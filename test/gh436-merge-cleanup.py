@@ -764,6 +764,109 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
         self.assertEqual(rc, 4)
 
+    def test_auto_sweep_clean_records_verdict_and_exits_0(self):
+        # GH-1383: Auto-execute the post-merge regression sweep by default on clean run
+        batch = self._seed_qa_pending_batch()
+        batch["sweep_inputs"] = {"command": "echo 'all tests green'", "deferred": False}
+        batch["_sweep_touched"] = True
+        import batch_record
+        batch_record.save(batch)
+
+        with mock.patch("merge_cleanup.run_auto_sweep", return_value=0) as m_sweep:
+            rc, _, _, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
+            self.assertEqual(rc, 0)
+            m_sweep.assert_called_once()
+
+    def test_no_auto_sweep_flag_defers_and_exits_4(self):
+        # GH-1383: --no-auto-sweep skips auto-execution and preserves exit 4
+        batch = self._seed_qa_pending_batch()
+        batch["sweep_inputs"] = {"command": "echo 'all tests green'", "deferred": False}
+        batch["_sweep_touched"] = True
+        import batch_record
+        batch_record.save(batch)
+
+        with mock.patch("merge_cleanup.run_auto_sweep") as m_sweep:
+            rc, _, _, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute", "--no-auto-sweep"],
+                prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
+            self.assertEqual(rc, 4)
+            m_sweep.assert_not_called()
+
+    def test_auto_sweep_findings_exits_4(self):
+        # GH-1383: When sweep fails, exit 4
+        batch = self._seed_qa_pending_batch()
+        batch["sweep_inputs"] = {"command": "echo 'assertion failed' && exit 1", "deferred": False}
+        batch["_sweep_touched"] = True
+        import batch_record
+        batch_record.save(batch)
+
+        with mock.patch("merge_cleanup.run_auto_sweep", return_value=4) as m_sweep:
+            rc, _, _, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
+            self.assertEqual(rc, 4)
+            m_sweep.assert_called_once()
+
+    def test_run_auto_sweep_clean(self):
+        # GH-1383: run_auto_sweep records clean verdict and returns 0
+        batch = self._seed_qa_pending_batch()
+        batch["sweep_inputs"] = {"command": "echo 'all green'", "deferred": False}
+        with mock.patch("merge_cleanup._gh") as m_gh, \
+             mock.patch("subprocess.run") as m_run:
+            m_run.return_value = subprocess.CompletedProcess(["bash", "-c", "..."], 0, stdout="all green\n", stderr="")
+            rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "echo 'all green'")
+            self.assertEqual(rc, 0)
+            loaded = json.loads(Path(batch["path"]).read_text())
+            self.assertEqual(loaded.get("verdict", {}).get("value"), "clean")
+
+    def test_run_auto_sweep_findings(self):
+        # GH-1383: run_auto_sweep records findings verdict and returns 4
+        batch = self._seed_qa_pending_batch()
+        batch["sweep_inputs"] = {"command": "echo 'failed' && exit 1", "deferred": False}
+        with mock.patch("merge_cleanup._gh") as m_gh, \
+             mock.patch("subprocess.run") as m_run:
+            m_run.return_value = subprocess.CompletedProcess(["bash", "-c", "..."], 1, stdout="", stderr="failed\n")
+            rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "echo 'failed' && exit 1")
+            self.assertEqual(rc, 4)
+            loaded = json.loads(Path(batch["path"]).read_text())
+            self.assertEqual(loaded.get("verdict", {}).get("value"), "findings")
+
+    def test_commit_and_push_phase5_writes_skip_ci_on_intermediate(self):
+        # GH-1383: Intermediate reconcile commits include [skip ci] to prevent CI push storms
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-b", "development", str(repo)], check=True, capture_output=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=str(repo), check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=str(repo), check=True)
+            (repo / "f.txt").write_text("hello")
+            subprocess.run(["git", "add", "f.txt"], cwd=str(repo), check=True)
+            subprocess.run(["git", "commit", "-m", "init"], cwd=str(repo), check=True)
+            # Create a dirty write
+            (repo / "f.txt").write_text("modified")
+
+            def fake_net(repo_path, cmd, **kwargs):
+                if cmd[0] in ("push", "fetch"):
+                    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(repo_path), capture_output=True, text=True).stdout.strip()
+                    subprocess.run(["git", "update-ref", "refs/remotes/origin/development", head], cwd=str(repo_path), check=True)
+                return subprocess.CompletedProcess([], 0, stdout="", stderr="")
+
+            with mock.patch("merge_cleanup._net_git", side_effect=fake_net):
+                ok = merge_cleanup.commit_and_push_phase5_writes(42, repo, "development", is_intermediate=True)
+                self.assertTrue(ok)
+                # Check commit message of HEAD
+                msg = subprocess.run(["git", "log", "-1", "--format=%B"], cwd=str(repo), capture_output=True, text=True).stdout
+                self.assertIn("chore: reconcile after PR #42 [skip ci]", msg)
+
+                # Final write (not intermediate) should NOT have [skip ci]
+                (repo / "f.txt").write_text("modified again")
+                ok = merge_cleanup.commit_and_push_phase5_writes(43, repo, "development", is_intermediate=False)
+                self.assertTrue(ok)
+                msg2 = subprocess.run(["git", "log", "-1", "--format=%B"], cwd=str(repo), capture_output=True, text=True).stdout
+                self.assertIn("chore: reconcile after PR #43", msg2)
+                self.assertNotIn("[skip ci]", msg2)
+
 
     def _open(self, n, base="development", **over):
         d = {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40,

@@ -889,7 +889,8 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
                              dry_run: bool = True,
                              pr_head: Optional[str] = None,
-                             merged_head: Optional[str] = None) -> bool:
+                             merged_head: Optional[str] = None,
+                             is_intermediate: bool = False) -> bool:
     """Reconcile locally (GH-1127 default; MERGE_CLEANUP_USE_HOSTED=1 waits for a hosted run first), then run governance checks.
 
     `merged_head`, when given, is the PR's merge commit as GitHub reports it (--reconcile-pr);
@@ -942,15 +943,18 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
             log_err(f"RELEASES DB check FAILED (exit {c_res.returncode}): {(c_res.stdout.strip() or c_res.stderr.strip())[-400:]}")
             ok = False
 
-    # 3. pdda.sh issue-doc-sync
+    # 3. pdda.sh issue-doc-sync (GH-1383: deferred for intermediate PRs in a batch)
     pdda_sh = repo_path / "utils" / "pdda" / "pdda.sh"
     if pdda_sh.exists():
-        p_res = subprocess.run(["bash", str(pdda_sh), "issue-doc-sync"], cwd=str(repo_path), capture_output=True, text=True, check=False)
-        if p_res.returncode == 0:
-            log("✅ pdda issue-doc-sync clean")
+        if is_intermediate:
+            log(f"Intermediate PR #{pr_num} in batch: deferring pdda issue-doc-sync to batch finalization")
         else:
-            log_err(f"pdda issue-doc-sync FAILED (exit {p_res.returncode}): {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
-            ok = False
+            p_res = subprocess.run(["bash", str(pdda_sh), "issue-doc-sync"], cwd=str(repo_path), capture_output=True, text=True, check=False)
+            if p_res.returncode == 0:
+                log("✅ pdda issue-doc-sync clean")
+            else:
+                log_err(f"pdda issue-doc-sync FAILED (exit {p_res.returncode}): {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
+                ok = False
 
     if not ok:
         return False
@@ -965,7 +969,8 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
     return False
 
 
-def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str) -> bool:
+def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str,
+                                 is_intermediate: bool = False) -> bool:
     """Commit, push, and verify every primary-side write made after a PR lands."""
     status = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
     if status.returncode != 0:
@@ -977,7 +982,8 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
         if added.returncode != 0:
             log_err(f"PR #{pr_num}: could not stage post-merge writes: {added.stderr.strip()}")
             return False
-        committed = run_git(repo_path, ["commit", "-m", f"chore: reconcile after PR #{pr_num}"])
+        ci_tag = " [skip ci]" if is_intermediate else ""
+        committed = run_git(repo_path, ["commit", "-m", f"chore: reconcile after PR #{pr_num}{ci_tag}"])
         if committed.returncode != 0:
             log_err(f"PR #{pr_num}: could not commit post-merge writes: {committed.stderr.strip()}")
             return False
@@ -1645,20 +1651,34 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log_err(f"fast-forward to origin/{branch} FAILED: {ff.stderr.strip() or 'git refused'}")
                 log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
                 return 2
+            remaining_unattempted = [p["number"] for p in ordered_prs
+                                     if p["number"] != p_num and p["number"] not in _MERGED_THIS_RUN
+                                     and p["number"] not in failed]
+            is_intermediate = bool(remaining_unattempted)
             if not run_post_merge_reconcile(
                     p_num, primary_repo, integration_branch=branch, dry_run=False,
-                    pr_head=info.get("headRefOid")):
+                    pr_head=info.get("headRefOid"), is_intermediate=is_intermediate):
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
                 return 2
             # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile
             # (including any fast-forward performed by reconciliation) all succeeded. `pr` rather
             # than `info` because the emitter reads the body for `Closes #N`.
             emit_pr_merged(primary_repo, pr, dry_run=False)
-            if not commit_and_push_phase5_writes(p_num, primary_repo, branch):
+            if not commit_and_push_phase5_writes(p_num, primary_repo, branch, is_intermediate=is_intermediate):
                 log_err(f"PR #{p_num}: post-merge writes were not made durable — stopping before the next PR")
                 return 2
             if track is not None:
                 track["reconciled"].add(p_num)
+        # GH-1383: If intermediate landings deferred pdda issue-doc-sync, run one final pass for the batch
+        if len(_MERGED_THIS_RUN) > 1 and not dry_run:
+            pdda_sh = primary_repo / "utils" / "pdda" / "pdda.sh"
+            if pdda_sh.exists():
+                log("Running batch finalization pdda issue-doc-sync...")
+                p_res = subprocess.run(["bash", str(pdda_sh), "issue-doc-sync"], cwd=str(primary_repo), capture_output=True, text=True, check=False)
+                if p_res.returncode == 0:
+                    log("✅ batch finalization pdda issue-doc-sync clean")
+                else:
+                    log_warn(f"batch finalization pdda issue-doc-sync reported issues: {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
         # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
         # HARD dependents; soft dependents were attempted above. Exit 3 keeps the shape
         # "the queue completed but not everything landed"; 2 remains a hard stop.
@@ -1786,6 +1806,7 @@ def main():
     parser.add_argument("--backup-first", action="store_true", help="Back up and verify candidate clone folders before tearing them down")
     parser.add_argument("--backup-root", help="Directory where standardized clone backups are stored (defaults to <top_level_folder>/_backups)")
     parser.add_argument("--record-sweep", metavar="FILE", help="Record the post-merge regression-sweep verdict for the newest batch with QA pending (first line `verdict: clean|findings|deferred`), update its issue, and exit; nothing is scanned, merged or torn down (GH-1064)")
+    parser.add_argument("--no-auto-sweep", action="store_true", help="Do not automatically run the post-merge QA sweep at batch conclusion; halt with exit 4 (QA pending) instead (GH-1383)")
     parser.add_argument("--landing-plan", choices=["direct", "group"], default=None, help="Landing plan decision for queues of 3+ PRs: 'direct' sequential landing or 'group' candidate (GH-1066)")
     parser.add_argument("--landing-reason", default="", help="Non-empty justification for the chosen --landing-plan (GH-1066)")
 
@@ -1816,7 +1837,8 @@ def main():
                 or not Path(args.primary).expanduser().is_absolute()
                 or args.root or args.prefix or args.exclude or args.prs or args.strategy or args.show_merge_policy
                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
-                or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root or args.record_sweep):
+                or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root or args.record_sweep
+                or args.no_auto_sweep):
             parser.error("published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides")
         return retire_published_checkouts(primary_repo, args.checkout, args.retire_published_pr,
                                          args.integration_branch, args.execute)
@@ -2229,8 +2251,23 @@ def main():
     if batch is not None and batch_record.qa_pending(batch):
         # GH-1064: landed, but no recorded sweep verdict covers these landings yet.
         where = batch.get("issue_url") or batch["path"]
+        inputs = batch.get("sweep_inputs") or {}
+        cmd = inputs.get("command") or ""
+        deferred = inputs.get("deferred", False)
+        # GH-1383: On by default when executing with an executable local sweep command.
+        # Can be opted out via --no-auto-sweep or deferred when full suite is deferred to promotion dispatch.
+        if (args.execute and not getattr(args, "no_auto_sweep", False)
+                and cmd and not deferred and not cmd.startswith("gh workflow run")):
+            rc = run_auto_sweep(primary_repo, batch, cmd)
+            if rc == 0:
+                log("Merge cleanup run complete with clean post-merge QA sweep.")
+                return 0
+            else:
+                log_err(f"STATUS: landed, QA sweep reported findings (batch: {where})")
+                return 4
+
         log(f"STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: {where})")
-        log(f"  sweep: {(batch.get('sweep_inputs') or {}).get('command') or batch_record.NO_SWEEP_COMMAND}")
+        log(f"  sweep: {cmd or batch_record.NO_SWEEP_COMMAND}")
         return 4
     log("Merge cleanup run complete.")
     return 0
@@ -2271,6 +2308,35 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
     else:
         log(f"Merge batch issue: {batch['issue_url']}")
     return batch
+
+
+def run_auto_sweep(primary_repo: Path, batch: Dict[str, Any], command: str) -> int:
+    """GH-1383: execute the batch regression sweep command in a throwaway clone and record the verdict."""
+    log("Auto-executing post-merge QA regression sweep...")
+    log(f"  Command: {command}")
+    clean_cmd = command
+    if command.startswith("T=$(mktemp -d) && "):
+        clean_cmd = f"T=$(mktemp -d); trap 'rm -rf \"$T\"' EXIT INT TERM; " + command[len("T=$(mktemp -d) && "):]
+    res = subprocess.run(["bash", "-c", clean_cmd], cwd=str(primary_repo), capture_output=True, text=True)
+    if res.returncode == 0:
+        log("✅ Auto-executed post-merge QA sweep passed.")
+        stdout_tail = (res.stdout.strip() or res.stderr.strip())[-1500:]
+        verdict = f"verdict: clean\nAuto-executed post-merge sweep passed.\nCommand: `{command}`\n\n```\n{stdout_tail}\n```"
+        ok, msg = batch_record.record_verdict(batch, verdict)
+        if not ok:
+            log_err(f"Could not record clean verdict: {msg}")
+            return 4
+        batch_record.update(batch, _gh, primary_repo)
+        return 0
+    else:
+        log_err(f"❌ Auto-executed post-merge QA sweep FAILED (exit {res.returncode})")
+        err_tail = (res.stderr.strip() or res.stdout.strip())[-2000:]
+        verdict = f"verdict: findings\n- [ ] Post-merge regression sweep failed with exit code {res.returncode}:\n\nCommand: `{command}`\n\n```\n{err_tail}\n```"
+        ok, msg = batch_record.record_verdict(batch, verdict)
+        if not ok:
+            log_err(f"Could not record findings verdict: {msg}")
+        batch_record.update(batch, _gh, primary_repo)
+        return 4
 
 
 def record_sweep(primary_repo: Path, integration: str, verdict_file: Path) -> int:

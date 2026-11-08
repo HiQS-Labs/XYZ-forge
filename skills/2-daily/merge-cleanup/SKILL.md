@@ -19,7 +19,7 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forg
 > 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
 > 4. **Merge & reconcile governance (Phase 5).** Merge using the project policy in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
 > 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
-> 6. **Document and sweep qualifying batches (GH-944, GH-1064).** When the sequenced queue holds **two or more PRs**, the script opens the `merge-batch` GitHub issue **before the first merge** with the planned order, keeps its outcomes and sweep inputs current, and exits **4** (landed, QA pending) until a sweep verdict is recorded. You fill the caller sections (problems, ad-hoc fixes/pivots, findings), run the `/debug-mantra` regression sweep with the printed command (a Small suite in a throwaway clone, or the full sweep deferred to the pre-promotion dispatch, GH-1127), record the verdict with `--record-sweep <file>`, and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
+> 6. **Document and sweep qualifying batches (GH-944, GH-1064, GH-1383).** When the sequenced queue holds **two or more PRs**, the script opens the `merge-batch` GitHub issue **before the first merge** with the planned order, keeps its outcomes and sweep inputs current, and executes the local regression sweep by default on clean runs (unless opted out via `--no-auto-sweep` or deferred). Exits **0** on clean automated sweep, or **4** (landed, QA pending) when sweep is deferred, reports findings, or is opted out until a clean sweep verdict is recorded with `--record-sweep <file>`. You fill the caller sections (problems, ad-hoc fixes/pivots, findings), transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
 >
 > **Overall Goal:** All ready-to-merge PRs processed, qualifying batches documented and swept for regressions, and local disk clones and git worktree folders safely torn down when appropriate.
 
@@ -468,8 +468,10 @@ any test suite (GH-831): the caller still runs the sweep and writes the verdict.
     for the full gate, the pre-promotion `gh workflow run wave-reconcile.yml` dispatch (GH-1127, #1131).
     A full sweep is never rerun locally: record `verdict: deferred` naming the promotion dispatch, or
     `clean` naming the hosted run that covered the batch tip.
+- **Automated QA regression sweep (GH-1383):** In `--execute` mode, when a non-deferred local sweep command is declared (e.g. small canary suite in a throwaway clone), `merge_cleanup.py` automatically executes it upon batch landing completion. If the sweep passes, it records `verdict: clean`, updates the batch issue, and exits 0. If the sweep fails, it records `verdict: findings` with the error output and exits 4. To disable automatic execution and retain the manual exit 4 flow, pass `--no-auto-sweep`.
 - **Exit 4 = landed, QA pending.** After a normal Phase 6, a batch with landings that no recorded
-  verdict covers ends with exit 4. Held or handed-off PRs elsewhere in the batch do not change
+  verdict covers (or whose automated sweep was deferred, reported findings, or was opted out via `--no-auto-sweep`)
+  ends with exit 4. Held or handed-off PRs elsewhere in the batch do not change
   that, and a new landing makes an earlier verdict partial again. Exit 2 and 3 take precedence.
 - **Recording the verdict.** `merge_cleanup.py --primary <path> --record-sweep <file>` runs no scan,
   merge or teardown. The file's first line is `verdict: clean|findings|deferred`:
@@ -565,7 +567,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--prs`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--landing-plan`, `--landing-reason`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--prs`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--no-auto-sweep`, `--landing-plan`, `--landing-reason`.
 
 ## CLI Usage
 
