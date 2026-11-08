@@ -26,3 +26,4 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-repaired.plist", "sha256": "bb242080522a249fe279419d2c19f5d9b1544ffaac08c04599ff2bce3495f6dd", "kind": "existing observer correction; manual controls; not yet deployed"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-gap-controls.json", "sha256": "a0a5a95ef757941834b759ed5387ec8fd458389b57141b9308164965090385b9", "kind": "existing observer correction; manual controls; not yet deployed"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-repair-notes.md", "sha256": "26ceca900f9ee0fb9ecc9249e6400dcbf66bdcd099045915404823699d6b2540", "kind": "existing observer correction; manual controls; not yet deployed"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-before-landing.json", "sha256": "4cb4ef2530b5eeb3a8fcb3bbb8e02dffc9cd8b9e30a55d85ad3d9d89a17b0492", "kind": "preserved prior observer state across declared paused window"}
