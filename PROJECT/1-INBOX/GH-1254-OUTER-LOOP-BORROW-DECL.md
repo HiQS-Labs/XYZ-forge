@@ -159,3 +159,7 @@ commits do not change runtime. Independent QA approved GH1254 runtime; merged GH
 packet changes carry their separate review and gate evidence. One width-environment
 publication failure repaired without code changes; controls and failed log retained.
 No merge/watch; parent retains outer-review and user per-PR approval boundary.
+
+## Merge evidence
+
+- PR #1369 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
