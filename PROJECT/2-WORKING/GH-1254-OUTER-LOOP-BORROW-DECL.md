@@ -189,3 +189,7 @@ restored intact to their original paths. No data was discarded and no peer proce
 The initial lifecycle commit recorded only the rename after a stale old-path staging argument
 failed. Remaining owned status/ledger/evidence changes were preserved and published in a
 follow-up commit; no reset or history rewrite. Final publication re-runs the normal docs gate.
+
+## Merge evidence
+
+- PR #1377 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

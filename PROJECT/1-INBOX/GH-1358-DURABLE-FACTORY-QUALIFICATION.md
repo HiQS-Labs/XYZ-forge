@@ -211,3 +211,7 @@ PR1377 evidence head322026791 passed the normal docs gate70s. Existing gate-only
 Evidence and exact commands: `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/`. Remaining original acceptance: normal no-row admission, two successive successful PR-ready wakes, continuous observation bounds/slot accounting, broader1254 restart/overload/live-cost proof and full qualification.
 
 Recovery outcome: PR1379 head18e5df165, full408/408 in536s, finaldocs67s. Finalprimarya71a1d5a published clean with peerlandings intact and actual PR pointer. Both schedulesdisabled/unloaded. Success-path counter deletion was caught and exact2/2 file restored; originaltimeout retained. Automatic receipt docs-onlygate in retainedrunner missed the all-gates-disposable instruction; no heavy suite ran there, finaldocs used disposableclone. NewclockPR docs/evidence tail requires applicable approval binding before automaticJoglanding; no merge approved. See recovery/FINAL-OUTCOME.md for scope, repairs and remainingacceptance.
+
+## Merge evidence
+
+- PR #1377 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
