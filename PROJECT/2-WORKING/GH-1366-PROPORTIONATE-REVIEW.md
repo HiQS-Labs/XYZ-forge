@@ -16,7 +16,7 @@ doc_type: enhancement
 
 | What was just completed | What's next |
 |---|---|
-| Audit and K3 review adjudicated; #1367 merged | Independent plan QA, then two scoped wording changes |
+| Plan QA approved; both scoped wording changes implemented | Final verification and independent QA |
 
 ## Scope and recon
 
@@ -69,7 +69,7 @@ these remaining exact paragraphs. No override score.
 
 ## Review and evidence
 
-Plan QA pending. Final QA pending. Gate/consumer evidence pending.
+Plan QA Approved: `relay-system/2026-11-07/gh1366-plan.codex.md` (driver exit 0, one reviewer turn). Final QA and gate/consumer evidence pending.
 Umbrella stays open after this slice lands.
 
 ## Lessons Learned (For Future Agents)
