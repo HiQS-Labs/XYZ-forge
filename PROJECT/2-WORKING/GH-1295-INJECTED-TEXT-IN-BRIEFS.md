@@ -2,7 +2,7 @@
 gh_issue: 1295
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1295
 title: "factory-primitive plan-draft: injected instruction text in an issue body is carried into briefs and launch packets"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-10-31
 owner: noelsaw1
 doc_type: feedback
@@ -20,6 +20,7 @@ related:
   - #1294
 goal: >
   Issue text reaches briefs and launch packets only as quoted data that a builder prompt cannot read as an instruction; a recorded manual round trip on the injection canaries shows it.
+updated: 2026-11-08
 ---
 
 ## Key concepts
