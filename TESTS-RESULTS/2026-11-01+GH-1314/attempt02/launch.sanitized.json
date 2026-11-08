@@ -1,0 +1,121 @@
+{
+  "attempt": "02",
+  "candidate_invocations": "inspect helper evidence",
+  "commands": [
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "clone",
+        "--no-hardlinks",
+        "--no-checkout",
+        "<READ_ONLY_SOURCE>",
+        "<ATTEMPT02_ROOT>/bad"
+      ],
+      "duration_s": 0.13238325,
+      "rc": 0,
+      "stderr": "Cloning into '<ATTEMPT02_ROOT>/bad'...\ndone.\n",
+      "stdout": "",
+      "surviving_group_observed": false,
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-C",
+        "<ATTEMPT02_ROOT>/bad",
+        "checkout",
+        "--detach",
+        "b78df4b93049498b19dd47fe6a90d006f9c42700"
+      ],
+      "duration_s": 0.60624625,
+      "rc": 0,
+      "stderr": "HEAD is now at b78df4b93 chore: reconcile after PR #1277\n",
+      "stdout": "",
+      "surviving_group_observed": false,
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "clone",
+        "--no-hardlinks",
+        "--no-checkout",
+        "<READ_ONLY_SOURCE>",
+        "<ATTEMPT02_ROOT>/good"
+      ],
+      "duration_s": 0.06745983300000002,
+      "rc": 0,
+      "stderr": "Cloning into '<ATTEMPT02_ROOT>/good'...\ndone.\n",
+      "stdout": "",
+      "surviving_group_observed": false,
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-C",
+        "<ATTEMPT02_ROOT>/good",
+        "checkout",
+        "--detach",
+        "47deab48b8c749d699c6b6c77c38dfdaa5682025"
+      ],
+      "duration_s": 0.595635833,
+      "rc": 0,
+      "stderr": "HEAD is now at 47deab48b fix(GH-1284): factory-primitive status/tick/packet refuse an uninitialized run root\n",
+      "stdout": "",
+      "surviving_group_observed": false,
+      "timed_out": false
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+        "-B",
+        "<TASK_WORKSPACE>/gh1314-run02-helper-review.txt",
+        "<ATTEMPT02_SETUP>/helper-config.json"
+      ],
+      "duration_s": 10.743818749999999,
+      "rc": 0,
+      "stderr": "",
+      "stdout": "",
+      "surviving_group_observed": false,
+      "timed_out": false
+    }
+  ],
+  "config": {
+    "approval": "Parent conditionally approved attempt02 with SIGTERM bounded grace then SIGKILL fallback; forced kill invalidates descendant cleanup; static review completed before observations",
+    "helper_path": "<TASK_WORKSPACE>/gh1314-run02-helper-review.txt",
+    "helper_sha256": "4250cb90eff905f851b5cc6d18f3b7c7932f68058e0470846eaedb8f5657d753",
+    "launcher_sha256": "8fbefd93a70dd2341b73a2a6e840e5962bcaec4e168c13b46c6a27efdfee3847",
+    "protocol_path": "<TASK_WORKSPACE>/gh1314-run02-protocol-review.md",
+    "protocol_sha256": "2dff5b6d5505b182cd4ed51e32a2be87c24534382deea3b9aea066a1bfb9370f",
+    "python": "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+    "shutdown_correction": "SIGTERM, 1.5-second grace for helper signal-handler candidate cleanup, SIGKILL fallback with descendant_cleanup explicitly unverified; stop inconclusive",
+    "source_root": "<READ_ONLY_SOURCE>",
+    "workspace": "<TASK_WORKSPACE>"
+  },
+  "deadline_epoch": 1793557615.343033,
+  "git_sha256": "a73bf622a2e470d5d57a4b1d5aef1e8680e67278018d4858a2f93825b7d595c7",
+  "outcome": "helper completed; parent semantic acceptance pending",
+  "python_sha256": "6e7ae61f68a3838094fc56590f84c52069a97d7816f6bb79e0e85995b340e464",
+  "root": "<ATTEMPT02_ROOT>",
+  "setup_environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HOME": "<ATTEMPT02_SETUP>/home",
+    "LC_ALL": "C",
+    "PATH": "/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "<ATTEMPT02_SETUP>/tmp",
+    "TZ": "UTC"
+  },
+  "setup_root": "<ATTEMPT02_SETUP>",
+  "setup_start_epoch": 1793557015.343033,
+  "total_elapsed_s": 12.14999794960022
+}
