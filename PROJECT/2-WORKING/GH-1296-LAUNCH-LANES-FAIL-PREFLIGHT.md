@@ -2,8 +2,9 @@
 gh_issue: 1296
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1296
 title: "factory-primitive launch packets: lanes fail preflight on a stale artifact path or missing Preflight Contract"
-status: Proposed (1-INBOX — not yet active)
+status: active
 created: 2026-10-31
+updated: 2026-11-08
 owner: noelsaw1
 doc_type: feedback
 complexity: 2
@@ -38,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| PR #1324 repairs malformed contract input, path comparison, and selected capture freshness. Current-wave paired replay and independent implementation QA are retained in `TESTS-RESULTS/2026-11-08+GH-1296-review/`; full `validate.sh` passed 409/409 on reviewed runtime `a0f65126`. | Original #1279 frozen backlog is unavailable after bounded search and operator confirmation. Exact historical replay remains incomplete; current-wave evidence does not replace it. Leave #1296 open for outer inspection and final gate/publication. |
+| PR #1324 repairs malformed contract input, path comparison, and selected capture freshness. Current-wave paired replay and independent implementation QA are retained in `TESTS-RESULTS/2026-11-08+GH-1296-review/`; full `validate.sh` passed 409/409 on reviewed runtime `a0f65126`. | Original #1279 frozen backlog is unavailable after bounded search and operator confirmation. Exact historical replay remains incomplete; current-wave evidence does not replace it. PR #1324 merged as `2bed0a59b7`; required-field repair independently approved and full gate passed 409/409 at `a1a0b687`. Leave #1296 open for the missing historical replay. The active-document promotion records current status, not a retroactive admission checkpoint. |
 
 ## Idea
 
