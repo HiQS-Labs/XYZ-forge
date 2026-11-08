@@ -1,0 +1,18 @@
+{
+  "root": 21566,
+  "owned_pids": [
+    21566,
+    23640,
+    24154,
+    24213,
+    25869
+  ],
+  "reason": "stop unsuitable GH1296 admitted workload; preserve original backlog limitation; scheduled cold recovery witness",
+  "commands": {
+    "24213": "python3 /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/utils/py/agy-turn.py",
+    "23640": "python3 /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/utils/py/marathon_drive.py --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/.tick/jog/jog-01M6X2ZXGNHFVS268HFP4AQQ49/gh1296-exec1/preflight/packet.md --reviewer codex --builder agy --artifact utils/py/harness.py,test/gh174-harness-registry.sh --pre-advance-cmd python3 -m pytest test/test_python_layer.py && bash test/swarm-preflight.sh --result-file /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/.tick/jog/jog-01M6X2ZXGNHFVS268HFP4AQQ49/gh1296-exec1/preflight/marathon-result.json --target-root /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner --phase-id gh-1296-launch-lanes-fail-preflight --execution-id gh1296-exec1",
+    "24154": "python3 /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/utils/py/relay_drive.py --relay-file /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/marathon-system/gh-1296-launch-lanes-fail-preflight/RELAY.md --relay-task MARATHON-GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT-TURN --agent-cmd /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/relay-automation/marathon-agent.sh --reviewer codex --builder agy --round-cap 5 --target-root /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner",
+    "25869": "agy --dangerously-skip-permissions --print-timeout 900s",
+    "21566": "/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/utils/py/releases_app.py --root /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary jog run --max-tasks 1 --builder agy --reviewer codex --target-root /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner --checkpoint-root /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/publisher"
+  }
+}

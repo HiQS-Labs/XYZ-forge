@@ -1,0 +1,130 @@
+{
+  "samples": 114,
+  "gaps_over_45s": [
+    {
+      "from": "2026-11-08T10:47:34.880735+00:00",
+      "to": "2026-11-08T10:55:24.299283+00:00",
+      "seconds": 469.418548,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    },
+    {
+      "from": "2026-11-08T11:06:21.417051+00:00",
+      "to": "2026-11-08T11:07:17.216954+00:00",
+      "seconds": 55.799903,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    },
+    {
+      "from": "2026-11-08T11:16:38.240530+00:00",
+      "to": "2026-11-08T11:19:12.666201+00:00",
+      "seconds": 154.425671,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    },
+    {
+      "from": "2026-11-08T11:21:09.795881+00:00",
+      "to": "2026-11-08T11:34:22.152415+00:00",
+      "seconds": 792.356534,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    },
+    {
+      "from": "2026-11-08T11:40:23.008829+00:00",
+      "to": "2026-11-08T11:56:45.347644+00:00",
+      "seconds": 982.338815,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    },
+    {
+      "from": "2026-11-08T11:57:32.822877+00:00",
+      "to": "2026-11-08T12:04:41.414747+00:00",
+      "seconds": 428.59187,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    },
+    {
+      "from": "2026-11-08T12:05:56.847755+00:00",
+      "to": "2026-11-08T12:07:04.182202+00:00",
+      "seconds": 67.334447,
+      "classification": "sleep-correlated where matched to retained power log; otherwise UNKNOWN"
+    }
+  ],
+  "transitions": [
+    {
+      "observed_at": "2026-11-08T10:46:16.188368+00:00",
+      "observer_pid": 67108,
+      "silence_threshold_s": 120,
+      "observation_interval_s": 15,
+      "active_pass_limit_s": 10800,
+      "host_loss_coverage": false,
+      "authority": "observe only; no work-state writes or recovery",
+      "error": "[Errno 1] Operation not permitted: '/Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/checkpoint.json'",
+      "alarm": true,
+      "status": "OBSERVATION_UNCERTAIN",
+      "alert_transition": true,
+      "recovery_transition": false
+    },
+    {
+      "observed_at": "2026-11-08T10:47:34.880735+00:00",
+      "observer_pid": 3041,
+      "silence_threshold_s": 120,
+      "observation_interval_s": 15,
+      "active_pass_limit_s": 10800,
+      "host_loss_coverage": false,
+      "authority": "observe only; no work-state writes or recovery",
+      "phase": "committed",
+      "checkpoint": "681ab30a2e716787537f2521ee94b0b1fc42c39d",
+      "journal_age_s": 12.7,
+      "supervisor_pid": 89175,
+      "owned_supervisor_alive": true,
+      "runner_head": "624f52c8c489c41b70445a54e860416e54538e64",
+      "committed_head_changed": false,
+      "driver_heartbeat": null,
+      "alarm": false,
+      "status": "ACTIVE_WITHIN_DEADLINE",
+      "alert_transition": false,
+      "recovery_transition": true
+    },
+    {
+      "observed_at": "2026-11-08T10:58:54.085663+00:00",
+      "observer_pid": 42679,
+      "silence_threshold_s": 120,
+      "observation_interval_s": 15,
+      "active_pass_limit_s": 10800,
+      "host_loss_coverage": false,
+      "authority": "observe only; no work-state writes or recovery",
+      "phase": "published",
+      "checkpoint": "681ab30a2e716787537f2521ee94b0b1fc42c39d",
+      "journal_age_s": 135.1,
+      "supervisor_pid": null,
+      "owned_supervisor_alive": false,
+      "runner_head": "d335e54296ebe90572c497ea8a84ff10a36aaeec",
+      "committed_head_changed": false,
+      "driver_heartbeat": null,
+      "alarm": true,
+      "status": "SCHEDULE_SILENCE",
+      "alert_transition": true,
+      "recovery_transition": false
+    },
+    {
+      "observed_at": "2026-11-08T11:01:13.842459+00:00",
+      "observer_pid": 94730,
+      "silence_threshold_s": 120,
+      "observation_interval_s": 15,
+      "active_pass_limit_s": 10800,
+      "host_loss_coverage": false,
+      "authority": "observe only; no work-state writes or recovery",
+      "phase": "published",
+      "checkpoint": "80c3156844018fffa482fce912b101f706268f32",
+      "journal_age_s": 19.9,
+      "supervisor_pid": null,
+      "owned_supervisor_alive": false,
+      "runner_head": "d335e54296ebe90572c497ea8a84ff10a36aaeec",
+      "committed_head_changed": false,
+      "driver_heartbeat": null,
+      "alarm": false,
+      "status": "RECENT_COMPLETION",
+      "alert_transition": false,
+      "recovery_transition": true
+    }
+  ],
+  "global_detection_bound_met": false,
+  "real_elapsed_gate_cap_met": false,
+  "natural_sleep_continuation_observed": true,
+  "offhost_detection": false
+}

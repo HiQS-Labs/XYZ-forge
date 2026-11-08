@@ -1,0 +1,10 @@
+# resolve-profile: 'gh1358 routing check' -> tier 2 (profile 'gh1358 routing check')
+# resolve-profile: WARNING — aider harness selected, but its CLI 'aider' is NOT on PATH; this turn will not run on this machine
+export AIDER_AGENT='aider'
+export AIDER_MODEL='moonshotai/kimi-k3.1-pro'
+export AIDER_GATEWAY='openrouter'
+export RELAY_AGENT='aider'
+export RELAY_AGENT_CMD='relay-automation/aider-turn.sh'
+export HARNESS='/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54'
+export TICK='/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54/bin/tick'
+export XYZ_MODEL_CATALOG_VERSION='1.3.0'

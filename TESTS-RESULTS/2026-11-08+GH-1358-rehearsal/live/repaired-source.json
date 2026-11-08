@@ -1,0 +1,5 @@
+{
+  "source_commit": "450dec8e2f7b8f9061e82c82ae7fb66edc105872",
+  "purpose": "one-shot launchd empty wake; no workload admission or retry",
+  "interval": null
+}

@@ -1,0 +1,28 @@
+{
+  "primary": {
+    "head": "632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0",
+    "dirty": "",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "local_identity": ""
+  },
+  "publisher": {
+    "head": "632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0",
+    "dirty": "",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "local_identity": ""
+  },
+  "source": {
+    "head": "450dec8e2f7b8f9061e82c82ae7fb66edc105872",
+    "dirty": "?? TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/live/launchd-final-status.txt\n?? TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/live/launchd-stopped.txt",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "local_identity": ""
+  },
+  "checkpoint": {
+    "base": "632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0",
+    "phase": "published",
+    "commit": "632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "frozen_at": "2026-11-08T09:54:44.991087+00:00",
+  "source": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54",
+  "source_commit": "5182a77c12e3b43612b96d78f7c5a9639949aafc",
+  "runtime_sha256": {
+    "utils/py/jog_run.py": "bb02dc5fd4608f4ab917db2ab81a4e1f0e9b0e73142ced6f779b6e7f77b9ba47",
+    "utils/py/releases_app.py": "f25db05bc8d696532af895c3e90017fd4319201b16040c7ed6e242ebf7db39aa"
+  },
+  "primary": "/Users/noelsaw/Documents/GitHub/XYZ-forge",
+  "primary_checkpoint": "4c7f7d3cd336827bb9d0d48d9d483ddefd2aff61",
+  "runner": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner",
+  "prepared_runner_development": "e9d676e42c71d188e8206e9ee71ff63a366df48e",
+  "publisher": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/publisher",
+  "workload_order": [
+    1295,
+    1160
+  ],
+  "builder": "codex",
+  "configured_codex_model": "gpt-6.1-sol",
+  "codex_reasoning_effort": "low (matches local account configuration; adapter default high explicitly not used)",
+  "reviewer": "agy (configured account default)",
+  "worker_wall_s": 900,
+  "worker_idle_s": 900,
+  "relay_base_rounds": 5,
+  "relay_progress_extension_hard_max": 10,
+  "marathon_lane_attempt_max": 2,
+  "prior_1295_attempts": 1,
+  "additional_1295_attempts": 1,
+  "window_1160_attempts": 1,
+  "automatic_retries": false,
+  "gate_wall_s": 1800,
+  "preparation_hard_stop_utc": "2026-11-08T12:30:00Z",
+  "cadence_s": 60,
+  "merge_authority": "none; per-PR approval retained",
+  "coverage": "agent-assisted preparation; two successive scheduled useful-work outcomes targeted; no PhaseB/off-host observer claim",
+  "primary_intake": "GH1160 new row via CLI with branch-local capture contract; pointer reconciled on landing; no source file mutation in primary",
+  "held_exclusions": [
+    670,
+    1296,
+    1344
+  ],
+  "plan_qa": "gh1358-scheduled-retry-plan.codex.md and gh1358-runner-progression-plan.codex.md",
+  "final_qa": "corresponding final.codex.md receipts"
+}
