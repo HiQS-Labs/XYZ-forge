@@ -102,3 +102,7 @@ pri 90 / sev 80 / appeal 85 / effort 50 (validates core product flywheel on live
 ## Merge evidence
 
 - PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Terminal attempt accounting
+
+Agent-assisted partial / not qualified; NOT acceptance-complete. Issue remains open. Full live-acceptance matrix and preserved friction history: `TESTS-RESULTS/2026-11-08+GH-1356-closeout/SUMMARY.md`. No unmet criterion waived; no further #1344 attempt or stale #1345 dispatch.
