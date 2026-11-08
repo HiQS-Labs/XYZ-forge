@@ -39,3 +39,9 @@ Remaining original acceptance stays OPEN: normal no-row admission/discovery, two
 ### 18:53Z bounded verification continuation
 
 Finalbuilder2/2 completed fixturepacing and non-tierregistryremoval. Agy and independentCodexapproved; existingclockruntimehash unchanged. Disabled-watchdogred reachedfiniteceiling/exit1; originalassertionspreserved. Reviewfinishedafter900sreserveentrycutoff; originalrefusalretained, primarycheckpoint980afdb13e925a4ca2dd2353155494c9320ea532published. Finalexistinggate-only invocation launched18:53:06Z with explicit720s cap/reserve, latestentry18:54:18Z. Same reviewedcandidate/brief/attestation, no extra builder. This is the last boundedverificationattempt underunchanged19:06:18Zdeadline. Normalfullgate stillpending; no successclaim.
+
+### Verified main and adjacent paths — 18:56Z
+
+Final candidate c6cc2d6d7a3dddf313f08954b842f8136fc294f0 passed manualclock7/7, gh39023/23 and gh280227/227 in the separate disposable fullclone. The pre-push livehost check returned no other fullgate. Normal408-suite push gate is active; no finalfullpass/clockPRclaim yet.
+
+Observer active-load snapshot spans18:27:33–18:58:33Z,125samples. Initial22534.7s declaredpause is flagged; maximumsubsequent observedgap15.1s. Priorfalseownedretryalarms and two schedule-silence records remain inrawlog. These measurements cover this awake sampledwindow only and do not erase earlierglobalboundfailures.

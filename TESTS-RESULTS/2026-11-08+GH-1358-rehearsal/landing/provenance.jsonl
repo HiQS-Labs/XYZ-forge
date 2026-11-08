@@ -61,3 +61,4 @@
 {"recorded_at": "2026-11-08T18:57:12.400708+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-main-adjacent.json", "sha256": "7264209e59642417f67961108cbf3098c0cd8cb8d6287748396074618bb146b1"}
 {"recorded_at": "2026-11-08T18:58:42.683087+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-active-load-analysis.json", "sha256": "de425c2403e28a8598dc4cbd70bf23b207ee318bb1f283efb68ec813a5c2a118"}
 {"recorded_at": "2026-11-08T18:58:42.683255+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-active-load.jsonl", "sha256": "8cc11575bab911509bbc9cccfddcf3eafb1506b4604b2aedf0f45e2c4d4d23a0"}
+{"recorded_at": "2026-11-08T18:59:12.649855+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/README.md", "sha256": "c651883ef4f871fec2e14a43f8e75187fa3b20f71ad34b6b0baade701125e162"}
