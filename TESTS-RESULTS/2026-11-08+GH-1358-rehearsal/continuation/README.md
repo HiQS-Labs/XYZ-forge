@@ -20,3 +20,23 @@ Marathon lane fire remain retained. Retry will change builder from agy to codex,
 reviewer to agy, not raise limits: worker wall/idle900, relay rounds5, lane max2.
 Task blocker repair max3 is distinct from QA rounds and Marathon lane attempts.
 Actual model/cost telemetry remains unknown unless the new receipt supplies it.
+
+Second concrete connection: the runner remains on the prior lane after Marathon.
+In checkpoint mode only, before a pending row is leased, acquire the existing
+runner driver lock, require a named clean branch, switch to prepared development,
+then release for Marathon. This allows Marathon's existing branch guard and PR
+closeout to own each lane; it preserves prior commits and refuses busy/dirty or
+detached runners. Independent plan/final QA approved. Manual real-git/lock/queue
+controls pass; checkpoint/engine stubbed, not deployed-autonomy evidence.
+
+Independent workload selected from current live open-issue discovery: GH1160.
+Actual startup paragraph contradicts dispatch-only workflow/local reconcile; issue
+OPEN, no comments/defer; primary roadmap had no1160 row. Prepared a minimal docs
+contract on runner development. This preparation is agent-assisted, not scheduled
+no-row admission. GH670 was excluded after comments proved cap exhaustion and an
+explicit operator defer. GH355 is a broad nine-table migration, not bounded here.
+
+Budget correction from source: relay base5 can extend to hardmax10 only for
+qualifying progress (relay_drive.py), not an absolute5 cap. Worker wall/idle900,
+Marathon lane max2 unchanged; GH1295 count1 retained. Preparation earliest recorded
+receipt 06:55:50Z implies latest ceiling12:55:50Z; the ceiling is not reset.

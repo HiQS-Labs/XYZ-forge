@@ -2306,6 +2306,20 @@ def jog_run_main(args=None):
                 print("jog: queue complete (0 pending tasks).")
                 break
 
+            if checkpoint:
+                # A previous lane stays on its branch. Start the next scheduled task
+                # from the prepared base so Marathon owns branch selection and PR creation.
+                runner_lock = JogSupervisorLock(target)
+                runner_lock.acquire()
+                try:
+                    branch = _git(target, "symbolic-ref", "--short", "HEAD").decode().strip()
+                    if _git(target, "status", "--porcelain=v1", "--untracked-files=all").strip():
+                        raise ContractError("checkpoint execution clone is dirty; preserve it before dispatch")
+                    if branch != "development":
+                        _git(target, "switch", "development")
+                finally:
+                    runner_lock.release()
+
             gh_num = row["gh_number"]
             att = row["attempt_count"] + 1
 
