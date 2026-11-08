@@ -1,6 +1,6 @@
 # Marathon Phase gh-1216-aider-openrouter-profile
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1216-AIDER-OPENROUTER-PROFILE-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -181,3 +181,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Changed `utils/py/profile_resolve.py`: only tier-2 named Aider profiles with gateway `openrouter` gain a missing `openrouter/` prefix in `emit_env`. Already-prefixed values are preserved. Resolution data is not mutated, keeping raw JSON unchanged; tier-1 overrides and other lanes/gateways retain their existing exports.
+- Extended existing `test/gh346-profile-resolve.sh` coverage for bare/prefixed models, another Aider gateway, raw JSON, and an explicit tier-1 Aider override. Existing DeepSeek and Command Code assertions cover other lanes. No new suite or gate machinery.
+- Root cause: the profile export path emitted a gateway-neutral stored slug verbatim into Aider's gateway-qualified model slot; fix site: the existing environment emission boundary; why not upstream/downstream: changing stored resolution would alter JSON, while changing the Aider shim would affect manual overrides.
+- Reversibility: Easy; a local export adaptation, with no persistent state or provider execution.
+- Verification: inspected the edited source and suite text. No tests or gates run, following this packet's scope lock; no git commands run. Harness must execute the existing covering suite in its disposable full clone. The bare-profile assertion is expected to fail against the pre-fix exporter; that red control has not been witnessed during this restricted turn.
+- Only the two files above and this relay file were edited. `test/gh450-model-catalog-pin.sh` and `test/_setup.sh` required no changes.
+- Ready for independent agy review; harness verification remains pending.
