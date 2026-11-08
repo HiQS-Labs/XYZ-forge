@@ -15,4 +15,4 @@ Restart allowed/refused behavior and launchd restart/declaration consistency are
 
 Unconditional execution by deadline under overload remains OPEN. A single-action tick cannot execute two independent notes at the same deadline. The existing rules evaluator now prioritizes due deferred inputs; a separate scheduler was not added. Budget, pause and tool failures retain their existing restrictions.
 
-Full applicable gate and final independent QA are pending. No #1356 completion claim.
+Final independent QA Approved at 7366edcd3; full applicable gate is pending parent host release. No #1356 completion claim.

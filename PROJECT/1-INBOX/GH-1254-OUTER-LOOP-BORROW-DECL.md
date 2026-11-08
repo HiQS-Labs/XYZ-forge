@@ -32,7 +32,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via intake for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture. | Run Phase 0 explore pass before promoting to `2-WORKING`. |
+| Scoped implementation and focused evidence complete; independent final QA Approved at 7366edcd3. | Run final full gate after parent releases host, then publish PR; restart and unconditional deadlines stay open. |
 
 ## Idea
 
@@ -125,3 +125,21 @@ selection fallback using the existing evaluator, not a new queue or dispatch mec
 ## Implementation checkpoint
 
 Runtime implemented; focused manual 21/21 and Python 21/21 pass. Evidence: TESTS-RESULTS/2026-11-08+GH-1254/. Independent final QA and applicable gate pending. Initializer defect repaired in one round; no other blocker budget consumed. Plan QA Approved round 2. Restart and overloaded execution-deadline acceptance remain OPEN. NO_ENTRY for lessons: modeled-only observation is insufficient for a durable generalization.
+
+## Durable gate handoff
+
+Parent owns the full-gate host reservation for #1324. Do not run this gate concurrently.
+Task candidate includes development through 035802c19, not the pending #1324 repair.
+After parent releases the host, inspect origin/development and safely merge any landed
+#1324 changes; no reset/stash/force. Recheck actual combined diff and focused evidence
+if integration changes runtime behavior. Then in the existing disposable full gate clone,
+fetch the task branch and fast-forward it. Verify core.bare=false, origin, user identity,
+HEAD and clean status before/after. Use Python 3.13 venv already verified to import
+requests, yaml and pytest. Run `PATH=<verified-venv>/bin:$PATH bash validate.sh --parallel 4`
+with full output captured under temp/gh1254/full-gate.log. Keep exact-SHA receipt;
+normal pre-push can reuse it for this commit. Publish the gated runtime commit first,
+then commit raw gate log/provenance and push that evidence-only delta through the docs gate.
+No PR exists yet. No full gate has started. No #1358 run or #1344 retry.
+
+Final QA Approved round 1, receipt relay-system/2026-11-08/gh1254-final.codex.md.
+Primary ownership released after accepted-start 035802c19aea8724f96193edae611389376839ad.
