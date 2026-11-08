@@ -1,0 +1,8 @@
+warning: You appear to have cloned an empty repository.
+remote-identical {"ok": true, "failed_query": "", "unlanded": ["refs/tags/archive/annotated @ f009e994bd: not reachable from origin/development; no merged PR has this head", "refs/tags/archive/light @ cf79acbbdb: not reachable from origin/development; no merged PR has this head"], "landed": ["refs/heads/development @ 1cabc75396 (reachable from origin/development)"]}
+local-only {"ok": true, "failed_query": "", "unlanded": ["refs/tags/archive/annotated @ f009e994bd: not reachable from origin/development; no merged PR has this head", "refs/tags/archive/light @ cf79acbbdb: not reachable from origin/development; no merged PR has this head", "refs/tags/local-only @ cf79acbbdb: not reachable from origin/development; no merged PR has this head"], "landed": ["refs/heads/development @ 1cabc75396 (reachable from origin/development)"]}
+different {"ok": true, "failed_query": "", "unlanded": ["refs/tags/archive/annotated @ f009e994bd: not reachable from origin/development; no merged PR has this head"], "landed": ["refs/heads/development @ 1cabc75396 (reachable from origin/development)", "refs/tags/archive/light @ 1cabc75396 (reachable from origin/development)"]}
+lookup-failure {"ok": true, "failed_query": "", "unlanded": ["refs/tags/archive/annotated @ f009e994bd: not reachable from origin/development; no merged PR has this head"], "landed": ["refs/heads/development @ 1cabc75396 (reachable from origin/development)", "refs/tags/archive/light @ 1cabc75396 (reachable from origin/development)"]}
+tick-env None
+tick-config None
+tick-missing None

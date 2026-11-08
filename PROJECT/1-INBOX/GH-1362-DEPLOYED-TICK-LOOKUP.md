@@ -1,7 +1,8 @@
 ---
 title: merge-cleanup deployed copy never finds tick, so published retirement preserves every checkout
-status: Proposed (1-INBOX — not yet active)
+status: Active (shared plan GH-1247)
 created: 2026-11-07
+updated: 2026-11-07
 owner: noelsaw1
 gh_issue: 1362
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1362
@@ -10,7 +11,7 @@ complexity: 2
 risk: 2
 effort: 2
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 reported_from: LTVera-Pandas
 harness_commit: f5fe2379
 non_goals:
@@ -27,9 +28,7 @@ goal: >
 
 # GH-1362 — merge-cleanup deployed copy never finds tick
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+Canonical active shared plan: [GH-1247](../2-WORKING/GH-1247-RETIRE-REMOTE-TAGS.md). The original incident details below are retained; plan, ratings, QA and verification are maintained in the shared plan. PR #1364 implements this issue; installed deployment remains post-merge.
 
 ## Symptom
 
@@ -64,12 +63,12 @@ start-task Step 9 published retirement cannot complete from the deployed copy. W
 > (`PROJECT/PDDA.md` → Discovery & spike phases).
 
 ### Checklist
-- [ ] Reproduce it in the intake repo (not just in the reporting repo)
-- [ ] Locate the responsible script/path — name the concrete write-set
-- [ ] Decide fix vs. guard-and-document; reuse an existing code path before adding one (`/ponytail`)
-- [ ] Set/correct the triage ratings; clear `ratings_provisional` once real
+- [x] Reproduce it in the intake repo (not just in the reporting repo)
+- [x] Locate the responsible script/path — name the concrete write-set
+- [x] Decide fix vs. guard-and-document; reuse an existing code path before adding one (`/ponytail`)
+- [x] Set/correct the triage ratings; clear `ratings_provisional` once real
 
 ### QA checklist — Phase 0
-- [ ] The repro is confirmed from the report, not assumed
-- [ ] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
-- [ ] The fix composes with the existing harness rather than adding a parallel path
+- [x] The repro is confirmed from the report, not assumed
+- [x] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
+- [x] The fix composes with the existing harness rather than adding a parallel path

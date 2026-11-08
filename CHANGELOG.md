@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 — GH-1247 / GH-1362 retirement preservation fixes
+
+### Fixed
+- Merge-cleanup now compares exact origin tag objects before ancestry and resolves deployed tick from trusted explicit/device configuration. Local-only/differing tags, query failures and unknown claims remain preserved. Shared plan and controls: `PROJECT/2-WORKING/GH-1247-RETIRE-REMOTE-TAGS.md`, `TESTS-RESULTS/2026-11-07+GH-1247/`. GH-1359 remains research-only: producer ownership map recorded, no schedule or broad disposal introduced.
+- Bet: exact recoverability removes the reported false preservation without weakening safety. Costly boundary because a false safe classification can enable retirement; stop on any false-safe control and revert the source change before deployment. Candidate manual controls passed; focused suite/final QA and final classified gate are recorded separately when completed. Installed deployment remains post-merge.
+
 ## 2026-11-07 — GH-1332 Item 2: jog retry-gate accepts relay-receipt-only tail
 
 - `utils/py/jog_run.py`: `jog retry-gate` now accepts candidate heads whose only commits past the prior execution head touch the lane's relay file (`marathon-system/<lane>/RELAY.md`), transcripts (`relay-system/`), or phase records (`ESCALATION.md`, `PHASE-INTERRUPTED.md`), matching Phase 0 / GH-505 candidate-ok semantics.
