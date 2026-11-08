@@ -41,7 +41,16 @@ Within that model:
 
 - `ROADMAP.md` is the index of current, completed, attempted, and deferred work
 - project detail lives in the individual `PROJECT/**` documents
-- a working doc is the canonical source of truth for that effort until it is completed, deferred, or superseded
+- a working doc is the canonical source of truth for that effort's content until it is completed, deferred, or superseded; whether the work is done is not the doc's to say (next item)
+- **the GitHub issue's state is the only authority for "done"** (GH-1333, decided 2026-11-03,
+  [decision record](../decisions/2026-11-03-gh1333-issue-state-authority.md)). The folder a `GH-<n>-` doc
+  sits in and its ledger row's section are views of that state, not separate assertions. When they
+  disagree, the issue wins and the view is corrected.
+- **readers find a `GH-<n>-` doc by its issue number** (the `gh_issue` key, else the `GH-<n>-` filename
+  prefix), never by a stored path, so moving a doc cannot break a reference. A stored path, such as the
+  ledger's `doc_path`, is a cache that the completion sweep (see Lifecycle) repoints. **Decided policy,
+  not yet true of today's readers:** several still match stored paths (for example the roadmap coverage
+  check). They change in #1340 Task 10.
 - `blank.md` placeholders are scaffolding and should be ignored by PDDA checks
 
 ## Required contract for active docs
@@ -164,6 +173,12 @@ effort must **not** become auto-selectable on the strength of that guess. So a p
 out of auto-selection until a human confirms the ratings and clears the flag — the same "route to a
 human" posture as `risk >= 4`.
 
+**Not enforced today (GH-1333).** No planner code reads `ratings_provisional`. `marathon_plan`, `jog`
+and `swarm_preflight` ignore it; only the `sentinel-overlay/` scripts read it. `marathon_plan` also uses
+`risk` only as a ranking weight, not as the `risk <= 2` hold. Until #1333 Phase 4 either implements these
+holds or retires them, they are manual. Whoever prepares a marathon must keep provisional and `risk > 2`
+captures out of its waves.
+
 This keeps the raw ratings canonical and queryable while letting the "what's the easiest *safe* thing
 to grab" logic live in one place that can evolve. (See the resolved `priority` note under
 [Proposed extensions](#proposed-extensions-not-yet-locked).)
@@ -243,7 +258,8 @@ stream lives in GitHub (machine-queryable state, labels, commit↔issue linkage)
 surface of record stays in `PROJECT/**`. This is the **issue-first SOP**; the bug-fix stance above
 states the principle, and this section owns the *format*. To prevent duplicate intake and forgotten
 work, every captured `GH-*.md` doc is also **parked immediately in `ROADMAP.md`** as a one-line queue
-entry until it is promoted, deferred, or closed.
+entry until it is promoted, deferred, or closed. **This is changing** (GH-1333 decision 6, 2026-11-04,
+policy only): the ledger row will be created when work starts, not at capture. See Lifecycle.
 
 **Floor (what needs an issue).** The operational test is **lines of code touched**: any change
 beyond a **2–3 line** fix opens a GitHub issue first, and its local plan doc is named after that
@@ -272,17 +288,50 @@ Lifecycle:
 
 - The `GH-` inbox doc is the **capture**, not the active-work doc. It carries no `## Status` table while
   it sits in `1-INBOX` (the inbox is the rough/untriaged bucket).
-- Capture time also adds a **one-line `ROADMAP.md` queue pointer** linking that inbox doc. This is a
-  temporary parking slot: it makes fresh intake visible to humans and automation before promotion,
-  which is the duplicate-prevention guard.
+- **The ledger row is created when work starts** (GH-1333 decision 6, implemented in GH-1340 / GH-1345).
+  Filing an issue does not insert a row in `releases.db`. The row, and the PRS rating stored on it,
+  appear at pickup/selection: `jog add`, `start-task`, `express`, `start-marathon`, or promotion to
+  `2-WORKING`. Until then the rating proposal lives in the issue body. Duplicate prevention is
+  enforced by open issue search at filing (`hq park --create`), capture doc reuse on `--gh-issue`
+  adoption, and `UNIQUE(repo_id, gh_number)` at row insertion.
+  - **The PRS appeal axis stays neutral 50 unless the operator supplies a value** (GH-1333 decision 5,
+    2026-11-04; unchanged practice). This is the 1-100 PRS rating stored on the ledger row
+    (`rated P/S/A/E`), not the 1-5 `effort` / `complexity` / `risk` / `phases` triage fields in frontmatter.
+  - **Selection counts as starting** (decision D-b): committing an issue to an actual execution batch or
+    marathon creates its row, on the primary checkout and before dispatch, or reuses an existing
+    proposal row and its rating. Ranking or shortlisting does not.
+  - **Existing rows stay** (decision D-a): the rows already in "Queue / parked intake" are proposals, not
+    a sign that work started. They are not migrated; revisit about a month after the cutover. This
+    exception covers only those rows.
 - When execution starts, **promote** it to `PROJECT/2-WORKING/` — keep the `GH-` prefix for provenance —
   and it must then satisfy the full active-doc contract (frontmatter, exact status table, QA gates if
-  phased), **carrying `gh_issue` forward**. The `ROADMAP.md` pointer is therefore required twice:
-  first as a queued parking entry at capture, then as an active-work ledger entry after promotion.
+  phased), **carrying `gh_issue` forward**. The pointer row is created once at pickup/selection.
   This is the concrete mechanism behind "GitHub issues are not a substitute for the local active-work
   doc once execution starts" (bug-fix stance above).
-- If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note; if it is
-  closed without work, move the doc to `PROJECT/4-MISC` and remove its queue pointer from `ROADMAP.md`.
+- If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note. If it is
+  closed, the completion sweep (next item) places the doc by the issue's `stateReason`, whether or not work
+  started; an existing ledger pointer is repointed, not removed.
+- **Completion moves come from one sweep, keyed on current issue state** (GH-1333). The sweep reads the
+  issue state of every `GH-<n>-` doc in `1-INBOX` and `2-WORKING`. The destination comes from the
+  closed issue's GitHub `stateReason`:
+  - `COMPLETED`: it moves the doc to `PROJECT/3-COMPLETED/`;
+  - `NOT_PLANNED`: it moves the doc to `PROJECT/4-MISC/`;
+  - anything else (`DUPLICATE`, a missing reason on an older issue, or a value it does not know): it
+    leaves the doc where it is and reports it for a person to place, rather than guessing a folder.
+
+  It repoints the ledger row's section and `doc_path` in the same commit. It is idempotent and reads
+  state when it runs, not when a PR merges. That way a manual close, a bulk close, a `Refs`-only lane
+  PR, or a merge in the GitHub UI is caught on the next run. It replaces the per-merge moves in
+  `wave_reconcile.py --pr N`. It runs from the steps that already run: the merge-cleanup batch and
+  `start-marathon` Step 2. It never closes an issue. **Until it lands**, `wave_reconcile.py --pr N`
+  still moves docs on a closing-keyword merge, and `issue-doc-sync` (H) flags what that misses.
+- **Closing an issue at merge** (GH-1333 decision 4, 2026-11-04; decided, not yet implemented, #1340
+  Task 7). The merge step closes an issue only when **either** a recorded independent review assertion
+  says the delivered lane covers the whole issue, **or** the issue has a non-empty `## Acceptance`
+  checklist with every item checked. Otherwise it leaves the issue open with one comment, "delivered, left
+  open because <reason>". A mention is never authority to close. Closing text never uses a negated keyword:
+  "does not close #N" still closes #N, so write `Refs #N` and "leaves #N open". **Until Task 7 lands**, a PR
+  writes a closing keyword only when one of the two conditions holds.
 
 A foreign-repo issue (not `origin`) is the rare exception: the `source:` URL disambiguates it, since the
 bare `GH-<number>` only guarantees uniqueness within the canonical repo.
@@ -459,7 +508,10 @@ Minimum behavior:
   or the `GH-<number>-` filename; silently skip docs that carry neither (they are not issue-tracked)
 - resolve each issue's state from the best available source (see gh-degrade below), then flag:
   - **(a)** issue **CLOSED** but the doc is still in `2-WORKING` -> `warn`, recommending the exact
-    `git mv` to `PROJECT/3-COMPLETED` (flag-only; a human runs the one reversible move)
+    `git mv` to `PROJECT/3-COMPLETED` (flag-only). The manual `git mv` is the fallback only **until the
+    GH-1333 completion sweep lands**, and needs a `releases roadmap repoint` in the same commit so the
+    ledger's `doc_path` does not go stale. Once the sweep exists, run the sweep instead, because it
+    repoints the ledger itself. It also covers `1-INBOX` docs, which this check does not yet scan.
   - **(b)** issue **OPEN** but the doc's `status:` lead word declares it done (`complete`, `done`,
     `shipped`, `fixed`, `closed`, `merged`, `resolved`, `landed`) -> `warn` to reconcile. Anchoring on the
     status **lead word** means a mid-status mention like `Active — Phase 0 complete` never false-flags.
@@ -469,12 +521,15 @@ Minimum behavior:
     every human reads that as done; the lead word is `active`. The phrase list stays short and literal —
     a general "does this prose mean done?" parse is the false-positive machine the lead-word anchor exists
     to avoid.
-  - **(c)** doc is in `3-COMPLETED` but the issue is **OPEN** -> `warn`, recommending `gh issue close <n>`.
-    The lifecycle bucket is a deterministic signal; the status prose is not. `3-COMPLETED/` *is* the
-    operator's assertion that the work is done, recorded in a path and verifiable with `test -f`.
+  - **(c)** doc is in `3-COMPLETED` but the issue is **OPEN** -> `warn`. Since GH-1333 the issue's state,
+    not the folder, says whether work is done. So (c) means either the doc moved early or the issue was
+    never closed after delivery. It is a prompt to whoever owns closing (the merge step, under the two
+    conditions of GH-1333 decision 4; see Lifecycle),
+    not evidence that the work is done; neither this check nor the sweep closes the issue.
     A doc in `3-COMPLETED` with a **CLOSED** issue is the fully reconciled end state: no finding.
 - `warn` (never `error` — does not block, even in `full`, mirroring `pdda.sh changelog`); **flag-only**,
-  never moves a file and never closes an issue
+  never moves a file and never closes an issue. The GH-1333 completion sweep (Lifecycle) is the one
+  mover; this check stays the detector.
 - gh-degrade: with `PDDA_ISSUE_SYNC_SOURCE=auto` (default) it uses live `gh` when that succeeds, else a
   cached state file (`PDDA_GH_STATE_CACHE`). `gh`/`cache` force one source. **A successful live lookup
   writes the cache** (best-effort, atomic), so the offline consumers — chiefly the `Stop` hook — have
@@ -485,9 +540,10 @@ Why warn-only + flag-only:
 - every drift class here is mechanical, so the check carries zero false-judgment risk; a false flag is
   one ignorable warn line and a missed flag just leaves today's manual reconciliation — both cheap, so
   warn-only never-blocks is the right calibration (same stance as `pdda.sh stale` and `pdda.sh changelog`)
-- closing an issue is a **human judgment** about whether the work is genuinely done, so no script does it.
-  The `Stop` hook names the wrap (`/pdda-eod`) when this check reports reconciliation drift; the skill
-  proposes, the operator confirms. Detect deterministically, act only with a yes.
+- this check is a **detector**: it never moves a file and never closes an issue. Closing belongs to the
+  merge step under the two conditions of GH-1333 decision 4 (see Lifecycle; not yet implemented, #1340
+  Task 7); anything outside those conditions stays a person's judgment. The `Stop` hook names the wrap
+  (`/pdda-eod`) when this check reports reconciliation drift, and the skill proposes what to reconcile.
 
 #### I. `pdda.sh governance`
 
@@ -973,17 +1029,21 @@ Coverage rule:
 - every active doc in `PROJECT/2-WORKING` must be reflected here by a pointer (a one-line ledger entry
   that links it), so the ledger never falls behind the working set. A working doc that legitimately
   should not appear opts out with `roadmap_exempt: true` in its frontmatter. This is the inverse of the
-  "no detail leaks in" rule above: nothing active goes *missing from* the roadmap either.
-- every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be reflected here as a
-  one-line **queued / parked** pointer until it is promoted, deferred out, or closed, so intake cannot
-  quietly disappear and later be duplicated.
+  "no detail leaks in" rule above: nothing active goes *missing from* the roadmap either. A doc that Jog
+  promoted on an execution branch counts as covered while the ledger still points at the same file name in
+  `PROJECT/1-INBOX/` and that inbox file is gone (GH-1332, #1339): Jog writes no ledger on a lane branch, and
+  the pointer is corrected when the issue is reconciled closed.
+- captured GitHub issue docs in `PROJECT/1-INBOX/GH-*.md` exist as unstarted capture docs without
+  requiring a ledger row at intake (GH-1333 decision 6, GH-1340 / GH-1345). The row is created once when
+  work starts (at pickup/selection: `start-task`, Jog, `start-marathon`, `10days`), while active `2-WORKING`
+  docs still require a pointer row in the ledger.
 
 How this is enforced (so it cannot quietly rot in either direction):
 - **deterministic (no leak in)** — `pdda.sh roadmap` errors on task checklists / `### Checklist` /
   `### QA checklist` headings and warns on size sprawl (runs hourly, free, no model needed)
-- **deterministic (no gap missing)** — `pdda.sh roadmap-coverage` errors when either an
-  active `PROJECT/2-WORKING` doc has no pointer here, or a captured `PROJECT/1-INBOX/GH-*.md` doc is
-  not parked here as a queue entry (honors `roadmap_exempt: true`)
+- **deterministic (no gap missing)** — `pdda.sh roadmap-coverage` errors when an
+  active `PROJECT/2-WORKING` doc has no pointer in the ledger (honors `roadmap_exempt: true`).
+  Captured `PROJECT/1-INBOX/GH-*.md` docs do not require a row until pickup.
 - **LLM** — `utils/pdda/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
   fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
 - the file itself carries a top banner restating the contract, so a human editing it sees the rule
@@ -995,10 +1055,6 @@ updated **at the end of each iteration**. It is the one narrative/provenance log
 prescribes — if an adopting repo kept its own ad hoc recap or run-observation notes before adopting
 PDDA, `CHANGELOG.md` supersedes them; PDDA does not require or name any such file itself (Principle #4 —
 one canonical place per fact). Durable Costly / one-way-door bets still earn a `decisions/` record.
-updated **at the end of each iteration**. It supersedes the retired RECAP convention as the running
-provenance/narrative log, and it also absorbs the run-specific compliance findings the retired
-REAL-AGENT-OBSERVATIONS convention used to collect. Durable Costly / one-way-door bets still earn a
-`decisions/` record.
 
 It should contain:
 
@@ -1017,8 +1073,6 @@ Maintained append-only:
   recommendation** — *especially* not when it turned out wrong. Correct a past entry by appending a
   dated correction, not by editing history. This append-only guarantee is the whole point of having one
   canonical narrative log instead of scattered ad hoc notes.
-  dated correction, not by editing history. This is the provenance guarantee the retired RECAP
-  convention used to carry.
 
 Recording a bet (when a change is consequential):
 
@@ -1029,10 +1083,6 @@ Recording a bet (when a change is consequential):
   separate run-specific compliance-observations doc if that's useful to it, but that's a local
   convention this contract neither requires nor names. (`AGENTS.md` principle #7 supplies the
   behavioral trigger — *record the bet*; this contract owns the *where and how*.)
-  entry suffices. Durable bets also earn a `decisions/` record; run-specific compliance findings go in
-  the iteration's own `CHANGELOG.md` entry. (`AGENTS.md` principle #7 supplies the behavioral trigger —
-  *record the bet*; this contract owns the *where and how*, so governance is not fragmented across the
-  two files.)
 
 How this is enforced (a nudge, not a gate):
 - **deterministic** — `pdda.sh changelog` **warns** (never `error`, so it never blocks —

@@ -1,5 +1,92 @@
 # Changelog
 
+## 2026-11-07 — GH-1365 proportional Jog closeout
+
+- Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.
+- Operator-selected bet: repeating approval ancestry at bookkeeping costs more than it adds to existing review, CI and post-merge QA. Costly shared-policy change; revert the implementation to restore the old rule while retaining honest historical records. Verification is recorded in the GH-1365 plan/evidence; policy adoption alone is not proof.
+
+## 2026-11-07 — GH-1247 / GH-1362 retirement preservation fixes
+
+### Fixed
+- Merge-cleanup now compares exact origin tag objects before ancestry and resolves deployed tick from trusted explicit/device configuration. Local-only/differing tags, query failures and unknown claims remain preserved. Shared plan and controls: `PROJECT/2-WORKING/GH-1247-RETIRE-REMOTE-TAGS.md`, `TESTS-RESULTS/2026-11-07+GH-1247/`. GH-1359 remains research-only: producer ownership map recorded, no schedule or broad disposal introduced.
+- Bet: exact recoverability removes the reported false preservation without weakening safety. Costly boundary because a false safe classification can enable retirement; stop on any false-safe control and revert the source change before deployment. Candidate manual controls passed; focused suite/final QA and final classified gate are recorded separately when completed. Installed deployment remains post-merge.
+
+## 2026-11-07 — GH-1332 Item 2: jog retry-gate accepts relay-receipt-only tail
+
+- `utils/py/jog_run.py`: `jog retry-gate` now accepts candidate heads whose only commits past the prior execution head touch the lane's relay file (`marathon-system/<lane>/RELAY.md`), transcripts (`relay-system/`), or phase records (`ESCALATION.md`, `PHASE-INTERRUPTED.md`), matching Phase 0 / GH-505 candidate-ok semantics.
+- Non-relay code edits and empty commits remain strictly refused before dispatch with exit code 2.
+- Gate retry dispatches and publishes the updated approved receipt for the new head, preventing unnecessary rebuilds after manual/out-of-band turn completions on stalled relays.
+- Existing suite `test/gh280-jog-marathon-adapter.sh` updated with K3, K3b, and K3c assertions (226/226 pass; zero new test suites added per GH-831).
+
+## 2026-11-07 — GH-1345 cutover: rows at pickup, decoupled intake, rating contract, discovery of no-row issues
+
+- **Task 2 (Intake decoupled from row insertion):** `hq park` (`--create` and `--gh-issue`), `/file-xyz-bug`, and `/idea` no longer insert rows into `releases.db` (`roadmap_items`) at filing. Unstarted intake creates the GitHub issue and `PROJECT/1-INBOX/GH-<n>-*.md` capture doc only. `utils/pdda/pdda.sh` (`check_roadmap_coverage`) updated so unstarted `1-INBOX` issue docs without a ledger row pass with info, while active `2-WORKING` docs without a row still fail with `rc=1` (falsification verified).
+- **Task 3 & 11 (Idempotent pickup writer & rating contract):** Implemented `releases roadmap pickup --issue-num N [--doc-path P] [--rated P/S/A/E] [--ovr O]` in `utils/py/releases_app.py`. Creates the ledger row exactly once at work start with genuine 1–100 ratings, adopting pre-existing proposals (D-a) and refusing placeholder values (`50/50/50/50` without distinct rationale, or all <= 5). Retrying pickup is idempotent and preserves existing ratings and `ovr`. Integrated into `express.py` hotfix ledger step (with real 70/60/50/85 rating), `jog_run.py` promotion fallback, and start skills (`start-task`, `jog`, `start-marathon`, `10days`, `workhorse`).
+- **Task 4 (Readiness & factory discovery for unstarted no-row issues):** Extended `_unregistered_record` and `Engine.compute()` in `utils/py/_marathon_plan.py` to evaluate unstarted issues from `1-INBOX` (and `2-WORKING`) by capture doc, Preflight Contract artifacts/writeset/zone, and PRS proposals. Discovers and admits fully specified issues into factory candidate pools and marathon waves with `state = 'ready'` without needing premature ledger rows. Shared `_unregistered_record` eliminates duplication in `harness.py`.
+- **Review Remediation (PR #1351 reviews):**
+  - Ordinary planner integration: `Engine.compute()` in `_marathon_plan.py` directly executes unregistered discovery, so the admission census, ordinary planning, and factory pilots all see unstarted no-row work in `computed['deduped']`.
+  - Express placeholder rejection: `utils/py/express.py` routes through `roadmap pickup` with explicit validation against `parse_rating(..., allow_placeholder=False)`, refusing placeholder scores like `50/50/50/50` or `<= 5` before row creation. Added regression check in `test/gh267-express-skill.sh` (127/127 pass).
+  - Atomic repoint on row reuse: `cmd_roadmap_pickup` in `releases_app.py` validates target doc existence and atomically repoints both `doc_path` and `raw_text` via `perform_write` (`roadmap-repoint`), ensuring `roadmap_render()` links stay consistent.
+  - Consistent rating policy: `parse_prs_proposal` strictly rejects `50/50/50/50` as a placeholder, aligning discovery and pickup so uniform-50 proposals are held as `unrated` rather than accepted and then rejected at start.
+- **Task 6 (Duplicate prevention):** Maintained three independent duplicate guards: issue search before creation, capture doc reuse in `hq park --gh-issue`, and database unique constraints (`UNIQUE(repo_id, gh_number)`) at pickup. Reworded `PROJECT/PDDA.md` lifecycle documentation accordingly.
+- **Task 12 (Structured body formatting & umbrella metrics):** `hq park --create` and `/file-xyz-bug` render standard `/idea` sections (`## Observed`, `## Acceptance`, `## Preflight Contract`, `## PRS proposal`). Added `umbrella` label handling to exclude multiphase tracking containers from atomic intake queues and factory discovery.
+- **Task 5 (Rollout instructions):** Documented that #1298 backlog supply step prepares issue text, capture doc, and contract only, creating zero rows at intake.
+- **Bet & Reversibility:** Costly (touches intake and row-creation machinery across hq.sh, pdda.sh, releases_app.py, harness.py, and express.py). Bet: Decoupling filing from ledger row creation removes the primary bottleneck causing 200+ issues to drift without ledger pointers, shifting rating authority to work selection/pickup where actual effort and scope are known. Assumption: Start paths (`start-task`, `jog`, `start-marathon`, `10days`, `express`) reliably run `roadmap pickup` so all active work gets a rated row upon entry to `2-WORKING`. Rollback: The database schema is untouched; legacy `releases roadmap add` and mirror sync remain functional; reverting these commits restores row creation at filing.
+- **Verification:** Existing covering suites green (`test/gh238-hq-releases-mode.sh`, `test/hq-park.sh` 23/23, `test/hq-park-synthesis.sh` 35/35, `test/gh267-express-skill.sh` 126/126, `releases_app check`, `pdda.sh roadmap-coverage`, `pdda.sh run` 0 errors, `gh308-frozen-twin-guard.sh`). No new test suites added per GH-831.
+
+## 2026-11-05 — GH-1348 express admits non-execution-authority skill docs under --docs-only with relay attestation
+
+- `utils/py/express.py` now admits non-execution-authority `skills/**/SKILL.md` files under `--docs-only` when accompanied by a validated `Approved` attestation receipt (`.git/relay-attest/*.json`) proving independent cross-model review of `HEAD`.
+- Changes to execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables, or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only`.
+- Unattested, unapproved, malformed, or post-review drifted skill files refuse with `rule=skill-unattested`.
+- `skills/2-daily/express/SKILL.md` updated to document active driver support for attested skill documentation.
+- Existing regression suite `test/gh267-express-skill.sh` extended with positive and negative controls (126/126 pass; zero new suites per GH-831).
+
+## 2026-11-04 — GH-1340 Task 1: GH-1333 decisions 4-6 written into the rules (policy only)
+
+- `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
+- It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
+- Decision 5 (the PRS appeal axis stays neutral 50 unless the operator sets it) is stated in PDDA.md, distinct from the 1-5 frontmatter triage fields.
+- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H is described as a detector, with closing pointed at decision 4. The "readers find docs by number" rule is marked as not yet true of today's readers (#1340 Task 10). The coverage rule mentions #1339's in-flight promotion case. Removes three duplicated older paragraphs in the CHANGELOG contract.
+- Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
+
+## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
+
+- `todo-list` has a new section 4, "Close the loop on GitHub". When a run ends, including on a halt or the 100-minute / 10-wake cap, it posts one comment to each issue the run touched. The comment covers what was done, the evidence, the decisions and why, what stays open, and the next step. A marker line (`<!-- todo-list closeout: <note-path> -->`) makes a rerun edit that comment instead of adding another. Tier A and B post with `gh` and record the URLs in the note; Tier C renders the text in chat to paste. A failed lookup or write is reported `unposted` or `unknown`, with no URL claimed. The step never closes or relabels an issue. Both run ends call it: section 3 step 4 and the watchdog wake prompt.
+- `start-task` Step 9 reuses that procedure with its own marker (`<!-- start-task closeout: <branch> -->`). It says "awaiting merge" only for a verified ready PR. A group that stops at plan QA or a blocked gate posts its blocker and resume action at that stop (Step 6). A `todo-list` run that drove a `start-task` does not comment twice on the same issue.
+- Instruction text only, no new tests (GH-831). Docs gate: `utils/pdda/pdda.sh run`. Plan QA: Codex Approved in round 2 (`relay-system/2026-11-04/gh1341-plan-qa.md`). Receipts: `TESTS-RESULTS/2026-11-04+GH-1341/`.
+- Bet: later sessions resume from the issue comment instead of re-deriving findings. Revisit if comments duplicate on reruns or show up on issues a run did not touch. Reversible: revert the commit. Posted comments stay, and their marker identifies them.
+
+## 2026-11-03 — GH-1333 decisions: issue state is the authority for "done"; docs found by number; one completion sweep
+
+- `PROJECT/PDDA.md` now says the GitHub issue's state is the only authority for "done". A doc's folder and its ledger section are views of that state. Readers find a `GH-<n>-` doc by its issue number, not a stored path.
+- Completion moves are to come from one idempotent sweep, keyed on current issue state. It covers `1-INBOX` and `2-WORKING`, repoints the ledger row, runs from merge-cleanup and `start-marathon`, and never closes an issue. It replaces per-merge moves.
+- Policy only. The sweep and the reader changes are not built yet; until they land, `wave_reconcile.py --pr N` and `issue-doc-sync` behave as before. Decision record: `decisions/2026-11-03-gh1333-issue-state-authority.md`. #1333's other decisions (who closes issues, the appeal axis, when a ledger row is created) stay open.
+- #1333 Phase 1 fixes:
+  - `express` no longer writes `rated 2/2/2/2` into the rows it parks. That token put the 1-5 scale into the 1-100 grammar and ranked as a real score (#1177). Those rows now stay unrated until someone rates them.
+  - `PROJECT/PDDA.md` and the `start-marathon` skill no longer claim the planner enforces `ratings_provisional`. Only `sentinel-overlay/` reads it, so the hold is manual for now.
+  - `SOP.md` no longer says the hosted `wave-reconcile.yml` reconciles automatically. It has been dispatch-only since #1131, and local reconcile is the writer. The `AGENTS.md` copy is #1160, PR #1326.
+  - Neither the `ratings_provisional` hold nor the `risk > 2` hold is enforced by the planner, which uses risk only as a ranking weight. `PDDA.md` and `start-marathon` now say both holds are manual.
+- Verification:
+  - `express` red/green: `parse_rating` of the old line gives `2/2/2/2`; the new line gives all NULL.
+  - `test/gh267-express-skill.sh` passed 113/113.
+  - `utils/pdda/pdda.sh run`: 0 errors before and after. The CHANGELOG-freshness warning clears, and no warning comes from this diff.
+  - Pre-push gates were green: the documentation gate, then the full gate (6939 s).
+  - Codex (GPT-6 Astra, medium) QA was Approved in round 2: `relay-system/2026-11-03/gh1333-pr1334-final-qa.md`.
+  - Receipts: `TESTS-RESULTS/2026-11-03+GH-1333/`.
+- Bet:
+  - Expected signal: once the #1333 sweep runs, `issue-doc-sync` warning (a) stays at 0 across two merge-cleanup batches, and no ledger `doc_path` points at a missing file.
+  - Revisit if the sweep moves a doc whose issue was reopened, or if a reader still resolves by stored path.
+  - Reversible: the policy is text. Revert these commits; the `express` change is one line.
+
+## 2026-11-02 — GH-1308 decisions 9–13: receipt policy, teardown origin check, regression cases
+
+- `validate.sh` writes a gate receipt on every green tier-3 run of a clean tree again, as it did before #1253. Only a run with no skipped suite and no environment fault is stamped `--scope full`, which pre-push reuse still requires. `marathon-closeout.sh` therefore no longer refuses a host whose run skipped a suite.
+- merge-cleanup `teardown_checkout` takes the primary and re-checks origin itself for a path under the primary's parent folder and outside the default roots, so a forged or stale `SAFE_REMOVE` record cannot remove another project's checkout.
+- Existing suites gained cases: `gh534_phase_a_tests.py` `TestSiblingRoot` (sibling-root refusals, same-origin scan filter, teardown origin check) and `test_deploy_skills.py` (the GH-1306 receipt-only update). No new suite was registered.
+- The #1274 PR description no longer reads `refresh or close #418 and #1098`, which `wave_reconcile` took as a closing clause and so held #1098 as delivered. Finding 12 (relay separator rendering) is documentation only: the fallback guarantees byte integrity, not identical rendering.
+- Evidence: `TESTS-RESULTS/2026-11-02+GH-1308/`.
+
 ## 2026-11-01 — GH-1309 skills-army-hq replaces a real legacy folder in an app root with the managed link
 
 - New `sync.py --migrate-legacy SKILL --archive-legacy` (preview first, then `--apply`). Until now `--adopt`, `--migrate` and `--migrate-from` refused any real directory in an app root, and `--archive-legacy` worked only for `--retire-trinity` with a matching source, so an installer-created folder (for example a stale `~/.claude/skills/xyz`) kept `sync.py --status` at exit 2 with no supported fix. For each enabled target holding such a folder it now requires a valid skill folder of that name, takes a verified ZIP, moves the folder to retained `.staging/<op>/retired`, and creates the owned link in one transaction. Its content may differ from the managed copy; the preview reports `matches_managed`. A run with nothing to migrate, an unknown skill, or no `--archive-legacy` refuses. Opt-in: no existing flow changes.

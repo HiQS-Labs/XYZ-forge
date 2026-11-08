@@ -258,12 +258,15 @@ An in-flight failing test or runner error is not automatically an urgent blocker
 2. **Batch same-seam scopes into one PR.** Five small PRs touching one seam is five
    gate + merge + reconcile cycles for what is really one unit of review. GH-291 shipped
    Scopes 1+5, 3+4, and 2 as three PRs; two would have carried the same review weight.
-3. **Reconciliation ownership and batching.** Hosted `wave-reconcile.yml` is the primary landing
-   writer on `development`, automatically reconciling docs, ledger, and views. If running local
-   reconciliation as fallback, the rule is to let hosted runs finish (or pass `--force-local-reconcile`
-   in emergencies) and batch multiple PRs (`wave_reconcile.py --pr <N> <M>`) rather than running
-   instantly per merge. Task branches must not commit routine view updates (`ROADMAP-DASHBOARD.md`,
-   `LEADERBOARD.md`).
+3. **Reconciliation ownership and batching.** Local `wave_reconcile.py --pr <N>` is the landing
+   writer on `development`; merge-cleanup runs it by default. Hosted `wave-reconcile.yml` has been
+   dispatch-only since GH-1127 / #1131, so nothing reconciles docs, ledger, and views after a merge
+   unless someone runs it. merge-cleanup reconciles each merged PR separately
+   (`merge_cleanup.py:784-797`). When you reconcile by hand, batch several PRs
+   (`wave_reconcile.py --pr <N> <M>`) rather than one run per merge. Never reconcile locally while a
+   dispatched hosted run is in flight; pass
+   `--force-local-reconcile` only in emergencies. Task branches must not commit routine view updates
+   (`ROADMAP-DASHBOARD.md`, `LEADERBOARD.md`).
 4. **Never write bare `#N` for another repo's issues in a PR body.** The reconciler
    resolves every `#N` against *this* repo and exits 6 when it cannot (GH-301 needed an
    offline-manifest escape mid-reconcile). Cross-repo references are written `GH-N`;

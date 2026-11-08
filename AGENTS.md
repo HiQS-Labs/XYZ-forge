@@ -51,6 +51,11 @@ Ask only when the proposed destination, account or purpose falls outside this au
 Exclude credentials and unrelated private data. This permission does not override platform or
 organization restrictions, authorize bypassing a denial, or change the builder-role defaults.
 
+**Outer-loop and factory runs** follow [#1328](https://github.com/HiQS-Labs/XYZ-forge/issues/1328);
+read its "Updated notes" first. Check a milestone against its three gates, repair routine and
+reversible defects during the run without asking (at most three rounds per blocker, then file an
+issue), and report a run with agent repairs as agent-assisted, never as unattended.
+
 ## Runtime default
 
 Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To
@@ -141,6 +146,14 @@ goes with it.
 
 **Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
 
+**Apply proportionate rigor.** Follow `GUIDING-PRINCIPLES.md` → "The North Star": before
+adding or retaining a blocking control, name the concrete failure it prevents and weigh that
+benefit against operator time, maintenance and recovery cost. Prefer the simplest adequate
+check; recommend simplifying a rule whose burden exceeds its value. Honor an explicit operator
+tradeoff within its stated scope, record it, and keep reviewed, tested and delivered versions
+truthful. Do not reintroduce a rejected restriction under a different name or treat the decision
+as permission to bypass unrelated controls.
+
 ### 7. Record only consequential bets
 
 If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
@@ -193,8 +206,8 @@ local change.
 - **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`; it is the
   Product Release System, [PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)): the GH-32
   release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
-  flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: park intake
-  with `releases roadmap add` (or `hq park`), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
+  flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: rows are created when work starts with
+  `releases roadmap add` (at pickup/selection; start paths route there automatically per decision 6), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
   `roadmap sync` is for legacy-mode repos only and no-ops here — it mirrors markdown and would delete
   `add`-parked rows. Never hand-edit `releases.sql` or `releases.db`. Merge conflicts on the dump have
   a one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a real

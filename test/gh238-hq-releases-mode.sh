@@ -48,6 +48,7 @@ cat << 'MOCK' > "$WORK/mock-gh.sh"
 #!/bin/bash
 if [ "$1" = "issue" ] && [ "$2" = "list" ]; then echo "[]"; exit 0; fi
 if [ "$1" = "issue" ] && [ "$2" = "create" ]; then echo "https://github.com/HiQS-Labs/XYZ-forge/issues/102"; exit 0; fi
+if [ "$1" = "issue" ] && [ "$2" = "view" ]; then echo '{"number":102,"title":"test req releases","url":"https://github.com/HiQS-Labs/XYZ-forge/issues/102","body":""}'; exit 0; fi
 exit 1
 MOCK
 chmod +x "$WORK/mock-gh.sh"
@@ -80,12 +81,12 @@ out="$(bash utils/hq/hq.sh park "repo-releases" "test req releases")"
 grep -q "ROADMAP sink: releases roadmap add" <<<"$out" || fail "releases-mode preview sink wrong"
 
 out="$(bash utils/hq/hq.sh park "repo-releases" "test req releases" --create)"
-grep -q "DB: pointer added via releases CLI" <<<"$out" || fail "releases write failed"
+grep -q "ledger:  row creation deferred to pickup" <<<"$out" || fail "releases write failed"
 
-# Check DB was written
-grep -q "test req releases" <<<"$(sqlite3 "$WORK/repo-releases/releases.db" "SELECT title FROM roadmap_items")" || fail "releases DB was not written"
+# Check DB was NOT written at filing (GH-1340 / GH-1345 decision 6: deferred to pickup)
+[ "$(sqlite3 "$WORK/repo-releases/releases.db" "SELECT COUNT(*) FROM roadmap_items")" = "0" ] || fail "releases DB was written at filing"
 
-# 3. Vendored .xyz/ layout — hq_releases_bin's fallback must find the CLI there
+# 3. Vendored .xyz/ layout
 mkdir -p "$WORK/repo-vendored/.xyz/utils/py"
 cp "$root/utils/py/releases_app.py" "$WORK/repo-vendored/.xyz/utils/py/"
 cd "$WORK/repo-vendored"
@@ -94,14 +95,12 @@ echo "ROADMAP_SOURCE=releases" > .pdda-mode
 python3 .xyz/utils/py/releases_app.py init >/dev/null
 cd "$root"
 out="$(bash utils/hq/hq.sh park "repo-vendored" "test req vendored" --create)"
-grep -q "DB: pointer added via releases CLI" <<<"$out" || fail "vendored .xyz/ layout write failed"
-grep -q "test req vendored" <<<"$(sqlite3 "$WORK/repo-vendored/releases.db" "SELECT title FROM roadmap_items")" || fail "vendored releases DB was not written"
+grep -q "ledger:  row creation deferred to pickup" <<<"$out" || fail "vendored .xyz/ layout write failed"
+[ "$(sqlite3 "$WORK/repo-vendored/releases.db" "SELECT COUNT(*) FROM roadmap_items")" = "0" ] || fail "vendored releases DB was written at filing"
 
-# 4. Failure mode (no DB) — scratch stays in $WORK, never the repo root (AGENTS.md)
-rm "$WORK/repo-releases/releases.db"
-! bash utils/hq/hq.sh park "repo-releases" "test req fails" --create >"$WORK/out" 2>"$WORK/err" || fail "failure mode did not abort"
-grep -q "releases roadmap add failed" "$WORK/err" || fail "did not print failure error"
-! grep -q "ROADMAP: pointer added" "$WORK/out" || fail "failure mode fell back to ROADMAP.md text append"
+# 4. Duplicate capture guard (Task 6): re-running capture for same issue reuses existing capture
+out="$(bash utils/hq/hq.sh park "repo-releases" --gh-issue 102 --create)"
+grep -q "reusing existing capture" <<<"$out" || fail "duplicate capture guard did not reuse existing capture"
 
 echo "  PASS: hq.sh tests"
 echo "== GH-238 ALL PASSED =="

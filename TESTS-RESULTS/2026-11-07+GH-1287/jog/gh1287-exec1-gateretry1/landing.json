@@ -1,0 +1,18 @@
+{
+  "issue": 1287,
+  "queue_gid": "jog-01M6W3M997K04BP4GBE9PQZN0T",
+  "execution_id": "gh1287-exec1-gateretry1",
+  "pr_number": 1361,
+  "merged_sha": "4a82bb8fe9bbc2590d1ef6e58c555bbad58bdecc",
+  "approved_head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+  "landed_head_sha": "50b60b19901254a6da50ef550ee4a6283c9d9bcf",
+  "reviewed_head_sha": "99aa9e262701d9b0947c6ac49289cd9e5200ac9d",
+  "reviewed_candidate_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+  "tested_head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "doc_path": "PROJECT/2-WORKING/GH-1287-FUZZ-NOVELTY-SIGNATURE.md",
+    "pr_number": 1361
+  }
+}

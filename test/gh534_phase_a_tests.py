@@ -566,7 +566,7 @@ class TestA5FreshInspection(unittest.TestCase):
                 on_merge()
             return True, "f" * 40  # GH-1140: execute_pr_merge returns (landed, verified_oid)
 
-        def fake_teardown(c, dry_run=True, safe_roots=None):
+        def fake_teardown(c, dry_run=True, safe_roots=None, primary=None):
             removed.append((c["name"], c["disposition"], "scan_disposition" in c))
             return True
 
@@ -650,6 +650,60 @@ class TestA5FreshInspection(unittest.TestCase):
             self.assertEqual(self._run()[1], [], "tick claims")
         with mock.patch.dict(os.environ, {LSOF_BIN_ENV: str(self.tmp / "no-lsof")}):
             self.assertEqual(self._run()[1], [], "lsof")
+
+
+# --- GH-722 / GH-1308: the primary's parent folder is a safe root only for same-origin checkouts ----
+
+class TestSiblingRoot(_Fixture):
+    """Pins #1305's sibling scan (same_origin gate, sibling_root refusals) and the teardown-time
+    origin check from GH-1308 #10. Fixture clones live in $TMPDIR, so the tmp dir is the sibling root."""
+
+    def setUp(self):
+        super().setUp()
+        self.tmp = self.tmp.resolve()
+        # The base fixture made tmp a default safe root; here it must be reachable only as the primary's parent.
+        p = mock.patch.object(scan_clones, "DEFAULT_SAFE_ROOTS", [])
+        p.start()
+        self.addCleanup(p.stop)
+        self.sibling = self.tmp / "sibling"
+        subprocess.run(["git", "clone", "-q", str(self.origin), str(self.sibling)], check=True, capture_output=True)
+        foreign_dir = self.tmp / "foreign-origin"
+        foreign_dir.mkdir()
+        _, self.foreign = make_origin_and_clone(foreign_dir)
+
+    def test_sibling_root_refuses_a_never_delete_root_and_its_ancestors(self):
+        primary = self.clone
+        with mock.patch.object(scan_clones, "DEFAULT_NEVER_DELETE", {self.tmp}):
+            self.assertIsNone(scan_clones.sibling_root(primary), "parent == NEVER_DELETE root")
+        with mock.patch.object(scan_clones, "DEFAULT_NEVER_DELETE", {self.tmp / "sibling"}):
+            self.assertIsNone(scan_clones.sibling_root(primary), "parent contains a NEVER_DELETE root")
+        with mock.patch.object(scan_clones, "DEFAULT_NEVER_DELETE", {self.tmp.parent / "elsewhere-never"}):
+            self.assertEqual(scan_clones.sibling_root(primary), self.tmp, "control: unrelated NEVER_DELETE root")
+
+    def test_scan_under_the_sibling_root_inspects_only_same_origin_checkouts(self):
+        found = {Path(c["path"]).name for c in scan_directories(
+            [self.tmp], primary_repo=self.clone, sibling_root=self.tmp)}
+        self.assertIn("sibling", found)
+        self.assertNotIn("foreign-origin", found)
+
+    def _record(self, path):
+        return {"path": str(path), "name": Path(path).name, "checkout_type": "standalone_clone",
+                "disposition": "SAFE_REMOVE_CLONE", "scan_disposition": "SAFE_REMOVE_CLONE", "parent_clone": None}
+
+    def test_teardown_refuses_a_foreign_origin_even_with_a_forged_safe_disposition(self):
+        roots = scan_clones.primary_safe_roots(self.clone)
+        self.assertIn(self.tmp, roots)
+        # The foreign checkout is deep enough to sit inside the sibling root; give it a direct child path too.
+        victim = self.tmp / "foreign-clone"
+        shutil.move(str(self.foreign), str(victim))
+        self.assertFalse(merge_cleanup.teardown_checkout(
+            self._record(victim), dry_run=True, safe_roots=roots, primary=self.clone))
+        self.assertTrue(victim.exists())
+
+    def test_teardown_accepts_a_same_origin_sibling(self):
+        roots = scan_clones.primary_safe_roots(self.clone)
+        self.assertTrue(merge_cleanup.teardown_checkout(
+            self._record(self.sibling), dry_run=True, safe_roots=roots, primary=self.clone))
 
 
 if __name__ == "__main__":

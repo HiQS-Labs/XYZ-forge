@@ -1,0 +1,61 @@
+{
+  "result": "PASS",
+  "candidate": "49777b82d1be9ac915e9cdced5db2adb6018607f",
+  "before": {
+    "sha": "49777b82d1be9ac915e9cdced5db2adb6018607f",
+    "row": [
+      [
+        "jog-01M6W3M997K04BP4GBE9PQZN0T",
+        "parked",
+        "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+      ]
+    ]
+  },
+  "after_first": {
+    "rows": [
+      [
+        "jog-01M6W3M997K04BP4GBE9PQZN0T",
+        "completed",
+        "landed via PR #1361 (merged 4a82bb8f)"
+      ]
+    ],
+    "counts": {
+      "op_receipts": 2655,
+      "work_events": 1328
+    }
+  },
+  "after_repeat": {
+    "rows": [
+      [
+        "jog-01M6W3M997K04BP4GBE9PQZN0T",
+        "completed",
+        "landed via PR #1361 (merged 4a82bb8f)"
+      ]
+    ],
+    "counts": {
+      "op_receipts": 2655,
+      "work_events": 1328
+    }
+  },
+  "repeat_stdout": "jog: GH-1287 landed from committed receipt \u2014 PR #1361, 4a82bb8f; publish owned post-merge writes before continuing\n",
+  "landing": {
+    "issue": 1287,
+    "queue_gid": "jog-01M6W3M997K04BP4GBE9PQZN0T",
+    "execution_id": "gh1287-exec1-gateretry1",
+    "pr_number": 1361,
+    "merged_sha": "4a82bb8fe9bbc2590d1ef6e58c555bbad58bdecc",
+    "approved_head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+    "landed_head_sha": "50b60b19901254a6da50ef550ee4a6283c9d9bcf",
+    "reviewed_head_sha": "99aa9e262701d9b0947c6ac49289cd9e5200ac9d",
+    "reviewed_candidate_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+    "tested_head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+    "completion_policy": "merged-pr",
+    "hosted_reconcile": null,
+    "local_reconcile": {
+      "doc_path": "PROJECT/2-WORKING/GH-1287-FUZZ-NOVELTY-SIGNATURE.md",
+      "pr_number": 1361
+    }
+  },
+  "landing_sha256": "8c83e6bee99c838171bafe63878125a3b60301292fa4605bd1704348c0e04e51",
+  "scope": "Live Jog closeout of already-merged PR1361; no new build or batch qualification"
+}
