@@ -259,3 +259,7 @@ follow-up commit; no reset or history rewrite. Final publication re-runs the nor
 ## Merge evidence
 
 - PR #1377 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1379 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
