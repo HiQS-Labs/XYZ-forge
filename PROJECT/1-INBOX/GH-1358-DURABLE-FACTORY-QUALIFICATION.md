@@ -12,7 +12,7 @@ doc_type: experiment
 
 | What was just completed | What's next |
 |---|---|
-| Implemented opt-in primary checkpoint publication; manual controls and existing 227-assertion adapter pass; launchd rehearsal entered publication and interruption recovery. | Finish scheduled evidence and final gate/QA; remaining discovery, observer, eligible-work and approved-landing transitions stay open. |
+| Scheduled GH1295 produced reviewed PR1371 and published its primary checkpoint. Independent GH1160 exposed a stale runner-ledger snapshot; red/green repair preserved its failure and counters. | Repaired scheduled window runs GH1160 final attempt then GH1216; parent owns per-PR landing approval. Discovery, observer and all-seven qualification remain open. |
 
 ## Scope
 
@@ -120,3 +120,20 @@ Marathon docs-tail push/PR. Independent configuration QA required post-test HEAD
 origin fetch/push URL, clean-tree, bare and hook verification before push; applied.
 No new runtime gate/supervisor. This preparation is agent-assisted; no merge,
 unattended, independent-observer or full-qualification claim.
+
+
+Deployment-snapshot repair: published intakef3ff5e9d is normally merged into the
+retained runner development and1160lane. This is the root setup correction for the
+failed coverage check, not a PDDA exception or alternate ledger writer. Old lane
+commit93164d4 remains an ancestor; attemptfile hash unchanged. Red1error/green0errors
+and frozen repair-window are committed at1a2ec9bb3. New scheduled order1160attempt2
+(final allowed), then1216attempt1; source runtime unchanged from5182a77c. No source
+full-gate repetition, cap reset, auto-merge or new qualifying claim.
+
+## Additive scope correction and independent observation — 2026-11-08
+
+GH1160 attempt2 created PR1372 and published primary checkpoint da2bc3de. Outer inspection found inherited GH1295 preparation documents; dispatch was halted. Additive624f52c8 removes that scope (normal docs gate166s), preserves all history/receipts and the2/2 counter, and corrects the PR description to AGENTS guidance only. Runner preparation d335e5429 now differs from published development only in GH1216 capture.
+
+A queued wake ran before launchd bootout and refused GH1216 promotion: python3 -c was parsed as missing file -c. Queue attempt1 is retained; no builder started. Shutdown interrupted checkpoint681ab30 publication; a recovery-only scheduled Jog wake published that exact checkpoint. Corrected same behavioral probe uses Python stdin file input under the deployment Python3.13 PATH; validator passes and actual unprefixed export fails the assertion. A bounded second dispatch remains within queue cap2; no third dispatch.
+
+The independent read-only launchd observer (15s interval,120s silence,1800s publication/10800s active ceiling, absolute12:30Z preparation bound) detected the absent supervisor and then active recovery. Initial system-Python deployment could not read Documents (TCC); use of the already-authorized deployment Python repaired observation. This is local process/scheduler observation only, with no host-loss/offhost-delivery claim. Independent QA required journal reread and best-effort supplemental heartbeat; both are applied.
