@@ -2,7 +2,7 @@
 gh_issue: 1356
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1356
 title: "Flywheel Batch 2: autonomous supervisor outerloop run across critical targets (#1296, #1288, #1287, #1254, #1344)"
-status: Proposed (1-INBOX — not yet active)
+status: Partial (attempt terminal; acceptance incomplete)
 created: 2026-11-07
 owner: unassigned
 doc_type: experiment
@@ -41,7 +41,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue #1356 created with complete supervisor outerloop prompt plan and target workload specification. | Initialize supervisor session and launch sub-session monitoring loop. |
+| Terminal attempt accounting committed: agent-assisted PARTIAL / NOT QUALIFIED; issue remains open. | Retain unmet acceptance and prior repair counters; see the closeout evidence matrix. |
 
 ## Idea
 
@@ -102,3 +102,7 @@ pri 90 / sev 80 / appeal 85 / effort 50 (validates core product flywheel on live
 ## Merge evidence
 
 - PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Terminal attempt accounting
+
+Agent-assisted partial / not qualified; NOT acceptance-complete. Issue remains open. Full live-acceptance matrix and preserved friction history: `TESTS-RESULTS/2026-11-08+GH-1356-closeout/SUMMARY.md`. No unmet criterion waived; no further #1344 attempt or stale #1345 dispatch.

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-08 — GH-1356 accounting and GH-1358 readiness
+
+- Recorded Batch 2 as agent-assisted partial/not qualified, retaining unmet criteria and repair history. Short Phase A readiness inspection stopped before deployed transitions: no established deployment/observer/workload/budget contract. All seven transitions remain unexercised; no overnight start. Independent QA approved accounting at 507765671; status-table finding corrected. Evidence: TESTS-RESULTS/2026-11-08+GH-1356-closeout/ and TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/.
+
+## 2026-11-08 — GH-1254 publication evidence
+
+- Scoped factory changes published in PR1369; independent final QA Approved and combined full gate 409/409 at 79c735156. One caller-width environment failure retained and resolved by removing the override (no source or gate change). Restart and overloaded deadline acceptance remain open; no live savings claim. Evidence: TESTS-RESULTS/2026-11-08+GH-1254/.
+
+## 2026-11-08
+
+- GH-1254: record explicit supervision declarations without claiming restart capability; add nullable cache token telemetry and opt-in bounded cold-work withholding using existing inbox/events/evaluator. Due deferred work uses deterministic selection. Easy rollback, no schema/scheduler change. Focused manual 21/21 and Python 21/21 pass; full gate/final QA pending. Restart, unconditional overloaded deadlines, and live savings remain unproven. See TESTS-RESULTS/2026-11-08+GH-1254/.
+
 ## 2026-11-08 — GH-1296 packet review repairs
 
 - Lanes with missing contracts or artifacts remain visible with reasons and without launch commands. Required contract fields and new-artifact probes are checked before offering commands. Packet checks now handle malformed contract paths without aborting the wave, preserve preflight artifact exemptions, and reject changed selected capture identities before staging. Parent traversal and missing frozen identities are explicitly not launchable.
