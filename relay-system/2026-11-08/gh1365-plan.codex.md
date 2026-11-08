@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -96,5 +96,18 @@ Handing off to Producer (task-parent) — add the missed Jog guidance update, th
 ### Producer · Round 1
 
 Disposition: Implemented. Added skills/2-daily/jog/SKILL.md landing paragraph to step 2; source confirms this exact consumer must change. Corrected publish_jog_receipt symbol spelling. No scope expansion or extra mechanism. Please recheck revised plan and approve if fit.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: The revised plan addresses the prior findings and fits the explicit operator policy with proportionate verification. Approval covers the plan, not implementation outcomes.
+swept file: yes
+
+- [Pass] Swept the whole revised plan, including pre-existing sections; no additional plan defect found. Step 2 now includes “skills/2-daily/jog/SKILL.md landing guidance” (plan:51), resolving the concrete missed consumer at skill lines 168-177. The corrected publisher name at plan:36 matches utils/py/jog_run.py:1077.
+- [Pass] The boundary remains narrow: plan:30,36-40 preserves publication/retry admission and committed receipt identity while removing post-merge approval ancestry. Source separates the publication caller (utils/py/jog_run.py:1129) from landing (:1344), validates the historical gate (:1178), and uses the existing queue writer (:1431). Plan:40 explicitly separates original review fields, tested head, final PR head and merge SHA, with absent review fields left null.
+- [Pass] Acceptance remains falsifiable and bounded: plan:42,53 requires nonledger and non-ancestor completion, original evidence/identity negatives, baseline refusal, exact attribution and replay idempotence in a disposable full clone. Existing landing checks at test/gh280-jog-marathon-adapter.sh:1000-1073 provide the scenario to update. Plan:28,46,52,58 records the tradeoff, rating rationale, guidance scope and rollback without adding a supplemental attestation.
+- [Unverified — needs clone run] No runtime acceptance claim is established here. Source-reading commands (sed, rg and nl) exited 0; no suite, executable fixture, Git operation or queue mutation was run. Implementation and final gate evidence remain required by plan:53-54.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
