@@ -1,0 +1,39 @@
+[
+  {
+    "argv": [
+      "/Library/Developer/CommandLineTools/usr/bin/python3",
+      "<CANDIDATE_CLONE>/utils/py/releases_app.py",
+      "--root",
+      "/private<EVIDENCE_ROOT>/ledger",
+      "init",
+      "--slug",
+      "HiQS-Labs/XYZ-forge"
+    ],
+    "rc": 0,
+    "stdout": "initialized /private<EVIDENCE_ROOT>/ledger/releases.db (slug 'HiQS-Labs/XYZ-forge', enforcement=lenient, generation 1); canonical dump at /private<EVIDENCE_ROOT>/ledger/releases.sql\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "/Library/Developer/CommandLineTools/usr/bin/python3",
+      "<CANDIDATE_CLONE>/utils/py/releases_app.py",
+      "--root",
+      "/private<EVIDENCE_ROOT>/ledger",
+      "roadmap",
+      "add",
+      "--issue-num",
+      "9001317",
+      "--issue-url",
+      "https://github.com/HiQS-Labs/XYZ-forge/issues/9001317",
+      "--title",
+      "Synthetic repair fixture",
+      "--created",
+      "2026-11-01",
+      "--doc-path",
+      "PROJECT/1-INBOX/GH-9001317-FIXTURE.md"
+    ],
+    "rc": 0,
+    "stdout": "added roadmap entry rmi-01M6CJY6BXP3A0T9FTVVT538A8 for GH-9001317\n",
+    "stderr": ""
+  }
+]

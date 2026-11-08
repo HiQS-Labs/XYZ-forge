@@ -1,0 +1,93 @@
+[
+  {
+    "case": "not-due",
+    "pass": true,
+    "calls": 0,
+    "agent_called": false,
+    "released_nocharge": true,
+    "tool": "idle",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.0
+  },
+  {
+    "case": "due",
+    "pass": true,
+    "calls": 1,
+    "agent_called": true,
+    "released_nocharge": false,
+    "tool": "probe",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.01
+  },
+  {
+    "case": "inbox",
+    "pass": true,
+    "calls": 1,
+    "agent_called": true,
+    "released_nocharge": false,
+    "tool": "note",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.01
+  },
+  {
+    "case": "mutated-v2",
+    "pass": false,
+    "calls": 1,
+    "agent_called": true,
+    "released_nocharge": false,
+    "tool": "note",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.01
+  },
+  {
+    "case": "mutated-v3",
+    "pass": false,
+    "calls": 1,
+    "agent_called": true,
+    "released_nocharge": false,
+    "tool": "idle",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.01
+  },
+  {
+    "case": "unchanged-v2",
+    "pass": true,
+    "calls": 1,
+    "agent_called": true,
+    "released_nocharge": false,
+    "tool": "note",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.01
+  },
+  {
+    "case": "unchanged-v3",
+    "pass": true,
+    "calls": 1,
+    "agent_called": true,
+    "released_nocharge": false,
+    "tool": "idle",
+    "decision_status": "raw-valid",
+    "tick_rc": 0,
+    "completed_with_verified_output": true,
+    "spent_before": 0,
+    "spent_after": 0.01
+  }
+]
