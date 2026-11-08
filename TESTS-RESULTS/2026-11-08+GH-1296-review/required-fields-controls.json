@@ -1,0 +1,192 @@
+[
+  {
+    "case": "missing-required-fields",
+    "baseline_blockers": [],
+    "bug_reproduced": true
+  },
+  {
+    "case": "valid-existing",
+    "contract": {
+      "target": {
+        "repo": ".",
+        "ref": "development"
+      },
+      "gate": "true",
+      "fix_probes": [
+        {
+          "type": "path_exists",
+          "path": "README.md"
+        }
+      ],
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": false,
+    "blockers": []
+  },
+  {
+    "case": "artifacts-only",
+    "contract": {
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "Preflight Contract missing required field: target"
+    ]
+  },
+  {
+    "case": "missing-target",
+    "contract": {
+      "gate": "true",
+      "fix_probes": [
+        {
+          "type": "path_exists",
+          "path": "README.md"
+        }
+      ],
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "Preflight Contract missing required field: target"
+    ]
+  },
+  {
+    "case": "missing-gate",
+    "contract": {
+      "target": {
+        "repo": ".",
+        "ref": "development"
+      },
+      "fix_probes": [
+        {
+          "type": "path_exists",
+          "path": "README.md"
+        }
+      ],
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "Preflight Contract missing required field: gate"
+    ]
+  },
+  {
+    "case": "missing-fix_probes",
+    "contract": {
+      "target": {
+        "repo": ".",
+        "ref": "development"
+      },
+      "gate": "true",
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "Preflight Contract needs at least one fix_probes entry"
+    ]
+  },
+  {
+    "case": "missing-target-repo",
+    "contract": {
+      "target": {
+        "ref": "development"
+      },
+      "gate": "true",
+      "fix_probes": [
+        {
+          "type": "path_exists",
+          "path": "README.md"
+        }
+      ],
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "Preflight Contract missing required field: target.repo"
+    ]
+  },
+  {
+    "case": "missing-target-ref",
+    "contract": {
+      "target": {
+        "repo": "."
+      },
+      "gate": "true",
+      "fix_probes": [
+        {
+          "type": "path_exists",
+          "path": "README.md"
+        }
+      ],
+      "artifacts": [
+        "README.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "Preflight Contract missing required field: target.ref"
+    ]
+  },
+  {
+    "case": "new-without-probe",
+    "contract": {
+      "target": {
+        "repo": ".",
+        "ref": "development"
+      },
+      "gate": "true",
+      "fix_probes": [
+        {
+          "type": "path_exists",
+          "path": "README.md"
+        }
+      ],
+      "artifacts": [
+        "new.md"
+      ],
+      "artifacts_new": [
+        "new.md"
+      ]
+    },
+    "expected_blocked": true,
+    "blockers": [
+      "artifacts_new entry has no matching path_absent probe: new.md"
+    ]
+  },
+  {
+    "case": "new-with-probe",
+    "contract": {
+      "target": {
+        "repo": ".",
+        "ref": "development"
+      },
+      "gate": "true",
+      "fix_probes": [
+        {
+          "type": "path_absent",
+          "path": "new.md"
+        }
+      ],
+      "artifacts": [
+        "new.md"
+      ],
+      "artifacts_new": [
+        "new.md"
+      ]
+    },
+    "expected_blocked": false,
+    "blockers": []
+  }
+]
