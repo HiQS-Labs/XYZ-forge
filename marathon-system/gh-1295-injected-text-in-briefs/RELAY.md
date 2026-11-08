@@ -1,6 +1,6 @@
 # Marathon Phase gh-1295-injected-text-in-briefs
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -185,3 +185,16 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-1295 in utils/py/harness.py and extended the existing test/gh174-harness-registry.sh only.
+
+- Recognize the six recorded instruction-override forms in issue title/body, capture text, and authored additions. Matching drafts are held with a fixed review reason; _build_proposal excludes them from provisional waves, preventing launch packet admission.
+- Preserve matching brief text as explicitly untrusted data, fenced with more backticks than any embedded run. Renderer fallback also recognizes override text in older brief dictionaries. Ordinary briefs retain their previous rendering and schema.
+- Extended the existing suite with a draft-to-proposal round-trip using all six frozen override canaries, an ordinary ready control, and a 20-backtick escape input. No new suite, gate, or test file.
+- Verification: Python AST parsing of harness.py and embedded round-trip code passed; bash -n of the existing suite passed after correcting shell quoting in the added fixture. No behavioral tests or full gate executed, following the packet's explicit no-test scope lock; harness verification remains required. Failure sensitivity is not yet witnessed.
+- Prior escalation inspected: timeout-no-artifact (exit 7), gate not run; no previous patch to preserve.
+- Reversibility: Easy; no persistent schema/state changes. This is bounded recognition of recorded override forms, not a general classifier or a model-safety guarantee.
+
+NEXT actor: agy (Reviewer). Please review the implementation and run the authorized verification through the harness.
