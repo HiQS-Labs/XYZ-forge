@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1160-exec2",
+  "generated_at": "2026-11-08T10:35:56Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1160",
+  "phase": "gh-1160-local-reconcile-startup",
+  "lane": "gh-1160-local-reconcile-startup",
+  "token": "MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN-2",
+  "attempt": {
+    "count": 2,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1160-local-reconcile-startup-2026-11-08",
+  "head_sha": "8eb0934c81bd822394b386181de7674fcdb75b59",
+  "reviewed_candidate": "8eb0934c81bd822394b386181de7674fcdb75b59",
+  "reviewed_head": "c8224dcf6cbf3cff825ced1ad23e62b6ce519a6f",
+  "added_sha256": "c44e0cd1a27d4a83bc2fe5f5e5b8a01ed71dcfde0c791aabf3a6b48740f06308",
+  "attest_path": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN-2.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash utils/pdda/pdda.sh run",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.xyz/receipts/8eb0934c81bd822394b386181de7674fcdb75b59.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": 1372,
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1372",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-08T10:25:41Z",
+    "finished_at": "2026-11-08T10:35:56Z"
+  }
+}
