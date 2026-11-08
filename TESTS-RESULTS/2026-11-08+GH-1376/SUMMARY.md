@@ -38,6 +38,10 @@ Ran `utils/pdda/pdda.sh run` in the separate disposable full clone `XYZ-forge-gh
 - The 100 reported warnings are existing unrelated issue-sync/governance/marathon-plan hygiene warnings; none was edited or suppressed. LLM doc-ready self-skipped because `PDDA_LLM_BIN` was not set; independent review is supplied by the relay, not that optional hook.
 - HEAD, canonical GitHub origin and `core.bare=false` matched before/after; the gate clone was clean after the run.
 
+## Final independent QA
+
+Codex final review through `relay-xyz` returned **Approved** in `relay-system/2026-11-08/gh1376-flywheel-final.codex.md`, reviewed head `9be787e6d99467b6950376d2664a2953bcaf5ee3`. It found no source correction, confirmed the seeded artifact equals the consumer source, resolved all eight owner paths, and independently matched the nonempty evidence hashes. The final publication gate and PR identity remain separate requirements; no merge, deployment or marathon dispatch is authorized by this review.
+
 ## Current state and next
 
-Source, consumer smoke and classified documentation gate pass. Final independent Codex QA is next. No deployment is requested or performed; Skills Army HQ status/list could not start because the resolved collection root `~/git-pulse-sync/Deployed Skills` is absent on this device. Source authoring and PR publication are unaffected.
+Source, consumer smoke, classified documentation gate and final independent QA pass. Publish through the normal pre-push gate and open the development PR, then verify its exact head and hosted checks. No deployment is requested or performed; Skills Army HQ status/list could not start because the resolved collection root `~/git-pulse-sync/Deployed Skills` is absent on this device. Source authoring and PR publication are unaffected.

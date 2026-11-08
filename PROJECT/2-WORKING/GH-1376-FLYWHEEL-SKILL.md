@@ -2,7 +2,7 @@
 gh_issue: 1376
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1376
 title: "Add flywheel skill for adaptive Jog orchestration"
-status: Active — final verification pending
+status: Active — final QA Approved; publication pending
 created: 2026-11-08
 updated: 2026-11-08
 owner: parent orchestrator
@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved in `relay-system/2026-11-08/gh1376-flywheel-plan.codex.md`; authored the flywheel skill and index row. Consumer smoke passed 12/12 required segments and 8/8 owner links. | Run the classified documentation gate and final independent Codex QA, then publish the development PR. |
+| Plan and final Codex QA Approved; consumer smoke passed 12/12 required segments and 8/8 owner links; integrated PDDA gate passed with zero errors. Evidence is committed under `TESTS-RESULTS/2026-11-08+GH-1376/`. | Publish through the normal pre-push gate, open and inspect the development PR, then await per-PR merge approval. Deployment remains separate. |
 
 ## Idea
 
