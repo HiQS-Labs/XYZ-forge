@@ -24,7 +24,7 @@ goal: >
   Borrow declared supervision (FACTORY_SUPERVISED=1) and cache-warmth dispatch into the #1248 outer loop primitive.
 ---
 
-## Current bounded clock correction — GH1358 continuation
+## Clock correction implementation — GH1358 continuation
 
 This is the only current implementation scope; retain historical cache/restart work below.
 User explicitly authorized the demonstrated timing correction; broader1254 acceptance stays OPEN.
@@ -46,7 +46,7 @@ fullpushgate. Do not run test/*.sh/validate.sh in thisrunner orlinkedworker. No 
 The worker may use the puremanualcontrols via python3; no Git commands or scopeexpansion.
 
 
-## Current bounded repair — 18:45Z
+## Historical bounded repair — 18:45Z
 
 The clock source already has independent Codex and Agy approval; preserve that implementation. Two scheduled gate-only checks failed existing gh390 MagicMock RSS fixture because500000calls can reach its safety ceiling before one-second watchdog sampling; diagnostic bash-x rerun passed with ceiling/496MBsample. This is final builder attempt2/2; no morebuilder afterthis.
 
@@ -56,10 +56,10 @@ Actual gate wallcap and minimumremaining reserve900s, lower than prior1200/1800;
 
 ## Acceptance
 
-- [ ] The existing Marathon gate counts sleep-inclusive wall elapsed without subtracting monotonic elapsed after a backward clock adjustment.
-- [ ] Late running or completed children are refused with exit 108 before accepting success; a reaped child is never signalled.
-- [ ] Normal success, genuine non-expired failure, disabled wall caps and existing CPU/RSS behavior are preserved.
-- [ ] Recorded old-code red/new-code green controls and existing gh390/gh280 checks pass in a disposable full clone, followed by the normal full push gate; no new suite or gate machinery.
+- [x] The existing Marathon gate counts sleep-inclusive wall elapsed without subtracting monotonic elapsed after a backward clock adjustment.
+- [x] Late running or completed children are refused with exit 108 before accepting success; a reaped child is never signalled.
+- [x] Normal success, genuine non-expired failure, disabled wall caps and existing CPU/RSS behavior are preserved.
+- [x] Recorded old-code red/new-code green controls and existing gh390/gh280 checks pass in a disposable full clone, followed by the normal full push gate; no new suite or gate machinery.
 
 No wholeissueclosure claim. Actualunknown modelusage remainsunknown.
 
@@ -68,6 +68,16 @@ no1254Jogrow beforethiscontinuation, so this is firstdispatch ofthe newdemonstra
 not reset of oldtaskrepairs. Old1254initializer/publication/lifecycle repair counters remain.
 Worker wall/idle900s, relaybase5/hardmax10 qualifyingprogress, gatewall1800s unchanged.
 Fixed outerdeadline19:06:18Z; atdeadline no newwork, preserve/report anyactive taskidentity.
+
+## Current recovery verification — separate window
+
+The original rehearsal ended with a720-second gate timeout and no full pass by19:06:18Z. New user-authorized recovery runs20:05:42–21:35:42Z with an explicit1800-second gate cap. This does not extend or rewrite the original rehearsal. Existing satisfied-lane retry skipped rendering/reseeding and builder execution. The unchanged candidate8d541d012 passed the normal full gate408/408 in536s; guard elapsed544s, exit0. Transcript-only resultheadfc7896aae is bound to reviewed sourcebd4b0462. Prior manual7/7, gh39023/23 and adjacent227/227 evidence was reused.
+
+The post-run preservation assertion caught existing success-path deletion of the lane attempt file before primary checkpoint publication. Its exact original two records were restored from hashed evidence; no new builder or counter reset is authorized. This is disclosed agent-assisted recovery. The generated approved receipt reports null attempt count on this gate-only path; the preserved file is the count evidence. No historical receipt was rewritten.
+
+Normal full verification ran in a separate disposable full clone. The existing automatic receipt publisher then ran its documentation-only push in the retained full runner; no mutation-heavy suite ran there. This falls short of the recovery instruction that all gates use disposable clones and is disclosed; subsequent documentation publication uses the disposable gate clone. No bypass or new gate machinery.
+
+Exact receipts, original failed result, full log and provenance are in `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/`. Independent Codex plan/final code/fixture/recovery reviews and Agy implementation approval retained. Physical same-host sleep blindness remains; enforcement is awake/on-resume only. No schedules, PhaseB or merge.
 
 ## Key concepts
 
@@ -78,7 +88,7 @@ Fixed outerdeadline19:06:18Z; atdeadline no newwork, preserve/report anyactive t
 
 | What was just completed | What's next |
 |---|---|
-| PR1369 merged with user approval; independent QA Approved, integrated full gate 409/409, reconciliation published. | GH1254 remains OPEN: restart verification, overloaded deadlines and observed live savings require follow-up. |
+| Clock correction independently reviewed; controls7/7, main23/23, adjacent227/227 and full408/408 passed in separate disposable verification clones. | Review and obtain per-PR approval for the unmerged clock delivery. GH1254 remains OPEN: restart verification, overloaded deadlines and observed live savings are still unmet. |
 
 ## Idea
 
