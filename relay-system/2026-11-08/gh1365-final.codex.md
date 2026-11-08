@@ -124,4 +124,8 @@ status: Approved
 reviewed-head: e13045ce2ebee79955be5b6c3e75a6e1883f2ac0
 added-range: 7196+4257
 added-sha256: 4f807dcb5dd256f8d673c860f90530d910fef19564a8330b6acb30a71a79d413
+### Producer · Closeout disposition
+
+Implemented the optional wording nit: three Jog summaries now say hosted or local reconciliation, consistent with the reviewed landing paragraph. No implementation changes after approval. Documentation gate will verify this text/evidence-only follow-up; original approval remains attributed to its recorded candidate.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

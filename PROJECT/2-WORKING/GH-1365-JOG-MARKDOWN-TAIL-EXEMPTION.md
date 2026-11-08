@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implementation and isolated 227-check suite plus 9-case manual replay passed | Final independent QA and classified full gate, then publication |
+| Plan/final QA Approved; focused and full gates plus manual replay passed | PR publication, hosted checks and merge handoff |
 
 ## Decision and requirements
 
@@ -63,4 +63,4 @@ Pending observed implementation results; no lesson claimed from policy adoption 
 
 ## Verification results
 
-Evidence: `TESTS-RESULTS/2026-11-08+GH-1365/`. Main and adjacent CLI paths pass, original code fails on the actual historical tail, and non-ancestor fixture completes without special approval. Invalid inputs leave ledger unchanged. Code/doc changes are a full tier-3 route; final gate follows QA. NO_ENTRY for shared lessons pending evidence of broader operational effect.
+Evidence: `TESTS-RESULTS/2026-11-08+GH-1365/`. Main and adjacent CLI paths pass, original code fails on the actual historical tail, and non-ancestor fixture completes without special approval. Invalid inputs leave ledger unchanged. Code/doc changes classified tier 3; full pre-push gate passed 409/409 at fc66c116, after final QA. NO_ENTRY for shared lessons pending evidence of broader operational effect.

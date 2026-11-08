@@ -4,7 +4,7 @@
 - Manual command: `python3 TESTS-RESULTS/2026-11-08+GH-1365/manual-replay.py SOURCE_CLONE NEW_DISPOSABLE_WORK_DIRECTORY`. Requires Python dependencies requests/PyYAML, Git and the source commit. The script clones its source, uses a local bare mirror for fetch, and captures every GitHub operation locally. No production function is replaced and no live issue is closed/commented.
 - Main path uses actual PR #1361 head and its committed #1287 receipt. Baseline cff1d0a16 refuses the nonledger tail; candidate succeeds and records the original review head, review candidate, tested head, PR head and merge separately. Adjacent repeat preserves bytes and counts. Five invalid-input cases refuse without ledger changes. A self-consistent *fixture* receipt on an unrelated commit also completes a parked queue; it is not evidence of an actual review of that constructed commit.
 - `manual-results.json` contains the nine outcomes and final historical landing record. `provenance.jsonl` names source revisions and the runner hash. GitHub snapshots are recorded inputs, not a claim that live issue state is unchanged.
-- Full classified gate remains pending until final QA; focused checks are not a full-gate claim. No live queue was modified. Plan QA approved in round 2 after adding the missed Jog instruction consumer.
+- Final Codex QA Approved in round 1. Full classified pre-push gate passed 409/409 checks (including 21 Python checks), 528 seconds, at fc66c1166301e37107e09d1523e181194cf5224b; exact receipt retained. HEAD and local Git config unchanged. Subsequent changes are only evidence and the reviewer-requested reconciliation wording correction; runtime/test code unchanged. No live queue was modified. Plan QA approved in round 2.
 
 ## Component observations
 
