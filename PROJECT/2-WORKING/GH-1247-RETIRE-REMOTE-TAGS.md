@@ -83,15 +83,15 @@ the checkout is preserved and can be removed by hand.
 > (`PROJECT/PDDA.md` → Discovery & spike phases).
 
 ### Checklist
-- [ ] Reproduce it in the intake repo (not just in the reporting repo)
-- [ ] Locate the responsible script/path — name the concrete write-set
-- [ ] Decide fix vs. guard-and-document; reuse an existing code path before adding one (`/ponytail`)
-- [ ] Set/correct the triage ratings; clear `ratings_provisional` once real
+- [x] Reproduce it in the intake repo (not just in the reporting repo)
+- [x] Locate the responsible script/path — name the concrete write-set
+- [x] Decide fix vs. guard-and-document; reuse an existing code path before adding one (`/ponytail`)
+- [x] Set/correct the triage ratings; clear `ratings_provisional` once real
 
 ### QA checklist — Phase 0
-- [ ] The repro is confirmed from the report, not assumed
-- [ ] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
-- [ ] The fix composes with the existing harness rather than adding a parallel path
+- [x] The repro is confirmed from the report, not assumed
+- [x] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
+- [x] The fix composes with the existing harness rather than adding a parallel path
 
 ## Merge evidence
 
@@ -101,7 +101,7 @@ the checkout is preserved and can be removed by hand.
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved; both fixes implemented | Disposable-clone verification and final QA |
+| Plan/final Codex QA Approved; focused controls and existing suite passed | Full gate passed; publication and safe closeout |
 
 ## Shared plan — #1247, #1362, coordinating #1359
 
@@ -109,8 +109,8 @@ Base `3bf02f73ce0cb11a82f970357209980f808ccb3c`. Clone `XYZ-forge-gh1247-retire-
 
 | Issue | Scope / acceptance | Dependencies | Rating and rationale | State |
 |---|---|---|---|---|
-| [#1247](https://github.com/HiQS-Labs/XYZ-forge/issues/1247) | Exact origin tag-object equality permits classification; local-only/different/query-failure preserve | None | 75/60/50/80: recurring retention, recoverable operator burden, neutral appeal, narrow fix | Plan QA |
-| [#1362](https://github.com/HiQS-Labs/XYZ-forge/issues/1362) | Deployed scanner resolves trusted configured tick, unknown claims preserve | Same scanner | 75/60/50/85: deployed closeout blocked, workaround exists, neutral appeal, small extension | Plan QA |
+| [#1247](https://github.com/HiQS-Labs/XYZ-forge/issues/1247) | Exact origin tag-object equality permits classification; local-only/different/query-failure preserve | None | 75/60/50/80: recurring retention, recoverable operator burden, neutral appeal, narrow fix | QA and gate passed; awaiting PR |
+| [#1362](https://github.com/HiQS-Labs/XYZ-forge/issues/1362) | Deployed scanner resolves trusted configured tick, unknown claims preserve | Same scanner | 75/60/50/85: deployed closeout blocked, workaround exists, neutral appeal, small extension | QA and gate passed; awaiting PR |
 | [#1359](https://github.com/HiQS-Labs/XYZ-forge/issues/1359) | Research/coordination only, bounded transition map and remaining gaps | Findings from both fixes | 70/45/50/45: retain issue proposal, recurring burden, no loss observed, neutral appeal, bounded audit | Broader work remains open |
 
 ### Recon, solution-fit and blast radius
@@ -135,7 +135,7 @@ Costly: a false safe verdict can permit downstream retirement. Source rollback i
 - [x] Plan independent Codex QA approved before production edits (relay-system/2026-11-07/gh1247-plan.codex.md).
 - [x] Both issues reproduced on base; fixed main path and adjacent/negative controls verified.
 - [x] Local-only/different tags, query failures, unknown/active claims remain preserved.
-- [ ] Existing suite, final independent QA and classified gate pass; receipts retained.
+- [x] Existing suite, final independent QA and classified gate pass; receipts retained.
 
 ### Recurrence and rating evidence
 

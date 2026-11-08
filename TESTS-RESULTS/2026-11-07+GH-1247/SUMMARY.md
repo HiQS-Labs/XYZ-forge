@@ -6,6 +6,6 @@ The manual probe exercises the actual ref classifier and claim inspector against
 
 Existing `test/gh436-merge-cleanup.sh` passed on the candidate in a separate full clone. Its fixture paths are redacted in gh436.log. Repository identity remained unchanged. An earlier baseline-suite attempt overlapped a checkout change and is excluded from evidence.
 
-Final independent review and classified push gate are pending. The classifier selected tier 3 for the scanner change. No new suite, test registry entry or gate was added. `manual-probe.py` is a retained manual reproduction artifact.
+Final independent review Approved (relay-system/2026-11-07/gh1247-final.codex.md); full classified push gate passed on 5d7edd631138bd4fc4b30c610cd66afcc0d9067f in 660 seconds, with stable clone identity. Documentation closeout follows without production changes. Live issue bodies for #1247/#1362/#1359 were re-read successfully by the producer on 2026-11-07, confirming the scoped acceptance and research-only boundary. The classifier selected tier 3 for the scanner change. No new suite, test registry entry or gate was added. `manual-probe.py` is a retained manual reproduction artifact.
 
 Lessons decision: NO_ENTRY. Tag identity and deployed lookup each helped in controlled reproductions, but this task adds no broadly new operating lesson beyond the existing preservation contract.
