@@ -210,3 +210,7 @@ No generalized autonomy or productivity-improvement claim from this single pilot
 Final independent review Approved in relay-system/2026-11-01/gh1317-final.md.
 See pilot/SUMMARY.md for results, bounds, process deviations and remaining full-gate
 qualification. All eight cases were approved/exercised (case 8 is controlled bypass).
+
+## Merge evidence
+
+- PR #1318 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
