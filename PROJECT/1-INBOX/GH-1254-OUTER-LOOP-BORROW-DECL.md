@@ -143,3 +143,10 @@ No PR exists yet. No full gate has started. No #1358 run or #1344 retry.
 
 Final QA Approved round 1, receipt relay-system/2026-11-08/gh1254-final.codex.md.
 Primary ownership released after accepted-start 035802c19aea8724f96193edae611389376839ad.
+
+### Gate and integration progress
+
+Original full gate passed 409/409 at 522155356. PR1324 and reconciliation through 248ecec4d
+are now included. Combined focused manual21/Python21/packet9 checks pass. Code QA remains
+applicable to unchanged GH1254 runtime; upstream packet changes carry their independent receipts.
+Combined-SHA publication gate pending; peer PR1316 currently occupies the host. No bypass.

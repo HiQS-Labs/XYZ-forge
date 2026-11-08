@@ -16,3 +16,11 @@ Restart allowed/refused behavior and launchd restart/declaration consistency are
 Unconditional execution by deadline under overload remains OPEN. A single-action tick cannot execute two independent notes at the same deadline. The existing rules evaluator now prioritizes due deferred inputs; a separate scheduler was not added. Budget, pause and tool failures retain their existing restrictions.
 
 Final independent QA Approved at 7366edcd3; full applicable gate is pending parent host release. No #1356 completion claim.
+
+## Integration checkpoint
+
+Original candidate 522155356 passed full validate.sh 409/409, Python21/21, identity unchanged.
+PR1324 landed while that gate ran; safely merged runtime 2bed0a59b and reconciliation 248ecec4d.
+Only changelog conflict; retained both entries. Runtime overlap is packet validation, not cache/supervision.
+Combined candidate 0cee95e21 passes repeated manual21, Python21 and inherited packet9 controls.
+Normal combined-SHA push gate pending host availability; no reuse of a receipt for another SHA.
