@@ -1,6 +1,6 @@
 # Marathon Phase gh-1254-outer-loop-borrow-decl
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -212,3 +212,18 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented the bounded GH1358 clock correction only in `utils/py/marathon_drive.py`, inside `run_pre_advance_gate`.
+
+- Elapsed enforcement and duration logging now use `max(0, monotonic elapsed, wall elapsed)`: host sleep counts, and backward wall adjustments cannot subtract awake elapsed. Forward wall jumps conservatively expire.
+- Deadline enforcement follows the initial completion poll and the group-missing completion recheck, including time spent sampling RSS. Late completion returns existing guard exit 108 before baseline/success handling. A fresh poll precedes the running-child kill; reaped children are refused without signalling.
+- Existing CPU attribution, RSS cap, disabled wall-cap behavior, unguarded escape hatch, and baseline exclusions remain in place. No tests, dependencies, or gate machinery added.
+
+Verification: ran the existing pure manual control script `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py` against the original source with `--expect-old-red`, then against the modified source normally. Original code failed four expiry cases (sleep-running, sleep-child-already-exited, backward-wall-monotonic-expiry, group-missing-late-completion); modified code passed all seven cases. Running expiry recorded one kill; completed expiry cases recorded zero kills. Normal success returned 0, genuine nonexpired failure returned 7, disabled wall cap returned 0. Both commands exited 0 under their respective expectations. Ephemeral outputs are `.relay-scratch/clock-old.json` and `.relay-scratch/clock-new.json`; these are not committed evidence or gate receipts.
+
+No Git commands or shell suites/full gates run. Required disposable-clone gh390/gh280 and normal push gate remain the harness's responsibility; acceptance is not yet fully verified. Only the artifact and this relay file changed. The required NEXT metadata line is updated; all other prior relay content is preserved.
+
+handing off to agy — agy, take your turn.
