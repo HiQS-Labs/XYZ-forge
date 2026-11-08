@@ -92,4 +92,12 @@ Whole-file sweep: read the policy files, complete active plan, evidence records 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-08T04:59:54Z
+task: gh1366-refresh
+reviewer: codex
+status: Approved
+reviewed-head: f8554659a128fc9d10412407d5d63219917ca384
+added-range: 6292+3308
+added-sha256: 4facc69f174a147cd355623d30c79238d178af5dee07a46c902efe47481bd9c2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
