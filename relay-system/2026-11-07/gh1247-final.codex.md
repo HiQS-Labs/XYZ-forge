@@ -85,4 +85,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. The producer/harness owns the final gate and relay-file commit.
 
+
+### Attestation · relay-drive — 2026-11-08T00:00:09Z
+task: RELAY-gh1247-final
+reviewer: codex
+status: Approved
+reviewed-head: 9ebb1ac02dfe9a02c4618c15448dcc6d341aa90e
+added-range: 6817+4784
+added-sha256: da5a744b65a0a3e167ce0c3afd0f389226cf20d3a748effd251b497734df368c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
