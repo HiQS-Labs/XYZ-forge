@@ -1,8 +1,8 @@
 ---
 title: Jog queue completion with honest version attribution
-status: Verification
+status: Complete
 created: 2026-11-07
-updated: 2026-11-07
+updated: 2026-11-08
 owner: codex
 goal: Record delivered work without requiring exact approval ancestry at queue closeout.
 gh_issue: 1365
