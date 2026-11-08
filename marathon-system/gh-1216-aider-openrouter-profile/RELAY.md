@@ -1,5 +1,5 @@
 # Marathon Phase gh-1216-aider-openrouter-profile
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1216-AIDER-OPENROUTER-PROFILE-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -191,3 +191,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Verification: inspected the edited source and suite text. No tests or gates run, following this packet's scope lock; no git commands run. Harness must execute the existing covering suite in its disposable full clone. The bare-profile assertion is expected to fail against the pre-fix exporter; that red control has not been witnessed during this restricted turn.
 - Only the two files above and this relay file were edited. `test/gh450-model-catalog-pin.sh` and `test/_setup.sh` required no changes.
 - Ready for independent agy review; harness verification remains pending.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+- Swept all four artifact files in full (`utils/py/profile_resolve.py`, `test/gh346-profile-resolve.sh`, `test/gh450-model-catalog-pin.sh`, `test/_setup.sh`) and found no pre-existing defects or new regressions.
+- Verified Criterion 1 & 2 via isolated non-mutating CLI probes under `.relay-scratch/tmp` (`PYTHONDONTWRITEBYTECODE=1 XYZ_DEVICE_CONFIG_PATH="$TMPDIR/aider.json" bash relay-automation/resolve-profile.sh <profile> --env|--json`, exit 0):
+  - Bare named Aider/OpenRouter profile (`"model": "qwen/qwen3.8-max"`) emits `export AIDER_MODEL='openrouter/qwen/qwen3.8-max'`.
+  - Already-prefixed named Aider/OpenRouter profile (`"model": "openrouter/qwen/qwen3.8-max"`) emits `export AIDER_MODEL='openrouter/qwen/qwen3.8-max'` (no double prefix).
+  - Named Aider profile on another gateway (`"gateway": "openai"`) emits `export AIDER_MODEL='qwen/qwen3.8-max'` unchanged.
+  - Other lanes (`deepseek` with `openrouter` and `commandcode` with `self`) emit their models unchanged (`DEEPSEEK_MODEL='qwen/qwen3.8-max'`, `COMMANDCODE_MODEL='zai-org/glm-5.3'`).
+  - Raw `--json` output on the bare Aider/OpenRouter profile retains `"tier": 2` and `"model": "qwen/qwen3.8-max"`.
+  - Explicit tier-1 override (`env -i PATH="$PATH" XYZ_DEVICE_CONFIG_PATH="$TMPDIR/aider.json" AIDER_AGENT=aider AIDER_MODEL=qwen/manual AIDER_GATEWAY=openrouter bash relay-automation/resolve-profile.sh bare --env`, exit 0) resolves at tier 1 and preserves `export AIDER_MODEL='qwen/manual'`.
+- Criterion 3 (`test/gh346-profile-resolve.sh` in a disposable full clone): `[Unverified — needs clone run]` per worktree scope lock; the added assertions in `test/gh346-profile-resolve.sh` (lines 316–346) accurately pin all required cases and the harness pre-advance gate will execute the suite in an isolated clone.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
