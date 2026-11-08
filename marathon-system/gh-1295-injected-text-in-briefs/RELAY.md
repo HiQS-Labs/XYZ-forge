@@ -1,5 +1,5 @@
 # Marathon Phase gh-1295-injected-text-in-briefs
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN-2 builder=codex reviewer=agy round-cap=5 -->
@@ -53,7 +53,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md` (its `## Acceptance` section, 3 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*NOT verified, and NOT verifiable as things stand — issue #1295 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*
+*NOT verified, and NOT verifiable as things stand — issue #1295 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*  [Unverified — no citation]
 - [ ] The six override canaries are held or fenced in both the proposal and emitted brief.md.
 - [ ] Ordinary issues render unchanged.
 - [ ] Verify with the recorded round-trip; no new test file or suite (GH-831).
@@ -198,3 +198,18 @@ Implemented GH-1295 in utils/py/harness.py and extended the existing test/gh174-
 - Reversibility: Easy; no persistent schema/state changes. This is bounded recognition of recorded override forms, not a general classifier or a model-safety guarantee.
 
 NEXT actor: agy (Reviewer). Please review the implementation and run the authorized verification through the harness.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes (`utils/py/harness.py:1-1926`, `test/gh174-harness-registry.sh:1-286`; no pre-existing defects found in `utils/py/harness.py:1` or `test/gh174-harness-registry.sh:1`).
+
+- [Pass] Six recorded override canaries are held and fenced in both the proposal and emitted `brief.md`: `_instruction_override` in `utils/py/harness.py:519-524` matches all six `instruction-override` rows from `utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl:1-6`. In `plan_draft` (`utils/py/harness.py:753-770`), matching inputs set `draft_status="held"`, `held_reason="instruction-override source text; independent review required"`, and `brief["untrusted_issue_text"]=True`, which `_build_proposal` (`utils/py/harness.py:613-647`) excludes from `provisional.waves` and records under `held`. In `render_brief` (`utils/py/harness.py:527-533`, `utils/py/harness.py:563`), `_untrusted_issue_text` wraps the rendered brief in a backtick fence of width `max(3, width + 1)` so embedded backticks cannot close the data block, while `_verify_plan_draft` (`utils/py/harness.py:813-814`) remains round-trip consistent.
+- [Pass] Ordinary issues render byte-for-byte unchanged (`utils/py/harness.py:562-563`, `utils/py/harness.py:769-770`) when `untrusted_issue_text` is absent and `_instruction_override(text)` is false; existing `missing-scope` and `needs-recon` holds (`utils/py/harness.py:744-748`) remain holds.
+- [Pass] Recorded round-trip check and failure sensitivity (red control) witnessed in `.relay-scratch/tmp` without adding a new test file or suite (`test/gh174-harness-registry.sh:222-283`, GH-831):
+  - Green probe (`PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - "$PWD" "$TMPDIR"` running the `test/gh174-harness-registry.sh:224-277` block): exit `0`, decisive output `OVERRIDE_ROUNDTRIP_OK`.
+  - Red control (same probe with `harness._instruction_override = lambda text: False` replaying pre-fix behavior on `canary-instruction-override-01`): exit `1`, decisive output `AssertionError: expected held, got 'ready'`.
+  - Full clone gate (`pytest test/test_python_layer.py`, `bash test/synthetic/gh94-containment-invariants.sh`, and `test/gh174-harness-registry.sh` execution): [Unverified — needs clone run] per reviewer scope lock (`marathon-system/gh-1295-injected-text-in-briefs/RELAY.md:63-89`); the harness gate runs after this turn.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
