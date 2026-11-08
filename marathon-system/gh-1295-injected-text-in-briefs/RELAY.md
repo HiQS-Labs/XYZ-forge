@@ -213,3 +213,12 @@ swept file: yes (`utils/py/harness.py:1-1926`, `test/gh174-harness-registry.sh:1
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-08T10:00:14Z
+task: MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN-2
+reviewer: agy
+status: Approved
+reviewed-head: ad766129929551169116e9592261c5af8905054a
+added-range: 20690+2462
+added-sha256: c42e40ec6127bd95e166a944aa78769582c8c74ad8a17846939cd1ed0dced0e9
+config-sha256: 5640015112ff68c24fcf42f2a478d6eeff6739f3f336f4b2bd41ef5a54c7ada7
