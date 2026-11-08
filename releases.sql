@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 2445
+-- generation: 2446
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -13,7 +13,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-12T16:07
 INSERT INTO schema_migrations(version, applied_at) VALUES('9', '2026-09-23T01:01:18Z');
 -- table: settings
 INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
-INSERT INTO settings(key, value, updated_at) VALUES('generation', '2445', '2026-11-08T20:26:13Z');
+INSERT INTO settings(key, value, updated_at) VALUES('generation', '2446', '2026-11-08T20:31:10Z');
 INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
 -- table: repos
 INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
@@ -1004,7 +1004,7 @@ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M6X4GEMDS11PQ30QA8A52XZA', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1295', '1', 'completed', '2026-11-08T08:30:58Z', '2026-11-08T17:52:46Z', '2', NULL, 'landed via PR #1371 (merged 85ebee37)');
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M6X8FJA6VWWJDMXJ9BF5A1A4', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1160', '1', 'completed', '2026-11-08T09:40:23Z', '2026-11-08T18:15:58Z', '2', NULL, 'landed via PR #1372 (merged 3decc7e4)');
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M6XAWG3E7Q7SD0HVKD8ZM9JN', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1216', '1', 'completed', '2026-11-08T10:22:24Z', '2026-11-08T18:31:19Z', '2', NULL, 'landed via PR #1373 (merged bf18d49a)');
-INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M6Y67FAWQFFXC8VQZ1J7HRNH', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1254', '1', 'parked', '2026-11-08T18:20:15Z', '2026-11-08T20:26:13Z', '2', NULL, 'awaiting-landing (no PR yet — open one from the receipt''s branches: head=marathon/gh-1254-outer-loop-borrow-decl-2026-11-08; base=unknown)');
+INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M6Y67FAWQFFXC8VQZ1J7HRNH', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1254', '1', 'parked', '2026-11-08T18:20:15Z', '2026-11-08T20:31:10Z', '2', NULL, 'awaiting-landing (PR #1379: https://github.com/HiQS-Labs/XYZ-forge/pull/1379); recovery verified, builder attempts retained2/2; separate merge approval required');
 INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M6HZQWZVKJBB5STSYQC3Q6SC', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1264', '2', 'parked', '2026-11-04T00:36:00Z', '2026-11-04T05:15:33Z', '2', NULL, 'approved receipt not published: git push origin HEAD:refs/heads/marathon/gh-1264-hq-park-goal-passthrough-2026-11-03 failed: pre-push: full validation RED (exit 1) after 756s — push REFUSED.
 
   The failing checks are named in the output above.
@@ -3746,6 +3746,7 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:274', '2026-11-08T19:19:05Z', '4c88d386c86b4272a174baabead58d8b', 'default', '20f4b110640fd98bf5edc6df13b7666a2fe81e0cc150a60226f79a8f25d7e123', '13e4bacef4cec0da1edceb47f67a92a394e74d86262c93bac71a5778d35491c8');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-failed', 'GH-1254', '2026-11-08T20:12:37Z', 'a4f973ef0b754cff87e152b47a97c12b', 'default', '13e4bacef4cec0da1edceb47f67a92a394e74d86262c93bac71a5778d35491c8', '66c624c174f9957ed95ea464afc305de89b88d410d5100c5198fc348868518ac');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-parked', 'GH-1254', '2026-11-08T20:26:13Z', '1440caf1a2414646973dfa20444b1d29', 'default', '66c624c174f9957ed95ea464afc305de89b88d410d5100c5198fc348868518ac', 'a269a7f556b341e775d00a710c300e8d9229f2cea64a3b0567b559098b8d67e1');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('jog-skip', 'GH-1254', '2026-11-08T20:31:10Z', 'df95659f4ab0450b921adee2af1919bd', 'default', 'a269a7f556b341e775d00a710c300e8d9229f2cea64a3b0567b559098b8d67e1', 'e29a7cfbb8cdb26894ce06d7b6a7f1b2d3df0fda4831da96e43832905ece113c');
 -- table: work_events
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CBC3C2HSWRSBY81TAZHYY0', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '568', 'df2ee890077d486dbe23311c5dd74d82', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-13T03:01:02Z');
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CGH1A7Z979TG5DQJHN8DX6', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '591', '6d3d7a7619c247b5a85a039ea98756bd', 'parked', '{"section": "Queue / parked intake"}', '2026-09-13T04:31:07Z');
