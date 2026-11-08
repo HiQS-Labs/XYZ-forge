@@ -13,6 +13,11 @@ effort: 1
 phases: 1
 goal: Named Aider profiles emit the provider-native OpenRouter route without altering manual overrides.
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted to active working contract via jog | Execute implementation and verify probes |
 
 # GH1216 — named Aider OpenRouter export
 
