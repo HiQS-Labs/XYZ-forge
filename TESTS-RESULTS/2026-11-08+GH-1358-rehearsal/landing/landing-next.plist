@@ -33,11 +33,11 @@ def within():
  if datetime.datetime.now(datetime.timezone.utc)&gt;=deadline:raise SystemExit('fixed deadline reached; no new work')
 def output(argv,cwd=primary):return subprocess.check_output(argv,cwd=cwd,text=True).strip()
 within()
-cmd=[sys.executable,str(primary/'skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'),'--primary',str(primary),'--root',str(primary/'temp'),'--exclude','/Users/noelsaw','--exclude','/private/var','--exclude','/var','--prs','1373@3a7b3d8aa09f5129ca1c976320c7438ed785caa8','--resume','--execute']
+cmd=[sys.executable,str(primary/'skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'),'--primary',str(primary),'--root',str(primary/'temp'),'--exclude','/Users/noelsaw','--exclude','/private/var','--exclude','/var','--prs','1373@d8a9167c24b47f55663f4d3bf718e455f287a4aa','--resume','--execute']
 rc=subprocess.run(cmd,cwd=primary).returncode
 if rc not in (0,4):raise SystemExit(rc)
 pr=json.loads(output(['gh','pr','view','1373','--repo','HiQS-Labs/XYZ-forge','--json','state,headRefOid,mergeCommit']))
-assert pr['state']=='MERGED' and pr['headRefOid']=='3a7b3d8aa09f5129ca1c976320c7438ed785caa8',pr
+assert pr['state']=='MERGED' and pr['headRefOid']=='d8a9167c24b47f55663f4d3bf718e455f287a4aa',pr
 cli=[sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(primary)]
 queue=json.loads(output(cli+['jog','list','--all','--json']))
 assert any(r['gh_number']==1216 and r['status']=='completed' for r in queue),queue

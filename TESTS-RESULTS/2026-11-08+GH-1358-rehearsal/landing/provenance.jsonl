@@ -13,3 +13,5 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/landing-next.plist", "sha256": "0b09ccf540aa411b27ac3efac9d995f4aeb6e016789825d0fc2fcbd39da9ff46", "kind": "prelaunch configuration; independent QA pending"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gh1254-clock-contract.md", "sha256": "5984b5daf06b59c049bc0a1b149af1d47920f658dd59ede1178b4eda01835e25", "kind": "prelaunch configuration; independent QA pending"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/scheduled-landing-next-plan.md", "sha256": "5ecc38fdfd34c46b506f85a177b52205fb46307662cc5136f979faa66949cef2", "kind": "prelaunch configuration; independent QA pending"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/landing-next.plist", "sha256": "6d48134b9c735e7c0091ea5e6710a25736f8749a78f4dd552656f64425c466dd", "kind": "review finding correction; current pin; prelaunch"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gh1254-clock-contract.md", "sha256": "20a04fd17a102ecfa4e416075c192496a3e2693fdf728d94c4df97dec8b05bed", "kind": "review finding correction; current pin; prelaunch"}
