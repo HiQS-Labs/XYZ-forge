@@ -102,13 +102,10 @@ MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
 PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-push hook, which can run a gate
 
-# `execute_pr_merge` intentionally keeps its long-standing signature: Phase-A callers replace it
-# with a three-argument stub. Phase 5 records the exceptional PRs here before calling it.
-_WITHHOLD_BRANCH_DELETE: set[int] = set()
 # GH-1226: every PR this run merged, for the post-run merged ⊆ --prs assertion (batch or not).
 _MERGED_THIS_RUN: set[int] = set()
 # GH-1226: the pinned head each PR may merge at, passed to `gh pr merge --match-head-commit` so GitHub
-# rejects a head pushed after the final refresh. A module map, like _WITHHOLD_BRANCH_DELETE, keeps
+# rejects a head pushed after the final refresh. A module map keeps
 # execute_pr_merge's signature for the Phase-A stubs.
 _MATCH_HEAD: Dict[int, str] = {}
 # GH-1226 (from #1231): a pinned head whose required checks are still running is waited for, bounded,
@@ -251,16 +248,12 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
         log_err(f"PR #{pr_num}: {exc}")
         return False, ""
     strategy = policy["strategy"]
-    delete_branch = pr_num not in _WITHHOLD_BRANCH_DELETE
-    _WITHHOLD_BRANCH_DELETE.discard(pr_num)
-    delete_text = " --delete-branch" if delete_branch else ""
+    # GH-1381: merging never authorizes branch/worktree cleanup; teardown owns it.
     if dry_run:
-        log(f"[DRY RUN] Would merge PR #{pr_num} via `gh pr merge {pr_num} --{strategy}{delete_text}`")
+        log(f"[DRY RUN] Would merge PR #{pr_num} via `gh pr merge {pr_num} --{strategy}`")
         return True, ""
 
     merge_args = ["pr", "merge", str(pr_num), f"--{strategy}"]
-    if delete_branch:
-        merge_args.append("--delete-branch")
     match_head = _MATCH_HEAD.pop(pr_num, None)
     if match_head:
         merge_args += ["--match-head-commit", match_head]
@@ -351,7 +344,7 @@ def fetch_open_prs_with_retry(repo_path: str) -> List[Dict[str, Any]]:
 
 def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, Any]],
                                 repo_path: Path, integration_branch: str) -> bool:
-    """Retarget open stacked dependents, withholding branch deletion if any retarget fails."""
+    """Retarget open stacked dependents before merging their base."""
     pr_num = info["number"]
     head = info.get("headRefName") or ""
     dependents = [p for p in open_prs
@@ -362,12 +355,11 @@ def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, A
         dep_num = dependent["number"]
         res = _gh(["pr", "edit", str(dep_num), "--base", integration_branch], repo_path)
         if res.returncode != 0:
-            _WITHHOLD_BRANCH_DELETE.add(pr_num)
             log_warn(f"PR #{pr_num}: open stacked PR #{dep_num} could not be retargeted "
-                     f"({res.stderr.strip() or 'gh pr edit failed'}); branch deletion withheld")
+                     f"({res.stderr.strip() or 'gh pr edit failed'}); branches remain preserved")
             return False
         log(f"PR #{pr_num}: retargeted open stacked PR #{dep_num} from '{head}' to "
-            f"'{integration_branch}' before deleting the base branch")
+            f"'{integration_branch}' before merging the base PR")
     return True
 
 
@@ -1590,7 +1582,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log(f"PR #{p_num}: required checks: {detail}")
 
             if dry_run:
-                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy} --delete-branch`")
+                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
                 continue
             live = refresh_pr_with_retry(p_num, primary_repo)
             if live.get("error"):
@@ -1622,7 +1614,6 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                         f"{str(pinned)[:10]}; re-run the dry run to re-pin once its checks finish")
                 failed[p_num] = "deferred: head is not the dry-run pin"
                 continue
-            _WITHHOLD_BRANCH_DELETE.discard(p_num)
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
             _MATCH_HEAD[p_num] = pinned

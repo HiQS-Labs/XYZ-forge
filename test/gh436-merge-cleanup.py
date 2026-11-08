@@ -633,7 +633,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         self.assertEqual(sleep.call_count, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
 
-    def test_stacked_pr_is_retargeted_before_base_branch_deletion(self):
+    def test_stacked_pr_is_retargeted_before_base_merge(self):
         info = {"number": 7, "headRefName": "feat/base"}
         prs = [info, {"number": 8, "baseRefName": "feat/base"}]
         ok = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
@@ -642,23 +642,20 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                 info, prs, self.primary, "development"))
         gh.assert_called_once_with(["pr", "edit", "8", "--base", "development"], self.primary)
 
-    def test_failed_stacked_retarget_withholds_branch_delete(self):
+    def test_failed_stacked_retarget_preserves_branch(self):
         info = {"number": 7, "headRefName": "feat/base"}
         prs = [info, {"number": 8, "baseRefName": "feat/base"}]
         failed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="protected")
         merged = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
-        try:
-            with mock.patch.object(merge_cleanup, "_gh", side_effect=[failed, merged]) as gh, \
-                 mock.patch.object(merge_cleanup, "refresh_pr", return_value={
-                     "state": "MERGED", "mergeCommit": {"oid": "a" * 40}}):
-                self.assertFalse(merge_cleanup._protect_stacked_dependents(
-                    info, prs, self.primary, "development"))
-                landed, oid = merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False)
-                self.assertTrue(landed)
-                self.assertEqual(oid, "a" * 40)
-            self.assertNotIn("--delete-branch", gh.call_args_list[1].args[0])
-        finally:
-            merge_cleanup._WITHHOLD_BRANCH_DELETE.discard(7)
+        with mock.patch.object(merge_cleanup, "_gh", side_effect=[failed, merged]) as gh, \
+             mock.patch.object(merge_cleanup, "refresh_pr", return_value={
+                 "state": "MERGED", "mergeCommit": {"oid": "a" * 40}}):
+            self.assertFalse(merge_cleanup._protect_stacked_dependents(
+                info, prs, self.primary, "development"))
+            landed, oid = merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False)
+            self.assertTrue(landed)
+            self.assertEqual(oid, "a" * 40)
+        self.assertNotIn("--delete-branch", gh.call_args_list[1].args[0])
 
     def test_matching_base_on_a_non_default_target_proceeds(self):
         prs = [{"number": 7, "baseRefName": "main", "title": "t", "files": [], "body": ""}]
