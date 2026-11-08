@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,7 +67,7 @@ ROUND: 1 / 3
 
 ## Log
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ## Review request
 Read the plan and governing paragraphs. Pure documentation scope; no runtime or test-policy amendment.
@@ -75,3 +75,22 @@ Questions: 1. Does the planned wording faithfully reuse principle 13's existing 
 2. Does the appendix clarification preserve containment and operator control?
 3. Are verification, rating and non-goals proportionate and complete?
 Do not demand runtime machinery for this two-paragraph clarification. Review only; no artifact edits.
+
+### Reviewer · Round 1
+
+Ship — plan approved for the bounded two-paragraph clarification.
+
+VERDICT: PASS
+Basis: The acceptance criteria are the plan's ordered implementation and the three explicit review questions below Setup; the Setup Definition of Done remains a scaffold placeholder. Approval covers the plan, not implementation, runtime behavior, or merge readiness.
+swept file: yes
+
+- [Pass] Existing scope reused: principle 13 says "Every new or materially changed decision gate needs a recorded demonstration that it fails for the right reason". Plan step 1 adopts that same predicate, preserves the rationale/examples and existing-suite/manual routes, and explicitly exempts only fresh mutation on unchanged coverage reruns. Implement as scoped; no additional mechanism needed.
+- [Pass] Containment and operator authority retained: plan step 2 makes appendix ordering "a doc-review tie-breaker applied subject to the North Star proportionality assessment". The North Star already says this is "not a blanket bypass of containment, verification or protection against data loss"; principle 3 says "Containment is non-negotiable". Preserve those boundaries in final wording and link the canonical North Star rather than restating a new exception policy.
+- [Pass] Verification and rating are proportionate: the plan calls for "record manual evidence and provenance", the "classified docs gate", and "independent final QA"; its boundary explicitly says "text review is not a runtime pass". The two consumer cases distinguish changed gates from unchanged reruns. Rating rationale discloses "no complete incident census, unknown trend" and no override; no unsupported measured improvement is claimed. Carry out those existing checks after implementation; no runtime smoke or new suite is warranted by these prose edits.
+- [Nit] Whole-file sweep found pre-existing reconciliation wording drift in AGENTS.md: its ownership section says the hosted workflow "automatically reconciles docs, ledger, and views" after a development merge and calls local reconciliation an "emergency fallback"; the later GH-1127 rail says "Development merges reconcile locally". This can misdirect a cold reader, but neither planned paragraph depends on it. Cheapest correction is a separate scoped wording reconciliation against the canonical GH-1127 procedure; do not expand this two-paragraph slice to repair it. No other additional defect identified in this textual sweep of the three artifacts.
+
+Verification boundary: source inspection only; no executable fixtures, suites, or Git commands run. Implementation evidence and final QA remain pending as the plan states.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the approved plan outside this closed plan-QA relay.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
