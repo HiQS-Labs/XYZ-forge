@@ -14,7 +14,7 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path  # noqa: E402  GH-376: the shared lock resolver, called not copied
+from rtl import archive_lane_attempts, driver_lock_path  # noqa: E402  GH-376: the shared lock resolver, called not copied
 from rtl import (resolve_turn_root, rtl_default_log, checkout_snapshot,
                  restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
@@ -286,9 +286,12 @@ def main():
         if get_env("LANE_ATTEMPT_COUNTED"): return
         if not raw: return
         attempts_file = os.path.join(root, ".tick", "attempts", _lane_key(raw))
-        if os.path.exists(attempts_file):
-            try: os.remove(attempts_file)
-            except: pass
+        try:
+            archive = archive_lane_attempts(attempts_file)
+        except OSError as exc:
+            die(f"cannot preserve lane attempts {attempts_file}: {exc}")
+        if archive:
+            eprint(f"lane-attempt history preserved: {archive}")
 
     # #129/#136: resolve TICK_REPO_ROOT ONCE, here, silently. The lane-attempt gate just below
     # is the first consumer — with the env unset on a vendored-.xyz drive it used to count
