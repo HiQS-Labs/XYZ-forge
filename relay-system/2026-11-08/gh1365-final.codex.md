@@ -116,4 +116,12 @@ Command: `python3 - <<'PY'` with the above body and closing `PY`. Decisive outpu
 
 Relay closed (Approved), no further turn needed. Producer/harness proceeds to the classified gate before publication.
 
+
+### Attestation · relay-drive — 2026-11-08T04:22:51Z
+task: RELAY-gh1365-final
+reviewer: codex
+status: Approved
+reviewed-head: e13045ce2ebee79955be5b6c3e75a6e1883f2ac0
+added-range: 7196+4257
+added-sha256: 4f807dcb5dd256f8d673c860f90530d910fef19564a8330b6acb30a71a79d413
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
