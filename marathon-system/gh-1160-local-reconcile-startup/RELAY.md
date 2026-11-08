@@ -134,3 +134,12 @@ swept file: yes
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-08T10:17:22Z
+task: MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 171bb7293bc29376633f6457fd3045b3f8294913
+added-range: 10898+1953
+added-sha256: 97a9691e68389c38f5d77991e832f2fa4c5f27ef4fda213df7cb67e2ce04bd76
+config-sha256: 02cb1dec7863cd4668d263531a1a18a9d88d3311be610dc4ae1daac674762fd9
