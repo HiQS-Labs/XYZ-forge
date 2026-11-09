@@ -1,0 +1,14 @@
+test_noop_publication_already_remote_skips_push (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_already_remote_skips_push) ... ok
+test_noop_publication_empty_refs_fail_closed (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_empty_refs_fail_closed) ... merge-cleanup: ERROR — PR #1390: cannot prove nonempty local/remote publication heads
+ok
+test_noop_publication_fetch_failure_never_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_fetch_failure_never_pushes) ... merge-cleanup: ERROR — PR #1390: could not refresh integration head: offline
+ok
+test_noop_publication_unpublished_commit_still_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_unpublished_commit_still_pushes) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.342s
+
+OK
+merge-cleanup: PR #1390: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
