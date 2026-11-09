@@ -1,0 +1,225 @@
+== test: gh251-validate-pytest-skip ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.oyUDUCOZTt
+  PASS: validate.sh invokes pytest when pytest is importable
+  FAIL: python:test_python_layer.py was not reported in passed list: validate.sh: classified tier 2 — subsystems: skills-army-hq (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): skills-army-hq.sh gh620-skills-army-mini-sync.sh gh589-xyz-mini-sync.sh gh589-consult-no-tick.sh gh589-skill-viewer.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 static syntax checks on changed files
+===============================
+  python3 ast-parse skills/3-weekly/skills-army-hq/scripts/sync.py
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.GFqkEh/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  5 pooled suites + 0 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+[parallel] skills-army-hq.sh rc=0
+[parallel] gh589-xyz-mini-sync.sh rc=0
+[parallel] gh589-skill-viewer.sh rc=0
+[parallel] gh589-consult-no-tick.sh rc=0
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /private/tmp/gh1378-test-env/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1376-flywheel-skill-2026-11-08-gate
+configfile: pytest.ini
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load FAILED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+=================================== FAILURES ===================================
+________________________ test_marathon_plan_module_load ________________________
+
+    def test_marathon_plan_module_load():
+>       import marathon_plan
+
+test/test_python_layer.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+utils/py/marathon_plan.py:25: in <module>
+    import _marathon_plan as engine  # noqa: E402
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    """Native Python marathon-plan planner/rendering engine (GH-340).
+    
+    This is a faithful, byte-compatible port of the canonical planner embedded in
+    ``utils/marathon-plan.sh`` (the ``node - <<'NODE'`` program). It replaces the copied,
+    drifted ``utils/py/_marathon_plan_node.js`` on the Python (``XYZ_PYTHON=1``) path, so a
+    production Python marathon-plan run needs neither Node nor that JS file.
+    
+    The two temporary Python parity shims that used to wrap the copied Node engine are folded
+    in here natively: ``doc_of()`` implements the correct own-``GH-<n>``-doc precedence (was the
+    ``_normalize_roadmap`` input-mutation shim ``S``), and the "Review lanes" overlay is rendered
+    in place from ``parse_lanes_table()`` (was the ``_inject_review_lanes`` post-render shim ``N``).
+    
+    Output is intentionally identical to the Bash engine on fixed fixtures. It is invoked by
+    ``utils/py/marathon_plan.py``; the CLI wrapper, exit-code handling, ``--check``/``--dry-run``
+    modes, and hermetic test seams live there. Python is authoritative (GH-362); the Bash
+    fallback remains frozen.
+    
+    Stdlib only; no external dependency, no third renderer.
+    """
+    
+    import functools
+    import json
+    import math
+    import os
+    import re
+    import subprocess
+    import sys
+    import sqlite3
+    from contextlib import closing
+    from pathlib import Path
+    
+    from router_audit import parse_pdda_mode
+    from releases_app import roadmap_render
+    
+    # Ledger sections we sequence from vs. only reference.
+    SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"]
+    KNOWN_EMOJI = ["\U0001F7E2", "\U0001F7E1", "⏸️", "⛔", "✅",
+                   "\U0001F52E", "\U0001F532", "⚠️", "\U0001F195", "\U0001F41E", "\U0001F534"]
+    
+    DEP_RESOLVED = frozenset(["completed-ref", "already-landed", "already-closed",
+                              "deferred", "exempt", "note-only"])
+    
+    
+    class EngineExit(Exception):
+        """Raised for the engine's hard-exit paths (unparseable ROADMAP / bad zones config)."""
+    
+        def __init__(self, code, message=None):
+            super().__init__(message or "")
+            self.code = code
+            self.message = message
+    
+    
+    class ZoneConfigError(Exception):
+        """Invalid zone configuration — surfaced to the caller as exit 3."""
+    
+    
+    # ── JS Number/String parity helpers ──────────────────────────────────────────
+    def _js_number(x):
+        """Mirror JS ``Number(x)`` closely enough for zone penalties (returns float or nan)."""
+        if x is None:
+            return 0.0
+        if isinstance(x, bool):
+            return 1.0 if x else 0.0
+        if isinstance(x, (int, float)):
+            return float(x)
+        try:
+            s = str(x).strip()
+            if s == "":
+                return 0.0
+            return float(s)
+        except (ValueError, TypeError):
+            return float("nan")
+    
+    
+    def _num_to_str(n):
+        """Mirror JS ``String(number)``: integer-valued numbers print with no decimal point."""
+        if isinstance(n, bool):
+            return "true" if n else "false"
+        if isinstance(n, int):
+            return str(n)
+        f = float(n)
+        if math.isnan(f):
+            return "NaN"
+        if f == float("inf"):
+            return "Infinity"
+        if f == float("-inf"):
+            return "-Infinity"
+        if f == int(f) and abs(f) < 1e21:
+            return str(int(f))
+        return repr(f)
+    
+    
+    def _cell(v):
+        if v is None:
+            return "—"
+        if isinstance(v, bool):
+            return "true" if v else "false"
+        if isinstance(v, (int, float)):
+            return _num_to_str(v)
+        return str(v)
+    
+    
+    def _rating_num(n):
+        # Ratings are integers 1 (low) .. 5 (highest); render the number, or — when unrated.
+        if n is not None and 1 <= n <= 5:
+            return str(n)
+        return "—"
+    
+    
+    def _L(x):
+        """PDDA triage rating parse — parseInt-like; valid only 1..5, else None."""
+        s = ("" if x is None else str(x)).strip()
+        m = re.match(r"[+-]?\d+", s)
+        if not m:
+            return None
+        n = int(m.group())
+        return n if 1 <= n <= 5 else None
+    
+    
+>   def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None = None,
+                             doc_text: str | None = None, engine=None, root=None) -> dict:
+E                            TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'
+
+utils/py/_marathon_plan.py:121: TypeError
+=========================== short test summary info ============================
+FAILED test/test_python_layer.py::test_marathon_plan_module_load - TypeError:...
+======================== 1 failed, 20 passed in 26.21s =========================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 5 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1376-flywheel-skill-2026-11-08-gate/.tick/telemetry/validate-parallel-1794193907236-57135.jsonl (7 suite events, 405 registered)
+10 slowest suites:
+  name  duration_s  rc
+  skills-army-hq.sh  26.833  0
+  gh589-xyz-mini-sync.sh  14.687  0
+  gh620-skills-army-mini-sync.sh  12.651  0
+  gh589-consult-no-tick.sh  3.967  0
+  gh589-skill-viewer.sh  0.682  0
+re-run ladder: 0 suite(s), 0.000s total
+passed: 7 / 8
+  + tier2:static
+  + gh620-skills-army-mini-sync.sh
+  + skills-army-hq.sh
+  + gh589-xyz-mini-sync.sh
+  + gh589-skill-viewer.sh
+  + gh589-consult-no-tick.sh
+  + clone-identity-invariant
+failed:
+  - python:test_python_layer.py
