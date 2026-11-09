@@ -74,3 +74,7 @@ Display order only; not blocking. Active work is not the first open card a reade
 ## Merge evidence
 
 - PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## B trial implementation — 2026-11-09
+
+The open-release bucket now ranks active before draft, then target date. Shipped/cut history and nullable versions retain their previous ordering. Prior #1187 was ledger re-rating, not this correction. Independent plan/final code QA passed. Manual missing/equal/conflicting-date controls and existing timeline suite passed; evidence: `TESTS-RESULTS/2026-11-09+GH-254/`. Full qualification/publication/landing pending in #1386; no automated progression claim.

@@ -70,3 +70,7 @@ TODO: why this matters now -- what prompted it, what breaks or slows without it.
 ## Merge evidence
 
 - PR #782 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## B trial implementation — 2026-11-09
+
+Runtime compressor conversion now uses `os.sysconf("SC_PAGE_SIZE")`; the existing exception path leaves the measurement unknown if unavailable. Linux logic is unchanged. Prior #776/#782 references were intake and a separate RSS watchdog fix, not this correction. Independent plan/final code QA passed. Manual 4K/16K/unavailable controls and existing memory telemetry suite passed; evidence: `TESTS-RESULTS/2026-11-09+GH-772/`. Full qualification/publication/landing pending in #1386; no automated progression claim.
