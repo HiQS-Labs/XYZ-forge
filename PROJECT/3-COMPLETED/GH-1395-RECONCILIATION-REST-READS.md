@@ -2,7 +2,7 @@
 gh_issue: 1395
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1395
 title: Reduce redundant REST reads in reconciliation workflows
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-11-09
 doc_type: bugfix
 effort: 3

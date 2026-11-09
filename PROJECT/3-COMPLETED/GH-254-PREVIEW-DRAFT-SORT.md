@@ -1,6 +1,6 @@
 ---
 title: "Show active releases before drafts"
-status: In progress
+status: Complete
 created: 2026-11-09
 updated: 2026-11-09
 gh_issue: 254
