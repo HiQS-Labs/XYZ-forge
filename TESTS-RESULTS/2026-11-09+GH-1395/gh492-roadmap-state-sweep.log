@@ -1,0 +1,6 @@
+PASS: default and explicit dry-run preserve DB/dump bytes and mtime
+PASS: missing CLI, later lookup failure, malformed JSON and unknown reason refuse without writes
+PASS: cached section drift warns without changing the ledger or blocking full mode
+PASS: injected second terminal-event failure rolls back rows, receipt, events and generation
+PASS: apply corrects both closure reasons, preserves open/terminal rows and records one transaction
+PASS: second sweep writes nothing and never queries terminal rows

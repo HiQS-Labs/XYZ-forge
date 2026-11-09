@@ -1,0 +1,22 @@
+{
+  "source_sha": "e0037c82658f27ce8fdcdd3d09af3c53049b54fe",
+  "workflow": "A PR 1388 landing readiness",
+  "invocation_sha256": "d655228d49ca65f337b41be03097abd955ca255a02039f7edbeb53015bddd636",
+  "invocation_facts": [
+    "prepare_landing_clone",
+    "pre_merge_ledger_gate",
+    "required_checks_state",
+    "refresh_pr"
+  ],
+  "log_snapshot": [
+    "ORDER [1388] PINS {1388: 'c4ff4b75d0f899ef5b2b191e9ce4dbb9eb71c6d1'} WARNINGS []"
+  ],
+  "gate_completion_observed": false,
+  "internal_http_count": null,
+  "resource_headers_observed": false,
+  "interrupted_independent_sweep_cli_counts": {
+    "native": 27,
+    "closure": 27
+  },
+  "interrupted_sweep_reason": "Stopped after coordination supplied active workflow evidence; no further duplicate live sweep authorized."
+}
