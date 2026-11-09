@@ -6,3 +6,4 @@
 {"command": "bash temp/gh1387-manual.sh", "mode": "baseline", "source": "1c2bd89eb7e4176f8333d338a74d2113bb581a32", "exit": 0, "result": "RED: both records lost; count null", "payload_sha256": "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2"}
 {"command": "python3 temp/attempt-history/adjacent-replay.py VERIFY_CLONE", "source": "0ae5e01c3", "exit": 0, "result": "14/14 adjacent function controls", "limitations": "AST extraction of actual nested functions; driver main path covered separately"}
 {"command": "bash test/gh280-jog-marathon-adapter.sh", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 92.80589008331299}
+{"command": "git push origin HEAD:refs/heads/t3/preserve-attempt-history", "sha": "f7c893e4d9e1f4fd9ebce06b28f715f0ca4c79f2", "started_at": "2026-11-08T23:54:21.813756+00:00", "elapsed_seconds": 540.8449559211731, "exit": 1, "identity_unchanged": true, "cap_seconds": 1800}

@@ -15,3 +15,6 @@ Initial `/usr/bin/python3` lacks requests; selected existing `~/.cache/gh805-tes
 Budget begins 2026-11-08T23:44:07Z, ends 2026-11-09T01:44:07Z. Builder attempt 1/2, runtime repair rounds 0; one fixture setup command had a shell glob error, corrected without mutation. Parent interventions: gate-slot coordination and clarification of permitted task-branch Git metadata writes. Tokens unknown. Agent-assisted; no unattended qualification, merge or cleanup.
 
 Edit verdicts: archive helper helped (baseline loss vs retained exact bytes); gate-only count capture helped (null vs 2); shared caller change helped in function controls. NO_ENTRY for lessons: this bounded replay does not justify a broader operating lesson.
+
+
+Initial full gate on f7c893e4d: RED, 406/408, push refused after 539 seconds (outer elapsed 541 seconds), identity unchanged. Two deterministic failures survived automatic serial retry: GH376 checks the literal import prefix (20/21); GH544 inherited the caller's XYZ_VALIDATE_MAX_JOBS=4 (22/29). Repair round 1 for each: reorder identical imported symbols; remove caller width override and retain normal default auto-sizing. No behavior or suite changes, no bypass. Both failures retained in initial-full-push.log. The initial single-gate plan now requires a bounded failed-gate repair run under the existing repair budget and parent slot coordination.
