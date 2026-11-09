@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Ownership transferred from MBP; five remaining controls witnessed red on476400948 and green on takeover repair. Reviewed1384 branch preservation integrated. Fresh independent static QA found no additional blocker. | Finish existing suites and full gate, publish exact repair, land1385first without cleanup, deploy merged skill, then measure real multi-PR sequence under1386. Prior failures/caps retained. |
+| Ownership transferred from MBP; five remaining controls witnessed red on476400948 and green on takeover repair. Reviewed1384 branch preservation integrated. Fresh independent static QA found no additional blocker. | Existing focused334/334 and normalfullprepushGREEN540s at58671b8d0. Publish receipt tail, land1385first without cleanup, deploy merged skill, then measure real multi-PR sequence under1386. Prior failures/caps retained. |
 
 ## Context & Problem Statement
 During multi-PR merge batches (such as the 9-PR sequence in LTVera thread `90a3846f-ed6a-4104-b71e-73ef197e3182` and XYZ Forge batches #1374, #1375, #1380), `merge-cleanup` currently executes a full cycle of local reconciliation (`run_local_wave_reconcile`), RELEASES DB check (`releases_app check`), PDDA sync (`pdda.sh issue-doc-sync`), and commits/pushes to `origin/development` after **every single merged PR**.

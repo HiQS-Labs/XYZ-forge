@@ -8,3 +8,6 @@ Caller restriction: ordinary main executes Phase6 and symlink pruning. Use exist
 
 ## Fresh platform recheck
 Reviewer native Codex gpt-6.1-sol medium task /root/gh1385_final_platform_recheck: PASS, no additional blocker. Reviewed final diff after narrow macOSEPERM handling: successful process-table observation with no live matching group members is the only suppressed PermissionError; query failure/timeout/live members fail. Selected8/8green. All retained clone/debt/durability/no-delete conclusions unchanged. Full gate remains parent responsibility.
+
+## Caller/trial configuration review
+Independent native Codex /root/preserved_landing_trial_review validated existing Phase5-only seam and per_batch/canary commands, found one caller omission: sortALLopenPRs and propagateunlistedharddependenciesbeforeallowlistfilter. Parent appliedtheexistingmainpropagationlogic. No newruntimeflag/gate/cleanupbypass. ExistingPhase5eligibility/head/ledger/checks/capsretained; Phase6/symlinkcleanupnotinvoked. Trialsetup/restorationmustnormalpublish; actualsweepcloneHEAD/identityandcostsrecordedseparately.
