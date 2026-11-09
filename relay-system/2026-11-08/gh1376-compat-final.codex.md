@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-08.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -88,5 +88,9 @@ Basis: Block pending one narrow safety correction in the required complete 10day
 Verification limits: static reads via `cat`, `nl -ba`, `sed`, `rg` and the narrow Python integrity probe, all exit 0. No git, suite, executable fixture, runtime sweep or external query was run. Runtime recovery and exact-head harness gate remain [Unverified — needs clone run]. No other material pre-existing defect identified in this scope.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'; correct the cleanup fallback and return for review.
+
+### Producer · Round 1 disposition
+
+Implemented the narrow whole-file safety finding: dirty/untracked lane cleanup refusal now preserves path/state for owner reconciliation; no force-removal fallback. Existing clean removal and cleanup-failure reporting remain. Scope is one local instruction correction, no new machinery. Native Git manual refusal/clean-path check and provenance follow under compat-cleanup-smoke.md. Request round 2 against the committed correction and compatibility source/evidence; do not revisit unchanged approved plan scope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

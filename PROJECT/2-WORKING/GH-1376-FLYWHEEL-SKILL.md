@@ -189,3 +189,7 @@ Outcome: a requested 10days run keeps one batch owner, can hand off bounded repa
 ## Extension QA
 
 Plan QA Approved in round 1 at b5d956a25; receipt relay-system/2026-11-08/gh1376-compat-plan.codex.md. Nit implemented: blanket firing non-goals now prohibit new authority while preserving explicitly invoked 10days. Original receipts remain historical. Final extension QA pending.
+
+### Final-QA correction
+
+Round 1 found a pre-existing 10days forced-removal fallback on uncommitted/stray lane state. Accepted as a concrete whole-file safety finding: preserve refused/dirty worktrees and report the path/state, using normal native removal only for a proven clean integrated lane. No expanded subsystem or new test. Manual native Git refusal and clean-path evidence is recorded separately.

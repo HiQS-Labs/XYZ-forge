@@ -517,9 +517,10 @@ Then:
      already-superseded file state between the stale base and the marathon branch tip.
      Merge/cherry-pick each lane **one at a time** (not concurrently) so the branch ref
      never has two writers racing it.
-   - Once a lane's commit(s) are merged, remove its worktree: `git worktree remove
-     <path>` (fall back to `git worktree remove --force <path>` if it still reports
-     uncommitted/stray state). Do this for every lane in the wave, right alongside the
+   - Once a lane's commit(s) are merged and no unique state remains, remove its
+     clean worktree with `git worktree remove <path>`. If removal refuses because
+     uncommitted or untracked files remain, preserve the worktree and report its
+     path/state for owner reconciliation; never force-remove it. Do this for every lane in the wave, right alongside the
      gate check below — left as-is, a run with several parallel lanes accumulates
      orphaned worktree directories under the repo's git metadata across sessions. A
      removal failure does not stop the run: record the lane, path, and error for the
