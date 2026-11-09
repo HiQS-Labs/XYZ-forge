@@ -1,0 +1,36 @@
+{
+  "source_revision": "c8498ce5d18d6badb7d1459d78931b4ec48ad946",
+  "skills": {
+    "flywheel": {
+      "parity": true,
+      "receipt_commit": "c8498ce5d18d6badb7d1459d78931b4ec48ad946",
+      "receipt_digest": "4ae74943f1826362d999611fc93f9bb6d267defe34a6cdcdbdb698b3eedeb088",
+      "links": [
+        "claude",
+        "antigravity",
+        "zcode",
+        "codex",
+        "grok-bot",
+        "kimi"
+      ]
+    },
+    "10days": {
+      "parity": true,
+      "receipt_commit": "c8498ce5d18d6badb7d1459d78931b4ec48ad946",
+      "receipt_digest": "87128906082f824fa8a700aea0fd3b8a3024e06228764eefc1597bdd0952feaa",
+      "links": [
+        "claude",
+        "antigravity",
+        "zcode",
+        "codex",
+        "grok-bot",
+        "kimi"
+      ]
+    }
+  },
+  "discovery": "GUI/picker refresh not observed; Grok Mac staging only",
+  "distribution": "pending separate remoteGit verification; Pulse history untouched",
+  "remote_distribution": "VERIFIED identical two skill payloads on fetched origin/main",
+  "remote_git_head": "0ea7f4df5db8a5e4a76d67deb61727a38b4ab481",
+  "remote_final_check": "2026-11-09T06:46:58.958915+00:00"
+}
