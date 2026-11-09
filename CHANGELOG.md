@@ -2,6 +2,8 @@
 
 ## 2026-11-09
 
+- GH-1395: bound dense reconciliation native reads to two open-issue inventory pages plus singleton misses; preserve separate closure observations and mismatch refusal. Bet: dense open candidates repay up to two extra reads on sparse inventories. No cross-stage cache; malformed/error pages fail closed. Easy isolated patch rollback by revert, no schema or remote writes. Offline native CLI counts 90→3 and 220→22; sparse90→91. Retained real gate repetitions do not establish HTTP totals or live savings. Evidence and verification status: `TESTS-RESULTS/2026-11-09+GH-1395/`.
+
 - GH-1390: compose the retained reviewed empty-publication repair on B01. Fresh fetch/nonempty IDs permit skipping only an already-published head; unequal heads retain normal push, post-fetch and final durability checks. Costly shared publication surface; revert the narrow helper change for rollback. Source QA and 227/227 focused evidence are historical; 405/408 failure and aborted retry remain failures. Current independent review/full qualification and landing are parent-owned and pending. Evidence: `TESTS-RESULTS/2026-11-09+GH-1390/`.
 
 - GH-1386: restore the exact pre-trial merge-cleanup policy (`full_suite: promotion`, hosted sweep declaration) under the new pinned-flywheel Mode1B recovery window. This reuses the retained restoration; it introduces no runner, cleanup, promotion dispatch or1390 implementation. Original/live/restored byte discrimination and independent source QA are retained under `TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/`; fresh normal qualification and durable merge remain pending at this entry. Later results are appended to evidence rather than rewriting prior capped claims.

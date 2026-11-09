@@ -1,0 +1,185 @@
+{
+  "kind": "offline actual function execution with stubbed CLI; NOT HTTP measurement",
+  "source_sha256": "f25db05bc8d696532af895c3e90017fd4319201b16040c7ed6e242ebf7db39aa",
+  "results": [
+    {
+      "rows": 4,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 4,
+        "closure_view_cli": 4
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 220,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 220,
+        "closure_view_cli": 220
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "sparse",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "pull_request",
+      "calls": {
+        "native_rest_cli": 1
+      },
+      "result": "roadmap-issue-state: https://github.com/example/repo/issues/1 native identity/state unavailable (native issue identity/state unavailable or pull request); refusing to guess issue state",
+      "output": ""
+    },
+    {
+      "rows": 90,
+      "mode": "unknown_reason",
+      "calls": {
+        "native_rest_cli": 1,
+        "closure_view_cli": 1
+      },
+      "result": "roadmap-issue-state: https://github.com/example/repo/issues/1 returned unknown closure reason; refusing to guess issue state",
+      "output": ""
+    },
+    {
+      "rows": 90,
+      "mode": "changed_between_reads",
+      "calls": {
+        "native_rest_cli": 1,
+        "closure_view_cli": 1
+      },
+      "result": "roadmap-issue-state: https://github.com/example/repo/issues/1 changed from native closed to open during lookup; retry the sweep",
+      "output": ""
+    },
+    {
+      "rows": 90,
+      "mode": "changed_open",
+      "calls": {
+        "native_rest_cli": 2,
+        "closure_view_cli": 2
+      },
+      "result": "roadmap-issue-state: https://github.com/example/repo/issues/2 changed from native open to closed during lookup; retry the sweep",
+      "output": ""
+    },
+    {
+      "rows": 90,
+      "mode": "page_failure",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "malformed_page",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "duplicate_page",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "wrong_repo",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "inventory_pr",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 90,
+      "mode": "missing_number",
+      "calls": {
+        "native_rest_cli": 90,
+        "closure_view_cli": 90
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 9,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 9,
+        "closure_view_cli": 9
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 10,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 10,
+        "closure_view_cli": 10
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 102,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 102,
+        "closure_view_cli": 102
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    },
+    {
+      "rows": 202,
+      "mode": "valid",
+      "calls": {
+        "native_rest_cli": 202,
+        "closure_view_cli": 202
+      },
+      "result": "PASS",
+      "output": "would move GH-1: In progress -> Completed\nwould move GH-3: In progress -> Deferred \u00b7 vision\nroadmap reconcile-state: dry-run; nothing written (pass --apply to write)\n"
+    }
+  ]
+}
