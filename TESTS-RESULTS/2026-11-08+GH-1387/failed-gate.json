@@ -1,0 +1,15 @@
+{
+  "case": "failed-gate",
+  "mode": "candidate",
+  "rc": 5,
+  "live": true,
+  "archives": 0,
+  "hashes": [],
+  "receipt_attempt": {
+    "count": 2,
+    "max": 2
+  },
+  "relay_dispatches": 0,
+  "fixture": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.3r37HkVQru",
+  "log": "marathon-drive: phase p1: legacy attestation without config identity \u2014 reusing (GH-1220)\nmarathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) \u2014 skipping render/reseed, re-running only the pre-advance gate\nmarathon-drive: relay approved \u2014 running pre-advance gate: false\nmarathon-drive: gate-guard: gate exit 1 after 1s \u2014 peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)\nmarathon-drive: pre-advance gate FAILED (exit 1) \u2014 escalating\nmarathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.3r37HkVQru/agent-a/relay-system/2026-11-08/marathon-p1-235024.md\nmarathon-drive: warn: host free swap is critically low (1023MB < 1024MB)\nmarathon-drive: memory-telemetry: phase p1-escalated boundary \u2014 compressor=739MB, swap_free=1023MB\nmarathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.3r37HkVQru/agent-a/phases/p1/ESCALATION.md (reason: pre-advance-failed)\nmarathon-drive: result receipt written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.3r37HkVQru/result.json (outcome: escalated, exit 5)\n"
+}

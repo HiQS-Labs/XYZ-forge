@@ -18,6 +18,11 @@
 - Intermediate checks and automatic local sweeps use retained independent full clones; failed or timed-out command groups are stopped. Deferred issue/doc synchronization is only marked reconciled after checked final publication, including a skipped last candidate. Integrated GH-1381/PR1384 branch preservation before deployment.
 - Costly shared landing surface: revert the implementation to restore the prior sequence; preserve all checkout/evidence state. Five pre-fix controls fail on `476400948` and pass on the repair. Focused334/334 and normalfullprepushGREEN540s on58671b8d0; deployment and measured real-batch performance remain pending. Green tests alone do not establish a speedup.
 
+## 2026-11-08 — GH-1387 successful attempt history
+
+- Marathon and standalone Relay preserve exact attempt files in unique `.tick/attempt-history/` archives before resetting successful budgets. Failed executions still accumulate; nested Relay leaves ownership with Marathon. Gate-only success retains its existing receipt count. Preservation errors report failure and keep the live budget.
+- Baseline two-record deletion reproduced; fixed replay retains the original hash through success and post-approve failure. Existing reset timing is unchanged. Evidence: `TESTS-RESULTS/2026-11-08+GH-1387/`.
+
 ## 2026-11-08 — GH-1358 bounded Jog checkpoint integration
 
 - Opt-in one-task Jog wakes commit owned primary ledger changes and publish the exact checkpoint through a separate disposable full clone. Interrupted publication resumes before another dispatch; existing lock and cold-start recovery remain authoritative. No automatic merge or retry.
