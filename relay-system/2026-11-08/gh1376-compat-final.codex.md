@@ -109,4 +109,12 @@ Probe: read-only Python with `hashlib.sha256(p.read_bytes()).hexdigest() == r['s
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-09T03:11:03Z
+task: RELAY-gh1376-compat-final
+reviewer: codex
+status: Approved
+reviewed-head: bc04fc63fa6330e72eec8dc5b46e5f413d1f5662
+added-range: 12017+2913
+added-sha256: 2973a4fab02c67f40a7b161ba1cfa454925f17d7b826dcbc2119e3eb04990097
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
