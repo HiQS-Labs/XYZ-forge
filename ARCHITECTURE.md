@@ -82,6 +82,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [daily-planner](skills/2-daily/daily-planner/SKILL.md) | Adapt the weekly plan to daily outcomes using the shared planning engine. |
 | [express](skills/2-daily/express/SKILL.md) | Explicit hotfix or documentation fast lane — existing covering suite or PDDA docs gate, bounded direct development landing, commit-bound receipts and reconciliation. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
+| [flywheel](skills/2-daily/flywheel/SKILL.md) | Drive real work through existing intake, Jog, review, recovery and landing skills with bounded autonomous repair and explicit continuation. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
 | [merge-cleanup](skills/2-daily/merge-cleanup/SKILL.md) | Land open PRs in dependency order, reconcile, and tear down clones/worktrees that are proven landed. |
