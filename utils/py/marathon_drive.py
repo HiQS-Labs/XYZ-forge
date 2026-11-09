@@ -1084,7 +1084,7 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
             m = re.search(r"Pages occupied by compressor:\s*([0-9]+)", out)
             if m:
                 pages = int(m.group(1))
-                compressor_mb = (pages * 4096) // (1024 * 1024)
+                compressor_mb = (pages * os.sysconf("SC_PAGE_SIZE")) // (1024 * 1024)
         except Exception:
             pass
     elif os.path.exists("/proc/meminfo"):
