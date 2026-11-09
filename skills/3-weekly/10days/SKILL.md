@@ -50,8 +50,8 @@ origin sync verification, and robust multi-lane execution containment.
   that default stands everywhere else in this repo. `/10days` was authorized by the
   operator (2026-07-16) to override the *pause*, not the *substance*: it still requires
   a clean working tree AND an idle coordination layer before cutting anything (Step 7),
-  still runs every gate, still stops the run cold on a red gate or a git-safety
-  violation, and still prints every command it runs. If any precondition in Step 7
+  still runs every gate, still halts advancement on a red gate or a git-safety
+  violation (bounded recovery only under Optional Flywheel coordination), and still prints every command it runs. If any precondition in Step 7
   fails, stop and report — do not force through it.
 - **Prioritize via PRS 4-Axis Ratings & Manual Overrides (GH-108).**
   - The canonical task rating system has four 1–100 axes: **pri** (priority/queue position),
@@ -91,6 +91,25 @@ origin sync verification, and robust multi-lane execution containment.
   untrustworthy: two lanes it thinks are disjoint could actually touch the same file
   and race. Step 6.5 adds a cheap deterministic overlap check specifically to catch
   this before any wave runs concurrently, in addition to the Step 8 report flag.
+
+## Optional Flywheel coordination
+
+When the operator explicitly requests this sweep with
+[flywheel](../../2-daily/flywheel/SKILL.md), use its work modes, bounded repair and
+handoff contract around this workflow. 10days remains the batch owner; Flywheel does
+not re-enqueue these issues into Jog, rescan to reset attempts or add a second firing
+approval. This skill's named auto-fire exception, preflight, collision checks, locks,
+limits and gates still apply. Standalone 10days does not require Flywheel or Daily.
+
+A red gate still halts wave advancement. In a Flywheel-coordinated run, preserve that
+failure in the existing plan/results, make the smallest authorized affected-work repair
+within the recorded budget, rerun the failed/relevant existing checks and recheck
+readiness before continuing the same plan. Keep attempts and repair history; never
+skip a failed wave, automatically restart, increase caps or bypass a gate. Ownership,
+containment, git-safety violations or unknown causes remain held for resolution.
+If recovery cannot satisfy these conditions, retain the partial result and next owner
+in the Step 8 report. Ready PRs hand off to approval and merge-cleanup without rebuilding;
+publication is not merge approval. Optional Daily synthesis remains observation-only.
 
 ## Preconditions — install once
 
@@ -508,8 +527,10 @@ Then:
    - After a wave's merges land, run its gate (the contract's `gate`, default
      `bash validate.sh`) **before starting the next wave.** Running this gate inside the
      full clone folder ensures tests cannot contaminate the primary repo (GH-564). A red gate
-     stops the run — do not advance to the next wave, do not force-merge, report it in Step 8
-     and leave the branch as-is for the operator to inspect.
+     halts wave advancement — do not advance to the next wave or force-merge. Report
+     the failure in Step 8 and retain the branch. Only a Flywheel-coordinated run may
+     use the bounded recovery contract above before continuing; otherwise leave it
+     held for the operator to inspect.
 3. Commit per lane/wave with a message referencing the GH issue number(s) it closes.
 
 ### 8. Report

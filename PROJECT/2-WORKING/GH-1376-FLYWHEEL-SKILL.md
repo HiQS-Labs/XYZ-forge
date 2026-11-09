@@ -15,7 +15,7 @@ branch: feat/XYZ-forge-gh1376-flywheel-skill-2026-11-08
 ratings_provisional: false
 non_goals:
   - No new runner, queue, scheduler, supervisor, executable, test suite, or gate.
-  - No automatic marathon firing, PR merging, deployment, or direct edits to deployed skill copies.
+  - No new marathon-firing authority, PR merging, deployment, or direct edits to deployed skill copies.
 related:
   - skills/2-daily/jog/SKILL.md
   - skills/1-hourly/relay-xyz/SKILL.md
@@ -92,7 +92,7 @@ Keep this as a small decision/routing layer. Reuse each owned skill's commands, 
 ## Non-goals
 
 - No new executable, daemon, queue, scheduler, test suite, or gate machinery.
-- No automatic marathon firing or PR merging.
+- No new marathon-firing authority or PR merging.
 - No dependency on draft PR #1024; its weekly-intake scope is separate.
 - No direct edits to deployed skill collections or app symlinks.
 
@@ -133,7 +133,7 @@ Add one concise `skills/2-daily/flywheel/SKILL.md` and its Skills Index row. The
 ## Non-goals
 
 - No new executable, queue, scheduler, supervisor, daemon, test suite, gate, or second state writer.
-- No automatic marathon firing, PR merging, deployment, or expanded permissions.
+- No new marathon-firing authority, PR merging, deployment, or expanded permissions.
 - No implication that `handsfree` supplies a durable scheduler, or that a skill alone proves unattended reliability.
 - No repetition of the full #1356/#1358 run history or detailed command reference already owned by other skills.
 
@@ -188,4 +188,4 @@ Outcome: a requested 10days run keeps one batch owner, can hand off bounded repa
 
 ## Extension QA
 
-Plan QA pending. Original plan/final receipts remain historical and do not cover this extension.
+Plan QA Approved in round 1 at b5d956a25; receipt relay-system/2026-11-08/gh1376-compat-plan.codex.md. Nit implemented: blanket firing non-goals now prohibit new authority while preserving explicitly invoked 10days. Original receipts remain historical. Final extension QA pending.

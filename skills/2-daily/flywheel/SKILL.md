@@ -5,7 +5,7 @@ description: >-
   bounded autonomous repair, independent review, landing, and continuation to the
   next eligible item. Use for "flywheel", "run the factory flywheel", "keep real
   work moving", or "drive Jog through completion". Routes to start-task, jog,
-  start-marathon, relay-xyz, handsfree, unstuck, merge-cleanup, and explicitly
+  start-marathon, 10days, optional Daily observation, relay-xyz, handsfree, unstuck, merge-cleanup, and explicitly
   requested skills-army-hq deployment; never creates another runner or queue.
 ---
 
@@ -18,7 +18,8 @@ state, locks, limits or evidence.
 
 The current text of each linked skill owns its workflow. An explicit operator
 instruction or a more specific requested skill takes precedence. Flywheel does not
-install itself, start a durable scheduler, fire a marathon or merge a PR by itself.
+install itself, start a durable scheduler, grant new marathon-firing authority or merge
+a PR by itself. An explicitly invoked 10days sweep retains its named firing exception.
 
 ## Choose the work and answer the three rubrics
 
@@ -88,6 +89,38 @@ remains in [#1328](https://github.com/HiQS-Labs/XYZ-forge/issues/1328). Flywheel
 this projection to runs that explicitly select it; it does not rewrite unrelated
 campaigns' policies.
 
+## Daily observation and 10days batches
+
+**Daily is an optional observation-only companion.** When installed and configured,
+use the `daily` skill's synthesis to surface progress or blockers, then verify relevant
+live state before Flywheel acts within existing authorization. Daily owns its local
+synthesis logs; it does not dispatch, repair, merge or grant authority. Missing, stale
+or unavailable Daily data is not a blocker to eligible work; use the execution owner's
+live evidence. This is instruction-level support, not an automatic observer adapter.
+Do not install Daily, start schedules or edit deployed copies as part of a run.
+
+**An explicitly requested [10days](../../3-weekly/10days/SKILL.md) sweep keeps one batch
+owner.** 10days owns its scan window, issue selection, ratings, plan, preflight and
+batch execution. Its named auto-fire exception applies only when that skill is
+explicitly invoked; selecting Flywheel alone does not invoke it or authorize a sweep.
+Do not send its issues through Jog or start a second sweep to resume it. Standalone
+10days remains supported without Flywheel. The start-marathon route still needs its
+own exact-plan/order confirmation.
+
+For a Flywheel-coordinated 10days run, a red wave gate stops advancement. Preserve
+its halt and evidence; within the recorded limits, repair only the affected work
+through its owner, rerun the existing failed/relevant checks and recheck readiness
+before continuing the same plan. Ownership, containment, git-safety violations and
+unknown causes remain held for resolution; never skip a failed wave. Independent
+work may proceed only when the owner's dependencies and locks permit it. No automatic
+restart, new execution identity to reset attempts, cap increase or gate bypass.
+
+Handoff in the existing plan/results: objective and mode, scan window and exact plan,
+clone/revision, claims/lock state, budgets and attempt/repair history, halt/gate evidence
+and next owner. A returning owner reconciles those facts before continuing; a new
+conversation is not a fresh allowance. Use start-task/relay for scoped repairs when
+needed and step 6 for verified ready PRs, preserving per-PR merge approval.
+
 ## One ordered operating flow
 
 1. **Anchor the outcome and existing state.** Read the live issue, canonical plan,
@@ -99,14 +132,17 @@ campaigns' policies.
    branches or ledger rows. If start-task or existing state already supplies a
    verified ready PR, go directly to step 6 for approval and landing; do not send
    that issue back through Jog for another build.
-2. **Choose the existing execution engine.** Use
+2. **Choose the existing execution engine.** For an explicitly requested 10days sweep,
+   keep 10days as batch owner under the compatibility contract above. Otherwise use
    [jog](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/jog/SKILL.md)
    for immediate serial work. Use
    [start-marathon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/start-marathon/SKILL.md)
    only for genuinely marathon-shaped work that needs its preparation, lanes and dry-run.
    Marathon preparation never authorizes firing. A single task does not need a new
    marathon, queue or parallel executor.
-3. **Ready and dispatch through the selected owner.** For a prepared multi-lane
+3. **Ready and dispatch through the selected owner.** For 10days, use its preflight,
+   collision checks and existing firing exception; do not substitute Jog dispatch or
+   add start-marathon confirmation to that explicitly requested sweep. For a prepared multi-lane
    marathon, retain start-marathon ownership and hand off to `/pre-marathon` only
    after the operator confirms the exact dry-run-approved plan and order. Do not
    route that arc into serial Jog dispatch. For the Jog route, Jog owns pickup-time ledger registration,
