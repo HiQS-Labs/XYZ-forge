@@ -713,7 +713,7 @@ else
     # The dry-run report does not carry the banner, so compare the RENDERED doc, which does.
     QUEUE_PLAN_ROOT="$T" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
       QUEUE_PLAN_GH_STATE_FILE="$T/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$T/.branches" \
-      XYZ_PYTHON=0 bash "$MUT" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+      XYZ_PYTHON=0 bash "$MUT" --write --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
     if cmp -s "$T/shell.md" "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"; then
       fail "T: mutating the Bash engine changed NOTHING — the parity comparison is not cross-lane [GH-348]"
     else

@@ -1,0 +1,2 @@
+# GH-446 PR1327 takeover independent review
+Reviewer native Codex gpt-6.1-sol medium task /root/pr1327_eligibility_review. Need stillvalid, notsuperseded atdevelopment1c2bd89e. Python/Bashbehavior andwave_reconcile--write agree; file-specificfrozenexceptiontrailer exists. One readinessfinding: existingmutationcontrol directBashcallmissing--write couldpassstalePythonplan. Minimalexistingcallrepairapplied byparent andfocused suite verified70/0/2. External consumers requiring files must adopt--write; bareprintsreport ratherthanexit2 asdisclosed. Fullnormalgate remainsnecessary.
