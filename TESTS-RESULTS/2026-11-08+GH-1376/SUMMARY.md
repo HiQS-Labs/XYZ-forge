@@ -57,3 +57,5 @@ Resumed the existing GH-1376 clone/branch/PR, merged published development e695d
 Independent plan QA Approved in one round at b5d956a25; receipt gh1376-compat-plan.codex.md. Implemented its nit reconciling blanket no-firing language with 10days' pre-existing named exception. Source implementation f40a5f7b1; instruction-level consumer evidence compat-consumer-smoke.md at ea6c7b496. No actual sweep or automatic Daily integration is claimed. Daily is external/optional and no deployed skill was edited. Final extension QA and publication status are recorded separately.
 
 Lessons: NO_ENTRY. Component edit verdicts: flywheel routing, 10days recovery/handoff and Daily observation support all have no observed runtime effect yet; static consumer checks cannot support a runtime outcome lesson.
+
+Final compatibility QA Approved in round 2 at bc04fc63f. Round 1's concrete dirty-worktree fallback finding was corrected and verified by native Git refusal/clean-removal controls; see compat-cleanup-smoke.md. No further source findings. Normal final push gate and exact-head hosted inspection remain publication steps, not inferred from review.

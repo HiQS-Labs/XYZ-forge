@@ -2,7 +2,7 @@
 gh_issue: 1376
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1376
 title: "Add flywheel skill for adaptive Jog orchestration"
-status: Active — PR #1378 compatibility extension in final QA
+status: Active — PR #1378 reviewed; awaiting publication checks and merge approval
 created: 2026-11-08
 updated: 2026-11-08
 owner: parent orchestrator
@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Compatibility extension implemented at f40a5f7b1; independent plan QA Approved; instruction consumer checks pass. Daily/10days source changes remain in PR #1378. | Complete extension final QA and exact-head publication checks; merge and deployment require separate authority. |
+| Compatibility extension implemented at f40a5f7b1; independent plan QA Approved; instruction consumer checks pass. Daily/10days source changes remain in PR #1378. | Extension final QA Approved in round 2; publish through the normal documentation gate and inspect exact-head hosted checks. Merge and deployment remain separate. |
 
 ## Idea
 
@@ -188,7 +188,7 @@ Outcome: a requested 10days run keeps one batch owner, can hand off bounded repa
 
 ## Extension QA
 
-Plan QA Approved in round 1 at b5d956a25; receipt relay-system/2026-11-08/gh1376-compat-plan.codex.md. Nit implemented: blanket firing non-goals now prohibit new authority while preserving explicitly invoked 10days. Original receipts remain historical. Final extension QA pending.
+Plan QA Approved in round 1 at b5d956a25; receipt relay-system/2026-11-08/gh1376-compat-plan.codex.md. Nit implemented: blanket firing non-goals now prohibit new authority while preserving explicitly invoked 10days. Original receipts remain historical. Final extension QA Approved in round 2 at bc04fc63f, receipt relay-system/2026-11-08/gh1376-compat-final.codex.md.
 
 ### Final-QA correction
 
