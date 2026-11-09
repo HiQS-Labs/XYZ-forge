@@ -24,3 +24,7 @@ missing and changed-state counterexamples; independent plan/final QA; reviewable
 No new service, cache subsystem, gate or suite. No attribution to a principal consumer without evidence.
 
 Prior 90 native plus 90 closure CLI counts are fixture measurements, not historical wire volume.
+
+## Merge evidence
+
+- PR #1396 merged 2026-11-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
