@@ -1,0 +1,3 @@
+STATUS: Approved
+
+Fresh native gh1388_current_batch_final_qa round2/3, source681e5837. PASS: runtimebyteidenticalD520, unique exactbytearchive rename; errors preservebudget; nestedownership/failedaccumulation/resetboundaries/gateonlycount retained. Allcurrentnonsettingsrows preserved; exactlyone1387row withsupportedremintedGID/acceptedstart. Originalpolicyhash unchanged. Historicalfailed/greenqualifications remainhistorical. No reviewer tests/edits; currentdisposableclonequalification/exacthosted/outerreview stillrequired.

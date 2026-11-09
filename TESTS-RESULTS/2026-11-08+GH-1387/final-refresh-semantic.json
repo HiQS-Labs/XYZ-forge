@@ -1,0 +1,77 @@
+{
+  "ok": true,
+  "changed_both": true,
+  "classification": {
+    "disjoint": true,
+    "reasons": [],
+    "ours": {
+      "roadmap_items": {
+        "rmi-01M6ZEYZ9Y9CQMTC43E0FQ37AY": "added"
+      }
+    },
+    "theirs": {
+      "roadmap_items": {
+        "rmi-01M6YX2RK98XRZE9E38Z904KW2": "updated"
+      }
+    },
+    "keep": "ours",
+    "replay": [
+      {
+        "op": "update",
+        "row": {
+          "global_id": "rmi-01M6YX2RK98XRZE9E38Z904KW2",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "1381",
+          "title": "Merge worktree preservation",
+          "section": "Completed",
+          "position": "148",
+          "status_marker": "\u2705",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/3-COMPLETED/GH-1381-MERGE-WORKTREE-PRESERVATION.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1381",
+          "raw_text": "- **GH-1381 \u00b7 Merge worktree preservation** \u2705 **SHIPPED 2026-11-09 (PR #1382)** \u2014 [GH-1381-MERGE-WORKTREE-PRESERVATION.md](PROJECT/3-COMPLETED/GH-1381-MERGE-WORKTREE-PRESERVATION.md) \u00b7 [#1381](https://github.com/HiQS-Labs/XYZ-forge/issues/1381) (rated 95/90/50/90)",
+          "first_seen": "2026-11-09T00:59:38Z",
+          "updated_at": "2026-11-09T06:47:59Z",
+          "rating_pri": "95",
+          "rating_sev": "90",
+          "rating_appeal": "50",
+          "rating_effort": "90",
+          "rating_ovr": null,
+          "status_label": null
+        },
+        "base": {
+          "global_id": "rmi-01M6YX2RK98XRZE9E38Z904KW2",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "1381",
+          "title": "Merge worktree preservation",
+          "section": "Completed",
+          "position": "148",
+          "status_marker": "\u2705",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/3-COMPLETED/GH-1381-MERGE-WORKTREE-PRESERVATION.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1381",
+          "raw_text": "- **GH-1381 \u00b7 Merge worktree preservation** \u2705 **SHIPPED 2026-11-09 (PR #1384)** \u2014 [GH-1381-MERGE-WORKTREE-PRESERVATION.md](PROJECT/3-COMPLETED/GH-1381-MERGE-WORKTREE-PRESERVATION.md) \u00b7 [#1381](https://github.com/HiQS-Labs/XYZ-forge/issues/1381) (rated 95/90/50/90)",
+          "first_seen": "2026-11-09T00:59:38Z",
+          "updated_at": "2026-11-09T03:15:03Z",
+          "rating_pri": "95",
+          "rating_sev": "90",
+          "rating_appeal": "50",
+          "rating_effort": "90",
+          "rating_ovr": null,
+          "status_label": null
+        },
+        "cols": [
+          "raw_text"
+        ]
+      }
+    ],
+    "gen": [
+      2472,
+      2467
+    ]
+  }
+}

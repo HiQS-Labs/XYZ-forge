@@ -1,0 +1,9 @@
+# A — approved PR1388 recovery and landing
+
+Mode1B. Sharedwindow16:30:31–19:30:31Z, reserve19:10:31; no capreset. Baseline cleanE003 and exactc4ff4b75 unchanged; livehosted42576170480SUCCESS, prior408/408qualification and finalQA3/3 reused. DeployedFlywheel and merge-cleanup matched mergedsource; originalpolicy375ac...b2cf259 unchanged. Parentconfirmed soleprimarywriter, Bwaited; APIowner stoppedits overlappingread-onlybaseline query and preservedpartialobservations. A added no diagnosticquotaqueries.
+
+Rubric1B capability: turn already-qualifiedPR into durablemerged/reconciledstate, unblockB. Rubric2 discrimination: requiredliveledgercheckPASS thisattempt (prior403retained), exactpinnedno-delete merge, canonicalreconcileandnormaldocs publication; sourcegreen alone didnotcount. Rubric3 cost: no build, runtimegate, review, repair or capreset; existingmanualcanonicalstages measured/disclosed, not automatic/unattendedclaim. Independentread-onlyprogressmonitor hadno API/delegatepolling/schedule. Explicitoutsideengineghreads: PR1388once, issue1386once; startcommentonce. Existingengine nestedAPIcalls totalunknown; sanitizedlog sharedwithAPIowner#1395/#80. Tokensunknown. Actualstageresult/log inthisfolder. No cleanup/install/policyexperiment/promotion; allcheckoutsretained. Batch1394 promotionQA remainsdeferred underoriginalpolicy.
+
+Prior execution-seam independent QA is reused (receiptcopiedexplicitly as priorreview), not a new review round. Currentruntime/head unchanged so no evidence-invalidating edit required. Finalreportwillstateexactmerge/reconcile/finalpublishedSHA and release separatelyon1386.
+
+Actual merge b74ff542baffa74eadbbe7c39841288472232436; reconciliation published f68b51412ba9a2d4965a36be5c1f22ee943e8765, clean/equalremote. Existing-stage elapsed 541.347s, normaldocs gate78s; requiredledgeroncePASS; no runtimequalification/reviewrepeat. Batch1394bothPRsmerged/reconciled; promotion sweepdeferred.
