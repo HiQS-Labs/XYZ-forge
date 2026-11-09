@@ -87,3 +87,7 @@ Recon: [current seams](../../TESTS-RESULTS/2026-11-08+GH-1383/recon.md). Indepen
 5. Publish through normal full gate after host-slot confirmation, then land PR1385 through pinned reviewed PR1384 safe source with caller no-cleanup restrictions independently checked -> exact-head merge, original sequence and governance checks preserved; no unmerged code globally installed.
 
 Budget: existing review cap3 rounds/blocker, repair cap2/PR; batch window ends2026-11-09T02:42:44Z, no new scheduler. Future deployment uses only SkillsArmyHQ scripts against the explicit existing Pulse collection and merged canonical primary, never a second mirror or ad hoc link edits. All applied warnings/refusals are reported without adoption/drift overrides.
+
+## Merge evidence
+
+- PR #1385 merged 2026-11-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
