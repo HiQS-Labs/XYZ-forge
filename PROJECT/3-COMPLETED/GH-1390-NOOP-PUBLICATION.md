@@ -21,7 +21,7 @@ goal: Avoid empty publication pushes in primary while retaining normal gates for
 
 | What was just completed | What's next |
 |---|---|
-| Observed primaryfullgate from no-op push after1389; ownedgatecontained, checkedprimaryclean/published67adb with expectedconfig. No blanketall-stateclaim. | Minimal repair implemented; baseline 3 failures/1 pass, repaired existing suite 227/227 and independent source QA PASS. Next: parent independent composition review and disposable-full-clone qualification for this separate GH-1390 task; landing remains pending. |
+| Reviewed/tested fix merged in PR1393 and deployed through Skills Army HQ; actual primary no-op fetched and verified without push | Issue1390 complete; Pulse remote distribution warning remains separate; no next trial started |
 
 ## Recon Map
 Existing commit_and_push_phase5_writes commits pendingwrites then unconditionallypushes. No-write/headalreadyremote invokesprepush with emptyrefpairs; hookcorrectlyfailsclosedtofullregistry, inprimary. Callerreturned2afterownedabortalthoughHEADalreadyremote. Thehookremainsunchanged.
@@ -57,3 +57,11 @@ Two probe setup corrections are disclosed: initial baseline function globals did
 ## Fresh full qualification
 
 First new issue-specific normal full push passed408/408, including GH123parallelrc0, on d336b6d7db14a5bc3eb4506af23cc72bd0013dc4; hook524s, outer526.789s. Independent fullclone identity before/after unchanged. Prior405/408 and abortedretry remain failures; no gatewaiver or second attempt. Evidence-only normal publication, exact-head hosted checks, approved landing and HQdelivery parity remain pending.
+
+## Delivered outcome
+
+PR1393 finalafbab719 exact-hosted42559882821SUCCESS and parent outerPASS; merge4df6b0a4acd4702add981f241aecaab76ec7985c, canonical cleanpublicationfb8b766718c54c8e64037418105a24ae10b680bf. One new fullqualification408/408(hook524s) and docs64s/70s; original405/408/abortedretry remain historical failures and counters unchanged. Required premerge gate refused on RESTcore0/5000; parent-owned04:44 continuation retried after04:43:45 reset and gatepassed, no API/account/gate bypass.
+
+HQ manager alone updated local payload from clean merged4df6b0a4, digest3ac107523f1157a2a8e588895b3706a44cb37149f46fe0f75f72c326ae92210d, matchingreceipt/wholefolder/6links. Pulsecommit82d38e8b9, remote distribution unverified with STALE_PULSE_COLLECTION behind1; no history force/rebase/reset. App picker refresh unverified. Delivered primary no-op probe: realfetch and finaldurabilitychecks, zero pushrequests,0.421s; spy would reject unexpectedpush before execution. Earlier actual localbareGit dirty-write probe proves unpublishedwrites stillcommit/publish through normalhook. No speedup/coalescingclaim.
+
+Agent-assisted Flywheel1B, start03:48:20Z, deadline05:18:20Z; tokensunknown. Priorfailurecosts, two manualprobe setupcorrections and quotawait are retained; no new productionrepair, newbuilder or second fullattempt. No othermerge/configexperiment/cleanup/trial/promotion. ExactfinalSHA/end recorded in1390/1386 after normalbookkeepingpublication. Originalpolicyhash375ac61e7589b6a7ae6da78da2a696dd1c95f193a512bd5b25ac3af58b2cf259 unchanged.
