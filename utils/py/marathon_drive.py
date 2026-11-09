@@ -1082,9 +1082,10 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
             out = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=5).stdout
             import re
             m = re.search(r"Pages occupied by compressor:\s*([0-9]+)", out)
-            if m:
+            page_size = re.search(r"page size of\s+([0-9]+)\s+bytes", out)
+            if m and page_size and int(page_size.group(1)) > 0:
                 pages = int(m.group(1))
-                compressor_mb = (pages * os.sysconf("SC_PAGE_SIZE")) // (1024 * 1024)
+                compressor_mb = (pages * int(page_size.group(1))) // (1024 * 1024)
         except Exception:
             pass
     elif os.path.exists("/proc/meminfo"):
