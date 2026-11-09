@@ -207,3 +207,5 @@ Ledger conflict resolution retained E844 artifacts, then replayed GH-1376 regist
 
 
 Bounded E844 refresh: accepted-start UPDATE-only succeeded after corequota reset at05:44:26Z; existing row/GID/rating retained, no second roadmapadd. Actual F65 merge preserved, both skill files byte-identical to F65. Current03-policy unchanged. Original403refusal remains in temp/1378-e844-refresh; normal current qualification and final remainingreview round next. Window05:23:41–07:23:41Z, closeout07:03:41.
+
+Normal current refresh push passed408/408 at78dd98ee6561dfcf75181902b040c53f78320fd5, hook544s, independentclone identityunchanged; receipt e844-current-full-result.json. This is currentqualification, distinctfromhistorical547/539s. Evidence-only normalpublication andfreshhostedexactheadverification next.
