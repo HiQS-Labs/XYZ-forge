@@ -1,0 +1,1 @@
+{"timestamp": "2026-11-09T00:50:04.951804+00:00", "command": "existing resolve_merge_policy(root), assert selectedper_batch and existingcommands", "result": "PASS; policy parses, realcommand files exist", "exit_code": 0, "source_base": "061e8981e0f54f726708c683726302b9387a65f3", "note": "staticconfigurationcheck only, actualcanary/fullbatchsweeppending"}
