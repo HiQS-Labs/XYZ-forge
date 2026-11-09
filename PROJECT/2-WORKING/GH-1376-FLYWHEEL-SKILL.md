@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Compatibility extension implemented at f40a5f7b1; independent plan QA Approved; instruction consumer checks pass. Daily/10days source changes remain in PR #1378. | Extension final QA Approved in round 2. Full normal push gate passed in 547s on c4abd1db6; committed evidence receipt follows. Inspect exact-head hosted checks, then await per-PR merge approval. No deployment. |
+| Compatibility source QA Approved; development b01b621e1 integrated at 404579d6, full normal hook GREEN539s and GitHub mergeable=true. Both skill files unchanged by the base merge; receipts committed. | Inspect exact-head hosted checks and scoped published-checkout retirement; await separate per-PR merge approval. No deployment. |
 
 ## Idea
 
