@@ -9,6 +9,9 @@ refusals across initial readiness, resumed readiness and the current landing. Th
 stage extraction is `retained-workflow-stages.json`, with original artifact hashes. These establish
 repeated real gate execution; they do **not** enumerate internal HTTP requests or quota units.
 The current invocation hash and stage facts are in `workflow-observation.json`.
+The owner supplied the terminal result, retained as `completed-workflow.json`: the workflow
+completed successfully in 541.347 seconds. This includes local planner/reconciliation work and
+is not an API latency measurement; nested HTTP counts remain unknown.
 
 A separate read-only readiness observation was interrupted once the owner supplied the active
 workflow logs, to avoid duplicate reads. It completed 27 native CLI calls and 27 closure CLI calls;
@@ -58,4 +61,4 @@ no cross-stage cache. Its suggested error fallback and mismatch re-probe are als
 they weaken fail-closed behavior. Existing fixtures are not a reason to fallback after API errors.
 Bounded valid misses may use the existing singleton path, without treating absence as open.
 
-Independent final QA approved the full-gate step (receipt in relay-system/2026-11-09/gh1395-final.codex.md). GH492 passed; native-label coverage passed 42 tests; GH436 passed 227 tests in a separate full clone. Full gate remains pending; no production performance claim or merge readiness yet.
+Independent final QA approved the full-gate step (receipt in relay-system/2026-11-09/gh1395-final.codex.md). GH492 passed; native-label coverage passed 42 tests; GH436 passed 227 tests in a separate full clone. Full `validate.sh` passed 408/408 in 623.056 seconds on `273700069754f22d1ddebf274f33fd775207d58d`; normal pre-push reused that exact-SHA receipt without bypass. This is not ci-local promotion qualification. Clone identity was verified after the gate. Subsequent commits contain evidence/docs only; runtime SHA256 remains the reviewed value. Parent outer review and hosted checks remain separate; no production performance claim.
