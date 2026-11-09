@@ -2,8 +2,8 @@
 gh_issue: 1387
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1387
 title: Preserve successful lane attempt history
-status: In progress
-updated: 2026-11-08
+status: Complete
+updated: 2026-11-09
 owner: Codex
 goal: Retain exact attempt history without changing live budget semantics
 created: 2026-11-08
