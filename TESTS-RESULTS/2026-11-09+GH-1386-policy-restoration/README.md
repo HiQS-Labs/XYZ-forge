@@ -12,4 +12,8 @@ Rubrics: real policy drift eliminated only after durable merged bytes match; dis
 
 ## Fresh recovery qualification
 
-2026-11-09T02:56:03Z–03:05:09Z: first normal full push408/408GREEN; hook544s, outer545.367s. Source898801a3, separate full clone, before/after HEAD/origin/bare/localidentity unchanged. No retry, bypass or1390 repair. Subsequent evidence-only normal publication and hosted exact-head checks remain separate; durable restoration still requires merge/reconciliation.
+2026-11-09T02:56:03Z–03:05:09Z: first normal full push408/408GREEN; hook543s, outer545.367s. Source898801a3, separate full clone, before/after HEAD/origin/bare/localidentity unchanged. No retry, bypass or1390 repair. Subsequent evidence-only normal publication and hosted exact-head checks remain separate; durable restoration still requires merge/reconciliation.
+
+## Durable restoration and bookkeeping
+
+PR1392 exact4e9b4691 hosted42554551752 SUCCESS, merged 4394c7c4cf65871fc33f40945b1fb13d88fbc45a. Canonical individual reconciliation also reran1384 after corrective issue1381 closure; recovery inventory uncertainty stays separate. Fresh runtime gate1/2 passed, no new blocker repair or1390 counter reset. Final publication and SHA are recorded in issue1386.
