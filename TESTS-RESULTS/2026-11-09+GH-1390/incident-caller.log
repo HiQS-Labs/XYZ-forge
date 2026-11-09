@@ -1,0 +1,38 @@
+CALLER_START 2026-11-09T01:06:24Z
+Primary checkout: /Users/noelsaw/Documents/GitHub/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+PINNED {"1389": "568a2a3d8b5710a048441ee694ccffe4a93398c6"}
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub/XYZ-forge/.merge-cleanup.json
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-F1CCB6 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D7D2C4 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D248B2 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-79F036 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-A993B3 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-751A4C is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-7AFFE1 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-AC68FA is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 44 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.8.0 Sundown is still a draft and 23 day(s) past its target of 2026-10-17 — the plan has drifted from the calendar
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-216: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-255: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1075: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1087: Queue / parked intake -> Completed
+merge-cleanup: PR #1389: pre-merge ledger gate green on 568a2a3d8b + origin/development
+merge-cleanup: PR #1389: required checks: no required checks
+merge-cleanup: Merging PR #1389 via `gh pr merge 1389 --merge --match-head-commit 568a2a3d8b5710a048441ee694ccffe4a93398c6`...
+OBSERVED_MERGE_COMMAND ["pr", "merge", "1389", "--merge", "--match-head-commit", "568a2a3d8b5710a048441ee694ccffe4a93398c6"]
+merge-cleanup: ✅ PR #1389 is MERGED as 67adb8775e
+merge-cleanup: Running post-merge reconciliation for PR #1389 in /Users/noelsaw/Documents/GitHub/XYZ-forge...
+merge-cleanup: ✅ local wave_reconcile for PR #1389 passed
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+OBSERVED_PUBLICATION_ATTEMPT 1794186506.571468 /Users/noelsaw/Documents/GitHub/XYZ-forge ["push", "origin", "HEAD:development"]
+OBSERVED_PUBLICATION_RESULT 1794186683.3789802 -15
+merge-cleanup: ERROR — PR #1389: could not push post-merge writes: pre-push: no ref pairs to classify — running the full gate.
+/Users/noelsaw/Documents/GitHub/XYZ-forge/test/lib/runner-envelope.sh: line 120: 57573 Done                    printf '%s\n' ${POOL[@]+"${POOL[@]}"}
+     57577 Terminated: 15          | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$1" pool' _ {}
+merge-cleanup: ERROR — PR #1389: post-merge writes were not made durable — stopping before the next PR
+merge-cleanup: Landing clones retained for inspection under /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/merge-cleanup-_kl_v2dy
+CALLER_END 2026-11-09T01:11:23Z elapsed 299.02 rc 2
