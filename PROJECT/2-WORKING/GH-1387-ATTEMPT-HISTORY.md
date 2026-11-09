@@ -16,7 +16,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Exact-byte baseline RED/fixed GREEN, adjacent controls, focused suites and independent final QA Approved | Reserved full gate and ready PR; parent inspects before merge |
+| Exact-byte baseline RED/fixed GREEN, adjacent controls, focused suites and independent final QA Approved | 408/408 full gate passed; publish ready PR for parent outer inspection, awaiting merge |
 
 Marathon and standalone relay success currently unlink `.tick/attempts/<lane>`. GH1254 gate-only recovery lost exactly two records (SHA256 d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2); the supervisor restored them before checkpoint publication. Merged evidence: TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/success-counter-repair.json and gate-start.json.
 
@@ -44,3 +44,8 @@ Independent Codex review approved with conditions (receipt `relay-system/2026-11
 ## Rubric and cost
 
 Capability is retained audit bytes plus unchanged live budget behavior, not a PR count. Baseline and candidate replay decide whether the bounded fix works. Start 23:44:07Z; fixed deadline 2026-11-09T01:44:07Z. Budget 120 minutes, two builder attempts, three repair rounds per blocker, one full gate capped at 1800 seconds only with parent reservation. Agent-assisted. Tokens unknown. Primary working tree/index/ledger and peer refs untouched; task-branch object writes authorized. No global skill installation; flywheel pinned to PR1378 commit 7c382a594057d2992b9dace28569adfd6130db00, fetched via GitHub.
+
+
+## Delivery evidence
+
+Scoped rubric PASS: exact original history survives success, failed attempts still accumulate, new post-success budget starts at one. Full gate 408/408 on dc02fa19a; initial406/408 and both focused repair controls retained. One builder session, one import-order repair and one caller-environment repair; no extra worker dispatch. Plan/final independent QA Approved. Evidence and actual costs: `TESTS-RESULTS/2026-11-08+GH-1387/SUMMARY.md`. Not merged or unattended-qualified; #1254/#1358 remain open.

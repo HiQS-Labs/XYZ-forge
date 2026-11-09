@@ -21,3 +21,12 @@ Initial full gate on f7c893e4d: RED, 406/408, push refused after 539 seconds (ou
 
 
 Repair controls on ab48e83af: GH376 21/21 GREEN after import order correction; GH544 with explicit width override RED 22/29, without override GREEN 29/29. Both run in the disposable full clone. The independent final review predates the import-order-only correction; author comparison confirms the same imported symbols and runtime behavior, and the affected existing suite now passes. No new review was spawned for this formatting-only correction. Builder session 1, repair round 1 per blocker; retry gate remains pending.
+
+
+## Final gate and capability verdict
+
+**PASS for the scoped repair capability.** The original two records remain inspectable after successful gate-only recovery; failed-run cap accumulation and successful fresh-budget behavior remain correct. Initial failure 406/408 is retained. Corrected candidate `dc02fa19a6ea1e118377d8ae51da452bf6ad90d0` passed **408/408 in 535 seconds**, normal push exit 0 (outer 538 seconds), with strict before/after clone identity unchanged. Full gate receipt is committed alongside raw output and provenance. No bypass. Parent host slot released at completion.
+
+Actual usage at runtime publication: 30 minutes elapsed of 120; one builder session with an initial implementation and import-only repair (no additional dispatched builder); plan QA 1 and final QA 1, both Approved. Two blockers each consumed repair round 1/3: literal import check and caller width override. Full gates: initial 539 seconds RED and retry 535 seconds GREEN, each below 1800 seconds. Focused GH491, GH280 227/227, GH376 21/21 and GH544 clean29/29; negative width control22/29. Tokens unknown; no new paid accounts/tools. Parent interventions were host-slot coordination and worktree metadata permission clarification; no parent code repair. Agent-assisted, not unattended qualification.
+
+The final publication tail adds only evidence/accounting to the full-gated code. Independent QA covered the implementation before the import-order-only correction; the affected existing suite and final full gate verify that correction. Broader #1254/#1358 qualification remains open. Parent outer inspection and merge remain separate. All checkouts and manual fixtures preserved; no cleanup, primary writes, schedules or offhost exposure. NO_ENTRY.
