@@ -41,6 +41,9 @@ heuristic, not an empirically universal optimum. The later authorized required c
 
 The native observation can precede the closure observation by longer. Disagreement still refuses;
 there is no re-read that overrides disagreement, no persistence, and no reuse across commands.
+An accepted terminal transition still obtains its native closed observation from the singleton
+reader: inventory entries must be open, and an open inventory hit followed by closed refuses.
+Thus the bulk path never supplies a closed observation used to authorize a ledger write.
 Errors, malformed pages, duplicate numbers, wrong repositories and requested PRs refuse before
 writes. Existing row identity, local transaction/recheck and event emission remain intact.
 The shared validator is extracted without changing singleton behavior.
@@ -84,3 +87,12 @@ Actual HTTP request totals/resource headers were not observed. No principal clie
 is established. The earlier incomplete 27+27 observation is not substituted for a baseline sweep.
 The required actual optimized workflow/page-hit observation is now complete; exact historical
 HTTP savings remain unknowable from the retained baseline logs.
+
+## Integrated publication qualification
+
+Normal pre-push passed **408/408** on `c4343fc1a6a4d4539c3d9cdde047a50891786653`.
+The hook reported **548 seconds** for the full gate; total push duration was **551.480 seconds**.
+The branch update succeeded without bypass. Post-gate clone identity and cleanliness passed.
+This separately qualifies the integrated whole head; it is not promotion/ci-local evidence.
+The final tail changes only evidence and documentation and uses the normal documentation gate.
+Parent outer review and hosted checks are not replaced by these local results.
