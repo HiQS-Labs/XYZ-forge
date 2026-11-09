@@ -24,6 +24,61 @@ goal: >
   Borrow declared supervision (FACTORY_SUPERVISED=1) and cache-warmth dispatch into the #1248 outer loop primitive.
 ---
 
+## Clock correction implementation — GH1358 continuation
+
+This is the only current implementation scope; retain historical cache/restart work below.
+User explicitly authorized the demonstrated timing correction; broader1254 acceptance stays OPEN.
+Actual GH1216 gate took3403real seconds but monotonicguard reported859 under1800cap.
+Independent Codex plan QA Approved atd8405cc02; receipt gh1358-elapsed-clock-plan.codex.md.
+
+Modify only run_pre_advance_gate in utils/py/marathon_drive.py. Use maximum of monotonic
+elapsed, wall elapsed and0; enforce existingwallcap before accepting either initialpoll
+completion or group-missing recheck completion. An already-exited child must be refused
+with existingexit108 without signalling its reapedPID/group. Existinggroupkill only for
+still-runningchild. Enforcement/logduration must agree. Preserve disabledwallcap, genuine
+nonexpired gatefailure, CPU/RSS caps and baseline handling. No new suite/module/gate or
+clockdependency. No host-power/offhost change. Local on-resume enforcement cannot act
+while host sleeps; forwardwalljump conservatively expires, backward cannot subtractawake.
+
+Manual red/green controls are committed at TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/.
+The existing gate runs those and gh390/gh280 in a separate disposable fullclone, thennormal
+fullpushgate. Do not run test/*.sh/validate.sh in thisrunner orlinkedworker. No new tests.
+The worker may use the puremanualcontrols via python3; no Git commands or scopeexpansion.
+
+
+## Historical bounded repair — 18:45Z
+
+The clock source already has independent Codex and Agy approval; preserve that implementation. Two scheduled gate-only checks failed existing gh390 MagicMock RSS fixture because500000calls can reach its safety ceiling before one-second watchdog sampling; diagnostic bash-x rerun passed with ceiling/496MBsample. This is final builder attempt2/2; no morebuilder afterthis.
+
+Repair only existing fixture: importtime in embedded MOCK_HOG and sleep0.01s every1000calls, preserving500000ceiling/96MBthreshold/assertions (roughly5s bounded pacing). Witness disabled-watchdog red: same fixture exits safetyceiling nonzero, so existing expectedguardkill check cannot falselypass. Retain existingmanualclock7cases. PlanQA confirmed technical pacing sound. gh390 suite is NOT in SUBSYSTEM_TESTS_small: follow AGENTS flaky-nontier rule by removing its validate.sh TESTS entry and adding filename to gh306 EXEMPT, leaving file for explicit manual/main-path use; do not claimtiermembership oraddanynewtest. Existing explicit gh390/gh280 gate commands remain required. Registry becomes408, not409; disclose why.
+
+Actual gate wallcap and minimumremaining reserve900s, lower than prior1200/1800; latestgateentry18:51:18Z, absolute19:06:18Z unchanged. No modelchange, no newmachinery, no offhost access. Only file-scopedrepair andreview; harness runs mutation-heavy suites in disposable fullclone.
+
+## Acceptance
+
+- [x] The existing Marathon gate counts sleep-inclusive wall elapsed without subtracting monotonic elapsed after a backward clock adjustment.
+- [x] Late running or completed children are refused with exit 108 before accepting success; a reaped child is never signalled.
+- [x] Normal success, genuine non-expired failure, disabled wall caps and existing CPU/RSS behavior are preserved.
+- [x] Recorded old-code red/new-code green controls and existing gh390/gh280 checks pass in a disposable full clone, followed by the normal full push gate; no new suite or gate machinery.
+
+No wholeissueclosure claim. Actualunknown modelusage remainsunknown.
+
+Budget: one scheduledJogdispatch, existingMarathon lane cap2; no automaticretry. Therewas
+no1254Jogrow beforethiscontinuation, so this is firstdispatch ofthe newdemonstratedclockscope,
+not reset of oldtaskrepairs. Old1254initializer/publication/lifecycle repair counters remain.
+Worker wall/idle900s, relaybase5/hardmax10 qualifyingprogress, gatewall1800s unchanged.
+Fixed outerdeadline19:06:18Z; atdeadline no newwork, preserve/report anyactive taskidentity.
+
+## Current recovery verification — separate window
+
+The original rehearsal ended with a720-second gate timeout and no full pass by19:06:18Z. New user-authorized recovery runs20:05:42–21:35:42Z with an explicit1800-second gate cap. This does not extend or rewrite the original rehearsal. Existing satisfied-lane retry skipped rendering/reseeding and builder execution. The unchanged candidate8d541d012 passed the normal full gate408/408 in536s; guard elapsed544s, exit0. Transcript-only resultheadfc7896aae is bound to reviewed sourcebd4b0462. Prior manual7/7, gh39023/23 and adjacent227/227 evidence was reused.
+
+The post-run preservation assertion caught existing success-path deletion of the lane attempt file before primary checkpoint publication. Its exact original two records were restored from hashed evidence; no new builder or counter reset is authorized. This is disclosed agent-assisted recovery. The generated approved receipt reports null attempt count on this gate-only path; the preserved file is the count evidence. No historical receipt was rewritten.
+
+Normal full verification ran in a separate disposable full clone. The existing automatic receipt publisher then ran its documentation-only push in the retained full runner; no mutation-heavy suite ran there. This falls short of the recovery instruction that all gates use disposable clones and is disclosed; subsequent documentation publication uses the disposable gate clone. No bypass or new gate machinery.
+
+Exact receipts, original failed result, full log and provenance are in `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/`. Independent Codex plan/final code/fixture/recovery reviews and Agy implementation approval retained. Physical same-host sleep blindness remains; enforcement is awake/on-resume only. No schedules, PhaseB or merge.
+
 ## Key concepts
 
 - Declared-not-detected supervision: explicit `FACTORY_SUPERVISED=1`, refusing restart if undeclared.
@@ -33,7 +88,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| PR1369 merged with user approval; independent QA Approved, integrated full gate 409/409, reconciliation published. | GH1254 remains OPEN: restart verification, overloaded deadlines and observed live savings require follow-up. |
+| Clock correction independently reviewed; controls7/7, main23/23, adjacent227/227 and full408/408 passed in separate disposable verification clones. | Review and obtain per-PR approval for the unmerged clock delivery. GH1254 remains OPEN: restart verification, overloaded deadlines and observed live savings are still unmet. |
 
 ## Idea
 
@@ -68,16 +123,27 @@ pri 60 / sev 40 / appeal 50 / effort 50 (extends factory-primitive resilience an
 
 ```json
 {
-  "target": { "repo": ".", "ref": "development" },
-  "gate": "python3 -m pytest test/test_python_layer.py",
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json,datetime,re\ndeadline=datetime.datetime.fromisoformat('\"'\"'2026-11-08T19:06:18+00:00'\"'\"').timestamp()\ngate_started=datetime.datetime.now(datetime.timezone.utc).timestamp()\nassert deadline-gate_started>=900, '\"'\"'fixed preparation deadline leaves less than reduced 900s gate cap; preserve candidate without starting gate'\"'\"'\nroot=pathlib.Path.cwd().resolve()\nassert root==pathlib.Path(os.environ['\"'\"'MARATHON_ROOT'\"'\"']).resolve()\nenv={k:v for k,v in os.environ.items() if k in ('\"'\"'PATH'\"'\"','\"'\"'HOME'\"'\"','\"'\"'USER'\"'\"','\"'\"'LOGNAME'\"'\"','\"'\"'SHELL'\"'\"','\"'\"'TMPDIR'\"'\"','\"'\"'LANG'\"'\"','\"'\"'LC_ALL'\"'\"','\"'\"'TERM'\"'\"','\"'\"'SSH_AUTH_SOCK'\"'\"','\"'\"'GH_TOKEN'\"'\"','\"'\"'GITHUB_TOKEN'\"'\"')}\ndef git(where,*args):return subprocess.check_output(['\"'\"'git'\"'\"','\"'\"'-C'\"'\"',str(where),*args],text=True,env=env).strip()\nsha=git(root,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"');branch=git(root,'\"'\"'symbolic-ref'\"'\"','\"'\"'--short'\"'\"','\"'\"'HEAD'\"'\"');origin=git(root,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'origin'\"'\"')\nassert branch.startswith('\"'\"'marathon/'\"'\"') and origin=='\"'\"'https://github.com/HiQS-Labs/XYZ-forge.git'\"'\"'\nclone=pathlib.Path(tempfile.mkdtemp(prefix='\"'\"'gh1358-lane-gate-'\"'\"')).resolve()\nprint('\"'\"'GH1358 isolated existing gate/push:'\"'\"',clone,'\"'\"'candidate'\"'\"',sha,flush=True)\ndef run(args):subprocess.run(args,cwd=clone,env=env,check=True)\nrun(['\"'\"'git'\"'\"','\"'\"'clone'\"'\"','\"'\"'--no-local'\"'\"','\"'\"'--no-hardlinks'\"'\"',str(root),str(clone)])\nrun(['\"'\"'git'\"'\"','\"'\"'remote'\"'\"','\"'\"'set-url'\"'\"','\"'\"'origin'\"'\"',origin]);run(['\"'\"'bash'\"'\"','\"'\"'githooks/install.sh'\"'\"']);run(['\"'\"'bash'\"'\"','\"'\"'githooks/install.sh'\"'\"','\"'\"'--check'\"'\"'])\nrun(['\"'\"'python3'\"'\"','\"'\"'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py'\"'\"','\"'\"'utils/py/marathon_drive.py'\"'\"'])\nrun(['\"'\"'bash'\"'\"','\"'\"'test/gh390-gate-guard.sh'\"'\"'])\nrun(['\"'\"'bash'\"'\"','\"'\"'test/gh280-jog-marathon-adapter.sh'\"'\"'])\nassert git(clone,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha and git(root,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha\nassert git(clone,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'origin'\"'\"')==origin\nassert git(clone,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'--push'\"'\"','\"'\"'--all'\"'\"','\"'\"'origin'\"'\"')==origin\nassert git(clone,'\"'\"'config'\"'\"','\"'\"'--get'\"'\"','\"'\"'core.bare'\"'\"')=='\"'\"'false'\"'\"' and not git(clone,'\"'\"'status'\"'\"','\"'\"'--porcelain'\"'\"')\nrun(['\"'\"'bash'\"'\"','\"'\"'githooks/install.sh'\"'\"','\"'\"'--check'\"'\"'])\nlive=subprocess.check_output(['\"'\"'ps'\"'\"','\"'\"'-axo'\"'\"','\"'\"'pid=,command='\"'\"'],text=True)\nother_gates=[line for line in live.splitlines() if re.match(r'\"'\"'^\\s*\\d+\\s+(?:/\\S*/)?bash\\s+(?:\\S*/)?(?:validate|ci-local)\\.sh(?:\\s|$)'\"'\"',line)]\nprint('\"'\"'pre-push live host gate check:'\"'\"',other_gates,flush=True)\nassert not other_gates, '\"'\"'another host full gate is active; no peer was stopped'\"'\"'\nassert datetime.datetime.now(datetime.timezone.utc).timestamp()<deadline, '\"'\"'fixed preparation deadline reached before push'\"'\"'\nrun(['\"'\"'git'\"'\"','\"'\"'push'\"'\"','\"'\"'--set-upstream'\"'\"','\"'\"'origin'\"'\"','\"'\"'HEAD:refs/heads/'\"'\"'+branch])\nassert git(clone,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha and git(root,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha\nassert git(clone,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'origin'\"'\"')==origin and git(clone,'\"'\"'config'\"'\"','\"'\"'--get'\"'\"','\"'\"'core.bare'\"'\"')=='\"'\"'false'\"'\"'\nassert not git(clone,'\"'\"'status'\"'\"','\"'\"'--porcelain'\"'\"')\nreceipt=clone/'\"'\"'.xyz/receipts'\"'\"'/f'\"'\"'{sha}.json'\"'\"';data=json.loads(receipt.read_text())\nassert data['\"'\"'sha'\"'\"']==sha and data['\"'\"'exit_code'\"'\"']==0 and data.get('\"'\"'scope'\"'\"')=='\"'\"'full'\"'\"'\ndest=root/'\"'\"'.xyz/receipts'\"'\"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)\nprint('\"'\"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'\"'\"',flush=True)\n'",
   "fix_probes": [
-    { "type": "grep_absent", "path": "utils/py/harness.py", "pattern": "FACTORY_SUPERVISED",
-      "note": "pre-fix: harness.py does not check FACTORY_SUPERVISED declaration" }
+    {
+      "type": "command",
+      "cmd": "python3 /dev/stdin <<'GH1254_CLOCK'\nimport ast,pathlib\ns=pathlib.Path('utils/py/marathon_drive.py').read_text()\nn=next(n for n in ast.walk(ast.parse(s)) if isinstance(n,ast.FunctionDef) and n.name=='run_pre_advance_gate')\nassert any(isinstance(c,ast.Call) and isinstance(c.func,ast.Attribute) and isinstance(c.func.value,ast.Name) and c.func.value.id=='time' and c.func.attr=='time' for c in ast.walk(n)), 'existing gate lacks wall-time sampling across sleep'\nGH1254_CLOCK",
+      "expect_nonzero": true
+    }
   ],
-  "artifacts": [ "utils/py/harness.py" ],
+  "artifacts": [
+    "utils/py/marathon_drive.py",
+    "test/gh390-gate-guard.sh",
+    "validate.sh",
+    "test/gh306-registry-bidirectional.sh"
+  ],
   "remediation": {
     "source": "issue#1254",
-    "criteria": "Check FACTORY_SUPERVISED in tick/watchdog and implement cache-warmth dispatch telemetry; no new tests (GH-831)."
+    "criteria": "Bounded GH1358 demonstrated clock correction only: use max(monotonic elapsed, wall elapsed,0), refuse late exited child before accepting success, no signal to reaped process, preserve disabled cap/genuine failure/CPU/RSS. No new suite/gate; existing manual controls and gh390/gh280 through disposable gate clone. Leave broader GH1254 acceptance open."
   }
 }
 ```
@@ -189,3 +255,11 @@ restored intact to their original paths. No data was discarded and no peer proce
 The initial lifecycle commit recorded only the rename after a stale old-path staging argument
 failed. Remaining owned status/ledger/evidence changes were preserved and published in a
 follow-up commit; no reset or history rewrite. Final publication re-runs the normal docs gate.
+
+## Merge evidence
+
+- PR #1377 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1379 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

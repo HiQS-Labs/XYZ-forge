@@ -1,0 +1,13 @@
+import sys,subprocess,json,datetime,hashlib,os
+from pathlib import Path
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge');source=Path.cwd();base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg');e=source/'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery'
+sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogSupervisorLock,JogCheckpoint,_git
+assert datetime.datetime.now(datetime.timezone.utc)<datetime.datetime.fromisoformat('2026-11-08T21:35:42.553636+00:00')
+lock=JogSupervisorLock(str(primary));lock.acquire()
+try:
+ c=JogCheckpoint(str(primary),str(base/'publisher'));assert c.begin()
+ subprocess.run([sys.executable,str(primary/'utils/py/releases_app.py'),'--root',str(primary),'jog','skip','1254','--reason','awaiting-landing (PR #1379: https://github.com/HiQS-Labs/XYZ-forge/pull/1379); recovery verified, builder attempts retained2/2; separate merge approval required'],check=True)
+ c.finish()
+ print(json.dumps(c.state),flush=True)
+finally:lock.release()

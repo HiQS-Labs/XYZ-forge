@@ -1,0 +1,11 @@
+{
+  "candidate": "c6cc2d6d7a3dddf313f08954b842f8136fc294f0",
+  "manual_clock_cases": 7,
+  "gh390_pass": 23,
+  "gh280_pass": 227,
+  "focused_fail": 0,
+  "full_gate": "in progress; no pass claim",
+  "gate_cap_s": 720,
+  "deadline": "2026-11-08T19:06:18Z",
+  "builder_attempts": "2/2; no further builder"
+}

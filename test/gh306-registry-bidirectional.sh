@@ -45,6 +45,7 @@ echo "== test: gh306-registry-bidirectional =="
 # exemptions are how this list rots into covering nothing), so the list is pinned in BOTH
 # directions below, like the registry it carves holes into.
 EXEMPT=(
+  "gh390-gate-guard.sh" # GH-1358 / AGENTS #802/#853: observed non-Small RSS fixture timing flake; retained for explicit gh390 gate checks
   "gh492-idle-kill.sh" # GH-1006 / AGENTS #802/#853: observed non-Small parallel timing flake; manual suite retained
   "gh4-ungated-clone-warning.sh" # GH-920 / GH-853: observed non-Small fixture-copy flake; retained for targeted use
   "registry-lock-concurrency.sh" # GH-854 / GH-917: operator-deferred installer stress; retained for targeted manual use

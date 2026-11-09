@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1254-exec1",
+  "generated_at": "2026-11-08T18:37:22Z",
+  "outcome": "escalated",
+  "reason": "pre-advance-failed",
+  "exit_code": 5,
+  "approval_preserved": false,
+  "issue": "1254",
+  "phase": "gh-1254-outer-loop-borrow-decl",
+  "lane": "gh-1254-outer-loop-borrow-decl",
+  "token": "MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1254-outer-loop-borrow-decl-2026-11-08",
+  "head_sha": "e86d59ea11c1034cbf85adbb49a0ca12752a7960",
+  "reviewed_candidate": null,
+  "reviewed_head": null,
+  "added_sha256": null,
+  "attest_path": null,
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json,datetime,re\ndeadline=datetime.datetime.fromisoformat('\"'\"'2026-11-08T19:06:18+00:00'\"'\"').timestamp()\ngate_started=datetime.datetime.now(datetime.timezone.utc).timestamp()\nassert deadline-gate_started>=1800, '\"'\"'fixed preparation deadline leaves less than existing 1800s gate cap; preserve candidate without starting gate'\"'\"'\nroot=pathlib.Path.cwd().resolve()\nassert root==pathlib.Path(os.environ['\"'\"'MARATHON_ROOT'\"'\"']).resolve()\nenv={k:v for k,v in os.environ.items() if k in ('\"'\"'PATH'\"'\"','\"'\"'HOME'\"'\"','\"'\"'USER'\"'\"','\"'\"'LOGNAME'\"'\"','\"'\"'SHELL'\"'\"','\"'\"'TMPDIR'\"'\"','\"'\"'LANG'\"'\"','\"'\"'LC_ALL'\"'\"','\"'\"'TERM'\"'\"','\"'\"'SSH_AUTH_SOCK'\"'\"','\"'\"'GH_TOKEN'\"'\"','\"'\"'GITHUB_TOKEN'\"'\"')}\ndef git(where,*args):return subprocess.check_output(['\"'\"'git'\"'\"','\"'\"'-C'\"'\"',str(where),*args],text=True,env=env).strip()\nsha=git(root,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"');branch=git(root,'\"'\"'symbolic-ref'\"'\"','\"'\"'--short'\"'\"','\"'\"'HEAD'\"'\"');origin=git(root,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'origin'\"'\"')\nassert branch.startswith('\"'\"'marathon/'\"'\"') and origin=='\"'\"'https://github.com/HiQS-Labs/XYZ-forge.git'\"'\"'\nclone=pathlib.Path(tempfile.mkdtemp(prefix='\"'\"'gh1358-lane-gate-'\"'\"')).resolve()\nprint('\"'\"'GH1358 isolated existing gate/push:'\"'\"',clone,'\"'\"'candidate'\"'\"',sha,flush=True)\ndef run(args):subprocess.run(args,cwd=clone,env=env,check=True)\nrun(['\"'\"'git'\"'\"','\"'\"'clone'\"'\"','\"'\"'--no-local'\"'\"','\"'\"'--no-hardlinks'\"'\"',str(root),str(clone)])\nrun(['\"'\"'git'\"'\"','\"'\"'remote'\"'\"','\"'\"'set-url'\"'\"','\"'\"'origin'\"'\"',origin]);run(['\"'\"'bash'\"'\"','\"'\"'githooks/install.sh'\"'\"']);run(['\"'\"'bash'\"'\"','\"'\"'githooks/install.sh'\"'\"','\"'\"'--check'\"'\"'])\nrun(['\"'\"'python3'\"'\"','\"'\"'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py'\"'\"','\"'\"'utils/py/marathon_drive.py'\"'\"'])\nrun(['\"'\"'bash'\"'\"','\"'\"'test/gh390-gate-guard.sh'\"'\"'])\nrun(['\"'\"'bash'\"'\"','\"'\"'test/gh280-jog-marathon-adapter.sh'\"'\"'])\nassert git(clone,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha and git(root,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha\nassert git(clone,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'origin'\"'\"')==origin\nassert git(clone,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'--push'\"'\"','\"'\"'--all'\"'\"','\"'\"'origin'\"'\"')==origin\nassert git(clone,'\"'\"'config'\"'\"','\"'\"'--get'\"'\"','\"'\"'core.bare'\"'\"')=='\"'\"'false'\"'\"' and not git(clone,'\"'\"'status'\"'\"','\"'\"'--porcelain'\"'\"')\nrun(['\"'\"'bash'\"'\"','\"'\"'githooks/install.sh'\"'\"','\"'\"'--check'\"'\"'])\nlive=subprocess.check_output(['\"'\"'ps'\"'\"','\"'\"'-axo'\"'\"','\"'\"'pid=,command='\"'\"'],text=True)\nother_gates=[line for line in live.splitlines() if re.match(r'\"'\"'^\\s*\\d+\\s+(?:/\\S*/)?bash\\s+(?:\\S*/)?(?:validate|ci-local)\\.sh(?:\\s|$)'\"'\"',line)]\nprint('\"'\"'pre-push live host gate check:'\"'\"',other_gates,flush=True)\nassert not other_gates, '\"'\"'another host full gate is active; no peer was stopped'\"'\"'\nassert datetime.datetime.now(datetime.timezone.utc).timestamp()<deadline, '\"'\"'fixed preparation deadline reached before push'\"'\"'\nrun(['\"'\"'git'\"'\"','\"'\"'push'\"'\"','\"'\"'--set-upstream'\"'\"','\"'\"'origin'\"'\"','\"'\"'HEAD:refs/heads/'\"'\"'+branch])\nassert git(clone,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha and git(root,'\"'\"'rev-parse'\"'\"','\"'\"'HEAD'\"'\"')==sha\nassert git(clone,'\"'\"'remote'\"'\"','\"'\"'get-url'\"'\"','\"'\"'origin'\"'\"')==origin and git(clone,'\"'\"'config'\"'\"','\"'\"'--get'\"'\"','\"'\"'core.bare'\"'\"')=='\"'\"'false'\"'\"'\nassert not git(clone,'\"'\"'status'\"'\"','\"'\"'--porcelain'\"'\"')\nreceipt=clone/'\"'\"'.xyz/receipts'\"'\"'/f'\"'\"'{sha}.json'\"'\"';data=json.loads(receipt.read_text())\nassert data['\"'\"'sha'\"'\"']==sha and data['\"'\"'exit_code'\"'\"']==0 and data.get('\"'\"'scope'\"'\"')=='\"'\"'full'\"'\"'\ndest=root/'\"'\"'.xyz/receipts'\"'\"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)\nprint('\"'\"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'\"'\"',flush=True)\n'",
+    "result": "red",
+    "exit": 1,
+    "receipt_path": null
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-08T18:32:59Z",
+    "finished_at": "2026-11-08T18:37:22Z"
+  }
+}

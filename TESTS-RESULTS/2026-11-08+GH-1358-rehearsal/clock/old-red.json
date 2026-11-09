@@ -1,0 +1,100 @@
+[
+  {
+    "case": "normal-success",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 0,
+    "pass": true
+  },
+  {
+    "case": "genuine-red",
+    "exit": 7,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 7 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 7
+    },
+    "expected": 7,
+    "pass": true
+  },
+  {
+    "case": "sleep-running",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 2s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 108,
+    "pass": false
+  },
+  {
+    "case": "sleep-child-already-exited",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 108,
+    "pass": false
+  },
+  {
+    "case": "backward-wall-monotonic-expiry",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 11s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 108,
+    "pass": false
+  },
+  {
+    "case": "cap-disabled",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 0s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 0,
+    "pass": true
+  },
+  {
+    "case": "group-missing-late-completion",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 0s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 108,
+    "pass": false
+  }
+]

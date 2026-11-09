@@ -1,0 +1,7 @@
+{
+  "exit": 2,
+  "primary_before_after": "c8c9a60ef6c8dab21a1285d4fa1833cfe7b1cbbb",
+  "primary_clean": true,
+  "observed": "scheduled existing landing tool refused stale approved head; no merge",
+  "scope": "not Jog automatic-landing witness"
+}
