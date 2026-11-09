@@ -117,6 +117,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1317 GH-1317 · Codex adapter repair pilot: due probes and frozen prompts — `needs-contract`
 - #1359 GH-1359 · Clone retirement lifecycle research — `needs-contract`
 - #1383 GH-1383 · merge-cleanup: optimize merge sequences with intermediate canary gating, coalesced reconciliation, and automated post-merge QA sweep by default — `needs-contract`
+- #1376 GH-1376 · Add flywheel skill for adaptive Jog orchestration — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
 - #61 GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) — `needs-doc`
@@ -180,7 +181,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1387 Preserve lane attempt history when Marathon and relay reset successful budgets — `needs-doc`
 - #1386 2026-11-08 merge inventory and manual post-merge regression review — `needs-doc`
 - #1380 Merge batch 2026-11-08 — HiQS-Labs-XYZ-forge — #1377, #1379 — `needs-doc`
-- #1376 Add flywheel skill for adaptive Jog orchestration — `needs-doc`
 - #1375 Merge batch 2026-11-08 — HiQS-Labs-XYZ-forge — #1316, #1318 — `needs-doc`
 - #1374 Merge batch 2026-11-08 — HiQS-Labs-XYZ-forge — #1370, #1371 — `needs-doc`
 - #1352 Radar 2026-11-07: work is landing, but unreliable handoffs still require human rescue — `needs-doc`
