@@ -8,6 +8,23 @@ import tempfile
 import sys
 import time
 
+def archive_lane_attempts(attempts_file):
+    """Preserve a successful budget before resetting it (caller holds driver lock).
+
+    History is passive evidence, never input to the live attempt cap. A unique
+    directory keeps repeated successes distinct; rename preserves the exact bytes.
+    On any failure the live file remains and the caller must report the error.
+    """
+    if not os.path.exists(attempts_file):
+        return None
+    history = os.path.join(os.path.dirname(os.path.dirname(attempts_file)), "attempt-history")
+    os.makedirs(history, exist_ok=True)
+    archive_dir = tempfile.mkdtemp(prefix=os.path.basename(attempts_file) + "-", dir=history)
+    archive = os.path.join(archive_dir, "attempts")
+    os.rename(attempts_file, archive)
+    return archive
+
+
 # GH-375 — agy's auth pre-flight cannot decide on exit status alone. `agy whoami` EXITS 0 while
 # failing to run at all when there is no TTY ("CLI error: bubbletea: error opening TTY: ... open
 # /dev/tty: device not configured"), and every marathon or driven relay turn is headless, so that is
