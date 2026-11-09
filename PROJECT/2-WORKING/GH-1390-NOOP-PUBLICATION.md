@@ -53,3 +53,7 @@ SANITY-CHECK: Fix now. The empty publication path exposes primary to a full regi
 Fresh independent composed source QA Approved ataf84ecbc2. Current existing four controls: baseline3fail/1pass, candidate4pass. Manual local bare-Git fixture witnessed equal-head skip (zero hook calls), dirty writes committed and genuinely published through ordinary pre-push (one hook call), and subsequent equal-head skip (no extra call), clean and actual remote equality. No live primary push in the probe. Parent recovered historical aborted retry result/owned-stop metadata from retained temp; both are now preserved alongside the prior failure.
 
 Two probe setup corrections are disclosed: initial baseline function globals did not share test mock bindings (invalid negative result); initial manual fixture lacked its exact temp parent. Corrected probes are separate records, no production repair. Cost includes these plus prior failures; tokensunknown. Fresh normal full qualification is next; no current fullpass claim.
+
+## Fresh full qualification
+
+First new issue-specific normal full push passed408/408, including GH123parallelrc0, on d336b6d7db14a5bc3eb4506af23cc72bd0013dc4; hook524s, outer526.789s. Independent fullclone identity before/after unchanged. Prior405/408 and abortedretry remain failures; no gatewaiver or second attempt. Evidence-only normal publication, exact-head hosted checks, approved landing and HQdelivery parity remain pending.
