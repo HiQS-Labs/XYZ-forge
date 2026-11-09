@@ -91,3 +91,7 @@ Budget: existing review cap3 rounds/blocker, repair cap2/PR; batch window ends20
 ## Merge evidence
 
 - PR #1385 merged 2026-11-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1393 merged 2026-11-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

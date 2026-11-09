@@ -1,6 +1,6 @@
 ---
 title: Avoid empty post-merge publication gates in primary
-status: Active
+status: Complete
 created: 2026-11-09
 updated: 2026-11-09
 owner: noel
