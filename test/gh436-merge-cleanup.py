@@ -429,7 +429,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                 rc = fetch_rc if fetches[0] == 1 else final_fetch_rc
             else:
                 rc = ff_rc if args[:2] == ["merge", "--ff-only"] else 0
-            return subprocess.CompletedProcess(args=args, returncode=rc, stdout="", stderr="boom" if rc else "")
+            return subprocess.CompletedProcess(args=args, returncode=rc, stdout=("f" * 40 + "\n") if args[:1] == ["rev-parse"] else "", stderr="boom" if rc else "")
 
         insp_kwargs = ({"side_effect": [_verdict(v) for v in verdicts]} if verdicts
                        else {"return_value": _verdict(landing_ready)})
@@ -838,11 +838,13 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             (repo / "f.txt").write_text("hello")
             subprocess.run(["git", "add", "f.txt"], cwd=str(repo), check=True)
             subprocess.run(["git", "commit", "-m", "init"], cwd=str(repo), check=True)
+            initial = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+            subprocess.run(["git", "update-ref", "refs/remotes/origin/development", initial], cwd=repo, check=True)
             # Create a dirty write
             (repo / "f.txt").write_text("modified")
 
             def fake_net(repo_path, cmd, **kwargs):
-                if cmd[0] in ("push", "fetch"):
+                if cmd[0] == "push":
                     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(repo_path), capture_output=True, text=True).stdout.strip()
                     subprocess.run(["git", "update-ref", "refs/remotes/origin/development", head], cwd=str(repo_path), check=True)
                 return subprocess.CompletedProcess([], 0, stdout="", stderr="")
@@ -1017,6 +1019,60 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             self.assertFalse(alive, f"Descendant process {child_pid} was not killed on timeout")
 
 
+
+    def _noop_publication_repo(self):
+        self._takeover_seed()
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.primary, text=True).strip()
+        subprocess.run(["git", "update-ref", "refs/remotes/origin/development", head], cwd=self.primary, check=True)
+        return head
+
+    def test_noop_publication_already_remote_skips_push(self):
+        self._noop_publication_repo()
+        calls = []
+        def network(repo, cmd, **kw):
+            calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, 0 if cmd[0] == "fetch" else 1, "", "unneeded push invoked")
+        with mock.patch.object(merge_cleanup, "_net_git", side_effect=network):
+            self.assertTrue(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+        self.assertFalse(any(x[0] == "push" for x in calls))
+        self.assertTrue(any(x[0] == "fetch" for x in calls))
+
+    def test_noop_publication_unpublished_commit_still_pushes(self):
+        self._noop_publication_repo()
+        (self.primary / "seed").write_text("unpublished")
+        subprocess.run(["git", "add", "seed"], cwd=self.primary, check=True)
+        subprocess.run(["git", "commit", "-qm", "unpublished"], cwd=self.primary, check=True)
+        calls = []
+        def network(repo, cmd, **kw):
+            calls.append(cmd)
+            if cmd[0] == "push":
+                head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+                subprocess.run(["git", "update-ref", "refs/remotes/origin/development", head], cwd=repo, check=True)
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+        with mock.patch.object(merge_cleanup, "_net_git", side_effect=network):
+            self.assertTrue(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+        self.assertEqual(sum(x[0] == "push" for x in calls), 1)
+
+    def test_noop_publication_fetch_failure_never_pushes(self):
+        self._noop_publication_repo()
+        calls = []
+        def network(repo, cmd, **kw):
+            calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, 1 if cmd[0] == "fetch" else 0, "", "offline")
+        with mock.patch.object(merge_cleanup, "_net_git", side_effect=network):
+            self.assertFalse(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+        self.assertFalse(any(x[0] == "push" for x in calls))
+
+    def test_noop_publication_empty_refs_fail_closed(self):
+        self._noop_publication_repo()
+        original = merge_cleanup.run_git
+        def git(repo, cmd, **kw):
+            if cmd[0] == "rev-parse":
+                return subprocess.CompletedProcess(cmd, 0, "", "")
+            return original(repo, cmd, **kw)
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=git), \
+             mock.patch.object(merge_cleanup, "_net_git", return_value=subprocess.CompletedProcess([], 0, "", "")):
+            self.assertFalse(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
 
     def _takeover_seed(self):
         subprocess.run(["git", "config", "user.name", "fixture"], cwd=self.primary, check=True)

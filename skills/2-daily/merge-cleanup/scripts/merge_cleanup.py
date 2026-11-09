@@ -1056,20 +1056,35 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
             log_err(f"{label}: could not commit post-merge writes: {committed.stderr.strip()}")
             return False
 
-    pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
-    if pushed.returncode != 0:
-        log_err(f"{label}: could not push post-merge writes: {pushed.stderr.strip()}")
-        return False
+    # An up-to-date push supplies no ref pairs to pre-push, which correctly falls
+    # back to the full gate. Never trigger that gate in primary for no publication.
     fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
     if fetched.returncode != 0:
-        log_err(f"{label}: could not verify pushed integration head: {fetched.stderr.strip()}")
+        log_err(f"{label}: could not refresh integration head: {fetched.stderr.strip()}")
         return False
+    local = run_git(repo_path, ["rev-parse", "HEAD"])
+    remote = run_git(repo_path, ["rev-parse", f"origin/{integration_branch}"])
+    if local.returncode or remote.returncode or not local.stdout.strip() or not remote.stdout.strip():
+        log_err(f"{label}: cannot prove nonempty local/remote publication heads")
+        return False
+    if local.stdout.strip() != remote.stdout.strip():
+        pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
+        if pushed.returncode != 0:
+            log_err(f"{label}: could not push post-merge writes: {pushed.stderr.strip()}")
+            return False
+        fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
+        if fetched.returncode != 0:
+            log_err(f"{label}: could not verify pushed integration head: {fetched.stderr.strip()}")
+            return False
+    else:
+        log(f"{label}: already published at origin/{integration_branch}; no push needed")
 
     clean = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
     local = run_git(repo_path, ["rev-parse", "HEAD"])
     remote = run_git(repo_path, ["rev-parse", f"origin/{integration_branch}"])
     if (clean.returncode != 0 or clean.stdout.strip() or
             local.returncode != 0 or remote.returncode != 0 or
+            not local.stdout.strip() or not remote.stdout.strip() or
             local.stdout.strip() != remote.stdout.strip()):
         log_err(f"{label}: post-merge durability check failed — primary must be clean and match origin/{integration_branch}")
         return False

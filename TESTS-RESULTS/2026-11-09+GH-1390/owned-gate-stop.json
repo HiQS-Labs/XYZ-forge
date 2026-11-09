@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-11-09T01:11:23.360086+00:00",
+  "reason": "stop unintended own primary gate on up-to-date push",
+  "root": 55756,
+  "owned_processes": [
+    {
+      "pid": 34338,
+      "ppid": 57577,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 34346,
+      "ppid": 34338,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 34350,
+      "ppid": 34346,
+      "pgid": 55756,
+      "executable": "python3"
+    },
+    {
+      "pid": 35196,
+      "ppid": 57577,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 35203,
+      "ppid": 35196,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 35795,
+      "ppid": 57577,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 35802,
+      "ppid": 35795,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 38037,
+      "ppid": 35802,
+      "pgid": 55756,
+      "executable": "python3"
+    },
+    {
+      "pid": 38065,
+      "ppid": 57577,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 38071,
+      "ppid": 38065,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 38738,
+      "ppid": 38071,
+      "pgid": 55756,
+      "executable": "sleep"
+    },
+    {
+      "pid": 38790,
+      "ppid": 38037,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 38795,
+      "ppid": 34350,
+      "pgid": 55756,
+      "executable": "/Users/noelsaw/.cache/xyz-forge-test-venv/bin/python3"
+    },
+    {
+      "pid": 38825,
+      "ppid": 35203,
+      "pgid": 55756,
+      "executable": "python3"
+    },
+    {
+      "pid": 38830,
+      "ppid": 38795,
+      "pgid": 38830,
+      "executable": "(python3.13)"
+    },
+    {
+      "pid": 38839,
+      "ppid": 38790,
+      "pgid": 55756,
+      "executable": "(node)"
+    },
+    {
+      "pid": 55756,
+      "ppid": 8224,
+      "pgid": 55756,
+      "executable": "/Library/Developer/CommandLineTools/usr/bin/git"
+    },
+    {
+      "pid": 55773,
+      "ppid": 55756,
+      "pgid": 55756,
+      "executable": "/Library/Developer/CommandLineTools/usr/libexec/git-core/git"
+    },
+    {
+      "pid": 55778,
+      "ppid": 55773,
+      "pgid": 55756,
+      "executable": "/Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https"
+    },
+    {
+      "pid": 56710,
+      "ppid": 55756,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 57116,
+      "ppid": 56710,
+      "pgid": 55756,
+      "executable": "bash"
+    },
+    {
+      "pid": 57577,
+      "ppid": 57116,
+      "pgid": 55756,
+      "executable": "xargs"
+    }
+  ],
+  "preserved_peer_gate_group": 59606
+}
