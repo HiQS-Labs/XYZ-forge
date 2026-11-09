@@ -376,7 +376,7 @@ For each `INCLUDE` verdict:
 ### 5. Build and rank the marathon file
 
 ```bash
-"$HARNESS/utils/marathon-plan.sh" --deep
+"$HARNESS/utils/marathon-plan.sh" --write --deep
 ```
 
 `--deep` delegates to `$HARNESS/utils/swarm-preflight.sh --dry-run` per ready item for an

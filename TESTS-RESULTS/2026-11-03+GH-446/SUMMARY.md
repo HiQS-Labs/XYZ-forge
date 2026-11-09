@@ -18,3 +18,5 @@
 
 ## Takeover readiness correction
 Independent Codex source review atcf799f0 confirmed originalneed remains on development1c2bd89e and found existing directmutatedBashinvocation omitted--write, potentially comparing stalePythonoutput. Added--write to that existing invocation only; no new suite/machinery. Existing suite70pass/0fail/2explicitlegacy-render skips, mutation detected. Normal exact-composition push gate pending.
+
+FreshcompositionQA atf9ec80fb foundexisting10daysconsumer explicitlyexpectsplanfileafterbare--deep. Correctedcommandto--write--deep; earlierclaimnoin-reposkillcallerswasincomplete. Secondordinaryreadinessrepair; priorhistory/capsretained. Afterlandingrefresh10days throughSkillsArmyexistingcollectionsoitsdeployedconsumerkeepswriting; source-onlychangecannotupdateglobalcopy.
