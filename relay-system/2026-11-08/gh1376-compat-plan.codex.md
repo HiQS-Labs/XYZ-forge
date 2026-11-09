@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-08.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -69,5 +69,22 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Read the complete seeded plan, complete flywheel and 10days source skills, and the recorded Daily contract in Setup. The extension is a proportionate instruction-routing change; no blocking pre-existing defect was found in the plan. Approval covers plan readiness, not implementation, live GitHub state, runtime integration or successful unattended execution.
+
+- [Unverified — no citation] One batch owner and the firing boundary are explicit. Artifact lines 183–184 require selection AND dispatch through 10days only when explicitly invoked, while retaining start-marathon exact-plan confirmation and standalone sweeps. This matches 10days' introduction, “carries the plan through PRS rating evaluation, preflight, branch-cut, and execution in one run”, and flywheel step 3, “only after the operator confirms the exact dry-run-approved plan and order.” No second Jog dispatch is proposed.
+- [Unverified — no citation] Recovery retains the failed-wave hold rather than skipping it. Artifact line 185 requires verification with existing failed/relevant checks, retained attempts/history, readiness recheck, and safety/ownership/containment/unknown-cause holds; it expressly forbids counter resets, cap/gate changes and automatic restart. The reciprocal wording change is necessary because current 10days Step 7 says “leave the branch as-is for the operator to inspect.”
+- [Unverified — no citation] Daily is an optional observation source, not a dispatcher: artifact lines 174 and 183 prohibit installed-copy changes and dispatch/repair authority, and missing Daily cannot block execution. This is consistent with Setup's recorded “Read-Only Against Repositories & External Stores” contract. No automatic observer integration is claimed.
+- [Pass] Scope and proof are bounded. Artifact lines 179 and 187 specify reversible Markdown edits, existing PDDA checks in a separate full clone, manual consumer scenarios, independent plan/final review and provenance; no new gate, scheduler, sweep, merge or deployment. Line 191 explicitly excludes historical QA receipts from extension coverage. Reusing the issue/branch/PR is justified as the same routing seam at line 168; live remote identity/state still belongs to execution-time reconciliation.
+- [Nit] Reconcile the earlier blanket “No automatic marathon firing” statements (artifact lines 18, 95 and 136) with the named exception at line 184 during implementation. State “no new firing authority; preserve explicitly invoked 10days' existing exception” or equivalent. The specific extension already makes the intended precedence clear, so this does not block plan approval.
+
+Verification: static source inspection only, using `nl -ba .relay-artifacts/GH-1376-FLYWHEEL-SKILL.md`, `cat skills/2-daily/flywheel/SKILL.md`, and `cat skills/3-weekly/10days/SKILL.md` plus targeted reads for truncated spans; exit status 0. Decisive spans are quoted/cited above. No executable fixtures or test gates were run. Runtime/gate claims remain [Unverified — needs clone run].
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
