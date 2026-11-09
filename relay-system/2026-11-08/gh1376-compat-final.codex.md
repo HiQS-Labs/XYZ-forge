@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-08.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -92,5 +92,21 @@ Handing off to Producer — go to the Producer window and say 'take your turn'; 
 ### Producer · Round 1 disposition
 
 Implemented the narrow whole-file safety finding: dirty/untracked lane cleanup refusal now preserves path/state for owner reconciliation; no force-removal fallback. Existing clean removal and cleanup-failure reporting remain. Scope is one local instruction correction, no new machinery. Native Git manual refusal/clean-path check and provenance follow under compat-cleanup-smoke.md. Request round 2 against the committed correction and compatibility source/evidence; do not revisit unchanged approved plan scope.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Read the complete seeded flywheel and complete 10days skill, compatibility acceptance map, approved plan receipt, consumer/cleanup evidence, PDDA summary and provenance. The sole Round 1 safety finding is resolved. No additional material pre-existing defect identified in the reviewed instruction-level scope. Approval covers source instructions and supplied evidence, not live execution, deployment or landing.
+
+- [Pass] Cleanup now preserves unique state. `skills/3-weekly/10days/SKILL.md:520–527` permits removal only after integration with no unique state, and explicitly says “preserve the worktree” and “never force-remove it” on uncommitted/untracked refusal. `TESTS-RESULTS/2026-11-08+GH-1376/compat-cleanup-smoke.md` records “dirty lane native removal refused rc=128; unique untracked bytes remained” and clean removal rc=0 after deliberate preservation. This addresses the Round 1 falsifier without adding machinery.
+- [Pass] One owner and firing boundaries remain intact: `.relay-artifacts/SKILL.md:102–108` prohibits Jog duplication and limits the exception to an explicitly requested sweep; steps 2–3 select AND dispatch through 10days while retaining exact-plan/order confirmation for start-marathon. `skills/3-weekly/10days/SKILL.md:95–112` reciprocates and preserves standalone operation.
+- [Pass] Recovery retains halt, budgets, attempts, readiness and safety holds at seeded lines 110–122 and 10days lines 104–112, 528–534. Seeded steps 1 and 6 route verified ready PRs to approval/landing without rebuilding. Daily remains optional observation only at seeded lines 94–100 (“not an automatic observer adapter”), consistent with the approved plan receipt's recorded Daily contract.
+- [Pass] The plan's Compatibility extension acceptance items 1–5 are represented by the source and narrowly scoped consumer evidence. `compat-consumer-smoke.md:3` expressly excludes live execution; `compat-pdda.log` reports “no errors, 102 warning(s)” with optional LLM readiness skipped. Historical receipts are not treated as current runtime proof.
+
+Probe: read-only Python with `hashlib.sha256(p.read_bytes()).hexdigest() == r['sha256']`, nonempty byte assertions for the three compatibility provenance records, and seeded/canonical flywheel byte equality; exit 0. Decisive output: “compat-consumer-smoke: nonempty hash matches; recorded exit 0”, “compat-pdda: nonempty hash matches; recorded exit 0”, “compat-cleanup-smoke: nonempty hash matches; recorded exit 0”, “seed matches canonical flywheel source”. These establish evidence integrity, not independent replay of recorded commands. Static reads exited 0. No git, executable fixture or suite was run. Runtime recovery and final-head harness gate remain [Unverified — needs clone run].
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
