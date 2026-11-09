@@ -1,0 +1,50 @@
+[
+  {
+    "sandbox": true,
+    "args": [
+      "init",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1356-1288-diagnosis/temp/factory-primitive/True/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": ""
+  },
+  {
+    "sandbox": true,
+    "args": [
+      "tick",
+      "--slot",
+      "1"
+    ],
+    "rc": 1,
+    "stdout": "{\"status\":\"failed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": ""
+  },
+  {
+    "sandbox": false,
+    "args": [
+      "init",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1356-1288-diagnosis/temp/factory-primitive/False/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": ""
+  },
+  {
+    "sandbox": false,
+    "args": [
+      "tick",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": ""
+  }
+]

@@ -1,0 +1,83 @@
+{
+  "ticks": [
+    {
+      "tick_id": "slot_001",
+      "slot": 1,
+      "status": "completed",
+      "stage": "record",
+      "created_at": "2026-11-01T22:12:12.109623+00:00",
+      "updated_at": "2026-11-01T22:12:12.287626+00:00",
+      "error": null
+    }
+  ],
+  "decisions": [
+    {
+      "tick_id": "slot_001",
+      "raw": "{\"tool\": \"probe\", \"args\": {\"target\": \"fixture-target\"}, \"reason\": \"recording external fixture\", \"confidence\": 1}",
+      "validated_json": "{\"args\":{\"target\":\"fixture-target\"},\"confidence\":1,\"reason\":\"recording external fixture\",\"tool\":\"probe\"}",
+      "status": "raw-valid",
+      "rejected_reason": null
+    }
+  ],
+  "reservations": [
+    {
+      "tick_id": "slot_001",
+      "amount": 0.01,
+      "status": "held",
+      "billing_status": "unknown",
+      "actual_cost": null
+    }
+  ],
+  "events": [
+    {
+      "id": 2,
+      "ts": "2026-11-01T22:12:12.110919+00:00",
+      "tick_id": "slot_001",
+      "stage": "tick.started",
+      "status": "ok",
+      "json": "{\"fault\":null,\"slot\":1,\"stage\":\"tick.started\",\"status\":\"ok\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:12:12.110919+00:00\"}"
+    },
+    {
+      "id": 3,
+      "ts": "2026-11-01T22:12:12.157295+00:00",
+      "tick_id": "slot_001",
+      "stage": "evaluate",
+      "status": "ok",
+      "json": "{\"agent_called\":true,\"stage\":\"evaluate\",\"status\":\"ok\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:12:12.157295+00:00\"}"
+    },
+    {
+      "id": 4,
+      "ts": "2026-11-01T22:12:12.157770+00:00",
+      "tick_id": "slot_001",
+      "stage": "validate",
+      "status": "raw-valid",
+      "json": "{\"rejection\":null,\"stage\":\"validate\",\"status\":\"raw-valid\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:12:12.157770+00:00\"}"
+    },
+    {
+      "id": 5,
+      "ts": "2026-11-01T22:12:12.287841+00:00",
+      "tick_id": "slot_001",
+      "stage": "tick.completed",
+      "status": "completed",
+      "json": "{\"decision_status\":\"raw-valid\",\"output_sha256\":\"46aed318665bf9a2b5843eb900dbf4ca1f1db7662b71d3f6f9777c44ea9ea5b2\",\"stage\":\"tick.completed\",\"status\":\"completed\",\"tick_id\":\"slot_001\",\"tool\":\"probe\",\"ts\":\"2026-11-01T22:12:12.287841+00:00\"}"
+    }
+  ],
+  "receipts": [
+    {
+      "tick_id": "slot_001",
+      "status": "completed",
+      "json": "{\"decision_status\":\"raw-valid\",\"output_sha256\":\"46aed318665bf9a2b5843eb900dbf4ca1f1db7662b71d3f6f9777c44ea9ea5b2\",\"tool\":\"probe\"}",
+      "created_at": "2026-11-01T22:12:12.287626+00:00"
+    }
+  ],
+  "tool_runs": [
+    {
+      "tick_id": "slot_001",
+      "rc": 0,
+      "status": "ok",
+      "output_path": "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-due/instances/C/out/probe/slot_001.json",
+      "sha256": "46aed318665bf9a2b5843eb900dbf4ca1f1db7662b71d3f6f9777c44ea9ea5b2",
+      "error": null
+    }
+  ]
+}

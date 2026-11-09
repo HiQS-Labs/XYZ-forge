@@ -2467,21 +2467,38 @@ relay-file: {rel_relay}
         proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash", cwd=cwd, env=env,
                                 start_new_session=True)
         started = time.monotonic()
+        wall_started = time.time()
+
+        def gate_elapsed():
+            # Wall time includes host sleep; monotonic time prevents a backward wall-clock
+            # adjustment from subtracting awake time. A forward jump expires conservatively.
+            return max(0.0, time.monotonic() - started, time.time() - wall_started)
+
         peak_rss_mb = 0
         rss_readable = rss_unreadable = 0
         rc = None
         while rc is None:
             rc = proc.poll()
+            rss_mb, rss_status = None, None
+            if rc is None:
+                rss_mb, rss_status = _gate_group_rss_mb(proc.pid)
+                if rss_status == "group-missing":
+                    # The child may have finished during the RSS probe. Reap it before
+                    # deciding whether it is safe to signal its process group.
+                    rc = proc.poll()
+            # Check after both polls and the potentially slow RSS probe, even for a reaped
+            # child: completion observed after the deadline is not a successful gate.
+            elapsed = gate_elapsed()
+            if cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]:
+                reason = f"wall clock {int(elapsed)}s >= cap {cfg['wall_s']}s"
+                if rc is None and proc.poll() is None:
+                    _gate_kill_group(proc, reason)
+                else:
+                    log(f"gate-guard: refusing completed gate — {reason}")
+                rc = GATE_GUARD_KILL_EXIT
+                break
             if rc is not None:
                 break
-            elapsed = int(time.monotonic() - started)
-            rss_mb, rss_status = _gate_group_rss_mb(proc.pid)
-            if rss_status == "group-missing":
-                # No row for the group: either the gate exited between poll() and ps (a clean
-                # finish, not a failed sample) or ps cannot see a live group (unreadable).
-                rc = proc.poll()
-                if rc is not None:
-                    break
             if rss_mb is None:
                 rss_unreadable += 1
                 if rss_unreadable == 1:
@@ -2490,9 +2507,7 @@ relay-file: {rel_relay}
                 rss_readable += 1
                 peak_rss_mb = max(peak_rss_mb, rss_mb)
             reason = None
-            if cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]:
-                reason = f"wall clock {elapsed}s >= cap {cfg['wall_s']}s"
-            elif cfg["rss_mb"] > 0 and rss_mb is not None and rss_mb >= cfg["rss_mb"]:
+            if cfg["rss_mb"] > 0 and rss_mb is not None and rss_mb >= cfg["rss_mb"]:
                 reason = f"gate group RSS {rss_mb}MB >= cap {cfg['rss_mb']}MB"
             if reason:
                 _gate_kill_group(proc, reason)
@@ -2525,7 +2540,7 @@ relay-file: {rel_relay}
         # Peak RSS is logged on EVERY run, pass or fail, deliberately: it is the only evidence that
         # can later answer whether the layer-3 poll is being outrun by a fast allocator — which is
         # the stated precondition for taking on container isolation at all.
-        log(f"gate-guard: gate exit {rc} after {int(time.monotonic() - started)}s — "
+        log(f"gate-guard: gate exit {rc} after {int(gate_elapsed())}s — "
             f"{_gate_rss_summary(peak_rss_mb, rss_readable, rss_unreadable)} "
             f"(tier {cfg['tier']}; caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, "
             f"CPU {cfg['cpu_s']}s)")

@@ -1,0 +1,24 @@
+## 1. consumer read: frontmatter + section 4 + start-task link anchor
+(python: ~/.cache/xyz-forge-test-venv, PyYAML)
+skills/2-daily/todo-list/SKILL.md name= todo-list desc-mentions-closeout= True
+skills/1-hourly/start-task/SKILL.md name= start-task desc-mentions-closeout= True
+section4 heading present: True
+wake prompt runs section 4: True
+step 4 runs section 4: True
+start-task links anchor: True | step 6 early-stop hook: True
+
+## 2. main path: lookup, real marker absent -> create branch
+exit=0 (empty output = no match = create)
+
+## 3. adjacent: quoted template marker — contains() vs startswith()
+contains:   6638233042
+exit=0
+startswith: exit=0
+
+## 4. adjacent: found branch — a comment that starts with a given first line returns its id (-> edit)
+6638233042
+exit=0
+
+## 5. failed lookup (nonexistent issue) -> nonzero exit -> unposted, never create
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/issues/comments#list-issue-comments","status":"404"}gh: Not Found (HTTP 404)
+exit=1

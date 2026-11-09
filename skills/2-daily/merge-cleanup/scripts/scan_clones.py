@@ -252,14 +252,35 @@ def coordination_root(repo_path: Path) -> Optional[Path]:
 
 
 def _tick_binary() -> Optional[str]:
-    """The harness's own `bin/tick`, then PATH. Never the audited checkout's copy."""
+    """Resolve trusted installation/configuration, never the audited checkout's cwd."""
     override = os.environ.get(TICK_BIN_ENV)
     if override:
         return override
+    explicit = os.environ.get("XYZ_HARNESS")
+    if explicit:
+        tick = Path(explicit).expanduser() / "bin" / "tick"
+        if tick.is_absolute() and tick.is_file() and os.access(tick, os.X_OK):
+            return str(tick)
     for parent in Path(__file__).resolve().parents:  # skills/<tier>/merge-cleanup/scripts/ (GH-744)
         own = parent / "bin" / "tick"
         if own.is_file() and os.access(own, os.X_OK):
             return str(own)
+    # Same per-device contract as relay-xyz/find-harness.sh, without its caller/vendored
+    # discovery: the audited tree must not supply the program judging its own claims.
+    config_home = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+    try:
+        configured = (config_home / "xyz" / "harness").read_text().splitlines()[0]
+        harness = Path(configured)
+        tick = harness / "bin" / "tick"
+        if configured and harness.is_absolute() and tick.is_file() and os.access(tick, os.X_OK):
+            origin = run_git(harness, ["remote", "get-url", "origin"])
+            if origin.returncode == 0 and re.fullmatch(
+                r"(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/)"
+                r"HiQS-Labs/XYZ-forge(?:\.git)?/?", origin.stdout.strip(), re.I
+            ):
+                return str(tick)
+    except (OSError, IndexError, ValueError):
+        pass
     return shutil.which("tick")
 
 
@@ -550,7 +571,8 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
                         published_pr: int = 0) -> Dict[str, Any]:
     """Every local ref tip is LANDED or UNLANDED, by provenance — or the query failed.
 
-    Rule 1: reachable from origin/<integration_branch> -> landed.
+    Tags: exact name and unpeeled object ID on origin -> recoverable; otherwise preserve.
+    Rule 1 (non-tags): reachable from origin/<integration_branch> -> landed.
     Rule 2: tip == headRefOid of a MERGED PR whose mergeCommit is reachable, AND the branch's
             aggregate raw diff (merge-base..tip) equals the merge commit's (parent..merge) —
             blob ids, modes, paths; whitespace is not normalised away -> landed.
@@ -596,8 +618,28 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
             return out
         tips.append(("HEAD (detached)", head.stdout.strip()))
 
+    remote_tags: Dict[str, str] = {}
+    if any(name.startswith("refs/tags/") for name, _ in tips):
+        advertised = run_git(repo_path, ["ls-remote", "--refs", "--tags", "origin"], timeout=180)
+        if advertised.returncode:
+            out["failed_query"] = f"git ls-remote --tags origin: {advertised.stderr.strip() or 'failed'}"
+            return out
+        for line in advertised.stdout.splitlines():
+            fields = line.split()
+            if (len(fields) != 2 or not re.fullmatch(r"[0-9a-f]{40,64}", fields[0])
+                    or not fields[1].startswith("refs/tags/") or fields[1] in remote_tags):
+                out["failed_query"] = "git ls-remote --tags origin: malformed tag advertisement"
+                return out
+            remote_tags[fields[1]] = fields[0]
+
     index: Optional[Dict[str, Any]] = None
     for name, sha in tips:
+        if name.startswith("refs/tags/"):
+            if remote_tags.get(name) == sha:
+                out["landed"].append(f"{name} @ {sha[:10]} (exact tag object recoverable from origin)")
+            else:
+                out["unlanded"].append(f"{name} @ {sha[:10]}: tag absent from origin or object differs")
+            continue
         anc = run_git(repo_path, ["merge-base", "--is-ancestor", sha, remote_ref])
         if anc.returncode == 0:
             out["landed"].append(f"{name} @ {sha[:10]} (reachable from {remote_ref})")

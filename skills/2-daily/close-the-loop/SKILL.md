@@ -5,14 +5,16 @@ description: >-
   conversation. Trace findings, decisions and technical spikes into issue/PR records and
   next-step execution plans; return numbered possible orphaned tasks with evidence and
   next actions. Use for /close-the-loop, "what did we leave unfinished", or "check this
-  conversation for follow-up holes". Report-only, not a general backlog or device scan.
+  conversation for follow-up holes". Report-only by default; when invoked with --execute
+  (or "close the loop and run the todo list" / "close the loop and execute"), chains the
+  confirmed-pending list directly into skills/2-daily/todo-list/SKILL.md.
 ---
 
 # Close the loop
 
 Find unfinished commitments and missing handoffs between what this session learned or decided,
 where it was recorded, and what the next execution step needs. A gap can exist even when nobody
-explicitly promised the missing update. Return candidates; do not execute them or create records.
+explicitly promised the missing update. Return candidates; do not execute them or create records by default (see `## Execute mode` below).
 
 ## Review
 
@@ -60,7 +62,19 @@ Example shape:
 If none qualify, say "No likely orphaned follow-ups found in the available conversation."
 Do not manufacture candidates or list the whole backlog. Keep visibility/access limits visible.
 
-Stop after the report. This invocation does not authorize executing candidates, creating issues,
-changing PR status, merging or deploying. If the user selects items or requests action alongside
-the sweep, honor that scope and existing authorization, recheck current state, and reuse the
-existing issues/docs/workflows rather than creating duplicates.
+Stop after the report by default. A bare `/close-the-loop` invocation does not authorize
+executing candidates, creating issues, changing PR status, merging or deploying.
+
+## Execute mode (`--execute` / chain into `todo-list`)
+
+When the user invokes `/close-the-loop --execute` (or asks in one prompt to "close the loop and
+execute", "close the loop and make a todo-list", or "find what we forgot and work through it"):
+
+1. Run `## Review` and `## Report` above first so the numbered candidate list and its evidence are
+   visible in chat.
+2. Filter to `confirmed pending` items (plus any `possible` items the user explicitly included),
+   preserving the recommended execution order and existing authorization scope. Re-check current
+   state and reuse existing issues/docs/workflows rather than creating duplicates.
+3. Immediately load and execute [`todo-list`](../todo-list/SKILL.md)
+   (`skills/2-daily/todo-list/SKILL.md`) using that numbered list as the input to its Section 1
+   (including its non-blocking skip/park ladder and end-of-sequence blocked/deferred reminder).

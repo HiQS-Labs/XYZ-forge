@@ -32,14 +32,15 @@ usage:
   hq.sh status  <project|repo>            human-readable project card
   hq.sh registries                        what each registry knows (Phase-0 introspection)
   hq.sh next [--limit N]                   projects ranked by Rebalance priority + HQ capability tier
-  hq.sh park [--create] [--title T] <project> <req…>
+  hq.sh park [--create] [--title T] [--gh-issue N] <project> [<req…>]
                                           issue-first intake in the target repo
                                           (PREVIEWS by default; --create writes;
-                                           --title sets a clean title, request = body)
+                                           --title sets a clean title, request = body;
+                                           --gh-issue N adopts an existing issue)
                                           Capture doc renders the full PDDA skeleton (TODO stubs by
                                           default); optional synthesis passthrough via env vars
                                           HQ_PARK_{WHY,KEY_CONCEPTS,NON_GOALS,RELATED,COMPLEXITY,
-                                          RISK,EFFORT,PHASES} (GH-164 Phase 1).
+                                          RISK,EFFORT,PHASES,GOAL} (GH-164 Phase 1, GH-1264).
   hq.sh queue [--create] [--gh-issue N] <project> <req…>
                                           append an HQ-queued lane to the target's Marathon Plan
                                           (PREVIEWS by default; --create appends, non-destructive)
@@ -221,12 +222,13 @@ cmd_registries(){
 #   HQ_PARK_COMPLEXITY / HQ_PARK_RISK / HQ_PARK_EFFORT / HQ_PARK_PHASES  — integers 1-5 / phase count
 #   HQ_PARK_WHY                                                          — the ## Why paragraph
 #   HQ_PARK_KEY_CONCEPTS / HQ_PARK_NON_GOALS / HQ_PARK_RELATED           — pipe ('|')-delimited lists
+#   HQ_PARK_GOAL                                                         — the frontmatter goal: > scalar (GH-1264)
 cmd_park(){
-  local create="$1" ptitle="$2" project="$3"; shift 3; local request="$*"
+  local create="$1" ptitle="$2" issue="$3" project="$4"; shift 4; local request="$*"
   # GH-164 Phase 1: read the optional synthesis passthrough once; all unset -> hq_render_capture's
   # own TODO-stub defaults (empty strings here reproduce the pre-Phase-1 bare-call behavior exactly).
   local p_complexity="${HQ_PARK_COMPLEXITY:-}" p_risk="${HQ_PARK_RISK:-}" p_effort="${HQ_PARK_EFFORT:-}" p_phases="${HQ_PARK_PHASES:-}"
-  local p_why="${HQ_PARK_WHY:-}" p_kc="${HQ_PARK_KEY_CONCEPTS:-}" p_ng="${HQ_PARK_NON_GOALS:-}" p_rel="${HQ_PARK_RELATED:-}"
+  local p_why="${HQ_PARK_WHY:-}" p_kc="${HQ_PARK_KEY_CONCEPTS:-}" p_ng="${HQ_PARK_NON_GOALS:-}" p_rel="${HQ_PARK_RELATED:-}" p_goal="${HQ_PARK_GOAL:-}"
   local R rc; R="$(hq_resolve "$project")"; rc=$?
   local repo path tier has_pdda=0 has_xyz=0
   repo="$(printf '%s\n' "$R" | val REPO)"
@@ -248,10 +250,78 @@ cmd_park(){
   hq_is_releases_mode "$path" && is_releases=1
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
 
-  local title slug created oslug src
-  # --title (if given) is used verbatim for the issue + capture-doc title; the request stays the body.
-  title="${ptitle:-$(hq_issue_title "$project" "$request")}"
-  slug="$(hq_slug "${ptitle:-$request}")"
+  local title slug created oslug src="" num=""
+  if [ "$issue" != "-" ]; then
+    case "$issue" in
+      ''|*[!0-9]*)
+        echo "hq park: --gh-issue requires a numeric issue number (got '$issue')." >&2
+        return 1
+        ;;
+    esac
+    local existing_doc="" d reuse_doc=""
+    for d in "$path/PROJECT/1-INBOX" "$path/PROJECT/2-WORKING"; do
+      [ -d "$d" ] || continue
+      existing_doc="$(find "$d" -maxdepth 1 -name "GH-${issue}-*.md" 2>/dev/null | sort | head -1)"
+      [ -n "$existing_doc" ] && break
+    done
+    if [ -n "$existing_doc" ]; then
+      # GH-1340 / GH-1345 Task 6: repeating capture for the same issue must reuse the existing capture
+      reuse_doc="$existing_doc"
+    fi
+    if [ "$tier" = C ]; then
+      echo "hq park: $repo is Tier C (no PDDA) — no PDDA lifecycle to register #$issue into." >&2
+      return 1
+    fi
+    local vjson parsed fetched_title fetched_body
+    vjson="$(cd "$path" && "$HQ_GH_BIN" issue view "$issue" --json url,title,body 2>&1)" || {
+      echo "hq park: gh issue view #$issue failed: $vjson" >&2
+      return 1
+    }
+    parsed="$(printf '%s' "$vjson" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+if not isinstance(d, dict):
+    sys.exit(1)
+url = d.get("url")
+title = d.get("title")
+body = d.get("body")
+if not isinstance(url, str) or not isinstance(title, str) or (body is not None and not isinstance(body, str)):
+    sys.exit(1)
+url = url.replace("\r", "").replace("\n", "").strip()
+title = title.replace("\r", "").replace("\n", "").strip()
+body = (body or "").replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
+if not url or not title:
+    sys.exit(1)
+sys.stdout.write(url + "\n" + title + "\n" + body)
+' 2>/dev/null)" || {
+      echo "hq park: invalid JSON from gh issue view #$issue" >&2
+      return 1
+    }
+    src="${parsed%%$'\n'*}"
+    parsed="${parsed#*$'\n'}"
+    if [[ "$parsed" == *$'\n'* ]]; then
+      fetched_title="${parsed%%$'\n'*}"
+      fetched_body="${parsed#*$'\n'}"
+    else
+      fetched_title="$parsed"
+      fetched_body=""
+    fi
+    num="$issue"
+    title="${ptitle:-$fetched_title}"
+    [ -n "$request" ] || request="$fetched_body"
+    slug="$(hq_slug "${ptitle:-$title}")"
+  else
+    # --title (if given) is used verbatim for the issue + capture-doc title; the request stays the body.
+    title="${ptitle:-$(hq_issue_title "$project" "$request")}"
+    slug="$(hq_slug "${ptitle:-$request}")"
+  fi
+  if python3 -c 'import re, sys; sys.exit(0 if re.search(r"\b(rated|ovr)\s+\d", sys.argv[1]) else 1)' "$title"; then
+    echo 'hq park: title carries rating grammar ("rated N/N/N/N" / "ovr N"); roadmap add would read it as the row'\''s score. Move the example into the body and rate with: releases roadmap rate --issue-num N --rated P/S/A/E' >&2
+    return 2
+  fi
   created="$(date +%F)"
   oslug="$(hq_target_slug "$path")"
 
@@ -263,8 +333,32 @@ cmd_park(){
     echo   '  (no PDDA rails here — not writing a capture doc or ROADMAP pointer)'
     echo   "  suggestion:   install PDDA to unlock full intake — see install.sh / utils/pdda"
     if [ "$create" = 1 ]; then
+      local issue_body="$request"
+      if ! printf '%s' "$issue_body" | grep -qE '^## (Observed|Acceptance)'; then
+        issue_body="$(cat <<EOF
+$request
+
+## Observed
+| Claim | Command | Observed |
+|---|---|---|
+| Request captured via HQ intake | \`hq park\` | $title |
+
+## Acceptance
+- [ ] Implement requested changes and verify against existing covering suites
+
+## Preflight Contract
+<!-- Preflight contract to be specified at pickup/planning -->
+
+## PRS proposal
+- pri 50: Initial intake proposal for $title
+- sev 50: Standard triage priority
+- appeal 50: Default neutral operator appeal
+- effort 50: Estimated medium implementation effort
+EOF
+)"
+      fi
       local out url
-      out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$request" 2>&1)" || {
+      out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$issue_body" 2>&1)" || {
         echo "  gh issue create failed: $out" >&2; return 1; }
       url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
       printf '  ✓ issue created: %s\n' "${url:-$out}"
@@ -275,16 +369,16 @@ cmd_park(){
   fi
 
   # ---- Tier A/B: full PDDA intake ----
-  local num relpath docname roadmap="$path/ROADMAP.md"
+  local relpath docname roadmap="$path/ROADMAP.md"
   if [ "$create" != 1 ]; then
-    num="<N>"; src="<assigned when the issue is created>"
+    [ -n "$num" ] || { num="<N>"; src="<assigned when the issue is created>"; }
     docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
     echo "HQ park · Tier $tier — issue-first intake PREVIEW (writes nothing)"
     printf '  target repo:  %s  →  %s  (%s)\n' "$project" "$repo" "$path"
     printf '  GitHub issue: %s\n' "$title"
     printf '  capture doc:  %s\n' "$relpath"
     if [ "$is_releases" = "1" ]; then
-      printf '  ROADMAP sink: releases roadmap add (DB row, not ROADMAP.md text)\n'
+      printf '  ROADMAP sink: releases roadmap add deferred to pickup (decision 6; DB row created when work starts)\n'
     fi
     # Both sinks store the SAME rendered line (releases-mode passes it via --raw-text), so the
     # preview shows it unconditionally — what you see is byte-for-byte what either sink records.
@@ -292,7 +386,7 @@ cmd_park(){
     echo
     echo "  --- capture doc that would be written ---"
     hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
-      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" \
+      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" "$p_goal" \
       | sed 's/^/  | /'
     echo
     echo "  [preview only] re-run with --create to file the issue + write the two docs into the target."
@@ -301,48 +395,72 @@ cmd_park(){
 
   # --create: real intake
   echo "HQ park · Tier $tier — creating intake in $repo …"
-  # dup-guard (best-effort; never blocks on gh error)
-  local dup
-  dup="$(cd "$path" && "$HQ_GH_BIN" issue list --search "$title" --state open --json number,title 2>/dev/null)" || dup=""
-  if printf '%s' "$dup" | grep -q '"number"'; then
-    echo "  ! possible duplicate open issue matching this title — aborting to avoid double-filing:" >&2
-    printf '    %s\n' "$dup" >&2
-    echo "    (refine the request or file manually if this is genuinely new)" >&2
-    return 1
-  fi
-  local out url
-  out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$request" 2>&1)" || {
-    echo "  gh issue create failed: $out" >&2; return 1; }
-  url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
-  num="$(printf '%s' "$url" | grep -oE '[0-9]+$')"
-  [ -n "$num" ] || { echo "  could not parse issue number from: $out" >&2; return 1; }
-  src="$url"
-  docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
+  local url="$src"
+  if [ -z "$num" ]; then
+    # dup-guard (best-effort; never blocks on gh error)
+    local dup
+    dup="$(cd "$path" && "$HQ_GH_BIN" issue list --search "$title" --state open --json number,title 2>/dev/null)" || dup=""
+    if printf '%s' "$dup" | grep -q '"number"'; then
+      echo "  ! possible duplicate open issue matching this title — aborting to avoid double-filing:" >&2
+      printf '    %s\n' "$dup" >&2
+      echo "    (refine the request or file manually if this is genuinely new)" >&2
+      return 1
+    fi
+    # Task 12: render /idea's body sections if not already structured
+    local issue_body="$request"
+    if ! printf '%s' "$issue_body" | grep -qE '^## (Observed|Acceptance)'; then
+      issue_body="$(cat <<EOF
+$request
 
-  mkdir -p "$path/PROJECT/1-INBOX"
-  hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
-    "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" \
-    > "$path/$relpath"
-  printf '  ✓ issue:   %s\n' "$url"
-  printf '  ✓ capture: %s\n' "$relpath"
+## Observed
+| Claim | Command | Observed |
+|---|---|---|
+| Request captured via HQ intake | \`hq park\` | $title |
+
+## Acceptance
+- [ ] Implement requested changes and verify against existing covering suites
+
+## Preflight Contract
+<!-- Preflight contract to be specified at pickup/planning -->
+
+## PRS proposal
+- pri 50: Initial intake proposal for $title
+- sev 50: Standard triage priority
+- appeal 50: Default neutral operator appeal
+- effort 50: Estimated medium implementation effort
+EOF
+)"
+    fi
+    local out
+    out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$issue_body" 2>&1)" || {
+      echo "  gh issue create failed: $out" >&2; return 1; }
+    url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
+    num="$(printf '%s' "$url" | grep -oE '[0-9]+$')"
+    [ -n "$num" ] || { echo "  could not parse issue number from: $out" >&2; return 1; }
+    src="$url"
+  fi
+
+  # Task 6: Duplicate capture guard for --gh-issue adoption (reusing existing capture doc if present)
+  if [ -n "${reuse_doc:-}" ] && [ -f "$reuse_doc" ]; then
+    relpath="${reuse_doc#$path/}"
+    docname="$(basename "$reuse_doc")"
+    printf '  ✓ issue:   %s\n' "$url"
+    printf '  ✓ capture: %s (reusing existing capture)\n' "$relpath"
+  else
+    docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
+    mkdir -p "$path/PROJECT/1-INBOX"
+    hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
+      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" "$p_goal" \
+      > "$path/$relpath"
+    printf '  ✓ issue:   %s\n' "$url"
+    printf '  ✓ capture: %s\n' "$relpath"
+  fi
 
   local r_bin=""
   if [ "$is_releases" = "1" ]; then
-    # No fallback to ROADMAP.md here on purpose: in releases-mode the text file is not the
-    # source of truth, so failing loudly beats silently parking where nothing reads.
-    if ! r_bin="$(hq_releases_bin "$path")"; then
-      echo "  ! releases roadmap add failed: no releases_app.py under $path (utils/py/ or .xyz/utils/py/)" >&2
-      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — install the CLI, then run 'releases roadmap add' there manually." >&2
-      return 1
-    fi
-    local db_out
-    if db_out="$(cd "$path" && python3 "$r_bin" roadmap add --issue-num "$num" --issue-url "$url" --title "$title" --created "$created" --doc-path "$relpath" --raw-text "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")" 2>&1)"; then
-      printf '  ✓ DB: pointer added via releases CLI\n'
-    else
-      echo "  ! releases roadmap add failed: $db_out" >&2
-      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — fix the DB, then run 'releases roadmap add' there manually." >&2
-      return 1
-    fi
+    # GH-1340 / GH-1345 decision 6: rows are created when work starts, not at filing.
+    # Filing paths create the issue and 1-INBOX capture doc; releases.db row insertion is deferred to pickup.
+    printf '  ✓ ledger:  row creation deferred to pickup (decision 6)\n'
   else
     if [ -f "$roadmap" ]; then
       local where
@@ -542,18 +660,31 @@ case "${1:-}" in
     cmd_next "$nlimit";;
   park)
     shift
-    create=0; ptitle=""; pargs=()
+    create=0; ptitle=""; issue=""; has_issue=0; pargs=()
     while [ $# -gt 0 ]; do
       case "$1" in
         --create|--yes) create=1;;
-        --title) shift; ptitle="${1:-}";;
+        --title) [ $# -gt 1 ] && { shift; ptitle="$1"; } || ptitle="";;
         --title=*) ptitle="${1#--title=}";;
+        --gh-issue) has_issue=1; [ $# -gt 1 ] && { shift; issue="$1"; } || issue="";;
+        --gh-issue=*) has_issue=1; issue="${1#--gh-issue=}";;
         *) pargs+=("$1");;
       esac
       shift
     done
-    [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] [--title T] <project> <request...>" >&2; exit 2; }
-    cmd_park "$create" "$ptitle" "${pargs[@]}";;
+    if [ "$has_issue" = 1 ]; then
+      case "$issue" in
+        ''|*[!0-9]*)
+          echo "hq park: --gh-issue requires a numeric issue number (got '$issue')." >&2
+          exit 1
+          ;;
+      esac
+      [ "${#pargs[@]}" -ge 1 ] || { echo "usage: hq.sh park [--create] [--title T] [--gh-issue N] <project> [<request...>]" >&2; exit 2; }
+    else
+      issue="-"
+      [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] [--title T] [--gh-issue N] <project> <request...>" >&2; exit 2; }
+    fi
+    cmd_park "$create" "$ptitle" "$issue" "${pargs[@]}";;
   queue)
     shift
     create=0; issue="-"; qargs=()

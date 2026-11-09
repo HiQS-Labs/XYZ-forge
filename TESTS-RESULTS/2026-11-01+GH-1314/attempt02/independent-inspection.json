@@ -1,0 +1,111 @@
+{
+  "cases": [
+    {
+      "case": "r1-bad-status",
+      "candidate_changed_paths": [
+        "temp",
+        "temp/factory-primitive",
+        "temp/factory-primitive/calibration-r1",
+        "temp/factory-primitive/calibration-r1/instances",
+        "temp/factory-primitive/calibration-r1/instances/C",
+        "temp/factory-primitive/calibration-r1/instances/C/state.db",
+        "temp/factory-primitive/calibration-r1/instances/C/state.db-shm",
+        "temp/factory-primitive/calibration-r1/instances/C/state.db-wal"
+      ],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r1-bad-init",
+      "candidate_changed_paths": [],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r1-good-status",
+      "candidate_changed_paths": [],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r1-good-init",
+      "candidate_changed_paths": [
+        "temp",
+        "temp/factory-primitive",
+        "temp/factory-primitive/calibration-r1",
+        "temp/factory-primitive/calibration-r1/instances",
+        "temp/factory-primitive/calibration-r1/instances/C",
+        "temp/factory-primitive/calibration-r1/instances/C/canary.txt",
+        "temp/factory-primitive/calibration-r1/instances/C/config.json",
+        "temp/factory-primitive/calibration-r1/instances/C/state.db",
+        "temp/factory-primitive/calibration-r1/instances/C/state.db-shm",
+        "temp/factory-primitive/calibration-r1/instances/C/state.db-wal",
+        "temp/factory-primitive/calibration-r1/instances/C/telemetry",
+        "temp/factory-primitive/calibration-r1/instances/C/telemetry/events.jsonl"
+      ],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r2-good-status",
+      "candidate_changed_paths": [],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r2-good-init",
+      "candidate_changed_paths": [
+        "temp/factory-primitive/calibration-r2",
+        "temp/factory-primitive/calibration-r2/instances",
+        "temp/factory-primitive/calibration-r2/instances/C",
+        "temp/factory-primitive/calibration-r2/instances/C/canary.txt",
+        "temp/factory-primitive/calibration-r2/instances/C/config.json",
+        "temp/factory-primitive/calibration-r2/instances/C/state.db",
+        "temp/factory-primitive/calibration-r2/instances/C/state.db-shm",
+        "temp/factory-primitive/calibration-r2/instances/C/state.db-wal",
+        "temp/factory-primitive/calibration-r2/instances/C/telemetry",
+        "temp/factory-primitive/calibration-r2/instances/C/telemetry/events.jsonl"
+      ],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r2-bad-status",
+      "candidate_changed_paths": [
+        "temp/factory-primitive/calibration-r2",
+        "temp/factory-primitive/calibration-r2/instances",
+        "temp/factory-primitive/calibration-r2/instances/C",
+        "temp/factory-primitive/calibration-r2/instances/C/state.db",
+        "temp/factory-primitive/calibration-r2/instances/C/state.db-shm",
+        "temp/factory-primitive/calibration-r2/instances/C/state.db-wal"
+      ],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    },
+    {
+      "case": "r2-bad-init",
+      "candidate_changed_paths": [],
+      "inactive_candidate_unchanged": true,
+      "home_unchanged": true,
+      "tmp_unchanged": true,
+      "git_unchanged": true
+    }
+  ],
+  "scope": "post-run independent reads of raw output/state/inventory; no candidate commands rerun",
+  "candidate_commands": 8,
+  "old_attempt_retained_unchanged": true
+}

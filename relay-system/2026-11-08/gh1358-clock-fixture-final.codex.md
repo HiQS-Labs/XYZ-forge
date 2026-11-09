@@ -1,0 +1,3 @@
+# Independent Codex fixture delta final QA
+
+Native /root/clock_fixture_final_qa: Approved, nofindings in three-filefixture/registrydelta. Reviewedbd4b0462ce5995ccf790152e9a7b77a07fb63871, runtimeSHA256169e57aeb0e19926c55c11cc7e272778c06dad3bd0c25bf8c8784c62737992c9 unchanged. Pacingpreserves500000ceiling/96MB/killassertions. Registryremoval+exemptionfollowAGENTSnontierflakepolicy. Recordeddisabled-watchdogexit1 cannot satisfyguardkill/108; retainprovenance. Readinessconditionalongh390/gh280/fullgate. Cleanworkingtree, noedits/shellsuites.

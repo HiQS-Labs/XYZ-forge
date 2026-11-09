@@ -1,0 +1,49 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1295-exec1",
+  "generated_at": "2026-11-08T08:50:56Z",
+  "outcome": "escalated",
+  "reason": "timeout-no-artifact",
+  "exit_code": 7,
+  "approval_preserved": false,
+  "issue": "1295",
+  "phase": "gh-1295-injected-text-in-briefs",
+  "lane": "gh-1295-injected-text-in-briefs",
+  "token": "MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1295-injected-text-in-briefs-2026-11-08",
+  "head_sha": "5a8583aac840ad27403d5568e512c1f90b9dff23",
+  "reviewed_candidate": null,
+  "reviewed_head": null,
+  "added_sha256": null,
+  "attest_path": null,
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "python3 -m pytest test/test_python_layer.py && bash test/synthetic/gh94-containment-invariants.sh",
+    "result": "not-run",
+    "exit": null,
+    "receipt_path": null
+  },
+  "acceptance": null,
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Open",
+  "timestamps": {
+    "started_at": "2026-11-08T08:35:42Z",
+    "finished_at": "2026-11-08T08:50:56Z"
+  }
+}

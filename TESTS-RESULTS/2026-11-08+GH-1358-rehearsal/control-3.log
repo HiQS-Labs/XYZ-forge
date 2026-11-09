@@ -1,0 +1,25 @@
+usage: releases jog run [-h] [--target-root TARGET_ROOT] [--auto-merge]
+                        [--builder BUILDER] [--reviewer REVIEWER]
+                        [--executor {relay,marathon}] [--max-tasks MAX_TASKS]
+                        [--simulate] [--dry-run]
+
+options:
+  -h, --help            show this help message and exit
+  --target-root TARGET_ROOT
+                        disposable full execution clone (required for
+                        dispatch)
+  --auto-merge          opt-in to auto-merge passing PRs on same-seam tasks
+  --builder BUILDER     builder turn-taker (default: agy; or codex, aider)
+  --reviewer REVIEWER   reviewer agent — REQUIRED with --executor marathon,
+                        the default executor (GH-280 Phase 5); no default is
+                        selected
+  --executor {relay,marathon}
+                        per-task executor (GH-280 Phase 5): 'marathon' is the
+                        default — the reviewed one-phase driver via the
+                        structured contracts, requires --reviewer; 'relay' is
+                        the legacy rollback path kept for a documented
+                        compatibility window
+  --max-tasks MAX_TASKS
+                        maximum tasks to process in this run
+  --simulate            simulate drive execution in test environments
+  --dry-run             simulate queue run without mutations

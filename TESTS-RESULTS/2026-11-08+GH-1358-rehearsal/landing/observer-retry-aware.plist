@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.xyz-forge.gh1358-local-observer</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python</string>
+		<string>-c</string>
+		<string>import datetime,json,os,subprocess,time
+from pathlib import Path
+base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg')
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge')
+source='/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54/utils/py/releases_app.py'
+now=time.time();state_path=base/'observer-state.json'
+prior=json.loads(state_path.read_text()) if state_path.exists() else {}
+record={'observed_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'observer_pid':os.getpid(),'silence_threshold_s':120,'observation_interval_s':15,'active_pass_limit_s':10800,'host_loss_coverage':False,'authority':'observe only; no work-state writes or recovery'}
+try:
+ journal_path=primary/'.tick/jog/checkpoint.json';journal=json.loads(journal_path.read_text());age=now-journal_path.stat().st_mtime
+ assert journal.get('phase') in ('running','committed','published') and age&gt;=0
+ lock=primary/'.git/relay-driver.lock/pid'
+ try:pid=int(lock.read_text().strip())
+ except FileNotFoundError:pid=None
+ command=subprocess.run(['ps','-p',str(pid),'-o','command='],capture_output=True,text=True,timeout=5).stdout if pid else ''
+ owned=bool(pid and source in command and str(primary) in command and 'jog run' in command and str(base/'publisher') in command)
+ retry_owned=bool(pid and str(Path(source).parents[2]) in command and str(primary) in command and str(base) in command and 'JogCheckpoint' in command and ('_jog_retry_gate_locked' in command or '_jog_retry_build_locked' in command))
+ owned=owned or retry_owned
+ record['owned_retry_alive']=retry_owned
+ if not owned:
+  journal=json.loads(journal_path.read_text());age=now-journal_path.stat().st_mtime
+ head=subprocess.check_output(['git','-C',str(base/'runner'),'rev-parse','HEAD'],text=True,timeout=5).strip()
+ heartbeat_path=base/'runner/.tick/driver-heartbeat.json'
+ try:heartbeat=json.loads(heartbeat_path.read_text())
+ except (OSError,ValueError):heartbeat=None
+ record.update(phase=journal['phase'],checkpoint=journal.get('commit'),journal_age_s=round(age,1),supervisor_pid=pid,owned_supervisor_alive=owned,runner_head=head,committed_head_changed=bool(prior.get('runner_head') and prior['runner_head']!=head),driver_heartbeat=heartbeat)
+ landing_owned=False
+ if not owned:
+  import re
+  job=subprocess.run(['launchctl','print','gui/'+str(os.getuid())+'/com.xyz-forge.gh1358-live-checkpoint'],capture_output=True,text=True,timeout=5)
+  match=re.search(r'^\s*pid = (\d+)$',job.stdout,re.M)
+  launch_pid=int(match.group(1)) if match else None
+  launch_command=subprocess.run(['ps','-p',str(launch_pid),'-o','command='],capture_output=True,text=True,timeout=5).stdout if launch_pid else ''
+  landing_owned=bool(launch_pid and str(base) in launch_command and 'merge_cleanup.py' in launch_command and 'd8a9167c24b47f55663f4d3bf718e455f287a4aa' in launch_command)
+  record.update(landing_pid=launch_pid,owned_landing_alive=landing_owned)
+ if landing_owned and journal['phase']=='published':
+  landing_age=now-datetime.datetime.fromisoformat('2026-11-08T18:23:00+00:00').timestamp()
+  alarm=landing_age&gt;1800;status='LANDING_DEADLINE_EXCEEDED' if alarm else 'LANDING_WITHIN_DEADLINE'
+  record['landing_age_s']=round(landing_age,1)
+ elif owned:
+  limit=1800 if journal['phase']=='committed' else 10800
+  alarm=age&gt;limit;status='ACTIVE_DEADLINE_EXCEEDED' if alarm else 'ACTIVE_WITHIN_DEADLINE'
+ elif journal['phase']!='published':alarm=True;status='OWNED_SUPERVISOR_ABSENT'
+ else:alarm=age&gt;120;status='SCHEDULE_SILENCE' if alarm else 'RECENT_COMPLETION'
+except Exception as exc:
+ alarm=True;status='OBSERVATION_UNCERTAIN';record['error']=str(exc)
+# A fresh current sample cannot erase an unobserved interval, including host sleep.
+try:
+ prior_at=datetime.datetime.fromisoformat(prior['observed_at']).timestamp() if prior.get('observed_at') else None
+ gap=now-prior_at if prior_at is not None else None
+ coverage_gap=gap is not None and (gap&lt;0 or gap&gt;180)
+ record.update(observation_gap_s=round(gap,1) if gap is not None else None,coverage_status='GAP' if coverage_gap else ('CONTIGUOUS' if gap is not None else 'FIRST_SAMPLE'),operating_envelope='awake-host only; no offhost/sleep-time detection')
+ if coverage_gap:
+  record['work_status']=status;alarm=True;status='OBSERVATION_GAP'
+except (ValueError,TypeError):
+ alarm=True;status='OBSERVATION_UNCERTAIN';record['coverage_status']='INVALID_PRIOR_TIME'
+if datetime.datetime.now(datetime.timezone.utc)&gt;=datetime.datetime.fromisoformat('2026-11-08T19:06:18+00:00'):
+ alarm=True;status='PREPARATION_BOUND_REACHED'
+record.update(alarm=alarm,status=status,alert_transition=bool(alarm and not prior.get('alarm')),recovery_transition=bool(not alarm and prior.get('alarm')))
+temporary=state_path.with_suffix('.tmp');temporary.write_text(json.dumps(record,indent=2)+'\n');os.replace(temporary,state_path)
+print(json.dumps(record),flush=True)
+raise SystemExit(1 if alarm else 0)
+</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/observer-landing.stderr.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/observer-landing.stdout.jsonl</string>
+	<key>StartInterval</key>
+	<integer>15</integer>
+</dict>
+</plist>

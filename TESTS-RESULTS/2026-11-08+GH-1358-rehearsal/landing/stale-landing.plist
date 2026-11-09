@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.xyz-forge.gh1358-stale-landing</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python</string>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py</string>
+		<string>--primary</string>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge</string>
+		<string>--root</string>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp</string>
+		<string>--exclude</string>
+		<string>/Users/noelsaw</string>
+		<string>--exclude</string>
+		<string>/private/var</string>
+		<string>--exclude</string>
+		<string>/var</string>
+		<string>--prs</string>
+		<string>1372@624f52c8c489c41b70445a54e860416e54538e64</string>
+		<string>--resume</string>
+		<string>--execute</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/stale-landing.stderr.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/stale-landing.stdout.log</string>
+	<key>WorkingDirectory</key>
+	<string>/Users/noelsaw/Documents/GitHub/XYZ-forge</string>
+</dict>
+</plist>

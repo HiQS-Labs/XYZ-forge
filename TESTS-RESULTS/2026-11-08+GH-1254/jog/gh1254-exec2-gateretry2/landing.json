@@ -1,0 +1,18 @@
+{
+  "issue": 1254,
+  "queue_gid": "jog-01M6Y67FAWQFFXC8VQZ1J7HRNH",
+  "execution_id": "gh1254-exec2-gateretry2",
+  "pr_number": 1379,
+  "merged_sha": "9d2ecf868217777e0add829e707eb64dd2942da6",
+  "approved_head_sha": "fc7896aae3349e89d0e929aa1ca299f2fa678f2d",
+  "landed_head_sha": "18e5df165030677a4ad3db1b46f7bc66459d09f3",
+  "reviewed_head_sha": "bd4b0462ce5995ccf790152e9a7b77a07fb63871",
+  "reviewed_candidate_sha": "fc7896aae3349e89d0e929aa1ca299f2fa678f2d",
+  "tested_head_sha": "fc7896aae3349e89d0e929aa1ca299f2fa678f2d",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "doc_path": "PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md",
+    "pr_number": 1379
+  }
+}

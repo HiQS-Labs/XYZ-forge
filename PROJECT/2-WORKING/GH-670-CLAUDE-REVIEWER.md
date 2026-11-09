@@ -123,3 +123,19 @@ Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet
 ## Merge evidence
 
 - PR #753 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1319 merged 2026-11-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 1cc70b1f0d49 landed 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 7af4ee3d957c landed 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 229e1be952bf landed 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

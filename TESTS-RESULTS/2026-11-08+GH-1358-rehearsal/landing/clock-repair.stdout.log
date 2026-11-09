@@ -1,0 +1,70 @@
+jog: marathon execution gh1254-exec2 for GH-1254 (packet: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/preflight)
+jog: dispatching marathon-drive (/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-automation/marathon-drive.sh)
+marathon-drive: phase gh-1254-outer-loop-borrow-decl: relay is terminal (STATUS: Approved) but token 'MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2' reads 'unknown', not done — rebuilding; if this phase really did complete, its record is on a token this run cannot see (see GH-385)
+marathon-drive: phase gh-1254-outer-loop-borrow-decl: --retry given, so this run REBUILDS. But the relay is already terminal (STATUS: Approved) and its recorded token 'MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN' reads done — re-firing WITHOUT --retry would have re-run only the pre-advance gate and dispatched no builder or reviewer turn (GH-491)
+marathon-drive: relay file committed: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1254-outer-loop-borrow-decl/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2 → codex
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1254-outer-loop-borrow-decl-start boundary — compressor=831MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+codex-turn: committed codex turn (file-scoped, no push)
+agy-turn: committed agy turn (file-scoped, no push)
+relay-drive: attested Approved by agy — reviewed bd4b0462ce59, 2275 bytes of review text, record /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2.json
+relay-drive: relay terminated (STATUS: Approved, token done, attested by agy) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json,datetime,re
+deadline=datetime.datetime.fromisoformat('"'"'2026-11-08T19:06:18+00:00'"'"').timestamp()
+gate_started=datetime.datetime.now(datetime.timezone.utc).timestamp()
+assert deadline-gate_started>=900, '"'"'fixed preparation deadline leaves less than reduced 900s gate cap; preserve candidate without starting gate'"'"'
+root=pathlib.Path.cwd().resolve()
+assert root==pathlib.Path(os.environ['"'"'MARATHON_ROOT'"'"']).resolve()
+env={k:v for k,v in os.environ.items() if k in ('"'"'PATH'"'"','"'"'HOME'"'"','"'"'USER'"'"','"'"'LOGNAME'"'"','"'"'SHELL'"'"','"'"'TMPDIR'"'"','"'"'LANG'"'"','"'"'LC_ALL'"'"','"'"'TERM'"'"','"'"'SSH_AUTH_SOCK'"'"','"'"'GH_TOKEN'"'"','"'"'GITHUB_TOKEN'"'"')}
+def git(where,*args):return subprocess.check_output(['"'"'git'"'"','"'"'-C'"'"',str(where),*args],text=True,env=env).strip()
+sha=git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"');branch=git(root,'"'"'symbolic-ref'"'"','"'"'--short'"'"','"'"'HEAD'"'"');origin=git(root,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')
+assert branch.startswith('"'"'marathon/'"'"') and origin=='"'"'https://github.com/HiQS-Labs/XYZ-forge.git'"'"'
+clone=pathlib.Path(tempfile.mkdtemp(prefix='"'"'gh1358-lane-gate-'"'"')).resolve()
+print('"'"'GH1358 isolated existing gate/push:'"'"',clone,'"'"'candidate'"'"',sha,flush=True)
+def run(args):subprocess.run(args,cwd=clone,env=env,check=True)
+run(['"'"'git'"'"','"'"'clone'"'"','"'"'--no-local'"'"','"'"'--no-hardlinks'"'"',str(root),str(clone)])
+run(['"'"'git'"'"','"'"'remote'"'"','"'"'set-url'"'"','"'"'origin'"'"',origin]);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"']);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+run(['"'"'python3'"'"','"'"'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py'"'"','"'"'utils/py/marathon_drive.py'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh390-gate-guard.sh'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh280-jog-marathon-adapter.sh'"'"'])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'--push'"'"','"'"'--all'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"' and not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+live=subprocess.check_output(['"'"'ps'"'"','"'"'-axo'"'"','"'"'pid=,command='"'"'],text=True)
+other_gates=[line for line in live.splitlines() if re.match(r'"'"'^\s*\d+\s+(?:/\S*/)?bash\s+(?:\S*/)?(?:validate|ci-local)\.sh(?:\s|$)'"'"',line)]
+print('"'"'pre-push live host gate check:'"'"',other_gates,flush=True)
+assert not other_gates, '"'"'another host full gate is active; no peer was stopped'"'"'
+assert datetime.datetime.now(datetime.timezone.utc).timestamp()<deadline, '"'"'fixed preparation deadline reached before push'"'"'
+run(['"'"'git'"'"','"'"'push'"'"','"'"'--set-upstream'"'"','"'"'origin'"'"','"'"'HEAD:refs/heads/'"'"'+branch])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin and git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"'
+assert not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+receipt=clone/'"'"'.xyz/receipts'"'"'/f'"'"'{sha}.json'"'"';data=json.loads(receipt.read_text())
+assert data['"'"'sha'"'"']==sha and data['"'"'exit_code'"'"']==0 and data.get('"'"'scope'"'"')=='"'"'full'"'"'
+dest=root/'"'"'.xyz/receipts'"'"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)
+print('"'"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'"'"',flush=True)
+'
+marathon-drive: gate-guard: gate exit 1 after 1s — peak group RSS 2MB (tier full; caps: RSS 8192MB, wall 900s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-185133.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1254-outer-loop-borrow-decl-escalated boundary — compressor=600MB, swap_free=1023MB
+marathon-drive: escalation written: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1254-outer-loop-borrow-decl/ESCALATION.md (reason: pre-advance-failed)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/preflight/marathon-result.json (outcome: escalated, exit 5)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/6 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 10h 15m
+per done-task: ≥0 tokens, 1h 42m wall-clock
+memory: compressor peak: 1431MB, swap free min: 1023MB
+  turn peak RSS: agy: 209MB peak RSS, codex: 336MB peak RSS
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+jog: retry-build GH-1254 → failed — marathon escalated: pre-advance-failed (exit 5) [gh1254-exec2; result: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/preflight/marathon-result.json]

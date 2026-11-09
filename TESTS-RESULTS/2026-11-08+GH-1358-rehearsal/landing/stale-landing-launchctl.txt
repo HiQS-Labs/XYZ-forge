@@ -1,0 +1,78 @@
+gui/501/com.xyz-forge.gh1358-stale-landing = {
+	active count = 0
+	path = /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/stale-landing.plist
+	type = LaunchAgent
+	state = not running
+
+	program = /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python
+	arguments = {
+		/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python
+		/Users/noelsaw/Documents/GitHub/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+		--primary
+		/Users/noelsaw/Documents/GitHub/XYZ-forge
+		--root
+		/Users/noelsaw/Documents/GitHub/XYZ-forge/temp
+		--exclude
+		/Users/noelsaw
+		--exclude
+		/private/var
+		--exclude
+		/var
+		--prs
+		1372@624f52c8c489c41b70445a54e860416e54538e64
+		--resume
+		--execute
+	}
+
+	working directory = /Users/noelsaw/Documents/GitHub/XYZ-forge
+
+	stdout path = /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/stale-landing.stdout.log
+	stderr path = /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/stale-landing.stderr.log
+	inherited environment = {
+		SSH_AUTH_SOCK => /var/run/com.apple.launchd.9uplH66u1I/Listeners
+	}
+
+	default environment = {
+		PATH => /usr/bin:/bin:/usr/sbin:/sbin
+	}
+
+	environment = {
+		OSLogRateLimit => 64
+		PATH => /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+		XPC_SERVICE_NAME => com.xyz-forge.gh1358-stale-landing
+	}
+
+	domain = gui/501 [100062]
+	asid = 100062
+	minimum runtime = 10
+	exit timeout = 5
+	runs = 1
+	last exit code = 2
+
+	resource coalition = {
+		ID = 21634
+		type = resource
+		state = active
+		active count = 1
+		name = com.xyz-forge.gh1358-stale-landing
+	}
+
+	jetsam coalition = {
+		ID = 21635
+		type = jetsam
+		state = active
+		active count = 1
+		name = com.xyz-forge.gh1358-stale-landing
+	}
+
+	spawn type = daemon (3)
+	jetsam priority = 40
+	jetsam memory limit (active) = (unlimited)
+	jetsam memory limit (inactive) = (unlimited)
+	jetsamproperties category = daemon
+	jetsam thread limit = 32
+	cpumon = default
+	sanitizer flags = 0x0
+
+	properties = runatload | inferred program
+}

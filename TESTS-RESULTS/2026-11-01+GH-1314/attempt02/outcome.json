@@ -1,0 +1,7 @@
+{
+  "commands": 8,
+  "model_spend": 0,
+  "outcome": "calibrated",
+  "parent_acceptance": "pending independent raw-evidence review",
+  "scope": "historical GH-1284 status/init only"
+}
