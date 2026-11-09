@@ -2,7 +2,7 @@
 gh_issue: 1376
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1376
 title: "Add flywheel skill for adaptive Jog orchestration"
-status: Active — PR #1378 reviewed; awaiting publication checks and merge approval
+status: Active — PR #1378 published; awaiting merge approval
 created: 2026-11-08
 updated: 2026-11-08
 owner: parent orchestrator
@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Compatibility extension implemented at f40a5f7b1; independent plan QA Approved; instruction consumer checks pass. Daily/10days source changes remain in PR #1378. | Extension final QA Approved in round 2; publish through the normal documentation gate and inspect exact-head hosted checks. Merge and deployment remain separate. |
+| Compatibility extension implemented at f40a5f7b1; independent plan QA Approved; instruction consumer checks pass. Daily/10days source changes remain in PR #1378. | Extension final QA Approved in round 2. Full normal push gate passed in 547s on c4abd1db6; committed evidence receipt follows. Inspect exact-head hosted checks, then await per-PR merge approval. No deployment. |
 
 ## Idea
 
