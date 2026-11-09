@@ -1,0 +1,1 @@
+Read-only --show-merge-policy against source clone refused because --primary differed from pinned Jog primary /Users/noelsaw/Documents/GitHub/XYZ-forge. No identity override or mutation performed. Nonblocking: source clone is not the landing primary; byte comparison and public existing resolve_merge_policy API inspect its configuration without pretending otherwise.

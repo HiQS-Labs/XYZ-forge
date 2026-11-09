@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-09
+
+- GH-1386: restore the exact pre-trial merge-cleanup policy (`full_suite: promotion`, hosted sweep declaration) under the new pinned-flywheel Mode1B recovery window. This reuses the retained restoration; it introduces no runner, cleanup, promotion dispatch or1390 implementation. Original/live/restored byte discrimination and independent source QA are retained under `TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/`; fresh normal qualification and durable merge remain pending at this entry. Later results are appended to evidence rather than rewriting prior capped claims.
+
 ## 2026-11-08 — GH-1383 merge sequence repair
 
 - Intermediate checks and automatic local sweeps use retained independent full clones; failed or timed-out command groups are stopped. Deferred issue/doc synchronization is only marked reconciled after checked final publication, including a skipped last candidate. Integrated GH-1381/PR1384 branch preservation before deployment.
