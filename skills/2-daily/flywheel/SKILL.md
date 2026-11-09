@@ -125,8 +125,11 @@ needed and step 6 for verified ready PRs, preserving per-PR merge approval.
 
 1. **Anchor the outcome and existing state.** Read the live issue, canonical plan,
    current queue and latest verified result. Name the nearest observable milestone,
-   selected rubric mode, budgets and next owner. If governed intake, a fresh full clone,
-   a surgical plan or double-relay QA is needed, use
+   selected rubric mode, budgets and next owner. Resolve an explicitly requested
+   execution owner before choosing preparation: for 10days, continue to step 2 and
+   let that owner select issues and prepare its dedicated clone; do not run a generic
+   start-task prelude. For an individual task that still needs the start-task lifecycle
+   and has no existing execution owner, use
    [start-task](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/start-task/SKILL.md).
    Reuse its resume reconciliation instead of creating duplicate issues, clones,
    branches or ledger rows. If start-task or existing state already supplies a

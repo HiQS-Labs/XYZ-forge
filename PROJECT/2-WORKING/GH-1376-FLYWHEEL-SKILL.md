@@ -118,7 +118,7 @@ The #1356/#1358 sessions showed that the individual tools can produce reviewed P
 - **Policy source:** #1358 currently defines Rubrics 1A/1B, 2 and 3 and the standing authorization ladder. Flywheel is an operational projection for runs that explicitly select this policy; it does not rewrite other campaigns' policies or #1328.
 - **Dependencies:** draft #1024 is weekly intake, conflicted and explicitly not merge-authorized; it is not needed. The external #1316/#1318 landing task is not a flywheel dependency. Fetch their eventual integration updates normally and reread any referenced contract they change.
 - **Skill tier:** `2-daily`, matching its role in queueing and driving work and its neighbor `jog`. The required Skills Index row lives in `ARCHITECTURE.md`.
-- **Deployment status:** Skills Army HQ status/list could not start because the resolved collection root is absent on this device (`~/git-pulse-sync/Deployed Skills`). This does not block source authoring; no installation or deployment is attempted or claimed.
+- **Initial authoring observation:** Skills Army HQ status/list could not start because its resolved collection root was unavailable. This did not block source authoring. This task performs no deployment; any separately managed deployment is outside its claims.
 
 ## Smallest viable bet
 
@@ -126,7 +126,7 @@ Add one concise `skills/2-daily/flywheel/SKILL.md` and its Skills Index row. The
 
 **Assumption:** a single explicit composition and continuation contract will reduce repeated planning and premature handoffs without changing runtime code. **Failure mode:** duplicating detailed CLI/policy text would drift or contradict the owned skills. The mitigation is stable links and decision rules, not copied implementation detail.
 
-**Reversibility: Easy.** Remove the skill file and index row to roll back. No runtime, schema, deployed collection, credential, or remote-service change is in scope.
+**Reversibility: Easy.** Revert the Flywheel skill/index, GP/AGENTS pointers and optional 10days coordination/recovery instructions together so no dangling references remain. Retain the independent dirty-worktree preservation correction. No runtime, schema, deployed collection, credential or remote-service change is in scope.
 
 **Alternative considered:** add a flywheel section to `jog`. Rejected because the requested unit spans intake, Jog, Marathon, review, continuation, landing and deployment; Jog cannot own those other skills' contracts. `start-task` likewise cannot own recurring queue execution. A thin top-level skill is the smallest shape that covers the whole route.
 
@@ -193,3 +193,7 @@ Plan QA Approved in round 1 at b5d956a25; receipt relay-system/2026-11-08/gh1376
 ### Final-QA correction
 
 Round 1 found a pre-existing 10days forced-removal fallback on uncommitted/stray lane state. Accepted as a concrete whole-file safety finding: preserve refused/dirty worktrees and report the path/state, using normal native removal only for a proven clean integrated lane. No expanded subsystem or new test. Manual native Git refusal and clean-path evidence is recorded separately.
+
+### CodeRabbit follow-up dispositions
+
+At 06bf5c98, valid narrow findings: explicitly select 10days before generic preparation (step1 now defers selection/clone preparation to that owner); record dirty-worktree preservation and native refusal/clean-removal verification in CHANGELOG; include dependent GP/AGENTS/10days pointers in rollback; remove the machine-specific collection path from the active plan. The old ready-PR and marathon-dispatch findings are already corrected. The missing-independent-review claim based on the takeover note is superseded by gh1376-compat-final.codex.md round2, which swept the corrected full skill at bc04fc63f. These later small comment corrections were directly reviewed and consumer-checked; independent review did not run for this narrow follow-up. Earlier approvals remain scoped to their recorded heads.
