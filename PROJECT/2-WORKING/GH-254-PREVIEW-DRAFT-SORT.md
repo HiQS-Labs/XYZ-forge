@@ -6,6 +6,8 @@ updated: 2026-11-09
 gh_issue: 254
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/254
 doc_type: bugfix
+owner: B trial
+goal: Order active release cards before drafts while preserving shipped history.
 ---
 
 # GH-254 — Show active releases before drafts

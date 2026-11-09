@@ -1,0 +1,11 @@
+{
+  "recorded_utc": "2026-11-09T19:22:28.313538+00:00",
+  "authority": "Explicit user: Yes two more qualification attempts. Increase time by 20% if needed too.",
+  "original_qualification_allowance": "2/2 exhausted; retained",
+  "additional_qualification_attempts": 2,
+  "per_attempt_ceiling_seconds": 2160,
+  "hard_end": "2026-11-09T20:06:31Z",
+  "closeout_reserve": "2026-11-09T19:46:31Z",
+  "scope": "Prepared four-frontmatter-line correction only; no additional builder scope; standing defaults unchanged",
+  "patch_sha256": "c236be4cdd2e0951cc46b0900990f72a39c6ed2d722e92aacdd695c0f873124a"
+}

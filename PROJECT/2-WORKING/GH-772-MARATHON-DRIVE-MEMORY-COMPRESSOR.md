@@ -6,6 +6,8 @@ updated: 2026-11-09
 gh_issue: 772
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/772
 doc_type: bugfix
+owner: B trial
+goal: Report compressor memory using the page size from vm_stat.
 ---
 
 # GH-772 — Correct compressor page-size measurement
