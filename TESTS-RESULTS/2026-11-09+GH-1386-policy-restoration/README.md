@@ -17,3 +17,11 @@ Rubrics: real policy drift eliminated only after durable merged bytes match; dis
 ## Durable restoration and bookkeeping
 
 PR1392 exact4e9b4691 hosted42554551752 SUCCESS, merged 4394c7c4cf65871fc33f40945b1fb13d88fbc45a. Canonical individual reconciliation also reran1384 after corrective issue1381 closure; recovery inventory uncertainty stays separate. Fresh runtime gate1/2 passed, no new blocker repair or1390 counter reset. Final publication and SHA are recorded in issue1386.
+
+## Completion filing and explicit skill installation
+
+Original policy was durably restored by1392 merge4394c7c4 and normal reconciliation/publicationf5009284 (docs87s, caller266.550s). The Refs-only1384 issue document still needed the supported explicit delivered-issue1381 path; it now moved to3-COMPLETED and its existing ledger row was repointed, with no unrelated sweep or force.
+
+The user subsequently explicitly requested Flywheel installation through Skills Army HQ, overriding this recovery's earlier no-install boundary without authorizing1378 merge. Only intake.py/sync.py mutated the existing Pulse collection and owned links. Clean pinned unmerged7c382a59 source, digestcda1bbb7eead243fa264d644767a8c31391d239387b6e16604b1b1e2637d30ab, receipt matches,6configured links readable, Pulse commit27fc810df. Initial STALE_PULSE_COLLECTION warning cleared after supported clean fast-forward; final warnings/errors empty. GUI discovery remains unverified, Grok Mac staging only. No deployed file/link hand edits.
+
+Recovery outcomes are agent-assisted. One full qualification attempt used, no failed qualification/retry or new blocker repair in this window; earlier1390 counters unchanged. The nonblocking source-CLI primary identity refusal is retained. Human input: explicit recovery authorization and later installation request; no routine approval intervention requested. Tokens unknown. Final elapsed/publicationSHA and process closeout are recorded in issue1386 after normal final bookkeeping publication. No1378/1388 landing,1327fix,1390 implementation, cleanup, schedule or promotion.
