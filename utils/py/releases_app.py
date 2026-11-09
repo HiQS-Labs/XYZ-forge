@@ -4294,6 +4294,12 @@ def cmd_roadmap_reconcile_state(args):
         unresolvable = []
         owned_repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
         origin = _origin_repo_identity(root)
+        inventories = {}
+        repo_counts = {}
+        for candidate in rows:
+            owned = resolve_roadmap_identity(candidate, owned_repos, origin)
+            if owned["identity_valid"]:
+                repo_counts[owned["repo"]] = repo_counts.get(owned["repo"], 0) + 1
         for row in rows:
             # A URL cannot override the row's independently owned repository.
             url = row["issue_url"] or ""
@@ -4307,7 +4313,16 @@ def cmd_roadmap_reconcile_state(args):
                 unresolvable.append(row["gh_number"])
                 continue
             try:
-                native = read_native_issue(identity["repo"], row["gh_number"], url)
+                repo = identity["repo"]
+                # ponytail: at most two open-issue pages for a dense sweep; no persisted cache.
+                # Missing entries still require a singleton read, never an inferred open state.
+                if repo_counts[repo] >= 10 and repo not in inventories:
+                    inventories[repo] = read_native_open_inventory(repo)
+                native = inventories.get(repo, {}).get(row["gh_number"])
+                if native is None:
+                    native = read_native_issue(repo, row["gh_number"], url)
+                else:
+                    native = validate_native_issue(native, row["gh_number"], url)
             except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
                 refuse("roadmap-issue-state", "%s native identity/state unavailable (%s); refusing to guess "
                        "issue state" % (url, exc))
@@ -5684,13 +5699,48 @@ def read_native_issue(repo, number, issue_url, timeout=10):
                           capture_output=True, text=True, timeout=timeout)
     if proc.returncode:
         raise ValueError("native issue read failed: %s" % proc.stderr.strip())
-    issue = json.loads(proc.stdout)
+    return validate_native_issue(json.loads(proc.stdout), number, issue_url)
+
+
+def validate_native_issue(issue, number, issue_url):
     if (not isinstance(issue, dict) or "pull_request" in issue
             or issue.get("number") != number or issue.get("html_url") != issue_url
             or issue.get("state") not in ("open", "closed")
             or not isinstance(issue.get("labels"), list)):
         raise ValueError("native issue identity/state unavailable or pull request")
     return issue
+
+
+def read_native_open_inventory(repo, timeout=10):
+    """Bounded native observations, not a complete inventory or evidence of absence.
+
+    Errors fail closed. A valid page miss uses read_native_issue, including closed issues.
+    Retain PR entries so a requested PR is rejected by the same validator as singleton reads.
+    """
+    inventory = {}
+    for page in (1, 2):
+        proc = subprocess.run(
+            [os.environ.get("XYZ_LABELS_GH_BIN", os.environ.get("RELEASES_GH_BIN", "gh")),
+             "api", "repos/%s/issues?state=open&per_page=100&page=%d&sort=created&direction=asc"
+             % (repo, page)], capture_output=True, text=True, timeout=timeout)
+        if proc.returncode:
+            raise ValueError("native issue inventory failed: %s" % proc.stderr.strip())
+        items = json.loads(proc.stdout)
+        if not isinstance(items, list) or len(items) > 100:
+            raise ValueError("invalid native issue inventory page")
+        for item in items:
+            if not isinstance(item, dict) or type(item.get("number")) is not int:
+                raise ValueError("invalid native issue inventory identity")
+            number = item["number"]
+            if (number <= 0 or number in inventory
+                    or item.get("html_url") != "https://github.com/%s/issues/%d" % (repo, number)
+                    and item.get("html_url") != "https://github.com/%s/pull/%d" % (repo, number)
+                    or item.get("state") != "open" or not isinstance(item.get("labels"), list)):
+                raise ValueError("invalid or duplicate native issue inventory entry")
+            inventory[number] = item
+        if len(items) < 100:
+            break
+    return inventory
 
 
 def load_work_evidence(db_path, stale_days=3, as_of=None):
