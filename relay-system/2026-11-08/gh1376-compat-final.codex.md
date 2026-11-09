@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-08.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -68,5 +68,25 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: Block pending one narrow safety correction in the required complete 10days sweep. Read the entire seeded flywheel, entire 10days skill, canonical plan including compatibility acceptance map, approved compatibility-plan receipt and supplied smoke/provenance/PDDA evidence. The compatibility additions are proportionate instruction-level composition; the pre-existing cleanup defect below remains in scope under the whole-file review contract.
+
+- [Should] Preserve dirty lane worktrees instead of force-removing them. `skills/3-weekly/10days/SKILL.md:520`–526 explicitly says to “fall back to `git worktree remove --force <path>` if it still reports uncommitted/stray state.” This discards uncommitted tracked or untracked lane work, despite the wave's committed portion having been merged. It contradicts `WORKTREE-SAFETY.md:547`–549: “Never default a script to `--force` as a way to ‘fix’ a remove that failed.” Cheapest fix: remove that fallback; preserve the worktree on dirty-state failure and report its path/state for owner reconciliation under the existing cleanup-failure reporting path. No new gate or test is needed.
+  Observed input: the literal cleanup instruction at 10days lines 520–522 selects forced removal specifically on “uncommitted/stray state”; the safety guide at lines 547–549 documents that this input is refused by normal removal and discarded by force.
+  Affected scope: post-merge lane cleanup when ordinary worktree removal refuses because files remain uncommitted or untracked.
+  Falsifier: a lane with its committed patch integrated plus one unique untracked file must remain present after cleanup refusal and be reported; a clean integrated lane should still be removed normally. A demonstrated existing preservation step covering that unique file before force removal would invalidate this finding; none appears in the complete skill.
+- [Pass] Selection and dispatch retain one owner and the explicit exception: `.relay-artifacts/SKILL.md:102`–108 says “Do not send its issues through Jog or start a second sweep to resume it”; lines 135–148 select and dispatch through 10days while requiring exact-plan/order approval for start-marathon. Reciprocal `skills/3-weekly/10days/SKILL.md:95`–112 preserves standalone use.
+- [Pass] Recovery and handoff retain limits and holds: `.relay-artifacts/SKILL.md:110`–122 requires failed/relevant checks, readiness recheck, attempt history, lock state and next owner; `skills/3-weekly/10days/SKILL.md:104`–112 and 527–533 keep red-wave advancement held and distinguish standalone behavior. Ready PRs route directly to approval/landing at seeded lines 132–134 and step 6; no new merge authority is granted.
+- [Pass] Daily is optional observation only: seeded lines 94–100 say “not an automatic observer adapter” and forbid dispatch/repair/merge authority and installed-copy changes. This matches the recorded Daily contract in `relay-system/2026-11-08/gh1376-compat-plan.codex.md` Setup. No invented Daily link or runtime integration is claimed.
+- [Pass] Evidence is scoped honestly: `TESTS-RESULTS/2026-11-08+GH-1376/compat-consumer-smoke.md:3` says “no live sweep, repair, schedule, merge or observer integration executed”; compat-pdda.log ends “no errors, 102 warning(s)” and records optional LLM readiness skipped. The two compatibility provenance entries name their revisions and evidence hashes. Narrow read-only Python hash/source comparison (exit 0) produced “compat-consumer-smoke nonempty hash matches; recorded exit 0”, “compat-pdda nonempty hash matches; recorded exit 0”, and “seed matches canonical flywheel source”. Command: `python3` with `hashlib.sha256(p.read_bytes()).hexdigest() == r['sha256']` for both compatibility records, nonempty byte assertions, and byte equality of seeded/canonical flywheel. This confirms artifact integrity, not execution of the recorded gate.
+
+Verification limits: static reads via `cat`, `nl -ba`, `sed`, `rg` and the narrow Python integrity probe, all exit 0. No git, suite, executable fixture, runtime sweep or external query was run. Runtime recovery and exact-head harness gate remain [Unverified — needs clone run]. No other material pre-existing defect identified in this scope.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'; correct the cleanup fallback and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
