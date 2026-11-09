@@ -7,3 +7,6 @@
 {"command": "python3 temp/attempt-history/adjacent-replay.py VERIFY_CLONE", "source": "0ae5e01c3", "exit": 0, "result": "14/14 adjacent function controls", "limitations": "AST extraction of actual nested functions; driver main path covered separately"}
 {"command": "bash test/gh280-jog-marathon-adapter.sh", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 92.80589008331299}
 {"command": "git push origin HEAD:refs/heads/t3/preserve-attempt-history", "sha": "f7c893e4d9e1f4fd9ebce06b28f715f0ca4c79f2", "started_at": "2026-11-08T23:54:21.813756+00:00", "elapsed_seconds": 540.8449559211731, "exit": 1, "identity_unchanged": true, "cap_seconds": 1800}
+{"command": "bash test/gh376-relay-drive-lock-parity.sh", "case": "import-green", "environment_override": {}, "sha": "ab48e83afa01a8551ef19e0fea7b7f7965748a00", "exit": 0, "expected_exit": 0, "elapsed_seconds": 1.244157075881958}
+{"command": "bash test/gh544-parallel-default.sh", "case": "width-red", "environment_override": {"XYZ_VALIDATE_MAX_JOBS": "4"}, "sha": "ab48e83afa01a8551ef19e0fea7b7f7965748a00", "exit": 1, "expected_exit": 1, "elapsed_seconds": 1.2944128513336182}
+{"command": "bash test/gh544-parallel-default.sh", "case": "width-green", "environment_override": {}, "sha": "ab48e83afa01a8551ef19e0fea7b7f7965748a00", "exit": 0, "expected_exit": 0, "elapsed_seconds": 1.2664909362792969}

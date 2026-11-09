@@ -18,3 +18,6 @@ Edit verdicts: archive helper helped (baseline loss vs retained exact bytes); ga
 
 
 Initial full gate on f7c893e4d: RED, 406/408, push refused after 539 seconds (outer elapsed 541 seconds), identity unchanged. Two deterministic failures survived automatic serial retry: GH376 checks the literal import prefix (20/21); GH544 inherited the caller's XYZ_VALIDATE_MAX_JOBS=4 (22/29). Repair round 1 for each: reorder identical imported symbols; remove caller width override and retain normal default auto-sizing. No behavior or suite changes, no bypass. Both failures retained in initial-full-push.log. The initial single-gate plan now requires a bounded failed-gate repair run under the existing repair budget and parent slot coordination.
+
+
+Repair controls on ab48e83af: GH376 21/21 GREEN after import order correction; GH544 with explicit width override RED 22/29, without override GREEN 29/29. Both run in the disposable full clone. The independent final review predates the import-order-only correction; author comparison confirms the same imported symbols and runtime behavior, and the affected existing suite now passes. No new review was spawned for this formatting-only correction. Builder session 1, repair round 1 per blocker; retry gate remains pending.
