@@ -161,3 +161,31 @@ The plan fails if the new file is absent, its frontmatter or index link is inval
 ## Scope addendum — operator-requested GP/AGENTS text
 
 After the hosted-green flywheel delivery, the operator explicitly requested inclusion in the same PR of a short `GUIDING-PRINCIPLES.md` section on adaptive work and continuous handoff, plus an `AGENTS.md` pointer to it. The operational rubrics and ladder remain only in the flywheel skill; no code or full-rubric duplicate is added. The operator will override approval for this text-only extension.
+
+
+## Compatibility extension — 2026-11-08
+
+Operator requested start-task execution of the 10days gap and explicit Daily support in PR #1378. Reuse GH-1376, its one branch/clone/PR and canonical plan; no second intake for the same routing seam. PR #1351 is intake cutover, not this owner/handoff gap (broad prior-art match rejected after scope inspection).
+
+### Recon map (instruction consumer paths)
+
+- `skills/2-daily/flywheel/SKILL.md` selects Jog or start-marathon, with ready PRs going to landing; it currently names neither Daily nor 10days. Step 3 requires exact-plan confirmation for the start-marathon route.
+- `skills/3-weekly/10days/SKILL.md` introduction and Guardrails explicitly authorize one requested sweep to plan/preflight/fire without a second pause. Step 7 owns batch/lane execution and stops wave advancement on a red gate; Step 8 retains the partial result. Re-running its scan/dispatch through Jog would duplicate execution. This skill's driver lock, claims, attempts, workload and gates remain authoritative.
+- Daily is installed separately, not authored in this Forge tree. Its `Guardrails & Principles` and Steps 1–6 read prompt/work/Git signals and write local synthesis logs. It explicitly prohibits repository or external-store mutations. This task adds only a portable skill-name reference and no guessed repository link, installed-copy edit or deployment. Its availability and configured data sources are optional; source text was read through installed discovery. Local synthesis is observation, not dispatch authority.
+- Existing owner precedence in flywheel permits the more specific requested skill to govern. 10days support must make that precedence explicit at selection AND dispatch; no blanket relaxation of red-gate or safety boundaries. A text-level consumer check can verify routing; it cannot establish a successful unattended batch.
+
+### Bet, limits and rating
+
+Outcome: a requested 10days run keeps one batch owner, can hand off bounded repair and delivery without duplicate execution, while Daily observes without launching work. Smallest viable bet: a short compatibility section in flywheel, a reciprocal 10days handoff section, and a narrow red-gate wording clarification. Alternatives: just adding names would leave contradictory dispatch/stop instructions; a new runner or observer adapter is unnecessary. Easy reversibility: revert these Markdown edits. Blast radius is agent instructions for the selected skills, not runtime code or queue schemas. Existing 80/45/50/80 rating is retained: concentrated November 7–8 handoff evidence in #1358/#1376 supports priority; no new incident or growing trend is inferred. Recent 14-day vs preceding-14-day recurrence is not independently enumerated here; trend remains unknown. No operator override changes.
+
+### Acceptance and ordered work
+
+1. Add Daily as an optional observation-only companion by skill name: it may surface evidence for Flywheel to assess but cannot dispatch, merge, repair or create authority; missing Daily never blocks execution. -> Consumer read distinguishes observing from acting.
+2. Add explicit 10days selection and dispatch ownership in Flywheel, preserving its named firing exception only when explicitly invoked and keeping start-marathon's exact-plan confirmation. Add reciprocal 10days handoff guidance, without requiring Flywheel for standalone sweeps. -> Requested 10days does not fall into Jog or a redundant firing approval; standalone behavior stays available.
+3. Define bounded recovery: a red wave gate halts advancement; within the recorded budget, repair only the affected work through its owner, verify the correction with the existing failed/relevant checks, preserve attempts/history and recheck readiness before continuation. Safety/ownership/containment failures and unknown causes remain held. Independent work advances only when dependency/lock rules permit; no failed wave is skipped. No automatic restart, count reset, cap/gate change or merge. -> Failed-gate scenario preserves halt and next owner; approved PR scenario goes to landing without rebuild.
+4. Record mode, objective, plan/window, clone/revision, claims/lock state, budgets/attempt history, halt/gate evidence and next owner in the existing plan/results for handoffs. Use existing start-task/relay and merge-cleanup only as needed, honoring per-PR approval. -> Cold resume reconciles existing state instead of launching a fresh sweep.
+5. Verify nonempty source/link/branch boundaries and manually walk requested sweep, red-gate recovery, ready PR, Daily missing/stale cases. Use existing deterministic PDDA gate in a separate full clone and independent plan/final Codex relay QA, at most three rounds each. No new test, gate, executable, scheduler, deployment, real sweep dispatch, merge or promotion. Record provenance and explicitly limit claims to instruction-level compatibility.
+
+## Extension QA
+
+Plan QA pending. Original plan/final receipts remain historical and do not cover this extension.
