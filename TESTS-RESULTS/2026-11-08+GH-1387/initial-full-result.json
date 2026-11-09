@@ -1,0 +1,9 @@
+{
+  "command": "git push origin HEAD:refs/heads/t3/preserve-attempt-history",
+  "sha": "f7c893e4d9e1f4fd9ebce06b28f715f0ca4c79f2",
+  "started_at": "2026-11-08T23:54:21.813756+00:00",
+  "elapsed_seconds": 540.8449559211731,
+  "exit": 1,
+  "identity_unchanged": true,
+  "cap_seconds": 1800
+}

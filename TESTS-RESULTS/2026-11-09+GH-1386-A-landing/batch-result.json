@@ -1,0 +1,251 @@
+{
+  "start": "2026-11-09T16:32:53.085376+00:00",
+  "end": "2026-11-09T16:41:54.434289+00:00",
+  "seconds": 541.3472336670093,
+  "rc": 0,
+  "merged": [
+    1388
+  ],
+  "batch": {
+    "allowlist": {
+      "1382": "f0e47898dd69b9244a269488d53006385aa17886",
+      "1388": "c4ff4b75d0f899ef5b2b191e9ce4dbb9eb71c6d1"
+    },
+    "created": "2026-11-09T06:46:23Z",
+    "integration": "development",
+    "issue": 1394,
+    "issue_error": "",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1394",
+    "landed_order": [
+      1382,
+      1388
+    ],
+    "landing_plan": null,
+    "outcomes": {
+      "1382": {
+        "merge_oid": "c78f67f9c0664212c338f4a785f9ca70c71d19eb",
+        "reconcile": "ok",
+        "status": "merged"
+      },
+      "1388": {
+        "merge_oid": "b74ff542baffa74eadbbe7c39841288472232436",
+        "reconcile": "ok",
+        "status": "merged"
+      }
+    },
+    "path": "/Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/batch-20261109T064623Z-1382.json",
+    "planned": [
+      {
+        "files": [
+          "AGENTS.md",
+          "ARCHITECTURE.md",
+          "CHANGELOG.md",
+          "GUIDING-PRINCIPLES.md",
+          "LEADERBOARD.md",
+          "PROJECT/2-WORKING/GH-1376-FLYWHEEL-SKILL.md",
+          "PROJECT/2-WORKING/GH-1383-MERGE-CLEANUP-OPTIMIZATION.md",
+          "PROJECT/2-WORKING/MARATHON-PLAN-2026-11-09.md",
+          "PROJECT/3-COMPLETED/GH-1381-MERGE-WORKTREE-PRESERVATION.md",
+          "PROJECT/3-COMPLETED/GH-1390-NOOP-PUBLICATION.md",
+          "TESTS-RESULTS/2026-11-08+GH-1376/SUMMARY.md",
+          "TESTS-RESULTS/2026-11-08+GH-1376/base-b01-full-push.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1376/base-b01-ledger-resolution.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/coderabbit-followup-smoke.md",
+          "TESTS-RESULTS/2026-11-08+GH-1376/compat-cleanup-smoke.md",
+          "TESTS-RESULTS/2026-11-08+GH-1376/compat-consumer-smoke.md",
+          "TESTS-RESULTS/2026-11-08+GH-1376/compat-pdda.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/compat-publication-full.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/compat-python313-focused.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/compat-python39-failure.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/consumer-smoke.txt",
+          "TESTS-RESULTS/2026-11-08+GH-1376/e844-current-full-push.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1376/e844-current-full-result.json",
+          "TESTS-RESULTS/2026-11-08+GH-1376/e844-secondclone-ledger-check.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/pdda-initial.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/pdda-integrated.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-08+GH-1376/takeover-merge-push.log",
+          "TESTS-RESULTS/2026-11-08+GH-1376/takeover-review.md",
+          "TESTS-RESULTS/2026-11-08+GH-1381/RECOVERY-MANIFEST.md",
+          "TESTS-RESULTS/2026-11-08+GH-1381/attempt-state.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/docs-publication.log",
+          "TESTS-RESULTS/2026-11-08+GH-1381/files-manifest.jsonl.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/SUMMARY.md",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/docs-push.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/focused-baseline.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/focused-fixed.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/manual-check.md",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/manual.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/push-gate.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/takeover-ledger-preflight.log",
+          "TESTS-RESULTS/2026-11-08+GH-1381/fix-trial/takeover-ledger-result.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/inventory.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/manual-check.txt",
+          "TESTS-RESULTS/2026-11-08+GH-1381/primary.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-08+GH-1381/reflogs.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/refs.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/retained-git-inventory.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/stashes.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/status.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/unreachable.json",
+          "TESTS-RESULTS/2026-11-08+GH-1381/worktrees.json",
+          "TESTS-RESULTS/2026-11-08+GH-1383/README.md",
+          "TESTS-RESULTS/2026-11-08+GH-1383/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-08+GH-1383/recon.md",
+          "TESTS-RESULTS/2026-11-08+GH-1383/takeover-first-broad.log",
+          "TESTS-RESULTS/2026-11-08+GH-1383/takeover-focused-green.log",
+          "TESTS-RESULTS/2026-11-08+GH-1383/takeover-normal-push-result.json",
+          "TESTS-RESULTS/2026-11-08+GH-1383/takeover-normal-push.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1383/takeover-red.log",
+          "TESTS-RESULTS/2026-11-08+GH-1383/takeover-selected-green.log",
+          "TESTS-RESULTS/2026-11-09+GH-1382-composition/README.md",
+          "TESTS-RESULTS/2026-11-09+GH-1382-composition/aborted-noop-push.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1382-composition/current-full-push.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1382-composition/current-full-result.json",
+          "TESTS-RESULTS/2026-11-09+GH-1382-composition/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/README.md",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/bookkeeping-publication-result.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/bookkeeping-publication.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/delivered-issue-bookkeeping.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/flywheel-install-verification.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/leaderboard-after.log",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/leaderboard-before.log",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/leaderboard-render.log",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/original-policy.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-evidence-push.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-full-push-result.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-full-push.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-landing-result.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-landing.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/resolved-policy-discrimination.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/source-cli-identity-refusal.txt",
+          "TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/README.md",
+          "TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/normal-push-result.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/normal-push.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/original-policy.json",
+          "TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-09+GH-1390/README.md",
+          "TESTS-RESULTS/2026-11-09+GH-1390/baseline-red.log",
+          "TESTS-RESULTS/2026-11-09+GH-1390/current-baseline-invalid-probe.log",
+          "TESTS-RESULTS/2026-11-09+GH-1390/current-baseline-red.log",
+          "TESTS-RESULTS/2026-11-09+GH-1390/current-fixed-green.log",
+          "TESTS-RESULTS/2026-11-09+GH-1390/current-normal-full-push-result.json",
+          "TESTS-RESULTS/2026-11-09+GH-1390/current-normal-full-push.log.gz",
+          "TESTS-RESULTS/2026-11-09+GH-1390/delivered-noop-probe.json",
+          "TESTS-RESULTS/2026-11-09+GH-1390/delivered-noop-probe.log",
+          "TESTS-RESULTS/2026-11-09+GH-1390/final-view-check.log"
+        ],
+        "hard": [],
+        "pos": 1,
+        "pr": 1382,
+        "soft": {
+          "1024": [
+            "ARCHITECTURE.md",
+            "CHANGELOG.md"
+          ],
+          "1326": [
+            "AGENTS.md",
+            "CHANGELOG.md"
+          ]
+        },
+        "title": "docs(GH-1381): preserve worktree incident inventory and corrective intake"
+      },
+      {
+        "files": [
+          "CHANGELOG.md",
+          "PROJECT/2-WORKING/GH-1387-ATTEMPT-HISTORY.md",
+          "TESTS-RESULTS/2026-11-08+GH-1387/SUMMARY.md",
+          "TESTS-RESULTS/2026-11-08+GH-1387/adjacent-replay.txt",
+          "TESTS-RESULTS/2026-11-08+GH-1387/adjacent.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/archive-failure.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/baseline.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/current-full-push.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1387/current-full-result.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/current-secondclone-ledger-check.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/docs-push.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/failed-gate.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/final-ledger-docs-push.log.gz",
+          "TESTS-RESULTS/2026-11-08+GH-1387/final-refresh-dryrun.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/final-refresh-replay.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/final-refresh-semantic.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/full-gate-receipt.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/gh280-jog-marathon-adapter.sh.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/gh491-gate-only-refire.sh.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/identity-focused.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/import-green.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/import-repair.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/initial-full-push.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/initial-full-result.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/initial-host-before-gate.txt",
+          "TESTS-RESULTS/2026-11-08+GH-1387/initial-identity-after-full.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/initial-identity-before-full.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/manual-replay.txt",
+          "TESTS-RESULTS/2026-11-08+GH-1387/post-failure.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/provenance.jsonl",
+          "TESTS-RESULTS/2026-11-08+GH-1387/retry-full-push.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/retry-full-result.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/retry-host-before-gate.txt",
+          "TESTS-RESULTS/2026-11-08+GH-1387/retry-identity-after-full.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/retry-identity-before-full.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/success.json",
+          "TESTS-RESULTS/2026-11-08+GH-1387/width-green.log",
+          "TESTS-RESULTS/2026-11-08+GH-1387/width-red.log",
+          "relay-system/2026-11-08/gh1387-final.codex.md",
+          "relay-system/2026-11-08/gh1387-plan.codex.md",
+          "relay-system/2026-11-09/gh1387-current-batch-final.codex.md",
+          "relay-system/2026-11-09/gh1387-last-ledger-refresh.codex.md",
+          "releases.db",
+          "releases.sql",
+          "utils/py/marathon_drive.py",
+          "utils/py/relay_drive.py",
+          "utils/py/rtl.py"
+        ],
+        "hard": [],
+        "pos": 2,
+        "pr": 1388,
+        "soft": {
+          "1024": [
+            "CHANGELOG.md"
+          ],
+          "1326": [
+            "CHANGELOG.md"
+          ]
+        },
+        "title": "fix: preserve successful Marathon and relay attempt history"
+      }
+    ],
+    "repo": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "schema": 1,
+    "sweep_inputs": {
+      "command": "gh workflow run wave-reconcile.yml --ref development  # full registry, hosted, once before promotion (#1131); no local full rerun",
+      "computed_at": "2026-11-09T16:41:52Z",
+      "conflict_sites": {},
+      "deferred": true,
+      "full_suite": "promotion",
+      "gate": "validate.sh --parallel 4",
+      "gate_reason": "tier 3",
+      "range": "c78f67f9c0664212c338f4a785f9ca70c71d19eb^1..b74ff542baffa74eadbbe7c39841288472232436",
+      "shared_files": {
+        "CHANGELOG.md": [
+          1382,
+          1388
+        ]
+      }
+    },
+    "verdict": {
+      "at": "2026-11-09T07:03:18Z",
+      "body": "Original policy full_suite=promotion remains unchanged. No promotion dispatched; batch-wide full-registry QA remains deferred to that authorized boundary. PR1382 landed/reconciled; PR1388 remains unmerged after required premerge ledger HTTP403. Current source408/408 evidence does not prove final batch sweep.",
+      "covers": [
+        1382
+      ],
+      "value": "deferred"
+    }
+  },
+  "policy_hash": "375ac61e7589b6a7ae6da78da2a696dd1c95f193a512bd5b25ac3af58b2cf259",
+  "primary_head": "f68b51412ba9a2d4965a36be5c1f22ee943e8765",
+  "status": "",
+  "mode": "existing Phase5 only; no Phase6, sweep dispatch, cleanup or policy edits"
+}

@@ -1,0 +1,84 @@
+import sys,json,datetime,time,hashlib,argparse,os
+from pathlib import Path
+sys.path.insert(0,"/Users/noelsaw/Documents/GitHub/rebalance-git-pulse/Deployed Skills/merge-cleanup/scripts")
+import merge_cleanup as m
+p=Path("/Users/noelsaw/Documents/GitHub/XYZ-forge")
+start=datetime.datetime.now(datetime.timezone.utc);t=time.monotonic()
+assert start < datetime.datetime(2026,11,9,19,10,31,tzinfo=datetime.timezone.utc)
+pins={int(k):v for k,v in json.loads((p/"temp/twohour-resume-pins.json").read_text()).items()}
+assert set(pins)=={1388}
+assert hashlib.sha256((p/".merge-cleanup.json").read_bytes()).hexdigest()=="375ac61e7589b6a7ae6da78da2a696dd1c95f193a512bd5b25ac3af58b2cf259"
+a=argparse.Namespace(integration_branch="development",strategy=None,execute=True,resume=True,teardown_only=False,scan_only=False,prs_only=False,allow_unready_primary=False,prs=pins,_pins=None,landing_plan=None,landing_reason="",no_auto_sweep=True)
+m.ledger_merge.TOOL_FALLBACK_ROOT=p
+assert m._net_git(p,["fetch","origin","development"]).returncode==0
+assert m.inspect_primary_landing(p,integration_branch="development")["landing_ready"]
+prs=[m.refresh_pr(1388,p)];a._pins=m.verify_selection(p,"development",pins,prs);assert a._pins==pins
+a._open_prs_for_stacks=list(prs)
+ordered,_,warnings=m.toposort_prs(prs)
+selected=[x for x in ordered if x["number"] in pins]
+assert len(selected)==1
+for x in selected:
+ assert x["baseRefName"]=="development" and not x["isDraft"]
+ assert set(x.get("_hard_deps",[]))<=set(pins)
+print("ORDER",[x["number"] for x in selected],"PINS",pins,"WARNINGS",warnings,flush=True)
+m._MERGED_THIS_RUN.clear()
+batch=m.select_batch(p,a,selected);assert batch
+track={"current":None,"errs":[],"failed":{},"skips":{},"reconciled":set()}
+rc=2
+try:
+ for i,pr in enumerate(selected):
+  n=pr["number"];pin=pins[n];track["current"]=n
+  assert datetime.datetime.now(datetime.timezone.utc)<datetime.datetime(2026,11,9,19,10,31,tzinfo=datetime.timezone.utc)
+  info=pr
+  assert info.get("state")=="OPEN" and info.get("headRefOid")==pin and info.get("baseRefName")=="development" and not info.get("isDraft") and not m._final_eligibility_veto(info)
+  assert info.get("mergeable")=="MERGEABLE", f"defer to T3 watch; mergeable={info.get('mergeable')}; never poll unknown"
+  policy=m.resolve_merge_policy(p);m.check_merge_capability(p,policy)
+  work=Path(__import__("tempfile").mkdtemp(prefix=f"twohour-phase5-{n}-"))
+  prep=m.prepare_landing_clone(info,p,"development",work);assert not prep["error"] and prep["merge_rc"]==0,prep
+  gate=m.pre_merge_ledger_gate(prep["clone"],gh_bin=m._gh_bin(),integration_branch="development");print("LEDGER_GATE",n,json.dumps(gate),flush=True);assert gate["green"]
+  state,detail=m.required_checks_state(n,p);print("CHECKS",n,state,detail,flush=True);assert state=="ok", "pending/unknown defer to T3 watch"
+  live=m.refresh_pr(n,p);assert live.get("headRefOid")==pin and live.get("state")=="OPEN" and live.get("baseRefName")=="development" and not m._final_eligibility_veto(live)
+  assert datetime.datetime.now(datetime.timezone.utc)<datetime.datetime(2026,11,9,19,10,31,tzinfo=datetime.timezone.utc)
+  m._protect_stacked_dependents(info,prs,p,"development");m._MATCH_HEAD[n]=pin
+  ok,oid=m.execute_pr_merge(n,p,strategy=policy["strategy"],dry_run=False);assert ok
+  m._MERGED_THIS_RUN.add(n)
+  m.batch_record.set_outcome(batch,n,status="merged",merge_oid=oid)
+  assert m._net_git(p,["fetch","origin","development"]).returncode==0
+  def git(args):
+   r=m.run_git(p,args);assert r.returncode==0,(args,r.stderr);return r.stdout.strip()
+  git(["merge","--ff-only","origin/development"])
+  assert m.run_local_wave_reconcile(n,p)
+  import subprocess
+  check=subprocess.run([sys.executable,str(m.tool_path(p,"releases_app.py")),"check"],cwd=p,capture_output=True,text=True);print(check.stdout,check.stderr,flush=True);assert check.returncode==0
+  if i<len(selected)-1:print("INTERMEDIATE: defer issue-doc-sync to final landing",n,flush=True)
+  else:
+   sync=subprocess.run(["bash",str(p/"utils/pdda/pdda.sh"),"issue-doc-sync"],cwd=p,capture_output=True,text=True);print("FINAL_ISSUE_DOC_SYNC",sync.returncode,sync.stdout,sync.stderr,flush=True);assert sync.returncode==0
+  assert m.run_jog_post_merge_land(n,p)
+  m.emit_pr_merged(p,pr,dry_run=False)
+  status=git(["status","--porcelain","--untracked-files=all"])
+  if status:
+   paths=set(x for x in (m.run_git(p,["diff","HEAD","--name-only","-z"]).stdout+m.run_git(p,["ls-files","--others","--exclude-standard","-z"]).stdout).split("\0") if x)
+   assert all(x.startswith("PROJECT/") or x in {"LEADERBOARD.md","LEADERBOARD.html","RELEASES-PREVIEW.html","releases.sql","releases.db"} for x in paths),paths
+   git(["add","-A"]);git(["commit","-m",f"chore: reconcile after PR #{n}"+(" [skip ci]" if i<len(selected)-1 else "")])
+  assert m._net_git(p,["fetch","origin","development"]).returncode==0
+  head=git(["rev-parse","HEAD"]);remote=git(["rev-parse","origin/development"]);assert head and remote
+  if head!=remote:
+   holder=Path(__import__("tempfile").mkdtemp(prefix=f"twohour-publication-{n}-",dir="/Users/noelsaw/Documents/GitHub"));pub=holder/"repo"
+   import subprocess
+   subprocess.run(["git","clone","--quiet","--no-local",str(p),str(pub)],check=True)
+   subprocess.run(["git","remote","set-url","origin","https://github.com/HiQS-Labs/XYZ-forge.git"],cwd=pub,check=True)
+   subprocess.run(["git","fetch","origin","development"],cwd=pub,check=True)
+   subprocess.run(["bash","githooks/install.sh"],cwd=pub,check=True)
+   subprocess.run(["git","push","origin","HEAD:refs/heads/development"],cwd=pub,check=True,timeout=180)
+  assert m._net_git(p,["fetch","origin","development"]).returncode==0
+  assert not git(["status","--porcelain","--untracked-files=all"]) and git(["rev-parse","HEAD"])==git(["rev-parse","origin/development"])
+  m.batch_record.set_outcome(batch,n,reconcile="ok" if i==len(selected)-1 else "pending final issue-doc-sync")
+  if i==len(selected)-1:track["reconciled"].update(pins)
+  print("LANDED",n,oid,"PUBLISHED",head,flush=True)
+ rc=0
+finally:
+ m._record_batch_outcomes(batch,selected,track,rc,p)
+assert m._MERGED_THIS_RUN<=set(pins)
+result={"start":start.isoformat(),"end":datetime.datetime.now(datetime.timezone.utc).isoformat(),"seconds":time.monotonic()-t,"rc":rc,"merged":sorted(m._MERGED_THIS_RUN),"batch":batch,"policy_hash":hashlib.sha256((p/".merge-cleanup.json").read_bytes()).hexdigest(),"primary_head":m.run_git(p,["rev-parse","HEAD"]).stdout.strip(),"status":m.run_git(p,["status","--porcelain","--untracked-files=all"]).stdout,"mode":"existing Phase5 only; no Phase6, sweep dispatch, cleanup or policy edits"}
+(p/"temp/a1388-20261109-result.json").write_text(json.dumps(result,indent=2,default=str));print("RESULT",json.dumps(result,default=str),flush=True)
+sys.exit(rc)
