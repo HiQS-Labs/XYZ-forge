@@ -1,0 +1,203 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1383-fixed-controls-2026-11-09
+configfile: pytest.ini
+collected 223 items
+
+test/gh436-merge-cleanup.py ...................................F........ [ 19%]
+............F........................................................... [ 52%]
+........................................................................ [ 84%]
+...................................                                      [100%]
+
+=================================== FAILURES ===================================
+_ TestMergeCleanupOrchestration.test_intermediate_canary_runs_in_isolated_clone _
+
+self = <gh436-merge-cleanup.TestMergeCleanupOrchestration testMethod=test_intermediate_canary_runs_in_isolated_clone>
+
+    def test_intermediate_canary_runs_in_isolated_clone(self):
+        # GH-1383 Codex Sol QA P1: intermediate canary must run in disposable clone, not primary
+        policy = {
+            "preserve_commit_history": False,
+            "strategy": "squash",
+            "source": "test",
+            "qualification": {
+                "full_suite": "per_batch",
+                "canary_command": "echo canary"
+            }
+        }
+        canary_cwds = []
+        def fake_run_session(primary, cmd, timeout=None):
+            canary_cwds.append(str(primary))
+            return 0, "canary ok\n", ""
+    
+        with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
+             mock.patch("merge_cleanup.run_isolated_check", side_effect=fake_run_session):
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[
+                    {"number": 7, "baseRefName": "development", "title": "t1", "files": ["a"], "body": ""},
+                    {"number": 8, "baseRefName": "development", "title": "t2", "files": ["b"], "body": ""}
+                ])
+            # Exits 4 because QA is pending for the batch (no sweep command declared in test policy)
+            self.assertEqual(rc, 4)
+            self.assertEqual(len(canary_cwds), 1)
+            # Must NOT be primary repo
+>           self.assertEqual(canary_cwds[0], str(self.primary))  # real isolation is tested below
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary' != '/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary'
+E           - /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary
+E           ? --------
+E           + /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary
+
+test/gh436-merge-cleanup.py:949: AssertionError
+----------------------------- Captured stdout call -----------------------------
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=test
+merge-cleanup: Operating on primary repo: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+Scanned roots: /Users/noelsaw/Documents/GH Repos, /Users/noelsaw/agent-workspaces, /Users/noelsaw/Documents/agent-workspaces, /Users/noelsaw/marathon-clones, /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs (only checkouts with the primary's origin from /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs)
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#7]() | t1 | `` | `development` | no | PASS | UNKNOWN | 1 |
+| 2 | [#8]() | t2 | `` | `development` | no | PASS | UNKNOWN | 1 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=test
+merge-cleanup: PR #7: pre-merge ledger gate green on aaaaaaaaaa + origin/development
+merge-cleanup: PR #7: required checks: no required checks
+merge-cleanup: ✅ PR #7 committed; primary is clean at origin/development
+merge-cleanup: Running intermediate canary for PR #7: echo canary
+merge-cleanup: ✅ PR #7: intermediate canary passed
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=test
+merge-cleanup: PR #8: pre-merge ledger gate green on aaaaaaaaaa + origin/development
+merge-cleanup: PR #8: required checks: no required checks
+merge-cleanup: ✅ PR #8 committed; primary is clean at origin/development
+merge-cleanup: Landing clones retained for inspection under /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/merge-cleanup-ulg_8xg6
+merge-cleanup: Merged set ⊆ --prs: #7, #8 within #7, #8
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary/.tick/merge-cleanup/local-repo/batch-20261109T002700Z-7.json)
+merge-cleanup:   sweep: No sweep command declared for this repo; declare `qualification` in its `.merge-cleanup.json` (merge-cleanup SKILL.md, Project merge policy)
+----------------------------- Captured stderr call -----------------------------
+merge-cleanup: WARNING — merge-batch issue not created: issue create failed: no git remotes found — landing continues; the record is at /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmp6rc378xs/primary/.tick/merge-cleanup/local-repo/batch-20261109T002700Z-7.json
+merge-cleanup: WARNING — merge-batch issue: issue create failed: no git remotes found (the landing itself is unaffected)
+_ TestMergeCleanupOrchestration.test_run_command_in_session_kills_process_group_on_timeout _
+
+    def run_command_in_session(cmd: str, cwd: Path, timeout: Optional[int] = None) -> Tuple[int, str, str]:
+        """Bound a check's session, terminate its remaining group, and reap the direct child."""
+        p = subprocess.Popen(["bash", "-c", cmd], cwd=str(cwd), stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, text=True, start_new_session=True)
+    
+        def stop_group():
+            try:
+                os.killpg(p.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                return
+            time.sleep(0.1)
+            try:
+                os.killpg(p.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    
+        try:
+>           stdout, stderr = p.communicate(timeout=timeout)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/subprocess.py:1222: in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/subprocess.py:2155: in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <Popen: returncode: None args: ['bash', '-c', 'sh -c "sleep 60 & echo \\$! >...>
+endtime = 99162.575762083, orig_timeout = 1, stdout_seq = [], stderr_seq = []
+skip_check_and_raise = False
+
+    def _check_timeout(self, endtime, orig_timeout, stdout_seq, stderr_seq,
+                       skip_check_and_raise=False):
+        """Convenience for checking if a timeout has expired."""
+        if endtime is None:
+            return
+        if skip_check_and_raise or _time() > endtime:
+>           raise TimeoutExpired(
+                    self.args, orig_timeout,
+                    output=b''.join(stdout_seq) if stdout_seq else None,
+                    stderr=b''.join(stderr_seq) if stderr_seq else None)
+E           subprocess.TimeoutExpired: Command '['bash', '-c', 'sh -c "sleep 60 & echo \\$! > /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpqqqe3vt2/child.pid; wait"']' timed out after 1 seconds
+
+../../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/subprocess.py:1269: TimeoutExpired
+
+During handling of the above exception, another exception occurred:
+
+self = <gh436-merge-cleanup.TestMergeCleanupOrchestration testMethod=test_run_command_in_session_kills_process_group_on_timeout>
+
+    def test_run_command_in_session_kills_process_group_on_timeout(self):
+        # GH-1383 Codex Sol QA P1: run_command_in_session must terminate process group descendants on timeout
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "child.pid"
+            # Bash script that spawns a background child process and records its pid
+            cmd = f'sh -c "sleep 60 & echo \\$! > {pid_file}; wait"'
+            with self.assertRaises(subprocess.TimeoutExpired):
+>               merge_cleanup.run_command_in_session(cmd, cwd=tmp_path, timeout=1)
+
+test/gh436-merge-cleanup.py:1010: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:187: in run_command_in_session
+    stop_group()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def stop_group():
+        try:
+            os.killpg(p.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            return
+        time.sleep(0.1)
+        try:
+>           os.killpg(p.pid, signal.SIGKILL)
+E           PermissionError: [Errno 1] Operation not permitted
+
+skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:180: PermissionError
+=========================== short test summary info ============================
+FAILED test/gh436-merge-cleanup.py::TestMergeCleanupOrchestration::test_intermediate_canary_runs_in_isolated_clone
+FAILED test/gh436-merge-cleanup.py::TestMergeCleanupOrchestration::test_run_command_in_session_kills_process_group_on_timeout
+================== 2 failed, 221 passed in 148.32s (0:02:28) ===================

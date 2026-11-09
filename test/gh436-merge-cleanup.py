@@ -633,7 +633,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         self.assertEqual(sleep.call_count, merge_cleanup.MERGEABLE_POLL_ATTEMPTS)
 
-    def test_stacked_pr_is_retargeted_before_base_branch_deletion(self):
+    def test_stacked_pr_is_retargeted_before_base_merge(self):
         info = {"number": 7, "headRefName": "feat/base"}
         prs = [info, {"number": 8, "baseRefName": "feat/base"}]
         ok = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
@@ -642,23 +642,20 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                 info, prs, self.primary, "development"))
         gh.assert_called_once_with(["pr", "edit", "8", "--base", "development"], self.primary)
 
-    def test_failed_stacked_retarget_withholds_branch_delete(self):
+    def test_failed_stacked_retarget_preserves_branch(self):
         info = {"number": 7, "headRefName": "feat/base"}
         prs = [info, {"number": 8, "baseRefName": "feat/base"}]
         failed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="protected")
         merged = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
-        try:
-            with mock.patch.object(merge_cleanup, "_gh", side_effect=[failed, merged]) as gh, \
-                 mock.patch.object(merge_cleanup, "refresh_pr", return_value={
-                     "state": "MERGED", "mergeCommit": {"oid": "a" * 40}}):
-                self.assertFalse(merge_cleanup._protect_stacked_dependents(
-                    info, prs, self.primary, "development"))
-                landed, oid = merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False)
-                self.assertTrue(landed)
-                self.assertEqual(oid, "a" * 40)
-            self.assertNotIn("--delete-branch", gh.call_args_list[1].args[0])
-        finally:
-            merge_cleanup._WITHHOLD_BRANCH_DELETE.discard(7)
+        with mock.patch.object(merge_cleanup, "_gh", side_effect=[failed, merged]) as gh, \
+             mock.patch.object(merge_cleanup, "refresh_pr", return_value={
+                 "state": "MERGED", "mergeCommit": {"oid": "a" * 40}}):
+            self.assertFalse(merge_cleanup._protect_stacked_dependents(
+                info, prs, self.primary, "development"))
+            landed, oid = merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False)
+            self.assertTrue(landed)
+            self.assertEqual(oid, "a" * 40)
+        self.assertNotIn("--delete-branch", gh.call_args_list[1].args[0])
 
     def test_matching_base_on_a_non_default_target_proceeds(self):
         prs = [{"number": 7, "baseRefName": "main", "title": "t", "files": [], "body": ""}]
@@ -814,7 +811,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         batch = self._seed_qa_pending_batch()
         batch["sweep_inputs"] = {"command": "echo 'all green'", "deferred": False}
         with mock.patch("merge_cleanup._gh") as m_gh, \
-             mock.patch("merge_cleanup.run_command_in_session", return_value=(0, "all green\n", "")) as m_run:
+             mock.patch("merge_cleanup.run_isolated_check", return_value=(0, "all green\n", "")) as m_run:
             rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "echo 'all green'")
             self.assertEqual(rc, 0)
             loaded = json.loads(Path(batch["path"]).read_text())
@@ -825,7 +822,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         batch = self._seed_qa_pending_batch()
         batch["sweep_inputs"] = {"command": "echo 'failed' && exit 1", "deferred": False}
         with mock.patch("merge_cleanup._gh") as m_gh, \
-             mock.patch("merge_cleanup.run_command_in_session", return_value=(1, "", "failed\n")) as m_run:
+             mock.patch("merge_cleanup.run_isolated_check", return_value=(1, "", "failed\n")) as m_run:
             rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "echo 'failed' && exit 1")
             self.assertEqual(rc, 4)
             loaded = json.loads(Path(batch["path"]).read_text())
@@ -874,7 +871,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         batch_record.save(batch)
 
         with mock.patch("merge_cleanup._gh") as m_gh, \
-             mock.patch("merge_cleanup.run_command_in_session", side_effect=subprocess.TimeoutExpired(cmd="sleep 100", timeout=5, output="test timeout", stderr="")):
+             mock.patch("merge_cleanup.run_isolated_check", side_effect=subprocess.TimeoutExpired(cmd="sleep 100", timeout=5, output="test timeout", stderr="")):
             rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "sleep 100", timeout=5)
             self.assertEqual(rc, 4)
             loaded = json.loads(Path(batch["path"]).read_text())
@@ -909,7 +906,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             }
         }
         with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
-             mock.patch("merge_cleanup.run_command_in_session", return_value=(1, "", "canary broken")):
+             mock.patch("merge_cleanup.run_isolated_check", return_value=(1, "", "canary broken")):
             rc, _, merged, _, _ = self._drive_phase5(
                 ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
                 prs=[
@@ -933,12 +930,12 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             }
         }
         canary_cwds = []
-        def fake_run_session(cmd, cwd, timeout=None):
-            canary_cwds.append(str(cwd))
+        def fake_run_session(primary, cmd, timeout=None):
+            canary_cwds.append(str(primary))
             return 0, "canary ok\n", ""
 
         with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
-             mock.patch("merge_cleanup.run_command_in_session", side_effect=fake_run_session):
+             mock.patch("merge_cleanup.run_isolated_check", side_effect=fake_run_session):
             rc, _, merged, _, _ = self._drive_phase5(
                 ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
                 prs=[
@@ -948,9 +945,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             # Exits 4 because QA is pending for the batch (no sweep command declared in test policy)
             self.assertEqual(rc, 4)
             self.assertEqual(len(canary_cwds), 1)
-            # Must NOT be primary repo
-            self.assertNotEqual(canary_cwds[0], str(self.primary))
-            self.assertIn("canary-pr-7", canary_cwds[0])
+            # The isolation helper receives primary; its actual clone boundary is tested below.
+            self.assertEqual(Path(canary_cwds[0]).resolve(), self.primary.resolve())  # real isolation below
 
     def test_batch_finalization_failure_returns_2(self):
         # GH-1383 Codex Sol QA P1: batch finalization issue-doc-sync failure must return 2
@@ -1014,14 +1010,89 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                 merge_cleanup.run_command_in_session(cmd, cwd=tmp_path, timeout=1)
             self.assertTrue(pid_file.exists(), "child pid file was not created")
             child_pid = int(pid_file.read_text().strip())
-            # Verify child process does not exist anymore (was terminated)
-            try:
-                os.kill(child_pid, 0)
-                alive = True
-            except (ProcessLookupError, OSError):
-                alive = False
+            # A killed grandchild may await its new parent's reap; zombies are not running.
+            state = subprocess.run(["ps", "-p", str(child_pid), "-o", "stat="],
+                                   capture_output=True, text=True)
+            alive = state.returncode == 0 and not state.stdout.strip().startswith("Z")
             self.assertFalse(alive, f"Descendant process {child_pid} was not killed on timeout")
 
+
+
+    def _takeover_seed(self):
+        subprocess.run(["git", "config", "user.name", "fixture"], cwd=self.primary, check=True)
+        subprocess.run(["git", "config", "user.email", "fixture@example.invalid"], cwd=self.primary, check=True)
+        (self.primary / "seed").write_text("fixture")
+        subprocess.run(["git", "add", "seed"], cwd=self.primary, check=True)
+        subprocess.run(["git", "commit", "-qm", "fixture"], cwd=self.primary, check=True)
+
+    def test_takeover_sweep_keeps_guard_and_has_no_cleanup_trap(self):
+        self._takeover_seed()
+        batch = self._seed_qa_pending_batch()
+        command = ('T=$(mktemp -d) && git clone --no-local ' + str(self.primary)
+                   + ' "$T" && cd "$T" && echo checked')
+        with mock.patch.object(merge_cleanup, "_gh"), mock.patch.object(
+                merge_cleanup, "run_command_in_session", return_value=(0, "checked", "")) as run:
+            self.assertEqual(merge_cleanup.run_auto_sweep(self.primary, batch, command), 0)
+        args, kwargs = run.call_args
+        self.assertNotIn("rm -rf", args[0])
+        self.assertNotEqual(Path(kwargs["cwd"]).resolve(), self.primary.resolve())
+        self.assertTrue(Path(kwargs["cwd"]).is_dir())
+
+    def test_takeover_sweep_real_clone_retains_sentinel_and_independent_objects(self):
+        self._takeover_seed()
+        batch = self._seed_qa_pending_batch()
+        with mock.patch.object(merge_cleanup, "_gh"), mock.patch.object(
+                merge_cleanup, "run_command_in_session", wraps=merge_cleanup.run_command_in_session) as run:
+            self.assertEqual(merge_cleanup.run_auto_sweep(
+                self.primary, batch, "printf checked > takeover-sentinel"), 0)
+        clone = Path(run.call_args.kwargs["cwd"])
+        self.assertFalse((self.primary / "takeover-sentinel").exists())
+        self.assertEqual((clone / "takeover-sentinel").read_text(), "checked")
+        self.assertTrue((clone / ".git").is_dir())
+        self.assertFalse((clone / ".git/objects/info/alternates").exists())
+
+    def test_takeover_empty_allocation_never_clones_or_dispatches(self):
+        batch = self._seed_qa_pending_batch()
+        with mock.patch.object(merge_cleanup, "_gh"), mock.patch.object(
+                merge_cleanup.tempfile, "mkdtemp", return_value=""), mock.patch.object(
+                merge_cleanup, "_net_git") as clone, mock.patch.object(
+                merge_cleanup, "run_command_in_session", return_value=(0, "wrong", "")) as run:
+            self.assertEqual(merge_cleanup.run_auto_sweep(self.primary, batch, "echo check"), 4)
+        clone.assert_not_called()
+        run.assert_not_called()
+
+    def test_takeover_early_canary_failure_keeps_reconciliation_debt(self):
+        policy = {"preserve_commit_history": False, "strategy": "squash", "source": "fixture",
+                  "qualification": {"full_suite": "per_batch", "canary_command": "exit 1"}}
+        with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
+             mock.patch.object(merge_cleanup, "run_isolated_check", create=True, return_value=(1, "", "red")), \
+             mock.patch.object(merge_cleanup, "run_command_in_session", return_value=(1, "", "red")), \
+             mock.patch.object(merge_cleanup, "_record_batch_outcomes",
+                               wraps=merge_cleanup._record_batch_outcomes) as recorded:
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--execute"], prs=[
+                    {"number": 7, "baseRefName": "development", "title": "one", "files": [], "body": ""},
+                    {"number": 8, "baseRefName": "development", "title": "two", "files": [], "body": ""}])
+        self.assertEqual(rc, 2)
+        self.assertEqual(merged.call_count, 1)
+        self.assertNotIn(7, recorded.call_args.args[2]["reconciled"])
+
+    def test_takeover_nonzero_leader_does_not_leave_redirected_descendant(self):
+        import shlex
+        pidfile = Path(self.temp_dir) / "descendant.pid"
+        child = "import signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); time.sleep(60)"
+        leader = ("import subprocess,sys,time,pathlib; p=subprocess.Popen([sys.executable,'-c',"
+                  + repr(child) + "],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); "
+                  + "pathlib.Path(" + repr(str(pidfile)) + ").write_text(str(p.pid)); time.sleep(.2); sys.exit(1)")
+        rc, _, _ = merge_cleanup.run_command_in_session(
+            shlex.quote(sys.executable) + " -c " + shlex.quote(leader), self.primary, timeout=5)
+        self.assertEqual(rc, 1)
+        pid = int(pidfile.read_text())
+        state = subprocess.run(["ps", "-p", str(pid), "-o", "stat="], capture_output=True, text=True)
+        live = state.returncode == 0 and not state.stdout.strip().startswith("Z")
+        if live:  # only our deliberately created fixture child; retain a truthful red result
+            os.kill(pid, 9)
+        self.assertFalse(live, "redirected TERM-ignoring descendant survived the failed leader")
 
     def _open(self, n, base="development", **over):
         d = {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40,

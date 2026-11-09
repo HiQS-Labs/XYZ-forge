@@ -77,7 +77,7 @@ The same file declares the repo's batch-sweep cadence (GH-1159) as an optional k
 With `promotion`, Forge's classifier picks the gate and a full sweep is deferred to
 `sweep_command`. With `per_batch`, `sweep_command` runs in a throwaway clone. With `none`, the
 batch issue says the repo has no full suite. `sweep_command` is printed verbatim. An optional
-`canary_command` specifies a fast local test command to execute between intermediate batch merges (GH-1383).
+`canary_command` specifies a fast local test command to execute between intermediate batch merges (GH-1383). Canary and automatic local sweep commands run in retained independent full clones, never primary. Command limits are 300s and 900s respectively, plus the separate bounded clone operation (180s). A failed canary stops before the next merge; any deferred issue/doc sync remains explicitly unreconciled until existing recovery succeeds. Merging preserves source branches; checkout retirement remains a separately authorized operation.
 Without the key, the issue says no sweep command is declared and shows no Forge gate or workflow. An invalid value
 fails closed, and `--show-merge-policy` prints the key. A merge-cleanup older than this key refuses
 the file ("expected an object with only preserve_commit_history"): update the harness. The globally

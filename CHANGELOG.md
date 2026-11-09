@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08 — GH-1383 merge sequence repair
+
+- Intermediate checks and automatic local sweeps use retained independent full clones; failed or timed-out command groups are stopped. Deferred issue/doc synchronization is only marked reconciled after checked final publication, including a skipped last candidate. Integrated GH-1381/PR1384 branch preservation before deployment.
+- Costly shared landing surface: revert the implementation to restore the prior sequence; preserve all checkout/evidence state. Five pre-fix controls fail on `476400948` and pass on the repair. Full qualification, deployment and measured real-batch performance remain pending; green tests alone do not establish a speedup.
+
 ## 2026-11-08 — GH-1358 bounded Jog checkpoint integration
 
 - Opt-in one-task Jog wakes commit owned primary ledger changes and publish the exact checkpoint through a separate disposable full clone. Interrupted publication resumes before another dispatch; existing lock and cold-start recovery remain authoritative. No automatic merge or retry.
