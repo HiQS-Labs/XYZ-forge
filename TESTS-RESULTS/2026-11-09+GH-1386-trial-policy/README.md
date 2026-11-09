@@ -5,3 +5,5 @@ Refs1386/1383. Existing policy keys select per_batch local qualification, real e
 Independent configuration/caller review: nativeCodex /root/preserved_landing_trial_review. Existingcommands/selection verified; all-open harddependencypropagation correctionapplied incaller. Captureactualtip/cloneidentity/time/pushcounts; old853sbaselinecoversmerge-to-reconciliationcommitsonly. Pushcoalescingremainsunmet inopen1383. Normalsetup/restorationcostsseparate.
 
 Restoreexactoriginal-policy.json bytes throughnormalfollowupPR aftertrial, preservingoriginalpromotioncadence. No scheduling orhostedpromotiondispatch.
+
+Normalfullprepush408/408GREEN535s atca7f1fb53; outer536.903s. Noperformancesavingsclaim; normalsetupcostseparate. Finaldocumentaryreceiptpublication/hostedcheckseparate.
