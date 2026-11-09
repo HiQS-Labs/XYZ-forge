@@ -9,3 +9,7 @@ Discrimination: temporary live policy differs from original-policy.json (expecte
 Plan: independent source/recovery QA; normal push gate in separate disposable full clone (<=1800s, max2 recovery attempts); exact-head hosted checks; approved no-delete merge and individual canonical reconciliation stages; actual unpublished writes gated from separate clone, otherwise fresh nonempty remote equality without a no-op push. Never invoke the known unsafe full publication fallback. Finish clean primary equal live origin and retain failures.
 
 Rubrics: real policy drift eliminated only after durable merged bytes match; distinguish old temporary bytes, local restore and actual live publication; record start/end, gates, repairs and human interventions, tokens unknown. Existing1390 counters remain exhausted; max3 routine rounds per new blocker, no cap reset. This is agent-assisted setup/recovery, not formal unattended execution or a real multi-PR speedup trial.
+
+## Fresh recovery qualification
+
+2026-11-09T02:56:03Z–03:05:09Z: first normal full push408/408GREEN; hook544s, outer545.367s. Source898801a3, separate full clone, before/after HEAD/origin/bare/localidentity unchanged. No retry, bypass or1390 repair. Subsequent evidence-only normal publication and hosted exact-head checks remain separate; durable restoration still requires merge/reconciliation.
