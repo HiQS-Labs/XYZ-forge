@@ -37,8 +37,7 @@ Valid misses use the existing singleton reader, including closed issues and entr
 This is a bounded partial inventory, never evidence of absence: no Link traversal or complete-list
 claim is required. An exactly full page can cause one extra page request; two is the hard cap.
 A sparse repository can spend up to two additional native calls. The density threshold is a modest
-heuristic, not an empirically universal optimum. Live page-hit/savings measurement remains missing
-because the owner prohibited additional live queries while the authorized workflow runs.
+heuristic, not an empirically universal optimum. The later authorized required candidate gate measured page hits as described below; historical wire savings remain unmeasured.
 
 The native observation can precede the closure observation by longer. Disagreement still refuses;
 there is no re-read that overrides disagreement, no persistence, and no reuse across commands.
@@ -62,3 +61,26 @@ they weaken fail-closed behavior. Existing fixtures are not a reason to fallback
 Bounded valid misses may use the existing singleton path, without treating absence as open.
 
 Independent final QA approved the full-gate step (receipt in relay-system/2026-11-09/gh1395-final.codex.md). GH492 passed; native-label coverage passed 42 tests; GH436 passed 227 tests in a separate full clone. Full `validate.sh` passed 408/408 in 623.056 seconds on `273700069754f22d1ddebf274f33fd775207d58d`; normal pre-push reused that exact-SHA receipt without bypass. This is not ci-local promotion qualification. Clone identity was verified after the gate. Subsequent commits contain evidence/docs only; runtime SHA256 remains the reviewed value. Parent outer review and hosted checks remain separate; no production performance claim.
+
+## Actual optimized workflow after conflict repair
+
+Development advanced during the first qualification. The supported ledger resolver classified the
+conflict as disjoint, kept development's ledger and replayed only GH-1395 through the writer.
+Its merge commit is `58658c66074d914510fc1148ab92bb3067b7c1d4`; the reviewed reconciliation file
+is byte-identical. Integration also brings the independently landed upstream runtime changes;
+the prior exact-SHA full-gate receipt does not qualify this new whole head.
+
+One required `pre_merge_ledger_gate` after that repair ran against the candidate in a disposable
+full clone, after checking no peer live sweep was running. It passed in **67.517 seconds**:
+**35 native CLI invocations = 2 inventory pages + 33 singleton misses**, and **92 closure CLI
+invocations**. Pages had 100 entries each and matched 32 + 27 = **59 candidate issues**. All calls
+exited zero. Existing warnings and four proposed terminal moves remained diagnostics only.
+No writes were applied. Sanitized endpoints, durations and page-hit counts are retained in
+`candidate-cli.jsonl`; `candidate-readiness.json` binds the stage and candidate SHA.
+
+The singleton baseline source would read each of these 92 valid candidates once: 92 native calls.
+The difference of 57 is a **source-based counterfactual**, not a measured historical wire delta.
+Actual HTTP request totals/resource headers were not observed. No principal client attribution
+is established. The earlier incomplete 27+27 observation is not substituted for a baseline sweep.
+The required actual optimized workflow/page-hit observation is now complete; exact historical
+HTTP savings remain unknowable from the retained baseline logs.
