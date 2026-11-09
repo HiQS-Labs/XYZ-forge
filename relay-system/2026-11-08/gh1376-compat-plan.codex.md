@@ -87,4 +87,12 @@ Verification: static source inspection only, using `nl -ba .relay-artifacts/GH-1
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-09T03:04:43Z
+task: RELAY-gh1376-compat-plan
+reviewer: codex
+status: Approved
+reviewed-head: b5d956a25b5c12a8ab240a69f9707c7cac953cb6
+added-range: 7069+3157
+added-sha256: 93a45e44e9e6c7dfc1fb338e7e985aa27bc3a0c83d1e718f80929d9a364f487e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
