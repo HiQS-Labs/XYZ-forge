@@ -49,3 +49,11 @@ Takeover merged published development at `a71a1d5a` into the task branch (`29f41
 The operator replaced the requested additional delegate review with direct review. That review verified and corrected two existing CodeRabbit routing findings; see `takeover-review.md`. Earlier independent plan/final receipts do not claim coverage of this later correction. GP/AGENTS text is included; the original docs-only classification above predates that extension. The merge publication hook classified its incremental update as docs-only. Historical full-gate success on `abae1cc4` was reported in the transcript, but its raw log is not committed here and is not used as new proof.
 
 PR #1378 remains open against development. No merge, deployment, promotion or factory qualification is claimed. Final correction push/check status must be inspected on its exact head.
+
+## 10days and Daily compatibility extension
+
+Resumed the existing GH-1376 clone/branch/PR, merged published development e695d3263, and replayed only the task registration using roadmap pickup/accepted-start plus the supported resolver. Current row: rmi-01M6Z440MV93RH8S65CGHTNMQ3; rating 80/45/50/80 retained. Prior IDs and merge heads above are historical.
+
+Independent plan QA Approved in one round at b5d956a25; receipt gh1376-compat-plan.codex.md. Implemented its nit reconciling blanket no-firing language with 10days' pre-existing named exception. Source implementation f40a5f7b1; instruction-level consumer evidence compat-consumer-smoke.md at ea6c7b496. No actual sweep or automatic Daily integration is claimed. Daily is external/optional and no deployed skill was edited. Final extension QA and publication status are recorded separately.
+
+Lessons: NO_ENTRY. Component edit verdicts: flywheel routing, 10days recovery/handoff and Daily observation support all have no observed runtime effect yet; static consumer checks cannot support a runtime outcome lesson.

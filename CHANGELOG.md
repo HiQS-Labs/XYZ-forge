@@ -2,6 +2,8 @@
 
 ## 2026-11-08 — GH-1376 flywheel composition skill
 
+- Compatibility extension: explicitly invoked 10days retains batch ownership and its firing exception; bounded red-gate recovery preserves holds, checks and limits. Daily is an optional observation-only companion, without automatic integration or installed-copy edits. Instruction consumer checks recorded under `TESTS-RESULTS/2026-11-08+GH-1376/compat-consumer-smoke.md`; runtime trial remains separate.
+
 - Add `flywheel` as a documentation-only route across start-task, Jog, Marathon preparation, relay QA, handsfree continuation, unstuck recovery, authorized merge-cleanup landing and explicitly requested Skills Army HQ deployment. Carry #1358's two work modes, three rubrics and standing authorization ladder; bounded autonomous repairs are recorded and continued rather than treated as a special stop. `GUIDING-PRINCIPLES.md` owns the adaptive-work/continuous-handoff principle and links to the skill; `AGENTS.md` points readers to that section without duplicating the rubrics.
 - Easy rollback: remove the skill and index row; no runtime, queue, scheduler, schema, deployed copy or permission changes. Codex plan QA Approved; consumer smoke passed 12/12 required segments and 8/8 owner links; classified PDDA gate passed with zero errors on integrated commit `681809230`. Final Codex QA Approved at `9be787e6d994`; PR #1378 passed the normal documentation push gate and hosted smoke on `a16d51ca83bf` (run `42512720415`), and remains open awaiting merge approval. Evidence: `TESTS-RESULTS/2026-11-08+GH-1376/`.
 

@@ -2,7 +2,7 @@
 gh_issue: 1376
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1376
 title: "Add flywheel skill for adaptive Jog orchestration"
-status: Active — PR #1378 ready; awaiting merge approval
+status: Active — PR #1378 compatibility extension in final QA
 created: 2026-11-08
 updated: 2026-11-08
 owner: parent orchestrator
@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| PR #1378 base conflict resolved at `29f41026`; normal documentation push gate passed. Direct takeover review corrected ready-PR and marathon routing; see TESTS-RESULTS/2026-11-08+GH-1376/takeover-review.md. Earlier independent QA receipts cover their recorded revisions. Final correction publication/checks are separate. | Await the operator's per-PR merge decision. Do not merge or deploy automatically. |
+| Compatibility extension implemented at f40a5f7b1; independent plan QA Approved; instruction consumer checks pass. Daily/10days source changes remain in PR #1378. | Complete extension final QA and exact-head publication checks; merge and deployment require separate authority. |
 
 ## Idea
 
