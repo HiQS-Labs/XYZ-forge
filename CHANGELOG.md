@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-09
+
+- GH-1386: restore the exact pre-trial merge-cleanup policy (`full_suite: promotion`, hosted sweep declaration) under the new pinned-flywheel Mode1B recovery window. This reuses the retained restoration; it introduces no runner, cleanup, promotion dispatch or1390 implementation. Original/live/restored byte discrimination and independent source QA are retained under `TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/`; fresh normal qualification and durable merge remain pending at this entry. Later results are appended to evidence rather than rewriting prior capped claims.
+
 ## 2026-11-08 — GH-1376 flywheel composition skill
 
 - Compatibility extension: explicitly invoked 10days retains batch ownership and its firing exception; bounded red-gate recovery preserves holds, checks and limits. Daily is an optional observation-only companion, without automatic integration or installed-copy edits. Instruction consumer checks recorded under `TESTS-RESULTS/2026-11-08+GH-1376/compat-consumer-smoke.md`; runtime trial remains separate.

@@ -1,8 +1,8 @@
 ---
 title: "GH-1381: keep merge separate from worktree cleanup"
-status: proposed
+status: Complete
 created: 2026-11-08
-updated: 2026-11-08
+updated: 2026-11-09
 owner: operator
 gh_issue: 1381
 goal: Remove implicit branch/worktree cleanup from merge-only execution while preserving landing controls.
@@ -17,7 +17,7 @@ Incident batch: https://github.com/HiQS-Labs/XYZ-forge/issues/1380
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA approved; minimal fix and controlled red/green complete | PR #1384 published; parent observes exact-head hosted checks; no merge authorized |
+| PR #1384 merged and its preservation behavior deployed; issue #1381 closed; canonical delivered-issue filing completed | Corrective implementation complete; separate incident recovery unknowns remain in #1380/#1382 |
 
 ## Problem and evidence
 
@@ -75,3 +75,15 @@ Environment repair: system python lacks requests; existing ~/.cache/xyz-forge-te
 ## Merge evidence
 
 - PR #1384 merged 2026-11-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Final implementation bookkeeping — 2026-11-09
+
+Original qualified1384 E26 merged5881262361e62b988404c871c44c0abef2450dc4; original canonical publicatione695d32630557599d155b84a1106b5133784c41a. Issue1381 closed only for its five implemented correction criteria. Generic repeat reconciliation of a Refs-only PR did not terminalize the issue doc; existing `wave_reconcile.py --pr 1384 --delivered-issue 1381` performed the scoped move and ledger repoint after closure. No force-promote or global sweep.
+
+Normal restoration1392 merged4394c7c4cf65871fc33f40945b1fb13d88fbc45a and reconciled/publishedf5009284b47b23b8f41b3698e12f65b0a147856e. Original policy restored;1390 remains unqualified and unmerged. Skills Army installed pinned flywheel7c382a59 by the user's later explicit request;1378 remains unmerged. Exact final bookkeeping publication is recorded in issue1386.
+
+## Lessons Learned (For Future Agents)
+
+- Remote merge flags may invoke local GitHub CLI worktree removal; retain the explicit separation between merging and scoped retirement.
+- A Refs-only PR can need the existing delivered-issue path after its corrective issue closes; a successful generic rerun is not proof the issue doc moved.
+- Fix evidence and recovery completeness answer separate questions. The missing worktree's ignored/untracked completeness stays UNKNOWN.

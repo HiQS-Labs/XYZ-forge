@@ -1,0 +1,11 @@
+{
+  "pr": 1392,
+  "pin": "4e9b4691ba7562b68977eaaefa724e5a236909b6",
+  "merge_sha": "4394c7c4cf65871fc33f40945b1fb13d88fbc45a",
+  "published_sha": "f5009284b47b23b8f41b3698e12f65b0a147856e",
+  "start": "2026-11-09T03:09:29.446809+00:00",
+  "end": "2026-11-09T03:13:55.997629+00:00",
+  "monotonic_seconds": 266.55044833300053,
+  "publication_clone": "/Users/noelsaw/Documents/GitHub/XYZ-forge-postmerge-1392-gate-80gbva2p/repo",
+  "mode": "manual canonical stages, normal gated publication only for unpublished commits; no cleanup"
+}
