@@ -39,7 +39,7 @@ A request with no issue IDs or selection scope needs one clarification. Resolve 
    python3 utils/py/releases_app.py check
    ```
 
-   Substitute actual values; size-check/parse the read-back and verify the exact issue URL, row, doc and rating. `pickup` reuses a row and preserves its existing scores/override. Repoint only to the verified canonical doc via supported verbs. A justified rescore uses `roadmap rate` with retained `--ovr` explicitly; no automatic `--force`, raw SQL or competing rank store. Repositories without PRS retain their local equivalent; do not install PRS or bypass its refusal.
+   Substitute actual values; size-check/parse the read-back and verify the exact issue URL, row, doc and rating. `pickup` reuses a row and preserves its existing scores/override. If that existing row is unrated, apply its first rating with `roadmap rate --issue-num N --rated P/S/A/E --dry-run`, retaining any operator `--ovr` explicitly; inspect and repeat without `--dry-run`, then read back all four axes. This needs no `--force`; hold any writer refusal for the supported resolution rather than bypass it. Repoint only to the verified canonical doc via supported verbs. A justified rescore uses `roadmap rate` with retained `--ovr` explicitly; no automatic `--force`, raw SQL or competing rank store. Repositories without PRS retain their local equivalent; do not install PRS or bypass its refusal.
 
 5. **Validate the actual consumer input.** In a separate disposable full clone, inspect all probe commands before evaluation. Import the existing parser and Jog shape/linter; assert a nonempty result and no reason:
 

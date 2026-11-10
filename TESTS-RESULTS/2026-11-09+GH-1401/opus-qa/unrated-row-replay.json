@@ -1,0 +1,97 @@
+{
+  "verdict": "PASS",
+  "original_guidance": "FAIL: pickup preserves existing NULL rating",
+  "first_rating": "PASS: rate fills all axes without force",
+  "rated_rerun": "PASS: refused, unchanged",
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "utils/py/releases_app.py",
+        "roadmap",
+        "pickup",
+        "--issue-num",
+        "1314",
+        "--rated",
+        "50/50/50/50"
+      ],
+      "rc": 0,
+      "stdout": "roadmap-pickup: GH-1314 already parked (rmi-01M6Y9K4FRM158F3BC8XG3QB4Q); preserved\n",
+      "stderr": "",
+      "readback": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "utils/py/releases_app.py",
+        "roadmap",
+        "rate",
+        "--issue-num",
+        "1314",
+        "--rated",
+        "50/50/50/50",
+        "--dry-run"
+      ],
+      "rc": 0,
+      "stdout": "ROADMAP line: - **GH-1314 \u00b7 Explore independent verification loops: manual GH-1284 calibration** \ud83c\udd95 **captured 2026-11-01 via HQ** \u2014 [GH-1314-VERIFICATION-CALIBRATION.md](PROJECT/1-INBOX/GH-1314-VERIFICATION-CALIBRATION.md) \u00b7 [#1314](https://github.com/HiQS-Labs/XYZ-forge/issues/1314) (rated 50/50/50/50)\nrating: 50/50/50/50\n",
+      "stderr": "",
+      "readback": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "utils/py/releases_app.py",
+        "roadmap",
+        "rate",
+        "--issue-num",
+        "1314",
+        "--rated",
+        "50/50/50/50"
+      ],
+      "rc": 0,
+      "stdout": "rated GH-1314 50/50/50/50\n",
+      "stderr": "",
+      "readback": [
+        50,
+        50,
+        50,
+        50,
+        null
+      ]
+    },
+    {
+      "command": [
+        "python3",
+        "utils/py/releases_app.py",
+        "roadmap",
+        "rate",
+        "--issue-num",
+        "1314",
+        "--rated",
+        "60/60/60/60"
+      ],
+      "rc": 3,
+      "stdout": "",
+      "stderr": "refused: rule=already-rated: GH-1314 is already rated. Re-scoring is a deliberate act, not a retry: pass --force if you mean to replace the existing scores.\n",
+      "readback": [
+        50,
+        50,
+        50,
+        50,
+        null
+      ]
+    }
+  ]
+}

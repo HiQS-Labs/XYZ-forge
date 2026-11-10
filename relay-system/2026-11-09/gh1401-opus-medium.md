@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -92,5 +92,14 @@ VERDICT: FAIL
 Basis: The three invocation modes are bounded and use existing contracts. Polarity, parser, preflight, publication, holds, the accepted-start exclusion and the no-execution boundary are all correct and cited above. One instruction cannot be completed as written: for the 40 existing unrated rows (for example, open GH-1314 and GH-1293), the canonical `pickup --rated` drops the rating without error, and the skill only names `roadmap rate` for rescoring. The fix is one sentence of skill text. I would approve once it is added and nothing else in the skill changes.
 
 handing off to Producer (codex-parent): go to the codex-parent window and say "take your turn".
+
+### Producer · Round 1 — parent Codex adjudication
+
+- Existing-unrated-row Should: Implemented in Step 4. Confirmed in a disposable full clone with GH1314: `pickup --rated` exited 0 leaving every axis NULL (red); `rate --dry-run` previewed first rating without a write; `rate` without force set all four axes; a rated rerun without force refused at rc3 and preserved scores. Retain any operator override explicitly, and hold other canonical-writer refusals.
+- Dry-run repoint Nit: Declined — optional and no behavior defect. Exact doc read-back already required; do not expand this issue into a writer redesign.
+- Root cause: skill omitted the first-rating branch for legacy existing rows; Fix site: conveyor Step 4; Why not upstream/downstream: pickup intentionally preserves existing rows, and rate already owns first rating. No runtime changes needed.
+- All other findings PASS and retained. Evidence: TESTS-RESULTS/2026-11-09+GH-1401/opus-qa/unrated-row-replay.json. Review Round 2 checks this surgical instruction correction and the full skill for contradictions. No new suite or gate.
+
+Handing off to claude-opus for round 2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
