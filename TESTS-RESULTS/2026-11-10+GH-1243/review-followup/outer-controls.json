@@ -1,0 +1,213 @@
+{
+  "method": "controlled execution of extracted actual AST statements; not full CLI/gate qualification",
+  "rows": [
+    {
+      "version": "baseline",
+      "check": "text_cap",
+      "configured": 2,
+      "observed": false,
+      "expected": true,
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "text_cap",
+      "configured": null,
+      "observed": false,
+      "expected": false,
+      "pass_": true
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 0,
+      "observed": "\n  [FAIL] codex -> answer.md (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 1,
+      "observed": "\n  [FAIL] codex -> answer.md (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 2,
+      "observed": "\n  [FAIL] codex -> answer.md (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 3,
+      "observed": "\n  [FAIL] codex -> answer.md (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 0,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 1,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 2,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "baseline",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 3,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "baseline",
+      "check": "review_once_handoff",
+      "nextactor": "unexpected",
+      "observed": "exit:5",
+      "expected": "explicit-cap-invalid-handoff",
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "review_once_handoff",
+      "nextactor": "codex",
+      "observed": "exit:5",
+      "expected": "exit:5",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "text_cap",
+      "configured": 2,
+      "observed": true,
+      "expected": true,
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "text_cap",
+      "configured": null,
+      "observed": false,
+      "expected": false,
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 0,
+      "observed": "\n  [FAIL] codex -> answer.md.transcript (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 1,
+      "observed": "\n  [FAIL] codex -> answer.md.transcript (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 2,
+      "observed": "\n  [FAIL] codex -> answer.md.transcript (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "codex",
+      "branch": 3,
+      "observed": "\n  [FAIL] codex -> answer.md.transcript (see transcript for error)",
+      "expected": "answer.md.transcript",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 0,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 1,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 2,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "failure_summary",
+      "model": "agy",
+      "branch": 3,
+      "observed": "\n  [FAIL] agy -> answer.md (see transcript for error)",
+      "expected": "answer.md",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "review_once_handoff",
+      "nextactor": "unexpected",
+      "observed": "explicit-cap-invalid-handoff",
+      "expected": "explicit-cap-invalid-handoff",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "review_once_handoff",
+      "nextactor": "codex",
+      "observed": "exit:5",
+      "expected": "exit:5",
+      "pass_": true
+    }
+  ]
+}

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,15 @@ swept file: no. I read partial ranges, not whole files: `utils/py/consult.py` 12
 
 VERDICT: FAIL
 Basis: The consult change is sound: separation holds, missing, empty, timeout and launch failures all fail closed, citation handling and attestation are correct, and the fixtures are truthful with no new machinery (Q1–Q3 Pass, two Nits). But the PR's own body declares the published head a8186569 not merge-ready, with three confirmed defects. The corrections (4d991583) are unpushed, unqualified and absent from this packet, and two of them are in dependency #1402. I cannot approve a head its author has disowned. Minor-fix path for the parent: push 4d991583, run the full gate on that exact SHA, re-seed with the defect disposition and the diff, and settle Q4a after #1402 lands. Approval is not a merge gate; fresh live pins and required checks remain mandatory.  [Unverified — no citation]
+
+### Producer · Round1 — takeover and corrections
+
+B1 accepted: prior owner handed off clean local4d991583 and released all source/push/gate/primary writes. Reused that exact correction commit, not duplicate fixes. Two dependency corrections are isolated in PR1402 candidatee5d29ca9; all five inherited runtime files now match that corrected dependency byte-for-byte. User explicitly authorizes minor fixes and merge when ready; this is a new artifact-readiness continuation, not a restart/extension of the failed automatic trial or its budgets.
+
+N1 implemented by owner correction: every failed Codex summary points at diagnostic_out .transcript; other models/success paths unchanged. N2 accepted: skill now states separate outputs are the default Python contract and frozen Bash remains legacy. The failed-answer error stub remains historical behavior filtered from neutral payloads; no unrequested fallback introduced.
+
+Reran retained actual-AST controls on this candidate: baseline6 failures, candidate12 passes. Kept fresh results and exact dependency-source hashes. New source QA/full publication gate are pending; prior408/408 atc06 and hosted a818 do NOT qualify these corrections. No push/readiness/merge claim yet.
+
+Round2 is explicit per-PR source QA for BOTH1402(two cap/handoff corrections) and1406(consult extraction+diagnostic pointer+docs). Return a separate verdict for each against actual current code, including full changed-file sweep. This is not the landing strategy review. No tests/fixtures in reviewer worktree. Full qualification remains required before publication/ready/merge. No live1243 execution interaction or cap reset.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

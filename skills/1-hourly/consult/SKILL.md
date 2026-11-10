@@ -124,7 +124,8 @@ degraded pair with `--models <survivor>,kimi` or `--models <survivor>,cmd`).
    the named originals (`<label>.codex.md`, `<label>.agy.md`, plus any `.NO-CITATION.txt` /
    `.PROVENANCE.txt` / `DEGRADED-SINGLE-MODEL.txt` sidecars) to attribute the result. For Codex,
    `<label>.codex.md` is the final answer; `<label>.codex.md.transcript` retains raw CLI
-   diagnostics and attestation. Keep both hidden until the blind verdict is written. Produce a
+   diagnostics and attestation. This separation is the default Python runtime contract; the frozen
+   `XYZ_PYTHON=0` fallback retains its legacy stdout handling. Keep both hidden until the blind verdict is written. Produce a
    synthesis with four parts, in this order:
    - **TLDR** (one to two sentences, before anything else): the reconciled call and how confident
      it is, so the operator can stop reading right there if that's all they need. e.g. *"Both models
