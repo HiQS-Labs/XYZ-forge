@@ -87,6 +87,19 @@ execution-modes table in [README.md](README.md).)
   gate ([ROUTER.md](ROUTER.md), [AGENTS.md](AGENTS.md)); **PDDA**, project-doc governance
   ([PROJECT/PDDA.md](PROJECT/PDDA.md)); and **PRS** ([RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md)).
 
+### More terms
+
+- **answer key / actor–verifier loop** — a way to check one fix. A separate agent makes the fix
+  (the **actor**). Before it starts, someone else writes down and locks the expected results: the
+  **answer key**. The actor cannot see or edit those results. An independent **verifier** then reruns
+  the frozen cases and grades the actual outputs, exit codes and state changes. There is no
+  self-acceptance. The verifier is calibrated first: it must reject a known-bad revision and accept a
+  known-good one. Outside XYZ this is usually called *held-out acceptance testing* with a
+  *test oracle*. The cases are evidence for that single task, kept under `TESTS-RESULTS/`. They are
+  not added to `validate.sh` or CI (GH-831). Precedents: calibration
+  [#1314](https://github.com/HiQS-Labs/XYZ-forge/issues/1314) (PR #1316) and repair pilot
+  [#1317](https://github.com/HiQS-Labs/XYZ-forge/issues/1317) (PR #1318).
+
 ## FAQ
 
 ### Is XYZ a "graph" — does it do graph engineering?
