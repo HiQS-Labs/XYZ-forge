@@ -142,3 +142,11 @@ Only this relay file was edited. No git commands, suites, executable fixtures or
 
 VERDICT: PASS
 Basis: Working workflow implements approved R1–R5; syntax probes and discriminating recorded controls support the scoped verdict, with full-gate and hosted evidence explicitly outstanding.
+
+### Attestation · relay-drive — 2026-11-10T22:16:41Z
+task: RELAY-gh1409-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: bb598e8f06df9a5425aef82a4b9ae7eddb1f0fd9
+added-range: 6929+4235
+added-sha256: 756b6149e4554530c1732b24a5012514e4ba3e717ce381ecf7a1fe2a7a2d456f
