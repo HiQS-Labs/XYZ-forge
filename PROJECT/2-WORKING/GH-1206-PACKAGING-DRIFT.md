@@ -20,7 +20,7 @@ goal: Align npm metadata with XYZ Forge and explicitly bound package contents wi
 
 | What was just completed | What's next |
 |---|---|
-| Promoted to active working contract via jog | Execute implementation and verify probes |
+| Package metadata and allowlist implemented; source review, package controls, full gate and14 kernel tests passed | Land and reconcile native issue/doc state; original interrupted trial remains historical |
 
 # GH-1206 — Package metadata and contents
 
@@ -105,3 +105,7 @@ Correct package identity, missing main, Node baseline and intentional package co
   }
 }
 ```
+
+## Parent qualification context
+
+Source QA and package controls are retained in TESTS-RESULTS/2026-11-10+GH-1206; exact-a602 full qualification is committed under GH-1386 (dependency1402). Existing14 kernel tests passed on a602; parent-kernel/result.json and kernel.log retain the result. The original marathon-system/gh-1206-packaging-drift/RELAY.md is an authentic interrupted trial record, not a live continuation. Its header is preserved. Admission fix probes becoming stale after implementation is expected; they are not weakened. Actual native issue state controls completion/archive after landing.

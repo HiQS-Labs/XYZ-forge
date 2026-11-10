@@ -14,3 +14,7 @@ Red control: the baseline fails the corrected identity and bounded-contents pred
 Environment: Node v24.21.0, npm 11.19.0. Outputs and npm cache stayed under `.relay-scratch/`. These are archive/metadata probes, not runtime compatibility evidence for Node 18.
 
 No install, publish, version bump, release-tag change, or git command was performed. No CLI installation support was declared. No test suites were changed or run: the embedded relay scope lock defers them to the harness. The acceptance requirement for 14 kernel unit tests remains pending harness verification; the full gate is also pending.
+
+## Parent qualification follow-up
+
+The preceding pending statements are historical builder observations. Normal full publication gate subsequently passed on exact source `a6024d0c3031fdc6607b8a987fe6ef8bbeab87fb`; committed receipt and compressed log: `TESTS-RESULTS/2026-11-10+GH-1386/1206-qualification-result.json` and `1206-qualification.log.gz` (landed with dependency1402). Parent independently ran existing `npm run test:unit` on exact a6024d0c in a disposable full clone:14 pass,0 fail,0 skipped; clone identity unchanged. Log/result under parent-kernel. No npm CLI entry is declared, so packed CLI installation is inapplicable. No install or publish occurred. Original interrupted Marathon RELAY is historical; no automatic retry or approved Jog receipt was fabricated.
