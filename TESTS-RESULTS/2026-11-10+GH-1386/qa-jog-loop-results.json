@@ -14,6 +14,7 @@
       "development"
     ],
     "error": null,
+    "checkpoint_finished": true,
     "pass": true
   },
   {
@@ -31,6 +32,7 @@
       "development"
     ],
     "error": null,
+    "checkpoint_finished": true,
     "pass": true
   },
   {
@@ -44,6 +46,7 @@
     ],
     "switches": [],
     "error": "checkpoint execution clone is dirty; preserve it before dispatch",
+    "checkpoint_finished": false,
     "pass": true
   },
   {
@@ -55,6 +58,7 @@
     "dispatches": [],
     "switches": [],
     "error": null,
+    "checkpoint_finished": true,
     "pass": true
   },
   {
@@ -68,6 +72,7 @@
     ],
     "switches": [],
     "error": null,
+    "checkpoint_finished": true,
     "pass": true
   },
   {
@@ -81,6 +86,7 @@
     ],
     "switches": [],
     "error": null,
+    "checkpoint_finished": true,
     "pass": true
   },
   {
@@ -94,6 +100,21 @@
     ],
     "switches": [],
     "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "invalid-result",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true,
     "pass": true
   },
   {
@@ -106,7 +127,8 @@
       1
     ],
     "switches": [],
-    "error": null
+    "error": null,
+    "checkpoint_finished": true
   },
   {
     "version": "prior",
@@ -118,7 +140,8 @@
       1
     ],
     "switches": [],
-    "error": null
+    "error": null,
+    "checkpoint_finished": true
   },
   {
     "version": "prior",
@@ -129,6 +152,7 @@
     ],
     "dispatches": [],
     "switches": [],
-    "error": null
+    "error": null,
+    "checkpoint_finished": true
   }
 ]
