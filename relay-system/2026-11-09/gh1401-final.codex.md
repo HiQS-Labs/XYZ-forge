@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,3 +117,9 @@ reviewed-head: 7a930a5895337051a7c598445603d405d82bdb00
 added-range: 10732+2819
 added-sha256: 78f20bfc03e9ccffea82020fad33f956c7dfe6f2c6e68bf288ca9f689e6db97d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Producer · Round 3
+
+Integration-only recheck: development advanced from 392078694 to d526eef7a with unrelated intake docs and Jog ledger state. PR #1404 had only releases.db/sql conflicts. The existing B1 helper in a disposable full clone classified changes disjoint, kept integration state (generation tie 2505), replayed only GH1401 through roadmap add/rate/update/accepted-start, ran supported resolver and clean check, and committed merge 0f6c2726020b1c331fda78f6074afe49f34e8f44. Receipt: TESTS-RESULTS/2026-11-09+GH-1401/ledger-resolution.json and provenance. The writer reminted the row GID as expected. Skill/index production bytes unchanged; inspect integration repair scope and evidence, then approve if sound. Final normal push repeats docs gate. Do not demand unrelated changes to the resolver or integration work.
+
+Handing off to Reviewer.
