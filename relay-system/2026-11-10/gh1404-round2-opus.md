@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,5 +90,23 @@ Basis: The receipt repair and the source analysis are correct, and the pin-equal
 ### Producer · Round 2
 Implemented the Should: compare full SHAs on the full printed pin line and execute with explicit inline `N@<approved-full-sha>` pins. This avoids re-reading a mutable selection record. Implemented Nit by keeping one moved-head instruction and the no-widen/no-reset tail. Receipt pointer unchanged and verified. Review the updated artifact. No runtime changes or new tests/gates.
 Handing off to claude-opus for round 2.
+
+### Reviewer · Round 2
+swept file: yes. I re-read the whole artifact (flywheel SKILL.md, the receipt pointer and the source note) and re-checked the cited code paths. Graded against the same artifact-stated intent as Round 1, because the DoD is still a placeholder.
+
+- [Pass] The R1 Should is implemented. Artifact :113-119 reads "compare every full-SHA pin on the printed `Pinned for --execute:` line with its reviewed and approved full SHA ... Only execute the verified matching pins, passed inline as `--prs N@<approved-full-sha>,...`, so execution checks the approved heads directly." The code supports every part of this:
+  - `merge_cleanup.py:509` prints that line with full SHAs (`log("Pinned for --execute: --prs " + ",".join(f"{n}@{sha}" ...))`; `sha` is the unsliced `headRefOid`).
+  - `:459` accepts 7-40 hex inline. At `:513-533`, an inline sha sets `want[n]`, the selection record is not read when every entry is inline (`if any(sha is None ...)`), and `startswith` on a full 40-hex SHA is an exact match. A moved head is refused with "head moved".
+  - `:2011` stores the verified live heads in `args._pins`, and `:328-330` passes the pin to `gh pr merge --match-head-commit`. GitHub therefore enforces the approved SHA at merge time too, which also closes the verify-to-merge window.
+  End-to-end replay: [Unverified — needs clone run]. The binding chain itself is verified by reading the code.
+- [Pass] The extra clause "neither bare PR numbers nor a newly recorded pin prove that a moved head was approved" (:117-118) correctly names the bypass that R1 found.
+- [Pass] The R1 Nit is implemented. The duplicated moved-head sentence is gone. One instruction remains (:115-117: "If any differs, stop that PR's landing, re-establish eligibility and QA/review approval as applicable, and obtain a fresh matching pin"), and the tail survives at :123: "Never silently widen the list or reset repair history."
+- [Pass] The tree matches the artifact. `diff <(sed -n '/^name: flywheel/,$p' skills/2-daily/flywheel/SKILL.md) <(sed -n '/^name: flywheel/,$p' .relay-artifacts/review-1404-round2.md)` printed only `262a263,267`, which is the appended receipt and source notes, so the skill body under review is the checked-in text. The text agrees with merge-cleanup SKILL.md:238-239 ("prints the same pins as `Pinned for --execute: --prs N@sha,...`"; "An entry may carry its own pin as `N@sha`").
+- [Pass] The receipt is unchanged and good. `readiness-repair.json:4` = `"original_b1_refusal": "TESTS-RESULTS/2026-11-09+GH-1400/readiness-b1-refusal.json",`, and `python3 -I -c json.load` on the target gives `dict 6`, exit 0.
+- [Pass] Authority is not widened. These are still present: "neither a ready PR nor a `--prs` pin grants approval" (:112), "Keep the existing project policy, landing-plan checkpoint and review requirements" (:122), and step 6 "keep per-PR merge approval" (:237). No runtime change.
+- [Pass] Rest of the sweep: no new contradictions in the rubrics, ladder, Daily/10days or the ordered flow, and no pre-existing defects found.
+
+VERDICT: PASS
+Basis: The Should and the Nit are both implemented. The full-SHA comparison and inline `N@<approved-full-sha>` execution are backed end to end by the code: the full-SHA print at `:509`, record-free inline verification at `:513-533`, and `--match-head-commit` at `:330`. That closes the mutable-record bypass with no runtime change and no new authority. Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
