@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -101,5 +101,22 @@ handing off to Producer (codex-parent): go to the codex-parent window and say "t
 - All other findings PASS and retained. Evidence: TESTS-RESULTS/2026-11-09+GH-1401/opus-qa/unrated-row-replay.json. Review Round 2 checks this surgical instruction correction and the full skill for contradictions. No new suite or gate.
 
 Handing off to claude-opus for round 2 review.
+
+### Reviewer · Round 2 (claude-opus)
+
+swept file: yes. I re-read all 71 lines of `skills/1-hourly/conveyor/SKILL.md` at candidate 91e682b47. I diffed 2ac48f402..91e682b47: the only source change is one line, `SKILL.md:42`. The rest is evidence, provenance and this relay file. I read the replay JSON and `cmd_roadmap_rate` (`releases_app.py:3747-3807`). All probes were read-only.
+
+- **[Pass] The fix closes the R1 Should without force or a second writer.** `SKILL.md:42` now says: "If that existing row is unrated, apply its first rating with `roadmap rate --issue-num N --rated P/S/A/E --dry-run` … This needs no `--force`". The writer agrees. The force check refuses only when `row["rating_pri"] is not None and not args.force` (`releases_app.py:3787-3790`), so a NULL row is rated without force. The replay agrees too (`TESTS-RESULTS/2026-11-09+GH-1401/opus-qa/unrated-row-replay.json`): pickup returned rc 0 and readback `[null,null,null,null,null]`; rate dry-run returned rc 0 with no write; rate returned rc 0 and readback `[50,50,50,50,null]`; a rerun returned rc 3 with `refused: rule=already-rated` and the scores unchanged.
+- **[Pass] Overrides are preserved by an explicit instruction.** `rate` rebuilds the token from args only: `token = "(rated %s%s)" % (args.rated, "" if args.ovr is None else " ovr %d" % args.ovr)` (`releases_app.py:3797`). It also strips the old rating from raw_text (`:3801`). An override is therefore kept only if it is passed again, and `SKILL.md:42` says "retaining any operator `--ovr` explicitly". This case is latent today: `sqlite3 -readonly releases.db "SELECT COUNT(*) FROM roadmap_items WHERE rating_pri IS NULL AND rating_ovr IS NOT NULL"` exited 0 and returned `0`.
+- **[Pass] The fix adds no runtime duplication.** It is instruction text that reuses the existing GH-253 `rate` verb, whose docstring says "This is the way back" for unrated parked rows (`releases_app.py:3747-3753`). It adds no code, schema or rank store.
+- **[Pass] Other writer refusals are held, not bypassed.** `rate` can also refuse with `rating-vocabulary-clash` on legacy cx/risk/eff rows (`:3791-3795`) and with `selector` (`:3768-3780`). "hold any writer refusal for the supported resolution rather than bypass it" (`SKILL.md:42`) covers both.
+- **[Pass] The skill has no new contradictions.** The new sentence sits between "preserves its existing scores/override" and the rescore sentence. It applies only to unrated rows, while rescoring still uses retained `--ovr` and never automatic `--force`. All R1 [Pass] findings (polarity, parser, preflight exit codes, publication/readiness hold, accepted-start exclusion, marker rerun, PR1403 composition) still hold, because nothing outside line 42 changed.
+- **[Nit, carried, no action]** The R1 dry-run repoint Nit was declined, and I accept that: the Step 4 read-back already verifies the doc path.
+- Pre-existing defects in the swept file: none found.
+
+VERDICT: PASS
+Basis: The single instruction that could not be followed in R1 is now complete. The fix uses the canonical `rate` writer without force, keeps operator overrides through an explicit `--ovr`, holds refusals, and is backed by a committed red/green replay. No other part of the skill changed, and all five packet questions remain answered as in R1.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
