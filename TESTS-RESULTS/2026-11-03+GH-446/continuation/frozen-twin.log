@@ -1,0 +1,6 @@
+gh308 guard: FROZEN Bash twin edit blocked; change its Python twin instead:
+utils/marathon-plan.sh
+gh308 guard: no new Bash under utils/ or relay-automation/
+---
+gh308 guard: utils/marathon-plan.sh — covered by a declared Frozen-twin-exception
+gh308 guard: every frozen-twin edit in this range is accounted for — declared, or the freeze itself
