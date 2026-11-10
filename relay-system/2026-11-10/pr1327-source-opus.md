@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -138,4 +138,7 @@ status: Approved
 reviewed-head: 0b597d7b7373771b2a679affd82abec3bc0b08b2
 added-range: 14789+4739
 added-sha256: 424bcb012da6a4ed9f5f5810e817dc568d09a8905aeed32610d78e2bc8327aa6
+### Producer — final round 3
+Normal publication gate refused the push: its only failing suite gh698-planner-db-ratings expected the bare planner to write a plan. Existing fixture now requests --write. Full gate plus serial retry witnessed red; direct corrected gh698 exits 0. No production behavior change since R2, no new suite/gate. Review this one-line existing fixture correction and recorded failure/green evidence. Prior approval remains source-only; new full publication gate and hosted checks pending. Return final source verdict; do not execute suites in the relay worktree.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
