@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA Approved; owned-row accepted-start recorded; bounded flywheel instruction change drafted. | Manual instruction smoke and final Codex QA. |
+| Plan/final independent Codex QA Approved; textual smoke PASS; documentation gate passed. | Publish the reviewed subset PR; retain open arc dependencies. |
 
 ## Quad Concepts
 
@@ -102,8 +102,8 @@ Dogfood/conformance follow-ups are bounded here as main/adjacent instruction rea
 the broader real-work qualification remains owned by GH-1386 and the full arc remains
 open pending its dependencies. This is a small instruction extension, not a large refactor.
 
-Phase 2 QA: textual main/adjacent instruction smoke PASS; docs gate at 37119562c returned 0 (659 inherited warnings), identity unchanged; final relay pending. No runtime/cost-saving qualification claimed.
+Phase 2 QA: textual main/adjacent instruction smoke PASS; docs gate at 37119562c returned 0 (659 inherited warnings), identity unchanged; final relay Approved and attested at `relay-system/2026-11-09/gh1400-final.codex.md`. No runtime/cost-saving qualification claimed.
 
 ## Lessons Learned (For Future Agents)
 
-NO_ENTRY pending observed evidence; instruction review alone cannot establish a throughput gain.
+Edit verdict: flywheel instruction extension — no observed effect on real-world throughput (only textual smoke was run). NO_ENTRY: instruction review alone cannot establish a throughput gain.
