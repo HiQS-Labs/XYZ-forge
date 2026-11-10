@@ -43,7 +43,7 @@ Proposed 80/65/85/45 is in #1401 authored by operator noelsaw1; retain explicit 
 
 1. Add the concise conveyor skill with bounded modes, dedupe/reuse, recon, capture synthesis, canonical PRS writer, probe semantics and publication/readiness handoff -> parser/linter can consume a worked contract; intentionally malformed contract is rejected with no label publication.
 2. Add one ARCHITECTURE skills-index row -> linked skill exists; no downstream flywheel or runtime edits.
-3. Smoke the consumer instructions with a valid missing-artifact contract at the pinned base and a malformed/empty contract using existing parser/linter in a disposable full clone; read the publication/rerun path -> record commands/output/provenance under TESTS-RESULTS/2026-11-09+GH-1401, no live issue labelling during smoke.
+3. Smoke the consumer instructions with a valid missing-artifact contract at the pinned base and a malformed/empty contract using existing parser/linter in a disposable full clone; also exercise a grep_present probe against paired bug-present/fixed existing-file contents (expect unfixed/landed) and an intentionally inverted grep_absent red control (expect the wrong landed/unfixed pair to expose the mismatch); read the publication/rerun path -> record commands/output/provenance under TESTS-RESULTS/2026-11-09+GH-1401, no live issue labelling during smoke.
 4. Run skill quick validation and classified documentation gate; independent final Codex relay QA; publish verified PR against development and issue closeout -> no new suites, registry entries or gate machinery. Retire only safely published owned checkouts through merge-cleanup.
 
 ## Acceptance

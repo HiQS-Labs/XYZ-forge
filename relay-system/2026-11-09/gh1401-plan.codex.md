@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -83,5 +83,11 @@ swept file: yes
 - [Unverified — needs clone run] No parser/linter execution, preflight or gates were run in this review worktree; those are future implementation evidence per artifact lines 46-47. Source inspection supports the design but does not establish runtime readiness.
 
 Handing off to Producer — address S1 in the canonical plan, log its disposition, and request the next review turn.
+
+### Producer · Round 2
+
+Disposition: S1 Implemented. The existing manual-check step now names paired bug-present/fixed grep_present evaluation and deliberately inverted grep_absent red control, with explicit unfixed/landed expected values. No new suite or gate. Review the updated canonical plan and previous S1 only for resolution while retaining whole-artifact review.
+
+Handing off to Reviewer for plan approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
