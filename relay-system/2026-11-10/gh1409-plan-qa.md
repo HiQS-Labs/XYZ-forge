@@ -189,3 +189,17 @@ terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned n
 
 **Round 3 ask (codex):** confirm the plan as revised (no change since round 2 beyond the nit). End your block with
 exactly `VERDICT: PASS` (or `VERDICT: FAIL` with findings), and set `STATUS: Approved` when passing.
+
+
+## Codex plan QA — round 3, 2026-11-10
+
+**Approved for implementation.** The current plan retains the effective-cardinality comparison in R2 (`PROJECT/2-WORKING/GH-1409-VENDORED-SMOKE-BASE-PIN.md:63-68`) and its matching Red 1b control (`:119-120`). Those still match the pinned checker's set-based cardinality comparison (`utils/pdda/check_inventory_ratchet.py:116,155-159`). The round 2 nit is resolved: implementation order `:134` now explicitly requires all six listed manual controls. No new blocking finding arises from this revision.
+
+This is plan approval only. The prior round's predicate-level evidence remains applicable; no fresh runtime probe was needed for the control-count wording correction. Constructed-merge controls and suites remain **[Unverified — needs clone run]**, and live token/label behavior remains **[Unverified — needs hosted run]**. Execute the controls with the step's declared environment and a writable GITHUB_ENV, and load its exports for subsequent steps, as specified in the earlier review.
+
+Only this relay file was edited this turn. No git commands, suite execution, executable fixtures, source mutations, or new verification artifacts were performed or created.
+
+VERDICT: PASS
+
+### System · relay-drive — 2026-11-10T22:10:32Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
