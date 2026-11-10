@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -82,5 +82,22 @@ Review whole skill for concrete pre-existing defects; grade against commensurate
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship the delivered instruction-only subset. No blocking omission against the four-row requirements table; broader enforcement, upstream implementation and real-work qualification remain open.
+swept file: yes
+
+- [Pass] Batch landing: artifact says “explicit batch list”, “neither a ready PR nor a `--prs` pin grants approval”, and “A repaired/moved head needs fresh eligibility, review/approval as applicable and a new pin”. Matches merge-cleanup SKILL.md:236–249 and retains its landing-plan checkpoint. No new landing authority.
+- [Pass] Event continuation: “where the harness provides it”, live-head/terminal-result verification, capability/readback checks and “continuation is unarmed” cover supported and unsupported harnesses. Matches handsfree SKILL.md Start steps 2–3; no watcher or scheduler is claimed installed.
+- [Pass] Accounting: “Before a repair, use that owner's existing reservation/wrapper” and “hold the repair” preserve merge-cleanup SKILL.md:336's durable per-PR reservation and distinguish lane attempts. “Universal push/gate enforcement is proposed in GH-1399” explicitly retains the enforcement limitation.
+- [Pass] Upstream: “Prepared intake is a signal for selection” and “neither automatic Jog selection nor execution approval” retain selected-owner revalidation and GH-1401 independence. Omission-diff: none in the delivered requirements; GH-1399 enforcement, GH-1401 runtime and GH-1386 supervision/cost trial are deliberately undelivered.
+- [Pass] Whole-file sweep found no concrete pre-existing defect requiring correction within this instruction scope. Existing 10days explicit-invocation exception, marathon confirmation, Jog recovery order, independent review, per-PR merge approval and explicit-only deployment remain intact. Artifact completion text says “A prepared plan, open PR, healthy process or elapsed window is not completion”. No new runtime, suite, gate or writer is prescribed.
+- [Pass] Retained evidence is correctly scoped: SUMMARY.md labels all five scenarios “PASS (textual)” and disclaims executed landing/cost savings. Read-only probe (exit 0): `python3` with `hashlib.sha256(Path('.relay-artifacts/SKILL.md').read_bytes()).hexdigest()` returned `df6430db13f6db9f460f86b2891a2dfe0fe6c74f28abfc890c26a56b93cded15`, matching provenance.jsonl; byte comparison with source returned `True`. Using `gzip.open(.../pdda.log.gz, 'rt').read()` showed “PDDA run complete: no errors, 659 warning(s)”; JSON before/after comparison returned `True`. This inspects retained evidence, not a fresh gate run.
+- [Pass] Read-only PRS probe (exit 0): `sqlite3.connect('file:releases.db?mode=ro', uri=True)` and `select * from roadmap_items where gh_number=1400` returned row 476, ratings `75/60/50/80`, `rating_ovr: null`, status `in-progress`. Plan's bounded rating claim is supported.
+- [Unverified — needs clone run] No suites, fixtures or runtime trial were executed here. Gate receipt reports revision `37119562c`; harness owns post-turn qualification. No git command was run under the explicit reviewer restriction, so the requested origin/development diff was not independently queried. Approval covers the whole seeded artifact and retained instruction evidence, not final commit/remote state or throughput.
+
+Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit; reviewer ran no git commands.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
