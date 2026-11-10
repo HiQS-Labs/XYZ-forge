@@ -23,7 +23,13 @@ python3 "$SRC/utils/py/xyz_mini_sync.py" --dest "$PKG" --apply >/dev/null 2>"$WO
 [ ! -e "$PKG/bin/tick" ] && [ ! -e "$PKG/PROJECT" ] && [ ! -e "$PKG/releases.db" ] && pass "package has no bin/tick, PROJECT/ or releases.db" || fail "governance leaked"
 
 BIN="$WORK/bin"; mkdir -p "$BIN"
-printf '#!/usr/bin/env bash\nprintf "model: stub\\nprovider: stub\\nsandbox: read-only\\n\\n[Pass] via \\`README.md:1\\` \\"XYZ mini\\".\\n"\n' >"$BIN/codex"
+cat >"$BIN/codex" <<'CODEX_EOF'
+#!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf '[Pass] via `README.md:1` "XYZ mini".\n' >"$answer_file"
+printf 'model: stub\nprovider: stub\nsandbox: read-only\n\n[Pass] via `README.md:1` "XYZ mini".\n'
+CODEX_EOF
 printf '#!/usr/bin/env bash\ncase "${1:-}" in whoami|models) echo stub; exit 0;; esac\nprintf "[Pass] via \\`README.md:1\\` \\"XYZ mini\\".\\n"\n' >"$BIN/agy"
 printf '#!/usr/bin/env bash\ncase "${1:-}" in whoami|models) echo stub; exit 0;; esac\nexit 0\n' >"$BIN/agy-empty"
 chmod +x "$BIN"/*

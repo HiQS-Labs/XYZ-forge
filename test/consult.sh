@@ -21,6 +21,9 @@ cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
 if [ "${1:-}" = "exec" ]; then who=codex; rc="${CODEX_RC:-0}"; else who=gemini; rc="${GEMINI_RC:-0}"; fi
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER from %s stub\n[Pass] looks fine\nRECOMMENDATION: ship\n' "$who" >"$answer_file"
 printf 'ANSWER from %s stub\n[Pass] looks fine\nRECOMMENDATION: ship\n' "$who"
 if [ "${STUB_WRITE:-0}" = 1 ]; then
   printf 'pwned by %s\n' "$who" > "pwned-by-$who.txt" 2>/dev/null || true   # CWD = worktree
@@ -194,6 +197,9 @@ grep -q "1 answered, 0 failed" <<<"$(printf '%s' "$out")" && pass "LM Studio-bac
 NOCITE_STUB="$WORK/nocite-stub"
 cat >"$NOCITE_STUB" <<'EOF'
 #!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER: this looks correct.\n[Pass] no issues found\nRECOMMENDATION: ship\n' >"$answer_file"
 printf 'ANSWER: this looks correct.\n[Pass] no issues found\nRECOMMENDATION: ship\n'
 EOF
 chmod +x "$NOCITE_STUB"
@@ -217,6 +223,9 @@ sidecar4="$(dirname "$ncfile")/t.codex.NO-CITATION.txt"
 CITE_STUB="$WORK/cite-stub"
 cat >"$CITE_STUB" <<'EOF'
 #!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\n[Pass] verified — see relay-automation/consult.sh:266\nRECOMMENDATION: ship\n' >"$answer_file"
 printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\n[Pass] verified — see relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
 EOF
 chmod +x "$CITE_STUB"
@@ -238,6 +247,9 @@ grep -q "NO FIRSTHAND VERIFICATION CITED" "$cfile4" 2>/dev/null && fail "cited t
 PARTIAL_CITE_STUB="$WORK/partial-cite-stub"
 cat >"$PARTIAL_CITE_STUB" <<'EOF'
 #!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\nLater: [Pass] this other part also looks fine\nRECOMMENDATION: ship\n' >"$answer_file"
 printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\nLater: [Pass] this other part also looks fine\nRECOMMENDATION: ship\n'
 EOF
 chmod +x "$PARTIAL_CITE_STUB"
@@ -256,6 +268,9 @@ grep -q "this other part also looks fine" "$pfile4" 2>/dev/null && pass "stampin
 ECHOED_STUB="$WORK/echoed-stub"
 cat >"$ECHOED_STUB" <<'EOF'
 #!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER: verified — see relay-automation/consult.sh:266.\n[Pass] confirmed by relay-automation/consult.sh:266\nRECOMMENDATION: ship\n' >"$answer_file"
 printf 'ANSWER: verified — see relay-automation/consult.sh:266.\n[Pass] confirmed by relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
 EOF
 chmod +x "$ECHOED_STUB"
@@ -287,6 +302,9 @@ grep -q '^ECHOED relay-automation/consult.sh:266$' "$eprov" 2>/dev/null \
 FIRSTHAND_STUB="$WORK/firsthand-stub"
 cat >"$FIRSTHAND_STUB" <<'EOF'
 #!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER: verified — see relay-automation/consult.sh:266.\n[Pass] confirmed by relay-automation/consult.sh:266\nRECOMMENDATION: ship\n' >"$answer_file"
 printf 'ANSWER: verified — see relay-automation/consult.sh:266.\n[Pass] confirmed by relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
 EOF
 chmod +x "$FIRSTHAND_STUB"

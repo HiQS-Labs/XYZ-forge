@@ -77,3 +77,9 @@ contains stdout-only Codex stubs that do not implement `--output-last-message`;
 these need adapting before that suite can qualify the new strict contract. That
 file is outside this turn's edit allowlist. Do not weaken missing-final safety to
 make those obsolete fixtures pass. No readiness or full-gate claim is made here.
+
+## Independent review disposition and bounded fixture repair
+
+Original agy ChangesRequested is retained in RELAY.md. Fresh independent round2 replayed actual consult.main against baseline56b5b89b and candidate09027b1d: baseline leaks sentinel/false citation warning; candidate preserves cited final text, separates diagnostics, still warns on uncited answers, and rejects missing/empty last messages with exit5. The helper-level admission probe is a false negative for this valid caller-boundary fix. The reviewed replacement exercises the public CLI with a controlled advisor fixture, no provider call.
+
+Existing stdout-only fixtures in consult, gh308-consult-guards, gh589-consult-no-tick and archive-writers now honor --output-last-message while preserving stdout for the Bash fallback. The gh308 raw-attestation assertion follows .codex.md.transcript. No runtime fallback or missing-final weakening. This is one manual fixture/probe repair after one engine builder, not a second automated delivery; model-builder history remains1, prior queue attempts preserved. Fresh final review and qualification remain required. No live-provider consult claimed.
