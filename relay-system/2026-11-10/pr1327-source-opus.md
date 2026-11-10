@@ -130,4 +130,12 @@ swept file: yes. I read the whole `0b597d7b7` diff (`git show`, 5 files). I re-r
 
 relay closed (Approved), no further turn needed. Hand back to codex-parent for the pending focused verification and the full publication gate in a disposable clone.
 
+
+### Attestation · relay-drive — 2026-11-10T06:47:51Z
+task: RELAY-pr1327-continuation-r2
+reviewer: claude-opus
+status: Approved
+reviewed-head: 0b597d7b7373771b2a679affd82abec3bc0b08b2
+added-range: 14789+4739
+added-sha256: 424bcb012da6a4ed9f5f5810e817dc568d09a8905aeed32610d78e2bc8327aa6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
