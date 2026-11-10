@@ -1,12 +1,7 @@
 {
-  "name": "xyz-3-agents-swarm",
+  "name": "xyz-forge",
   "version": "1.0.1",
-  "description": "XYZ multi-agent coordination: the tick kernel plus relay automation for running multiple AI coding agents on one repo without collisions.",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs",
-    "test": "test"
-  },
+  "description": "XYZ Forge repository development manifest. The npm archive is a source snapshot, not an installable CLI or the full relay harness.",
   "scripts": {
     "test": "./validate.sh",
     "test:unit": "node --test \"test/unit/*.test.js\"",
@@ -18,5 +13,12 @@
   "devDependencies": {
     "acorn": "^8.17.0",
     "acorn-walk": "^8.3.5"
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "src/*.js",
+    "LICENSE-COMMERCIAL.md"
+  ]
 }
