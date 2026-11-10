@@ -35,6 +35,14 @@ Extract final answer for neutral payload and citation screening; preserve full t
       "type": "grep_present",
       "path": "utils/py/consult.py",
       "pattern": "body = raw_text"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-10+GH-1243/manual.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
     }
   ],
   "artifacts": [
