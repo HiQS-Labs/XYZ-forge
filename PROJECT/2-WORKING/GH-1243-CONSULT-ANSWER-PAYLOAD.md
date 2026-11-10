@@ -93,3 +93,7 @@ PR1406 merged as6a0766b97f after independent Opus source approval, exact-source 
 The original no-publication constraint belonged to the closed engine window. The operator subsequently authorized PR review, minor corrections and merging. No package/service publishing, dependency/version change, new test suite, engine restart or cap reset occurred. Original failed automatic trial and manual interventions remain historical; delivery is agent-assisted.
 
 GitHub closed issue1243 through PR1406's closing reference at08:42:52Z. The parent removed closing wording and reopened it because live acceptance remains unverified. Active document and nonterminal ledger state are restored through the existing PRS writer; the original rating65/60/70/75 is retained. This corrects source-delivery bookkeeping, not the live engine.
+
+## Merge evidence
+
+- PR #1406 merged 2026-11-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
