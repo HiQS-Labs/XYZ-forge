@@ -1,0 +1,45 @@
+## red1
+== scenario red1 base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=fa3e49b6d829732241eb99dd5025e0d3077d9f84 labels=''
+inventory baseline grew vs PR base: utils/zz-dummy.sh
+pin_step_exit=1
+
+## red1b
+== scenario red1b base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=6015acfd0b0cfc91082c1a0f8cd84f83c0f64eea labels=''
+inventory baseline grew vs PR base: bypass count
+pin_step_exit=1
+
+## red2
+== scenario red2 base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=c36cd9ba7b761616137c6528f90d7f7c31b1d390 labels=''
+::error::new SQLITE-*-OK suppression marker added (label judge-change if intended)
+pin_step_exit=1
+
+## red3
+== scenario red3 base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=6fc0e7ca5ea28d7c7b9de47e5813bc53e7916f9b labels=''
+pin_step_exit=0
+ratchet_exit=0
+  FAIL: plain .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo (got <tmp>)
+vendored_suites_exit=1
+
+## green
+== scenario green base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=6974a748f896237a86302d8fabf8bb5f3995db3b labels=''
+pin_step_exit=0
+ratchet_exit=0
+== test: gh358-wave-reconcile-vendored-paths ==
+== test: gh358-wave-reconcile-vendored-paths ==
+vendored_suites_exit=0
+
+## label
+== scenario label base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=1ec4e565df7a82c79056bb36939400e6c898f04a labels='judge-change'
+::warning::judge-change label: running this PR's own judge files
+pin_step_exit=0
+ratchet_exit=0
+
+## label-red3
+== scenario label-red3 base=69030ddabfad6ffc90493efee17cab9784e2d4bc merge=987d758d330782d0fd5bc38af10b6669782e83a8 labels='judge-change'
+::warning::judge-change label: running this PR's own judge files
+pin_step_exit=0
+ratchet_exit=0
+== test: gh358-wave-reconcile-vendored-paths ==
+== test: gh358-wave-reconcile-vendored-paths ==
+vendored_suites_exit=0
+
