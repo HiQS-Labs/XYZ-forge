@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon done; main now requires vendored-smoke (development blocked on bypass policy); plan drafted at base 089eac1b. | Codex plan QA, then implement the single ci.yml step and witness the controls. |
+| Plan QA round 1: Block on R2 cardinality, accepted and revised; R1/R4 wording and R3 friction recorded. | Codex plan QA round 2, then implement the single ci.yml step and witness the controls. |
 
 ## Problem (recon, 2026-11-10)
 
@@ -61,8 +61,11 @@ goal: >
 - **R1** On `pull_request`, resolve the trusted base as the merge ref's first parent and log base,
   PR head and merge SHAs. Fail closed when HEAD is not a merge commit.
 - **R2** Refuse a PR whose `inventory_ratchet_baseline.json` grows relative to base: a script added
-  to `scripts`, a file added to the `sqlite_bypasses` file set, or a larger `sqlite_bypasses_count`.
-  A shrink or exact match passes. That keeps `--update-baseline` shrinks legitimate.
+  to `scripts`, a file added to the `sqlite_bypasses` file set, more distinct `sqlite_bypasses`
+  entries (the cardinality the ratchet actually compares, `check_inventory_ratchet.py:116,155-159`),
+  or a larger declared `sqlite_bypasses_count`. A shrink or exact match passes. That keeps
+  `--update-baseline` shrinks legitimate. (Plan QA round 1: the declared count alone missed an extra
+  location in an existing bypass file.)
 - **R3** Refuse a PR that adds a `SQLITE-BYPASS-OK:` or `SQLITE-GATEWAY-OK:` line in a `.py`/`.sh`
   file outside `test/`. Counting markers is not enough, because a removed marker could hide an added one.
 - **R4** Run all seven judge scripts from the base commit. Keep the PR's baseline JSON, which R2 has
@@ -90,15 +93,17 @@ It runs only when `github.event_name == 'pull_request'`.
    - `xyz-vendor.sh` copies `test/` into `.xyz/test` (`VENDOR_DIRS`, line 432), so the scratch
      repo gets the base copies of the four suites without a second overwrite.
 
-The existing gh308 step drops its step-level `BASE_SHA` env so it uses the exported value; on PR
-merge refs the two are identical. Push events are unchanged and run the merged tree's own judges.
+The existing gh308 step drops its step-level `BASE_SHA` env so it uses the exported value. That aligns
+its range with the tested merge, including on a re-run where the event's base SHA may be stale. Push events are unchanged and run the merged tree's own judges.
 
 ## Risks, residuals, rollback
 
 - **Residual, accepted:** a PR can still edit `ci.yml` itself.
 - **Residual, accepted:** anyone with triage rights can apply the label, including the agents'
   account.
-- **Residual:** helpers the suites source (`test/lib/*`) stay at the PR's version.
+- **Residual:** helpers the suites source (`test/lib/*`, `test/_setup.sh`) stay at the PR's version.
+- **Accepted friction (R3):** the diff scope is broader than the scanner's `PRUNED_DIRS`, and a moved
+  marker line shows as an added one. Both can need the label; neither lets a marker through.
 - **Risk:** a PR that legitimately changes behaviour one of the seven suites pins now fails until
   the label is applied. That is the intended friction.
 - **Rollback:** revert the single ci.yml commit. The settings change reverts with one
@@ -111,12 +116,15 @@ merge refs the two are identical. Push events are unchanged and run the merged t
   Each runs in a disposable full clone: the step's `run:` block is extracted from ci.yml and run
   against a constructed `--no-ff` merge of a throwaway PR commit onto base.
   - **Red 1:** a dummy script added to the baseline → R2 exits non-zero.
+  - **Red 1b:** an extra distinct location in an existing bypass file, declared count unchanged →
+    R2 exits non-zero.
   - **Red 2:** one existing marker moved to a new `sqlite3.connect(` line → R3 exits non-zero.
   - **Red 3:** `test/gh396-find-harness-roots.sh` replaced with `exit 0` while `find-harness-roots`
     is broken → after the pin, the vendored gh396 run exits non-zero.
   - **Green:** a script under `utils/` deleted, plus `--update-baseline` → R2, the pinned ratchet and
     the vendored suites all exit 0.
-  - **Adjacent:** the same Red 1 with the label lookup returning `judge-change` → warning, exit 0.
+  - **Adjacent:** the same Red 1 with a stubbed label lookup returning `judge-change` → warning, exit 0.
+    This proves only the branch; live label permissions are shown by the hosted run.
 - Hosted: this PR's own `vendored-smoke` run is green, and its log shows the three SHAs.
 - Final gate: one `ci-local.sh` run in a disposable full clone (ci-route: tier 3, kernel/gate surface).
 
