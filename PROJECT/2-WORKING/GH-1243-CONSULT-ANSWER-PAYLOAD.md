@@ -2,12 +2,17 @@
 gh_issue: 1243
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1243
 title: "Consult answer payload and citation accuracy"
-status: proposed
+status: Active
 created: 2026-11-10
 updated: 2026-11-10
 owner: B trial
 goal: "Extract final answer for neutral payload and citation screening; preserve full transcript separately and missing-final-answer safety. Verify cited and uncited answers plus transcript exclusion using existing consult suite/manual evidence; no new suite."
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Final-answer extraction implemented; independent source QA approved and controlled public-CLI checks passed | Complete publication qualification and live Codex + agy acceptance; retain issue open until verified |
 
 # GH-1243 — Consult answer payload
 
