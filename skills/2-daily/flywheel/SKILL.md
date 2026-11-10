@@ -107,12 +107,17 @@ continue independent eligible work without inventing a second intake queue.
 each PR's base, exact head, logical scope and current QA/gate evidence, obtain the
 required per-PR merge approval. The operator may give those approvals together as an
 explicit batch list; neither a ready PR nor a `--prs` pin grants approval. Then use
-merge-cleanup's existing dry run to pin exactly that list and its `--execute` path to
-own dependency ordering, landing, reconciliation and the batch record. Do not nudge
+merge-cleanup's existing dry run to pin exactly that list. Before `--execute`, compare
+every full-SHA pin on the printed `Pinned for --execute:` line with its reviewed
+and approved full SHA. If any differs, stop
+that PR's landing, re-establish eligibility and QA/review approval as applicable,
+and obtain a fresh matching pin; neither bare PR numbers nor a newly recorded pin
+prove that a moved head was approved. Only execute the verified matching pins, passed inline as
+`--prs N@<approved-full-sha>,...`, so execution checks the approved heads directly.
+Use that execution to own dependency ordering, landing, reconciliation and the batch record. Do not nudge
 through those stages one PR at a time or discover extra approved PRs during execution.
 Keep the existing project policy, landing-plan checkpoint and review requirements.
-A repaired/moved head needs fresh eligibility, review/approval as applicable and a new
-pin before landing; never silently widen the list or reset repair history.
+Never silently widen the list or reset repair history.
 
 **Wait on the result that can unlock work.** Prefer a native exact-PR/head check watcher
 (for example `watch_pull_request` where the harness provides it) or a delegated task's

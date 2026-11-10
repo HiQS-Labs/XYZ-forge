@@ -1,0 +1,11 @@
+{
+  "controlled_input": {
+    "approved": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "current": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "existing_dry_run_accepts_moved_head": true,
+  "recorded_pin": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "required_caller_equality_accepts": false,
+  "red_witness": "Old instructions allowed newly recorded B; changed instructions reject mismatch A!=B before execute.",
+  "scope": "Manual probe of existing pin_selection with isolated filesystem and mocked origin/path; no new test/gate."
+}
