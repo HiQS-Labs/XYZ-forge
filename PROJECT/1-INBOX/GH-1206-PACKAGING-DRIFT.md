@@ -109,3 +109,7 @@ Correct package identity, missing main, Node baseline and intentional package co
   "round_cap": 1
 }
 ```
+
+## Merge evidence
+
+- PR #1402 merged 2026-11-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
