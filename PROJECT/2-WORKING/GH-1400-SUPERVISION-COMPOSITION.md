@@ -135,3 +135,7 @@ and this readiness repair consume 2/2 existing per-PR slots. The reminder arrive
 after this repair command started; no advance reservation is claimed. No further
 repair allowance remains. Retained refusal, invariants and accounting snapshot are
 under `TESTS-RESULTS/2026-11-09+GH-1400/`.
+
+## Merge evidence
+
+- PR #1403 merged 2026-11-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
