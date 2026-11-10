@@ -2,7 +2,7 @@
 
 - Generated: 2026-11-10T05:31:14Z
 - Mode: project-doc
-- Sources: <local-root>/PROJECT/1-INBOX/GH-1206-PACKAGING-DRIFT.md 
+- Sources: <local-root>/PROJECT/1-INBOX/GH-1206-PACKAGING-DRIFT.md
 - Target root: <local-root>/temp/b-jog-transition-gate-b7urqpag/repo (development @ bb7cff2b6)
 - Suggested branch: `marathon/gh-1206-packaging-drift-2026-11-10` (branch_ready=false — carve-out: risk=1/independent zone, proceed on the current branch without asking)
 - Verdict: ready

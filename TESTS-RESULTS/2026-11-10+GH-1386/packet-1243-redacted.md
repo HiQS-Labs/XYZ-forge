@@ -2,7 +2,7 @@
 
 - Generated: 2026-11-10T05:31:13Z
 - Mode: project-doc
-- Sources: <local-root>/PROJECT/1-INBOX/GH-1243-CONSULT-ANSWER-PAYLOAD.md 
+- Sources: <local-root>/PROJECT/1-INBOX/GH-1243-CONSULT-ANSWER-PAYLOAD.md
 - Target root: <local-root>/temp/b-jog-transition-gate-b7urqpag/repo (development @ bb7cff2b6)
 - Suggested branch: `marathon/gh-1243-consult-answer-payload-2026-11-10` (branch_ready=false — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8)
 - Verdict: ready
