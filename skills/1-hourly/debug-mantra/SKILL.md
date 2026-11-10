@@ -56,7 +56,7 @@ When a candidate root cause surfaces, scrutinise it **before** testing it.
 
 **Verify relevance and preserve guarantees.** Before accepting a fix:
 
-1. Show that it changes the failure path responsible for the reported symptom. A synthetic reproduction of a related defect is insufficient; label that distinction explicitly.
+1. Show that it addresses the failure path responsible for the reported symptom, then rerun the reported reproducer with the candidate and require the symptom to be resolved. If no runnable reproducer exists, verify resolution by direct observation. A synthetic reproduction of a related defect is insufficient to claim the reported symptom is fixed; label the distinction. Without evidence of resolution, record the fix as unverified.
 2. Identify existing guarantees the change touches, using code, tests and prior fix rationale.
 3. Try to violate those guarantees with the candidate applied, including combinations of inputs tested separately. Use existing tests or proportionate manual probes under the host repo's test policy.
 

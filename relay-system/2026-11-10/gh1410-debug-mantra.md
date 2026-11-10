@@ -68,8 +68,9 @@ ROUND: 1 / 2
 
 ## Log
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ## Producer disposition — 2026-11-10
 
 The agy run exceeded its 180-second cap and produced no valid reviewer verdict or attestation. This scaffold is not approval evidence. Express refused skill-unattested; the normal PR review is recorded separately in gh1410-wording-qa.md.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

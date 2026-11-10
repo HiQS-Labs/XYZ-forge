@@ -4,6 +4,8 @@
 
 - Clarify step 3: tie the candidate to the reported failure and falsify preservation of existing guarantees, including combined inputs and assertion changes.
 - Documentation only; no new skill, executable tests, gates or execution authority. Express review timed out; use normal PR review before landing and managed deployment.
+- Verification: independent wording QA passed; existing PDDA docs suite passed at `8a7e93d1` (zero errors, 658 repository warnings). That historical run does not qualify later review corrections.
+- Review corrections: require observed symptom resolution and retain the relay marker last.
 
 ## 2026-11-09 — GH-446 explicit planner writes and consumer compatibility
 
