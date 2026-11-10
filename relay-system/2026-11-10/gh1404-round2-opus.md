@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,24 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+swept file: yes. I read the whole flywheel SKILL.md in the artifact, not just the landing paragraph, plus the receipt pointer and the cited source.
+DoD note: Setup's Definition of Done is still the placeholder, so I graded against the artifact's own stated intent: before `--execute`, the dry-run pin must explicitly equal the reviewed/approved SHA; a moved head needs fresh eligibility/QA/approval; no runtime change; no widening of authority.
+
+- [Pass] The artifact's skill text matches the tree exactly. Probe: `diff <(sed -n '/^name: flywheel/,$p' skills/2-daily/flywheel/SKILL.md) <artifact skill section>` printed only the appended receipt and source note lines (261a262,266), so the skill body itself is unchanged. No runtime file is in scope.
+- [Pass] The source claim is accurate. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:491` `pin_selection` pins `found[n]["headRefOid"]` (the live head) and, when an inline sha is stale, only calls `log_warn("--prs: inline pin(s) no longer match; pinned the live head instead: ...")`. `:513` `verify_selection` compares against `want = {n: (sha or pinned.get(n))}`, meaning the new pin, not the reviewed SHA. So with a reviewed A and a live B, the dry run returns true with B pinned, and the caller is the only guard. The skill's added sentence "Before `--execute`, compare every printed PR/head pin with its reviewed and approved head. If any differs, stop that PR's landing ..." is the correct and necessary instruction.
+- [Pass] The receipt pointer is repaired. `TESTS-RESULTS/2026-11-09+GH-1400/readiness-repair.json:4` reads `"original_b1_refusal": "TESTS-RESULTS/2026-11-09+GH-1400/readiness-b1-refusal.json"`. The target exists (354 bytes) and parses as a dict with 6 keys (`resolved, handoff, reason, log, commit, conflict_set`; `python3 -I -c json.load` exit 0). Grepping for `/tmp/` or `temp/` in that receipt found nothing (exit 1), so the old temp pointer is gone.
+- [Pass] Authority is not widened. The text keeps "neither a ready PR nor a `--prs` pin grants approval", "never silently widen the list", and "Keep the existing project policy, landing-plan checkpoint and review requirements". That is consistent with merge-cleanup SKILL.md:240 ("`--prs` may narrow the pinned list ..., never widen it") and :249 ("a repaired PR is always **deferred** ... re-run the dry run to re-pin").
+- [Should] Bind `--execute` to the approved SHA inline. After the equality check, a bare `--prs N` execute still re-reads a mutable record. The skill says "Only execute the verified matching pins", but it never says to pass them as `--prs N@<approved sha>`. Bare-N execute reads the selection record again at execute time, and `pin_selection` overwrites that record unconditionally with no lock (`merge_cleanup.py:499-503`: `path = selection_path(...)`, `path.write_text(...)`; there is no lock call in either function, `grep -n "_lock(\|acquire"` near 468-545 found none).
+  Observed input: `verify_selection` line `want = {n: (sha or pinned.get(n)) ...}` (`:513` body). For a bare `N`, `sha is None`, so the binding is whatever the record says at execute time, not what the caller compared. Sequence: the dry run pins A (A matches the approved head) → the caller compares and sees equality → another dry run on the same primary/integration, after the head moved to B, rewrites `selection-<integration>.json` with B and only warns → the caller runs `--execute --prs N` → `verify_selection` wants B, live is B → it merges the unapproved B.
+  Affected scope: only Flywheel-coordinated landings that run `--execute` with bare PR numbers after the pin-equality check. Inline `N@sha` executes are already bound at `:513`.
+  Fix (doc-only, one clause): "... Only execute the verified matching pins, passed inline as `--prs N@<approved full sha>,...`, so `verify_selection` checks each live head against the approved SHA itself rather than a re-readable record." This needs no runtime change, matching "No runtime guard requested". If you take this, also make the comparison full-SHA (or the printed `Pinned for --execute:` full-SHA line), not the 10-char abbreviations in the `--prs pinned for --execute (...)` log line.
+  Falsifier: in a clone, approve A, dry-run pin A, rewrite the selection record to B with a second dry run after moving the head, then execute `--prs N@A`. Expected: exit 2 with "head moved A -> B" and nothing merged. Executing bare `--prs N` in the same state would proceed. If bare-N verification actually cross-checked an immutable approved SHA, this finding would be wrong. The code at `:513-533` shows it does not. [Unverified — needs clone run] for the end-to-end replay; the code path above is verified by reading it.
+- [Nit] The "approved batch" paragraph says the moved-head rule twice: "If any differs, stop that PR's landing, re-establish eligibility and QA/review approval as applicable, and obtain a fresh matching pin" and later "A repaired/moved head needs fresh eligibility, review/approval as applicable and a new pin before landing". Fold the second into the first, keeping its "never silently widen the list or reset repair history" tail.
+- [Pass] Rest of the sweep: the relative 10days link resolves (`skills/3-weekly/10days/SKILL.md` exists). The rubrics, ladder, Daily, 10days and the ordered flow show no contradiction with the landing paragraph. No other pre-existing defects found.
+
+VERDICT: FAIL
+Basis: The receipt repair and the source analysis are correct, and the pin-equality instruction is right. One [Should] remains: the instruction stops short of binding `--execute` to the approved SHA. Bare-N execute re-reads an unlocked, overwritable selection record (`merge_cleanup.py:499-503`, `:513`), so the equality check can be bypassed between comparison and execute. A one-clause doc fix (execute with inline `N@<approved sha>`) closes it with no runtime change.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
