@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 — GH-1409 vendored-smoke pins its judge files to the PR base
+
+- On pull requests, `vendored-smoke` now restores the inventory ratchet, gh421, gh308 and the four vendored suites from the merge ref's first parent before running them. It refuses a grown inventory baseline (including effective bypass cardinality) or newly added `SQLITE-*-OK` markers; a `judge-change` label skips the pin. One inline step, no new suite, script or gate.
+- `main` now requires the `vendored smoke gate` check (repository setting, 2026-11-10). `development` stays unprotected until a reviewed bot-bypass policy exists for `wave-reconcile.yml`.
+- Accepted residuals: a PR can still edit `ci.yml`; helpers the suites source are not pinned. Easy to revert (one workflow commit; one protection setting).
+
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 
 Extended the existing flywheel routing skill with one approved pinned-batch handoff,

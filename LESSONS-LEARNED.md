@@ -157,3 +157,20 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: skills
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 - **date**: 2026-11-04
+
+## A hand-written relay thread must state the validator's VERDICT and Basis contract
+
+- **cue**: Scaffolding a relay review thread by hand (not with `new-relay.sh`) and driving it with `relay-drive.sh --review-once` and a Codex or agy shim.
+- **lesson**: Tell the reviewer to end with one `### `-headed block whose last lines are exactly `VERDICT: PASS|FAIL|PARKED` and a non-empty `Basis:` line (`bin/validate-relay-block`). Without them the shim exits 8 and the driver reverts an approving `STATUS:`, so a substantive approval counts as a failed review and burns a round. `VERDICT: Approved` is also refused.
+- **evidence**: relay-system/2026-11-10/gh1409-plan-qa.md (rounds 1-3 exit 8: missing VERDICT, `Approved` refused, missing Basis; round 4 with the contract stated attested Approved), relay-system/2026-11-10/gh1409-final-qa.md (contract stated up front, attested on the first turn), https://github.com/HiQS-Labs/XYZ-forge/issues/1409
+- **confidence**: high. Deterministic validator messages, and the same reviewer passed as soon as the thread stated the contract.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1409
+- **date**: 2026-11-10
+
+### Edit verdicts
+
+| Component | Verdict |
+|---|---|
+| Thread without the VERDICT/Basis contract (rounds 1-3) | hurt (three structurally failed approvals) |
+| Thread stating the contract (plan round 4, final round 1) | helped (attested on the first try) |
