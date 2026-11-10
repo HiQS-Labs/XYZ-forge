@@ -1,0 +1,46 @@
+[
+  {
+    "issue": 1243,
+    "source_head": "089eac1b995cb701c7becff1c4e2b638e815df45",
+    "live_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1243 is OPEN"
+    },
+    "fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "3 issue criteria reconciled: 2 deviation(s) declared and accounted for",
+      "issue": "1243",
+      "dropped": [],
+      "added": [],
+      "declared": 2
+    },
+    "criteria": 5,
+    "candidate_state": "stale (alreadylandedprobes)",
+    "stdout_sha256": "2ced61607e546dab0162896cec177331db2a2ae9c8dc512ed016ff128c94e2fd",
+    "packet_emission": "Correctly absent: sourcecandidateSTALE causes exit4 beforepacketwrite. NonemptyJSONcontract/fidelityreport is the receipt; noREADYorpacketgenerationclaim."
+  },
+  {
+    "issue": 1206,
+    "source_head": "089eac1b995cb701c7becff1c4e2b638e815df45",
+    "live_state": {
+      "status": "CLOSED",
+      "closed_at": "2026-11-10T08:32:39Z",
+      "detail": "issue #1206 is CLOSED since 2026-11-10T08:32:39Z"
+    },
+    "fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "6 issue criteria reconciled: 2 deviation(s) declared and accounted for",
+      "issue": "1206",
+      "dropped": [],
+      "added": [],
+      "declared": 2
+    },
+    "criteria": 8,
+    "candidate_state": "stale (alreadylandedprobes)",
+    "stdout_sha256": "b85509e3693b21c0090ce246a89c5ef9fcdfc7f434b5e9f463a75cf68f0d78bb",
+    "packet_emission": "Correctly absent: sourcecandidateSTALE causes exit4 beforepacketwrite. NonemptyJSONcontract/fidelityreport is the receipt; noREADYorpacketgenerationclaim."
+  }
+]
