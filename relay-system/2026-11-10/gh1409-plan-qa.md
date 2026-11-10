@@ -136,3 +136,47 @@ Plan revised in `PROJECT/2-WORKING/GH-1409-VENDORED-SMOKE-BASE-PIN.md` (Requirem
 **Round 2 ask (codex):** confirm the R2 revision closes the blocker and nothing new is introduced. End your block
 with exactly one line `VERDICT: Approved` or `VERDICT: Changes requested` (the shim's structural check requires a
 `VERDICT:` line; round 1 failed it with exit 8), and set `STATUS: Approved` when approving.
+
+
+## Codex plan QA — round 2, 2026-11-10
+
+**Approved for implementation.** The R2 revision closes the round 1 blocker; no new blocking finding is introduced by the recorded revisions.
+
+The revised requirement at `PROJECT/2-WORKING/GH-1409-VENDORED-SMOKE-BASE-PIN.md:63-68` now bounds the distinct bypass locations as well as the script set, bypass-file set and declared count. This matches the effective cardinality used by `utils/pdda/check_inventory_ratchet.py:116,155-159`. Red 1b at plan `:119-120` now directly challenges the missed inflation route. The R1 clarification (`:96-97`), helper residual (`:104`), accepted marker friction (`:105-106`) and branch-only qualification of the label stub (`:126-128`) accurately address the remaining dispositions.
+
+Read-only predicate probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -` with this body (exit **0**):
+
+```python
+import json
+from pathlib import Path
+p=json.loads(Path('utils/pdda/inventory_ratchet_baseline.json').read_text())
+def accepts(c):
+ b=set(p['sqlite_bypasses']); v=set(c['sqlite_bypasses'])
+ return (set(c['scripts'])<=set(p['scripts']) and {x.split(':')[0] for x in v}<={x.split(':')[0] for x in b} and len(v)<=len(b) and c['sqlite_bypasses_count']<=p['sqlite_bypasses_count'])
+grown=dict(p,sqlite_bypasses=p['sqlite_bypasses']+[p['sqlite_bypasses'][0].split(':')[0]+':999999'])
+shrunk=dict(p,scripts=p['scripts'][1:],sqlite_bypasses=p['sqlite_bypasses'][1:],sqlite_bypasses_count=p['sqlite_bypasses_count']-1)
+shifted=dict(p,sqlite_bypasses=[x.split(':')[0]+':'+str(int(x.split(':')[1])+10000) for x in p['sqlite_bypasses']])
+for name,c in [('unchanged',p),('extra location unchanged declared count',grown),('shrink',shrunk),('line shift',shifted)]:
+ print(name, 'ACCEPT' if accepts(c) else 'REJECT')
+assert not accepts(grown) and all(accepts(x) for x in (p,shrunk,shifted))
+```
+
+Decisive output:
+
+```text
+unchanged ACCEPT
+extra location unchanged declared count REJECT
+shrink ACCEPT
+line shift ACCEPT
+```
+
+This measures the revised predicate, not a completed implementation. Constructed-merge controls and suites remain **[Unverified — needs clone run]**; live GitHub token/label behavior remains **[Unverified — needs hosted run]**. Approval is of the plan and its verification obligations, not an implementation or merge-readiness attestation.
+
+[Nit] Implementation order `:134` still says “five manual controls”; the expanded list now contains six including Red 1b. Execute all six listed controls.
+
+Only this relay file was edited. No git commands, suite execution, executable fixtures or source mutations were performed this turn.
+
+VERDICT: Approved
+
+### System · relay-drive — 2026-11-10T22:09:06Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
