@@ -2,7 +2,7 @@
 Goal: Final QA for GH-1409 (vendored-smoke base-pinning of judge files)
 Date: 2026-11-10
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -119,3 +119,26 @@ Every `[Blocker]` or `[Should]` requesting a behaviour change needs `Observed in
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+
+### Codex final QA — round 1
+
+**Ship with conditions: final implementation QA passes; hosted verification and full-gate completion remain outstanding.** No blocking implementation finding against the approved R1–R5 contract.
+
+- R1: `ci.yml:548,554-557` restricts the step to PRs, rejects a missing second parent, derives the base from the tested merge's first parent, exports it and logs all three SHAs. The frozen guard consumes that export at `:592-596`.
+- R2: `ci.yml:563-571` compares added scripts, added bypass files, distinct bypass-entry cardinality and declared bypass count. The `set` cardinality closes the previously identified same-file inflation route; shrink and equality remain permitted.
+- R3: `ci.yml:572-574` checks added Python/shell lines outside `test/`, including moved markers. R4: `:575-578` restores exactly the seven judges in place; the downstream ratchet, reconciliation, frozen guard and vendored suites use those paths (`:584-619`). The PR baseline stays intact.
+- R5: `ci.yml:549-560` supplies the token and PR number, reads labels live and warns before skipping R2–R4. A failed label lookup in this conditional takes the conservative pin path; it does not grant the exception. Actual hosted lookup permissions and rerun behavior remain **[Unverified — needs hosted run]**.
+
+Quoting check: narrow non-mutating probe extracted the pin step from the working workflow and ran `subprocess.run(['bash','-n'], input=body, text=True, capture_output=True)`, then `ast.parse` on its inline Python. Outer command exit 0; decisive output: `bash -n extracted pin step: rc=0` and `inline Python ast.parse: OK`. The single-quoted Python shell argument contains double-quoted Python literals; stdin remains available for `git show` JSON. The standalone JSON pipeline fails under pipefail on extraction/parse failure. The marker grep lacks `-q`, so it consumes the diff rather than causing an early-match SIGPIPE. Like other shell conditionals, a producer error in the marker pipeline would take its false branch; no concrete reachable bypass was demonstrated for this fixed invocation and checked merge/base.
+
+Receipts: `control-results.txt` and `provenance.jsonl` agree on intended nonzero failures for Red 1 (dummy script), Red 1b (distinct entry with unchanged declared count), and Red 2 (added marker). Red 3 passes pin/ratchet but fails the restored gh396 on consumer-root discovery; Label + Red 3 passes the vendored suites with the neutered judge, discriminating the effect of pinning. Green records pin/ratchet/suites all 0. Label records the visible warning and pin 0. The manual procedure extracts actual workflow bodies and explicitly stubs labels. Existing focused-suite receipts report ci-workflow 0 and gh308 38 pass/0 fail at `69030ddab`; these are reviewed producer receipts, not fresh suite executions by this reviewer.
+
+The supplied diff introduces one inline workflow step, no duplicate subsystem, suite, executable script or registry entry. `controls-procedure.md` is documentation. Read-only SQLite inspection (`sqlite3.connect('file:releases.db?mode=ro', uri=True)`, outer exit 0) confirmed GH-1409's persisted `rating_pri=25`, `rating_sev=30`, `rating_appeal=50`, `rating_effort=70`, with matching raw text. That operator-set latent-risk/cheap-change rating remains consistent with the evidence; this review establishes no incident or trend that warrants changing it.
+
+Evidence limits: SUMMARY's hosted main-path paragraph describes the intended PR check receipt, not an observed hosted success in this packet. Do not cite it as completed smoke evidence until that run exists. Full qualifying gate completion is **[Unverified — needs clone run]**; the separately running gate and hosted PR run must supply their own final-commit receipts before merge readiness. The accepted workflow-self-edit and unpinned-helper residuals remain within the approved scope.
+
+Only this relay file was edited. No git commands, suites, executable fixtures or source mutations were run this turn.
+
+VERDICT: PASS
+Basis: Working workflow implements approved R1–R5; syntax probes and discriminating recorded controls support the scoped verdict, with full-gate and hosted evidence explicitly outstanding.
