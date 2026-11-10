@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,20 @@ Do not demand a new runner, gate or tests. Return Approved only when the bounded
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship the bounded instruction-only plan. Existing owners provide the necessary contracts; implementation and final evidence remain pending. Approval does not authorize any merge or establish a supervision-cost improvement.
+swept file: yes
+
+- [Pass] Scope and dependency accounting are honest. The whole artifact explicitly holds “GH-1399 remains OPEN,” describes GH-1401 as independent, and leaves “broader real-work qualification” with GH-1386. Its closing “instruction review alone cannot establish a throughput gain” prevents treating this review as trial evidence. No additional pre-existing defect found in the whole plan or the whole existing `skills/2-daily/flywheel/SKILL.md`.
+- [Pass] Batch composition is constrained by the plan's “One exact approved pinned allowlist,” “changed heads need renewed eligibility/review,” and non-goal “changing policy/caps.” This fits `skills/2-daily/merge-cleanup/SKILL.md:236–250` (pins, narrowing, required checks, repaired-head deferral) and its Phase 5 contracts (two repairs per PR; stop/defer/QA-pending outcomes; project-policy merge method). Preserve those owner details by reference when writing the compact extension; a pin itself supplies no approval.
+- [Pass] Continuation and admission remain capability-dependent: “when supported,” “No runtime-specific tools installed or scheduler armed,” and “execution owner explicitly selects/revalidates.” These agree with handsfree's “Do not claim a wake is armed until those checks succeed” and flywheel step 3's owner-controlled admission. The implementation must retain the existing receipt/readback/cancellation and deadline requirements rather than promise a particular watcher API.
+- [Pass] Accounting claims match the existing owner boundary. The plan says “does not implement push/gate enforcement”; `attempt_record.py` defines `MAX_REPAIRS = 2`, locked reservation, and refusal without the coordinator's absolute `MERGE_CLEANUP_RECORD`. The linked recon separately names relay's lane attempt scope. Neither is presented as universal raw-edit accounting.
+- [Unverified — no citation] Verification and rollback are proportionate: “revert the instruction patch,” manual main/adjacent scenarios with provenance, final changed-path classification, existing gate, and independent final QA. Rating search counts are explicitly “NOT independent incidents or a velocity claim,” with older coverage incomplete and trend unknown. No omitted source requirement requiring broader machinery was identified in the supplied review packet; exact owner outcome codes and scheduler lifecycle remain owned by their linked skills.
+- [Unverified — needs clone run] No gate or executable fixture ran in this reviewer worktree. The planned smoke, applicable existing gate and final QA must still establish implementation correctness; this verdict approves preparation only.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
