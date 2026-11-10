@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Controls witnessed (receipts 2fc09f198); focused suites green; final QA PASS (attested fc48de9a5). | Full gate result, then push and PR; hosted run proves the live label lookup. |
+| Final QA PASS (attested fc48de9a5); full gate rc=1 on harness-environment and pre-existing causes, base-identical (TESTS-RESULTS gate.txt). | Push through the pre-push gate from the disposable clone, open the PR, confirm the hosted vendored-smoke run. |
 
 ## Problem (recon, 2026-11-10)
 
