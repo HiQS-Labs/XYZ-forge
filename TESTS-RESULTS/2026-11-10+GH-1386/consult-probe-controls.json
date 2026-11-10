@@ -1,0 +1,14 @@
+[
+  {
+    "variant": "baseline",
+    "fixed_probe": false
+  },
+  {
+    "variant": "partial",
+    "fixed_probe": false
+  },
+  {
+    "variant": "fixed-control",
+    "fixed_probe": true
+  }
+]
