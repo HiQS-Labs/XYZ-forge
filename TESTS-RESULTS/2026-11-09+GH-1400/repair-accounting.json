@@ -1,0 +1,41 @@
+{
+  "attempts": [
+    {
+      "booking": "retrospective historical repair; not advance reservation",
+      "by": "start-task readiness owner",
+      "clone_path": "",
+      "evidence": "TESTS-RESULTS/2026-11-09+GH-1400/integration-repair.json",
+      "finished": "2026-11-09T21:36:24-0800",
+      "head_sha": "12dd4a1d4",
+      "outcome": "resolved",
+      "repair": "initial pre-publication disjoint B1 ledger integration",
+      "rung": "start-task",
+      "started": "2026-11-09T21:36:24-0800"
+    },
+    {
+      "booking": "retrospective; repair began before accounting reminder",
+      "by": "start-task readiness owner",
+      "clone_path": "",
+      "diagnosis": [
+        {
+          "at": "2026-11-09T21:36:24-0800",
+          "data": "Second actual integration repair booked after implementation began; accounting reminder arrived during command. No advance reservation claimed, no reset, cap remains two."
+        }
+      ],
+      "evidence": "TESTS-RESULTS/2026-11-09+GH-1400/readiness-repair.json",
+      "finished": "2026-11-09T21:36:54-0800",
+      "head_sha": "03f23256d7f49171fabf6ceb1cac39bee9ae8a83",
+      "outcome": "resolved-awaiting-publication",
+      "rung": "start-task",
+      "started": "2026-11-09T21:36:24-0800"
+    }
+  ],
+  "base_sha": "",
+  "conflict_files": [],
+  "last_side_touched": {},
+  "merge_base": "",
+  "pr": 1403,
+  "pre_repair": {},
+  "repo": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "schema": 1
+}

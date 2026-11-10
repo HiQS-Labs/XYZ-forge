@@ -31,6 +31,9 @@ OUT="$WORK/out"; mkdir -p "$OUT"
 CODEX="$WORK/codex.sh"
 cat >"$CODEX" <<'EOF'
 #!/usr/bin/env bash
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'Here is the answer. [Pass] verified via "a quoted span".\n' >"$answer_file"
 printf 'model: gpt-stub-9\nprovider: openai-stub\nsandbox: read-only\n\nHere is the answer. [Pass] verified via "a quoted span".\n'
 exit 0
 EOF
@@ -51,7 +54,7 @@ find_transcript() { find "$OUT" -name "$1" | head -1; }
 
 # ── (1) codex ATTESTATION header on the default lane ─────────────────────────────────────
 CONSULT_ROOT="$REPO" CODEX_BIN="$CODEX" bash "$CONSULT" --prompt "q" --models codex --out "$OUT" --label cx >/dev/null 2>&1; rc_cx=$?
-cx="$(find_transcript 'cx.codex.md')"
+cx="$(find_transcript 'cx.codex.md.transcript')"
 if grep -qF '> **ATTESTATION**' <<<"$([ -n "$cx" ] && head -1 "$cx")" \
    && grep -qF '> Model: gpt-stub-9' "$cx" && grep -qF '> Provider: openai-stub' "$cx" && grep -qF '> Sandbox: read-only' "$cx"; then
   pass "consult default lane: codex transcript is stamped with the ATTESTATION provenance header"

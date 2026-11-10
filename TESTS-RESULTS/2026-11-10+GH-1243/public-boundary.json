@@ -1,0 +1,70 @@
+{
+  "at": "2026-11-10T06:01:02.328532+00:00",
+  "boundary": "actual consult.main invocation with controlled CLI fixture, not live providers",
+  "baseline": "56b5b89b50f52ca6f5ec7e4db196f34b16080795",
+  "candidate": "09027b1db8c5ba441681f879ceb043904f5bb3d0",
+  "checks": [
+    {
+      "version": "baseline",
+      "mode": "cited",
+      "source": "56b5b89b50f52ca6f5ec7e4db196f34b16080795",
+      "rc": 0,
+      "answer_exists": true,
+      "answer_nonempty": true,
+      "sentinel_in_answer": true,
+      "final_content_preserved": true,
+      "uncited_stamp": true,
+      "raw_transcript_preserved": false
+    },
+    {
+      "version": "candidate",
+      "mode": "cited",
+      "source": "09027b1db8c5ba441681f879ceb043904f5bb3d0",
+      "rc": 0,
+      "answer_exists": true,
+      "answer_nonempty": true,
+      "sentinel_in_answer": false,
+      "final_content_preserved": true,
+      "uncited_stamp": false,
+      "raw_transcript_preserved": true
+    },
+    {
+      "version": "candidate",
+      "mode": "uncited",
+      "source": "09027b1db8c5ba441681f879ceb043904f5bb3d0",
+      "rc": 0,
+      "answer_exists": true,
+      "answer_nonempty": true,
+      "sentinel_in_answer": false,
+      "final_content_preserved": null,
+      "uncited_stamp": true,
+      "raw_transcript_preserved": true
+    },
+    {
+      "version": "candidate",
+      "mode": "missing",
+      "source": "09027b1db8c5ba441681f879ceb043904f5bb3d0",
+      "rc": 5,
+      "answer_exists": false,
+      "answer_nonempty": false,
+      "sentinel_in_answer": false,
+      "final_content_preserved": null,
+      "uncited_stamp": false,
+      "raw_transcript_preserved": true
+    },
+    {
+      "version": "candidate",
+      "mode": "empty",
+      "source": "09027b1db8c5ba441681f879ceb043904f5bb3d0",
+      "rc": 5,
+      "answer_exists": false,
+      "answer_nonempty": false,
+      "sentinel_in_answer": false,
+      "final_content_preserved": null,
+      "uncited_stamp": false,
+      "raw_transcript_preserved": true
+    }
+  ],
+  "original_helper_probe": "false negative on valid caller-boundary candidate; not used to claim acceptance",
+  "pass": true
+}

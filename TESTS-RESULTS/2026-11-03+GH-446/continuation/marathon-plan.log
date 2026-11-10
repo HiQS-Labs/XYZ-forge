@@ -1,0 +1,138 @@
+== test: marathon-plan ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo
+  FAIL: A: expected exit 0, got 1
+  FAIL: A: MARATHON-PLAN doc not written
+  FAIL: A: wrong active/wave count — 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: A: indeps not both Wave 1 (102= 103=)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: A: kernel items shared a wave (100= 101=)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: A: shim not after its kernel dep (shim= kernel=)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: A: #100 missing suggested_branch line
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: A: expected 5 suggested_branch lines, got 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/A/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: A: suggested_branch drifted on re-run
+  FAIL: B: expected exit 4, got 1
+  FAIL: B: #200 not flagged already-closed
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/B/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  PASS: B: closed item excluded from waves
+  FAIL: B: #210 not flagged already-landed
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/B/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  PASS: B: landed item excluded from waves
+  FAIL: B: #220 not flagged partial
+  PASS: B: #221 NOT flagged partial (1 signal < threshold)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/B/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: B: one-signal item not active
+  FAIL: B: #230 not flagged unrated
+  FAIL: B: dead pointer not flagged
+  FAIL: B: note-only not flagged
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/B/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: B: gated item not in gated bucket
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/B/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  PASS: B: gated item excluded from active waves
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/C/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/C/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: C: quick-wins order wrong
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/C/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/C/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: C: derisk-first did not flip order
+  FAIL: D: gh-off expected exit 0, got 1
+  FAIL: D: gh=off not announced
+  FAIL: D: expected exit 6, got 1
+  FAIL: E: --check expected exit 0, got 1
+  PASS: E: ledger change → --check detects drift (exit 1)
+  FAIL: F: json lines not all valid
+  FAIL: F: json summary missing
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/G/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/G/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: G: dependent-on-held not excluded (700= 701=)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/H/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/H/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/H/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/H/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: H: oxford-comma deps not all honored (800= 801= 803= 802=)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/I/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: I: ghIssueOf precedence wrong — 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/J/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: J: (a) edit-existing-file lane was wrongly flagged partial or excluded from waves
+  FAIL: J: (b) lane with genuine partial signals was not flagged partial or got sequenced in waves
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/K/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/K/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: K: expected a src/schema seam warning for #920‖#921, got: 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/K/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  PASS: K: #922 in a disjoint subtree is NOT flagged as coupled (no false seam)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/K/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: K: no pin-a-contract guidance in the seam section
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/L/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/L/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: L: trailing-slash dir artifact dropped the seam: 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/M/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: M: wrong deepest spine — expected x/a/b/c, got: 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/N/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  PASS: N: (a) no PR-REVIEW-QUEUE doc -> no Review lanes section [GH-86]
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/N/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: N: (b) Review lanes section missing with overlay doc present
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/N/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: N: (b) lane R1 not listed correctly
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/N/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: N: (b) lane R2 not listed correctly
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/N/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: N: (b) overlay doc link missing
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/N/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: N: (c) missing fs-touching-test warning in the generated plan
+cp: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/O/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: O: explicit default config changed planner output
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: P: expected #972 zone=turn-shim, got 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: P: expected #973 zone=review-gate, got 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: P: expected helper lanes in different waves (970= 971=)
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/P/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: P: signed-helper collision-map row missing
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/Q/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/Q/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: Q: expected root-zone, got 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/Q/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/Q/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: Q: expected env-zone, got 
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/Q/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/Q/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: Q: expected cli-zone, got 
+  FAIL: R: expected exit 3 from malformed --zones-config, got 1
+  FAIL: R: expected exit 3 from malformed QUEUE_PLAN_ZONES_FILE, got 1
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/S/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/S/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md": No such file or directory
+  FAIL: S: docOf chose the distractor PROJECT doc (out= wave=)
+  FAIL: T: explicit zones dry-run mismatch (bash=0 py=1)
+  PASS: T: rendered MARATHON-PLAN doc matches between the BASH engine and XYZ_PYTHON=1 [GH-154/GH-348]
+  PASS: T: mutating the Bash engine IS detected — the parity comparison is genuinely cross-lane [GH-348]
+  FAIL: U: unknown flag exited 1 on the default lane (expected 2)
+  FAIL: U: no 'unknown argument' on stderr: Traceback (most recent call last):
+  FAIL: U: usage block missing from stdout
+  FAIL: U: --help no longer exits 0
+  PASS: U: the Bash lane also exits 2 (codes agree across lanes) [GH-349]
+  PASS: V: the Bash engine no longer hardcodes 'branch: main' [GH-346]
+  PASS: V: the native Python engine no longer hardcodes 'branch: main' [GH-346]
+  FAIL: V: no plan rendered at /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/V/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/V/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/V/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  FAIL: V: QUEUE_PLAN_BRANCH ignored on the Python lane: ''
+cp: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/V/PROJECT/2-WORKING/MARATHON-PLAN-2026-06-28.md: No such file or directory
+  PASS: V: QUEUE_PLAN_BRANCH overrides the derived value (Bash lane) [GH-346]
+grep: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/V/py-branch.md: No such file or directory
+diff: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//marathon-plan.lhxwvo/V/py-branch.md: No such file or directory
+  FAIL: V: engines diverge with a derived branch: 
+
+  marathon-plan: 13 passed, 59 failed

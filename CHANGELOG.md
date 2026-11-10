@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-09 — GH-1400 downstream flywheel composition
+
+Extended the existing flywheel routing skill with one approved pinned-batch handoff,
+result-specific native continuation, explicit pickup revalidation and operation-owned
+attempt accounting. No new runner, scheduler or gate. GH-1399 enforcement, GH-1401
+upstream preparation and real-work qualification remain separate; no unattended or
+cost-saving result is claimed. The instruction change is Easy to revert.
+
+## 2026-11-10 — Debug mantra relevance and guarantees (GH-1410)
+
+- Clarify step 3: tie the candidate to the reported failure and falsify preservation of existing guarantees, including combined inputs and assertion changes.
+- Documentation only; no new skill, executable tests, gates or execution authority. Express review timed out; use normal PR review before landing and managed deployment.
+- Verification: independent wording QA passed; existing PDDA docs suite passed at `8a7e93d1` (zero errors, 658 repository warnings). That historical run does not qualify later review corrections.
+- Review corrections: require observed symptom resolution and retain the relay marker last.
+
+## 2026-11-09 — GH-446 explicit planner writes and consumer compatibility
+
+- Bare planner calls report without writing; `--write` explicitly saves the dated plan. Reconcile, 10days and start-marathon file-generating paths now request it, and existing fixture writers use the same contract.
+- Preserved two earlier readiness repairs and the operator-authorized additional correction. Independent source review approved the composed code; final publication qualification is recorded separately. No new suite or gate.
+
 ## 2026-11-09
 
 - GH-1401: added `/conveyor` for preparing existing issues through grounded recon, current Preflight Contracts and canonical PRS pickup. Preparation publishes separately from execution; readiness waits for integration-ref validation and does not enqueue/admit work. Manual parser/linter, empty-input and polarity controls passed; main READY and adjacent already-delivered STALE preflight receipts are retained in `TESTS-RESULTS/2026-11-09+GH-1401/`.
