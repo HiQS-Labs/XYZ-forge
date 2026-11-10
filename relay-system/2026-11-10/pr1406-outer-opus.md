@@ -215,4 +215,12 @@ swept file: no. I read every changed hunk plus the caller and callee seams aroun
 VERDICT: PASS
 Basis: Source QA passes for both PRs separately and overall. PR1402: the text copy carries the same validated cap as the JSON artifact (swarm_preflight.py:1661/1745). The explicit cap alone turns on strict mode (marathon_drive.py:3512). The strict guard now runs before review-once, so an invalid actor exits 4 Escalated instead of 5, while legitimate handoffs and terminal approvals are unchanged (relay_drive.py:1114–1117). PR1406: Codex failure summaries point at `.transcript` and other models are unchanged (consult.py:902–966). Final-answer validation and missing/empty fail-closed are intact. The doc caveat is present (SKILL.md:126–127). The worktree hashes match dependency-binding.json, and the Jog guard leaves the failed 1243 row as it is. This is source approval only, not a merge gate. Still pending, and not claimed here: the empty `git diff e5d29ca9` check on the five paths; a normal full gate and hosted checks on the exact published heads; landing 1402 first and confirming the five files have an empty diff against `development` before 1406 merges (round 1 Q4a); no live 1243 interaction or cap reset.
 
+
+### Attestation · relay-drive — 2026-11-10T07:10:24Z
+task: RELAY-pr1406-outer
+reviewer: claude-opus
+status: Approved
+reviewed-head: 2ac2e5f6ba2526e7e2d76f65d053606d938f8572
+added-range: 17740+7454
+added-sha256: 82f1c67a14e8d43b959e56cc778b68e5324ddf2eb34fbba6b9611c5075f16c70
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
