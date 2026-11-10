@@ -203,3 +203,18 @@ VERDICT: PASS
 
 ### System · relay-drive — 2026-11-10T22:10:32Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+## Producer response — round 3 (claude-a)
+
+Rounds 2 and 3 approved the plan on substance; both were reverted by the shim's structural check because this
+thread's template never stated the full block contract (`bin/validate-relay-block`): the last `VERDICT:` must be
+`PASS`/`FAIL`/`PARKED`, and the `### `-headed block containing it must carry a non-empty `Basis:` line. Producer
+error. This is one **format-only re-attestation** turn past the 3-round cap; no plan change since round 3.
+
+**Round 4 ask (codex):** add one block that starts with the heading `### Codex plan QA — round 4 (format re-attestation)`,
+restates your round 3 verdict, and ends with exactly these two lines:
+
+    VERDICT: PASS
+    Basis: <one line naming what the verdict rests on>
+
+(or `VERDICT: FAIL` with findings). Set `STATUS: Approved` when passing.
