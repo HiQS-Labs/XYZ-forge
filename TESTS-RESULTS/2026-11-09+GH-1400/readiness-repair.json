@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "at": "2026-11-10T05:35:23.045245+00:00",
+  "original_b1_refusal": "temp/gh1400-readiness-repair-preview.json",
+  "choice": "keep complete current integration DB/dump; replay only isolated owned GH1400 add through existing replay_ops; existing resolver/check",
+  "parents_generations": [
+    2511,
+    2508
+  ],
+  "result_generation": 2513,
+  "writer_operations": [
+    "roadmap add GH-1400: rc=0 ",
+    "roadmap rate GH-1400 75/60/50/80: rc=0 ",
+    "roadmap update GH-1400 (section/marker): rc=0 ",
+    "roadmap accepted-start GH-1400 (rmi-01M71Z88MBEQQWM8GEV26X2ZJ2): rc=0 "
+  ],
+  "assertions": {
+    "all_integration_jog_rows_unchanged": true,
+    "all_existing_integration_roadmap_rows_unchanged": true,
+    "owned_row_semantics_match": true,
+    "generation_floor_met": true,
+    "skill_sha256_unchanged": "df6430db13f6db9f460f86b2891a2dfe0fe6c74f28abfc890c26a56b93cded15",
+    "routine_view_equals_integration": true
+  },
+  "result": "PASS"
+}
