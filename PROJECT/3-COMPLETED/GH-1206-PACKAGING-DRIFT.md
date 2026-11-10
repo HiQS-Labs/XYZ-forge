@@ -2,7 +2,7 @@
 gh_issue: 1206
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1206
 title: "Audit E: correct package identity entrypoint and contents"
-status: Active
+status: Complete
 created: 2026-10-24
 updated: 2026-11-10
 owner: noelsaw
