@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented skill/index; parser, paired polarity controls and main/adjacent preflight passed. | Plan and final independent QA Approved; publish gated PR against development. |
+| Implemented skill/index; parser, paired polarity controls and main/adjacent preflight passed. | PR #1404 published; integration repair QA Approved; finish final gated push and parent review. |
 
 ## Observed problem and solution-fit bet
 
@@ -73,3 +73,9 @@ NO_ENTRY pending observed evidence; adoption alone does not support a lesson.
 Documentation gate `PDDA_ISSUE_SYNC_SOURCE=cache bash utils/pdda/pdda.sh run` exited 0 with no errors and 656 cache/governance/marathon warnings; [summary](../../TESTS-RESULTS/2026-11-09+GH-1401/docs-gate.txt). Final normal push repeats the classified docs gate at the published head.
 
 Final relay [Approved round 2](../../relay-system/2026-11-09/gh1401-final.codex.md), driver exit 0. Round 1 text was invalidated by caller interference (author appended a gate receipt during review); the guard reverted it and the author committed the receipt before the clean recheck. No skill production text changed between final review rounds.
+
+## Publication handoff
+
+[PR #1404](https://github.com/HiQS-Labs/XYZ-forge/pull/1404) targets development. Development advanced during work; existing B1 resolved only the disjoint ledger conflict through canonical verbs in a disposable full clone, preserving current integration Jog state. [Repair receipt](../../TESTS-RESULTS/2026-11-09+GH-1401/ledger-resolution.json). Final QA recheck Approved round 3, driver exit 0. The routine LEADERBOARD.md regeneration from that helper was removed by restoring the exact integration version under parent direction; skill/index bytes remain reviewed and unchanged. Metadata-only verification: leaderboard bytes equal origin/development, diff check clean and PRS check clean.
+
+NO_ENTRY: skill/index and contract checks show no observed production outcome; a lesson based only on this single preparation run would be confounded. Clone retained for the user-requested parent Claude review/follow-up, overriding automatic retirement. Awaiting merge only after that additional review is resolved; no merge performed.
