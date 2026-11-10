@@ -1,0 +1,1 @@
+{"event": "manual-approved-head-mismatch-and-retained-pointer", "result": "PASS", "negative_control": "A!=B rejected by required caller comparison", "receipt_pointer_exists": true, "files": {"pin-mismatch.json": "d0543614a24bf7a9ebfa5c449017b79413322b81f5794c25cd82149aa0d84679"}}
