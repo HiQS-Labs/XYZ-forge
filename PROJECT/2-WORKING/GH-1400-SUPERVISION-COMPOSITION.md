@@ -107,3 +107,13 @@ Phase 2 QA: textual main/adjacent instruction smoke PASS; docs gate at 37119562c
 ## Lessons Learned (For Future Agents)
 
 Edit verdict: flywheel instruction extension — no observed effect on real-world throughput (only textual smoke was run). NO_ENTRY: instruction review alone cannot establish a throughput gain.
+
+## Integration repair
+
+Remote development advanced to d526eef7 during publication. The first normal push
+passed its docs hook (79s). A disposable-clone merge exposed only releases.db/sql
+conflicts; the existing B1 classifier confirmed disjoint changes, and its writer
+replayed the owned GH-1400 row with ratings and accepted-start. Resolver and PRS
+checks passed, producing 7eb672f5; no source/skill bytes changed after final QA.
+One integration repair, no cap reset or bypass. Retained record:
+`TESTS-RESULTS/2026-11-09+GH-1400/integration-repair.json`.
