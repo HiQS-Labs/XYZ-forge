@@ -158,4 +158,12 @@ swept file: yes. I read the whole of `test/gh698-planner-db-ratings.sh` around t
 
 relay closed (Approved), no further turn needed. Hand back to codex-parent to rerun the normal full publication gate at the new head in a disposable clone, then push.
 
+
+### Attestation · relay-drive — 2026-11-10T07:18:31Z
+task: RELAY-pr1327-continuation-r3
+reviewer: claude-opus
+status: Approved
+reviewed-head: d13becae5a57226703738db77d15ddcea73beb73
+added-range: 20405+4451
+added-sha256: f3b817cde646be985e425a7168ea5771b027a8fe7fde2f810ec4eb843ff71708
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
