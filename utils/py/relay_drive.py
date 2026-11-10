@@ -55,6 +55,7 @@ def main():
     parser.add_argument("--agent-cmd", dest="agent_cmd")
     parser.add_argument("--relay-task", dest="relay_task", default="RELAY-TURN")
     parser.add_argument("--round-cap", dest="round_cap", type=int, default=6)
+    parser.add_argument("--strict-role-handoff", action="store_true")
     parser.add_argument("--target-root", dest="target_root")
     parser.add_argument("--consult-verify", dest="consult_verify", action="store_true")
     parser.add_argument("--artifact-file", dest="artifact_file")
@@ -850,6 +851,8 @@ def main():
         # (rtl_is_reviewer_turn) uses the driver's knowledge instead of bytes a builder can rewrite.
         # The reviewed revision is pinned: the shim cuts its worktree at RELAY_REVIEWED_HEAD, so a
         # concurrent parent commit during the turn cannot change what the reviewer read.
+        if args.strict_role_handoff and (not args.builder or not args.reviewer or args.builder == args.reviewer or actor not in (args.builder, args.reviewer)):
+            exit_escalate("explicit-cap-invalid-role")
         role = "reviewer" if actor == args.reviewer else "builder"
         if args.review_once and args.reviewer and role != "reviewer":
             die(f"--review-once dispatches '{actor}' but --reviewer is '{args.reviewer}' (review-once-actor-mismatch)")
@@ -1135,6 +1138,8 @@ def main():
             xyz_relay_emit("red")
             sys.exit(3)
             
+        if args.strict_role_handoff and not terminal_status(ns) and (nactor == actor or nactor not in (args.builder, args.reviewer)):
+            exit_escalate("explicit-cap-invalid-handoff")
         if not terminal_status(ns) and f"{ntstatus}:{nactor}" == prev:
             eprint(f"relay-drive: no progress after {actor} turn (token still {prev}) — escalating")
             xyz_relay_emit("red")

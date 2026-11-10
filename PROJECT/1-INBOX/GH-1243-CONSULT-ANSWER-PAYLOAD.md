@@ -13,9 +13,9 @@ goal: "Extract final answer for neutral payload and citation screening; preserve
 
 ## Acceptance
 
-Extract final answer for neutral payload and citation screening; preserve full transcript separately and missing-final-answer safety. Verify cited and uncited answers plus transcript exclusion using existing consult suite/manual evidence; no new suite.
-
-Baseline: controlled transcript marker survives current neutralizer. Original issue describes prompt echo causing false uncited warnings.
+- [ ] Neutral payloads contain final answer text only, without prompt echo, exec logs, duplicated answers or token footer; retain full advisor transcript separately.
+- [ ] A final answer with adjacent source file:line citations is not stamped uncited; an actually uncited claim is still stamped.
+- [ ] Verify with the existing consult suite and recorded manual red/green controls; add no new suite, dependency or runner.
 
 ## Trial execution scope
 
@@ -65,6 +65,7 @@ Extract final answer for neutral payload and citation screening; preserve full t
       "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
     ],
     "orchestrator_only": []
-  }
+  },
+  "round_cap": 2
 }
 ```

@@ -3509,6 +3509,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
                 # GH-505/GH-509: the driver learns the roles from ITS invocation, never from the
                 # relay file or the token, and attests only the reviewer's approval.
                 "--reviewer", args.reviewer, "--builder", args.builder]
+        if cli_round_cap is not None:
+            cmd2.append("--strict-role-handoff")
         if review_once:
             cmd2.append("--review-once")   # GH-207: one approval pass, no round-cap
         else:
@@ -3678,7 +3680,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
             log(f"timeout probe: builder still owns {relay_task} (STATUS: {s}) — treating this as a real hang")
             return 7
         log(f"timeout probe: artifact landed and {relay_task} moved to {actor} — resuming relay-drive from the post-timeout state")
-        r = _run_relay_drive()
+        r = _run_relay_drive(review_once=cli_round_cap is not None)
         if r == 7:
             timeout_reason[0] = "timeout-during-review-recovery"
             timeout_emit[0] = f"halted at phase {args.phase_id} — relay timed out again during review recovery"

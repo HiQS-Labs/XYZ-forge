@@ -37,11 +37,11 @@ goal: Align npm metadata with XYZ Forge and explicitly bound package contents wi
 
 ## Acceptance
 
-- No predecessor package name remains in package/lock metadata and no missing `main` target remains.
-- Node engine matches the README.
-- Dry-run contents exclude evidence, state, ledgers, and transcripts.
-- All 14 kernel unit tests pass; any declared CLI works from the packed artifact.
-- No publish, version bump, or release-tag change occurs.
+- [ ] No predecessor package name remains in package/lock metadata and no missing `main` target remains.
+- [ ] Node engine matches the README.
+- [ ] Dry-run contents exclude evidence, state, ledgers, and transcripts.
+- [ ] All 14 kernel unit tests pass; any declared CLI works from the packed artifact.
+- [ ] No publish, version bump, or release-tag change occurs.
 
 ## Merge evidence
 
@@ -97,6 +97,7 @@ Correct package identity, missing main, Node baseline and intentional package co
       "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
     ],
     "orchestrator_only": []
-  }
+  },
+  "round_cap": 1
 }
 ```

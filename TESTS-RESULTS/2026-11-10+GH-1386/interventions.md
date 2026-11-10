@@ -1,0 +1,7 @@
+Mode1B repaired-runtime trial. Originalautomatictransition NOT demonstrated.
+
+1. ExistingJog parks publishedreadyPR thenhalts; scopedconnectionrepair qualified306b95aa (542.727s) and independentQA.
+2. Firstreal invocation05:09:35–05:11:02 (86.924s) returned0 but task1206preflight-refused: newevidence artifacts lacked path_absent probes. No builder. Fixedcontracts, preservedqueueattempt1; supportedresume/retry/bump.
+3. Second invocation05:13:24–05:16:53 (209.340s) dispatchedone1206Codexbuilder. Packet erroneouslycontainedzeroacceptance criteria; defaultrelayroundcap5 exceededauthorized potentialbuilderbudget. Owneddispatcherpaused; currentbuildercommitted7276186d0. Reviewerstarted beforepause. Afterbuildercompletion, ancestry-proven executiontree receivedSIGTERM; pauseddispatcher continued solelytodeliverqueuedtermination. AllownedPIDsgone, noorphanSTOP. Candidatepreserved, norebuild.
+4. CapplanQA foundhardturncount didnot implybuildercount: sameactor/unknownactor canpassoldhandoff logic; timeoutrecovery resetturnbudget. Scopedexplicit-cap forwarding+strictrolehandoff+existingreview-onlytimeoutrecovery passedfreshQA controllednegativecases. Defaultsunchanged. Futureallowances remain1206onebuilderremaining(notplanned),1243two; newinvocation mustnot regrantspentallowance.
+5. Correctcheckboxadmission; actualgeneratedpacket allcriteria/exactcap mustbeverifiedbeforefuturedispatch. No globalinstall/primaryruntimechange. Tokens/spend/totalHTTP remainunknown; GH_DEBUG outputcapturedby subprocesses is incomplete, not zeroAPIusage.

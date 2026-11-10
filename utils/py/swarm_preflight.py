@@ -105,6 +105,10 @@ def extract_contract(doc_path):
             eprint(f"contract in {doc_path} missing required field: {p}")
             sys.exit(3)
             
+    if "round_cap" in obj and (type(obj["round_cap"]) is not int or obj["round_cap"] < 1):
+        eprint(f"contract in {doc_path}: round_cap must be a positive integer")
+        sys.exit(3)
+
     if not isinstance(obj.get('fix_probes'), list) or len(obj['fix_probes']) == 0:
         eprint(f"contract in {doc_path} needs at least one fix_probes entry")
         sys.exit(3)
@@ -169,6 +173,7 @@ def merge_contracts(contracts):
     out = {
         "target": {"repo": base["target"]["repo"], "ref": base["target"]["ref"]},
         "gate": base["gate"],
+        "round_cap": base.get("round_cap"),
         "fix_probes": list(base.get("fix_probes", [])),
         "artifacts": list(base.get("artifacts", [])),
         "artifacts_new": list(base.get("artifacts_new", [])),
@@ -179,6 +184,9 @@ def merge_contracts(contracts):
     for c in contracts[1:]:
         if c["target"]["repo"] != out["target"]["repo"] or c["target"]["ref"] != out["target"]["ref"]:
             eprint(f"bundle disagreement: targets differ ({out['target']['repo']}@{out['target']['ref']} vs {c['target']['repo']}@{c['target']['ref']})")
+            sys.exit(7)
+        if c.get("round_cap") != out.get("round_cap"):
+            eprint("bundle disagreement: explicit round caps differ")
             sys.exit(7)
         if c["gate"] != out["gate"]:
             eprint(f"bundle disagreement: gate commands differ")
@@ -1083,7 +1091,7 @@ MARATHON_INVOCATION_SCHEMA = "swarm-preflight/marathon-invocation@1"
 
 
 def build_marathon_invocation_artifact(now, root, drive_cmd, target_root, out_dir,
-                                       slug, gate_cmd, art_csv, issue, base_ref, builder, reviewer):
+                                       slug, gate_cmd, art_csv, issue, base_ref, builder, reviewer, round_cap=None):
     """GH-280: the structured, machine-consumable Marathon invocation contract.
 
     The existing `marathon-invocation.txt` is shell text for a human to copy — a supervisor
@@ -1106,6 +1114,8 @@ def build_marathon_invocation_artifact(now, root, drive_cmd, target_root, out_di
         "--builder", builder,
         "--artifact", art_csv,
     ]
+    if round_cap is not None:
+        argv += ["--round-cap", str(round_cap)]
     if os.path.realpath(target_root) != os.path.realpath(root):
         argv += ["--target-root", target_root]
     argv += [
@@ -1731,7 +1741,7 @@ def main():
     # consumer of the packet (run-candidate@1, the text hint, exits, stdout) is unchanged.
     invocation_artifact = build_marathon_invocation_artifact(
         now, root, drive_cmd, target_root, out_dir, slug, gate_cmd, art_csv,
-        acc_issue, ref, builder="codex", reviewer="agy")
+        acc_issue, ref, builder="codex", reviewer="agy", round_cap=merged.get("round_cap"))
     with open(os.path.join(out_dir, "marathon-invocation.json"), "w") as f:
         json.dump(invocation_artifact, f, indent=2)
         f.write("\n")
