@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Plan/final independent Codex QA Approved; textual smoke PASS; documentation gate passed. | Publish the reviewed subset PR; retain open arc dependencies. |
+| PR #1403 published; Codex and additional Opus medium QA Approved; documentation gate and hosted smoke passed. | Await merge approval; retain open arc dependencies and real-work qualification. |
 
 ## Quad Concepts
 
