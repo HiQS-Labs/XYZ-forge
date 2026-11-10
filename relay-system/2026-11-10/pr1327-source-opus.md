@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -112,5 +112,22 @@ handing off to Producer (codex-parent): go to the codex-parent window and say "t
 The user explicitly instructed: "For the one that has a repair limit hold, review and take it over to finish it for approval." Scope is PR1327, one additional bounded readiness repair, not a reset or new allowance for other PRs. The original two repairs are preserved; the canonical attempt record reserves this exception as third/final, with authorization noted before mutation.
 
 Implemented the accepted start-marathon caller correction: explicit --write on the secondary file-generation path. Corrected the Python CLI docstring Nit. Preserved old review/history text, adding a readable current SUMMARY correction rather than rewriting historical records. No new suite/registry entry/runtime behavior. Current development merged cleanly before this correction. R2 should check the whole composed source and all known file-expecting consumers; focus tests and final full publication gate remain pending and are not claimed by this review.
+
+### Reviewer · Round 2 (claude-opus)
+
+swept file: yes. I read the whole `0b597d7b7` diff (`git show`, 5 files). I re-read the `marathon_plan.py` docstring and mode parser (`:1-20,64-80,183-210`), the Bash twin's usage header and parser (`utils/marathon-plan.sh:60-80,136-150`), the `wave_reconcile.py` plan step (`:2005-2013,2057-2061`), the `hosted_lane_publish.py` recompute (`:169-181`), and start-marathon `:240-262`. I also swept every planner invocation in `skills/ utils/ relay-automation/ bin/ ROUTER.md HOW-TO-USE.md AGENTS.md docs/ PROJECT/2-WORKING` with `grep -rnE '(marathon-plan\.sh|marathon_plan\.py)"?[[:space:]]+(-|\$|")'` (exit 0) and checked the Python importers. Every probe was a read-only grep, sed or `git show`/`git log`. I ran no planner, test, fixture or validate.
+
+- **[Pass] The R1 Blocker is fixed.** `skills/2-daily/start-marathon/SKILL.md:258` now says "Write the canonical plan with the planner **with** `--write` only when the file is absent, inspect its diff, and run `--check`". The falsifier grep for "without `--dry-run`" now returns no planner hits under `skills/ docs/ ROUTER.md HOW-TO-USE.md`. Its only match is `skills/3-weekly/end-of-week/SKILL.md:214`, which is about `work backfill`, not the planner.
+- **[Pass] Every file-expecting consumer is now explicit, and none is left over.** Reconcile's live path appends `--write` (`wave_reconcile.py:2012-2013`) and its dry path appends `--dry-run` (`:2011`). 10days reads `"$HARNESS/utils/marathon-plan.sh" --write --deep` (`skills/3-weekly/10days/SKILL.md:398`). The start-marathon secondary route is fixed as above. Its primary route (`:249`), table (`:103`) and default note (`:54`) deliberately keep `--dry-run`. `hosted_lane_publish.py:171-174` regenerates the plan only through the reconciler, so it inherits `--write`. The Python importers (`harness.py:401-412`, `marathon_drive.py`) use `_marathon_plan.Engine` and not the CLI. `gen4_campaign.py:76` uses only `--help`. `HOW-TO-USE.md:36` uses `--dry-run`. I found no other invocation that expects a file.
+- **[Pass] The metadata describes the new contract.** The Python docstring is now `CLI contract: [--write | --dry-run | --check] …` (`marathon_plan.py:12`), which fixes the R1 Nit. The Bash header says `# report on stdout; writes nothing (GH-446)` for a bare run and `--write # report + write today's marathon-plan doc` (`utils/marathon-plan.sh:70-71`). Both lanes default to dry-run (`marathon_plan.py:64`, `marathon-plan.sh:138`), so the R1 Q1 parity still holds. The frozen-twin exception is named in `ebb24925d` ("Frozen-twin-exception: utils/marathon-plan.sh — same contract change as the Python lane (GH-446)"). `0b597d7b7` does not touch the twin.
+- **[Pass] The evidence is truthful and the scope is bounded.** The new SUMMARY section says "Final focused verification, independent recheck and normal full publication gate are still pending; no new suite or gate is added", and it names "reconcile, 10days and start-marathon". The provenance row records `"prior_repairs": 2, "authorized_additional_episodes": 1, "reserved_attempt_index": 2` and `"review": "R1 FAIL retained;R2 pending"`. The earlier findings are kept and not rewritten. The diff changes one line in a skill and one docstring line, and adds two evidence appends. It adds no suite and no registry entry, and changes no runtime behaviour.
+- **[Nit] Some of R1's space-stripped paragraphs are still there.** Examples are "atcf799f0" in the older SUMMARY text and the line in `gh446-takeover.codex.md`. The Producer chose to preserve that history and append a readable correction instead. That is acceptable. No action needed.
+- **[Nit] [Unverified — needs landing check] `CHANGELOG.md` has no `GH-446` entry** (`grep -n 'GH-446' CHANGELOG.md` returned no output). This turns a bare-run behaviour change into one that needs `--write`. If PDDA's landing rule requires a changelog line, add it at landing, not as another readiness repair.
+- I found no pre-existing defects in the reviewed sections beyond these points.
+
+**VERDICT: PASS**
+**Basis:** The one R1 Blocker, the start-marathon secondary writer, now passes `--write` (`SKILL.md:258`). A repo-wide invocation sweep found no other consumer that expects a file but runs bare. The Python and Bash mode semantics and their docs agree, the frozen-twin exception is named, and the evidence makes no false gate claims. This approval covers source QA only. Focused tests, the normal full publication gate, the hosted check and the merge remain separate and pending. I did not verify them here.
+
+relay closed (Approved), no further turn needed. Hand back to codex-parent for the pending focused verification and the full publication gate in a disposable clone.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
