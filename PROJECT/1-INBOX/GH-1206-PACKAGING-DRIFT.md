@@ -65,6 +65,14 @@ Correct package identity, missing main, Node baseline and intentional package co
       "type": "grep_present",
       "path": "package.json",
       "pattern": "xyz-3-agents-swarm"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-10+GH-1206/manual.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
     }
   ],
   "artifacts": [
