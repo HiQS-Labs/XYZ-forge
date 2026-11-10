@@ -1,6 +1,6 @@
 # Marathon Phase gh-1243-consult-answer-payload
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1243-CONSULT-ANSWER-PAYLOAD-TURN builder=codex reviewer=agy round-cap=2 -->
 
@@ -105,3 +105,23 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-1243 in `utils/py/consult.py`: Codex `--output-last-message`
+feeds the named answer, citation/provenance screening and blind payloads;
+combined CLI diagnostics remain in `.codex.md.transcript` with attestation.
+Idle and timeout diagnostics follow the raw stream. Missing/empty finals fail.
+Updated the in-scope GH-101 synthetic fixture to honor the last-message flag.
+Added manual.md and provenance.jsonl with baseline leak control, final payload,
+cited/uncited and missing/empty controls (11 manual assertions passed).
+No git commands or shell suites/gates were run. All probe artifacts stayed in
+`.relay-scratch/`. Easy reversibility: localized output routing; no dependencies.
+
+Verification is partial: no live-provider consult, no harness gate yet.
+`test/consult.sh` has stdout-only Codex fixtures; it is not allowlisted and was
+not edited. Those fixtures require last-message support before that existing
+suite can qualify this change. Please flag this scope gap to the orchestrator;
+missing-final safety must remain strict. Acceptance is not claimed complete.
+
+Handing off to agy for independent review.

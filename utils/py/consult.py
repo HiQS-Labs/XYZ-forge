@@ -807,8 +807,9 @@ def main():
                 cenv = dict(base_env)
                 if os.environ.get("CODEX_ALLOW_API_KEY", "0") != "1":
                     cenv.pop("OPENAI_API_KEY", None)
-                cmd = [codex_bin, "exec"] + cflags + [full_prompt]
-                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, cenv)
+                cmd = [codex_bin, "exec"] + cflags + ["--output-last-message", f_out, full_prompt]
+                # Keep CLI progress/prompt/tool output separate from the final answer.
+                proc = guarded_with_timeout(cmd, wt, f_out + ".transcript", timeout_s, cenv)
                 procs.append((proc, "codex", f_out, time.time(), cmd))
             elif m == "agy":
                 f_out = os.path.join(run_dir, f"{label}.agy.md")
@@ -915,14 +916,14 @@ def main():
                 # runs in ONE shared worktree under ONE parent, so the progress signal is the
                 # advisor's OWN transcript file and the CPU signal is its OWN subtree pid. Measuring
                 # the shared worktree would let a fast codex answer mask a hung agy.
-                _idle_killed = wait_with_idle_bound(proc, out, rem)
+                _idle_killed = wait_with_idle_bound(proc, out + ".transcript" if m == "codex" else out, rem)
                 if _idle_killed:
                     raise subprocess.TimeoutExpired(cmd or m, rem)
 
-                # GH-308 port (consult.sh run_codex): stamp the codex transcript with its provenance
-                # ATTESTATION header (whether the run succeeded or not, mirroring the Bash `[[ -f ]]` guard).
+                # Preserve provenance in the raw diagnostic transcript only. Citation screening,
+                # answer validation and neutral payloads all consume --output-last-message.
                 if m == "codex":
-                    consult_codex_attestation(out)
+                    consult_codex_attestation(out + ".transcript")
 
                 # GH-308 port (GH-178 B1, consult.sh run_agy): a successful agy run whose transcript cited
                 # the real repo root escaped its isolation worktree — fail the advisor (Bash `return 5`)
@@ -974,7 +975,7 @@ def main():
                 failed += 1
                 marker = (f"PARTIAL — killed at idle threshold [{idle_reason}], no verdict"
                           if idle_reason else f"PARTIAL — hit the {timeout_s}s cap, no verdict")
-                partial_path = surface_partial(out, m, marker)
+                partial_path = surface_partial(out + ".transcript" if m == "codex" else out, m, marker)
                 summary += f"\n  [FAIL] {m} -> {partial_path} ({marker})"
                 results.append((m, out, False))
 
