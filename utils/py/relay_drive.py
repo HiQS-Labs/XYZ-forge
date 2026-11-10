@@ -1111,6 +1111,9 @@ def main():
         if verdict[0] == "attested":
             ns = file_status()   # the trailer was appended; re-read so the signatures below see it
 
+        if args.strict_role_handoff and not terminal_status(ns) and (nactor == actor or nactor not in (args.builder, args.reviewer)):
+            exit_escalate("explicit-cap-invalid-handoff")
+
         if args.review_once:
             if terminal_status(ns):
                 if not attested:
@@ -1138,8 +1141,6 @@ def main():
             xyz_relay_emit("red")
             sys.exit(3)
             
-        if args.strict_role_handoff and not terminal_status(ns) and (nactor == actor or nactor not in (args.builder, args.reviewer)):
-            exit_escalate("explicit-cap-invalid-handoff")
         if not terminal_status(ns) and f"{ntstatus}:{nactor}" == prev:
             eprint(f"relay-drive: no progress after {actor} turn (token still {prev}) — escalating")
             xyz_relay_emit("red")

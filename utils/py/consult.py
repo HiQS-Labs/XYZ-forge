@@ -899,9 +899,10 @@ def main():
         results = []  # (model, out_path, ok) — used by the GH-223 citation-stamp pass below
 
         for proc, m, out, start_time, cmd in procs:
+            diagnostic_out = out + ".transcript" if m == "codex" else out
             if proc is None:
                 failed += 1
-                summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                summary += f"\n  [FAIL] {m} -> {diagnostic_out} (see transcript for error)"
                 results.append((m, out, False))
                 continue
 
@@ -947,7 +948,7 @@ def main():
 
                 if breached:
                     failed += 1
-                    summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                    summary += f"\n  [FAIL] {m} -> {diagnostic_out} (see transcript for error)"
                     results.append((m, out, False))
                 elif proc.returncode == 0 and (aider_answer_ok(out) if m == "aider" else advisor_answer_ok(out, m)):
                     answered += 1
@@ -958,11 +959,11 @@ def main():
                 elif proc.returncode == 0:
                     # exit 0 but the aider transcript proved an auth/config failure or empty answer
                     failed += 1
-                    summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                    summary += f"\n  [FAIL] {m} -> {diagnostic_out} (see transcript for error)"
                     results.append((m, out, False))
                 else:
                     failed += 1
-                    summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                    summary += f"\n  [FAIL] {m} -> {diagnostic_out} (see transcript for error)"
                     with open(out, "a") as f:
                         f.write(f"\nconsult: advisor failed with exit {proc.returncode}\n")
                         if m == "claude":
