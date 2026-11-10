@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "at": "2026-11-10T05:35:23.045245+00:00",
-  "original_b1_refusal": "temp/gh1400-readiness-repair-preview.json",
+  "original_b1_refusal": "TESTS-RESULTS/2026-11-09+GH-1400/readiness-b1-refusal.json",
   "choice": "keep complete current integration DB/dump; replay only isolated owned GH1400 add through existing replay_ops; existing resolver/check",
   "parents_generations": [
     2511,
