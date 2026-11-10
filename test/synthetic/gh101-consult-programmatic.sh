@@ -46,7 +46,13 @@ fi
 if [ -n "\${RELAY_SCRATCH_DIR:-}" ] && [ -d "\${RELAY_SCRATCH_DIR}" ]; then
   echo "PROBE_RESULT=OK" > "\${RELAY_SCRATCH_DIR}/probe_output.txt"
 fi
-printf 'model: gpt-stub\nprovider: mock\nsandbox: test\n\nDirect answer: everything is verified. [Pass] "sample_code.py:1"\n'
+answer_path=""
+while [ "\$#" -gt 0 ]; do
+  if [ "\$1" = "--output-last-message" ]; then shift; answer_path="\$1"; fi
+  shift
+done
+printf 'model: gpt-stub\nprovider: mock\nsandbox: test\nexec TRANSCRIPT_SENTINEL\ntokens used\n123\n'
+printf 'Direct answer: everything is verified. [Pass] "sample_code.py:1"\n' > "\$answer_path"
 exit 0
 STUB_EOF
 chmod +x "$CODEX_STUB"

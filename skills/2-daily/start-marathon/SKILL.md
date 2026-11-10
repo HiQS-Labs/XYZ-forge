@@ -255,7 +255,7 @@ held items and any drift lines in the report. Handle the exit code per the drive
 (ledger unparseable) turns the run into a blocked report, as does any other unmet Done-rule
 After contract and candidate review, if a current `MARATHON-PLAN-*.md` already exists, run the
 planner with `--check` first: `--check` reports whether it is in sync, reporting drift without
-overwriting it. Write the canonical plan with the planner **without** `--dry-run` only when the file
+overwriting it. Write the canonical plan with the planner **with** `--write` only when the file
 is absent, inspect its diff, and run `--check`. Revise an existing plan only when concrete evidence
 or operator review explicitly justifies the revision; drift is a finding for the report, not an
 automatic reason to regenerate or overwrite an in-flight or reviewed plan. This is reversible

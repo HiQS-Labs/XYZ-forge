@@ -1,0 +1,6 @@
+{
+  "command": "python3 utils/py/marathon_plan.py --format json (isolated output directory)",
+  "result": "timeout after120seconds before result",
+  "verdict": "not evidence of pass; no output-based assertion consumed",
+  "scope": "optional extra live-backlog probe; existing deterministic CLI/manual write controls and focused suites retained; no performance claim"
+}

@@ -1,0 +1,3 @@
+# GH-1410 verification
+
+Existing PDDA docs suite passed at 8a7e93d1: no errors, 658 repository warnings. Full output is retained compressed. Subsequent commits retain the independent wording review, timeout disposition and task-status paperwork; the reviewed skill text is unchanged. Content and existing relative-link checks passed; no new links, tests, runners or execution authority. No runtime-suite coverage claimed. The first agy relay timed out at 180 seconds without a valid verdict; express skill-unattested admission remained refused. Opus normal-PR wording review passed separately. No deployment yet.

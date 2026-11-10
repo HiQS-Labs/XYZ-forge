@@ -87,7 +87,7 @@ def plan(root, override=None, forbid_markdown=False, args=()):
         return real_open(path, mode, *a, **kw)
     # tempfile caches its directory: pin it as well as TMPDIR for in-process CLI runs.
     with patch.dict(os.environ, env, clear=True), patch.object(tempfile, 'tempdir', str(work)), \
-         patch.object(sys, 'argv', [str(cli_path), *args]), patch('builtins.open', guarded_open), \
+         patch.object(sys, 'argv', [str(cli_path), '--write', *args]), patch('builtins.open', guarded_open), \
          contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
         try:
             runpy.run_path(str(cli_path), run_name='__main__')

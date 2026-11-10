@@ -1,0 +1,18 @@
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub/XYZ-forge/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub/XYZ-forge
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GitHub/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #1327 in /Users/noelsaw/Documents/GitHub/XYZ-forge...
+merge-cleanup: ✅ local wave_reconcile for PR #1327 passed
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: PR #1327: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1327 committed; primary is clean at origin/development
