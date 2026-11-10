@@ -2,7 +2,7 @@
 Goal: Plan QA for GH-1409 (vendored-smoke base-pinning of judge files)
 Date: 2026-11-10
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -218,3 +218,15 @@ restates your round 3 verdict, and ends with exactly these two lines:
     Basis: <one line naming what the verdict rests on>
 
 (or `VERDICT: FAIL` with findings). Set `STATUS: Approved` when passing.
+
+
+### Codex plan QA — round 4 (format re-attestation)
+
+**Approved for implementation.** Read-only inspection confirms that the current plan retains the R2 distinct-location bound alongside the script-set, bypass-file-set and declared-count bounds (`PROJECT/2-WORKING/GH-1409-VENDORED-SMOKE-BASE-PIN.md:63-68`). This matches the pinned checker's effective set cardinality (`utils/pdda/check_inventory_ratchet.py:116,155-159`). Red 1b still exercises the previously missed inflation route (plan `:119-120`), and implementation order `:134` correctly requires all six manual controls. The round 3 substantive verdict stands; no new blocking finding arises.
+
+This is a format-only re-attestation of plan approval. Prior predicate-level evidence remains applicable. Constructed-merge controls and suite execution remain **[Unverified — needs clone run]**; live token/label behavior remains **[Unverified — needs hosted run]**. Approval does not attest implementation completion or merge readiness.
+
+Only this relay file was edited. No git commands, suites, executable fixtures, source mutations or new verification artifacts were run or created.
+
+VERDICT: PASS
+Basis: Current plan R2 and Red 1b match the pinned ratchet's effective cardinality; all six controls remain required, with runtime and hosted verification still outstanding.
