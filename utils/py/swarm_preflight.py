@@ -1658,10 +1658,11 @@ def main():
     if os.path.realpath(target_root) != os.path.realpath(root):
         target_root_line = f"\n  --target-root {target_root} \\"
         
+    round_cap_arg = f" --round-cap {merged['round_cap']}" if merged.get("round_cap") is not None else ""
     invocation = f"""XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID={slug} RELAY_WORKTREE_ISOLATION=1 {drive_cmd} \\
   --phase-brief <packet>/packet.md \\
   --reviewer agy \\
-  --builder codex \\
+  --builder codex{round_cap_arg} \\
   --artifact {art_csv} \\{target_root_line}
   --pre-advance-cmd '{gate_cmd}' \\
   --require-clean"""

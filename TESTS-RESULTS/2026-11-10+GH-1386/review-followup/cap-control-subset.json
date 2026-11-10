@@ -1,0 +1,76 @@
+{
+  "method": "retained actual-AST controls subset from owner4d991583; candidate source blobs matched exactly",
+  "source_commit": "4d9915835317952983c1c1fb6f4ea6f733174411",
+  "candidate_sha256": {
+    "utils/py/swarm_preflight.py": "54881b94779816f1154af7838236cb300dd04b2304504d818baa8f280a38753f",
+    "utils/py/relay_drive.py": "1c951073d4b59e416ac4509a3fda7797c19e185baa051822f99b211b1e702449"
+  },
+  "baseline_failed": 2,
+  "candidate_passed": 4,
+  "rows": [
+    {
+      "version": "baseline",
+      "check": "text_cap",
+      "configured": 2,
+      "observed": false,
+      "expected": true,
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "text_cap",
+      "configured": null,
+      "observed": false,
+      "expected": false,
+      "pass_": true
+    },
+    {
+      "version": "baseline",
+      "check": "review_once_handoff",
+      "nextactor": "unexpected",
+      "observed": "exit:5",
+      "expected": "explicit-cap-invalid-handoff",
+      "pass_": false
+    },
+    {
+      "version": "baseline",
+      "check": "review_once_handoff",
+      "nextactor": "codex",
+      "observed": "exit:5",
+      "expected": "exit:5",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "text_cap",
+      "configured": 2,
+      "observed": true,
+      "expected": true,
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "text_cap",
+      "configured": null,
+      "observed": false,
+      "expected": false,
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "review_once_handoff",
+      "nextactor": "unexpected",
+      "observed": "explicit-cap-invalid-handoff",
+      "expected": "explicit-cap-invalid-handoff",
+      "pass_": true
+    },
+    {
+      "version": "candidate",
+      "check": "review_once_handoff",
+      "nextactor": "codex",
+      "observed": "exit:5",
+      "expected": "exit:5",
+      "pass_": true
+    }
+  ]
+}
