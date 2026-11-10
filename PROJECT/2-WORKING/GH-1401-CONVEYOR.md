@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented skill/index; parser, paired polarity controls and main/adjacent preflight passed. | PR #1404 published; integration repair QA Approved; finish final gated push and parent review. |
+| PR #1404 published; Codex and additional Opus medium QA Approved; first-rating instruction corrected with red/green replay. | Publish reviewed follow-up receipts/fix through the documentation gate, then await merge approval. |
 
 ## Observed problem and solution-fit bet
 
@@ -79,3 +79,7 @@ Final relay [Approved round 2](../../relay-system/2026-11-09/gh1401-final.codex.
 [PR #1404](https://github.com/HiQS-Labs/XYZ-forge/pull/1404) targets development. Development advanced during work; existing B1 resolved only the disjoint ledger conflict through canonical verbs in a disposable full clone, preserving current integration Jog state. [Repair receipt](../../TESTS-RESULTS/2026-11-09+GH-1401/ledger-resolution.json). Final QA recheck Approved round 3, driver exit 0. The routine LEADERBOARD.md regeneration from that helper was removed by restoring the exact integration version under parent direction; skill/index bytes remain reviewed and unchanged. Metadata-only verification: leaderboard bytes equal origin/development, diff check clean and PRS check clean.
 
 NO_ENTRY: skill/index and contract checks show no observed production outcome; a lesson based only on this single preparation run would be confounded. Clone retained for the user-requested parent Claude review/follow-up, overriding automatic retirement. Awaiting merge only after that additional review is resolved; no merge performed.
+
+## Additional parent Opus QA
+
+User-requested Claude Code CLI Opus medium review ran serially after PR1403. Round 1 requested explicit first-rating handling for existing unrated rows; parent reproduced pickup leaving NULL axes, then verified canonical rate fills them without force and a rated rerun refuses unchanged. Parent corrected conveyor Step 4, including explicit retained operator override and holds for writer refusals. [Replay](../../TESTS-RESULTS/2026-11-09+GH-1401/opus-qa/unrated-row-replay.json). Optional dry-run repoint Nit declined because exact read-back is already required. [Opus Round 2 Approved, driver exit 0](../../relay-system/2026-11-09/gh1401-opus-medium.md). No runtime changes or new tests/gates.
