@@ -567,7 +567,7 @@ jobs:
           grown = sorted(set(head.get("scripts", [])) - set(base.get("scripts", []))) + sorted(files(head) - files(base))
           more = lambda k: len(set(head.get(k, []))) > len(set(base.get(k, [])))
           if grown or more("sqlite_bypasses") or head.get("sqlite_bypasses_count", 0) > base.get("sqlite_bypasses_count", 0):
-              sys.exit(f"inventory baseline grew vs PR base: {grown or 'bypass count'}")
+              sys.exit("inventory baseline grew vs PR base: " + (", ".join(grown) or "bypass count"))
           ' "$B"
           if git diff -U0 "$BASE_SHA" HEAD -- '*.py' '*.sh' ':!test/**' | grep -E '^\+[^+].*SQLITE-(BYPASS|GATEWAY)-OK:'; then
             echo "::error::new SQLITE-*-OK suppression marker added (label judge-change if intended)"; exit 1
