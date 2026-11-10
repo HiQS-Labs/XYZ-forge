@@ -1,0 +1,5 @@
+Independent native Codex final QA PASS on 702bb4d6607fcd0e7df7840f05e054d307def13a against bb7cff2b6c5c8b90ae078ab206e187b6e630b9cd; no blocking source findings.
+
+Replayed20 cap controls: cap1 permits committed build→review, cap2 bounds builders to2, repeated/unknown roles refuse, timeout recovery review-only, rejection cannot regrant builders, default callers unchanged. Replayed11 Jog loop controls; invalid receipt stops and reaches checkpoint.finish; stale/publication-failed/missing-PR/promotion-failed do not advance. Four invalid configs exit2. Actual packets contain all8/5 criteria including constraints/baseline-final evidence, cap1/2. Independently reproduced consult baseline RED/empty partial RED/extraction retaining assignment GREEN. QA baseline pinned and temp created before mkdtemp.
+
+Limits: invocation-local caps require preserved external remaining history (1206 one remaining,1243 two); no reset. Preflight live lookup failed, disclosed. Probe is admission evidence not complete1243 acceptance. No full gate/automatic transition/hosted smoke/merge readiness attested by this review.

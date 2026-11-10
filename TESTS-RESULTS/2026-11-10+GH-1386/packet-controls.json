@@ -1,0 +1,40 @@
+[
+  {
+    "issue": 1206,
+    "criteria": 8,
+    "all_present_in_generated_packet": true,
+    "round_cap": 1,
+    "builder": "codex",
+    "reviewer": "agy",
+    "fidelity_direct_body": {
+      "status": "match",
+      "cause": null,
+      "detail": "6 issue criteria reconciled: 2 deviation(s) declared and accounted for",
+      "issue": 1206,
+      "dropped": [],
+      "added": [],
+      "declared": 2
+    },
+    "preflight_live_lookup": "fetch-failed; not claimed verified by preflight",
+    "packet_sha256": "8332935fc374b73aedc3865f87569d8224fa3ad0e5a59313d21dbf83d8826e75"
+  },
+  {
+    "issue": 1243,
+    "criteria": 5,
+    "all_present_in_generated_packet": true,
+    "round_cap": 2,
+    "builder": "codex",
+    "reviewer": "agy",
+    "fidelity_direct_body": {
+      "status": "match",
+      "cause": null,
+      "detail": "3 issue criteria reconciled: 2 deviation(s) declared and accounted for",
+      "issue": 1243,
+      "dropped": [],
+      "added": [],
+      "declared": 2
+    },
+    "preflight_live_lookup": "fetch-failed; not claimed verified by preflight",
+    "packet_sha256": "f8ed760848ba30fda6ae07645052cbc61e66f4afda5aa9b4f7bac982d5eac394"
+  }
+]
