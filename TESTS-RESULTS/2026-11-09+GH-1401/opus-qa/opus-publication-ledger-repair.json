@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "issue": 1401,
+  "result": "resolved",
+  "method": "preserved full integration DB/dump; replayed ONLY GH1401 add via existing ledger_merge.replay_ops then existing resolver/check",
+  "integration_sha": "995af060947de09bee3eb976dc8c52408c673347",
+  "merge_sha": "3588e104748c65f29eeb65b011d4ebefc71ed43f",
+  "source_sha256": "272a7346c4f31307f58fd6c6cdef884e6275d5acebd03b7c01d577986e38a65d",
+  "source_unchanged_from_opus_review": true,
+  "all_integration_jog_rows_unchanged_by_stable_global_id": true,
+  "jog_rows": 37,
+  "owned_row_semantics_preserved": true,
+  "generation_floor": 2511,
+  "generation_after": 2514,
+  "resolver_check": "pass",
+  "leaderboard": "exact integration bytes; no routine delta",
+  "accounting": "Second/final slot index1 parent-reserved before mutation; prior actual repair retrospectively recorded, no advance-reservation claim; count remains2/2, no reset",
+  "original_failed_assertion": "SELECT* compared derived local integer ids; false positive; original failed receipt retained, owner authorized completion of same attempt after stable-global_id all non-id fields equality",
+  "b1_refusal_retained": "opus-publication-b1-preview.json",
+  "original_assertion_receipt_retained": "opus-publication-ledger-repair-failed.json"
+}
