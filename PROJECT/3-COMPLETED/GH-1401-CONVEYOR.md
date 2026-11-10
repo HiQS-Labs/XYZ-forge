@@ -1,8 +1,8 @@
 ---
 title: "GH-1401 · Conveyor upstream issue preparation"
-status: active
+status: Complete
 created: 2026-11-09
-updated: 2026-11-09
+updated: 2026-11-10
 owner: codex
 goal: Prepare existing issues into grounded, published task packets using existing intake and preflight mechanisms.
 gh_issue: 1401
