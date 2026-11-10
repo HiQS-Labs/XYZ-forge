@@ -189,11 +189,11 @@ def release_columns(cx, repo_url, roadmap_idx, today):
         " FROM releases r JOIN issue_refs ir ON ir.id = r.tracking_ref_id"
     ).fetchall()
     # Rail order: shipped/cut history on the far left (by ship date), then the
-    # open releases by target date. The viewer auto-scrolls to the active node,
+    # active releases before drafts, then by target date. The viewer auto-scrolls to the active node,
     # so history sits off-screen left until the reader pages back with ‹.
     rows.sort(
         key=lambda r: (
-            (0, r[5] or r[4] or "") if r[3] in ("shipped", "cut") else (1, r[4] or "9999-12-31"),
+            (0, r[5] or r[4] or "") if r[3] in ("shipped", "cut") else (1, 0 if r[3] == "active" else 1, r[4] or "9999-12-31"),
             r[1] or "",  # version is nullable (codename-only releases); None breaks the tuple compare
         )
     )

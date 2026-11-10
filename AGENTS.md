@@ -28,7 +28,8 @@ Read `ROUTER.md` first for startup order and canonical files.
 
 Read `GUIDING-PRINCIPLES.md` for the product north stars — its "The North Star" section (durable,
 reversible, DRY; extend what exists rather than forking a parallel system) is canonical and governs
-everything below.
+everything below. For semi-autonomous work, also read its "Adaptive work and continuous handoff"
+section, which links to flywheel's operational rubrics and standing authorization ladder.
 
 Read `PROJECT/PDDA.md` when the task touches project docs or `CHANGELOG.md`.
 Its document contract is adopted here; [ROUTER’s role split](ROUTER.md#role-split) distinguishes

@@ -1,0 +1,1 @@
+{"timestamp": "2026-11-09T07:01:08.835930+00:00", "command": "agent-assisted manual existing canonical stages: approved1382/1388 pair; no cleanup/policychange/promotion", "head": "9569fbbe239d709478cd0a6de2daf379d07f0d80", "artifact": "batch.log.gz", "exit_code": 3, "result": "see exact batch outcomes; promotion sweep remains deferred"}

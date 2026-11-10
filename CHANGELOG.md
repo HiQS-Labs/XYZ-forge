@@ -1,9 +1,29 @@
 # Changelog
 
+## 2026-11-09
+
+- GH-1395: bound dense reconciliation native reads to two open-issue inventory pages plus singleton misses; preserve separate closure observations and mismatch refusal. Bet: dense open candidates repay up to two extra reads on sparse inventories. No cross-stage cache; malformed/error pages fail closed. Easy isolated patch rollback by revert, no schema or remote writes. Offline native CLI counts 90→3 and 220→22; sparse90→91. Retained real gate repetitions do not establish HTTP totals or live savings. Evidence and verification status: `TESTS-RESULTS/2026-11-09+GH-1395/`.
+
+- GH-1390: compose the retained reviewed empty-publication repair on B01. Fresh fetch/nonempty IDs permit skipping only an already-published head; unequal heads retain normal push, post-fetch and final durability checks. Costly shared publication surface; revert the narrow helper change for rollback. Source QA and 227/227 focused evidence are historical; 405/408 failure and aborted retry remain failures. Current independent review/full qualification and landing are parent-owned and pending. Evidence: `TESTS-RESULTS/2026-11-09+GH-1390/`.
+
+- GH-1386: restore the exact pre-trial merge-cleanup policy (`full_suite: promotion`, hosted sweep declaration) under the new pinned-flywheel Mode1B recovery window. This reuses the retained restoration; it introduces no runner, cleanup, promotion dispatch or1390 implementation. Original/live/restored byte discrimination and independent source QA are retained under `TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/`; fresh normal qualification and durable merge remain pending at this entry. Later results are appended to evidence rather than rewriting prior capped claims.
+
+## 2026-11-08 — GH-1376 flywheel composition skill
+
+- Compatibility extension: explicitly invoked 10days retains batch ownership and its firing exception; bounded red-gate recovery preserves holds, checks and limits. Daily is an optional observation-only companion, without automatic integration or installed-copy edits. Instruction consumer checks recorded under `TESTS-RESULTS/2026-11-08+GH-1376/compat-consumer-smoke.md`; runtime trial remains separate. Dirty lane worktrees are preserved and reported when native removal refuses, replacing the unsafe force fallback; native refusal/clean-removal controls are recorded in `TESTS-RESULTS/2026-11-08+GH-1376/compat-cleanup-smoke.md`. Owner selection precedes generic preparation for an explicitly requested 10days sweep.
+
+- Add `flywheel` as a documentation-only route across start-task, Jog, Marathon preparation, relay QA, handsfree continuation, unstuck recovery, authorized merge-cleanup landing and explicitly requested Skills Army HQ deployment. Carry #1358's two work modes, three rubrics and standing authorization ladder; bounded autonomous repairs are recorded and continued rather than treated as a special stop. `GUIDING-PRINCIPLES.md` owns the adaptive-work/continuous-handoff principle and links to the skill; `AGENTS.md` points readers to that section without duplicating the rubrics.
+- Easy rollback: revert the skill/index, GP/AGENTS pointers and optional 10days coordination/recovery instructions together; retain the independent dirty-worktree preservation fix; no runtime, queue, scheduler, schema, deployed copy or permission changes. Codex plan QA Approved; consumer smoke passed 12/12 required segments and 8/8 owner links; classified PDDA gate passed with zero errors on integrated commit `681809230`. Final Codex QA Approved at `9be787e6d994`; PR #1378 passed the normal documentation push gate and hosted smoke on `a16d51ca83bf` (run `42512720415`), and remains open awaiting merge approval. Evidence: `TESTS-RESULTS/2026-11-08+GH-1376/`.
+
 ## 2026-11-08 — GH-1383 merge sequence repair
 
 - Intermediate checks and automatic local sweeps use retained independent full clones; failed or timed-out command groups are stopped. Deferred issue/doc synchronization is only marked reconciled after checked final publication, including a skipped last candidate. Integrated GH-1381/PR1384 branch preservation before deployment.
 - Costly shared landing surface: revert the implementation to restore the prior sequence; preserve all checkout/evidence state. Five pre-fix controls fail on `476400948` and pass on the repair. Focused334/334 and normalfullprepushGREEN540s on58671b8d0; deployment and measured real-batch performance remain pending. Green tests alone do not establish a speedup.
+
+## 2026-11-08 — GH-1387 successful attempt history
+
+- Marathon and standalone Relay preserve exact attempt files in unique `.tick/attempt-history/` archives before resetting successful budgets. Failed executions still accumulate; nested Relay leaves ownership with Marathon. Gate-only success retains its existing receipt count. Preservation errors report failure and keep the live budget.
+- Baseline two-record deletion reproduced; fixed replay retains the original hash through success and post-approve failure. Existing reset timing is unchanged. Evidence: `TESTS-RESULTS/2026-11-08+GH-1387/`.
 
 ## 2026-11-08 — GH-1358 bounded Jog checkpoint integration
 

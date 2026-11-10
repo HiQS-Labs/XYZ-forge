@@ -1,0 +1,3 @@
+merge-cleanup: PR #1390: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+{"result": "PASS", "commands": [["fetch", "origin", "development"]], "push_calls": 0, "seconds": 0.420681417, "head": "fb8b766718c54c8e64037418105a24ae10b680bf", "guard": "manual spy asserts no push before delegation; real fetch and final checks; no production control modified"}

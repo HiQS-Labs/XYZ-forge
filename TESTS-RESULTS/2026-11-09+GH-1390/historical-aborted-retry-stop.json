@@ -1,0 +1,156 @@
+{
+  "at": "2026-11-09T02:22:35.603735+00:00",
+  "reason": "stop own unqualified retry to reserve hard-cutoff policy restoration",
+  "processes": [
+    {
+      "pid": 184,
+      "ppid": 99913,
+      "pgid": 184,
+      "executable": "<defunct>"
+    },
+    {
+      "pid": 425,
+      "ppid": 96547,
+      "pgid": 85467,
+      "executable": "python3"
+    },
+    {
+      "pid": 432,
+      "ppid": 99707,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 433,
+      "ppid": 432,
+      "pgid": 85467,
+      "executable": "python3"
+    },
+    {
+      "pid": 462,
+      "ppid": 433,
+      "pgid": 462,
+      "executable": "<defunct>"
+    },
+    {
+      "pid": 479,
+      "ppid": 425,
+      "pgid": 85467,
+      "executable": "(node)"
+    },
+    {
+      "pid": 481,
+      "ppid": 99913,
+      "pgid": 85467,
+      "executable": "(pgrep)"
+    },
+    {
+      "pid": 85467,
+      "ppid": 85452,
+      "pgid": 85467,
+      "executable": "/Library/Developer/CommandLineTools/usr/bin/git"
+    },
+    {
+      "pid": 85468,
+      "ppid": 85467,
+      "pgid": 85467,
+      "executable": "/Library/Developer/CommandLineTools/usr/libexec/git-core/git"
+    },
+    {
+      "pid": 85469,
+      "ppid": 85468,
+      "pgid": 85467,
+      "executable": "/Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https"
+    },
+    {
+      "pid": 85474,
+      "ppid": 85467,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 85556,
+      "ppid": 85474,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 85643,
+      "ppid": 85556,
+      "pgid": 85467,
+      "executable": "xargs"
+    },
+    {
+      "pid": 86517,
+      "ppid": 85643,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 86526,
+      "ppid": 86517,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 86530,
+      "ppid": 86526,
+      "pgid": 85467,
+      "executable": "python3"
+    },
+    {
+      "pid": 93765,
+      "ppid": 85643,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 93772,
+      "ppid": 93765,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 96531,
+      "ppid": 85643,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 96547,
+      "ppid": 96531,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 99252,
+      "ppid": 86530,
+      "pgid": 99252,
+      "executable": "<defunct>"
+    },
+    {
+      "pid": 99698,
+      "ppid": 85643,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 99707,
+      "ppid": 99698,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 99912,
+      "ppid": 93772,
+      "pgid": 85467,
+      "executable": "bash"
+    },
+    {
+      "pid": 99913,
+      "ppid": 99912,
+      "pgid": 85467,
+      "executable": "python3"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+merge-cleanup: PR #1390: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+PASS equal durable heads: zero push-hook calls
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+PASS dirty write committed and genuinely published through normal pre-push to local remote 1a892d7aa610dbd9cf5d3b7ec6e60983566ec14c
+merge-cleanup: PR #1390: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+PASS second durable call skips additional push
+{"fixture": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/temp/gh1390-real-publication-ew2l21es", "remote_head": "1a892d7aa610dbd9cf5d3b7ec6e60983566ec14c", "hook_calls": 1, "result": "PASS", "network": "local bare Git fixture only; no live primary push"}

@@ -1,0 +1,14 @@
+{
+  "start": "2026-11-09T16:32:53.085376+00:00",
+  "end": "2026-11-09T16:41:54.434289+00:00",
+  "seconds": 541.3472336670093,
+  "rc": 0,
+  "merged": [
+    1388
+  ],
+  "primary_head": "f68b51412ba9a2d4965a36be5c1f22ee943e8765",
+  "mode": "existing Phase5 only; no Phase6, sweep dispatch, cleanup or policy edits",
+  "source_artifact_sha256": "2f2c4e0d141146789b8160a5ce42b069807b3d408d4efa7de67e393cb4a91d25",
+  "nested_http_count": null,
+  "live_optimized_sweep_measurement": false
+}

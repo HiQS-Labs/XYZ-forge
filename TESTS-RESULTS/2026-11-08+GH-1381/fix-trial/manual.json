@@ -1,0 +1,101 @@
+[
+  {
+    "revision": "baseline",
+    "strategy": "merge",
+    "command": [
+      "pr",
+      "merge",
+      "1381",
+      "--merge",
+      "--delete-branch",
+      "--match-head-commit",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "no_delete_assertion": "FAIL (expected red)",
+    "sentinel": "preserved",
+    "linked_worktree": "registered",
+    "preview": "merge-cleanup: [DRY RUN] Would merge PR #1381 via `gh pr merge 1381 --merge --delete-branch`"
+  },
+  {
+    "revision": "baseline",
+    "strategy": "squash",
+    "command": [
+      "pr",
+      "merge",
+      "1381",
+      "--squash",
+      "--delete-branch",
+      "--match-head-commit",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "no_delete_assertion": "FAIL (expected red)",
+    "sentinel": "preserved",
+    "linked_worktree": "registered",
+    "preview": "merge-cleanup: [DRY RUN] Would merge PR #1381 via `gh pr merge 1381 --squash --delete-branch`"
+  },
+  {
+    "revision": "baseline",
+    "strategy": "rebase",
+    "command": [
+      "pr",
+      "merge",
+      "1381",
+      "--rebase",
+      "--delete-branch",
+      "--match-head-commit",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "no_delete_assertion": "FAIL (expected red)",
+    "sentinel": "preserved",
+    "linked_worktree": "registered",
+    "preview": "merge-cleanup: [DRY RUN] Would merge PR #1381 via `gh pr merge 1381 --rebase --delete-branch`"
+  },
+  {
+    "revision": "fixed",
+    "strategy": "merge",
+    "command": [
+      "pr",
+      "merge",
+      "1381",
+      "--merge",
+      "--match-head-commit",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "no_delete_assertion": "PASS",
+    "sentinel": "preserved",
+    "linked_worktree": "registered",
+    "preview": "merge-cleanup: [DRY RUN] Would merge PR #1381 via `gh pr merge 1381 --merge`"
+  },
+  {
+    "revision": "fixed",
+    "strategy": "squash",
+    "command": [
+      "pr",
+      "merge",
+      "1381",
+      "--squash",
+      "--match-head-commit",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "no_delete_assertion": "PASS",
+    "sentinel": "preserved",
+    "linked_worktree": "registered",
+    "preview": "merge-cleanup: [DRY RUN] Would merge PR #1381 via `gh pr merge 1381 --squash`"
+  },
+  {
+    "revision": "fixed",
+    "strategy": "rebase",
+    "command": [
+      "pr",
+      "merge",
+      "1381",
+      "--rebase",
+      "--match-head-commit",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ],
+    "no_delete_assertion": "PASS",
+    "sentinel": "preserved",
+    "linked_worktree": "registered",
+    "preview": "merge-cleanup: [DRY RUN] Would merge PR #1381 via `gh pr merge 1381 --rebase`"
+  }
+]

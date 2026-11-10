@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "git",
+    "worktree",
+    "list",
+    "--porcelain"
+  ],
+  "rc": 0,
+  "stdout": "worktree $PRIMARY\nHEAD 1c2bd89eb7e4176f8333d338a74d2113bb581a32\nbranch refs/heads/development\n\nworktree $T3_WORKTREES/t3-330d3581\nHEAD cff1d0a16c2c9a6eb073b99ef259d3658aea1430\nbranch refs/heads/t3/inspect-jog-landing-tail\n\nworktree $T3_WORKTREES/t3-51a72571\nHEAD 56dcb50384bf9d8750d99de5758a550b7e539d77\nbranch refs/heads/t3/supervised-factory-batch-two\n\nworktree $T3_WORKTREES/t3-8ec6dbd2\nHEAD 56dcb50384bf9d8750d99de5758a550b7e539d77\nbranch refs/heads/t3/implement-batch-two-work\n\nworktree $T3_WORKTREES/t3-b0eb0ba2\nHEAD cff1d0a16c2c9a6eb073b99ef259d3658aea1430\nbranch refs/heads/t3/jog-tail-recovery-options\n\nworktree $T3_WORKTREES/t3-b7efaa05\nHEAD 938a96e60542e6bff1234d1e5fddfadec646c706\nbranch refs/heads/t3/implement-issue-1254\n\nworktree $PRIMARY/.claude/worktrees/confident-sanderson-18bac5\nHEAD cf799f0df443ff17297ed2f8f91fc16733ec95fc\nbranch refs/heads/fix/gh446-planner-write-flag\n\n",
+  "stderr": ""
+}

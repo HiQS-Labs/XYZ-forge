@@ -1,0 +1,1 @@
+PASS consumer-smoke: 12/12 required segments; 8/8 owner links resolve; Skills Index link present

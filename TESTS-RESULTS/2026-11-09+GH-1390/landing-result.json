@@ -1,0 +1,11 @@
+{
+  "pr": 1393,
+  "pin": "afbab719352a8415eb7d7c21da13bd008dca68d8",
+  "merge_sha": "4df6b0a4acd4702add981f241aecaab76ec7985c",
+  "published_sha": "fb8b766718c54c8e64037418105a24ae10b680bf",
+  "start": "2026-11-09T04:44:22.994211+00:00",
+  "end": "2026-11-09T04:52:40.063389+00:00",
+  "monotonic_seconds": 497.06941237499996,
+  "publication_clone": "/Users/noelsaw/Documents/GitHub/XYZ-forge-postmerge-1393-gate-1_m1hll_/repo",
+  "mode": "manual canonical stages, normal gated publication only for unpublished commits; no cleanup"
+}

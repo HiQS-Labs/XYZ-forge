@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-11-09T03:14:09.596005+00:00",
+  "source_revision": "7c382a594057d2992b9dace28569adfd6130db00",
+  "source_status": "unmerged pinned source, explicitly requested installation;1378 unmerged",
+  "payload_whole_folder_parity": true,
+  "manager_digest": "cda1bbb7eead243fa264d644767a8c31391d239387b6e16604b1b1e2637d30ab",
+  "enabled_links_verified": [
+    "claude",
+    "antigravity",
+    "zcode",
+    "codex",
+    "grok-bot",
+    "kimi"
+  ],
+  "final_warnings": [],
+  "discovery": "GUI/picker refresh not observed per app; Grok Mac staging only, no box import performed",
+  "runtime": "instruction payload readable through all6links; existing skill routing only, no new runner/service",
+  "pulse_commit": "27fc810df",
+  "mutation": "only SkillsArmyHQ intake.py/sync.py; no manual payload/link edits",
+  "receipt": "matches pinned clean source and whole-folder digest"
+}

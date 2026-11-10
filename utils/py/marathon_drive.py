@@ -18,7 +18,7 @@ import datetime as _dt
 # python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
-from rtl import driver_lock_path  # noqa: E402
+from rtl import driver_lock_path, archive_lane_attempts  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
@@ -1082,9 +1082,10 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
             out = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=5).stdout
             import re
             m = re.search(r"Pages occupied by compressor:\s*([0-9]+)", out)
-            if m:
+            page_size = re.search(r"page size of\s+([0-9]+)\s+bytes", out)
+            if m and page_size and int(page_size.group(1)) > 0:
                 pages = int(m.group(1))
-                compressor_mb = (pages * 4096) // (1024 * 1024)
+                compressor_mb = (pages * int(page_size.group(1))) // (1024 * 1024)
         except Exception:
             pass
     elif os.path.exists("/proc/meminfo"):
@@ -1286,9 +1287,16 @@ def main():
         if get_env("LANE_ATTEMPT_COUNTED"): return
         if not raw: return
         attempts_file = os.path.join(root_dir, ".tick", "attempts", _lane_key(raw))
-        if os.path.exists(attempts_file):
-            try: os.remove(attempts_file)
-            except: pass
+        try:
+            # Gate-only recovery does not fire, so preserve its count before reset.
+            if _RESULT.get("attempt_count") is None and os.path.isfile(attempts_file):
+                with open(attempts_file) as f:
+                    _RESULT["attempt_count"] = sum(1 for _ in f)
+            archive = archive_lane_attempts(attempts_file)
+        except OSError as exc:
+            die(f"cannot preserve lane attempts {attempts_file}: {exc}")
+        if archive:
+            eprint(f"lane-attempt history preserved: {archive}")
 
     def debug_mantra_prior_attempts(root_dir, raw):
         # GH-162: READ-ONLY peek at the .tick/attempts/<lane> file GH-45 maintains — how many prior

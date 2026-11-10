@@ -46,3 +46,57 @@ goal: Align npm metadata with XYZ Forge and explicitly bound package contents wi
 ## Merge evidence
 
 - PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Trial execution scope
+
+Correct package identity, missing main, Node baseline and intentional package contents without publishing, installing, version bump or new tests. Preserve unrelated files. Two builder attempts maximum. Capture baseline/final controls, no new test suite.
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh --auto development",
+  "fix_probes": [
+    {
+      "type": "grep_present",
+      "path": "package.json",
+      "pattern": "xyz-3-agents-swarm"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-10+GH-1206/manual.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+    }
+  ],
+  "artifacts": [
+    "package.json",
+    "package-lock.json",
+    "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+    "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+    "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+  ],
+  "remediation": {
+    "source": "issue#1206",
+    "criteria": "Correct package identity, missing main, Node baseline and intentional package contents without publishing, installing, version bump or new tests."
+  },
+  "lanes": {
+    "agy_safe": [
+      "package.json",
+      "package-lock.json",
+      "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
