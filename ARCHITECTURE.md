@@ -54,6 +54,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 |---|---|
 | [better-options](skills/1-hourly/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
 | [consult](skills/1-hourly/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
+| [conveyor](skills/1-hourly/conveyor/SKILL.md) | Refine existing issues into grounded capture plans, Preflight Contracts and rated, published pickup packets. |
 | [debug-mantra](skills/1-hourly/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
 | [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |

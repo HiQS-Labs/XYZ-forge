@@ -1,3 +1,13 @@
+---
+title: Conveyor recon map
+status: reference
+created: 2026-11-09
+updated: 2026-11-09
+owner: codex
+goal: Record traced conveyor handoff seams.
+roadmap_exempt: true
+---
+
 # Recon Map — Conveyor upstream preparation
 Commit: 39207869450ee7115dcd9b552fb1bcacd15e203b · Mode: grep-only · Lanes: A–D in one context (bounded skill composition)
 

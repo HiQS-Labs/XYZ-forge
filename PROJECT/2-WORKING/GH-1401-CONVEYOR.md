@@ -1,6 +1,6 @@
 ---
 title: "GH-1401 · Conveyor upstream issue preparation"
-status: planning
+status: active
 created: 2026-11-09
 updated: 2026-11-09
 owner: codex
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Recon traced existing intake and the downstream contract consumer. | Obtain independent plan QA before implementation. |
+| Independent plan QA Approved after paired polarity control was added. | Implement and smoke the reviewed skill scope. |
 
 ## Observed problem and solution-fit bet
 
