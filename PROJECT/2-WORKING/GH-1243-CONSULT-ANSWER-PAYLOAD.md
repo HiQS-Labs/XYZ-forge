@@ -12,7 +12,7 @@ goal: "Extract final answer for neutral payload and citation screening; preserve
 
 | What was just completed | What's next |
 |---|---|
-| Promoted to active working contract via jog | Execute implementation and verify probes |
+| Final-answer extraction implemented; independent source QA approved and controlled public-CLI checks passed | Complete publication qualification and live Codex + agy acceptance; retain issue open until verified |
 
 # GH-1243 — Consult answer payload
 

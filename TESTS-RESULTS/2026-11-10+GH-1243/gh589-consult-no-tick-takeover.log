@@ -1,0 +1,8 @@
+== test: gh589-consult-no-tick ==
+  PASS: publisher built the package
+  PASS: package has no bin/tick, PROJECT/ or releases.db
+  PASS: 4. Python lane: exit 0, two transcripts, degrade warning, no tick
+  PASS: 4. Bash lane (XYZ_PYTHON=0) also runs clean
+  PASS: explicit broken TICK_BIN is fatal
+  PASS: exit-0 empty agy counts as failed (degraded, not a full panel)
+gh589-consult-no-tick: 6 passed, 0 failed
