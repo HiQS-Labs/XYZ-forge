@@ -16,3 +16,5 @@ this concrete pinned-batch/event-selection/accounting handoff. No runtime decisi
 changed, so no mutation/red-control claim is made. No real PRs landed, watches armed,
 schedulers created or cost saving measured. Assertions in the recorded manual command
 checked nonempty consumer source and the exact boundary wording; no new suite was added.
+
+Documentation gate: `bash utils/pdda/pdda.sh run` at 37119562c returned 0 in a separate full clone. 0 errors, 659 inherited warnings (642 issue-state/cache, 8 governance, 9 older marathon-QA); LLM readiness skipped. Identity bracket unchanged. PRS check clean (0 failures, inherited warnings). Final changed paths classified docs/tier 1.

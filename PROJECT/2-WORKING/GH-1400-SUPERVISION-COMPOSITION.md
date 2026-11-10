@@ -102,7 +102,7 @@ Dogfood/conformance follow-ups are bounded here as main/adjacent instruction rea
 the broader real-work qualification remains owned by GH-1386 and the full arc remains
 open pending its dependencies. This is a small instruction extension, not a large refactor.
 
-Phase 2 QA: pending smoke, gate and final relay.
+Phase 2 QA: textual main/adjacent instruction smoke PASS; docs gate at 37119562c returned 0 (659 inherited warnings), identity unchanged; final relay pending. No runtime/cost-saving qualification claimed.
 
 ## Lessons Learned (For Future Agents)
 
