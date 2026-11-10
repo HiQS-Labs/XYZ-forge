@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -116,10 +116,25 @@ status: Approved
 reviewed-head: 7a930a5895337051a7c598445603d405d82bdb00
 added-range: 10732+2819
 added-sha256: 78f20bfc03e9ccffea82020fad33f956c7dfe6f2c6e68bf288ca9f689e6db97d
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ### Producer · Round 3
 
 Integration-only recheck: development advanced from 392078694 to d526eef7a with unrelated intake docs and Jog ledger state. PR #1404 had only releases.db/sql conflicts. The existing B1 helper in a disposable full clone classified changes disjoint, kept integration state (generation tie 2505), replayed only GH1401 through roadmap add/rate/update/accepted-start, ran supported resolver and clean check, and committed merge 0f6c2726020b1c331fda78f6074afe49f34e8f44. Receipt: TESTS-RESULTS/2026-11-09+GH-1401/ledger-resolution.json and provenance. The writer reminted the row GID as expected. Skill/index production bytes unchanged; inspect integration repair scope and evidence, then approve if sound. Final normal push repeats docs gate. Do not demand unrelated changes to the resolver or integration work.
 
 Handing off to Reviewer.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the complete skill and bounded integration repair on the inspected retained evidence and read-only current-state checks. No blocking or should-fix defect found, including pre-existing skill text. Final-head publication qualification remains with the normal harness/push gate.
+swept file: yes
+
+- [Pass] Full skill retains bounded inputs, canonical capture/PRS composition, inspected probe polarity, disposable-clone validation and publication-before-readiness. Execution admission and scheduler installation remain excluded. Evidence: `.relay-artifacts/SKILL.md:10-19,23-42,44-71`. No new subsystem or unsupported mutation was found in the complete artifact.
+- [Pass] Production skill equals the seeded reviewed artifact. Read-only probe command: `PYTHONDONTWRITEBYTECODE=1 python3` reading both files with pathlib, asserting nonempty byte equality; exit 0, decisive output: `skill bytes identical 12128`.
+- [Pass] Integration receipt is scoped to the two ledger files and canonical writer replay: `TESTS-RESULTS/2026-11-09+GH-1401/ledger-resolution.json` quotes `keep=theirs generation ours/theirs=(2505, 2505) replay=1 op(s)`, rebuild/check rc=0, add/rate/update/accepted-start rc=0 and resolver rc=0; provenance binds it to merge `0f6c2726020b1c331fda78f6074afe49f34e8f44`. This is inspected producer evidence, not a repeated merge execution.
+- [Pass] Resulting GH-1401 row agrees with the plan and receipt. Command: `PYTHONDONTWRITEBYTECODE=1 python3` using `sqlite3.connect("file:releases.db?mode=ro", uri=True)`, `pragma integrity_check`, and SELECTs of roadmap_items/op_receipts for issue 1401/reminted GID; exit 0. Decisive output: `integrity ok`; exactly one row `rmi-01M71YE95F88RX3PSRRA1Q5D83, 1401, PROJECT/2-WORKING/GH-1401-CONVEYOR.md, 80,65,85,65, None, in-progress`; receipts `roadmap-add, roadmap-rate, roadmap-update, roadmap-update`. SQL projection corroborates the same row at `releases.sql:983`. Accepted start here records this implementation task's existing state; it does not change the skill's prohibition on admitting future prepared issues (`.relay-artifacts/SKILL.md:27,33,67`).
+- [Unverified — needs clone run] No Git commands, suites, pytest, executable fixtures, merger replay or final-head gate ran here. Complete branch ancestry/diff and preservation of every unrelated integration row are not independently measured in this worktree; the bounded integration conclusion relies on the retained disjoint-resolution receipt. Prior parser/main/adjacent/red controls and documentation qualification remain recorded in `TESTS-RESULTS/2026-11-09+GH-1401/provenance.jsonl` and SUMMARY; acceptance fidelity remains explicitly unknown/no-issue-section. No final-head gate pass is claimed.
+
+relay closed (Approved), no further turn needed.
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
