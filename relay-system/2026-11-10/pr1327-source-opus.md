@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -140,5 +140,22 @@ added-range: 14789+4739
 added-sha256: 424bcb012da6a4ed9f5f5810e817dc568d09a8905aeed32610d78e2bc8327aa6
 ### Producer — final round 3
 Normal publication gate refused the push: its only failing suite gh698-planner-db-ratings expected the bare planner to write a plan. Existing fixture now requests --write. Full gate plus serial retry witnessed red; direct corrected gh698 exits 0. No production behavior change since R2, no new suite/gate. Review this one-line existing fixture correction and recorded failure/green evidence. Prior approval remains source-only; new full publication gate and hosted checks pending. Return final source verdict; do not execute suites in the relay worktree.
+
+### Reviewer · Round 3 (claude-opus)
+
+swept file: yes. I read the whole of `test/gh698-planner-db-ratings.sh` around the planner call and every assertion that uses its output (`:120-175`). I swept every planner invocation under `test/` for bare runs: `grep -rnE '(marathon-plan\.sh|marathon_plan\.py)"?[[:space:]]' test/ | grep -v -- '--write\|--dry-run\|--check\|--help'` (exit 0, only comments and mock stubs matched), and `grep -rnE '(marathon-plan\.sh|marathon_plan\.py)"?\)?$' test/` (only mock stubs, path lists and the `QP`/`MUT`/`PLAN` variable assignments). I read the recorded evidence in `TESTS-RESULTS/2026-11-03+GH-446/continuation/` (`gh698-fixed.log`, `publication-full.json`, `publication-full.log.gz`) and `provenance.jsonl:5`. All probes were read-only greps, sed, gzip -dc and a `python3 -I` JSON print. I ran no git, planner, suite or validate.
+
+- **[Pass] The fixture fix is the correct one-line change.** `test/gh698-planner-db-ratings.sh:128` now reads `planner_out="$(QUEUE_PLAN_ROOT="$FX" bash "$ROOT/utils/marathon-plan.sh" --write 2>&1)"`. The suite judges plan content from the file it reads at `:129` (`cat "$FX"/PROJECT/2-WORKING/MARATHON-PLAN-*.md`), and asserts it was written at `:157` ("planner wrote the plan doc"). So it is a file-expecting consumer of the R1 class, and `--write` is required under the new default. The exit-code assertions at `:169-172` (`4|5`) still hold, because `--write` returns the engine rc (R1 Q1, `marathon_plan.py:199-210`). No assertion was weakened and no production file changed.
+- **[Pass] The red evidence matches the cause.** `publication-full.json` records `"head": "1f5d3abf…"`, `"rc": 1`, `"bypass": false`, `"identity_unchanged": true`. In the gate log, `[parallel] gh698-planner-db-ratings.sh rc=1` is the only nonzero suite (`grep -cE '^\[parallel\] .* rc=[1-9]'` → `1`). The serial rerun shows `FAIL: no MARATHON-PLAN doc written (rc=5)` and `gh698-planner-db-ratings: 8 pass, 8 fail`. The summary reads `failed:` / `- gh698-planner-db-ratings.sh` / `push REFUSED`. The 8 failures are exactly the `$plan_doc` assertions. That fits a bare run that wrote nothing and rules out a ratings regression.
+- **[Pass] The green evidence is focused and honestly scoped.** `continuation/gh698-fixed.log` ends `gh698-planner-db-ratings: 16 pass, 0 fail`, which includes `PASS: planner wrote the plan doc`. `provenance.jsonl:5` records `"full_gate": "pending rerun; prior push refused"`. It does not claim a green full gate.
+- **[Pass] No other test caller is left bare.** `test/gh269-roadmap-retired.sh:18` uses `--dry-run` and only checks rc≠3. `test/gh362-marathon-plan-link-bullets.sh:57,109` use `--dry-run`. `test/marathon-plan.sh` and `gh418` already prepend `--write` (R1 Q3). The reconcile suites (`gh168`, `gh202`, `gh232`, `gh358`, `gh421`, `gh496`) replace the planner with mock stubs, so the flag does not affect them. Because the full gate ran every suite and only gh698 failed, the sweep and the gate agree.
+- **[Nit] The seeded artifact is wrong for this relay.** `.relay-artifacts/` contains only `gh182-claim-guards.md` (a rebalance diff that has nothing to do with PR1327), and `.relay-artifacts/packet.md` is absent (`cat` → "No such file or directory"). I reviewed the tracked tree and the recorded evidence directly. Fix: in later continuations, pass the PR1327 packet to `relay-drive.sh --artifact-file`. This does not block the verdict.
+- **[Nit] Carried from R2:** no `CHANGELOG.md` `GH-446` entry. Handle it at landing if PDDA requires one.
+- I found no pre-existing defects in the swept gh698 section beyond these points.
+
+**VERDICT: PASS**
+**Basis:** The only red in the normal publication gate at `1f5d3abf` was gh698. Its 8 failures are all plan-document assertions, after a bare planner run that wrote nothing under the GH-446 default. The fix is one existing-fixture line that adds `--write` (`test/gh698-planner-db-ratings.sh:128`). It weakens no assertion, changes no production behaviour and adds no suite or gate. The recorded focused rerun is 16/0. A sweep of `test/` found no other bare caller that expects a file. This approval covers source QA only. The full publication gate rerun at the new head and the hosted checks are still pending, and I did not verify them here.
+
+relay closed (Approved), no further turn needed. Hand back to codex-parent to rerun the normal full publication gate at the new head in a disposable clone, then push.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
