@@ -2,9 +2,9 @@
 gh_issue: 1206
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1206
 title: "Audit E: correct package identity entrypoint and contents"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-11-10
 owner: noelsaw
 doc_type: plan
 effort: 1
@@ -16,6 +16,11 @@ related:
   - https://github.com/HiQS-Labs/XYZ-forge/issues/1201
 goal: Align npm metadata with XYZ Forge and explicitly bound package contents without publishing or changing the release version.
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted to active working contract via jog | Execute implementation and verify probes |
 
 # GH-1206 — Package metadata and contents
 
