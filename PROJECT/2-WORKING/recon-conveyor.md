@@ -11,6 +11,12 @@ roadmap_exempt: true
 # Recon Map — Conveyor upstream preparation
 Commit: 39207869450ee7115dcd9b552fb1bcacd15e203b · Mode: grep-only · Lanes: A–D in one context (bounded skill composition)
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Traced the existing preparation and execution handoff. | Use this map with the GH-1401 canonical plan. |
+
 ## Subject and change class
 Existing-issue intake preparation; cross-module instruction composition, no runtime/state authority replacement.
 

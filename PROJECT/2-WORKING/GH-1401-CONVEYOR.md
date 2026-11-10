@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA Approved after paired polarity control was added. | Implement and smoke the reviewed skill scope. |
+| Implemented skill/index; parser, paired polarity controls and main/adjacent preflight passed. | Complete documentation gate and final independent QA. |
 
 ## Observed problem and solution-fit bet
 
@@ -48,11 +48,11 @@ Proposed 80/65/85/45 is in #1401 authored by operator noelsaw1; retain explicit 
 
 ## Acceptance
 
-- [ ] Existing issue retrofit reuses its canonical doc/row, with duplicate/already-fixed/ambiguous cases held honestly.
-- [ ] Contract uses current target/gate/probes/artifacts schema and records unfixed polarity, new-artifact markers, actual preflight result and pinned SHA. Empty/malformed input cannot publish readiness.
-- [ ] PRS values and operator overrides survive reruns; prep registration is not accepted execution start.
-- [ ] Readiness follows merged/published preparation availability at the integration ref, approved preparation review and passing applicable docs gate; label does not enqueue/admit and must be revalidated by consumer.
-- [ ] All three invocation modes reuse existing tools with bounded inputs and no new scheduler or daemon; no production edits or full gate from conveyor.
+- [x] Existing issue retrofit reuses its canonical doc/row, with duplicate/already-fixed/ambiguous cases held honestly.
+- [x] Contract uses current target/gate/probes/artifacts schema and records unfixed polarity, new-artifact markers, actual preflight result and pinned SHA. Empty/malformed input cannot publish readiness.
+- [x] PRS values and operator overrides survive reruns; prep registration is not accepted execution start.
+- [x] Readiness follows merged/published preparation availability at the integration ref, approved preparation review and passing applicable docs gate; label does not enqueue/admit and must be revalidated by consumer.
+- [x] All three invocation modes reuse existing tools with bounded inputs and no new scheduler or daemon; no production edits or full gate from conveyor.
 
 ## Risks and rollback
 
@@ -65,3 +65,7 @@ No new tests, gates, runners, frameworks or registry entries (GH-831). Existing 
 ## Lessons Learned
 
 NO_ENTRY pending observed evidence; adoption alone does not support a lesson.
+
+## Verification evidence
+
+[Manual checks and provenance](../../TESTS-RESULTS/2026-11-09+GH-1401/SUMMARY.md): parser/Jog shape valid; empty-probe red control exit 3; BUG/FIXED pair and inversion control passed; main preflight READY exit 0 at pinned base, adjacent already-delivered STALE exit 4 at implementation SHA. Skill quick_validate passed. Plan relay [Approved round 2](../../relay-system/2026-11-09/gh1401-plan.codex.md). Classified docs/tier 1; full suite intentionally not run for this route.

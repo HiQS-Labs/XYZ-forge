@@ -2,6 +2,10 @@
 
 ## 2026-11-09
 
+- GH-1401: added `/conveyor` for preparing existing issues through grounded recon, current Preflight Contracts and canonical PRS pickup. Preparation publishes separately from execution; readiness waits for integration-ref validation and does not enqueue/admit work. Manual parser/linter, empty-input and polarity controls passed; main READY and adjacent already-delivered STALE preflight receipts are retained in `TESTS-RESULTS/2026-11-09+GH-1401/`.
+
+## 2026-11-09
+
 - GH-1395: bound dense reconciliation native reads to two open-issue inventory pages plus singleton misses; preserve separate closure observations and mismatch refusal. Bet: dense open candidates repay up to two extra reads on sparse inventories. No cross-stage cache; malformed/error pages fail closed. Easy isolated patch rollback by revert, no schema or remote writes. Offline native CLI counts 90→3 and 220→22; sparse90→91. Retained real gate repetitions do not establish HTTP totals or live savings. Evidence and verification status: `TESTS-RESULTS/2026-11-09+GH-1395/`.
 
 - GH-1390: compose the retained reviewed empty-publication repair on B01. Fresh fetch/nonempty IDs permit skipping only an already-published head; unequal heads retain normal push, post-fetch and final durability checks. Costly shared publication surface; revert the narrow helper change for rollback. Source QA and 227/227 focused evidence are historical; 405/408 failure and aborted retry remain failures. Current independent review/full qualification and landing are parent-owned and pending. Evidence: `TESTS-RESULTS/2026-11-09+GH-1390/`.
