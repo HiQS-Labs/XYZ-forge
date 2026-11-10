@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-09 — GH-446 explicit planner writes and consumer compatibility
+
+- Bare planner calls report without writing; `--write` explicitly saves the dated plan. Reconcile, 10days and start-marathon file-generating paths now request it, and existing fixture writers use the same contract.
+- Preserved two earlier readiness repairs and the operator-authorized additional correction. Independent source review approved the composed code; final publication qualification is recorded separately. No new suite or gate.
+
 ## 2026-11-09
 
 - GH-1395: bound dense reconciliation native reads to two open-issue inventory pages plus singleton misses; preserve separate closure observations and mismatch refusal. Bet: dense open candidates repay up to two extra reads on sparse inventories. No cross-stage cache; malformed/error pages fail closed. Easy isolated patch rollback by revert, no schema or remote writes. Offline native CLI counts 90→3 and 220→22; sparse90→91. Retained real gate repetitions do not establish HTTP totals or live savings. Evidence and verification status: `TESTS-RESULTS/2026-11-09+GH-1395/`.
