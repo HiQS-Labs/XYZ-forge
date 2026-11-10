@@ -1,0 +1,166 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-10T22:07:35Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1243-consult-answer-payload"
+  },
+  "provenance": {
+    "source_docs": [
+      "$TARGET/PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md"
+    ],
+    "issues": [],
+    "target_root": "$TARGET",
+    "branch": "development",
+    "commit": "089eac1b995cb701c7becff1c4e2b638e815df45",
+    "suggested_branch": "marathon/gh-1243-consult-answer-payload-2026-11-10",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash validate.sh --auto development",
+    "round_cap": 2,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "python3 TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py",
+        "expect_nonzero": true
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1243/manual.md"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
+      }
+    ],
+    "artifacts": [
+      "utils/py/consult.py",
+      "TESTS-RESULTS/2026-11-10+GH-1243/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-10+GH-1243/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
+    ],
+    "remediation": {
+      "source": "issue#1243",
+      "criteria": "Extract final answer for neutral payload and citation screening; preserve full transcript separately and missing-final-answer safety. Verify cited and uncited answers plus transcript exclusion using existing consult suite/manual evidence; no new suite."
+    },
+    "lanes": {
+      "agy_safe": [
+        "utils/py/consult.py",
+        "TESTS-RESULTS/2026-11-10+GH-1243/manual.md",
+        "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
+      ],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "089eac1b995cb701c7becff1c4e2b638e815df45",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "stale",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "landed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1243/manual.md",
+        "verdict": "landed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl",
+        "verdict": "landed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1243 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "3 issue criteria reconciled: 2 deviation(s) declared and accounted for",
+      "issue": "1243",
+      "dropped": [],
+      "added": [],
+      "declared": 2
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1243 (https://github.com/HiQS-Labs/XYZ-forge/issues/1243)",
+      "issue": "1243",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1243",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 5,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "test/gh375-auth-timeout-verdict.sh",
+      "test/synthetic/gh101-consult-programmatic.sh",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [
+      "utils/py/consult.py",
+      "TESTS-RESULTS/2026-11-10+GH-1243/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl"
+    ],
+    "effective_artifacts": [
+      "utils/py/consult.py",
+      "TESTS-RESULTS/2026-11-10+GH-1243/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl",
+      "test/gh375-auth-timeout-verdict.sh",
+      "test/synthetic/gh101-consult-programmatic.sh",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh375-auth-timeout-verdict.sh",
+      "test/synthetic/gh101-consult-programmatic.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh375-auth-timeout-verdict.sh",
+      "test/synthetic/gh101-consult-programmatic.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

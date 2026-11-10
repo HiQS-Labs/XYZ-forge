@@ -12,13 +12,13 @@ goal: "Extract final answer for neutral payload and citation screening; preserve
 
 | What was just completed | What's next |
 |---|---|
-| Reviewed final-answer fix qualified and merged as PR1406; missing/empty and citation controls passed | Live Codex + agy comparison remains unverified; issue1243 stays open under its owner |
+| Reviewed final-answer fix qualified and merged as PR1406; missing/empty and citation controls passed | Live Codex + agy comparison passed; issue1243 stays open for owner closeout |
 
 # GH-1243 — Consult answer payload
 
 ## Acceptance
 
-- [ ] Re-running a small Codex + agy consult gives neutral payloads of comparable shape and size: answer text only, with no exec logs, prompt echo or token footer.
+- [x] Re-running a small Codex + agy consult gives neutral payloads of comparable shape and size: answer text only, with no exec logs, prompt echo or token footer.
 - [x] A Codex answer that cites file:line next to its `[Pass]` lines is not stamped. An answer with an uncited `[Pass]` still is.
 - [x] Verified per GH-831 with existing suites (`test/consult.sh`) plus a manual TESTS-RESULTS receipt. No new suites.
 - [x] Preserve baseline failure and final passing evidence in the declared manual/provenance artifacts; use existing checks only.
@@ -97,3 +97,7 @@ GitHub closed issue1243 through PR1406's closing reference at08:42:52Z. The pare
 ## Merge evidence
 
 - PR #1406 merged 2026-11-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Live acceptance — authorized todo-list follow-up
+
+The actual Codex + agy comparison passed on source089eac1b9: answer-only neutral payloads, separate diagnostics and no false citation warning for cited Codex output. Committed evidence, blind verdict and measured correction: `TESTS-RESULTS/2026-11-10+GH-1243/live-acceptance-215704/`. This later result supersedes the earlier pending-live statement above. No engine restart, production change or repair-cap reset occurred. The historical no-publication trial constraint remains historical; subsequent operator authorization covers source delivery and this evidence publication. Native issue remains open for owner closeout.

@@ -1,0 +1,3 @@
+# Live acceptance receipt
+
+Actual Codex and agy consult: two answers, zero failures, final-answer-only neutral payloads (78/121 words). Cited Codex answer has no false citation warning. Full diagnostics retained separately with local paths redacted; hashes recorded. Blind verdict preceded key inspection; the later word-count correction is retained. Agy advice overgeneralized a Claude-only branch and was corrected against source. Existing missing/empty and uncited controls remain in the earlier source qualification. This run verifies the live comparison only; issue state remains under its owner.

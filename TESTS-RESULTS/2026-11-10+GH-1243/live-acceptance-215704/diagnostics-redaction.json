@@ -1,0 +1,6 @@
+{
+  "original_sha256": "a649af9c2a0e2078c2e9ad8cfea5aa328b1be1ee009e31a018c200bd991960b3",
+  "redacted_sha256": "aaf01741f5781f5e4410040ae894a6a9bea33d8c339af007ecf660c531d02f35",
+  "redactions": "localcheckout andtemporaryworktree paths; raw retained in live clone untilcloseout",
+  "no_credentials_detected": true
+}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09 — GH-1400 downstream flywheel composition
+
+Extended the existing flywheel routing skill with one approved pinned-batch handoff,
+result-specific native continuation, explicit pickup revalidation and operation-owned
+attempt accounting. No new runner, scheduler or gate. GH-1399 enforcement, GH-1401
+upstream preparation and real-work qualification remain separate; no unattended or
+cost-saving result is claimed. The instruction change is Easy to revert.
+
 ## 2026-11-10 — Debug mantra relevance and guarantees (GH-1410)
 
 - Clarify step 3: tie the candidate to the reported failure and falsify preservation of existing guarantees, including combined inputs and assertion changes.

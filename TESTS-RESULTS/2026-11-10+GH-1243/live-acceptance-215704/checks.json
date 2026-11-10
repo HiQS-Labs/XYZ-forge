@@ -1,0 +1,32 @@
+{
+  "event": "live-Codex-agy-comparison",
+  "source_head": "089eac1b995cb701c7becff1c4e2b638e815df45",
+  "advisors_answered": 2,
+  "failed": 0,
+  "answers": [
+    {
+      "answer": "A",
+      "advisor": "codex",
+      "bytes": 777,
+      "words": 78,
+      "final_only": true,
+      "sha256": "36b99e935cdf1b7903c39cb0b90302515785c1a0483f213ca4af6dd99cd11efa"
+    },
+    {
+      "answer": "B",
+      "advisor": "agy",
+      "bytes": 1388,
+      "words": 121,
+      "final_only": true,
+      "sha256": "0d70373bd7fc5fcc5dcfde41a649702f8162e03c348deef62a6e06403ef9a4b6"
+    }
+  ],
+  "codex_cited_false_warning": false,
+  "codex_final_bytes": 788,
+  "codex_transcript_bytes": 74359,
+  "transcript_sha256": "a649af9c2a0e2078c2e9ad8cfea5aa328b1be1ee009e31a018c200bd991960b3",
+  "verdict_before_key": "verdict.md",
+  "actual_cli_calls": true,
+  "production_changes": false,
+  "limit": "AdviceB overgeneralizes Claude-only validation; source-reconciled advice defect. Earlier length suspicion withdrawn: measuredA78/B121words, both under150."
+}
