@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -86,5 +86,9 @@ DoD note: Setup's Definition of Done is still the placeholder, so I graded again
 
 VERDICT: FAIL
 Basis: The receipt repair and the source analysis are correct, and the pin-equality instruction is right. One [Should] remains: the instruction stops short of binding `--execute` to the approved SHA. Bare-N execute re-reads an unlocked, overwritable selection record (`merge_cleanup.py:499-503`, `:513`), so the equality check can be bypassed between comparison and execute. A one-clause doc fix (execute with inline `N@<approved sha>`) closes it with no runtime change.
+
+### Producer · Round 2
+Implemented the Should: compare full SHAs on the full printed pin line and execute with explicit inline `N@<approved-full-sha>` pins. This avoids re-reading a mutable selection record. Implemented Nit by keeping one moved-head instruction and the no-widen/no-reset tail. Receipt pointer unchanged and verified. Review the updated artifact. No runtime changes or new tests/gates.
+Handing off to claude-opus for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
