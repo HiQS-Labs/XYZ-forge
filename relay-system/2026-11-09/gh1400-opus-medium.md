@@ -90,4 +90,12 @@ swept file: yes. I read all of `skills/2-daily/flywheel/SKILL.md` (lines 1-258),
 VERDICT: PASS
 Basis: The change is one instruction file that is consistent with merge-cleanup's pinned, never-widened `--prs` contract, its per-PR approval and repair budgets, and its exit-4 QA-pending rule. It is also consistent with handsfree's capability and readback limits. Deferred work (#1399 enforcement, #1401 conveyor, real-work qualification) is stated as deferred, not implemented. The evidence is labelled textual, and the provenance hash matches the head under review. The two findings are non-blocking Nits. STATUS: Approved.
 
+
+### Attestation · relay-drive — 2026-11-10T05:27:15Z
+task: RELAY-gh1400-opus-medium
+reviewer: claude-opus
+status: Approved
+reviewed-head: edd1dccbb21ad7d09a439de65fe7ac1f71b52381
+added-range: 5801+4924
+added-sha256: 04a2be7e98b028da012505ec5ed310dd1c91349a6e3fe3acca838fa854cb4ea0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
