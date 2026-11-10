@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented skill/index; parser, paired polarity controls and main/adjacent preflight passed. | Complete documentation gate and final independent QA. |
+| Implemented skill/index; parser, paired polarity controls and main/adjacent preflight passed. | Documentation gate passed; complete final independent QA and publication. |
 
 ## Observed problem and solution-fit bet
 
@@ -69,3 +69,5 @@ NO_ENTRY pending observed evidence; adoption alone does not support a lesson.
 ## Verification evidence
 
 [Manual checks and provenance](../../TESTS-RESULTS/2026-11-09+GH-1401/SUMMARY.md): parser/Jog shape valid; empty-probe red control exit 3; BUG/FIXED pair and inversion control passed; main preflight READY exit 0 at pinned base, adjacent already-delivered STALE exit 4 at implementation SHA. Skill quick_validate passed. Plan relay [Approved round 2](../../relay-system/2026-11-09/gh1401-plan.codex.md). Classified docs/tier 1; full suite intentionally not run for this route.
+
+Documentation gate `PDDA_ISSUE_SYNC_SOURCE=cache bash utils/pdda/pdda.sh run` exited 0 with no errors and 656 cache/governance/marathon warnings; [summary](../../TESTS-RESULTS/2026-11-09+GH-1401/docs-gate.txt). Final normal push repeats the classified docs gate at the published head.

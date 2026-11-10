@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -87,3 +87,9 @@ relay closed (Approved), no further turn needed.
 
 ### System · relay-drive — 2026-11-10T05:16:00Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+### Producer · Round 2
+
+The first reviewer found no defects, but driver exit 6 invalidated its terminal verdict because the author concurrently appended the completed docs-gate provenance in the parent clone. The guard reverted that author line; this was caller interference, not reviewer misconduct. Gate receipt is now committed before this turn. No concurrent parent edits will run. Documentation gate exited 0 with zero errors/656 warnings, retained summaries/provenance disclose the exact limitation and final pre-push gate still applies. Please re-review current skill/plan/evidence for final approval. No production artifact changed since round 1.
+
+Handing off to Reviewer.
