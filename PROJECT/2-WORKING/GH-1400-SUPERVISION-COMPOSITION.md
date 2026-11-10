@@ -117,3 +117,21 @@ replayed the owned GH-1400 row with ratings and accepted-start. Resolver and PRS
 checks passed, producing 7eb672f5; no source/skill bytes changed after final QA.
 One integration repair, no cap reset or bypass. Retained record:
 `TESTS-RESULTS/2026-11-09+GH-1400/integration-repair.json`.
+
+## Published-PR readiness repair after extra Opus QA
+
+Development advanced to 995af060 after the additional Opus review. B1's preview
+refused to replay two Jog queue rows from the lower-generation integration side;
+that refusal is retained, not overridden. Manual governed composition kept the full
+integration ledger, replayed only the isolated GH-1400 row through the existing
+`replay_ops` writer (add, rate, section/marker, accepted-start), then ran the existing
+resolver/check. Generations 2511/2508 became 2513 without an arbitrary bump.
+Every integration Jog row and pre-existing roadmap row stayed unchanged; owned
+semantic fields and approved skill hash stayed unchanged. Routine leaderboard bytes
+match integration. No source or helper changes, control bypass, new QA or new suite.
+
+Repair accounting is explicitly retrospective: the first pre-publication integration
+and this readiness repair consume 2/2 existing per-PR slots. The reminder arrived
+after this repair command started; no advance reservation is claimed. No further
+repair allowance remains. Retained refusal, invariants and accounting snapshot are
+under `TESTS-RESULTS/2026-11-09+GH-1400/`.
