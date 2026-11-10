@@ -13,9 +13,16 @@ goal: "Extract final answer for neutral payload and citation screening; preserve
 
 ## Acceptance
 
-- [ ] Neutral payloads contain final answer text only, without prompt echo, exec logs, duplicated answers or token footer; retain full advisor transcript separately.
-- [ ] A final answer with adjacent source file:line citations is not stamped uncited; an actually uncited claim is still stamped.
-- [ ] Verify with the existing consult suite and recorded manual red/green controls; add no new suite, dependency or runner.
+- [ ] Re-running a small Codex + agy consult gives neutral payloads of comparable shape and size: answer text only, with no exec logs, prompt echo or token footer.
+- [ ] A Codex answer that cites file:line next to its `[Pass]` lines is not stamped. An answer with an uncited `[Pass]` still is.
+- [ ] Verified per GH-831 with existing suites (`test/consult.sh`) plus a manual TESTS-RESULTS receipt. No new suites.
+- [ ] Preserve baseline failure and final passing evidence in the declared manual/provenance artifacts; use existing checks only.
+- [ ] Do not install or publish anything, change versions or release tags, add dependencies, create new test suites, or modify unrelated paths.
+
+## Acceptance — deviations from the issue
+
+- [added] Preserve baseline failure and final passing evidence in the declared manual/provenance artifacts; use existing checks only. — reason: operator-authorized bounded trial constraints.
+- [added] Do not install or publish anything, change versions or release tags, add dependencies, create new test suites, or modify unrelated paths. — reason: operator-authorized bounded trial constraints.
 
 ## Trial execution scope
 
@@ -32,9 +39,9 @@ Extract final answer for neutral payload and citation screening; preserve full t
   "gate": "bash validate.sh --auto development",
   "fix_probes": [
     {
-      "type": "grep_present",
-      "path": "utils/py/consult.py",
-      "pattern": "body = raw_text"
+      "type": "command",
+      "cmd": "python3 -c 'import sys;sys.path.insert(0,'\"'\"'utils/py'\"'\"');from consult import _neutralize_answer_text;raw='\"'\"'Prompt echo\\nTRANSCRIPT_SENTINEL\\nexec log\\ntokens used\\n123\\n[Pass] utils/py/consult.py:89 final answer.'\"'\"';out=_neutralize_answer_text(raw,'\"'\"'advisor.md'\"'\"','\"'\"'A'\"'\"','\"'\"'codex'\"'\"');assert '\"'\"'TRANSCRIPT_SENTINEL'\"'\"' not in out and '\"'\"'exec log'\"'\"' not in out and '\"'\"'[Pass] utils/py/consult.py:89 final answer.'\"'\"' in out'",
+      "expect_nonzero": true
     },
     {
       "type": "path_absent",

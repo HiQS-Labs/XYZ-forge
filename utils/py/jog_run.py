@@ -2247,9 +2247,11 @@ def jog_run_main(args=None):
         sys.exit(2)
     checkpoint_root = getattr(args, "checkpoint_root", None)
     if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
-        raise ContractError("--checkpoint-root requires positive --max-tasks and the real Marathon executor")
+        print("jog: --checkpoint-root requires positive --max-tasks and the real Marathon executor", file=sys.stderr)
+        sys.exit(2)
     if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
-        raise ContractError("publication and execution clones must be distinct")
+        print("jog: publication and execution clones must be distinct", file=sys.stderr)
+        sys.exit(2)
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
 
@@ -2372,7 +2374,12 @@ def jog_run_main(args=None):
                     if (len(executions) == prior_executions + 1
                             and latest.get("status") == "projected-parked"
                             and latest.get("committed_receipt") and latest.get("published_head")):
-                        result = load_marathon_result(_ledger_abs_path(root, ledger_gid, latest.get("result_path")))
+                        try:
+                            result = load_marathon_result(_ledger_abs_path(root, ledger_gid, latest.get("result_path")))
+                        except ContractError as exc:
+                            jog_set_status(root, gh_num, "parked", failure_reason=f"continuation refused: {exc}")
+                            print(f"jog: continuation refused: {exc}", file=sys.stderr)
+                            break
                         if result.get("outcome") == "approved" and (result.get("pr") or {}).get("number"):
                             print(f"jog: GH-{gh_num} published awaiting approval; continuing independent pending work.")
                             continue
