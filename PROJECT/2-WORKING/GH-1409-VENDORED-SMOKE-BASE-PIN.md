@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (attested ea31f426c, round 4 format re-attestation); task admitted; pin step implemented in ci.yml. | Witness the six controls in a disposable clone, run focused suites and the full gate, then final relay QA. |
+| Controls witnessed (receipts 2fc09f198); focused suites green; final QA PASS (attested fc48de9a5). | Full gate result, then push and PR; hosted run proves the live label lookup. |
 
 ## Problem (recon, 2026-11-10)
 
