@@ -1,2 +1,4 @@
 {"event": "manual-approved-head-mismatch-and-retained-pointer", "result": "PASS", "negative_control": "A!=B rejected by required caller comparison", "receipt_pointer_exists": true, "files": {"pin-mismatch.json": "d0543614a24bf7a9ebfa5c449017b79413322b81f5794c25cd82149aa0d84679"}}
 {"event": "independent-review", "reviewer": "Claude Code CLI", "model": "claude-opus-5-5", "effort": "medium", "verdict": "Approved", "reviewed_head": "0377d05da9b9", "attestation_sha256": "25ddf18e441b9b74c86cd79c618f54723069a613c720045eeda35b4c4fcb5d19"}
+{"event": "existing-verify-selection-negative-control", "result": "PASS", "sha256": "05c21398ec837150447df5c30cda1db148310e91f34ad8abad792693d5b76d5b"}
+{"event": "normal-documentation-publication", "head": "e1135aa5adf95f6ec53ed49b78743e757c0e3bf6", "rc": 0, "elapsed": 67.9239399433136, "bypass": false}
