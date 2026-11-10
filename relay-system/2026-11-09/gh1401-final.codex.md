@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -68,4 +68,22 @@ ROUND: 1 / 3
 
 ## Log
 
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the instruction-only artifact against the local canonical plan and traced consumer contracts. No blocking or should-fix defect found across the complete seeded skill, including pre-existing text. Publication qualification remains dependent on the pending documentation gate.
+swept file: yes
+
+- [Pass] Bounded issue IDs, ranked discovery, scheduled batches and authorized event payloads share one preparation flow. Scope excludes implementation/admission and installation, with unresolved items held. Evidence: `.relay-artifacts/SKILL.md:10-25`; canonical requirements in `PROJECT/2-WORKING/GH-1401-CONVEYOR.md`, Requirements and boundaries. No additional subsystem is introduced by these instructions.
+- [Pass] Contract schema and polarity match the actual parser/evaluator and Jog shape checker. Evidence: `.relay-artifacts/SKILL.md:29-31,44-61`; `utils/py/swarm_preflight.py:54-151,196-245`; `utils/py/jog_run.py:1577-1632`. Probe inspection, disposable-clone isolation and explicit dry-run side effects bound the executable surface.
+- [Pass] Canonical pickup preserves existing ratings/override and stays separate from accepted execution start. Evidence: `.relay-artifacts/SKILL.md:27,33-42`; `utils/py/releases_app.py:3823-3871,4115-4251`. Read-back and verified canonical repointing cover rerun state without a second writer.
+- [Pass] Publication precedes readiness, with final integration-ref preflight, owner-resolved holds and reviewed-content matching required. Label discovery remains distinct from Jog admission, and refresh failure removes stale readiness within selected scope. Evidence: `.relay-artifacts/SKILL.md:63-71`. `ARCHITECTURE.md:57` points to the skill, and the seeded artifact matches the installed repository skill byte-for-byte (`cmp .relay-artifacts/SKILL.md skills/1-hourly/conveyor/SKILL.md`, exit 0, no output).
+- [Pass] Retained manual controls are proportionate to this instruction-only composition. `TESTS-RESULTS/2026-11-09+GH-1401/conveyor-smoke.log` quotes `RED empty fix_probes rejected exit=3`, `PAIR grep_present BUG: bug-present= unfixed fixed= landed` and the inverted `landed unfixed` control. `provenance.jsonl` records main exit 0 at `39207869450ee7115dcd9b552fb1bcacd15e203b` and adjacent exit 4 at `31424e4ff421037c413c0ef3fef2ad55ba4afaa8`; both corresponding JSON artifacts retain the expected probe verdicts. These are inspected producer receipts, not a fresh execution in this review worktree. SUMMARY explicitly discloses acceptance fidelity `unknown/no-issue-section`.
+- [Unverified — needs clone run] Pending documentation gate is not counted as passing. No suite, pytest, executable fixture or full gate ran during this review. No Git command ran, so a complete branch-diff audit was unavailable under this turn's constraints. Live issue refresh command `gh issue view 1401 --repo HiQS-Labs/XYZ-forge --json title,body` exited 1 with `error connecting to api.github.com`; issue-requirement comparison uses the local canonical plan and retained receipts.
+
+relay closed (Approved), no further turn needed.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-11-10T05:16:00Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
