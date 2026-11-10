@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -144,5 +144,75 @@ N1 implemented by owner correction: every failed Codex summary points at diagnos
 Reran retained actual-AST controls on this candidate: baseline6 failures, candidate12 passes. Kept fresh results and exact dependency-source hashes. New source QA/full publication gate are pending; prior408/408 atc06 and hosted a818 do NOT qualify these corrections. No push/readiness/merge claim yet.
 
 Round2 is explicit per-PR source QA for BOTH1402(two cap/handoff corrections) and1406(consult extraction+diagnostic pointer+docs). Return a separate verdict for each against actual current code, including full changed-file sweep. This is not the landing strategy review. No tests/fixtures in reviewer worktree. Full qualification remains required before publication/ready/merge. No live1243 execution interaction or cap reset.
+
+### Reviewer · Round 2
+
+Reviewed: the round-2 packet (local candidate 2ac2e5f6) against the worktree source. I used read-only probes only: grep, sed, shasum, and `python3 -I` reads of JSON. I did not run git, any suite, any fixture, or manual-controls.py.
+
+swept file: no. I read every changed hunk plus the caller and callee seams around it: consult.py 895–985 (the whole per-advisor result loop); swarm_preflight.py 100–110, 170–190, 1088–1125, 1650–1670 and 1735–1748; relay_drive.py 401–423, 644–646, 845–870 and 1070–1150; marathon_drive.py 3097–3104 and 3494–3515. From round 1 I am reusing consult.py 128–264, 365–525 and 795–1114. I did not read the rest of the three files. In the ranges I did read, I found no pre-existing defect.
+
+**PR1402: source verdict PASS**
+
+**[Pass] P1 — The text invocation now carries the same explicit cap as the JSON artifact.**
+- swarm_preflight.py:1661 `round_cap_arg = f" --round-cap {merged['round_cap']}" if merged.get("round_cap") is not None else ""` is emitted at :1665 `--builder codex{round_cap_arg} \\`.
+- The JSON twin reads the same value: :1745 `round_cap=merged.get("round_cap")` goes to :1117–1118 `argv += ["--round-cap", str(round_cap)]`.
+- So the text and JSON caps come from one source and cannot disagree.
+- Interpolation is safe because :108 rejects any `round_cap` that is not a positive int.
+- Without a configured cap the text is unchanged (empty string). Results.json rows `text_cap configured: null` are pass in both versions.
+
+**[Pass] P2 — The caller derives strict mode only from an explicit cap.**
+- marathon_drive.py:3512–3513 `if cli_round_cap is not None: cmd2.append("--strict-role-handoff")`.
+- :3097–3104: `cli_round_cap` is the CLI value. A brief-derived or default 5 cap does not turn on strict mode.
+- P1 therefore matters: the old text copy dropped `--round-cap`, so a copied invocation silently lost strict handoff.
+
+**[Pass] P3 — An invalid actor in review-once now escalates instead of returning changes-requested (exit 5).**
+- relay_drive.py:1114–1115, the strict guard, now runs before `if args.review_once:` at :1117.
+- `exit_escalate` (:644–646) writes the reason and exits 4.
+- Results.json shows `review_once_handoff nextactor: unexpected`: baseline `exit:5` (fail), candidate pass.
+
+**[Pass] P4 — Legitimate handoffs are unchanged.**
+- Terminal STATUS skips the guard (`not terminal_status(ns)`).
+- Reviewer→builder handoff passes, because `nactor` is the builder (token_state :420–421 maps claimed→claimer and open→handoff-to).
+- Non-strict runs never enter the guard.
+- Candidate row `nextactor: codex` → `exit:5`, the same as baseline.
+
+**[Nit] N3 — Under strict mode, a review-once stall now exits 4, not 3.**
+- Observed input: a review-once reviewer turn that leaves the token claimed by itself (`nactor == actor`) now hits the guard at :1114 → exit 4 `explicit-cap-invalid-handoff`. Before, it reached the stall exit 3 at :1144–1146.
+- Affected scope: only `--strict-role-handoff` + `--review-once` + non-terminal + token not moved.
+- This matches the existing non-review-once ordering, where the same guard already precedes the no-progress exit 3 at :1148–1151, so I am requesting no change. It is noted so that nobody reads an exit 4 in that corner as a forged handoff.
+- Falsifier: a marathon consumer that treats review-once exit 3 and exit 4 differently in a way that matters. I did not find one in the ranges I read.
+
+**[Pass] P5 — Byte binding to e5d29ca9 matches dependency-binding.json, but only on the worktree side.**
+- `shasum -a 256` of the five worktree files equals every hash in `review-followup/dependency-binding.json` (for example relay_drive `1c951073…e702449` and swarm_preflight `54881b94…a38753f`). Exit 0, 5/5 match.
+- [Unverified — needs git]: that e5d29ca9 itself has those blobs. Settle with `git diff e5d29ca9 2ac2e5f6 -- <five paths>` empty.
+- jog_run, marathon_drive and releases_app are hash-bound and were not changed for this round. Their consumer seams for P2 and the Jog guard (below) still cite correctly.
+
+**PR1406: source verdict PASS**
+
+**[Pass] P6 — N1 is fixed for Codex only, and other models are unchanged.**
+- consult.py:902 `diagnostic_out = out + ".transcript" if m == "codex" else out`. It is used in all four FAIL summaries: :905 (launch), :951 (breach), :962 (exit 0, bad answer) and :966 (non-zero exit).
+- The timeout path already used `surface_partial(out + ".transcript" ...)` at :978.
+- Results.json: codex branches 0–3 fail at baseline and pass in the candidate. Agy branches 0–3 still point at `answer.md` in both.
+
+**[Pass] P7 — Final-answer behaviour is unchanged.**
+- Validation still reads `out`: :952 `advisor_answer_ok(out, m)`. Attestation still goes only to `.transcript` (:925–926), and results tuples still carry `out`.
+- So the missing and empty fail-closed checks (round 1 Q1b: :215–216 and :232–238) are untouched.
+- The :967 error stub is still appended to `out` on non-zero exit. The producer declared this as kept historical behaviour, and it is filtered from neutral payloads by `ok`. Accepted.
+
+**[Pass] P8 — The N2 doc caveat is present.** SKILL.md:126–127: "`<label>.codex.md` is the final answer; `<label>.codex.md.transcript` retains raw CLI diagnostics and attestation. This separation is the default Python runtime contract; the frozen…".
+
+**[Pass] P9 — The controls are truthful and add no new machinery.**
+- results.json has 24 rows: 6 baseline failures and 12/12 candidate passes, which matches the producer's "6 red / 12 green". outer-controls.json is byte-identical (`cmp` → SAME).
+- README.md labels the evidence "LOCAL, NOT QUALIFIED", "not a new suite or gate".
+- manual-controls.py executes the extracted AST statements (for example :12–14, which pulls `round_cap_arg` and `invocation` from swarm_preflight). Its scope is honest: it is not a CLI or gate run.
+
+**[Pass] P10 — The Jog post-merge path stays truthful.**
+- There is no `jog/` directory under `TESTS-RESULTS/2026-11-10+GH-1243/` (`grep -c jog` → 0).
+- merge_cleanup.py:933 "not a Jog delivery — row left as-is".
+- jog_run.py:1186 refuses with "has no committed approved Jog receipt bundle".
+- So nothing manufactures an approval, and nothing resets the cap.
+
+VERDICT: PASS
+Basis: Source QA passes for both PRs separately and overall. PR1402: the text copy carries the same validated cap as the JSON artifact (swarm_preflight.py:1661/1745). The explicit cap alone turns on strict mode (marathon_drive.py:3512). The strict guard now runs before review-once, so an invalid actor exits 4 Escalated instead of 5, while legitimate handoffs and terminal approvals are unchanged (relay_drive.py:1114–1117). PR1406: Codex failure summaries point at `.transcript` and other models are unchanged (consult.py:902–966). Final-answer validation and missing/empty fail-closed are intact. The doc caveat is present (SKILL.md:126–127). The worktree hashes match dependency-binding.json, and the Jog guard leaves the failed 1243 row as it is. This is source approval only, not a merge gate. Still pending, and not claimed here: the empty `git diff e5d29ca9` check on the five paths; a normal full gate and hosted checks on the exact published heads; landing 1402 first and confirming the five files have an empty diff against `development` before 1406 merges (round 1 Q4a); no live 1243 interaction or cap reset.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
