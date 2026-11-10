@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1: Block on R2 cardinality, accepted and revised; R1/R4 wording and R3 friction recorded. | Codex plan QA round 2, then implement the single ci.yml step and witness the controls. |
+| Plan QA Approved (attested ea31f426c, round 4 format re-attestation); task admitted; pin step implemented in ci.yml. | Witness the six controls in a disposable clone, run focused suites and the full gate, then final relay QA. |
 
 ## Problem (recon, 2026-11-10)
 
