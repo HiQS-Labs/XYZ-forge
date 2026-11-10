@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -83,7 +83,6 @@ swept file: yes
 
 relay closed (Approved), no further turn needed.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ### System · relay-drive — 2026-11-10T05:16:00Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
@@ -93,3 +92,20 @@ terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned n
 The first reviewer found no defects, but driver exit 6 invalidated its terminal verdict because the author concurrently appended the completed docs-gate provenance in the parent clone. The guard reverted that author line; this was caller interference, not reviewer misconduct. Gate receipt is now committed before this turn. No concurrent parent edits will run. Documentation gate exited 0 with zero errors/656 warnings, retained summaries/provenance disclose the exact limitation and final pre-push gate still applies. Please re-review current skill/plan/evidence for final approval. No production artifact changed since round 1.
 
 Handing off to Reviewer.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Approve the complete instruction-only skill against the canonical plan, recon and retained consumer evidence. No blocking or should-fix defects found, including pre-existing text. This approves preparation content; final publication qualification remains with the normal push gate.
+swept file: yes
+
+- [Pass] All input modes stay bounded and reuse the same preparation flow; authority excludes implementation, admission and installation. Evidence: `.relay-artifacts/SKILL.md:10-25`. Publication waits for integration-ref availability, authorized hold resolution and fresh preflight; the label is explicitly discovery only (`.relay-artifacts/SKILL.md:63-71`).
+- [Pass] Schema, probe polarity and parser/Jog composition match the inspected consumer code: `.relay-artifacts/SKILL.md:29-61`, `utils/py/swarm_preflight.py:54-151,196-245`, `utils/py/jog_run.py:1577-1632`. PRS pickup preserves existing scores/override and remains distinct from accepted start: `.relay-artifacts/SKILL.md:27,33-42`, `utils/py/releases_app.py:3823-3861,4115-4251`. No duplicate writer, scheduler or gate is introduced.
+- [Pass] Full artifact matches the repository skill: command `cmp .relay-artifacts/SKILL.md skills/1-hourly/conveyor/SKILL.md`, exit 0, no output. `ARCHITECTURE.md:57` links that skill. Canonical plan requirements and `PROJECT/2-WORKING/recon-conveyor.md` describe the same bounded preparation/consumer seam.
+- [Pass] Retained manual controls discriminate main, adjacent and bad-input cases. `TESTS-RESULTS/2026-11-09+GH-1401/conveyor-smoke.log` quotes `RED empty fix_probes rejected exit=3`, `PAIR grep_present BUG: bug-present= unfixed fixed= landed`, and inversion `landed unfixed`. Main/rerun JSON retain candidate states `ready`/`stale` at their recorded evaluated SHAs; provenance records exit 0/4. SUMMARY explicitly discloses acceptance fidelity `unknown/no-issue-section`. These are inspected producer receipts, not fresh executions here.
+- [Pass] Documentation receipt now exists: `TESTS-RESULTS/2026-11-09+GH-1401/docs-gate.txt` says `PDDA run complete: no errors, 656 warning(s) to review`; provenance records exit 0 and explicitly states the gate began before final evidence/review-only commits. This is adequate retained evidence for instruction-only review, without claiming final-head qualification.
+- [Unverified — needs clone run] No suites, pytest, executable fixtures or gate ran in this review worktree. No Git command ran, so a complete branch-diff audit was unavailable. Live issue requirements were assessed through the canonical local plan and retained issue/preflight evidence rather than a fresh GitHub query. Final-head push qualification remains outstanding as disclosed by the producer receipt.
+
+relay closed (Approved), no further turn needed.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
