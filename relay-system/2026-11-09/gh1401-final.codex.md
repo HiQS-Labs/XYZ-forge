@@ -137,4 +137,12 @@ swept file: yes
 - [Unverified — needs clone run] No Git commands, suites, pytest, executable fixtures, merger replay or final-head gate ran here. Complete branch ancestry/diff and preservation of every unrelated integration row are not independently measured in this worktree; the bounded integration conclusion relies on the retained disjoint-resolution receipt. Prior parser/main/adjacent/red controls and documentation qualification remain recorded in `TESTS-RESULTS/2026-11-09+GH-1401/provenance.jsonl` and SUMMARY; acceptance fidelity remains explicitly unknown/no-issue-section. No final-head gate pass is claimed.
 
 relay closed (Approved), no further turn needed.
+
+### Attestation · relay-drive — 2026-11-10T05:22:33Z
+task: RELAY-gh1401-final-r3
+reviewer: codex
+status: Approved
+reviewed-head: df7b9e19ff73e7e94ac5213c2a6d0f965fab24de
+added-range: 14688+2818
+added-sha256: 50bf7f70be9308ef1fd6b096d50bd8c292a1dd5c51f57a7f76976d9d73677f55
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
