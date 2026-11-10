@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-10 — Debug mantra relevance and guarantees (GH-1410)
+
+- Clarify step 3: tie the candidate to the reported failure and falsify preservation of existing guarantees, including combined inputs and assertion changes.
+- Documentation only; no new skill, executable tests, gates or execution authority. Express review timed out; use normal PR review before landing and managed deployment.
+
 ## 2026-11-09 — GH-446 explicit planner writes and consumer compatibility
 
 - Bare planner calls report without writing; `--write` explicitly saves the dated plan. Reconcile, 10days and start-marathon file-generating paths now request it, and existing fixture writers use the same contract.
