@@ -1,0 +1,8 @@
+{
+  "approved": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "mutable_record": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "live_head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "bare_number_accepts_B": true,
+  "inline_approved_A_refuses_B": true,
+  "runtime_changes": false
+}
