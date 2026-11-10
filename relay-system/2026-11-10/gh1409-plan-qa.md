@@ -230,3 +230,11 @@ Only this relay file was edited. No git commands, suites, executable fixtures, s
 
 VERDICT: PASS
 Basis: Current plan R2 and Red 1b match the pinned ratchet's effective cardinality; all six controls remain required, with runtime and hosted verification still outstanding.
+
+### Attestation · relay-drive — 2026-11-10T22:11:44Z
+task: RELAY-gh1409-plan-qa-r4
+reviewer: codex
+status: Approved
+reviewed-head: b09b0e0e1dd624588171363e05006d2765a11c1c
+added-range: 17198+1336
+added-sha256: ec49c07d4cfd7bfab3532a4491451a3a806c4f0705fac39816579c0d077aeb9f
