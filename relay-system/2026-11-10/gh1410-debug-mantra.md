@@ -5,7 +5,7 @@
 -->
 
 NEXT: Reviewer
-STATUS: Open
+STATUS: Escalated
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -56,7 +56,7 @@ ROUND: 1 / 2
   `relay-drive.sh --artifact-file skills/1-hourly/debug-mantra/SKILL.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: agy   ·   Producer: codex
 - Started: 2026-11-10
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Wording must tie the candidate to the reported symptom and challenge existing guarantees without new machinery or authority.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -69,3 +69,7 @@ ROUND: 1 / 2
 ## Log
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+## Producer disposition — 2026-11-10
+
+The agy run exceeded its 180-second cap and produced no valid reviewer verdict or attestation. This scaffold is not approval evidence. Express refused skill-unattested; the normal PR review is recorded separately in gh1410-wording-qa.md.

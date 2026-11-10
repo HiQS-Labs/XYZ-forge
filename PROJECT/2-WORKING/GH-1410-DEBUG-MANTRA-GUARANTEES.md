@@ -12,7 +12,7 @@ gh_issue: 1410
 
 | What was just completed | What's next |
 |---|---|
-| Bounded wording and relative-link checks; express review attempt timed out | Independent review and normal PR qualification; managed deployment after landing |
+| Bounded wording and relative-link checks; express review attempt timed out | Opus wording review PASS; finish normal PR qualification and managed deployment after landing |
 
 ## Scope and acceptance
 
