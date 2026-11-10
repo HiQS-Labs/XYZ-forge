@@ -119,4 +119,12 @@ Basis: The single instruction that could not be followed in R1 is now complete. 
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-10T05:32:42Z
+task: RELAY-gh1401-opus-medium
+reviewer: claude-opus
+status: Approved
+reviewed-head: 91e682b4749dd07c564a03dceb60c8de79a30150
+added-range: 13959+3339
+added-sha256: 3eda21a3200e235bc5edf7d58dedd339ecdcc4f7751ec5be3e788c0b6ad1351e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
