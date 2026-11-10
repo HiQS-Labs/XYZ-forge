@@ -9,7 +9,7 @@ post-render patching).
 
 Python is authoritative (GH-362); this does not alter the frozen `XYZ_PYTHON=0` fallback.
 
-CLI contract (unchanged): [--dry-run | --check] [--policy quick-wins|derisk-first] [--deep]
+CLI contract: [--write | --dry-run | --check] [--policy quick-wins|derisk-first] [--deep]
 [--require-gh] [--format text|json]. `--zones-config` is translated to QUEUE_PLAN_ZONES_FILE by
 the Bash entry point before this script runs.
 """

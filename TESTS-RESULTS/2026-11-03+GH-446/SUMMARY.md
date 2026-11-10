@@ -20,3 +20,7 @@
 Independent Codex source review atcf799f0 confirmed originalneed remains on development1c2bd89e and found existing directmutatedBashinvocation omitted--write, potentially comparing stalePythonoutput. Added--write to that existing invocation only; no new suite/machinery. Existing suite70pass/0fail/2explicitlegacy-render skips, mutation detected. Normal exact-composition push gate pending.
 
 FreshcompositionQA atf9ec80fb foundexisting10daysconsumer explicitlyexpectsplanfileafterbare--deep. Correctedcommandto--write--deep; earlierclaimnoin-reposkillcallerswasincomplete. Secondordinaryreadinessrepair; priorhistory/capsretained. Afterlandingrefresh10days throughSkillsArmyexistingcollectionsoitsdeployedconsumerkeepswriting; source-onlychangecannotupdateglobalcopy.
+
+## Operator-authorized continuation
+
+The operator authorized continuing PR1327 beyond its two preserved readiness repairs. One additional bounded repair episode corrects the remaining start-marathon secondary-route instruction to use explicit `--write`, and updates the Python CLI docstring. Earlier no-in-repo-caller claims were incomplete: reconcile, 10days and start-marathon all require the write contract. Existing manual bare/write/dry/check evidence and historical review findings remain intact. Final focused verification, independent recheck and normal full publication gate are still pending; no new suite or gate is added. This is a source correction only; deployed Skills Army copies require a separately authorized refresh after landing.
