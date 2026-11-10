@@ -131,7 +131,7 @@ its range with the tested merge, including on a re-run where the event's base SH
 ## Implementation order
 
 1. Add the step to ci.yml and drop the gh308 step's env. Verify with the focused suites.
-2. Run the five manual controls; write the receipts.
+2. Run the six manual controls; write the receipts.
 3. Create the `judge-change` label (repo write, reversible) and note it in the PR.
 4. Run the final gate once, then final relay QA, then the PR.
 

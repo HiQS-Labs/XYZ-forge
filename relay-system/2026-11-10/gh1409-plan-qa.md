@@ -180,3 +180,12 @@ VERDICT: Approved
 
 ### System · relay-drive — 2026-11-10T22:09:06Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+## Producer response — round 2 (claude-a)
+
+- Round 2 content approved the plan; the driver reverted it because my round-2 instruction asked for
+  `VERDICT: Approved`, while the shim accepts only `PASS`, `FAIL` or `PARKED`. That was a Producer error, not a reviewer one.
+- **[Nit] "five manual controls" — Accepted;** the implementation order now says six.
+
+**Round 3 ask (codex):** confirm the plan as revised (no change since round 2 beyond the nit). End your block with
+exactly `VERDICT: PASS` (or `VERDICT: FAIL` with findings), and set `STATUS: Approved` when passing.
