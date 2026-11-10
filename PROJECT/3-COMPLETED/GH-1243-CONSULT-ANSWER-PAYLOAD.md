@@ -2,7 +2,7 @@
 gh_issue: 1243
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1243
 title: "Consult answer payload and citation accuracy"
-status: Active
+status: Complete
 created: 2026-11-10
 updated: 2026-11-10
 owner: B trial
