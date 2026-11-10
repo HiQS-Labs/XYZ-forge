@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The bounded skill-only design fits the request; add one explicit bug-polarity verification before implementation. This is plan QA, not an implementation failure or execution attestation.
+swept file: yes
+
+- [Should] S1 — Make the promised bug-polarity check falsifiable in the verification sequence. `.relay-artifacts/GH-1401-CONVEYOR.md:46` specifies only a valid missing-artifact contract and malformed/empty contracts, while lines 34 and 52 require concrete bug-polarity probes. Those checks cannot distinguish an inverted bug probe from a correct one: both parse and lint. `utils/py/swarm_preflight.py:211-234` demonstrates why: `grep_present` means the bug pattern still exists, and command success means unfixed unless `expect_nonzero` reverses it. Cheapest fix: extend step 3 with a manual paired existing-file bug example in the already-planned disposable clone: bug-present input must yield unfixed, controlled fixed input must yield landed, and deliberately inverted polarity must expose the mismatch. Record commands, exit status, verdicts and provenance; no new suite or gate.
+  Observed input: The complete verification step at artifact line 46 is “a valid missing-artifact contract at the pinned base and a malformed/empty contract using existing parser/linter”; it contains no bug-present/fixed pair or expected verdicts.
+  Affected scope: Verification of synthesized existing-file bug contracts, not every backlog item and not new runtime behavior.
+  Falsifier: An explicit existing planned manual check that runs the same bug probe against bug-present and fixed contents, expecting unfixed and landed respectively, with an inverted-polarity red control. If that check is named in the sequence, this finding is satisfied.
+- [Pass] Writer and consumer reuse are appropriately bounded: artifact lines 30 and 36 keep PRS canonical and forbid `--accepted-start`; lines 54 and 59 defer admission and require integration-ref availability before readiness. This matches Jog's separate promotion/shape-check/preflight stages (`skills/2-daily/jog/SKILL.md:90-104`, `utils/py/jog_run.py:1577-1627`).
+- [Pass] Invocation coverage and scope match the issue at plan level: artifact lines 34 and 55 cover issue IDs/PRS selection, scheduled batches, and intake/refine events without installing dispatch machinery; lines 40 and 53 state rating provenance/preservation, and line 59 supplies rollback. Source request read through GitHub `fetch_issue` for HiQS-Labs/XYZ-forge #1401 (Invocation Modes and Initial PRS Proposal). No additional pre-existing defects found in the swept 67-line artifact.
+- [Unverified — needs clone run] No parser/linter execution, preflight or gates were run in this review worktree; those are future implementation evidence per artifact lines 46-47. Source inspection supports the design but does not establish runtime readiness.
+
+Handing off to Producer — address S1 in the canonical plan, log its disposition, and request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
