@@ -100,4 +100,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit; reviewer ran no git commands.
 
+
+### Attestation · relay-drive — 2026-11-10T05:12:51Z
+task: RELAY-gh1400-final
+reviewer: codex
+status: Approved
+reviewed-head: 2bb92f56f0a793325aa5563ff67f8c9a156e6f0b
+added-range: 6997+3468
+added-sha256: af0a99ded4b0e7b90a0a8ede3097d38511caabab0bae1032f215f018022606e1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
