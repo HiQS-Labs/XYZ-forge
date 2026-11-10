@@ -1,0 +1,1 @@
+{"at": "2026-11-10T04:59:08.213674+00:00", "mode": "1B setup repair", "checks": "independent AST loop red/green controls; existing gh280 adapter227pass0fail in disposablefullclone", "runtime_sha256": "ef15b4a5326cf0c45245165817255a50591a5d921a44dc2209185d2ccea6706f", "real_transition": "not yet run"}

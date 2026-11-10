@@ -2172,7 +2172,7 @@ def jog_run_main(args=None):
                                  "the reviewed one-phase driver via the structured contracts, "
                                  "requires --reviewer; 'relay' is the legacy rollback path kept "
                                  "for a documented compatibility window")
-        parser.add_argument("--checkpoint-root", help="dedicated disposable publication clone; one-task wake")
+        parser.add_argument("--checkpoint-root", help="dedicated disposable publication clone; bounded serial run")
         parser.add_argument("--max-tasks", type=int, default=None, help="max tasks to process")
         parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
         parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
@@ -2246,8 +2246,8 @@ def jog_run_main(args=None):
         print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
     checkpoint_root = getattr(args, "checkpoint_root", None)
-    if checkpoint_root and (args.max_tasks != 1 or simulate or executor != "marathon"):
-        raise ContractError("--checkpoint-root requires --max-tasks 1 and the real Marathon executor")
+    if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
+        raise ContractError("--checkpoint-root requires positive --max-tasks and the real Marathon executor")
     if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
         raise ContractError("publication and execution clones must be distinct")
     supervisor_lock = JogSupervisorLock(root)
@@ -2341,6 +2341,8 @@ def jog_run_main(args=None):
                 if err:
                     print(f"jog: contract promotion failed: {err}")
                     jog_set_status(root, gh_num, "parked", failure_reason=err)
+                    if checkpoint:
+                        break
                     continue
                 doc_path = promoted_path
 
@@ -2351,6 +2353,7 @@ def jog_run_main(args=None):
             # via --executor relay or --simulate during the compatibility window.
             if executor == "marathon" and not simulate:
                 ledger_gid = jog_resolve_ledger_gid(root, gh_num) or row["global_id"]
+                prior_executions = len(jog_load_state(root, ledger_gid).get("executions") or [])
                 action, reason = run_marathon_phase(
                     root, gh_num, ledger_gid,
                     builder=args.builder, reviewer=args.reviewer,
@@ -2358,8 +2361,21 @@ def jog_run_main(args=None):
                     auto_merge=getattr(args, "auto_merge", False), target_root=target)
                 jog_set_status(root, gh_num, action, failure_reason=reason)
                 if action == "completed":
-                    tasks_processed += 1
+                    if not checkpoint:
+                        tasks_processed += 1
                     continue
+                if checkpoint and action == "parked":
+                    # Only the execution just projected may authorize independent work.
+                    # Earlier approved results must not mask a failed latest attempt.
+                    executions = jog_load_state(root, ledger_gid).get("executions") or []
+                    latest = executions[-1] if executions else {}
+                    if (len(executions) == prior_executions + 1
+                            and latest.get("status") == "projected-parked"
+                            and latest.get("committed_receipt") and latest.get("published_head")):
+                        result = load_marathon_result(_ledger_abs_path(root, ledger_gid, latest.get("result_path")))
+                        if result.get("outcome") == "approved" and (result.get("pr") or {}).get("number"):
+                            print(f"jog: GH-{gh_num} published awaiting approval; continuing independent pending work.")
+                            continue
                 if action == "failed":
                     print("jog: stopping queue execution on task failure.")
                 else:
