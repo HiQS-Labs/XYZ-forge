@@ -1,6 +1,6 @@
 # Marathon Phase gh-1243-consult-answer-payload
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1243-CONSULT-ANSWER-PAYLOAD-TURN builder=codex reviewer=agy round-cap=2 -->
 
@@ -125,3 +125,46 @@ suite can qualify this change. Please flag this scope gap to the orchestrator;
 missing-final safety must remain strict. Acceptance is not claimed complete.
 
 Handing off to agy for independent review.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Changes requested
+swept file: yes
+
+Swept all 6 in-scope artifact files in full (`utils/py/consult.py:1-1117`, `TESTS-RESULTS/2026-11-10+GH-1243/manual.md:1-79`, `TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl:1-2`, `test/gh375-auth-timeout-verdict.sh:1-204`, `test/synthetic/gh101-consult-programmatic.sh:1-114`, `test/_setup.sh:1-175`), plus the phase contract (`PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md:1-83`), admission probe (`TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py:1-2`), and existing consult suites (`test/consult.sh:1-306`, `test/gh308-consult-guards.sh:1-131`, `test/gh589-consult-no-tick.sh:1-54`, `test/archive-writers.sh:1-85`). No pre-existing critical defects outside the two blockers below were found in the swept files.
+
+- **[Blocker] R1 — Contract `fix_probes[0]` (`python3 TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py`) fails with `AssertionError` (exit 1) because `_neutralize_answer_text` in `utils/py/consult.py:253-317` does not strip Codex transcript preamble/exec logs/token footers.**
+  - `Observed input:` `raw='Prompt echo\nTRANSCRIPT_SENTINEL\nexec log\ntokens used\n123\n[Pass] utils/py/consult.py:89 final answer.'` passed to `_neutralize_answer_text(raw, 'advisor.md', 'A', 'codex')` in `TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py:2` (referenced by `PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md:45-50` `fix_probes`).
+    Probe run under `.relay-scratch/tmp`:
+    ```text
+    $ PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py
+    Traceback (most recent call last):
+      File ".../TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py", line 2, in <module>
+        ... assert 'TRANSCRIPT_SENTINEL' not in out and 'exec log' not in out and '[Pass] utils/py/consult.py:89 final answer.' in out
+    AssertionError
+    exit=1
+    ```
+  - `Affected scope:` `utils/py/consult.py:253-317` (`_neutralize_answer_text`), `TESTS-RESULTS/2026-11-10+GH-1243/manual.md:36-45`, `TESTS-RESULTS/2026-11-10+GH-1243/provenance.jsonl:1-2`. Note that in `utils/py/swarm_preflight.py:239-241` (invoked by `utils/py/marathon_drive.py:2671` `acceptance_probes_unmet()`), `expect_nonzero: true` means the probe failed pre-fix (nonzero exit) and MUST exit `0` (`verdict == "landed"`) post-fix. Additionally, `TESTS-RESULTS/2026-11-10+GH-1243/manual.md:38` currently asserts `'TRANSCRIPT_SENTINEL' in consult._neutralize_answer_text(...)` against the live post-fix function rather than a pre-fix baseline control.
+  - `Falsifier:` `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py` exits `0`, and `_neutralize_answer_text(raw, 'advisor.md', 'A', 'codex')` returns a neutralized payload containing `[Pass] utils/py/consult.py:89 final answer.` without `Prompt echo`, `TRANSCRIPT_SENTINEL`, `exec log`, or `tokens used\n123`.
+
+- **[Blocker] R2 — Requiring `--output-last-message` as the sole producer of `<label>.codex.md` and moving `consult_codex_attestation` off `<label>.codex.md` breaks existing suites (`test/consult.sh:20-30,195-292`, `test/gh308-consult-guards.sh:31-60`, `test/gh589-consult-no-tick.sh:26`, `test/archive-writers.sh:23-30`) without needing out-of-scope test edits.**
+  - `Observed input:` A `codex` invocation where the CLI writes only to stdout (as in `test/gh308-consult-guards.sh:31-37` and `test/consult.sh:20-30`) or where a caller inspects `<label>.codex.md` for `> **ATTESTATION**` (`test/gh308-consult-guards.sh:54-60`).
+    Probe run under `.relay-scratch/tmp` simulating `test/gh308-consult-guards.sh:31-60`:
+    ```text
+    $ PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -c '...'
+    rc: 5
+    stderr: ... consult: all advisors failed
+    cx.codex.md exists: False
+    cx.codex.md.transcript exists: True
+    ```
+  - `Affected scope:` `utils/py/consult.py:88-127` (`rtl_has_uncited_claim`), `utils/py/consult.py:130-191` (`rtl_classify_cited_claims`), `utils/py/consult.py:209-250` (`advisor_answer_ok`), `utils/py/consult.py:253-317` (`_neutralize_answer_text`), `utils/py/consult.py:804-813` (`run_one` codex branch), `utils/py/consult.py:919-926`, `952`, `978`.
+  - `Falsifier:` This does NOT require editing `test/consult.sh` or expanding the scope lock. Resolve both R1 and R2 inside `utils/py/consult.py` by adding a shared final-answer extractor (e.g. `_extract_final_answer(raw_text)` in `utils/py/consult.py`):
+    1. When `raw_text` contains a Codex CLI token footer (`(?m)^tokens used\s*\n\s*[\d,]+\s*(?:\n|$)`), extract only the text after the last `tokens used\n<count>` line (which yields `""` if nothing follows the token count, so a mid-run crash or truncated transcript after `tokens used` still fails `advisor_answer_ok`).
+    2. When `raw_text` contains Codex CLI transcript preamble/exec markers (e.g. `^Reading additional input from stdin\.\.\.`, `^=== CONSULT QUESTION ===`, or `\nexec\n` with `codex\n` / `workdir:`) and NO `tokens used\n<count>` footer, return `""` so a mid-run crash before the final answer fails `advisor_answer_ok`.
+    3. Otherwise (plain answer text or stdout-only test stubs without CLI transcript framing), return the body after stripping attestation/stamps/banners.
+    4. Keep `<label>.codex.md` populated and attested via `consult_codex_attestation(out)` (`utils/py/consult.py:926`) — e.g. if `--output-last-message` writes to `f_out + ".last"` (or if `codex` stdout is captured to `f_out` / copied from `.transcript` when `--output-last-message` did not write `f_out`), ensure `<label>.codex.md` exists and starts with `> **ATTESTATION**` (`test/gh308-consult-guards.sh:54-60`), while `advisor_answer_ok`, `rtl_has_uncited_claim`, `rtl_classify_cited_claims`, and `_neutralize_answer_text` operate on the extracted final answer (preferring the `--output-last-message` payload when non-empty and falling back to `_extract_final_answer` on `<label>.codex.md`).
+
+- **[Pass]** `utils/py/consult.py:88-191` (`rtl_has_uncited_claim` and `rtl_classify_cited_claims`) accurately classifies cited `[Pass] utils/py/consult.py:89` claims vs uncited `[Pass]` claims when given the final answer text.
+- **[Pass]** `test/synthetic/gh101-consult-programmatic.sh:21-38` cleanly handles `--output-last-message` while still emitting stdout, and `test/gh375-auth-timeout-verdict.sh:1-204` and `test/_setup.sh:1-175` remain untouched and intact.
+
+handing off to codex — codex, take your turn
