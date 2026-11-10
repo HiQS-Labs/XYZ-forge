@@ -1,6 +1,6 @@
 # Marathon Phase gh-1206-packaging-drift
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1206-PACKAGING-DRIFT-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -101,3 +101,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Changed `package.json` and `package-lock.json`: aligned root names to `xyz-forge`, retained version 1.0.1 and dependencies, declared Node >=18, removed nonexistent `main` and obsolete directory hints. Package purpose is explicitly a repository-development/source snapshot; no npm CLI or library entry point is declared. Minimal `files` allowlist ships top-level JS sources and licenses/readme/metadata, excluding full harness installation and historical/runtime material.
+
+Added `TESTS-RESULTS/2026-11-10+GH-1206/manual.md` and `provenance.jsonl` with baseline/final dry-run metrics, exact final paths, red-control observations, metadata assertions, and artifact hashes. Baseline: 10,447 files / 186,258,993 unpacked bytes; final: 17 files / 152,679 unpacked bytes. Manual probes passed; raw output and cache stayed in `.relay-scratch/`. Reversibility: Easy, metadata-only changes; no publication or installation.
+
+`test/xyz-vendor.sh` and `test/_setup.sh` read and left unchanged. No git commands or test suites run. Kernel unit tests and full gate remain pending harness verification, per embedded scope lock. No claim of runtime or full-gate completion.
+
+NEXT: agy (Reviewer)
