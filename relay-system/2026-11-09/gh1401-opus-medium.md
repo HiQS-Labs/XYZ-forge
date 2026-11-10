@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-09.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,30 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (claude-opus)
+
+swept file: yes. I read all of `skills/1-hourly/conveyor/SKILL.md` (71 lines), `PROJECT/2-WORKING/GH-1401-CONVEYOR.md` (81 lines), the ARCHITECTURE row (`ARCHITECTURE.md:57`) and the TESTS-RESULTS SUMMARY. I checked every CLI and parser claim in the skill against its consumer: `utils/py/swarm_preflight.py`, `utils/py/jog_run.py:1577`, `utils/py/releases_app.py` pickup/rate, the HQ skill, the idea skill and `prior_art_recon.py`. All probes were read-only; no tests, validate or fixtures were run.
+
+- **[Should] Step 4 has no instructed path to rate an existing unrated row: `pickup --rated` silently drops the rating there.** `cmd_roadmap_pickup` returns early on any existing row: `if row is not None: ... print("roadmap-pickup: GH-%d already parked (%s); preserved" ...); return` (`releases_app.py:3841-3862`). `--rated` is never read on that path. The skill (`SKILL.md:36`) passes `--rated P/S/A/E` and then only offers `roadmap rate` for "A justified rescore ... with retained `--ovr`" (`SKILL.md:42`). For an issue that is parked but has never been rated, the agent gets "preserved", and the read-back then shows no rating. The skill gives no next step: the rescore wording does not fit, and the agent cannot tell whether to hold or improvise.
+  - Observed input: `sqlite3 -readonly releases.db "SELECT COUNT(*) FROM roadmap_items WHERE gh_number IS NOT NULL AND rating_pri IS NULL"` exited 0 and returned `40`. Open-section examples: `1314|Queue / parked intake|🆕` and `1293|Queue / parked intake|🆕`. `/conveyor 1314` would hit the early return at `releases_app.py:3841`.
+  - Affected scope: only issues whose roadmap row exists with `rating_pri IS NULL`. Absent rows (the create path) and rated rows (correctly preserved) are unchanged.
+  - Fix (instruction only, no code): in Step 4, add one sentence: "If pickup reports an existing row that is unrated, apply the first rating with `roadmap rate --issue-num N --rated P/S/A/E --dry-run`, then without `--dry-run`. This needs no `--force`." `rate` refuses to overwrite an existing rating without `--force` (`releases_app.py:7020-7021`), so the sentence cannot clobber operator values.
+  - Falsifier: if pickup's existing-row path did apply `--rated` to a NULL-rated row, the gap would not exist. Expected result under current code: in a disposable clone, `pickup --issue-num 1314 --rated 50/50/50/50` followed by `roadmap list --json` still shows GH-1314 with null rating fields. Grade: [Unverified — needs clone run]. The early return is statically certain from `releases_app.py:3841-3862`.
+- **[Nit] On an existing row, the pickup `--dry-run` "preview" shows nothing about a repoint.** When `--doc-path` differs, the dry-run skips the write but prints the same "already parked ... preserved" line (`releases_app.py:3857-3861`). It never says that a doc repoint would happen, so "After inspecting the preview" (`SKILL.md:37`) shows nothing useful. This is optional: the Step 4 read-back (`roadmap list --json`, `SKILL.md:38,42`) already catches the doc path. No change required.
+- **[Pass] Probe polarity matches the evaluator.** `path_absent` lands when the path exists. `grep_present` lands when the pattern is gone and is blocked when the file is missing. `grep_absent` lands when the pattern is present. `command` lands on rc≠0, inverted by `expect_nonzero` (`swarm_preflight.py:207-232`). All of this agrees with `SKILL.md:31`.
+- **[Pass] Contract fields and the `artifacts_new` rule are the parser's rules, not a second schema.** Each `artifacts_new` entry must also appear in `artifacts` (`swarm_preflight.py:119-126`) and needs a matching `path_absent` probe (`swarm_preflight.py:1332-1336`), as `SKILL.md:29` says.
+- **[Pass] Preflight flags, input scope and exit codes are accurate.** `--project-doc/--target-root/--format/--dry-run` exist (`swarm_preflight.py:1158-1163`). `--gh-issue` globs only `PROJECT/2-WORKING` (`swarm_preflight.py:1232-1235`). Exit codes match: 3 contract error, 4 STALE, 5 NOT-READY, 6 BLOCKED, 7 AMBIGUOUS (`:66`, `:1644-1645`, `:1210`, `:182`).
+- **[Pass] The validation snippet fits the real signatures.** `extract_contract(doc_path)` is at `swarm_preflight.py:54`, and `contract_probes_from_doc(root, doc_path)` returns `(labels, reason)` (`jog_run.py:1577-1582`). If the doc has no contract heading, `extract_contract` exits 3 before the assert runs, so the snippet fails closed rather than passing an empty result.
+- **[Pass] Pickup cannot grant accepted start or an in-progress label.** `pickup` has no `--accepted-start` flag (`releases_app.py:7025-7032`). The `in-progress` label is set only on `roadmap-update` with `accepted_start` (`releases_app.py:1655-1657`). Existing scores and override are preserved (`releases_app.py:3826`).
+- **[Pass] The readiness label is a publication signal only.** `grep -rn ready-for-pickup utils/py/*.py skills/1-hourly/jog/SKILL.md` returned nothing, so no consumer admits work from the label, matching "today Jog does not select or admit work from it" (`SKILL.md:67`). The label is held until the packet is on the integration ref and a fresh exit-0 run passes (`SKILL.md:63-65`). A stale label is removed only within invocation scope (`SKILL.md:67`). This composes with PR1403's flow of explicit owner selection, revalidation, then execution, and no shared runtime is touched (the PR's changes are the skill, the index row, docs and evidence).
+- **[Pass] The skill's cross-references resolve.** `hq park --gh-issue N` exists (`skills/2-daily/hq/SKILL.md:68`). The idea skill excludes retrofit (`skills/1-hourly/idea/SKILL.md:3,72`). `prior_art_recon.py` supports `--query/--json` (`:171,176`). `relay-automation/CONTRACT.example.md` exists.
+- **[Pass] The evidence supports the claims and the change is proportionate.** SUMMARY records main READY exit 0, adjacent STALE exit 4 and the empty-probe red control at exit 3 (`TESTS-RESULTS/2026-11-09+GH-1401/SUMMARY.md:5-7`). No new tests, gates or runtime were added, consistent with GH831. Gap: the evidence never exercised the existing-unrated-row path, which is why the Should finding above went undetected.
+- Pre-existing defects in the swept files: none beyond the writer behaviour behind the Should and the Nit. That writer is not changed by this PR, and the fix belongs in the skill text.
+
+VERDICT: FAIL
+Basis: The three invocation modes are bounded and use existing contracts. Polarity, parser, preflight, publication, holds, the accepted-start exclusion and the no-execution boundary are all correct and cited above. One instruction cannot be completed as written: for the 40 existing unrated rows (for example, open GH-1314 and GH-1293), the canonical `pickup --rated` drops the rating without error, and the skill only names `roadmap rate` for rescoring. The fix is one sentence of skill text. I would approve once it is added and nothing else in the skill changes.
+
+handing off to Producer (codex-parent): go to the codex-parent window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
