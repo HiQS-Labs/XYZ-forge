@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| Recon and intake complete at 39207869; downstream scope separated from GH-1401. | Independent plan QA, then the bounded instruction change. |
+| Independent plan QA Approved; owned-row accepted-start recorded; bounded flywheel instruction change drafted. | Manual instruction smoke and final Codex QA. |
 
 ## Quad Concepts
 
@@ -89,7 +89,7 @@ no merged fix candidate; existing GH-1376 source supplies the base to extend.
 3. Read consumer entry and exercise main/adjacent instruction scenarios → approved two-PR batch delegates once; pending changed-head or missing-accounting paths stay held and never silently advance.
 4. Classify final paths, run existing applicable gate and independent final Codex QA → retain provenance and Approved review; publish PR against development, leaving arc dependencies open.
 
-Phase 1 QA: map findings integrated above; independent review pending.
+Phase 1 QA: map findings integrated above; independent Codex plan review Approved in `relay-system/2026-11-09/gh1400-plan.codex.md` (driver exit 0).
 
 ## Phase 2 — Delivery and verification
 

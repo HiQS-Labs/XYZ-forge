@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09 — GH-1400 downstream flywheel composition
+
+Extended the existing flywheel routing skill with one approved pinned-batch handoff,
+result-specific native continuation, explicit pickup revalidation and operation-owned
+attempt accounting. No new runner, scheduler or gate. GH-1399 enforcement, GH-1401
+upstream preparation and real-work qualification remain separate; no unattended or
+cost-saving result is claimed. The instruction change is Easy to revert.
+
 ## 2026-11-09
 
 - GH-1395: bound dense reconciliation native reads to two open-issue inventory pages plus singleton misses; preserve separate closure observations and mismatch refusal. Bet: dense open candidates repay up to two extra reads on sparse inventories. No cross-stage cache; malformed/error pages fail closed. Easy isolated patch rollback by revert, no schema or remote writes. Offline native CLI counts 90→3 and 220→22; sparse90→91. Retained real gate repetitions do not establish HTTP totals or live savings. Evidence and verification status: `TESTS-RESULTS/2026-11-09+GH-1395/`.

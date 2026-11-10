@@ -89,6 +89,60 @@ remains in [#1328](https://github.com/HiQS-Labs/XYZ-forge/issues/1328). Flywheel
 this projection to runs that explicitly select it; it does not rewrite unrelated
 campaigns' policies.
 
+## Compose the existing owners with one handoff
+
+Keep the objective, exact work/PR identities and heads, dependencies, approved scope,
+remaining budgets, evidence and next owner in the existing plan or batch record.
+Re-read those facts on resume; a new conversation supplies no new attempt allowance.
+Preparation, execution and landing retain their own canonical writers.
+
+**Prepared intake is a signal for selection.** When upstream preparation (such as
+`conveyor`, GH-1401) publishes a capture and Preflight Contract, the selected execution
+owner still checks current issue/PR state, contract probes, dependencies, rating and
+admission at pickup. A `status:ready-for-pickup` label is neither automatic Jog selection
+nor execution approval. Hold missing or stale prerequisites with the preparation owner;
+continue independent eligible work without inventing a second intake queue.
+
+**An approved batch needs one landing owner.** After the outer reviewer has checked
+each PR's base, exact head, logical scope and current QA/gate evidence, obtain the
+required per-PR merge approval. The operator may give those approvals together as an
+explicit batch list; neither a ready PR nor a `--prs` pin grants approval. Then use
+merge-cleanup's existing dry run to pin exactly that list and its `--execute` path to
+own dependency ordering, landing, reconciliation and the batch record. Do not nudge
+through those stages one PR at a time or discover extra approved PRs during execution.
+Keep the existing project policy, landing-plan checkpoint and review requirements.
+A repaired/moved head needs fresh eligibility, review/approval as applicable and a new
+pin before landing; never silently widen the list or reset repair history.
+
+**Wait on the result that can unlock work.** Prefer a native exact-PR/head check watcher
+(for example `watch_pull_request` where the harness provides it) or a delegated task's
+completion notification over repeated chat status calls. Record the awaited identity,
+next action, hard deadline and subscription/job identity in the existing handoff.
+Follow the native tool's continuation and cancellation contract. On wake, verify the
+live head and actual terminal result before resuming; pending, missing, failed or stale
+results do not prove readiness. Use handsfree's bounded same-conversation timer only
+when no suitable event continuation exists and its capability/readback checks pass.
+Do not arm duplicate watchers/timers for one wait or substitute a shell polling loop.
+When neither mechanism is available, state that continuation is unarmed and leave a
+resumable handoff; do not promise a wake. End subscriptions as required when the wait
+ends, the deadline expires or the owner hands control back.
+
+**Accounting belongs to the operation's owner.** Before a repair, use that owner's
+existing reservation/wrapper and durable record, and retain its outcome and consumed
+budget across heads, retries and resumes. Merge-cleanup's per-PR `attempt_record.py`
+and relay/Marathon lane attempts have different scopes; a nested counted flag is not
+a new allowance. If the required reservation is absent or unreadable, hold the repair
+and resolve it through the existing owner rather than edit first and reconstruct later.
+Universal push/gate enforcement is proposed in GH-1399; these instructions do not
+claim that raw edits are mechanically intercepted today.
+
+Report the driver's actual outcome: stopped/deferred work and landed-but-QA-pending
+batches remain open under merge-cleanup's existing recovery protocol. Preserve failures
+and partial delivery instead of calling every zero/nonzero exit a completed batch.
+Measure useful deliveries, elapsed time, gates/publications, repairs and parent/human
+interventions; leave unavailable tokens/spend unknown. A prose change or green component
+check does not qualify unattended progression or establish a supervision-cost saving.
+
 ## Daily observation and 10days batches
 
 **Daily is an optional observation-only companion.** When installed and configured,
@@ -159,8 +213,9 @@ needed and step 6 for verified ready PRs, preserving per-PR merge approval.
    [relay-xyz](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/relay-xyz/SKILL.md)
    for required independent plan/final review and its locator, containment and receipt
    contract. A green suite alone is not independent review.
-5. **Continue or recover without a premature handoff.** When external work is running
-   and the current conversation must wake to advance it, use
+5. **Continue or recover without a premature handoff.** Use the result-specific native
+   continuation above when available. If external work requires a same-conversation
+   timer, use
    [handsfree](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/handsfree/SKILL.md)
    within its native-scheduler and deadline limits; it is not a durable deployed
    scheduler. When narration, repeated planning, tool exits or delegation produce no
@@ -170,7 +225,8 @@ needed and step 6 for verified ready PRs, preserving per-PR merge approval.
    its recovery order: `resume` first, `retry-gate` for an approved build with a failed
    gate, then `retry-build` when the build genuinely needs a fresh bounded attempt.
    Never reset counters by changing sessions or identities.
-6. **Land only within approval, then advance.** Keep per-PR merge approval. Use
+6. **Land only within approval, then advance.** Hand the exact approved pinned batch
+   to one landing owner as above; keep per-PR merge approval. Use
    [merge-cleanup](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/merge-cleanup/SKILL.md)
    for the authorized landing, reconciliation, Jog completion and safe retirement.
    Verify the actual merge and clean synchronized primary before calling it landed.
