@@ -40,7 +40,7 @@ Extract final answer for neutral payload and citation screening; preserve full t
   "fix_probes": [
     {
       "type": "command",
-      "cmd": "python3 -c 'import sys;sys.path.insert(0,'\"'\"'utils/py'\"'\"');from consult import _neutralize_answer_text;raw='\"'\"'Prompt echo\\nTRANSCRIPT_SENTINEL\\nexec log\\ntokens used\\n123\\n[Pass] utils/py/consult.py:89 final answer.'\"'\"';out=_neutralize_answer_text(raw,'\"'\"'advisor.md'\"'\"','\"'\"'A'\"'\"','\"'\"'codex'\"'\"');assert '\"'\"'TRANSCRIPT_SENTINEL'\"'\"' not in out and '\"'\"'exec log'\"'\"' not in out and '\"'\"'[Pass] utils/py/consult.py:89 final answer.'\"'\"' in out'",
+      "cmd": "python3 TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py",
       "expect_nonzero": true
     },
     {
