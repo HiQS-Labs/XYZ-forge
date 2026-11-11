@@ -570,9 +570,18 @@ strip_githooks() {  # <repo> <branch>
 }
 realpush() {  # <repo> [env...] -> pushes the current branch; prints output + trailing RC=
   local r="$1"; shift
-  local _o _r
+  local _o _r _context _key _cache
   require_fixture "$r" "realpush repo"          # `cd ""` would push the CALLER's repo to the bare
-  _o="$( cd "$r" && env "$@" git push -q origin HEAD:refs/heads/probe 2>&1 )"; _r=$?
+  # GH-1399: these existing runtime-gate controls need a booked task candidate first.
+  _key="$(basename "$r")-$(git -C "$r" branch --show-current | tr '/' '_')"
+  _cache="$WORK/context-$_key.json"
+  if [ ! -f "$_cache" ]; then
+    python3 "$REPO/utils/py/gate_receipt.py" attempt-start --repo "$r" \
+      --accounting-root "$WORK" --task "$_key" > "$_cache" || return 2
+  fi
+  _context="$(cat "$_cache")"
+  _o="$( cd "$r" && env XYZ_ATTEMPT_CONTEXT="$_context" "$@" git push -q origin \
+    "HEAD:refs/heads/${GH544_PUSH_DESTINATION:-probe}" 2>&1 )"; _r=$?
   printf '%s\nRC=%s\n' "$_o" "$_r"
 }
 
@@ -620,7 +629,7 @@ ok "a delete-only push is not gated on the fallback path" "printf '%s' \"\$out\"
 git -C "$R_P" worktree add -q "$WORK/wt-probe" -b wtprobe >/dev/null 2>&1
 ok "a linked worktree resolves to the SAME hooks dir as its parent clone" \
    "[ \"\$(git -C '$WORK/wt-probe' rev-parse --git-common-dir)/hooks\" -ef '$R_P/.git/hooks' ]"
-out="$( cd "$WORK/wt-probe" && git push -q origin HEAD:refs/heads/wtprobe 2>&1; printf '\nRC=%s\n' "$?" )"
+out="$(GH544_PUSH_DESTINATION=wtprobe realpush "$WORK/wt-probe")"
 ok "  and a push FROM that worktree is gated too" "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 git -C "$R_P" worktree remove --force "$WORK/wt-probe" >/dev/null 2>&1
 

@@ -186,6 +186,7 @@ mkfixture() {  # -> prints fixture repo path
   cp "$REPO/relay-automation/gate-env.sh" "$r/relay-automation/gate-env.sh"
   cp "$ROUTER" "$r/utils/ci-route.sh"; chmod +x "$r/utils/ci-route.sh"
   cp "$REPO/utils/py/gate_env.py" "$r/utils/py/gate_env.py"
+  cp "$REPO/utils/py/gate_receipt.py" "$REPO/utils/py/rtl.py" "$r/utils/py/"
   cp "$REPO/githooks/install.sh" "$r/githooks/install.sh"
   cp "$REPO/test/lib/clone-identity.sh" "$r/test/lib/clone-identity.sh"
   # GH-365 step 1: validate.sh's envelope (harness scratch + identity + tree/worktree/lock

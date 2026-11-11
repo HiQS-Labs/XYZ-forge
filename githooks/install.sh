@@ -163,7 +163,8 @@ _attempt_guard() {
     branch="$(git branch --show-current 2>/dev/null)"
     for ref in "$ref" "$destination" "refs/heads/$branch"; do
       case "$ref" in
-        refs/heads/feat/*|refs/heads/fix/*|refs/heads/chore/*|refs/heads/docs/*|refs/heads/marathon/*|refs/heads/relay/*)
+        refs/heads/main|refs/heads/development|refs/heads/master|refs/heads/) ;;
+        refs/heads/*)
           echo 'pre-push: REFUSED — task accounting admission is unavailable on this old branch; update the harness.' >&2
           return 2 ;;
       esac

@@ -23,7 +23,7 @@ from rtl import (ATTEMPT_CONTEXT_ENV, attempt_git, attempt_origin, attempt_origi
                  lane_attempt_row, lane_attempt_reserve, lane_attempt_finish)
 
 
-TASK_BRANCH = re.compile(r"^(feat|fix|chore|docs|marathon|relay)/")
+ADMIN_BRANCHES = {"main", "development", "master"}
 
 
 def _merge_attempt(repo_root, sha, context):
@@ -92,12 +92,13 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
     repo_root = os.path.realpath(repo_root)
     branch = (ref.removeprefix("refs/heads/") if ref and ref.startswith("refs/heads/")
               else attempt_git(repo_root, "branch", "--show-current"))
-    destination_task = bool(destination_ref and TASK_BRANCH.match(destination_ref.removeprefix("refs/heads/")))
+    destination_task = bool(destination_ref and destination_ref.startswith("refs/heads/")
+                            and destination_ref.removeprefix("refs/heads/") not in ADMIN_BRANCHES)
     raw = (json.dumps(context_override) if context_override is not None else
            os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
     if not raw and os.environ.get("MERGE_CLEANUP_RECORD"):
         raw = json.dumps({"kind": "merge-repair", "record": os.environ["MERGE_CLEANUP_RECORD"]})
-    if not raw and branch and not TASK_BRANCH.match(branch) and not destination_task:
+    if not raw and branch in ADMIN_BRANCHES and not destination_task:
         return {"kind": "non-task", "branch": branch}
     sha = attempt_git(repo_root, "rev-parse", (sha or "HEAD") + "^{commit}")
     if not raw:
@@ -108,7 +109,7 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
             expected = "https://github.com/" + os.environ["GITHUB_REPOSITORY"]
             if hashlib.sha256(expected.encode()).hexdigest() == attempt_origin(repo_root):
                 return {"kind": "hosted-actions", "sha": sha}
-        if branch and not TASK_BRANCH.match(branch) and not destination_task:
+        if branch in ADMIN_BRANCHES and not destination_task:
             return {"kind": "non-task", "branch": branch}
         if not branch:
             for base in ("refs/heads/development", "refs/heads/main",
