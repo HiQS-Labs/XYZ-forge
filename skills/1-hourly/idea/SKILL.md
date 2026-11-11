@@ -1,6 +1,7 @@
 ---
 name: idea
-description: File an admission-ready GitHub issue from the repo you are standing in — recon-lite and the debug-mantra plan pivots run at filing time, so the issue body carries an Observed table, a plan that names the existing subsystem and writer, checkbox Acceptance with red controls, a PRS proposal, a Preflight Contract and a review footer, then lands through `hq park --create` (issue + 1-INBOX capture + ledger row) and `releases roadmap rate`. Trigger on /idea, "file an issue for this", "write this up as a GH issue", "capture this idea", "park this", or the legacy /file-issue. NOT for a bug in the xyz harness seen from another repo (that is /file-xyz-bug), and NOT for rewriting an existing issue (retrofit is a later phase: comment on that issue instead).
+description: >-
+  File an admission-ready GitHub issue from the repo you are standing in — recon-lite and the debug-mantra plan pivots run at filing time, so the issue body carries an Observed table, a plan that names the existing subsystem and writer, checkbox Acceptance with red controls, a PRS proposal, a Preflight Contract and a review footer, then lands through `hq park --create` (issue + 1-INBOX capture + ledger row) and `releases roadmap rate`. Trigger on /idea, "file an issue for this", "write this up as a GH issue", "capture this idea", "park this", or the legacy /file-issue. NOT for a bug in the xyz harness seen from another repo (that is /file-xyz-bug), and NOT for rewriting an existing issue (retrofit is a later phase: comment on that issue instead).
 ---
 
 # /idea — admission-ready intake
