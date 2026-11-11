@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-10 — GH-1000 consolidation inventory and evidence reconstruction
+
+- Documentation only. Inventoried the Storyline, Kanban and dashboard efforts with a recommended disposition each; they reduce to three systems that already share one reader (`load_work_evidence`).
+- Reconstructed GH-1254 from committed records alone: six attempts found, none with a fully resolvable evidence chain. Manual check and its GH-1064 control are in `TESTS-RESULTS/2026-11-10+GH-1000/`.
+- Recommends Flightdeck as the first-slice interface and drafts five follow-on issues. None is filed; three operator decisions (board target, Paperclip, the unidentified knowledge-graph component) come first. The umbrella stays open and the interface demonstration is still owed.
+- No code, schema, contract, suite or gate change. Easy to revert.
+
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 
 Extended the existing flywheel routing skill with one approved pinned-batch handoff,
