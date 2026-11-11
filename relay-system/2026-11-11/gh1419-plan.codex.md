@@ -1,6 +1,6 @@
 # GH1419 independent plan review
-STATUS: Open
-NEXT: orchestrator (Builder)
+STATUS: Approved
+NEXT: orchestrator
 
 Artifact under review: `PROJECT/1-INBOX/GH-1419-REVIEWER-ROUTING.md`
 
@@ -55,3 +55,22 @@ Plan QA only. The plan's complete text and the affected admission, discovery, di
 ### Round 2 · Builder · orchestrator
 
 Both P2 findings accepted and incorporated into canonical plan steps 2, 3 and 5. Re-review the revised plan and affected source boundaries; no production changes made. Preserve Round 1. Append a Round 2 Reviewer block with substantive plain paragraphs directly under its heading (no nested headings), swept file: yes/no and explicit verdict. Set STATUS Approved only if approved; NEXT orchestrator. Same scope, no new machinery, no tests in task clone.
+
+
+### Round 2 · Reviewer · codex
+
+The revised document proposes one supported-route owner for explicit reviewer admission across Jog, Marathon and manifest parsing, plus exact actor dispatch for same-provider pairs. Per the document, current admission lists disagree and scalar provider slots overwrite actors; the revision preserves independent role IDs rather than equating independence with different providers. It excludes new registries, runners, quality certification and default-role changes. This remains plan approval only, with implementation behavior unverified.
+
+Source-backed validation: both Round 1 P2 requests are resolved in the plan. Step 3 now explicitly requires exact membership followed by a child-local scalar equal to RELAY_AGENT, addressing the dispatcher at relay-automation/marathon-agent.sh:49–105 and scalar identity consumers at utils/py/claude-turn.py:71 and utils/py/codex-turn.py:38. Its requirement to reach actual shim identity checks, reject unlisted actors and preserve MARATHON roles/RELAY_PEER makes silent exit-0 deferral a failure. Applying this to every supported provider avoids advertising same-provider support that still overwrites actors elsewhere.
+
+Step 5 names the discriminating timeout input and stop outcomes requested in Round 1. This matches the existing one-recovery call at utils/py/marathon_drive.py:3614–3687: builder-owned state refuses recovery; a post-handoff retry returning 7 propagates timeout-during-review-recovery. Wrong actor, silent deferral, repeated recovery or changed caps explicitly fail the planned check. These outcomes remain [Unverified — needs clone run]; no runtime success is inferred from source inspection.
+
+The smallest shared-helper design remains the proposed module-scope route_agent with an optional destination mapping, plus the existing _probe_agent_bin at utils/py/marathon_drive.py:847. The source reader at utils/py/profile_resolve.py:84–94,151–181 specifically matches os.environ assignment syntax, so changing to a destination mapping must retain that discoverable shape or minimally adapt the reader; the revised requirement for a nonempty unchanged lane set is the right falsifier. Manifest recognition at bin/marathon-yaml:88–97 should share this owner without binary probes, while Jog execution admission at utils/py/jog_run.py:206–233 probes both selected roles before lease. This is recognition/availability separation within the existing owner, not a second registry.
+
+Exact role replacement remains centralized at utils/py/jog_run.py:485–500, with retry admission calls at :792 and :1011, and preflight packet suggestions at utils/py/swarm_preflight.py:1094–1145. The plan now explicitly covers these boundaries, manifest parity, baseline refusal, adjacent Codex/Agy behavior, containment and attestation. Provider-neutral explicit admission is coherent with the authorized goal without asserting reviewer quality. The Costly rating, scoped-PR rollback and bounded disposable-clone verification are proportionate; no further blocking clarification or extra machinery is warranted.
+
+swept file: yes
+
+**Verdict:** Approved
+
+Plan QA only. Re-read the revised complete plan and the affected source contexts; preserved Round 1. No git command, validate.sh, test/*.sh, pytest, executable fixture or live provider call was run. Implementation, controlled dispatch, timeout evidence and final committed-source QA remain required before implementation approval.
