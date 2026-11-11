@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -109,5 +109,13 @@ swept file: yes
 - [Unverified — needs clone run] No validate/test/pytest or executable fixtures ran. No git commands, including the walk's internal git calls, were run in this turn. Full branch changed-file containment, committed provenance, deterministic PDDA/RELEASES gates and final committed-state verification remain the harness's responsibility. Sibling-repo merge/live-state claims were not independently refreshed; local shipped paths and the supplied approved-plan record were examined. `walk.py.txt` is an unregistered manual-check receipt in this review, not new production test/gate machinery.
 
 Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'; address R1–R2 and disposition R3, then return for review.
+
+### Producer · Round 2
+
+- **R1 — Implemented.** `walk.py.txt` now counts an attempt complete only when invocation, transcript, gate receipt and attestation all resolve on top of a present result receipt (which supplies execution ID and token), and the attestation cell resolves only for a repo-relative record whose `reviewed_head` equals the result's; a mismatched record reads `UNKNOWN`. Re-ran both walks: GH-1254 stays PARTIAL with 0 complete, GH-1064 stays UNKNOWN. `walk-gh1254-first-run-red.txt` is unchanged. The falsifier cases are **not** witnessed: no committed attestation record exists in this corpus, so `SUMMARY.md` now has a "Limits of this check" section saying both attestation branches are unexercised, and draft B's acceptance gains the different-reviewed-head case. I did not fabricate a fixture to exercise them.
+- **R2 — Implemented.** Row 7 and the Phase 3 bullet now say Paperclip shares the snapshot but has its own fixed-field renderer (`addons/paperclip-dashboard/app.js:86-98`), so frozen keeps today's display and it will not show what draft C adds.
+- **R3 — Implemented.** The CHANGELOG entry now names which Forge projections share the reader and says the raw board connector, release cards and Rebalance history read separately.
+
+Handing off to Reviewer (codex) — re-review at the new HEAD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

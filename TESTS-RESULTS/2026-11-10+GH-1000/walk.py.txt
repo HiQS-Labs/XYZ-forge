@@ -92,6 +92,8 @@ for a in attempts:
     print(f"  execution ID   : RESOLVED {a}  outcome={d.get('outcome')} reason={d.get('reason')} exit={d.get('exit_code')}")
     print(f"  result receipt : RESOLVED {p}  (join: execution_id + issue fields)")
     inv = [str(ip) for ip, i in invocations if f"/{a}/" in str(i.get("result_path", "")) + str(i.get("packet_dir", ""))]
+    if inv:
+        cells["i"] = 1
     print(f"  invocation     : {'RESOLVED ' + str(inv) + ' (join: execution ID as a path segment of result_path; implicit, no execution_id field)' if inv else 'MISSING - no committed invocation whose result_path names this attempt'}")
     print(f"  token          : RESOLVED {token}  (field in result)")
     by_sha = [t for t, c in tcommit.items() if c and c[0] == head]
@@ -117,9 +119,17 @@ for a in attempts:
     else:
         print(f"  gate receipt   : MISSING - gate.result={g.get('result')}; receipt_path={'machine-local, absent' if rp and not Path(rp).exists() else rp}; no committed receipt bound to {str(head)[:9]}")
     ap = d.get("attest_path")
+    att = None
     if ap and not Path(ap).is_absolute() and Path(ap).exists():
+        try:
+            att = json.loads(Path(ap).read_text())
+        except Exception:
+            att = {}
+    if att is not None and att.get("reviewed_head") and att.get("reviewed_head") == d.get("reviewed_head"):
         cells["a"] = 1
-        print(f"  attestation    : RESOLVED {ap}")
+        print(f"  attestation    : RESOLVED {ap}  (bound: record reviewed_head == result.reviewed_head)")
+    elif att is not None:
+        print(f"  attestation    : UNKNOWN - {ap} exists in the repo but its reviewed_head does not match the result's; not bound to this attempt")
     else:
         why = f"attest_path is an absolute machine-local path outside the repo (present on this host: {Path(ap).exists()})" if ap else "attest_path is null (attempt not attested)"
         print(f"  attestation    : MISSING - {why}. A transcript trailer is not the attestation record.")
@@ -127,9 +137,11 @@ for a in attempts:
     if d.get("reviewed_head") and tr:
         trailer = re.findall(r"^reviewed-head: ([0-9a-f]{40})$", Path(tr).read_text(), re.M)
         print(f"  review binding : result.reviewed_head={d['reviewed_head'][:9]} transcript trailer reviewed-head={[x[:9] for x in trailer]} match={d['reviewed_head'] in trailer}")
-    complete += len(cells) == 3
+    # A result receipt exists here, so execution ID, token and result are resolved; the attempt is
+    # complete only if invocation, transcript, gate receipt and attestation are all resolved too.
+    complete += len(cells) == 4
 orphans = [t for t in tcommit if t not in used]
 print(f"\ntranscripts not joined to any attempt: {len(orphans)}")
 for t in orphans:
     print(f"  {t}  commit {tcommit[t][0][:9]}  {tcommit[t][1][-60:]}")
-print(f"\nVERDICT: PARTIAL - {len(attempts)} attempts discovered, {complete} with every cell resolved." if complete < len(attempts) else "\nVERDICT: COMPLETE")
+print(f"\nVERDICT: PARTIAL - {len(attempts)} attempts discovered, {complete} with all seven cells resolved." if complete < len(attempts) else "\nVERDICT: COMPLETE")

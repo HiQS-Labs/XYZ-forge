@@ -229,7 +229,7 @@ it without a person typing the command.
 | 4 | End of Week skill (#606) | Shipped as `skills/3-weekly/end-of-week/SKILL.md`; no scripts | Hand-run | n/a | **Reuse**, one fix | Step 6 prescribes `work reconcile --connector github_board`, which is refused on a policy-covered board, and never mentions `policy-preview` / `policy-apply`. Fix with row 2. |
 | 5 | Flightdeck (#494, #646, #673, #797) | Shipped: `src/flightdeck/` loopback server on port 8768, six readers, read-only. Not shipped: session-context connectors; `topology` and `continuity` have no producer | Hand-started. Its tests are outside the `validate.sh` registry, and the GH-981 doc records five failing on macOS | repo + issue number; no attempt concept | **Finish** as the first-slice interface | Already reads the shared reader, is local and read-only, and carries GitHub URLs in its snapshot. Needs follow-on B and C. |
 | 6 | Release cards (#39) | Shipped: `releases project sync` (`releases_app.py:3191`), dry-run unless `--apply` | Hand-run | Release ID | **Reuse unchanged** | A view of releases, not tasks. It shares no state with the task board, so it does not compete. |
-| 7 | Paperclip add-on (#981, PR #982 merged 2026-10-10) | Shipped: `addons/paperclip-dashboard/`, synthetic demo by default, `--live` reads Flightdeck | Hand-run; no tests of its own | Inherits Flightdeck's | **Keep, frozen** | Pure reuse with no reader of its own, so it costs nothing to keep and cannot drift from Flightdeck's data. It adds no evidence, attempt or blocker that Flightdeck lacks, so it is not the primary interface. Operator decision D2. |
+| 7 | Paperclip add-on (#981, PR #982 merged 2026-10-10) | Shipped: `addons/paperclip-dashboard/`, synthetic demo by default, `--live` reads Flightdeck | Hand-run; no tests of its own | Inherits Flightdeck's | **Keep, frozen** | It has no reader of its own: it fetches Flightdeck's snapshot, so its data cannot drift. It does have its own renderer with a fixed set of fields (`addons/paperclip-dashboard/app.js:86-98`), so frozen means it keeps today's display and will not show attempts or evidence that draft C adds to Flightdeck. It adds nothing Flightdeck lacks, so it is not the primary interface. Operator decision D2. |
 | 8 | Journey replay (rebalanceOS PR #231, merged 2026-09-22) | Shipped: `rebalance clio-journey-replay`, opt-in, no model calls, writes files only | Not verified | owner/repo + issue or PR number, parsed from references | **Reuse** | It is the history layer. No Forge work. |
 | 9 | Close-loop flags (rebalanceOS PR #308, 2026-10-03; PR #311, 2026-10-14) | Shipped: `rebalance github-close-loop`; `--releases-scan` reads each clone's `releases.db` read-only | The deployed Daily skill offers `--close-loop`; whether it is switched on is not verified | repo + number | **Reuse** | Already reads the Forge ledger read-only, which is the right direction of dependency. |
 | 10 | Storyline integration (rebalanceOS #300) and the "knowledge-graph component" | #300 is open; the usefulness verdict and the goal-anchored narrative experiment are outstanding. No PR or commit for a knowledge graph was found in the org | n/a | n/a | **Defer**; component **unknown** | Cannot disposition what cannot be identified. Operator decision D3. Rows 8 and 9 do not establish #300 as complete. |
@@ -337,9 +337,12 @@ approval: closing the issue, since neither condition for closing at merge holds.
 `jog_failed` events.
 
 **The check on the check.** The first run of the walk marked the approved attempt's attestation
-`RESOLVED`, because the temp directory still exists on this host. That output is kept as
+`RESOLVED`, because the temp directory still exists on this host, and its tally ignored the
+invocation cell. That output is kept as
 `walk-gh1254-first-run-red.txt`. The walk now treats any absolute path outside the repo as
-machine-local. The GH-1064 control reports zero attempts and `UNKNOWN`.
+machine-local and counts an attempt complete only when all seven cells resolve. Its
+"attestation resolved" branch is unwitnessed, because no committed attestation record exists yet;
+follow-on B must witness it. The GH-1064 control reports zero attempts and `UNKNOWN`.
 
 ## Phase 3 — Interface selection
 
@@ -369,7 +372,9 @@ Each interface was checked against the five questions using the GH-1254 records.
 - **GitHub board:** shared, coarse status for people who are not at the operator's machine. One
   writer per board after D1.
 - **Release cards (#39):** releases, not tasks.
-- **Paperclip:** keep, frozen, as an optional skin (D2). It inherits whatever Flightdeck gains.
+- **Paperclip:** keep, frozen, as an optional skin (D2). It receives the same snapshot but renders
+  a fixed set of fields, so it will not display what draft C adds unless someone later chooses to
+  revise it.
 - **Rebalance journey replay and close-loop:** history and narrative across repos. It reads the
   Forge ledger; Forge does not read it.
 
@@ -416,7 +421,8 @@ dispositions are accepted.
   1. A new result names its transcript, and the walk in this doc's receipt resolves the
      transcript cell without the `head_sha` match.
   2. An approved bundle contains its attestation record, and its content matches the
-     `reviewed_head` and `added_sha256` in the result.
+     `reviewed_head` and `added_sha256` in the result. A record for a different reviewed head
+     is shown not to satisfy the check.
   3. A result written before the change still loads.
   4. A transcript trailer alone still does not satisfy the attestation check.
 

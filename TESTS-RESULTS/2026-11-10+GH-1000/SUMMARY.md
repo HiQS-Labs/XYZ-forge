@@ -4,7 +4,7 @@ Manual check for [#1000](https://github.com/HiQS-Labs/XYZ-forge/issues/1000), re
 AGENTS.md "No new tests" (GH-831). `walk.py.txt` is the exact command text that was run; it is a
 receipt, not a tool, suite or gate, and nothing invokes it.
 
-- **Tree:** `b71bde38e` (branch `docs/XYZ-forge-gh1000-evidence-linked-consolidation-2026-11-10`,
+- **Tree:** final walks at `dcaa38aff`; first run at `b71bde38e` (branch `docs/XYZ-forge-gh1000-evidence-linked-consolidation-2026-11-10`,
   base `68367d668`).
 - **Commands:** `python3 TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt 1254` and the same with
   `1064`, run from the repo root. Read-only: committed files and `git log`.
@@ -14,9 +14,9 @@ receipt, not a tool, suite or gate, and nothing invokes it.
 
 | Run | File | Verdict |
 |---|---|---|
-| Main path, GH-1254 | `walk-gh1254.txt` | PARTIAL: 6 attempts discovered, 0 with every cell resolved |
+| Main path, GH-1254 | `walk-gh1254.txt` | PARTIAL: 6 attempts discovered, 0 with all seven cells resolved |
 | Red control, GH-1064 (no execution records) | `walk-gh1064-control.txt` | UNKNOWN: zero attempts; not reported as a reconstruction |
-| First run, kept as a witnessed false pass | `walk-gh1254-first-run-red.txt` | Marked the approved attempt's attestation RESOLVED because the machine-local temp path still exists on this host, and found 0 invocations because of a schema-prefix mismatch. The temp-directory prefix in that file is redacted to `<machine-local-temp>` |
+| First run, kept as a witnessed false pass | `walk-gh1254-first-run-red.txt` | Marked the approved attempt's attestation RESOLVED because the machine-local temp path still exists on this host, and found 0 invocations because of a schema-prefix mismatch. Its closing tally ("1 with every cell resolved") also counted only transcript, gate and attestation, ignoring the missing invocation; that file is kept unchanged as the red witness. The temp-directory prefix in that file is redacted to `<machine-local-temp>` |
 
 ## What the walk shows
 
@@ -28,5 +28,14 @@ receipt, not a tool, suite or gate, and nothing invokes it.
 - The approved attempt's attestation record is outside the repo.
 - One attempt's result (gate red) conflicts with a later committed receipt for the same SHA
   (exit 0).
+
+## Limits of this check
+
+- An attempt counts as complete only when result, invocation, transcript, gate receipt and
+  attestation all resolve (execution ID and token come with the result). The attestation cell
+  resolves only for a repo-relative record whose `reviewed_head` equals the result's.
+- No committed attestation record exists in this corpus, so the walk's "attestation resolved"
+  branch and its "exists but bound to a different head" branch were never exercised. They are
+  unwitnessed. Follow-on B's acceptance must witness both when it first commits such a record.
 
 Interpretation is in `PROJECT/2-WORKING/GH-1000-EVIDENCE-LINKED-CONSOLIDATION.md`, Phase 2.

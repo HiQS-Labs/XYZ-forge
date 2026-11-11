@@ -1,4 +1,4 @@
-# Walk for GH-1254 at b71bde38e
+# Walk for GH-1254 at dcaa38aff
 
 ## 1. Ledger (join: gh_number)
 roadmap rows: ['rmi-01M6WTMK376C3R6EGNG4BG4HTH']
@@ -88,4 +88,4 @@ transcripts not joined to any attempt: 2
   relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-184120.md  commit d0b117022  nscript saved (MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN)
   relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-184323.md  commit e3d40c855  nscript saved (MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN)
 
-VERDICT: PARTIAL - 6 attempts discovered, 0 with every cell resolved.
+VERDICT: PARTIAL - 6 attempts discovered, 0 with all seven cells resolved.
