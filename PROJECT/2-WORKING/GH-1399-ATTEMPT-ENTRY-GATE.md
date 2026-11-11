@@ -13,7 +13,7 @@ goal: Refuse unaccounted task qualification through existing gate boundaries whi
 
 | What was just completed | What's next |
 |---|---|
-| Final Codex QA Approved in round6 of6; nine qualification fixture repairs verified | Retry normal full qualifying push, ready PR, hosted smoke and scoped retirement |
+| Final QA Approved in round6; normal full qualifying push passed408/408 without bypass | Publish receipt-only checkpoint, open ready development PR and verify hosted smoke |
 
 ## Request and scope
 
@@ -151,3 +151,8 @@ First normal full push candidate d19ba481a refused after523s with nine failed ex
 
 
 Final Codex QA round6 Approved at28da1ddb59f2654cd8b3117f21957226ca511187, including complete newly touched fixture/helper bodies. Mechanical receipt/provenance under final-review-6. All production and fixture changes are independently reviewed. The original spent DONE token required a fresh read-only coordination token for round6; the same transcript and six-round budget/history were retained. Normal full publication retry remains pending.
+
+
+## Qualified publication
+
+Normal push qualified2daec744ca276d93b2bf7f661fd263fa01b4802b: validate.sh full parallel gate408/408, green545s; push549.65s; no bypass; HEAD/origin/bare/identity unchanged. Committed gate receipt, full log and provenance under qualification/attempt-2. The following checkpoint changes only evidence/documentation; reviewed runtime/fixture bytes are unchanged. Plan QA Approved round2; final QA Approved round6. Ready PR creation and hosted exact-head smoke remain pending, then automatic scoped retirement. Source skill instruction changes are not deployed.

@@ -11,7 +11,9 @@ control change: rollback must revert admission and producer integrations togethe
 preserving attempt/history bytes. It prevents missing accounting, not inference of logical
 repair rounds or hostile local state changes. Focused/manual controls passed; final Codex
 review Approved in round6 after existing qualification fixtures adopted the dependencies
-and their own accounting. Normal publication qualification and hosted smoke remain pending.
+and their own accounting. Normal full publication gate passed408/408 without bypass at
+2daec744ca27; committed receipts bind that runtime to the evidence-only checkpoint. Hosted
+PR smoke is checked separately; no merge, promotion or managed skill deployment.
 The review also corrected existing parent-approval ownership, directory-lock inspection and
 run-log comment identity defects in the touched integrations.
 
