@@ -72,3 +72,8 @@ AGENTS compression: helped byte-budget compliance (base fails, candidate passes)
 Policy-behavior equivalence: not measured by runtime experimentation; independent textual QA required.
 Lesson verdict: NO_ENTRY — byte reduction proves this acceptance criterion, not a new general
 lesson beyond the documented instruction budget.
+
+## Post-consult correction
+
+Current count: 27,812 bytes, 4,956 bytes headroom. See [consult-corrections.md](consult-corrections.md)
+for accepted/rejected findings and fresh exact-content verification; prior counts above are historical.

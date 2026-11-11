@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; accepted-start recorded; draft 27,756 bytes and manual controls pass | PR publication through final push gate |
+| Applied agreed consult corrections; 27,812 bytes; fresh manual checks pass | Publish correction through docs gate; await merge |
 
 ## Requirements and observed baseline
 
@@ -108,3 +108,10 @@ Publication gate reruns on the final pushed commit; issue remains open until mer
 ## Lessons Learned (For Future Agents)
 
 Byte count alone cannot establish preservation of policy. Retain the requirement map and independent omission review. NO_ENTRY for the global lessons ledger.
+
+## Consult follow-up
+
+User authorized four small corrections after independent Agy/Claude consult: two restored
+requirements and two clarity/accuracy edits. Current size 27,812 bytes. Dispositions and
+current-content probes: `TESTS-RESULTS/2026-11-11+GH-1422/consult-corrections.md`.
+Earlier QA approvals remain revision-specific; no new delegated review of these small fixes.

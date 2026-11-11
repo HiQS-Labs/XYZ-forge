@@ -123,8 +123,8 @@ Retain and commit `provenance.jsonl` in the same PR with every run cited in an i
 behavior, mutate its input or supply a controlled failure. Unchanged coverage needs no fresh
 mutation. A check unable to fail is decorative. Use an existing suite or recorded manual check,
 never a new suite (see *No new tests*). GH-377/GH-379 show why: an awk range ended at its own
-first line, a duplicated `--` made a grep search for the wrong text, and retry telemetry never
-exercised the failing path. Passing outputs alone established none of those claims.
+first line, a duplicated `--` made a grep search for the wrong text, and a telemetry `rc`
+assertion could not be exercised by any passing run. Passing outputs alone established none of those claims.
 
 **Reject empty evidence.** Failed substitutions and redirects can produce empty data that passes
 every downstream assertion. Assert extraction succeeded and the artifact is nonempty first.
@@ -137,7 +137,7 @@ otherwise remove from `validate.sh` TESTS and add to gh306 EXEMPT, retaining the
 Tests or feature work do not authorize a tunnel, port-forward or remote bridge. Read SOP §3b
 for the incident and teardown requirement.
 
-**Establish blocker necessity.** If a failure's user consequence is unclear, or two investigation
+**Establish blocker necessity.** If an obstacle's necessity or user consequence is unclear, or two investigation
 attempts produce no new evidence, use `skills/1-hourly/sanity-check/SKILL.md` to decide whether
 to fix, simplify, defer via PRS or dismiss before investing further.
 
@@ -175,7 +175,7 @@ local change.
   with per-item machine-checkable outcomes and enough blast radius to stress the harness
   (GH-10's 73 suites is the archetype). Choosing a comparably valuable non-marathon-shaped item
   instead needs a reason in the ledger. Never invent work or a harmless synthetic load to keep
-  busy: if no needed marathon fits, stay idle or do smaller work. Report failures and lessons;
+  busy: if no needed marathon fits, say so plainly and stay idle or do smaller work. Report failures and lessons;
   a clean run teaching nothing is weaker evidence than one exposing a defect.
 - **The RELEASES DB has two subsystems behind one CLI:** release planning and the roadmap
   (`roadmap_items`), both owned by `utils/py/releases_app.py`. This is the Product Release System
@@ -290,8 +290,8 @@ local change.
   rewritten development, even from worktrees deliberately created for isolation. Full clones
   contain that Git blast radius but may themselves be corrupted, including mid-push-hook.
 
-  Before trusting a run, fetch or push from a tested clone, compare pre/post `HEAD`,
-  `git config --get core.bare`, `git remote -v` and `git config --local --get user.email`.
+  Compare pre/post `HEAD`, `git config --get core.bare`, `git remote -v` and
+  `git config --local --get user.email` before trusting any run, fetch, or push from a tested clone.
   Until #564's invariant gate lands, treat every tested clone as suspect. Unexpected identity
   drift invalidates the result: re-clone and compare candidate/base at the same width before
   blaming the diff. Intact identity means investigate the diff or normal flakiness. A serial
