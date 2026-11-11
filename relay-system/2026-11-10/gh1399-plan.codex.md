@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,5 +90,21 @@ Handing off to Producer (codex-parent) — resolve the lifecycle decision above 
 ### Producer · Round 2
 Accepted the lifecycle Should. The canonical plan now names the source-to-archive reference transition, binds the existing protected attestation to the consumed reservation, reuses candidate_ok for existing transcript-only post-approve evolution, preserves archive-before-post-approve/failure semantics, and restores that same reference for gate-only resume without another fire. Archives remain immutable. Exact completed B1/manual commits remain distinct. No new budget store, helper executable, suite, or speculative threat model.
 Handing off to Codex for the second plan review. Please check the corrected protocol against the cited existing candidate_ok and completion paths; production implementation remains unstarted.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Approve the implementation plan. The round-1 lifecycle ambiguity is resolved using existing approval authority and archive handling; this verdict does not approve an implementation or claim runtime controls have passed.
+swept file: yes
+
+- [Pass] The archive protocol now specifies the missing transition: “Return the archive path from lane_attempt_reset” and “replace the propagated qualification reference with that actual archive path plus the matching attestation reference.” It preserves archive-before-post-approve, refuses failed rename advancement, and retains the original reservation for failed/resumed closeout without another fire. This addresses the ordering actually present at `utils/py/marathon_drive.py:2857-2878` and the byte-preserving rename at `utils/py/rtl.py:11-25`.
+- [Pass] Attestation reuse fits the existing candidate contract rather than inventing a broader completed-receipt exception. `utils/py/relay_attest.py:395-432` requires reviewed ancestry and excludes only existing transcript/relay/phase-record paths from the endpoint diff; it refuses non-isolated and seeded-artifact reviews. The corrected plan explicitly retains these exclusions and restrictions, requires matching reservation/target identity and current target HEAD, and keeps completed manual/B1 records exact-commit. `utils/py/relay_attest.py:435-449` already validates the final candidate before extending phase completion. The proposed reservation/archive reference fields remain implementation work, not existing behavior.
+- [Pass] Whole-plan coverage remains proportionate: “No automatic cap reset or retrospective uncounted binding,” nested ownership, external canonical-record references for full gate clones, detached context, per-pushed-ref identity, direct qualification, docs/receipt shortcuts, legacy green writing and explicit hosted/admin exemptions all have implementation and manual-control obligations. The observed shortcut sites remain `githooks/pre-push:258-263`, `:289-308` and `utils/gate-record.sh:80-106`; completed B1 remains `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1581-1583`. No new suite, registry entry or second budget authority is proposed.
+- [Pass] Rating is stated as a proposal with an appropriate evidence limit: “Appeal50 is neutral” and “Coverage limited; trend unknown, not zero.” This approves the rationale's restraint, not an independent verification of remote issue history or operator scoring.
+- [Unverified — needs clone run] Production behavior, original red admission control, archive hash/count preservation, allowed transcript evolution, failed/resumed closeout and unrelated-source refusal require the disposable-clone evidence specified in the plan. No tests, validate, pytest, executable fixtures or git commands ran in this review. Read-only source inspection commands exited 0; decisive inspected span: `candidate_ok` rejects `artifact_sha256` and non-isolated records before its ancestry and endpoint-diff checks.
+
+Read the whole seeded packet, both canonical candidate documents, and the relevant existing archive, candidate/completion, lane, receipt and publication seams. No additional pre-existing plan defect identified in that scope. Implementation and final QA remain outstanding.
+
+Relay closed (Approved), no further turn needed. Producer (codex-parent) may proceed with the approved plan and its required clone controls.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
