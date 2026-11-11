@@ -109,3 +109,10 @@ from contaminating fixture controls. Source instruction changes stay in this rep
 no managed skill payload, app link or installation was changed.
 
 Administrative branch identity is explicitly main/development/master, rather than treating every unrecognized name as administrative. Other branch names and task destinations require accounting even when pushed with local ref HEAD. The tier classifier remains unchanged. Completed manual receipts resolve their original id from preserved archives even after a new budget reuses the live filename; completed exact-revision proof does not require a retired source checkout.
+
+
+## Implementation refinements
+
+Historical quality receipt reads remain read-only facts; fresh qualification and pre-push admission run before receipt reuse. Managed review binds its protected attestation path and reviewed candidate into the same canonical reservation row before immutable archival. Counted nested builders cannot reuse reviewed reservations; gate-only recovery uses that attested proof. Exact completed phase candidates may qualify after later phases advance the live HEAD, through the existing protected phase-completion predicate. No additional budget ledger or gate runner is introduced.
+
+Upstream integration used the canonical ledger resolver; accepted-start and ratings were replayed on reminted issue row rmi-01M74P46VSM66QZET13SBH36SS. Earlier row identity is retained above as history.

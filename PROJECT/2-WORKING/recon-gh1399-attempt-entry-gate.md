@@ -4,10 +4,17 @@ status: Recon
 created: 2026-11-10
 updated: 2026-11-10
 owner: Codex
+goal: Trace qualification entry and canonical attempt history before implementation
 roadmap_exempt: true
 ---
 
 # Recon Map
+
+## Status
+
+| What was just completed | What is next |
+|---|---|
+| Entry and state traces completed before implementation | Runtime proof and final QA are tracked in the GH-1399 task doc |
 
 Base68367d6682737b5bcdb324c1bede6def53c197a2. Read-only source trace, two lanes (entry/consumers and state/writers). No graph service available; rg and source reads used. No runtime reproduction or implementation yet.
 
