@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,19 @@ Handing off to Producer (claude-a) — go to the Producer window and say 'take y
 - **R3 — Implemented.** The CHANGELOG entry now names which Forge projections share the reader and says the raw board connector, release cards and Rebalance history read separately.
 
 Handing off to Reviewer (codex) — re-review at the new HEAD.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: R1–R3 are resolved for this bounded documentation slice. It is suitable for PR publication subject to the harness's final committed-state checks. Approval does not accept D1–D3, authorize implementation or close the umbrella.
+swept file: yes
+
+- [Pass] **R1 resolved with an explicit verification limit.** `TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt:128` checks the attestation's reviewed-head binding, and `:142` requires all four additional cells (invocation, transcript, gate, attestation), on top of the result/ID/token. `SUMMARY.md:32–39` explicitly says the positive and wrong-head attestation branches were never exercised. The retained main output ends “0 with all seven cells resolved”; the GH-1064 output ends “UNKNOWN - zero attempts discovered.” The first-run output still contains the false completeness tally and is described as erroneous. This establishes the present corpus's incomplete chain, not general attestation-check correctness; draft B at working-doc lines 423–427 carries the remaining binding/trailer acceptance.
+- [Pass] **R2–R3 resolved.** Working-doc row 7 (`:232`) and the optional-skin recommendation (`:375–377`) now distinguish the shared snapshot from Paperclip's independent fixed-field renderer, matching `addons/paperclip-dashboard/app.js:86–106`. `CHANGELOG.md:5` identifies the Forge projections sharing the reader and explicitly excludes the raw connector, release cards and Rebalance history from that assertion.
+- [Pass] **Core reconstruction remains conservative.** Independent standard-library JSON/text inspection exited 0: “approved gh1254-exec2-gateretry2 approved same SHA True gate exit 0 attestation bundled False” and “GH1254 events 10 execution_id occurrences 0”. Command: `python3` with `json.loads` of `TESTS-RESULTS/2026-11-08+GH-1254/jog/gh1254-exec2-gateretry2/{marathon-result,gate-receipt}.json`, comparing `head_sha` to `sha`, listing bundle filenames for `attest`, and selecting `INSERT INTO work_events(` lines in `releases.sql` containing `, '1254',`. These agree with Phase 2 and the retained receipt. The retry conflict and two unjoined transcripts remain visible in `walk-gh1254.txt`; the prose labels the proposed orphan association a guess.
+- [Pass] **Full document sweep finds no further publication-blocking or pre-existing document defect.** The inventory, Phases 2–4, acceptance map, complete manual command, summary, outputs and changelog were reread. Board refusal remains explicit at `utils/py/work_connectors/github_board.py:126–133`, while End of Week still prescribes raw reconciliation at `skills/3-weekly/end-of-week/SKILL.md:210`; inventory rows 2 and 4 and draft D are grounded. `web/flightdeck/issue-context.mjs:23–40` and `src/flightdeck/aggregate.py:40–43` support the qualified Flightdeck recommendation. Draft A names the approved-only publication restriction (`utils/py/jog_run.py:1083–1084`) and requires failed receipts never to satisfy landing. Draft C covers repeated loading, stale/conflicting state and reader failure. The acceptance map explicitly leaves implementation, interface demonstration and issue filing owed. The rating remains proportionate. Runtime sources were spot-checked, not exhaustively audited. The recorded `walk.py.txt` remains an unregistered manual receipt, not a maintained tool or new gate.
+- [Unverified — needs clone run] No git commands, walk execution (which invokes git internally), validate/test/pytest or executable fixtures ran in this turn. Full branch containment, unchanged historical receipt bytes, committed provenance and final PDDA/RELEASES/runtime gates remain the harness's responsibility. The unexercised attestation branches are not passed by this review. Sibling-repo/live GitHub claims were not independently refreshed; their prior source-access limitation remains.
+
+Relay closed (Approved), no further turn needed. The harness may commit the relay file and run its final checks; the Producer may proceed to the bounded documentation PR after those checks pass.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
