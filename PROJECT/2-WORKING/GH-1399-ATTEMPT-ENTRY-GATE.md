@@ -143,3 +143,8 @@ Round4 completed whole-file coverage and approved the directory-lock fix, then f
 ## Final independent review
 
 Final Codex QA Approved in round5 of6 at reviewed head41929b4fd2fdec049926173d43b91b4cfd71347c. Whole-file sweep completed in round4 and new gh322 fixture body read in round5; all concrete findings closed. Mechanical attestation and provenance are in TESTS-RESULTS/2026-11-10+GH-1399/final-review. Remaining publication checkpoint changes only documentation/receipts/transcript; reviewed runtime is unchanged. Final qualifying push and hosted smoke remain pending.
+
+
+## Publication qualification — repair checkpoint
+
+First normal full push candidate d19ba481a refused after523s with nine failed existing suites, canonical remote untouched and clone identity unchanged. All failures were fixture accounting/dependency contracts. Updated only existing fixture setup and synthetic approval binding; no production runtime changed after round5 approval. Nine focused reruns pass (Express127/0 after cache-ignore correction). Original run and focused provenance are under TESTS-RESULTS/2026-11-10+GH-1399/qualification. Round6 final QA pending for these fixture changes, followed by the normal full push retry.

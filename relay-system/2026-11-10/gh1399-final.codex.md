@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 5 / 6
+NEXT: Reviewer
+STATUS: Open
+ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -238,4 +238,19 @@ status: Approved
 reviewed-head: 41929b4fd2fdec049926173d43b91b4cfd71347c
 added-range: 31794+3426
 added-sha256: 38714b2d9da94be0c5443bfc292d67b60b03cf4c7e40c75bd04a41d24e1ef3fd
+### Producer · Round 6
+
+Normal full qualifying push atd19ba481a was refused after523s: nine existing suites failed and no remote update occurred. Production runtime remains unchanged from the round5 approved tree. The errors were existing fixture contracts newly affected by required admission; retained original run/identity receipt under qualification/attempt-1.
+
+Fixture corrections in a04ed9f25 and2142101d8:
+- gh371/gh372 partial harnesses now copy the existing gate_receipt runtime dependency, alongside rtl.
+- gh365 telemetry/envelope partial validate fixtures copy gate_receipt+rtl; envelope's real-repo green-writer control books its own temporary fixture reservation.
+- gh251 andgh528 self-qualification suites book their own fixture episode in existing WORK, never inherit the outer qualification proof. gh379's zero-suite control does likewise in ignored temp scratch. Existing assertions remain unchanged.
+- Existing test/lib/attest-stub.sh now mirrors production's lane-only canonical approval binding with the same writer. It retains parent manual/merge ownership and adds no alternate accounting.
+- Express's existing stub-gate fixture explicitly stubs the new admission dependency, just as gh544 does for routing, and mirrors the real repo's ignored Python cache. It is not used as proof for the new accounting guard; real book/unbook/archived controls are retained separately. Express's own refusal and landing assertions remain intact.
+
+All nine formerly failing existing suites now pass individually; Express127/0 after the cache correction. No new suite, assertion matrix, registry entry or production gate is added. Retained logs, failed intermediate Express result and provenance are in qualification/fixture-repairs. Review the newly touched full fixture bodies/helper as required; previously completed production coverage and round5 approval remain historical evidence. This is round6 of6, no reset. After approval only normal full qualification and hosted checks/publication remain. No second full run has been claimed yet.
+
+Handing off to Reviewer(codex) for final authorized round6.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
