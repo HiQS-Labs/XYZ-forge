@@ -2,7 +2,7 @@
 gh_issue: 1399
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1399
 title: Attempt accounting at qualification entry
-status: Planning
+status: Active
 created: 2026-11-10
 updated: 2026-11-10
 owner: Codex
@@ -86,3 +86,7 @@ An archived-lane reference is admissible only when its immutable reservation ent
 While post-approve is running, the original approved reservation remains the accounting proof for exactly that attested candidate set. Post-approve success uses existing record_phase_completion to pin its validated final candidate; failure keeps the archived accounting and approval intact, as today. Gate-only/closeout resume loads the same archived reservation reference from the existing protected attestation, verifies candidate_ok and phase identity, and does not fire/reset another attempt. New source changes fail that predicate and need a normally counted build. No new attempt is booked merely for closeout or transcript evolution.
 
 Standalone manual reservations and completed B1 records use their exact recorded final commit once finished; only attested managed-lane archives receive the pre-existing transcript-only candidate rule. Standalone start-task keeps its reservation active through intended evidence/publication checkpoints, then finishes. Legacy timestamp-only history keeps consuming cap and is retained, but cannot be silently upgraded into a new binding. Controls must cover archive reference propagation, same-candidate publication, permitted transcript-only post-approve evolution, failed/resumed closeout, unrelated source refusal, unchanged archive hash and unchanged consumed count.
+
+## Implementation admission
+
+Plan QA Approved in round2 at ebeaae250a55a172f1b2ea5b926e430f18818039. Canonical accepted-start applied to exact issue-owned row rmi-01M74GKNF9DGEQBPX5R34FQBZN before implementation. Actual normal unaccounted task push reproduced the missing guard (expected refusal assertion RED); retained baseline/invalid-control diagnostics and independent review attestation are under TESTS-RESULTS/2026-11-10+GH-1399/baseline/. No implementation or fixed behavior is claimed yet.
