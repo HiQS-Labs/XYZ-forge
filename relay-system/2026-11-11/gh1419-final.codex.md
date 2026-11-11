@@ -57,3 +57,11 @@ swept file: yes
 **Verdict:** Approved
 
 Only this relay file was edited. No git command, validate.sh, test/*.sh, pytest, executable fixture, source edit or live provider call was run. Approval covers implementation QA of the scoped Round 2 correction; final gate/publication responsibility remains with the orchestrator.
+
+### Attestation · relay-drive — 2026-11-11T20:39:22Z
+task: GH1419-FINAL-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: f39a5e4240315c1af823df23151173d7c34ff7cd
+added-range: 9762+3082
+added-sha256: 52f3424d18b5d62ba069c3dd46db21b373248d17c58d9aa0024e4da50e0cfeb6
