@@ -1,0 +1,22 @@
+[
+  {
+    "name": "missing-push",
+    "rc": 1,
+    "output": "gate-attempt: REFUSED \u2014 task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start\nerror: failed to push some refs to 'temp/gh1399-controls/destination.git'\n"
+  },
+  {
+    "name": "missing-validate",
+    "rc": 2,
+    "output": "validate.sh: suite workers run under nice -n 10 \u2014 an interactive-session hint, not a CPU limit (GH-35)\nENVIRONMENT FAULT: python3 (/usr/bin/python3) cannot import yaml \u2014 put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)\ngate-attempt: REFUSED \u2014 task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start\n"
+  },
+  {
+    "name": "missing-ci-local",
+    "rc": 2,
+    "output": "gate-attempt: REFUSED \u2014 task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start\n"
+  },
+  {
+    "name": "missing-green-writer",
+    "rc": 0,
+    "output": "ne without\n# re-running fifteen minutes of tests on a hunch.\n#\n# WHAT IT DOES NOT MEAN: promotion qualification. An earlier draft of the GH-509 plan let a local\n# record qualify a commit; the agy review called that circular and was right \u2014 if self-reported\n# evidence satisfies the boundary, the boundary is optional and buys nothing. Promotion needs the\n# hosted macOS run.\n#\n# Usage: utils/gate-record.sh [--repo DIR]\n# Exit:  0 recorded \u00b7 3 refused (dirty tree) \u00b7 4 refused (no commit) \u00b7 2 usage\n\n"
+  }
+]

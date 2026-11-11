@@ -1,0 +1,22 @@
+[
+  {
+    "suite": "gh35-test-tiers.sh",
+    "rc": 0,
+    "elapsed": 7.883130788803101
+  },
+  {
+    "suite": "gh129-relay-tick-root.sh",
+    "rc": 0,
+    "elapsed": 1.0351202487945557
+  },
+  {
+    "suite": "gh436-merge-cleanup.py",
+    "rc": 0,
+    "elapsed": 151.797208070755
+  },
+  {
+    "suite": "gh124-closeout.sh",
+    "rc": 0,
+    "elapsed": 0.9138529300689697
+  }
+]

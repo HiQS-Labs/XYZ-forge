@@ -1,0 +1,43 @@
+[
+  {
+    "name": "live-reviewed-candidate",
+    "accepted": true,
+    "expected": true,
+    "detail": "accepted"
+  },
+  {
+    "name": "archived-reference",
+    "accepted": true,
+    "expected": true,
+    "detail": "accepted"
+  },
+  {
+    "name": "stale-live-reference-resolves-archive",
+    "accepted": true,
+    "expected": true,
+    "detail": "accepted"
+  },
+  {
+    "name": "postapprove-transcript",
+    "accepted": true,
+    "expected": true,
+    "detail": "accepted"
+  },
+  {
+    "name": "failed-closeout-resume-same-proof",
+    "accepted": true,
+    "expected": true,
+    "detail": "accepted"
+  },
+  {
+    "name": "unrelated-candidate",
+    "accepted": false,
+    "expected": false,
+    "detail": "archived reservation candidate refused: candidate 3c9dd66fc22e changes non-transcript content after reviewed head 8277824f8d68"
+  },
+  {
+    "name": "archive-byte-count-preservation",
+    "sha256": "909da3303ec655a07f598847858b3913dde77e574a769f6d564f81e4521d5cee",
+    "count": 2
+  }
+]
