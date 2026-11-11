@@ -1,0 +1,5 @@
+# GH1419 live Claude reviewer-route smoke
+STATUS: Open
+NEXT: claude-reviewer
+
+Scope: independent read-only routing review of commit d7939db9. Inspect utils/py/marathon_drive.py route_agent, utils/py/jog_run.py validate_marathon_executor, relay-automation/marathon-agent.sh, and src/marathon-yaml.js recognition. This turn is dispatched through the real Marathon dispatcher with CLAUDE_AGENT=claude-builder,claude-reviewer and exact RELAY_AGENT=claude-reviewer. Do not build, run gates, call other models, or change source. Only append this relay file. Check distinct actor retention, scalar shim identity, unknown-route refusal and whether a concrete routing defect remains. Return concise source-backed findings, literal swept file: yes, and **Verdict:** Approved or Changes requested. Use heading `### Round 1 · Reviewer · claude-reviewer` then plain paragraphs (no nested headings). If approved set STATUS: Approved, NEXT: claude-builder; otherwise STATUS: Open, NEXT: claude-builder. This is a bounded real reviewer-path smoke, not full final QA or a claim about all providers.
