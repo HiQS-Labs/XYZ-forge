@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -107,5 +107,18 @@ requires provenance “in the same PR”; requirement map updated. Candidate now
 Earlier provenance measurements remain immutable; appended new hash/count receipt.
 Re-review the narrow correction and confirm prior omission conclusions still hold.
 No runtime changes or new tests. Final push reruns the docs gate on the final commit.
+
+### Reviewer · Round 2
+
+swept file: yes
+VERDICT: PASS
+Basis: The sole Round 1 omission is resolved. Re-read the complete current AGENTS and original base text (GitHub fetch_file at exact base, blob bbec1624fe13313fc5637c6387d865f09077d839), and cross-checked the requirement map. Omission outcome: no remaining operative original rule, exception or authority boundary without an equivalent current instruction; no additional pre-existing defect found in AGENTS. Approval is textual artifact QA, with final publication evidence still owned by the author/harness.
+
+- [Pass] Same-PR evidence boundary restored: AGENTS.md principle 6 now says “Retain and commit `provenance.jsonl` in the same PR with every run cited in an issue, PR, roadmap or decision”. SUMMARY.md requirement-map row “Operating principle 6” now explicitly says “same-PR committed provenance”. This closes the observed Round 1 counterexample without widening policy.
+- [Pass] Updated byte/hash receipt matches current content. Probe command: `python3` reading `p=Path('AGENTS.md').read_bytes()` and the final JSONL row, asserting `0<len(p)<=28000`, byte/hash equality and `'in the same PR' in p.decode()`, then printing length/hash/result; exit 0; decisive output: `27756 b8bf7de266e33184f31fb69d2a21afd62a9951396ccd24f0a418f3d306a466d7 same-PR restored; receipt matches`. Citation: TESTS-RESULTS/2026-11-11+GH-1422/provenance.jsonl final `post-review-byte-budget` row. Earlier measurements remain historical.
+- [Unverified — no citation] Whole-file omission sweep preserves the Round 1 enumerated groups, including the narrow frozen-banner/historical-trailer exceptions (AGENTS “Frozen Bash twins”), unavailable-builder stop/independent QA boundaries (“Builder/orchestrator”), per-function resolved-path and clone-identity controls (“Run mutation-heavy suites”), and all five exact-commit promotion steps (“Promotion”). Required startup reads, Markdown target spellings, headings and conflict order remain intact. SUMMARY.md “Original-to-current requirement map” accurately describes these retained obligations; the restored provenance phrase resolves its only previously identified gap.
+- [Unverified — needs harness/clone evidence] Exact committed base-to-HEAD changed-path inventory and docs gate on the eventual final commit remain delivery checks, as in Round 1. No git commands, suites, pytest or executable fixtures were run here. The retained docs-gate receipt is historical, not final-head qualification. Author/harness must retain the final docs gate before publication; this does not reopen a textual omission finding. No new gate/test machinery appears in the reviewed artifact packet.
+
+Relay closed (Approved), no further turn needed. Author/harness retains responsibility for final scope/gate recording and publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
