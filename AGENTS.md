@@ -71,17 +71,15 @@ radius, planning shape, and proof.
 Do not restate routing, roadmap, changelog, or active-doc contracts here. Those live in
 `ROUTER.md` and `PROJECT/PDDA.md`.
 
-After a PR merges into `development`, merge-cleanup reconciles docs, ledger, and views
-(`LEADERBOARD.md`) locally via `python3 utils/py/wave_reconcile.py --pr <N>`. Task
-branches do not commit routine views. The local writer fails closed if a hosted reconciler is
-in-flight (pass `--force-local-reconcile` to override). The hosted `wave-reconcile.yml` is
-dispatch-only and runs before promotion to qualify the development tip; see **Promotion** below.
-`pdda.sh issue-doc-sync` is the deterministic drift detector when in doubt.
+After development merges, merge-cleanup runs `python3 utils/py/wave_reconcile.py --pr <N>`
+locally for docs, ledger and LEADERBOARD views. Task branches do not commit routine views.
+It refuses while a hosted reconciler runs unless `--force-local-reconcile` is passed.
+Hosted `wave-reconcile.yml` is dispatch-only, before promotion; see **Promotion**.
+Use `pdda.sh issue-doc-sync` to detect drift.
 
-Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
-live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section
-is a standing carve-out from the "do not create new git branches automatically" rail: it
-pre-authorizes one `feat/`/`fix/`/`chore/`/`docs/` branch per fresh task clone, nothing more.
+Read SOP's **Opinionated SOPs** for binding maintainer branch/isolation defaults (optional
+for downstream users). It pre-authorizes one `feat/`, `fix/`, `chore/` or `docs/` branch per
+fresh task clone, an explicit carve-out from the interactive no-automatic-branch rule.
 
 ## Operating principles
 
@@ -118,45 +116,36 @@ inline (`-> expect ...`). Do not scatter action items across prose.
 Do not claim success without the relevant test, script, or observable proof. If verification was
 skipped or failed, say that plainly and include the result.
 
-An uncommitted `provenance.jsonl` is not proof (GH-430). Any run cited as evidence in an issue, PR,
-ROADMAP entry, or decision record must have its `provenance.jsonl` committed in the same PR — a path
-you merely ran and can no longer show counts as no claim at all.
+Retain and commit `provenance.jsonl` with every run cited in an issue, PR, roadmap or decision
+(GH-430); a transient local path is not proof.
 
-**A check that cannot fail is not a check.** For every new or materially changed decision gate,
-witness a failure before treating its passing result as evidence: replay the pre-fix behavior,
-mutate the thing it guards, or supply controlled bad input, and watch it go red. Rerunning unchanged
-coverage does not require a fresh mutation. If a new or materially changed gate cannot fail,
-it is decorative, and it is worse than nothing because it reports confidence it never earned.
-Witness the failure on an existing suite or record it as a manual check.
-Never add a suite to do it; see the *No new tests* rail. This is the precise way this principle fails while looking
-satisfied: you *did* verify, and the verification was hollow. Three examples from GH-377/GH-379, all
-of which passed cleanly before they were mutated — an `awk` range that terminated on its own first
-line, `not matches -- "$pat"` where the helper already supplied `--` so the check searched for the
-literal string `--`, and a telemetry `rc` assertion that no *passing* run could ever exercise.
+**Witness a red control for every new or materially changed decision gate:** replay pre-fix
+behavior, mutate its input or supply a controlled failure. Unchanged coverage needs no fresh
+mutation. A check unable to fail is decorative. Use an existing suite or recorded manual check,
+never a new suite (see *No new tests*). GH-377/GH-379 show why: an awk range ended at its own
+first line, a duplicated `--` made a grep search for the wrong text, and retry telemetry never
+exercised the failing path. Passing outputs alone established none of those claims.
 
-**A flaky suite is fixed in place if it is in a tier, and turned off if it is not.** Tier membership comes from
-`utils/ci-route.sh` (`SUBSYSTEM_TESTS_small`). Turning off means removing it from `validate.sh` `TESTS` and adding it to the
-gh306 `EXEMPT` list, keeping the file (#802 operator decision, comment 5841529958; #853).
+**Reject empty evidence.** Failed substitutions and redirects can produce empty data that passes
+every downstream assertion. Assert extraction succeeded and the artifact is nonempty first.
 
-**An empty input passes every check.** Before asserting anything about extracted data, assert that
-you extracted some: a failed command substitution yields an empty string, a shell redirect creates
-the file regardless, and a scanner then reports CLEAN against zero bytes. Size-check the artifact,
-or guard the extraction with its own assertion, before trusting a verdict computed from it.
+**Flaky suites:** fix in place if in a tier (`utils/ci-route.sh`, `SUBSYSTEM_TESTS_small`);
+otherwise remove from `validate.sh` TESTS and add to gh306 EXEMPT, retaining the file
+(#802, comment 5841529958; #853).
 
-**Never expose the operator's machine to the network without asking.** A tunnel, port forward, or
-remote bridge needs explicit permission each time — running the tests is not permission, and neither
-is working on the feature that provides it. `SOP.md` §3b has the incident and the teardown rule that
-goes with it.
+**Never expose the operator's machine to the network without explicit permission each time.**
+Tests or feature work do not authorize a tunnel, port-forward or remote bridge. Read SOP §3b
+for the incident and teardown requirement.
 
-**Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
+**Establish blocker necessity.** If a failure's user consequence is unclear, or two investigation
+attempts produce no new evidence, use `skills/1-hourly/sanity-check/SKILL.md` to decide whether
+to fix, simplify, defer via PRS or dismiss before investing further.
 
-**Apply proportionate rigor.** Follow `GUIDING-PRINCIPLES.md` → "The North Star": before
-adding or retaining a blocking control, name the concrete failure it prevents and weigh that
-benefit against operator time, maintenance and recovery cost. Prefer the simplest adequate
-check; recommend simplifying a rule whose burden exceeds its value. Honor an explicit operator
-tradeoff within its stated scope, record it, and keep reviewed, tested and delivered versions
-truthful. Do not reintroduce a rejected restriction under a different name or treat the decision
-as permission to bypass unrelated controls.
+**Apply proportionate rigor** under GUIDING-PRINCIPLES' North Star. Name each blocking control's
+concrete benefit and weigh operator time, maintenance and recovery cost. Prefer the simplest
+adequate control; recommend simplifying one whose burden exceeds its value. Honor and record
+explicit scoped operator tradeoffs while keeping review/test/delivery evidence truthful. Do not
+recreate a rejected restriction under another name or bypass unrelated controls.
 
 ### 7. Record only consequential bets
 
@@ -170,97 +159,54 @@ local change.
 
 ## Repo-specific rails
 
-- **No new tests (GH-831, operator decision 2026-09-25).** This covers three things:
-  - Do not add a new `test/` suite or a new entry in `validate.sh`'s `TESTS` registry.
-  - Do not add new gate machinery: guards, lanes, runners or telemetry stages.
-  - Do not add a test to enforce this rule.
+- **No new tests (GH-831, operator decision 2026-09-25).** No new `test/` suite,
+  `validate.sh` TESTS entry, gate/guard/lane/runner/telemetry-stage machinery, or test to
+  enforce this rule. Verify through existing coverage or manual checks retained under
+  `TESTS-RESULTS/<date>+GH-<n>/` with `provenance.jsonl`. Edit an existing suite only to keep
+  it truthful when pinned behavior changes. Witness red controls there or manually.
+  A new test file is a review finding. The Small/Medium/Large transition is #831;
+  #815/#816/#817/#819 are superseded and must not be implemented.
 
-  Verify a change with the existing suite that covers it, or with a manual check recorded under
-  `TESTS-RESULTS/<date>+GH-<n>/` with its `provenance.jsonl`. Edit an existing suite only to keep it truthful
-  when the behaviour it pins changes. A red control (see *Verified beats plausible*) is witnessed on an
-  existing suite or recorded as a manual check. Reviewers treat a new test file as a finding.
-
-  The gate is being cut to Small/Medium/Large tiers under [#831](https://github.com/HiQS-Labs/XYZ-forge/issues/831).
-  #815, #816, #817 and #819 are superseded; do not implement them.
-
-- **This repo's purpose is to keep a long-horizon marathon under load — and that is a work-selection
-  filter, not a slogan.** The harness is only proven by work long enough, parallel enough, and
-  failure-prone enough to tax the whole system: worktree isolation, path claims, the driver lock,
-  multi-round handoff, escalation, and resume. Short, single-shot tasks land fine but prove nothing.
-  Four rules follow, and they are load-bearing:
-
-  1. **Exactly one long-horizon marathon is in flight at a time.** When one lands, choosing the next
-     is a real decision, not a default. It is named in the roadmap ledger's **Immediate next-up**
-     (query via `python3 utils/py/releases_app.py roadmap list`; the RELEASES DB is the source of truth since the
-     `ROADMAP_SOURCE=releases` flip) as the marathon, so an agent arriving cold can tell which item
-     is the load and which items are riding alongside it.
-  2. **Prefer the marathon-shaped candidate.** *Marathon-shaped* means: decomposable into many items
-     with an identical transform, a per-item pass condition a machine can check, and a plausible way
-     to break the harness. GH-10 (73 unaudited suites, one mechanical adoption each) is the
-     archetype. Picking a non-marathon-shaped item over a marathon-shaped one of comparable value
-     needs a stated reason — write it in the ledger entry, not in a commit message.
-  3. **Only real work.** Never manufacture a marathon to keep the system busy, and never build a
-     synthetic workload that cannot damage anything — a run with no blast radius does not surface
-     the failures that matter. If nothing genuinely needed is marathon-shaped right now, **the
-     correct state is idle**. Say so plainly and do the smaller work; an idle gap is honest signal,
-     a fabricated marathon is noise that costs real tokens.
-  4. **The point is the failures.** A marathon that completes cleanly and teaches nothing is a
-     weaker result than one that escalates and names a defect. Report what broke; do not smooth it.
-
-- **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`; it is the
-  Product Release System, [PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)): the GH-32
-  release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
-  flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: rows are created when work starts with
-  `releases roadmap add` (at pickup/selection; start paths route there automatically per decision 6), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
-  `roadmap sync` is for legacy-mode repos only and no-ops here — it mirrors markdown and would delete
-  `add`-parked rows. Never hand-edit `releases.sql` or `releases.db`. Merge conflicts on the dump have
-  a one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a real
-  merge conflict looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
-
-- **The local gate runs at the push boundary; hosted CI independently attests public-repo changes
-  (GH-544, XYZ-forge #16).** The private-phase bridge ended when this repository became public on
-  2026-08-15. `.github/workflows/ci.yml` now covers `push`/`pull_request` on `main` and `development`;
-  the macOS promotion boundary remains restricted to a push on `main`, while the Ubuntu job is an
-  advisory portability canary. Local commits are ungated on purpose; pushes are still gated by
-  `githooks/pre-push` so failures are caught before the remote round trip.
-  - Wire a new clone once: `bash githooks/install.sh` (idempotent). It installs a dispatch stub into
-    `.git/hooks/`, which covers **every branch and linked worktree** of that clone, including branches
-    with no `githooks/` directory (GH-549 — the first design wired `core.hooksPath` at the in-tree
-    directory, and git skips a hook path that does not resolve *in total silence*). **The wiring is
-    still per clone and does not travel** — a fresh clone or second machine has NO gate until this
-    runs. Check with `bash githooks/install.sh --check`.
-  - `./validate.sh` is **parallel by default** (see the hook’s measured `GREEN in Ns` line; GH-35 balanced width is cores/2 capped 4; `--burst`
-  restores the old full-core width), auto-sized to the host, and announces a
-    sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
-    the evidence record — it stays sequential and does not call `validate.sh`.
-  - **Development merges reconcile locally; the full registry runs at promotion (GH-1127, decision #1131).**
-    After a merge, merge-cleanup reconciles the ledger locally (`wave_reconcile.py --pr N`); no hosted
-    suite runs per merge. Before every promotion, the hosted `wave-reconcile.yml` is dispatched once with
-    `--promotion`: it runs the full registry (`validate.sh --parallel 4`, #1134) on the development tip
-    and qualifies every landing since the last receipt together. See **Promotion** below. The GH-831
-    tiers and the suites turned off are in `ROUTER.md`; the tier selector now applies only to a
-    non-promotion `--qualify` run.
-  - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
-    deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
-    Draft-review publication (GH-487) is a legitimate bypass use and is NOT merge readiness: an
-    operator-requested WIP draft may bypass only with current focused evidence for the changed area,
-    the skipped-gate disclosure echoed into the PR description, and merge readiness still
-    outstanding — a bypassed push never authorises merge, promotion, or teardown.
-  - **PR checks are meaningful again only after a hosted run actually appears for the commit.** A
-    configured workflow is not evidence; query the run and cite its SHA.
-
-- **Never use a git command that overwrites the working tree from a committed state to undo a
-  working-tree experiment.** In this clone other agents hold uncommitted work you cannot see.
-  Three spellings destroyed peer work three times in one session (GH-527) and the common factor
-  is not obvious from any one of them:
-  - `git reset --hard <anything>`
-  - `git checkout -- <path>` (restores **HEAD**, not the state before your edit)
-  - tree-wide `git stash` (and it may time out before its `pop`)
-
-  To undo your own experiment, copy the file first (`cp f f.bak`) and restore from that. The
-  blast radius is **tracked** modifications; untracked files survive. `relay-automation/hooks/gh527-destructive-git-guard.sh`
-  snapshots the doomed tracked files into `.tick/orphan-backups/` before the command runs, so
-  this is recoverable rather than prevented — the snapshot is a net, not permission to swing.
+- **Prove the harness with real long-horizon marathon work.** Short tasks can land but do not
+  establish coordination, isolation, lock, multi-round handoff, escalation or resume robustness.
+  Keep exactly one long-horizon marathon in flight, explicitly named in the RELEASES ledger's
+  **Immediate next-up** (`python3 utils/py/releases_app.py roadmap list`). Choosing its successor
+  is a decision, not a default. Prefer needed work decomposable into many identical transforms,
+  with per-item machine-checkable outcomes and enough blast radius to stress the harness
+  (GH-10's 73 suites is the archetype). Choosing a comparably valuable non-marathon-shaped item
+  instead needs a reason in the ledger. Never invent work or a harmless synthetic load to keep
+  busy: if no needed marathon fits, stay idle or do smaller work. Report failures and lessons;
+  a clean run teaching nothing is weaker evidence than one exposing a defect.
+- **The RELEASES DB has two subsystems behind one CLI:** release planning and the roadmap
+  (`roadmap_items`), both owned by `utils/py/releases_app.py`. This is the Product Release System
+  ([PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)). Create roadmap rows at work
+  pickup/selection via the CLI; read with `roadmap list`. `ROADMAP.md` is retired; `roadmap sync`
+  is for legacy repos and no-ops here, since mirroring Markdown could delete parked rows.
+  Never hand-edit `releases.db` or `releases.sql`. Before changing or merging them, read
+  [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md); resolve dump conflicts through
+  `utils/releases-merge-resolve.sh`.
+- **Local push gates and hosted CI both apply (GH-544, #16).** This repo has been public since
+  2026-08-15; `.github/workflows/ci.yml` covers pushes/PRs on `main` and `development`.
+  Commits are ungated; `githooks/pre-push` gates pushes. Install and check once per clone with
+  `bash githooks/install.sh` and `bash githooks/install.sh --check`. The dispatch stub covers
+  every branch/worktree even where `githooks/` is absent; hooks do not travel to another clone.
+  `validate.sh` defaults to parallel, cores/2 capped at 4 (GH-35); `--burst` restores full width.
+  `ci-local.sh` stays sequential, writes qualifying evidence, and does not call `validate.sh`.
+  Development merges reconcile locally through `wave_reconcile.py --pr N`. The dispatch-only
+  `wave-reconcile.yml --promotion` runs the full registry (`validate.sh --parallel 4`) on the
+  development tip before promotion, qualifying landings together (GH-1127/#1131/#1134).
+  Read ROUTER for tiers/retired suites; its selector applies to non-promotion `--qualify` only.
+  Bypasses (`git push --no-verify`, `XYZ_SKIP_PREPUSH=1`) announce themselves: use deliberately,
+  not reflexively. Operator-requested WIP draft publication may bypass only with current focused
+  evidence and skipped-gate disclosure in the PR, leaving merge readiness outstanding (GH-487).
+  A bypass authorizes no merge, promotion or teardown. A configured workflow is not a result:
+  query the actual hosted run and cite its commit SHA. See **Promotion** below.
+- **Never restore committed tree state to undo an experiment in a shared clone (GH-527).**
+  `git reset --hard`, `git checkout -- <path>` and tree-wide `git stash` can overwrite or hide
+  peer work; stash may time out before pop. Copy your file first and restore that copy instead.
+  Untracked files surviving does not protect tracked changes. The
+  `relay-automation/hooks/gh527-destructive-git-guard.sh` snapshot to `.tick/orphan-backups/`
+  is a recovery net, not permission to use destructive commands.
 - **Preflight sandboxed branch mutations (GH-50).** A sandbox may let `git switch --track` rewrite
   the index and working tree, then deny the `.git/config` lock and leave HEAD on the old branch.
   Before a harness runs a tracking switch or destructive branch mutation such as `git branch -D`,
@@ -278,184 +224,102 @@ local change.
   itself establish that deleted local behaviour was safe to remove.
 - `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
-- **Scratch and temporary files go in `temp/`, never the repo root.** `/temp/` is already gitignored
-  (`.gitignore:13`). Probes, reproduction scripts, one-off analysis, captured command output,
-  half-written notes — anything you would not put in a commit — belongs there or outside the repo
-  entirely. **Do not create `scratch-*.md`, `notes-*.md`, `*.tmp` or similar at the repo root.**
-
-  This is a housekeeping rule with a real failure mode behind it, which is why it is a rail and not a
-  preference. Root-level scratch is *untracked*, so it survives branch switches, rebases and
-  worktree teardown; it accumulates silently across sessions until nobody can say which agent or
-  which lane produced it, or whether it is safe to delete. It also puts unreviewed prose one
-  `git add -A` away from a commit — and `marathon-closeout.sh` has already swept 20 unrelated files
-  into a lane's PR once (2026-08-10), which is exactly this hazard firing.
-
-  A file that turns out to be worth keeping gets *promoted* deliberately — into `PROJECT/1-INBOX/`
-  as a capture doc, into `test/baselines/` as recorded evidence, or into the CHANGELOG — rather than
-  being left at the root in the hope that someone later works out what it was.
+- **Scratch belongs in `temp/` (gitignored), never the repo root.** Probes, captured output,
+  temporary scripts and unfinished notes go there or outside the repo. Untracked root scratch
+  survives branch/worktree changes and can be swept into unrelated commits (observed with 20
+  files in marathon closeout). Deliberately promote durable material to `PROJECT/1-INBOX/`,
+  `test/baselines/` or CHANGELOG; do not leave it for later agents to classify.
 - **Park incidental findings in root `PARKED/`.** When an agent notices a real item outside the
   current task, record a short, sourced observation there under `PARKED/README.md` without expanding
   the active work. Triage may promote it through issue-first `PROJECT/1-INBOX` and the RELEASES
   roadmap. This folder is an intentional exception to the scratch-file rule above; it is durable
   intake, not a place for probes or half-written notes. Never park a blocker to the current task.
-- **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the twelve Tier-A
-  entry points (`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`,
-  `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, and
-  `swarm-preflight`). Their `.sh`
-  files are historical `XYZ_PYTHON=0` fallbacks: put behavior fixes in the named Python twin, not
-  the Bash body. Before committing, run `bash test/gh308-frozen-twin-guard.sh --check --staged`; the
-  `Frozen Bash twin guard (GH-308)` step in `.github/workflows/ci.yml` runs the same guard with
-  `--base <PR base> --allow-exceptions` on every PR to reject a committed twin edit. **Escape
-  hatch:** a safety defect in a fallback can warrant an edit anyway — GH-319 left a silently-fake
-  pre-advance gate in `marathon-drive.sh` under `XYZ_PYTHON=0`. Such a commit must carry a trailer
-  that **names the twin it covers**, with an em-dash before the reason:
+- **Frozen Bash twins (GH-308).** Python in `utils/py/` owns the twelve Tier-A entry points:
+  `agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`, `relay-loop`,
+  `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, `swarm-preflight`.
+  Their `.sh` bodies are historical `XYZ_PYTHON=0` fallbacks: fix behavior in Python.
+  `marathon-plan` became the twelfth frozen twin when GH-340 removed its copied-node-engine
+  implementation (GH-362). `relay-turn-lib.sh` remains an unfrozen shared Bash dependency.
+  Before committing run `bash test/gh308-frozen-twin-guard.sh --check --staged`; hosted CI runs
+  the guard with `--base <PR base> --allow-exceptions` on every PR.
 
-  ```
-  Frozen-twin-exception: relay-automation/marathon-drive.sh — silently-fake pre-advance gate (GH-319)
-  ```
+  A fallback safety defect can justify an exception, with a per-file commit trailer:
+  `Frozen-twin-exception: relay-automation/marathon-drive.sh — <reason>`.
+  Every edited twin in the range must be named by a trailer in that range; comma-separated
+  paths may share a reason. No trailer, no edit. Non-twin paths and new pathless trailers fail.
+  A commit introducing a path's `FROZEN` banner may establish the freeze without a trailer;
+  later edits still need one. Historical pre-GH-321 pathless trailers are tolerated only in
+  those establishing commits, not new changes (GH-321/GH-362).
 
-  **Per file, not per PR (GH-321).** Every frozen twin changed in the range must be named by some
-  trailer in that range; one exception no longer excuses a different, undeclared edit riding along
-  on the same branch — the common case on a multi-lane marathon PR. A trailer naming a path that is
-  not a frozen twin fails loudly rather than silently covering nothing, and the bare
-  `Frozen-twin-exception: <reason>` form (no path) no longer covers anything. Comma-separate to cover
-  several twins with one reason. No trailer, no edit.
+  **No new Bash (GH-551).** New executables belong in `utils/py/` as Python. A new `.sh` under
+  `utils/` or `relay-automation/` needs `New-bash-exception: <path> — <reason>` per file.
+  Tests, git hooks and existing shims are outside that new-file guard.
+- **Builder/orchestrator role split (GH-221).** Claude Code terminal/VS Code agents orchestrate
+  and review; they never default to building or drive themselves as a headless build lane.
+  Agy CLI and Codex CLI are the subscription-billed default builders (GH-212).
+  `--builder claude` remains supported only as an explicit, usage-acknowledged user choice
+  (flag or local settings), whether authenticated by subscription or API. If neither default
+  builder is available, stop and ask; do not silently substitute headless Claude.
 
-  **`utils/marathon-plan.sh` is no longer the exception (GH-362).** It was, while its Python "port"
-  shelled out to a copied node engine with documented gaps; GH-340 deleted that copy and made the
-  Python lane native, so the exception outlived its reason and marathon-plan is now the **12th frozen
-  twin**. `relay-turn-lib.sh` remains a shared Bash runtime dependency rather than a twin, and is the
-  only non-frozen file left in the Tier-A surface.
-
-  **No new Bash either (GH-551).** New executables are Python in `utils/py/`; the same guard rejects
-  a **new** `.sh` file added under `utils/` or `relay-automation/` unless a
-  `New-bash-exception: <path> — <reason>` trailer names it (per file, like GH-321). `test/`, git
-  hooks, and existing shims are out of scope.
-
-  **Two edits the guard permits without a trailer, both narrow (GH-362).** A commit that *introduces*
-  a path's `FROZEN` banner establishes the freeze for that path and is not a violation of it — a range
-  reaching back before the freeze (a release merge, a bisect, an old fork base) contains exactly that
-  commit. The exemption covers the establishing edit only; anything touching the path *after* it in
-  the same range still needs a trailer. Relatedly, the pre-GH-321 pathless trailer is tolerated **only**
-  inside such a commit, because it is permanently in git history and cannot be rewritten — a new
-  pathless trailer is still rejected everywhere.
-- **Builder/orchestrator role split (GH-221)** — **Claude Code (terminal and VS Code agents) is the
-  orchestrator and reviewer, never a default builder.** It plans, dispatches marathon/relay lanes, and
-  reviews/verifies their output; it does not drive itself headlessly as a build lane. **Agy CLI and
-  Codex CLI are the builders** — the two cost-blind (subscription-billed) headless build lanes
-  `marathon.sh`/`marathon-drive.sh` default to (GH-212). **Claude CLI (subscription or API, according to its authentication route) is
-  NOT a builder by default** — `--builder claude` stays fully supported, but only as an explicit,
-  usage-acknowledged choice the *user* makes locally (their own `--builder claude` flag or a local
-  settings override), never something a session reaches for on its own reasoning that it's "just
-  another supported builder option." If a task calls for a headless build lane and neither agy nor
-  codex is available, stop and ask — don't default to spawning a headless Claude CLI turn.
-
-  **As the orchestrator, you are the final outer reviewer of any emitted artifact (e.g., an automated PR).**
-  You must treat an automation's emission as an event requiring inspection, not as an automatic success.
-  Before permitting an automated loop to proceed to its next iteration, you must query and verify the emitted PR:
-  1. **Base Branch Sanity:** The PR targets the active WIP branch (`development`), not `main`.
-  2. **Diff Size Sanity:** The diff size matches the logical scope of the fix (e.g. < 500 lines for targeted bugs).
-  3. **Verification Status:** A test gate ran against the final committed state (either CI or a local `validate.sh` run).
-  **Halt Condition:** If an emitted artifact fails any of these predicates, you must suspend the automation loop immediately.
-
-  **Orchestrator vs. Review Protocol Separation (GH-784):** The Orchestrator (the dispatch/tool driver) cannot self-satisfy the review contract or attest review solely by observing passing test suites. It must mechanically invoke an independent peer/Codex QA turn (`relay-xyz` / `/start-task` Step 8 parity) with recorded receipts under `relay-system/<YYYY-MM-DD>/<label>.codex.md` before approving or signing off on PR creation or promotion. Self-review or test-only observation does not satisfy the Wave QA receipt gate.
+  The orchestrator must inspect every emitted artifact before continuing automation: the PR
+  targets `development`, its diff matches the logical scope (e.g. <500 lines for a targeted bug),
+  and a gate ran on the final commit. Failure of any predicate halts the loop.
+  **Independent QA is separate (GH-784):** test results or author review cannot satisfy it.
+  Mechanically invoke peer/Codex QA via `relay-xyz` / start-task Step 8 and retain receipts in
+  `relay-system/<YYYY-MM-DD>/<label>.codex.md` before signing off PR creation or promotion.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),
   install, and the resolution ladder and agent-facing invocation flow + guardrails are in [skills/2-daily/hq/SKILL.md](skills/2-daily/hq/SKILL.md). Write paths preview by default; `fire` never drives the harness.
 - Changes to `.tick/events/`, `src/project.js`, relay containment, or event/verb shape are usually
   broader than they look. Treat them as at least Costly until proven otherwise.
-- **Contain tree-touching subagents with `isolation: "worktree"` (GH-177/GH-233).** A Claude Code
-  session spawning Agent/Workflow subagents that will *modify files* in this repo should pass
-  `isolation: "worktree"` so a runaway destructive command shreds a disposable checkout, not the main
-  tree (this repo has been wiped twice — see
-  `PROJECT/3-COMPLETED/GH-177-MKTEMP-TRAP-REPO-WIPE.md`). Know what it does NOT protect: worktrees
-  share `.git` objects/refs, so destructive *git* operations (`update-ref`, `branch -D`, resets,
-  force-push) still hit the real repo — a worktree-isolated agent once reset ROOT HEAD via
-  `rtl_enforce`'s commit-bypass guard. Harness-driven codex/agy lanes are covered by
-  `rtl_worktree_begin` instead and don't need the flag. Known frictions: `--require-clean` self-trips
-  on the driver's own lock dir inside a linked worktree, and untracked artifacts are invisible to a
-  worktree checkout — commit review inputs first. Read-only subagents (Explore, audits) don't need
-  isolation. Related guards: never execute `validate.sh`/`test/*.sh` under a sandboxed Bash call
-  (enforced by `relay-automation/hooks/gh177-sandbox-test-guard.sh` — re-run it un-sandboxed; do NOT
-  push it to CI to be exercised, see the CI rail below), and `test/mktemp-trap-guard.sh` statically
-  outlaws the wipe idiom repo-wide. **The "what it does NOT protect" list above is narrower than
-  reality — see the next rail (GH-564): a worktree isolates the working tree only, and everything
-  under `.git` is shared, which is why running the suite in one contaminated the parent clone twice.**
-- **Run the suite in a SEPARATE FULL CLONE, never in a clone whose state you care about — and a
-  linked worktree is NOT a way around it (GH-564).** `validate.sh` and `test/*.sh` can write to the
-  git config, remotes, and refs of the repository they are invoked from. On 2026-08-15 the primary
-  clone was contaminated **twice in one morning**: `core.bare=true`, `remote.origin.url` repointed at
-  a fixture bare repo, a fixture `[user]` identity appended, and `refs/heads/development` reset onto
-  ~35 fixture commits. It also **defeated the push gate while corrupting it** — pushes failed with
-  `'/var/folders/…/bare.XXXXXX' does not appear to be a git repository` because the suite repointed
-  `origin` mid-hook.
-  - **The worktree precaution was taken and it FAILED.** Both bursts came from `./validate.sh` run in
-    linked worktrees cut off the primary clone, chosen specifically to isolate the risk. **Linked
-    worktrees share `.git/config` with the parent clone**, so an escape landing in a worktree's CWD
-    writes the parent's config. Reproduced deterministically: from a worktree CWD, `r=""; git -C "$r"
-    remote set-url origin "$b"` rewrote the *parent* clone's origin. Same structural fact the
-    driver-lock matrix documents from the other side (GH-42/GH-354/GH-448) — a linked worktree
-    resolves to the parent's `git-common-dir`, which is why it grants no second lane either.
-  - **State the boundary precisely, because the previous rail's version was too narrow.** The rail
-    above says worktree isolation does not protect against destructive *git operations*. That is
-    true and insufficient: a worktree isolates the **working tree only**. Everything reached through
-    `.git` — config, remotes, refs, objects, hooks — is shared with the parent clone, whether it is
-    touched deliberately or by an escaped fixture. Only a **separate full clone** isolates any of it.
-  - **Why it escapes at all:** `git -C ""` is documented to leave the working directory unchanged and
-    `cd ""` is a bash no-op, and these suites run without `set -e` — so one unguarded
-    `r="$(mktemp -d …)"` silently redirects every "fixture" operation onto the caller's clone. It
-    fires under **parallel** load (the failure mode of `mktemp`), which is why a serial re-run of the
-    same suite reproduces nothing and must not be read as an all-clear. GH-177 family.
-  - **Until #564's suite-wide invariant gate lands**, treat any clone you ran the suite in as
-    suspect: check `git config --get core.bare`, `git remote -v`, `git config --local --get user.email`,
-    and `git log --oneline -1` before trusting a push, a fetch, or a green run from it. A guarded
-    fixture helper (`require_fixture`: the path must exist AND live under `$WORK` — containment, not
-    a null check) is the pattern to copy; `test/gh544-pre-push-gate.sh` has it, 31 other suites do
-    not.
-  - **Validate a sandbox path at the USE boundary, not where it was created (GH-567).** An empty
-    variable does not fail — `git -C ""` uses the current directory, `cd ""` is a no-op,
-    `rm -rf "$VAR/"` becomes `/`, `find "$VAR" -delete` becomes `.`. So guard immediately before the
-    first dangerous use **in every function that receives the path**, not once at the `mktemp` that
-    derived it: a variable that was safe at line 10 can be empty at line 50, and a derivation-site
-    check never covers a path passed in from elsewhere. Assert non-empty, a **resolved** descendant
-    of the sandbox root, and the expected type — `require_fixture`'s current `case "$p" in "$WORK"/*)`
-    is lexical and still accepts `$WORK/../../<real repo>`, so harden it before copying it into the
-    other 31. `set -e` is not the containment proof; these suites deliberately run without it.
-  - **A clone whose identity changed under a run cannot attribute that run (GH-567).** If a suite
-    fails only under parallel load, compare `core.bare`, `git remote -v`, the local user identity and
-    `HEAD` against their pre-run values **before** blaming your diff. Unexpected drift invalidates
-    every result from that clone — re-clone, then run candidate and base at the same width. Identity
-    intact means it is your diff or ordinary flakiness: investigate normally. This is a trigger, not a
-    licence to write failures off as harness noise; the 2026-08-15 incident cost several full-suite
-    runs to a single green control run treated as proof, which is one sample from a nondeterministic
-    process.
-  - **An audit that recognizes only one invocation shape stops covering the same operation reached a
-    different way (GH-195).** `marathon-root-audit.sh` exists (GH-401) specifically to catch an
-    unscoped marathon-drive invocation writing into the real clone instead of a fixture — but its
-    detector only matches `bash <driver>.sh`. A test that calls `python3 marathon_drive.py` directly
-    is invisible to it. That exact gap let `test/gh115-round-cap.sh` commit a live transcript onto
-    whichever real clone was running `validate.sh`, every single run, reproduced across 4 separate
-    clones including a brand-new one. **If you add or harden an audit that matches on invocation
-    text, ask what it does NOT match, not just what it does.** Diagnosing this cost ~2.5h chasing
-    plausible-but-wrong external causes (a leftover process, a second concurrent agent, a scheduled
-    job) before a one-shot stack-trace at the actual write call site named the real culprit in one
-    run — when a repeatable artifact exists (here: the per-clone `.tick/attempts/<phase>` fire
-    ledger, timestamp-correlated to each gate run), inspect it directly before building a
-    process-hunting hypothesis chain. Full writeup:
-    [GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md).
-- **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
-  for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
-  `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
-  platform with the real toolchain. Operator-retired suites stay out of both runners;
-  their retained manual files are listed in gh306 EXEMPT (GH-854). The hosted `canary-ubuntu`
-  job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
-  reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
-  advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a
-  promotion. Two hosted **macOS** rules follow (GH-1127, #1131): `development` landings are qualified
-  together by the pre-promotion `wave-reconcile.yml` dispatch (full registry on the tip), and main is
-  then witnessed by `boundary-macos` after the push. When a claim really is about
-  Linux, the canary is the right instrument and its red is authoritative.
+- **Contain modifying subagents with `isolation: "worktree"` (GH-177/GH-233).** Claude Code
+  Agent/Workflow subagents that edit this repo need that flag; read-only audits do not.
+  Harness-driven Codex/Agy lanes use `rtl_worktree_begin`. Commit review inputs first:
+  untracked artifacts are invisible to a new worktree; `--require-clean` may self-trip on the
+  driver's lock directory. Worktrees isolate working files only: config, refs, objects, hooks
+  and all other shared `.git` state remain exposed, including destructive git operations.
+  Never run `validate.sh`/`test/*.sh` under a sandboxed Bash call; the GH-177 hook enforces it.
+  Rerun unsandboxed, never defer to CI. `test/mktemp-trap-guard.sh` outlaws the wipe idiom.
+
+- **Run mutation-heavy suites only in a separate disposable FULL CLONE (GH-564).** Never run
+  `validate.sh` or `test/*.sh` in a valued clone or linked worktree. Read
+  [WORKTREE-SAFETY.md](WORKTREE-SAFETY.md#12-run-the-full-gate-only-in-a-disposable-full-clone)
+  before running gates. A linked worktree shares `.git/config`, refs, remotes, objects and
+  hooks with its parent. Escaped fixtures have set `core.bare=true`, repointed origin and
+  rewritten development, even from worktrees deliberately created for isolation. Full clones
+  contain that Git blast radius but may themselves be corrupted, including mid-push-hook.
+
+  Before trusting a run, fetch or push from a tested clone, compare pre/post `HEAD`,
+  `git config --get core.bare`, `git remote -v` and `git config --local --get user.email`.
+  Until #564's invariant gate lands, treat every tested clone as suspect. Unexpected identity
+  drift invalidates the result: re-clone and compare candidate/base at the same width before
+  blaming the diff. Intact identity means investigate the diff or normal flakiness. A serial
+  pass cannot disprove a parallel fixture escape; one green run is not nondeterminism proof.
+
+  **Validate paths at every dangerous use boundary (GH-567), not just creation.** Empty
+  `git -C` uses CWD and empty `cd` is a no-op; empty cleanup operands can target root/CWD.
+  These suites may intentionally lack `set -e`. Each receiving function must prove a path
+  nonempty, resolved beneath its sandbox root, and of the expected type. A lexical prefix
+  permits `..` traversal; harden before copying. `require_fixture` in
+  `test/gh544-pre-push-gate.sh` is the containment pattern; the recorded 31 other suites lack
+  it. Strict mode or a non-null check alone is not containment.
+
+  **Audit invocation variants and inspect repeatable write artifacts (GH-195).** A detector
+  matching only `bash <driver>.sh` misses direct Python execution. That blind spot let
+  `test/gh115-round-cap.sh` commit a live transcript on every run in four separate clones.
+  Ask what an audit does not match. Trace the actual write using repeatable artifacts (such
+  as timestamp-correlated `.tick/attempts/<phase>`) before speculative process hunts.
+  Evidence: [GH-195](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md).
+
+- **Local macOS is the gate; hosted Ubuntu is advisory (GH-509).** XYZ ships for macOS;
+  Linux/Windows support is future work. Never defer local verification to CI's wrong-platform
+  canary. Operator-retired suites stay out of both runners; retained manual files are in
+  gh306 EXEMPT (GH-854). `canary-ubuntu` is `continue-on-error: true`: red means portability
+  drift, not a broken macOS commit. For a Linux-specific claim it is authoritative.
+  A green local run is self-reported and cannot qualify promotion. Development landings are
+  qualified together by pre-promotion hosted `wave-reconcile.yml` on the tip; after pushing
+  main, hosted `boundary-macos` witnesses it (GH-1127/#1131).
 - **Promotion (development → main), GH-1127.** Evidence must belong to the commit that is merged:
   1. **Quiet window** from the dispatch until the promotion PR is merged: no PR merges or direct pushes
      to `development`. (The local writer's exit 8 only refuses *reconciliation* while a hosted run is
@@ -477,16 +341,19 @@ local change.
   `relay-drive.sh`) refuses to re-fire it (exit 8, no token), you capture the findings as an issue and
   stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
   override (`--force`) or a replan note — never a quiet slide off the plan.
-- **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user. **This governs interactive work only — it is NOT a licence to commit a marathon onto `development`.** The very next bullet is the carve-out: a marathon/relay-fired lane cuts its own `marathon/gh-<n>-*` branch and PRs back into `development`, and that per-lane branch IS the explicitly-requested case. Read 2026-08-15 as permission to skip the branch, which is how four Meter commits landed straight on `development` with no PR (GH-561). The guard now refuses that (`marathon_drive.py`'s branch guard protects `development`, not just `origin/HEAD`), because a rule an agent can talk itself past is not a rule.
-- **`development` is the standing WIP branch — ALL work targets it, including marathon/relay-fired lanes (cut fresh from `main` 2026-07-17, [GH-216](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/216); policy widened 2026-07-17 to cover marathon lanes too, first applied to [PR #217](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/217)).** The prior `development` had drifted 295 commits behind `main` with no open PRs — retired to `development-archived-2026-07-04` rather than deleted outright. Both manual/exploratory work AND marathon-fired lanes (`marathon/gh-<n>-*` branches, GH-212 convention) now branch off `development` and PR back into it — `--plan`/`marathon.sh` still cuts its own short-lived per-lane branch, just off `development` instead of `main`. Periodically merge `development` → `main` once it's in a shippable state; don't let `main` sit behind `development` indefinitely. Watch for `development` drifting stale again the same way the old one did; re-cut from `main` if it does.
-- **Anti-pattern: renaming a branch with an open PR via GitHub's branch-rename API
-  (`POST /repos/{owner}/{repo}/branches/{branch}/rename`, or `gh api ... branches/<old>/rename`).**
-  It does **not** rename in place — it deletes the old ref and recreates a new one, which GitHub
-  treats as `head_ref_deleted` and **auto-closes the open PR** pointed at that branch (found
-  2026-07-10 renaming a branch backing PR #193; recovered by opening a new PR from the renamed
-  branch and pointer-commenting the closed one). If a branch needs a new name and has an open PR:
-  either rename it *before* opening the PR, or accept that renaming after will require re-opening a
-  fresh PR — don't assume the PR follows the rename.
+- **Do not create branches automatically in interactive work** unless the user requests it.
+  The maintainer fresh-clone policy in SOP §4 pre-authorizes one task branch. A requested
+  marathon/relay lane also cuts its own `marathon/gh-<n>-*` branch and PRs to `development`.
+  This rule never licenses marathon commits directly onto development (GH-561); the driver
+  guards `development` itself, not just `origin/HEAD`.
+- **`development` is the standing WIP branch for ALL work**, including relay/marathon lanes:
+  branch from it and PR back to it, not main (GH-216/#217). Promote development to main
+  periodically when shippable; do not leave main indefinitely behind. Watch for development
+  becoming stale and re-cut from main if necessary. The previous branch was 295 commits
+  behind main and was preserved as `development-archived-2026-07-04`, not deleted.
+- **Do not assume GitHub branch rename preserves an open PR.** The branch-rename API
+  deletes/recreates the ref, closing its PR as `head_ref_deleted` (PR #193, 2026-07-10).
+  Rename before opening a PR, or expect to open a new PR and pointer-comment the old one.
 - **Aider Configuration (AIDER.md / GH-77)**: When using Aider as a headless runner against OpenRouter, do not hardcode the API key or attempt to use a secrets manager. The `OPENROUTER_API_KEY` is securely stored at `~/secrets/openrouter/openrouter.txt` and is exported dynamically by `~/.zshrc`.
 - **Aider edit-format compat for OpenRouter models (GH-118)**: many OpenRouter-proxied models
   (confirmed: GLM-5.2, Nemotron Ultra 3) default to Aider's `whole` edit format and fail to emit

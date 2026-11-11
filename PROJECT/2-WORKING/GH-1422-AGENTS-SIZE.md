@@ -1,6 +1,6 @@
 ---
 title: Trim AGENTS.md below 32 KiB
-status: Planning
+status: In progress
 created: 2026-11-11
 updated: 2026-11-11
 owner: Codex
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake, isolated clone, recon and rating registered | Independent Codex plan QA before implementation |
+| Plan QA Approved; accepted-start recorded; draft 27,741 bytes and manual controls pass | Final omission QA and docs gate |
 
 ## Requirements and observed baseline
 
@@ -100,8 +100,10 @@ Trend unknown; this is one demonstrated oversized artifact, not proven increasin
 
 ## Review and verification
 
-Plan QA pending. Final QA pending. Gates pending. No implementation yet.
+Plan QA Approved at `5b6db4820`; receipt: `relay-system/2026-11-11/gh1422-plan.codex.md`.
+Candidate 27,741 bytes; manual controls/link/chain smoke passed. Evidence:
+`TESTS-RESULTS/2026-11-11+GH-1422/SUMMARY.md`. Final QA and docs gate pending.
 
 ## Lessons Learned (For Future Agents)
 
-Pending evidence; do not infer reliability from byte count alone.
+Byte count alone cannot establish preservation of policy. Retain the requirement map and independent omission review. NO_ENTRY for the global lessons ledger.
