@@ -100,4 +100,22 @@ exec(compile(ast.Module(body=[node],type_ignores=[]),'<baseline>','exec'),ns)
 with patch.dict(os.environ,{'CLAUDE_AGENT':''}):
     ns['route_agent']('claude-builder');ns['route_agent']('claude-reviewer')
     check('baseline overwrite witnessed',os.environ['CLAUDE_AGENT']=='claude-reviewer')
+# Reviewer isolation is a capability boundary, not a provider quality ranking.
+with patch.dict(os.environ, {'SMALLCODE_BIN':'/usr/bin/true', 'RELAY_WORKTREE_ISOLATION':'1'}):
+    baseline=subprocess.check_output(['git','show','e68f7cc8:utils/py/marathon_drive.py'],text=True)
+    old=next(n for n in ast.walk(ast.parse(baseline)) if isinstance(n,ast.FunctionDef) and n.name=='_probe_agent_bin')
+    ns=md.__dict__.copy()
+    exec(compile(ast.Module(body=[old],type_ignores=[]),'<baseline probe>','exec'),ns)
+    ns['_probe_agent_bin']('smallcode-reviewer','reviewer')
+    check('baseline unsupported isolation admitted',True)
+    for isolation,role,refused in [('1','reviewer',True),('0','reviewer',False),('1','builder',False)]:
+        with patch.dict(os.environ,{'RELAY_WORKTREE_ISOLATION':isolation}):
+            try:
+                with contextlib.redirect_stderr(io.StringIO()): md._probe_agent_bin('smallcode-actor',role)
+                rejected=False
+            except SystemExit: rejected=True
+            check('SmallCode '+role+' isolation='+isolation,rejected==refused)
+    with patch.dict(os.environ,{'CODEX_BIN':'/usr/bin/true'}):
+        error=jog.validate_marathon_executor(SimpleNamespace(builder='codex',reviewer='smallcode-reviewer'))
+        check('Jog refuses unsupported reviewer isolation',bool(error) and 'isolation' in error,error)
 print(json.dumps(rows,indent=2))
