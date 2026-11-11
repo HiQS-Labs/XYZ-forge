@@ -1,0 +1,6 @@
+{
+  "event": "invalid-control-stopped",
+  "process_group": 23121,
+  "reason": "The isolated bare clone already contained the pushed ref; no ref pairs forced a full gate instead of exercising a task update. Stopped owned process group. No qualifying result claimed.",
+  "environment_fault": "Unqualified system Python lacked yaml; use existing gate venv for real controls."
+}

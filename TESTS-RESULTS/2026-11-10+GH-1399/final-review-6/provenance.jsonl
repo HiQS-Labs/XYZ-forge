@@ -1,0 +1,1 @@
+{"event": "GH1399-final-QA6-approved", "observed_at": "2026-11-11T17:11:48.041023+00:00", "review_round": 6, "budget_total": 6, "reviewed_head": "28da1ddb59f2654cd8b3117f21957226ca511187", "added_sha256": "a71db45eaf391d67277bc8633047ea031849cc9a55af3e9243fb5ed778c6d9be", "files": {"attestation.json": "407f1597c219eab18b6aa8d98005d9ec207763ea2a1d96a755dfef06f9b6cb53"}}

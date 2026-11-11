@@ -1,4 +1,10 @@
 import atexit
+import contextlib
+import datetime
+import fcntl
+import hashlib
+import json
+import uuid
 import os
 import re
 import shlex
@@ -8,7 +14,187 @@ import tempfile
 import sys
 import time
 
-def archive_lane_attempts(attempts_file):
+# GH-1399: canonical lane accounting remains one file, one line per consumed fire.
+ATTEMPT_CONTEXT_ENV = "XYZ_ATTEMPT_CONTEXT"
+ATTEMPT_SCHEMA = "xyz-attempt@1"
+
+
+def attempt_git(root, *args):
+    return subprocess.check_output(["git", "-C", os.fspath(root), *args],
+                                   text=True, stderr=subprocess.PIPE).strip()
+
+
+def attempt_origin(root, seen=None):
+    root = os.path.realpath(root)
+    seen = set(seen or ())
+    if root in seen or len(seen) >= 8:
+        raise ValueError("local Git origin identity is cyclic or too deep")
+    seen.add(root)
+    try:
+        url = attempt_git(root, "remote", "get-url", "origin")
+    except subprocess.CalledProcessError:
+        common = attempt_git(root, "rev-parse", "--git-common-dir")
+        identity = "local:" + os.path.realpath(os.path.join(root, common))
+        return hashlib.sha256(identity.encode()).hexdigest()
+    if not os.path.isabs(url) and ":" not in url:
+        local = os.path.join(root, url)
+        if os.path.isdir(local):
+            url = local
+    return attempt_origin_url(url, seen)
+
+
+def attempt_origin_url(url, seen=None):
+    # Local clones retain their source's configured identity, without network access.
+    local = url[7:] if url.startswith("file://") else url
+    if os.path.isdir(local):
+        return attempt_origin(local, seen)
+    # Persist a comparison digest, never a URL that might contain credentials.
+    url = url.rstrip("/")
+    url = re.sub(r"^https?://[^/@]+@", "https://", url)
+    url = re.sub(r"^git@([^:]+):", r"https://\1/", url)
+    return hashlib.sha256(re.sub(r"\.git$", "", url).encode()).hexdigest()
+
+
+@contextlib.contextmanager
+def lane_attempt_lock(record):
+    os.makedirs(os.path.dirname(record), exist_ok=True)
+    lock_dir = os.path.join(os.path.dirname(os.path.dirname(record)), "attempt-locks")
+    os.makedirs(lock_dir, exist_ok=True)
+    with open(os.path.join(lock_dir, os.path.basename(record) + ".lock"), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
+
+
+def lane_attempt_reserve(root, raw, target_root, cap=2, force=False, check_only=False,
+                         kind="lane"):
+    key = re.sub(r"[^A-Za-z0-9._-]", "_", raw)
+    if not key or key in (".", ".."):
+        raise ValueError("attempt task identity is empty or invalid")
+    root, target_root = os.path.realpath(root), os.path.realpath(target_root)
+    path = os.path.join(root, ".tick", "attempts", key)
+    if check_only:
+        try:
+            with open(path) as f:
+                return sum(1 for _ in f), None
+        except FileNotFoundError:
+            return 0, None
+    with lane_attempt_lock(path):
+        try:
+            with open(path) as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            lines = []
+        count = len(lines)  # Legacy timestamp rows still consume exactly one attempt.
+        if lines:
+            try:
+                last = json.loads(lines[-1])
+            except ValueError:
+                last = None
+            if isinstance(last, dict) and last.get("schema") == ATTEMPT_SCHEMA and last.get("state") == "completed":
+                raise ValueError("completed reservation awaits archival; retry attempt-finish before starting another budget")
+        if count >= int(cap) and not force:
+            return count, None
+        if check_only:
+            return count, None
+        row = {"schema": ATTEMPT_SCHEMA, "id": uuid.uuid4().hex,
+               "task": raw, "kind": kind, "state": "active",
+               "started": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+               "target_root": target_root, "origin": attempt_origin(target_root),
+               "branch": attempt_git(target_root, "branch", "--show-current"),
+               "start_sha": attempt_git(target_root, "rev-parse", "HEAD")}
+        with open(path, "a") as f:
+            if lines and not lines[-1].endswith("\n"):
+                f.write("\n")
+            f.write(json.dumps(row, sort_keys=True) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+    context = {"kind": kind, "record": path, "id": row["id"]}
+    os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
+    return count + 1, context
+
+
+def lane_attempt_row(context):
+    path = context.get("record", "")
+    if not os.path.isabs(path) or not context.get("id"):
+        raise ValueError("attempt context requires an absolute record and reservation id")
+    matches = []
+    with open(path) as f:
+        lines = f.readlines()
+        for index, line in enumerate(lines):
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue  # Historical timestamp lines are counts, never qualification proof.
+            if isinstance(row, dict) and row.get("id") == context["id"]:
+                matches.append((index, row))
+    if len(matches) != 1 or matches[0][1].get("schema") != ATTEMPT_SCHEMA:
+        raise ValueError("reservation is missing, duplicated or has an unsupported schema")
+    index, row = matches[0]
+    if row.get("state") == "active" and index != len(lines) - 1:
+        raise ValueError("active reservation was superseded by a later consumed attempt")
+    if (not isinstance(row.get("id"), str) or not re.fullmatch(r"[0-9a-f]{32}", row["id"])
+            or row.get("kind") not in ("lane", "manual")
+            or not isinstance(row.get("task"), str) or not row["task"]
+            or not isinstance(row.get("branch"), str)
+            or not isinstance(row.get("origin"), str) or not re.fullmatch(r"[0-9a-f]{64}", row["origin"])
+            or not isinstance(row.get("start_sha"), str) or not re.fullmatch(r"[0-9a-f]{40,64}", row["start_sha"])
+            or row.get("state") not in ("active", "completed", "failed")
+            or not isinstance(row.get("target_root"), str) or not os.path.isabs(row["target_root"])):
+        raise ValueError("malformed canonical reservation metadata")
+    datetime.datetime.fromisoformat(row["started"])
+    return row
+
+
+def lane_attempt_finish(context, outcome, sha=None, archive=False, attestation=None):
+    path = context["record"]
+    if os.path.basename(os.path.dirname(path)) != "attempts":
+        raise ValueError("archived attempt bytes are immutable")
+    with lane_attempt_lock(path):
+        row = lane_attempt_row(context)
+        with open(path) as f:
+            lines = f.readlines()
+        last = json.loads(lines[-1])
+        if not isinstance(last, dict) or last.get("id") != row["id"]:
+            raise ValueError("cannot finish a superseded reservation")
+        row["state"] = outcome
+        if outcome != "active":
+            row.setdefault("finished", datetime.datetime.now(datetime.timezone.utc).isoformat())
+        if attestation:
+            row["attestation"] = os.path.realpath(attestation)
+        if sha:
+            row["candidate"] = sha
+        for n, line in enumerate(lines):
+            try:
+                old = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(old, dict) and old.get("id") == row["id"]:
+                lines[n] = json.dumps(row, sort_keys=True) + "\n"
+        fd, tmp = tempfile.mkstemp(prefix=".attempt-", dir=os.path.dirname(path))
+        try:
+            with os.fdopen(fd, "w") as f:
+                f.writelines(lines)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, path)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        if archive:
+            archive_lane_attempts(path, _locked=True)
+    return row
+
+
+def archive_lane_attempts(attempts_file, *, _locked=False):
+    if not os.path.exists(attempts_file):
+        return None
+    canonical = (os.path.basename(os.path.dirname(attempts_file)) == "attempts" and
+                 os.path.basename(os.path.dirname(os.path.dirname(attempts_file))) == ".tick")
+    with (contextlib.nullcontext() if _locked or not canonical else lane_attempt_lock(attempts_file)):
+        return _archive_lane_attempts(attempts_file)
+
+
+def _archive_lane_attempts(attempts_file):
     """Preserve a successful budget before resetting it (caller holds driver lock).
 
     History is passive evidence, never input to the live attempt cap. A unique
@@ -17,11 +203,30 @@ def archive_lane_attempts(attempts_file):
     """
     if not os.path.exists(attempts_file):
         return None
+    raw = os.environ.get(ATTEMPT_CONTEXT_ENV)
+    context = json.loads(raw) if raw else None
+    if context and context.get("record") == os.path.abspath(attempts_file):
+        lane_attempt_row(context)
     history = os.path.join(os.path.dirname(os.path.dirname(attempts_file)), "attempt-history")
     os.makedirs(history, exist_ok=True)
     archive_dir = tempfile.mkdtemp(prefix=os.path.basename(attempts_file) + "-", dir=history)
     archive = os.path.join(archive_dir, "attempts")
     os.rename(attempts_file, archive)
+    if context:
+        if context.get("record") == os.path.abspath(attempts_file):
+            context["record"] = os.path.abspath(archive)
+            context["archived"] = True
+            os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
+            if context.get("attestation"):
+                # Update the existing protected approval, never the immutable archive.
+                import relay_attest
+                with open(context["attestation"]) as f:
+                    approved = json.load(f)
+                old = approved.get("attempt_context", {})
+                if old.get("id") != context["id"]:
+                    raise ValueError("approval reservation changed before archive")
+                approved["attempt_context"] = context
+                relay_attest.write(approved)
     return archive
 
 

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "completed-B1",
+    "accepted": true,
+    "expected": true
+  },
+  {
+    "name": "completed-B1-wrong-sha",
+    "accepted": false,
+    "expected": false
+  },
+  {
+    "name": "legacy-cap-retained",
+    "count": 2,
+    "unchanged": true
+  }
+]

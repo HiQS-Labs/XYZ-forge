@@ -70,7 +70,19 @@ mkrepo() {  # <validate-exit-code> -> prints repo path
   git -C "$r" init -q
   git -C "$r" config user.email t@t
   git -C "$r" config user.name t
-  mkdir -p "$r/githooks" "$r/utils/pdda"
+  mkdir -p "$r/githooks" "$r/utils/pdda" "$r/utils/py"
+  cp "$REPO/utils/py/gate_receipt.py" "$r/utils/py/gate_receipt_impl.py"
+  cp "$REPO/utils/py/rtl.py" "$r/utils/py/"
+  # Existing routing cases use synthetic refs/SHAs. Isolate admission here; GH-1399's
+  # real guard is exercised by retained manual actual-push controls, not this stub.
+  cat > "$r/utils/py/gate_receipt.py" <<'ADMISSION_STUB'
+import gate_receipt_impl as impl
+def attempt_admission(*args, **kwargs):
+    return {"kind": "fixture-admitted"}
+impl.attempt_admission = attempt_admission
+if __name__ == "__main__":
+    impl.main()
+ADMISSION_STUB
   cp "$HOOK" "$r/githooks/pre-push"; chmod +x "$r/githooks/pre-push"
   cp "$ROUTER" "$r/utils/ci-route.sh"; chmod +x "$r/utils/ci-route.sh"
   cat > "$r/validate.sh" <<STUB

@@ -58,6 +58,16 @@ PASS = "pass"
 # Keep the reason strings — they are the argument for the classification, and the next person to add
 # an export will read them to decide which side their variable belongs on.
 HARNESS_ENV = {
+    "XYZ_ATTEMPT_CONTEXT": (
+        PASS,
+        "Qualification must verify its canonical reservation before running. Standard gate "
+        "entry points consume this context and remove it from fixture-suite children.",
+    ),
+    "MERGE_CLEANUP_RECORD": (
+        PASS,
+        "The explicit coordinator-owned repair record is needed at qualification admission; "
+        "standard gates remove it from unrelated fixture children after checking it.",
+    ),
     # ── SCRUB: proven to flip a suite's verdict, or in the same family as one that does ────────────
     "ALLOW_PATHS": (
         SCRUB,

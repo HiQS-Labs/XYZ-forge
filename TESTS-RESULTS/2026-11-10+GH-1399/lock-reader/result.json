@@ -1,0 +1,32 @@
+{
+  "red": {
+    "locked": false
+  },
+  "live": {
+    "locked": true,
+    "lock_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10-gate/temp/gh1399-lock-control/fixture/.git/relay-driver.lock",
+    "pid": 20711,
+    "alive": true,
+    "content": "20711"
+  },
+  "stale": {
+    "locked": true,
+    "lock_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10-gate/temp/gh1399-lock-control/fixture/.git/relay-driver.lock",
+    "pid": 20726,
+    "alive": false,
+    "content": "20726"
+  },
+  "missing_pid": {
+    "locked": true,
+    "lock_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10-gate/temp/gh1399-lock-control/fixture/.git/relay-driver.lock",
+    "error": "[Errno 2] No such file or directory: '/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10-gate/temp/gh1399-lock-control/fixture/.git/relay-driver.lock/pid'",
+    "alive": true
+  },
+  "legacy": {
+    "locked": true,
+    "lock_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10-gate/temp/gh1399-lock-control/fixture/.git/relay-driver.lock",
+    "pid": 20711,
+    "alive": true,
+    "content": "pid=20711"
+  }
+}

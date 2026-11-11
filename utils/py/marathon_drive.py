@@ -18,7 +18,7 @@ import datetime as _dt
 # python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
-from rtl import driver_lock_path, archive_lane_attempts  # noqa: E402
+from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, ATTEMPT_CONTEXT_ENV  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
@@ -412,7 +412,7 @@ def runlog_find_comment_id(payload_text, marker):
             elif isinstance(entry, dict):
                 comments.append(entry)
     for comment in comments:
-        if isinstance(comment, dict) and marker in str(comment.get("body", "")):
+        if isinstance(comment, dict) and str(comment.get("body", "")).splitlines()[:1] == [marker]:
             return str(comment.get("id", ""))
     return ""
 
@@ -1228,59 +1228,37 @@ def main():
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
     def lane_attempt_gate(root_dir, raw, force, check_only=False):
-        # GH-1002: check_only=True parks an at-cap lane exactly as below but never writes — it runs
-        # before the relay-file commit so a parked fire leaves no commit; the single append stays in
-        # the later full call.
-        if get_env("LANE_ATTEMPT_COUNTED"): return 0
-        if not raw: return 0
-        max_attempts = get_env("LANE_MAX_ATTEMPTS", "2")
-        try: max_attempts = int(max_attempts)
-        except ValueError: max_attempts = 2
-
-        key = _lane_key(raw)
-        attempts_dir = os.path.join(root_dir, ".tick", "attempts")
-        if not check_only:
-            os.makedirs(attempts_dir, exist_ok=True)
-        attempts_file = os.path.join(attempts_dir, key)
-
-        # One read-only reader for the attempts file (shared with the GH-162 debug-mantra note).
-        count = debug_mantra_prior_attempts(root_dir, raw)
-
-        if force:
-            if not check_only: eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
-        elif count >= max_attempts:
-            eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
-            eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
-            # GH-280: the receipt reports the count that PARKED the lane; the attempts file
-            # still holds it here, but record it explicitly so the receipt survives any later
-            # state change.
-            _RESULT["attempt_count"] = count
-            # Sentinel Tier 1 (GH-281/GH-342). The Bash lane emits this from the CALLER, on rc==8
-            # (marathon-drive.sh:1103-1106); this gate exits directly, so it emits here instead —
-            # same record, same position relative to the two messages above. `raw`, not `key`: the
-            # Bash message carries $LANE_STATE_KEY as given, not the sanitized form.
-            xyz_debug_log_append(
-                root, "warn", "marathon.lane-park",
-                f"lane {raw} parked at attempt cap",
-                action="re-anchor to QUEUE lanes or re-fire with --force",
-                target_root=args.target_root, phase_id=args.phase_id,
-                relay_task=relay_task)
-            sys.exit(8)
-        if check_only:
+        if get_env("LANE_ATTEMPT_COUNTED"):
+            from gate_receipt import attempt_admission
+            try:
+                proof = attempt_admission(args.target_root or root_dir)
+            except Exception as exc:
+                die(f"nested counted build has invalid accounting: {exc}")
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived") or proof.get("attestation"):
+                die("nested counted build requires an active canonical reservation")
             return 0
-
-        # append fire
-        ts = "fire"
+        if not raw:
+            return 0
         try:
-            ts = subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
-        except:
-            pass
-        with open(attempts_file, "a") as f:
-            f.write(f"{ts} fire\n")
-        # GH-280: record the attempt this fire represents — complete_phase_success RESETS the
-        # attempts file, so a receipt that re-reads it after a green phase would report null
-        # for a run that genuinely fired.
-        _RESULT["attempt_count"] = count + 1
+            cap = int(get_env("LANE_MAX_ATTEMPTS", "2"))
+        except ValueError:
+            cap = 2
+        count, context = lane_attempt_reserve(
+            root_dir, raw, args.target_root or root_dir, cap=cap, force=force,
+            check_only=check_only)
+        if count >= cap and context is None and not force:
+            eprint(f"lane-attempt-cap: lane {_lane_key(raw)} PARKED after {count} attempt(s) (cap {cap}) — no relay token seeded.")
+            _RESULT["attempt_count"] = count
+            xyz_debug_log_append(root, "warn", "marathon.lane-park",
+                                 f"lane {raw} parked at attempt cap",
+                                 action="re-anchor to QUEUE lanes or re-fire with --force",
+                                 target_root=args.target_root, phase_id=args.phase_id,
+                                 relay_task=relay_task)
+            sys.exit(8)
+        if force and context is not None:
+            eprint(f"lane-attempt-cap: --force override — lane {_lane_key(raw)} at {count - 1} attempt(s) (cap {cap}), proceeding.")
+        if context is not None:
+            _RESULT["attempt_count"] = count
         return 0
 
     def lane_attempt_reset(root_dir, raw):
@@ -1293,10 +1271,11 @@ def main():
                 with open(attempts_file) as f:
                     _RESULT["attempt_count"] = sum(1 for _ in f)
             archive = archive_lane_attempts(attempts_file)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             die(f"cannot preserve lane attempts {attempts_file}: {exc}")
         if archive:
             eprint(f"lane-attempt history preserved: {archive}")
+        return archive
 
     def debug_mantra_prior_attempts(root_dir, raw):
         # GH-162: READ-ONLY peek at the .tick/attempts/<lane> file GH-45 maintains — how many prior
@@ -2630,6 +2609,8 @@ relay-file: {rel_relay}
         if not ok:
             log(f"{where}: attested approval found but candidate {cand[:12] if cand else '?'} is not the reviewed revision — {why} — not accepting it (GH-505)")
             return None
+        if record.get("attempt_context"):
+            os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(record["attempt_context"])
         return record
 
     def path_has_nonempty_phase_delta(path):
@@ -2854,7 +2835,9 @@ relay-file: {rel_relay}
         candidate, record = bind_candidate(f"phase {args.phase_id} success")
         # Approval precedes the post-approve hook (GH-273); completion is stamped only later.
         subprocess.run([tick_bin, "log", "marathon.phase.approved", attested_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+        archive = lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+        if archive and os.environ.get(ATTEMPT_CONTEXT_ENV):
+            record = dict(record, attempt_context=json.loads(os.environ[ATTEMPT_CONTEXT_ENV]))
         refresh_remote_tracking_ref()
         if args.post_approve_cmd and not historical:
             log(f"phase approved — running post-approve command: {args.post_approve_cmd}")

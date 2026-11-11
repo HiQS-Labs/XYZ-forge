@@ -1,0 +1,20 @@
+{
+  "sha": "2daec744ca276d93b2bf7f661fd263fa01b4802b",
+  "gate": "validate.sh",
+  "mode": "parallel",
+  "exit_code": 0,
+  "passed": 408,
+  "total": 408,
+  "duration_s": null,
+  "timestamp": "2026-11-11T17:20:54.708260+00:00",
+  "host": "Darwin 27.0.0",
+  "attempt": {
+    "kind": "manual",
+    "record": "/Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/attempts/GH1399-start-task",
+    "id": "27f6e9ef781f4d62b416013ea895ea63",
+    "archived": false,
+    "sha": "2daec744ca276d93b2bf7f661fd263fa01b4802b",
+    "state": "active"
+  },
+  "scope": "full"
+}

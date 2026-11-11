@@ -14,7 +14,7 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path, archive_lane_attempts  # noqa: E402  GH-376: the shared lock resolver, called not copied
+from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, lane_attempt_finish, ATTEMPT_CONTEXT_ENV  # noqa: E402  GH-376: the shared lock resolver, called not copied
 from rtl import (resolve_turn_root, rtl_default_log, checkout_snapshot,
                  restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
@@ -245,42 +245,40 @@ def main():
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
-    def lane_attempt_gate(root, raw, force):
-        if get_env("LANE_ATTEMPT_COUNTED"): return 0
-        if not raw: return 0
-        
-        max_attempts = get_env("LANE_MAX_ATTEMPTS", "2")
-        try: max_attempts = int(max_attempts)
-        except ValueError: max_attempts = 2
-
-        key = _lane_key(raw)
-        attempts_dir = os.path.join(root, ".tick", "attempts")
-        os.makedirs(attempts_dir, exist_ok=True)
-        attempts_file = os.path.join(attempts_dir, key)
-
-        count = 0
-        if os.path.isfile(attempts_file):
+    def target_repo():
+        repo = get_env("RELAY_TARGET_ROOT")
+        if not repo:
             try:
-                with open(attempts_file, "r") as f:
-                    count = len(f.readlines())
+                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
             except Exception:
-                pass
-        
-        if force:
-            eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
-        elif count >= max_attempts:
-            eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
-            eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
-            sys.exit(8)
+                repo = root_dir
+        return repo or root_dir
 
-        # append fire
-        ts = "fire"
+
+    def lane_attempt_gate(root, raw, force):
+        if get_env("LANE_ATTEMPT_COUNTED"):
+            from gate_receipt import attempt_admission
+            try:
+                proof = attempt_admission(target_repo())
+            except Exception as exc:
+                die(f"nested counted build has invalid accounting: {exc}")
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived") or proof.get("attestation"):
+                die("nested counted build requires an active canonical reservation")
+            return 0
+        if not raw:
+            return 0
         try:
-            ts = subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
-        except:
-            pass
-        with open(attempts_file, "a") as f:
-            f.write(f"{ts} fire\n")
+            cap = int(get_env("LANE_MAX_ATTEMPTS", "2"))
+        except ValueError:
+            cap = 2
+        count, context = lane_attempt_reserve(
+            root, raw, target_repo(), cap=cap, force=force,
+            check_only=False)
+        if count >= cap and context is None and not force:
+            eprint(f"lane-attempt-cap: lane {_lane_key(raw)} PARKED after {count} attempt(s) (cap {cap}) — no relay token seeded.")
+            sys.exit(8)
+        if force and context is not None:
+            eprint(f"lane-attempt-cap: --force override — lane {_lane_key(raw)} at {count - 1} attempt(s) (cap {cap}), proceeding.")
         return 0
 
     def lane_attempt_reset(root, raw):
@@ -289,10 +287,11 @@ def main():
         attempts_file = os.path.join(root, ".tick", "attempts", _lane_key(raw))
         try:
             archive = archive_lane_attempts(attempts_file)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             die(f"cannot preserve lane attempts {attempts_file}: {exc}")
         if archive:
             eprint(f"lane-attempt history preserved: {archive}")
+        return archive
 
     # #129/#136: resolve TICK_REPO_ROOT ONCE, here, silently. The lane-attempt gate just below
     # is the first consumer — with the env unset on a vendored-.xyz drive it used to count
@@ -652,14 +651,6 @@ def main():
     # exit never depends on the on-disk record, which consumers validate separately.
     attested = {}
 
-    def target_repo():
-        repo = get_env("RELAY_TARGET_ROOT")
-        if not repo:
-            try:
-                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
-            except Exception:
-                repo = root_dir
-        return repo or root_dir
 
     def transcript_repo():
         try:
@@ -772,7 +763,19 @@ def main():
         if not commit_relay_file(f"relay-drive: attest {args.relay_task} approved by {actor} (reviewed {pre['reviewed_head'][:12]})"):
             return ("refused", "attest-publish-failed")
         try:
+            raw_context = os.environ.get(ATTEMPT_CONTEXT_ENV)
+            if (raw_context and not args.review_once
+                    and json.loads(raw_context).get("kind") == "lane"):
+                from gate_receipt import attempt_admission
+                attempt_admission(trepo)
+                context = json.loads(raw_context)
+                context["attestation"] = str(relay_attest.path_for(args.relay_task, trepo))
+                record["attempt_context"] = context
+                os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
             path = relay_attest.write(record)
+            if record.get("attempt_context"):
+                lane_attempt_finish(record["attempt_context"], "active",
+                                    pre["reviewed_head"], attestation=str(path))
         except Exception as e:
             eprint(f"relay-drive: attestation record write FAILED: {e}")
             return ("refused", "attest-publish-failed")
@@ -1168,6 +1171,7 @@ def main():
     if terminal_status(s) and not actor:
         if not attested:
             exit_unattested(s, "post-loop")
+        lane_attempt_reset(tick_repo_root, args.relay_task)
         print(f"relay-drive: relay terminated (STATUS: {s}, attested by {attested['reviewer']})")
         xyz_relay_emit("green")
         sys.exit(0)

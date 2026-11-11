@@ -135,12 +135,12 @@ def _transient(err: str) -> bool:
     return bool(TRANSIENT_RE.search(err or ""))
 
 
-def _net_git(cwd: Path, args: List[str], timeout: float = NET_TIMEOUT_S) -> subprocess.CompletedProcess:
+def _net_git(cwd: Path, args: List[str], timeout: float = NET_TIMEOUT_S, env=None) -> subprocess.CompletedProcess:
     """run_git with a finite timeout for network call sites. A hung git call becomes the same
     non-zero failure shape as any other error (rc 124, "timed out" diagnostic) so the retry
     loop can classify it; a plain run_git call with no timeout stays unbounded by default."""
     try:
-        return run_git(cwd, args, timeout=timeout)
+        return run_git(cwd, args, timeout=timeout, **({"env": env} if env is not None else {}))
     except subprocess.TimeoutExpired:
         return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
                                            stderr=f"timed out after {timeout}s: git {' '.join(args)}")
@@ -664,7 +664,11 @@ def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo: 
         return False, DRAFT_REFUSAL
     if live.get("headRefOid") != pr["headRefOid"]:
         return False, f"remote head moved from {pr['headRefOid'][:10]} to {str(live.get('headRefOid'))[:10]} during resolution — not pushing"
-    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"])
+    env = dict(os.environ)
+    env["XYZ_ATTEMPT_CONTEXT"] = json.dumps({
+        "kind": "merge-repair", "record": str(attempt_record.record_path(
+            primary_repo, origin_url(primary_repo) or "", pr["number"]))})
+    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"], env=env)
     if r.returncode != 0:
         return False, f"push refused: {r.stderr.strip()[-400:]}"
     return True, f"pushed {sha[:10]} to {pr['headRefName']}"

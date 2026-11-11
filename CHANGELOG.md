@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-10 — GH-1399 qualification accounting
+
+Extend the existing qualification boundaries to require canonical accounting for task
+candidates before docs routing, receipt reuse or legacy green recording. Lane reservations
+retain legacy consumed lines; protected phase attestations carry archived references through
+post-approve. Manual skill workflows use the same writer and a maintained accounting root.
+Administrative routing and documented bypasses retain their existing scope. This is a Costly
+control change: rollback must revert admission and producer integrations together while
+preserving attempt/history bytes. It prevents missing accounting, not inference of logical
+repair rounds or hostile local state changes. Focused/manual controls passed; final Codex
+review Approved in round6 after existing qualification fixtures adopted the dependencies
+and their own accounting. Normal full publication gate passed408/408 without bypass at
+2daec744ca27; committed receipts bind that runtime to the evidence-only checkpoint. Hosted
+PR CI passed on c811a2be9; final documentation checkpoint is checked separately.
+No merge, promotion or managed skill deployment.
+The review also corrected existing parent-approval ownership, directory-lock inspection and
+run-log comment identity defects in the touched integrations.
+
+
 ## 2026-11-10 — GH-1414 paraphrase-first skill review
 
 Added document-only paraphrase and grounded scope boundaries to existing start-task
