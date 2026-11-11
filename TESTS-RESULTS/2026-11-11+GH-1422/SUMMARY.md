@@ -64,7 +64,7 @@ Historical links replaced by compact issue references in AGENTS (preserved here)
 ## QA and gates
 
 Plan relay: Approved, reviewed `5b6db4820f275ba293dc245f4e2413a114ee5c8e`.
-Docs gate passed (exit 0, zero errors, 99 existing backlog warnings); final omission review pending.
+Docs gate passed (exit 0, zero errors, 99 existing backlog warnings); final omission review Approved at `d53a88d60` after restoring the same-PR provenance boundary (round 2). Final publication reruns the push gate.
 
 ## Edit verdicts and lesson admission
 

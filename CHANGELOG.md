@@ -4,7 +4,7 @@
 
 - GH-1422: compressed AGENTS.md from 42,768 to 27,756 bytes, retaining operative rules and
   existing canonical owners. Manual byte-budget red controls, local links and default project
-  instruction-chain smoke pass; docs gate passes (zero errors, 99 backlog warnings); final omission QA pending.
+  instruction-chain smoke pass; docs gate passes (zero errors, 99 backlog warnings); final omission QA Approved after restoring the same-PR provenance requirement.
   Evidence: TESTS-RESULTS/2026-11-11+GH-1422/.
 
 ## 2026-11-10 — GH-1414 paraphrase-first skill review

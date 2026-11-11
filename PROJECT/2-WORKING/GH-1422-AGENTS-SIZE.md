@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; accepted-start recorded; draft 27,756 bytes and manual controls pass | Final omission QA and docs gate |
+| Plan QA Approved; accepted-start recorded; draft 27,756 bytes and manual controls pass | PR publication through final push gate |
 
 ## Requirements and observed baseline
 
@@ -81,11 +81,11 @@ Non-goals: policy changes, harness/runtime edits, new tests/gates, config change
 
 ## Acceptance
 
-- [ ] Root file is nonempty and below 32,768 bytes, with target <=28,000 for headroom.
-- [ ] Before/after counts and a section/requirement destination mapping are retained.
-- [ ] Critical safety, authority, routing and existing operative semantics are preserved.
-- [ ] Links resolve; applicable instruction-chain totals are measured and limitations stated.
-- [ ] Existing docs gate and independent plan/final QA pass; no new tests or gate machinery.
+- [x] Root file is nonempty and below 32,768 bytes, with target <=28,000 for headroom.
+- [x] Before/after counts and a section/requirement destination mapping are retained.
+- [x] Critical safety, authority, routing and existing operative semantics are preserved.
+- [x] Links resolve; applicable instruction-chain totals are measured and limitations stated.
+- [x] Existing docs gate and independent plan/final QA pass; no new tests or gate machinery.
 
 ## PRS rationale (2026-11-11)
 
@@ -102,7 +102,8 @@ Trend unknown; this is one demonstrated oversized artifact, not proven increasin
 
 Plan QA Approved at `5b6db4820`; receipt: `relay-system/2026-11-11/gh1422-plan.codex.md`.
 Candidate 27,756 bytes; manual controls/link/chain smoke passed. Evidence:
-`TESTS-RESULTS/2026-11-11+GH-1422/SUMMARY.md`. Docs gate passed (exit 0, zero errors, 99 backlog warnings); final QA pending.
+`TESTS-RESULTS/2026-11-11+GH-1422/SUMMARY.md`. Docs gate passed (exit 0, zero errors, 99 backlog warnings); final QA Approved at `d53a88d60` (round 2), receipt `relay-system/2026-11-11/gh1422-final.codex.md`.
+Publication gate reruns on the final pushed commit; issue remains open until merge.
 
 ## Lessons Learned (For Future Agents)
 
