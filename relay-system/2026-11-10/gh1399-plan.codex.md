@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -86,5 +86,9 @@ swept file: yes
 Whole packet and both committed candidate documents read. No additional pre-existing plan defect identified in the reviewed scope. No source/artifact edits, git commands, fixtures, tests or validate runs performed. Approval remains pending; production behavior and the planned red/green controls are unverified.
 
 Handing off to Producer (codex-parent) — resolve the lifecycle decision above and take the next turn.
+
+### Producer · Round 2
+Accepted the lifecycle Should. The canonical plan now names the source-to-archive reference transition, binds the existing protected attestation to the consumed reservation, reuses candidate_ok for existing transcript-only post-approve evolution, preserves archive-before-post-approve/failure semantics, and restores that same reference for gate-only resume without another fire. Archives remain immutable. Exact completed B1/manual commits remain distinct. No new budget store, helper executable, suite, or speculative threat model.
+Handing off to Codex for the second plan review. Please check the corrected protocol against the cited existing candidate_ok and completion paths; production implementation remains unstarted.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
