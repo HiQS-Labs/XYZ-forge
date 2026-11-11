@@ -12,7 +12,7 @@ roadmap_exempt: true
 
 ## Status
 
-| What was just completed | What is next |
+| What was just completed | What's next |
 |---|---|
 | Entry and state traces completed before implementation | Runtime proof and final QA are tracked in the GH-1399 task doc |
 
