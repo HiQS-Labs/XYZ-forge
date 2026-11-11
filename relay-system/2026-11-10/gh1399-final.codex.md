@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -69,5 +69,27 @@ Review the full diff origin/development...HEAD for issue1399, its active task/re
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The inherited merge-repair accounting path can enter a counted relay but cannot complete its approval path. Full-file review coverage also remains incomplete; this is not final sign-off.
+swept file: no
+
+Operator contract: fail closed at existing qualification boundaries using existing accounting, preserve consumed rounds and administrative behavior, and add no suites/framework. Native bypasses and deliberate local-file tampering remain outside the boundary; one reservation covers one caller-owned repair episode.
+
+- [Should] **Do not send a merge-repair reservation to the lane-only writer on approval.** `utils/py/relay_drive.py:259` accepts a nested counted reservation with state `in_progress`; `utils/py/gate_receipt.py:133` explicitly supports `kind=merge-repair`. With that context in `XYZ_ATTEMPT_CONTEXT`, `relay_drive.py:766` attaches it to the approval, then `relay_drive.py:776` unconditionally invokes `lane_attempt_finish`. That writer rejects every canonical merge-cleanup record path before doing any IO (`utils/py/rtl.py:148`), so the enclosing catch returns `attest-publish-failed` after the reviewer already approved and the trailer/approval were written. This conflicts with parent-context reuse in `skills/1-hourly/start-task/SKILL.md:252`.
+  Observed input: `{"kind":"merge-repair","record":"/primary/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1399.json","index":0}` passed to `lane_attempt_finish(context, "active", "a"*40, attestation="/primary/.git/approval.json")` raises `ValueError: archived attempt bytes are immutable`. The path follows the canonical shape in `skills/2-daily/merge-cleanup/scripts/attempt_record.py:49`; rejection precedes checking record contents.
+  Affected scope: non-review-once relay approvals inheriting an explicitly supplied, valid merge-repair `XYZ_ATTEMPT_CONTEXT`, with `LANE_ATTEMPT_COUNTED=1`. The admission branch already permits this state; this is not a request to admit failed/resolved reservations as active builders.
+  Falsifier: in a disposable full clone, run an approving nested relay under a valid in-progress canonical merge-repair context. It must finish without `attest-publish-failed`, preserve the parent's repair count and lifecycle ownership, and avoid allocating a lane budget. If it already does, this finding is wrong.
+  Probe: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with `sys.path.insert(0, "utils/py"); from rtl import lane_attempt_finish` and the exact call above, catching/printing `ValueError`. Exit status **0** (exception caught); decisive output **`ValueError: archived attempt bytes are immutable`**. No Git invocation, lock, record read or write occurred. This establishes the callee mismatch; end-to-end reproduction remains **[Unverified — needs clone run]**.
+  Fix: dispatch approval binding according to reservation kind and retain merge-repair ownership with its existing writer/caller. Do not invoke the lane JSONL writer for a merge-repair JSON record or book a replacement lane merely to make approval pass. Verify with a retained manual clone control, not a new suite.
+
+- [Pass] Admission precedes docs routing and full-receipt reuse in `githooks/pre-push:90`, and legacy green recording in `utils/gate-record.sh:81`. This is source inspection, not an independently executed gate.
+- [Pass] Legacy timestamp lines still consume count in `utils/py/rtl.py:86`, and archive preservation uses rename in `utils/py/rtl.py:215`. Recorded managed controls include transcript-only acceptance, unrelated-candidate refusal and two retained lines in `TESTS-RESULTS/2026-11-10+GH-1399/implementation/gate/managed-results.json`. These are producer receipts, not a fresh reviewer execution.
+- [Unverified — needs clone run] Full pre-push/hosted qualification remains outstanding as Setup explicitly permits. No validate, test suite, pytest, executable fixture or Git command was run in this turn.
+- [Unverified — review coverage] Reconstructed the base-to-HEAD changed-path list and diff by reading Git object bytes without invoking Git; reviewed the task/recon docs, admission module, lane accounting changes, relay driver, boundary integrations and retained evidence. The complete pre-existing bodies of marathon_drive, merge_cleanup, scan_clones and every changed gate/test/skill have not all been swept. No claim of absence of pre-existing defects is made. Complete that sweep before final approval.
+
+Handing off to Producer (codex-parent) — correct/disposition the lifecycle mismatch, retain its clone evidence, and return for the remaining full-file review; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
