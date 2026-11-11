@@ -380,7 +380,9 @@ ok "  and names the explicit override" \
 ok "  and NOTHING ran — no docs gate, no suite banners" \
    "! printf '%s' \"\$out\" | grep -E 'stub-pdda ran|^Running ' >/dev/null"
 
-out="$( cd "$WT45" && XYZ_ALLOW_WORKTREE_GATE=1 bash validate.sh --tier 1 2>&1 )"; rc=$?
+# The explicit worktree override still needs accounting for this fixture task branch.
+_wt_accounting="$(python3 "$REPO/utils/py/gate_receipt.py" attempt-start --repo "$WT45" --accounting-root "$WORK" --task gh35-worktree)"
+out="$( cd "$WT45" && XYZ_ALLOW_WORKTREE_GATE=1 XYZ_ATTEMPT_CONTEXT="$_wt_accounting" bash validate.sh --tier 1 2>&1 )"; rc=$?
 ok "GH-45: the override runs the gate AND announces itself (exit $rc)" \
    "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'explicit request' >/dev/null && printf '%s' \"\$out\" | grep 'stub-pdda ran' >/dev/null"
 

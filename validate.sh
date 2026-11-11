@@ -816,12 +816,6 @@ if [ "$LIST_ONLY" -eq 1 ]; then
   exit 0
 fi
 
-# GH-1399: --list is read-only; every actual task gate requires booked accounting.
-_gate_attempt_context="${XYZ_ATTEMPT_CONTEXT:-}"
-_gate_merge_context="${MERGE_CLEANUP_RECORD:-}"
-python3 "$HERE/utils/py/gate_receipt.py" admit --repo "$HERE" >/dev/null || exit 2
-# The parent proof must not become ambient state in the suites' unrelated fixtures.
-unset XYZ_ATTEMPT_CONTEXT MERGE_CLEANUP_RECORD
 
 
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
@@ -1058,6 +1052,13 @@ if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
   fi
   exit 0
 fi
+
+# GH-1399: --list and --print-mode are read-only; every actual task gate requires booked accounting.
+_gate_attempt_context="${XYZ_ATTEMPT_CONTEXT:-}"
+_gate_merge_context="${MERGE_CLEANUP_RECORD:-}"
+python3 "$HERE/utils/py/gate_receipt.py" admit --repo "$HERE" >/dev/null || exit 2
+# The parent proof must not become ambient state in the suites' unrelated fixtures.
+unset XYZ_ATTEMPT_CONTEXT MERGE_CLEANUP_RECORD
 
 # ── GH-35 tier 1: the deterministic docs gate, and nothing else ─────────────────────────────────
 # This is the same pair of checks githooks/pre-push runs for a route=docs push, so
