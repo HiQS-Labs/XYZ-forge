@@ -14,7 +14,7 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, ATTEMPT_CONTEXT_ENV  # noqa: E402  GH-376: the shared lock resolver, called not copied
+from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, lane_attempt_finish, ATTEMPT_CONTEXT_ENV  # noqa: E402  GH-376: the shared lock resolver, called not copied
 from rtl import (resolve_turn_root, rtl_default_log, checkout_snapshot,
                  restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
@@ -262,7 +262,7 @@ def main():
                 proof = attempt_admission(target_repo())
             except Exception as exc:
                 die(f"nested counted build has invalid accounting: {exc}")
-            if proof.get("state") not in ("active", "in_progress") or proof.get("archived"):
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived") or proof.get("attestation"):
                 die("nested counted build requires an active canonical reservation")
             return 0
         if not raw:
@@ -765,11 +765,16 @@ def main():
         try:
             raw_context = os.environ.get(ATTEMPT_CONTEXT_ENV)
             if raw_context and not args.review_once:
+                from gate_receipt import attempt_admission
+                attempt_admission(trepo)
                 context = json.loads(raw_context)
                 context["attestation"] = str(relay_attest.path_for(args.relay_task, trepo))
                 record["attempt_context"] = context
                 os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
             path = relay_attest.write(record)
+            if record.get("attempt_context"):
+                lane_attempt_finish(record["attempt_context"], "active",
+                                    pre["reviewed_head"], attestation=str(path))
         except Exception as e:
             eprint(f"relay-drive: attestation record write FAILED: {e}")
             return ("refused", "attest-publish-failed")
@@ -1165,6 +1170,7 @@ def main():
     if terminal_status(s) and not actor:
         if not attested:
             exit_unattested(s, "post-loop")
+        lane_attempt_reset(tick_repo_root, args.relay_task)
         print(f"relay-drive: relay terminated (STATUS: {s}, attested by {attested['reviewer']})")
         xyz_relay_emit("green")
         sys.exit(0)

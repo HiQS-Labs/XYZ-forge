@@ -145,7 +145,7 @@ def lane_attempt_row(context):
     return row
 
 
-def lane_attempt_finish(context, outcome, sha=None, archive=False):
+def lane_attempt_finish(context, outcome, sha=None, archive=False, attestation=None):
     path = context["record"]
     if os.path.basename(os.path.dirname(path)) != "attempts":
         raise ValueError("archived attempt bytes are immutable")
@@ -157,7 +157,10 @@ def lane_attempt_finish(context, outcome, sha=None, archive=False):
         if not isinstance(last, dict) or last.get("id") != row["id"]:
             raise ValueError("cannot finish a superseded reservation")
         row["state"] = outcome
-        row.setdefault("finished", datetime.datetime.now(datetime.timezone.utc).isoformat())
+        if outcome != "active":
+            row.setdefault("finished", datetime.datetime.now(datetime.timezone.utc).isoformat())
+        if attestation:
+            row["attestation"] = os.path.realpath(attestation)
         if sha:
             row["candidate"] = sha
         for n, line in enumerate(lines):

@@ -142,12 +142,16 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
         raise ValueError("reservation target repository does not match this qualification clone")
     if row.get("state") != "completed" and attempt_origin(source) != row["origin"]:
         raise ValueError("active reservation source is unavailable or mismatched")
-    if context.get("archived") and context.get("attestation"):
+    if row.get("attestation"):
+        context["attestation"] = row["attestation"]
+    if context.get("attestation"):
         import relay_attest
         with open(context["attestation"]) as f:
             approval = json.load(f)
         if os.path.realpath(context["attestation"]) != os.path.realpath(relay_attest.path_for(approval["task"], source)):
             raise ValueError("approval is outside the protected target attestation path")
+        if row.get("candidate") != approval.get("reviewed_head"):
+            raise ValueError("approval does not match the canonical reviewed candidate")
         linked = approval.get("attempt_context", {})
         if linked.get("id") != context["id"]:
             raise ValueError("approval is not bound to the consumed reservation")
@@ -265,12 +269,6 @@ def check_receipt(repo_root, sha, max_age_s=None, require_full_gate=False):
                     age = (datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds()
                     if age > max_age_s:
                         return False, f"Receipt expired (age: {age:.0f}s > max: {max_age_s}s)"
-                proof = data.get("attempt")
-                if not isinstance(proof, dict) or proof.get("kind") not in ("lane", "manual", "merge-repair"):
-                    proof = None
-                if os.environ.get(ATTEMPT_CONTEXT_ENV) or os.environ.get("MERGE_CLEANUP_RECORD"):
-                    proof = None
-                attempt_admission(repo_root, sha, context_override=proof)
                 return True, data
             if data.get("sha") != sha:
                 return False, f"Receipt sha is {data.get('sha')}, expected {sha}"
@@ -288,7 +286,6 @@ def check_receipt(repo_root, sha, max_age_s=None, require_full_gate=False):
             with open(txt_path, "r", encoding="utf-8") as f:
                 content = f.read()
             if f"commit: {sha}" in content and "result: green" in content:
-                attempt_admission(repo_root, sha)
                 return True, {"sha": sha, "gate": "ci-local.sh", "mode": "sequential", "exit_code": 0, "source": "gate-evidence"}
             return False, "gate-evidence file exists but result is not green"
         except Exception as e:

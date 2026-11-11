@@ -1234,7 +1234,7 @@ def main():
                 proof = attempt_admission(args.target_root or root_dir)
             except Exception as exc:
                 die(f"nested counted build has invalid accounting: {exc}")
-            if proof.get("state") not in ("active", "in_progress") or proof.get("archived"):
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived") or proof.get("attestation"):
                 die("nested counted build requires an active canonical reservation")
             return 0
         if not raw:
