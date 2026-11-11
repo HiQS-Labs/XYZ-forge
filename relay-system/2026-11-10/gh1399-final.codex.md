@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -256,5 +256,20 @@ Handing off to Reviewer(codex) for final authorized round6.
 ### System · Round 6 token continuation
 
 The original review token is mechanically DONE after round5 approval and cannot be reopened. Continue this same transcript and round6-of6 budget using the fresh read-only turn token GH1399-FINAL-20261110-R6. This changes only the spent coordination token, not the review history, authorized cap, task identity or consumed accounting. No replacement review transcript and no new repair reservation.
+
+### Reviewer · Round 6
+
+VERDICT: PASS
+Basis: The fixture repairs preserve the existing assertions while supplying their newly required dependencies and fixture-owned accounting. Round five's production approval and round four's completed production sweep remain applicable. No additional concrete pre-existing defect was found in the newly reviewed files.
+swept file: yes
+
+Operator contract: fail closed at qualification entry using existing accounting, preserve consumed rounds and administrative behavior, and introduce no new suites/framework. Explicit bypasses and deliberate local-file tampering remain outside the boundary; one reservation covers one caller-owned repair episode.
+
+- [Pass] **Fixture-owned accounting and dependencies are appropriate.** Read the full bodies of the newly touched gh251, gh267, gh365-runner-envelope, gh365-validate-telemetry, gh371, gh372, gh379 and gh528 suites and `test/lib/attest-stub.sh`, filling truncated output spans separately. `test/gh251-validate-pytest-skip.sh:10` and `test/gh528-parallel-contention-retry.sh:37` allocate through the existing `attempt-start` with `--accounting-root "$WORK"`; `test/gh379-canary-uses-validate.sh:267` does so in ignored temp for its zero-suite refusal control. The real green writer gets its own context at `test/gh365-runner-envelope.sh:233`. Partial harnesses copy gate_receipt alongside rtl (`test/gh371-interrupt-snapshot.sh:9`, `test/gh372-escalation-log-tail.sh:9`, `test/gh365-validate-telemetry.sh:77`, `test/gh365-runner-envelope.sh:215`). These changes support existing behavior assertions; no new suite or framework is requested or introduced by these repairs.
+- [Pass] **Stub boundaries remain explicit.** `test/lib/attest-stub.sh:75-87` admits and binds only lane contexts and calls the canonical lane writer, matching the lane-only production ownership at `utils/py/relay_drive.py:767-777`; manual/merge ownership stays with its parent. Express labels its admission replacement as a dependency stub (`test/gh267-express-skill.sh:131-143`), and its fixture ignores Python cache at `:124`. Its refusal, landing, TOCTOU and receipt assertions remain present in the complete body. This is source inspection, not proof of real admission from a stubbed suite.
+- [Pass] **Retained focused receipts are intact and distinguish the failed intermediate Express run.** Read-only command: `PYTHONDONTWRITEBYTECODE=1 python3 -` loading each nonblank JSON row in `TESTS-RESULTS/2026-11-10+GH-1399/qualification/fixture-repairs/provenance.jsonl`, asserting nonempty rows/files, comparing `hashlib.sha256((p/name).read_bytes()).hexdigest()` with every listed hash, decompressing each `*.log.gz` with `gzip.decompress`, asserting nonempty text, printing the last three lines, and reading `gh267-r2.rc`. Exit **0**; decisive output: **`receipt files: 12 hash mismatches: []`**. The original Express log ends **`pass=123 fail=4`**; its corrected log ends **`pass=127 fail=0`**, with final rc **0**. Other retained summaries: gh251 **6/0**, gh280 **227/0**, envelope **25/0**, telemetry **16/0**, gh371 **2/0**, gh372 **3/0**, gh379 **36/0**, gh528 **9/0**. These are authenticated producer clone receipts, not independently rerun suites. `results.json` retains the original Express rc=1; the separate r2 receipt supplies the later success.
+- [Unverified — needs clone run] The second full qualifying run and hosted checks remain outstanding. This approval completes the independent review and does not claim publication readiness or a green final full gate. No Git command, validate/test/pytest invocation, executable fixture, source edit or artifact edit was performed in this reviewer turn. Only this relay file was changed.
+
+Relay closed (Approved), no further review turn needed. Producer owns normal full qualification and subsequent hosted checks/publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
