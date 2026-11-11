@@ -75,7 +75,7 @@ transcripts for the issue: 6
   token          : RESOLVED MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2  (field in result)
   transcript     : RESOLVED relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-202503.md  (join: result.head_sha == transcript commit fc7896aae; implicit)
   gate receipt   : RESOLVED ['TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/marathon-gate-receipt.json', 'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/marathon-gate-receipt.json', 'TESTS-RESULTS/2026-11-08+GH-1254/jog/gh1254-exec2-gateretry2/gate-receipt.json']  (join: receipt.sha == result.head_sha) gate.result=green
-  attestation    : RESOLVED /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2.json
+  attestation    : RESOLVED <machine-local-temp>/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2.json
 
 transcripts not joined to any attempt: 2
   relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-184120.md  commit d0b117022  nscript saved (MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN)

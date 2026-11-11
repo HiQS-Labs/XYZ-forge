@@ -16,7 +16,7 @@ receipt, not a tool, suite or gate, and nothing invokes it.
 |---|---|---|
 | Main path, GH-1254 | `walk-gh1254.txt` | PARTIAL: 6 attempts discovered, 0 with every cell resolved |
 | Red control, GH-1064 (no execution records) | `walk-gh1064-control.txt` | UNKNOWN: zero attempts; not reported as a reconstruction |
-| First run, kept as a witnessed false pass | `walk-gh1254-first-run-red.txt` | Marked the approved attempt's attestation RESOLVED because the machine-local temp path still exists on this host, and found 0 invocations because of a schema-prefix mismatch |
+| First run, kept as a witnessed false pass | `walk-gh1254-first-run-red.txt` | Marked the approved attempt's attestation RESOLVED because the machine-local temp path still exists on this host, and found 0 invocations because of a schema-prefix mismatch. The temp-directory prefix in that file is redacted to `<machine-local-temp>` |
 
 ## What the walk shows
 
