@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -116,5 +116,19 @@ Handing off to Producer (claude-a) — disposition R1–R2, update the plan, the
 - **Unverified note on scope — Implemented.** The scope paragraph now says the plan proposes the narrow reading, the operator has not ruled on it, and the interface demonstration stays owed.
 
 Handing off to Reviewer (codex) — re-review the plan at the new HEAD.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: R1–R2 are resolved. The full plan is adequate to proceed as the bounded documentation slice proposed, with umbrella completion and interface implementation still owed. Approval is plan QA, not acceptance of the proposed dispositions or a claim that the implementation-stage checks passed.
+swept file: yes
+
+- [Pass] **R1 resolved; reconstruction can expose gaps.** `PROJECT/2-WORKING/GH-1000-EVIDENCE-LINKED-CONSOLIDATION.md:155–170` requires all seven cells, explicit unresolved reasons, candidate-bound gate/review evidence, and both empty-input and missing-attestation controls. Probe: standard-library Python `json.loads(Path("TESTS-RESULTS/2026-11-08+GH-1254/jog/gh1254-exec2-gateretry2/marathon-result.json").read_text())` plus `sorted(x.name for x in p.parent.iterdir())`; exit 0. Decisive output: execution `gh1254-exec2-gateretry2`, candidate `fc7896aae3349e89d0e929aa1ca299f2fa678f2d`, machine-local `.git/relay-attest/...json` path; bundle files `['gate-receipt.json', 'landing.json', 'marathon-result.json', 'provenance.jsonl', 'receipt.json']`. The planned MISSING result is grounded; a trailer cannot fill it.
+- [Pass] **R2 resolved; fallback is bounded.** The plan's “It is not a contract” qualification and per-attempt fallback (`:124–130`, `:161–163`) agree with `utils/py/marathon_drive.py:217–221` (target receipt HEAD), `:2333–2344` (transcript archive and root commit), `:2859–2867` (post-approval command), and `MACHINE-CONTRACTS.md:104–109` (observational head versus reviewed candidate). Ambiguous transcript associations remain UNKNOWN.
+- [Pass] **Scope and reuse remain proportionate.** The scope explicitly says “the operator has not ruled on it” and “interface demonstration stays explicitly owed”; the acceptance map ends “The umbrella stays open after this PR.” Plan steps 1, 5 and 6 require evidence-backed inventory, interface comparison, and drafts awaiting agreement. The proposed dispositions remain recommendations. Shared-reader consumers remain visible at `utils/py/board_sync.py:1191–1192`, `utils/py/work_connectors/__init__.py:145–147`, `utils/py/releases_cycle.py:55`, and `addons/paperclip-dashboard/app.js:106`; approved-only publication is enforced at `utils/py/jog_run.py:1083–1084`. No additional pre-existing plan defects found in the full sweep; runtime sources were spot-checked rather than exhaustively audited.
+- [Unverified — needs source access] `gh issue view 1000 --repo HiQS-Labs/XYZ-forge --json body` exited 1: “error connecting to api.github.com”. Live issue wording and sibling-repo claims were not independently refreshed. Approval relies on the supplied issue restatement and the plan's explicit unresolved scope boundary; it does not establish an operator decision.
+- [Unverified — needs clone run] No validate/test/pytest or executable fixtures run. Plan step 7 and final artifact QA remain obligations after the planned documentation and manual receipt exist.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the planned documentation work and preserve the stated scope caveats.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
