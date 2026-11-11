@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -85,5 +85,28 @@ Flag anything wrong, missing, incorrectly scoped, or over/under-engineered, with
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The docs-only approach is proportionate, but the reconstruction acceptance omits part of the requested chain and one recon statement overstates a runtime invariant. These need small plan edits before execution.
+swept file: yes
+
+- [Should] **R1 — Require the complete evidence chain in the walk.** `PROJECT/2-WORKING/GH-1000-EVIDENCE-LINKED-CONSOLIDATION.md:147–158` currently permits an attempt to pass with only result, transcript and review trailer. A review trailer is not the separate machine attestation; neither invocation identity nor gate binding is required by that pass condition. Add a per-attempt checklist/table for execution ID, invocation identity/path (explicitly say if no independent invocation ID exists), token, transcript, gate receipt, result and attestation, each resolved or MISSING/UNKNOWN with its join and reason. Bind gate/review evidence to the relevant candidate; a green label alone is insufficient. Keep this a manual check, with no new machinery.
+  Observed input: Reading `TESTS-RESULTS/2026-11-08+GH-1254/jog/gh1254-exec2-gateretry2/marathon-result.json` yields execution `gh1254-exec2-gateretry2`, token `MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2`, head `fc7896aae3349e89d0e929aa1ca299f2fa678f2d`, green gate and a machine-local `.git/relay-attest/...json` path. Its published directory contains `gate-receipt.json`, `landing.json`, `marathon-result.json`, `provenance.jsonl`, `receipt.json`; no attestation file. Probe: `python3` standard-library `json.loads(Path(path).read_text())`, print those fields and sorted parent filenames; exit 0, decisive output as quoted above. The current walk could omit this attestation gap entirely.
+  Affected scope: Phase 2's manual reconstruction and its Phase 4 missing-reference conclusions, for every discovered attempt including gate retries.
+  Falsifier: Walk that same published bundle without access to the original runner: it must report an unresolved attestation unless an independently located committed copy is actually linked and its binding checked; it must not call the full chain complete merely because the transcript has an approval trailer. GH-1064 must still return UNKNOWN on zero attempts.
+
+- [Should] **R2 — Qualify the transcript-commit join.** At plan lines 124–125, replace the unconditional “`head_sha` equals the commit that saved the transcript” with a candidate join to investigate per attempt. `utils/py/marathon_drive.py:216–222` reads receipt-time HEAD from `target_repo_path` or root; `:2322–2344` writes/commits the transcript in root (or its configured archive); `:2859–2867` can run a post-approval command before terminal receipt generation. `MACHINE-CONTRACTS.md:105–109` explicitly calls head_sha observational receipt-time HEAD. Absence of a transcript field is supported, but equality is not a general contract. Document how the walk falls back to transcript content/token and provenance when that equality is absent or ambiguous, and report unresolved joins honestly.
+  Observed input: The actual writer uses `repo = _RESULT.get("target_repo_path") or _RESULT.get("root")` followed by `rev-parse HEAD`, whereas `save_transcript` commits with `git -C root`; these are distinct supported roots. Source inspection, not an executed failure claim.
+  Affected scope: The Phase 0 statement and Phase 2 reconstruction procedure; no runtime change requested.
+  Falsifier: A same-root, unchanged-HEAD attempt may establish the equality for that record. A target-root/archive-root or post-approval-commit case must not inherit that equality without evidence; missing/ambiguous association must remain MISSING/UNKNOWN.
+
+- [Pass] **Reuse and publication recon:** `utils/py/releases_app.py:1508–1512` emits Jog status and global ID without execution identity; `:5746` owns the shared reader; `utils/py/board_sync.py:1191–1192`, `utils/py/work_connectors/__init__.py:145–147`, `utils/py/releases_cycle.py:55` and `src/flightdeck/connectors.py:13` establish the consumer chain. Paperclip fetches `/flightdeck.json` at `addons/paperclip-dashboard/app.js:106`. `utils/py/jog_run.py:1083–1084` refuses publication except approved green results. The proposed reuse and failed-result gap are grounded.
+- [Pass] **Proportionate work and negative control:** plan lines 140–141, 153–155 and 163–169 reuse existing owners, reject empty-input success, and add no suite/store/scheduler. The scope paragraph explicitly leaves dispositions as operator recommendations; retirement/freeze proposals therefore do not themselves authorize action. The rating section states neutral appeal and no incident recurrence claim. GH-1254 is a useful worked example with the explicitly stated hand-preservation caveat; no broader representativeness claim should be inferred.
+- [Unverified — needs source access] `gh issue view 1000 --repo HiQS-Labs/XYZ-forge --json body` returned “error connecting to api.github.com”. The issue's live authorization wording and sibling-repo state were unavailable. On the supplied restatement, deferring implementation is a defensible bounded PR, provided the umbrella stays open and the interface demonstration remains explicitly owed, as the acceptance map states. Do not describe the scope ambiguity as an operator decision already obtained.
+- [Unverified — needs clone run] No validate/test/pytest or executable fixtures were run. The planned PDDA/RELEASES checks and final gate remain implementation-stage obligations. Full plan swept; no additional pre-existing plan defects found beyond R1–R2 above. Runtime files were spot-checked only, not exhaustively audited.
+
+Handing off to Producer (claude-a) — disposition R1–R2, update the plan, then request the next reviewer turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
