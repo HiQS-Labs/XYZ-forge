@@ -90,7 +90,6 @@ def _resolve_lane_context(context):
 def attempt_admission(repo_root, sha=None, ref=None, context_override=None, destination_ref=None):
     """Read canonical accounting before qualification; never allocate or reset budget."""
     repo_root = os.path.realpath(repo_root)
-    sha = attempt_git(repo_root, "rev-parse", (sha or "HEAD") + "^{commit}")
     branch = (ref.removeprefix("refs/heads/") if ref and ref.startswith("refs/heads/")
               else attempt_git(repo_root, "branch", "--show-current"))
     destination_task = bool(destination_ref and TASK_BRANCH.match(destination_ref.removeprefix("refs/heads/")))
@@ -98,6 +97,9 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
            os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
     if not raw and os.environ.get("MERGE_CLEANUP_RECORD"):
         raw = json.dumps({"kind": "merge-repair", "record": os.environ["MERGE_CLEANUP_RECORD"]})
+    if not raw and branch and not TASK_BRANCH.match(branch) and not destination_task:
+        return {"kind": "non-task", "branch": branch}
+    sha = attempt_git(repo_root, "rev-parse", (sha or "HEAD") + "^{commit}")
     if not raw:
         if (os.environ.get("GITHUB_ACTIONS") == "true" and
                 os.environ.get("GITHUB_SHA") == sha and

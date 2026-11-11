@@ -70,7 +70,8 @@ mkrepo() {  # <validate-exit-code> -> prints repo path
   git -C "$r" init -q
   git -C "$r" config user.email t@t
   git -C "$r" config user.name t
-  mkdir -p "$r/githooks" "$r/utils/pdda"
+  mkdir -p "$r/githooks" "$r/utils/pdda" "$r/utils/py"
+  cp "$REPO/utils/py/gate_receipt.py" "$REPO/utils/py/rtl.py" "$r/utils/py/"
   cp "$HOOK" "$r/githooks/pre-push"; chmod +x "$r/githooks/pre-push"
   cp "$ROUTER" "$r/utils/ci-route.sh"; chmod +x "$r/utils/ci-route.sh"
   cat > "$r/validate.sh" <<STUB
