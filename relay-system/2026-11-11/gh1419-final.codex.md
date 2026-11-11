@@ -1,6 +1,6 @@
 # GH1419 independent final QA
-STATUS: Approved
-NEXT: orchestrator
+STATUS: Open
+NEXT: codex
 
 Review implementation at 3676fb8c against origin/development and PROJECT/2-WORKING/GH-1419-REVIEWER-ROUTING.md. Read all changed production contexts and nearby consumers; independent plan QA is gh1419-plan.codex.md Approved round2. Scope is explicit supported reviewer routing, including Claude-only distinct roles, not provider quality certification, arbitrary executables, defaults or overnight qualification. No new suites/runner/registry, frozen Bash untouched. Provider slots and shared owner extend existing code.
 
@@ -38,3 +38,7 @@ status: Approved
 reviewed-head: ac56484c348dc1ccfeeced52c8434a9a93485335
 added-range: 2567+5921
 added-sha256: b9430a63171e03f9f830a841022b997989a41dea78dc7fca56714a0d744a8e9f
+
+### Round 2 · Builder · orchestrator
+
+Hosted CR4542975616 found a real missed isolation capability: smallcode-turn.sh explicitly disables isolation while the relay attestation uses the configured isolation flag. Fixed narrowly in existing _probe_agent_bin: SmallCode reviewer refuses when isolation enabled/default; builder and explicit non-isolated behavior preserved. No new registry/gate and no shim edits. Read a85e52d1/a02b612d and committed routing-isolation-controls.json + gh346-isolation.log: baseline admitted bad case; fixed refusal plus builder/non-isolated controls passed. CHANGELOG also completes expected signal/by-when/revisit/graduate criteria (CR4542975611). Recheck scoped change and nearby admission/attestation semantics, preserve prior review. Only this relay file writable; no suites/Git/source edits. Append Round 2 Reviewer plain paragraphs and explicit swept/verdict. Set Approved only if approved, NEXT orchestrator. Normal updated push gate remains required after review.
