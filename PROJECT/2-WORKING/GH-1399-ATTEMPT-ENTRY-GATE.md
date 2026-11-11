@@ -2,7 +2,7 @@
 gh_issue: 1399
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1399
 title: Attempt accounting at qualification entry
-status: Captured
+status: Planning
 created: 2026-11-10
 updated: 2026-11-10
 owner: Codex
@@ -45,3 +45,32 @@ A qualification guard can detect missing accounting, not infer logical repair ep
 ## Reversibility
 
 Costly: a bad predicate could block every task publication or qualification. Rollback must revert the reader and its producer integrations together; retain all existing attempt bytes and historical receipts. No new source of truth or destructive migration.
+
+## Preflight bet and proposed protocol
+
+Outcome: every local task qualification has attributable accounting, without manual reconstruction. Smallest bet: one admission predicate in the existing gate-receipt module, referencing canonical lane/repair records. Rejected alternatives: checking a counter/flag is stale and unbound; guarding only JSON writing misses legacy and docs shortcuts; a new global lease ledger duplicates existing authorities. Authority is a read projection over existing writers, not a new accounting source. This is accidental-omission enforcement, not protection against an operator rewriting local state or documented Git bypasses.
+
+Task identity is independent of ci-route: task branches include the maintained feat/fix/chore/docs and harness marathon prefixes. A supplied managed-attempt context is always checked, even on an integration branch. Without managed context, maintained integration/admin roots retain normal routing; detached local task verification requires explicit context. Hosted Actions qualification is an explicit existing-CI case, using repository/commit identity, not a generic CI=true bypass. Push ref names must be retained and checked per pushed candidate, not only current HEAD.
+
+Keep the current counter file and count semantics. Extend newly written lane fire entries with one-line JSON reservation metadata (unique id, target root, branch, starting revision, normalized remote identity, state), while counting and preserving pre-existing timestamp lines. Put the one shared append/update implementation beside existing archive handling in rtl.py; both drivers use it. Legacy lines continue consuming budget but are not fabricated into candidate-bound reservations. No automatic cap reset or retrospective uncounted binding.
+
+Gate context references an absolute canonical record plus reservation identity/index; it is not proof on its own. For an in-progress record, require the same target repository/origin and a candidate matching the live target's committed HEAD, descended from its reserved start. For a completed/resolved record, require its recorded final candidate exactly. Missing/malformed/unreadable/mismatched context refuses with the supported booking command; the nested counted flag never substitutes for this check. Completion/failure updates newly structured entries through the same writer without changing consumed count; successful reset preserves exact bytes and archive provenance. Merge-cleanup keeps its locked JSON writer and existing resolved-commit qualification behavior.
+
+Separate full gate clones receive an explicit reference to the originating record via the existing gate environment contract; validate the source/candidate binding, rather than copying a mutable counter or treating the verification clone as a fresh budget. A live lane may evolve through multiple checkpoints inside one already-booked episode; completed receipts cannot authorize later unrecorded revisions. This is deliberately not a claim that the system can infer logical episode boundaries from edits.
+
+Manual start-task/workhorse booking should use subcommands on the existing gate_receipt CLI which delegate to the canonical lane writer, not a second writer or new executable. Skills book at accepted implementation start, retain the returned context through focused checks, QA and publication, and finish only after intended publication checkpoints. Existing harness producers establish/pass/finish context automatically; reviewer-only turns remain uncounted. Failed/resumed work preserves the existing cap/history and does not mint a new identity to obtain capacity.
+
+## Ordered implementation and verification proposal
+
+1. Reproduce current unaccounted task admission in a disposable full clone, plus integration/admin routing and receipt reuse. Retain commands/results/provenance; an assertion requiring refusal must be RED before the fix. No source edits before Approved plan QA.
+2. Extend existing rtl lane reservation metadata/writer and the existing merge-repair record adapter; wire Relay/Marathon and nested ownership. Preserve line-count budgets, archive bytes and failure/cap behavior. -> manual controls distinguish missing, malformed, wrong-candidate and legitimate active/completed records.
+3. Extend gate_receipt with the single admission predicate and delegated manual booking commands. Preserve context through gate_env. -> direct API/CLI negative controls reject arbitrary flags, stale/completed wrong SHA, and missing external record; same committed candidate in a disposable full clone passes.
+4. Invoke that predicate before pre-push docs/receipt shortcuts and at direct validate/ci-local entry; cover legacy gate-record before its first green write and install fallback. Retain ref names and check every pushed task candidate. -> actual main/adjacent hook and qualification controls prove refusal and unaffected admin/deletion/hosted routing. Preserve unsafe-worktree and explicit-bypass contracts.
+5. Update start-task/workhorse instructions and merge-cleanup qualification context at their existing producer/consumer seams, without deploying installed skills. -> exercise normal lane, nested lane, resolved B1, archived success/post-approve and standalone manual booking. Keep old evidence/history readable.
+6. Run only existing focused suites for changed behavior, adjusting fixtures only where the new admission contract changes their setup. No new suites/registry entries or speculative security machinery. Record negative controls as manual receipts under TESTS-RESULTS/2026-11-10+GH-1399/.
+7. Independent Codex final QA of committed scope, receipt and main/adjacent smoke evidence. Adjudicate within three rounds; select the final normal push gate from actual paths and run required full qualification once in a disposable full clone. -> independent Approved, identity unchanged, exact-head hosted smoke when published.
+8. Publish one ready PR to development with issue mapping and limitations, issue closeout, and scoped published-checkout retirement. No merge or deployment. If binding/lifecycle cannot be made coherent within existing authorities, stop with concrete unresolved requirement rather than shipping a decorative or overbroad gate.
+
+## Plan QA
+
+Pending. The proposed protocol is not an implemented contract. Reviewer must challenge active/completed lifecycle, detached/verification clone identity, inherited environment, all successful qualification shortcuts, legacy counter compatibility, administrative exemptions and operational burden. Production admission remains unstarted until Approved review and accepted-start through the owned PRS row.
