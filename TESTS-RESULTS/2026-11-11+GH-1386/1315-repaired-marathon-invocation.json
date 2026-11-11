@@ -1,0 +1,45 @@
+{
+  "schema": "swarm-preflight/marathon-invocation@1",
+  "generated_at": "2026-11-11T06:20:27Z",
+  "harness_root": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/temp/gh1386-runner-20261111",
+  "harness_home": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/temp/gh1386-runner-20261111",
+  "target_root": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/temp/gh1386-runner-20261111",
+  "drive_command": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/temp/gh1386-runner-20261111/relay-automation/marathon-drive.sh",
+  "argv": [
+    "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/temp/gh1386-runner-20261111/relay-automation/marathon-drive.sh",
+    "--phase-brief",
+    "temp/repaired1315/packet.md",
+    "--reviewer",
+    "agy",
+    "--builder",
+    "codex",
+    "--artifact",
+    "skills/3-weekly/skills-army-hq/scripts/sync.py,TESTS-RESULTS/2026-11-11+GH-1315/",
+    "--round-cap",
+    "2",
+    "--pre-advance-cmd",
+    "bash test/skills-army-hq.sh",
+    "--result-file",
+    "temp/repaired1315/marathon-result.json",
+    "--require-clean"
+  ],
+  "env": {
+    "XYZ_HARNESS_CONTEXT": "swarm",
+    "XYZ_SESSION_ID": "gh-1315-legacy-preview-parity",
+    "RELAY_WORKTREE_ISOLATION": "1"
+  },
+  "issue": "1315",
+  "phase": "gh-1315-legacy-preview-parity",
+  "lane": "gh-1315-legacy-preview-parity",
+  "artifacts": [
+    "skills/3-weekly/skills-army-hq/scripts/sync.py",
+    "TESTS-RESULTS/2026-11-11+GH-1315/"
+  ],
+  "gate": "bash test/skills-army-hq.sh",
+  "builder": "codex",
+  "reviewer": "agy",
+  "base_ref": "development",
+  "packet_dir": "temp/repaired1315",
+  "packet_path": "temp/repaired1315/packet.md",
+  "result_path": "temp/repaired1315/marathon-result.json"
+}
