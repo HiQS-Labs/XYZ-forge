@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 2 and final source QA round 1 Approved; focused verification passed | Normal push qualification and ready PR |
+| Plan QA round 2 and final source QA round 1 Approved; focused verification passed | Full gate passed; publish PR and verify hosted head |
 
 ## Outcome and recon
 
@@ -45,7 +45,7 @@ Costly coordination surface: misrouting can dispatch a builder instead of review
 - [x] Explicit supported reviewers consistently accepted by Jog/Marathon/manifest; original Claude refusal reproduced red.
 - [x] Claude-only distinct actor roles route to correct isolated turns; equal IDs/unknown routes/missing binaries refuse before lease.
 - [x] Existing Codex/Agy behavior, reviewer-only containment, approval attestation, retry caps and explicit builder default policy remain intact.
-- [ ] Main+adjacent smoke, independent plan/final QA and normal gate evidence committed; no new suite or runner.
+- [x] Main+adjacent smoke, independent plan/final QA and normal gate evidence committed; no new suite or runner.
 
 ## Non-goals
 
