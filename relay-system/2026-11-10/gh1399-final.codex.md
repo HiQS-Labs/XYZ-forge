@@ -272,4 +272,12 @@ Operator contract: fail closed at qualification entry using existing accounting,
 
 Relay closed (Approved), no further review turn needed. Producer owns normal full qualification and subsequent hosted checks/publication.
 
+
+### Attestation · relay-drive — 2026-11-11T17:11:18Z
+task: GH1399-FINAL-20261110-R6
+reviewer: codex
+status: Approved
+reviewed-head: 28da1ddb59f2654cd8b3117f21957226ca511187
+added-range: 38051+3848
+added-sha256: a71db45eaf391d67277bc8633047ea031849cc9a55af3e9243fb5ed778c6d9be
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
