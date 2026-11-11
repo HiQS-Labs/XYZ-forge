@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/TESTS-RESULTS/2026-11-11+GH-1315/manual_probe.py", line 13, in <module>
+    assert errors and any("adopt" in e["error"].lower() for e in errors), (actions,errors,changes)
+AssertionError: ([{'kind': 'link', 'root': '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpwndqi7gi/target', 'name': 'example', 'before': None, 'after': '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpwndqi7gi/collection/example'}], [], [{'migrate_legacy': '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmpwndqi7gi/target/example', 'digest': '2765a9a49220976ad93127ec8d5fcaaa210f9d1ff083f98feecd2b20cb827b4b', 'matches_managed': True}])
