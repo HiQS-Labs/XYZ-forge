@@ -39,7 +39,9 @@ def attempt_origin_url(url):
 @contextlib.contextmanager
 def lane_attempt_lock(record):
     os.makedirs(os.path.dirname(record), exist_ok=True)
-    with open(record + ".lock", "a") as lock:
+    lock_dir = os.path.join(os.path.dirname(os.path.dirname(record)), "attempt-locks")
+    os.makedirs(lock_dir, exist_ok=True)
+    with open(os.path.join(lock_dir, os.path.basename(record) + ".lock"), "a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         yield
 
@@ -100,7 +102,18 @@ def lane_attempt_row(context):
                 matches.append(row)
     if len(matches) != 1 or matches[0].get("schema") != ATTEMPT_SCHEMA:
         raise ValueError("reservation is missing, duplicated or has an unsupported schema")
-    return matches[0]
+    row = matches[0]
+    if (not isinstance(row.get("id"), str) or not re.fullmatch(r"[0-9a-f]{32}", row["id"])
+            or row.get("kind") not in ("lane", "manual")
+            or not isinstance(row.get("task"), str) or not row["task"]
+            or not isinstance(row.get("branch"), str)
+            or not isinstance(row.get("origin"), str) or not re.fullmatch(r"[0-9a-f]{64}", row["origin"])
+            or not isinstance(row.get("start_sha"), str) or not re.fullmatch(r"[0-9a-f]{40,64}", row["start_sha"])
+            or row.get("state") not in ("active", "completed", "failed")
+            or not isinstance(row.get("target_root"), str) or not os.path.isabs(row["target_root"])):
+        raise ValueError("malformed canonical reservation metadata")
+    datetime.datetime.fromisoformat(row["started"])
+    return row
 
 
 def lane_attempt_finish(context, outcome, sha=None):
