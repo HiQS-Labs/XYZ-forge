@@ -132,4 +132,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. The harness may commit the relay file and run its final checks; the Producer may proceed to the bounded documentation PR after those checks pass.
 
+
+### Attestation · relay-drive — 2026-11-11T06:15:37Z
+task: RELAY-gh1000-final
+reviewer: codex
+status: Approved
+reviewed-head: e75e6bcf68d8ba98c08f29279ef29157229553de
+added-range: 17285+4093
+added-sha256: cb25418f03c7a7aa6591470ebd99458737363587e3eb530f57fe01f81a9df449
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
