@@ -34,7 +34,7 @@ def _merge_attempt(repo_root, sha, context):
         record = json.load(f)
     attempts = record.get("attempts", [])
     index = context.get("index", len(attempts) - 1)
-    if not isinstance(index, int) or index < 0 or index >= len(attempts):
+    if not isinstance(index, int) or isinstance(index, bool) or index < 0 or index >= len(attempts):
         raise ValueError("merge repair reservation index is invalid")
     row = attempts[index]
     origin = record.get("origin", record.get("repo", ""))
@@ -43,6 +43,8 @@ def _merge_attempt(repo_root, sha, context):
     if not origin or attempt_origin_url(origin) != attempt_origin(repo_root):
         raise ValueError("merge repair target repository does not match")
     if row.get("outcome") == "in_progress":
+        if index != len(attempts) - 1:
+            raise ValueError("active merge repair was superseded by a later reservation")
         if not source or attempt_origin(source) != attempt_origin(repo_root):
             raise ValueError("active merge repair source is unavailable or mismatched")
         if attempt_git(source, "rev-parse", "HEAD") != sha:
@@ -155,8 +157,18 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
         if not approval:
             raise ValueError("archived reservation approval refused: " + str(why))
         ok, why = relay_attest.candidate_ok(approval, sha, source)
-        if not ok or attempt_git(source, "rev-parse", "HEAD") != sha:
+        if not ok:
             raise ValueError("archived reservation candidate refused: " + str(why))
+        historical = False
+        completion = approval.get("phase_completion")
+        if completion is not None:
+            completed, why = relay_attest.phase_completion_candidate(
+                approval, phase=completion.get("phase"), lane=row["task"], head=sha, target_repo=source)
+            if why:
+                raise ValueError("archived phase completion refused: " + str(why))
+            historical = completed == sha
+        if not historical and attempt_git(source, "rev-parse", "HEAD") != sha:
+            raise ValueError("archived reservation candidate differs from the live target HEAD")
     elif row.get("state") == "completed":
         if row.get("candidate") != sha:
             raise ValueError("completed reservation covers a different revision")
@@ -347,12 +359,12 @@ def main():
                 raise ValueError("attempt-finish requires the manual reservation context")
             attempt_admission(repo_root, context_override=context)
             context, current = _resolve_lane_context(context)
-            if current.get("state") == "completed" and args.outcome == "completed":
+            if current.get("state") == "completed" and args.outcome == "completed" and context.get("archived"):
                 print(json.dumps({"id": current["id"], "state": "completed", "context": context}))
                 return
-            row = lane_attempt_finish(context, args.outcome, attempt_git(repo_root, "rev-parse", "HEAD"))
-            if args.outcome == "completed":
-                archive_lane_attempts(context["record"])
+            os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
+            row = lane_attempt_finish(context, args.outcome, attempt_git(repo_root, "rev-parse", "HEAD"),
+                                      archive=args.outcome == "completed")
             print(json.dumps({"id": row["id"], "state": row["state"],
                               "context": json.loads(os.environ[ATTEMPT_CONTEXT_ENV])}))
             return

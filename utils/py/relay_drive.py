@@ -258,7 +258,10 @@ def main():
     def lane_attempt_gate(root, raw, force):
         if get_env("LANE_ATTEMPT_COUNTED"):
             from gate_receipt import attempt_admission
-            proof = attempt_admission(target_repo())
+            try:
+                proof = attempt_admission(target_repo())
+            except Exception as exc:
+                die(f"nested counted build has invalid accounting: {exc}")
             if proof.get("state") not in ("active", "in_progress") or proof.get("archived"):
                 die("nested counted build requires an active canonical reservation")
             return 0

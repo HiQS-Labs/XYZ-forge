@@ -85,6 +85,13 @@ def lane_attempt_reserve(root, raw, target_root, cap=2, force=False, check_only=
         except FileNotFoundError:
             lines = []
         count = len(lines)  # Legacy timestamp rows still consume exactly one attempt.
+        if lines:
+            try:
+                last = json.loads(lines[-1])
+            except ValueError:
+                last = None
+            if isinstance(last, dict) and last.get("schema") == ATTEMPT_SCHEMA and last.get("state") == "completed":
+                raise ValueError("completed reservation awaits archival; retry attempt-finish before starting another budget")
         if count >= int(cap) and not force:
             return count, None
         if check_only:
@@ -112,16 +119,19 @@ def lane_attempt_row(context):
         raise ValueError("attempt context requires an absolute record and reservation id")
     matches = []
     with open(path) as f:
-        for line in f:
+        lines = f.readlines()
+        for index, line in enumerate(lines):
             try:
                 row = json.loads(line)
             except ValueError:
                 continue  # Historical timestamp lines are counts, never qualification proof.
             if isinstance(row, dict) and row.get("id") == context["id"]:
-                matches.append(row)
-    if len(matches) != 1 or matches[0].get("schema") != ATTEMPT_SCHEMA:
+                matches.append((index, row))
+    if len(matches) != 1 or matches[0][1].get("schema") != ATTEMPT_SCHEMA:
         raise ValueError("reservation is missing, duplicated or has an unsupported schema")
-    row = matches[0]
+    index, row = matches[0]
+    if row.get("state") == "active" and index != len(lines) - 1:
+        raise ValueError("active reservation was superseded by a later consumed attempt")
     if (not isinstance(row.get("id"), str) or not re.fullmatch(r"[0-9a-f]{32}", row["id"])
             or row.get("kind") not in ("lane", "manual")
             or not isinstance(row.get("task"), str) or not row["task"]
@@ -135,7 +145,7 @@ def lane_attempt_row(context):
     return row
 
 
-def lane_attempt_finish(context, outcome, sha=None):
+def lane_attempt_finish(context, outcome, sha=None, archive=False):
     path = context["record"]
     if os.path.basename(os.path.dirname(path)) != "attempts":
         raise ValueError("archived attempt bytes are immutable")
@@ -143,7 +153,11 @@ def lane_attempt_finish(context, outcome, sha=None):
         row = lane_attempt_row(context)
         with open(path) as f:
             lines = f.readlines()
-        row.update(state=outcome, finished=datetime.datetime.now(datetime.timezone.utc).isoformat())
+        last = json.loads(lines[-1])
+        if not isinstance(last, dict) or last.get("id") != row["id"]:
+            raise ValueError("cannot finish a superseded reservation")
+        row["state"] = outcome
+        row.setdefault("finished", datetime.datetime.now(datetime.timezone.utc).isoformat())
         if sha:
             row["candidate"] = sha
         for n, line in enumerate(lines):
@@ -163,10 +177,21 @@ def lane_attempt_finish(context, outcome, sha=None):
         finally:
             if os.path.exists(tmp):
                 os.unlink(tmp)
+        if archive:
+            archive_lane_attempts(path, _locked=True)
     return row
 
 
-def archive_lane_attempts(attempts_file):
+def archive_lane_attempts(attempts_file, *, _locked=False):
+    if not os.path.exists(attempts_file):
+        return None
+    canonical = (os.path.basename(os.path.dirname(attempts_file)) == "attempts" and
+                 os.path.basename(os.path.dirname(os.path.dirname(attempts_file))) == ".tick")
+    with (contextlib.nullcontext() if _locked or not canonical else lane_attempt_lock(attempts_file)):
+        return _archive_lane_attempts(attempts_file)
+
+
+def _archive_lane_attempts(attempts_file):
     """Preserve a successful budget before resetting it (caller holds driver lock).
 
     History is passive evidence, never input to the live attempt cap. A unique
@@ -175,14 +200,16 @@ def archive_lane_attempts(attempts_file):
     """
     if not os.path.exists(attempts_file):
         return None
+    raw = os.environ.get(ATTEMPT_CONTEXT_ENV)
+    context = json.loads(raw) if raw else None
+    if context and context.get("record") == os.path.abspath(attempts_file):
+        lane_attempt_row(context)
     history = os.path.join(os.path.dirname(os.path.dirname(attempts_file)), "attempt-history")
     os.makedirs(history, exist_ok=True)
     archive_dir = tempfile.mkdtemp(prefix=os.path.basename(attempts_file) + "-", dir=history)
     archive = os.path.join(archive_dir, "attempts")
     os.rename(attempts_file, archive)
-    raw = os.environ.get(ATTEMPT_CONTEXT_ENV)
-    if raw:
-        context = json.loads(raw)
+    if context:
         if context.get("record") == os.path.abspath(attempts_file):
             context["record"] = os.path.abspath(archive)
             context["archived"] = True
