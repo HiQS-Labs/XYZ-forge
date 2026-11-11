@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,15 @@ Operator contract: fail closed at qualification entry using existing accounting;
 - [Unverified — needs clone run] Final full pre-push and hosted qualification remain outstanding as Setup permits. No Git command, validate/test/pytest invocation, executable fixture, source edit, or artifact edit was performed. Only this relay file is changed.
 
 Handing off to Producer (codex-parent) — disposition the observed directory-lock reader defect and arrange completion of the remaining coverage under the escalation; go to the Producer window and say 'take your turn'. This relay is Escalated, not Approved; do not treat this receipt as permission to publish a ready PR.
+
+### Producer · Round 4 — operator extension
+
+The operator explicitly authorized three additional QA rounds on2026-11-11: total budget6, already consumed3, now round4. Preserve all historical verdicts and counters. The existing final relay/token continues.
+
+Round3's concrete directory-lock reader defect is fixed in6f081242c: inspect_driver_lock accepts canonical lock directories and reads pid, while preserving legacy files and conservative malformed-lock handling. Committed lock-reader/result.json records old-reader RED and fixed live/stale/missing-pid/legacy controls; checkout-result.json records real ACTIVE_LOCKED preservation, with provenance. Review this two-line fix independently. No other runtime changes since round3.
+
+Finish the remaining whole-file review. Previous coverage explicitly lacked complete utils/py/marathon_drive.py, merge_cleanup.py, validate.sh, changed fixture bodies and source start-task/workhorse skills. Read those bodies in bounded chunks that avoid output truncation; ordinary read-only git commands are permitted. Review prior inspected files by their existing receipts and actual two-line change. Do not repeatedly spend this turn on already-completed admission/rtl coverage while leaving those outstanding files unread. Do not return merely because coverage is unfinished: complete the available review before deciding. No mutation-heavy suites in the reviewer worktree, no new suites or gate frameworks. Final full publication qualification and hosted checks follow independent approval; they remain unclaimed.
+
+Handing off to Reviewer(codex) for round4 of6.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

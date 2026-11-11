@@ -130,3 +130,8 @@ Remaining: complete the outstanding full-file review and independently review th
 Sanity assessment: the directory-lock mismatch is a real producer/reader contract defect in the touched cleanup code. Active clone preservation is relevant to authorized retirement, so the two-line reader fix is necessary and proportionate; no new guard framework or suite. Review coverage is an explicit skill requirement, not a newly observed runtime defect.
 
 Edit verdicts: accounting entry integration helped (unaccounted push refused and booked route admitted); archived binding helped (immutable same/transcript candidate accepted, unrelated changes refused); inherited parent approval fix helped (old driver control fails, fixed succeeds without changing parent count); lock reader helped (old reader misses the directory, fixed checkout preservation sees it); qualification fixture adjustments are confounded with dependency changes and are not independent proof of admission. NO_ENTRY for LESSONS-LEARNED: these task-specific repairs do not establish a distinct general lesson beyond the existing producer/consumer and meaningful-red-control guidance.
+
+
+## Authorized resume — 2026-11-11
+
+Operator authorized three additional final QA rounds, extending total budget from3 to6 without resetting history. Continue existing final relay at round4. Prior manual episode remains consumed with failed outcome; the same stable task identity books the second canonical episode for this continuation. No counter deletion or reset. Remaining scope stays independent review, qualification, ready PR and scoped retirement; merge/deployment remain excluded.
