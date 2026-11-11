@@ -29,6 +29,12 @@ goal: "Relay preflight distinguishes existing branch refs from missing files"
 - [ ] A genuinely missing docs/gh1171-missing.md still fails with the existing diagnostic.
 - [ ] Record manual regression controls with provenance; no new suite or gate.
 
+## Acceptance — deviations from the issue
+
+- [added] An existing slash-containing local branch on Artifact under review passes preflight. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+- [added] A genuinely missing docs/gh1171-missing.md still fails with the existing diagnostic. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+- [added] Record manual regression controls with provenance; no new suite or gate. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+
 ## Scope and budget
 
 Easy to revert as a targeted source commit. The relay change affects artifact admission; the migration change affects explicit legacy retirement only. Stop on containment, ownership, gate failure, or cap exhaustion. No merge, deployment, cleanup, new test suite, or configuration change. Independent of the other trial item. PRS proposal: rated 65/50/50/90.

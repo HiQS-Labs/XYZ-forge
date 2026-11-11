@@ -29,6 +29,12 @@ goal: "Legacy migration preview refuses unadopted skill retirement"
 - [ ] Refusal creates no backup, staging retirement, or link and preserves the directory.
 - [ ] Recorded-skill migration remains supported; verify in isolated fixtures only.
 
+## Acceptance — deviations from the issue
+
+- [added] An unadopted real legacy directory is refused by preview and apply with an adoption remedy. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+- [added] Refusal creates no backup, staging retirement, or link and preserves the directory. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+- [added] Recorded-skill migration remains supported; verify in isolated fixtures only. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+
 ## Scope and budget
 
 Easy to revert as a targeted source commit. The relay change affects artifact admission; the migration change affects explicit legacy retirement only. Stop on containment, ownership, gate failure, or cap exhaustion. No merge, deployment, cleanup, new test suite, or configuration change. Independent of the other trial item. PRS proposal: rated 60/45/50/85.
