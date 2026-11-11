@@ -30,3 +30,11 @@ swept file: yes
 **Verdict:** Approved
 
 Only this relay file was edited. No git command, validate.sh, test/*.sh, pytest, executable fixture or live provider call was run; scratch YAML stayed under .relay-scratch/tmp. Independent implementation review is complete; orchestrator retains final gate/publication responsibility.
+
+### Attestation · relay-drive — 2026-11-11T20:01:37Z
+task: GH1419-FINAL-QA
+reviewer: codex
+status: Approved
+reviewed-head: ac56484c348dc1ccfeeced52c8434a9a93485335
+added-range: 2567+5921
+added-sha256: b9430a63171e03f9f830a841022b997989a41dea78dc7fca56714a0d744a8e9f
