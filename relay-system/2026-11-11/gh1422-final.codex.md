@@ -121,4 +121,12 @@ Basis: The sole Round 1 omission is resolved. Re-read the complete current AGENT
 
 Relay closed (Approved), no further turn needed. Author/harness retains responsibility for final scope/gate recording and publication.
 
+
+### Attestation · relay-drive — 2026-11-11T22:16:00Z
+task: RELAY-gh1422-final
+reviewer: codex
+status: Approved
+reviewed-head: d53a88d60e28f560b6896fea1046609b86eb0a9a
+added-range: 11705+2838
+added-sha256: 2599b297bffe2b5699790828ff3540779199aa280f05cc2ec1aace6728dd584b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
