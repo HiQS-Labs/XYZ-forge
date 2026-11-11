@@ -764,7 +764,8 @@ def main():
             return ("refused", "attest-publish-failed")
         try:
             raw_context = os.environ.get(ATTEMPT_CONTEXT_ENV)
-            if raw_context and not args.review_once:
+            if (raw_context and not args.review_once
+                    and json.loads(raw_context).get("kind") == "lane"):
                 from gate_receipt import attempt_admission
                 attempt_admission(trepo)
                 context = json.loads(raw_context)
