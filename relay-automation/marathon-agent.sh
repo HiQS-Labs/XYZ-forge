@@ -48,6 +48,7 @@ fi
 for lane in claude codex agy aider pi smallcode commandcode deepseek kimi; do
   slot="$(printf '%s' "$lane" | tr '[:lower:]' '[:upper:]')_AGENT"
   configured="${!slot:-}"
+  [[ -n "$configured" ]] || continue
   IFS=, read -r -a actors <<< "$configured"
   for actor in "${actors[@]}"; do
     if [[ -n "$actor" && "$me" == "$actor" ]]; then

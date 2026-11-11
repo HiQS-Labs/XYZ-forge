@@ -302,16 +302,19 @@ done
 # ------------------------------------------------------------------------------------------------
 # #6 — the reviewer gate. Two independent copies; `gemini` was a phantom with no shim anywhere.
 # ------------------------------------------------------------------------------------------------
-if grep -qv '^[0-9]*: *//' <<<"$(grep -n "gemini" "$ROOT/bin/marathon-yaml" 2>/dev/null)"; then
-  fail "#6 bin/marathon-yaml still admits the phantom 'gemini' reviewer outside a comment"
-else
-  pass "#6 bin/marathon-yaml no longer admits the phantom 'gemini' reviewer"
-fi
-if grep -qv '^[0-9]*: *//' <<<"$(grep -n "gemini" "$ROOT/src/marathon-yaml.js" 2>/dev/null)"; then
-  fail "#6 src/marathon-yaml.js still admits the phantom 'gemini' reviewer outside a comment"
-else
-  pass "#6 src/marathon-yaml.js no longer admits the phantom 'gemini' reviewer"
-fi
+for reader in bin/marathon-yaml src/marathon-yaml.js; do
+  if node - "$ROOT/$reader" <<'JS'
+const reader = process.argv[2];
+if (reader.endsWith('.js')) {
+  try { require(reader).resolveOrder({phases:[{id:'p',reviewer:'gemini'}]}); process.exit(1); }
+  catch (e) { process.exit(/not recognized/.test(e.message) ? 0 : 1); }
+}
+const {spawnSync} = require('child_process');
+const r = spawnSync('python3',[require('path').join(reader,'../../utils/py/marathon_drive.py'),'--validate-agent-routes','gemini'],{encoding:'utf8'});
+process.exit(r.status === 2 && /not recognized/.test(r.stderr) ? 0 : 1);
+JS
+  then pass "#6 $reader rejects phantom reviewer"; else fail "#6 $reader phantom rejection failed"; fi
+done
 
 # there must be NO gemini shim -- if one is ever added, this test must be revisited, not deleted
 # The path is assembled from parts on purpose: test/path-integrity.sh scans suites for referenced
