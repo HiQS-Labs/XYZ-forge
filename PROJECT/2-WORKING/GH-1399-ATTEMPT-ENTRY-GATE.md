@@ -13,7 +13,7 @@ goal: Refuse unaccounted task qualification through existing gate boundaries whi
 
 | What was just completed | What's next |
 |---|---|
-| Final QA Approved in round6; normal full qualifying push passed408/408 without bypass | Publish receipt-only checkpoint, open ready development PR and verify hosted smoke |
+| PR1417 published; full local gate408/408 and hosted CI on c811a2be9 passed | Final documentation-only checkpoint checks, scoped retirement; awaiting merge |
 
 ## Request and scope
 
@@ -21,12 +21,12 @@ Issue1399 requests fail-closed qualification/pre-push accounting, automatic bind
 
 ## Acceptance
 
-- [ ] Unaccounted mutation on a task branch is refused at push and direct local qualification boundaries.
-- [ ] A valid canonical reservation or candidate-bound completed receipt permits the same qualification.
-- [ ] Lane and merge-repair histories retain all consumed rounds; no migration/reset silently replenishes budgets.
-- [ ] Reconciliation and docs-only integration-root updates retain existing ci-route behavior.
-- [ ] Main and adjacent paths include archived/completed attempts, nested counted ownership and disposable full verification clones.
-- [ ] Independent Codex plan and final QA Approved, applicable focused/final gates pass; ready PR targets development.
+- [x] Unaccounted mutation on a task branch is refused at push and direct local qualification boundaries.
+- [x] A valid canonical reservation or candidate-bound completed receipt permits the same qualification.
+- [x] Lane and merge-repair histories retain all consumed rounds; no migration/reset silently replenishes budgets.
+- [x] Reconciliation and docs-only integration-root updates retain existing ci-route behavior.
+- [x] Main and adjacent paths include archived/completed attempts, nested counted ownership and disposable full verification clones.
+- [x] Independent Codex plan and final QA Approved, applicable focused/final gates pass; ready PR targets development.
 
 ## Intake and rating rationale — 2026-11-10
 
@@ -156,3 +156,7 @@ Final Codex QA round6 Approved at28da1ddb59f2654cd8b3117f21957226ca511187, inclu
 ## Qualified publication
 
 Normal push qualified2daec744ca276d93b2bf7f661fd263fa01b4802b: validate.sh full parallel gate408/408, green545s; push549.65s; no bypass; HEAD/origin/bare/identity unchanged. Committed gate receipt, full log and provenance under qualification/attempt-2. The following checkpoint changes only evidence/documentation; reviewed runtime/fixture bytes are unchanged. Plan QA Approved round2; final QA Approved round6. Ready PR creation and hosted exact-head smoke remain pending, then automatic scoped retirement. Source skill instruction changes are not deployed.
+
+## Ready PR and hosted qualification
+
+PR [1417](https://github.com/HiQS-Labs/XYZ-forge/pull/1417) targets development and is mergeable. Hosted CI [43067783170](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/43067783170) passed for c811a2be969576f32f4c284b4b82ba9a35095b04. Full local qualification remains408/408 on2daec744ca276d93b2bf7f661fd263fa01b4802b; later changes are documentation/evidence only. Final inspection removed the intake-generated LEADERBOARD diff per task-branch policy; post-merge reconciliation owns that generated view. This final documentation checkpoint receives its own normal push gate and hosted checks. No merge, promotion or skill deployment. CodeRabbit reported review-capacity exhaustion; independent Codex review is Approved, not a claim that CodeRabbit reviewed. Scoped retirement follows final live checks; helpers with local-only state must be preserved. NO_ENTRY.

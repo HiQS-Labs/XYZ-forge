@@ -13,7 +13,8 @@ repair rounds or hostile local state changes. Focused/manual controls passed; fi
 review Approved in round6 after existing qualification fixtures adopted the dependencies
 and their own accounting. Normal full publication gate passed408/408 without bypass at
 2daec744ca27; committed receipts bind that runtime to the evidence-only checkpoint. Hosted
-PR smoke is checked separately; no merge, promotion or managed skill deployment.
+PR CI passed on c811a2be9; final documentation checkpoint is checked separately.
+No merge, promotion or managed skill deployment.
 The review also corrected existing parent-approval ownership, directory-lock inspection and
 run-log comment identity defects in the touched integrations.
 
