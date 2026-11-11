@@ -1229,8 +1229,10 @@ def main():
 
     def lane_attempt_gate(root_dir, raw, force, check_only=False):
         if get_env("LANE_ATTEMPT_COUNTED"):
-            if not os.environ.get(ATTEMPT_CONTEXT_ENV):
-                die("nested counted lane has no canonical attempt context")
+            from gate_receipt import attempt_admission
+            proof = attempt_admission(args.target_root or root_dir)
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived"):
+                die("nested counted build requires an active canonical reservation")
             return 0
         if not raw:
             return 0

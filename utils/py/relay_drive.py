@@ -245,10 +245,22 @@ def main():
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
+    def target_repo():
+        repo = get_env("RELAY_TARGET_ROOT")
+        if not repo:
+            try:
+                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+            except Exception:
+                repo = root_dir
+        return repo or root_dir
+
+
     def lane_attempt_gate(root, raw, force):
         if get_env("LANE_ATTEMPT_COUNTED"):
-            if not os.environ.get(ATTEMPT_CONTEXT_ENV):
-                die("nested counted lane has no canonical attempt context")
+            from gate_receipt import attempt_admission
+            proof = attempt_admission(target_repo())
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived"):
+                die("nested counted build requires an active canonical reservation")
             return 0
         if not raw:
             return 0
@@ -257,7 +269,7 @@ def main():
         except ValueError:
             cap = 2
         count, context = lane_attempt_reserve(
-            root, raw, args.target_root or root, cap=cap, force=force,
+            root, raw, target_repo(), cap=cap, force=force,
             check_only=False)
         if count >= cap and context is None and not force:
             eprint(f"lane-attempt-cap: lane {_lane_key(raw)} PARKED after {count} attempt(s) (cap {cap}) — no relay token seeded.")
@@ -636,14 +648,6 @@ def main():
     # exit never depends on the on-disk record, which consumers validate separately.
     attested = {}
 
-    def target_repo():
-        repo = get_env("RELAY_TARGET_ROOT")
-        if not repo:
-            try:
-                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
-            except Exception:
-                repo = root_dir
-        return repo or root_dir
 
     def transcript_repo():
         try:

@@ -55,7 +55,7 @@ def _merge_attempt(repo_root, sha, context):
             raise ValueError("completed repair does not cover this candidate")
     else:
         raise ValueError("merge repair is neither active nor resolved for this candidate")
-    return {"kind": "merge-repair", "record": path, "index": index}
+    return {"kind": "merge-repair", "record": path, "index": index, "state": row.get("outcome")}
 
 
 def _resolve_lane_context(context):
@@ -168,7 +168,7 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
             raise ValueError("pushed task ref differs from the reserved branch")
     else:
         raise ValueError("reservation is not active or completed for this revision")
-    return dict(context, sha=sha)
+    return dict(context, sha=sha, state=row["state"])
 
 
 def get_receipt_dir(repo_root):
