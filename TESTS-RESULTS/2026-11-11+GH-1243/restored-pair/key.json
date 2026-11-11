@@ -1,0 +1,12 @@
+{
+  "A": {
+    "advisor": "codex",
+    "answer_file": "answer-A.md",
+    "file": "gh1243-restored-pair.codex.md"
+  },
+  "B": {
+    "advisor": "agy",
+    "answer_file": "answer-B.md",
+    "file": "gh1243-restored-pair.agy.md"
+  }
+}

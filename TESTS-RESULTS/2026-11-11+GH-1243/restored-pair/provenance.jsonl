@@ -1,0 +1,6 @@
+{"kind": "live-pair", "exit_code": 0, "answered": 2, "failed": 0, "acceptance": "partial", "source_head": "68367d6682737b5bcdb324c1bede6def53c197a2", "blind_verdict_before_key": true}
+{"artifact": "SUMMARY.md", "bytes": 797, "sha256": "2898fa47e4c7d0fb660545b3c5c5d8ec70e01c31a7a866a2348462cebc5569d7"}
+{"artifact": "answer-A.md", "bytes": 1135, "sha256": "52a41c06abdc759f4a5f57afcd236cb3c49b8ecdf41265f1d7db4be96d5ede93"}
+{"artifact": "answer-B.md", "bytes": 2203, "sha256": "9c9142a5b2ed09b937bb8e0c4f157c55d5c3772dbb48b1aa7382efdcd5e82b5d"}
+{"artifact": "blind-verdict.md", "bytes": 431, "sha256": "22acba26591cd350ae3a3ea732150d45ea2276fc00f5c889819d6787750faf72"}
+{"artifact": "key.json", "bytes": 231, "sha256": "7fec586d1aa697285644347ad668def76dc15fa1ec4401834554a92631252dd6"}

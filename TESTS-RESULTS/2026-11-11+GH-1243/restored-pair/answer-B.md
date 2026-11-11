@@ -1,0 +1,11 @@
+**(1) ANSWER**
+Yes. In [utils/py/consult.py](file:///private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-45466-nuhhm1bh/utils/py/consult.py), the B path directs the final answer to `--output-last-message` (`f_out`) while routing CLI stdout/stderr diagnostics to `f_out + ".transcript"`, and rejects missing or empty final answers via `advisor_answer_ok`.
+
+**(2) FINDINGS**
+- **[Pass]** [utils/py/consult.py](file:///private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-45466-nuhhm1bh/utils/py/consult.py#L810-L813): `B exec` writes the final message to `f_out` via `--output-last-message` (`utils/py/consult.py:810`) while `guarded_with_timeout` logs process stdout/stderr to `f_out + ".transcript"` (`utils/py/consult.py:812`, `utils/py/consult.py:418-L419`).
+- **[Pass]** [utils/py/consult.py](file:///private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-45466-nuhhm1bh/utils/py/consult.py#L902-L980): Idle monitoring (`utils/py/consult.py:920`), provenance attestation (`utils/py/consult.py:927`), failure reporting (`utils/py/consult.py:902`), and partial timeout surfacing (`utils/py/consult.py:979`) stay bound to `out + ".transcript"`, keeping `out` isolated for validation and neutral payloads (`utils/py/consult.py:924-L926`).
+- **[Pass]** [utils/py/consult.py](file:///private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-45466-nuhhm1bh/utils/py/consult.py#L209-L239): `advisor_answer_ok(out, m)` (`utils/py/consult.py:953`) returns `False` on missing/unreadable `out_path` (`utils/py/consult.py:215-L216`) or when stripped content (after removing attestation headers and provenance metadata at `utils/py/consult.py:218-L224`) is empty (`utils/py/consult.py:232-L238`), counting exit-0 empty runs as failed (`utils/py/consult.py:959-L963`).
+- **[Nit]** **Limitation:** Static inspection of `utils/py/consult.py` cannot verify that the external `B` binary honors `--output-last-message` without leaking diagnostic text into `f_out`, nor does it inspect the `XYZ_PYTHON=0` Bash fallback (`relay-automation/consult.sh`).
+
+**(3) RECOMMENDATION**
+Accept the `utils/py/consult.py` B output boundary and empty-answer rejection as implemented.
