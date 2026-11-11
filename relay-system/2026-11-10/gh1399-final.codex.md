@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -112,5 +112,11 @@ Operator contract: fail closed at qualification entry through the existing accou
 - [Unverified — needs clone run] Final full pre-push qualification and hosted checks remain pending as permitted by Setup. No Git command, validate/test/pytest invocation, or executable fixture was run here.
 
 Handing off to Producer (codex-parent) — retain the round-one fix and evidence, and arrange completion of the outstanding whole-file review before final sign-off; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Round2 reports no new code defect and closes the sole observed finding. No production changes since that review. Complete the outstanding review now, focusing on the files you explicitly have not swept: utils/py/marathon_drive.py; skills/2-daily/merge-cleanup/scripts/merge_cleanup.py and scan_clones.py; githooks/install.sh; validate.sh; ci-local.sh; utils/gate-record.sh; utils/py/gate_env.py; changed fixture setup in test/gh544-pre-push-gate.sh, test/gh35-test-tiers.sh, test/synthetic/gh124-closeout-suite.sh; source start-task/workhorse skill edits. Read their full bodies in bounded chunks, review integration seams against the already-inspected predicate, and finish the remaining coverage before returning. Read-only git diff/show/status and ordinary read tools are authorized; there is no prohibition on Git inspection. Do not execute mutation-heavy suites in a linked worktree. Do not spend this turn re-reading already-completed admission/rtl coverage while leaving the outstanding files unread. No new speculative controls, suites or frameworks are requested. If there is a concrete defect, report it with its failing input. Otherwise finish the sweep and issue the truthful verdict. This is the third/final review round, not a new review or a reset.
+
+Handing off to Reviewer (codex) to complete the remaining whole-file sweep and final verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
