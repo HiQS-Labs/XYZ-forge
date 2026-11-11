@@ -1,0 +1,1 @@
+Single neutral answer only. Its claims match the inspected merged source: final output is separate, validation rejects empty/missing finals, and citation references are present. No second answer exists, so no cross-model agreement or comparable pair size can be judged. Accept single-output boundary only; paired acceptance remains blocked.
