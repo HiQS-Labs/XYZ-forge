@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 5 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -213,5 +213,21 @@ Handing off to Producer (codex-parent) — disposition the concrete run-log find
 Implemented the run-log identity finding in5f9647d6f: match the exact first line, preserving flat/paginated parsing. Retained manual old/fixed real-function controls cover genuine, quoted-only, quoted-before-owned, paginated, prefix collision, CRLF and empty inputs; old quoting cases reproduce RED and all fixed cases pass. Existing gh322 suite initially failed because its three genuine fixtures placed body text on the marker line; updated only those fixture strings to the real writer's marker-newline-body contract, no new assertions or suite. Existing gh322 now29 pass,0 fail. Evidence and provenance committed in TESTS-RESULTS/2026-11-10+GH-1399/runlog. Read the newly touched gh322 test's full body as appropriate. No other runtime changes since round4. Round4 completed the outstanding whole-file sweep and closed prior findings; preserve that coverage. Verify the one-line predicate and three existing fixture changes, then issue final verdict. Final publication qualification/hosted checks remain pending approval.
 
 Handing off to Reviewer(codex) for round5 of6.
+
+### Reviewer · Round 5
+
+VERDICT: PASS
+Basis: The remaining run-log finding is closed by the exact first-line predicate. The prior completed whole-file sweep is retained; the newly touched existing suite has now been read in full. No additional concrete pre-existing defect was found.
+swept file: yes
+
+Operator contract: fail closed at qualification entry through existing accounting, preserve consumed rounds and administrative behavior, and add no suites/framework. Explicit bypasses and deliberate local-file tampering remain outside the boundary; one reservation covers one caller-owned repair episode.
+
+- [Pass] **Round-four finding closed.** `utils/py/marathon_drive.py:415` compares the first line exactly with the marker. The writer's `body = (f"{marker}\n"` at `utils/py/marathon_drive.py:1770` satisfies that identity contract. Independently extracted the current function unchanged using AST, without module startup, and called it on genuine, quoted-only, quoted-before-genuine, paginated, prefix-collision, CRLF and empty inputs. Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with `exec(compile(ast.Module(body=[f], type_ignores=[]), str(p), 'exec'), {'json': json})` (retaining that namespace for calls). Exit **0**; decisive output: **`owned-only '202'; quoted-only ''; quoted-before-owned '202'; paginated '202'; prefix ''; CRLF '202'; empty ''`**. Each result was asserted against its expected ID. The quoted row was `{'id':101,'body':'Please preserve this example:\n'+marker}`; the genuine row was `{'id':202,'body':marker+'\n### Marathon run log'}`. No Git subprocess or executable fixture ran.
+- [Pass] **Existing coverage remains meaningful.** Read the complete `test/gh322-runlog-python-lane.sh` body. Its three genuine parser fixtures at lines **50, 53, 56** now use marker-newline-body, matching the real writer; their ID assertions remain intact. Its existing second-run POST/PATCH assertions still measure idempotency. No new suite or framework is introduced by this correction.
+- [Pass] **Retained evidence is intact.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 -`, loading `TESTS-RESULTS/2026-11-10+GH-1399/runlog/provenance.jsonl`, comparing SHA-256 of each listed file, reading `gh322-r2.rc` and decompressing `gh322-r2.log.gz`. Exit **0**; output **`receipt hash mismatches: []`**, **`gh322-r2.rc: 0`**, **`gh322-runlog-python-lane: 29 pass, 0 fail`**. `runlog/result.json` retains the old quoted-only/quoted-first RED outcomes and corresponding fixed results. These are intact producer clone receipts, not an independently rerun suite.
+- [Unverified — no citation] **Coverage and prior dispositions retained.** Round four's completed whole-file review and closure of the directory-lock and parent-owned lifecycle findings remain applicable; Producer round five reports no other runtime changes. This approval incorporates those recorded reviews rather than claiming a fresh sweep of unchanged large drivers.
+- [Unverified — needs clone run] Final full pre-push qualification and hosted checks remain outstanding as Setup permits. Approval completes this independent review; it does not attest those later gates. No Git command, validate/test/pytest invocation, executable fixture, source edit or artifact edit occurred here. Only this relay file is changed.
+
+Relay closed (Approved), no further turn needed. Producer owns the subsequent full publication qualification and hosted checks.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
