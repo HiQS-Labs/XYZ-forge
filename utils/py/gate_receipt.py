@@ -15,6 +15,152 @@ import datetime
 import json
 import os
 import sys
+import re
+import shlex
+from pathlib import Path
+
+from rtl import (ATTEMPT_CONTEXT_ENV, attempt_git, attempt_origin, attempt_origin_url, archive_lane_attempts,
+                 lane_attempt_row, lane_attempt_reserve, lane_attempt_finish)
+
+
+TASK_BRANCH = re.compile(r"^(feat|fix|chore|docs|marathon|relay)/")
+
+
+def _merge_attempt(repo_root, sha, context):
+    path = context.get("record", "")
+    if not os.path.isabs(path):
+        raise ValueError("merge repair record must be absolute")
+    with open(path) as f:
+        record = json.load(f)
+    attempts = record.get("attempts", [])
+    index = context.get("index", len(attempts) - 1)
+    if not isinstance(index, int) or index < 0 or index >= len(attempts):
+        raise ValueError("merge repair reservation index is invalid")
+    row = attempts[index]
+    origin = record.get("origin", record.get("repo", ""))
+    # Compare through Git's configured source identity, not an unbound outcome flag.
+    source = row.get("clone_path", "")
+    if not origin or attempt_origin_url(origin) != attempt_origin(repo_root):
+        raise ValueError("merge repair target repository does not match")
+    if row.get("outcome") == "in_progress":
+        if not source or attempt_origin(source) != attempt_origin(repo_root):
+            raise ValueError("active merge repair source is unavailable or mismatched")
+        if attempt_git(source, "rev-parse", "HEAD") != sha:
+            raise ValueError("active repair candidate is not its source HEAD")
+        if not row.get("head_sha"):
+            raise ValueError("merge repair has no reserved starting revision")
+        attempt_git(source, "merge-base", "--is-ancestor", row["head_sha"], sha)
+    elif row.get("outcome") == "resolved":
+        if sha not in (row.get("commit"), row.get("resolved_head")):
+            raise ValueError("completed repair does not cover this candidate")
+    else:
+        raise ValueError("merge repair is neither active nor resolved for this candidate")
+    return {"kind": "merge-repair", "record": path, "index": index}
+
+
+def _resolve_lane_context(context):
+    # A crash after rename but before the protected reference update can leave the old
+    # live path. Recover only one matching id from this lane's existing archive area.
+    if os.path.isfile(context.get("record", "")):
+        path = Path(context["record"])
+        if path.parent.name == "attempts" and path.parent.parent.name == ".tick":
+            context = dict(context, archived=False)
+        elif (path.name == "attempts" and path.parent.parent.name == "attempt-history"
+              and path.parent.parent.parent.name == ".tick"):
+            context = dict(context, archived=True)
+        else:
+            raise ValueError("reservation is outside the canonical attempt areas")
+        return context, lane_attempt_row(context)
+    original = Path(context.get("record", ""))
+    if not original.is_absolute() or original.parent.name != "attempts":
+        raise ValueError("attempt record is missing")
+    matches = []
+    for candidate in (original.parent.parent / "attempt-history").glob(original.name + "-*/attempts"):
+        recovered = dict(context, record=str(candidate), archived=True)
+        try:
+            row = lane_attempt_row(recovered)
+        except (OSError, ValueError):
+            continue
+        matches.append((recovered, row))
+    if len(matches) != 1:
+        raise ValueError("no unique archived reservation matches the missing reference")
+    return matches[0]
+
+
+def attempt_admission(repo_root, sha=None, ref=None, context_override=None, destination_ref=None):
+    """Read canonical accounting before qualification; never allocate or reset budget."""
+    repo_root = os.path.realpath(repo_root)
+    sha = attempt_git(repo_root, "rev-parse", (sha or "HEAD") + "^{commit}")
+    branch = (ref.removeprefix("refs/heads/") if ref and ref.startswith("refs/heads/")
+              else attempt_git(repo_root, "branch", "--show-current"))
+    destination_task = bool(destination_ref and TASK_BRANCH.match(destination_ref.removeprefix("refs/heads/")))
+    raw = (json.dumps(context_override) if context_override is not None else
+           os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
+    if not raw and os.environ.get("MERGE_CLEANUP_RECORD"):
+        raw = json.dumps({"kind": "merge-repair", "record": os.environ["MERGE_CLEANUP_RECORD"]})
+    if not raw:
+        if (os.environ.get("GITHUB_ACTIONS") == "true" and
+                os.environ.get("GITHUB_SHA") == sha and
+                os.environ.get("GITHUB_REPOSITORY")):
+            import hashlib
+            expected = "https://github.com/" + os.environ["GITHUB_REPOSITORY"]
+            if hashlib.sha256(expected.encode()).hexdigest() == attempt_origin(repo_root):
+                return {"kind": "hosted-actions", "sha": sha}
+        if branch and not TASK_BRANCH.match(branch) and not destination_task:
+            return {"kind": "non-task", "branch": branch}
+        if not branch:
+            for base in ("refs/heads/development", "refs/heads/main",
+                         "refs/remotes/origin/development", "refs/remotes/origin/main"):
+                try:
+                    if attempt_git(repo_root, "rev-parse", base) == sha:
+                        return {"kind": "integration-tip", "ref": base}
+                except Exception:
+                    continue
+        raise ValueError("task qualification has no attempt reservation; use gate_receipt.py attempt-start")
+    context = json.loads(raw)
+    if not isinstance(context, dict):
+        raise ValueError("attempt context must be an object")
+    if context.get("kind") == "merge-repair":
+        return _merge_attempt(repo_root, sha, context)
+    if context.get("kind") not in ("manual", "lane"):
+        raise ValueError("unknown attempt context kind")
+    context, row = _resolve_lane_context(context)
+    if context["kind"] != row.get("kind"):
+        raise ValueError("reservation kind does not match its canonical entry")
+    source = row.get("target_root", "")
+    if not source or row.get("origin") != attempt_origin(repo_root):
+        raise ValueError("reservation target repository does not match this qualification clone")
+    if row.get("state") != "completed" and attempt_origin(source) != row["origin"]:
+        raise ValueError("active reservation source is unavailable or mismatched")
+    if context.get("archived") and context.get("attestation"):
+        import relay_attest
+        with open(context["attestation"]) as f:
+            approval = json.load(f)
+        if os.path.realpath(context["attestation"]) != os.path.realpath(relay_attest.path_for(approval["task"], source)):
+            raise ValueError("approval is outside the protected target attestation path")
+        linked = approval.get("attempt_context", {})
+        if linked.get("id") != context["id"]:
+            raise ValueError("approval is not bound to the consumed reservation")
+        approval, why = relay_attest.load(approval["task"], expected_reviewer=approval["reviewer"],
+                                         relay_file=approval["relay_file"], target_repo=source,
+                                         path=context["attestation"])
+        if not approval:
+            raise ValueError("archived reservation approval refused: " + str(why))
+        ok, why = relay_attest.candidate_ok(approval, sha, source)
+        if not ok or attempt_git(source, "rev-parse", "HEAD") != sha:
+            raise ValueError("archived reservation candidate refused: " + str(why))
+    elif row.get("state") == "completed":
+        if row.get("candidate") != sha:
+            raise ValueError("completed reservation covers a different revision")
+    elif row.get("state") == "active" and not context.get("archived"):
+        if attempt_git(source, "rev-parse", "HEAD") != sha:
+            raise ValueError("qualification candidate differs from the live task HEAD")
+        attempt_git(source, "merge-base", "--is-ancestor", row["start_sha"], sha)
+        if branch and row.get("branch") and branch != row["branch"]:
+            raise ValueError("pushed task ref differs from the reserved branch")
+    else:
+        raise ValueError("reservation is not active or completed for this revision")
+    return dict(context, sha=sha)
 
 
 def get_receipt_dir(repo_root):
@@ -27,6 +173,7 @@ def get_receipt_path(repo_root, sha):
 
 def write_receipt(repo_root, sha, gate, mode, exit_code, passed=None, total=None, duration_s=None, scope=None):
     """Write an on-disk JSON receipt for a qualified gate run."""
+    admission = attempt_admission(repo_root, sha) if int(exit_code) == 0 else None
     receipt_dir = get_receipt_dir(repo_root)
     os.makedirs(receipt_dir, exist_ok=True)
     
@@ -41,6 +188,8 @@ def write_receipt(repo_root, sha, gate, mode, exit_code, passed=None, total=None
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "host": f"{os.uname().sysname} {os.uname().release}" if hasattr(os, "uname") else "unknown"
     }
+    if admission is not None:
+        receipt_data["attempt"] = admission
     if scope is not None:
         receipt_data["scope"] = str(scope)
     
@@ -96,6 +245,12 @@ def check_receipt(repo_root, sha, max_age_s=None, require_full_gate=False):
                     age = (datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds()
                     if age > max_age_s:
                         return False, f"Receipt expired (age: {age:.0f}s > max: {max_age_s}s)"
+                proof = data.get("attempt")
+                if not isinstance(proof, dict) or proof.get("kind") not in ("lane", "manual", "merge-repair"):
+                    proof = None
+                if os.environ.get(ATTEMPT_CONTEXT_ENV) or os.environ.get("MERGE_CLEANUP_RECORD"):
+                    proof = None
+                attempt_admission(repo_root, sha, context_override=proof)
                 return True, data
             if data.get("sha") != sha:
                 return False, f"Receipt sha is {data.get('sha')}, expected {sha}"
@@ -113,6 +268,7 @@ def check_receipt(repo_root, sha, max_age_s=None, require_full_gate=False):
             with open(txt_path, "r", encoding="utf-8") as f:
                 content = f.read()
             if f"commit: {sha}" in content and "result: green" in content:
+                attempt_admission(repo_root, sha)
                 return True, {"sha": sha, "gate": "ci-local.sh", "mode": "sequential", "exit_code": 0, "source": "gate-evidence"}
             return False, "gate-evidence file exists but result is not green"
         except Exception as e:
@@ -142,8 +298,54 @@ def main():
     check_p.add_argument("--max-age-s", type=int, default=None)
     check_p.add_argument("--require-full-gate", action="store_true")
 
+    admit_p = subparsers.add_parser("admit", help="verify existing task accounting without booking")
+    admit_p.add_argument("--repo", default=".")
+    admit_p.add_argument("--sha")
+    admit_p.add_argument("--ref")
+    admit_p.add_argument("--destination-ref")
+    start_p = subparsers.add_parser("attempt-start", help="book through the canonical lane writer")
+    start_p.add_argument("--repo", default=".")
+    start_p.add_argument("--task", required=True)
+    start_p.add_argument("--accounting-root", help="maintained coordinator root; survives task checkout retirement")
+    start_p.add_argument("--env", action="store_true")
+    finish_p = subparsers.add_parser("attempt-finish", help="finish the current manual reservation")
+    finish_p.add_argument("--repo", default=".")
+    finish_p.add_argument("--outcome", choices=("completed", "failed"), required=True)
+
     args = parser.parse_args()
     repo_root = os.path.abspath(args.repo)
+
+    try:
+        if args.action == "write" and args.exit_code == 0:
+            attempt_admission(repo_root, args.sha)
+        if args.action == "admit":
+            print(json.dumps(attempt_admission(repo_root, args.sha, args.ref, destination_ref=args.destination_ref)))
+            return
+        if args.action == "attempt-start":
+            count, context = lane_attempt_reserve(args.accounting_root or repo_root, args.task, repo_root,
+                                                 cap=int(os.environ.get("LANE_MAX_ATTEMPTS", "2")),
+                                                 kind="manual")
+            if context is None:
+                print(f"gate-attempt: budget exhausted after {count} consumed rounds", file=sys.stderr)
+                sys.exit(3)
+            if args.env:
+                print("export " + ATTEMPT_CONTEXT_ENV + "=" + shlex.quote(json.dumps(context)))
+            else:
+                print(json.dumps(context))
+            return
+        if args.action == "attempt-finish":
+            context = json.loads(os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
+            if context.get("kind") != "manual":
+                raise ValueError("attempt-finish requires the manual reservation context")
+            row = lane_attempt_finish(context, args.outcome, attempt_git(repo_root, "rev-parse", "HEAD"))
+            if args.outcome == "completed":
+                archive_lane_attempts(context["record"])
+            print(json.dumps({"id": row["id"], "state": row["state"],
+                              "context": json.loads(os.environ[ATTEMPT_CONTEXT_ENV])}))
+            return
+    except Exception as exc:
+        print(f"gate-attempt: REFUSED — {exc}; use gate_receipt.py attempt-start", file=sys.stderr)
+        sys.exit(2)
 
     if args.action == "write":
         receipt = write_receipt(

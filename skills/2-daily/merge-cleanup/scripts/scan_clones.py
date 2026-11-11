@@ -117,7 +117,7 @@ def is_safe_deletable_path(path: Path, safe_roots: Optional[List[Path]] = None, 
     return True, "OK"
 
 
-def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subprocess.CompletedProcess:
+def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None, env=None) -> subprocess.CompletedProcess:
     """Runs a git command in the target directory.
 
     Callers treat a non-zero return code as "git said no". A git that cannot be LAUNCHED at all
@@ -134,11 +134,12 @@ def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subp
     running after merge-cleanup had already reported failure (PR #880 review, P1).
     """
     argv = ["git", "-C", str(cwd)] + args
+    env_kwargs = {"env": env} if env is not None else {}
     try:
         if timeout is None:
-            return subprocess.run(argv, capture_output=True, text=True, check=False)
+            return subprocess.run(argv, capture_output=True, text=True, check=False, **env_kwargs)
         proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                                start_new_session=True)
+                                start_new_session=True, **env_kwargs)
     except OSError as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=f"{exc}")
     try:

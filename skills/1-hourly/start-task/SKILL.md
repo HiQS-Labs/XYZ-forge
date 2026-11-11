@@ -224,6 +224,21 @@ Then begin work.
    Registration/rating/QA are not starts. Refuse uncertain identity/native state;
    repeated admission preserves the original start. Do not install schema or
    enable connectors automatically, or impose this flag on other repositories.
+   Where Forge's `gate_receipt.py attempt-start` is available, book manual implementation
+   through that existing lane writer and retain its returned `XYZ_ATTEMPT_CONTEXT` through
+   qualification and publication. Use the plan's separately verified maintained primary as
+   `--accounting-root`, with the task clone as `--repo`, so retirement preserves accounting:
+   `python3 utils/py/gate_receipt.py attempt-start --repo TASK --accounting-root PRIMARY --task GH-N-start-task --env`.
+   Apply the returned export in the execution environment; pass the same context explicitly
+   to disposable full qualification clones. If a parent already supplied a valid lane or
+   merge-repair context, reuse/admit it instead of booking a second budget. Missing or
+   exhausted accounting is a refusal, never permission to rename the task or reset history.
+   After all intended publication checkpoints, finish a standalone manual reservation with
+   `gate_receipt.py attempt-finish --repo TASK --outcome completed`; a stopped failed episode
+   uses `--outcome failed` and retains its consumed count. Standard harnesses own their own
+   reservation/completion lifecycle; do not manually finish a parent's record. Read-only
+   recon and reviewer-only turns do not book build attempts. This is Forge-specific; do not
+   install accounting infrastructure into another repository.
    Use the current agent or the repo's
    established builder/jog/marathon workflow as appropriate. Multiple issues alone
    do not require a new marathon, queue, daemon, or parallel executor. Preserve

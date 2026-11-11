@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-10 — GH-1399 qualification accounting
+
+Extend the existing qualification boundaries to require canonical accounting for task
+candidates before docs routing, receipt reuse or legacy green recording. Lane reservations
+retain legacy consumed lines; protected phase attestations carry archived references through
+post-approve. Manual skill workflows use the same writer and a maintained accounting root.
+Administrative routing and documented bypasses retain their existing scope. This is a Costly
+control change: rollback must revert admission and producer integrations together while
+preserving attempt/history bytes. It prevents missing accounting, not inference of logical
+repair rounds or hostile local state changes. Verification and final review remain pending.
+
+
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 
 Extended the existing flywheel routing skill with one approved pinned-batch handoff,

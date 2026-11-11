@@ -816,6 +816,14 @@ if [ "$LIST_ONLY" -eq 1 ]; then
   exit 0
 fi
 
+# GH-1399: --list is read-only; every actual task gate requires booked accounting.
+_gate_attempt_context="${XYZ_ATTEMPT_CONTEXT:-}"
+_gate_merge_context="${MERGE_CLEANUP_RECORD:-}"
+python3 "$HERE/utils/py/gate_receipt.py" admit --repo "$HERE" >/dev/null || exit 2
+# The parent proof must not become ambient state in the suites' unrelated fixtures.
+unset XYZ_ATTEMPT_CONTEXT MERGE_CLEANUP_RECORD
+
+
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
 # gate is the only gate while this repo is private (GH-544), and the hook lives in `.git/hooks/`,
 # which does not travel with a clone. Surface that state loudly but NON-FATALLY, in-band, on the
@@ -1594,7 +1602,7 @@ if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] \
   if [ -n "$_val_sha" ] && [ -f "$HERE/utils/py/gate_receipt.py" ]; then
     _val_scope="--scope full"
     if [ "${#SKIPPED_SUITES[@]}" -gt 0 ] || [ -n "${XYZ_ENV_FAULTS:-}" ]; then _val_scope=""; fi
-    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" $_val_scope --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
+    XYZ_ATTEMPT_CONTEXT="$_gate_attempt_context" MERGE_CLEANUP_RECORD="$_gate_merge_context" python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" $_val_scope --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
   fi
 fi
 exit 0

@@ -110,6 +110,12 @@ while (($#)); do
   esac
 done
 
+_gate_attempt_context="${XYZ_ATTEMPT_CONTEXT:-}"
+_gate_merge_context="${MERGE_CLEANUP_RECORD:-}"
+python3 "$HERE/utils/py/gate_receipt.py" admit --repo "$HERE" >/dev/null || exit 2
+unset XYZ_ATTEMPT_CONTEXT MERGE_CLEANUP_RECORD
+
+
 # GH-509/GH-520 — strip the agent CLIs from PATH for the probe. Done by rebuilding PATH without the
 # directories that hold them, rather than by unsetting *_BIN vars: the failure being reproduced is a
 # binary that is not on PATH at all, and a shim that falls back to a PATH lookup would defeat a
@@ -432,7 +438,7 @@ if [ "$FAST" -eq 0 ] && [ "$PROBE" -eq 0 ]; then
   printf '\n'
   # Delegated rather than inlined, so the REFUSAL has a test that does not cost a 15-minute suite run.
   _gr_rc=0
-  bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || _gr_rc=$?
+  XYZ_ATTEMPT_CONTEXT="$_gate_attempt_context" MERGE_CLEANUP_RECORD="$_gate_merge_context" bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || _gr_rc=$?
   rt_emit stage stage "gate-record" "$(rt_now_ms)" "$(rt_now_ms)" "$_gr_rc"
   if [ "$_gr_rc" -ne 0 ]; then
     printf '\033[31mci-local: gate-record refused (exit %d) — this qualifying run leaves NO evidence record, so it cannot exit green (GH-365).\033[0m\n' "$_gr_rc" >&2

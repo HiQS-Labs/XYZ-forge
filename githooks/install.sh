@@ -150,9 +150,43 @@ if ! REPO="$(git rev-parse --show-toplevel 2>/dev/null)" || [ -z "$REPO" ]; then
   exit 1
 fi
 
+# GH-1399: retain stdin for delegation while protecting older in-tree hooks too.
+_attempt_input="$(cat)"
+_attempt_seen=0
+_attempt_guard() {
+  local ref="$1" sha="$2" destination="$3" branch
+  if [ -f "$REPO/utils/py/gate_receipt.py" ] && grep -q '^def attempt_admission(' "$REPO/utils/py/gate_receipt.py"; then
+    python3 "$REPO/utils/py/gate_receipt.py" admit --repo "$REPO" --sha "$sha" \
+      --ref "$ref" --destination-ref "$destination" >/dev/null || return 2
+  else
+    # No copied policy/runtime: an old task branch must upgrade before qualification.
+    branch="$(git branch --show-current 2>/dev/null)"
+    for ref in "$ref" "$destination" "refs/heads/$branch"; do
+      case "$ref" in
+        refs/heads/feat/*|refs/heads/fix/*|refs/heads/chore/*|refs/heads/docs/*|refs/heads/marathon/*|refs/heads/relay/*)
+          echo 'pre-push: REFUSED — task accounting admission is unavailable on this old branch; update the harness.' >&2
+          return 2 ;;
+      esac
+    done
+    if [ -n "${XYZ_ATTEMPT_CONTEXT:-}${MERGE_CLEANUP_RECORD:-}" ]; then
+      echo 'pre-push: REFUSED — this branch cannot verify its supplied attempt context.' >&2
+      return 2
+    fi
+  fi
+}
+if [ "${XYZ_SKIP_PREPUSH:-0}" = "0" ]; then
+  while read -r _ar _as _dr _ds; do
+    [ -n "${_as:-}" ] || continue
+    case "$_as" in *[!0]*) _attempt_seen=1; _attempt_guard "$_ar" "$_as" "$_dr" || exit 2 ;; esac
+  done <<< "$_attempt_input"
+  if [ "$_attempt_seen" -eq 0 ] && [ -z "$_attempt_input" ]; then
+    _attempt_guard HEAD "$(git rev-parse HEAD)" '' || exit 2
+  fi
+fi
+
 # 1. The normal path: hand off to the in-tree hook, stdin and all.
 if [ -x "$REPO/githooks/pre-push" ]; then
-  exec "$REPO/githooks/pre-push" "$@"
+  exec "$REPO/githooks/pre-push" "$@" <<< "$_attempt_input"
 fi
 
 # 2. This branch predates the in-tree hook. Do NOT skip — run the gate directly. Announced, because
@@ -176,7 +210,7 @@ while read -r _lref _lsha _rref _rsha; do
   case "$_lsha" in
     *[!0]*) _all_deletes=0 ;;
   esac
-done
+done <<< "$_attempt_input"
 if [ "$_saw_line" -eq 1 ] && [ "$_all_deletes" -eq 1 ]; then
   echo "pre-push: delete-only push — no gate to run."
   exit 0

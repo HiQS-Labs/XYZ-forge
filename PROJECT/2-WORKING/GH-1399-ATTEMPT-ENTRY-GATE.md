@@ -90,3 +90,20 @@ Standalone manual reservations and completed B1 records use their exact recorded
 ## Implementation admission
 
 Plan QA Approved in round2 at ebeaae250a55a172f1b2ea5b926e430f18818039. Canonical accepted-start applied to exact issue-owned row rmi-01M74GKNF9DGEQBPX5R34FQBZN before implementation. Actual normal unaccounted task push reproduced the missing guard (expected refusal assertion RED); retained baseline/invalid-control diagnostics and independent review attestation are under TESTS-RESULTS/2026-11-10+GH-1399/baseline/. No implementation or fixed behavior is claimed yet.
+
+## Implementation checkpoint
+
+Initial shared writer, admission predicate and entry/harness integrations are implemented;
+syntax and read-only admission controls pass (missing, counted-flag-only and wrong candidate
+refuse; canonical active reservation passes). Actual fixed hook/qualification controls,
+focused suites and final QA remain pending. The first writer bootstrap preceded the new CLI;
+the current implementation episode was then booked once through that same shared API before
+remaining integration and qualifying gates. The owned counter was moved byte-for-byte to the
+maintained primary accounting area without changing id/count so later task retirement cannot
+lose it. No primary tracked file was changed.
+
+Standard gate entry points consume the admitted context before suites, remove it from their
+unrelated fixture children, and explicitly restore it only to their own receipt writer.
+Gate-env still passes the proof into the qualifying process. This prevents the parent record
+from contaminating fixture controls. Source instruction changes stay in this repository PR;
+no managed skill payload, app link or installation was changed.

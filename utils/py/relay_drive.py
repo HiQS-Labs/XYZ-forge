@@ -14,7 +14,7 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path, archive_lane_attempts  # noqa: E402  GH-376: the shared lock resolver, called not copied
+from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, ATTEMPT_CONTEXT_ENV  # noqa: E402  GH-376: the shared lock resolver, called not copied
 from rtl import (resolve_turn_root, rtl_default_log, checkout_snapshot,
                  restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
@@ -246,41 +246,24 @@ def main():
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
     def lane_attempt_gate(root, raw, force):
-        if get_env("LANE_ATTEMPT_COUNTED"): return 0
-        if not raw: return 0
-        
-        max_attempts = get_env("LANE_MAX_ATTEMPTS", "2")
-        try: max_attempts = int(max_attempts)
-        except ValueError: max_attempts = 2
-
-        key = _lane_key(raw)
-        attempts_dir = os.path.join(root, ".tick", "attempts")
-        os.makedirs(attempts_dir, exist_ok=True)
-        attempts_file = os.path.join(attempts_dir, key)
-
-        count = 0
-        if os.path.isfile(attempts_file):
-            try:
-                with open(attempts_file, "r") as f:
-                    count = len(f.readlines())
-            except Exception:
-                pass
-        
-        if force:
-            eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
-        elif count >= max_attempts:
-            eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
-            eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
-            sys.exit(8)
-
-        # append fire
-        ts = "fire"
+        if get_env("LANE_ATTEMPT_COUNTED"):
+            if not os.environ.get(ATTEMPT_CONTEXT_ENV):
+                die("nested counted lane has no canonical attempt context")
+            return 0
+        if not raw:
+            return 0
         try:
-            ts = subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
-        except:
-            pass
-        with open(attempts_file, "a") as f:
-            f.write(f"{ts} fire\n")
+            cap = int(get_env("LANE_MAX_ATTEMPTS", "2"))
+        except ValueError:
+            cap = 2
+        count, context = lane_attempt_reserve(
+            root, raw, args.target_root or root, cap=cap, force=force,
+            check_only=False)
+        if count >= cap and context is None and not force:
+            eprint(f"lane-attempt-cap: lane {_lane_key(raw)} PARKED after {count} attempt(s) (cap {cap}) — no relay token seeded.")
+            sys.exit(8)
+        if force and context is not None:
+            eprint(f"lane-attempt-cap: --force override — lane {_lane_key(raw)} at {count - 1} attempt(s) (cap {cap}), proceeding.")
         return 0
 
     def lane_attempt_reset(root, raw):
@@ -289,10 +272,11 @@ def main():
         attempts_file = os.path.join(root, ".tick", "attempts", _lane_key(raw))
         try:
             archive = archive_lane_attempts(attempts_file)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             die(f"cannot preserve lane attempts {attempts_file}: {exc}")
         if archive:
             eprint(f"lane-attempt history preserved: {archive}")
+        return archive
 
     # #129/#136: resolve TICK_REPO_ROOT ONCE, here, silently. The lane-attempt gate just below
     # is the first consumer — with the env unset on a vendored-.xyz drive it used to count
@@ -772,6 +756,12 @@ def main():
         if not commit_relay_file(f"relay-drive: attest {args.relay_task} approved by {actor} (reviewed {pre['reviewed_head'][:12]})"):
             return ("refused", "attest-publish-failed")
         try:
+            raw_context = os.environ.get(ATTEMPT_CONTEXT_ENV)
+            if raw_context and not args.review_once:
+                context = json.loads(raw_context)
+                context["attestation"] = str(relay_attest.path_for(args.relay_task, trepo))
+                record["attempt_context"] = context
+                os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
             path = relay_attest.write(record)
         except Exception as e:
             eprint(f"relay-drive: attestation record write FAILED: {e}")

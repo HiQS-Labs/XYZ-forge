@@ -64,6 +64,7 @@ fi
 _all_deletes=1
 _saw_line=0
 _real_ref_pairs=()
+_attempt_ref_pairs=()
 while read -r _lref _lsha _rref _rsha; do
   [ -n "${_lsha:-}" ] || continue
   _saw_line=1
@@ -71,6 +72,7 @@ while read -r _lref _lsha _rref _rsha; do
     *[!0]*)
       _all_deletes=0
       _real_ref_pairs+=("$_lsha|${_rsha:-}")
+      _attempt_ref_pairs+=("$_lref|$_lsha|$_rref")
       ;;
   esac
 done
@@ -83,6 +85,17 @@ if [ "${XYZ_SKIP_PREPUSH:-0}" != "0" ]; then
   # Announced, never silent: a skipped gate that says nothing is indistinguishable from a passing one.
   echo "pre-push: SKIPPED by XYZ_SKIP_PREPUSH — nothing was verified before this push." >&2
   exit 0
+fi
+
+# GH-1399: accounting precedes BOTH docs routing and full-receipt reuse.
+if [ "${#_attempt_ref_pairs[@]}" -eq 0 ]; then
+  python3 "$REPO/utils/py/gate_receipt.py" admit --repo "$REPO" >/dev/null || exit 2
+else
+  for _attempt_pair in "${_attempt_ref_pairs[@]}"; do
+    IFS='|' read -r _attempt_ref _attempt_sha _attempt_destination <<< "$_attempt_pair"
+    python3 "$REPO/utils/py/gate_receipt.py" admit --repo "$REPO" --sha "$_attempt_sha" \
+      --ref "$_attempt_ref" --destination-ref "$_attempt_destination" >/dev/null || exit 2
+  done
 fi
 
 # A docs-only commit is still checked, but by the deterministic documentation gate instead of the

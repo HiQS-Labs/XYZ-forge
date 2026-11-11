@@ -77,6 +77,9 @@ sha256_of() {
   else echo "unavailable"; fi
 }
 
+# Admission must precede the legacy green file as well as the JSON receipt.
+python3 utils/py/gate_receipt.py admit --repo . --sha "$sha" >/dev/null || exit 2
+
 mkdir -p .gate-evidence
 {
   printf 'commit: %s\n' "$sha"
