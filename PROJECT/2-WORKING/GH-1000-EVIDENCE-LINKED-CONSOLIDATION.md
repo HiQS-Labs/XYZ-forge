@@ -51,7 +51,8 @@ goal: >
 The issue limits "scope now" to consolidation, evidence review and selection of a small
 end-to-end plan. Its checklist section 4 also asks for a demonstration in the selected interface.
 [#1414](https://github.com/HiQS-Labs/XYZ-forge/issues/1414) already flags that boundary as
-unresolved. This PR resolves it the narrow way:
+unresolved. This plan proposes the narrow reading; the operator has not ruled on it, and the
+interface demonstration stays explicitly owed:
 
 - **Outcome sought:** the operator can stop treating these as five projects, knows which three
   references are missing, and has follow-on work small enough to schedule.
@@ -121,8 +122,12 @@ but no execution ID, and `releases work status` returns only the latest event pe
 **Three references are missing.**
 
 1. `jog_*` work events have no `execution_id` or result path in their payload.
-2. `marathon-drive/result@1` has no transcript path. The only join today is implicit: the result's
-   `head_sha` equals the commit that saved the transcript.
+2. `marathon-drive/result@1` has no transcript path. A candidate join exists for some attempts:
+   the result's `head_sha` matching the commit that saved the transcript. It is not a contract.
+   `head_sha` is the observational receipt-time HEAD of the target repo
+   (`utils/py/marathon_drive.py:216`, `MACHINE-CONTRACTS.md:105`), the transcript is committed
+   in the harness root (`:2322`), and a post-approval command can move HEAD before the receipt
+   (`:2859`). Phase 2 tests the join per attempt and does not assume it.
 3. Only an approved result is copied into `TESTS-RESULTS/` (`jog_run.py:1077`). A failed
    attempt's receipt stays machine-local, and `gate.receipt_path` and `attest_path` are absolute
    paths that are dead off-machine.
@@ -147,12 +152,22 @@ Extends the existing subsystem: this plan doc under PDDA, the roadmap row throug
 2. Run the reconstruction walk for GH-1254 with read-only commands only (`grep` on `releases.sql`,
    `git log`, `python3` JSON reads, `gh issue view` / `gh pr view`), starting from the issue
    number alone. Record commands, output and verdict in
-   `TESTS-RESULTS/2026-11-10+GH-1000/` with `provenance.jsonl`. -> expect each attempt to
-   resolve to a result, a transcript and a review trailer, or to be marked `MISSING` with the
-   reason.
+   `TESTS-RESULTS/2026-11-10+GH-1000/` with `provenance.jsonl`. For every discovered attempt,
+   gate retries included, fill one row with seven cells: execution ID, invocation (path, and
+   whether any independent invocation ID exists), token, transcript, gate receipt, result
+   receipt, attestation. Each cell is `RESOLVED` with the join used, or `MISSING` / `UNKNOWN`
+   with the reason. Rules: a transcript approval trailer is not the machine attestation record
+   and never fills the attestation cell; a gate or review cell counts only when its SHA binds it
+   to that attempt's candidate, not on a green label; the transcript is joined by commit SHA
+   where that holds, otherwise by the token in its header and commit message, and an ambiguous
+   match (two transcripts, one token) is `UNKNOWN`. -> expect a complete table in which the
+   machine-local records (attestation JSON, failed-attempt results that were not hand-copied,
+   raw tick events) read `MISSING`, and no attempt is called complete on a trailer alone.
 3. Red control for step 2: run the same walk for GH-1064, which has start-task relays but no
    execution records. -> expect the walk to report zero attempts and `UNKNOWN`, not a completed
-   reconstruction. A walk that reports success on an empty attempt list fails this check.
+   reconstruction. A walk that reports success on an empty attempt list fails this check. Second
+   control, on GH-1254 itself: the published `gh1254-exec2-gateretry2` bundle has no attestation
+   file and its `attest_path` is machine-local, so that cell must read `MISSING`.
 4. Write Phase 2 from the receipt: goal, attempts, current state, blocker, last verified outcome,
    safe next step, with machine evidence, human decisions and model summaries labelled
    separately, and every link that needed an implicit join named.

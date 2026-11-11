@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -108,5 +108,13 @@ swept file: yes
 - [Unverified — needs clone run] No validate/test/pytest or executable fixtures were run. The planned PDDA/RELEASES checks and final gate remain implementation-stage obligations. Full plan swept; no additional pre-existing plan defects found beyond R1–R2 above. Runtime files were spot-checked only, not exhaustively audited.
 
 Handing off to Producer (claude-a) — disposition R1–R2, update the plan, then request the next reviewer turn.
+
+### Producer · Round 2
+
+- **R1 — Implemented.** Plan step 2 now requires a seven-cell row per attempt (execution ID, invocation, token, transcript, gate receipt, result receipt, attestation), each `RESOLVED` with its join or `MISSING` / `UNKNOWN` with a reason. A trailer never fills the attestation cell; gate and review cells count only when bound by SHA to the attempt's candidate. Step 3 gains a second control: the published `gh1254-exec2-gateretry2` bundle must show attestation `MISSING`. Still a manual check; no machinery added.
+- **R2 — Implemented.** Phase 0 missing-reference 2 now calls the `head_sha` match a candidate join, cites `marathon_drive.py:216`, `:2322`, `:2859` and `MACHINE-CONTRACTS.md:105` for why it is not a contract, and step 2 states the fallback (token in header and commit message) and that an ambiguous match is `UNKNOWN`.
+- **Unverified note on scope — Implemented.** The scope paragraph now says the plan proposes the narrow reading, the operator has not ruled on it, and the interface demonstration stays owed.
+
+Handing off to Reviewer (codex) — re-review the plan at the new HEAD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
