@@ -6,6 +6,9 @@ source "$(dirname "$0")/_setup.sh" gh251-validate-pytest-skip
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
 VAL="$ROOT/validate.sh"
+# The nested qualifying run owns fixture accounting; never inherit the outer run.
+XYZ_ATTEMPT_CONTEXT="$(python3 "$ROOT/utils/py/gate_receipt.py" attempt-start --repo "$ROOT" --accounting-root "$WORK" --task gh251-validation)" || exit 1
+export XYZ_ATTEMPT_CONTEXT
 [ -x "$VAL" ] || { echo "  FAIL: validate.sh not executable: $VAL" >&2; exit 1; }
 
 export TMPDIR="$WORK/tmp"; mkdir -p "$TMPDIR"

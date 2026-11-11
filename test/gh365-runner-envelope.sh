@@ -212,6 +212,7 @@ cp "$REPO/test/lib/clone-identity.sh" "$CB/test/lib/clone-identity.sh"
 cp "$REPO/relay-automation/gate-env.sh" "$CB/relay-automation/gate-env.sh"
 cp "$REPO/utils/ci-route.sh" "$CB/utils/ci-route.sh"; chmod +x "$CB/utils/ci-route.sh"
 cp "$REPO/utils/py/gate_env.py" "$CB/utils/py/gate_env.py"
+  cp "$REPO/utils/py/gate_receipt.py" "$REPO/utils/py/rtl.py" "$CB/utils/py/"
 printf '#!/usr/bin/env bash\necho stub-pdda ran\nexit 0\n' > "$CB/utils/pdda/pdda.sh"; chmod +x "$CB/utils/pdda/pdda.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$CB/utils/hq/hq.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$CB/test/hq.sh"; chmod +x "$CB/test/hq.sh"
@@ -229,7 +230,8 @@ else
 fi
 
 # ── D. the receipt teeth: dirty tree cannot retain a record (why drift must fail the bracket) ────
-out="$(bash "$REPO/utils/gate-record.sh" --suite-log /dev/null --verdicts /dev/null 2>&1)"; rc=$?
+_record_context="$(python3 "$REPO/utils/py/gate_receipt.py" attempt-start --repo "$REPO" --accounting-root "$WORK" --task gh365-record)"
+out="$(XYZ_ATTEMPT_CONTEXT="$_record_context" bash "$REPO/utils/gate-record.sh" --suite-log /dev/null --verdicts /dev/null 2>&1)"; rc=$?
 # From the REPO (a clean tree) this records; the refusal shape is exercised by gh509 against a
 # fixture. What THIS suite pins is the ci-local side: the refusal is no longer swallowed (B6).
 [ "$rc" -eq 0 ] && pass "D1 CONTROL: gate-record records from a clean tree (this clone)" \

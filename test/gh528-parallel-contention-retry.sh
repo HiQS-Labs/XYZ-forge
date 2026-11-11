@@ -33,6 +33,9 @@ source "$(dirname "$0")/_setup.sh" gh528-parallel-contention-retry
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 require_forge_root validate.sh   # GH-708: forge-root only — witnessed skip in a vendored .xyz/
+# The nested qualifying run owns fixture accounting; never inherit the outer run.
+XYZ_ATTEMPT_CONTEXT="$(python3 "$ROOT/utils/py/gate_receipt.py" attempt-start --repo "$ROOT" --accounting-root "$WORK" --task gh528-validation)" || exit 1
+export XYZ_ATTEMPT_CONTEXT
 
 # A probe suite with the exact shape of a contention failure: red the first time, green the second.
 # It stands in for the race deliberately — driving a REAL lock collision would need a live driver and

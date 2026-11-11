@@ -129,6 +129,18 @@ printf '# suite that replaces the untracked git-metadata hook\nprintf "#!/bin/sh
 printf '# unregistered suite\n' > "$FX/test/gh999b-unreg.sh"
 # Use the real installer contract with a tiny fixture gate. A foreign executable
 # hook must not satisfy `install.sh --check`.
+# This is a dependency stub for Express's contract, not evidence for attempt admission.
+# Actual unbooked/booked push controls are retained under GH-1399 TESTS-RESULTS.
+cp "$EXPRESS_CANONICAL_PY/gate_receipt.py" "$FX/utils/py/gate_receipt_impl.py"
+cp "$EXPRESS_CANONICAL_PY/rtl.py" "$FX/utils/py/rtl.py"
+cat > "$FX/utils/py/gate_receipt.py" <<'ADMISSION_STUB'
+import gate_receipt_impl as impl
+def attempt_admission(*args, **kwargs):
+    return {"kind": "fixture-admitted"}
+impl.attempt_admission = attempt_admission
+if __name__ == "__main__":
+    impl.main()
+ADMISSION_STUB
 cp "$HERE/../githooks/install.sh" "$FX/githooks/install.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$FX/githooks/pre-push"
 chmod +x "$FX/githooks/install.sh" "$FX/githooks/pre-push"
