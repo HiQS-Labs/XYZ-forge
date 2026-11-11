@@ -135,3 +135,6 @@ Edit verdicts: accounting entry integration helped (unaccounted push refused and
 ## Authorized resume — 2026-11-11
 
 Operator authorized three additional final QA rounds, extending total budget from3 to6 without resetting history. Continue existing final relay at round4. Prior manual episode remains consumed with failed outcome; the same stable task identity books the second canonical episode for this continuation. No counter deletion or reset. Remaining scope stays independent review, qualification, ready PR and scoped retirement; merge/deployment remain excluded.
+
+
+Round4 completed whole-file coverage and approved the directory-lock fix, then found the pre-existing run-log substring identity bug. Fixed by exact first-line matching; retained old/fixed manual controls and existing gh322 suite29/0 (only three genuine fixture strings adjusted). Round5 final QA pending; prior consumed rounds retained.

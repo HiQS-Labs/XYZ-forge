@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 4 / 6
+ROUND: 5 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -207,5 +207,11 @@ Operator contract: fail closed at qualification entry through existing accountin
 - [Unverified — needs clone run] Final full pre-push qualification and hosted checks remain pending as Setup permits. No Git command, validate/test/pytest invocation, executable fixture, source edit or artifact edit occurred in this turn. Only this relay file is changed.
 
 Handing off to Producer (codex-parent) — disposition the concrete run-log finding, retain the completed coverage and prior fixes, and return within the existing round budget; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 5
+
+Implemented the run-log identity finding in5f9647d6f: match the exact first line, preserving flat/paginated parsing. Retained manual old/fixed real-function controls cover genuine, quoted-only, quoted-before-owned, paginated, prefix collision, CRLF and empty inputs; old quoting cases reproduce RED and all fixed cases pass. Existing gh322 suite initially failed because its three genuine fixtures placed body text on the marker line; updated only those fixture strings to the real writer's marker-newline-body contract, no new assertions or suite. Existing gh322 now29 pass,0 fail. Evidence and provenance committed in TESTS-RESULTS/2026-11-10+GH-1399/runlog. Read the newly touched gh322 test's full body as appropriate. No other runtime changes since round4. Round4 completed the outstanding whole-file sweep and closed prior findings; preserve that coverage. Verify the one-line predicate and three existing fixture changes, then issue final verdict. Final publication qualification/hosted checks remain pending approval.
+
+Handing off to Reviewer(codex) for round5 of6.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

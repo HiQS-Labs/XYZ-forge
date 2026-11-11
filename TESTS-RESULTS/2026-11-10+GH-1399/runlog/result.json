@@ -1,0 +1,44 @@
+[
+  {
+    "name": "genuine",
+    "old": "202",
+    "fixed": "202",
+    "expected": "202"
+  },
+  {
+    "name": "quoted-only",
+    "old": "101",
+    "fixed": "",
+    "expected": ""
+  },
+  {
+    "name": "quoted-first",
+    "old": "101",
+    "fixed": "202",
+    "expected": "202"
+  },
+  {
+    "name": "paginated",
+    "old": "101",
+    "fixed": "202",
+    "expected": "202"
+  },
+  {
+    "name": "marker-prefix",
+    "old": "303",
+    "fixed": "",
+    "expected": ""
+  },
+  {
+    "name": "CRLF",
+    "old": "202",
+    "fixed": "202",
+    "expected": "202"
+  },
+  {
+    "name": "empty",
+    "old": "",
+    "fixed": "",
+    "expected": ""
+  }
+]
