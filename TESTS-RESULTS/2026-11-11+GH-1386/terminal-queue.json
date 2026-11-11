@@ -1,0 +1,32 @@
+[
+  {
+    "id": 39,
+    "global_id": "jog-01M74KY8CS4RY60S9YSFCCZTTB",
+    "gh_number": 1315,
+    "position": 1,
+    "status": "pending",
+    "attempt_count": 0,
+    "lease_pid": null,
+    "failure_reason": null,
+    "created_at": "2026-11-11T06:15:20Z",
+    "updated_at": "2026-11-11T06:15:20Z",
+    "title": "Legacy migration preview refuses unadopted skill retirement",
+    "doc_path": "PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1315"
+  },
+  {
+    "id": 38,
+    "global_id": "jog-01M74KY87SPPBKHNJ361G2Q0AH",
+    "gh_number": 1171,
+    "position": 1,
+    "status": "failed",
+    "attempt_count": 2,
+    "lease_pid": null,
+    "failure_reason": "marathon escalated: relay-failed-before-gate (exit 5) [gh1171-exec1; result: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M74KY87SPPBKHNJ361G2Q0AH/gh1171-exec1/preflight/marathon-result.json]",
+    "created_at": "2026-11-11T06:15:20Z",
+    "updated_at": "2026-11-11T06:25:18Z",
+    "title": "Relay preflight distinguishes existing branch refs from missing files",
+    "doc_path": "PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1171"
+  }
+]
