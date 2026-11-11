@@ -1,6 +1,6 @@
 # GH1419 independent final QA
-STATUS: Open
-NEXT: codex
+STATUS: Approved
+NEXT: orchestrator
 
 Review implementation at 3676fb8c against origin/development and PROJECT/2-WORKING/GH-1419-REVIEWER-ROUTING.md. Read all changed production contexts and nearby consumers; independent plan QA is gh1419-plan.codex.md Approved round2. Scope is explicit supported reviewer routing, including Claude-only distinct roles, not provider quality certification, arbitrary executables, defaults or overnight qualification. No new suites/runner/registry, frozen Bash untouched. Provider slots and shared owner extend existing code.
 
@@ -42,3 +42,18 @@ added-sha256: b9430a63171e03f9f830a841022b997989a41dea78dc7fca56714a0d744a8e9f
 ### Round 2 · Builder · orchestrator
 
 Hosted CR4542975616 found a real missed isolation capability: smallcode-turn.sh explicitly disables isolation while the relay attestation uses the configured isolation flag. Fixed narrowly in existing _probe_agent_bin: SmallCode reviewer refuses when isolation enabled/default; builder and explicit non-isolated behavior preserved. No new registry/gate and no shim edits. Read a85e52d1/a02b612d and committed routing-isolation-controls.json + gh346-isolation.log: baseline admitted bad case; fixed refusal plus builder/non-isolated controls passed. CHANGELOG also completes expected signal/by-when/revisit/graduate criteria (CR4542975611). Recheck scoped change and nearby admission/attestation semantics, preserve prior review. Only this relay file writable; no suites/Git/source edits. Append Round 2 Reviewer plain paragraphs and explicit swept/verdict. Set Approved only if approved, NEXT orchestrator. Normal updated push gate remains required after review.
+
+
+### Round 2 · Reviewer · codex
+
+Approve the scoped SmallCode isolation correction; no blocking source defect found. Preserved the Round 1 review and inspected the changed admission branch in utils/py/marathon_drive.py:898–907, Jog's shared-probe consumer (:203–237), Marathon's pre-dispatch calls (:2118–2119), SmallCode's disabled isolation block (relay-automation/smallcode-turn.sh:55–67), and relay_drive.py's isolation default, validation and attestation (:102–103, :319–320, :868). The refusal uses the same environment/default boundary as the receipt: absent or enabled isolation refuses a SmallCode reviewer before dispatch; explicit 0 preserves non-isolated use. Builder admission remains unchanged. Recognition-only manifest acceptance remains appropriate because it does not certify execution capability. This extends the existing probe rather than introducing another registry or gate. The Costly coordination change retains the scoped revert rollback.
+
+[Pass] Independent non-mutating probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` imported marathon_drive from utils/py, set SMALLCODE_BIN=/usr/bin/true, called `_probe_agent_bin('smallcode-review', role)` with isolation absent, 1 and 0, and asserted refusal exit 2 plus reason reviewer-isolation-unsupported for the first two reviewer cases. It also checked builder admission with isolation 1. Command exited 0. Decisive output: `PASS isolation=None role=reviewer admitted=False`; `PASS isolation=1 role=reviewer admitted=False`; `PASS isolation=0 role=reviewer admitted=True`; `PASS isolation=1 role=builder admitted=True`. This exercises admission only; no shim or executable fixture was invoked.
+
+[Pass] The same Python command read the latest provenance rows for routing-isolation-controls.json and gh346-isolation.log, asserted nonempty bytes, and recomputed SHA256. Exit 0; decisive output: `PASS nonempty provenance hash routing-isolation-controls.json` and `PASS nonempty provenance hash gh346-isolation.log`. Retained manual controls report the pre-fix unsupported-isolation admission, fixed refusal, builder/non-isolated controls and Jog refusal. Retained GH346 log reports 62 pass, 0 fail. These are retained clone evidence, not suites rerun here. CHANGELOG.md:3–17 now names the expected bounded-run signal, deadline relative to the overnight run, revisit and graduation/iteration/revert criteria; it accurately limits the prior full-gate claim to a9090e72. That prior gate does not qualify this updated isolation change. Updated normal push gate remains [Unverified — needs clone run] and is the orchestrator's next qualification step. No successful live end-to-end or overnight claim is inferred.
+
+swept file: yes
+
+**Verdict:** Approved
+
+Only this relay file was edited. No git command, validate.sh, test/*.sh, pytest, executable fixture, source edit or live provider call was run. Approval covers implementation QA of the scoped Round 2 correction; final gate/publication responsibility remains with the orchestrator.
