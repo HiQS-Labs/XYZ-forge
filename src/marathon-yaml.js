@@ -6,7 +6,7 @@
 //   phases:
 //     - id: p1
 //       name: <phase name>
-//       reviewer: codex | agy (or codex*/agy*)
+//       reviewer: explicit supported Marathon actor ID
 //       max_review_rounds: <int>
 //       depends_on: <phase id>        (optional)
 // Disambiguation is by indent: a top-level `name:` (indent 0) is the marathon name; an indented
@@ -103,6 +103,18 @@ function parseMarathonYaml(text) {
  * @throws {Error} on an empty plan, duplicate id, missing required field, bad
  *   `reviewer`, or an unknown/self/cyclic `depends_on`
  */
+function validateReviewer(reviewer, phaseId) {
+  const { spawnSync } = require('child_process');
+  const path = require('path');
+  const result = spawnSync(process.env.PYTHON3 || 'python3', [
+    path.join(__dirname, '..', 'utils', 'py', 'marathon_drive.py'),
+    '--validate-agent-routes', reviewer,
+  ], { encoding: 'utf8', timeout: 10000 });
+  if (result.error || result.status !== 0) {
+    throw new Error(`phase ${phaseId}: ${result.error ? result.error.message : result.stderr.trim()}`);
+  }
+}
+
 function resolveOrder(plan) {
   const phases = plan.phases || [];
   if (phases.length === 0) throw new Error('no phases defined');
@@ -111,12 +123,7 @@ function resolveOrder(plan) {
     if (!p.id) throw new Error('a phase is missing its id');
     if (byId.has(p.id)) throw new Error(`duplicate phase id: ${p.id}`);
     if (!p.reviewer) throw new Error(`phase ${p.id}: missing reviewer`);
-    // GH-346 Phase 2 (allowlist #6): `gemini` removed — phantom entry, no such shim in this tree.
-    // Kept byte-aligned with the duplicate implementation in bin/marathon-yaml; the allowlist test
-    // pins both, since the recon that found the other six allowlists missed this seventh copy.
-    if (!/^(codex|agy)/.test(p.reviewer)) {
-      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex or agy`);
-    }
+    validateReviewer(p.reviewer, p.id);
     if (p.depends_on === p.id) throw new Error(`phase ${p.id}: depends_on itself`);
     byId.set(p.id, p);
   }
@@ -149,4 +156,4 @@ function resolveOrder(plan) {
   return order;
 }
 
-module.exports = { parseMarathonYaml, resolveOrder };
+module.exports = { parseMarathonYaml, resolveOrder, validateReviewer };

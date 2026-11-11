@@ -844,6 +844,31 @@ def _probe_claude_bin(role_label):
     _RESULT["reason"] = f"{role_label}-binary-missing"
     die(f"{role_label} binary 'claude' not found on PATH (set CLAUDE_BIN or use a codex/agy --{role_label} agent)")
 
+def route_agent(agent_id, env=None):
+    """Register an explicit actor in the existing dispatcher slots; no quality claim.
+
+    Pass a private mapping for recognition without changing this process's routing.
+    Frozen Bash routing remains unchanged (GH-308).
+    """
+    env = os.environ if env is None else env
+    if not isinstance(agent_id, str) or not agent_id or any(c.isspace() or c == "," for c in agent_id):
+        raise ValueError("agent id must be nonempty and contain no whitespace or comma")
+    if agent_id.startswith("claude"): slot = "CLAUDE_AGENT"
+    elif agent_id.startswith("codex"): slot = "CODEX_AGENT"
+    elif agent_id.startswith("agy"): slot = "AGY_AGENT"
+    elif agent_id.startswith("aider"): slot = "AIDER_AGENT"
+    elif agent_id.startswith("pi"): slot = "PI_AGENT"
+    elif agent_id.startswith("smallcode"): slot = "SMALLCODE_AGENT"
+    elif agent_id.startswith("commandcode"): slot = "COMMANDCODE_AGENT"
+    elif agent_id.startswith("deepseek"): slot = "DEEPSEEK_AGENT"
+    elif agent_id.startswith("kimi"): slot = "KIMI_AGENT"
+    else: raise ValueError(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi")
+    actors = [part for part in env.get(slot, "").split(",") if part]
+    if agent_id not in actors:
+        actors.append(agent_id)
+    env[slot] = ",".join(actors)
+    return slot
+
 def _probe_agent_bin(agent_id, role_label):
     # GH-117: fail before any tick mutation or clean-workspace scan if the lane's
     # builder/reviewer binary would be undispatchable.
@@ -2075,77 +2100,16 @@ def main():
     os.environ["DEEPSEEK_AGENT"] = ""
     os.environ["KIMI_AGENT"] = ""
 
-    def route_agent(agent_id):
-        # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
-        # (GH-295 shipped the shim, GH-451/PR #452 wired it here); the frozen Bash twin at
-        # relay-automation/marathon-drive.sh:779-783 accepts claude/codex/agy/aider ONLY and dies
-        # on `pi`. Same split in the binary probe: _probe_agent_bin below has a `pi` branch, the
-        # Bash twin's does not. Nothing is broken by this — marathon-drive.sh execs this file
-        # whenever XYZ_PYTHON is unset or 1, which is the default, so the Bash path is only
-        # reachable via XYZ_PYTHON=0 or a host with no python3 >= 3.8. On THAT path `--builder pi`
-        # fails at argument routing before any tick mutation.
-        #
-        # The Bash half is frozen under GH-308 and is NOT to be taught about Pi as a drive-by fix;
-        # doing so needs a `Frozen-twin-exception:` trailer and should happen only as part of
-        # retiring the twins. test/marathon-drive.sh case (20b) asserts the Bash rejection, so if
-        # anyone does teach it Pi, that case fails loudly and this note must be retired with it.
-        #
-        # GH-346 Phase 2 DECISION (allowlist #1), recorded rather than silently skipped: the same
-        # freeze applies to commandcode and deepseek, added below. The Bash twin still accepts only
-        # claude/codex/agy/aider. The divergence is now three ids wide instead of two, and it stays
-        # that way deliberately — teaching the frozen twin is a twin-retirement task, not a
-        # drive-by. Reachable only via XYZ_PYTHON=0 or a host without python3 >= 3.8, and on that
-        # path an unrecognized id fails at argument routing before any tick mutation.
-        #
-        # One more thing about the twin, since a reader under XYZ_PYTHON=0 will otherwise be misled:
-        # its USAGE TEXT (marathon-drive.sh:33, :593) still advertises `gemini` as a reviewer, and
-        # it keeps a `gemini*` arm in its reviewer gate at :795 — dead, because its own route_agent
-        # at :783 rejects the id first. No gemini shim has ever existed. The Python side dropped the
-        # phantom in GH-346; the twin advertises a lane that cannot run, and stays frozen anyway.
-        #
-        # REVIEWER routing is a separate, narrower set and Pi is NOT in it — see the check below
-        # and bin/marathon-yaml:95. A Pi *builder* fallback does not give you a Pi *reviewer*.
-        if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
-        elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
-        # A lane can carry both a builder and its reviewer.  Keep every agy actor in the one
-        # dispatcher-facing slot instead of letting the second route overwrite the first.
-        elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = ",".join(
-            part for part in (os.environ["AGY_AGENT"], agent_id) if part)
-        elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
-        elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
-        elif agent_id.startswith("smallcode"): os.environ["SMALLCODE_AGENT"] = agent_id
-        # GH-346 Phase 2 (allowlist #2). Order matters below: neither "commandcode" nor "deepseek"
-        # is a prefix of, or prefixed by, any id above ("commandcode" does NOT start with "codex"),
-        # so these are safe as the last two branches. The matching case in marathon-agent.sh
-        # (allowlist #3) landed in the same change — routing here without a dispatcher branch there
-        # is what made these two gateways accept-then-die.
-        elif agent_id.startswith("commandcode"): os.environ["COMMANDCODE_AGENT"] = agent_id
-        elif agent_id.startswith("deepseek"): os.environ["DEEPSEEK_AGENT"] = agent_id
-        # GH-1215: builder lane only; the reviewer gate below stays codex/agy.
-        elif agent_id.startswith("kimi"): os.environ["KIMI_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi")
-        
     if args.builder == args.reviewer:
         _RESULT["reason"] = "builder-equals-reviewer"
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
         
-    route_agent(args.builder)
-    route_agent(args.reviewer)
+    try:
+        route_agent(args.builder)
+        route_agent(args.reviewer)
+    except ValueError as exc:
+        die(str(exc))
     
-    # GH-346 Phase 2 (allowlist #6): `gemini` was a PHANTOM. No gemini shim exists anywhere in this
-    # tree, and route_agent() above — which runs first — has no gemini branch, so a gemini reviewer
-    # always died there with "not recognized". Naming it here only advertised a lane that cannot
-    # exist. Removed rather than implemented.
-    #
-    # Reviewer eligibility for commandcode/deepseek is DELIBERATELY NOT added here. Reviewer
-    # fitness is a quality claim, and HARNESS-MODELS-REGISTRY.md grades it per harness separately
-    # from builder fitness (aider is graded "Builder only" precisely because its reviewer turns can
-    # produce a review without persisting it). Phase 2 makes them dispatchable as BUILDERS; whether
-    # they review well is for the ROI checkpoint to answer with evidence, not for this change to
-    # assume. See PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md.
-    if not (args.reviewer.startswith("codex") or args.reviewer.startswith("agy")):
-        die(f"reviewer '{args.reviewer}' must start with codex/agy")
-
     _probe_agent_bin(args.builder, "builder")
     _probe_agent_bin(args.reviewer, "reviewer")
 
@@ -3754,6 +3718,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         die(f"relay-drive exited with unexpected code {relay_exit}")
 
 if __name__ == "__main__":
+    # Recognition-only manifest seam: no probes, lease, result hooks or dispatch.
+    if sys.argv[1:2] == ["--validate-agent-routes"]:
+        try:
+            if not sys.argv[2:]:
+                raise ValueError("at least one agent id required")
+            for actor in sys.argv[2:]:
+                route_agent(actor, {})
+        except ValueError as exc:
+            die(str(exc))
+        sys.exit(0)
+
     # GH-284 P2 / GH-322: the Bash twin runs its run log + heartbeat stop from an EXIT trap that
     # captures `$?` first and re-exits with it explicitly, precisely so a failing reporting step can
     # never overwrite the driven run's real status. This is the same shape: the code is resolved

@@ -2,7 +2,7 @@
 title: "Provider-agnostic Jog reviewer routing"
 gh_issue: 1419
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1419
-status: "Proposed"
+status: "In Progress"
 created: 2026-11-11
 updated: 2026-11-11
 owner: Codex
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Grounded conflicting Jog/Marathon/manifest restrictions; fresh canonical clone provisioned | Independent plan QA before production changes |
+| Grounded conflicting Jog/Marathon/manifest restrictions; fresh canonical clone provisioned | Plan QA Approved round 2; implementation and disposable verification underway |
 
 ## Outcome and recon
 

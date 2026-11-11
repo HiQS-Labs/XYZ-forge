@@ -183,10 +183,6 @@ def _validate_marathon_result(obj):
 
 JOG_EXECUTION_STATE_SCHEMA = "jog/execution-state@1"
 
-# Marathon's reviewed-phase contract (marathon_drive.py): reviewer ids must start with one of
-# these. Jog mirrors the rule so an invalid reviewer fails before ANY lease mutation.
-_MARATHON_REVIEWER_PREFIXES = ("codex", "gemini", "agy")
-
 # GH-280 Phase 5: one line, stderr, on every legacy-machinery invocation (explicit
 # `--executor relay`, or `--simulate` which stays on the relay machinery). Names the window
 # and the separate-removal fact — removal is NOT part of the flip commit.
@@ -215,17 +211,26 @@ def validate_marathon_executor(args):
                 "default (GH-280: no silent cost-bearing or same-agent route)")
     if reviewer == args.builder:
         return f"--reviewer must differ from --builder (both are '{reviewer}')"
-    if not reviewer.startswith(_MARATHON_REVIEWER_PREFIXES):
-        return (f"--reviewer '{reviewer}' must start with one of "
-                f"{'/'.join(_MARATHON_REVIEWER_PREFIXES)} (marathon's reviewed-phase contract)")
-    if reviewer.startswith("agy"):
-        bin_name = os.environ.get("AGY_BIN", "agy")
-    elif reviewer.startswith("codex"):
-        bin_name = os.environ.get("CODEX_BIN", "codex")
-    else:  # gemini*
-        bin_name = os.environ.get("GEMINI_BIN", "gemini")
-    if not (shutil.which(bin_name) or (os.path.isfile(bin_name) and os.access(bin_name, os.X_OK))):
-        return f"reviewer binary '{bin_name}' not found on PATH (--reviewer {reviewer})"
+    import contextlib
+    import io
+    import marathon_drive
+
+    # Reuse execution's route/probe owners before any lease mutation. Keep the
+    # imported driver's result state untouched by this admission-only call.
+    diagnostic = io.StringIO()
+    saved_result = marathon_drive._RESULT.copy()
+    try:
+        with contextlib.redirect_stderr(diagnostic):
+            for role, actor in (("builder", args.builder), ("reviewer", reviewer)):
+                marathon_drive.route_agent(actor, {})
+                marathon_drive._probe_agent_bin(actor, role)
+    except ValueError as exc:
+        return str(exc)
+    except SystemExit:
+        return diagnostic.getvalue().strip() or "marathon agent admission failed"
+    finally:
+        marathon_drive._RESULT.clear()
+        marathon_drive._RESULT.update(saved_result)
     return None
 
 

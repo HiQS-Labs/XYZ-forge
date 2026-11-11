@@ -324,11 +324,12 @@ else
   pass "#6 no gemini shim exists, so removing it from the gates lost no capability"
 fi
 
-# the python reviewer gate must agree with the JS one
-if grep -q 'args.reviewer.startswith("codex") or args.reviewer.startswith("agy")' "$ROOT/utils/py/marathon_drive.py"; then
-  pass "#6 python reviewer gate agrees with the JS gates (codex/agy)"
+# Reviewer admission now shares Marathon's supported-route owner (GH-1419).
+if python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes claude-reviewer codex-reviewer agy-reviewer &&
+   ! python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes unsupported-reviewer 2>/dev/null; then
+  pass "#6 shared reviewer recognition accepts supported routes and refuses unknowns"
 else
-  fail "#6 python reviewer gate has drifted from bin/marathon-yaml + src/marathon-yaml.js"
+  fail "#6 shared reviewer route recognition failed"
 fi
 
 # ------------------------------------------------------------------------------------------------
