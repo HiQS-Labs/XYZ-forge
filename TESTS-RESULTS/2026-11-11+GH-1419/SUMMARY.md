@@ -17,3 +17,7 @@ Live Claude route reached the real isolated reviewer, which appended a source re
 Full push attempt 1 refused at 611c012b after 538.228s: marathon-root-audit and checkjs failed. Corrected missing exported-function JSDoc and explicit MARATHON_ROOT on two recognition-only commands; production runtime unchanged. Focused repairs: checkjs 6/6, root audit 169 invocations, GH346 62/62. No gate bypass. Attempt 2 normal full push PASS on a9090e72d058ea73af478e726c41108be86b3d58: hook 526s, elapsed 529.515s, cap1800. Postgate clone clean/non-bare/canonical origin/no local identity.
 
 Hosted review identified SmallCode shim disabling isolation. Shared execution probe now refuses SmallCode reviewers when isolation is enabled/default, retaining builder and explicitly non-isolated admission. Manual baseline admission witnessed, fixed refusal and preservation controls pass; GH346 62/62. Fresh final QA and normal qualification required for this correction.
+
+## Hosted-review isolation correction qualification
+
+Independent final QA round 2 approved f39a5e42. Normal full push gate on 2bb4f727 passed 408/408 in 551s (553.149s elapsed). Disposable clone remained clean, non-bare, canonical origin, without local identity override. SmallCode reviewer with isolation enabled refuses before dispatch; explicit nonisolated reviewer and builder behavior remain supported. Original failures and qualifications retained. Hosted checks on final evidence head remain required.
