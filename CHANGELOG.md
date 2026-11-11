@@ -4,7 +4,9 @@
 
 Added document-only paraphrase and grounded scope boundaries to existing start-task
 plan QA, and an author comprehension check to file-xyz-bug’s redacted capture preview.
-No extra approval checkpoint or automatic execution handoff. Independent wording QA
+The existing idea consult and preview now use the same lens, preserving its body
+schema, review hash and admission boundary. No extra approval checkpoint or automatic
+execution handoff. Independent wording QA
 approved; start-task skill validation passed; file-xyz-bug retains a reproduced
 pre-existing description-validator failure. Full gate and deployment are outstanding.
 Evidence: `TESTS-RESULTS/2026-11-10+GH-1414/`.
