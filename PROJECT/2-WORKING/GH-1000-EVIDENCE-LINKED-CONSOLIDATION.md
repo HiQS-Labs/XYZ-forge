@@ -77,11 +77,12 @@ so and Phase 4 treats that as a gap.
 
 ## Rating
 
-`rated 45/35/50/55` (pri/sev/appeal/effort), row `rmi-01M74M5C2Q93EFXBC07TSZG83Y`, written with
-`roadmap pickup` and read back on 2026-11-10. The row was first created as
-`rmi-01M74K4FNE7GBY2S1W3F24NF5K`; merging `development` at `f98ad1d92` collided on roadmap
-position, so the ledger was taken from `development` and the pickup and accepted-start were
-re-applied through the CLI. The plan and final QA threads cite the first ID.
+`rated 45/35/50/55` (pri/sev/appeal/effort), written with `roadmap pickup` and read back on
+2026-11-10. Look the row up by issue number (`roadmap list --json`, `gh_number` 1000), not by ID:
+an active jog kept writing `development`'s ledger while this branch was open, each merge collided
+in `releases.sql`, and each time the ledger was taken from `development` and the pickup and
+accepted-start were re-applied through the CLI, which mints a new row ID. The plan and final QA
+threads cite the first ID, `rmi-01M74K4FNE7GBY2S1W3F24NF5K`.
 
 - **Severity 35:** no crash, data loss or blocked work. The cost is duplicated effort, stale plan
   docs and a failed attempt that cannot be traced off the machine that ran it.
