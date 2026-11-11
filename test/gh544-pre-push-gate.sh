@@ -71,7 +71,18 @@ mkrepo() {  # <validate-exit-code> -> prints repo path
   git -C "$r" config user.email t@t
   git -C "$r" config user.name t
   mkdir -p "$r/githooks" "$r/utils/pdda" "$r/utils/py"
-  cp "$REPO/utils/py/gate_receipt.py" "$REPO/utils/py/rtl.py" "$r/utils/py/"
+  cp "$REPO/utils/py/gate_receipt.py" "$r/utils/py/gate_receipt_impl.py"
+  cp "$REPO/utils/py/rtl.py" "$r/utils/py/"
+  # Existing routing cases use synthetic refs/SHAs. Isolate admission here; GH-1399's
+  # real guard is exercised by retained manual actual-push controls, not this stub.
+  cat > "$r/utils/py/gate_receipt.py" <<'ADMISSION_STUB'
+import gate_receipt_impl as impl
+def attempt_admission(*args, **kwargs):
+    return {"kind": "fixture-admitted"}
+impl.attempt_admission = attempt_admission
+if __name__ == "__main__":
+    impl.main()
+ADMISSION_STUB
   cp "$HOOK" "$r/githooks/pre-push"; chmod +x "$r/githooks/pre-push"
   cp "$ROUTER" "$r/utils/ci-route.sh"; chmod +x "$r/utils/ci-route.sh"
   cat > "$r/validate.sh" <<STUB
@@ -570,18 +581,9 @@ strip_githooks() {  # <repo> <branch>
 }
 realpush() {  # <repo> [env...] -> pushes the current branch; prints output + trailing RC=
   local r="$1"; shift
-  local _o _r _context _key _cache
+  local _o _r
   require_fixture "$r" "realpush repo"          # `cd ""` would push the CALLER's repo to the bare
-  # GH-1399: these existing runtime-gate controls need a booked task candidate first.
-  _key="$(basename "$r")-$(git -C "$r" branch --show-current | tr '/' '_')"
-  _cache="$WORK/context-$_key.json"
-  if [ ! -f "$_cache" ]; then
-    python3 "$REPO/utils/py/gate_receipt.py" attempt-start --repo "$r" \
-      --accounting-root "$WORK" --task "$_key" > "$_cache" || return 2
-  fi
-  _context="$(cat "$_cache")"
-  _o="$( cd "$r" && env XYZ_ATTEMPT_CONTEXT="$_context" "$@" git push -q origin \
-    "HEAD:refs/heads/${GH544_PUSH_DESTINATION:-probe}" 2>&1 )"; _r=$?
+  _o="$( cd "$r" && env "$@" git push -q origin HEAD:refs/heads/probe 2>&1 )"; _r=$?
   printf '%s\nRC=%s\n' "$_o" "$_r"
 }
 
@@ -629,7 +631,7 @@ ok "a delete-only push is not gated on the fallback path" "printf '%s' \"\$out\"
 git -C "$R_P" worktree add -q "$WORK/wt-probe" -b wtprobe >/dev/null 2>&1
 ok "a linked worktree resolves to the SAME hooks dir as its parent clone" \
    "[ \"\$(git -C '$WORK/wt-probe' rev-parse --git-common-dir)/hooks\" -ef '$R_P/.git/hooks' ]"
-out="$(GH544_PUSH_DESTINATION=wtprobe realpush "$WORK/wt-probe")"
+out="$( cd "$WORK/wt-probe" && git push -q origin HEAD:refs/heads/wtprobe 2>&1; printf '\nRC=%s\n' "$?" )"
 ok "  and a push FROM that worktree is gated too" "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 git -C "$R_P" worktree remove --force "$WORK/wt-probe" >/dev/null 2>&1
 

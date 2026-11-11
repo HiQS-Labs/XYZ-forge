@@ -229,7 +229,8 @@ Then begin work.
    qualification and publication. Use the plan's separately verified maintained primary as
    `--accounting-root`, with the task clone as `--repo`, so retirement preserves accounting:
    `python3 utils/py/gate_receipt.py attempt-start --repo TASK --accounting-root PRIMARY --task GH-N-start-task --env`.
-   Apply the returned export in the execution environment; pass the same context explicitly
+   Check the booking command's exit status and nonempty output before applying its export;
+   an empty/failed command substitution must not be treated as successful booking. Pass the same context explicitly
    to disposable full qualification clones. If a parent already supplied a valid lane or
    merge-repair context, reuse/admit it instead of booking a second budget. Missing or
    exhausted accounting is a refusal, never permission to rename the task or reset history.
