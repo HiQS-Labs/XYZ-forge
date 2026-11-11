@@ -253,4 +253,8 @@ All nine formerly failing existing suites now pass individually; Express127/0 af
 
 Handing off to Reviewer(codex) for final authorized round6.
 
+### System · Round 6 token continuation
+
+The original review token is mechanically DONE after round5 approval and cannot be reopened. Continue this same transcript and round6-of6 budget using the fresh read-only turn token GH1399-FINAL-20261110-R6. This changes only the spent coordination token, not the review history, authorized cap, task identity or consumed accounting. No replacement review transcript and no new repair reservation.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
