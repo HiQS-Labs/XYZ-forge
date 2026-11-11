@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -81,5 +81,23 @@ recording from defects in the artifact. Explicitly report omission review outcom
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+VERDICT: FAIL
+Basis: Full original/current omission review found one operative boundary missing. Restore it before approval; no other operative omission or pre-existing defect found in AGENTS.md. This is an Easy documentation correction, with no runtime redesign.
+
+- [Should] Restore the same-PR provenance requirement at `AGENTS.md:119–120` and include it in the requirement map. Original `966290ddd8b69fcfd49a9df5e123b118befcd6e1:AGENTS.md:121–123` requires provenance to be “committed in the same PR”; current text only says “Retain and commit”. A receipt committed separately would satisfy the compressed wording while violating the original evidence boundary. Cheapest fix: add “in the same PR”.
+  Observed input: Original operative text “must have its `provenance.jsonl` committed in the same PR” versus current `AGENTS.md:119–120`, which omits “same PR”.
+  Affected scope: Runs cited as evidence in issues, PRs, roadmap entries or decisions, exactly the original GH-430 scope.
+  Falsifier: An equivalent mandatory instruction requiring same-PR provenance for that scope would make restoration unnecessary. No such equivalent appears in current AGENTS or its mandatory ROUTER/PDDA evidence routing; a receipt committed in a separate PR should remain insufficient.
+- [Pass] Other omission groups preserve the operative contract: danger prohibitions and safety read; startup reads; sharing destinations/exclusions and outer-loop limits; runtime opt-out; reconciliation/branch carve-out; principles 1–8 (except the finding above); no-new-test limits; marathon selection; RELEASES ownership; gate/bypass/publication limits; experiment rollback; sandbox mutation guard; canonical policy owners; scratch/PARKED; frozen twins and both historical exceptions; builder/QA separation; HQ; costly kernel surfaces; subagent/full-clone containment, identity and use-boundary checks; invocation audit; macOS/Linux distinction; all five promotion steps; queue limits; development/rename rules; Aider rules; conflict order. Cross-checked `SUMMARY.md` “Original-to-current requirement map” against both complete texts, rather than accepting its equivalence claim. Original fetched read-only through GitHub `fetch_file` at the exact base (blob `bbec1624fe13313fc5637c6387d865f09077d839`), because this turn expressly prohibits git commands. Historical incident detail removal does not otherwise remove an operative rule.
+- [Pass] Size/hash match the receipt. Probe: `python3` reading `Path('AGENTS.md').read_bytes()` and printing `len(p), hashlib.sha256(p).hexdigest()`; exit 0; decisive output: `27741 4f2e8449c411b1c57e3cb091148727f3469d8ddac9e1741db87935a12ba1b7e8`. `provenance.jsonl` byte-budget rows also retain original 42,768-byte and empty-input red controls. Current file meets the <=28,000 target.
+- [Pass] Local Markdown links and fragments resolve. Probe: `python3` extracting `re.findall(r'\]\(([^)]+)\)', s)`, asserting each local `Path(name).is_file()` and fragment membership in normalized heading slugs; exit 0; decisive output: eight `OK` targets, including `ROUTER.md#role-split` and `WORKTREE-SAFETY.md#12-run-the-full-gate-only-in-a-disposable-full-clone`. Required reads and top-level headings remain. `SUMMARY.md` explicitly limits chain totals to tracked default filenames and states links do not auto-load.
+- [Pass] Rated ledger row is consistent: `releases.sql:988` stores GH-1422 ratings `75`, `65`, `50`, `80`, matching the plan's “PRS rationale”. Retained gate receipt `docs-gate.txt` ends “PDDA run complete: no errors, 99 warning(s)”; provenance records exit 0 on `1daf62f6d`. This reviews the retained result, not a new gate execution or final-publication attestation.
+- [Unverified — needs harness/clone evidence] Exact committed base-to-HEAD changed-path inventory and gate on the eventual final commit were not independently obtained in this no-git reviewer turn. No suites or executable fixtures were run. No new gate/test machinery appears in the reviewed AGENTS/plan/evidence packet; the harness/author must establish final diff scope and retain the post-correction docs gate before publication. This pending delivery evidence is separate from the textual omission finding.
+
+Handing off to Producer — restore the same-PR boundary, update the mapping as needed, and take your turn in the Producer window.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
