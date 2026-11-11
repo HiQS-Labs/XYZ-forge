@@ -1,0 +1,10 @@
+{
+  "disposition": "ACTIVE_LOCKED",
+  "driver_lock": {
+    "locked": true,
+    "lock_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10-gate/.git/relay-driver.lock",
+    "pid": 20813,
+    "alive": true,
+    "content": "20813"
+  }
+}

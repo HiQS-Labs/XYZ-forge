@@ -13,7 +13,7 @@ goal: Refuse unaccounted task qualification through existing gate boundaries whi
 
 | What was just completed | What's next |
 |---|---|
-| Canonical issue and remote verified; isolated task clone and read-only entry/state recon complete | Resolve candidate binding and completed-attempt semantics, reproduce controls, then independent Codex plan QA |
+| Implementation and discriminating manual controls committed; final QA exhausted3 rounds and lock-reader finding repaired | Operator-extended independent review, final qualification and ready PR remain pending |
 
 ## Request and scope
 
@@ -119,3 +119,14 @@ Upstream integration used the canonical ledger resolver; accepted-start and rati
 
 
 Final QA round1 identified a real nested merge-repair approval writer mismatch. Fixed by retaining parent ownership for inherited manual/merge contexts; red/green driver controls retained under implementation/final-controls. Final QA round2 pending. Administrative normal push passed74s; separate-clone completed proof accepted. No new test suite or registry added.
+
+
+## Resumable stop — final QA cap exhausted
+
+Plan QA Approved in round2. Final QA rounds1–3 ran; no Approved final receipt. Round1's inherited merge-repair approval defect was fixed and red/green verified. Round2 closed it but left whole-file coverage incomplete. Round3 found a pre-existing canonical directory-lock reader mismatch in the touched scan_clones file and escalated at the binding three-round cap. Root fixed that existing reader in6f081242c: read directory/pid, preserve legacy file and conservative malformed-lock handling. Manual old-reader RED/fixed live, stale, missing-pid and legacy controls pass; real checkout inspection returns ACTIVE_LOCKED for a known live directory lock. Receipts are committed under TESTS-RESULTS/2026-11-10+GH-1399/lock-reader. This last repair has not received independent QA.
+
+Remaining: complete the outstanding full-file review and independently review the lock-reader repair under an operator-extended review budget; then final qualifying gate, normal push, ready PR against development, hosted checks, and published-checkout retirement. No PR, push to canonical remote, merge, deployment, or full qualification is claimed. Task and helper clones are preserved because intended commits/evidence remain local-only. Three final QA rounds are consumed; do not reset the count or scaffold a replacement relay. Continue GH1399-FINAL-20261110 and the existing final transcript if authorized. The completed old todo watchdog remains canceled; no new watchdog was armed.
+
+Sanity assessment: the directory-lock mismatch is a real producer/reader contract defect in the touched cleanup code. Active clone preservation is relevant to authorized retirement, so the two-line reader fix is necessary and proportionate; no new guard framework or suite. Review coverage is an explicit skill requirement, not a newly observed runtime defect.
+
+Edit verdicts: accounting entry integration helped (unaccounted push refused and booked route admitted); archived binding helped (immutable same/transcript candidate accepted, unrelated changes refused); inherited parent approval fix helped (old driver control fails, fixed succeeds without changing parent count); lock reader helped (old reader misses the directory, fixed checkout preservation sees it); qualification fixture adjustments are confounded with dependency changes and are not independent proof of admission. NO_ENTRY for LESSONS-LEARNED: these task-specific repairs do not establish a distinct general lesson beyond the existing producer/consumer and meaningful-red-control guidance.
