@@ -64,7 +64,7 @@ Historical links replaced by compact issue references in AGENTS (preserved here)
 ## QA and gates
 
 Plan relay: Approved, reviewed `5b6db4820f275ba293dc245f4e2413a114ee5c8e`.
-Final omission review and deterministic documentation gate pending.
+Docs gate passed (exit 0, zero errors, 99 existing backlog warnings); final omission review pending.
 
 ## Edit verdicts and lesson admission
 

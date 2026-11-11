@@ -102,7 +102,7 @@ Trend unknown; this is one demonstrated oversized artifact, not proven increasin
 
 Plan QA Approved at `5b6db4820`; receipt: `relay-system/2026-11-11/gh1422-plan.codex.md`.
 Candidate 27,741 bytes; manual controls/link/chain smoke passed. Evidence:
-`TESTS-RESULTS/2026-11-11+GH-1422/SUMMARY.md`. Final QA and docs gate pending.
+`TESTS-RESULTS/2026-11-11+GH-1422/SUMMARY.md`. Docs gate passed (exit 0, zero errors, 99 backlog warnings); final QA pending.
 
 ## Lessons Learned (For Future Agents)
 
