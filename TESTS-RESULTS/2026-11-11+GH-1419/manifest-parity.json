@@ -1,0 +1,68 @@
+[
+  {
+    "actor": "claude-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "codex-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "agy-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "aider-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "pi-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "smallcode-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "commandcode-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "deepseek-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "kimi-reviewer",
+    "exit": 0,
+    "stderr": "",
+    "passed": true
+  },
+  {
+    "actor": "gemini",
+    "exit": 1,
+    "stderr": "marathon-yaml: phase p: marathon-drive: agent 'gemini' not recognized \u2014 must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi",
+    "passed": true
+  },
+  {
+    "actor": "unknown",
+    "exit": 1,
+    "stderr": "marathon-yaml: phase p: marathon-drive: agent 'unknown' not recognized \u2014 must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi",
+    "passed": true
+  }
+]

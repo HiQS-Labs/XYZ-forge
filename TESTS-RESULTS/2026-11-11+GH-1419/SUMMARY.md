@@ -1,0 +1,15 @@
+# GH1419 routing verification
+
+Plan QA Approved round 2. Source d7939db9.
+
+- Existing GH346 gateway suite: 62/62 after correcting macOS Bash empty-array handling; original 50 pass/12 fail retained. Two failures were obsolete grep controls against removed comments, replaced by actual route rejection.
+- Existing manifest suite: 14/14; unsupported-Claude fixture now uses a genuinely unsupported actor.
+- Existing GH280 Jog adapter suite: 227/227.
+- Manual controls: nine routes retained; distinct pairs, unknown/phantom/malformed/missing-binary/same-actor refusal; real dispatcher child identity and peer; real Claude/Codex Python shim identity reached before model execution; actual recovery-function controlled timeout/handoff stops after one retry. Controlled recovery is not a live provider timeout.
+- Baseline Claude admission refusal and scalar overwrite reproduced from committed pre-change source.
+- Disposable clone identity remained clean/non-bare/canonical origin/no local identity. No full qualification yet.
+- An initial manual invocation used task CWD; it exercised temporary-directory dispatch and mocked post-identity RTL boundary, no test suite or provider call. Repeated in disposable clone for retained result. Evidence-copy command initially used gate CWD and failed before writes; corrected to task CWD.
+
+Existing Marathon chain suite 35/35 passed in disposable clone. Actual manifest CLI accepted all nine supported reviewers and rejected phantom/unknown routes without provider binary requirements.
+
+Live Claude route reached the real isolated reviewer, which appended a source review. Provider exited 1 (error_max_budget_usd, $0.5283504 reported against existing $0.50 cap); containment also rejected author evidence/JSDoc edits made concurrently in task CWD. Harness exit 6, terminal approval correctly revoked. Own files restored byte-for-byte from its orphan backups; no peer files involved. This is route-execution evidence, NOT successful independent approval or an end-to-end relay success. No live retry or budget increase. Independent final Codex QA remains required. No overnight progression, provider quality grade, merge or deployment claim.

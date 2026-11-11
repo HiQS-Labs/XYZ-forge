@@ -302,6 +302,7 @@ done
 # ------------------------------------------------------------------------------------------------
 # #6 — the reviewer gate. Two independent copies; `gemini` was a phantom with no shim anywhere.
 # ------------------------------------------------------------------------------------------------
+export WORK
 for reader in bin/marathon-yaml src/marathon-yaml.js; do
   if node - "$ROOT/$reader" <<'JS'
 const reader = process.argv[2];
@@ -310,8 +311,11 @@ if (reader.endsWith('.js')) {
   catch (e) { process.exit(/not recognized/.test(e.message) ? 0 : 1); }
 }
 const {spawnSync} = require('child_process');
-const r = spawnSync('python3',[require('path').join(reader,'../../utils/py/marathon_drive.py'),'--validate-agent-routes','gemini'],{encoding:'utf8'});
-process.exit(r.status === 2 && /not recognized/.test(r.stderr) ? 0 : 1);
+const fs = require('fs');
+const file = require('path').join(process.env.WORK, 'phantom.yaml');
+fs.writeFileSync(file, 'name: phantom\nphases:\n  - id: p\n    reviewer: gemini\n');
+const r = spawnSync(reader,[file],{encoding:'utf8'});
+process.exit(r.status !== 0 && /not recognized/.test(r.stderr) ? 0 : 1);
 JS
   then pass "#6 $reader rejects phantom reviewer"; else fail "#6 $reader phantom rejection failed"; fi
 done

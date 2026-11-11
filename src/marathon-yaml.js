@@ -94,15 +94,6 @@ function parseMarathonYaml(text) {
   return out;
 }
 
-/**
- * Validates a parsed marathon plan and resolves `depends_on` into a
- * deterministic topological execution order (authoring order preserved among
- * equally-ready phases).
- * @param {{phases: Object[]}} plan - as returned by {@link parseMarathonYaml}
- * @returns {Object[]} phases in execution order
- * @throws {Error} on an empty plan, duplicate id, missing required field, bad
- *   `reviewer`, or an unknown/self/cyclic `depends_on`
- */
 function validateReviewer(reviewer, phaseId) {
   const { spawnSync } = require('child_process');
   const path = require('path');
@@ -115,6 +106,15 @@ function validateReviewer(reviewer, phaseId) {
   }
 }
 
+/**
+ * Validates a parsed marathon plan and resolves `depends_on` into a
+ * deterministic topological execution order (authoring order preserved among
+ * equally-ready phases).
+ * @param {{phases: Object[]}} plan - as returned by {@link parseMarathonYaml}
+ * @returns {Object[]} phases in execution order
+ * @throws {Error} on an empty plan, duplicate id, missing required field, bad
+ *   `reviewer`, or an unknown/self/cyclic `depends_on`
+ */
 function resolveOrder(plan) {
   const phases = plan.phases || [];
   if (phases.length === 0) throw new Error('no phases defined');
