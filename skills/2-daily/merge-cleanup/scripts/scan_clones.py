@@ -209,9 +209,9 @@ def inspect_driver_lock(repo_path: Path) -> Dict[str, Any]:
             lock_candidates.append(common_dir / "relay-driver.lock")
 
     for lock in lock_candidates:
-        if lock.is_file():
+        if lock.is_file() or lock.is_dir():
             try:
-                content = lock.read_text().strip()
+                content = (lock / "pid" if lock.is_dir() else lock).read_text().strip()
                 pid = None
                 for line in content.splitlines():
                     if line.startswith("pid="):
