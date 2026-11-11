@@ -116,3 +116,6 @@ Administrative branch identity is explicitly main/development/master, rather tha
 Historical quality receipt reads remain read-only facts; fresh qualification and pre-push admission run before receipt reuse. Managed review binds its protected attestation path and reviewed candidate into the same canonical reservation row before immutable archival. Counted nested builders cannot reuse reviewed reservations; gate-only recovery uses that attested proof. Exact completed phase candidates may qualify after later phases advance the live HEAD, through the existing protected phase-completion predicate. No additional budget ledger or gate runner is introduced.
 
 Upstream integration used the canonical ledger resolver; accepted-start and ratings were replayed on reminted issue row rmi-01M74P46VSM66QZET13SBH36SS. Earlier row identity is retained above as history.
+
+
+Final QA round1 identified a real nested merge-repair approval writer mismatch. Fixed by retaining parent ownership for inherited manual/merge contexts; red/green driver controls retained under implementation/final-controls. Final QA round2 pending. Administrative normal push passed74s; separate-clone completed proof accepted. No new test suite or registry added.

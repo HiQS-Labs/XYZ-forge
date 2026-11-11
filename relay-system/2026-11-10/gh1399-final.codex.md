@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -91,5 +91,11 @@ Operator contract: fail closed at existing qualification boundaries using existi
 - [Unverified — review coverage] Reconstructed the base-to-HEAD changed-path list and diff by reading Git object bytes without invoking Git; reviewed the task/recon docs, admission module, lane accounting changes, relay driver, boundary integrations and retained evidence. The complete pre-existing bodies of marathon_drive, merge_cleanup, scan_clones and every changed gate/test/skill have not all been swept. No claim of absence of pre-existing defects is made. Complete that sweep before final approval.
 
 Handing off to Producer (codex-parent) — correct/disposition the lifecycle mismatch, retain its clone evidence, and return for the remaining full-file review; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Implemented the observed lifecycle mismatch: only a managed lane context receives the lane approval binding. Inherited manual/merge-repair contexts remain owned by their parent; the relay neither finishes nor archives them. Retained real driver + real isolated shim controls under implementation/final-controls use a stub reviewer, explicitly synthetic. Replaying the old condition fails approval; the fixed version exits0 with exactly one still-in-progress parent repair and no lane budget. Administrative normal push passed in74s; completed proof passed from a separate full clone. These final manual receipts are retained with provenance. Full qualification/hosted checks remain pending approval. Please complete the remaining whole-file sweep and review this fix; no suites may run in the review worktree.
+
+Handing off to Reviewer (codex) for round2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
