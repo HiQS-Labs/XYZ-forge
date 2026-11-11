@@ -107,3 +107,5 @@ unrelated fixture children, and explicitly restore it only to their own receipt 
 Gate-env still passes the proof into the qualifying process. This prevents the parent record
 from contaminating fixture controls. Source instruction changes stay in this repository PR;
 no managed skill payload, app link or installation was changed.
+
+Administrative branch identity is explicitly main/development/master, rather than treating every unrecognized name as administrative. Other branch names and task destinations require accounting even when pushed with local ref HEAD. The tier classifier remains unchanged. Completed manual receipts resolve their original id from preserved archives even after a new budget reuses the live filename; completed exact-revision proof does not require a retired source checkout.

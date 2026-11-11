@@ -70,7 +70,12 @@ def _resolve_lane_context(context):
             context = dict(context, archived=True)
         else:
             raise ValueError("reservation is outside the canonical attempt areas")
-        return context, lane_attempt_row(context)
+        try:
+            return context, lane_attempt_row(context)
+        except ValueError:
+            if context["archived"]:
+                raise
+            # A new budget may now occupy the old live filename; recover only the old id.
     original = Path(context.get("record", ""))
     if not original.is_absolute() or original.parent.name != "attempts":
         raise ValueError("attempt record is missing")
@@ -340,6 +345,11 @@ def main():
             context = json.loads(os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
             if context.get("kind") != "manual":
                 raise ValueError("attempt-finish requires the manual reservation context")
+            attempt_admission(repo_root, context_override=context)
+            context, current = _resolve_lane_context(context)
+            if current.get("state") == "completed" and args.outcome == "completed":
+                print(json.dumps({"id": current["id"], "state": "completed", "context": context}))
+                return
             row = lane_attempt_finish(context, args.outcome, attempt_git(repo_root, "rev-parse", "HEAD"))
             if args.outcome == "completed":
                 archive_lane_attempts(context["record"])

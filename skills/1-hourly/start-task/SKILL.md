@@ -235,7 +235,9 @@ Then begin work.
    exhausted accounting is a refusal, never permission to rename the task or reset history.
    After all intended publication checkpoints, finish a standalone manual reservation with
    `gate_receipt.py attempt-finish --repo TASK --outcome completed`; a stopped failed episode
-   uses `--outcome failed` and retains its consumed count. Standard harnesses own their own
+   uses `--outcome failed` and retains its consumed count. Clear only the completed owned
+   `XYZ_ATTEMPT_CONTEXT` from the caller environment before unrelated administrative work.
+   Standard harnesses own their own
    reservation/completion lifecycle; do not manually finish a parent's record. Read-only
    recon and reviewer-only turns do not book build attempts. This is Forge-specific; do not
    install accounting infrastructure into another repository.
