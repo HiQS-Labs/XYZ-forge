@@ -896,6 +896,11 @@ def _probe_agent_bin(agent_id, role_label):
         # Faithful: commandcode-turn.py:26 resolves COMMANDCODE_BIN or "cmd" and execs it directly.
         _probe_bin(get_env("COMMANDCODE_BIN", "cmd"), role_label, agent_id)
     elif agent_id.startswith("smallcode"):
+        # The SmallCode shim explicitly disables worktree isolation. Do not admit
+        # a reviewer whose receipt would claim an isolation boundary it did not use.
+        if role_label == "reviewer" and get_env("RELAY_WORKTREE_ISOLATION", "1") != "0":
+            _RESULT["reason"] = "reviewer-isolation-unsupported"
+            die("SmallCode reviewers do not support worktree isolation; select a reviewer with isolation support")
         _probe_bin_or_file(
             [get_env("SMALLCODE_BIN"), SMALLCODE_DEFAULT_BIN],
             role_label, agent_id, "SMALLCODE_BIN",
