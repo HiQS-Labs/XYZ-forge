@@ -212,4 +212,12 @@ No policy redesign, configuration override, nested instruction subsystem, runtim
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-11T22:08:21Z
+task: RELAY-gh1422-plan
+reviewer: codex
+status: Approved
+reviewed-head: 5b6db4820f275ba293dc245f4e2413a114ee5c8e
+added-range: 12204+4246
+added-sha256: 4c96c483ee84f3caa4646f8343860be11452cb48ce4b81d70ce941d475bc0e00
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
