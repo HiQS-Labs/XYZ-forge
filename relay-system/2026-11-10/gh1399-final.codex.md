@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -118,5 +118,46 @@ Handing off to Producer (codex-parent) — retain the round-one fix and evidence
 Round2 reports no new code defect and closes the sole observed finding. No production changes since that review. Complete the outstanding review now, focusing on the files you explicitly have not swept: utils/py/marathon_drive.py; skills/2-daily/merge-cleanup/scripts/merge_cleanup.py and scan_clones.py; githooks/install.sh; validate.sh; ci-local.sh; utils/gate-record.sh; utils/py/gate_env.py; changed fixture setup in test/gh544-pre-push-gate.sh, test/gh35-test-tiers.sh, test/synthetic/gh124-closeout-suite.sh; source start-task/workhorse skill edits. Read their full bodies in bounded chunks, review integration seams against the already-inspected predicate, and finish the remaining coverage before returning. Read-only git diff/show/status and ordinary read tools are authorized; there is no prohibition on Git inspection. Do not execute mutation-heavy suites in a linked worktree. Do not spend this turn re-reading already-completed admission/rtl coverage while leaving the outstanding files unread. No new speculative controls, suites or frameworks are requested. If there is a concrete defect, report it with its failing input. Otherwise finish the sweep and issue the truthful verdict. This is the third/final review round, not a new review or a reset.
 
 Handing off to Reviewer (codex) to complete the remaining whole-file sweep and final verdict.
+
+### Reviewer · Round 3
+
+VERDICT: FAIL
+Basis: The remaining scan_clones sweep exposed a concrete pre-existing lock-reader mismatch in a touched runtime file. The mandatory whole-file contract includes that defect. This is not a claim that GH-1399 introduced it, or that teardown was observed. The maximum round has been reached, so escalation is explicit.
+swept file: no
+
+Operator contract: fail closed at qualification entry using existing accounting; preserve consumed rounds and administrative behavior; introduce no new suites/framework. Explicit bypass and deliberate local-file tampering remain outside the boundary. One reservation covers one caller-owned repair episode.
+
+- [Should] **Recognize the canonical driver lock directory before considering cleanup safe.** `skills/2-daily/merge-cleanup/scripts/scan_clones.py:211-236` only considers `lock.is_file()`. The actual writer uses `os.mkdir(lock_dir)` and writes its PID into `lock_dir/pid` (`utils/py/marathon_drive.py:1355`, `:1387`). Consequently the reader returns `locked=False` for the writer's normal lock shape. `inspect_checkout` relies on `driver_lock.locked` and `alive` for its early `ACTIVE_LOCKED` preservation branch (`scan_clones.py:1126`). Tick claims and open handles are additional checks; this finding does not assert that they were bypassed or that a checkout was removed.
+  Observed input: existing `/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10/.git/relay-driver.lock` is a directory, with readable `pid` containing `17464`; `inspect_driver_lock` on that full-clone path returned `{'locked': False}`. No synthetic lock or repository state was created.
+  Affected scope: cleanup inspection of ordinary full clones containing the canonical directory-form driver lock (and the same resolved lock shape for linked worktrees). Preserve support for the legacy file form. This is a pre-existing defect in a changed file, not a new accounting requirement.
+  Falsifier: in a disposable full clone with a canonical directory-form lock owned by a known live process, the existing reader must return `locked=True`, identify that PID, and the checkout inspection must preserve it as active. A stale directory lock must retain the existing stale/idle semantics; a legacy file-form lock must remain readable. If the current reader already recognizes that directory input, this finding is wrong.
+  Probe command (exit **0**; no Git subprocess):
+  ```python
+  import sys, os
+  from pathlib import Path
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  from scan_clones import inspect_driver_lock
+  p = Path('/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10')
+  f = p / '.git/relay-driver.lock'
+  print('lock is directory:', f.is_dir())
+  if f.is_dir():
+      pid = (f / 'pid').read_text().strip()
+      print('pid:', pid)
+      try:
+          os.kill(int(pid), 0)
+          print('pid alive: yes')
+      except OSError as e:
+          print('pid check:', type(e).__name__)
+  print('reader:', inspect_driver_lock(p))
+  ```
+  Executed via `PYTHONDONTWRITEBYTECODE=1 python3 -`; decisive output: **`lock is directory: True`**, **`pid: 17464`**, **`pid check: PermissionError`**, **`reader: {'locked': False}`**. A separate `ps -p 17464 -o pid=,comm=` was refused by the sandbox (`operation not permitted`); PID liveness and end-to-end teardown remain **[Unverified — needs clone run]**. The directory-shape rejection itself is directly observed and independent of liveness.
+  Root cause: cleanup's reader assumes a regular-file lock while the canonical driver writes a directory; Fix site: existing `inspect_driver_lock`; Why not upstream/downstream: the driver lock format is already established, and the reader must understand its existing producer rather than add another safety framework. Read the directory's `pid` using the existing reader's conservative error handling, keeping the legacy file branch. Verify through retained manual clone controls or existing coverage, with no new suite.
+
+- [Pass] The inherited approval correction remains lane-specific: `utils/py/relay_drive.py:767` requires `kind == "lane"` before `lane_attempt_finish` at `:776`. No additional production change was reported since round2; the prior red/green retained controls remain the evidence for this fix.
+- [Pass] Source inspection of the merge-repair publication seam found explicit canonical context propagation: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:668` supplies `kind=merge-repair` and the coordinator's `attempt_record.record_path` to the push environment; `scan_clones.py:137-142` forwards the supplied environment into its bounded subprocess. These are source claims, not rerun publication controls.
+- [Unverified — review coverage] This turn read the remaining scan_clones body, the installer, ci-local, gate-record and gate-env bodies, and substantial bounded portions of marathon_drive and merge_cleanup including accounting/qualification seams. Some large command outputs were truncated; complete coverage of those two large drivers, validate's full body, all changed fixture bodies and both source skills is still not established. Therefore no absence-of-pre-existing-defects claim or full-file approval is made. The lock mismatch above is a concrete finding, not a substitute claim of completed coverage.
+- [Unverified — needs clone run] Final full pre-push and hosted qualification remain outstanding as Setup permits. No Git command, validate/test/pytest invocation, executable fixture, source edit, or artifact edit was performed. Only this relay file is changed.
+
+Handing off to Producer (codex-parent) — disposition the observed directory-lock reader defect and arrange completion of the remaining coverage under the escalation; go to the Producer window and say 'take your turn'. This relay is Escalated, not Approved; do not treat this receipt as permission to publish a ready PR.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
