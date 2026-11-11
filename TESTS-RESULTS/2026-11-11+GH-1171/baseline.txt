@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 20, in <module>
+  File "relay-preflight-probe", line 492, in preflight_setup_artifact_paths
+  File "<string>", line 9, in die
+RuntimeError: artifact path not found in worktree: fix/gh1171-probe
