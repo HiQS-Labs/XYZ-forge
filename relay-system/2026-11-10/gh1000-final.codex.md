@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -85,5 +85,29 @@ Flag anything wrong, missing, overclaimed or over/under-engineered with file:lin
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The documentation slice is proportionate and the retained GH-1254 conclusions are mostly supported. Correct the completeness claim in the manual receipt and the Paperclip inheritance claim before publication. These need bounded documentation/manual-check corrections, not new tests or runtime work.
+swept file: yes
+
+- [Should] **R1 — “Every cell resolved” counts only three cells.** `TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt:130` increments completeness from transcript, gate and attestation only; invocation is printed but never participates, and attestation at lines 120–122 checks existence without reading its candidate binding. This does not implement plan step 2's seven-cell/bound-review condition. The current zero-complete conclusion is conservative for this corpus, but the receipt's advertised completeness criterion remains false. Correct the recorded manual procedure/tally (or explicitly restrict its claim to the three cells it actually checks), and preserve the historical first-run output unchanged. Do not turn this receipt into a maintained tool or suite.
+  Observed input: `walk-gh1254-first-run-red.txt` reports the approved attempt's invocation MISSING yet ends “1 with every cell resolved.” The corrected command retains the same `complete += len(cells) == 3` predicate. The actual approved input still has invocation MISSING (`walk-gh1254.txt`, section `gh1254-exec2-gateretry2`). Inspection command: `nl -ba TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt | tail -12`, exit 0, decisive output `130 complete += len(cells) == 3`.
+  Affected scope: Only this recorded manual walk's completeness and attestation-resolution assertions, including its use as follow-on B acceptance evidence; no production gate change requested.
+  Falsifier: A record with transcript, gate and a candidate-bound attestation but no invocation must remain incomplete; a repo-relative existing attestation for a different reviewed head must remain unresolved. GH-1064 must remain UNKNOWN and the current GH-1254 corpus must remain PARTIAL. This can be a recorded manual check under the existing receipt convention.
+
+- [Should] **R2 — Frozen Paperclip does not automatically inherit the evidence display.** The working doc's Phase 1 row 7 says it “costs nothing to keep and cannot drift,” and line 372 says “It inherits whatever Flightdeck gains.” Paperclip shares the snapshot and status helper, but has an independent renderer (`addons/paperclip-dashboard/app.js:86–98`) which selects a fixed set of fields and renders no attempt/evidence links. Draft C changes Flightdeck's view only. Qualify the recommendation: keeping Paperclip frozen preserves its present display; it may receive new snapshot fields without displaying them. No Paperclip implementation is required in this slice.
+  Observed input: Paperclip `renderDetail` selects Observation, Progress, Data and Coverage at `app.js:92`, then builds its own handoff at `:97`; its live reader fetches `/flightdeck.json` at `:106`. Read-only Python inspection of the two app sources exited 0 and printed `addons/paperclip-dashboard/app.js own renderDetail True imports other app False`.
+  Affected scope: Inventory row 7, the Phase 3 optional-skin recommendation and any implication that draft C updates both interfaces automatically.
+  Falsifier: A shared evidence-detail renderer used by both apps, or code generically rendering new attempt/link fields, would justify automatic inheritance. The current fixed-field renderer does neither.
+
+- [Nit] **R3 — Narrow the changelog's shared-reader statement.** `CHANGELOG.md:5` says the three systems “already share one reader,” while the working doc's Phase 1 separates the Forge ledger/views from Rebalance history and its Phase 0 explicitly excludes the raw board connector and release cards from `load_work_evidence`. Say the Forge work projections share the reader and Rebalance consumes ledger/history separately; the present sentence overstates consolidation.
+
+- [Pass] **The retained reconstruction exposes the important gaps.** `walk-gh1254.txt` records six attempts, ten work events carrying zero execution IDs, two unjoined transcripts, a same-SHA red/green conflict, and missing approved attestation; `walk-gh1064-control.txt` ends “UNKNOWN - zero attempts discovered.” Independent JSON-only probe (`python3`, `json.loads` of the approved bundle's result and gate receipt, print identities/SHA/exit and whether any filename contains `attest`) exited 0: `gh1254-exec2-gateretry2 approved`, both SHAs `fc7896aae3349e89d0e929aa1ca299f2fa678f2d`, gate exit `0`, `attestation bundled False`. The first-run red witness is honestly described as an erroneous cell resolution, not a successful full reconstruction. The prose should continue treating the unjoined retries as guesses.
+- [Pass] **Reuse and scope are sound apart from R2–R3.** Board refusal is explicit at `utils/py/work_connectors/github_board.py:126–133`; End of Week prescribes the raw connector at `skills/3-weekly/end-of-week/SKILL.md:210`; `web/flightdeck/issue-context.mjs:23–40` handles unavailable, stale and conflicting evidence; `src/flightdeck/aggregate.py:40–43` always returns `needs-qa`. These support the inventory spot checks and the Flightdeck recommendation without establishing a uniquely mandatory interface. Draft A acknowledges the approved-only publication boundary implemented at `utils/py/jog_run.py:1083–1084`; draft C explicitly covers repeat loads, conflict/staleness and telemetry failure. The acceptance map at working-doc lines 464–473 leaves implementation and interface demonstration owed. The SQL row `rmi-01M74K4FNE7GBY2S1W3F24NF5K` stores `45/35/50/55`, consistent with the bounded documentation effort. No additional pre-existing defect found in the task document/receipt sweep; runtime sources were spot-checked, not exhaustively audited.
+- [Unverified — needs clone run] No validate/test/pytest or executable fixtures ran. No git commands, including the walk's internal git calls, were run in this turn. Full branch changed-file containment, committed provenance, deterministic PDDA/RELEASES gates and final committed-state verification remain the harness's responsibility. Sibling-repo merge/live-state claims were not independently refreshed; local shipped paths and the supplied approved-plan record were examined. `walk.py.txt` is an unregistered manual-check receipt in this review, not new production test/gate machinery.
+
+Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'; address R1–R2 and disposition R3, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
