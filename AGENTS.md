@@ -75,7 +75,7 @@ After development merges, merge-cleanup runs `python3 utils/py/wave_reconcile.py
 locally for docs, ledger and LEADERBOARD views. Task branches do not commit routine views.
 It refuses while a hosted reconciler runs unless `--force-local-reconcile` is passed.
 Hosted `wave-reconcile.yml` is dispatch-only, before promotion; see **Promotion**.
-Use `pdda.sh issue-doc-sync` to detect drift.
+Use `utils/pdda/pdda.sh issue-doc-sync` to detect drift.
 
 Read SOP's **Opinionated SOPs** for binding maintainer branch/isolation defaults (optional
 for downstream users). It pre-authorizes one `feat/`, `fix/`, `chore/` or `docs/` branch per
@@ -179,9 +179,8 @@ local change.
   a clean run teaching nothing is weaker evidence than one exposing a defect.
 - **The RELEASES DB has two subsystems behind one CLI:** release planning and the roadmap
   (`roadmap_items`), both owned by `utils/py/releases_app.py`. This is the Product Release System
-  ([PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)). Create roadmap rows at work
-  pickup/selection via the CLI; read with `roadmap list`. `ROADMAP.md` is retired; `roadmap sync`
-  is for legacy repos and no-ops here, since mirroring Markdown could delete parked rows.
+  ([PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)). Read `ROUTER.md` and
+  `PROJECT/PDDA.md` for roadmap operations and contracts.
   Never hand-edit `releases.db` or `releases.sql`. Before changing or merging them, read
   [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md); resolve dump conflicts through
   `utils/releases-merge-resolve.sh`.

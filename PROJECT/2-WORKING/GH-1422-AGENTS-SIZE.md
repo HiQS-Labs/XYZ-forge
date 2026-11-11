@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Applied agreed consult corrections; 27,812 bytes; fresh manual checks pass | Publish correction through docs gate; await merge |
+| Applied consult and CodeRabbit corrections; 27,686 bytes; fresh manual checks pass | Publish through docs gate; await merge |
 
 ## Requirements and observed baseline
 
@@ -85,7 +85,7 @@ Non-goals: policy changes, harness/runtime edits, new tests/gates, config change
 - [x] Before/after counts and a section/requirement destination mapping are retained.
 - [x] Critical safety, authority, routing and existing operative semantics are preserved.
 - [x] Links resolve; applicable instruction-chain totals are measured and limitations stated.
-- [x] Existing docs gate and independent plan/final QA pass; no new tests or gate machinery.
+- [x] Independent plan QA passed at `5b6db4820`; final QA passed at `d53a88d60` (27,756 bytes). Later consult and review corrections are author-checked only; docs gate results are in the receipts. No new tests or gate machinery.
 
 ## PRS rationale (2026-11-11)
 

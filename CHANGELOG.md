@@ -2,6 +2,12 @@
 
 ## 2026-11-11
 
+- GH-1422 review follow-up: fixed the drift-check path, delegated duplicate roadmap prose
+  to mandatory canonical reads, and scoped QA claims to reviewed revisions. AGENTS.md is
+  27,686 bytes; fresh byte/link/chain checks pass.
+
+## 2026-11-11
+
 - GH-1422 consult follow-up: restored the necessity trigger and explicit idle reporting,
   clarified clone identity sequencing, and corrected the telemetry example. AGENTS.md is
   27,812 bytes; fresh byte/link/chain checks pass. Dispositions and provenance are retained

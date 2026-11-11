@@ -25,7 +25,7 @@ nested-directory discovery has no additional tracked instructions and stays unde
 
 ## Original-to-current requirement map
 
-All operative rules remain in AGENTS.md. No new destination document or nested instructions
+Operative rules remain in AGENTS.md or its mandatory canonical reads. No new destination document or nested instructions
 were created. This table maps compressed groups; unmodified groups are enumerated afterward.
 The existing canonical documents provide detailed rationale, not automatic instruction loading.
 
@@ -35,7 +35,7 @@ The existing canonical documents provide detailed rationale, not automatic instr
 | Operating principle 6 | Same heading: same-PR committed provenance; red controls; no new suites; reject empty evidence; flaky-suite tier behavior; network permission per use; two-attempt blocker trigger; scoped proportionate rigor |
 | No new tests | Same rail: no suite/registry/gate/guard/lane/runner/telemetry stage or meta-test; truthful existing-suite changes only; manual receipts; superseded #815/#816/#817/#819 |
 | Marathon work selection | “Prove the harness”: one named active marathon; comparable-value selection rationale; real needed work only; no synthetic load; honest idle and failure reporting |
-| RELEASES DB | Same rail: two subsystems/one CLI; pickup rows; legacy sync no-op; no hand edits; required FAQ and conflict resolver |
+| RELEASES DB | Same rail: two subsystems/one CLI, no hand edits, required FAQ and conflict resolver; pickup rows and legacy sync no-op remain in mandatory ROUTER.md / PROJECT/PDDA.md |
 | Local gate / hosted CI | Same rail: per-clone hooks across branches/worktrees; commit versus push boundary; parallel sizing; sequential qualifying ci-local; local reconciliation and pre-promotion full run; bypass disclosure/limited draft authority; actual SHA evidence |
 | Undo experiments | “Never restore committed tree state”: protect peers, copy before experimenting, recovery snapshot is not authorization |
 | Scratch | Same rail: temp/outside repo only; deliberate promotion; root-scratch accidental publication risk |
@@ -77,3 +77,18 @@ lesson beyond the documented instruction budget.
 
 Current count: 27,812 bytes, 4,956 bytes headroom. See [consult-corrections.md](consult-corrections.md)
 for accepted/rejected findings and fresh exact-content verification; prior counts above are historical.
+
+## CodeRabbit follow-up
+
+Current AGENTS.md: 27,686 bytes; 5,082 bytes headroom. All eight local links/anchors and
+default tracked instruction discovery pass; oversized-base and empty controls fail as expected.
+Corrected the drift-check executable path. Replaced duplicate roadmap operations with mandatory
+ROUTER / PDDA owner pointers (ROUTER lines 43, 193–207 retain pickup, commands, retirement
+and sync no-op behavior). Scoped the QA checkbox to reviewed revisions; these small
+follow-ups are author-checked. Branch-policy hunks preserve the original SOP §4 carve-out,
+interactive request requirement, and development target; no new branch authorization was added.
+Historical measurements and reviews above remain unchanged.
+
+Docs gate: zero errors, 99 preexisting backlog warnings (review-docs-gate.txt).
+Machine-path checker named by the PR template is absent; direct added-line scan found
+zero new absolute user-home paths. Existing historical paths elsewhere were not changed.
