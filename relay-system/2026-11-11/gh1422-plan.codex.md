@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -187,5 +187,29 @@ Pending evidence; do not infer reliability from byte count alone.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approve the embedded plan for implementation, not the eventual rewrite or publication. The five Acceptance bullets are the review criteria because Setup's Definition of Done is still a placeholder. No material plan defect or pre-existing defect was found in the whole embedded artifact.
+swept file: yes
+
+**What this proposes**
+Compress the root AGENTS.md in place to <=28,000 UTF-8 bytes while preserving operative policy, exceptions, commands and meaningful anchors. Retain a requirement/destination map and perform independent final omission QA before publication.
+
+**How the existing system works, per this document**
+Codex discovers project instructions under a combined default 32,768-byte budget; the root file currently exceeds it. AGENTS routes agents through ROUTER to canonical SOP, PDDA and safety documents; links require explicit reading rather than automatic loading. Input boundary: the embedded planning artifact and current local policy sources, not an implemented rewrite.
+
+**What it is not**
+No policy redesign, configuration override, nested instruction subsystem, runtime edit, new suite or gate machinery, merge or deployment. Inference: publication in step 5 means a PR targeting development, consistent with SOP §4; it does not grant merge authority.
+
+- [Pass] Baseline and central premise are supported. Probe `wc -c AGENTS.md` exited 0 with `42768 AGENTS.md`. Official documentation at https://learn.chatgpt.com/docs/agent-configuration/agents-md states that files stop being added at the combined `project_doc_max_bytes` limit, default 32 KiB. The plan's “Splitting into nested AGENTS still shares the same cumulative budget” therefore addresses the actual constraint. Retain this source and before/after measurements in the implementation receipt.
+- [Pass] Preservation has an explicit falsifier beyond byte count: step 5 requires identifying “every original operative requirement without an equivalent retained requirement or reachable mandatory canonical instruction” and resolving material losses. Step 1 supplies the original-section mapping; step 3 says “Do not claim links auto-load their targets.” Together these address authority, exceptions, routing and late-file rails without silently delegating unique requirements to optional reading. Apply those checks to every original rail during final QA.
+- [Pass] Verification is proportionate and bounded: step 2 requires `0 < size <= 28000 < 32768`, red controls for the oversized base and empty input, hashes and provenance; step 4 prohibits new machinery and places mutation-heavy suites in a disposable full clone with identity checks. This matches AGENTS.md §6, its “No new tests” rail, WORKTREE-SAFETY.md §12 and TESTS-RESULTS/README.md's retained-evidence purpose. Execute the planned checks against the final candidate; no implementation verification is claimed here.
+- [Unverified — no citation] Scope and rollback are explicit: “Reversibility: Easy — revert the documentation commit; no runtime/state migration” and “Non-goals: policy changes, harness/runtime edits, new tests/gates, config changes, merge or deploy.” This follows GUIDING-PRINCIPLES.md “The North Star” and SOP.md §4's task-branch/PR-to-development workflow. Keep the rewrite confined to compression and necessary task evidence.
+- [Unverified — no citation] Rating rationale distinguishes severity from demonstrated harm and avoids a fabricated trend: “no attributed data-loss incident” and “Trend unknown.” The numeric rating is presented as a prioritization judgment, not empirical impact. No rating change is requested.
+- [Unverified — needs clone run] Existing gate results, changed-link validity, final byte size, full instruction-chain totals and omission equivalence remain pending as the plan explicitly states. No suites, executable fixtures or git commands were run in this reviewer turn. The public issue fetch failed with “Cache miss”; issue state, prior-art search and persisted rating read-back were not independently verified, so this approval does not attest those historical claims.  [Unverified — no citation]
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
