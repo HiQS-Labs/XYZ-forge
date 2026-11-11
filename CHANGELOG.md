@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-10 — GH-1414 paraphrase-first skill review
+
+Added document-only paraphrase and grounded scope boundaries to existing start-task
+plan QA, and an author comprehension check to file-xyz-bug’s redacted capture preview.
+No extra approval checkpoint or automatic execution handoff. Independent wording QA
+approved; start-task skill validation passed; file-xyz-bug retains a reproduced
+pre-existing description-validator failure. Full gate and deployment are outstanding.
+Evidence: `TESTS-RESULTS/2026-11-10+GH-1414/`.
+
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 
 Extended the existing flywheel routing skill with one approved pinned-batch handoff,

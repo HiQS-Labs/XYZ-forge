@@ -84,6 +84,20 @@ you are standing in.
    `gh issue create` title + body, the full capture doc (with a `GH-<new>` placeholder), and the
    ROADMAP line. Say plainly which repo each lands in. This single preview **is** the human
    checkpoint — nothing is filed or written before the operator confirms once.
+   - **Comprehension lens (GH-1414):** Before presenting that same preview, read
+     the redacted capture as a new triager would. Include a brief **What this
+     proposes** (the reported failure and observable repair outcome), **How the
+     existing system works, per this capture**, and **What it's not** where a
+     consequential expectation could be mistaken. Cite the capture's evidence or
+     sections for boundaries; separate explicit exclusions from inference, deferred
+     work, unresolved choices and later authorization. Unknown behavior stays
+     unknown: do not invent a repro, root cause, non-goal or fix design. If an
+     expectation remains unclear, expose it in this preview using the existing
+     question budget. This is an author comprehension check, not independent QA;
+     it adds no reviewer, approval checkpoint, or permission to diagnose or fix.
+     Keep the useful clarification in the issue and capture so `/start-task` can
+     read it at pickup. Handoff to `/start-task` for its independent plan review
+     only when the operator asks to execute the bug; do not invoke it while filing.
    - **Task 12: structured issue body format.** The created issue body must render `/idea`'s standard sections:
      `## Observed` (measured table with claim, command, observed), `## Acceptance` (`- [ ]` items),
      `## Preflight Contract` (JSON block with target, gate, fix_probes, artifacts), and `## PRS proposal`

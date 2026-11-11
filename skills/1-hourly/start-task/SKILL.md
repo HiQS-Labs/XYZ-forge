@@ -193,8 +193,26 @@ Then begin work.
 6. **QA the plan before implementation.** For every non-simple change, load
    `relay-xyz` and use its locator, prerequisite checks, thread protocol and
    shipped harness to run a **Codex** plan review unless the user names another
-   reviewer. Commit review inputs so isolated reviewers can see them. Ask specific
-   questions: Are claims grounded in the actual paths? Is any requirement missing?
+   reviewer. Commit review inputs so isolated reviewers can see them.
+   **Paraphrase-first comprehension (GH-1414):** At the start of the existing
+   independent plan-review turn, give the reviewer the plan without author
+   conversation history. Before reading supplementary requirements or source
+   files, have it write 2–5 sentences each under **What this proposes** and
+   **How the existing system works, per this document**, plus a short
+   **What it's not** where a consequential expectation could be mistaken.
+   Ground exclusions in the plan's sections; distinguish excluded work, deferred
+   work, unresolved choices and later authorization. Label inference and missing
+   boundaries instead of inventing non-goals or narrowing acceptance criteria.
+   Record the initial paraphrase and its input boundary in the existing relay
+   receipt, then supply the requirements, source paths and recorded decisions for
+   technical validation. Label the latter assessment as source-backed. A mismatch
+   is a signal to investigate: adjudicate missing explanation versus reviewer error
+   with evidence. This uses the existing reviewer and round budget; it adds no
+   reviewer turn, approval authority or gate. Preserve original finding scope and
+   severity alongside dispositions; reopen a purported fix if it recurs, while
+   accepted risks or rejected findings stay settled absent materially new evidence.
+   Never describe a same-context author read-through as independent review.
+   Ask specific questions: Are claims grounded in the actual paths? Is any requirement missing?
    Does the plan extend the existing subsystem and writer? Are blast radius,
    dependency ordering, rollback, and falsifiable checks sufficient? Are per-task
    ratings grounded, recurrence claims supported, appeal neutral unless the user
