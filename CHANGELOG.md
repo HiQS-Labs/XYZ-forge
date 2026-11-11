@@ -9,7 +9,10 @@ post-approve. Manual skill workflows use the same writer and a maintained accoun
 Administrative routing and documented bypasses retain their existing scope. This is a Costly
 control change: rollback must revert admission and producer integrations together while
 preserving attempt/history bytes. It prevents missing accounting, not inference of logical
-repair rounds or hostile local state changes. Verification and final review remain pending.
+repair rounds or hostile local state changes. Focused/manual controls passed; final Codex
+review Approved in round5. Normal publication qualification and hosted smoke remain pending.
+The review also corrected existing parent-approval ownership, directory-lock inspection and
+run-log comment identity defects in the touched integrations.
 
 
 ## 2026-11-10 — GH-1414 paraphrase-first skill review

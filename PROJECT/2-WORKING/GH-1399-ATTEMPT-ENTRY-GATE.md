@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1399
 title: Attempt accounting at qualification entry
 status: Active
 created: 2026-11-10
-updated: 2026-11-10
+updated: 2026-11-11
 owner: Codex
 goal: Refuse unaccounted task qualification through existing gate boundaries while preserving legitimate harness and administrative flows
 ---
@@ -13,7 +13,7 @@ goal: Refuse unaccounted task qualification through existing gate boundaries whi
 
 | What was just completed | What's next |
 |---|---|
-| Implementation and discriminating manual controls committed; final QA exhausted3 rounds and lock-reader finding repaired | Operator-extended independent review, final qualification and ready PR remain pending |
+| Final Codex QA Approved in round5 of6; findings repaired and controls committed | Normal qualifying push, ready PR, hosted smoke and scoped retirement |
 
 ## Request and scope
 
@@ -138,3 +138,8 @@ Operator authorized three additional final QA rounds, extending total budget fro
 
 
 Round4 completed whole-file coverage and approved the directory-lock fix, then found the pre-existing run-log substring identity bug. Fixed by exact first-line matching; retained old/fixed manual controls and existing gh322 suite29/0 (only three genuine fixture strings adjusted). Round5 final QA pending; prior consumed rounds retained.
+
+
+## Final independent review
+
+Final Codex QA Approved in round5 of6 at reviewed head41929b4fd2fdec049926173d43b91b4cfd71347c. Whole-file sweep completed in round4 and new gh322 fixture body read in round5; all concrete findings closed. Mechanical attestation and provenance are in TESTS-RESULTS/2026-11-10+GH-1399/final-review. Remaining publication checkpoint changes only documentation/receipts/transcript; reviewed runtime is unchanged. Final qualifying push and hosted smoke remain pending.
