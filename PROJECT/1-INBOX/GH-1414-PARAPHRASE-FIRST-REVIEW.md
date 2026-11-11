@@ -84,3 +84,7 @@ A separate fresh-context reviewer paraphrased the issue draft and found no conse
 Exact input and receipt: `relay-system/2026-11-10/egm-paraphrase-pilot.input.md` and `relay-system/2026-11-10/egm-paraphrase-pilot.codex.md`. Provenance: `relay-system/2026-11-10/egm-paraphrase-pilot.provenance.jsonl`. These intake artifacts are uncommitted; include them together in any later PR that cites the run.
 
 The live issue contains source links and the reviewer paraphrases. No RELEASES row is created for this unstarted implementation capture.
+
+## Merge evidence
+
+- PR #1415 merged 2026-11-11 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
