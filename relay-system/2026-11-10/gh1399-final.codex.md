@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 6
 
@@ -169,5 +169,43 @@ Round3's concrete directory-lock reader defect is fixed in6f081242c: inspect_dri
 Finish the remaining whole-file review. Previous coverage explicitly lacked complete utils/py/marathon_drive.py, merge_cleanup.py, validate.sh, changed fixture bodies and source start-task/workhorse skills. Read those bodies in bounded chunks that avoid output truncation; ordinary read-only git commands are permitted. Review prior inspected files by their existing receipts and actual two-line change. Do not repeatedly spend this turn on already-completed admission/rtl coverage while leaving those outstanding files unread. Do not return merely because coverage is unfinished: complete the available review before deciding. No mutation-heavy suites in the reviewer worktree, no new suites or gate frameworks. Final full publication qualification and hosted checks follow independent approval; they remain unclaimed.
 
 Handing off to Reviewer(codex) for round4 of6.
+
+### Reviewer · Round 4
+
+VERDICT: FAIL
+Basis: Completed the outstanding whole-file sweep. The directory-lock finding is closed; one concrete pre-existing run-log lookup defect remains in the touched marathon driver. This verdict does not claim GH-1399 introduced it.
+swept file: yes
+
+Operator contract: fail closed at qualification entry through existing accounting, preserve consumed rounds and administrative behavior, and add no suites/framework. Explicit bypasses and deliberate local-file tampering remain outside the boundary; a reservation covers one caller-owned repair episode.
+
+- [Should] **Do not select a quoting discussion comment as the run log to overwrite.** `utils/py/marathon_drive.py:415` accepts the marker anywhere in a comment body. The selected ID flows directly to the body-replacing PATCH at `:1783-1787`; the writer already places its own marker first (`:1768-1770`). An earlier discussion comment quoting the marker therefore wins over the actual run log. If that discussion comment belongs to the authenticated operator, the update can replace their discussion text. This is the exact class described in `LESSONS-LEARNED.md:151-159`, not a new security boundary or speculative framework requirement. No live GitHub write was attempted or observed.
+  Observed input: marker `<!-- xyz-marathon-run-log:1399:p1 -->`; ordered comments `[{"id":101,"body":"Please preserve this example:\n```\n<!-- xyz-marathon-run-log:1399:p1 -->\n```"},{"id":202,"body":"<!-- xyz-marathon-run-log:1399:p1 -->\n### Marathon run log"}]`. The actual reader returns `101`; the intended run-log ID is `202`. With only the quoting comment it also returns `101` instead of no match.
+  Affected scope: opt-in `--log-github` runs whose issue discussion contains the exact marker later in a comment body, before the real run log (or with no real log yet). Flat and paginated payloads share this predicate. No claim is made about comments lacking the exact marker or arbitrary local-file tampering.
+  Falsifier: with those same two rows the reader must select `202`; with the quoting row alone it must return an empty ID; with the genuine row alone it must still select `202`. If current code satisfies all three, this finding is wrong.
+  Probe command, exit **0** (pure function extracted unchanged from the source AST; no module startup, Git subprocess or fixture execution):
+  ```python
+  import ast, json
+  from pathlib import Path
+  p = Path('utils/py/marathon_drive.py')
+  tree = ast.parse(p.read_text())
+  f = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+           and n.name == 'runlog_find_comment_id')
+  ns = {'json': json}
+  exec(compile(ast.Module(body=[f], type_ignores=[]), str(p), 'exec'), ns)
+  marker = '<!-- xyz-marathon-run-log:1399:p1 -->'
+  quoted = {'id': 101, 'body': 'Please preserve this example:\n```\n' + marker + '\n```'}
+  owned = {'id': 202, 'body': marker + '\n### Marathon run log'}
+  for label, rows in [('owned-only', [owned]), ('quoted-only', [quoted]),
+                      ('quoted-before-owned', [quoted, owned])]:
+      print(label, 'selected=', repr(ns['runlog_find_comment_id'](json.dumps(rows), marker)))
+  ```
+  Executed using `PYTHONDONTWRITEBYTECODE=1 python3 -`. Decisive output: **`owned-only selected= '202'`**, **`quoted-only selected= '101'`**, **`quoted-before-owned selected= '101'`**. The genuine-only control rules out a generally broken parser; the quoting cases isolate the substring predicate. Root cause: comment identity uses substring presence; Fix site: existing `runlog_find_comment_id`; Why not upstream/downstream: ordinary discussion may quote examples, while PATCH correctly updates the ID it is given. Match the existing first-line marker rather than adding another writer or framework. Verify with an existing check or retained manual control, no new suite. Relevance/sanity check: this can replace operator-authored discussion, and the relay explicitly includes pre-existing defects in touched files; a narrow predicate correction is proportionate.
+
+- [Pass] **Round-three directory-lock finding closed.** `skills/2-daily/merge-cleanup/scripts/scan_clones.py:212-214` now accepts directories and reads `pid`; the file-form branch remains, and unreadable locks retain `locked=True, alive=True` at `:233-234`. Retained `TESTS-RESULTS/2026-11-10+GH-1399/lock-reader/result.json` contains old-reader `locked:false`, fixed live/stale/missing-pid/legacy cases; `checkout-result.json` records `ACTIVE_LOCKED`. A read-only SHA-256 check against `lock-reader/provenance.jsonl` exited **0**, output **`lock receipt hash mismatches: []`**. These are intact producer controls, not independently rerun clone controls.
+- [Pass] **Prior lifecycle correction retained.** `utils/py/relay_drive.py:767-777` still binds and finishes approval accounting only for `kind == "lane"`; parent-owned merge-repair records do not reach the lane writer. Round-two retained red/green control review remains applicable.
+- [Pass] **Outstanding source coverage completed.** Read the complete bodies of `utils/py/marathon_drive.py` and `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` in bounded chunks, filling truncated spans separately; read `validate.sh` including its complete registry/executable body, `githooks/install.sh`, `ci-local.sh`, `utils/gate-record.sh`, `utils/py/gate_env.py`, all three named changed fixture bodies, and the source start-task/workhorse skills. Combined with rounds 1–3's recorded admission/rtl/relay/scan_clones/task/recon/evidence coverage, the previously declared sweep gaps are closed. Integration references include `validate.sh:1073-1078` (admit before tier dispatch and scrub child context), `merge_cleanup.py:668-673` (repair push context), and `skills/1-hourly/start-task/SKILL.md:245-263` (reuse parent accounting and preserve lifecycle ownership). No additional concrete pre-existing defect was established beyond the run-log finding above; source coverage is not a claim of exhaustive runtime correctness.
+- [Unverified — needs clone run] Final full pre-push qualification and hosted checks remain pending as Setup permits. No Git command, validate/test/pytest invocation, executable fixture, source edit or artifact edit occurred in this turn. Only this relay file is changed.
+
+Handing off to Producer (codex-parent) — disposition the concrete run-log finding, retain the completed coverage and prior fixes, and return within the existing round budget; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
