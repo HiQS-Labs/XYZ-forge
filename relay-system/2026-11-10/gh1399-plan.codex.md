@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,24 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The design is appropriately bounded, but its archive/context lifecycle needs one concrete decision before implementation. This is plan QA, not a claim of a demonstrated runtime regression.
+swept file: yes
+
+- [Should] Specify the reservation-reference transition across archive/reset and post-approve candidate evolution. The proposed context references an absolute canonical record, but successful reset moves that record; the plan also requires exact final-candidate matching for completed records while the existing post-approve path can move HEAD after reset. Merely listing an archived/post-approve smoke check leaves the producer choosing between a missing reference, a stale completed SHA, or modifying the supposedly byte-preserved archive. Cheapest correction: state the precise completion/archive ordering, how the returned archive path reaches later qualification/publication, and which reservation remains active while post-approve may change the candidate. Preserve consumed rounds and immutable archived bytes; do not book another attempt for closeout. If ordering changes, explicitly retain post-approve failure/recovery semantics.
+  Observed input: `utils/py/rtl.py:23-25` renames the live file and returns its archive path; `utils/py/marathon_drive.py:1286-1300` logs that path without returning it; `utils/py/marathon_drive.py:2857-2867` calls reset before post-approve and explicitly says “the hook may move HEAD”. Read-only command `sed -n '2840,2900p' utils/py/marathon_drive.py` exited 0; decisive output: `lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)` precedes `post_approve_exit = run_post_approve_cmd()` and `candidate, record = bind_candidate(...)`.
+  Affected scope: a successful managed lane that archives its live record, then qualifies/publishes during or after post-approve, including an allowed candidate change and a failed closeout resumed without another fire.
+  Falsifier: a stated source-to-archive reference transition plus a manual clone control showing same-candidate publication after archive, allowed post-approve candidate evolution, and failed/resumed closeout all use the original consumed reservation without changing archived bytes or increasing/resetting the count. A later unrelated candidate must refuse. Runtime measurement is [Unverified — needs clone run].
+- [Pass] The accounting authority stays surgical: packet “Keep the current counter file and count semantics” and “No automatic cap reset or retrospective uncounted binding” preserve legacy consumption; delegated `gate_receipt` commands reuse the lane writer rather than introducing another budget ledger. No new suite or registry entry is proposed (ordered steps 2, 3, 6).
+- [Pass] Completed B1 is correctly distinguished from active work: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1581-1583` finishes `resolved` with `commit=b1["commit"]` before second-clone validation. Packet exact-final-candidate semantics and steps 3/5 cover that compatibility requirement. Nested ownership, standalone booking, external record transfer, per-pushed-ref identity and explicit hosted/admin exemptions are addressed as implementation obligations, not claimed runtime evidence.
+- [Pass] Entry coverage includes successful shortcuts and legacy evidence: `githooks/pre-push:258-263` returns on docs success, `:289-308` reuses receipts, and `utils/gate-record.sh:80-106` writes legacy green evidence before JSON. Packet step 4 places admission before these routes, including the install fallback; a JSON-writer-only fix is expressly rejected.
+- [Unverified — no citation] Rating rationale is proportionate as a proposal: packet “Appeal50 is neutral” and “Coverage limited; trend unknown, not zero” avoid inflating appeal or treating sparse observations as a trend. The source review supports broader lifecycle effort than a hook-only edit; original remote issue/history and operator scoring were not independently queried this turn.
+
+Whole packet and both committed candidate documents read. No additional pre-existing plan defect identified in the reviewed scope. No source/artifact edits, git commands, fixtures, tests or validate runs performed. Approval remains pending; production behavior and the planned red/green controls are unverified.
+
+Handing off to Producer (codex-parent) — resolve the lifecycle decision above and take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
