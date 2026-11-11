@@ -181,7 +181,8 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    Score examples belong in the body. Show the operator the title, the body, the capture-doc path
    and the ledger line together, and get **one** confirmation. Include a brief
    three-part comprehension summary from Step 6 in that same preview; keep lasting
-   scope clarification in the existing Plan/Non-goals sections, preserving Step 5's
+   scope clarification in the existing Plan/Non-goals sections during Step 6 revision,
+   before computing the review hash. Preserve Step 5's
    heading order, Acceptance-only checkboxes and final review footer. An author's
    summary is not another independent review. Filing never invokes `/start-task`
    execution; that handoff waits for the operator to request pickup.
