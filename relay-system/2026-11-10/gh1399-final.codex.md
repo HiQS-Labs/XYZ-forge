@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -97,5 +97,20 @@ Handing off to Producer (codex-parent) — correct/disposition the lifecycle mis
 Implemented the observed lifecycle mismatch: only a managed lane context receives the lane approval binding. Inherited manual/merge-repair contexts remain owned by their parent; the relay neither finishes nor archives them. Retained real driver + real isolated shim controls under implementation/final-controls use a stub reviewer, explicitly synthetic. Replaying the old condition fails approval; the fixed version exits0 with exactly one still-in-progress parent repair and no lane budget. Administrative normal push passed in74s; completed proof passed from a separate full clone. These final manual receipts are retained with provenance. Full qualification/hosted checks remain pending approval. Please complete the remaining whole-file sweep and review this fix; no suites may run in the review worktree.
 
 Handing off to Reviewer (codex) for round2.
+
+### Reviewer · Round 2
+
+VERDICT: PARKED
+Basis: Round-one lifecycle finding is addressed in source and supported by retained red/green controls. Final approval is withheld because the mandatory whole-file review remains incomplete; this is a review-coverage limitation, not a newly observed runtime failure.
+swept file: no
+
+Operator contract: fail closed at qualification entry through the existing accounting authorities, retain consumed rounds and administrative behavior, and introduce no new suites/framework. Explicit bypasses and deliberate local-file tampering remain outside the boundary; the reservation covers one caller-owned repair episode.
+
+- [Pass] **Round-one finding closed.** In `utils/py/relay_drive.py:767`, approval binding now requires `json.loads(raw_context).get("kind") == "lane"`; `utils/py/relay_drive.py:776` calls the lane writer only when that binding was installed. Thus this approval path no longer passes the inherited merge-repair JSON record to the lane JSONL writer. The retained `implementation/final-controls/parent-control.sh` asserts the parent remains in progress with one attempt and that the approval has no parent-owned attempt context. Its red counterpart restores the old condition. These scripts were read, not executed here.
+- [Pass] **Retained control integrity.** Read-only probe: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'`, loading `TESTS-RESULTS/2026-11-10+GH-1399/implementation/final-controls/provenance.jsonl`, computing SHA-256 for every listed file, and decompressing the two parent-approval logs. Exit **0**; decisive output: **`provenance files: 10 hash mismatches: []`**. Red log: **`relay-drive: attestation record write FAILED: archived attempt bytes are immutable`**. Green log: **`relay-drive: relay terminated (STATUS: Approved, token done, attested by rev) after 1 turn(s)`**. These are authenticated retained producer controls using a synthetic reviewer, not an independently rerun driver.
+- [Unverified — review coverage] This turn inspected the task/recon documents, the full admission predicate and lane writer, the approval fix and nested/reset paths, the pre-push hook, and retained final-control scripts/results/provenance. It did not complete the full pre-existing bodies of `utils/py/marathon_drive.py`, `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, `scan_clones.py`, or every changed gate/test/skill. No assertion of absence of pre-existing defects is made. Whole-file coverage remains necessary before approval; this finding requests review work, not a speculative behavior change or new gate.
+- [Unverified — needs clone run] Final full pre-push qualification and hosted checks remain pending as permitted by Setup. No Git command, validate/test/pytest invocation, or executable fixture was run here.
+
+Handing off to Producer (codex-parent) — retain the round-one fix and evidence, and arrange completion of the outstanding whole-file review before final sign-off; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
