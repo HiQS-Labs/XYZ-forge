@@ -131,4 +131,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the planned documentation work and preserve the stated scope caveats.
 
+
+### Attestation · relay-drive — 2026-11-11T06:06:06Z
+task: RELAY-gh1000-plan
+reviewer: codex
+status: Approved
+reviewed-head: 712ee432d57a5f4ba5f4de894beb933b64179d9e
+added-range: 16168+3164
+added-sha256: 36085d4f0ec6bb2bac117bae97872cc5d26cc3a6342a1301cb16a683cea296b2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
