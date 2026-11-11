@@ -13,7 +13,7 @@ goal: Refuse unaccounted task qualification through existing gate boundaries whi
 
 | What was just completed | What's next |
 |---|---|
-| Final Codex QA Approved in round5 of6; findings repaired and controls committed | Normal qualifying push, ready PR, hosted smoke and scoped retirement |
+| Final Codex QA Approved in round6 of6; nine qualification fixture repairs verified | Retry normal full qualifying push, ready PR, hosted smoke and scoped retirement |
 
 ## Request and scope
 
@@ -148,3 +148,6 @@ Final Codex QA Approved in round5 of6 at reviewed head41929b4fd2fdec049926173d43
 ## Publication qualification — repair checkpoint
 
 First normal full push candidate d19ba481a refused after523s with nine failed existing suites, canonical remote untouched and clone identity unchanged. All failures were fixture accounting/dependency contracts. Updated only existing fixture setup and synthetic approval binding; no production runtime changed after round5 approval. Nine focused reruns pass (Express127/0 after cache-ignore correction). Original run and focused provenance are under TESTS-RESULTS/2026-11-10+GH-1399/qualification. Round6 final QA pending for these fixture changes, followed by the normal full push retry.
+
+
+Final Codex QA round6 Approved at28da1ddb59f2654cd8b3117f21957226ca511187, including complete newly touched fixture/helper bodies. Mechanical receipt/provenance under final-review-6. All production and fixture changes are independently reviewed. The original spent DONE token required a fresh read-only coordination token for round6; the same transcript and six-round budget/history were retained. Normal full publication retry remains pending.

@@ -10,7 +10,8 @@ Administrative routing and documented bypasses retain their existing scope. This
 control change: rollback must revert admission and producer integrations together while
 preserving attempt/history bytes. It prevents missing accounting, not inference of logical
 repair rounds or hostile local state changes. Focused/manual controls passed; final Codex
-review Approved in round5. Normal publication qualification and hosted smoke remain pending.
+review Approved in round6 after existing qualification fixtures adopted the dependencies
+and their own accounting. Normal publication qualification and hosted smoke remain pending.
 The review also corrected existing parent-approval ownership, directory-lock inspection and
 run-log comment identity defects in the touched integrations.
 
