@@ -2,9 +2,9 @@
 gh_issue: 1000
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1000
 title: "Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow"
-status: PR ready — awaiting merge and operator decisions D1–D3
+status: PR open, conflicting on ledger files — D1 decided, D2 and D3 open
 created: 2026-11-10
-updated: 2026-11-10
+updated: 2026-11-11
 owner: Claude
 doc_type: feedback
 branch: docs/XYZ-forge-gh1000-evidence-linked-consolidation-2026-11-10
@@ -32,10 +32,11 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved (`relay-system/2026-11-10/gh1000-plan.codex.md`); Phases 1–4 written; reconstruction receipt recorded in `TESTS-RESULTS/2026-11-10+GH-1000/`; final Codex QA Approved (`relay-system/2026-11-10/gh1000-final.codex.md`) | PR review and merge. Then operator decisions D1–D3, after which follow-on issues A–E can be filed |
+| Codex plan QA Approved (`relay-system/2026-11-10/gh1000-plan.codex.md`); Phases 1–4 written; reconstruction receipt recorded in `TESTS-RESULTS/2026-11-10+GH-1000/`; final Codex QA Approved (`relay-system/2026-11-10/gh1000-final.codex.md`) | See [Handoff](#handoff). PR #1416 needs one ledger resolution to merge. D1 is decided (project 9); D2 and D3 are open; follow-on issues A–E are not filed |
 
 ## Table of contents
 
+- [Handoff](#handoff)
 - [Scope of this PR and the bet](#scope-of-this-pr-and-the-bet)
 - [Rating](#rating)
 - [Phase 0 — Recon findings](#phase-0--recon-findings)
@@ -44,7 +45,63 @@ goal: >
 - [Phase 2 — Worked reconstruction](#phase-2--worked-reconstruction)
 - [Phase 3 — Interface selection](#phase-3--interface-selection)
 - [Phase 4 — Implementation sequence](#phase-4--implementation-sequence)
+- [Board preview for D1](#board-preview-for-d1)
 - [Acceptance map](#acceptance-map)
+
+## Handoff
+
+State on 2026-11-11, for whoever picks this up.
+
+**Where things are.**
+
+- PR [#1416](https://github.com/HiQS-Labs/XYZ-forge/pull/1416) against `development`. Plan QA
+  and final QA are Approved (final reviewed head `e75e6bcf6`). Later commits were not re-reviewed:
+  status and handoff updates to this doc, two merges of `development`, and the board preview
+  section.
+- The PR is **not merge-ready**: it conflicts with `development` on `releases.sql` and
+  `releases.db` only. A jog was writing the ledger every few minutes; two merges were overtaken
+  within a minute each.
+- Task clone: sibling folder `XYZ-forge-gh1000-evidence-linked-consolidation-2026-11-10`, branch
+  `docs/XYZ-forge-gh1000-evidence-linked-consolidation-2026-11-10`. It is kept, not retired,
+  because the ledger resolution needs it.
+- Issue closeout comment on #1000 carries the marker
+  `start-task closeout: docs/XYZ-forge-gh1000-evidence-linked-consolidation-2026-11-10`; edit that
+  comment, do not add a second.
+
+**To land the PR** (repeat once, when the jog is idle):
+
+1. `git fetch origin development && git merge --no-ff --no-commit origin/development`
+2. `git show origin/development:releases.sql > releases.sql && git add releases.sql`
+3. `bash utils/releases-merge-resolve.sh`. If it refuses because the generation header is below
+   the highest parent, set both the `-- generation:` header and the `settings` row to the value
+   it names, `git add releases.sql`, and rerun.
+4. Re-create this task's row, because step 2 drops it:
+   `roadmap pickup --issue-num 1000 --doc-path PROJECT/2-WORKING/GH-1000-EVIDENCE-LINKED-CONSOLIDATION.md --rated 45/35/50/55`
+   (with `--issue-url` and `--title`), then `roadmap update --gid <new id> --accepted-start`.
+5. `git show origin/development:LEADERBOARD.md > LEADERBOARD.md` (task branches do not commit
+   views), remove `releases.db.bak`, check `releases check` is clean, commit, push.
+
+**Decisions.**
+
+| ID | Question | State |
+|---|---|---|
+| D1 | Board target | **Decided 2026-11-11 by the operator:** `noelsaw1` project 9, "XYZ Workflow". Not yet saved in any device config. Supersedes the project 3 / project 4 question from #897 |
+| D2 | Paperclip keep / revise / abandon | Open. Recommendation: keep, frozen |
+| D3 | Which component "the knowledge graph" is | Open. No such PR found in the org |
+| Scope | Deferring the interface demonstration to draft C | Proposed reading, not ruled on |
+
+**Next actions, in order.**
+
+1. Land PR #1416 with the steps above.
+2. Save the D1 board policy to the device config and decide the two open board questions in
+   [Board preview for D1](#board-preview-for-d1). Applying needs `gh auth refresh -s project`.
+3. Get D2 and D3 from the operator.
+4. File follow-on issues A–E from Phase 4 and link them on #1000. D is now unblocked by D1.
+5. Update the #1000 issue body: it still calls Paperclip PR #982 an open draft and lists
+   projects 3 and 4.
+
+**Not done, deliberately.** No follow-on issue filed, no older issue commented on, closed or
+relabelled, no board written, no device config created.
 
 ## Scope of this PR and the bet
 
@@ -251,8 +308,9 @@ in `3-COMPLETED` with Status tables that still describe unfinished publication.
 
 **Operator decisions this inventory cannot make.**
 
-- **D1 — Board target.** #897 says device config pointed at project 4 while the operator watches
-  project 3. Neither was read here (`gh` lacks `read:project`; no device config on this machine).
+- **D1 — Board target.** Decided on 2026-11-11: `noelsaw1` project 9 (see [Handoff](#handoff)).
+  At plan time #897 said device config pointed at project 4 while the operator watched project
+  3, and neither could be read.
 - **D2 — Paperclip.** Recommended: keep, frozen. The merge of PR #982 records an intent to retain
   it but is not a keep/revise/abandon decision.
 - **D3 — The knowledge-graph component.** Name the repo and PR, or confirm it is rows 8–9.
@@ -466,6 +524,41 @@ dispositions are accepted.
 
 **Not proposed.** A join between CLIO sessions and executions; any work in rebalanceOS; a
 scheduler for board review; a `showme` command.
+
+## Board preview for D1
+
+Read-only dry run on 2026-11-11 against `noelsaw1` project 9, after the operator chose it. Nothing
+was written to the board, and the policy was passed as `XYZ_GITHUB_BOARD_POLICY_*` environment
+variables, so no device config exists yet. The preview JSON was not committed: it holds issue
+state for private repositories, and this repository is public.
+
+- **Command:** `python3 utils/py/board_sync.py policy-preview --root . --out <file>`.
+- **Board:** empty, with Status options Backlog, Ready, In progress, In review, Done. These match
+  the policy writer's column names exactly, so draft D needs no column mapping.
+- **Repos:** the operator asked for five organizations. The policy takes `owner/name` repos, not
+  organizations, so the list came from Rebalance's `github_activity` table for the last 14 days:
+  21 active repos, 13 of them in the five organizations. One organization had no activity.
+- **Result:** 206 cards would be added: Ready 10, In progress 7, In review 61, Done 128. For this
+  repo: Ready 10, In progress 7, In review 5, Done 64.
+
+**What it shows.**
+
+1. **Only this repo gets Ready and In progress cards.** Those columns come from the ledger, and
+   no other repo has one. Other repos appear only through pull requests.
+2. **1,065 open items are not placed**, 1,031 of them because no ledger row identifies them. A
+   multi-repo board built on this policy is mostly a pull-request board outside Forge.
+3. **Backlog stays empty.** The policy decides 45 items belong in Backlog and adds no new card for
+   that column.
+4. **The built-in Rebalance repo source did not work on this device.** A plain read-only open of
+   the Rebalance database (what `_rebalance_active_repos` does, `utils/py/board_sync.py:133`) was
+   refused twice; only an immutable open succeeded. With `repos_source` configured it would fall
+   back to the pinned repos. Not yet filed as an issue.
+5. **Rebalance records zero merged PRs** for every repo in the window, so its activity score
+   undercounts.
+
+**Open board questions for the operator.** Whether repos under the personal account belong on
+the board (six were active), and whether a board that shows other repos only through pull
+requests is acceptable or draft D should wait for those repos to have a ledger.
 
 ## Acceptance map
 
