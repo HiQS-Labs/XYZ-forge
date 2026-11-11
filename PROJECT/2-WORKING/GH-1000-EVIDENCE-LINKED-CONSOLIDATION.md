@@ -2,7 +2,7 @@
 gh_issue: 1000
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1000
 title: "Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow"
-status: Consolidation written — awaiting final QA and operator decisions D1–D3
+status: PR ready — awaiting merge and operator decisions D1–D3
 created: 2026-11-10
 updated: 2026-11-10
 owner: Claude
@@ -32,7 +32,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved (`relay-system/2026-11-10/gh1000-plan.codex.md`); Phases 1–4 written; reconstruction receipt recorded in `TESTS-RESULTS/2026-11-10+GH-1000/` | Final Codex QA and PR. Then operator decisions D1–D3, after which follow-on issues A–E can be filed |
+| Codex plan QA Approved (`relay-system/2026-11-10/gh1000-plan.codex.md`); Phases 1–4 written; reconstruction receipt recorded in `TESTS-RESULTS/2026-11-10+GH-1000/`; final Codex QA Approved (`relay-system/2026-11-10/gh1000-final.codex.md`) | PR review and merge. Then operator decisions D1–D3, after which follow-on issues A–E can be filed |
 
 ## Table of contents
 
