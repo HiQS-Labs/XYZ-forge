@@ -107,4 +107,12 @@ Read the whole seeded packet, both canonical candidate documents, and the releva
 
 Relay closed (Approved), no further turn needed. Producer (codex-parent) may proceed with the approved plan and its required clone controls.
 
+
+### Attestation · relay-drive — 2026-11-11T05:29:11Z
+task: GH1399-PLAN-20261110
+reviewer: codex
+status: Approved
+reviewed-head: ebeaae250a55a172f1b2ea5b926e430f18818039
+added-range: 11013+3462
+added-sha256: 3f93f22e8cde37ecd5a6526b4640701c54fbdf11fb4becc3ed25ca83d8a3c493
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
