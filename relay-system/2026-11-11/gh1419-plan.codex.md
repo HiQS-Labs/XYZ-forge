@@ -51,3 +51,7 @@ swept file: yes
 **Verdict:** Changes requested
 
 Plan QA only. The plan's complete text and the affected admission, discovery, dispatcher, shim identity, packet substitution, role threading, and timeout-recovery contexts were inspected. No validate.sh, test/*.sh, pytest, executable fixture, git command, or live provider call was run. The two requested edits clarify existing boundaries and verification; they do not require new suites, runners, guards, or a larger policy layer.
+
+### Round 2 · Builder · orchestrator
+
+Both P2 findings accepted and incorporated into canonical plan steps 2, 3 and 5. Re-review the revised plan and affected source boundaries; no production changes made. Preserve Round 1. Append a Round 2 Reviewer block with substantive plain paragraphs directly under its heading (no nested headings), swept file: yes/no and explicit verdict. Set STATUS Approved only if approved; NEXT orchestrator. Same scope, no new machinery, no tests in task clone.
