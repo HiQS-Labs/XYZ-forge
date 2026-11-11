@@ -94,6 +94,12 @@ function parseMarathonYaml(text) {
   return out;
 }
 
+/**
+ * Recognize an explicit reviewer through Marathon's route owner, without binary probes.
+ * @param {string} reviewer - Exact configured actor ID.
+ * @param {string} phaseId - Phase used in error diagnostics.
+ * @throws {Error} when the actor is unsupported or recognition cannot execute.
+ */
 function validateReviewer(reviewer, phaseId) {
   const { spawnSync } = require('child_process');
   const path = require('path');

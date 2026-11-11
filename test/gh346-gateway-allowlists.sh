@@ -332,8 +332,8 @@ else
 fi
 
 # Reviewer admission now shares Marathon's supported-route owner (GH-1419).
-if python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes claude-reviewer codex-reviewer agy-reviewer &&
-   ! python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes unsupported-reviewer 2>/dev/null; then
+if MARATHON_ROOT="$WORK" python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes claude-reviewer codex-reviewer agy-reviewer &&
+   ! MARATHON_ROOT="$WORK" python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes unsupported-reviewer 2>/dev/null; then
   pass "#6 shared reviewer recognition accepts supported routes and refuses unknowns"
 else
   fail "#6 shared reviewer route recognition failed"
