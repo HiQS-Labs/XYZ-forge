@@ -412,7 +412,7 @@ def runlog_find_comment_id(payload_text, marker):
             elif isinstance(entry, dict):
                 comments.append(entry)
     for comment in comments:
-        if isinstance(comment, dict) and marker in str(comment.get("body", "")):
+        if isinstance(comment, dict) and str(comment.get("body", "")).splitlines()[:1] == [marker]:
             return str(comment.get("id", ""))
     return ""
 
