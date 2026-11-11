@@ -24,11 +24,30 @@ def attempt_git(root, *args):
                                    text=True, stderr=subprocess.PIPE).strip()
 
 
-def attempt_origin(root):
-    return attempt_origin_url(attempt_git(root, "remote", "get-url", "origin"))
+def attempt_origin(root, seen=None):
+    root = os.path.realpath(root)
+    seen = set(seen or ())
+    if root in seen or len(seen) >= 8:
+        raise ValueError("local Git origin identity is cyclic or too deep")
+    seen.add(root)
+    try:
+        url = attempt_git(root, "remote", "get-url", "origin")
+    except subprocess.CalledProcessError:
+        common = attempt_git(root, "rev-parse", "--git-common-dir")
+        identity = "local:" + os.path.realpath(os.path.join(root, common))
+        return hashlib.sha256(identity.encode()).hexdigest()
+    if not os.path.isabs(url) and ":" not in url:
+        local = os.path.join(root, url)
+        if os.path.isdir(local):
+            url = local
+    return attempt_origin_url(url, seen)
 
 
-def attempt_origin_url(url):
+def attempt_origin_url(url, seen=None):
+    # Local clones retain their source's configured identity, without network access.
+    local = url[7:] if url.startswith("file://") else url
+    if os.path.isdir(local):
+        return attempt_origin(local, seen)
     # Persist a comparison digest, never a URL that might contain credentials.
     url = url.rstrip("/")
     url = re.sub(r"^https?://[^/@]+@", "https://", url)
