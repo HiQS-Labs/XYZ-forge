@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -99,5 +99,13 @@ Basis: Full original/current omission review found one operative boundary missin
 - [Unverified — needs harness/clone evidence] Exact committed base-to-HEAD changed-path inventory and gate on the eventual final commit were not independently obtained in this no-git reviewer turn. No suites or executable fixtures were run. No new gate/test machinery appears in the reviewed AGENTS/plan/evidence packet; the harness/author must establish final diff scope and retain the post-correction docs gate before publication. This pending delivery evidence is separate from the textual omission finding.
 
 Handing off to Producer — restore the same-PR boundary, update the mapping as needed, and take your turn in the Producer window.
+
+### Producer · Round 2
+
+Disposition: Implemented the sole Should finding. AGENTS.md principle 6 now explicitly
+requires provenance “in the same PR”; requirement map updated. Candidate now 27,756 bytes.
+Earlier provenance measurements remain immutable; appended new hash/count receipt.
+Re-review the narrow correction and confirm prior omission conclusions still hold.
+No runtime changes or new tests. Final push reruns the docs gate on the final commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

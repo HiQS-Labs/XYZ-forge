@@ -4,14 +4,14 @@ Base: `966290ddd8b69fcfd49a9df5e123b118befcd6e1`. Candidate content hash is in p
 
 ## Measured controls
 
-`wc -c AGENTS.md`: 42,768 bytes before; 27,741 after (15,027 fewer; 5,027 bytes headroom).
+`wc -c AGENTS.md`: 42,768 bytes before; 27,756 after (15,012 fewer; 5,012 bytes headroom).
 A manual Python byte predicate `0 < len(data) <= 28000 < 32768` failed on the original
 and on empty bytes, and passed on the candidate. The probe reads baseline with
 `git show <base>:AGENTS.md`, candidate with `Path('AGENTS.md').read_bytes()` and hashes
 both with SHA-256. No test suite or gate was added.
 
 `git ls-files -z` filtered by filename `AGENTS.md` / `AGENTS.override.md` returned only
-root `AGENTS.md`. Default tracked root-to-directory project chains therefore total 27,741
+root `AGENTS.md`. Default tracked root-to-directory project chains therefore total 27,756
 bytes. User/global config, custom fallback filenames, untracked overrides and files in an
 external parent project are outside this claim. Links do not auto-load their destinations.
 
@@ -32,7 +32,7 @@ The existing canonical documents provide detailed rationale, not automatic instr
 | Original section/rail | Current location and retained obligations |
 |---|---|
 | What this file owns / reconciliation and maintainer SOP | Same section: local writer, hosted-active refusal/override, no task views, drift check, one-branch authorization |
-| Operating principle 6 | Same heading: committed provenance; red controls; no new suites; reject empty evidence; flaky-suite tier behavior; network permission per use; two-attempt blocker trigger; scoped proportionate rigor |
+| Operating principle 6 | Same heading: same-PR committed provenance; red controls; no new suites; reject empty evidence; flaky-suite tier behavior; network permission per use; two-attempt blocker trigger; scoped proportionate rigor |
 | No new tests | Same rail: no suite/registry/gate/guard/lane/runner/telemetry stage or meta-test; truthful existing-suite changes only; manual receipts; superseded #815/#816/#817/#819 |
 | Marathon work selection | “Prove the harness”: one named active marathon; comparable-value selection rationale; real needed work only; no synthetic load; honest idle and failure reporting |
 | RELEASES DB | Same rail: two subsystems/one CLI; pickup rows; legacy sync no-op; no hand edits; required FAQ and conflict resolver |

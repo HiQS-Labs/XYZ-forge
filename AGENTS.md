@@ -116,7 +116,7 @@ inline (`-> expect ...`). Do not scatter action items across prose.
 Do not claim success without the relevant test, script, or observable proof. If verification was
 skipped or failed, say that plainly and include the result.
 
-Retain and commit `provenance.jsonl` with every run cited in an issue, PR, roadmap or decision
+Retain and commit `provenance.jsonl` in the same PR with every run cited in an issue, PR, roadmap or decision
 (GH-430); a transient local path is not proof.
 
 **Witness a red control for every new or materially changed decision gate:** replay pre-fix

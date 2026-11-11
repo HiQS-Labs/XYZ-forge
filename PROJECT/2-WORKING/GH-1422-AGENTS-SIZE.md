@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; accepted-start recorded; draft 27,741 bytes and manual controls pass | Final omission QA and docs gate |
+| Plan QA Approved; accepted-start recorded; draft 27,756 bytes and manual controls pass | Final omission QA and docs gate |
 
 ## Requirements and observed baseline
 
@@ -101,7 +101,7 @@ Trend unknown; this is one demonstrated oversized artifact, not proven increasin
 ## Review and verification
 
 Plan QA Approved at `5b6db4820`; receipt: `relay-system/2026-11-11/gh1422-plan.codex.md`.
-Candidate 27,741 bytes; manual controls/link/chain smoke passed. Evidence:
+Candidate 27,756 bytes; manual controls/link/chain smoke passed. Evidence:
 `TESTS-RESULTS/2026-11-11+GH-1422/SUMMARY.md`. Docs gate passed (exit 0, zero errors, 99 backlog warnings); final QA pending.
 
 ## Lessons Learned (For Future Agents)
