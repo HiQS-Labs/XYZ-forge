@@ -1,0 +1,18 @@
+# Walk for GH-1064 at b71bde38e
+
+## 1. Ledger (join: gh_number)
+roadmap rows: ['rmi-01M4YGMMN70ATZMH520J4X0X5E']
+jog rows: []
+work_events: 4
+  2026-10-15T00:50:49Z parked
+  2026-10-15T01:03:25Z rated
+  2026-10-15T01:23:13Z in_flight
+  2026-10-15T18:53:37Z completed
+work_events carrying an execution_id: 0
+
+## 2. Attempts (join: issue field in result receipts; gh_number in jog ledger snapshots)
+jog ledger snapshots: []
+committed invocations naming the issue: 0
+attempts discovered: []
+
+VERDICT: UNKNOWN - zero attempts discovered; nothing to reconstruct. Not a completed reconstruction.

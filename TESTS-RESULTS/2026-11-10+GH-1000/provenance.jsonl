@@ -1,0 +1,3 @@
+{"id": "first-run-false-pass", "tree": "b71bde38e", "command": "python3 TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt 1254 (before correction)", "result": "RED witnessed: attestation cell RESOLVED via machine-local path; 0 invocations found", "artifact": "walk-gh1254-first-run-red.txt"}
+{"id": "main-gh1254", "tree": "b71bde38e", "command": "python3 TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt 1254", "exit": 0, "result": "PARTIAL: 6 attempts discovered, 0 with every cell resolved", "artifact": "walk-gh1254.txt"}
+{"id": "red-control-gh1064", "tree": "b71bde38e", "command": "python3 TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt 1064", "exit": 0, "result": "UNKNOWN: zero attempts discovered", "artifact": "walk-gh1064-control.txt"}

@@ -1,0 +1,135 @@
+# GH-1000 manual reconstruction walk. Read-only: reads committed files and `git log`.
+# Usage: python3 TESTS-RESULTS/2026-11-10+GH-1000/walk.py.txt <issue-number>   (run from the repo root)
+# Not a suite, gate or tool: a recorded manual check (AGENTS.md "No new tests", GH-831).
+import json, re, subprocess, sys
+from pathlib import Path
+
+n = sys.argv[1]
+root = Path(".")
+
+def git(*a):
+    return subprocess.run(["git", *a], capture_output=True, text=True).stdout.strip()
+
+print(f"# Walk for GH-{n} at {git('rev-parse', '--short', 'HEAD')}")
+
+# 1. Ledger: the only input is the issue number.
+sql = (root / "releases.sql").read_text().splitlines()
+pat = re.compile(rf"VALUES\('([a-z]+-[0-9A-Z]+)', '[^']+', '{n}',")
+rows = {"roadmap_items": [], "jog_queue": [], "work_events": []}
+for line in sql:
+    for t in rows:
+        if line.startswith(f"INSERT INTO {t}(") and f", '{n}'," in line:
+            rows[t].append(line)
+jog_gids = [re.search(r"'(jog-[0-9A-Z]+)'", l).group(1) for l in rows["jog_queue"]]
+rmi = [re.search(r"'(rmi-[0-9A-Z]+)'", l).group(1) for l in rows["roadmap_items"]]
+print(f"\n## 1. Ledger (join: gh_number)\nroadmap rows: {rmi}\njog rows: {jog_gids}")
+for l in rows["jog_queue"]:
+    print("  jog_queue:", re.sub(r".*VALUES\(", "", l)[:230])
+print(f"work_events: {len(rows['work_events'])}")
+ev_exec = 0
+for l in rows["work_events"]:
+    m = re.search(r"'([a-z_]+)', '(\{.*\})', '([0-9TZ:-]+)'\);$", l)
+    ev_exec += "execution_id" in m.group(2)
+    print(f"  {m.group(3)} {m.group(1)}")
+print(f"work_events carrying an execution_id: {ev_exec}")
+
+# 2. Attempts: committed result receipts and committed jog ledger snapshots naming this issue.
+results, states, invocations = {}, [], []
+for p in sorted(root.glob("TESTS-RESULTS/**/*.json")):
+    try:
+        d = json.loads(p.read_text())
+    except Exception:
+        continue
+    if not isinstance(d, dict):
+        continue
+    schema = str(d.get("schema", ""))
+    if schema.startswith("marathon-drive/result") and str(d.get("issue")) == n:
+        results.setdefault(d.get("execution_id"), []).append((p, d))
+    elif schema.startswith("jog/execution-state") and str(d.get("gh_number")) == n:
+        states.append((p, d))
+    elif "marathon-invocation" in schema and str(d.get("issue")) == n:
+        invocations.append((p, d))
+known = []
+for p, d in states:
+    for e in d.get("executions", []):
+        known.append(e["execution_id"])
+        known += [g["execution_id"] for g in e.get("gate_retries", [])]
+attempts = list(dict.fromkeys(known + [k for k in results if k]))
+print(f"\n## 2. Attempts (join: issue field in result receipts; gh_number in jog ledger snapshots)")
+print(f"jog ledger snapshots: {[str(p) for p, _ in states]}")
+print(f"committed invocations naming the issue: {len(invocations)}")
+for p, d in invocations:
+    print(f"  {p}  execution_id field: {d.get('execution_id', 'ABSENT')}  result_path tail: ...{str(d.get('result_path'))[-58:]}")
+print(f"attempts discovered: {attempts}")
+if not attempts:
+    print("\nVERDICT: UNKNOWN - zero attempts discovered; nothing to reconstruct. Not a completed reconstruction.")
+    sys.exit(0)
+
+# 3. Seven cells per attempt.
+transcripts = sorted(root.glob(f"relay-system/*/marathon-gh-{n}-*.md"))
+tcommit = {str(t): git("log", "--diff-filter=A", "--format=%H %s", "--", str(t)).split(" ", 1) for t in transcripts}
+gate_files = []
+for p in root.glob("TESTS-RESULTS/**/*.json"):
+    try:
+        d = json.loads(p.read_text())
+    except Exception:
+        continue
+    if isinstance(d, dict) and "sha" in d and "exit_code" in d:
+        gate_files.append((p, d))
+print(f"\n## 3. Evidence chain per attempt\ntranscripts for the issue: {len(transcripts)}")
+used = set()
+complete = 0
+for a in attempts:
+    print(f"\n### {a}")
+    cells = {}
+    if a not in results:
+        print("  result receipt : MISSING - named only in a jog ledger snapshot; its result_path is machine-local")
+        for c in ("invocation", "token", "transcript", "gate receipt", "attestation"):
+            print(f"  {c:<15}: UNKNOWN - no committed result receipt to join from")
+        continue
+    p, d = results[a][0]
+    head, token = d.get("head_sha"), d.get("token")
+    print(f"  execution ID   : RESOLVED {a}  outcome={d.get('outcome')} reason={d.get('reason')} exit={d.get('exit_code')}")
+    print(f"  result receipt : RESOLVED {p}  (join: execution_id + issue fields)")
+    inv = [str(ip) for ip, i in invocations if f"/{a}/" in str(i.get("result_path", "")) + str(i.get("packet_dir", ""))]
+    print(f"  invocation     : {'RESOLVED ' + str(inv) + ' (join: execution ID as a path segment of result_path; implicit, no execution_id field)' if inv else 'MISSING - no committed invocation whose result_path names this attempt'}")
+    print(f"  token          : RESOLVED {token}  (field in result)")
+    by_sha = [t for t, c in tcommit.items() if c and c[0] == head]
+    by_tok = [t for t, c in tcommit.items() if c and c[1].endswith(f"({token})")]
+    if len(by_sha) == 1:
+        used.add(by_sha[0]); cells["t"] = 1
+        print(f"  transcript     : RESOLVED {by_sha[0]}  (join: result.head_sha == transcript commit {head[:9]}; implicit)")
+    elif len(by_tok) == 1:
+        used.add(by_tok[0]); cells["t"] = 1
+        print(f"  transcript     : RESOLVED {by_tok[0]}  (join: token in commit message; implicit)")
+    else:
+        print(f"  transcript     : UNKNOWN - no head_sha match; {len(by_tok)} transcripts share the token")
+    g = d.get("gate") or {}
+    bound = [str(gp) for gp, gd in gate_files if gd.get("sha") == head]
+    rp = g.get("receipt_path")
+    exits = sorted({gd.get("exit_code") for gp, gd in gate_files if gd.get("sha") == head})
+    agree = (g.get("result") == "green") == (exits == [0])
+    if bound and agree:
+        cells["g"] = 1
+        print(f"  gate receipt   : RESOLVED {bound}  (join: receipt.sha == result.head_sha) gate.result={g.get('result')} receipt exit={exits}")
+    elif bound:
+        print(f"  gate receipt   : CONFLICT {bound}  (join: receipt.sha == result.head_sha) result says gate.result={g.get('result')} but the receipt for the same SHA has exit={exits}; kept visible, not resolved")
+    else:
+        print(f"  gate receipt   : MISSING - gate.result={g.get('result')}; receipt_path={'machine-local, absent' if rp and not Path(rp).exists() else rp}; no committed receipt bound to {str(head)[:9]}")
+    ap = d.get("attest_path")
+    if ap and not Path(ap).is_absolute() and Path(ap).exists():
+        cells["a"] = 1
+        print(f"  attestation    : RESOLVED {ap}")
+    else:
+        why = f"attest_path is an absolute machine-local path outside the repo (present on this host: {Path(ap).exists()})" if ap else "attest_path is null (attempt not attested)"
+        print(f"  attestation    : MISSING - {why}. A transcript trailer is not the attestation record.")
+    tr = (by_sha or by_tok or [None])[0]
+    if d.get("reviewed_head") and tr:
+        trailer = re.findall(r"^reviewed-head: ([0-9a-f]{40})$", Path(tr).read_text(), re.M)
+        print(f"  review binding : result.reviewed_head={d['reviewed_head'][:9]} transcript trailer reviewed-head={[x[:9] for x in trailer]} match={d['reviewed_head'] in trailer}")
+    complete += len(cells) == 3
+orphans = [t for t in tcommit if t not in used]
+print(f"\ntranscripts not joined to any attempt: {len(orphans)}")
+for t in orphans:
+    print(f"  {t}  commit {tcommit[t][0][:9]}  {tcommit[t][1][-60:]}")
+print(f"\nVERDICT: PARTIAL - {len(attempts)} attempts discovered, {complete} with every cell resolved." if complete < len(attempts) else "\nVERDICT: COMPLETE")

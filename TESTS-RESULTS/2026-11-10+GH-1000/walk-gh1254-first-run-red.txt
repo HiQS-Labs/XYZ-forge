@@ -1,0 +1,84 @@
+# Walk for GH-1254 at b71bde38e
+
+## 1. Ledger (join: gh_number)
+roadmap rows: ['rmi-01M6WTMK376C3R6EGNG4BG4HTH']
+jog rows: ['jog-01M6Y67FAWQFFXC8VQZ1J7HRNH']
+  jog_queue: 'jog-01M6Y67FAWQFFXC8VQZ1J7HRNH', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1254', '1', 'completed', '2026-11-08T18:20:15Z', '2026-11-08T21:33:56Z', '2', NULL, 'landed via PR #1379 (merged 9d2ecf86)');
+work_events: 10
+  2026-11-08T05:38:28Z parked
+  2026-11-08T05:42:36Z in_flight
+  2026-11-08T06:48:51Z updated
+  2026-11-08T18:20:15Z jog_pending
+  2026-11-08T18:32:56Z in_flight
+  2026-11-08T18:37:22Z jog_failed
+  2026-11-08T18:45:58Z in_flight
+  2026-11-08T18:51:34Z jog_failed
+  2026-11-08T20:26:13Z jog_parked
+  2026-11-08T21:33:56Z jog_completed
+work_events carrying an execution_id: 0
+
+## 2. Attempts (join: issue field in result receipts; gh_number in jog ledger snapshots)
+jog ledger snapshots: ['TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/prior-execution-state.json', 'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/reconciled-execution-state.json']
+committed invocations naming the issue: 0
+attempts discovered: ['gh1254-exec1', 'gh1254-exec1-gateretry1', 'gh1254-exec1-gateretry2', 'gh1254-exec2', 'gh1254-exec2-gateretry1', 'gh1254-exec2-gateretry2']
+
+## 3. Evidence chain per attempt
+transcripts for the issue: 6
+
+### gh1254-exec1
+  execution ID   : RESOLVED gh1254-exec1  outcome=escalated reason=pre-advance-failed exit=5
+  result receipt : RESOLVED TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gh1254-original-marathon-result.json  (join: execution_id + issue fields)
+  invocation     : MISSING - no committed invocation identifiable for this attempt
+  token          : RESOLVED MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN  (field in result)
+  transcript     : RESOLVED relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-183722.md  (join: result.head_sha == transcript commit e86d59ea1; implicit)
+  gate receipt   : MISSING - gate.result=red; receipt_path=None; no committed receipt bound to e86d59ea1
+  attestation    : MISSING - attest_path is null (attempt not attested); reviewed_head=None. A transcript trailer is not the attestation record.
+
+### gh1254-exec1-gateretry1
+  result receipt : MISSING - named only in a jog ledger snapshot; its result_path is machine-local
+  invocation     : UNKNOWN - no committed result receipt to join from
+  token          : UNKNOWN - no committed result receipt to join from
+  transcript     : UNKNOWN - no committed result receipt to join from
+  gate receipt   : UNKNOWN - no committed result receipt to join from
+  attestation    : UNKNOWN - no committed result receipt to join from
+
+### gh1254-exec1-gateretry2
+  result receipt : MISSING - named only in a jog ledger snapshot; its result_path is machine-local
+  invocation     : UNKNOWN - no committed result receipt to join from
+  token          : UNKNOWN - no committed result receipt to join from
+  transcript     : UNKNOWN - no committed result receipt to join from
+  gate receipt   : UNKNOWN - no committed result receipt to join from
+  attestation    : UNKNOWN - no committed result receipt to join from
+
+### gh1254-exec2
+  execution ID   : RESOLVED gh1254-exec2  outcome=escalated reason=pre-advance-failed exit=5
+  result receipt : RESOLVED TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gh1254-exec2-original-result.json  (join: execution_id + issue fields)
+  invocation     : MISSING - no committed invocation identifiable for this attempt
+  token          : RESOLVED MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2  (field in result)
+  transcript     : RESOLVED relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-185133.md  (join: result.head_sha == transcript commit c6cc2d6d7; implicit)
+  gate receipt   : MISSING - gate.result=red; receipt_path=None; no committed receipt bound to c6cc2d6d7
+  attestation    : MISSING - attest_path is null (attempt not attested); reviewed_head=None. A transcript trailer is not the attestation record.
+
+### gh1254-exec2-gateretry1
+  execution ID   : RESOLVED gh1254-exec2-gateretry1  outcome=escalated reason=gate-killed exit=5
+  result receipt : RESOLVED TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/retained-result.json  (join: execution_id + issue fields)
+  invocation     : MISSING - no committed invocation identifiable for this attempt
+  token          : RESOLVED MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN  (field in result)
+  transcript     : RESOLVED relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-190512.md  (join: result.head_sha == transcript commit 8d541d012; implicit)
+  gate receipt   : RESOLVED ['TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/full-gate-receipt.json', 'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/full-gate-receipt.json']  (join: receipt.sha == result.head_sha) gate.result=red
+  attestation    : MISSING - attest_path is null (attempt not attested); reviewed_head=None. A transcript trailer is not the attestation record.
+
+### gh1254-exec2-gateretry2
+  execution ID   : RESOLVED gh1254-exec2-gateretry2  outcome=approved reason=already-satisfied exit=0
+  result receipt : RESOLVED TESTS-RESULTS/2026-11-08+GH-1254/jog/gh1254-exec2-gateretry2/marathon-result.json  (join: execution_id + issue fields)
+  invocation     : MISSING - no committed invocation identifiable for this attempt
+  token          : RESOLVED MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2  (field in result)
+  transcript     : RESOLVED relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-202503.md  (join: result.head_sha == transcript commit fc7896aae; implicit)
+  gate receipt   : RESOLVED ['TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/marathon-gate-receipt.json', 'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/marathon-gate-receipt.json', 'TESTS-RESULTS/2026-11-08+GH-1254/jog/gh1254-exec2-gateretry2/gate-receipt.json']  (join: receipt.sha == result.head_sha) gate.result=green
+  attestation    : RESOLVED /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2.json
+
+transcripts not joined to any attempt: 2
+  relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-184120.md  commit d0b117022  nscript saved (MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN)
+  relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-184323.md  commit e3d40c855  nscript saved (MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN)
+
+VERDICT: PARTIAL - 6 attempts discovered, 1 with every cell resolved.
