@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Grounded conflicting Jog/Marathon/manifest restrictions; fresh canonical clone provisioned | Plan QA Approved round 2; implementation and disposable verification underway |
+| Plan QA round 2 and final source QA round 1 Approved; focused verification passed | Normal push qualification and ready PR |
 
 ## Outcome and recon
 
@@ -42,9 +42,9 @@ Costly coordination surface: misrouting can dispatch a builder instead of review
 
 ## Acceptance
 
-- [ ] Explicit supported reviewers consistently accepted by Jog/Marathon/manifest; original Claude refusal reproduced red.
-- [ ] Claude-only distinct actor roles route to correct isolated turns; equal IDs/unknown routes/missing binaries refuse before lease.
-- [ ] Existing Codex/Agy behavior, reviewer-only containment, approval attestation, retry caps and explicit builder default policy remain intact.
+- [x] Explicit supported reviewers consistently accepted by Jog/Marathon/manifest; original Claude refusal reproduced red.
+- [x] Claude-only distinct actor roles route to correct isolated turns; equal IDs/unknown routes/missing binaries refuse before lease.
+- [x] Existing Codex/Agy behavior, reviewer-only containment, approval attestation, retry caps and explicit builder default policy remain intact.
 - [ ] Main+adjacent smoke, independent plan/final QA and normal gate evidence committed; no new suite or runner.
 
 ## Non-goals
@@ -57,7 +57,7 @@ No arbitrary command reviewer, automatic provider fallback, account/credential c
 
 ## Lessons Learned
 
-Pending verified results; NO_ENTRY until evidence distinguishes changed components.
+NO_ENTRY. Routing controls helped; live review was confounded by provider budget and concurrent author writes. No general operational lesson inferred from that mixed run.
 
 ## Plan QA dispositions
 

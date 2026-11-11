@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-11 — GH-1419 explicit reviewer routing
+
+Jog and manifest validation reuse Marathon’s supported route owner. Distinct actors
+sharing a provider retain their identities through the dispatcher and turn shims.
+Provider selection is explicit; defaults, review attestation and caps stay intact.
+This Costly coordination change is reversible by reverting the scoped PR, with no
+schema migration. Focused controls and independent plan/final QA passed; full push
+qualification is pending. The bounded live Claude turn failed and is not approval.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1419/`.
+
 ## 2026-11-10 — GH-1414 paraphrase-first skill review
 
 Added document-only paraphrase and grounded scope boundaries to existing start-task

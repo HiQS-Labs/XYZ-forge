@@ -6,3 +6,4 @@
 {"time": "2026-11-11T19:57:46.555316+00:00", "artifact": "TESTS-RESULTS/2026-11-11+GH-1419/manifest-parity.json", "sha256": "56fde5c2673cd88cfa3402a1e783f14cc5be3a82a34a47cc8f90a8f9b7a84edb", "outcome": "passed"}
 {"time": "2026-11-11T19:57:46.555604+00:00", "artifact": "TESTS-RESULTS/2026-11-11+GH-1419/marathon.log", "sha256": "cad4ae727589d67156583e52d43433bdc5e63b0f35df433d0229a55515442275", "outcome": "passed"}
 {"time": "2026-11-11T19:57:46.555785+00:00", "artifact": "TESTS-RESULTS/2026-11-11+GH-1419/claude-route-failed.log", "sha256": "7edf7e74cbae60853b2ceb526c406b5fc2c8a39bf47473212704c40a23f58752", "outcome": "failed"}
+{"time": "2026-11-11T20:02:15.367088+00:00", "artifact": "TESTS-RESULTS/2026-11-11+GH-1419/gh346-final.log", "sha256": "5d72c54b5ad23c7d634a75c3a6ebc3248c24a2783cb48cf434f1ffd96d9748af", "candidate": "3676fb8c", "outcome": "passed"}
