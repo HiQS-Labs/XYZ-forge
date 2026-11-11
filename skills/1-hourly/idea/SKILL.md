@@ -1,6 +1,7 @@
 ---
 name: idea
-description: File an admission-ready GitHub issue from the repo you are standing in — recon-lite and the debug-mantra plan pivots run at filing time, so the issue body carries an Observed table, a plan that names the existing subsystem and writer, checkbox Acceptance with red controls, a PRS proposal, a Preflight Contract and a review footer, then lands through `hq park --create` (issue + 1-INBOX capture + ledger row) and `releases roadmap rate`. Trigger on /idea, "file an issue for this", "write this up as a GH issue", "capture this idea", "park this", or the legacy /file-issue. NOT for a bug in the xyz harness seen from another repo (that is /file-xyz-bug), and NOT for rewriting an existing issue (retrofit is a later phase: comment on that issue instead).
+description: >-
+  File an admission-ready GitHub issue from the repo you are standing in — recon-lite and the debug-mantra plan pivots run at filing time, so the issue body carries an Observed table, a plan that names the existing subsystem and writer, checkbox Acceptance with red controls, a PRS proposal, a Preflight Contract and a review footer, then lands through `hq park --create` (issue + 1-INBOX capture + ledger row) and `releases roadmap rate`. Trigger on /idea, "file an issue for this", "write this up as a GH issue", "capture this idea", "park this", or the legacy /file-issue. NOT for a bug in the xyz harness seen from another repo (that is /file-xyz-bug), and NOT for rewriting an existing issue (retrofit is a later phase: comment on that issue instead).
 ---
 
 # /idea — admission-ready intake
@@ -134,8 +135,19 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
 6. **Consult (standard and spike).** Load the consult skill and fan the rendered body out with the
    start-task Step 6 questions (claims grounded in the cited paths? requirement missing? extends
    the existing subsystem and writer? blast radius, ordering, rollback and falsifiable checks
-   sufficient? ratings grounded, appeal neutral?). Adjudicate every finding against the tree, revise
-   the body, re-run the Step 5 check, keep the dispositions for Step 9. Then compute the hash and
+   sufficient? ratings grounded, appeal neutral?). Chain in start-task Step 6's
+   **paraphrase-first comprehension lens (GH-1414)** within those existing consult
+   seats: give each seat the rendered body without author conversation history,
+   record **What this proposes**, **How the existing system works, per this
+   document**, and **What it's not** before it reads supplementary source material.
+   Ground exclusions in the body; label inferred, deferred, unresolved and
+   authorization boundaries instead of inventing non-goals or narrowing Acceptance.
+   Then let the same seats inspect the cited requirements and source paths for
+   technical validation. Preserve the initial input boundary and paraphrase with
+   original findings, severities and dispositions in the existing consult artifacts.
+   This adds no consult seat, review round, approval marker or admission authority.
+   Adjudicate every finding against the tree, revise the body, re-run the Step 5
+   check, keep the dispositions for Step 9. Then compute the hash and
    finish the footer:
 
    ```bash
@@ -167,7 +179,14 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    ```
 
    Score examples belong in the body. Show the operator the title, the body, the capture-doc path
-   and the ledger line together, and get **one** confirmation. `hq park` refuses a title that
+   and the ledger line together, and get **one** confirmation. Include a brief
+   three-part comprehension summary from Step 6 in that same preview; keep lasting
+   scope clarification in the existing Plan/Non-goals sections during Step 6 revision,
+   before computing the review hash. Preserve Step 5's
+   heading order, Acceptance-only checkboxes and final review footer. An author's
+   summary is not another independent review. Filing never invokes `/start-task`
+   execution; that handoff waits for the operator to request pickup.
+   `hq park` refuses a title that
    matches an open issue (`hq.sh:306`); that is the dedupe, do not work around it.
 
 8. **File and verify capture.** Run un-sandboxed (`gh` needs the keychain):

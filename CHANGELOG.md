@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-10 — GH-1414 paraphrase-first skill review
+
+Added document-only paraphrase and grounded scope boundaries to existing start-task
+plan QA, and an author comprehension check to file-xyz-bug’s redacted capture preview.
+The existing idea consult and preview now use the same lens, preserving its body
+schema, review hash and admission boundary. No extra approval checkpoint or automatic
+execution handoff. The initial Codex wording approval covers the original two-skill
+diff only. Claude Opus 5.5 reviewed all three skills and requested an evidence refresh;
+its exact-head re-check approved 6e040869. All three skill validators now pass after fixing
+pre-existing intake description syntax. The final push gate, full runtime gate and
+managed deployment remain outstanding at this checkpoint.
+Evidence: `TESTS-RESULTS/2026-11-10+GH-1414/`.
+
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 
 Extended the existing flywheel routing skill with one approved pinned-batch handoff,
