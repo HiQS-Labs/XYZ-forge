@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -95,5 +95,33 @@ Do not run suites here or create a clone. Review permissions only. Append one re
 include swept file: yes/no, VERDICT and Basis, set header, and close tick on approval.
 
 ## Log
+
+### Reviewer · Round 1
+
+Input boundary: read the entire artifact first, without author chat or supplementary sources; the following paraphrase was recorded before source validation.
+
+**What this proposes:** Deliver target-specific policy and narrow measurement permission through the shared reviewer prompt and existing relay-xyz documentation. Allow an explicitly assigned check only in an orchestrator-supplied, revision-pinned disposable full clone, retaining evidence and identity checks.
+
+**How the existing system works, per this document:** Python reviewers delegate prompt construction to the shared Bash function; its current note permits seeded-artifact probes and a named phase-gate exception. Existing history/disposition and terminal attestation mechanisms remain in place but do not establish semantic truth.
+
+**What it is not:** A controller or global semantic gate, a LTVera implementation, or closure of either issue's remaining requirements.
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: The bounded delivery design is sound, but its red control currently demonstrates missing text rather than an observed rejection of an unchanged candidate. Tighten that acceptance step before implementation. This is plan QA, not runtime qualification; no suites, executable fixtures, clone creation or git commands ran.
+
+- [Should] S1 — Make step 5 defect-sensitive and retain the rejection. `PROJECT/2-WORKING/GH-1092-REVIEWER-EVIDENCE.md:88-95` promises a live candidate transcript but only “renders baseline prompt demonstrating missing delivery/permission text” for the red control. A baseline display has no stated acceptance verdict, so it cannot establish that the unchanged prompt fails the delivery criterion. PR1445's merged description explicitly asks “what prevents an unchanged, unfixed candidate from being reported as delivered, and where was rejection observed?” Define one manual acceptance procedure applied to baseline and candidate: require actual rendered delivery of target-rule discovery and supplied-clone permission, and the live candidate transcript's assigned check/evidence; reject baseline on the missing delivery requirements, recording the decisive missing spans and explicit failed verdict. Do not require a new global gate, a new suite, or a speculative baseline behavioral run. Retain baseline rejection, candidate render/transcript/check outputs and command/revision/exit details together under `TESTS-RESULTS/<date>+GH-1092/` with committed `provenance.jsonl` and link them from FINAL QA. Existing suite success remains separate regression evidence.
+  Observed input: Step 5 at lines 90-91 specifies only “Red control renders baseline prompt demonstrating missing delivery/permission text”; step 6 names committed provenance without assigning this rejection a durable receipt.
+  Affected scope: Acceptance of this prompt delivery change, including an unchanged baseline incorrectly presented as delivered; no relay terminal-policy or controller change.
+  Falsifier: A retained manual baseline acceptance result explicitly rejecting missing rule/permission delivery, paired with a candidate result satisfying the same requirements and live clone-check evidence, would satisfy S1; a baseline render or green regression suite alone would not.
+- [Pass] Source substantiates the narrow delivery gap after the reused changes: `utils/py/codex-turn.py:53` calls the bridge, `utils/py/rtl.py:866-868` delegates to `rtl_turn_prompt`, and `relay-automation/relay-turn-lib.sh:1067` permits seeded probes but sends clone-only claims to Unverified without the proposed supplied-clone route. `utils/py/relay_drive.py:744-754` conditions refusal on `MARATHON_REVIEWER_GATE_CMD`; it is not generic semantic approval. Read-only `gh api` reads of PR1432 and PR1445 returned exit 0, `merged: true`, merge SHAs `2688c788007e925bdbc0a352cca282917c9077b7` and `76a53663834193d75e1994c8c6b5e4d3f089584b` respectively. No new controller is warranted.
+- [Pass] Proposed authority is appropriately bounded: artifact lines 78-83 require an assigned command, separate full clone, reviewed-revision pin, identity brackets, no protected checkout execution or shared Git mutation, and missing-environment Unverified. Keep that last classification for sandbox/network/DB access failures too; prose permission alone does not supply writable sandbox access. `codex-turn.py` currently adds only the shared `.tick` directory to its extra sandbox roots. The planned live supplied-clone smoke must establish that its orchestrator-provided environment actually supports the assigned command.
+- [Pass] Requirements remain open rather than falsely closed: artifact lines 100-115 explicitly preserve six decisions and original eight findings. Live `gh api repos/BinoidCBD/LTVera-Pandas/issues/981 --jq .body` (exit 0) still says “The original eight checkboxes above remain open”; live #1092 and comment 6205666218 (both read via `gh api`, exit 0) retain factual approval, umbrella verification and cross-repository policy work beyond this bounded seam. Artifact's “neither closes” and non-goals preserve that scope; no LTVera runtime/browser closure is established here.
+- [Pass] Reuse, rating and rollback are commensurate: artifact lines 58-68 and 119-122 bound this to prompt/docs/package, call reversal Easy, explain the four scores without claiming a recurrence rate, and reject parallel machinery. Existing `test/gh681-reviewer-probe-rules.sh` explicitly distinguishes wording cases from behavioral residue containment; `test/gh397-reviewer-turn-role.sh` case 8 covers reviewer scope; `test/gh505-relay-attest.sh` covers attestation/forgery, not factual truth. Running these plus the planned main/adjacent smokes in a disposable clone is appropriate once S1 is corrected.
+
+Source access limits: graph search returned “MCP tool call requires approval, but approval policy is never”; used direct source reads instead. Initial `gh issue view` calls failed connection (exit 1); read-only `gh api` retries supplied both issue bodies and the requested comment. Entire plan swept; no additional pre-existing plan defects found. Runtime/suite claims remain [Unverified — needs clone run].
+
+Handing off to Producer (implementation) — address S1 in the plan, log its disposition and reopen round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
