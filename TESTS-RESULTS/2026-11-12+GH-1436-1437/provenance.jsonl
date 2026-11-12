@@ -1,0 +1,14 @@
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/swarm-preflight.sh", "rc": 0, "duration_s": 9.412}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/hq-park.sh", "rc": 0, "duration_s": 0.879}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/hq-park-synthesis.sh", "rc": 0, "duration_s": 0.754}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/gh168-wave-reconcile-scope.sh", "rc": 0, "duration_s": 0.74}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/wave-reconcile.sh", "rc": 0, "duration_s": 1.082}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/gh251-validate-pytest-skip.sh", "rc": 0, "duration_s": 36.435}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/gh732-l3-gate-summary.sh", "rc": 0, "duration_s": 0.029}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/marathon-plan.sh", "rc": 0, "result": "70 passed, 0 failed, 2 explicit Bash-parity skips"}
+{"commit": "1a1a636d5f198462cd07b4f5c486d1be76a625e0", "command": "python3 temp/manual_contract.py", "rc": 0, "result": "red control witnessed underlying planner exit 1 AttributeError"}
+{"commit": "1a1a636d5f198462cd07b4f5c486d1be76a625e0", "command": "PATH=/usr/bin:/bin bash temp/environment-block.sh (nonempty extracted GH-732 block)", "rc": 0, "result": "old unsuitable Python continued; expected refusal absent"}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_matrix.py (script retained beside receipt)", "rc": 0}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_hq.py (script retained beside receipt)", "rc": 0}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_environment.py (script retained beside receipt)", "rc": 0}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "git identity bracket after all focused suites", "rc": 0, "result": "HEAD bf38b326 unchanged; core.bare false; origin task source full clone unchanged; no local user.email; only intended untracked evidence"}
