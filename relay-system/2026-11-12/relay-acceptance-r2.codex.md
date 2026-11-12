@@ -33,3 +33,12 @@ print('question_count=1; location=existing QA template before example; sha256='+
 Decisive output: `question_count=1; location=existing QA template before example; sha256=d51ef7f5d2093e00ee3542f7009d35a310f5dd22742c2524e86ca55c203f0ec7; receipt_hash_match=true`.
 
 Scope: documentation wording and retained evidence only. Falsifier: wording equating admission with delivery, demanding all regressions fail, or evidence claiming accepted round-1 QA would overturn this verdict; none occurs in the reviewed inputs. No blocking findings. Runtime compliance, normal publication hooks and post-turn harness acceptance remain unverified here; no suites, pytest, validate or executable fixtures were run.
+
+### Attestation · relay-drive — 2026-11-12T20:47:30Z
+task: RELAY-ACCEPTANCE-R2-20261112
+reviewer: codex
+status: Approved
+reviewed-head: 8f599d40259f1b85ce45ecb5cf974b1c8e11fc83
+added-range: 1227+2578
+added-sha256: be9972b774679ce1624f2c161fc05b766ec00d4cd8166ed6eaff231048424aa7
+gate-run: undeclared
