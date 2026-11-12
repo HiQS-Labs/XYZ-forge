@@ -1,6 +1,6 @@
 # GH1421 final implementation QA
-STATUS: Open
-NEXT: codex
+STATUS: Approved
+NEXT: orchestrator
 
 Final QA of the committed implementation for https://github.com/HiQS-Labs/XYZ-forge/issues/1421 against its approved plan.
 
@@ -74,3 +74,23 @@ Re-review the fix and updated evidence. Preserve Round 1. Append `### Round 2 ·
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+F1 is resolved at `utils/py/board_sync.py:153-155`: the aggregate is now `SUM(runs) AS total_runs`, and both HAVING and ordering use that unambiguous alias. The updated plan matches. A2b checks a concrete nonempty ordered list including the zero-first mixed repo, two equal-total repos ordered by name, and exclusion of an all-zero repo. Its pre-fix replay fails precisely by dropping `o/mixed` (rc=1); the current matrix records 30 PASS / 0 FAIL (rc=0). This is a discriminating correction rather than a vacuous passing assertion.
+
+Independent narrow probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'` parsed `utils/py/board_sync.py` with `ast`, extracted the literal `agent_sql`, and executed it on a SQLite `:memory:` CTE containing `(o/mixed,0),(o/mixed,5),(o/tie-b,5),(o/tie-a,2),(o/tie-a,3),(o/zeros,0)`, all dated `date('now')`, with parameters `('-7 days',8)`. It asserted the exact nonempty result below, then replayed the same SQL with `total_runs` renamed back to `runs`. Exit status 0; decisive output:
+
+```text
+current: [('o/mixed', 5), ('o/tie-a', 5), ('o/tie-b', 5)]
+pre-fix control: [('o/tie-a', 5), ('o/tie-b', 5)]
+PASS: nonempty aggregate, zero exclusion, name tie; old query drops mixed
+```
+
+Re-read the reader/resolver, plan and prior plan approval, updated manual matrix, SUMMARY, matrix and alias-red logs, F2 mutation/restoration outcomes, smoke disclosures, provenance, existing-suite tails, CHANGELOG entry and GH-1421 ledger records. The strict default-off bool, same-connection conditional query, GitHub-first merge and existing resolver cap/dedupe remain intact. The inner SQLite-error catch preserves GitHub rows; ordinary read-only opening and the qualified no-sidecar warning remain unchanged. No additional writer, subsystem, registered suite or gate is introduced. The populated-fixture base comparison supports key-off identity within its measured scope; source inspection supports the broader control-flow claim. The existing rating 50/45/50/75 and accepted-start event remain consistent with the bounded advisory-reader change.
+
+Recorded disposable-clone receipts at 2565f073b report gh402 34/0, gh405 19/0, gh549 125/0, gh605 OK and gh777 PASS. Those are supplied evidence, not suites rerun by this reviewer. The live reader still falls back on this Mac; the documented working immutable diagnostic mode remains outside production, as approved. Final committed-state harness qualification remains outstanding. No git, executable fixtures, pytest, test suites or validate.sh were run in this turn. Only this relay file was edited. No remaining blocking finding.
