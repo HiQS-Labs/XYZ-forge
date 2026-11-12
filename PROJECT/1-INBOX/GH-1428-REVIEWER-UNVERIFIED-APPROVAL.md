@@ -83,3 +83,7 @@ effort 55: prompt/attestation contract plus one Codex config knob.
 ## Merge evidence
 
 - PR #1433 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1431 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

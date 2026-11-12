@@ -278,3 +278,7 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only o
   zero (a4836f6c6). That is the acceptance gap plan QA asked to be checked rather than assumed.
 - The base red control also showed that on a non-ignoring host, base never recorded Claude cost even for successful turns,
   because `rtl_enforce` deleted the log before the cost block read it.
+
+## Merge evidence
+
+- PR #1431 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
