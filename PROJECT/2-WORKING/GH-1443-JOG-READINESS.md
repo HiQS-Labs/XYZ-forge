@@ -1,7 +1,7 @@
 ---
 title: Close proven Jog preparation automation gaps
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1443
-status: queued
+status: Active
 created: 2026-11-12
 updated: 2026-11-12
 owner: Codex
@@ -15,7 +15,7 @@ phases: 1
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Prior-art scan found no existing fix for the selected gaps | Three bounded spikes, then independent plan review before runtime changes |
+| Three spikes and attested plan QA round2 Approved; shared checks implemented | CLI/focused verification, final independent QA and qualification |
 
 ## Scope
 Follow-up to source-instruction PR1442; it remains unmerged. Current development already owns the runtime checks being reused, so no unmerged code dependency or implicit merge/install. User authorizes up to three technical spikes and start-task execution with workhorse. No factory dispatch or product changes.

@@ -1674,6 +1674,12 @@ def contract_probes_from_doc(root, doc_path):
     return labels, None
 
 
+def promotion_probes(root, doc_path):
+    """Shared read-only promotion admission: valid legacy probes precede contract fallback."""
+    valid = [probe for probe in extract_probes_from_doc(doc_path) if lint_probe(root, probe)[0]]
+    return (valid, None) if valid else contract_probes_from_doc(root, doc_path)
+
+
 def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
     """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
     _require_jog_primary(primary or root)
@@ -1716,16 +1722,7 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primar
     elif status_table:
         content = status_table + content
 
-    probes = extract_probes_from_doc(doc_path)
-    valid_probes = []
-    for p in probes:
-        ok, reason = lint_probe(root, p)
-        if ok:
-            valid_probes.append(p)
-
-    contract_reason = None
-    if not valid_probes:
-        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+    valid_probes, contract_reason = promotion_probes(root, doc_path)
 
     if not valid_probes:
         if not interactive:
@@ -2137,6 +2134,13 @@ class JogCheckpoint:
         if foreign:
             raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
 
+    def check_publication(self):
+        """Static clone checks only; no freshness, recovery or fast-forward guarantee."""
+        if any(self.dirty(self.publication)):
+            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
+        if _git(self.publication, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
+            raise ContractError("checkpoint publication clone must be on development")
+
     def begin(self):
         _require_jog_primary(self.root)
         self.check_owned()
@@ -2178,10 +2182,7 @@ class JogCheckpoint:
         self.state["phase"] = "committed"
         self.save()
         pub = self.publication
-        if any(self.dirty(pub)):
-            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
-        if _git(pub, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
-            raise ContractError("checkpoint publication clone must be on development")
+        self.check_publication()
         _git(pub, "fetch", self.root, self.state["commit"])
         _git(pub, "merge", "--ff-only", self.state["commit"])
         if _git(pub, "rev-parse", "HEAD").decode().strip() != self.state["commit"]:
@@ -2202,6 +2203,18 @@ class JogCheckpoint:
         return "jog: publish wake checkpoint " + self.state["base"]
 
 
+def validate_checkpoint_options(args, target):
+    """Share existing live option checks with explicit-target readiness."""
+    checkpoint = getattr(args, "checkpoint_root", None)
+    if not checkpoint:
+        return
+    if (not args.max_tasks or args.max_tasks < 1 or getattr(args, "simulate", False)
+            or (getattr(args, "executor", "marathon") or "marathon") != "marathon"):
+        raise ContractError("--checkpoint-root requires positive --max-tasks and the real Marathon executor")
+    if os.path.realpath(checkpoint) == os.path.realpath(target):
+        raise ContractError("publication and execution clones must be distinct")
+
+
 def _dry_run_preflight(target, gh_num):
     """GH-1426: preflight's own --dry-run for one queued item against the execution clone, as the
     live call runs it (cwd + SWARM_PREFLIGHT_ROOT pinned, explicit never-created --out). It writes
@@ -2209,7 +2222,7 @@ def _dry_run_preflight(target, gh_num):
     probes) are the same as an operator's manual `swarm-preflight.sh --dry-run`."""
     preflight_py = _resolve_preflight_py(target)
     if not os.path.isfile(preflight_py):
-        return f"not evaluated — swarm_preflight not found at {preflight_py}"
+        return 2, f"not evaluated — swarm_preflight not found at {preflight_py}"
     argv = [sys.executable, preflight_py, "--gh-issue", str(gh_num)]
     label = ""
     doc_path = find_issue_doc(target, gh_num)
@@ -2218,15 +2231,18 @@ def _dry_run_preflight(target, gh_num):
         # place only when preflight's own frontmatter reader yields the same issue (plan QA r2).
         from swarm_preflight import doc_frontmatter_issue
         if str(doc_frontmatter_issue(doc_path) or "") != str(gh_num):
-            return (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
+            return 2, (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
                     f"gh_issue: {gh_num}, so readiness cannot be evaluated before promotion")
+        probes, reason = promotion_probes(target, doc_path)
+        if not probes:
+            return 2, "unreviewed-probe-contract: " + (reason or "no valid probes in unattended mode")
         argv = [sys.executable, preflight_py, "--project-doc", doc_path]
         label = " (1-INBOX doc; live run promotes it first)"
     out_dir = os.path.join(tempfile.gettempdir(), f"jog-dry-run-preflight-gh{gh_num}-{os.getpid()}")
     proc = subprocess.run(argv + ["--dry-run", "--out", out_dir], cwd=target, capture_output=True,
                           text=True, env={**os.environ, "SWARM_PREFLIGHT_ROOT": target,
                                           "PYTHONDONTWRITEBYTECODE": "1"})
-    return _preflight_summary(proc) + label
+    return proc.returncode, _preflight_summary(proc) + label
 
 
 def jog_run_main(args=None):
@@ -2260,15 +2276,15 @@ def jog_run_main(args=None):
 
     # Delivery 1 needs an explicit primary publication checkpoint before landing,
     # regardless of executor. Refuse before any supervisor state mutation.
-    if not simulate and not dry_run and getattr(args, "auto_merge", False):
+    target_readiness = dry_run and bool(getattr(args, "target_root", None))
+    if not simulate and (not dry_run or target_readiness) and getattr(args, "auto_merge", False):
         print(f"jog: {JOG_AUTO_MERGE_CHECKPOINT}", file=sys.stderr)
         sys.exit(2)
 
     # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
-    # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
-    # excluded: both stay on the hermetic/relay machinery and dispatch no Marathon execution,
-    # so the reviewer policy (which governs real dispatches) does not apply to them.
-    if executor == "marathon" and not simulate and not dry_run:
+    # invalid configuration must not mutate queue state at all. Bare preview and simulation
+    # stay exempt; explicit-target readiness uses the same static route/binary checks.
+    if executor == "marathon" and not simulate and (not dry_run or target_readiness):
         executor_error = validate_marathon_executor(args)
         if executor_error:
             print(f"jog: {executor_error}", file=sys.stderr)
@@ -2296,9 +2312,16 @@ def jog_run_main(args=None):
         if dry_target:
             try:
                 dry_target = _validate_execution_target(root, dry_target)
+                validate_checkpoint_options(args, dry_target)
+                if getattr(args, "checkpoint_root", None):
+                    JogCheckpoint(root, args.checkpoint_root).check_publication()
             except (ContractError, OSError, subprocess.CalledProcessError) as exc:
-                print(f"jog: [dry-run] live run would refuse --target-root: {exc}", file=sys.stderr)
+                print(f"jog: [dry-run] live run would refuse preparation: {exc}", file=sys.stderr)
                 sys.exit(2)
+        if dry_target:
+            print("jog: [dry-run] not verified: live provider capacity, gate environment/services, "
+                  "remote freshness or checkpoint recovery eligibility")
+        failed = False
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         try:
@@ -2319,9 +2342,13 @@ def jog_run_main(args=None):
                     break
                 print(f"  {r['position']}. GH-{r['gh_number']} (builder={args.builder}, auto_merge={args.auto_merge})")
                 if dry_target:
-                    print(f"     preflight: {_dry_run_preflight(dry_target, r['gh_number'])}")
+                    status, summary = _dry_run_preflight(dry_target, r['gh_number'])
+                    print(f"     preflight: {summary}")
+                    failed = failed or status != 0
         finally:
             conn.close()
+        if failed:
+            sys.exit(2)
         return
 
     _require_jog_primary(root)
@@ -2331,11 +2358,10 @@ def jog_run_main(args=None):
         print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
     checkpoint_root = getattr(args, "checkpoint_root", None)
-    if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
-        print("jog: --checkpoint-root requires positive --max-tasks and the real Marathon executor", file=sys.stderr)
-        sys.exit(2)
-    if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
-        print("jog: publication and execution clones must be distinct", file=sys.stderr)
+    try:
+        validate_checkpoint_options(args, target)
+    except ContractError as exc:
+        print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
