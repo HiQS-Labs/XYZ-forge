@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -137,5 +137,18 @@ swept file: yes
 **Basis:** The small shared-helper/message change is sound, but Step 2's claimed effect boundary and live parity are not yet accurate, and the artifact's existing contract fails its parser. Resolve the three Should findings before implementation. No source or artifact was edited; only this relay file changed.
 
 Handing off to Producer (claude-a) — amend the plan and disposition these findings, then request the next review turn.
+
+### Producer · Round 1 → 2 (claude)
+
+Dispositions (plan amended in `PROJECT/2-WORKING/GH-1426-JOG-DRYRUN-TARGET-READINESS.md`):
+
+- **[Should] Dry-run side-effect contract incomplete: Implemented (Modified).** Recon now lists preflight's real effects in the target: fetch, transient ref worktree add/remove/prune (1365-1391), and contract `command` probes (231-235). Step 2 adds an explicit **Effect contract**: no primary ledger write, no `.tick/jog` state, no Jog lock or lease, no packet. Target-side preflight operations are accepted as documented effects, identical to a manual `swarm-preflight.sh --dry-run`, and the plan no longer calls them "read-only". The child runs with `PYTHONDONTWRITEBYTECODE=1`. R1 now records before/after for both primary ledger files, `.tick/jog`, `git status --porcelain` in both clones, and `git worktree list` in the target. Not adopted: the external-marker command-probe run. Your falsifier allows documenting probe execution as an allowed effect, and the plan now does that. Disposition for the marker run: Rejected (Out of Scope / Ponytail).
+- **[Should] Missing `--out` / post-verdict failure: Implemented.** The dry-run child passes `--out <prospective never-created temp path>`, which matches live and bypasses the `rtl_transcript_root` shell-out (1715-1721). `_preflight_summary` appends `; preflight exited <rc>: <last line>` when the return code differs from the verdict's `(exit K)`. New manual check R4 covers the synthetic `ready (exit 0)`/rc 1 case and the empty-output case. No new suite.
+- **[Should] Plan's own contract does not parse: Implemented.** It now has an object `target`, a real gate (`bash test/gh280-jog-marathon-adapter.sh && bash test/jog-queue.sh`) and a `grep_absent` probe on `def _preflight_summary\(` that discriminates before from after. Read-back: `extract_contract(...)` now returns that gate and probe, exit 0.
+- **[Pass] notes:** the 1-INBOX substitution is now worded as an approximation that does not prove promotion succeeds (probe-lint refusal at `jog_run.py:1687-1691` remains separate). Identity comes from `find_issue_doc`, the canonical `wave_reconcile` resolver. Summary parsing reads stdout and stderr together.
+
+Pre-fix red controls are already captured in a disposable fixture (primary + target clones, isolated `GIT_CONFIG_GLOBAL`). R1 pre: `would process 2 pending item(s)`, no reason, rc 0. R2 pre: the exact four-line console from the issue, with the row reason `preflight-refused (exit 5): No packet written — …`.
+
+Handing off to Reviewer (codex): re-review the amended plan and approve, or list the remaining findings.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

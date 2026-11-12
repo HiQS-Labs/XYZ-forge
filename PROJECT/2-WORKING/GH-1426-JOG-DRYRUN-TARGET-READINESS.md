@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from 1-INBOX; ledger row picked up and rated `55/45/50/70`; recon on base `0f21b761a` and surgical plan written (below). | Codex plan QA via relay-xyz, then implement Steps 1–5. |
+| Plan QA round 1 (Codex) returned FAIL with 3 Should findings; all were dispositioned and the plan amended (effect contract, `--out`, summary rc check, repaired preflight contract). Pre-fix R1/R2 red controls captured in a disposable fixture. | Codex plan QA round 2, then implement Steps 1–5. |
 
 ## Rating rationale (2026-11-11)
 
@@ -77,13 +77,23 @@ The pointers from the report are re-verified against current `development`; line
   check (1707-1713), so dry-run and live give the same verdict. Its text output carries
   `  readiness   : ready=N — next: <reason>` and `  verdict     : <VERDICT> (exit N)` (1702-1704). Early
   refusals print a `BLOCKED: …` / `CONTRACT ERROR …` line instead. The gate-program check is at
-  1585-1600. Side effect, live and dry: `git fetch --prune` in the target (1309). This updates
-  remote-tracking refs only. It does not touch the ledger or take a lock.
+  1585-1600. **Side effects, live and dry alike** (plan QA r1): `git fetch --prune` in the target (1309).
+  It also adds a transient detached worktree at the contract's `target.ref`, then removes and prunes it
+  (1365-1391). Contract `command` probes run with `shell=True` in that worktree (231-235), before the
+  dry-run exit (1727). None of these touches either ledger or takes a Jog lock or lease. Git takes its own
+  short-lived ref and worktree locks. After the ready verdict, if `--out` is unset, preflight shells out
+  to `rtl_transcript_root` (1715-1721). That call is read-only, but it exits 1 on an invalid
+  `XYZ_ARCHIVE_ROOT`. The live Jog call passes `--out`, so it never reaches that shell-out.
 - **Doc location gotcha:** `--gh-issue N` mode requires `PROJECT/2-WORKING/GH-N-*.md` in the target
   (1242-1248). A live run first **promotes** a 1-INBOX doc (`jog_run.py:2341-2352`, a mutation), so a naive
   dry-run preflight would report a false `BLOCKED` for every 1-INBOX item. Preflight's `--project-doc
   <path>` mode evaluates the same contract and readiness from an explicit doc, with the issue taken from
-  frontmatter (1494), and needs no promotion.
+  frontmatter (1494), and needs no promotion. The slug (basename, 1285-1288) and checklist source
+  (1509-1514) match what a post-promotion run sees, because promotion keeps the basename and content
+  (`jog_run.py:1638-1677`). This **approximates** post-promotion preflight. It does not prove that the
+  promotion itself would succeed: unattended probe-lint refusal at `jog_run.py:1687-1691` stays separate.
+  `find_issue_doc` is the canonical issue-identity resolver (`wave_reconcile`), so the doc used is the
+  one for issue N.
 - **Tests pinning touched text:** `test/jog-queue.sh:174-176` and `test/gh280-jog-marathon-adapter.sh:795-803`
   (I7) assert `would process` from the dry-run path. I7 already passes `--target-root "$FT"` via
   `jog_run_root`, so I7 will exercise the new path. G8 (`gh280…:703-712`) pins the park reason prefix
@@ -120,18 +130,27 @@ No schema, ledger or contract changes. Reversibility: **Easy**.
    - `_preflight_summary(proc)`: one line from a completed preflight run: `"<verdict line value>[ — next:
      <reason>]"` from the `verdict` / `readiness` lines. If those are absent, it falls back to the first
      `BLOCKED` / `CONTRACT ERROR` / `swarm-preflight:` line, then the last non-empty output line, then
-     `exit N`. It never returns an empty string.
+     `exit N`. It reads stdout and stderr together and never returns an empty string. If the process
+     return code differs from the `(exit K)` in the printed verdict (a post-verdict failure), it appends
+     `; preflight exited <rc>: <last line>`. A contradicted `ready` is therefore never reported unqualified
+     (plan QA r1).
    → expect: `bash test/gh280-jog-marathon-adapter.sh` stays green with no other edit.
 2. **Dry-run target readiness** (dry-run branch). With `--target-root`, call
    `_validate_execution_target` (no primary pin, matching the documented read-only contract). If the
    target is invalid, print `jog: [dry-run] live run would refuse --target-root: <reason>` and exit 2.
-   For each listed item (same `--max-tasks` cap), run `swarm_preflight --gh-issue N --dry-run` with
-   `cwd=target, SWARM_PREFLIGHT_ROOT=target`, exactly as the live call does. If `find_issue_doc(target, N)`
+   For each listed item (same `--max-tasks` cap), run `swarm_preflight --gh-issue N --dry-run --out <path>`
+   with `cwd=target, SWARM_PREFLIGHT_ROOT=target`, as the live call does. Also set
+   `PYTHONDONTWRITEBYTECODE=1` for the child. `<path>` is a prospective, never-created directory under the
+   system temp dir. It keeps the archive-root shell-out off the dry-run path, as in live (plan QA r1). If `find_issue_doc(target, N)`
    resolves to a 1-INBOX doc, run `--project-doc <that doc> --dry-run` instead, and label the line
    `(1-INBOX doc; live run promotes it first)`. Print `     preflight: <summary>` under each item. Without
-   `--target-root`, output is byte-identical to today. Still no `releases.db` writes, no supervisor lock,
-   no lease, no packet. The only side effect is preflight's own `git fetch` in the target (as a manual
-   preflight dry-run does).
+   `--target-root`, output is byte-identical to today.
+   **Effect contract** (plan QA r1): no write to the primary's `releases.db`/`releases.sql`, no
+   `.tick/jog` state, no Jog supervisor lock, no lease, no packet. In the target, preflight's own
+   operations run exactly as an operator's manual `swarm-preflight.sh --dry-run` would: `git fetch`, the
+   transient ref worktree (created, removed and pruned), and any contract `command` probes. These are
+   accepted, documented effects of reusing the one readiness engine. They are not "read-only". A probe
+   that writes is the contract author's choice and behaves the same as in a live run.
    → expect: red control R1 (below) names `.venv/bin/pytest` per item; jog-queue.sh dry-run assertions unchanged.
 3. **Live preflight park reason** (`run_marathon_phase`). Reword the pre-preflight line to
    `jog: running preflight for GH-N (execution <id>, packet: …)`, because the execution record already exists
@@ -156,11 +175,12 @@ No schema, ledger or contract changes. Reversibility: **Easy**.
 
 | Acceptance | Check |
 |---|---|
-| Dry-run + `--target-root` prints per-item verdict and `next:`; zero ledger writes or locks | **R1 (red control, manual):** a fixture queue with 2 pending items whose clone lacks the gate program. Pre-fix: `would process 2` and no reason. Fixed: each item prints `NOT-READY (exit 5) — next: gate program not found …`. `releases.db` sha256 is unchanged, and there is no `.tick/jog` lock or state. I7 (existing) stays green on a ready target. |
+| Dry-run + `--target-root` prints per-item verdict and `next:`; zero ledger writes or locks | **R1 (red control, manual):** a fixture queue with 2 pending items whose clone lacks the gate program. Pre-fix: `would process 2` and no reason. Fixed: each item prints `NOT-READY (exit 5) — next: gate program not found …`. Before/after: primary `releases.db` and `releases.sql` sha256 unchanged; `.tick/jog` unchanged; primary and target `git status --porcelain` unchanged; target `git worktree list` unchanged. I7 (existing) stays green on a ready target. |
 | No `--target-root` → unchanged output | `test/jog-queue.sh` case 12 (existing) + R3 (manual): diff of dry-run output with no target, before vs after = empty. |
 | Live preflight park prints the verdict and `next:`, not "landing boundary" | **R2 (red control, manual):** a live run against the same unready clone. Pre-fix console = the four lines in the report. Fixed: `preflight refused: NOT-READY (exit 5) — next: …` and `advancing halted: GH-N parked — preflight-refused (exit 5): …`. G8 (existing) still matches its prefix. |
 | `marathon execution <id>` not printed before preflight | R2 console shows `running preflight for GH-N (execution …)`. A grep shows no `marathon execution` print precedes the preflight `subprocess.run`. |
 | Existing Jog suites pass; evidence in TESTS-RESULTS | gh280 + jog-queue runs in a disposable clone, provenance committed. |
+| (plan QA r1) Summary never hides a post-verdict failure | **R4 (manual, one-liner):** `_preflight_summary` on a synthetic completed process with stdout `  verdict     : ready (exit 0)` and returncode 1 → output contains `preflight exited 1`. On empty output with returncode 2 → `exit 2`. |
 
 **Test non-scope:** no new suite, registry entry, fixture runner or guard (GH-831). Existing tests are
 edited only if a pinned string changes; none is expected to.
@@ -219,14 +239,19 @@ Root cause: `jog run --dry-run` is hermetic toward the ledger, and it also does 
 
 ```json
 {
-  "target": "utils/py/jog_run.py",
-  "gate": "existing Jog adapter + gh280 suites",
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash test/gh280-jog-marathon-adapter.sh && bash test/jog-queue.sh",
   "fix_probes": [
-    {"type": "grep", "path": "utils/py/jog_run.py", "pattern": "advancing halted at landing boundary"}
+    {"type": "grep_absent", "path": "utils/py/jog_run.py", "pattern": "def _preflight_summary\\("}
   ],
   "artifacts": ["utils/py/jog_run.py"]
 }
 ```
+
+(Plan QA r1 repaired this contract: the old one had a string `target`, a descriptive gate and an
+unsupported `grep` probe type, and `extract_contract` refused it with exit 3. The probe reports `landed`
+once the shared summary helper exists. The legacy landing string is intentionally retained, so it is not
+probed.)
 
 ## PRS proposal
 
