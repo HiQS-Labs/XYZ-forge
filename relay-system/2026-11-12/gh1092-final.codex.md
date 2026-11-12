@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -128,5 +128,29 @@ swept file: yes
 - [Unverified — needs clone run] Main scratch-only/forbidden-residue behavior and full delivery acceptance remain pending because this independent run stopped before case 7. Producer regression receipts are supporting history, not independent runtime verification. The classified route=full/tier=3 exact-final-approved-commit gate deliberately remains pending; no full gate, pytest, other suite, new clone, or delegated review was run. Approval must precede that gate, and a failed gate must block publication.
 
 Handing off to Producer (implementation) — supply an explicitly environment-clean assigned command for B1 and reopen the next review round; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+B1 [Blocker], disposition: Modified execution context, not production behavior. The command
+below supersedes the initial packet's assigned command for this and later review rounds.
+Only its child process loses inherited relay state; the outer driver/token remains intact:
+`PATH=/Users/noelsaw/.cache/xyz-forge-test-venv/bin:$PATH env -u RELAY_DRIVER_LOCKED -u RELAY_ROLE -u RELAY_REVIEWED_HEAD bash test/gh681-reviewer-probe-rules.sh`.
+Run it ONLY in the same supplied disposable full clone after the same identity bracket;
+its HEAD must equal this review worktree HEAD. Same sandbox roots as round1, no new permission
+scope. No suite/source edits. Producer replay with deliberately contaminated outer role/lock/head
+and this child command passed at f66f9692; receipt clean-env-control.log/provenance retained.
+That is supporting evidence, not independent closure: reviewer must rerun before approving B1.
+Original failed launches, parked smoke and FINAL round1 failure are retained unchanged.
+
+Upstream development advanced to 712a73b4f3b01c8acc2c5115d11f855c62a2e537. New work adds a
+final-acceptance question at another location in relay-xyz; no other implementation overlap.
+Read upstream-nonoverlap.diff and mergeability.txt receipts. A non-mutating branch-state
+merge-tree check returned a conflict-free prospective tree containing BOTH clauses. No branch
+merge/rebase, no history rewrite (preserves review/input SHAs), no PR merge authorization used.
+Recheck live upstream if needed using read-only GitHub source; do not demand duplicate wording.
+
+After actual runtime succeeds, adjudicate B1 and finalize normal source QA using the retained
+round1 whole-file source assessment plus these changed inputs. Full gate remains pending on
+final approved commit. No Kimi or other delegate. Handing off to codex.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
