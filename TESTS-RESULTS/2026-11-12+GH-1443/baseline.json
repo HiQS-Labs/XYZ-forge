@@ -1,0 +1,28 @@
+{
+  "missing_reviewer": {
+    "rc": 0,
+    "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-manual-hjuawje9)\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-1443 (builder=codex, auto_merge=False)\n     preflight: exit 3 \u2014 not ready\n"
+  },
+  "same_reviewer": {
+    "rc": 0,
+    "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-manual-hjuawje9)\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-1443 (builder=codex, auto_merge=False)\n     preflight: exit 3 \u2014 not ready\n"
+  },
+  "bad_checkpoint_options": {
+    "rc": 0,
+    "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-manual-hjuawje9)\njog: [dry-run] would process 1 pending item(s):\n  1. GH-1443 (builder=codex, auto_merge=False)\n     preflight: exit 3 \u2014 not ready\n"
+  },
+  "failed_preflight": {
+    "rc": 0,
+    "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-manual-hjuawje9)\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-1443 (builder=codex, auto_merge=False)\n     preflight: exit 3 \u2014 not ready\n"
+  },
+  "bare_preview": {
+    "rc": 0,
+    "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-manual-hjuawje9)\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-1443 (builder=codex, auto_merge=False)\n"
+  },
+  "promotion_lint": [
+    false,
+    "probe target path does not resolve: -c"
+  ],
+  "db_unchanged": true,
+  "no_jog_state": true
+}
