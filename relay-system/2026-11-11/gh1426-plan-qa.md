@@ -214,4 +214,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the approved implementation and disposable-clone verification.
 
+
+### Attestation · relay-drive — 2026-11-12T03:23:26Z
+task: RELAY-gh1426-plan-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: 56cdca9f118928e5fb51c9a113181c5a43430ce6
+added-range: 26847+4476
+added-sha256: 85bb6f281715354687686e9c48db11f2a65ff3cff61e85a4faa73e21586b42a7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
