@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; eight-case study finished. H produced two false positives and one false negative; no runtime change recommended. | Final QA and classified publication gate, then evidence PR for parent review. |
+| Plan and final Codex QA Approved in round 1; eight-case no-code recommendation retained. | Publish through the normal docs gate; parent reviews/merges evidence PR and decides issue disposition. |
 
 ## Current authorized plan (2026-11-12)
 
@@ -175,7 +175,7 @@ Determine whether existing contract validators can provide useful bounded adviso
 
 ### QA checklist — Phase 0
 
-- [ ] Independent plan/final review and classified gate with nonempty provenance.
+- [x] Independent plan/final review Approved; initial PDDA passed with nonempty provenance. Exact publication observation is retained with the evidence and issue closeout.
 
 ## Merge evidence
 
