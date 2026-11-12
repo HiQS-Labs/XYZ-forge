@@ -1,5 +1,8 @@
 # GH1092 bounded reviewer-delivery verification
 
+Frozen pre-FINAL evidence checkpoint; later revalidation and approval are recorded append-only
+in relay-system/2026-11-12/gh1092-final.codex.md. Earlier failures remain failures.
+
 Implementation source: 3f45258bf4f161d0a8c874c8b70cfa877f98696b, based on Forge
 ed0a386fac4caa170bd9d6b297da7154717288df. Shared reviewer prompt and existing relay-xyz
 item 5 changed; existing package regenerated. No terminal controller or containment writer changed.

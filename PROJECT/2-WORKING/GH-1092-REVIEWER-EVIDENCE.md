@@ -94,10 +94,12 @@ No runtime exception is inferred: absent a supplied clone/command, retain Unveri
    TESTS-RESULTS/2026-11-12+GH-1092/ with provenance.jsonl. No speculative baseline browser
    run or new gate. Sandbox/network/DB failure stays Unverified. Preserve containment negative controls
    from existing suites. This proves delivery and execution seam, not LTVera/browser safety.
-6. Classify all changed paths (including package/ledger). Run required full qualifying gate
-   in disposable full clone with identity bracket and committed provenance. Fresh gate after
-   material implementation changes; focused checks only between review rounds.
-7. Independent Codex FINAL QA (<=3 rounds), real supervisor exit/attestation. Publish verified
+6. Classify all changed paths (including package/ledger); route full/tier 3 observed.
+   Per installed start-task Step 7, run the full qualifying gate exactly once on the final
+   approved commit after FINAL QA, before publication, in a disposable full clone with identity
+   bracket. Focused checks and main/adjacent smokes precede FINAL QA; no full reruns between rounds.
+7. Independent Codex FINAL QA (<=3 rounds), real supervisor exit/attestation; resolve the
+   parked supplied-clone smoke before approval, then execute step 6 full gate. Publish verified
    PR into development, referencing #1092 and full LTVera GH981 URL without closing either.
    Parent performs additional Kimi review afterward; no Kimi run here.
 
@@ -128,6 +130,7 @@ are evidence of scope, not a measured recurrence rate. No complete trend survey 
 PLAN R1: FAIL, S1 accepted (baseline rejection lacked explicit verdict); revised step 5.
 PLAN R2: Approved, supervisor exit 0; relay-system/2026-11-12/gh1092-plan.codex.md.
 Reviewed plan revision 5e990ca71; attestation retained by the existing driver.
+Evidence checkpoint at c9f9bbc0d (later QA verdicts live in the relay):
 FINAL: pending. Focused checks passed; foreign delivery/missing-runtime smoke passed.
 Main smoke parked on sandbox fixture-temp denial, not a code/suite pass; see
 TESTS-RESULTS/2026-11-12+GH-1092/SUMMARY.md. FINAL reviewer must resolve that predicate
