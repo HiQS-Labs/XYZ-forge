@@ -136,7 +136,8 @@ def _rebalance_active_repos(source, limit):
     """GH-898: top active repos from rebalanceOS, read-only. Any failure warns and returns [].
 
     Mirrors rebalance.ingest.db.github.top_active_repos (7-day score over github_activity) with a
-    name tie-break; no `immutable` (the DB has a live writer) and no rebalance import.
+    name tie-break; no rebalance import. Opened mode=rw + query_only (GH-1430); no `immutable`
+    (the DB has a live writer).
 
     GH-1421: with source["include_agent_sessions"], repos with agent runs in agent_session_activity
     (rebalanceOS migration 0010) over the same window follow the GitHub list, by runs then name. The
@@ -156,8 +157,11 @@ def _rebalance_active_repos(source, limit):
     window = "-%d days" % source["since_days"]
     agent_rows = []
     try:
-        conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)  # SQLITE-GATEWAY-OK: read-only rebalanceOS DB, not harness state (GH-898)
+        # GH-1430: read-only by query_only, not mode=ro. Apple's system SQLite cannot open a WAL DB
+        # whose -wal/-shm side files are gone under mode=ro; mode=rw never creates a missing file.
+        conn = sqlite3.connect(path.resolve().as_uri() + "?mode=rw", uri=True, timeout=2)  # SQLITE-GATEWAY-OK: read-only rebalanceOS DB, not harness state (GH-898)
         try:
+            conn.execute("PRAGMA query_only=ON")
             rows = conn.execute(sql, (window, limit)).fetchall()
             if source.get("include_agent_sessions"):
                 try:
@@ -174,7 +178,7 @@ def _rebalance_active_repos(source, limit):
         elif ("unable to open database file" in str(exc)
               and not any(Path(str(path) + s).exists() for s in ("-wal", "-shm"))):
             reason = ("is unreadable (unable to open database file); this may be the WAL DB with no "
-                      "-shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421)")
+                      "-shm sidecar in a directory SQLite cannot write (GH-1430)")
         else:
             reason = "is unreadable (%s)" % exc
         _warn("repos_source: rebalanceOS DB %s; using the pinned repos" % reason)
