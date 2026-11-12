@@ -2,9 +2,9 @@
 gh_issue: 1430
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1430
 title: "board_sync: Rebalance WAL DB read fails under Apple SQLite mode=ro; open mode=rw with query_only"
-status: Active (2-WORKING — PR ready; awaiting merge)
+status: Complete
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 owner: claude (start-task)
 doc_type: feedback
 complexity: 1
