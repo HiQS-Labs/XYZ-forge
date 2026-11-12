@@ -15,7 +15,7 @@ goal: Fix the reported contract and environment failure using existing validatio
 
 | What was just completed | What's next |
 |---|---|
-| Implementation, focused verification and independent final QA approved. | Full push qualification and one PR for both issues. |
+| Implementation, independent QA and full qualification passed (408/408). | Publish one shared PR; the issue closeout comments record its URL and final head. |
 
 ## Symptom
 
@@ -68,10 +68,10 @@ Base: `3ad3c0d88fb3d10a0e685b34544264143290f1e1`; one branch and one PR for both
 
 | Issue | Scope | Dependencies | Rating | State |
 |---|---|---|---|---|
-| #1436 | Planner contract shape and intake rejection | None | 70/65/50/70 | Final QA approved; full gate pending |
-| #1437 | Existing gate environment probe and documentation | None | 55/40/50/75 | Final QA approved; full gate pending |
+| #1436 | Planner contract shape and intake rejection | None | 70/65/50/70 | Final QA and full gate passed; PR publication |
+| #1437 | Existing gate environment probe and documentation | None | 55/40/50/75 | Final QA and full gate passed; PR publication |
 
-Clone/branch: `XYZ-forge-gh1436-contract-environment-2026-11-12` / `fix/XYZ-forge-gh1436-contract-environment-2026-11-12`. Both PR links pending. #1437 retains its own capture and ledger row.
+Clone/branch: `XYZ-forge-gh1436-contract-environment-2026-11-12` / `fix/XYZ-forge-gh1436-contract-environment-2026-11-12`. One shared PR; publication URL and final head are recorded in each issue's start-task closeout comment. #1437 retains its own capture and ledger row.
 
 ### Recon and bet
 
@@ -98,7 +98,7 @@ Ratings preserve issue proposals except #1437 appeal uses neutral 50 (the issue 
 
 - [x] Independent plan QA approved before implementation; [receipt](../../relay-system/2026-11-12/gh1436-plan.codex.md), reviewed 1a1a636d.
 - [x] Both issues' focused acceptance checks reproduced and verified with committed provenance.
-- [ ] Final independent QA approved and required gate passes.
+- [x] Final independent QA approved and required gate passes (408/408 at c48c940c).
 - [ ] One PR targets development with both issue closeouts.
 
 ## Lessons Learned (For Future Agents)
@@ -110,3 +110,5 @@ Plan QA nits: accepted partial-contract matrix addition. The reviewer read the a
 ## Final review
 
 Codex final QA Approved after two concrete findings and bounded repairs; [receipt](../../relay-system/2026-11-12/gh1436-final.codex.md), reviewed 9c506687. Existing focused suites and manual controls passed; [evidence](../../TESTS-RESULTS/2026-11-12+GH-1436-1437/SUMMARY.md). Full gate and PR publication remain pending. Edit verdicts: contract/helper/intake helped (discriminating controls); environment refusal helped; optional-null merge helped; documentation has no observed runtime effect.
+
+Full qualification: 408/408 at c48c940c, [committed receipt](../../TESTS-RESULTS/2026-11-12+GH-1436-1437/provenance.jsonl). Final runtime code remains independently approved; the later mechanical assertion correction was outer-reviewed and rechecked, then covered by the full gate. Awaiting PR publication/merge; neither issue is closed by this branch yet.

@@ -15,7 +15,7 @@ goal: Fix the reported contract and environment failure using existing validatio
 
 | What was just completed | What's next |
 |---|---|
-| Implementation, focused verification and independent final QA approved. | Full push qualification and one PR for both issues. |
+| Implementation, independent QA and full qualification passed (408/408). | Publish one shared PR; the issue closeout comments record its URL and final head. |
 
 Shared plan: [GH-1436](GH-1436-CONTRACT-ENVIRONMENT.md).
 
@@ -76,3 +76,5 @@ effort 75: one probe block in `validate.sh`, plus an optional PATH line in the h
 
 - Making the codebase 3.9-compatible again.
 - Installing or upgrading the system Python, or creating the venv automatically.
+
+Full qualification: 408/408 at c48c940c, [committed receipt](../../TESTS-RESULTS/2026-11-12+GH-1436-1437/provenance.jsonl). Final runtime code remains independently approved; the later mechanical assertion correction was outer-reviewed and rechecked, then covered by the full gate. Awaiting PR publication/merge; neither issue is closed by this branch yet.
