@@ -87,8 +87,12 @@ No runtime exception is inferred: absent a supplied clone/command, retain Unveri
    registry entries or synthetic runners; manual controls live only as receipts.
 5. Smoke actual rendered prompt and live Codex reviewer transcript: main target names Forge
    rules and runs one assigned focused check in supplied full clone; adjacent foreign target
-   uses its own rule policy and absent clone reports Unverified. Red control renders baseline
-   prompt demonstrating missing delivery/permission text. Preserve containment negative controls
+   uses its own rule policy and absent clone reports Unverified. Apply the same manual delivery acceptance to baseline and candidate: reject baseline
+   explicitly for missing target-rule/supplied-clone delivery (quote missing spans and failed
+   verdict); accept candidate only with those rendered clauses AND live transcript/assigned-check
+   evidence. Retain both verdicts, commands, revisions, exits and decisive output together under
+   TESTS-RESULTS/2026-11-12+GH-1092/ with provenance.jsonl. No speculative baseline browser
+   run or new gate. Sandbox/network/DB failure stays Unverified. Preserve containment negative controls
    from existing suites. This proves delivery and execution seam, not LTVera/browser safety.
 6. Classify all changed paths (including package/ledger). Run required full qualifying gate
    in disposable full clone with identity bracket and committed provenance. Fresh gate after
@@ -121,4 +125,5 @@ unmeasured-claim risk; appeal is neutral; cheapness reflects bounded prompt/docs
 mandatory full gate and two independent reviews. Two incident reports (#1092 and LTVera GH981)
 are evidence of scope, not a measured recurrence rate. No complete trend survey claimed.
 
-PLAN: pending. FINAL: pending. Gate/smokes: pending. Lessons: NO_ENTRY pending observation.
+PLAN R1: FAIL, S1 accepted (baseline rejection lacked explicit verdict); revised step 5.
+FINAL: pending. Gate/smokes: pending. Lessons: NO_ENTRY pending observation.

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -123,5 +123,16 @@ Basis: The bounded delivery design is sound, but its red control currently demon
 Source access limits: graph search returned “MCP tool call requires approval, but approval policy is never”; used direct source reads instead. Initial `gh issue view` calls failed connection (exit 1); read-only `gh api` retries supplied both issue bodies and the requested comment. Entire plan swept; no additional pre-existing plan defects found. Runtime/suite claims remain [Unverified — needs clone run].
 
 Handing off to Producer (implementation) — address S1 in the plan, log its disposition and reopen round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Disposition S1: Implemented in plan step 5. One manual acceptance procedure now rejects the
+baseline explicitly on absent target-rule/supplied-clone clauses and requires candidate rendered
+clauses plus live transcript/check evidence. Both verdicts and provenance have one durable location.
+Sandbox/network/DB failures remain Unverified. No controller or suite added.
+
+Reviewer: recheck S1 and the revised plan against the retained round-1 source validation;
+read any source necessary for changed claims, but do not repeat the plan-only paraphrase.
+No implementation writes have occurred. Handing off to codex.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
