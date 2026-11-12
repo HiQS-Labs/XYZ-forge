@@ -1,0 +1,67 @@
+# GH1419 independent final QA
+STATUS: Approved
+NEXT: orchestrator
+
+Review implementation at 3676fb8c against origin/development and PROJECT/2-WORKING/GH-1419-REVIEWER-ROUTING.md. Read all changed production contexts and nearby consumers; independent plan QA is gh1419-plan.codex.md Approved round2. Scope is explicit supported reviewer routing, including Claude-only distinct roles, not provider quality certification, arbitrary executables, defaults or overnight qualification. No new suites/runner/registry, frozen Bash untouched. Provider slots and shared owner extend existing code.
+
+Evidence TESTS-RESULTS/2026-11-11+GH-1419: GH280 227/227, GH346 62/62, manifest14/14, Marathon35/35, manual controls including baseline refusal/overwrite, real dispatcher env plus actual Claude/Codex shim identity reached, controlled actual timeout function one-recovery stop. Disposable identity verified. Last existing GH346 assertion changed to invoke actual manifest CLI; rerun pending/recorded locally. Full normal push gate deliberately follows final QA, not claimed run yet.  [Unverified — no citation]
+
+Live Claude reviewer route did execute correct isolated actor and append review but failed existing $0.50 provider cap (exit1), plus author concurrently edited evidence/JSDoc in parent checkout, causing containment exit6. Original failure retained, approval revoked, own files restored from orphan backup and committed. DO NOT treat that review as approval. No cap increase/retry. Controlled routing evidence plus this real dispatch is not a successful live end-to-end relay or overnight claim. Assess code on actual requirements; don't demand extra machinery or bypass existing review contracts.
+
+Questions: shared recognition/probe parity across Jog/Marathon/both manifests, source-derived nonempty profile lanes, exact membership/scalar dispatch all9 providers, no lost role/attestation/cap semantics, packaging/consumer compatibility, unknown/missing refusal before mutation, truthful evidence and rating. Check no new test suite/registry and no hidden scope. Distinguish concrete code defects from environment/live-review limitations. Read all source necessary, no validate/test/*.sh in this valued clone. Manual read-only checks allowed. Only edit this relay file; no source/Git commands. Append `### Round 1 · Reviewer · codex` followed by plain paragraphs (not nested headings), `swept file: yes/no`, **Verdict:** Approved or Changes requested, precise source-backed findings. Set STATUS Approved only if approved; NEXT orchestrator. Three final rounds maximum, this is round1.
+
+
+### Round 1 · Reviewer · codex
+
+Approve the scoped routing implementation at 3676fb8c; no blocking source defect found. Inspected all changed production files (bin/marathon-yaml, src/marathon-yaml.js, marathon-agent.sh, jog_run.py, marathon_drive.py, profile_resolve.py), their complete changed functions and nearby admission, invocation substitution, dispatch, shim identity, role-containment, attestation and timeout consumers. Read the approved plan, modified existing suites and retained evidence. Compared committed implementation objects against the approved-plan revision 07e36a89 using read-only Python object decoding, without invoking git; this comparison establishes the implementation delta, rather than claiming a fresh git comparison against a moving remote ref. No new suite, registry entry, runner or frozen Bash edit appears in that implementation delta.
+
+[Pass] Shared recognition is owned by marathon_drive.route_agent (:847–871); Jog uses that owner and the existing binary probes before supervisor lease/dispatch (:203–239, :2198–2207), including retry-gate and retry-build (:792 onward, :1008 onward). Both manifest readers use src/marathon-yaml.js:97–108's argv-based recognition-only CLI, which exits before driver hooks/locking/dispatch at marathon_drive.py:3721 onward. Recognition remains independent of installed provider binaries. Profile discovery (:157–178) derives nine nonempty lanes from the changed owner. Equal actors, unsupported/phantom actors, malformed actor lists and missing binaries remain refusals; provider-neutral eligibility does not assert provider quality or change builder defaults.
+
+[Pass] marathon-agent.sh:46–62 matches exact comma members and exports the selected child-local scalar slot before exec. This addresses the actual claude-turn.py:71 and codex-turn.py:38 identity checks, retaining MARATHON role IDs and RELAY_PEER. Adjacent shims consume the same scalar/membership contract. relay_drive.py:850–860 still derives RELAY_ROLE from the named reviewer, and relay-turn-lib.sh:63 onward plus claude-turn.py:184 retain reviewer-only containment. Existing attestation validation and recovery remain in their owners; marathon_drive.py:3630–3662 retains builder-owned refusal and one recovery whose second timeout propagates. The manual recovery evidence calls the actual function with controlled dependencies; it is not a live provider timeout. Vendor packaging copies bin/src/utils together (xyz-vendor.sh:433–446); make-pkg.sh does not package marathon-agent.sh or these Python files, so no relay-pkg regeneration is required for this delta.
+
+Independent narrow probes, all exit 0, with PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp": `python3` imported marathon_drive/profile_resolve/jog_run, asserted nine derived lanes, both distinct actors retained in each provider slot, rejection of empty/gemini/comma/whitespace IDs, Jog Claude-pair admission with CLAUDE_BIN=/usr/bin/true, equal-actor and missing-binary refusal, and unchanged driver result state. Decisive output: `PASS nine nonempty lanes; all pairs retained; four bad actors rejected; Jog Claude pair admitted; equal actor and missing binary refused; result state unchanged`. The same probe read all eight provenance rows, required nonempty artifacts and recomputed their SHA256: `PASS all eight nonempty provenance artifacts match SHA256`. `node` called the actual JS resolveOrder for all nine provider reviewers and four invalid actors: `PASS actual JS reader nine supported reviewers; four bad actors rejected`. A separate `python3` probe wrote only $TMPDIR/reviewer-parity.yaml and invoked `node bin/marathon-yaml <scratch-yaml> --format json` for those same inputs, checking each exit status: `PASS actual manifest CLI: nine supported reviewers accepted; four invalid actors refused`. These are recognition/admission probes, not executable fixtures or suite runs.
+
+[Nit] releases.sql:988 / releases.db's GH-1419 row retains cached doc_path PROJECT/1-INBOX/GH-1419-REVIEWER-ROUTING.md, while its raw_text correctly links PROJECT/2-WORKING/GH-1419-REVIEWER-ROUTING.md. Read-only probe command: `sqlite3.connect('file:releases.db?mode=ro&immutable=1').execute("select gh_number,doc_path,rating_pri,rating_sev,rating_appeal,rating_effort,raw_text from roadmap_items where gh_number='1419'")`, then Path.is_file on both paths; Python exited 0, decisive output `stored_doc_exists=False; working_doc_exists=True`, rating `75,70,50,55`. Repoint the cache through the existing CLI during normal reconciliation, preserving that rating. This is nonblocking: PROJECT/PDDA.md treats stored paths as caches; pdda.sh:357–373 covers issue identity and :810–814 emits cache drift as a warning. No claim that roadmap coverage necessarily fails.
+
+Retained focused clone evidence reports GH280 227/227, GH346 62/62, manifest 14/14 and Marathon 35/35; hashes match the committed artifacts, but those suites were not rerun in this reviewer worktree. The last GH346 CLI assertion update still needs the promised final clone/gate run: [Unverified — needs clone run]. Full normal push gate follows this review and remains outstanding; approval here is implementation QA, not merge/promotion qualification. The live Claude turn is correctly retained as failed (provider cap plus concurrent-parent containment), with approval revoked; it proves route execution only. No successful live end-to-end relay, overnight progression, provider-quality certification or budget increase is inferred. Scoped revert remains the Costly coordination change's rollback.
+
+swept file: yes
+
+**Verdict:** Approved
+
+Only this relay file was edited. No git command, validate.sh, test/*.sh, pytest, executable fixture or live provider call was run; scratch YAML stayed under .relay-scratch/tmp. Independent implementation review is complete; orchestrator retains final gate/publication responsibility.
+
+### Attestation · relay-drive — 2026-11-11T20:01:37Z
+task: GH1419-FINAL-QA
+reviewer: codex
+status: Approved
+reviewed-head: ac56484c348dc1ccfeeced52c8434a9a93485335
+added-range: 2567+5921
+added-sha256: b9430a63171e03f9f830a841022b997989a41dea78dc7fca56714a0d744a8e9f
+
+### Round 2 · Builder · orchestrator
+
+Hosted CR4542975616 found a real missed isolation capability: smallcode-turn.sh explicitly disables isolation while the relay attestation uses the configured isolation flag. Fixed narrowly in existing _probe_agent_bin: SmallCode reviewer refuses when isolation enabled/default; builder and explicit non-isolated behavior preserved. No new registry/gate and no shim edits. Read a85e52d1/a02b612d and committed routing-isolation-controls.json + gh346-isolation.log: baseline admitted bad case; fixed refusal plus builder/non-isolated controls passed. CHANGELOG also completes expected signal/by-when/revisit/graduate criteria (CR4542975611). Recheck scoped change and nearby admission/attestation semantics, preserve prior review. Only this relay file writable; no suites/Git/source edits. Append Round 2 Reviewer plain paragraphs and explicit swept/verdict. Set Approved only if approved, NEXT orchestrator. Normal updated push gate remains required after review.
+
+
+### Round 2 · Reviewer · codex
+
+Approve the scoped SmallCode isolation correction; no blocking source defect found. Preserved the Round 1 review and inspected the changed admission branch in utils/py/marathon_drive.py:898–907, Jog's shared-probe consumer (:203–237), Marathon's pre-dispatch calls (:2118–2119), SmallCode's disabled isolation block (relay-automation/smallcode-turn.sh:55–67), and relay_drive.py's isolation default, validation and attestation (:102–103, :319–320, :868). The refusal uses the same environment/default boundary as the receipt: absent or enabled isolation refuses a SmallCode reviewer before dispatch; explicit 0 preserves non-isolated use. Builder admission remains unchanged. Recognition-only manifest acceptance remains appropriate because it does not certify execution capability. This extends the existing probe rather than introducing another registry or gate. The Costly coordination change retains the scoped revert rollback.
+
+[Pass] Independent non-mutating probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` imported marathon_drive from utils/py, set SMALLCODE_BIN=/usr/bin/true, called `_probe_agent_bin('smallcode-review', role)` with isolation absent, 1 and 0, and asserted refusal exit 2 plus reason reviewer-isolation-unsupported for the first two reviewer cases. It also checked builder admission with isolation 1. Command exited 0. Decisive output: `PASS isolation=None role=reviewer admitted=False`; `PASS isolation=1 role=reviewer admitted=False`; `PASS isolation=0 role=reviewer admitted=True`; `PASS isolation=1 role=builder admitted=True`. This exercises admission only; no shim or executable fixture was invoked.
+
+[Pass] The same Python command read the latest provenance rows for routing-isolation-controls.json and gh346-isolation.log, asserted nonempty bytes, and recomputed SHA256. Exit 0; decisive output: `PASS nonempty provenance hash routing-isolation-controls.json` and `PASS nonempty provenance hash gh346-isolation.log`. Retained manual controls report the pre-fix unsupported-isolation admission, fixed refusal, builder/non-isolated controls and Jog refusal. Retained GH346 log reports 62 pass, 0 fail. These are retained clone evidence, not suites rerun here. CHANGELOG.md:3–17 now names the expected bounded-run signal, deadline relative to the overnight run, revisit and graduation/iteration/revert criteria; it accurately limits the prior full-gate claim to a9090e72. That prior gate does not qualify this updated isolation change. Updated normal push gate remains [Unverified — needs clone run] and is the orchestrator's next qualification step. No successful live end-to-end or overnight claim is inferred.
+
+swept file: yes
+
+**Verdict:** Approved
+
+Only this relay file was edited. No git command, validate.sh, test/*.sh, pytest, executable fixture, source edit or live provider call was run. Approval covers implementation QA of the scoped Round 2 correction; final gate/publication responsibility remains with the orchestrator.
+
+### Attestation · relay-drive — 2026-11-11T20:39:22Z
+task: GH1419-FINAL-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: f39a5e4240315c1af823df23151173d7c34ff7cd
+added-range: 9762+3082
+added-sha256: 52f3424d18b5d62ba069c3dd46db21b373248d17c58d9aa0024e4da50e0cfeb6

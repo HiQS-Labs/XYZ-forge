@@ -264,11 +264,40 @@ def path_for(task, target_repo):
     return os.path.join(git_common_dir(target_repo), "relay-attest", safe + ".json")
 
 
+GATE_RUN_VALUES = ("yes", "failed", "no", "undeclared")
+_GATE_RUN_RE = re.compile(r"^[ \t]*[-*]?[ \t]*gate run:[ \t]*(yes|no)\b(.*)$", re.I | re.M)
+_BUILDER_BLOCK_RE = re.compile(r"^### Round [^\n]*· Builder ·[^\n]*\n(.*?)(?=^### |\Z)", re.M | re.S)
+
+
+def _text(data):
+    return data.decode("utf-8", "replace") if isinstance(data, (bytes, bytearray)) else (data or "")
+
+
+def declared_gate_run(added):
+    """GH-1428: the reviewer's last `gate run:` declaration. "yes" only for an explicit exit 0."""
+    found = _GATE_RUN_RE.findall(_text(added))
+    if not found:
+        return "undeclared"
+    word, rest = found[-1]
+    if word.lower() == "no":
+        return "no"
+    return "yes" if re.search(r"\bexit[ \t:=]*0\b", rest, re.I) else "failed"
+
+
+def builder_declared_unverified(pre_text):
+    """GH-1428: does the LATEST `### Round N · Builder ·` block say anything is unverified?"""
+    blocks = _BUILDER_BLOCK_RE.findall(_text(pre_text))
+    return bool(blocks) and re.search(r"\bunverified\b", blocks[-1], re.I) is not None
+
+
 def trailer_text(record):
     # GH-1220: bind config_sha256 into the trailer when present so a tampered value is refused at
     # load() while legacy records without the field continue to match their legacy trailers.
     cfg = record.get("config_sha256")
     cfg_line = f"config-sha256: {cfg}\n" if cfg else ""
+    # GH-1428: same pattern for the reviewer's gate-run declaration.
+    if record.get("gate_run"):
+        cfg_line += f"gate-run: {record['gate_run']}\n"
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"
@@ -344,6 +373,8 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None, any_re
         # GH-1220: optional config identity; when present it must be a non-empty string.
         if not isinstance(rec["config_sha256"], str) or not rec["config_sha256"]:
             return None, "attestation record field config_sha256 is not a non-empty string"
+    if "gate_run" in rec and rec["gate_run"] not in GATE_RUN_VALUES:
+        return None, "attestation record field gate_run is not one of " + "/".join(GATE_RUN_VALUES)
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:

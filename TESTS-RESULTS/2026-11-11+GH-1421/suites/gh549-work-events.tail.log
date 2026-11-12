@@ -1,0 +1,3 @@
+  ok  - 26 on a ledger without work_events the scan returns (0,0,0) instead of exiting
+
+GH-549 work-state event stream: 125 passed, 0 failed

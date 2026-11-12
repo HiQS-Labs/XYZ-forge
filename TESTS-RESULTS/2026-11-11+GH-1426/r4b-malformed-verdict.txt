@@ -1,0 +1,8 @@
+# before fix (8ad2ff632)
+malformed verdict line, rc 2: RAISED IndexError: list index out of range
+valid ready: 'ready (exit 0)'
+ready, rc 1, late failure: 'ready (exit 0); preflight exited 1: late failure'
+# after fix
+malformed verdict line, rc 2: 'verdict pending'
+valid ready: 'ready (exit 0)'
+ready, rc 1, late failure: 'ready (exit 0); preflight exited 1: late failure'

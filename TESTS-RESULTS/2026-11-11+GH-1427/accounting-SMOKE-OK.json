@@ -1,0 +1,41 @@
+{
+  "result_projection": {
+    "errors": null,
+    "is_error": false,
+    "modelUsage": {
+      "claude-haiku-5-5": {
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUSD": 0.0001888,
+        "inputTokens": 1778,
+        "outputTokens": 22
+      },
+      "claude-sonnet-4-6": {
+        "cacheCreationInputTokens": 11576,
+        "cacheReadInputTokens": 258017,
+        "costUSD": 0.1656831,
+        "inputTokens": 9,
+        "outputTokens": 1253
+      }
+    },
+    "num_turns": 7,
+    "subtype": "success",
+    "total_cost_usd": 0.16587190000000002,
+    "type": "result",
+    "usage": {
+      "cache_creation_input_tokens": 11576,
+      "cache_read_input_tokens": 258017,
+      "input_tokens": 9,
+      "output_tokens": 1253
+    }
+  },
+  "tick_rows": [
+    {
+      "task": "SMOKE-OK",
+      "tokens_in": 258026,
+      "tokens_out": 1253,
+      "tool": "claude",
+      "type": "cost.tokens"
+    }
+  ]
+}

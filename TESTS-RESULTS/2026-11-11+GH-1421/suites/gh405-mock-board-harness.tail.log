@@ -1,0 +1,3 @@
+  ok  - red control: with the fault cleared the same call succeeds (rc=0)
+
+GH-405 mock_gh_board harness: 19 passed, 0 failed

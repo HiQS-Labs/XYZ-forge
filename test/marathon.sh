@@ -120,7 +120,7 @@ run_marathon "$A/PROJECT/2-WORKING/nobrief.yaml" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "phase without a brief -> error (exit 2)" || fail "no-brief exit=$rc (expected 2)"
 
 # --- (5) malformed plan -> halt before running ANY phase -----------------
-printf 'name: bad\nphases:\n  - id: p1\n    reviewer: claude\n    brief: briefs/p1.md\n' > "$A/PROJECT/2-WORKING/bad.yaml"
+printf 'name: bad\nphases:\n  - id: p1\n    reviewer: unsupported-reviewer\n    brief: briefs/p1.md\n' > "$A/PROJECT/2-WORKING/bad.yaml"
 rm -f "$WORK/phases-ran"
 run_marathon "$A/PROJECT/2-WORKING/bad.yaml" >/dev/null 2>&1; rc=$?
 { [ "$rc" -eq 2 ] && [ ! -f "$WORK/phases-ran" ]; } \

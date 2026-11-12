@@ -1,0 +1,4 @@
+fix-armed-yes-exit0: fix-code load -> OK gate_run=yes
+base-red-control: fix-code load -> OK gate_run=(absent: legacy)
+tampered value -> attestation record field gate_run is not one of yes/failed/no/undeclared
+valid-but-rebound value -> attestation record does not match its own trailer

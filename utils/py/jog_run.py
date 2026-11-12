@@ -183,10 +183,6 @@ def _validate_marathon_result(obj):
 
 JOG_EXECUTION_STATE_SCHEMA = "jog/execution-state@1"
 
-# Marathon's reviewed-phase contract (marathon_drive.py): reviewer ids must start with one of
-# these. Jog mirrors the rule so an invalid reviewer fails before ANY lease mutation.
-_MARATHON_REVIEWER_PREFIXES = ("codex", "gemini", "agy")
-
 # GH-280 Phase 5: one line, stderr, on every legacy-machinery invocation (explicit
 # `--executor relay`, or `--simulate` which stays on the relay machinery). Names the window
 # and the separate-removal fact — removal is NOT part of the flip commit.
@@ -215,17 +211,26 @@ def validate_marathon_executor(args):
                 "default (GH-280: no silent cost-bearing or same-agent route)")
     if reviewer == args.builder:
         return f"--reviewer must differ from --builder (both are '{reviewer}')"
-    if not reviewer.startswith(_MARATHON_REVIEWER_PREFIXES):
-        return (f"--reviewer '{reviewer}' must start with one of "
-                f"{'/'.join(_MARATHON_REVIEWER_PREFIXES)} (marathon's reviewed-phase contract)")
-    if reviewer.startswith("agy"):
-        bin_name = os.environ.get("AGY_BIN", "agy")
-    elif reviewer.startswith("codex"):
-        bin_name = os.environ.get("CODEX_BIN", "codex")
-    else:  # gemini*
-        bin_name = os.environ.get("GEMINI_BIN", "gemini")
-    if not (shutil.which(bin_name) or (os.path.isfile(bin_name) and os.access(bin_name, os.X_OK))):
-        return f"reviewer binary '{bin_name}' not found on PATH (--reviewer {reviewer})"
+    import contextlib
+    import io
+    import marathon_drive
+
+    # Reuse execution's route/probe owners before any lease mutation. Keep the
+    # imported driver's result state untouched by this admission-only call.
+    diagnostic = io.StringIO()
+    saved_result = marathon_drive._RESULT.copy()
+    try:
+        with contextlib.redirect_stderr(diagnostic):
+            for role, actor in (("builder", args.builder), ("reviewer", reviewer)):
+                marathon_drive.route_agent(actor, {})
+                marathon_drive._probe_agent_bin(actor, role)
+    except ValueError as exc:
+        return str(exc)
+    except SystemExit:
+        return diagnostic.getvalue().strip() or "marathon agent admission failed"
+    finally:
+        marathon_drive._RESULT.clear()
+        marathon_drive._RESULT.update(saved_result)
     return None
 
 
@@ -524,6 +529,12 @@ def _marathon_env_from_invocation(invocation):
 
 def _execution_root(root, target):
     _require_jog_primary(root)
+    return _validate_execution_target(root, target)
+
+
+def _validate_execution_target(root, target):
+    """The read-only target checks of _execution_root, minus the primary pin (GH-1426: dry-run
+    validates the same target without the pin that read-only dry-run is documented not to need)."""
     if not target:
         raise ContractError("--target-root <disposable-full-clone> is required for Jog dispatch")
     target = os.path.realpath(os.path.expanduser(target))
@@ -537,6 +548,44 @@ def _execution_root(root, target):
     if dirty_ledger.strip() or lane_ledger.strip():
         raise ContractError("execution clone already has ledger changes; preserve and reconcile before dispatch")
     return target
+
+
+def _resolve_preflight_py(target):
+    """swarm_preflight.py for an execution clone: its own copy, then its vendored .xyz/, then the
+    harness home (GH-1093/GH-1098 A1, GH-279 #2). Returns the last candidate even when missing."""
+    preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
+        preflight_py = os.path.join(target, ".xyz", "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
+        preflight_py = os.path.join(harness_home(), "utils", "py", "swarm_preflight.py")
+    return preflight_py
+
+
+def _preflight_summary(proc):
+    """One non-empty line naming a completed swarm_preflight run's verdict and readiness cause
+    (GH-1426): `<VERDICT> (exit N)[ — next: <reason>]`, else its first BLOCKED / CONTRACT ERROR /
+    die line, else its last output line, else `exit N`. A return code that contradicts the
+    printed verdict (a post-verdict failure) is appended so a `ready` is never reported unqualified."""
+    out_lines = (proc.stdout or "").splitlines()
+    lines = [ln.strip() for ln in out_lines + (proc.stderr or "").splitlines() if ln.strip()]
+    verdict = next((ln.partition(":")[2].strip() for ln in lines
+                    if ln.startswith("verdict ") and ":" in ln), None)
+    if verdict:
+        nxt = next((ln.split("— next:", 1)[1].strip() for ln in lines
+                    if ln.startswith("readiness ") and "— next:" in ln), None)
+        summary = verdict + (f" — next: {nxt}" if nxt else "")
+        m = re.search(r"\(exit (\d+)\)", verdict)
+        if m and int(m.group(1)) != proc.returncode:
+            summary += f"; preflight exited {proc.returncode}: {lines[-1]}"
+    else:
+        summary = next((ln for ln in lines
+                        if ln.startswith(("BLOCKED", "CONTRACT ERROR", "swarm-preflight:"))), None)
+        summary = summary or (lines[-1] if lines else f"exit {proc.returncode}")
+        # The CONTRACT ERROR headline says "see message above"; the cause is preflight's stderr line.
+        err = next((ln.strip() for ln in (proc.stderr or "").splitlines() if ln.strip()), "")
+        if summary.startswith("CONTRACT ERROR") and err:
+            summary = f"CONTRACT ERROR: {err}"
+    return summary[:300]
 
 
 def _ledger_bytes(root):
@@ -557,12 +606,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # root without its own copy (vendored .xyz/ layouts) falls through to the harness home.
     target = _execution_root(root, target_root)
     ledger_before = _ledger_bytes(target)
-    home = harness_home()
-    preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
-    if not os.path.isfile(preflight_py):
-        preflight_py = os.path.join(target, ".xyz", "utils", "py", "swarm_preflight.py")
-    if not os.path.isfile(preflight_py):
-        preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
+    preflight_py = _resolve_preflight_py(target)
     if not os.path.isfile(preflight_py):
         return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
                         f"(vendored installs resolve .xyz via the harness home — GH-279 #2)"
@@ -587,7 +631,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     state["executions"].append(record)
     state["gh_number"] = gh_num
     jog_save_state(root, gid, state)
-    print(f"jog: marathon execution {exec_id} for GH-{gh_num} (packet: {packet_dir})")
+    # GH-1426: no Marathon execution has happened yet; say that preflight is starting.
+    print(f"jog: running preflight for GH-{gh_num} (execution {exec_id}, packet: {packet_dir})")
 
     pf = subprocess.run(
         [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
@@ -600,9 +645,11 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     if pf.returncode != 0:
         record["status"] = "preflight-refused"
         jog_save_state(root, gid, state)
-        tail = (pf.stderr or pf.stdout or "").strip().splitlines()
-        detail = tail[-1][:200] if tail else ""
-        return "parked", f"preflight-refused (exit {pf.returncode}){': ' + detail if detail else ''}"
+        # GH-1426: the last output line is "No packet written — …"; surface the verdict and the
+        # readiness `next:` cause on the console and in the parked row instead.
+        summary = _preflight_summary(pf)
+        print(f"jog: GH-{gh_num} preflight refused: {summary}")
+        return "parked", f"preflight-refused (exit {pf.returncode}): {summary}"
 
     invocation_path = os.path.join(packet_dir, "marathon-invocation.json")
     try:
@@ -2155,6 +2202,33 @@ class JogCheckpoint:
         return "jog: publish wake checkpoint " + self.state["base"]
 
 
+def _dry_run_preflight(target, gh_num):
+    """GH-1426: preflight's own --dry-run for one queued item against the execution clone, as the
+    live call runs it (cwd + SWARM_PREFLIGHT_ROOT pinned, explicit never-created --out). It writes
+    no Jog state; preflight's target-side effects (fetch, transient ref worktree, contract command
+    probes) are the same as an operator's manual `swarm-preflight.sh --dry-run`."""
+    preflight_py = _resolve_preflight_py(target)
+    if not os.path.isfile(preflight_py):
+        return f"not evaluated — swarm_preflight not found at {preflight_py}"
+    argv = [sys.executable, preflight_py, "--gh-issue", str(gh_num)]
+    label = ""
+    doc_path = find_issue_doc(target, gh_num)
+    if doc_path and "/PROJECT/1-INBOX/" in doc_path:
+        # A live run promotes a 1-INBOX doc before preflight; dry-run must not. Evaluate the doc in
+        # place only when preflight's own frontmatter reader yields the same issue (plan QA r2).
+        from swarm_preflight import doc_frontmatter_issue
+        if str(doc_frontmatter_issue(doc_path) or "") != str(gh_num):
+            return (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
+                    f"gh_issue: {gh_num}, so readiness cannot be evaluated before promotion")
+        argv = [sys.executable, preflight_py, "--project-doc", doc_path]
+        label = " (1-INBOX doc; live run promotes it first)"
+    out_dir = os.path.join(tempfile.gettempdir(), f"jog-dry-run-preflight-gh{gh_num}-{os.getpid()}")
+    proc = subprocess.run(argv + ["--dry-run", "--out", out_dir], cwd=target, capture_output=True,
+                          text=True, env={**os.environ, "SWARM_PREFLIGHT_ROOT": target,
+                                          "PYTHONDONTWRITEBYTECODE": "1"})
+    return _preflight_summary(proc) + label
+
+
 def jog_run_main(args=None):
     """Main execution loop for jog supervisor."""
     if args is None:
@@ -2213,9 +2287,18 @@ def jog_run_main(args=None):
         print(f"jog: releases.db not found at {db_path}", file=sys.stderr)
         sys.exit(1)
 
-    # Hermetic --dry-run: zero mutations, zero locks, zero DB writes
+    # Hermetic --dry-run: zero Jog ledger/queue/state writes, zero Jog locks or leases.
     if getattr(args, "dry_run", False):
         print(f"jog: [dry-run] simulating queue execution (root: {root})")
+        # GH-1426: with --target-root, also validate the target (no primary pin — read-only
+        # dry-run is documented not to need one) and run preflight's own --dry-run per item.
+        dry_target = getattr(args, "target_root", None)
+        if dry_target:
+            try:
+                dry_target = _validate_execution_target(root, dry_target)
+            except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+                print(f"jog: [dry-run] live run would refuse --target-root: {exc}", file=sys.stderr)
+                sys.exit(2)
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         try:
@@ -2235,6 +2318,8 @@ def jog_run_main(args=None):
                 if max_t is not None and idx >= max_t:
                     break
                 print(f"  {r['position']}. GH-{r['gh_number']} (builder={args.builder}, auto_merge={args.auto_merge})")
+                if dry_target:
+                    print(f"     preflight: {_dry_run_preflight(dry_target, r['gh_number'])}")
         finally:
             conn.close()
         return
@@ -2386,7 +2471,9 @@ def jog_run_main(args=None):
                 if action == "failed":
                     print("jog: stopping queue execution on task failure.")
                 else:
-                    print("jog: advancing halted at landing boundary.")
+                    # GH-1426: a park is not always a landing boundary (preflight refusal, invalid
+                    # invocation, unpublished receipt); the reason says which one it was.
+                    print(f"jog: advancing halted: GH-{gh_num} parked — {reason}")
                 break
 
             # Swarm Preflight check
@@ -2408,8 +2495,10 @@ def jog_run_main(args=None):
                     tasks_processed += 1
                     continue
                 elif pf_res.returncode != 0:
-                    print(f"jog: GH-{gh_num} preflight failed (exit {pf_res.returncode}); parking item.")
-                    jog_set_status(root, gh_num, "parked", failure_reason=f"preflight-refused (exit {pf_res.returncode})")
+                    summary = _preflight_summary(pf_res)  # GH-1426
+                    print(f"jog: GH-{gh_num} preflight failed (exit {pf_res.returncode}): {summary}; parking item.")
+                    jog_set_status(root, gh_num, "parked",
+                                   failure_reason=f"preflight-refused (exit {pf_res.returncode}): {summary}")
                     continue
 
             # Execute single-phase drive, retaining the same lane-ledger invariant.
