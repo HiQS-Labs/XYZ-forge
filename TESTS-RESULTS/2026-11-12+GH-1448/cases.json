@@ -1,0 +1,63 @@
+{
+  "recorded_utc": "2026-11-12T22:39:28.231199+00:00",
+  "base": "7acaa24508002a74e2445534af3ecaccc0b26b7a",
+  "hypothesis": "H: re.match(r\"^(?:printf|echo|true|exit\\s+0)(?:\\s|$)\", cmd.strip()) warns; research only, case-sensitive.",
+  "cases": [
+    {
+      "name": "constant-printf",
+      "cmd": "printf '%s\\n' PASS",
+      "origin": "synthetic fixed-output positive",
+      "expected_admitted": true,
+      "desired_warning": true
+    },
+    {
+      "name": "wrapped-constant",
+      "cmd": "env printf '%s\\n' PASS",
+      "origin": "synthetic fixed-output positive; wrapper false-negative control",
+      "expected_admitted": true,
+      "desired_warning": true
+    },
+    {
+      "name": "input-dependent-printf",
+      "cmd": "printf '%s\\n' \"$(git status --porcelain)\" | grep -q '^ M'",
+      "origin": "synthetic legitimate changed-file check; warning false-positive control",
+      "expected_admitted": true,
+      "desired_warning": false
+    },
+    {
+      "name": "specialized-pipeline",
+      "cmd": "printf '%s\\n' '{}' | python3 -m json.tool >/dev/null",
+      "origin": "synthetic legitimate JSON parser acceptance check; warning false-positive control",
+      "expected_admitted": true,
+      "desired_warning": false
+    },
+    {
+      "name": "unrelated-regression",
+      "cmd": "bash test/codex-turn.sh",
+      "origin": "retained suite invocation; valid regression, unrelated to GH1448 outcome",
+      "expected_admitted": true,
+      "desired_warning": false
+    },
+    {
+      "name": "option-refusal",
+      "cmd": "pytest -q test/",
+      "origin": "synthetic command-form mismatch; preserve existing compatibility refusal",
+      "expected_admitted": false,
+      "desired_warning": false
+    },
+    {
+      "name": "retained-consult",
+      "cmd": "python3 TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py",
+      "origin": "PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md",
+      "expected_admitted": true,
+      "desired_warning": false
+    },
+    {
+      "name": "retained-clock",
+      "cmd": "python3 /dev/stdin <<'GH1254_CLOCK'\nimport ast,pathlib\ns=pathlib.Path('utils/py/marathon_drive.py').read_text()\nn=next(n for n in ast.walk(ast.parse(s)) if isinstance(n,ast.FunctionDef) and n.name=='run_pre_advance_gate')\nassert any(isinstance(c,ast.Call) and isinstance(c.func,ast.Attribute) and isinstance(c.func.value,ast.Name) and c.func.value.id=='time' and c.func.attr=='time' for c in ast.walk(n)), 'existing gate lacks wall-time sampling across sleep'\nGH1254_CLOCK",
+      "origin": "PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md",
+      "expected_admitted": true,
+      "desired_warning": false
+    }
+  ]
+}

@@ -2,19 +2,20 @@
 gh_issue: 1448
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1448
 title: "Explore advisory contract-quality linting in existing Jog and preflight validators"
-status: Proposed (1-INBOX — not yet active)
+status: Active
+updated: 2026-11-12
 created: 2026-11-12
-owner: unassigned
+owner: Codex
 doc_type: feedback
 complexity: 2
 risk: 2
 effort: 2
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 non_goals:
   - new runner
   - automatic admission
-  - runtime implementation
+  - broad semantic lint
 related:
   - #1447
   - #1439
@@ -38,9 +39,67 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Fill in Why/Key Concepts, correct the provisional ratings above, and run a Phase 0 explore pass before promoting to `2-WORKING`. |
+| Reused canonical capture; rated and traced current validators at development `7acaa245`. | Independent plan QA, then bounded eight-case study; implementation only if findings justify a reviewed amendment. |
 
-## Idea
+## Current authorized plan (2026-11-12)
+
+The current operator request supersedes the historical research-only/later-authorization
+wording retained below: investigate and, if promising, implement a small grounded change
+following independent plan QA and publish a reviewed PR. This is not authorization for
+broad lint. Use the T3-provided checkout and existing branch, no shell task clone, primary
+writes, deployment, merge, cleanup or Pulse changes. Parent owns merge. Prior GH1447
+receipts are published in development and will be consumed, never replayed here.
+
+**Outcome sought:** reduce misleading preparation confidence while preserving valid
+specialized probes. Lexical command-form recognition cannot establish the task's outcome.
+**Smallest viable bet:** eight named non-executing command classifications and source trace,
+with a go/no-go recommendation. No runtime edit is predetermined. A promising runtime
+change requires a specific reviewed plan amendment before implementation.
+**Alternative:** already-shipped GH1447 outcome-sensitive review wording plus real script
+probes is the zero-code baseline. Compare a deliberately simple advisory hypothesis H:
+warn when a command begins with `printf`, `echo`, `true` or `exit 0`. It is a research
+hypothesis, not a new helper or gate. Compare with existing hard refusals, not replace them.
+**Reversibility: Easy:** evidence/docs and owned PRS row only; revert this task's commit.
+A runtime amendment must separately size callers/blast radius. No new tests, registry,
+runner, ledger, hook or telemetry machinery; no imported unlazy code.
+
+1. Record eight inputs, expected existing admission and desired advisory classifications
+   in `TESTS-RESULTS/2026-11-12+GH-1448/cases.json` before running. Include retained GH1243
+   and GH1254 contracts, fixed-output positive controls and legitimate specialized negatives.
+   Consume GH1447 empty/trivial/missing and inline-command controls without repeating them.
+2. After approved plan QA, admit the exact GH1448 PRS row with `--accepted-start`, then
+   evaluate only `lint_probe` and H over the eight inputs; never execute inherited commands.
+   Research clock starts at evaluation (30 minutes maximum; eight cases maximum).
+   Inspect extraction and promotion statically. Record actual versus expected classifications,
+   false positives/negatives and limits. No population accuracy claim from a selected sample.
+3. Decide go/no-go: a useful change must add actionable information beyond existing review
+   without weakening refusals or claiming relevance. If no small improvement is justified,
+   publish a no-code recommendation and evidence. If promising, amend this plan with exact
+   helper, controls and rollout, obtain independent review within three rounds, then implement.
+4. Verify evidence is nonempty, inputs predate evaluation, GH1447 hashes are retained and
+   source remains unchanged on the no-code path. Read the report from the issue's main
+   preparation consumer and adjacent specialized-check case; record limits rather than
+   claiming runtime delivery. Run the classifier-selected gate (disposable full clone for
+   mutation-heavy suites); independent final Codex relay QA; publish to development and
+   idempotently close out GH1448, leaving merge to parent. No checkout retirement.
+
+**Acceptance / falsifiers:** H must warn on fixed `printf` positive and remain silent on
+retained specialized checks. An input-dependent `printf` and pipeline exercise false
+positives; `env printf` exercises an obvious false negative. An unrelated real regression
+command must not be presented as proof of this issue's outcome. Report adverse results,
+not tune the sample until green. Existing compatibility refusals remain intact. No code
+means no new decision gate; the hypothesis's failing controls establish its limitations.
+
+**Ratings readback:** PRS pickup `60/55/50/70`, no operator override. Priority follows
+explicit investigation order; severity is bounded wasted runs/misleading evidence, no
+observed data loss; appeal neutral; research is cheap. Recurrence windows 2026-10-30–11-12
+versus 2026-10-16–29: issue search found GH1232 (different extraction bug) and retained
+GH1171/GH1315 command-form examples consumed by GH1447. No distinct incident count or
+rising trend can be inferred from keyword matches; trend remains unknown. Prior-art
+PR1237 fixed JSON extraction and PR1449 supplied the prerequisite wording/replay; neither
+implements this study. No candidate already delivers this requested comparison.
+
+## Historical intake (scope superseded above)
 
 ## Observed
 
@@ -112,11 +171,11 @@ Determine whether existing contract validators can provide useful bounded adviso
 
 ### Checklist
 
-- [ ] TODO: scope-specific checklist items for this idea's Phase 0 pass.
+- [ ] Eight-case report and sourced go/no-go recommendation.
 
 ### QA checklist — Phase 0
 
-- [ ] TODO: acceptance criteria for the Phase 0 pass above.
+- [ ] Independent plan/final review and classified gate with nonempty provenance.
 
 ## Merge evidence
 
