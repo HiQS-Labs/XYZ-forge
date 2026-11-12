@@ -1,0 +1,52 @@
+[
+  {
+    "issue": 1171,
+    "label": "original",
+    "revision": "f98ad1d925a28e0d724a70c8653b00a100521b59",
+    "doc": "PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md",
+    "doc_sha256": "ebad642959fc79fcc872aee8257cf987887514ade283e7946fbdebed358830d8",
+    "probe": {
+      "type": "command",
+      "cmd": "python3 -c 'import ast,os,re,subprocess,tempfile\nfrom pathlib import Path\nsource=Path(\"utils/py/relay_drive.py\").read_text()\ntree=ast.parse(source)\nnames={\"relay_setup_section_lines\",\"relay_extract_markdown_paths\",\"relay_is_worktree_artifact_path\",\"preflight_setup_artifact_paths\"}\nnodes=[n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name in names]\nassert len(nodes)==4\nns=dict(os=os,re=re,subprocess=subprocess,root_dir=os.getcwd(),get_env=lambda k: os.getcwd() if k==\"RELAY_TARGET_ROOT\" else \"\")\ndef die(message): raise RuntimeError(message)\nns[\"die\"]=die\nexec(compile(ast.Module(body=nodes,type_ignores=[]),\"relay-preflight-probe\",\"exec\"),ns)\nbranch=\"fix/gh1171-probe\"\nwith tempfile.TemporaryDirectory() as d:\n fixture=Path(d).resolve(); subprocess.run([\"git\",\"init\",\"-q\",str(fixture)],check=True)\n subprocess.run([\"git\",\"-C\",str(fixture),\"symbolic-ref\",\"HEAD\",\"refs/heads/\"+branch],check=True)\n subprocess.run([\"git\",\"-C\",str(fixture),\"-c\",\"user.name=Probe\",\"-c\",\"user.email=probe@example.invalid\",\"-c\",\"commit.gpgsign=false\",\"commit\",\"-q\",\"--allow-empty\",\"-m\",\"fixture\"],check=True)\n ns[\"root_dir\"]=str(fixture); ns[\"get_env\"]=lambda k: str(fixture) if k==\"RELAY_TARGET_ROOT\" else \"\"\n p=fixture/\"relay.md\"; ns[\"relay_file\"]=str(p)\n p.write_text(\"## Setup\\nArtifact under review: branch `\"+branch+\"`\\n\")\n ns[\"preflight_setup_artifact_paths\"]()\n p.write_text(\"## Setup\\nArtifact under review: `docs/gh1171-missing.md`\\n\")\n try: ns[\"preflight_setup_artifact_paths\"]()\n except RuntimeError as e: assert \"artifact path not found in worktree\" in str(e)\n else: raise AssertionError(\"missing file accepted\")\nprint(\"branch accepted; missing file rejected\")\n'",
+      "expect_nonzero": true
+    }
+  },
+  {
+    "issue": 1171,
+    "label": "repaired",
+    "revision": "811d582360df31d21d9ccb4208fb8e474191b08b",
+    "doc": "PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md",
+    "doc_sha256": "114d82993c866ecf9c31656f1704d146b4ed63e4b00ba026e2205ee6e3c18a54",
+    "probe": {
+      "type": "command",
+      "cmd": "python3 TESTS-RESULTS/2026-11-11+GH-1171/manual_probe.py",
+      "expect_nonzero": true
+    },
+    "script_sha256": "87724f551f88940dde6420fee7c4d3a16f7dd3c064007677eb798be93016b0d1"
+  },
+  {
+    "issue": 1315,
+    "label": "original",
+    "revision": "f98ad1d925a28e0d724a70c8653b00a100521b59",
+    "doc": "PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md",
+    "doc_sha256": "5d73a98763b586ebc57370e24a1bbda59a3ea1970f57c0ebe5c65d7d1ad9a0c1",
+    "probe": {
+      "type": "command",
+      "cmd": "python3 -c 'import sys,tempfile,copy\nfrom pathlib import Path\nsys.path.insert(0,str(Path(\"skills/3-weekly/skills-army-hq/scripts\").resolve()))\nimport sync\nwith tempfile.TemporaryDirectory() as d:\n root=Path(d).resolve()/\"collection\"; target=Path(d).resolve()/\"target\"; root.mkdir(); target.mkdir()\n for parent in (root,target):\n  p=parent/\"example\"; p.mkdir(); (p/\"SKILL.md\").write_text(\"---\\nname: example\\ndescription: fixture\\n---\\n\")\n state={\"collection\":\"fixture\",\"skills\":{},\"links\":{}}\n config={\"targets\":[{\"path\":str(target),\"enabled\":True}]}\n found={\"example\":{\"digest\":sync.shared.digest(root/\"example\")}}\n actions,errors,changes=sync.reconcile(root,copy.deepcopy(state),config,found,legacy=[\"example\"],archive_directories=True,apply=False)\n assert errors and any(\"adopt\" in e[\"error\"].lower() for e in errors), (actions,errors,changes)\n assert not actions, actions\n assert not (root/\"backups\").exists()\n assert (target/\"example\").is_dir() and not (target/\"example\").is_symlink()\n print(\"unadopted preview refuses with adoption remedy before side effects\")\n'",
+      "expect_nonzero": true
+    }
+  },
+  {
+    "issue": 1315,
+    "label": "repaired",
+    "revision": "811d582360df31d21d9ccb4208fb8e474191b08b",
+    "doc": "PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md",
+    "doc_sha256": "d4c571d6414aec9c57af327bd6497c1e1ee00354915326f425a6a8255b8a5743",
+    "probe": {
+      "type": "command",
+      "cmd": "python3 TESTS-RESULTS/2026-11-11+GH-1315/manual_probe.py",
+      "expect_nonzero": true
+    },
+    "script_sha256": "df59d9e7adbfd1e325134aaccfa22939daf99c391735e5b276a3e9993ab53a04"
+  }
+]

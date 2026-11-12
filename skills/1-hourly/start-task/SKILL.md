@@ -216,6 +216,8 @@ Then begin work.
    For each task, what prevents an unchanged, unfixed candidate from being reported as delivered—
    and where is the observed rejection? Distinguish admission probes from final acceptance;
    passing regression coverage alone does not establish defect detection.
+   Identify the artifact or behavior each acceptance check observes and why its success
+   establishes the requested outcome, rather than merely successful execution.
    Does the plan extend the existing subsystem and writer? Are blast radius,
    dependency ordering, rollback, and falsifiable checks sufficient? Are per-task
    ratings grounded, recurrence claims supported, appeal neutral unless the user
