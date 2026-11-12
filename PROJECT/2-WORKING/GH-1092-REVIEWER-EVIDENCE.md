@@ -5,6 +5,7 @@ created: 2026-11-12
 updated: 2026-11-12
 owner: Noel
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1092
+goal: Deliver target rules and bounded reviewer measurement permissions through the existing prompt.
 risk: 3
 ---
 
@@ -12,11 +13,9 @@ risk: 3
 
 ## Status
 
-| Field | Value |
+| What was just completed | What's next |
 |---|---|
-| Last completed | Live prior-art reconciliation and bounded source trace |
-| In progress | Independent Codex PLAN QA |
-| Next step | Implement only after Approved plan review |
+| Live prior-art reconciliation and bounded source trace | Independent Codex PLAN QA; implement only after Approved |
 
 ## Outcome and boundaries
 
