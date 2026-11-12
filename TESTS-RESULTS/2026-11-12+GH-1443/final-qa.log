@@ -1,0 +1,19 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.rrODOK)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.rrODOK) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.rrODOK) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12/relay-system/2026-11-12/gh1443-final.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: attested Approved by codex — reviewed d1a5191e59df, 3984 bytes of review text, record /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12/.git/relay-attest/GH1443-FINAL-QA.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/3 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 11m 43s
+per done-task: ≥0 tokens, 3m 54s wall-clock
+  turn peak RSS: codex: 311MB peak RSS
+

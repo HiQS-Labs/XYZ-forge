@@ -15,7 +15,7 @@ phases: 1
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Three spikes and attested plan QA round2 Approved; shared checks implemented | CLI/focused verification, final independent QA and qualification |
+| Shared checks implemented;24 manual controls,227/227 and34/34 focused, final relay Approved | Normal classified qualification and follow-up PR |
 
 ## Scope
 Follow-up to source-instruction PR1442; it remains unmerged. Current development already owns the runtime checks being reused, so no unmerged code dependency or implicit merge/install. User authorizes up to three technical spikes and start-task execution with workhorse. No factory dispatch or product changes.
@@ -38,9 +38,9 @@ Follow-up to source-instruction PR1442; it remains unmerged. Current development
 Easy local-branch reversal: existing runtime function changes only, no persistent schema/state migration. Blast radius is target-aware dry-run readiness/exit semantics; bare list/preview and actual dispatch must retain behavior. A green dry-run will still not certify credit capacity, incompatible dependencies, deadline monitoring or five useful deliveries. Rollback is revert this PR; no data conversion. The simpler docs-only option already exists in1442 but leaves known machine-detectable failures reporting0. A new prepare command/setup engine would duplicate owners and is rejected.
 
 ## Acceptance
-- [ ] At most3 spikes with concrete red controls and explicit implement/defer decisions.
-- [ ] Invalid target-aware role/checkpoint/probe/preflight is nonzero, while valid nonempty preparation passes.
-- [ ] No queue/DB/journal/lock/lease changes or provider calls in checks; bare preview stays compatible.
+- [x] At most3 spikes with concrete red controls and explicit implement/defer decisions.
+- [x] Invalid target-aware role/checkpoint/probe/preflight is nonzero, while valid nonempty preparation passes.
+- [x] No queue/DB/journal/lock/lease changes or provider calls in checks; bare preview stays compatible.
 - [ ] Main/adjacent actual-entry smoke, existing focused coverage, independent plan/final QA, classified final qualification.
 
 ## Ratings
