@@ -81,7 +81,9 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
    - Bare `--dry-run`: queue preview with zero Jog state writes, locks or leases.
    - With `--target-root`, dry-run checks explicit Marathon roles/binaries, inbox promotion probes,
      and per-item preflight. Any selected nonzero preflight (including already-landed) exits 2
-     after displaying all outcomes. Empty queues remain an empty preview, not workload readiness.
+     after displaying all outcomes. Empty queues and `--max-tasks 0` without checkpoint mode
+     evaluate no items and are previews, not workload readiness. Inbox probe checks use unattended
+     rules even in a terminal; an attended live run may instead prompt for missing probes.
      When supplied, `--checkpoint-root` also checks bounded-run options, separate full-clone origin,
      clean publication tree and development branch. It never begins checkpoint recovery/publication.
      Preflight itself can fetch, create transient worktrees and execute contract probes; this is

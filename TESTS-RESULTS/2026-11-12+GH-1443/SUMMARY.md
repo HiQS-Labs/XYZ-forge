@@ -19,3 +19,11 @@ Live provider capacity/credit, exact gate interpreter/dependencies/services, fre
 Shared readiness checks: helped in controlled baseline/fixed comparison. Bare-preview test invocation correction: helped test fidelity. Automatic dependency/capacity handling: not implemented. No new general lesson: NO_ENTRY; existing verification lessons cover this case.
 
 All task and verification clones preserved at user direction. No merge, deployment, schedule, product build or cleanup performed. This is agent-assisted implementation/verification, not an unattended factory trial.
+
+## Additional Claude review (held delivery)
+
+Claude Opus 5.5 high-effort round 1 found no Blocker or Should, but relay exited 4 (`review-body-rewritten`): the verdict was inserted before the permitted review block. This is not a driver-attested approval. Original packet/review commits 2e9281542 and 3164c2cab are preserved. A corrected-placement review follows; no runtime change.
+
+Historical `manual-cli-and-helper` provenance records the earlier helper-controls.py hash; the current script was revised for real fallback coverage. Retrieve that earlier script from its recorded source commit, not the current path. Earlier helper-fixed.json is superseded; current helper-final.json and the later provenance record are the qualification evidence.
+
+User hold: no merge, deployment, Jose handoff, or changes to Jose’s current instructions.

@@ -58,7 +58,7 @@ Three spikes complete; see TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md. Share exa
 | Publication clone/options | Existing checkpoint constructor/static checks; reused without begin/finish |
 | Gate interpreter/dependencies/services | Existing caller gate/env contract; not automatically installed or exercised here |
 | Live reviewer credits/auth/capacity | Requires a real authorized provider request; not implied by executable presence |
-| Fresh published primary and pending recovery | Existing live checkpoint/admission; static dry-run explicitly leaves freshness/recovery unknown |
+| Primary cleanliness, fresh published primary and pending recovery | Existing live checkpoint/admission; static dry-run explicitly leaves primary cleanliness/freshness/recovery unknown |
 | Ownership, time budgets and automatic useful progression | Existing orchestration/flywheel/Jog run; requires actual run evidence, not this preparation patch |
 
 ## Milestone rubric
