@@ -216,7 +216,7 @@ def merge_contracts(contracts):
         "round_cap": base.get("round_cap"),
         "fix_probes": list(base.get("fix_probes", [])),
         "artifacts": list(base.get("artifacts", [])),
-        "artifacts_new": list(base.get("artifacts_new", [])),
+        "artifacts_new": list(base.get("artifacts_new") or []),
         "remediation": base.get("remediation"),
         "lanes": merged_lanes
     }
@@ -235,7 +235,7 @@ def merge_contracts(contracts):
         out["fix_probes"].extend(c.get("fix_probes", []))
         for a in c.get("artifacts", []):
             if a not in out["artifacts"]: out["artifacts"].append(a)
-        for a in c.get("artifacts_new", []):
+        for a in c.get("artifacts_new") or []:
             if a not in out["artifacts_new"]: out["artifacts_new"].append(a)
             
     return out
