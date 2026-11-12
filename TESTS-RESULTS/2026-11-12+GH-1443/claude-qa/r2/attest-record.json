@@ -1,0 +1,20 @@
+{
+  "added_len": 9077,
+  "added_sha256": "b46431fe296c3302b45530742e13e2b0b2419ccbf8ce97cd7b57cb44e0a52b75",
+  "added_start": 7219,
+  "artifact_sha256": null,
+  "attested_at": "2026-11-12T18:28:01Z",
+  "driver_pid": 98814,
+  "gate_run": "undeclared",
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12/relay-system/2026-11-12/gh1443-claude-qa-r2.md",
+  "relay_file_rel": "relay-system/2026-11-12/gh1443-claude-qa-r2.md",
+  "reviewed_head": "9666d2984a4afeecb47d7c126b4d76bc0ffb3134",
+  "reviewer": "claude",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12",
+  "task": "GH1443-CLAUDE-QA-R2-20261112T182423Z",
+  "trailer_sha256": "489c2032fca5c1dc055d92172fd191813f852fe9c1d0e2f6e6b4a33b4641f144",
+  "transcript_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12"
+}

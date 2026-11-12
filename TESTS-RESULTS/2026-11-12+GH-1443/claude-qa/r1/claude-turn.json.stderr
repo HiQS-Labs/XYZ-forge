@@ -1,0 +1,1 @@
+Ignoring 15 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12"].hasTrustDialogAccepted: true in /Users/noelsaw/.claude.json.
