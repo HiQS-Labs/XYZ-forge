@@ -22,3 +22,12 @@ Verification: read-only `sed -n '196,239p' skills/1-hourly/start-task/SKILL.md`,
 The canonical plan preserves Easy reversibility and the existing instruction owners. releases.sql retains GH1447's 65/55/50/80 ratings and accepted_start event; no GH1448 roadmap row is present in its roadmap entries. GH1448 is a separate proposed intake with 60/55/50/70 proposal, bounded research, no admission contract, and later implementation authorization. The advisory's command-form terminology, bounded corpus/expected classifications, ownership distinction and uncertainty findings have explicit dispositions in the retained capture/evidence. Its single responding Codex seat and Agy credit failure are disclosed; external-reference characterization remains author inspection rather than independent confirmation. No runtime extension, installed runner, registry suite or authority change is proposed here; replay.py is retained manual evidence.
 
 Remaining delivery obligation: normal classified gate in a disposable full clone and subsequent publication remain **Unverified — needs clone run**. The unchecked delivery criterion and next-action text correctly leave them pending. Approval does not authorize merge or deployment.
+
+### Attestation · relay-drive — 2026-11-12T22:14:16Z
+task: GH1447-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 6a4a4eb147c32b48c5ff4dcc3f000d68259b9c7b
+added-range: 1185+4520
+added-sha256: 58e1bb14dffdd23fdc40f9d804ab088a051e351d2a000304ac0419ef8ebf633c
+gate-run: undeclared
