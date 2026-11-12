@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -88,5 +88,26 @@ Write your verdict; set STATUS to Approved if it passes, otherwise leave it Open
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: reviewed all of the primary artifact (`utils/py/claude-turn.py`) and `claude_cli.py`, the changed containment/escalation regions, approved plan and retained receipts. No additional pre-existing defect was established in the primary artifact. This is not an attestation of a full-file sweep of the 1,826-line shell library or 3,792-line Marathon implementation. The implementation is plausibly proportionate, but the approved plan's decisive real-result usage receipt is missing. No git commands, suites, executable fixtures or provider calls were run; the full gate remains [Unverified — needs clone run] on the final state.
+
+- [Should] **Retain the real failed-result accounting inputs and demonstrate the comparison.** `TESTS-RESULTS/2026-11-11+GH-1427/smoke-live-r2.log:9-11` prints expected input/output `0/0` and actual `25646/178`, without printing any `modelUsage`. `manual_smoke.sh:18-23` reports only `usage` and the output row; `:30` deletes the entire temporary host, including the real JSON. The evidence directory contains no retained JSON. Consequently the claim in SUMMARY.md that these numbers equal the sum across models cannot be checked, and the plan's required retained real error JSON/exact matching row is not satisfied. Retain a credential-free accounting projection of the real error result (type/subtype/usage/modelUsage), plus the matching cost row, and record an explicit comparison of the aggregate input/output and exactly-one count. Prefer recovering the existing result if available; otherwise measure this in the disposable clone. No new suite is requested, and no production behavior change is requested.
+  Observed input: the committed r2 receipt's `expected tokens_in=0 tokens_out=0` followed by `row: tokens_in=25646 tokens_out=178`; source accounting JSON is absent.
+  Affected scope: verification of the real-error `modelUsage` fallback added after plan approval, and the failed-cost acceptance item.
+  Falsifier: retained real `modelUsage` values sum to 25646 input-plus-cache-read and 178 output, with exactly one matching event; an explicit comparison passes. A wrong aggregate or duplicate row must make that comparison fail.
+
+- [Pass] **Role ceilings and overrides are witnessed in the retained manual output.** `m1m2-green.log` quotes `builder: --max-turns 40 --max-budget-usd 3.00`, `reviewer: --max-turns 12 --max-budget-usd 1.00`, and explicit budget/turn overrides. `claude-turn.py:120-124` uses the existing role resolver and `get(...) or default`; empty strings intentionally select defaults. This is a bounded settings change, not proof that every implementation fits the ceiling.
+- [Pass] **Reason, log survival and nonzero failed accounting have receipts.** `smoke-live-r2.log:4-11` witnesses exit 5, `error_max_budget_usd`, surviving JSON and one nonzero cost row. `m1m2-green.log` also records one row on success and failure; `m1m2-red-base.log` records the prior missing-log/zero-row signature. The exact real failed-token values remain subject to the Should above. Marathon's key list at `marathon_drive.py:2215` includes `errors`, and its writer emits adjacent `builder-diagnostic`, consistent with the approved interpretation; the retained M1 parse is not an end-to-end Marathon execution receipt.
+- [Pass] **The cost refactor preserves branch precedence by inspection.** `claude-turn.py:321-336` keeps both exit-6 checks before accounting, records once on other failure paths, preserves timeout 7 and other failure 5, and records once on success. `:285-291` sums model counts only when both primary token totals are zero; no second writer is introduced. Containment exits intentionally still bypass cost recording.
+- [Pass] **The durable exception is narrow by inspection.** `relay-turn-lib.sh:1303-1306,1324,1773` limits preservation to the exact own-log path under `relay-system/logs/` with no archive override. Custom paths elsewhere retain cleanup; `.relay-scratch` handling at `:1317-1320` is unchanged. The benefit applies to all users of this shared helper. Existing broad transcript-directory exemptions remain pre-existing behavior.
+- [Pass] **Package and syntax probes passed.** Ran a read-only Python probe using `tarfile.open(...).extractfile(...).read() == Path(...).read_bytes()` for packaged `relay-automation/relay-turn-lib.sh` and `relay-automation/README.md`, and `ast.parse` on the three scoped Python files. Exit 0; decisive output: `package relay-automation/relay-turn-lib.sh equal= True`, `package relay-automation/README.md equal= True`, and `AST OK` for all three. This does not substitute for the clone gate. `suites.log` reports 15 focused suites at e9ff76adc and three reruns at a4836f6c6; provenance identifies those revisions. No fresh execution of those suites is claimed.
+- [Nit] `claude-turn.py:176` still describes the current default budget as `$0.50` in its wall-cap rationale; refresh that non-frozen Python comment when addressing the receipt. Docs otherwise describe builder 3.00/40, reviewer 1.00/12 and consult 0.50/12 consistently. The 80/80/50/60 rating remains a judgment grounded in the documented blocked turns, not a measured recurrence rate.
+
+Handing off to Producer (claude-a) — retain and compare the real failed-result accounting inputs, disposition the finding, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
