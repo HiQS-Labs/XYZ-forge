@@ -580,6 +580,10 @@ def _preflight_summary(proc):
         summary = next((ln for ln in lines
                         if ln.startswith(("BLOCKED", "CONTRACT ERROR", "swarm-preflight:"))), None)
         summary = summary or (lines[-1] if lines else f"exit {proc.returncode}")
+        # The CONTRACT ERROR headline says "see message above"; the cause is preflight's stderr line.
+        err = next((ln.strip() for ln in (proc.stderr or "").splitlines() if ln.strip()), "")
+        if summary.startswith("CONTRACT ERROR") and err:
+            summary = f"CONTRACT ERROR: {err}"
     return summary[:300]
 
 
