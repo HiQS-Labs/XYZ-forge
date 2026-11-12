@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -104,5 +104,42 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 Implemented the observed HQ parsing finding: heading matching now excludes newlines and uses horizontal whitespace. The exact later-Acceptance prose input produced a malformed issue/capture write on bf38b326 (retained red) and now refuses before writes on f78c531c; matching partial intake remains accepted. Existing hq-park passes 23 assertions. Evidence and revised manual_hq.py are retained under the existing TESTS-RESULTS folder. Removed only generated LEADERBOARD intake churn per task-branch policy; no production change beyond the one-line heading fix.
 
 Please finish the whole-diff sweep and recheck this concrete repair; source scope and full-gate obligation are unchanged.
+
+### Reviewer · Round 2
+
+swept file: no
+
+- [Pass] Round 1 HQ finding is repaired: utils/hq/hq.sh:328 now bounds the heading with `[^\n]*` and horizontal whitespace. Pure in-memory replay of the two current `re.search` patterns on the exact Round 1 request produced `HQ {"target": "bad"} -> target must be an object`; the corresponding partial request produced `HQ {"artifacts": ["README.md"]} -> None` (exit 0). The validation still precedes issue/capture writes and imports only the shape helper (utils/hq/hq.sh:323-342). Retained f78c531c provenance separately records HQ no-write green and 23 existing-suite assertions; these were read, not rerun here.
+- [Should] Accepted optional-null artifacts crash the next preflight consumer. `contract_shape_error` explicitly accepts `artifacts_new: null` (utils/py/swarm_preflight.py:74-75), and extract_contract also permits it (:163), but merge_contracts calls `list(None)` for the first contract (:219) and iterates None for later bundle contracts (:238). Main calls merge_contracts even for a single project doc (:1316). Normalize this optional marker to an empty list at both merge reads, preserving nonempty subset behavior. Extend the retained manual evidence through this existing consumer; manual_matrix.py:31-40 currently checks only planner and extract_contract for optional-null, so it misses the crash. This is a pre-existing defect in the touched source, covered by this relay's whole-file rule and optional-null review question.
+  Observed input: `{"target":{"repo":".","ref":"development"},"gate":"true","fix_probes":[{"type":"path_absent","path":"missing"}],"artifacts":["README.md"],"artifacts_new":null}` passed as the sole member of merge_contracts, or as the second member after the same contract with artifacts_new absent.
+  Affected scope: shape-valid execution contracts with explicit JSON null for artifacts_new, at either the first or a later bundle position; no broadening to other fields or execution authorization is requested.
+  Falsifier: the exact input must merge without exception and yield artifacts_new `[]` in both positions. Absent and empty-list markers must continue yielding `[]`; valid nonempty subset markers must survive merging unchanged.
+  Probe command (pure functions; no CLI, git, suites, fixtures, or probe execution):
+  ```sh
+  PYTHONDONTWRITEBYTECODE=1 python3 - <<'PYPROBE'
+  import sys, copy
+  sys.path.insert(0, 'utils/py')
+  from swarm_preflight import contract_shape_error, merge_contracts
+  c = {'target': {'repo': '.', 'ref': 'development'}, 'gate': 'true',
+       'fix_probes': [{'type': 'path_absent', 'path': 'missing'}],
+       'artifacts': ['README.md']}
+  print('shape_error:', contract_shape_error(dict(c, artifacts_new=None)))
+  for label, cs in [('absent', [c]), ('empty', [dict(c, artifacts_new=[])]),
+                    ('first-null', [dict(c, artifacts_new=None)]),
+                    ('later-null', [c, dict(c, artifacts_new=None)])]:
+      try:
+          print(label, '->', merge_contracts(copy.deepcopy(cs))['artifacts_new'])
+      except Exception as e:
+          print(label, '->', type(e).__name__ + ':', str(e))
+  PYPROBE
+  ```
+  Equivalent in-memory probes executed here: initial single-case probe exited 1 with `shape_error: None` and `merge failure: TypeError: 'NoneType' object is not iterable`; follow-up with caught exceptions exited 0 and printed `absent -> []`, `empty -> []`, and both `first-null`/`later-null -> TypeError: 'NoneType' object is not iterable`.
+- [Unverified — needs clone run] No suites or executable evidence scripts ran here. Full push gate remains pending before PR-ready publication. No git commands were used, so the requested complete origin/development diff comparison was not independently obtained. Read the complete seeded artifact, both requirements, plan receipt, retained receipts/scripts, HQ source, planner validation/discovery/packing/rendering paths, and preflight extraction/merge/execution paths. Whole-source sweep is not claimed complete: portions of the large gate registry and source output were truncated; this declaration must not be interpreted as exhaustive source approval.
+
+**VERDICT: FAIL**
+
+**Basis:** The earlier HQ defect is addressed, but a concrete downstream crash remains for an explicitly accepted optional-null marker. Correct both merge positions and retain discriminating manual evidence. Source-review and full-gate limitations above remain explicit; no approval or publication qualification is granted.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
