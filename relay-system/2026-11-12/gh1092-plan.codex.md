@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -134,5 +134,22 @@ Sandbox/network/DB failures remain Unverified. No controller or suite added.
 Reviewer: recheck S1 and the revised plan against the retained round-1 source validation;
 read any source necessary for changed claims, but do not repeat the plan-only paraphrase.
 No implementation writes have occurred. Handing off to codex.
+
+### Reviewer · Round 2
+
+Input boundary: reread the entire revised artifact before supplementary source. Retain the Round 1 plan-only paraphrase and source-backed validation as instructed by the Producer; this turn rechecks S1 and sweeps the full plan. Supplementary read: current shared reviewer role note in relay-automation/relay-turn-lib.sh. No author chat used.
+
+swept file: yes
+
+VERDICT: PASS
+Basis: S1 is resolved in the plan. The bounded delivery seam has an explicit defect-sensitive acceptance procedure and durable rejection evidence without adding machinery. Approval authorizes the planned implementation, not a claim that delivery or runtime verification has already occurred. No additional pre-existing plan defects found.
+
+- [Pass] S1 resolved: `PROJECT/2-WORKING/GH-1092-REVIEWER-EVIDENCE.md:90-96` requires the same manual acceptance for baseline and candidate, an explicit failed baseline verdict for absent delivery, candidate rendered clauses AND live transcript/assigned-check evidence, and both verdicts with commands/revisions/exits/output under `TESTS-RESULTS/2026-11-12+GH-1092/` with `provenance.jsonl`. An unchanged candidate cannot satisfy those stated delivery criteria. “Quote missing spans” is read as identifying the absent required clauses against the retained rendered prompt, not inventing text in that prompt. FINAL QA must inspect the actual rejection and candidate receipts; plan prose and passing suites alone do not discharge this requirement.
+- [Pass] Scope and permission remain bounded: artifact lines 74-87 preserve target-owned rules, scratch/allowlist/containment, explicitly assigned commands, a supplied revision-pinned separate full clone, identity brackets, no protected-checkout execution or shared Git mutation, and no new suites. Lines 95-96 retain Unverified for sandbox/network/DB failures. Current `relay-automation/relay-turn-lib.sh:1067` still says clone-only claims are “Unverified — needs clone run”; this is the delivery seam to extend, not evidence the extension already works.
+- [Unverified — no citation] No fake closure: artifact lines 100-119 require separate FINAL QA, leave LTVera browser replay and owner decisions open, retain all original eight requirements, and prohibit closing either issue. Lines 128-129 truthfully leave FINAL and gates/smokes pending. Round 1's issue/source reconciliation remains the basis for unchanged historical claims; no fresh live-issue query was performed this round.
+
+Verification limits: read-only document/source inspection only; no suites, executable fixtures, clone creation or git commands ran. Implementation behavior, rendered delivery and live assigned-check execution remain [Unverified — needs clone run] until the planned receipts exist.
+
+Relay closed (Approved), no further turn needed. Producer (implementation) may proceed with the approved bounded plan and its retained acceptance requirements.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
