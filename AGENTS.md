@@ -233,9 +233,9 @@ local change.
   the active work. Triage may promote it through issue-first `PROJECT/1-INBOX` and the RELEASES
   roadmap. This folder is an intentional exception to the scratch-file rule above; it is durable
   intake, not a place for probes or half-written notes. Never park a blocker to the current task.
-- **Frozen Bash twins (GH-308).** Python in `utils/py/` owns the twelve Tier-A entry points:
+- **Frozen Bash twins (GH-308).** Python in `utils/py/` owns the twelve Tier-A entry points (
   `agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`, `relay-loop`,
-  `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, `swarm-preflight`.
+  `relay-drive`, `consult`, `marathon-drive`, `marathon-plan`, `swarm-preflight`).
   Their `.sh` bodies are historical `XYZ_PYTHON=0` fallbacks: fix behavior in Python.
   `marathon-plan` became the twelfth frozen twin when GH-340 removed its copied-node-engine
   implementation (GH-362). `relay-turn-lib.sh` remains an unfrozen shared Bash dependency.

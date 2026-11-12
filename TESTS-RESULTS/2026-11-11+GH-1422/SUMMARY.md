@@ -92,3 +92,13 @@ Historical measurements and reviews above remain unchanged.
 Docs gate: zero errors, 99 preexisting backlog warnings (review-docs-gate.txt).
 Machine-path checker named by the PR template is absent; direct added-line scan found
 zero new absolute user-home paths. Existing historical paths elsewhere were not changed.
+
+## Merge-time consumer correction (2026-11-12)
+
+The broader push gate exposed a real consumer of Tier-A inventory punctuation:
+relay-xyz-guard.sh and gh415 parse `entry points (...)`. Restored the parentheses.
+The prior compressed colon format failed both existing guard suites; the corrected
+format passes all 12 and 35 assertions respectively in a separate full clone.
+Final size: 27688 bytes. Earlier semantic QA did not catch this machine consumer.
+Development was merged with changelog entries preserved and disjoint GH-1422 ledger
+changes replayed through the existing resolver; ledger check passes.
