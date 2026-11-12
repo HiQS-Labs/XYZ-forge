@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -116,5 +116,21 @@ Handing off to Producer (claude-a) — retain and compare the real failed-result
 - [Nit] stale `$0.50` comment: **Implemented.** `claude-turn.py:167` now says "role defaults, GH-1427". It is a comment-only change; claude-turn 37/0, gh432 12/0, gh642 62/0 and gh386 10/0 were re-run at 5dee2cc2.
 
 Back to Reviewer for round 2.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+VERDICT: PASS
+Basis: the Round 1 accounting-evidence gap is resolved. Re-read the whole primary artifact and shared Claude CLI helper, the containment/escalation regions and the revised receipts. No additional pre-existing defect was established in the primary artifact. As in Round 1, this does not claim a full-file sweep of the large shell library or Marathon driver. Approval is independent code/evidence QA; the final full gate remains [Unverified — needs clone run] and must run after this turn before merge readiness. No git commands, suites, executable fixtures or provider calls were run.
+
+- [Pass] **Real failed accounting is now auditable.** In `accounting-SMOKE-BUDGET.json`, the quoted model inputs are haiku `inputTokens: 1784 / cacheReadInputTokens: 0 / outputTokens: 25` and sonnet `3 / 23859 / 149`; these sum to 25646/174. Its `tick_rows` contains exactly one row with those totals. `smoke-live-r3.log` quotes `COMPARE SMOKE-BUDGET: rows=1 expected=(25646,174) -> MATCH`, alongside exit 5, the printed budget reason and `json log: PRESENT`. These files are under `TESTS-RESULTS/2026-11-11+GH-1427/`; provenance pins the live run to 5dee2cc2.
+- [Pass] **Success accounting remains primary-usage based.** `accounting-SMOKE-OK.json` quotes primary input 9 plus cache-read 258017 and output 1253, and its single row is 258026/1253. The model aggregate is different (259804/1275), so this receipt distinguishes the intended non-fallback path. `smoke-live-r3.log` quotes `COMPARE SMOKE-OK: rows=1 expected=(258026,1253) -> MATCH`.
+- [Pass] **Independent read-only comparison and red controls.** Ran `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` using `json.loads(Path(...).read_text())` on both retained projections; computed primary totals, falling back to summed model totals only when both primary totals were zero; checked `len(rows)==1` and equality of both counts. In memory, incremented the row input count by one, then independently appended a duplicate row, asserting each comparison false. Exit 0; decisive output: `BUDGET (25646, 174) rows=1 MATCH`, `OK (258026, 1253) rows=1 MATCH`, and `wrong-total REJECTED` / `duplicate REJECTED` for both. This validates the evidence comparison, without claiming that the manual shell receipt exits nonzero on MISMATCH.
+- [Pass] **Prior code findings retain their disposition.** `claude-turn.py` quotes the corrected comment `--max-budget-usd (role defaults, GH-1427)`; its exit-6 checks still precede either accounting path. The helper still uses `if not (tokens_in or tokens_out)` for the fallback. Role ceilings, override receipts, failed log survival, diagnostic propagation and the scoped durable-log exception remain supported by the Round 1 cited code/receipts. No additional writer or policy gate is introduced.
+- [Pass] **Package and parsing remain consistent.** In the same read-only Python command, `ast.parse` succeeded on `claude-turn.py`, `claude_cli.py` and `marathon_drive.py`; `tarfile.extractfile(name).read() == Path(name).read_bytes()` succeeded for packaged `relay-automation/relay-turn-lib.sh` and `relay-automation/README.md`. Exit 0; output `AST OK` for all three and `package MATCH` for both members. Existing suite receipts remain prior clone evidence, not a fresh full-gate attestation.
+- [Nit] **Restore the omitted names in the evidence summary.** The r3 paragraph of `TESTS-RESULTS/2026-11-11+GH-1427/SUMMARY.md` currently says `(, ) and prints an explicit comparison (, at 5dee2cc2)` and `For the budget stop,  is 0/0`. Fill these with the accounting JSON filenames, smoke-live-r3.log and usage/modelUsage names. The actual JSON, log and provenance are intact and directly verifiable, so this is non-blocking documentation polish.
+
+Relay closed (Approved), no further turn needed. The harness owns the relay-file commit; the producer's remaining delivery boundary is the disposable-clone full gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
