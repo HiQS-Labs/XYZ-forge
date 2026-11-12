@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -187,5 +187,31 @@ Handing off to Producer (claude-a) — amend the identity handling and dispositi
 - **[Nit] wording: Implemented.** The goal line now names the precise effect boundary. A reading note under Acceptance maps "read-only"/"zero locks" to the Step 2 effect contract. The criterion text stays verbatim because preflight checks acceptance fidelity against the issue. Step 6 now lists R1–R5.
 
 Handing off to Reviewer (codex), round 3 of 3: approve, or list the remaining findings.
+
+### Reviewer · Round 3
+
+**What this proposes:** Reuse target preflight to summarize readiness for each pending dry-run item and preserve its diagnostic in live park output. Shared helpers stay in jog_run.py; inbox substitution is permitted only when preflight retains the queued issue identity.
+
+**How the existing system works, per this document:** Queue-only dry-run returns before target validation and primary-pin enforcement. Live execution promotes inbox documents before preflight, whose current captured last line loses the readiness cause; preflight itself performs target-side fetch, worktree operations and contract probes even in dry-run.
+
+**What it's not:** No new readiness engine, dry-run promotion, clone bootstrapping, readiness-rule changes, new suites, or sibling #1427/#1428 work (Plan/Non-goals).
+
+**Input boundary:** Read Status, Recon, Plan with subsections, Acceptance and Non-goals before source inspection; the complete artifact and relay history were also read. Prior-round findings were available, so this is a follow-up review rather than a blind assessment.
+
+**Source-backed assessment**
+
+swept file: yes
+
+- [Pass] The remaining identity finding is resolved by Step 2's explicit matching-reader condition and unavailable diagnostic, with numeric/URL controls in R5 (`PROJECT/2-WORKING/GH-1426-JOG-DRYRUN-TARGET-READINESS.md:145–152,189`). Compare normalized issue values when implementing: the canonical resolver returns an integer and preflight returns a digit string (`utils/py/wave_reconcile.py:1072–1082`; `utils/py/swarm_preflight.py:1012–1018`). Read-only probe command: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -B`, importing `doc_issue_number`, `doc_frontmatter_issue` and `extract_contract`, then printing their results for the plan and GH-1292 inbox doc; exit **0**. Decisive output: plan `resolver=1426, preflight='1426'`; GH-1292 `resolver=1292, preflight=None`. The amended fallback prevents this observed identity loss from being presented as live-equivalent readiness (`swarm_preflight.py:1494–1504`).
+- [Pass] The effect boundary is now consistent in the goal, Step 2 and Acceptance reading note: no Jog ledger/state/lock/lease writes, with target preflight effects explicitly disclosed (`plan:21–24,154–159`, Acceptance reading note). This matches the existing fetch/worktree/probe path (`utils/py/swarm_preflight.py:1309,1365–1391,231–235`). Explicit prospective `--out` avoids archive resolution, and the summary specification qualifies contradictory return codes (`plan:131–147`; `swarm_preflight.py:1715–1733`).
+- [Pass] All five issue criteria retain implementation and falsifiable verification paths; R4/R5 are now included in the evidence step (`plan:175–190`). The contract parses successfully in the reader probe above; a separate `re.search` probe using its extracted pattern against current jog_run.py returned `base matches: False`, exit **0** (`plan` Preflight Contract). Prior-round helper-presence discrimination remains recorded in this relay; parser success alone is not implementation evidence.
+- [Pass] The design remains a bounded extension of the current owner and preflight, with the legacy landing path preserved (`plan:126–174`; `utils/py/jog_run.py:530–610,2393–2417,2453`). Existing assertions are compatible by inspection (`test/gh280-jog-marathon-adapter.sh:703–712,795–803`; `test/jog-queue.sh:172–185`). A read-only `rg` search for the changed output strings in utils/skills/docs/test found no additional output parser requiring a plan change, exit **0**. Whole-artifact sweep found no additional consequential pre-existing defect.
+- [Unverified — needs clone run] Implementation behavior, R1–R5 and existing suites remain pending the disposable full-clone execution prescribed at `plan:175–178`. No suite, executable fixture, git command, or production preflight ran in this review.
+
+**VERDICT: PASS**
+
+**Basis:** Ship the plan. The last Should finding and wording Nit are addressed; the plan now preserves issue identity or explicitly declines to evaluate it, documents the actual effect boundary, and maps acceptance to existing suites and manual red controls without adding machinery. This approves the implementation plan, not an unbuilt or untested implementation. Only this relay file was edited.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the approved implementation and disposable-clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
