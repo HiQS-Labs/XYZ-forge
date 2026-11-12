@@ -226,4 +226,12 @@ Basis: approve the plan for implementation. The round-2 Should is resolved, and 
 
 Relay closed (Approved), no further turn needed. Producer may proceed with implementation and retain the planned evidence before claiming acceptance.
 
+
+### Attestation · relay-drive — 2026-11-12T03:20:56Z
+task: RELAY-gh1427-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 7e9cb12db79ef3db8a732843425eca8851e549dc
+added-range: 23857+3326
+added-sha256: 01a0abab4ca365df515a20f469fc30ee5c13c68bf0be3ce2f137bf4bdaacb9e8
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
