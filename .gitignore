@@ -21,9 +21,9 @@ XYZ.heartbeat.json
 utils/telemetry/preflight-log/
 # swarm-preflight packet output — ephemeral per-run artifact (sleuth-app already gitignores this).
 relay-system/preflight/
-# GH-161: persistent CODEX_LOG/AGY_LOG default (rtl_default_log in relay-turn-lib.sh). MUST stay
-# ignored — rtl_check already deletes any file landing in the tracked tree that matches the shim's
-# own transcript path, so an un-ignored log here would be wiped at the end of every single turn.
+# GH-161: persistent CODEX_LOG/AGY_LOG/CLAUDE_LOG default (rtl_default_log in relay-turn-lib.sh). Keep
+# ignored so turn logs never show as tree dirt. (Before GH-1427 an un-ignored log here was deleted at
+# the end of every turn; rtl_own_log_is_durable now keeps it.)
 relay-system/logs/
 # Hourly HQ marathon scan (utils/hq/hourly-global-scan.sh) — a live, machine-local rolling snapshot
 # overwritten every run; committing it each hour would be pure churn with no historical value.

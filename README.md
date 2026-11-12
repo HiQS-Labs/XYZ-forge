@@ -122,8 +122,9 @@ installed and authenticated first.
 Two marathon knobs worth knowing before the first unattended run: headless builders default to
 subscription-billed `codex`/`agy`; `--builder claude` remains an explicit operator choice.
 Claude also supports [account-validated subscription mode](relay-automation/README.md#claude-subscription-mode)
-for native consult, standalone relay review, and builds. `CLAUDE_MAX_TURNS` defaults to 12;
-`CLAUDE_MAX_BUDGET` (default $0.50) is an API budget, not a subscription quota guarantee. A target repo with known
+for native consult, standalone relay review, and builds. Relay turns default by role (GH-1427):
+builders $3.00 / 40 turns, reviewers $1.00 / 12 (`CLAUDE_MAX_BUDGET` / `CLAUDE_MAX_TURNS` override both);
+the budget is an API budget, not a subscription quota guarantee. A target repo with known
 pre-existing test failures can pass `--pre-advance-baseline <rc>` (or `MARATHON_GATE_BASELINE=<rc>`)
 so the gate tolerates the existing exit code while still halting on regressions.
 

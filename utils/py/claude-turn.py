@@ -8,7 +8,7 @@ import json
 import shutil
 from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root, rtl_default_log
 from turn_diagnostics import TurnDiagnostics
-from claude_cli import resolve_binary, preflight, read_result, effort_flags
+from claude_cli import resolve_binary, preflight, read_result, effort_flags, result_error_summary
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -33,15 +33,29 @@ def warn_if_workspace_untrusted(root):
             file=sys.stderr,
         )
 
+# GH-1427: one relay-sized ceiling ($0.50 / 12) used to apply to every Claude role, so a Marathon/Jog
+# BUILDER was cut off mid-implementation (LTVera-Pandas GH-993: $0.5104 / 12 turns, killed mid-Write),
+# and #1420's live REVIEWER died at $0.5283 on the same $0.50. The role comes from the existing
+# resolver (rtl.is_reviewer_turn: the driver's RELAY_ROLE, then the relay file); an explicit
+# CLAUDE_MAX_BUDGET / CLAUDE_MAX_TURNS still overrides both roles. The 900s wall cap and the GH-492
+# idle bound still end a runaway turn.
+CEILING_DEFAULTS = {"reviewer": ("1.00", "12"), "builder": ("3.00", "40")}
+
+
 def warn_opus_budget(model, max_budget, stream=None):
-    """GH-642: the default budget is sized for Sonnet (see the cost-ceilings history in the bash
-    body). An Opus-class pin with that default hard-stops the turn mid-flight — a bare smoke
-    call is already ~$0.68 of cache-write. Advisory, not a refusal: Opus is an explicit operator
-    choice, and refusing would turn a cost mismatch into a new policy gate."""
-    if model.startswith("claude-opus") and max_budget == "0.50":
+    """GH-642: the defaults are sized for Sonnet. An Opus-class pin on a small budget hard-stops
+    the turn mid-flight — a bare smoke call is already ~$0.68 of cache-write. Advisory, not a
+    refusal: Opus is an explicit operator choice, and refusing would turn a cost mismatch into a
+    new policy gate. GH-1427: keyed on the amount (< $3.00), not the old "0.50" literal, which is no
+    longer any role's default; an unparseable value never raises here."""
+    try:
+        small = float(max_budget) < 3.0
+    except (TypeError, ValueError):
+        small = False
+    if model.startswith("claude-opus") and small:
         print(
-            "claude-turn: WARNING — CLAUDE_MODEL is Opus-class but CLAUDE_MAX_BUDGET is the "
-            "Sonnet-sized default ($0.50); the turn will likely hard-stop on budget. Raise "
+            f"claude-turn: WARNING — CLAUDE_MODEL is Opus-class but CLAUDE_MAX_BUDGET is a "
+            f"Sonnet-sized ${max_budget}; the turn will likely hard-stop on budget. Raise "
             "CLAUDE_MAX_BUDGET (e.g. 5.00) for Opus lanes.",
             file=stream or sys.stderr,
         )
@@ -108,8 +122,9 @@ def main():
     # Keep diagnostics beside the selected JSON transcript, including custom/archive paths.
     claude_stderr = claude_log + ".stderr"
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
-    max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
-    max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
+    default_budget, default_turns = CEILING_DEFAULTS["reviewer" if rtl.is_reviewer_turn(me) else "builder"]
+    max_turns = os.environ.get("CLAUDE_MAX_TURNS") or default_turns
+    max_budget = os.environ.get("CLAUDE_MAX_BUDGET") or default_budget
 
     warn_opus_budget(model, max_budget)
     
@@ -252,7 +267,36 @@ def main():
         print(f"claude-turn: claude -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)
         print(f"claude-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
-        print(f"claude-turn: claude -p failed (exit {bounded_rc})", file=sys.stderr)
+        # GH-1427: a ceiling stop exits 1 with EMPTY stderr; the cause is only in the JSON result.
+        _why = result_error_summary(claude_log)
+        print(f"claude-turn: claude -p failed (exit {bounded_rc})" + (f": {_why}" if _why else ""), file=sys.stderr)
+
+    def record_cost():
+        # GH-1427: a failed turn spent money too (the CLI's error result carries `usage`). This ran only
+        # after the failure exits below, so a ceiling-stopped turn recorded no `tick cost` row and the
+        # end-of-run summary read "tokens: 0 total". Called exactly once on every path that reaches it.
+        if os.path.exists(claude_log) and os.path.getsize(claude_log) > 0:
+            try:
+                with open(claude_log) as f:
+                    data = json.load(f)
+                usage = data.get("usage", {})
+                tokens_in = usage.get("input_tokens", 0) + usage.get("cache_read_input_tokens", 0)
+                tokens_out = usage.get("output_tokens", 0)
+
+                if tokens_in > 0 or tokens_out > 0:
+                    cost_tick_bin = tick_bin or resolve_tick_bin(tick_repo_root, xyz_root)
+                    if cost_tick_bin:
+                        tick_res = subprocess.run(
+                            [cost_tick_bin, "cost", t, "--agent", me, "--tokens-in", str(tokens_in), "--tokens-out", str(tokens_out), "--tool", "claude"],
+                            env=make_tick_env(tick_repo_root),
+                            capture_output=True,
+                        )
+                        if tick_res.returncode != 0:
+                            print(f"claude-turn: tokens not captured for {t}", file=sys.stderr)
+                else:
+                    print(f"claude-turn: tokens not captured for {t} (zero or no stats in transcript)", file=sys.stderr)
+            except Exception:
+                pass
 
     # GH-432: a failed turn must still reach rtl_enforce. This branch used to `sys.exit(5)` right
     # here, two lines above the timeout path that deliberately falls THROUGH — so the one case where
@@ -273,6 +317,8 @@ def main():
         sys.exit(6)
     if bounded_rc == 6:
         sys.exit(6)
+    if bounded_rc != 0:
+        record_cost()
     if bounded_rc == 7:
         sys.exit(7)
     if bounded_rc != 0:
@@ -280,29 +326,8 @@ def main():
         # the side effects that precede it changed.
         sys.exit(5)
 
-    if os.path.exists(claude_log) and os.path.getsize(claude_log) > 0:
-        try:
-            with open(claude_log) as f:
-                data = json.load(f)
-            usage = data.get("usage", {})
-            tokens_in = usage.get("input_tokens", 0) + usage.get("cache_read_input_tokens", 0)
-            tokens_out = usage.get("output_tokens", 0)
-            
-            if tokens_in > 0 or tokens_out > 0:
-                cost_tick_bin = tick_bin or resolve_tick_bin(tick_repo_root, xyz_root)
-                if cost_tick_bin:
-                    tick_res = subprocess.run(
-                        [cost_tick_bin, "cost", t, "--agent", me, "--tokens-in", str(tokens_in), "--tokens-out", str(tokens_out), "--tool", "claude"],
-                        env=make_tick_env(tick_repo_root),
-                        capture_output=True,
-                    )
-                    if tick_res.returncode != 0:
-                        print(f"claude-turn: tokens not captured for {t}", file=sys.stderr)
-            else:
-                print(f"claude-turn: tokens not captured for {t} (zero or no stats in transcript)", file=sys.stderr)
-        except Exception:
-            pass
-            
+    record_cost()
+
     try:
         from harness_turn_logger import HarnessTurnLogger
         with HarnessTurnLogger(

@@ -76,7 +76,8 @@ execution-modes table in [README.md](README.md).)
 - **Marathon** (`relay-automation/marathon.sh`) — chains several relay build→review phases from a
   `MARATHON.yaml`, in `depends_on` order. The multi-agent coordinator built on the relay loop.
   Headless builders default to subscription-billed `codex`/`agy`; `--builder claude` is available as
-  an explicit per-call API opt-in (`CLAUDE_MAX_BUDGET` defaults to $0.50 and `CLAUDE_MAX_TURNS` to 12).
+  an explicit per-call API opt-in (a builder turn defaults to `CLAUDE_MAX_BUDGET` $3.00 and `CLAUDE_MAX_TURNS` 40,
+  a reviewer turn to $1.00 / 12; GH-1427).
 - **agy** — the Antigravity CLI (Google), one of the agents XYZ coordinates alongside Claude Code
   and Codex.
 - **PRS** — the **Product Release System**: the RELEASES ledger, `releases.db` with its git-mergeable dump
