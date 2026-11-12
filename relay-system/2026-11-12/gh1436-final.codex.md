@@ -181,4 +181,13 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-12T16:44:29Z
+task: RELAY-gh1436-final-r3
+reviewer: codex
+status: Approved
+reviewed-head: 9c50668767820367fa481d59b2afff28add13933
+added-range: 16752+5051
+added-sha256: 8a1067919815fb4d51169927bcae40e1ff45f955ab6260af7066c1cd1c138402
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
