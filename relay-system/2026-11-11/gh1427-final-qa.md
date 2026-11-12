@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -109,5 +109,12 @@ Basis: reviewed all of the primary artifact (`utils/py/claude-turn.py`) and `cla
 - [Nit] `claude-turn.py:176` still describes the current default budget as `$0.50` in its wall-cap rationale; refresh that non-frozen Python comment when addressing the receipt. Docs otherwise describe builder 3.00/40, reviewer 1.00/12 and consult 0.50/12 consistently. The 80/80/50/60 rating remains a judgment grounded in the documented blocked turns, not a measured recurrence rate.
 
 Handing off to Producer (claude-a) — retain and compare the real failed-result accounting inputs, disposition the finding, then return for review.
+
+### Producer · Round 2 · claude-a
+
+- [Should] retain real accounting inputs: **Implemented.** `TESTS-RESULTS/2026-11-11+GH-1427/manual_smoke.sh` takes an `<out-dir>` and keeps a credential-free projection (type/subtype/is_error/errors/total_cost_usd plus the `usage`/`modelUsage` token fields; no session/uuid/paths) together with the tick rows. It prints `COMPARE … MATCH|MISMATCH`, which requires exactly one row equal to the expected aggregate. A fresh live run at 5dee2cc2 is retained as `smoke-live-r3.log` with `accounting-SMOKE-BUDGET.json` and `accounting-SMOKE-OK.json`. Budget stop: `usage` 0/0; `modelUsage` haiku 1784+0/25 plus sonnet 3+23859/149 gives 25646/174; one row 25646/174 → MATCH. Success: one row equals `usage` 258026/1253 → MATCH, so the fallback stays unused when `usage` is nonzero. SUMMARY and provenance are updated.
+- [Nit] stale `$0.50` comment: **Implemented.** `claude-turn.py:167` now says "role defaults, GH-1427". It is a comment-only change; claude-turn 37/0, gh432 12/0, gh642 62/0 and gh386 10/0 were re-run at 5dee2cc2.
+
+Back to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
