@@ -157,3 +157,12 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: skills
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 - **date**: 2026-11-04
+
+## A failed `claude -p` JSON result zeroes `usage`; count tokens from `modelUsage`
+- **cue**: harness code that reads token counts or cost from a `claude -p --output-format json` result on a non-success turn (budget or turn ceiling, error subtype)
+- **lesson**: in `utils/py/claude-turn.py` (and any other reader of the Claude CLI result), do not trust `usage` alone on an error result; when its input/cache-read/output totals are zero, sum the per-model `modelUsage` counts, and verify against one live bounded error result instead of a fixture
+- **evidence**: `TESTS-RESULTS/2026-11-11+GH-1427/smoke-live-r1.log` (real `error_max_budget_usd`, `usage` 0/0, 0 cost rows) vs `smoke-live-r3.log` + `accounting-SMOKE-BUDGET.json` (same path after the fallback: 1 row equal to the `modelUsage` sum, MATCH); the fake-JSON check `m1m2-green.log` passed throughout and could not see it
+- **confidence**: medium — observed on claude 2.1.322 only, with an isolated single-change before/after
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1427
+- **date**: 2026-11-11
