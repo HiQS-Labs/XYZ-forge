@@ -1,5 +1,5 @@
 == test: debug-mantra ==
-  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-debug-mantra.XXXXXX.E3Bdh2pNbs
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-debug-mantra.XXXXXX.shHN6x9Gpm
   PASS: relay-automation/DEBUG-MANTRA.md exists
   PASS: DEBUG-MANTRA.md carries all four discipline steps
   PASS: first fire: dry-run emits a render

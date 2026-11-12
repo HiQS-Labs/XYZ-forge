@@ -1,5 +1,5 @@
 == test: gh268-relay-cue-and-target-checks ==
-  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh268-relay-cue-and-target-checks.XXXXXX.doELJYBNZy
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh268-relay-cue-and-target-checks.XXXXXX.MfVPRcjktQ
   PASS: new-relay template carries the hand-off cue
   PASS: new-relay cue says EVERY turn (the reported defect was first-turn-only)
   PASS: new-relay cue names the words to say to the other window

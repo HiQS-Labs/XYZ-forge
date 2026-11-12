@@ -1,5 +1,5 @@
 == test: gh681-reviewer-probe-rules ==
-  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh681-reviewer-probe-rules.XXXXXX.BdH4QibalB
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh681-reviewer-probe-rules.XXXXXX.i5ad1DhmVR
   PASS: case 1: reviewer prompt carries: You are the REVIEWER this turn
   PASS: case 1: reviewer prompt carries: MAY run narrow, non-mutating probes
   PASS: case 1: reviewer prompt carries: .relay-scratch/
