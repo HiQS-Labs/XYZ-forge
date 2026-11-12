@@ -1,0 +1,20 @@
+{
+  "added_len": 2578,
+  "added_sha256": "be9972b774679ce1624f2c161fc05b766ec00d4cd8166ed6eaff231048424aa7",
+  "added_start": 1227,
+  "artifact_sha256": null,
+  "attested_at": "2026-11-12T20:47:30Z",
+  "driver_pid": 9569,
+  "gate_run": "undeclared",
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GitHub/XYZ-forge-relay-acceptance-2026-11-12/relay-system/2026-11-12/relay-acceptance-r2.codex.md",
+  "relay_file_rel": "relay-system/2026-11-12/relay-acceptance-r2.codex.md",
+  "reviewed_head": "8f599d40259f1b85ce45ecb5cf974b1c8e11fc83",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge-relay-acceptance-2026-11-12",
+  "task": "RELAY-ACCEPTANCE-R2-20261112",
+  "trailer_sha256": "5e4dc65ed72e98d4ecb5be70014207dbc9adb31a1fb053653a96b8f055303736",
+  "transcript_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge-relay-acceptance-2026-11-12"
+}
