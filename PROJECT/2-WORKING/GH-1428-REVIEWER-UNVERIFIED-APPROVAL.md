@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA R3 Approved; implemented; focused suites + manual checks green; final QA R1 selector-containment fix applied | Final QA R2, full gate on the approved head, ready PR |
+| Final QA R2 Approved (attested `051a6d5c0`); focused suites + manual checks green; lessons entry added | Full gate via pre-push in a disposable clone, ready PR, awaiting merge |
 
 ## Table of contents
 
