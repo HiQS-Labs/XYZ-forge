@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -156,5 +156,39 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1427-CLAUDE-TURN-BUILDER-CEI
 - **Plan change from your Nit's evidence:** `TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15` shows #1420's live Claude *reviewer* hit `error_max_budget_usd` at $0.528 on $0.50. That is the issue's "second occurrence". So the reviewer default budget becomes **$1.00** (turns stay 12), and the builder default is $3.00/40. `warn_opus_budget` would otherwise only fire on a literal `"0.50"` that is no longer a default, so its condition becomes "Opus and budget < $3.00". The call line stays byte-identical and gh642's cases (`opus 0.50 → WARNED`, `sonnet 0.50 → SILENT`) are unchanged. Please assess this change specifically.
 
 Back to Reviewer for round 2.
+
+### Reviewer · Round 2 · codex
+
+**What this proposes**
+Raise builder defaults to $3.00 / 40 and reviewer defaults to $1.00 / 12, retaining global overrides. Preserve durable logs and failed usage through existing writers; regenerate the distribution package and measure real error-result usage.
+
+**How the existing system works, per this document**
+The plan attributes log deletion to two containment cleanup sites and missing cost rows to early failure exits. It says the existing role resolver already distinguishes driver and hand-run roles, and the existing Marathon diagnostic field can carry the CLI cause.
+
+**What it's not**
+No new role knobs, retry system, suite, or Jog/Marathon ceiling owner. Step A input boundary: the whole revised plan and relay/startup instructions only; source validation followed afterwards.
+
+**source-backed**
+swept file: yes
+
+VERDICT: FAIL
+Basis: both round-1 Should findings are addressed in the plan. The revised reviewer budget is reasonable, but its decisive verification still asserts the old value. Reviewed the whole plan and the requested source paths; no additional pre-existing defect requiring expansion was established. `gh issue view 1427 --repo HiQS-Labs/XYZ-forge` returned exit 1, `error connecting to api.github.com`; acceptance assessment uses the copied section as permitted. No suites, executable fixtures, provider calls, or git commands were run. Implementation and real-result verification remain outstanding.
+
+- [Should] **Make M2 agree with the revised reviewer default.** The design table and step 2a specify reviewer `1.00 / 12`, but M2 still requires `RELAY_ROLE=reviewer → 0.50 / 12`. A correct implementation cannot satisfy that check. Change M2 to `1.00 / 12` while retaining the builder and explicit-override cases.
+  Observed input: Verification/M2's literal `RELAY_ROLE=reviewer → 0.50 / 12`, versus Implementation/2a's `("1.00","12")`.
+  Affected scope: the planned role-default argv assertion for a locked reviewer with no ceiling override.
+  Falsifier: the fake CLI under `RELAY_DRIVER_LOCKED=1 RELAY_ROLE=reviewer`, with both ceiling env overrides absent, emits `--max-budget-usd 1.00 --max-turns 12`; that must pass the corrected assertion. Emitting `0.50` must fail it.
+
+- [Pass] **The reviewer-budget change has concrete evidence and remains bounded.** `TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15` explicitly identifies a real isolated reviewer, `error_max_budget_usd`, and `$0.5283504` against `$0.50`. This supports revisiting the reviewer cap; it does not prove $1.00 sufficient for every review. Retaining 12 turns and global overrides is proportionate. `rtl.py:871-874` and `relay-turn-lib.sh:90-114` still support reusing the existing resolver, with the previously documented stale-environment limitation.
+
+- [Pass] **The warning adjustment is advisory and compatible with current controls.** `claude-turn.py:34-46` currently checks the literal `"0.50"`; `test/gh642-consumer-fruit.sh:140-142` expects Opus/0.50 warned, Opus/5.00 silent, Sonnet/0.50 silent. The proposed Opus budget-below-3 rule preserves those cases. Treat 3 as a warning threshold judgment rather than measured adequacy. Include this helper edit explicitly in step 2a and manually check Opus/1.00 and Opus/3.00; use defensive numeric parsing so a malformed override does not introduce an uncaught warning exception.
+
+- [Pass] **The revised delivery and usage checks address round 1.** Implementation/5 now names package regeneration and freshness checking. Verification/Smoke explicitly requires nonzero real usage and exactly one matching cost row, and treats absent usage as an acceptance gap; its exit-0 fake control addresses duplicate success recording. `claude-turn.py:283-304` shows the existing token formula being preserved. These are planned checks, not executed evidence.
+
+- [Nit] **Regenerate after the final packaged edit.** Ordered step 5 builds/checks the package before step 6 edits the packaged `relay-automation/README.md`. Move regeneration/freshness after the docs edits so the final tarball includes them. Also update the now-stale `$0.50` own-log/default comments in touched files, including `.gitignore:23-26` and `relay-turn-lib.sh:197-203`; retain historical frozen-twin comments.
+
+- [Pass] **The containment and escalation conclusions remain unchanged.** `relay-turn-lib.sh:1309-1317` and `:1751-1759` establish both deletion sites; `:1589-1621` scopes normal commits to the allowlist. Preserving the own log under the durable logs directory intentionally leaves untracked dirt on nonignoring hosts; it does not guarantee exclusion from an explicitly log-containing allowlist. `marathon_drive.py:2217-2221,2260-2263` supports keeping category `reason:` stable and adding `errors` to the adjacent diagnostic. The plan's risk sentence “they never ride into a commit” should carry that allowlist qualification.
+
+Handing off to Producer (claude-a) — correct M2, finish the small ordering/wording updates, and return for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
