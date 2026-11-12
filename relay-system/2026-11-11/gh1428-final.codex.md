@@ -1,6 +1,6 @@
 # GH1428 final implementation QA
-STATUS: Open
-NEXT: codex (Reviewer)
+STATUS: Approved
+NEXT: orchestrator
 
 Final independent QA of the committed implementation for https://github.com/HiQS-Labs/XYZ-forge/issues/1428 against its Codex-approved plan (`relay-system/2026-11-11/gh1428-plan.codex.md`, R3 Approved, attested `67fa20b09`). Review `git diff 0f21b761a..HEAD` (read it with `git diff`/`git show` read-only, or read the files). Plan: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md`. Evidence: `TESTS-RESULTS/2026-11-11+GH-1428/SUMMARY.md` (+ receipts, provenance.jsonl).
 
@@ -51,3 +51,19 @@ Dispositions for Round 1:
 - [Note] Status table — **Implemented**.
 
 Re-review the delta (`git diff <R1 reviewed head>..HEAD`) and confirm. Same rules. Append `### Round 2 · Reviewer · codex` with plain paragraphs (no nested headings), a `swept file:` line and an explicit `**Verdict:**`; STATUS: Approved only if approved; NEXT: orchestrator.
+
+### Round 2 · Reviewer · codex
+
+Ship within final-QA scope. The Round 1 selector-containment finding is resolved: `reviewer_runnable_gate` now rejects absolute selectors, resolves relative selectors against the real target root, requires a regular file, and checks containment with `os.path.commonpath`. This preserves the worktree-relative GH-955 command while rejecting parent and symlink escapes. The existing Status table now reflects implementation and final QA. No further required finding in this correction.
+
+[Pass — independently measured] Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PY' … PY`. The Python body parsed `utils/py/marathon_drive.py` with `ast`, extracted only `_FULL_SUITE_RE` and `reviewer_runnable_gate`, supplied `os/re/shlex`, and evaluated inert files created with `tempfile.TemporaryDirectory(dir=os.environ['TMPDIR'])`. It asserted expected results for twelve commands and a GH-54 negative; no application import, subprocess, fixture or test execution occurred. Exit status 0. Decisive output: `pytest tests/x.py => qualifies`; `pytest tests/x.py::test_a => qualifies`; `.venv/bin/pytest -q tests/x.py => qualifies`; parent traversal, absolute outside, absolute inside, escaping symlink, directory, missing file, passthrough, compound and unscoped pytest all returned `harness-only`; `PASS: 12 selector cases plus GH-54 negative`. Together with the R1 pre-fix red, this witnesses that the correction addresses the reported failure.
+
+[Evidence limits] Inspected the refreshed provenance entry for `c64d83d02`, focused suite logs and render receipt. These report five existing suites green and seven unchanged render variants; they are builder-provided clone evidence, not suites independently executed in this reviewer turn. A first attempt to read `focused.out` exited 1 because receipts use `focused-*.log`; the actual logs were then read. Full final-commit gate remains [Unverified — needs clone run] and must run in the harness disposable full clone after this turn. This approval concerns the scoped code correction and does not claim that deferred gate passed or that a live DB-backed reviewer run was measured.
+
+swept file: no
+
+Reviewed the complete predicate and its surrounding context, the R1 finding and R2 disposition, the updated plan/status and relevant receipts. This is a delta re-review carrying forward the prior review, not a new sweep of the entire driver. No git commands or prohibited suites were run. Only this relay file was changed outside sanctioned scratch.
+
+**Verdict:** Approved
+
+Handing off to orchestrator — orchestrator, take your turn.
