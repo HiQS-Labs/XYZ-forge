@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-11 — GH-1421 board_sync agent-session repos (opt-in)
+
+`board_sync`'s Rebalance `repos_source` takes an opt-in `include_agent_sessions: true`
+(default false). When set, repos with T3 agent runs in Rebalance's `agent_session_activity`
+(rebalanceOS#375, migration 0010) over the same `since_days` follow the GitHub-active repos,
+ordered by runs then name, within the existing `top_n` cap. GitHub order is unchanged; a
+missing or unreadable agent table warns and keeps the GitHub list. With the key off the
+resolved list is unchanged. The `?mode=ro` failure on the live DB is root-caused: the DB
+is in persistent WAL mode with no `-wal`/`-shm` sidecars, and this SQLite build fails the
+first read-only SELECT. The warning now names that likely cause. `immutable=1` reads it but
+is deliberately not used (no stable-read contract), so on this Mac the feature stays inert
+until a follow-up decides how to read it safely. Revert by reverting the single-file change.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1421/`.
+
 ## 2026-11-11 — GH-1419 explicit reviewer routing
 
 Jog and manifest validation reuse Marathon’s supported route owner. Distinct actors

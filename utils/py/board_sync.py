@@ -85,7 +85,9 @@ POLICY_DEFAULTS = {
     "status_field": "Status", "ready": "Ready", "in_progress": "In progress",
     "in_review": "In review", "done": "Done", "backlog": "Backlog",
     "implementation_status": "pending",
-    "repos_source": None,  # GH-898: {"type": "rebalance_active", "top_n": 8, "since_days": 7}
+    # GH-898: {"type": "rebalance_active", "top_n": 8, "since_days": 7}; GH-1421 adds the opt-in
+    # "include_agent_sessions": true (also read Rebalance's agent_session_activity; default false)
+    "repos_source": None,
 }
 
 STRONG_SOURCES = ("pdda_doc", "branch", "tick_event", "jog_running")
@@ -135,6 +137,10 @@ def _rebalance_active_repos(source, limit):
 
     Mirrors rebalance.ingest.db.github.top_active_repos (7-day score over github_activity) with a
     name tie-break; no `immutable` (the DB has a live writer) and no rebalance import.
+
+    GH-1421: with source["include_agent_sessions"], repos with agent runs in agent_session_activity
+    (rebalanceOS migration 0010) over the same window follow the GitHub list, by runs then name. The
+    GitHub order is never changed, and an agent-query failure keeps the GitHub rows.
     """
     path = _rebalance_db_path()
     if path is None or not path.is_file():
@@ -144,21 +150,42 @@ def _rebalance_active_repos(source, limit):
            "SUM(issues_opened) + SUM(issue_comments) + SUM(reviews) AS score "
            "FROM github_activity WHERE scan_date >= date('now', ?) "
            "GROUP BY repo_full_name HAVING score > 0 ORDER BY score DESC, repo_full_name LIMIT ?")
+    agent_sql = ("SELECT repo_full_name, SUM(runs) AS total_runs FROM agent_session_activity "
+                 "WHERE day >= date('now', ?) GROUP BY repo_full_name HAVING total_runs > 0 "
+                 "ORDER BY total_runs DESC, repo_full_name LIMIT ?")
+    window = "-%d days" % source["since_days"]
+    agent_rows = []
     try:
         conn = sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)  # SQLITE-GATEWAY-OK: read-only rebalanceOS DB, not harness state (GH-898)
         try:
-            rows = conn.execute(sql, ("-%d days" % source["since_days"], limit)).fetchall()
+            rows = conn.execute(sql, (window, limit)).fetchall()
+            if source.get("include_agent_sessions"):
+                try:
+                    agent_rows = conn.execute(agent_sql, (window, limit)).fetchall()
+                except sqlite3.Error as exc:
+                    _warn("repos_source: rebalanceOS DB %s; using github_activity only"
+                          % ("has no agent_session_activity table (older Rebalance)" if "no such table" in str(exc)
+                             else "agent_session_activity is unreadable (%s)" % exc))
         finally:
             conn.close()
     except (sqlite3.Error, OSError) as exc:
-        reason = ("has no github_activity table" if "no such table" in str(exc)
-                  else "is unreadable (%s)" % exc)
+        if "no such table" in str(exc):
+            reason = "has no github_activity table"
+        elif ("unable to open database file" in str(exc)
+              and not any(Path(str(path) + s).exists() for s in ("-wal", "-shm"))):
+            reason = ("is unreadable (unable to open database file); this may be the WAL DB with no "
+                      "-shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421)")
+        else:
+            reason = "is unreadable (%s)" % exc
         _warn("repos_source: rebalanceOS DB %s; using the pinned repos" % reason)
         return []
-    if not rows:
+    names = [r[0] for r in rows]
+    seen = {n.lower() for n in names}
+    names += [r[0] for r in agent_rows if r[0].lower() not in seen]
+    if not names:
         _warn("repos_source: no repo has activity in the last %d days; using the pinned repos"
               % source["since_days"])
-    return [r[0] for r in rows]
+    return names
 
 
 def resolve_selection_policy(required=False):
@@ -179,10 +206,12 @@ def _resolve_policy_and_label(required=False):
             raise ValueError("repos_source must be an object; set it in the device config")
         if source.get("type") != "rebalance_active":
             raise ValueError("repos_source.type must be 'rebalance_active'")
-        source = {"top_n": 8, "since_days": 7, **source}
+        source = {"top_n": 8, "since_days": 7, "include_agent_sessions": False, **source}
         for key in ("top_n", "since_days"):
             if not isinstance(source[key], int) or isinstance(source[key], bool) or source[key] <= 0:
                 raise ValueError("repos_source.%s must be a positive integer" % key)
+        if not isinstance(source["include_agent_sessions"], bool):
+            raise ValueError("repos_source.include_agent_sessions must be true or false")
         if cfg.get("repo"):
             raise ValueError("use repos[] with repos_source, not repo")
     if cfg.get("repo"):

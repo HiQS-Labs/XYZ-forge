@@ -1,0 +1,38 @@
+PASS A1 key off identical to base resolver (key absent)
+PASS A1 key off identical to base resolver (key false)
+PASS A1 key off config output byte-identical to base (key absent)
+PASS A1 key off config output byte-identical to base (key false)
+PASS A1 red control: key on changes the repo list
+PASS A2 key on: GitHub order kept, agent-only appended by runs DESC; zero/old/case-dup excluded
+PASS A2 label on success
+PASS A2 no warning on success
+PASS A2 red control: key off omits the agent-only repo
+PASS A2 top_n cap still applies (agent repos rank last)
+PASS A2b multi-row repos summed (zero row first kept); runs tie broken by name; all-zero repo excluded
+PASS A2 no GitHub activity in window: agent repos still added, no empty-window warning
+PASS A3 missing table: GitHub-derived list, no exception
+PASS A3 missing table: exactly one warning naming agent_session_activity
+PASS A3 red control: same DB plus the table yields the agent repo
+PASS A3b agent table without runs: unchanged GitHub list
+PASS A3b agent table without runs: one warning naming agent_session_activity
+PASS A4 ValueError: include_agent_sessions='yes'
+PASS A4 ValueError: include_agent_sessions=1
+PASS A4 ValueError: include_agent_sessions=None
+PASS A5 fixture is WAL with no sidecars
+PASS A5 red control: base reader fails with the generic unreadable warning
+PASS A5 new reader (key off): pinned fallback, one warning naming the WAL/no-sidecar cause
+PASS A5 new reader (key on): pinned fallback, one warning naming the WAL/no-sidecar cause
+PASS A5 failed read created no sidecar on this build
+PASS A5 control: with a writer holding the DB open, key on reads and merges
+LIVE sidecars before: []
+LIVE base: label=explicit (rebalance_active fell back) repos=1 warn='board_sync: repos_source: rebalanceOS DB is unreadable (unable to open database file); using the pinned repos'
+PASS LIVE red control: base reader gives the generic unreadable warning
+LIVE new key off: label=explicit (rebalance_active fell back) repos=1 warn='board_sync: repos_source: rebalanceOS DB is unreadable (unable to open database file); this may be the WAL DB with no -shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421); using the pinned repos'
+PASS LIVE new key off: named-cause warning, pinned fallback
+LIVE new key on: label=explicit (rebalance_active fell back) repos=1 warn='board_sync: repos_source: rebalanceOS DB is unreadable (unable to open database file); this may be the WAL DB with no -shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421); using the pinned repos'
+PASS LIVE new key on: named-cause warning, pinned fallback
+PASS LIVE recorded working mode: ?mode=ro&immutable=1 reads agent_session_activity
+LIVE agent_session_activity rows via immutable: 25
+
+ALL PASS: 0 failure(s)
+rc=0
