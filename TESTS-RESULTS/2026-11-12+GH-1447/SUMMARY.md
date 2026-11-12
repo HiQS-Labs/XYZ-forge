@@ -15,3 +15,7 @@ Prior-art search found related glossary1407, admission522, preparation1439/1296 
 ## Publication
 
 Plan and final Codex relay reviews are driver-attested Approved. Normal publication gate passed on 92b7df05d359749c4f1fe4cc51cf39bdc507e2a0 in 73.429s; clone identity unchanged. Raw log and JSON retained. Final documentation-tail publication follows. No merge/deployment.
+
+## Authorized landing and deployment
+
+PR1449 merged as 4cf70d70d82a7af630b7a7d9c08919e0107f4fc6. Canonical wave reconciliation, ledger check and issue/doc sync passed; primary publication verified clean/equal. Both skills deployed through Skills Army only from clean merged source; full folder and receipt parity, six owned links per skill verified. Pulse remote d5596580d8bbf3c3c159e136ebd6968b5a3b8b7d contains matching payloads. Initial stale/diverged Pulse finding cleared by the existing Pulse writer, not history mutation here. App picker discovery remains unverified; Grok Mac is staging only. No checkouts removed.
