@@ -556,6 +556,41 @@ def compute_config_sha256(brief_file, builder, reviewer, env=None):
     canonical = "\n".join([brief_text, builder, reviewer, _model_val(builder), _model_val(reviewer)])
     return relay_attest.sha256(canonical.encode("utf-8"))
 
+# GH-1428: the one gate shape a reviewer may run in its worktree. File/node selectors only; anything
+# broad, compound or unknown stays harness-only (AGENTS.md worktree rail, GH-681). A selector is a
+# scope check, not fixture-safety proof, so preflight's GH-54 fixture warning also disqualifies it.
+_FULL_SUITE_RE = re.compile(r'(?:^|/)(?:validate|ci-local|run-tests)\.sh$|(?:^|/)test/[^/]+\.sh$')
+
+def reviewer_runnable_gate(cmd, explicit, target_root, brief_text):
+    if not explicit or not cmd or re.search(r'&&|\|\||[;|`]|\$\(', cmd):
+        return ""
+    if "create temporary git fixtures" in (brief_text or "") or " -- " in f" {cmd} ":
+        return ""
+    try:
+        tokens = shlex.split(cmd)
+    except ValueError:
+        return ""
+    files, skip = 0, False
+    root_real = os.path.realpath(target_root)
+    for tok in tokens[1:]:
+        if skip:
+            skip = False
+            continue
+        if tok in ("-m", "-p", "-k"):
+            skip = True
+            continue
+        if tok.startswith("-"):
+            continue
+        path = tok.split("::", 1)[0]
+        # Relative, contained in the target (symlinks resolved), so it names the same file in the
+        # reviewer's worktree — never another checkout's copy (final QA R1).
+        real = os.path.realpath(os.path.join(root_real, path))
+        if (os.path.isabs(path) or _FULL_SUITE_RE.search(path) or not os.path.isfile(real)
+                or os.path.commonpath([root_real, real]) != root_real):
+            return ""
+        files += 1
+    return cmd if files and not _FULL_SUITE_RE.search(tokens[0]) else ""
+
 def resolve_force_relay_task(base_task, tick_bin, force, explicit):
     """GH-642: --force on a lane whose default token is already spent used to die at the tick
     seed with "not claimable — use a fresh per-relay id", AFTER the operator had already chosen
@@ -2213,7 +2248,7 @@ def main():
                 if log_text.startswith("{") and log_text.endswith("}"):
                     log_data = json.loads(log_text)
                     bits = []
-                    for k in ["is_error", "subtype", "terminal_reason", "total_cost_usd"]:
+                    for k in ["is_error", "subtype", "errors", "terminal_reason", "total_cost_usd"]:
                         if k in log_data:
                             bits.append(f"{k}={log_data[k]}")
                     if bits:
@@ -3062,6 +3097,9 @@ relay-file: {rel_relay}
     # does not exist yet, so the mkdir moves down next to the write it actually exists for.
     with open(args.phase_brief_file, "r") as f:
         brief_text = f.read()
+    # GH-1428: a focused, explicit gate the reviewer may run; "" keeps it harness-only.
+    reviewer_gate_cmd = reviewer_runnable_gate(pre_advance_cmd, bool(args.pre_advance_cmd),
+                                               _target_root or root, brief_text)
 
     cli_round_cap = args.round_cap
     if cli_round_cap is None:
@@ -3101,6 +3139,27 @@ relay-file: {rel_relay}
         reviewer_read_line = "Read the latest builder block above."
         reviewer_scope_line = "Do NOT run git. Do NOT touch any other file."
 
+    # GH-1428: gate evidence. The reviewer either runs the focused gate or says why not; relay-drive
+    # refuses an Approved after a builder-declared "unverified" unless the gate ran to exit 0.
+    if reviewer_gate_cmd:
+        reviewer_gate_line = (
+            f"3a. GATE EVIDENCE (GH-1428): before writing Approved, run this phase's gate yourself: `{reviewer_gate_cmd}` "
+            "— the one exception to the turn prompt's no-pytest rule. Run it with cwd = your worktree, so the tests and source "
+            "under test are the reviewed revision. Only TOOLING missing from your worktree (e.g. an untracked .venv/bin/pytest) "
+            f"may be taken from {_target_root or root}; if a test or source path is missing, do NOT substitute that "
+            "checkout's copy. First: export PYTHONDONTWRITEBYTECODE=1 TMPDIR=\"$PWD/.relay-scratch/tmp\"; keep caches out "
+            "of the tree (pytest: add -p no:cacheprovider) — an off-lane write fails your turn (4b). If you cannot tell the "
+            "run is worktree-safe, do not run it. Every review block MUST carry a literal `gate run: yes — exit <rc>` or "
+            "`gate run: no — <why>` line. If the builder's latest block says anything is unverified and you did not run the "
+            "gate to exit 0, do NOT approve: relay-drive refuses that approval (reason unverified-approval)."
+        )
+    else:
+        reviewer_gate_line = (
+            f"3a. GATE EVIDENCE (GH-1428): this phase's gate (`{pre_advance_cmd}`) is not a focused file-only command, so it "
+            "runs only in the harness after your turn — do NOT run it. Declare a literal `gate run: no — harness gate` line "
+            "in your review block."
+        )
+
     relay_content = f"""# Marathon Phase {args.phase_id}
 STATUS: Open
 NEXT: {args.builder} (Builder)
@@ -3119,6 +3178,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. {builder_impl_line}
 2. Append a build block to this relay file: `### Round N · Builder · {args.builder}` summarizing what you did (files touched, key decisions).
+   If a verification the brief asks for could not run (e.g. your sandbox denied a local service), put it on its own line: `unverified: <what> — <why>` (GH-1428).
 3. Use this exact tick binary (run it from any directory): {tick_cli}
    - {tick_cli} claim {relay_task} --agent {args.builder} --paths "{claim_paths}"
    - {tick_cli} ping {relay_task} --agent {args.builder}
@@ -3138,6 +3198,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 1. Append a review block: `### Round N · Reviewer · {args.reviewer}` followed by your assessment.
 2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: {args.builder} (Builder)`, then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: {tick_cli} done {relay_task} --agent {args.reviewer}
+{reviewer_gate_line}
 4. Use this exact tick binary (run it from any directory) for all token operations: {tick_cli}
    {reviewer_scope_line}
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -3493,6 +3554,10 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         env2["RELAY_COST_SUMMARY"] = "0"
         env2["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root)
         env2["MARATHON_CONFIG_SHA256"] = config_sha256  # GH-1220
+        if reviewer_gate_cmd:  # GH-1428: arms relay-drive's unverified-approval refusal
+            env2["MARATHON_REVIEWER_GATE_CMD"] = reviewer_gate_cmd
+        else:
+            env2.pop("MARATHON_REVIEWER_GATE_CMD", None)
         # GH-256: under --target-root the turn shim must GUARD the repo the worktree is cut FROM.
         #
         # relay-drive exports RELAY_TARGET_ROOT and relay-turn-lib.sh:251 reads
