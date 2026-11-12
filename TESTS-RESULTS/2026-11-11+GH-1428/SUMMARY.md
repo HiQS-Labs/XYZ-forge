@@ -13,6 +13,18 @@ and `<path>`.
 | Selector containment (final QA R1 fix) | `containment.out` (python, `reviewer_runnable_gate` on inert files) | relative file and `::node` qualify. `../x.py`, an absolute path (even inside the target), a symlink escaping the target, a directory, and a missing file are harness-only. The pre-fix red (`../…` qualified) was witnessed by the final QA reviewer (`relay-system/2026-11-11/gh1428-final.codex.md`, R1) |
 | **Codex localhost network, acceptance 3** | `python3 -m http.server --bind 127.0.0.1 <free port>`; `codex exec` (codex-cli 0.167.0-alpha.3.2) asked to `curl` it | default `-s workspace-write`: `curl: (7) Failed to connect` (red). With `-c sandbox_workspace_write.network_access=true`: `GH1428-OK` (`codex-network/`) |
 
+## Full gate (pre-push, disposable `-verify` full clone)
+
+- **Qualifying run: GREEN.** Final head `5cbc5162a`, `python3` = 3.12.14 (throwaway uv venv with
+  `pytest requests pyyaml` first on PATH), `githooks/pre-push` → full `validate.sh` route,
+  `full gate GREEN in 880s` with 405 suites at rc=0 (`full-gate-py312.log`). The push to
+  `origin` happened from that clone.
+- **Environment-invalid first run (not evidence either way).** The same head, run with the machine's
+  default `/usr/bin/python3` 3.9.6, went RED in 895s. Nine suites failed on interpreter prerequisites:
+  `str | None` in the untouched `utils/py/_marathon_plan.py` (needs ≥3.10, PR #1351), and missing
+  `requests` and `pytest`. One was contention and passed alone. None touch this diff
+  (`full-gate-py39-env-invalid.txt`).
+
 Not measured here: a live reviewer turn running a real DB-backed gate (the render establishes the
 instruction, not the source revision a real run imports). The next DB-backed Jog item is the field
 signal (CHANGELOG).
