@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-11 — GH-1430 board_sync reads Rebalance's WAL DB under Apple SQLite
+
+`board_sync`'s Rebalance `repos_source` reader now opens the DB `mode=rw` with
+`PRAGMA query_only=ON` instead of `mode=ro`. Under `/usr/bin/python3` (Apple SQLite), `mode=ro`
+cannot open a WAL DB whose `-wal`/`-shm` side files are gone, so the GH-1421 reader always fell
+back to the pinned repos. Writes are refused on the connection, and `mode=rw` never creates a
+missing file. One disclosed side effect: if a crash left committed WAL frames and board_sync is
+the last connection, its close checkpoints them into the main file (a byte change, no content
+change). `immutable=1` stays rejected. Revert by reverting the single-file change.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1430/`.
+
 ## 2026-11-11 — GH-1421 board_sync agent-session repos (opt-in)
 
 `board_sync`'s Rebalance `repos_source` takes an opt-in `include_agent_sessions: true`
