@@ -85,8 +85,8 @@ Where the stdout log went is untraced. GH-432's post-failure path (commit, conta
 
 ```json
 {
-  "target": "utils/py/claude-turn.py",
-  "gate": "existing claude-turn, gh432-failed-turn-persist, worktree-isolation suites",
+  "target": {"repo": ".", "ref": "development"},
+  "gate": "bash test/claude-turn.sh && bash test/gh432-failed-turn-persist.sh && bash test/worktree-isolation.sh",
   "fix_probes": [
     {"type": "grep", "path": "utils/py/claude-turn.py", "pattern": "CLAUDE_MAX_BUDGET\", \"0.50\""}
   ],
