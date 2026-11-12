@@ -1,8 +1,8 @@
 ---
 title: Reviewer approves without running the gate after builder flags unverified assertions; Codex builder sandbox blocks localhost
-status: Active (2-WORKING)
+status: Complete
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 owner: Noel Saw
 gh_issue: 1428
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1428
