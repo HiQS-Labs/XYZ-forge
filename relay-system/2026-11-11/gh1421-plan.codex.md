@@ -1,6 +1,6 @@
 # GH1421 independent plan review
 STATUS: Open
-NEXT: orchestrator
+NEXT: codex
 
 Artifact under review: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md`
 
@@ -77,3 +77,18 @@ Falsifier: clone-run evidence identifying the failing operation and proving the 
 The key-off base comparison is sound for the same ordinary fixture, environment, dependency paths and serialization, with nonempty output assertions. It cannot establish universal byte identity: the plan deliberately changes behavior for the formerly unreadable WAL case even with the flag off. Say so explicitly. Key on/off controls establish feature sensitivity; missing-table recovery is useful, but should not substitute for the error-preservation control above. Preserve commands, exit statuses and provenance in the eventual committed evidence directory as required by repo policy.
 
 No suites, pytest, fixtures, or git commands were executed. Read-only requirements query `gh api repos/HiQS-Labs/XYZ-forge/issues/1421 --jq '.body'` exited 1 with `error connecting to api.github.com`; the issue requirements were therefore assessed from the supplied plan quotation, not independently verified live. SQLite primary docs were fetched successfully; no upstream schema checkout was available. No source/artifact edits were made.
+
+### Round 2 · Builder · orchestrator
+
+Dispositions (plan doc revised; no production code written):
+
+- **F1 [High] — Accepted.** Measured on this Mac (SQLite 3.54.0 Apple build, Python 3.9): a `mode=ro` connection to a WAL DB with no sidecars **connects, then fails on the first SELECT** with "unable to open database file", and creates no sidecar even in a writable directory. Reproduced on the live DB and on a fixture (WAL DB, `wal_checkpoint(TRUNCATE)`, close, delete the empty `-wal`/`-shm`). This build is narrower than the general SQLite WAL docs; the plan now states the measured behaviour. Step 5 now uses a before/after sidecar bracket: immutable runs only when `mode=ro` failed with that error and no `-wal`/`-shm` exists; if either exists after the read, the result is discarded (warn, pinned fallback). The contract: WAL main file changes only at checkpoint; no sidecars before means fully checkpointed with no WAL connection; a WAL connection creates `-shm` on first read, so none after means none opened during. The residual (a whole writer session finishing inside the ms window) is stated as bounded advisory risk with its downstream containment (preview before apply; restore refuses membership drift). "No writes" is made explicit: no DB content change and no sidecar creation, asserted on the fixture. No `mode=rw`.
+- **F2 [Medium] — Accepted.** The loop wraps connect and queries (measured: the failure is on the first SELECT). The agent query runs in its own inner `try` after GitHub rows are read. Acceptance gains a malformed-agent-table case (no `runs` column → one warning, unchanged GitHub list) with a disposable-clone mutation red control, a no-sidecar WAL fixture with a base-reader red control, and a gate control (empty `-wal` present → no immutable read).
+- **Ratchet qualification — Accepted.** Observed now says the ratchet counts unannotated occurrences (`check_inventory_ratchet.py:65-83`).
+- **Key-off identity scope — Accepted.** The acceptance now says identity holds for every DB the base reader could open; the no-sidecar WAL case changes with the key off by design.
+
+Re-review the revised plan. Preserve Round 1. Append `### Round 2 · Reviewer · codex` with plain paragraphs, `swept file: yes/no` and an explicit verdict. Set STATUS: Approved only if approved, NEXT: orchestrator. Same scope and rules as Round 1.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->

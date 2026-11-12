@@ -53,9 +53,10 @@ Follow-on to HiQS-Labs/rebalanceOS#375. That issue adds per-device T3 Code agent
 ## Observed (recon, 2026-11-11, base 046b41538)
 
 - `utils/py/board_sync.py:133-161` `_rebalance_active_repos(source, limit)` opens the DB with one
-  `sqlite3.connect(<uri>?mode=ro, uri=True, timeout=2)` (annotated `SQLITE-GATEWAY-OK`; the
-  `gh777-inventory-ratchet` suite counts connect sites, so a second connect would trip it — GH-898 marker
-  round). It runs one `github_activity` score query, warns and returns `[]` on any `sqlite3.Error`/`OSError`
+  `sqlite3.connect(<uri>?mode=ro, uri=True, timeout=2)` annotated `SQLITE-GATEWAY-OK`. The GH-777
+  ratchet (`utils/pdda/check_inventory_ratchet.py:65-83`) counts *unannotated* connect occurrences, so the
+  annotation is what keeps it green (GH-898 marker round); keeping one annotated site is reuse, and a green
+  ratchet alone does not prove there is one site. It runs one `github_activity` score query, warns and returns `[]` on any `sqlite3.Error`/`OSError`
   ("has no github_activity table" vs "is unreadable"), and warns when no rows are in window.
 - Its only caller is `_resolve_policy_and_label` (`board_sync.py:169-232`), which validates `repos_source`
   (`type == "rebalance_active"`, positive-int `top_n`/`since_days`), merges results after the pinned repos
@@ -75,10 +76,14 @@ Follow-on to HiQS-Labs/rebalanceOS#375. That issue adds per-device T3 Code agent
   on `OperationalError` before migration 0010.
 - **`mode=ro` failure, cause confirmed.** On this Mac, `?mode=ro` fails with "unable to open database file"
   (SQLITE_CANTOPEN), reproduced in Python and with `/usr/bin/sqlite3 -readonly`, inside and outside the
-  agent sandbox. The DB header bytes 18–19 are `02 02` (persistent WAL mode; rebalanceOS's
+  agent sandbox. **The connect succeeds; the first SELECT fails** (measured on the live DB and on a fixture). The DB header bytes 18–19 are `02 02` (persistent WAL mode; rebalanceOS's
   `connection.py` sets `PRAGMA journal_mode=WAL`), and the directory holds only `rebalance.db` — no `-wal`
-  or `-shm`. A read-only connection to a WAL database must open the `-shm` index and cannot create it, so
-  the open fails whenever no writer currently has the DB open. `?mode=ro&immutable=1` opens and reads
+  or `-shm`. On this Mac's SQLite (3.54.0, Apple build, Python 3.9) a `mode=ro` connection to a WAL database
+  with no sidecars fails on first read and creates no sidecar, even in a writable directory. That is narrower
+  than SQLite's general WAL docs, which allow a read-only connection to create sidecars when the directory is
+  writable; the measured behaviour on this build is what the reader must handle. Fixture reproduction: write
+  a WAL DB, `wal_checkpoint(TRUNCATE)`, close, delete the empty `-wal`/`-shm`; `mode=ro` then fails on the first
+  SELECT and leaves the directory as it was. `?mode=ro&immutable=1` opens and reads
   (it reports `journal_mode=delete` only because immutable disables WAL). The issue's suspicion is
   confirmed. Consequence: GH-898's `repos_source` has silently fallen back to the pinned repos on this
   device, which raises severity above "missing signal" alone.
@@ -107,16 +112,29 @@ new subcommand.
    after GitHub-active" rule without re-scoring GitHub repos by `runs`: adding `runs` to a GitHub repo's
    score would reorder today's list for no stated gain. The caller's existing dedupe, regex and `top_n` cap
    apply unchanged. The empty-window warning fires only when the merged list is empty.
-4. **Missing table.** If the agent query raises `sqlite3.Error` containing "no such table", warn once
+4. **Missing table / other agent errors.** The agent query runs in its own inner `try`, after the GitHub rows
+   are in hand. If it raises `sqlite3.Error` containing "no such table", warn once
    ("repos_source: rebalanceOS DB has no agent_session_activity table (older Rebalance); using
    github_activity only") and return the GitHub list. Any other agent-query error warns and also returns
    the GitHub list: the agent signal is additive and must never remove GitHub repos.
-5. **Open mode.** Keep one `sqlite3.connect` call site. Try `?mode=ro` first; if it raises
-   "unable to open database file" and the `<db>-shm` sidecar does not exist (the WAL-without-writer case
-   above), retry once with `?mode=ro&immutable=1`. `immutable` is safe enough here: with no `-shm` no writer
-   holds the DB, the read is advisory, and if a writer starts mid-read the possible `sqlite3.Error` already
-   lands in the existing warn-and-fall-back path. Update the docstring, which today says "no `immutable`
-   (the DB has a live writer)".
+5. **Open mode (revised after plan QA round 1, F1/F2).** Keep one annotated `sqlite3.connect` site, inside a
+   loop over at most two URIs that wraps the connect **and** the queries (the measured failure is on the first
+   SELECT, not the connect). Attempt 1 is `?mode=ro`, unchanged. Attempt 2, `?mode=ro&immutable=1`, runs only if
+   attempt 1 raised "unable to open database file" **and** neither `<db>-wal` nor `<db>-shm` exists. After the
+   immutable read, if either sidecar now exists, the result is discarded with a warning and the existing
+   pinned-repo fallback applies.
+   *Read contract.* In WAL mode the main file changes only at a checkpoint. No `-wal`/`-shm` before the read
+   means the DB was fully checkpointed and no WAL connection was open; a WAL connection creates `-shm` when it
+   first reads. No sidecar after the read means none opened during it either. Within that bracket the main
+   file is quiescent, so the immutable read sees committed, consistent data. Residual: a whole writer session
+   (open, write, checkpoint, close, sidecars deleted) completing inside the millisecond read window. That is
+   accepted as bounded advisory risk: the output is a repo allow-list that `policy-preview` shows before any
+   `policy-apply`, and restore refuses on membership drift (GH-898). It is not presented as a general immutable
+   snapshot.
+   *No writes.* The reader changes neither DB contents nor the directory: `mode=ro` on this build creates no
+   sidecar, and immutable opens none (both measured; the matrix asserts no new sidecar after the read on the
+   fixture). No `mode=rw`.
+   Update the docstring, which today says "no `immutable` (the DB has a live writer)".
 6. **Docs.** Record the key, merge rule and open-mode behaviour in this doc and a `CHANGELOG.md` entry
    (the only other mention of `repos_source` outside completed docs is the policy-defaults comment, which
    gains the key).
@@ -155,7 +173,8 @@ existing suites `test/gh402-board-sync.sh`, `test/gh405-mock-board-harness.sh`, 
 behind `policy-preview` (`_resolve_policy_and_label`) and the offline `config` subcommand; a live
 `policy-preview` needs GitHub and is run once as the smoke.
 
-- [ ] **Key off is unchanged.** On a fixture DB holding both tables, the key absent and `false` yield a
+- [ ] **Key off is unchanged** for every DB the base reader could open (by design the formerly unreadable
+  no-sidecar WAL case changes even with the key off; see the open-mode check). On a fixture DB holding both tables, the key absent and `false` yield a
   resolved policy and `config` output byte-identical to the base commit's `board_sync.py` (loaded from
   `git show 046b41538:utils/py/board_sync.py`). Red control: the key on, same fixture, changes the list.
 - [ ] **Agent-only repo joins when on.** Fixture with a repo only in `agent_session_activity` (runs > 0):
@@ -164,6 +183,12 @@ behind `policy-preview` (`_resolve_policy_and_label`) and the offline `config` s
 - [ ] **Missing table falls back.** A DB with `github_activity` only, key on: no exception, one warning naming
   `agent_session_activity`, the GitHub-derived list. Red control: the same DB plus the table yields the
   agent repo.
+- [ ] **Other agent-query error keeps GitHub rows.** An `agent_session_activity` table without `runs`, key on:
+  one warning, the unchanged non-empty GitHub list. Red control: a disposable-clone mutation that lets that
+  error reach the outer fallback fails this check.
+- [ ] **No-sidecar WAL fixture.** First-SELECT failure reproduced on the base reader (red); the new reader returns
+  the list; no sidecar exists after the read. Gate control: the same fixture with an empty `-wal` file present
+  (so `mode=ro` still fails but a sidecar exists) is not read immutable: warn and pinned fallback.
 - [ ] **Validation.** `include_agent_sessions: "yes"` / `1` raise `ValueError`.
 - [ ] **Live open works.** Red control first: the base commit's reader on the live DB warns "is unreadable
   (unable to open database file)" and falls back. After: the reader returns a non-empty list from the live
