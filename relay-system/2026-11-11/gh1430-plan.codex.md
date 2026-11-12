@@ -59,3 +59,11 @@ Ship at plan level. I read the complete plan, the supplied reader/resolver conte
 Nonblocking evidence cautions: GH-1421's Observed section recorded that all three live agent repos also had GitHub activity in its seven-day window. Recheck the live input before claiming an agent-only on/off result; if none exists, report that live acceptance as outstanding rather than substituting fixture success or modifying live data. Also, timeout=2 is a busy-handler wait, not a hard two-second total runtime bound, and WAL readers can encounter contention during recovery/checkpoint operations. Neither qualification requires changing this bounded reader design.
 
 Inspection receipt: command `rg -n 'sqlite3.connect|def fetch_board_items|def collect_github_state|def _write_json|def main' utils/py/board_sync.py` exited 0; decisive output identified connect sites at 159 (Rebalance) and 542 (Forge ledger), plus the preview read helpers. Source reads completed with exit 0. No runtime fixture, SQLite connection, suite, pytest, validate.sh or git command was executed. Apple-build behavior, write refusal, byte/mtime preservation and live smoke remain **[Unverified — needs clone run]** for implementation QA. Approval is for the plan, not for delivered runtime behavior. Only this relay file was edited.
+
+### Attestation · relay-drive — 2026-11-12T03:38:36Z
+task: RELAY-gh1430-plan-r1
+reviewer: codex
+status: Approved
+reviewed-head: 07380e218e04699999bc5fdfbb6a4145273dc78c
+added-range: 3802+7036
+added-sha256: af8b6befe5374218a9ce019ab4f1daa0f4b6da4c2bd427b4f69ea1c6c3fce71b
