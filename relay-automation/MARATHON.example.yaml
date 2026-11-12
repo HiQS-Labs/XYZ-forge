@@ -19,7 +19,7 @@
 # option). `--builder claude` is available but spawns a headless Claude Code CLI subprocess — a
 # SEPARATE, PER-CALL API-BILLED turn-taker — as an explicit, cost-acknowledged opt-in only.
 # (GH-379/GH-1427: a Claude builder turn defaults to CLAUDE_MAX_BUDGET=$3.00 and CLAUDE_MAX_TURNS=40, a
-# Claude reviewer turn to $1.00 / 12. A prompt cache-creation floor cost is paid per turn; set
+# Claude reviewer turn to $1.50 / 20. A prompt cache-creation floor cost is paid per turn; set
 # CLAUDE_MAX_BUDGET / CLAUDE_MAX_TURNS in env to override both roles if a phase needs other headroom.)
 #
 # Plan location (GH-212): once this is a REAL plan for a tracked issue (not this shipped example),

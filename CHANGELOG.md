@@ -5,7 +5,7 @@
 A Claude builder turn under Marathon/Jog ran with the same $0.50 / 12-turn ceiling as a reviewer, so a
 small feature build (LTVera-Pandas GH-993) was stopped mid-Write at $0.51, and #1420's live reviewer
 stopped at $0.53. `claude-turn.py` now picks defaults by role from the existing resolver
-(`rtl.is_reviewer_turn`, i.e. the driver's `RELAY_ROLE`): builders get $3.00 / 40, reviewers $1.00 / 12.
+(`rtl.is_reviewer_turn`, i.e. the driver's `RELAY_ROLE`): builders get $3.00 / 40, reviewers $1.50 / 20.
 An explicit `CLAUDE_MAX_BUDGET` / `CLAUDE_MAX_TURNS` still overrides both. A nonzero `claude -p` exit now
 prints the CLI's own reason (`failed (exit 1): error_max_budget_usd: Reached maximum budget ($3.00)`), and
 the existing GH-379 `builder-diagnostic:` line in ESCALATION.md gains `errors`. The turn transcript was

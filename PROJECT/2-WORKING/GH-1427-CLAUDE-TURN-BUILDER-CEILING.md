@@ -165,7 +165,7 @@ trend is unknown. The ratings are a judgment grounded in queue blockage, not a m
 
 | Role (as resolved by `rtl.is_reviewer_turn`) | `--max-budget-usd` | `--max-turns` |
 |---|---|---|
-| reviewer | **1.00** (was 0.50) | 12 (unchanged) |
+| reviewer | **1.50** (was 0.50; plan said 1.00) | **20** (was 12) |
 | builder / producer (everything else) | **3.00** | **40** |
 
 **Why the reviewer budget moves too (plan-QA r1 evidence):** #1420's live Claude **reviewer** turn died with
@@ -173,6 +173,11 @@ trend is unknown. The ratings are a judgment grounded in queue blockage, not a m
 "second occurrence" the issue cites. A reviewer that reads a sizeable AGENTS.md plus sources does not fit in $0.50 on
 Sonnet 4.6, so the reviewer budget doubles to $1.00, which is still cheap. Reviewer turns stay at 12 because no evidence
 shows the turn cap biting a reviewer.
+
+**Operator decision, 2026-11-12 (post-approval):** reviewer raised from $1.00 / 12 to **$1.50 / 20**. Four of six real
+Claude reviewer turns in the 2026-11-11 LTVera-Pandas jog cost more than $0.50 ($0.512–$0.653), and #1428 makes the
+reviewer run the focused gate, which adds turns and tokens. Constant-only change at `utils/py/claude-turn.py:42` plus
+the five doc mentions; no logic changed. A follow-up issue covers subscription-vs-API budget defaults.
 
 An explicit `CLAUDE_MAX_BUDGET` / `CLAUDE_MAX_TURNS` overrides both roles, as it does today. The builder values are the
 operator's proven override from the LTVera-Pandas run. The failed builder turn reached $0.51 at 12 turns while still

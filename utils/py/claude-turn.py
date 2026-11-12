@@ -39,7 +39,7 @@ def warn_if_workspace_untrusted(root):
 # resolver (rtl.is_reviewer_turn: the driver's RELAY_ROLE, then the relay file); an explicit
 # CLAUDE_MAX_BUDGET / CLAUDE_MAX_TURNS still overrides both roles. The 900s wall cap and the GH-492
 # idle bound still end a runaway turn.
-CEILING_DEFAULTS = {"reviewer": ("1.00", "12"), "builder": ("3.00", "40")}
+CEILING_DEFAULTS = {"reviewer": ("1.50", "20"), "builder": ("3.00", "40")}
 
 
 def warn_opus_budget(model, max_budget, stream=None):

@@ -122,7 +122,7 @@ set `CLAUDE_MODEL=opus CLAUDE_REASONING_EFFORT=high` for an Opus high-effort req
 
 `CLAUDE_MODEL` selects the model (default `claude-sonnet-4-6`), `CLAUDE_MAX_TURNS` limits
 turns, and `CLAUDE_MAX_BUDGET` supplies an API dollar budget. Relay turns pick defaults by role
-(GH-1427): a builder/producer turn gets $3.00 / 40 turns, a reviewer turn $1.00 / 12; consult keeps
+(GH-1427): a builder/producer turn gets $3.00 / 40 turns, a reviewer turn $1.50 / 20; consult keeps
 $0.50 / 12. Setting either variable overrides it for every role. A turn stopped by a ceiling prints
 the CLI's own reason, e.g. `claude -p failed (exit 1): error_max_budget_usd: Reached maximum budget ($3.00)`.
 Consult uses `CONSULT_TIMEOUT` (default 300 seconds); relay uses `RELAY_TURN_TIMEOUT_S`
