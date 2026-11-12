@@ -1,0 +1,6 @@
+== test: relay-pkg-freshness ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-relay-pkg-freshness.XXXXXX.U17AKDRmq6
+  PASS: relay-pkg.tar.gz present
+  PASS: tarball exposes 18 packaged paths
+  PASS: every packaged file matches its live source
+  relay-pkg-freshness: 3 pass, 0 fail
