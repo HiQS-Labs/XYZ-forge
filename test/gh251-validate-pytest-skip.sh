@@ -56,9 +56,9 @@ chmod +x "$FAKE_BIN/python3"
 
 out="$(PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && [ -n "$out" ] \
-  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($FAKE_BIN/python3) version" \
-  && printf '%s' "$out" | grep -Fq 'missing modules: pytest' \
-  && ! printf '%s' "$out" | grep -Fq 'Running python3 -m pytest' \
+  && grep -Fq "ENVIRONMENT FAULT: python3 ($FAKE_BIN/python3) version" <<<"$out" \
+  && grep -Fq 'missing modules: pytest' <<<"$out" \
+  && ! grep -Fq 'Running python3 -m pytest' <<<"$out" \
   && pass "absent pytest is an environment refusal before suite execution" \
   || fail "absent pytest did not fail early (exit $rc): $out"
 
@@ -74,10 +74,10 @@ PYSH
 chmod +x "$YAML_BIN/python3"
 out="$(PATH="$YAML_BIN:$PATH" bash "$VAL" --print-mode 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && [ -n "$out" ] \
-  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) version" \
-  && printf '%s' "$out" | grep -Fq 'missing modules: yaml' \
-  && printf '%s' "$out" | grep -Fq 'PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh' \
-  && printf '%s' "$out" | grep -Fq 'NOT promotion evidence (GH-732)' \
+  && grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) version" <<<"$out" \
+  && grep -Fq 'missing modules: yaml' <<<"$out" \
+  && grep -Fq 'PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh' <<<"$out" \
+  && grep -Fq 'NOT promotion evidence (GH-732)' <<<"$out" \
   && pass "missing yaml names the interpreter, repair PATH, and evidence limit" \
   || fail "missing yaml diagnostic regressed (exit $rc): $out"
 
