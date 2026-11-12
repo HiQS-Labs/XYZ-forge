@@ -24,7 +24,7 @@ goal: >
   With an opt-in `include_agent_sessions: true` in the board selection policy's `repos_source`,
   repos that have T3 agent activity in Rebalance's `agent_session_activity` (and no GitHub activity)
   join the board's resolved repo list, ranked after the GitHub-active repos. With the key off the
-  output is unchanged. The read-only open of the live Rebalance DB works on this Mac.
+  output is unchanged. The live read-only open failure on this Mac is root-caused and named in the warning.
 ---
 
 ## Status
@@ -41,7 +41,8 @@ goal: >
   T3 agent activity per (source, device, repo, UTC day, provider) with `runs` and other counts.
 - The operator chose opt-in reads of the new table (2026-11-11), never writes into `github_activity`.
 - The reader has never worked on this Mac: the DB is in persistent WAL mode with no sidecars, so
-  `?mode=ro` cannot open it. The fix belongs in the same single connect.
+  `?mode=ro` cannot open it. This task documents the cause and names it in the warning; making it open
+  safely is a follow-up decision (step 5).
 
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
@@ -117,24 +118,22 @@ new subcommand.
    ("repos_source: rebalanceOS DB has no agent_session_activity table (older Rebalance); using
    github_activity only") and return the GitHub list. Any other agent-query error warns and also returns
    the GitHub list: the agent signal is additive and must never remove GitHub repos.
-5. **Open mode (revised after plan QA round 1, F1/F2).** Keep one annotated `sqlite3.connect` site, inside a
-   loop over at most two URIs that wraps the connect **and** the queries (the measured failure is on the first
-   SELECT, not the connect). Attempt 1 is `?mode=ro`, unchanged. Attempt 2, `?mode=ro&immutable=1`, runs only if
-   attempt 1 raised "unable to open database file" **and** neither `<db>-wal` nor `<db>-shm` exists. After the
-   immutable read, if either sidecar now exists, the result is discarded with a warning and the existing
-   pinned-repo fallback applies.
-   *Read contract.* In WAL mode the main file changes only at a checkpoint. No `-wal`/`-shm` before the read
-   means the DB was fully checkpointed and no WAL connection was open; a WAL connection creates `-shm` when it
-   first reads. No sidecar after the read means none opened during it either. Within that bracket the main
-   file is quiescent, so the immutable read sees committed, consistent data. Residual: a whole writer session
-   (open, write, checkpoint, close, sidecars deleted) completing inside the millisecond read window. That is
-   accepted as bounded advisory risk: the output is a repo allow-list that `policy-preview` shows before any
-   `policy-apply`, and restore refuses on membership drift (GH-898). It is not presented as a general immutable
-   snapshot.
-   *No writes.* The reader changes neither DB contents nor the directory: `mode=ro` on this build creates no
-   sidecar, and immutable opens none (both measured; the matrix asserts no new sidecar after the read on the
-   fixture). No `mode=rw`.
-   Update the docstring, which today says "no `immutable` (the DB has a live writer)".
+5. **Open mode (revised after plan QA rounds 1-2).** Keep today's single `?mode=ro` open and its
+   warn-and-fall-back path. No `immutable` read, no `mode=rw`. When the read fails with "unable to open database
+   file" and neither `<db>-wal` nor `<db>-shm` exists, the warning names the cause: "rebalanceOS DB is in WAL mode
+   with no -shm sidecar, which this SQLite cannot open read-only; it opens while Rebalance holds the DB open
+   (GH-1421)". Other failures keep today's wording.
+   *Why not `immutable=1`.* It opens this DB, but it disables locking and change detection. Checking for
+   sidecars before and after the read only detects a race; it cannot prove the file stayed still, and the
+   resolved list feeds board-mutation eligibility (GH-898), where the preview/apply/restore equality checks
+   catch a changed list but not a wrong list that repeats. Using it needs a stable-read contract or an explicit
+   operator decision, neither of which this task has. Recorded as the follow-up below.
+   *Measured behaviour is build-specific.* On this Mac's build `mode=ro` creates no sidecar; SQLite's general
+   docs allow a read-only WAL connection to create sidecars on supported builds. This reader therefore makes
+   no "never touches the directory" claim beyond SQLite's own read-only semantics.
+   *Follow-up (outside this task).* Make the live reader work on this device: either rebalanceOS keeps its WAL
+   sidecars between connections (e.g. `SQLITE_FCNTL_PERSIST_WAL`), or the operator explicitly accepts a
+   best-effort immutable read. Either is a separate decision and issue.
 6. **Docs.** Record the key, merge rule and open-mode behaviour in this doc and a `CHANGELOG.md` entry
    (the only other mention of `repos_source` outside completed docs is the policy-defaults comment, which
    gains the key).
@@ -157,14 +156,19 @@ map: names are deduped case-insensitively as today.
   opening `mode=rw` to get sidecars (writes to the Rebalance dir, violates the non-goal); a second
   connect for the agent table (trips the GH-777 ratchet and adds nothing).
 - *Rollback / containment:* key defaults off; reverting the single-file change restores today's
-  behaviour. The `immutable` retry only fires when the plain open already fails.
+  behaviour. The open mode is unchanged.
 
 ### Risks
 
-- `immutable=1` reads a snapshot that ignores writer locks. Contained as in step 5.
+- On this Mac the feature is inert until the step 5 follow-up lands (the live DB still falls back).
 - `day >= date('now','-N days')` includes N+1 calendar days, same as the existing `scan_date` filter.
 
 ## Acceptance (with verification)
+
+Acceptance 4 of the issue ("succeeds on this Mac, **or** the failure cause is documented with a working open
+mode") is met by the second branch: the cause is confirmed in Observed and `?mode=ro&immutable=1` is the
+recorded working mode, deliberately not used by the reader (step 5).
+
 
 Verification is a manual matrix under `TESTS-RESULTS/2026-11-11+GH-1421/` (no new tests, GH-831),
 modelled on `TESTS-RESULTS/2026-09-30+GH-898/manual_matrix.py`, run in a disposable full clone, plus the
@@ -173,8 +177,8 @@ existing suites `test/gh402-board-sync.sh`, `test/gh405-mock-board-harness.sh`, 
 behind `policy-preview` (`_resolve_policy_and_label`) and the offline `config` subcommand; a live
 `policy-preview` needs GitHub and is run once as the smoke.
 
-- [ ] **Key off is unchanged** for every DB the base reader could open (by design the formerly unreadable
-  no-sidecar WAL case changes even with the key off; see the open-mode check). On a fixture DB holding both tables, the key absent and `false` yield a
+- [ ] **Key off is unchanged.** Resolved policy and `config` stdout are identical to base for every DB; the
+  only key-off difference is the stderr wording of the no-sidecar WAL warning (step 5). On a fixture DB holding both tables, the key absent and `false` yield a
   resolved policy and `config` output byte-identical to the base commit's `board_sync.py` (loaded from
   `git show 046b41538:utils/py/board_sync.py`). Red control: the key on, same fixture, changes the list.
 - [ ] **Agent-only repo joins when on.** Fixture with a repo only in `agent_session_activity` (runs > 0):
@@ -186,14 +190,14 @@ behind `policy-preview` (`_resolve_policy_and_label`) and the offline `config` s
 - [ ] **Other agent-query error keeps GitHub rows.** An `agent_session_activity` table without `runs`, key on:
   one warning, the unchanged non-empty GitHub list. Red control: a disposable-clone mutation that lets that
   error reach the outer fallback fails this check.
-- [ ] **No-sidecar WAL fixture.** First-SELECT failure reproduced on the base reader (red); the new reader returns
-  the list; no sidecar exists after the read. Gate control: the same fixture with an empty `-wal` file present
-  (so `mode=ro` still fails but a sidecar exists) is not read immutable: warn and pinned fallback.
+- [ ] **No-sidecar WAL fixture.** First-SELECT failure reproduced on the base reader (red: generic "is
+  unreadable" warning). The new reader, key off and on: the pinned-list fallback, one warning naming the
+  WAL/no-sidecar cause, no exception. Control: the same DB while a writer connection holds it open (sidecars
+  present) reads normally, and with the key on merges the agent repo.
 - [ ] **Validation.** `include_agent_sessions: "yes"` / `1` raise `ValueError`.
-- [ ] **Live open works.** Red control first: the base commit's reader on the live DB warns "is unreadable
-  (unable to open database file)" and falls back. After: the reader returns a non-empty list from the live
-  DB with the key off and on.
-- [ ] **Ratchet unchanged.** `test/gh777-inventory-ratchet.sh` passes (still one connect site).
+- [ ] **Live open: cause documented.** On the live DB, the base reader's generic warning (red) vs the new
+  reader's named-cause warning, key off and on; `?mode=ro&immutable=1` reads it (the recorded working mode).
+- [ ] **Ratchet unchanged.** `test/gh777-inventory-ratchet.sh` passes; one annotated connect site, by inspection.
 
 ## Rating rationale (2026-11-11)
 

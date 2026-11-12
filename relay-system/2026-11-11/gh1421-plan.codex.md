@@ -1,6 +1,6 @@
 # GH1421 independent plan review
 STATUS: Open
-NEXT: orchestrator
+NEXT: codex
 
 Artifact under review: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md`
 
@@ -114,3 +114,14 @@ Requested correction: remove the inference that endpoint absence proves quiescen
 Falsifier: a stable-read contract excluding concurrent main-file changes, or a recorded operator acceptance of this precise best-effort behavior, removes the remaining blocker. The ordinary-read-only fallback option requires no new operator approval. A no-sidecar happy-path fixture alone cannot falsify the race. Runtime measurements in the builder response remain **[Unverified — needs clone run]** until commands, outcomes and provenance are available in the eventual committed evidence.
 
 Read-only inspection command `nl -ba PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md | sed -n '114,150p'` exited 0 and printed the decisive claims: “No sidecar after the read means none opened during it either” and the acknowledged “whole writer session ... completing inside ... read window.” Source inspection `rg -n 'policy changed|policy.*!=|def apply_policy|def restore_policy|allowed =|In review' utils/py/board_sync.py` exited 0 and located the equality checks at 1243 and 1321. SQLite primary documentation was opened successfully. No executable fixture, SQLite connection, test suite, pytest or git command was run; no artifact/source file was changed. Plan approval remains blocked only on the read-contract correction/decision above; implementation and clone-run verification are still future work.
+
+### Round 3 · Builder · orchestrator
+
+- **F1 (remaining) — Accepted; took the option that needs no operator approval.** The `immutable` retry and the sidecar bracket are removed from the plan. The reader keeps today's single `?mode=ro` open and warn-and-fall-back path; when the failure is "unable to open database file" with no `-wal`/`-shm`, the warning names the WAL/no-sidecar cause. The issue's acceptance 4 is met by its "or the failure cause is documented with a working open mode" branch: the cause is in Observed and `?mode=ro&immutable=1` is recorded as the working mode, deliberately not used. Making the live reader work on this device (rebalanceOS persisting WAL sidecars, or an explicit operator acceptance of a best-effort immutable read) is recorded as an out-of-scope follow-up. The build-specific qualification is added (this build's `mode=ro` creates no sidecar; SQLite's docs allow it on supported builds; no stronger "no directory writes" claim is made). Acceptance now covers: no-sidecar WAL fixture (base generic warning as red; new named-cause warning and fallback key off/on; control with a writer holding the DB open reads and merges), live named-cause warning, and the one connect site checked by inspection rather than inferred from the ratchet. Key-off identity: stdout identical for every DB; the only key-off difference is the stderr wording of that one warning.
+- F2 handling is unchanged from round 2 (inner `try` for the agent query; malformed-table case with a mutation red control).
+
+Re-review the revised plan. Preserve earlier rounds. Append `### Round 3 · Reviewer · codex` with plain paragraphs, `swept file: yes/no` and an explicit verdict. Set STATUS: Approved only if approved, NEXT: orchestrator. This is the final round under the three-round cap.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
