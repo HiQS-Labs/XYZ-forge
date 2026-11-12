@@ -282,6 +282,13 @@ def main():
                 usage = data.get("usage", {})
                 tokens_in = usage.get("input_tokens", 0) + usage.get("cache_read_input_tokens", 0)
                 tokens_out = usage.get("output_tokens", 0)
+                if not (tokens_in or tokens_out) and isinstance(data.get("modelUsage"), dict):
+                    # GH-1427, observed on claude 2.1.322: an error result (error_max_budget_usd) zeroes
+                    # `usage` while `modelUsage` keeps per-model counts; same formula, summed per model.
+                    for mu in data["modelUsage"].values():
+                        if isinstance(mu, dict):
+                            tokens_in += mu.get("inputTokens", 0) + mu.get("cacheReadInputTokens", 0)
+                            tokens_out += mu.get("outputTokens", 0)
 
                 if tokens_in > 0 or tokens_out > 0:
                     cost_tick_bin = tick_bin or resolve_tick_bin(tick_repo_root, xyz_root)
