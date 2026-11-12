@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -78,5 +78,40 @@ First read only PROJECT/1-INBOX/GH-1436-CONTRACT-ENVIRONMENT.md and write 2–5 
 Local CLI operational envelope. No new suites, test frameworks, or speculative schema system. Review only: write this relay, never implementation or tests. No suite execution in the relay worktree. Each behavior-change finding needs observed input, affected scope and falsifier.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+**What this proposes**
+
+Per the GH-1436 document alone, this combines two bounded repairs in one PR: reject malformed contract shapes through the existing preflight owner, and stop the existing validation entry point early for unsuitable Python. It preserves partial intake contracts, keeps full execution requirements in extract_contract, and uses existing suites plus committed manual evidence. This is a plan review; the proposed behavior has not yet been implemented or demonstrated here.
+
+**How the existing system works, per this document**
+
+The document says planner computation reads every active capture, so one malformed target can interrupt reconciliation for an unrelated landing. It identifies earlier zone inference and unregistered-record construction as additional dereference sites, and HQ park as an existing intake writer that accepts supplied contracts without validation. It describes the current environment probe as advisory and yaml-only; these statements were document claims at this first-reading boundary.
+
+**What it is not**
+
+This is not a general schema framework, automatic interpreter manager, new test lane, or permission to execute issue-supplied commands. Inference: accepting a shape-valid partial intake is intentionally weaker than certifying a runnable execution contract.
+
+**Source-backed assessment (after reading #1437 and named source paths)**
+
+- [Pass] Shape coverage and ordering are appropriately scoped. The plan's step 1 explicitly covers “registered and unregistered planner input” before shape-dependent use, including lanes. Current source demonstrates why: _marathon_plan.py:202 dereferences unregistered contract objects, :784 dereferences lanes, :1129 calls zone inference before later checks, :1190 evaluates probe entries, and :1200 dereferences target.ref. The proposed outer/nested checks and held-row state cover these bounded paths without requiring a second validator.
+- [Pass] Filing-time rejection has a concrete existing owner. The plan says “HQ park before external/file writes”; utils/hq/hq.sh:309-314 selects the fetched issue body when adopting an issue, and :361/:435 create issues before capture writes at :452. Validate the final selected request before those writes. The acceptance offers intake alternatives; extending HQ satisfies that choice without adding a PDDA gate.
+- [Pass] Partial shape and execution validity are explicitly separate: the plan says “shape checks validate present fields” and “extract_contract retains its existing required-field checks.” swarm_preflight.py:100-120 requires target/repo/ref/gate and nonempty probe/artifact lists. Preserving that stronger check avoids treating the helper's success as execution authorization.
+- [Pass] Environment work matches #1437 acceptance: the capture requests a distinct nonzero status before suites, interpreter/version/modules, and an exact PATH remedy; plan step 2 supplies exit 3 and chooses the explicit prefix rather than automatic selection. validate.sh:1033-1036 currently checks only yaml and continues; :1439-1441 separately skips missing pytest. Existing PHP handling at :1026-1031 remains outside the proposed behavior change.
+- [Pass] Proportionate delivery and rollback: the plan's “Reversibility: Easy; revert the code commit, no data migration,” bounded blast radius, independent per-issue ratings, unchanged PHP behavior, and step 3's existing-suite/manual-evidence approach fit the two issues. No new suite or parallel gate is proposed.
+- [Nit] Make the manual evidence matrix in step 3 explicitly include a shape-valid partial contract (for example {"artifacts":["README.md"]}) accepted as intake/planner data while extract_contract still exits 3 for missing required execution fields. Include the same partial/malformed cases for unregistered rows and preserve the distinction between planner “ready” classification and actual execution readiness. This clarifies verification of the plan's existing promise; it does not request a new execution-readiness policy.
+- [Nit] Setup's seeded artifact path is absent. Read-only command `cat .relay-artifacts/GH-1436-CONTRACT-ENVIRONMENT.md` exited 1 with “No such file or directory”. I reviewed the complete PROJECT/1-INBOX/GH-1436-CONTRACT-ENVIRONMENT.md explicitly named in the input-boundary instructions, followed by the complete #1437 capture. Ensure the harness binds approval to that reviewed plan content.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixtures, or mutating probes were run. Old-code red controls, new-code green controls, healthy/PHP preservation, HQ no-write refusal and exact-head gate results remain implementation obligations, not outcomes established by this approval.
+
+Whole-plan sweep included both captures' acceptance, ratings, non-goals, and verification sections. No additional pre-existing plan defects were found; source inspection was bounded to named owners and their relevant paths, not a whole-source-file implementation audit.
+
+**VERDICT: PASS**
+
+**Basis:** The plan extends existing owners, covers the known early and unregistered dereferences, preserves full preflight requirements, and proposes discriminating verification in isolation. Approval is for the plan only; the unexecuted implementation evidence remains outstanding.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
