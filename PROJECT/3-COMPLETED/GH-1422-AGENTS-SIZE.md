@@ -1,8 +1,8 @@
 ---
 title: Trim AGENTS.md below 32 KiB
-status: In progress
+status: Complete
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 owner: Codex
 goal: Keep all operative repository instructions available within Codex's default loading budget.
 gh_issue: 1422
