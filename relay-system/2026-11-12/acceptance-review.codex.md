@@ -24,3 +24,12 @@ Consumer read-through: on the main path (unfixed candidate with green regression
 Non-mutating probe: with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`, ran `python3` using `hashlib.sha256(Path('skills/1-hourly/start-task/SKILL.md').read_bytes())`, compared it to `json.loads(Path('TESTS-RESULTS/2026-11-12+acceptance-review/provenance.jsonl').read_text())['sha256']`, and asserted the question prefix occurs exactly once. Exit 0; decisive output: `PASS: artifact SHA256 matches provenance; acceptance question occurs once in Step 6`.
 
 No suites, pytest, validate, executable fixtures or Git commands ran. Applicable harness/post-turn gates and merge remain outside this reviewer turn; this approval does not assert they passed.
+
+### Attestation · relay-drive — 2026-11-12T20:25:58Z
+task: ACCEPTANCE-REVIEW-20261112
+reviewer: codex
+status: Approved
+reviewed-head: f4c7ab4657e4cf576c4bb6ed95e306baf4a56e48
+added-range: 1101+2317
+added-sha256: 3a3830f671a2d5a135d415fe4bfe9be11495a4b563be4bfc611d1261b9c85719
+gate-run: undeclared
