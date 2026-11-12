@@ -1,6 +1,6 @@
 # GH1421 independent plan review
-STATUS: Open
-NEXT: codex
+STATUS: Approved
+NEXT: orchestrator
 
 Artifact under review: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md`
 
@@ -125,3 +125,21 @@ Re-review the revised plan. Preserve earlier rounds. Append `### Round 3 · Revi
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 3 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+The revised plan proposes an opt-in additive agent-session query on the existing Rebalance connection, preserving GitHub ordering and appending agent-only repositories before the existing resolver cap. It now keeps ordinary read-only access and pinned fallback, documenting the measured local WAL failure instead of attempting an immutable repair. This is an Easy, reversible extension of the existing reader; enabling the flag still changes board-mutation eligibility through the resolved list.
+
+Per this document, the reader owns queries and warnings, and the resolver owns validation, dedupe, cap and resolved-policy identity. The config subcommand exposes that resolved list. The Non-goals exclude Rebalance content writes, GitHub re-scoring, new modules, suites, device/source filters and aliases; step 5 explicitly leaves making the live no-sidecar DB readable to a separate decision. The revised artifact was read before supplementary source in this turn.
+
+Source-backed validation: re-read the reader/resolver and config contexts in `utils/py/board_sync.py`, `resolve_device_block`, the GH-777 suite and scanner, and the GH-898 plan/manual matrix. The existing `board_sync.py:133-161` open and outer fallback remain the correct owner; the proposed inner agent-query catch preserves already-read GitHub rows. The resolver at `:169-232` supports the stated merge, cap and source-metadata exclusion. The scanner's annotation exception remains correctly qualified rather than offered as proof of one connection site. No parallel subsystem or writer is proposed.
+
+The remaining F1 blocker is resolved by retaining ordinary read-only access plus fallback. Step 5 no longer infers quiescence from endpoint sidecar checks, and explicitly recognizes both potentially repeated incorrect membership and build-specific sidecar behavior. No operator acceptance of immutable risk is now required for the production reader. F2 remains addressed by the malformed-table preservation case and its outer-catch mutation control. The quoted issue acceptance permits documenting the failure and a working open mode; the plan transparently chooses that branch and states that the live feature remains inert until follow-up. This is plan approval, not a claim that the local reader has been repaired or implementation verified.
+
+Nonblocking editorial cleanup: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md:152-153` still says “one retry” despite step 5 removing retries; `:156-157` still says a second connect trips the ratchet despite the corrected annotation account. Follow step 5 and the corrected Observed section during implementation. For the new warning at `:123-125`, prefer “may be the WAL/no-sidecar failure documented in GH-1421” to a categorical diagnosis: SQLITE_CANTOPEN plus absent sidecars alone does not establish WAL mode or exclude other open failures. This only affects diagnostic precision; fallback and membership behavior remain unchanged.
+
+Read-only inspection `nl -ba PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md | sed -n '112,185p'` exited 0; decisive output was “Keep today's single ?mode=ro open”, “No immutable read”, and “Using it needs a stable-read contract or an explicit operator decision, neither of which this task has.” The source-reading commands completed successfully. Requirements query `gh api repos/HiQS-Labs/XYZ-forge/issues/1421 --jq '.body'` exited 1 with “error connecting to api.github.com”; requirements were assessed from the supplied quotation, and the upstream schema was not independently available. No SQLite connection, executable fixture, suite, pytest, validate.sh or git command was run. Runtime claims and the final acceptance matrix remain **[Unverified — needs clone run]**, with commands, exit statuses and committed provenance still required at implementation QA. Only this relay file was edited.
