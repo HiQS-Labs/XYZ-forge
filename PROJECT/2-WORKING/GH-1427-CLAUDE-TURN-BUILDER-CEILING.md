@@ -140,7 +140,7 @@ larger than ~$0.50 halts the queue, and the only evidence (the JSON transcript) 
 undiagnosable. It is recoverable (GH-432 persists partial edits), so it sits at the bottom of the high band.
 **pri 80:** severity-led; it blocks #1418's Claude-only proving goal. **appeal 50:** neutral. The issue's 60 was
 an author proposal, not an operator value. **effort 60:** three small code sites plus docs. **Recurrence:**
-2 incidents in the last 14 days (#1420's live turn and the LTVera-Pandas GH-993 run, which are distinct runs).
+2 incident reports in the last 14 days (#1420's live turn and the LTVera-Pandas GH-993 run, which are distinct runs).
 None were found in the preceding 14 days. The search was not exhaustive, and this is a newly enabled route (#1420), so the
 trend is unknown. The ratings are a judgment grounded in queue blockage, not a measured recurrence score.
 
