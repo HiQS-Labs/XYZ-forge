@@ -326,7 +326,7 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
   if ! python3 - "$HERE/../py" "$request" <<'PYCONTRACT'
 import json, re, sys
 sys.path.insert(0, sys.argv[1])
-match = re.search(r"^#{1,6}\s+.*preflight\s+contract[^\n]*\n(.*?)(?=^#{1,6}\s|\Z)", sys.argv[2], re.I | re.M | re.S)
+match = re.search(r"^#{1,6}[ \t]+[^\n]*preflight[ \t]+contract[^\n]*\n(.*?)(?=^#{1,6}[ \t]|\Z)", sys.argv[2], re.I | re.M | re.S)
 if match:
     block = re.search(r"^```json\s*\n(.*?)^```\s*$", match[1], re.I | re.M | re.S)
     if block:
