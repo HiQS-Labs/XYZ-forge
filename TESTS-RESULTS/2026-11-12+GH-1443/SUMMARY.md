@@ -27,3 +27,5 @@ Claude Opus 5.5 high-effort round 1 found no Blocker or Should, but relay exited
 Historical `manual-cli-and-helper` provenance records the earlier helper-controls.py hash; the current script was revised for real fallback coverage. Retrieve that earlier script from its recorded source commit, not the current path. Earlier helper-fixed.json is superseded; current helper-final.json and the later provenance record are the qualification evidence.
 
 User hold: no merge, deployment, Jose handoff, or changes to Jose’s current instructions.
+
+ROUND2: Claude Code Opus 5.5, high effort, subscription route, driver-attested Approved (exit 0; attestation commit 13bcf7624). No Blocker or Should findings. Retained receipts, both original/retry logs and transcripts, model/effort/caps and provenance are under `claude-qa/`. This review inspected existing qualification evidence; it did not rerun suites. The remaining primary-cleanliness wording nit is clarified in SKILL.md; adjacent conditional consolidation is cosmetic and deferred. Runtime is unchanged. PR remains held, with no merge, deployment or Jose handoff.

@@ -88,7 +88,7 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
      clean publication tree and development branch. It never begins checkpoint recovery/publication.
      Preflight itself can fetch, create transient worktrees and execute contract probes; this is
      not a universally side-effect-free command. Live provider capacity, gate environments/services,
-     remote freshness and recovery eligibility remain unverified. Follow preparation instructions
+     primary cleanliness, remote freshness and recovery eligibility remain unverified. Follow preparation instructions
      before dispatch; a passing dry-run does not certify an unattended run.
    - Real run: Acquires `relay-driver.lock` via `rtl.driver_lock_path()`, sets `RELAY_DRIVER_LOCKED=1`, and registers a clean exit handler. Concurrently running marathons or relays in the same clone are safely excluded (GH-42 / GH-354).
 
