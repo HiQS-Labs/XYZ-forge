@@ -1,0 +1,20 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub/XYZ-forge-relay-acceptance-2026-11-12 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GitHub/XYZ-forge-relay-acceptance-2026-11-12) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.anBjOf)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.anBjOf) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub/XYZ-forge-relay-acceptance-2026-11-12/relay-system/2026-11-12/relay-acceptance.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte 1242):
+  before: b'!-- \xe2\x96\xb3 RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK \xe2\x96\xb3 -->\n\n<!-- NEXT TURN goes here -->\n'
+  after:  b'!-- \xe2\x96\xb3 RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK \xe2\x96\xb3 -->\n\n## Codex reviewer verdict \xe2\x80\x94 Approved\n\n[Pass] The wording a'
+relay-drive: terminal STATUS Approved by reviewer codex REFUSED — review-body-rewritten
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1m 1s
+per done-task: ≥0 tokens, 1m 1s wall-clock
+  turn peak RSS: codex: 307MB peak RSS
+
