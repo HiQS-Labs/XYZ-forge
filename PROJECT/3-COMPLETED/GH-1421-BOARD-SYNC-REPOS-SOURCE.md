@@ -2,9 +2,9 @@
 gh_issue: 1421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1421
 title: "board_sync repos_source: opt-in read of Rebalance agent_session_activity (T3 work signal)"
-status: Active (2-WORKING — PR ready; awaiting merge)
+status: Complete
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 owner: claude (start-task)
 doc_type: feedback
 complexity: 2
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, round 3; `relay-system/2026-11-11/gh1421-plan.codex.md`), `--accepted-start` recorded, implemented in `utils/py/board_sync.py`, verified (`TESTS-RESULTS/2026-11-11+GH-1421/SUMMARY.md`). | Codex final QA Approved (round 2, `relay-system/2026-11-11/gh1421-final.codex.md`; round 1 caught a `HAVING` alias bug, fixed in 2565f073b). Routed gate at push; ready PR; awaiting merge. Then the follow-up decision on reading the no-sidecar WAL DB (step 5). |
+| Merged in PR #1429 (`1ca887750`), reconciled in `5ceb8c999`; issue closed as completed 2026-11-12. | The live read on this Mac still falls back under Apple system SQLite; follow-on fix tracked in noelsaw1/noels-cross-project-tasks#87 step 6. |
 
 ## Key concepts
 
