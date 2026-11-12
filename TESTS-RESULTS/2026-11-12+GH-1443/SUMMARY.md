@@ -10,7 +10,7 @@ The existing explicit-target Jog dry-run incorrectly returned0 for controlled ad
 - Plan Codex relay: attested Approved round2/3. Round1 prose approval refused exit6 because orchestrator concurrently edited documentation; backups restored and committed before round2. No implementation before attested approval/accepted-start.
 - Advisory: Codex answered; Agy credit429. Single-model, not cross-model consensus. Blind disposition precedes attribution in CONSULT.md.
 - Existing focused suites: 227/227 gh280 and34/34 jog-queue PASS at8744fcb2f, clone clean/nonbare/canonical origin/no local identity drift. Initial failure was existing bare-preview cases implicitly using a target helper; two invocation lines corrected to actually test bare preview. No new cases or suites.
-- Final Codex relay QA attested Approved on d1a5191e5; review-only receipt committed in310c75471. Final classified runtime qualification remains pending.
+- Final Codex relay QA attested Approved on d1a5191e5; review-only receipt committed in310c75471. Normal classified full push qualification passed408/408 on ff4592c88b60ab1cf41c35baf1af2a7c36c17bbf,546s hook/550.312s elapsed. No bypass, one full attempt, clone identity unchanged. This receipt tail changes documentation/evidence only; no promotion qualification claimed.
 
 ## Remaining preparation gaps
 Live provider capacity/credit, exact gate interpreter/dependencies/services, fresh remote state, checkpoint recovery eligibility, deadline ownership and end-to-end useful delivery still require their existing operational steps. Preflight itself can fetch/create transient worktrees/run contract probes; guarantee is no Jog state writes, not universally no side effects.

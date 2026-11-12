@@ -15,7 +15,7 @@ phases: 1
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Shared checks implemented;24 manual controls,227/227 and34/34 focused, final relay Approved | Normal classified qualification and follow-up PR |
+| Three spikes;24 manual controls; focused261/261; final relay Approved; normal full408/408 | Follow-up PR and exact-head hosted checks; awaiting landing, not deployed |
 
 ## Scope
 Follow-up to source-instruction PR1442; it remains unmerged. Current development already owns the runtime checks being reused, so no unmerged code dependency or implicit merge/install. User authorizes up to three technical spikes and start-task execution with workhorse. No factory dispatch or product changes.
@@ -41,10 +41,27 @@ Easy local-branch reversal: existing runtime function changes only, no persisten
 - [x] At most3 spikes with concrete red controls and explicit implement/defer decisions.
 - [x] Invalid target-aware role/checkpoint/probe/preflight is nonzero, while valid nonempty preparation passes.
 - [x] No queue/DB/journal/lock/lease changes or provider calls in checks; bare preview stays compatible.
-- [ ] Main/adjacent actual-entry smoke, existing focused coverage, independent plan/final QA, classified final qualification.
+- [x] Main/adjacent actual-entry smoke, existing focused coverage, independent plan/final QA, classified final qualification.
 
 ## Ratings
 2026-11-12 provisional65/55/50/65. Consequence: false-ready preparation wastes admission/build opportunities; no newly established loss/corruption. Same-class examples include LTVera1014 and earlier1386 promotion-shape/provider stops; no complete14-vs14-day incidence count, trend unknown. Appeal neutral; estimated focused implementation. Preserve historical run caps.
 
 ## Spike/advisory refinements
 Three spikes complete; see TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md. Share exactly live legacy-first promotion selection (any valid legacy probe wins; contract fallback only if none). Helper returns status and summary, and actual CLI explicitly exits2 on any selected nonzero including4/already-landed, missing helper or identity mismatch. Keep static publication checks at existing finish position in live mode; do not move them into begin. Target-aware dry-run reports remote freshness/recovery eligibility unknown. No Jog-state writes, not a claim that preflight probes/fetch are side-effect-free. Consult single available neutral advisor supports this scoped direction; blind disposition committed separately, not cross-model consensus.
+
+## Remaining prerequisite coverage
+| Prerequisite | Current owner and this delivery |
+|---|---|
+| Queue selection and per-item contract/preflight | Existing Jog/Swarm; this PR propagates failures instead of discarding status |
+| Explicit reviewer route and executable | Existing Marathon admission; reused in target-aware dry-run |
+| Promotion command shape | Existing promotion selector; reused without executing probes twice |
+| Publication clone/options | Existing checkpoint constructor/static checks; reused without begin/finish |
+| Gate interpreter/dependencies/services | Existing caller gate/env contract; not automatically installed or exercised here |
+| Live reviewer credits/auth/capacity | Requires a real authorized provider request; not implied by executable presence |
+| Fresh published primary and pending recovery | Existing live checkpoint/admission; static dry-run explicitly leaves freshness/recovery unknown |
+| Ownership, time budgets and automatic useful progression | Existing orchestration/flywheel/Jog run; requires actual run evidence, not this preparation patch |
+
+## Milestone rubric
+Outcome:13 invalid CLI preparations formerly returned0; shared checks now refuse them.
+Critical path: prevents spending admission/build opportunities on machine-detectable preparation errors.
+Ownership/evidence: reversible clone implementation, three bounded spikes, independent plan/final review, manual red/green, existing focused suites and normal classified publication. No unattended qualification claim.
