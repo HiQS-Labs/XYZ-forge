@@ -568,7 +568,8 @@ def _preflight_summary(proc):
     printed verdict (a post-verdict failure) is appended so a `ready` is never reported unqualified."""
     out_lines = (proc.stdout or "").splitlines()
     lines = [ln.strip() for ln in out_lines + (proc.stderr or "").splitlines() if ln.strip()]
-    verdict = next((ln.split(":", 1)[1].strip() for ln in lines if ln.startswith("verdict ")), None)
+    verdict = next((ln.partition(":")[2].strip() for ln in lines
+                    if ln.startswith("verdict ") and ":" in ln), None)
     if verdict:
         nxt = next((ln.split("— next:", 1)[1].strip() for ln in lines
                     if ln.startswith("readiness ") and "— next:" in ln), None)
