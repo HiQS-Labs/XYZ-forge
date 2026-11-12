@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -79,5 +79,24 @@ Review the complete implementation diff against origin/development, requirements
 Only edit this relay. Do not run suites in the review worktree. Report observed input, affected scope and falsifier for behavioral findings. A complete code review is requested; retained manual evidence is available, full gate remains the author's publication obligation.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: no
+
+- [Should] HQ filing-time validation can skip a supplied malformed contract. At utils/hq/hq.sh:328, the heading expression uses `.*` with `re.S`, so it consumes subsequent headings and prose containing “preflight contract”; the block search then sees an empty body and never calls the validator. Use the same line-bounded first-heading/section extraction semantics as `swarm_preflight.extract_contract`, or at minimum prevent the heading matcher from crossing newlines. Preserve partial intake and do not execute probes.
+  Observed input: `## Preflight Contract\n```json\n{"target":"bad"}\n```\n\n## Acceptance\n- Reject malformed preflight contract before filing.\n` (literal `\n` here denotes a newline).
+  Affected scope: HQ requests containing a contract followed by later prose mentioning “preflight contract”; the first contract is malformed but the current validation branch silently skips it before the issue/capture writer.
+  Falsifier: With that exact request, the extracted first JSON must reach `contract_shape_error` and refuse with `target must be an object` before writes. The same request with `{"artifacts":["README.md"]}` must remain accepted as partial intake.
+  Probe: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` using the exact two `re.search` patterns from hq.sh against the request above, followed by the line-based heading search from extract_contract. Exit 0; decisive output: `HQ matched section body: ''`, `HQ validation invoked: False`, `extract_contract heading: ## Preflight Contract`, `first contract JSON: {"target":"bad"}`. This was a pure in-memory parsing probe; no HQ writer, fixture, git command, or suite was executed.
+- [Pass] Planner shape rejection is ordered before zone/probe consumers: utils/py/_marathon_plan.py:484 returns `(None if error else contract), error`; :1138 extracts before `_zone_of`; :1171-1178 holds malformed rows using `needs-contract` and continues. The helper at utils/py/swarm_preflight.py:54-92 preserves optional-null `lanes`/`artifacts_new` while rejecting non-object target and malformed path arrays.
+- [Pass] The environment branch exits 3 before suite dispatch and prints the interpreter, version, missing modules and explicit PATH remedy (validate.sh:1033-1043). Committed focused evidence is explicitly bounded: TESTS-RESULTS/2026-11-12+GH-1436-1437/SUMMARY.md says “No claims of full-gate or hosted success yet”; provenance.jsonl records eight focused suite commands at bf38b326.
+- [Unverified — needs clone run] No suites or executable evidence scripts were run here. Full push qualification remains outstanding and must pass before PR-ready publication.
+
+**VERDICT: FAIL**
+
+**Basis:** The observed HQ parsing bypass fails the filing-time rejection requirement. Reviewed the complete seeded artifact, both requirements, plan receipt, relevant implementation paths and retained evidence; the complete source-file sweep is unfinished, so no claim of an exhaustive pre-existing-defect audit is made. Finish that sweep on the next review after this concrete defect is repaired.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
