@@ -11,3 +11,7 @@ One offline replay ran: two exact original command probes from f98ad1d9, two rep
 Existing jog_run.lint_probe takes tokens[1] as the script path; swarm_preflight.eval_probes instead runs a shell command and maps return status. A surgical follow-up should reconcile supported command forms or explicitly refuse unsupported forms consistently at preparation, with preserved malformed/trivial/missing rejection. Do not simply exempt all option-looking tokens or claim that lint acceptance establishes semantics. No runtime fix implemented here; separate idea spike owns that decision and heuristic false-positive study. No unlazy runtime imported, no new suite/registry/gate/hook.
 
 Prior-art search found related glossary1407, admission522, preparation1439/1296 and outer-loop1386/1400; none is the requested narrow instruction + retained-input replay or explicit gate-lint exploration. Historical/14-day recurrence trend remains unknown. Lessons: NO_ENTRY; one replay supports a known compatibility observation, not an effectiveness claim.
+
+## Publication
+
+Plan and final Codex relay reviews are driver-attested Approved. Normal publication gate passed on 92b7df05d359749c4f1fe4cc51cf39bdc507e2a0 in 73.429s; clone identity unchanged. Raw log and JSON retained. Final documentation-tail publication follows. No merge/deployment.

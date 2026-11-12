@@ -1,7 +1,7 @@
 ---
 issue: 1447
 title: Acceptance relevance and complete outcome accounting
-status: planned
+status: implemented
 created: 2026-11-12
 updated: 2026-11-12
 owner: Codex
@@ -15,7 +15,7 @@ goal: Make acceptance relevance and incomplete requested outcomes visible withou
 
 | What was just completed | What's next |
 |---|---|
-| Existing review/closeout and historical probe failure traced at 712a73b4. | Plan QA Approved; wording and7-case replay complete; spike1448 filed. Final QA and normal gated PR publication next. |
+| Existing review/closeout and historical probe failure traced at 712a73b4. | Plan/final QA driver-attested Approved; wording and 7-case replay complete; spike #1448 filed; normal publication gate PASS 73.429s. PR review remains; no merge or deployment. |
 
 ## Observed
 
@@ -30,10 +30,10 @@ start-task Step6 already asks where the unchanged candidate is rejected; it does
 
 ## Acceptance
 
-- [ ] Preparation review asks what each acceptance check observes and why it establishes the requested outcome.
-- [ ] Flywheel final report maps every requested outcome/amendment to evidence or unresolved disposition; local completion does not imply integration.
-- [ ] Bounded replay preserves real input provenance and tests empty/trivial refusal plus valid control; semantic validity remains explicitly unproved.
-- [ ] Independent plan/final QA and applicable normal publication gate pass, and separate exploration issue is linked.
+- [x] Preparation review asks what each acceptance check observes and why it establishes the requested outcome.
+- [x] Flywheel final report maps every requested outcome/amendment to evidence or unresolved disposition; local completion does not imply integration.
+- [x] Bounded replay preserves real input provenance and tests empty/trivial refusal plus valid control; semantic validity remains explicitly unproved.
+- [x] Independent plan/final QA and applicable normal publication gate pass, and separate exploration issue is linked.
 
 ## Blast radius and rollback
 
@@ -49,7 +49,7 @@ Content red control is previous instruction absence; fixed exact sentence/placem
 
 ## Lessons Learned
 
-NO_ENTRY pending replay; wording alone cannot demonstrate improved agent compliance.
+NO_ENTRY; wording alone cannot demonstrate improved agent compliance.
 
 ## Replay disposition and follow-up
 
