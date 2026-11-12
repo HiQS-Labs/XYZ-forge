@@ -1,8 +1,8 @@
 ---
 title: jog run --dry-run ignores --target-root readiness; preflight park misreported as landing halt
-status: In Progress
+status: Complete
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 owner: Noel Saw
 branch: fix/XYZ-forge-gh1426-jog-dryrun-target-readiness-2026-11-11
 gh_issue: 1426
