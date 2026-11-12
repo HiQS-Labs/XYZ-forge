@@ -29,3 +29,12 @@ Reviewed the working plan, summary, spikes, manual control sources/receipts, pro
 Evidence verification: read-only `python3` using `json.loads`, `hashlib.sha256` and `Path.read_bytes` over the latest artifact mapping in `TESTS-RESULTS/2026-11-12+GH-1443/provenance.jsonl` exited 0; all 17 latest artifact hashes MATCH. Parsing `cli-baseline.json` and `cli-fixed.json` printed respectively `3 16 True` and `16 16 True` (passed, total, all_preserved). Reading final log tails showed `gh280-jog-marathon-adapter: 227 pass, 0 fail` and `34 passed, 0 failed`. No suites, pytest or executable fixtures were run in this reviewer worktree; clone execution is producer evidence, not an independently repeated run.
 
 Ratings 65/55/50/65 remain explicitly provisional, with trend unknown and no established corruption/loss claim. Scope and remaining environment/provider/freshness/recovery/deadline/useful-delivery gaps are honest. First malformed fixture, containment and focused failures are retained and hashed. Preservation constraints are respected; no cleanup or source changes performed. Full classified qualification after this approval is appropriate and must attest the final committed state before readiness is claimed.
+
+### Attestation · relay-drive — 2026-11-12T17:44:01Z
+task: GH1443-FINAL-QA
+reviewer: codex
+status: Approved
+reviewed-head: d1a5191e59df83364d4cc53d61e85ece577af6a1
+added-range: 1906+3984
+added-sha256: 82f4d7e2a97663bac6e0f5d7c6c2f191f03e0245a1a50d2a3c340009bf1cbe6e
+gate-run: undeclared
