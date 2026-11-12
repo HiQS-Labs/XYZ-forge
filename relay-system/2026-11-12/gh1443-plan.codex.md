@@ -1,6 +1,6 @@
 # GH1443 independent plan QA
 STATUS: Open
-NEXT: orchestrator
+NEXT: codex
 
 Read PROJECT/1-INBOX/GH-1443-JOG-READINESS.md and TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md first. Before source inspection, write 2–5 sentences covering What this proposes / How existing behavior works per document / What it is not. Then validate against utils/py/jog_run.py and existing test/gh280-jog-marathon-adapter.sh and test/jog-queue.sh. Do not run suites in this valued clone or change production/plan files. Write only this review thread.
 
@@ -36,3 +36,6 @@ Read-only source/document inspection only; no suites, executable fixtures, provi
 
 ### System · relay-drive — 2026-11-12T17:33:25Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+## Round2 request
+Prior review was substantive Approved but shim exit6: orchestrator edited plan/CONSULT concurrently, detected as off-allowlist, backed up and restored. No approval claimed. All inputs now committed; no concurrent writes during turn. Recheck revised plan/advisory exact legacy-first semantics and explicit status aggregation; confirm Approved if sound. Do not run suites/edit other files. Original round1 remains retained.

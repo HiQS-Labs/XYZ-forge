@@ -45,3 +45,6 @@ Easy local-branch reversal: existing runtime function changes only, no persisten
 
 ## Ratings
 2026-11-12 provisional65/55/50/65. Consequence: false-ready preparation wastes admission/build opportunities; no newly established loss/corruption. Same-class examples include LTVera1014 and earlier1386 promotion-shape/provider stops; no complete14-vs14-day incidence count, trend unknown. Appeal neutral; estimated focused implementation. Preserve historical run caps.
+
+## Spike/advisory refinements
+Three spikes complete; see TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md. Share exactly live legacy-first promotion selection (any valid legacy probe wins; contract fallback only if none). Helper returns status and summary, and actual CLI explicitly exits2 on any selected nonzero including4/already-landed, missing helper or identity mismatch. Keep static publication checks at existing finish position in live mode; do not move them into begin. Target-aware dry-run reports remote freshness/recovery eligibility unknown. No Jog-state writes, not a claim that preflight probes/fetch are side-effect-free. Consult single available neutral advisor supports this scoped direction; blind disposition committed separately, not cross-model consensus.
