@@ -144,6 +144,14 @@ def main():
               p_off["repos"])
         capped, _, _ = resolve(bs, tmp, {**on_block, "repos_source": {**on_block["repos_source"], "top_n": 4}}, db)
         check("A2 top_n cap still applies (agent repos rank last)", capped["repos"] == expect[:5], capped["repos"])
+        # A2b. multi-row aggregation (final QA F1): a zero row inserted before a positive row, and a runs tie
+        multi = Path(tmp) / "multi.db"
+        make_db(multi, [("o/a", "-1 days", 7)], [("o/mixed", "-1 days", 0), ("o/mixed", "-2 days", 5),
+                                                 ("o/tie-b", "-1 days", 5), ("o/tie-a", "-1 days", 2), ("o/tie-a", "-2 days", 3),
+                                                 ("o/zeros", "-1 days", 0), ("o/zeros", "-2 days", 0)])
+        p, lab, err = resolve(bs, tmp, on_block, multi)
+        check("A2b multi-row repos summed (zero row first kept); runs tie broken by name; all-zero repo excluded",
+              p["repos"] == ["o/pinned", "o/a", "o/mixed", "o/tie-a", "o/tie-b"] and err == "", (p["repos"], err))
         agent_only_db = Path(tmp) / "agentonly.db"
         make_db(agent_only_db, [("o/old", "-40 days", 5)], [("o/agentonly", "-1 days", 4)])
         p, lab, err = resolve(bs, tmp, on_block, agent_only_db)

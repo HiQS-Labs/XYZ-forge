@@ -150,9 +150,9 @@ def _rebalance_active_repos(source, limit):
            "SUM(issues_opened) + SUM(issue_comments) + SUM(reviews) AS score "
            "FROM github_activity WHERE scan_date >= date('now', ?) "
            "GROUP BY repo_full_name HAVING score > 0 ORDER BY score DESC, repo_full_name LIMIT ?")
-    agent_sql = ("SELECT repo_full_name, SUM(runs) AS runs FROM agent_session_activity "
-                 "WHERE day >= date('now', ?) GROUP BY repo_full_name HAVING runs > 0 "
-                 "ORDER BY runs DESC, repo_full_name LIMIT ?")
+    agent_sql = ("SELECT repo_full_name, SUM(runs) AS total_runs FROM agent_session_activity "
+                 "WHERE day >= date('now', ?) GROUP BY repo_full_name HAVING total_runs > 0 "
+                 "ORDER BY total_runs DESC, repo_full_name LIMIT ?")
     window = "-%d days" % source["since_days"]
     agent_rows = []
     try:

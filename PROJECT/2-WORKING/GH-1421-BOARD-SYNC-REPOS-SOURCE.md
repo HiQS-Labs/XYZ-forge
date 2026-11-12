@@ -103,8 +103,10 @@ new subcommand.
    dict, so apply/restore identity is unchanged.
 2. **Agent read, same connection.** In `_rebalance_active_repos`, after the existing `github_activity` query
    succeeds and only when the key is on, run on the same connection:
-   `SELECT repo_full_name, SUM(runs) AS runs FROM agent_session_activity WHERE day >= date('now', ?)
-   GROUP BY repo_full_name HAVING runs > 0 ORDER BY runs DESC, repo_full_name LIMIT ?` with the same
+   `SELECT repo_full_name, SUM(runs) AS total_runs FROM agent_session_activity WHERE day >= date('now', ?)
+   GROUP BY repo_full_name HAVING total_runs > 0 ORDER BY total_runs DESC, repo_full_name LIMIT ?`
+   (final QA round 1: an alias named `runs` makes `HAVING runs` bind to the stored column, so a repo whose
+   first row has 0 runs vanished; the alias must not collide with a column name) with the same
    `-N days` and `limit`. `date('now', …)` is UTC, matching the `day` column and the existing
    `scan_date` filter.
 3. **Merge rule (documented).** The return value is the GitHub-ranked list exactly as today, followed by
