@@ -52,7 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the completed implementation, i.e. the diff `git diff 0f21b761a..HEAD` on this branch (base = `origin/development` at `0f21b761a`).
+- Artifact under review: `utils/py/claude-turn.py`
+- Scope: the whole implementation diff on this branch since base commit 0f21b761a (`git diff 0f21b761a HEAD`).
   Code: `utils/py/claude-turn.py`, `utils/py/claude_cli.py`, `relay-automation/relay-turn-lib.sh`, `utils/py/marathon_drive.py`.
   Docs/package: `README.md`, `HOW-TO-USE.md`, `relay-automation/README.md`, `relay-automation/MARATHON.example.yaml`, `.gitignore`, `CHANGELOG.md`,
   `skills/1-hourly/relay-automation/relay-pkg.tar.gz`. Governance: `PROJECT/2-WORKING/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md` (plan + acceptance map),
