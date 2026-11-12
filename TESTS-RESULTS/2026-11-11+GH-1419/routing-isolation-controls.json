@@ -1,0 +1,286 @@
+[
+  {
+    "name": "nonempty nine routes",
+    "passed": true,
+    "detail": [
+      "agy",
+      "aider",
+      "claude",
+      "codex",
+      "commandcode",
+      "deepseek",
+      "kimi",
+      "pi",
+      "smallcode"
+    ]
+  },
+  {
+    "name": "claude pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "codex pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "agy pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "aider pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "pi pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "smallcode pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "commandcode pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "deepseek pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "kimi pair retained",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "refuse 'gemini'",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "refuse 'unknown'",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "refuse 'claude,other'",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "refuse 'claude x'",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "refuse ''",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "Jog claude-build/claude-review",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "Jog codex/agy",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "Jog codex/claude",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "same actor refused",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "missing binary refused",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "dispatch claude-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "actual shim identity claude-builder",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "dispatch claude-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "actual shim identity claude-reviewer",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "dispatch codex-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "actual shim identity codex-builder",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "dispatch codex-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "actual shim identity codex-reviewer",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "dispatch agy-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch agy-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch aider-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch aider-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch pi-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch pi-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch smallcode-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch smallcode-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch commandcode-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch commandcode-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch deepseek-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch deepseek-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch kimi-builder",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "dispatch kimi-reviewer",
+    "passed": true,
+    "detail": ""
+  },
+  {
+    "name": "unlisted actor refused",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "timeout claude-reviewer",
+    "passed": true,
+    "detail": {
+      "reason": [
+        "timeout-during-review-recovery"
+      ],
+      "calls": [
+        {
+          "review_once": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "timeout claude-builder",
+    "passed": true,
+    "detail": {
+      "reason": [
+        "timeout-builder-still-owned-turn"
+      ],
+      "calls": []
+    }
+  },
+  {
+    "name": "baseline Claude refusal witnessed",
+    "passed": true,
+    "detail": "--reviewer 'claude' must start with one of codex/gemini/agy (marathon's reviewed-phase contract)"
+  },
+  {
+    "name": "baseline overwrite witnessed",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "baseline unsupported isolation admitted",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "SmallCode reviewer isolation=1",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "SmallCode reviewer isolation=0",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "SmallCode builder isolation=1",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "Jog refuses unsupported reviewer isolation",
+    "passed": true,
+    "detail": "marathon-drive: SmallCode reviewers do not support worktree isolation; select a reviewer with isolation support"
+  }
+]

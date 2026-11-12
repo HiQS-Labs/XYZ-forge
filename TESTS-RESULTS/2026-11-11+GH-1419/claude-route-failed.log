@@ -1,0 +1,39 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11) changed-files=0
+claude-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.tCjUvn)
+claude-turn: WARNING: workspace '/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.tCjUvn' is not trusted; Claude may ignore project permissions. Run Claude Code interactively in this directory and accept the trust dialog, or set projects['/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.tCjUvn']["hasTrustDialogAccepted"] to true in /Users/noelsaw/.claude.json.
+claude-turn: CLI diagnostics: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/relay-system/logs/2026-11-11/claude-turn-GH1419-CLAUDE-SMOKE-49901.log.stderr
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.tCjUvn) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/relay-system/2026-11-11/gh1419-claude-route.md
+claude-turn: claude -p failed (exit 1)
+claude-turn: OFF-ALLOWLIST change: src/marathon-yaml.js — reverting
+claude-turn: pre-revert copy of src/marathon-yaml.js saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: test/gh346-gateway-allowlists.sh — reverting
+claude-turn: pre-revert copy of test/gh346-gateway-allowlists.sh saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/gh1419-focused.log — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/gh1419-focused.log saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/gh280.log — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/gh280.log saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/gh346-fixed.log — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/gh346-fixed.log saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/manifest.log — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/manifest.log saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/provenance.jsonl — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/provenance.jsonl saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-11+GH-1419/routing-controls.json — reverting
+claude-turn: pre-revert copy of TESTS-RESULTS/2026-11-11+GH-1419/routing-controls.json saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1419-reviewer-routing-2026-11-11/.tick/orphan-backups/20261111T195646Z-52227
+claude-turn: off-lane edits reverted; failing the turn
+claude-turn: released the claim on GH1419-CLAUDE-SMOKE that this turn would otherwise have left held — the turn ended without reaching its own token handoff (GH-409)
+relay-drive: terminal STATUS Approved written by FAILED reviewer turn (claude-reviewer; shim returned non-zero) — reverting to Open
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 5m 7s
+per done-task: ≥0 tokens, 5m 7s wall-clock
+  turn peak RSS: codex: 303MB peak RSS, claude-reviewer: 401MB peak RSS
+
