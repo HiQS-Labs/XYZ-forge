@@ -1,0 +1,2 @@
+ENVIRONMENT FAULT: python3 (/usr/bin/python3) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)
+rc=0

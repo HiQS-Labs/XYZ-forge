@@ -32,6 +32,7 @@ from pathlib import Path
 
 from router_audit import parse_pdda_mode
 from releases_app import roadmap_render
+from swarm_preflight import contract_shape_error
 
 # Ledger sections we sequence from vs. only reference.
 SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"]
@@ -169,9 +170,10 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None 
         engine = Engine(cfg)
 
     contract = None
+    contract_error = None
     if doc_rel and (repo_root / doc_rel).is_file():
-        contract = engine._extract_contract(str(repo_root / doc_rel))
-    if not contract and body:
+        contract, contract_error = engine._extract_contract(str(repo_root / doc_rel))
+    if not contract and not contract_error and body:
         lines = body.splitlines()
         h = next((j for j, l in enumerate(lines) if re.match(r"^#{1,6}\s+.*preflight\s+contract", l, re.I)), -1)
         if h >= 0:
@@ -181,8 +183,13 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None 
                 if end >= 0:
                     try:
                         contract = json.loads("\n".join(lines[start:end]))
+                        contract_error = contract_shape_error(contract)
                     except ValueError:
                         contract = None
+                        contract_error = "invalid JSON contract"
+
+    if contract_error:
+        contract = None
 
     from releases_app import parse_prs_proposal
     proposal = parse_prs_proposal(body)
@@ -207,7 +214,9 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None 
         zone_inferred = z["inferred"]
 
     doc_exists = bool(doc_rel and (repo_root / doc_rel).is_file())
-    if not doc_exists:
+    if contract_error:
+        state = "needs-contract"
+    elif not doc_exists:
         state = "needs-doc"
     elif not proposal:
         state = "unrated"
@@ -224,7 +233,7 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None 
         "gh": issue, "gid": None, "docRel": doc_rel, "docExists": doc_exists,
         "slug": slug, "ratings": {"complexity": None, "risk": None, "effort": None},
         "rated": bool(proposal), "ratingsExempt": False,
-        "contract": contract, "zone": zone, "zoneInferred": zone_inferred,
+        "contract": contract, "contractError": contract_error, "zone": zone, "zoneInferred": zone_inferred,
         "writeset": writeset, "zoneRule": zone_rule,
         "deps": deps, "goGated": False,
         "suggestedBranch": suggested_branch,
@@ -446,7 +455,7 @@ class Engine:
     def _extract_contract(self, doc):
         raw = self._read_file_safe(doc)
         if raw is None:
-            return None
+            return None, None
         lines = re.split(r"\r?\n", raw)
         h = -1
         for j, l in enumerate(lines):
@@ -454,7 +463,7 @@ class Engine:
                 h = j
                 break
         if h < 0:
-            return None
+            return None, None
         start = -1
         for j in range(h + 1, len(lines)):
             if re.match(r"^```json\s*$", lines[j], re.I):
@@ -463,18 +472,20 @@ class Engine:
             if re.match(r"^#{1,6}\s+", lines[j]):
                 break
         if start < 0:
-            return None
+            return None, None
         end = -1
         for j in range(start, len(lines)):
             if re.match(r"^```\s*$", lines[j]):
                 end = j
                 break
         if end < 0:
-            return None
+            return None, None
         try:
-            return json.loads("\n".join(lines[start:end]))
+            contract = json.loads("\n".join(lines[start:end]))
+            error = contract_shape_error(contract)
+            return (None if error else contract), error
         except ValueError:
-            return None
+            return None, "invalid JSON contract"
 
     def _eval_probe(self, p):
         def at(rel):
@@ -1125,14 +1136,14 @@ class Engine:
                 # ignored) — the two scales must not coexist in one score.
                 rated = True
             ratings_exempt = str(fm.get("ratings_exempt", "")).lower() == "true"
-            contract = self._extract_contract(doc_abs) if doc_exists else None
+            contract, contract_error = self._extract_contract(doc_abs) if doc_exists else (None, None)
             z = self._zone_of(contract, item)
             suggested_branch = "marathon/%s-%s" % (slug, self.TODAY)
             records.append({
                 "title": item["title"], "section": item["section"], "emoji": item["status"],
                 "raw": item["raw"], "gh": gh, "gid": gid, "docRel": doc_rel, "docExists": doc_exists,
                 "slug": slug, "ratings": ratings, "rated": rated, "ratingsExempt": ratings_exempt,
-                "contract": contract, "zone": z["zone"], "zoneInferred": z["inferred"],
+                "contract": contract, "contractError": contract_error, "zone": z["zone"], "zoneInferred": z["inferred"],
                 "writeset": z["writeset"], "zoneRule": z["zoneRule"],
                 "deps": self._deps_of(item), "goGated": self._is_go_gated(item),
                 "suggestedBranch": suggested_branch,
@@ -1158,6 +1169,16 @@ class Engine:
 
         # ── per-item validation signals ────────────────────────────────────────
         for r in deduped:
+            if r.get("contractError"):
+                terminal = r["section"] in ("Completed", "Deferred · vision")
+                r["flags"].append("malformed-contract")
+                self._flag("warn", "malformed-contract" if terminal else "needs-contract", r,
+                           "malformed-contract: " + r["contractError"],
+                           "correct the Preflight Contract shape before execution")
+                if not terminal:
+                    r["state"] = "needs-contract"
+                    continue
+                r["state"] = "completed-ref" if r["section"] == "Completed" else "deferred"
             if r["gh"] is None and not r["docRel"]:
                 r["state"] = "note-only"
                 self._flag("info", "note-only", r,

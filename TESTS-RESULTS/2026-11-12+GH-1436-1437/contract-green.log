@@ -1,0 +1,73 @@
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS outer-list planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS outer-null planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS outer-string planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS target0 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS target1 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS target2 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS target3 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS fix_probes0 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS fix_probes1 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS fix_probes2 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS fix_probes3 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS fix_probes4 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS artifacts0 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS artifacts1 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS artifacts2 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+PASS lanes0 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+wave-reconcile: ERROR — marathon-plan found drift/held state attributable to the reconciled PR item(s): GH-9001 (PROJECT/2-WORKING/GH-9001-PROBE.md)
+contract in /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1436-matrix-1j4hivj7/PROJECT/2-WORKING/GH-9001-PROBE.md missing required field: target
+PASS lanes1 planner held; unregistered held; unrelated reconcile continues; owned reconcile refuses
+PASS healthy planner preserved; execution completeness independently checked
+PASS optional-null planner preserved; execution completeness independently checked
+PASS partial planner preserved; execution completeness independently checked
+PASS all 20 contract cases

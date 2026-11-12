@@ -51,6 +51,41 @@ def log(msg):
 def emit(msg):
     print(msg)
 
+def contract_shape_error(obj):
+    """Validate present contract shapes without requiring an execution-ready contract."""
+    if not isinstance(obj, dict):
+        return "contract must be an object"
+    if "target" in obj:
+        if not isinstance(obj["target"], dict):
+            return "target must be an object"
+        for key in ("repo", "ref"):
+            if key in obj["target"] and not isinstance(obj["target"][key], str):
+                return "target.%s must be a string" % key
+    if "fix_probes" in obj:
+        if not isinstance(obj["fix_probes"], list):
+            return "fix_probes must be an array of objects"
+        for probe in obj["fix_probes"]:
+            if not isinstance(probe, dict):
+                return "fix_probes entries must be objects"
+            for key in ("type", "path", "pattern", "command"):
+                if key in probe and not isinstance(probe[key], str):
+                    return "fix_probes.%s must be a string" % key
+    for key in ("artifacts", "artifacts_new"):
+        if key == "artifacts_new" and obj.get(key) is None:
+            continue
+        if key in obj and (not isinstance(obj[key], list)
+                           or any(not isinstance(path, str) or not path for path in obj[key])):
+            return "%s must be an array of non-empty strings" % key
+    if obj.get("lanes") is not None:
+        if not isinstance(obj["lanes"], dict):
+            return "lanes must be an object"
+        for key in ("agy_safe", "orchestrator_only", "index_only"):
+            if key in obj["lanes"] and (not isinstance(obj["lanes"][key], list)
+                    or any(not isinstance(path, str) or not path for path in obj["lanes"][key])):
+                return "lanes.%s must be an array of non-empty strings" % key
+    return None
+
+
 def extract_contract(doc_path):
     with open(doc_path, 'r') as f:
         lines = f.read().splitlines()
@@ -93,6 +128,11 @@ def extract_contract(doc_path):
         eprint(f"invalid JSON contract in {doc_path}: {e}")
         sys.exit(3)
         
+    shape_error = contract_shape_error(obj)
+    if shape_error:
+        eprint(f"contract in {doc_path}: {shape_error}")
+        sys.exit(3)
+
     def get(p, o):
         for k in p.split('.'):
             if o is None: return None
@@ -176,7 +216,7 @@ def merge_contracts(contracts):
         "round_cap": base.get("round_cap"),
         "fix_probes": list(base.get("fix_probes", [])),
         "artifacts": list(base.get("artifacts", [])),
-        "artifacts_new": list(base.get("artifacts_new", [])),
+        "artifacts_new": list(base.get("artifacts_new") or []),
         "remediation": base.get("remediation"),
         "lanes": merged_lanes
     }
@@ -195,7 +235,7 @@ def merge_contracts(contracts):
         out["fix_probes"].extend(c.get("fix_probes", []))
         for a in c.get("artifacts", []):
             if a not in out["artifacts"]: out["artifacts"].append(a)
-        for a in c.get("artifacts_new", []):
+        for a in c.get("artifacts_new") or []:
             if a not in out["artifacts_new"]: out["artifacts_new"].append(a)
             
     return out

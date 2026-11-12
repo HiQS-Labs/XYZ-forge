@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/utils/py/_marathon_plan.py", line 121, in <module>
+    def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None = None,
+TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'

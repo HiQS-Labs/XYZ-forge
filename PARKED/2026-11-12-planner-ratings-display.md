@@ -1,0 +1,3 @@
+# Planner PRS ratings display
+
+Independent final QA for GH-1436/1437 found `_rating_num` uses the legacy 1–5 formatter for DB axes: `(70,65,50,70)` displays as `—/—/—/—` in the planner table, while scheduling still uses `dbRank`. Source and pure-function probe: [final QA Round 3](../relay-system/2026-11-12/gh1436-final.codex.md), `_marathon_plan.py` formatter and table rendering. This is a pre-existing presentation issue outside contract-shape and environment-fault acceptance. Next triage: confirm actual table output and decide whether to render DB axes directly while retaining legacy formatting. No matching parked note or issue found in the bounded search.

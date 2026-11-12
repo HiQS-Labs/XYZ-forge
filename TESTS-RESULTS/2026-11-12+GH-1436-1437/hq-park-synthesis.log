@@ -1,0 +1,37 @@
+== test: hq-park-synthesis (GH-164 Phase 1) ==
+  PASS: bare --create (no synthesis env) rc=0
+  PASS: capture doc written
+  PASS: default complexity=2
+  PASS: default risk=1
+  PASS: default effort=2
+  PASS: default phases=1
+  PASS: ratings_provisional: true
+  PASS: non_goals: key present
+  PASS: related: key present
+  PASS: goal: key present
+  PASS: ## Key concepts section present
+  PASS: ## Idea section present (renamed from Request)
+  PASS: request text preserved under Idea
+  PASS: ## Why section present
+  PASS: Why falls back to a TODO stub when not synthesized
+  PASS: Phase 0 section present
+  PASS: ### Checklist present
+  PASS: ### QA checklist present
+  PASS: ## Status table present
+  PASS: Status table has the exact PDDA headers
+  PASS: target's own pdda.sh frontmatter check accepted (stubbed to exit 0 — real gate exercised in hq-park.sh)
+  PASS: --create succeeds cleanly without dashboard generation
+  PASS: no phantom dashboard file created
+  PASS: no false dashboard claim
+  PASS: --create with full synthesis passthrough rc=0
+  PASS: synthesized capture doc written
+  PASS: synthesized complexity=4 passed through
+  PASS: synthesized risk=3 passed through
+  PASS: synthesized effort=3 passed through
+  PASS: synthesized phases=2 passed through
+  PASS: synthesized Why text passed through (no TODO fallback)
+  PASS: pipe-delimited Key Concepts rendered as 3 separate bullets
+  PASS: pipe-delimited non_goals rendered as a real YAML list
+  PASS: pipe-delimited related rendered as a real YAML list
+  PASS: synthesized multiline HQ_PARK_GOAL rendered under goal: > with 2-space indent and no TODO stub
+== hq-park-synthesis: 35 passed, 0 failed ==

@@ -1,0 +1,28 @@
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/swarm-preflight.sh", "rc": 0, "duration_s": 9.412}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/hq-park.sh", "rc": 0, "duration_s": 0.879}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/hq-park-synthesis.sh", "rc": 0, "duration_s": 0.754}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/gh168-wave-reconcile-scope.sh", "rc": 0, "duration_s": 0.74}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/wave-reconcile.sh", "rc": 0, "duration_s": 1.082}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/gh251-validate-pytest-skip.sh", "rc": 0, "duration_s": 36.435}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/gh732-l3-gate-summary.sh", "rc": 0, "duration_s": 0.029}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "bash test/marathon-plan.sh", "rc": 0, "result": "70 passed, 0 failed, 2 explicit Bash-parity skips"}
+{"commit": "1a1a636d5f198462cd07b4f5c486d1be76a625e0", "command": "python3 temp/manual_contract.py", "rc": 0, "result": "red control witnessed underlying planner exit 1 AttributeError"}
+{"commit": "1a1a636d5f198462cd07b4f5c486d1be76a625e0", "command": "PATH=/usr/bin:/bin bash temp/environment-block.sh (nonempty extracted GH-732 block)", "rc": 0, "result": "old unsuitable Python continued; expected refusal absent"}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_matrix.py (script retained beside receipt)", "rc": 0}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_hq.py (script retained beside receipt)", "rc": 0}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_environment.py (script retained beside receipt)", "rc": 0}
+{"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "git identity bracket after all focused suites", "rc": 0, "result": "HEAD bf38b326 unchanged; core.bare false; origin task source full clone unchanged; no local user.email; only intended untracked evidence"}
+{"commit": "bf38b326", "command": "python3 temp/manual_hq.py (following-prose case)", "rc": 1, "result": "red: malformed issue/capture written before refusal"}
+{"commit": "f78c531c", "command": "python3 temp/manual_hq.py (following-prose case)", "rc": 0, "result": "green: all six malformed cases refuse before writes; partial accepted"}
+{"commit": "f78c531c", "command": "bash test/hq-park.sh", "rc": 0, "result": "23 passed"}
+{"commit": "f78c531c", "command": "pure merge_contracts first/later optional-null control (probe in final QA receipt)", "rc": 0}
+{"commit": "ebbe5877", "command": "pure merge_contracts absent/empty/first-null/later-null/nonempty control", "rc": 0}
+{"commit": "ebbe5877", "command": "bash test/swarm-preflight.sh", "rc": 0}
+{"commit": "8d0f73af10ca522b8fdccde63132e031e591911f", "command": "normal git push; pre-push full validation", "rc": 1, "duration_s": 534, "result": "407/408; gh139 failed; push refused; clone identity invariant passed"}
+{"commit": "84728877", "command": "bash test/gh251-validate-pytest-skip.sh", "rc": 0}
+{"commit": "c48c940c", "command": "bash test/gh139-pipe-grep-guard.sh", "rc": 0}
+{"commit": "c48c940c89cc04435714fa5be89ef2dad1af6bbf", "command": "normal git push; pre-push full validation", "rc": 0, "duration_s": 567, "result": "408/408; full gate GREEN; branch pushed; clone identity invariant passed; post-run HEAD unchanged, core.bare false, canonical origin, clean tree"}
+{"base_commit": "1efbdd527df7fd329f27b2feba7ab4206741d8e4", "source_sha256": {"utils/hq/hq.sh": "9c47d405a76f283652bac905bd9b0380aae12d70e3789ba62ec8d5a91228e11d", "utils/py/_marathon_plan.py": "e6b6994675debb701fde32b8dda1c1467bf8ff3b41728f2646acc469e2e5c5cb"}, "command": "review_controls.py and review_hq.py --red on original full clone, green after applying reviewed two-file correction; existing hq-park, marathon-plan, gh168-wave-reconcile-scope suites", "rc": 0, "scope": "focused only; full gate not rerun; ledger restoration pending approval"}
+{"source_commit": "43265eed2359f781f942543af74c6d12c990cf00", "command": "scoped GH-1430 merge-history restoration with original raw rows; utils/releases-merge-resolve.sh; releases_app.py check", "rc": 0, "verification": "disposable rehearsal and task repair: exact original row/three events; all non-GH1430 business rows unchanged; all prior receipts preserved; one canonical merge-rebuild receipt; latest development original rows matched; backups retained", "authorization": "operator one-time exception 2026-11-12 after exact restoration preview; no universal safety guarantee"}
+{"commit": "4c85ee2a7ff5814fb35e78537fae83f26a8c4700", "command": "normal git push; pre-push full validation", "rc": 0, "duration_s": 646, "result": "full gate GREEN; push succeeded; clone identity invariant passed; canonical origin; core.bare false; clean tree"}
+{"at": "2026-11-12T18:37:29.874021+00:00", "kind": "manual-integration-history-check", "head": "784c79060d62fd2b24d372fc2413489bcf5d0131", "integration": "b22a4989e03b5c8984da99f390f77fcc964ce52a", "result": "PASS", "artifact": "integration-history-proof.json", "note": "Narrow history-preservation exception; exact parent events and receipts retained; canonical resolver rebuilt DB."}

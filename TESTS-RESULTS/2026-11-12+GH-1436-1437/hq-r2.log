@@ -1,0 +1,25 @@
+== test: hq-park (GH-128 intake writer) ==
+  PASS: park preview rc=0
+  PASS: preview labeled
+  PASS: slug drops stopwords (add/a)
+  PASS: 1-INBOX still empty after preview
+  PASS: ROADMAP untouched by preview
+  PASS: park --create rc=0
+  PASS: capture doc written at expected path
+  PASS: frontmatter gh_issue=777
+  PASS: frontmatter source URL set
+  PASS: status = Proposed(1-INBOX)
+  PASS: ROADMAP pointer inserted
+  PASS: pointer placed under Queue heading
+  PASS: reports files left uncommitted
+  PASS: --title drives the capture filename (slug from title)
+  PASS: --title overrides frontmatter title
+  PASS: --title used as doc H1
+  PASS: full request preserved as body under --title
+  PASS: dup-guard aborts rc=1
+  PASS: dup message shown
+  PASS: Tier C preview rc=0
+  PASS: Tier C detected
+  PASS: Tier C = plain issue only
+  PASS: unresolved park rc=1
+== hq-park: 23 passed, 0 failed ==

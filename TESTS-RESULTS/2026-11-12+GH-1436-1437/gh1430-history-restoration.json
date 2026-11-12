@@ -1,0 +1,60 @@
+{
+  "source_commit": "43265eed2359f781f942543af74c6d12c990cf00",
+  "purpose": "Restore exact original GH-1430 identity and history lost by prior merge replay; no other business rows changed",
+  "rows": {
+    "roadmap_items": [
+      {
+        "global_id": "rmi-01M76X72NHMNF7VAT0WMP8JSCA",
+        "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+        "gh_number": "1430",
+        "title": "board_sync: Rebalance WAL DB read fails under Apple SQLite mode=ro; open mode=rw with query_only",
+        "section": "Completed",
+        "position": "150",
+        "status_marker": "\u2705",
+        "complexity": null,
+        "risk": null,
+        "effort": null,
+        "doc_path": "PROJECT/3-COMPLETED/GH-1430-BOARD-SYNC-WAL-READ.md",
+        "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1430",
+        "raw_text": "- **GH-1430 \u00b7 board_sync: Rebalance WAL DB read fails under Apple SQLite mode=ro; open mode=rw with query_only** \u2705 **SHIPPED 2026-11-12 (PR #1434)** \u2014 [GH-1430-BOARD-SYNC-WAL-READ.md](PROJECT/3-COMPLETED/GH-1430-BOARD-SYNC-WAL-READ.md) \u00b7 [#1430](https://github.com/HiQS-Labs/XYZ-forge/issues/1430)",
+        "first_seen": "2026-11-12T03:35:55Z",
+        "updated_at": "2026-11-12T16:30:12Z",
+        "rating_pri": null,
+        "rating_sev": null,
+        "rating_appeal": null,
+        "rating_effort": null,
+        "rating_ovr": null,
+        "status_label": null
+      }
+    ],
+    "work_events": [
+      {
+        "global_id": "wev-01M76X72PAXVP97JE9M34DADSX",
+        "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+        "gh_number": "1430",
+        "txn_id": "3e88fee83a434884a6bd088f53a25a5f",
+        "event": "parked",
+        "payload": "{\"section\": \"Queue / parked intake\"}",
+        "at": "2026-11-12T03:35:55Z"
+      },
+      {
+        "global_id": "wev-01M76XCDZK898DGAQ8PZMJQKW8",
+        "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+        "gh_number": "1430",
+        "txn_id": "795720bf8553481bb6aaf9dfa25c476b",
+        "event": "in_flight",
+        "payload": "{\"accepted_start\": true, \"marker\": \"\\ud83d\\udea7\", \"section\": \"In progress\", \"source\": \"roadmap-update\", \"transition\": true}",
+        "at": "2026-11-12T03:38:50Z"
+      },
+      {
+        "global_id": "wev-01M789GTMR9RHJBT8CZFGCFCG8",
+        "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+        "gh_number": "1430",
+        "txn_id": "858736f699a74ff687ec1ba47739db79",
+        "event": "completed",
+        "payload": "{\"marker\": \"\\u2705\", \"section\": \"Completed\", \"source\": \"roadmap-update\", \"transition\": true}",
+        "at": "2026-11-12T16:30:12Z"
+      }
+    ]
+  }
+}
