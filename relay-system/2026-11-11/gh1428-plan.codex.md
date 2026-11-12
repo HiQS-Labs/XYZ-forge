@@ -1,6 +1,6 @@
 # GH1428 independent plan review
 STATUS: Open
-NEXT: orchestrator
+NEXT: codex (Reviewer)
 
 Artifact under review: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md` (committed plan; base `0f21b761a`).
 
