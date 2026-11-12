@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 — GH-1436 / GH-1437 contract and gate environment faults
+
+Malformed Preflight Contract shapes now produce attributable needs-contract planner findings instead of crashing unrelated reconciliation; HQ park rejects supplied malformed shapes before writes. The existing preflight validator owns the shared shape check, while partial intake and optional null markers retain their earlier meaning. The full gate now refuses unsuitable Python before suites with exit 3 and the explicit gate-toolchain PATH remedy. Existing focused suites and manual red/green controls are recorded in `TESTS-RESULTS/2026-11-12+GH-1436-1437/`; final full qualification is recorded there separately. Easy rollback: revert these bounded validation changes; no schema migration or automatic environment installation.
+
 ## 2026-11-11 — GH-1428 reviewer gate evidence
 
 A marathon whose explicit `--pre-advance-cmd` is a focused file/node command now asks the
