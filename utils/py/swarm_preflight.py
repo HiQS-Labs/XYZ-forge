@@ -71,10 +71,12 @@ def contract_shape_error(obj):
                 if key in probe and not isinstance(probe[key], str):
                     return "fix_probes.%s must be a string" % key
     for key in ("artifacts", "artifacts_new"):
+        if key == "artifacts_new" and obj.get(key) is None:
+            continue
         if key in obj and (not isinstance(obj[key], list)
                            or any(not isinstance(path, str) or not path for path in obj[key])):
             return "%s must be an array of non-empty strings" % key
-    if "lanes" in obj:
+    if obj.get("lanes") is not None:
         if not isinstance(obj["lanes"], dict):
             return "lanes must be an object"
         for key in ("agy_safe", "orchestrator_only", "index_only"):
