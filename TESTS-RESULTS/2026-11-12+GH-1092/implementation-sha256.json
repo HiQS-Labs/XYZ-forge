@@ -1,0 +1,8 @@
+{
+  "source_revision": "70ebdeb4f4bb4ac9ea3ec8b7ccdbbac8b1417945",
+  "sha256": {
+    "relay-automation/relay-turn-lib.sh": "2f6c5c9d27ccd950550e3a14ca6b10d6bf4a75366b526f36305061bbddeddab7",
+    "skills/1-hourly/relay-xyz/SKILL.md": "fa5aaec648c8a45fea6d1c5305023feb07a1707f3ff8245726bab071b9dd4997",
+    "skills/1-hourly/relay-automation/relay-pkg.tar.gz": "a3b5bb9662f8114fc3a446dcacba15e69efa6201657a0a341dce726f59927a78"
+  }
+}

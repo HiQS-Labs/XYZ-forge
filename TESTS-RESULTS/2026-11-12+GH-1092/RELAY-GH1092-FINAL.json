@@ -1,0 +1,20 @@
+{
+  "added_len": 6474,
+  "added_sha256": "70e7ef9a7e9ddfe3c5acbe26fb95dfccaad40ec1c4c68a1e22cf4ec23e8070d5",
+  "added_start": 18606,
+  "artifact_sha256": null,
+  "attested_at": "2026-11-12T21:17:04Z",
+  "driver_pid": 11904,
+  "gate_run": "undeclared",
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12/relay-system/2026-11-12/gh1092-final.codex.md",
+  "relay_file_rel": "relay-system/2026-11-12/gh1092-final.codex.md",
+  "reviewed_head": "c460929878066a3f09d20dfff0f9d35a70fc9f4a",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12",
+  "task": "RELAY-GH1092-FINAL",
+  "trailer_sha256": "c0dd7d3f023c93016e922b37d3b5a8f4a65ae85c5241bbe946e8f62c14ec030d",
+  "transcript_repo": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12"
+}

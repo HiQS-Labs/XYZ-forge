@@ -1,0 +1,8 @@
+{
+  "rev-parse --show-toplevel": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-gate",
+  "rev-parse HEAD": "70ebdeb4f4bb4ac9ea3ec8b7ccdbbac8b1417945",
+  "remote get-url origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "rev-parse --is-bare-repository": "false",
+  "config --local --get user.name": "",
+  "config --local --get user.email": ""
+}

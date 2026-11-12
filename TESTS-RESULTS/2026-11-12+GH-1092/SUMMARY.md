@@ -60,3 +60,27 @@ Those choices/replay remain outside this bounded prompt PR and no waiver is infe
 NO_ENTRY: no new behavioral lesson established by a completed acceptance run.
 Raw CLI transcripts and setup outputs are also preserved under temp/gh1092/unpublished/
 for parent inspection; they are not substituted for committed review and decisive evidence.
+
+## Completed normal QA and full local gate
+
+FINAL Round 2 independently reran the explicitly assigned clean-child-environment command:
+all eight gh681 cases passed, including Producer classification, scratch-only acceptance and
+forbidden-residue rejection; identity stayed unchanged. B1 is closed by this new measurement,
+not by removing its original grade or failed run. Driver exit 0 and immutable reviewed head
+c460929878066a3f09d20dfff0f9d35a70fc9f4a are retained in FINAL relay and attestation JSON.
+The earlier main smoke remains historically PARKED; final revalidation resolves its predicate.
+
+Full local gate ran once on approved source revision
+70ebdeb4f4bb4ac9ea3ec8b7ccdbbac8b1417945: **408/408 passed**, including the Python-layer
+stage (**21 passed**) and clone-identity invariant. Mode: four-wide, existing sequential lane;
+prepared Python 3.14.7 toolchain. External before/after identity bracket is equal. Native receipt
+has gate=validate.sh, scope=full, exit_code=0. This is local verification, not promotion evidence;
+no promotion or ci-local sequential qualification is claimed. Existing live self-sufficiency
+skip was used as in the shipped pre-push route; real Codex QA/smokes above ran separately.
+
+Initial source push succeeded through native exact-SHA full-receipt reuse, without a bypass.
+This later commit only publishes evidence/current status. implementation-sha256.json records
+all three implementation/package hashes; final publication must verify they remain identical
+and use the native documentation gate for this evidence-only update. No post-approval source
+change or additional full-gate run is hidden here. The final docs push/hosted checks are reported
+separately at handback. Parent supplemental Kimi K3.1 Pro review remains pending.

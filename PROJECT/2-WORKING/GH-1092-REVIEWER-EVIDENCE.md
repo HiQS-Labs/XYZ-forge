@@ -15,7 +15,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Live prior-art reconciliation and bounded source trace | PLAN Approved round 2; execute focused checks and delivery smokes |
+| Codex PLAN/FINAL Approved round 2; full local gate 408/408 at 70ebdeb4 | Parent supplemental Kimi review and hosted checks; both issues remain open |
 
 ## Outcome and boundaries
 
@@ -135,3 +135,13 @@ FINAL: pending. Focused checks passed; foreign delivery/missing-runtime smoke pa
 Main smoke parked on sandbox fixture-temp denial, not a code/suite pass; see
 TESTS-RESULTS/2026-11-12+GH-1092/SUMMARY.md. FINAL reviewer must resolve that predicate
 before approval. Classified full gate remains pending. Lessons: NO_ENTRY.
+
+## Publication checkpoint
+
+Normal PLAN and FINAL QA completed through the shipped Codex supervisor, both Approved in
+round 2 with exit 0/attestation. Final independent command resolved B1 through actual runtime.
+Full local gate on 70ebdeb4f4bb4ac9ea3ec8b7ccdbbac8b1417945 passed 408/408, Python layer
+21 passed, identity unchanged. See TESTS-RESULTS/2026-11-12+GH-1092/SUMMARY.md completed section.
+This evidence-only closeout preserves implementation hashes and will receive the native docs
+push gate. Parent Kimi review remains pending; neither issue is closed or declared fully fixed.
+No merge/deploy/global update. Original LTVera task/PR992 scope remains untouched.

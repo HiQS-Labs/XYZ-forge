@@ -1,0 +1,8 @@
+pre-push: reusing the passing full-gate receipt for 70ebdeb4 (validate.sh, scope full) — the full gate already ran on this exact commit.
+remote: 
+remote: Create a pull request for 'fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12' on GitHub by visiting:        
+remote:      https://github.com/HiQS-Labs/XYZ-forge/pull/new/fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12        
+remote: 
+To https://github.com/HiQS-Labs/XYZ-forge.git
+ * [new branch]        fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12 -> fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12
+branch 'fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12' set up to track 'origin/fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12'.
