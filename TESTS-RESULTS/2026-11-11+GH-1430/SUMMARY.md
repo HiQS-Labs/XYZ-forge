@@ -32,7 +32,11 @@ writes its `--out` file to scratch, and `policy-apply` was not run.
   Both resolve `explicit+rebalance_active` with
   `HiQS-Labs/XYZ-forge, Hypercart-Dev-Tools/rebalance-git-pulse, HiQS-Labs/rebalanceOS, BinoidCBD/LTVera-Pandas`.
   `policy-preview` exit 0, 164 proposed changes, no warnings. The `unresolved` list is elided in the receipt.
-- **Live DB:** mtime `1794454706` and size `1375346688` unchanged across the smoke.
+- **Live DB:** sha256 `585f1720e218bf8691684749cdbe1984c26c0161729997812b23289e9cd47378`, mtime `1794454706` and
+  size `1375346688` taken before the first new-code read and again after the smoke and final QA: identical, so the
+  main file's bytes did not change across every read this session. The reads left `rebalance.db-shm` (32 KB) and a
+  0-byte `rebalance.db-wal` beside it, as Apple SQLite does; Rebalance's next connection uses them. (sha256 added after
+  final QA, which noted its absence as non-blocking.)
 - **Agent-only on/off: outstanding.** Key on and key off give the same set because no live repo is agent-only.
   `agent_session_activity` holds 3 repos (681 runs, 2026-10-13..2026-11-11), and all 3 also have
   `github_activity` rows. The on-minus-off diff is empty for windows of 1, 2, 3, 7, 14 and 30 days. Live data

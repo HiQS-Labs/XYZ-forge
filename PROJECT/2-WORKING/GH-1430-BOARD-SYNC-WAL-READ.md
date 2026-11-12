@@ -2,7 +2,7 @@
 gh_issue: 1430
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1430
 title: "board_sync: Rebalance WAL DB read fails under Apple SQLite mode=ro; open mode=rw with query_only"
-status: Active (2-WORKING — plan QA)
+status: Active (2-WORKING — PR ready; awaiting merge)
 created: 2026-11-11
 updated: 2026-11-11
 owner: claude (start-task)
@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, clone provisioned, red control reproduced, plan written. | Codex plan QA, then implement, run the manual matrix and live smoke, final QA, ready PR. |
+| Plan QA Approved (Codex round 1, `relay-system/2026-11-11/gh1430-plan.codex.md`), `--accepted-start` recorded, implemented (`37676605d`), matrix 10/10 and live smoke recorded (`TESTS-RESULTS/2026-11-11+GH-1430/SUMMARY.md`), final QA Approved (Codex round 1, `relay-system/2026-11-11/gh1430-final.codex.md`). | Routed full gate, ready PR, awaiting merge. Outstanding: the live agent-only on/off check (no live repo is agent-only yet); re-run `smoke.sh` once one exists. |
 
 ## Key concepts
 
@@ -102,16 +102,16 @@ detection and can return stale or torn reads while Rebalance writes.
 All run under `/usr/bin/python3`. Evidence: `TESTS-RESULTS/2026-11-11+GH-1430/`. No new tests (AGENTS.md,
 GH-831); a manual check matrix only.
 
-- [ ] **Red control:** a WAL fixture with no side files, read through `board_sync._rebalance_active_repos`
+- [x] **Red control:** a WAL fixture with no side files, read through `board_sync._rebalance_active_repos`
       (`REBALANCE_DB` pointed at the fixture): base commit `0f21b761a` warns and returns `[]`; the new
       code returns the fixture repos. The fixture must be non-empty (`github_activity` and
       `agent_session_activity` rows), so an empty result cannot pass.
-- [ ] **Write refusal:** with the same connect sequence, an `INSERT` fails with
+- [x] **Write refusal:** with the same connect sequence, an `INSERT` fails with
       `attempt to write a readonly database`. The cleanly closed fixture's sha256 and mtime are unchanged
       after the reader runs.
-- [ ] **Missing file:** `REBALANCE_DB` pointing at a nonexistent path warns "not found" and returns `[]`;
+- [x] **Missing file:** `REBALANCE_DB` pointing at a nonexistent path warns "not found" and returns `[]`;
       the path still does not exist afterwards.
-- [ ] **Live smoke (#87 step 7), read-only:** against the live Rebalance DB, resolve the policy with
+- [ ] **Live smoke (#87 step 7), read-only** (partial: read path, `config` and `policy-preview` pass on the live DB, bytes unchanged; agent-only on/off outstanding because no live repo is agent-only): against the live Rebalance DB, resolve the policy with
       `project_owner`/`project_number`/`repos` from `XYZ_GITHUB_BOARD_POLICY_*` env and `repos_source`
       (`rebalance_active`, `include_agent_sessions` on) from a scratch file via `XYZ_DEVICE_CONFIG_PATH`,
       because the env tier cannot express an object (see Observed). Read path: `board_sync.py config`,
@@ -140,4 +140,4 @@ Ordered list as in Plan 1–4, then the Acceptance matrix, then the live smoke.
 
 ## Lessons Learned
 
-(filled at handoff)
+NO_ENTRY. Edit verdicts: `mode=rw` + `query_only` connect, helped (matrix red control); hint/docstring wording, no observed effect. The one candidate lesson ("system Python and venv Python differ in SQLite build, so probe under the shebang's interpreter") is already recorded in #87 §2 and rests on a single incident.
