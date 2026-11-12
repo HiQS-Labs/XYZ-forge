@@ -1,0 +1,43 @@
+{
+  "result_projection": {
+    "errors": [
+      "Reached maximum budget ($0.01)"
+    ],
+    "is_error": true,
+    "modelUsage": {
+      "claude-haiku-5-5": {
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "costUSD": 0.0001909,
+        "inputTokens": 1784,
+        "outputTokens": 25
+      },
+      "claude-sonnet-4-6": {
+        "cacheCreationInputTokens": 13402,
+        "cacheReadInputTokens": 23859,
+        "costUSD": 0.08981370000000001,
+        "inputTokens": 3,
+        "outputTokens": 149
+      }
+    },
+    "num_turns": 2,
+    "subtype": "error_max_budget_usd",
+    "total_cost_usd": 0.0900046,
+    "type": "result",
+    "usage": {
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "input_tokens": 0,
+      "output_tokens": 0
+    }
+  },
+  "tick_rows": [
+    {
+      "task": "SMOKE-BUDGET",
+      "tokens_in": 25646,
+      "tokens_out": 174,
+      "tool": "claude",
+      "type": "cost.tokens"
+    }
+  ]
+}

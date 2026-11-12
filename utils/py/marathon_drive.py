@@ -2213,7 +2213,7 @@ def main():
                 if log_text.startswith("{") and log_text.endswith("}"):
                     log_data = json.loads(log_text)
                     bits = []
-                    for k in ["is_error", "subtype", "terminal_reason", "total_cost_usd"]:
+                    for k in ["is_error", "subtype", "errors", "terminal_reason", "total_cost_usd"]:
                         if k in log_data:
                             bits.append(f"{k}={log_data[k]}")
                     if bits:
