@@ -126,4 +126,13 @@ Read the entire SUMMARY, current/historical issue plan, eight inputs/results, pr
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-12T22:46:54Z
+task: GH1448-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 69bb2ef7d733641ab19f239fa5815a40dd72ea68
+added-range: 8021+5041
+added-sha256: 96fa002cd979235a5f771f3b3629a17164c26fcf52b54cc1bcddae6ff80b03b8
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
