@@ -18,3 +18,6 @@
 {"commit": "f78c531c", "command": "pure merge_contracts first/later optional-null control (probe in final QA receipt)", "rc": 0}
 {"commit": "ebbe5877", "command": "pure merge_contracts absent/empty/first-null/later-null/nonempty control", "rc": 0}
 {"commit": "ebbe5877", "command": "bash test/swarm-preflight.sh", "rc": 0}
+{"commit": "8d0f73af10ca522b8fdccde63132e031e591911f", "command": "normal git push; pre-push full validation", "rc": 1, "duration_s": 534, "result": "407/408; gh139 failed; push refused; clone identity invariant passed"}
+{"commit": "84728877", "command": "bash test/gh251-validate-pytest-skip.sh", "rc": 0}
+{"commit": "c48c940c", "command": "bash test/gh139-pipe-grep-guard.sh", "rc": 0}
