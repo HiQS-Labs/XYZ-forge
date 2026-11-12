@@ -322,6 +322,24 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
     echo 'hq park: title carries rating grammar ("rated N/N/N/N" / "ovr N"); roadmap add would read it as the row'\''s score. Move the example into the body and rate with: releases roadmap rate --issue-num N --rated P/S/A/E' >&2
     return 2
   fi
+  # Validate supplied contracts before issue creation or capture writes; no probe execution.
+  if ! python3 - "$HERE/../py" "$request" <<'PYCONTRACT'
+import json, re, sys
+sys.path.insert(0, sys.argv[1])
+match = re.search(r"^#{1,6}\s+.*preflight\s+contract[^\n]*\n(.*?)(?=^#{1,6}\s|\Z)", sys.argv[2], re.I | re.M | re.S)
+if match:
+    block = re.search(r"^```json\s*\n(.*?)^```\s*$", match[1], re.I | re.M | re.S)
+    if block:
+        from swarm_preflight import contract_shape_error
+        try:
+            error = contract_shape_error(json.loads(block[1]))
+        except ValueError:
+            error = "invalid JSON contract"
+        if error:
+            sys.exit("hq park: malformed-contract: " + error)
+PYCONTRACT
+  then return 1; fi
+
   created="$(date +%F)"
   oslug="$(hq_target_slug "$path")"
 

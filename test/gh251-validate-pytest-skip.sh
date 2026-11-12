@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# GH-251: validate.sh reports python:test_python_layer.py as SKIPPED when pytest is absent,
-# and keeps genuine pytest failures in FAILED.
+# GH-251 / GH-1437: healthy Python reaches pytest; absent dependencies fail before suites.
 source "$(dirname "$0")/_setup.sh" gh251-validate-pytest-skip
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -55,33 +54,13 @@ exec "$REAL_PY" "\$@"
 PYSH
 chmod +x "$FAKE_BIN/python3"
 
-out="$(PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1 || true)"
-case "$out" in
-  *"SKIPPED: python:test_python_layer.py (pytest not importable — install it to cover utils/py/)"*)
-    pass "absent pytest outputs the documented named SKIPPED line"
-    ;;
-  *)
-    fail "absent pytest did not output the expected SKIPPED line: $out"
-    ;;
-esac
-
-case "$out" in
-  *"QUARANTINED"*"python:test_python_layer.py"*)
-    pass "absent pytest is tracked in the SKIPPED summary list"
-    ;;
-  *)
-    fail "absent pytest was not listed in summary SKIPPED list: $out"
-    ;;
-esac
-
-case "$out" in
-  *"- python:test_python_layer.py"*)
-    fail "absent pytest should not be listed under failed: $out"
-    ;;
-  *)
-    pass "absent pytest does not land in FAILED"
-    ;;
-esac
+out="$(PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1)"; rc=$?
+[ "$rc" -eq 3 ] && [ -n "$out" ] \
+  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($FAKE_BIN/python3) version" \
+  && printf '%s' "$out" | grep -Fq 'missing modules: pytest' \
+  && ! printf '%s' "$out" | grep -Fq 'Running python3 -m pytest' \
+  && pass "absent pytest is an environment refusal before suite execution" \
+  || fail "absent pytest did not fail early (exit $rc): $out"
 
 # GH-732: a different interpreter without PyYAML must name itself and the repair PATH.
 YAML_BIN="$WORK/no-yaml"; mkdir -p "$YAML_BIN"
@@ -94,9 +73,10 @@ exec "$REAL_PY" "\$@"
 PYSH
 chmod +x "$YAML_BIN/python3"
 out="$(PATH="$YAML_BIN:$PATH" bash "$VAL" --print-mode 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] && [ -n "$out" ] \
-  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) cannot import yaml" \
-  && printf '%s' "$out" | grep -Fq '~/.cache/xyz-forge-test-venv/bin first on PATH' \
+[ "$rc" -eq 3 ] && [ -n "$out" ] \
+  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) version" \
+  && printf '%s' "$out" | grep -Fq 'missing modules: yaml' \
+  && printf '%s' "$out" | grep -Fq 'PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh' \
   && printf '%s' "$out" | grep -Fq 'NOT promotion evidence (GH-732)' \
   && pass "missing yaml names the interpreter, repair PATH, and evidence limit" \
   || fail "missing yaml diagnostic regressed (exit $rc): $out"
