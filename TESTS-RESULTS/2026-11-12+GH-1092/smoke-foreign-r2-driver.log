@@ -1,0 +1,21 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//rtl-wt.J6LiAW)
+rtl: GH-654 off-lane candidate: .relay-artifacts/
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target/relay-system/2026-11-12/gh1092-smoke-foreign.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: attested Approved by codex — reviewed b5b166c5d418, 2434 bytes of review text, record /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target/.git/relay-attest/RELAY-GH1092-SMOKE-FOREIGN.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/2 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 11m 3s
+per done-task: ≥0 tokens, 5m 32s wall-clock
+  turn peak RSS: codex: 389MB peak RSS
+

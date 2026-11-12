@@ -1,0 +1,36 @@
+== test: worktree-isolation ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-worktree-isolation.XXXXXX.aLwwosgmhV
+  PASS: isolated good turn exits 0
+  PASS: isolated turn committed the allowlist
+  PASS: legit allowlist edit copied back to ROOT
+  PASS: async off-lane write CONTAINED (never reached ROOT)
+  PASS: throwaway worktree cleaned up
+  PASS: isolated off-lane edit -> exit 6 (contained + escalated)
+  PASS: off-lane file never reached ROOT
+  PASS: off-lane turn made NO commit (nothing copied back)
+  PASS: off-lane turn left ROOT working tree unmodified (all-or-nothing copy-back)
+  PASS: worktree cleaned up after off-lane fail
+  PASS: greenfield allowlisted dir exits 0
+  PASS: greenfield allowlisted dir committed cleanly
+  PASS: greenfield allowlisted file copied back from collapsed dir
+  PASS: greenfield case did not leak unrelated off-lane dir
+  PASS: genuine off-lane dir still exits 6
+  PASS: off-lane greenfield turn copied back nothing
+  PASS: genuine off-lane dir never reached ROOT
+  PASS: genuine off-lane dir made NO commit
+  PASS: non-isolated good turn exits 0 (unchanged path)
+  PASS: non-isolated turn committed normally
+  PASS: isolated turn + concurrent ROOT commit: NOT reset+exit-6 (GH-13/#14 preserve)
+  PASS: concurrent ROOT commit PRESERVED (not orphaned)
+  PASS: builder's allowlist edit still copied back to ROOT
+  PASS: GH-107: built-in tool-cache side-effect does NOT fail the turn
+  PASS: GH-107: turn with tool-cache side-effect still committed its allowlist
+  PASS: GH-107: ignored cache dir was discarded with the worktree, never copied to ROOT
+  PASS: GH-107: CONTAINMENT_IGNORE glob exempts a custom cache dir
+  PASS: GH-107: custom-ignored turn committed its allowlist
+  PASS: GH-107: custom cache dir never reached ROOT
+  PASS: GH-107 control: non-built-in cache dir WITHOUT the env still exits 6
+  PASS: GH-107 control: default-off turn made NO commit
+  PASS: GH-266: worktree-isolated turn writing only its own transcript log is NOT off-lane
+  PASS: GH-266: CONTAINMENT_IGNORE=relay-system still works as a manual override
+  worktree-isolation: 33 pass, 0 fail

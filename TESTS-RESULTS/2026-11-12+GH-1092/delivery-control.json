@@ -1,0 +1,21 @@
+[
+  {
+    "variant": "baseline",
+    "delivery_verdict": "REJECT",
+    "missing": [
+      "target checkout startup instructions",
+      "target test policy",
+      "Forge-only",
+      "read-only GitHub queries",
+      "orchestrator-supplied disposable full clone",
+      "pinned to the reviewed revision",
+      "identity drift invalidates",
+      "sandbox, network or DB access failure"
+    ]
+  },
+  {
+    "variant": "candidate",
+    "delivery_verdict": "PASS (render only; live transcript pending)",
+    "missing": []
+  }
+]

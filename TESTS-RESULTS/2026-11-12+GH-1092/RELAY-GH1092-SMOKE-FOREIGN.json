@@ -1,0 +1,20 @@
+{
+  "added_len": 2434,
+  "added_sha256": "050c60c4cabf3d80f271a114c23f7422e4657cde83a5722f0c995e1faf77ea46",
+  "added_start": 5749,
+  "artifact_sha256": "6371e2b9273bbf9a3f27fe751783a5e475b45d1a25b565def97101e3c0666178",
+  "attested_at": "2026-11-12T21:09:25Z",
+  "driver_pid": 59152,
+  "gate_run": "undeclared",
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target/relay-system/2026-11-12/gh1092-smoke-foreign.codex.md",
+  "relay_file_rel": "relay-system/2026-11-12/gh1092-smoke-foreign.codex.md",
+  "reviewed_head": "b5b166c5d418bdf87c32a058e4f5ec9d28b9ab7e",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target",
+  "task": "RELAY-GH1092-SMOKE-FOREIGN",
+  "trailer_sha256": "b9420b500ec1fd24855e40afc77c649169fbdea7dcb34665f6f2d08a53800d91",
+  "transcript_repo": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target"
+}

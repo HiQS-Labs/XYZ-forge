@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,4 +67,26 @@ ROUND: 1 / 3
 
 ## Log
 
+### Reviewer · Round 1
+
+swept file: yes
+VERDICT: PASS
+Basis: Instruction-delivery smoke only; the entire seeded packet was read. No pre-existing packet defects found. This does not certify LTVera GH981 or PR992 ready.
+
+- [Pass] Target identity: target root `/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify/temp/foreign-target`; review worktree `/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/rtl-wt.J6LiAW`; reviewed revision `b5b166c5d418bdf87c32a058e4f5ec9d28b9ab7e`. Evidence: `RELAY_TARGET_ROOT` / `RELAY_REVIEWED_HEAD` environment and read-only `cat <target-root>/.git/HEAD` (exit 0): `b5b166c5d418bdf87c32a058e4f5ec9d28b9ab7e`. No Git command executed.
+- [Pass] Canonical startup/rules: `ROUTER.md` startup steps 1–4 direct reading `ROUTER.md`, `GUIDING-PRINCIPLES.md`, `AGENTS.md`, `README.md`; `ROUTER.md` canonical rules name `SOP.md` for standing ranking decisions. Read those target files. `SOP.md:87` states “Semgrep is advisory, pytest and the repo guards are the gate”; `AGENTS.md:1368–1373` also makes dependency checks blocking and Ruff/Mypy advisory.
+- [Pass] Forge GH-831 does **not** forbid new behavior tests in this foreign target. `AGENTS.md:1341`: “New tests are allowed when they are justified.” `AGENTS.md:1346–1349` requires the PR to list each new test and its reason, then `Approved by <name>: the tests listed above.` The session approver is the directing person. `AGENTS.md:1355–1358` rejects older relay moratorium language and preserves feature test requirements. `AGENTS.md:1320–1322` specifies pytest against a disposable Postgres database. No new tests are requested or created in this bounded smoke.
+- [Unverified — needs clone run] Claim: “the LTVera browser failure is independently verified fixed.” The packet explicitly says “No runtime clone or runtime command is supplied for this foreign target.” No independently executed runtime evidence exists in this turn; producer receipts cannot substitute for it. Required follow-up for that claim: orchestrator-supplied disposable full clone pinned to the reviewed revision plus an explicitly assigned runtime command, with before/after root, HEAD, origin, bare flag and local identity recorded. No runtime commands, tests, fixtures, clone creation, or source/artifact edits performed.  [Unverified — no citation]
+
+Relay closed (Approved), no further turn needed.
+
+
+### Attestation · relay-drive — 2026-11-12T21:09:25Z
+task: RELAY-GH1092-SMOKE-FOREIGN
+reviewer: codex
+status: Approved
+reviewed-head: b5b166c5d418bdf87c32a058e4f5ec9d28b9ab7e
+added-range: 5749+2434
+added-sha256: 050c60c4cabf3d80f271a114c23f7422e4657cde83a5722f0c995e1faf77ea46
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

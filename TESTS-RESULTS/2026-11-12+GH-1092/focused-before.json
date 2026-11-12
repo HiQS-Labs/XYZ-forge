@@ -1,0 +1,8 @@
+{
+  "rev-parse --show-toplevel": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-verify",
+  "rev-parse HEAD": "3f45258bf4f161d0a8c874c8b70cfa877f98696b",
+  "remote get-url origin": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12/.",
+  "rev-parse --is-bare-repository": "false",
+  "config --local --get user.name": "",
+  "config --local --get user.email": ""
+}

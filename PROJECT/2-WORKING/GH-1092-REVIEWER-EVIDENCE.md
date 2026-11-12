@@ -128,4 +128,7 @@ are evidence of scope, not a measured recurrence rate. No complete trend survey 
 PLAN R1: FAIL, S1 accepted (baseline rejection lacked explicit verdict); revised step 5.
 PLAN R2: Approved, supervisor exit 0; relay-system/2026-11-12/gh1092-plan.codex.md.
 Reviewed plan revision 5e990ca71; attestation retained by the existing driver.
-FINAL: pending. Gate/smokes: pending. Lessons: NO_ENTRY pending observation.
+FINAL: pending. Focused checks passed; foreign delivery/missing-runtime smoke passed.
+Main smoke parked on sandbox fixture-temp denial, not a code/suite pass; see
+TESTS-RESULTS/2026-11-12+GH-1092/SUMMARY.md. FINAL reviewer must resolve that predicate
+before approval. Classified full gate remains pending. Lessons: NO_ENTRY.

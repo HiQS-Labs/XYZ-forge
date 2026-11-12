@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-12 — Reviewer target policy and supplied-clone permission (GH-1092)
+
+Extend the existing shared reviewer prompt to identify target rules/test policy, permit read-only
+GitHub/source checks and explicitly assigned checks in an orchestrator-supplied pinned disposable
+full clone. Keep protected-worktree containment and existing GH1428 gate logic unchanged; mirror
+the permission in relay-xyz and regenerate the package. Partial coordination with
+[LTVera GH981](https://github.com/BinoidCBD/LTVera-Pandas/issues/981), not closure of either issue.
+
+PLAN Codex Approved round 2; focused reviewer/attestation/isolation/package checks passed.
+Foreign-target delivery smoke passed; main runtime smoke remains Unverified after sandbox fixture
+denial. FINAL QA and classified full gate pending; no readiness claim. Evidence:
+TESTS-RESULTS/2026-11-12+GH-1092/SUMMARY.md.
+
 ## 2026-11-12 — GH-1436 / GH-1437 contract and gate environment faults
 
 Malformed Preflight Contract shapes now produce attributable needs-contract planner findings instead of crashing unrelated reconciliation; HQ park rejects supplied malformed shapes before writes. The existing preflight validator owns the shared shape check, while partial intake and optional null markers retain their earlier meaning. The full gate now refuses unsuitable Python before suites with exit 3 and the explicit gate-toolchain PATH remedy. Existing focused suites and manual red/green controls are recorded in `TESTS-RESULTS/2026-11-12+GH-1436-1437/`; final full qualification is recorded there separately. Easy rollback: revert these bounded validation changes; no schema migration or automatic environment installation.
