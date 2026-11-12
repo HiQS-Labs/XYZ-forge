@@ -25,3 +25,7 @@ Three code findings reproduced and corrected locally: unterminated HQ JSON fence
 GH-1430 ledger finding confirmed: the merge replay replaced its original row identity, first_seen and three lifecycle events with a fresh identity/two events. Original source is development commit 43265eed2359f781f942543af74c6d12c990cf00. Ordinary CLI verbs cannot restore exact immutable identity/timestamps. Restoration is pending a scoped operator exception to the no-direct-ledger-edit rail; do not merge meanwhile.
 
 The automated request to expand validation to all intake writers is declined: #1436 explicitly permits intake (including HQ) **or** PDDA validation. HQ rejects supplied malformed contracts before writes, covered by existing/manual checks; this PR makes no claim to validate every authoring surface.
+
+### Scoped ledger restoration completed
+
+Operator authorized a one-time exception on 2026-11-12. Rehearsal and task repair restored exactly the original GH-1430 row and three events from `43265eed`, preserving first_seen 03:35:55Z and accepted_start 03:38:50Z. All other business rows and prior receipts compared unchanged; canonical rebuild added its one merge-rebuild receipt and advanced generation. `releases check` reports zero failures (10 existing warnings). Backups retained outside committed artifacts. Earlier pending-approval status above is superseded. Full verification of the combined review follow-up remains pending.
