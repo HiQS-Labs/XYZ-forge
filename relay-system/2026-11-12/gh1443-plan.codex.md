@@ -1,6 +1,6 @@
 # GH1443 independent plan QA
-STATUS: Open
-NEXT: codex
+STATUS: Approved
+NEXT: orchestrator
 
 Read PROJECT/1-INBOX/GH-1443-JOG-READINESS.md and TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md first. Before source inspection, write 2–5 sentences covering What this proposes / How existing behavior works per document / What it is not. Then validate against utils/py/jog_run.py and existing test/gh280-jog-marathon-adapter.sh and test/jog-queue.sh. Do not run suites in this valued clone or change production/plan files. Write only this review thread.
 
@@ -39,3 +39,20 @@ terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned n
 
 ## Round2 request
 Prior review was substantive Approved but shim exit6: orchestrator edited plan/CONSULT concurrently, detected as off-allowlist, backed up and restored. No approval claimed. All inputs now committed; no concurrent writes during turn. Recheck revised plan/advisory exact legacy-first semantics and explicit status aggregation; confirm Approved if sound. Do not run suites/edit other files. Original round1 remains retained.
+
+## Codex round 2 — document model before source inspection
+
+The revised plan proposes explicit-target static admission checks and numeric readiness aggregation while preserving the live run path. Its documents describe current dry-run as returning success after displaying failed preflight and bypassing promotion/publication admission checks. This is not provider qualification, environment setup, remote freshness certification, or permission to change dispatch/recovery. The central bet remains that the existing read-only checks can be factored without moving live checks earlier or changing legacy-first probe selection.
+
+## Codex verdict — Approved (plan QA round 2/3)
+
+No blocking findings in the revised plan or advisory. Approval is for implementation direction; it is not a runtime qualification.
+
+- **Exact legacy-first semantics confirmed:** `utils/py/jog_run.py:1718–1734` lints legacy frontmatter probes, accepts any surviving valid probe, and consults JSON contract probes only when none survive. The revised plan and `TESTS-RESULTS/2026-11-12+GH-1443/CONSULT.md` now state precisely that rule. Share the selector with promotion rather than independently validating every JSON command. Final controls should include a valid legacy probe plus malformed JSON (legacy wins), invalid legacy plus valid contract (fallback), and neither valid (refusal). These are cases for the existing coverage/manual evidence, not a new suite.
+- **Explicit exit aggregation confirmed:** `_dry_run_preflight` at `jog_run.py:2205–2230` currently returns text, including early missing-helper and identity refusals; `jog_run_main:2291–2326` prints it and returns normally. Returning numeric status alongside summary and explicitly exiting 2 after processing all selected items closes the actual CLI gap. Exit 4 must remain visibly identified as already-landed while still making new-work readiness nonzero. Falsifier: one nonzero outcome in a mixed selected queue yields CLI zero, or suppresses a later summary.
+- **Live boundary preserved:** `JogCheckpoint.finish:2180–2185` checks publication cleanliness and development after recording the primary commit. The plan explicitly retains that live position; static preview may reuse a factored check without calling begin/finish, recovery, fetch or journal writes. Constructor identity checks and existing option/distinct-target constraints remain required. Static acceptance cannot certify remote freshness or recovery eligibility.
+- **Scope remains proportionate:** executor validation at `jog_run.py:202–235` reuses route recognition and binary checks with restored driver result state. Existing adapter G1–G3/G8 and preview/simulation cases, plus `test/jog-queue.sh:173–183`, remain the compatibility owners. The controlled CLI baseline records 3/16 expected outcomes satisfied, with failure/preflight-4 and admission cases incorrectly zero; its controlled preflight seam does not establish real preflight success. No evidence requires changing provisional 65/55/50/65 ratings or claiming an incidence trend. Easy reversal and the stated environment/capacity prerequisites remain adequate.
+
+### Round 2 evidence and remaining proof
+
+Read-only inspection of the revised plan, spikes, advisory, seeded CLI baseline, source owners and existing suite text; no executable fixtures, suites, provider calls, network or git commands. Source-reading commands exited 0. The displayed baseline reports `passed: 3`, `total: 16`, `all_preserved: true`; these are inspected recorded results, not a new replay. Final mixed-item aggregation, exact probe fallback controls, no-Jog-write behavior, unchanged actual dispatch/recovery, and successful real CLI preparation remain **[Unverified — needs clone run]**. Run the planned existing coverage/manual controls in a disposable full clone and obtain independent final QA before claiming completion.
