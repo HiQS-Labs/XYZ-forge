@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -120,5 +120,33 @@ Handing off to Producer (claude-a) — disposition S1, make the bounded parser c
 - Changed files vs base (for your unverified git inventory): `PROJECT/1-INBOX/GH-1426-…` → `PROJECT/2-WORKING/GH-1426-…` (promotion), `TESTS-RESULTS/2026-11-11+GH-1426/*` (evidence), `relay-system/2026-11-11/gh1426-{plan,final}-qa.md`, `releases.db`/`releases.sql` (pickup, rating, repoint, accepted-start), and `utils/py/jog_run.py`. No `test/` file and no `validate.sh` change.
 
 Handing off to Reviewer (codex), final QA round 2.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+Basis: S1 is resolved by the bounded parser correction. The five acceptance criteria remain supported by code and captured evidence. I swept the whole current utils/py/jog_run.py, including pre-existing receipt, resume/retry, promotion, lock and checkpoint paths; no additional actionable pre-existing defect was established. The full disposable-clone gate remains outstanding.
+
+- [Pass] **S1 closed** — utils/py/jog_run.py:571–572 requires a colon and uses partition; malformed verdict text reaches the nonempty fallback at :583. The actual AST-extracted helper probe exited **0**. Decisive output: `malformed: 'verdict pending'`, `valid: 'ready (exit 0)'`, `late: 'ready (exit 0); preflight exited 1: late failure'`, `empty: 'exit 2'`, `contract: 'CONTRACT ERROR: missing target'`, `empty verdict: 'verdict :'`. This matches TESTS-RESULTS/2026-11-11+GH-1426/r4b-malformed-verdict.txt, whose before case records `RAISED IndexError`.
+  Probe command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with the following extraction; the six completed-process cases above were asserted against those exact expected strings:
+  ```python
+  import ast, re, subprocess
+  from pathlib import Path
+  p = Path('utils/py/jog_run.py')
+  n = next(n for n in ast.parse(p.read_text()).body
+           if isinstance(n, ast.FunctionDef) and n.name == '_preflight_summary')
+  ns = {'re': re}
+  exec(compile(ast.Module(body=[n], type_ignores=[]), str(p), 'exec'), ns)
+  f = ns['_preflight_summary']
+  assert f(subprocess.CompletedProcess([], 2, 'verdict pending', '')) == 'verdict pending'
+  ```
+- [Pass] **Acceptance 1–2 / plan Steps 1–2** — jog_run.py:530–561 retains shared target checks and target → vendored → harness resolution; :2204–2228 delegates with pinned cwd/root, prospective out path, identity-checked inbox substitution and disabled child bytecode. :2290–2325 uses SQLite read-only and returns before supervisor acquisition. r1-post-dryrun.txt records the missing gate and contract error; r1-post-s1fix-dryrun.txt truthfully contains only remaining pending GH-1427. Python byte comparisons guarded by positive file sizes exited **0**, printing `R1 snapshots equal: True` and `R3 outputs equal: True` for the same pairs cited in round 1. Command core: `assert (d/a).stat().st_size > 0 and (d/b).stat().st_size > 0; assert (d/a).read_bytes() == (d/b).read_bytes()` with d the evidence directory and a/b the round-1 snapshot/output pairs.
+- [Pass] **Acceptance 3–4 / plan Steps 3–5** — jog_run.py:634, :649–651, :2473–2475 and :2497–2500 retain the preflight-start label, refusal cause, actual park reason and shared legacy summary. r2-post-live.txt records `preflight refused: NOT-READY (exit 5) — next: gate program not found`; README explicitly discloses attempt 2. :612–614 retains the outside-root notice and :635–647 the preflight state/exit-4 handling. Exact base-to-HEAD equality is not independently attested because git is prohibited this turn.
+- [Pass] **Acceptance 5 / final correction evidence** — provenance.jsonl names correction SHA `b59b801b1e26515e19f467398eba3be850607bbd` for R4/R4b/R1-recheck and both rerun suites. The captured gh280 log ends `227 pass, 0 fail`; jog-queue ends `34 passed, 0 failed`. These are producer clone-run receipts, not fresh suite execution here. Provenance JSONL parsed successfully in the exit-0 probe. The plan's `rated 55/45/50/70` remains consistent with the bounded change and recoverable setup failure.
+- [Pass] **Composition / exceptional cases** — jog_run.py:2210–2223 reports missing script or mismatched inbox identity without promotion; swarm_preflight.py:1012–1019 reads identity, its main guard prevents dispatch on import, and :1715–1735 confirms explicit out avoids archive lookup and dry-run exits before packet creation. jog_run.py:583–586's contract stderr substitution remains appropriate cause reporting. No second readiness engine or writer was found in the reviewed file.
+- [Unverified — needs clone run] Full gate execution remains with the harness. No git, suite, pytest or executable fixture was run here. Changed-file inventory, committed evidence membership and provenance-to-commit binding remain unverified independently; the producer inventory states no new tests or gate machinery. Only this relay file was edited.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
