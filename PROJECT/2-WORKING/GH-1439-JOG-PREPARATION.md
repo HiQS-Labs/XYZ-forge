@@ -2,6 +2,8 @@
 title: Codify Jog preparation and truthful dispatch readiness
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1439
 status: in-progress
+created: 2026-11-12
+updated: 2026-11-12
 owner: Codex
 goal: Make existing Jog preparation reusable without misreporting dry-run as execution readiness
 risk: 1
