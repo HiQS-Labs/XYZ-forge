@@ -10,6 +10,7 @@ missing file. One disclosed side effect: if a crash left committed WAL frames an
 the last connection, its close checkpoints them into the main file (a byte change, no content
 change). `immutable=1` stays rejected. Revert by reverting the single-file change.
 Evidence: `TESTS-RESULTS/2026-11-11+GH-1430/`.
+
 ## 2026-11-11 — GH-1428 reviewer gate evidence
 
 A marathon whose explicit `--pre-advance-cmd` is a focused file/node command now asks the
