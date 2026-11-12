@@ -95,6 +95,9 @@ Keep the objective, exact work/PR identities and heads, dependencies, approved s
 remaining budgets, evidence and next owner in the existing plan or batch record.
 Re-read those facts on resume; a new conversation supplies no new attempt allowance.
 Preparation, execution and landing retain their own canonical writers.
+Before reporting completion, map every requested outcome and later amendment to observed
+evidence or an explicit unresolved disposition in that same plan or batch record. A completed
+subtask does not establish integration.
 
 **Prepared intake is a signal for selection.** When upstream preparation (such as
 `conveyor`, GH-1401) publishes a capture and Preflight Contract, the selected execution

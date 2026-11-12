@@ -1,0 +1,1410 @@
+> **ATTESTATION**
+> Model: gpt-6.1-sol
+> Provider: openai
+> Sandbox: read-only
+
+Reading additional input from stdin...
+OpenAI Codex v0.167.0-alpha.3.2
+--------
+workdir: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: low
+reasoning summaries: none
+session id: 01a1d1cf-befc-7661-ae1e-c8868451b700
+--------
+user
+You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy).
+
+=== CONSULT QUESTION ===
+Review the attached spike issue draft first without conversation history. Before source inspection give What this proposes, How the existing system works per this document, What it is not (2–5 sentences each; distinguish inference/exclusion/deferred). Then verify cited current code and GH1447 evidence. Is scope grounded, distinct, small, no duplicate writer, ratings neutral, acceptance falsifiable and limits honest? Advisory only, no writes or suites; no new machinery requests absent concrete falsifier. Return concrete findings and dispositions proposed. The body follows:
+## Observed
+
+| Claim | Command / source | Observation |
+|---|---|---|
+| Existing syntax filter | GH1447 recorded replay.py using current jog_run.lint_probe | Two retained inline python commands refuse at -c; two repaired file commands pass; empty/trivial/missing controls refuse,7/7 expected classifications. This is offline function replay, not live delivery. |
+| Semantics not measured | utils/py/swarm_preflight.py eval_probes; utils/py/jog_run.py lint_probe | One evaluates exit status; the other syntax/path. Neither establishes correspondence to the requested outcome. |
+| External reference | Leonxlnx/unlazy@16671491 scripts/gate-lint.mjs | Non-executing lexical warnings for fixed-output checks, weak expectations, activity labels and unmeasured numbers. No imported code or installed hooks. |
+
+## Diagnosis / existing gap
+
+Determine whether a small advisory extension of existing Forge contract validation can catch useful preparation mistakes without adding another gate runner, contract ledger or approval system. Distinguish the concrete command-form disagreement from semantic relevance, which lexical lint cannot prove. GH1447 owns wording and the bounded historical replay; this spike owns follow-up design, not implementation.
+
+## Plan
+
+1. Trace existing jog_run.lint_probe, contract extraction and swarm_preflight.eval_probes plus their callers; record supported forms and canonical contract writer.
+2. Reuse GH1447 replay evidence and add only a bounded manual evaluation of real retained contracts: fixed-output checks, command-form mismatch, unrelated valid regression checks and valid specialized checks. Record false positives/negatives; do not execute inherited shell commands without inspection and existing isolation.
+3. Evaluate the smallest extension to existing validators, including a shared command-shape rule if justified. Compare advisory warnings with hard refusals; preserve existing safety checks. Do not add a second linter program by default.
+4. Produce a go/no-go recommendation with exact fix site, red controls, costs, rollout and rollback. Any implementation is a later authorized task.
+
+## Blast radius
+
+| Seam | Current owner | Proposed scope |
+|---|---|---|
+| Probe syntax/admission | utils/py/jog_run.py | Read-only investigation; no runtime writes in spike |
+| Preparation evaluation | utils/py/swarm_preflight.py | Read-only consistency trace |
+| Captures/contracts | Existing HQ/PRS writers | Idea capture only; no automatic admission |
+| Future verification | Existing suites/manual TESTS-RESULTS evidence | No new suite/runner |
+
+Recon712a73b4; integration base development@712a73b4. Codex builder and independent Codex relay reviewer if later picked up; this intake uses Codex/Agy advisory consult with actual returned seats disclosed.
+
+## Dependencies
+
+GH1447 replay evidence must be published before this investigation claims reproducible committed evidence. Related1439/1296/1386 and1414 remain distinct; no dependency on installing unlazy.
+
+## Acceptance
+
+- [ ] Produce a cited map of command-form and semantic boundaries; red control is the observed python -c disagreement, not an invented production failure.
+- [ ] Compare useful warnings against retained invalid and legitimate contracts, including empty input refusal and fixed-output positive control; record false positives/negatives without treating valid syntax as delivery proof.
+- [ ] Recommend the smallest existing extension or explicitly recommend no code; red control is a proposal requiring a parallel ledger/runner or claiming lexical checks prove relevance.
+- [ ] Preserve all prior receipts and distinguish source-derived conclusions from executed observations; absent evidence is unresolved, never pass.
+
+## Verification
+
+Bounded manual checks under TESTS-RESULTS with provenance when picked up; existing relevant suites only if an implementation is later authorized. Intake spike has no build contract or admission claim.
+
+## Non-goals
+
+No unlazy installation/vendoring, Stop hook, new test suite/gate/runner, separate GATES.md source of truth, automatic approvals, fullgate rerun mandate, model dispatch, runtime changes or deployment during this spike.
+
+## Risk and rollback
+
+Easy read-only research; retain evidence and close with no-code recommendation if burden exceeds value. Any future executable parsing change needs proportionate independent review and negative controls before rollout. Do not weaken current refusals to make a replay green.
+
+## PRS proposal
+
+- pri 60: Repeated preparation friction merits a bounded study after the current wording/replay delivery.
+- sev 55: Weak acceptance checks can waste bounded runs and overstate delivery without proven data loss.
+- appeal 50: Neutral operator appeal; no numeric preference supplied.
+- effort 70: Existing validator seams and retained evidence make investigation relatively inexpensive.
+
+Recon: 712a73b4f3b01c8acc2c5115d11f855c62a2e537 · base: development@712a73b4f3b01c8acc2c5115d11f855c62a2e537 · tier: spike · review: pending
+
+codex
+I’ll first read the draft on its own, then check the cited code and GH1447 evidence without running suites or writing files.
+
+**What this proposes:** A bounded design spike to decide whether existing contract validators could usefully flag preparation mistakes. It would compare warnings and refusals, then recommend a precise extension or no code; implementation is deferred.
+
+**How the existing system works per this document:** The draft says `lint_probe` checks command syntax and paths, while `eval_probes` evaluates command exit status. Existing HQ/PRS flows write captures and contracts, and GH1447 supplies an offline replay of admission classifications. These are the document’s claims, pending source verification.
+
+**What it is not:** It explicitly excludes a new runner, ledger, approval system, installed unlazy hooks, and runtime changes during the spike. Semantic relevance is a stated limit of lexical checks, not an outcome the spike promises to prove. I infer that any later implementation would require a separate task.
+
+exec
+/bin/zsh -lc 'cat ROUTER.md' in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+ succeeded in 0ms:
+# ROUTER.md
+
+XYZ Forge exists for cross-model reviews and agentic work on business information, including private code, within the task’s authorized scope and applicable data-protection requirements.
+
+This file is the first entry point for an AI agent working in this repo: it tells you what to read, what to run, and which files are canonical.
+
+XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md`); **PDDA**, project-doc governance (`PROJECT/PDDA.md`); and **PRS**, the Product Release System, which is the RELEASES ledger (`RELEASES-DB-FAQS.md`). Definition: [HOW-TO-USE.md → Glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first).
+
+## Role split
+
+- `ROUTER.md` = startup order and canonical entry points
+- `GUIDING-PRINCIPLES.md` = XYZ Forge’s product purpose, scope and *why*, and the canonical North Star: durable, reversible, DRY — extend what exists rather than forking a parallel system
+- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof
+- `README.md` = human-facing repo/product overview
+- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file
+- `CHANGELOG.md` = the end-of-iteration running log (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
+- `RELEASES DB` = the single runtime and release-planning ledger (`releases.db` via `releases.sql`; operated through `releases_app.py`); `RELEASES.md` is retired (GH-568)
+- `HARNESS-MODELS-REGISTRY.md` = evaluated agent harnesses, supported model grades (A/B/C), and CLI flags
+- `MACHINE-CONTRACTS.md` = the Jog ↔ Preflight ↔ Marathon machine-contract reference (`marathon-invocation@1`, `marathon-drive/result@1`) and their version/deprecation policy
+- `PROJECT/**` docs = canonical execution detail for a specific effort
+- `PARKED/` = root holding area for incidental agent findings outside the current task; triage may promote an item into issue-first PDDA intake
+- `PROJECT/PDDA.md` = shared PDDA document contract maintained in Forge (incl. CHANGELOG); repo-specific adoption policy stays in this router
+- `PROJECT/CONSTITUTION.md` = locally maintained PDDA-layer policy of record, with verified-success, reversibility and local-first safeguards adopted by XYZ; advisory-only LLM checking is PDDA-specific and does not replace XYZ relay approval
+- `PROJECT/DO-NOT-BUILD.md` = locally maintained PDDA anti-scope; XYZ product scope remains in GUIDING-PRINCIPLES, not a blanket prohibition on coordination or execution
+- `PROJECT/PDDA-MODE-GUIDE.md` = XYZ-maintained guidance for selecting PDDA’s enforcement mode
+- `PROJECT/PDDA-SYNC-POLICY.md` = binding XYZ-owned review policy for PDDA distribution updates
+
+## Startup sequence
+
+1. Read `ROUTER.md` to understand the repo's operating order and canonical files. -> expect one clear next file, not a repo-wide scavenger hunt.
+2. Read `AGENTS.md` before making recommendations or edits. -> expect explicit assumptions, a reversibility read on consequential changes, and verified claims only.
+3. Run `python3 utils/py/releases_app.py roadmap list` to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)
+4. Read the linked `PROJECT/**` document that owns the work you are touching. -> expect the near-top `## Status` table to tell you what was just completed and what is next.
+5. If the task touches project docs, read `PROJECT/PDDA.md` and follow the PDDA contract. -> expect `PROJECT/2-WORKING` docs to have frontmatter, the exact status table, and QA gates when phased.
+6. Before reporting success on code or runtime work, check that the same `python3` used by the gate imports `requests`, `yaml` (PyYAML), and `pytest`, then run `./validate.sh`. -> expect the suite to stay green; do not claim completion if it fails or was skipped.
+7. Before reporting success on doc-hygiene or roadmap work, run `utils/pdda/pdda.sh run` (or the relevant `utils/pdda/pdda.sh <check>` subcommand). -> expect deterministic findings first, then any LLM review.
+
+## Canonical rules
+
+- Do not put phase checklists, build steps, or deep execution notes in the roadmap ledger.
+- Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer row in the roadmap ledger (the RELEASES DB) that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Governance lives in `PROJECT/PDDA.md` → "ROADMAP contract".
+- Promoting a capture from `1-INBOX` to `2-WORKING` is a DB-verb procedure (`roadmap repoint` + `roadmap update` / `roadmap move`), never a markdown edit — the exact steps and their two known gate traps (`updated:` frontmatter key, bullet-format `raw_text`) live in `SOP.md` → "Step 1b: Promoting a capture from 1-INBOX to 2-WORKING (releases-mode)".
+- Captured GitHub issue docs in `PROJECT/1-INBOX/GH-*.md` exist as unstarted capture docs without a roadmap ledger row. Under GH-1340 / GH-1345 decision 6, the ledger row is created when work starts (at pickup/selection: `start-task`, Jog, `start-marathon`, `10days`), while active `2-WORKING` docs must have their pointer row. Governance lives in `PROJECT/PDDA.md` → "GitHub issue intake" + "ROADMAP contract".
+- Incidental findings outside the active task go first to root `PARKED/` under its README contract.
+  They need no issue or roadmap row until triage promotes them. “Queue / parked intake” in RELEASES
+  names the later, formal issue queue; it is not a replacement for the root folder. Required work
+  in the current task remains in its active plan rather than being parked.
+- Do not create a second competing plan when a canonical `PROJECT/**` doc already exists.
+- Issue-first: any change beyond a **2–3 line** fix opens a GitHub issue first, then a pointer doc **named after the issue** (`GH-<number>-VERY-SHORT-DESC.md`, e.g. `GH-1234-SHOWME-COMMAND.md`). Under decision 6, filing creates the issue and capture doc; the ledger row and stored rating are created when work starts (at pickup/selection) before execution begins. The issue is the signal stream; the pointer doc is the execution surface of record. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt. Governed by `PROJECT/PDDA.md` → "GitHub issue intake".
+- Issue-first applies when a parked observation is promoted into work, not when an agent first
+  records an out-of-scope observation in `PARKED/`.
+- Runtime triage labels: since the `XYZ_PYTHON` flip the harness is dual-runtime, so any harness-bug issue gets a `runtime:` label — `runtime:python` (default path), `runtime:bash` (`XYZ_PYTHON=0` opt-out), or `runtime:parity` (the twins diverge). `/file-xyz-bug` harvests and applies it; for in-repo intake (`/triage`, hand-filed `gh issue create`) apply it by hand. Omit rather than guess — a wrong runtime tag misroutes triage.
+- **`GH-<n>` numbering spans two repos.** This repo succeeded [`Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm) and the migration did **not** renumber references, so a `GH-<n>` in a source comment, test name, or CHANGELOG entry may belong to either repo. Upstream ledger entries are preserved verbatim in [`docs/ROADMAP-UPSTREAM-ARCHIVE.md`](docs/ROADMAP-UPSTREAM-ARCHIVE.md), which states its own numbering caveat and is not parsed by anything. Where an upstream number is cited from code that ships here, mirror it as a closed `[upstream archive]` issue so the citation resolves locally (#407, #408 are the pattern) rather than editing the comment. Raised externally as GH-406 §3.1.
+- Do not override deterministic PDDA findings with prose.
+- Do not report a win you did not verify with the relevant script or test.
+- Update `CHANGELOG.md` at the end of each iteration; its governance lives in `PROJECT/PDDA.md` — do not re-specify CHANGELOG rules in `AGENTS.md` or elsewhere.
+
+## PDDA distribution
+
+Forge is canonical for PDDA. `utils/pdda/pdda-install.sh` installs governance into targets;
+`utils/pdda/pdda-sync.sh` updates registered targets from the shared manifest.
+Read [PDDA migration](docs/PDDA-MIGRATION.md) before switching an existing distributor.
+Targets own their startup documents; generic templates live under `utils/pdda/templates/`.
+
+## Command rails
+
+For repo correctness:
+
+```bash
+bash githooks/install.sh        # ONCE PER CLONE — wires the pre-push gate (GH-544)
+bash githooks/install.sh --check # is this clone gated? exit 1 if not
+./validate.sh              # the gate — PARALLEL by default (GH-544), auto-sized to the host (GH-35)
+./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
+./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
+./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
+./validate.sh --sequential --subsystem small  # GH-831: the Small list — locally a self-check; hosted, the reconcile's qualifying run for docs/ledger/skill landings
+./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
+./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
+bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
+```
+
+**Both gate entry points refuse to run from a linked git worktree (GH-45)** — a worktree shares
+the parent clone's `.git`, and an observed suite escape corrupted the parent (core.bare, origin,
+remote refs, development). Run the gate from a separate disposable full clone; `XYZ_ALLOW_WORKTREE_GATE=1` is the
+announced override for disposable runs.
+
+**Local push checks and hosted CI both apply.** This repository is public; the workflow covers
+pushes and pull requests to `main` and `development`. Hosted macOS promotion evidence requires an
+actual passing run for the exact commit; the Ubuntu canary remains advisory. Install the local
+hook with `githooks/install.sh` for each clone — `.git/hooks/` does not travel with a clone. One
+installation covers that clone’s branches and linked worktrees. Run mutation-heavy gates and
+pushes that invoke them from a separate disposable full clone, as required by AGENTS.md.
+Bypasses (`git push --no-verify`, `XYZ_SKIP_PREPUSH=1`) announce that the local gate was skipped.
+**Draft-review publication is distinct from merge readiness (GH-487):** an operator-requested WIP
+draft may use a bypass only with (a) current focused evidence for the changed area — e.g. the
+mapped subsystem's suites run green — (b) the hook's skipped-gate disclosure echoed into the PR
+description, and (c) merge readiness still outstanding. A bypassed push never authorises merge,
+promotion, or teardown, and a published draft is never approval.
+
+**Parallel became the default on 2026-08-14 (GH-544)** when the local gate was the only gate during
+the private phase, and a slow gate risks being skipped; use the hook’s measured `GREEN in Ns` line for current cost. **GH-35 (2026-08-18) rebalanced the width to `cores/2` (floor 2, cap 4) and put every
+worker under `nice -n 10`** — the original `cores − 2` (up to 8) saturated developer machines badly
+enough to wedge the editor; `--burst` buys the old full-core width back for unattended runs, and
+`--throttle`/`--quiet-cpu` pins 2 workers. Ambient levers: `XYZ_VALIDATE_THROTTLE=1`,
+`XYZ_VALIDATE_MAX_JOBS=N`, `XYZ_VALIDATE_PARALLEL` (flags > MAX_JOBS > THROTTLE > PARALLEL > host
+detection; malformed values exit 2 naming the variable). Below 4 cores, or where `xargs -P` is
+unsupported, the run **falls back to sequential and says so** — every run prints the mode it chose
+and the reason, so a fallback is never silent.
+
+**GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
+owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
+agent-chorus, standup, skills-army-hq, plus `small`, a gate-only list that claims no paths); a push the classifier rates `tier=2` runs only those focused
+suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
+test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
+Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
+sequential full run qualifies (GH-509).
+
+**GH-1127 (2026-10-18, decision #1131): no hosted run per merge.** Development merges reconcile locally
+(merge-cleanup → `wave_reconcile.py --pr N`). `wave-reconcile.yml` is dispatch-only; before each promotion
+it runs `--promotion`, which always uses the full registry (`validate.sh --parallel 4`, #1134) on the
+development tip and qualifies every landing since the last receipt together (procedure: AGENTS.md
+**Promotion**). The GH-831 tiers below remain the classifier for a non-promotion `--qualify` run.
+
+**GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
+A non-promotion `--qualify` run picks **one** gate by classifying the landings' changes at the tested commit:
+
+- **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
+  `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
+  and the Python layer. The receipt records the list it ran.
+- **Medium** — mapped non-core code (tier 2): the full registry at the reconcile, the area's suites at push.
+- **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
+
+Promotion always runs the full registry. Eight skill-text suites are off, recorded in
+`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
+core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
+docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
+full-gate surfaces for every file. merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` are full-gate files too:
+they are what `gh436-merge-cleanup` reads, and GH-836 D1 moved that suite from Small to Large.
+Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
+
+`--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
+Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run
+(`nice` protects the editor, not the wall-clock).
+
+**What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
+`ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it
+stays sequential. The post-push macOS boundary on main in `ci.yml` pins `--sequential` explicitly for the
+same reason. The hosted pre-promotion qualification is the parallel exception (#1134 operator override;
+its receipt records `mode`, `width` and any first-attempt failures). GH-528 Phase 2 (multi-width stress evidence) is still **owed** — the flip was an operator
+decision taken with that evidence outstanding, mitigated by the announced fallback rather than
+discharged. See `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md`, #509 and #544.
+
+For document hygiene:
+
+```bash
+utils/pdda/pdda.sh run
+```
+
+For targeted PDDA debugging (subcommands of the single dispatcher):
+
+```bash
+utils/pdda/pdda.sh frontmatter
+utils/pdda/pdda.sh status-table
+utils/pdda/pdda.sh hardcoded-paths
+utils/pdda/pdda.sh roadmap
+utils/pdda/pdda.sh roadmap-coverage
+utils/pdda/pdda.sh changelog
+utils/pdda/pdda.sh stale
+utils/pdda/pdda.sh issue-doc-sync   # warn-only: flags 2-WORKING/GH-*.md docs drifted from their GitHub issue state
+utils/pdda/pdda.sh releases         # legacy releases check (skips when RELEASES.md is retired)
+utils/pdda/pdda.sh releases-current # read-only roll-up: queries releases.db (GH-568)
+utils/pdda/pdda.sh quad-concepts    # opt-in: requires a "## Quad Concepts" section of 1-4 bullets (lever: .pdda-quad / PDDA_QUAD)
+utils/pdda/pdda.sh glance           # read-only roll-up: title + Quad Concepts for each PROJECT/2-WORKING doc
+utils/pdda/pdda.sh governance       # repo-root governance-doc cross-reference + doc/code drift
+utils/pdda/pdda.sh marathon-qa      # mechanical marathon Wave QA receipt & checklist gate (GH-784)
+utils/pdda/pdda.sh gh-refresh       # refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
+utils/pdda/pdda.sh catchup          # LLM repo triage + ROUTER.md recommendations (delegates to pdda-catchup.sh)
+utils/pdda/pdda.sh doc-ready        # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
+```
+
+## The RELEASES DB — two subsystems, one ledger (GH-32 / GH-69)
+
+`releases.db` + `releases.sql` hold TWO mirrored subsystems, both operated through ONE CLI,
+`utils/py/releases_app.py` (alias: the `/releases` skill). Read
+[RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md) before merging either file — the SQLite binary is
+derived; the SQL dump is what git actually merges, and a conflicted merge has a one-command
+resolver (`utils/releases-merge-resolve.sh`).
+
+```bash
+python3 utils/py/releases_app.py check          # trio consistency, receipt chain, crash recovery
+python3 utils/py/releases_app.py next           # the next unshipped release, by target date
+python3 utils/py/releases_app.py add|ship ...   # RELEASE writes — never hand-edit releases.sql
+python3 utils/py/releases_app.py roadmap pickup ... # GH-1345: create rated row at work pickup (start-task, Jog, marathon)
+python3 utils/py/releases_app.py roadmap add ...    # low-level write path; puts row directly in roadmap
+                                                   #   GH-249: put `rated N/N/N/N [ovr N]` in --raw-text to score it
+python3 utils/py/releases_app.py roadmap rate ...   # GH-253: score a row that is ALREADY parked (--force to re-score)
+python3 utils/py/releases_app.py roadmap list      # read the roadmap rows (--json for machine consumers)
+python3 utils/py/releases_app.py roadmap sync      # LEGACY-mode only (mirrors ROADMAP.md); a guarded no-op in this repo
+```
+
+**Subsystem 1 — releases** (GH-32 / GH-568): the release ledger. App-managed writes
+only; `releases.db` and the `releases` CLI (`releases list`, `releases show`) are the sole source of truth (`RELEASES.md` is retired per GH-568).
+**Subsystem 2 — the roadmap ledger** (GH-69 shadow → GH-238/GH-243 canonical → GH-269 retired ROADMAP.md → GH-567 retired ROADMAP-DASHBOARD.md): since the
+`ROADMAP_SOURCE=releases` flip, `roadmap_items` IS the ledger — write rows at pickup with
+`releases roadmap pickup` (or `roadmap add`), read with `roadmap list`. `hq park` creates captures without premature ledger rows.
+The legacy markdown roadmap files (ROADMAP and ROADMAP-DASHBOARD) have been retired. `roadmap sync` exists for legacy-mode repos only and
+no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-roadmap-shadow.sh`,
+`test/gh238-hq-releases-mode.sh`, `test/gh269-roadmap-retired.sh`, and `test/gh567-roadmap-dashboard-retired.sh`.
+
+## Routing hints
+
+- If the task is about current priorities or active work, start with `releases roadmap list`, then follow the linked `PROJECT/**` doc.
+- If the task changes the roadmap ledger, write through the CLI (`releases roadmap pickup` at pickup/start time; start paths route there automatically).
+- If the task touches `releases.db`, `releases.sql`, or a merge conflict on either, start in [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md); writes go through the CLI, never a hand-edit.
+- If the task is about fresh GitHub intake or duplicate-prevention, start in `PROJECT/1-INBOX/` and open issues (duplicate issue search + capture reuse), then inspect the roadmap ledger at pickup.
+- If the task is about document quality, active-doc lifecycle, roadmap sprawl, or automation policy, start in `PROJECT/PDDA.md`.
+- If the task is about the CHANGELOG, provenance, or end-of-iteration logging, the governance is in `PROJECT/PDDA.md` (the "CHANGELOG.md — end-of-iteration record" contract).
+- If the task is about release planning, ledger health, cleanup, authoring, or publishing, invoke `/releases`. It operates against `releases.db` via `releases_app.py`; `RELEASES.md` has been retired (GH-568). It conditionally points strategic drift to `/radar` and a frozen path-to-ship to `/finish-line` without duplicating either workflow.
+- If the task is about the `tick` runtime, event projection, or multi-agent coordination kernel, start in `README.md`, then `bin/`, `src/`, `test/`, and the active project doc.
+- If the task is about the **Aider ↔ OpenRouter** turn-taker lane (`relay-automation/aider-turn.sh` — an OpenAI-standard build lane discrete from Codex; `AIDER_MODEL`/`OPENROUTER_API_KEY`, `--builder aider`), start in `PROJECT/3-COMPLETED/GH-77-AIDER-OPENROUTER-LANE.md`. The shim owns the tick token ops (Aider can't run shell mid-turn), asserts token ownership before launching Aider, and runs Aider `--no-auto-commits` (the harness commits).
+- If the task is about running, driving, or reviewing via the relay (`relay-automation/` — `relay-drive.sh`, `poll.sh`, the turn shims, `marathon*.sh`), **invoke the `relay-xyz` skill first — do not improvise the handoff or hand-roll a harness from `ls relay-automation/`.** The skill owns the locator, sandbox rules, exit codes, and the safety boundary; a `PreToolUse` guard (`relay-automation/hooks/relay-xyz-guard.sh`) blocks driving a harness driver before the skill is loaded. For the two live-Claude-windows, same-machine duel recipe (Reporter↔Maintainer with a human go-gate), the copy-paste form is [relay-automation/DUELING-CLAUDES.md](relay-automation/DUELING-CLAUDES.md).
+- If the task is about the ATE (Automated Testing Environment) skill — unattended variation-test fuzzing whose implementation lives under `utils/ate/` — start at its canonical interface in `skills/4-occasional/ate/SKILL.md`.
+- If the task is about relay session telemetry, the `focus5float` health feed, or extraction scripts under `utils/telemetry/`, start in `PROJECT/1-INBOX/GH-24-RELAY-TELEMETRY-EXTRACTOR.md`.
+- If the task is about live per-session completion telemetry — the `XYZ.json` log every relay/marathon/swarm session appends to at the harness repo root (schema: `harness`/`sessionId`/`health`/`title`/`description`/`updatedAt`), the shared writer `utils/telemetry/append-xyz-completion.sh`, or the shared health mapping `utils/telemetry/health-lib.sh` — start in `PROJECT/1-INBOX/GH-75-XYZ-JSON-COMPLETION-TELEMETRY.md`. `XYZ.json` is local + gitignored (machine-specific).
+- If the task is about cross-repo HQ tooling (`utils/hq/` — `hq.sh` single-repo actions, `rollup.sh` the Obsidian daily ROADMAP rollup, `marathon-scan.sh` the cross-repo marathon-preflight aggregator, `hq-lib.sh` the shared repo registry), start in `PROJECT/3-COMPLETED/GH-27-ROADMAP-DASHBOARD.md` and `PROJECT/3-COMPLETED/GH-158-HQ-MARATHON-SCAN.md`. The two rollups are deliberately separate today (`rollup.sh` → Obsidian, generic; `marathon-scan.sh` → hub repo, preflight-aware) and are not yet bridged — tracked in `PROJECT/1-INBOX/GH-192-HQ-MARATHON-OBSIDIAN-ROLLUP.md`.
+- If the task is about a proposed roadmap-steward agent, start here, then read `PROJECT/PDDA.md` and its `Proposed roadmap steward extension` section.
+- If the task is about finding or picking a skill for a job, see `ARCHITECTURE.md` → "Skills Index" for a one-line inventory of every skill in `skills/`.
+- If the task is blocked by a failing test, unexpected error, or disputed requirement, invoke the `sanity-check` skill (`skills/1-hourly/sanity-check/SKILL.md`) to establish whether the obstacle must block the goal before spending hours debugging or repairing it.
+- If the task is about **managing skills for the system** — adding a skill to the machine-wide collection, deploying/refreshing/removing it across the configured app targets (`targets.json`, machine-local), or asking what is deployed — the mechanism is the `skills-army-hq` skill (`skills/3-weekly/skills-army-hq/SKILL.md`). Forge authors its own skills in `skills/`, Skills Army HQ included; XYZ-skills-army-mini and the other standalone repos are published children (`push-downstream`, GH-955). Intake accepts any local folder. The durable collection lives wherever `XYZ_SKILLS_ROOT` points (machine-local, never committed; falls back to `~/git-pulse-sync/Deployed Skills`), and only `intake.py` / `sync.py` mutate it or the app symlinks. Never hand-copy a skill folder into an app's skills directory.
+- Issue-first SOP: any change beyond a 2–3 line fix (and every project plan) opens a GitHub issue *first*, then gets a pointer doc named after the issue at `PROJECT/1-INBOX/GH-<number>-VERY-SHORT-DESC.md` — e.g. `GH-1234-SHOWME-COMMAND.md`. Row creation and stored rating are deferred to pickup/selection when work starts (decision 6), following the normal `1-INBOX` → `2-WORKING` flow. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt and commit directly.
+
+exec
+/bin/zsh -lc "rg -n 'def (lint_probe|eval_probes)|lint_probe\\(|eval_probes\\(|1447|1439|1296|1386|1414' utils/py/jog_run.py utils/py/swarm_preflight.py PROJECT/1-INBOX TESTS-RESULTS | head -100" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+ succeeded in 0ms:
+utils/py/jog_run.py:1568:def lint_probe(root, probe_cmd):
+utils/py/jog_run.py:1661:            ok, why = lint_probe(root, cmd)
+utils/py/jog_run.py:1722:        ok, reason = lint_probe(root, p)
+utils/py/swarm_preflight.py:243:def eval_probes(root, c):
+utils/py/swarm_preflight.py:1414:    probes_res, stale, blocked, ambig = eval_probes(ref_wt, merged)
+PROJECT/1-INBOX/GH-1414-PARAPHRASE-FIRST-REVIEW.md:2:gh_issue: 1414
+PROJECT/1-INBOX/GH-1414-PARAPHRASE-FIRST-REVIEW.md:3:source: https://github.com/HiQS-Labs/XYZ-forge/issues/1414
+TESTS-RESULTS/2026-11-11+GH-1422/review-docs-gate.txt:139:INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1414-PARAPHRASE-FIRST-REVIEW.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1414-PARAPHRASE-FIRST-REVIEW.md)
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:6:{"v":1,"ts_ms":1791871145199,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1791871143616,"started_ms":1791871143801,"ended_ms":1791871145191,"duration_ms":1390,"rc":0,"worker":56381,"out_bytes":1296,"out_sha256":"0771567837ca","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:7:{"v":1,"ts_ms":1791871147457,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"pool","name":"chaos-concurrent-pollers.sh","queued_ms":1791871143616,"started_ms":1791871143939,"ended_ms":1791871147444,"duration_ms":3505,"rc":0,"worker":56601,"out_bytes":1140,"out_sha256":"ca6924881c66","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:50:{"v":1,"ts_ms":1791871191307,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"driver-lock","name":"relay-token-collision.sh","queued_ms":1791871143616,"started_ms":1791871190002,"ended_ms":1791871191298,"duration_ms":1296,"rc":0,"worker":55960,"out_bytes":453,"out_sha256":"8ea303cc1439","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:104:{"v":1,"ts_ms":1791871296964,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"pool","name":"gh308-poll-guards.sh","queued_ms":1791871143616,"started_ms":1791871295918,"ended_ms":1791871296956,"duration_ms":1038,"rc":0,"worker":99337,"out_bytes":732,"out_sha256":"2f90826328d0","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:155:{"v":1,"ts_ms":1791871386054,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"pool","name":"gh256-target-root-guard-root.sh","queued_ms":1791871143616,"started_ms":1791871385934,"ended_ms":1791871386046,"duration_ms":112,"rc":0,"worker":74203,"out_bytes":788,"out_sha256":"7592137af2c6","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:156:{"v":1,"ts_ms":1791871389600,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"pool","name":"gh426-worktree-leak.sh","queued_ms":1791871143616,"started_ms":1791871386091,"ended_ms":1791871389592,"duration_ms":3501,"rc":0,"worker":74394,"out_bytes":746,"out_sha256":"2abc6c3864f3","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl:392:{"v":1,"ts_ms":1791871991394,"run":"baf31e728-55960","runner":"validate","event":"suite","lane":"pool","name":"wave-reconcile.sh","queued_ms":1791871143616,"started_ms":1791871988954,"ended_ms":1791871991386,"duration_ms":2432,"rc":0,"worker":92351,"out_bytes":1737,"out_sha256":"bc26ca0b3f87","skip_lines":0}
+PROJECT/1-INBOX/GH-769-MARATHON-DRIVE-AUDIT.md:76:| F28 | doc drift | `ARCHITECTURE/system-diagram.json` (edges) | The `marathon` node only has edges to `relay-drive` and `gate-stack`. The driver also calls `tick` directly (the seed, `log`, `info` and `cost` at 3242-3247, 2186, 1009), `github-api` (gh issue, pr and api at 172, 1592, 1878), `runtime-telemetry` (append-xyz-completion and write-xyz-heartbeat at 1296, 1314), and `marathon-closeout.sh` (2600). | Add the edges the next time the diagram is regenerated. Do not hand-edit it; ARCHITECTURE/README.md says so. | all four `system-diagram*` specs | S | high |
+PROJECT/1-INBOX/GH-769-MARATHON-DRIVE-AUDIT.md:115:| `_md_telemetry.py` | driver heartbeat, XYZ heartbeat/emit, `_phase_memory_sample` (F18), and the cost summary | 953–1012, 1296–1335, 1434–1523, 1701–1732 |
+TESTS-RESULTS/2026-09-25+GH-591/wave-61f09827edcb48bd88c4d67595af2333dca06086/validation.jsonl:33:{"v":1,"ts_ms":1790355901453,"run":"61f09827e-6052","runner":"validate","event":"suite","lane":"sequential","name":"runner-loop.sh","queued_ms":1790354719751,"started_ms":1790355898127,"ended_ms":1790355901447,"duration_ms":3320,"rc":0,"worker":6052,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-61f09827edcb48bd88c4d67595af2333dca06086/validation.jsonl:126:{"v":1,"ts_ms":1790356621550,"run":"61f09827e-6052","runner":"validate","event":"suite","lane":"sequential","name":"gh492-idle-kill.sh","queued_ms":1790354719751,"started_ms":1790356613863,"ended_ms":1790356621542,"duration_ms":7679,"rc":0,"worker":6052,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-61f09827edcb48bd88c4d67595af2333dca06086/validation.jsonl:275:{"v":1,"ts_ms":1790358087339,"run":"61f09827e-6052","runner":"validate","event":"suite","lane":"sequential","name":"relay-turn-timeout.sh","queued_ms":1790354719751,"started_ms":1790358073466,"ended_ms":1790358087331,"duration_ms":13865,"rc":0,"worker":6052,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-61f09827edcb48bd88c4d67595af2333dca06086/validation.jsonl:291:{"v":1,"ts_ms":1790358144768,"run":"61f09827e-6052","runner":"validate","event":"suite","lane":"sequential","name":"relay-artifact-file.sh","queued_ms":1790354719751,"started_ms":1790358139722,"ended_ms":1790358144760,"duration_ms":5038,"rc":0,"worker":6052,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-61f09827edcb48bd88c4d67595af2333dca06086/validation.jsonl:292:{"v":1,"ts_ms":1790358146284,"run":"61f09827e-6052","runner":"validate","event":"suite","lane":"sequential","name":"relay-turn-handoff.sh","queued_ms":1790354719751,"started_ms":1790358144778,"ended_ms":1790358146279,"duration_ms":1501,"rc":0,"worker":6052,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:38:{"v":1,"ts_ms":1790313979861,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"codex-turn.sh","queued_ms":1790312877504,"started_ms":1790313958417,"ended_ms":1790313979856,"duration_ms":21439,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:60:{"v":1,"ts_ms":1790314140174,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"model-alias.sh","queued_ms":1790312877504,"started_ms":1790314137862,"ended_ms":1790314140170,"duration_ms":2308,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:61:{"v":1,"ts_ms":1790314142809,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"gh450-model-catalog-pin.sh","queued_ms":1790312877504,"started_ms":1790314140181,"ended_ms":1790314142805,"duration_ms":2624,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:62:{"v":1,"ts_ms":1790314145988,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"gh460-fuzz-resolver-smoke.sh","queued_ms":1790312877504,"started_ms":1790314142816,"ended_ms":1790314145983,"duration_ms":3167,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:63:{"v":1,"ts_ms":1790314146345,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"gh346-model-telemetry-honesty.sh","queued_ms":1790312877504,"started_ms":1790314145995,"ended_ms":1790314146340,"duration_ms":345,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:64:{"v":1,"ts_ms":1790314162084,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"gh518-muse-model-policy.sh","queued_ms":1790312877504,"started_ms":1790314146351,"ended_ms":1790314162080,"duration_ms":15729,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:91:{"v":1,"ts_ms":1790314470626,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"marathon-drive.sh","queued_ms":1790312877504,"started_ms":1790314336540,"ended_ms":1790314470619,"duration_ms":134079,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:92:{"v":1,"ts_ms":1790314477368,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"gh284-runlog-heartbeat.sh","queued_ms":1790312877504,"started_ms":1790314470635,"ended_ms":1790314477361,"duration_ms":6726,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:93:{"v":1,"ts_ms":1790314485491,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"gh115-round-cap.sh","queued_ms":1790312877504,"started_ms":1790314477376,"ended_ms":1790314485484,"duration_ms":8108,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-0ae3452a5774c6e72b633dd61648137e80516e6b/validation.jsonl:209:{"v":1,"ts_ms":1790315614480,"run":"0ae3452a5-4728","runner":"validate","event":"suite","lane":"sequential","name":"synthetic/gh101-consult-programmatic.sh","queued_ms":1790312877504,"started_ms":1790315612014,"ended_ms":1790315614474,"duration_ms":2460,"rc":0,"worker":4728,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-10-05+GH-789/red-controls-R3.log:494:.merge-cleanup: ERROR — could not prune orphaned REBASE_HEAD 183985725a381ab383eee76de6c9fbecb4fa0982: error: cannot lock ref 'REBASE_HEAD': is at 9ae3d867771fad80a1784696c6a13868ee346fb8 but expected 183985725a381ab383eee76de6c9fbecb4fa0982
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt2-telemetry.jsonl:6:{"v":1,"ts_ms":1791872256862,"run":"baf31e728-75790","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1791872255043,"started_ms":1791872255223,"ended_ms":1791872256848,"duration_ms":1625,"rc":0,"worker":76344,"out_bytes":1296,"out_sha256":"65fc1e0a23c5","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt2-telemetry.jsonl:38:{"v":1,"ts_ms":1791872281911,"run":"baf31e728-75790","runner":"validate","event":"suite","lane":"pool","name":"runner-loop.sh","queued_ms":1791872255043,"started_ms":1791872277822,"ended_ms":1791872281899,"duration_ms":4077,"rc":0,"worker":1447,"out_bytes":595,"out_sha256":"8798b812ab9e","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt2-telemetry.jsonl:68:{"v":1,"ts_ms":1791872399780,"run":"baf31e728-75790","runner":"validate","event":"suite","lane":"pool","name":"model-alias.sh","queued_ms":1791872255043,"started_ms":1791872385898,"ended_ms":1791872399767,"duration_ms":13869,"rc":0,"worker":2247,"out_bytes":2187,"out_sha256":"337a847e57c5","skip_lines":0}
+TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt2-telemetry.jsonl:381:{"v":1,"ts_ms":1791873237653,"run":"baf31e728-75790","runner":"validate","event":"suite","lane":"pool","name":"phase3-signoff-guard.sh","queued_ms":1791872255043,"started_ms":1791873236253,"ended_ms":1791873237639,"duration_ms":1386,"rc":0,"worker":7464,"out_bytes":1375,"out_sha256":"21563c4e707b","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:46:{"v":1,"ts_ms":1790318882905,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"gh267-express-skill.sh","queued_ms":1790317347365,"started_ms":1790318851460,"ended_ms":1790318882899,"duration_ms":31439,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:198:{"v":1,"ts_ms":1790320601398,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"gh484-phase-dir-default.sh","queued_ms":1790317347365,"started_ms":1790320598834,"ended_ms":1790320601386,"duration_ms":2552,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:291:{"v":1,"ts_ms":1790321296616,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"relay-artifact-file.sh","queued_ms":1790317347365,"started_ms":1790321288456,"ended_ms":1790321296604,"duration_ms":8148,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:292:{"v":1,"ts_ms":1790321298782,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"relay-turn-handoff.sh","queued_ms":1790317347365,"started_ms":1790321296628,"ended_ms":1790321298770,"duration_ms":2142,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:304:{"v":1,"ts_ms":1790321447878,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"xyz-sync-check.sh","queued_ms":1790317347365,"started_ms":1790321444376,"ended_ms":1790321447867,"duration_ms":3491,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:305:{"v":1,"ts_ms":1790321450693,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"gh293-vendored-guard-drift.sh","queued_ms":1790317347365,"started_ms":1790321447889,"ended_ms":1790321450679,"duration_ms":2790,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:357:{"v":1,"ts_ms":1790322031447,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"gh425-gate-provenance-pr.sh","queued_ms":1790317347365,"started_ms":1790322025606,"ended_ms":1790322031441,"duration_ms":5835,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-5ac6650d5027fe9223478b390c66dd6e0355460e/validation.jsonl:365:{"v":1,"ts_ms":1790322314476,"run":"5ac6650d5-37355","runner":"validate","event":"suite","lane":"sequential","name":"gh436-merge-cleanup.sh","queued_ms":1790317347365,"started_ms":1790322069549,"ended_ms":1790322314470,"duration_ms":244921,"rc":0,"worker":37355,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-6f956294ff05b66eaf0c79ea886a6ce5c64724c3/validation.jsonl:7:{"v":1,"ts_ms":1790325138625,"run":"6f956294f-5574","runner":"validate","event":"suite","lane":"sequential","name":"chaos-midturn-kill.sh","queued_ms":1790325130489,"started_ms":1790325137208,"ended_ms":1790325138618,"duration_ms":1410,"rc":0,"worker":5574,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-6f956294ff05b66eaf0c79ea886a6ce5c64724c3/validation.jsonl:8:{"v":1,"ts_ms":1790325139257,"run":"6f956294f-5574","runner":"validate","event":"suite","lane":"sequential","name":"path-overlap.sh","queued_ms":1790325130489,"started_ms":1790325138634,"ended_ms":1790325139251,"duration_ms":617,"rc":0,"worker":5574,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-6f956294ff05b66eaf0c79ea886a6ce5c64724c3/validation.jsonl:11:{"v":1,"ts_ms":1790325141487,"run":"6f956294f-5574","runner":"validate","event":"suite","lane":"sequential","name":"gh411-tick-log-foreign-cwd.sh","queued_ms":1790325130489,"started_ms":1790325140598,"ended_ms":1790325141478,"duration_ms":880,"rc":0,"worker":5574,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-6f956294ff05b66eaf0c79ea886a6ce5c64724c3/validation.jsonl:276:{"v":1,"ts_ms":1790328604282,"run":"6f956294f-5574","runner":"validate","event":"suite","lane":"sequential","name":"relay-target-root.sh","queued_ms":1790325130489,"started_ms":1790328589803,"ended_ms":1790328604274,"duration_ms":14471,"rc":0,"worker":5574,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-6f956294ff05b66eaf0c79ea886a6ce5c64724c3/validation.jsonl:282:{"v":1,"ts_ms":1790328622349,"run":"6f956294f-5574","runner":"validate","event":"suite","lane":"sequential","name":"archive-writers.sh","queued_ms":1790325130489,"started_ms":1790328614472,"ended_ms":1790328622339,"duration_ms":7867,"rc":0,"worker":5574,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-6f956294ff05b66eaf0c79ea886a6ce5c64724c3/validation.jsonl:406:{"v":1,"ts_ms":1790330043690,"run":"6f956294f-5574","runner":"validate","event":"suite","lane":"sequential","name":"gh693-lessons-learned-advisory.sh","queued_ms":1790325130489,"started_ms":1790330041296,"ended_ms":1790330043680,"duration_ms":2384,"rc":0,"worker":5574,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-31a42867521577e58220cd194d442212c609b7ca/validation.jsonl:85:{"v":1,"ts_ms":1790362474968,"run":"31a428675-2700","runner":"validate","event":"suite","lane":"sequential","name":"gh708-vendored-suite-skips.sh","queued_ms":1790361067560,"started_ms":1790362473665,"ended_ms":1790362474961,"duration_ms":1296,"rc":0,"worker":2700,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-31a42867521577e58220cd194d442212c609b7ca/validation.jsonl:146:{"v":1,"ts_ms":1790363012974,"run":"31a428675-2700","runner":"validate","event":"suite","lane":"sequential","name":"gh551-resolver-refuses.sh","queued_ms":1790361067560,"started_ms":1790363012278,"ended_ms":1790363012967,"duration_ms":689,"rc":0,"worker":2700,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-31a42867521577e58220cd194d442212c609b7ca/validation.jsonl:248:{"v":1,"ts_ms":1790364168954,"run":"31a428675-2700","runner":"validate","event":"suite","lane":"sequential","name":"gh232-wave-reconcile-multiphase.sh","queued_ms":1790361067560,"started_ms":1790364167503,"ended_ms":1790364168942,"duration_ms":1439,"rc":0,"worker":2700,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-25+GH-591/wave-31a42867521577e58220cd194d442212c609b7ca/validation.jsonl:275:{"v":1,"ts_ms":1790364429902,"run":"31a428675-2700","runner":"validate","event":"suite","lane":"sequential","name":"relay-turn-timeout.sh","queued_ms":1790361067560,"started_ms":1790364414476,"ended_ms":1790364429894,"duration_ms":15418,"rc":0,"worker":2700,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/gh605-plan-preflight/validate-telemetry.jsonl:5:{"v":1,"ts_ms":1789330418741,"run":"38507a233-13103","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1789330416739,"started_ms":1789330417049,"ended_ms":1789330418732,"duration_ms":1683,"rc":0,"worker":13249,"out_bytes":1296,"out_sha256":"4edbaaad3122","skip_lines":0}
+TESTS-RESULTS/gh605-plan-preflight/validate-telemetry.jsonl:217:{"v":1,"ts_ms":1789330952629,"run":"38507a233-13103","runner":"validate","event":"suite","lane":"pool","name":"gh156-turn-shims-help.sh","queued_ms":1789330416739,"started_ms":1789330951296,"ended_ms":1789330952615,"duration_ms":1319,"rc":0,"worker":84494,"out_bytes":1051,"out_sha256":"8972096f19e0","skip_lines":0}
+TESTS-RESULTS/gh605-plan-preflight/validate-telemetry.jsonl:268:{"v":1,"ts_ms":1789331062644,"run":"38507a233-13103","runner":"validate","event":"suite","lane":"pool","name":"agent-chorus.sh","queued_ms":1789330416739,"started_ms":1789331037145,"ended_ms":1789331062636,"duration_ms":25491,"rc":0,"worker":48782,"out_bytes":13864,"out_sha256":"004b1785e093","skip_lines":0}
+TESTS-RESULTS/2026-10-17+GH-1121/publication-validation.jsonl:6:{"v":1,"ts_ms":1792281398442,"run":"a2a138909-16746","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1792281397099,"started_ms":1792281397239,"ended_ms":1792281398434,"duration_ms":1195,"rc":0,"worker":17174,"out_bytes":1296,"out_sha256":"bddd1abc3be1","skip_lines":0}
+TESTS-RESULTS/2026-10-17+GH-1121/publication-validation.jsonl:38:{"v":1,"ts_ms":1792281414467,"run":"a2a138909-16746","runner":"validate","event":"suite","lane":"pool","name":"runner-loop.sh","queued_ms":1792281397099,"started_ms":1792281411487,"ended_ms":1792281414459,"duration_ms":2972,"rc":0,"worker":28713,"out_bytes":595,"out_sha256":"0731f9660eb6","skip_lines":0}
+TESTS-RESULTS/2026-10-17+GH-1121/publication-validation.jsonl:40:{"v":1,"ts_ms":1792281422320,"run":"a2a138909-16746","runner":"validate","event":"suite","lane":"pool","name":"relay-loop.sh","queued_ms":1792281397099,"started_ms":1792281414503,"ended_ms":1792281422312,"duration_ms":7809,"rc":0,"worker":30775,"out_bytes":1279,"out_sha256":"0be9aaed52be","skip_lines":0}
+TESTS-RESULTS/2026-11-10+GH-1414/provenance.jsonl:1:{"date": "2026-11-10", "issue": 1414, "kind": "focused-doc-verification", "skill_diff_sha256": "942267cc5239c64902e453c923a242318c70de24f45bea1f9414026c8543ab0e", "independent_wording_review": "approved", "start_task_validator": "pass", "file_xyz_bug_validator": "pre-existing failure reproduced on baseline", "full_gate": "not run", "deployment": "not performed"}
+TESTS-RESULTS/2026-11-10+GH-1414/provenance.jsonl:2:{"date": "2026-11-10", "issue": 1414, "kind": "focused-doc-verification-refresh", "skill_diff_sha256": "423d8ae39784a98e806ff9d009a20d5b2309ca8199d1eaf894d2ddd396fb0b76", "skill_diff_command": "git diff origin/development -- skills/1-hourly/start-task/SKILL.md skills/2-daily/file-xyz-bug/SKILL.md skills/1-hourly/idea/SKILL.md", "start_task_validator": "pass", "file_xyz_bug_validator": "pass", "idea_validator": "pass", "baseline_defects": "file-xyz-bug angle brackets; idea YAML plain-scalar colon; corrected in f49972ed", "earlier_codex_review_scope": "original two-skill diff only", "opus_round1": "changes requested: evidence refresh F1; wording safe; optional F2 clarified", "opus_round1_receipt": "relay-system/2026-11-10/gh1414-opus55-round1.md", "independent_final_review": "pending exact-head re-check", "full_gate": "not run", "final_push_gate": "pending", "deployment": "not performed"}
+TESTS-RESULTS/2026-11-10+GH-1414/provenance.jsonl:3:{"issue": 1414, "kind": "independent-final-review", "provider": "claudeAgent", "model": "claude-opus-5-5", "reviewed_head": "6e0408693d80962a9ad77855d9fa598526283af6", "verdict": "PASS", "status": "Approved", "receipt": "relay-system/2026-11-10/gh1414-opus55-final.md", "skill_diff_sha256": "423d8ae39784a98e806ff9d009a20d5b2309ca8199d1eaf894d2ddd396fb0b76", "receipt_only_followup": "reviewer explicitly permits verbatim receipt and provenance/status recording, with unchanged reviewed content", "reviewed_head_push_gate": "passed without bypass; documentation gate GREEN in 75s", "final_receipt_head_push_gate": "pending", "deployment": "not performed"}
+TESTS-RESULTS/2026-11-10+GH-1414/manual-checks.md:1:# GH-1414 focused documentation verification
+TESTS-RESULTS/2026-11-10+GH-1414/manual-checks.md:8:- Earlier Codex wording approval (`relay-system/2026-11-10/gh1414-skills-wording.codex.md`) covers only the original two-skill diff, not idea or the description fixes.
+TESTS-RESULTS/2026-11-10+GH-1414/manual-checks.md:9:- Claude Code Opus 5.5 reviewed all three skills at f49972ed. Its round-1 receipt (`relay-system/2026-11-10/gh1414-opus55-round1.md`) approves the skill intent but requests evidence correction (F1); final approval was granted at 6e040869 by the exact-head re-check in `relay-system/2026-11-10/gh1414-opus55-final.md`. This is T3 provider dispatch, not a relay-drive CLI attestation.
+PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md:42:Trial #1386 owns one invocation, max_tasks=2, Codex builder/Agy reviewer, round_cap=2 and LANE_MAX_ATTEMPTS=2. Hard end 2026-11-11T06:51:58Z; reserve ten minutes for closeout. No repeated dispatch or reset of history. Launch environment: RELAY_TURN_TIMEOUT_S=240, RELAY_TURN_IDLE_S=240, MARATHON_GATE_WALL_S=660, LANE_MAX_ATTEMPTS=2; inherited width overrides unset. Native timeout handoff recovery only; no manual second dispatch. Full gate runs serially on this host with default width and the existing test venv, only if time remains.
+TESTS-RESULTS/2026-10-23+GH-591/wave-eb0623ce207dbeacdd7997a73c75fd0277908585/validation.jsonl:9:{"v":1,"ts_ms":1792732938158,"run":"eb0623ce2-9930","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1792732930942,"started_ms":1792732934450,"ended_ms":1792732938146,"duration_ms":3696,"rc":0,"worker":10724,"out_bytes":1296,"out_sha256":"0c8e0e8e0d57","skip_lines":0}
+TESTS-RESULTS/2026-10-23+GH-591/wave-eb0623ce207dbeacdd7997a73c75fd0277908585/validation.jsonl:13:{"v":1,"ts_ms":1792732952141,"run":"eb0623ce2-9930","runner":"validate","event":"suite","lane":"pool","name":"scope-change.sh","queued_ms":1792732930942,"started_ms":1792732950777,"ended_ms":1792732952130,"duration_ms":1353,"rc":0,"worker":14396,"out_bytes":339,"out_sha256":"18bf1e11529a","skip_lines":0}
+TESTS-RESULTS/2026-10-23+GH-591/wave-eb0623ce207dbeacdd7997a73c75fd0277908585/validation.jsonl:135:{"v":1,"ts_ms":1792733381445,"run":"eb0623ce2-9930","runner":"validate","event":"suite","lane":"pool","name":"gh217-gate-env-plan-outside.sh","queued_ms":1792732930942,"started_ms":1792733374521,"ended_ms":1792733381439,"duration_ms":6918,"rc":0,"worker":41173,"out_bytes":415,"out_sha256":"c073594fb508","skip_lines":0}
+TESTS-RESULTS/2026-10-23+GH-591/wave-eb0623ce207dbeacdd7997a73c75fd0277908585/validation.jsonl:323:{"v":1,"ts_ms":1792734121959,"run":"eb0623ce2-9930","runner":"validate","event":"suite","lane":"pool","name":"gh14-atomic-append.sh","queued_ms":1792732930942,"started_ms":1792734120830,"ended_ms":1792734121944,"duration_ms":1114,"rc":0,"worker":14398,"out_bytes":663,"out_sha256":"aebf455ebb16","skip_lines":0}
+TESTS-RESULTS/2026-10-01+GH-591/wave-9ecb344f126c613d7fcc8a0f5d22145a954c6d31/validation.jsonl:306:{"v":1,"ts_ms":1790893712961,"run":"9ecb344f1-3231","runner":"validate","event":"suite","lane":"sequential","name":"pdda-roadmap-coverage.sh","queued_ms":1790890740031,"started_ms":1790893709351,"ended_ms":1790893712952,"duration_ms":3601,"rc":0,"worker":3231,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-835/gate-telemetry-b2c307b4.jsonl:6:{"v":1,"ts_ms":1790434731504,"run":"b2c307b4e-35339","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1790434729984,"started_ms":1790434730174,"ended_ms":1790434731497,"duration_ms":1323,"rc":0,"worker":35489,"out_bytes":1296,"out_sha256":"9d36bef02768","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-835/gate-telemetry-b2c307b4.jsonl:185:{"v":1,"ts_ms":1790435027833,"run":"b2c307b4e-35339","runner":"validate","event":"suite","lane":"pool","name":"gh544-pre-push-gate.sh","queued_ms":1790434729984,"started_ms":1790435012962,"ended_ms":1790435027826,"duration_ms":14864,"rc":0,"worker":23944,"out_bytes":7462,"out_sha256":"878c950461e4","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-835/gate-telemetry-b2c307b4.jsonl:225:{"v":1,"ts_ms":1790435141496,"run":"b2c307b4e-35339","runner":"validate","event":"suite","lane":"pool","name":"gh142-ate-exit-contract.sh","queued_ms":1790434729984,"started_ms":1790435132140,"ended_ms":1790435141488,"duration_ms":9348,"rc":0,"worker":58714,"out_bytes":1985,"out_sha256":"04717d18a8c8","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-835/gate-telemetry-b2c307b4.jsonl:405:{"v":1,"ts_ms":1790435556353,"run":"b2c307b4e-35339","runner":"validate","event":"suite","lane":"pool","name":"gh-gen4-phase5-campaign.sh","queued_ms":1790434729984,"started_ms":1790435541868,"ended_ms":1790435556346,"duration_ms":14478,"rc":0,"worker":62816,"out_bytes":1314,"out_sha256":"73f410624277","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-836/full-gate-290f75e0-telemetry.jsonl:6:{"v":1,"ts_ms":1790446863437,"run":"290f75e09-43030","runner":"validate","event":"suite","lane":"pool","name":"chaos-stale-writer.sh","queued_ms":1790446861248,"started_ms":1790446861418,"ended_ms":1790446863429,"duration_ms":2011,"rc":0,"worker":43204,"out_bytes":1296,"out_sha256":"da07cb16a714","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-836/full-gate-290f75e0-telemetry.jsonl:171:{"v":1,"ts_ms":1790447141439,"run":"290f75e09-43030","runner":"validate","event":"suite","lane":"pool","name":"champion.sh","queued_ms":1790446861248,"started_ms":1790447141214,"ended_ms":1790447141431,"duration_ms":217,"rc":0,"worker":57371,"out_bytes":676,"out_sha256":"c13512ed62de","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-836/full-gate-290f75e0-telemetry.jsonl:172:{"v":1,"ts_ms":1790447141656,"run":"290f75e09-43030","runner":"validate","event":"suite","lane":"pool","name":"heldout-check.sh","queued_ms":1790446861248,"started_ms":1790447141474,"ended_ms":1790447141648,"duration_ms":174,"rc":0,"worker":57579,"out_bytes":556,"out_sha256":"4a823ba41a2f","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-836/full-gate-290f75e0-telemetry.jsonl:176:{"v":1,"ts_ms":1790447143986,"run":"290f75e09-43030","runner":"validate","event":"suite","lane":"pool","name":"improve-loop-dogfood.sh","queued_ms":1790446861248,"started_ms":1790447143264,"ended_ms":1790447143978,"duration_ms":714,"rc":0,"worker":59995,"out_bytes":1185,"out_sha256":"ea80cd4c0291","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-836/full-gate-290f75e0-telemetry.jsonl:349:{"v":1,"ts_ms":1790447511867,"run":"290f75e09-43030","runner":"validate","event":"suite","lane":"pool","name":"gh418-planner-ledger-source.sh","queued_ms":1790446861248,"started_ms":1790447511386,"ended_ms":1790447511859,"duration_ms":473,"rc":0,"worker":18112,"out_bytes":722,"out_sha256":"a6cf1a7848d7","skip_lines":0}
+TESTS-RESULTS/2026-09-26+GH-836/full-gate-290f75e0-telemetry.jsonl:405:{"v":1,"ts_ms":1790447613869,"run":"290f75e09-43030","runner":"validate","event":"suite","lane":"pool","name":"gh-gen4-phase5-campaign.sh","queued_ms":1790446861248,"started_ms":1790447601882,"ended_ms":1790447613862,"duration_ms":11980,"rc":0,"worker":65144,"out_bytes":1314,"out_sha256":"73f410624277","skip_lines":0}
+TESTS-RESULTS/2026-11-07+GH-1317-refresh/SUMMARY.md:7:Later target2bed0a59b contains independently landed GH1296 packet changes in harness.py. Changelog conflict retains both additions. The three GH1317 repair functions remain AST-identical to reviewed73d610f2, but the integrated file changed; a fresh full push gate will qualify this new composition before publication. Earlier full receipts are historical for this head.
+TESTS-RESULTS/2026-09-26+GH-835/profile-gh549-trace.log:140:[1790435838.013868] + ok 'every derived op is mapped or allowlisted (ops=28 unclassified=none)'
+TESTS-RESULTS/2026-09-26+GH-835/profile-gh549-trace.log:1508:[1790436099.712962] + PASS=89
+TESTS-RESULTS/2026-10-03+GH-591/wave-352bd33f6ea06589bf908e3ed67ccbe48cdaee0e/validation.jsonl:50:{"v":1,"ts_ms":1790984741436,"run":"352bd33f6-8414","runner":"validate","event":"suite","lane":"sequential","name":"gh609-sdlc-agent-gaps.sh","queued_ms":1790984361241,"started_ms":1790984740043,"ended_ms":1790984741429,"duration_ms":1386,"rc":0,"worker":8414,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-10-03+GH-591/wave-352bd33f6ea06589bf908e3ed67ccbe48cdaee0e/validation.jsonl:51:{"v":1,"ts_ms":1790984742722,"run":"352bd33f6-8414","runner":"validate","event":"suite","lane":"sequential","name":"ate-run-variations.sh","queued_ms":1790984361241,"started_ms":1790984741447,"ended_ms":1790984742710,"duration_ms":1263,"rc":0,"worker":8414,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-10-03+GH-591/wave-352bd33f6ea06589bf908e3ed67ccbe48cdaee0e/validation.jsonl:169:{"v":1,"ts_ms":1790985747177,"run":"352bd33f6-8414","runner":"validate","event":"suite","lane":"sequential","name":"gh646-status-label.sh","queued_ms":1790984361241,"started_ms":1790985734206,"ended_ms":1790985747166,"duration_ms":12960,"rc":0,"worker":8414,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+TESTS-RESULTS/2026-09-29+GH-854/ci-local-telemetry.jsonl:12:{"v":1,"ts_ms":1790723360251,"run":"a66407cfd-14165","runner":"ci-local","event":"suite","lane":"sequential","name":"chaos-stale-writer.sh","queued_ms":1790723359155,"started_ms":1790723359155,"ended_ms":1790723360244,"duration_ms":1089,"rc":0,"worker":14165,"out_bytes":1296,"out_sha256":"b7eea44e3d27","skip_lines":0}
+TESTS-RESULTS/2026-09-29+GH-854/ci-local-telemetry.jsonl:66:{"v":1,"ts_ms":1790723814474,"run":"a66407cfd-14165","runner":"ci-local","event":"suite","lane":"sequential","name":"gh346-resolver-fallback.sh","queued_ms":1790723813919,"started_ms":1790723813919,"ended_ms":1790723814467,"duration_ms":548,"rc":0,"worker":14165,"out_bytes":957,"out_sha256":"07e2ea53a4ef","skip_lines":0}
+TESTS-RESULTS/2026-09-29+GH-854/ci-local-telemetry.jsonl:99:{"v":1,"ts_ms":1790724129679,"run":"a66407cfd-14165","runner":"ci-local","event":"suite","lane":"sequential","name":"gh331-cost-summary.sh","queued_ms":1790724121920,"started_ms":1790724121920,"ended_ms":1790724129672,"duration_ms":7752,"rc":0,"worker":14165,"out_bytes":804,"out_sha256":"727602b7e396","skip_lines":0}
+TESTS-RESULTS/2026-09-29+GH-854/ci-local-telemetry.jsonl:156:{"v":1,"ts_ms":1790724527114,"run":"a66407cfd-14165","runner":"ci-local","event":"suite","lane":"sequential","name":"gh409-claim-leak.sh","queued_ms":1790724512966,"started_ms":1790724512966,"ended_ms":1790724527104,"duration_ms":14138,"rc":0,"worker":14165,"out_bytes":955,"out_sha256":"f11ad0cf83f8","skip_lines":0}
+TESTS-RESULTS/2026-09-29+GH-854/ci-local-telemetry.jsonl:182:{"v":1,"ts_ms":1790724788999,"run":"a66407cfd-14165","runner":"ci-local","event":"suite","lane":"sequential","name":"gh35-test-tiers.sh","queued_ms":1790724774598,"started_ms":1790724774598,"ended_ms":1790724788991,"duration_ms":14393,"rc":0,"worker":14165,"out_bytes":4711,"out_sha256":"5fd2c36507fb","skip_lines":0}
+TESTS-RESULTS/2026-09-29+GH-854/ci-local-telemetry.jsonl:222:{"v":1,"ts_ms":1790725150311,"run":"a66407cfd-14165","runner":"ci-local","event":"suite","lane":"sequential","name":"gh148-deepseek-turn.sh","queued_ms":1790725143901,"started_ms":1790725143901,"ended_ms":1790725150304,"duration_ms":6403,"rc":0,"worker":14165,"out_bytes":2129,"out_sha256":"0888b25a2914","skip_lines":0}
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/resolved-policy-discrimination.json:15:    "source": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1386-recovery-2026-11-09/.merge-cleanup.json",
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/README.md:3:Pinned flywheel7c382a59 Mode1B recovery, start2026-11-09T02:54:00Z, cutoff04:24:00Z. Restore the exact pre1389 policy bytes and finish1384/1386 bookkeeping. No flywheel installation or1378 merge,1390 implementation,1327/1388 batch, cleanup, schedule or promotion.
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/README.md:19:PR1392 exact4e9b4691 hosted42554551752 SUCCESS, merged 4394c7c4cf65871fc33f40945b1fb13d88fbc45a. Canonical individual reconciliation also reran1384 after corrective issue1381 closure; recovery inventory uncertainty stays separate. Fresh runtime gate1/2 passed, no new blocker repair or1390 counter reset. Final publication and SHA are recorded in issue1386.
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/README.md:27:Recovery outcomes are agent-assisted. One full qualification attempt used, no failed qualification/retry or new blocker repair in this window; earlier1390 counters unchanged. The nonblocking source-CLI primary identity refusal is retained. Human input: explicit recovery authorization and later installation request; no routine approval intervention requested. Tokens unknown. Final elapsed/publicationSHA and process closeout are recorded in issue1386 after normal final bookkeeping publication. No1378/1388 landing,1327fix,1390 implementation, cleanup, schedule or promotion.
+TESTS-RESULTS/2026-10-03+GH-591/wave-3fbed72f781d1ad060e298b798a44c32edef393d/validation.jsonl:246:{"v":1,"ts_ms":1791011414601,"run":"3fbed72f7-3842","runner":"validate","event":"suite","lane":"sequential","name":"gh103-timeline-exporter.sh","queued_ms":1791009580363,"started_ms":1791011407200,"ended_ms":1791011414592,"duration_ms":7392,"rc":0,"worker":3842,"out_bytes":0,"out_sha256":"-","skip_lines":0}
+
+exec
+/bin/zsh -lc "cat GUIDING-PRINCIPLES.md PROJECT/PDDA.md HARNESS-MODELS-REGISTRY.md TESTS-RESULTS/README.md >/dev/null; git rev-parse HEAD; rg -n 'contract|probe' utils/py/jog_run.py | head -65" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+ succeeded in 0ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-tMMMwxAu' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-qHMUjifr' (errno=Operation not permitted)
+8f2aa8025ffd1fbf3575d40d0b2981923ee95383
+8:4. Auto-promotes 1-INBOX contracts to 2-WORKING with probe linting and safety checks.
+59:# ── GH-280: structured Jog ↔ Preflight ↔ Marathon machine contracts ────────────────────────────
+71:    """A machine contract failed validation — refuse before dispatch, never guess."""
+74:def _load_contract_json(path, expected_schema, what):
+88:            f"{expected_schema!r} — refusing rather than guessing at an unknown contract")
+98:    obj = _load_contract_json(path, MARATHON_INVOCATION_SCHEMA, "marathon invocation")
+141:    obj = _load_contract_json(path, MARATHON_RESULT_SCHEMA, "marathon result")
+169:# execution to Marathon's reviewed one-phase driver through the Phase 1 contracts. Jog still
+218:    # Reuse execution's route/probe owners before any lease mutation. Keep the
+226:                marathon_drive._probe_agent_bin(actor, role)
+269:def jog_commit_execution_contract(target, gh_num):
+270:    """Protect only this clone's promoted contract from turn containment; never stage ledger."""
+278:        raise ContractError("unrelated staged changes before execution contract commit")
+282:        _git(target, "commit", "-m", f"jog: prepare GH-{gh_num} execution contract")
+1445:        # Check the exact closeout contract before any remote issue closure.
+1568:def lint_probe(root, probe_cmd):
+1569:    """Lint a probe command to ensure it is non-trivial and resolves to a real target."""
+1570:    cmd = probe_cmd.strip()
+1572:        return False, "empty probe command"
+1575:            return False, f"trivial probe pattern rejected: {cmd!r}"
+1585:            return False, f"probe target path does not resolve: {target_path}"
+1596:def extract_probes_from_doc(doc_path):
+1597:    """Extract fix_probes from doc frontmatter or body."""
+1606:    probes = []
+1610:        probes_match = re.search(r"fix_probes:\s*\n((?:\s+-\s+.*\n?)+)", fm_text)
+1611:        if probes_match:
+1612:            for line in probes_match.group(1).splitlines():
+1617:                        probes.append(p)
+1618:    return probes
+1624:def contract_probes_from_doc(root, doc_path):
+1625:    """GH-1232: the Preflight Contract's JSON fix_probes, checked for shape only.
+1627:    Returns (labels, reason). Nothing is evaluated: whether a probe still reads "unfixed" is
+1628:    preflight's verdict, made next in its ref-pinned worktree. Running the probes here would judge
+1629:    the mutable checkout instead and execute shell `command` probes twice (plan QA round 1).
+1636:    # extract_contract sys.exit(3)s on a doc without the heading; check first (marathon_drive idiom).
+1637:    if not re.search(r'^#{1,6}\s+.*preflight\s+contract', text, re.IGNORECASE | re.MULTILINE):
+1640:        from swarm_preflight import extract_contract
+1642:        return [], f"could not load the preflight contract parser ({e})"
+1644:        contract = extract_contract(doc_path)
+1646:        # SystemExit(3) on a contract error; a non-object JSON value raises inside its validation.
+1647:        contract = None
+1648:    if not isinstance(contract, dict):
+1649:        return [], "contract did not parse"
+1651:    for n, p in enumerate(contract.get("fix_probes") or [], 1):
+1653:            return [], f"contract probe {n} malformed: not an object"
+1656:            return [], f"contract probe {n} malformed: unknown type {ptype!r}"
+1660:                return [], f"contract probe {n} malformed: command needs a non-empty cmd"
+1661:            ok, why = lint_probe(root, cmd)
+1663:                return [], f"contract probe {n}: {why}"
+1668:            return [], f"contract probe {n} malformed: {ptype} needs a non-empty path"
+1672:                return [], f"contract probe {n} malformed: {ptype} needs a non-empty pattern"
+1677:def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
+1678:    """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
+1694:            "| Promoted to active working contract via jog | Execute implementation and verify probes |\n\n"
+1719:    probes = extract_probes_from_doc(doc_path)
+1720:    valid_probes = []
+1721:    for p in probes:
+1722:        ok, reason = lint_probe(root, p)
+1724:            valid_probes.append(p)
+1726:    contract_reason = None
+1727:    if not valid_probes:
+1728:        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+1730:    if not valid_probes:
+1732:            detail = f"; {contract_reason}" if contract_reason else ""
+1733:            return None, f"unreviewed-probe-contract (no valid probes in unattended mode{detail})"
+
+exec
+/bin/zsh -lc "nl -ba utils/py/jog_run.py | sed -n '1550,1680p'; nl -ba utils/py/swarm_preflight.py | sed -n '140,330p'; rg --files | rg '(1447|1439|1296|1386|1414|replay.py)'" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+ succeeded in 0ms:
+  1550	        try:
+  1551	            with open(os.path.join(self.lock_dir, "pid"), "w") as f:
+  1552	                f.write(f"{os.getpid()}\n")
+  1553	        except Exception:
+  1554	            pass
+  1555	
+  1556	        os.environ["RELAY_DRIVER_LOCKED"] = "1"
+  1557	
+  1558	    def release(self):
+  1559	        if self.acquired:
+  1560	            try:
+  1561	                if os.path.exists(self.lock_dir):
+  1562	                    shutil.rmtree(self.lock_dir)
+  1563	            except Exception:
+  1564	                pass
+  1565	            self.acquired = False
+  1566	
+  1567	
+  1568	def lint_probe(root, probe_cmd):
+  1569	    """Lint a probe command to ensure it is non-trivial and resolves to a real target."""
+  1570	    cmd = probe_cmd.strip()
+  1571	    if not cmd:
+  1572	        return False, "empty probe command"
+  1573	    for pat in TRIVIAL_PROBE_PATTERNS:
+  1574	        if pat.match(cmd):
+  1575	            return False, f"trivial probe pattern rejected: {cmd!r}"
+  1576	
+  1577	    # Verify referenced file/glob resolves if command specifies a test path
+  1578	    tokens = cmd.split()
+  1579	    if len(tokens) >= 2 and tokens[0] in ("bash", "sh", "python3", "pytest"):
+  1580	        target_path = tokens[1]
+  1581	        # Resolve target relative to root
+  1582	        full_pattern = os.path.join(root, target_path)
+  1583	        matches = glob.glob(full_pattern)
+  1584	        if not matches and not os.path.exists(full_pattern):
+  1585	            return False, f"probe target path does not resolve: {target_path}"
+  1586	
+  1587	    return True, "ok"
+  1588	
+  1589	
+  1590	def find_issue_doc(root, gh_num):
+  1591	    """Use reconciliation's canonical issue identity resolver."""
+  1592	    from wave_reconcile import find_issue_doc as resolve_issue_doc
+  1593	    return resolve_issue_doc(root, gh_num)
+  1594	
+  1595	
+  1596	def extract_probes_from_doc(doc_path):
+  1597	    """Extract fix_probes from doc frontmatter or body."""
+  1598	    if not os.path.isfile(doc_path):
+  1599	        return []
+  1600	    try:
+  1601	        with open(doc_path, "r", encoding="utf-8") as f:
+  1602	            content = f.read()
+  1603	    except Exception:
+  1604	        return []
+  1605	
+  1606	    probes = []
+  1607	    fm_match = re.search(r"^---\n(.*?)\n---", content, re.DOTALL)
+  1608	    if fm_match:
+  1609	        fm_text = fm_match.group(1)
+  1610	        probes_match = re.search(r"fix_probes:\s*\n((?:\s+-\s+.*\n?)+)", fm_text)
+  1611	        if probes_match:
+  1612	            for line in probes_match.group(1).splitlines():
+  1613	                line = line.strip()
+  1614	                if line.startswith("- "):
+  1615	                    p = line[2:].strip().strip("\"'")
+  1616	                    if p:
+  1617	                        probes.append(p)
+  1618	    return probes
+  1619	
+  1620	
+  1621	_CONTRACT_PROBE_TYPES = ("path_absent", "path_present", "grep_present", "grep_absent", "command")
+  1622	
+  1623	
+  1624	def contract_probes_from_doc(root, doc_path):
+  1625	    """GH-1232: the Preflight Contract's JSON fix_probes, checked for shape only.
+  1626	
+  1627	    Returns (labels, reason). Nothing is evaluated: whether a probe still reads "unfixed" is
+  1628	    preflight's verdict, made next in its ref-pinned worktree. Running the probes here would judge
+  1629	    the mutable checkout instead and execute shell `command` probes twice (plan QA round 1).
+  1630	    """
+  1631	    try:
+  1632	        with open(doc_path, "r", encoding="utf-8") as f:
+  1633	            text = f.read()
+  1634	    except OSError:
+  1635	        return [], None
+  1636	    # extract_contract sys.exit(3)s on a doc without the heading; check first (marathon_drive idiom).
+  1637	    if not re.search(r'^#{1,6}\s+.*preflight\s+contract', text, re.IGNORECASE | re.MULTILINE):
+  1638	        return [], None
+  1639	    try:
+  1640	        from swarm_preflight import extract_contract
+  1641	    except Exception as e:
+  1642	        return [], f"could not load the preflight contract parser ({e})"
+  1643	    try:
+  1644	        contract = extract_contract(doc_path)
+  1645	    except (SystemExit, Exception):
+  1646	        # SystemExit(3) on a contract error; a non-object JSON value raises inside its validation.
+  1647	        contract = None
+  1648	    if not isinstance(contract, dict):
+  1649	        return [], "contract did not parse"
+  1650	    labels = []
+  1651	    for n, p in enumerate(contract.get("fix_probes") or [], 1):
+  1652	        if not isinstance(p, dict):
+  1653	            return [], f"contract probe {n} malformed: not an object"
+  1654	        ptype = p.get("type")
+  1655	        if ptype not in _CONTRACT_PROBE_TYPES:
+  1656	            return [], f"contract probe {n} malformed: unknown type {ptype!r}"
+  1657	        if ptype == "command":
+  1658	            cmd = p.get("cmd")
+  1659	            if not isinstance(cmd, str) or not cmd.strip():
+  1660	                return [], f"contract probe {n} malformed: command needs a non-empty cmd"
+  1661	            ok, why = lint_probe(root, cmd)
+  1662	            if not ok:
+  1663	                return [], f"contract probe {n}: {why}"
+  1664	            labels.append(f"command:{cmd}")
+  1665	            continue
+  1666	        path = p.get("path")
+  1667	        if not isinstance(path, str) or not path.strip():
+  1668	            return [], f"contract probe {n} malformed: {ptype} needs a non-empty path"
+  1669	        if ptype.startswith("grep_"):
+  1670	            pattern = p.get("pattern")
+  1671	            if not isinstance(pattern, str) or not pattern:
+  1672	                return [], f"contract probe {n} malformed: {ptype} needs a non-empty pattern"
+  1673	        labels.append(f"{ptype}:{path}")
+  1674	    return labels, None
+  1675	
+  1676	
+  1677	def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
+  1678	    """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
+  1679	    _require_jog_primary(primary or root)
+  1680	    basename = os.path.basename(doc_path)
+   140	        return o
+   141	
+   142	    for p, t in [("target", dict), ("target.repo", str), ("target.ref", str), ("gate", str)]:
+   143	        v = get(p, obj)
+   144	        if v is None or not isinstance(v, t):
+   145	            eprint(f"contract in {doc_path} missing required field: {p}")
+   146	            sys.exit(3)
+   147	            
+   148	    if "round_cap" in obj and (type(obj["round_cap"]) is not int or obj["round_cap"] < 1):
+   149	        eprint(f"contract in {doc_path}: round_cap must be a positive integer")
+   150	        sys.exit(3)
+   151	
+   152	    if not isinstance(obj.get('fix_probes'), list) or len(obj['fix_probes']) == 0:
+   153	        eprint(f"contract in {doc_path} needs at least one fix_probes entry")
+   154	        sys.exit(3)
+   155	        
+   156	    if not isinstance(obj.get('artifacts'), list) or len(obj['artifacts']) == 0:
+   157	        eprint(f"contract in {doc_path} needs at least one artifacts path")
+   158	        sys.exit(3)
+   159	
+   160	    # GH-89: artifacts_new is an OPTIONAL subset marker — every path in it must also
+   161	    # appear in artifacts[] (it is not a separate path list). A typo'd or stray entry
+   162	    # is a contract error (exit 3), same severity as a missing required field.
+   163	    if obj.get('artifacts_new') is not None:
+   164	        if not isinstance(obj['artifacts_new'], list):
+   165	            eprint(f"contract in {doc_path}: artifacts_new must be an array of strings")
+   166	            sys.exit(3)
+   167	        for a in obj['artifacts_new']:
+   168	            if a not in obj['artifacts']:
+   169	                eprint(f"contract in {doc_path}: artifacts_new entry not present in artifacts[]: {a}")
+   170	                sys.exit(3)
+   171	
+   172	    # GH-467: an index-only delivery needs the harness/orchestrator to perform the git operation.
+   173	    # Builders are expressly forbidden from running git, so reject a lane that declares such a
+   174	    # delivery without also routing it to the orchestrator.
+   175	    lanes = obj.get("lanes")
+   176	    if lanes is not None:
+   177	        if not isinstance(lanes, dict):
+   178	            eprint(f"contract in {doc_path}: lanes must be an object")
+   179	            sys.exit(3)
+   180	        for lane_name in ("agy_safe", "orchestrator_only", "index_only"):
+   181	            if lane_name not in lanes:
+   182	                continue
+   183	            lane_paths = lanes[lane_name]
+   184	            if not isinstance(lane_paths, list) or any(not isinstance(path, str) or not path for path in lane_paths):
+   185	                eprint(f"contract in {doc_path}: lanes.{lane_name} must be an array of non-empty strings")
+   186	                sys.exit(3)
+   187	
+   188	        index_only = lanes.get("index_only")
+   189	        if index_only is not None:
+   190	            for path in index_only:
+   191	                if path not in obj["artifacts"]:
+   192	                    eprint(f"contract in {doc_path}: lanes.index_only entry not present in artifacts[]: {path}")
+   193	                    sys.exit(3)
+   194	
+   195	    return obj
+   196	
+   197	def merge_contracts(contracts):
+   198	    base = contracts[0]
+   199	    merged_lanes = {}
+   200	    for lane_name in ("agy_safe", "orchestrator_only", "index_only"):
+   201	        declared = []
+   202	        declared_anywhere = False
+   203	        for contract in contracts:
+   204	            lanes = contract.get("lanes")
+   205	            if isinstance(lanes, dict) and lane_name in lanes:
+   206	                declared_anywhere = True
+   207	                for path in lanes[lane_name]:
+   208	                    if path not in declared:
+   209	                        declared.append(path)
+   210	        if declared_anywhere:
+   211	            merged_lanes[lane_name] = declared
+   212	
+   213	    out = {
+   214	        "target": {"repo": base["target"]["repo"], "ref": base["target"]["ref"]},
+   215	        "gate": base["gate"],
+   216	        "round_cap": base.get("round_cap"),
+   217	        "fix_probes": list(base.get("fix_probes", [])),
+   218	        "artifacts": list(base.get("artifacts", [])),
+   219	        "artifacts_new": list(base.get("artifacts_new") or []),
+   220	        "remediation": base.get("remediation"),
+   221	        "lanes": merged_lanes
+   222	    }
+   223	    
+   224	    for c in contracts[1:]:
+   225	        if c["target"]["repo"] != out["target"]["repo"] or c["target"]["ref"] != out["target"]["ref"]:
+   226	            eprint(f"bundle disagreement: targets differ ({out['target']['repo']}@{out['target']['ref']} vs {c['target']['repo']}@{c['target']['ref']})")
+   227	            sys.exit(7)
+   228	        if c.get("round_cap") != out.get("round_cap"):
+   229	            eprint("bundle disagreement: explicit round caps differ")
+   230	            sys.exit(7)
+   231	        if c["gate"] != out["gate"]:
+   232	            eprint(f"bundle disagreement: gate commands differ")
+   233	            sys.exit(7)
+   234	            
+   235	        out["fix_probes"].extend(c.get("fix_probes", []))
+   236	        for a in c.get("artifacts", []):
+   237	            if a not in out["artifacts"]: out["artifacts"].append(a)
+   238	        for a in c.get("artifacts_new") or []:
+   239	            if a not in out["artifacts_new"]: out["artifacts_new"].append(a)
+   240	            
+   241	    return out
+   242	
+   243	def eval_probes(root, c):
+   244	    probes_res = []
+   245	    counts = {"landed": 0, "unfixed": 0, "blocked": 0}
+   246	    
+   247	    for p in c["fix_probes"]:
+   248	        verdict = "unfixed"
+   249	        ptype = p.get("type")
+   250	        path = p.get("path")
+   251	        
+   252	        target_path = os.path.join(root, path) if path else root
+   253	        
+   254	        try:
+   255	            if ptype == "path_absent":
+   256	                if os.path.exists(target_path): verdict = "landed"
+   257	            elif ptype == "path_present":
+   258	                if not os.path.exists(target_path): verdict = "blocked"
+   259	            elif ptype == "grep_present":
+   260	                if not os.path.exists(target_path):
+   261	                    verdict = "blocked"
+   262	                else:
+   263	                    with open(target_path, 'r') as f:
+   264	                        if not re.search(p.get("pattern", ""), f.read()):
+   265	                            verdict = "landed"
+   266	            elif ptype == "grep_absent":
+   267	                if os.path.exists(target_path):
+   268	                    with open(target_path, 'r') as f:
+   269	                        if re.search(p.get("pattern", ""), f.read()):
+   270	                            verdict = "landed"
+   271	            elif ptype == "command":
+   272	                cmd = p.get("cmd")
+   273	                rc = 0
+   274	                try:
+   275	                    subprocess.run(cmd, shell=True, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+   276	                except subprocess.CalledProcessError:
+   277	                    rc = 1
+   278	                
+   279	                expect_nonzero = p.get("expect_nonzero", False)
+   280	                if (rc == 0) if expect_nonzero else (rc != 0):
+   281	                    verdict = "landed"
+   282	            else:
+   283	                verdict = "blocked"
+   284	        except Exception:
+   285	            verdict = "blocked"
+   286	            
+   287	        counts[verdict] += 1
+   288	        probes_res.append({"type": ptype, "path": path, "verdict": verdict})
+   289	        
+   290	    stale = 1 if counts["landed"] > 0 else 0
+   291	    blocked = 1 if counts["blocked"] > 0 else 0
+   292	    ambig = 1 if stale and counts["unfixed"] > 0 else 0
+   293	    return probes_res, stale, blocked, ambig
+   294	
+   295	def configured_lane_paths(contract, lane_name, default=()):
+   296	    """Return a declared lane list, applying defaults only when the field is absent."""
+   297	    lanes = contract.get("lanes")
+   298	    if not isinstance(lanes, dict) or lanes.get(lane_name) is None:
+   299	        return list(default)
+   300	    return lanes[lane_name]
+   301	
+   302	
+   303	def is_orchestrator_owned(path, orchestrator_only):
+   304	    return any(path == declared or path.startswith(declared) for declared in orchestrator_only)
+   305	
+   306	
+   307	def lane_plan(c, effective=None):
+   308	    effective = effective or {}
+   309	    if isinstance(effective.get("artifacts"), list):
+   310	        arts = effective["artifacts"]
+   311	    else:
+   312	        arts = c.get("artifacts", [])
+   313	    orch_only = configured_lane_paths(c, "orchestrator_only", DEFAULT_ORCHESTRATOR_ONLY)
+   314	    agy_safe = configured_lane_paths(c, "agy_safe")
+   315	
+   316	    orchestrator, codex, agy = [], [], []
+   317	    for a in arts:
+   318	        if is_orchestrator_owned(a, orch_only): orchestrator.append(a)
+   319	        elif a in agy_safe: agy.append(a)
+   320	        else: codex.append(a)
+   321	
+   322	    def top_dir(p): return p.split("/")[0]
+   323	    coupled = len(arts) > 1 and len(set(top_dir(a) for a in arts)) == 1
+   324	    buildable = codex + agy
+   325	
+   326	    return {
+   327	        "orchestrator_owned": orchestrator,
+   328	        "codex_lane": codex,
+   329	        "agy_lane": agy,
+   330	        "effective_artifacts": arts,
+TESTS-RESULTS/2026-10-04+GH-949/replay.py
+TESTS-RESULTS/2026-11-09+GH-1386-A-landing/invocation.py.txt
+TESTS-RESULTS/2026-11-09+GH-1386-A-landing/provenance.jsonl
+TESTS-RESULTS/2026-11-09+GH-1386-A-landing/hq-verification.json
+TESTS-RESULTS/2026-11-09+GH-1386-A-landing/README.md
+TESTS-RESULTS/2026-11-09+GH-1386-A-landing/batch.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-A-landing/batch-result.json
+PROJECT/1-INBOX/GH-1414-PARAPHRASE-FIRST-REVIEW.md
+TESTS-RESULTS/2026-11-10+GH-1386/consult-probe-controls.json
+TESTS-RESULTS/2026-11-10+GH-1386/1243-admission-refusal.json
+TESTS-RESULTS/2026-11-10+GH-1386/jog-trial2-result.json
+TESTS-RESULTS/2026-11-10+GH-1386/1243-admission-refusal.log
+TESTS-RESULTS/2026-11-10+GH-1386/1243-admission-start.json
+TESTS-RESULTS/2026-11-10+GH-1386/qa-explicit-cap-results.json
+TESTS-RESULTS/2026-11-10+GH-1386/checkpoint-config-controls.json
+TESTS-RESULTS/2026-11-10+GH-1386/qa-jog-loop-results.json
+TESTS-RESULTS/2026-11-10+GH-1386/new-trial-baseline.json
+TESTS-RESULTS/2026-11-10+GH-1386/provenance.jsonl
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/provenance.jsonl
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/1206-stdout.json
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/1243-stderr.log
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/checks.json
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/1243-stdout.json
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/results.json
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/SUMMARY.md
+TESTS-RESULTS/2026-11-10+GH-1386/live-acceptance-215704/1206-stderr.log
+TESTS-RESULTS/2026-11-10+GH-1386/1206-qualification-result.json
+PROJECT/2-WORKING/GH-1447-ACCEPTANCE-RELEVANCE.md
+TESTS-RESULTS/2026-11-10+GH-1386/review-followup/publication-full.log.gz
+TESTS-RESULTS/2026-11-10+GH-1386/review-followup/publication-full.json
+TESTS-RESULTS/2026-11-10+GH-1386/review-followup/README.md
+TESTS-RESULTS/2026-11-10+GH-1386/review-followup/cap-control-subset.json
+TESTS-RESULTS/2026-11-10+GH-1386/packet-1243-redacted.md
+PROJECT/2-WORKING/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/ledger-readback-final.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/recover1402.log
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/manual.md
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/landing-excerpts.log
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/held1404-current-merge.txt
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/pre1406-binding.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/1405-final-docs.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/provenance.jsonl
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/held1403-current-merge.txt
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/pr-1406.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/pr-1405.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/recover1327.log
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/pr-1327.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/ledger-readback.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/active1243-reconcile.log
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/pr-1402.json
+TESTS-RESULTS/2026-11-10+GH-1386/merge-cleanup/1406-final-docs.json
+TESTS-RESULTS/2026-11-10+GH-1386/consolidated-qualification.log.gz
+TESTS-RESULTS/2026-11-10+GH-1386/packet-1206-redacted.md
+TESTS-RESULTS/2026-11-10+GH-1386/qa-explicit-cap.py
+TESTS-RESULTS/2026-11-10+GH-1386/1206-qualification.log.gz
+TESTS-RESULTS/2026-11-10+GH-1386/consult-admission.py
+TESTS-RESULTS/2026-11-10+GH-1386/jog-trial-result.json
+TESTS-RESULTS/2026-11-10+GH-1386/consolidated-qualification-result.json
+TESTS-RESULTS/2026-11-10+GH-1386/1243-isolated-runtime.json
+TESTS-RESULTS/2026-11-10+GH-1386/packet-controls.json
+TESTS-RESULTS/2026-11-10+GH-1386/jog-trial2-start.json
+TESTS-RESULTS/2026-11-10+GH-1386/qa-jog-loop.py
+TESTS-RESULTS/2026-11-10+GH-1386/jog-trial-start.json
+TESTS-RESULTS/2026-11-10+GH-1386/interventions.md
+TESTS-RESULTS/2026-11-08+GH-1365/manual-replay.py
+TESTS-RESULTS/2026-11-10+GH-1414/provenance.jsonl
+TESTS-RESULTS/2026-11-10+GH-1414/manual-checks.md
+relay-system/2026-11-09/gh1386-trial-policy-final.codex.md
+relay-system/2026-11-09/gh1386-twohour-publication-seam.codex.md
+relay-system/2026-11-09/gh1386-policy-recovery.codex.md
+relay-system/2026-11-09/gh1386-A-reused-seam.codex.md
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/invocation.py.txt
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/provenance.jsonl
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/hq-verification.json
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/README.md
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/batch.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/resume.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-twohour/batch-result.json
+TESTS-RESULTS/2026-11-12+GH-1447/replay.log
+TESTS-RESULTS/2026-11-12+GH-1447/provenance.jsonl
+TESTS-RESULTS/2026-11-12+GH-1447/inputs.json
+TESTS-RESULTS/2026-11-12+GH-1447/replay.py
+TESTS-RESULTS/2026-11-12+GH-1447/replay-results.json
+TESTS-RESULTS/2026-11-12+GH-1447/SUMMARY.md
+TESTS-RESULTS/2026-10-30+GH-1273/manual-replay.py
+relay-system/2026-11-08/gh1296-preliminary.codex.md
+relay-system/2026-11-08/gh1296-required-fields.codex.md
+relay-system/2026-11-08/gh1296-final.codex.md
+TESTS-RESULTS/2026-11-09+GH-1386-B/full-push.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-B/ratings-restoration.json
+TESTS-RESULTS/2026-11-09+GH-1386-B/provenance.jsonl
+TESTS-RESULTS/2026-11-09+GH-1386-B/extension2-result.json
+TESTS-RESULTS/2026-11-09+GH-1386-B/qualification-extension.json
+TESTS-RESULTS/2026-11-09+GH-1386-B/full-result.json
+TESTS-RESULTS/2026-11-09+GH-1386-B/SUMMARY.md
+TESTS-RESULTS/2026-11-09+GH-1386-B/reserve-entry-decision.json
+TESTS-RESULTS/2026-11-09+GH-1386-B/extension1-result.json
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-full-push.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/leaderboard-render.log
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/delivered-issue-bookkeeping.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/provenance.jsonl
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-landing-result.json
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-landing.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/resolved-policy-discrimination.json
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-evidence-push.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/README.md
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/leaderboard-after.log
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/source-cli-identity-refusal.txt
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/flywheel-install-verification.json
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/recovery-full-push-result.json
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/leaderboard-before.log
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/original-policy.json
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/bookkeeping-publication.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-policy-restoration/bookkeeping-publication-result.json
+TESTS-RESULTS/2026-10-13+GH-1042/manual-replay.py
+TESTS-RESULTS/2026-11-03+GH-1296/gh1296-check.py
+TESTS-RESULTS/2026-11-03+GH-1296/launch-README-before.md
+TESTS-RESULTS/2026-11-03+GH-1296/provenance.jsonl
+TESTS-RESULTS/2026-11-03+GH-1296/live-preflight-verdicts.txt
+TESTS-RESULTS/2026-11-03+GH-1296/gh1296-check-output.txt
+TESTS-RESULTS/2026-11-03+GH-1296/launch-README-after.md
+TESTS-RESULTS/2026-11-03+GH-1296/GH-1265-moved-path-control.md
+TESTS-RESULTS/2026-11-03+GH-1296/SUMMARY.md
+TESTS-RESULTS/2026-10-10+GH-1015/manual-replay.py
+TESTS-RESULTS/2026-10-01+GH-909/red-handoff/replay.py
+TESTS-RESULTS/2026-11-11+GH-1386/1315-packet.md
+TESTS-RESULTS/2026-11-11+GH-1386/initial-jog-refusal.log
+TESTS-RESULTS/2026-11-11+GH-1386/1171-repaired-packet.md
+TESTS-RESULTS/2026-11-11+GH-1386/1315-readiness.json
+TESTS-RESULTS/2026-11-11+GH-1386/run.rc
+TESTS-RESULTS/2026-11-11+GH-1386/1171-repaired-freshness.json
+TESTS-RESULTS/2026-11-11+GH-1386/unreviewed-candidate.patch
+TESTS-RESULTS/2026-11-11+GH-1386/ESCALATION.md
+TESTS-RESULTS/2026-11-11+GH-1386/resume-stale-origin-refusal.log
+TESTS-RESULTS/2026-11-11+GH-1386/admission-repair-push-excerpt.txt
+TESTS-RESULTS/2026-11-11+GH-1386/1315-repaired-packet.md
+TESTS-RESULTS/2026-11-11+GH-1386/1315-repaired-marathon-invocation.json
+TESTS-RESULTS/2026-11-11+GH-1386/terminal-queue.json
+TESTS-RESULTS/2026-11-11+GH-1386/1171-marathon-invocation.json
+TESTS-RESULTS/2026-11-11+GH-1386/provenance.jsonl
+TESTS-RESULTS/2026-11-11+GH-1386/1315-repaired-readiness.json
+TESTS-RESULTS/2026-11-11+GH-1386/terminal-checkpoint.json
+TESTS-RESULTS/2026-11-11+GH-1386/1315-marathon-invocation.json
+TESTS-RESULTS/2026-11-11+GH-1386/1171-repaired-marathon-invocation.json
+TESTS-RESULTS/2026-11-11+GH-1386/final-evidence-push-excerpt.txt
+TESTS-RESULTS/2026-11-11+GH-1386/1171-freshness.json
+TESTS-RESULTS/2026-11-11+GH-1386/1171-readiness.json
+TESTS-RESULTS/2026-11-11+GH-1386/run-start.txt
+TESTS-RESULTS/2026-11-11+GH-1386/intake-push-excerpt.txt
+TESTS-RESULTS/2026-11-11+GH-1386/1315-repaired-freshness.json
+TESTS-RESULTS/2026-11-11+GH-1386/native-attempts.txt
+TESTS-RESULTS/2026-11-11+GH-1386/builder-provenance.jsonl
+TESTS-RESULTS/2026-11-11+GH-1386/1171-packet.md
+TESTS-RESULTS/2026-11-11+GH-1386/SUMMARY.md
+TESTS-RESULTS/2026-11-11+GH-1386/terminal-relay.md
+TESTS-RESULTS/2026-11-11+GH-1386/1315-freshness.json
+TESTS-RESULTS/2026-11-11+GH-1386/1171-repaired-readiness.json
+TESTS-RESULTS/2026-11-11+GH-1386/resumed-jog.log
+TESTS-RESULTS/2026-11-11+GH-1386/marathon-result.json
+TESTS-RESULTS/2026-10-03+GH-949/manual-state/replay.py
+TESTS-RESULTS/2026-10-03+GH-949/manual-idempotence/replay.py
+TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/normal-push.log.gz
+TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/provenance.jsonl
+TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/README.md
+TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/original-policy.json
+TESTS-RESULTS/2026-11-09+GH-1386-trial-policy/normal-push-result.json
+relay-system/2026-11-11/gh1386-two-task-plan.codex.md
+relay-system/2026-11-11/gh1386-evidence.codex.md
+TESTS-RESULTS/2026-10-18+GH-591/wave-c1439a83789473e5f4d9477abfc0ab76fae91844/provenance.jsonl
+TESTS-RESULTS/2026-10-18+GH-591/wave-c1439a83789473e5f4d9477abfc0ab76fae91844/validation.jsonl
+relay-system/2026-11-10/gh1414-opus55-round1.md
+relay-system/2026-11-10/gh1414-opus55-final.md
+relay-system/2026-11-10/gh1414-skills-wording.codex.md
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-candidate-README.md
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-baseline-packet.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/code-push.log
+TESTS-RESULTS/2026-11-08+GH-1296-review/independent-required-fields.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/full-gate-receipt.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-baseline-README.md
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-instance.tar.gz
+TESTS-RESULTS/2026-11-08+GH-1296-review/provenance.jsonl
+TESTS-RESULTS/2026-11-08+GH-1296-review/primary-reconciliation-push.log
+TESTS-RESULTS/2026-11-08+GH-1296-review/full-gate.log
+TESTS-RESULTS/2026-11-08+GH-1296-review/required-fields-full-gate-receipt.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/required-fields-controls.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/manual-procedure.md
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-input-hashes.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/SUMMARY.md
+TESTS-RESULTS/2026-11-08+GH-1296-review/required-fields-full-gate.log
+TESTS-RESULTS/2026-11-08+GH-1296-review/required-fields-clone-state.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-candidate-packet.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/manual-output.jsonl
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-dryrun/preflight-1204.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-dryrun/preflight-446.json
+TESTS-RESULTS/2026-11-08+GH-1296-review/current-dryrun/dryrun.json
+relay-system/2026-11-12/gh1447-plan.codex.md
+relay-system/2026-11-12/gh1447-lint-idea-141014/gh1447-lint-idea.PROMPT.txt
+
+mcp: codex_apps/github.fetch_issue started
+mcp: codex_apps/github.fetch_issue (completed)
+mcp: codex_apps/github.fetch_issue_comments started
+mcp: codex_apps/github.fetch_issue_comments (failed)
+exec
+/bin/zsh -lc "nl -ba TESTS-RESULTS/2026-11-12+GH-1447/replay.py; nl -ba TESTS-RESULTS/2026-11-12+GH-1447/SUMMARY.md; cat TESTS-RESULTS/2026-11-12+GH-1447/replay-results.json; cat TESTS-RESULTS/2026-11-12+GH-1447/provenance.jsonl; nl -ba utils/py/swarm_preflight.py | sed -n '270,305p'; nl -ba PROJECT/2-WORKING/GH-1447-ACCEPTANCE-RELEVANCE.md | head -95" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+ succeeded in 0ms:
+     1	"""Bounded manual lint replay; never executes any inherited probe command."""
+     2	import ast,glob,hashlib,json,os,re,subprocess,tempfile
+     3	from pathlib import Path
+     4	root=Path(__file__).resolve().parents[2]
+     5	def git(*args):return subprocess.check_output(['git','-C',str(root),*args],text=True)
+     6	source=(root/'utils/py/jog_run.py').read_text();tree=ast.parse(source)
+     7	nodes=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='lint_probe' or isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='TRIVIAL_PROBE_PATTERNS' for t in n.targets)]
+     8	assert len(nodes)==2
+     9	ns={'re':re,'os':os,'glob':glob};exec(compile(ast.Module(body=nodes,type_ignores=[]),'current-lint-probe','exec'),ns)
+    10	results=[];inputs=[]
+    11	with tempfile.TemporaryDirectory(prefix='gh1447-replay-') as d:
+    12	 fixture=Path(d)
+    13	 for issue,slug in [(1171,'BRANCH-ARTIFACT-PREFLIGHT'),(1315,'LEGACY-PREVIEW-PARITY')]:
+    14	  for label,rev in [('original','f98ad1d925a28e0d724a70c8653b00a100521b59'),('repaired','811d582360df31d21d9ccb4208fb8e474191b08b')]:
+    15	   path=f'PROJECT/1-INBOX/GH-{issue}-{slug}.md';doc=git('show',f'{rev}:{path}');assert doc.strip()
+    16	   blocks=re.findall(r'```json\s*(.*?)```',doc,re.S);contracts=[json.loads(b) for b in blocks];c=next(c for c in contracts if 'fix_probes' in c)
+    17	   probes=[p for p in c['fix_probes'] if p.get('type')=='command'];assert len(probes)==1
+    18	   cmd=probes[0]['cmd'];assert cmd.strip();entry={'issue':issue,'label':label,'revision':rev,'doc':path,'doc_sha256':hashlib.sha256(doc.encode()).hexdigest(),'probe':probes[0]}
+    19	   if label=='repaired':
+    20	    rel=cmd.split()[1];assert not Path(rel).is_absolute() and '..' not in Path(rel).parts
+    21	    data=git('show',f'{rev}:{rel}');assert data.strip();f=fixture/rel;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(data);entry['script_sha256']=hashlib.sha256(data.encode()).hexdigest()
+    22	   inputs.append(entry);ok,reason=ns['lint_probe'](str(fixture),cmd);results.append({'case':f'{issue}-{label}','accepted':ok,'reason':reason});assert ok==(label=='repaired')
+    23	 for name,cmd,want in [('empty','',False),('trivial','echo ok',False),('missing','python3 missing.py',False)]:
+    24	  ok,reason=ns['lint_probe'](str(fixture),cmd);results.append({'case':name,'accepted':ok,'reason':reason});assert ok==want
+    25	out=Path(__file__).parent
+    26	(out/'inputs.json').write_text(json.dumps(inputs,indent=2)+'\n')
+    27	(out/'replay-results.json').write_text(json.dumps({'source_revision':git('rev-parse','HEAD').strip(),'source_sha256':hashlib.sha256(source.encode()).hexdigest(),'results':results,'limits':'Only current lint_probe executed. No historical shell commands, probe semantics, full Swarm CLI or end-to-end delivery replay executed.'},indent=2)+'\n')
+    28	print(json.dumps(results,indent=2));print('PASS: 7/7 expected lint classifications; semantic acceptance unverified')
+     1	# GH1447 bounded replay and instruction verification
+     2	
+     3	## Results
+     4	
+     5	Two requested wording improvements applied to existing start-task preparation review and Flywheel handoff. Manual previous-text absence/current-text uniqueness controls PASS. Consumer main path: green regressions without artifact/outcome correspondence do not establish acceptance. Adjacent path: separate defect-sensitive acceptance may establish outcome even while regressions stay green. Flywheel review of a later amendment requires evidence or unresolved disposition; one completed child cannot establish integration. These are text interpretations, not observed agent effectiveness.
+     6	
+     7	One offline replay ran: two exact original command probes from f98ad1d9, two repaired command forms and historical script files from811d5823, plus empty/trivial/missing controls. Current lint_probe classified all7 as expected: original inline commands refused at -c; repaired file commands accepted; invalid controls refused. No inherited command executed. The script reconstructs only required historical files in a temporary fixture. Inputs and hashes are nonempty and recorded.
+     8	
+     9	## Recommendation and limits
+    10	
+    11	Existing jog_run.lint_probe takes tokens[1] as the script path; swarm_preflight.eval_probes instead runs a shell command and maps return status. A surgical follow-up should reconcile supported command forms or explicitly refuse unsupported forms consistently at preparation, with preserved malformed/trivial/missing rejection. Do not simply exempt all option-looking tokens or claim that lint acceptance establishes semantics. No runtime fix implemented here; separate idea spike owns that decision and heuristic false-positive study. No unlazy runtime imported, no new suite/registry/gate/hook.
+    12	
+    13	Prior-art search found related glossary1407, admission522, preparation1439/1296 and outer-loop1386/1400; none is the requested narrow instruction + retained-input replay or explicit gate-lint exploration. Historical/14-day recurrence trend remains unknown. Lessons: NO_ENTRY; one replay supports a known compatibility observation, not an effectiveness claim.
+{
+  "source_revision": "fbe202b5b07d0ce9169dab6e4b8e4ae74444f5d7",
+  "source_sha256": "4d7c2b1110abfc7c245941ac4d3c0b541580d85611179f70dcc5cd662acc769e",
+  "results": [
+    {
+      "case": "1171-original",
+      "accepted": false,
+      "reason": "probe target path does not resolve: -c"
+    },
+    {
+      "case": "1171-repaired",
+      "accepted": true,
+      "reason": "ok"
+    },
+    {
+      "case": "1315-original",
+      "accepted": false,
+      "reason": "probe target path does not resolve: -c"
+    },
+    {
+      "case": "1315-repaired",
+      "accepted": true,
+      "reason": "ok"
+    },
+    {
+      "case": "empty",
+      "accepted": false,
+      "reason": "empty probe command"
+    },
+    {
+      "case": "trivial",
+      "accepted": false,
+      "reason": "trivial probe pattern rejected: 'echo ok'"
+    },
+    {
+      "case": "missing",
+      "accepted": false,
+      "reason": "probe target path does not resolve: missing.py"
+    }
+  ],
+  "limits": "Only current lint_probe executed. No historical shell commands, probe semantics, full Swarm CLI or end-to-end delivery replay executed."
+}
+{"command": "PYTHONDONTWRITEBYTECODE=1 python3 TESTS-RESULTS/2026-11-12+GH-1447/replay.py", "exit": 0, "source": "fbe202b5b07d0ce9169dab6e4b8e4ae74444f5d7", "result": "7/7 expected syntax classifications; no shell probes executed", "artifacts": [{"artifact": "replay.py", "sha256": "0dbe08f1646c078048f0c57367a404d9b8e54a4610ff3f3c76c110a228673216"}, {"artifact": "inputs.json", "sha256": "427da70b2c2c4f0ed30935594446325bf0ea3a676bb48f2f69a95cdcc39a6f2d"}, {"artifact": "replay-results.json", "sha256": "1fc9533e2694053874209e6fc498749cf6e6f20de558a0b715f77811cdb85fb2"}, {"artifact": "replay.log", "sha256": "b8cb2b82150a9553ddfe219adb7dfd7e2b83b62fc107c3b49aac790bf4af17c2"}]}
+{"command": "Python base/current instruction assertions and main/adjacent consumer read-through", "base": "712a73b4f3b01c8acc2c5115d11f855c62a2e537", "exit": 0, "result": "previous wording absent; exact new wording once; no runtime compliance claim"}
+   270	                            verdict = "landed"
+   271	            elif ptype == "command":
+   272	                cmd = p.get("cmd")
+   273	                rc = 0
+   274	                try:
+   275	                    subprocess.run(cmd, shell=True, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+   276	                except subprocess.CalledProcessError:
+   277	                    rc = 1
+   278	                
+   279	                expect_nonzero = p.get("expect_nonzero", False)
+   280	                if (rc == 0) if expect_nonzero else (rc != 0):
+   281	                    verdict = "landed"
+   282	            else:
+   283	                verdict = "blocked"
+   284	        except Exception:
+   285	            verdict = "blocked"
+   286	            
+   287	        counts[verdict] += 1
+   288	        probes_res.append({"type": ptype, "path": path, "verdict": verdict})
+   289	        
+   290	    stale = 1 if counts["landed"] > 0 else 0
+   291	    blocked = 1 if counts["blocked"] > 0 else 0
+   292	    ambig = 1 if stale and counts["unfixed"] > 0 else 0
+   293	    return probes_res, stale, blocked, ambig
+   294	
+   295	def configured_lane_paths(contract, lane_name, default=()):
+   296	    """Return a declared lane list, applying defaults only when the field is absent."""
+   297	    lanes = contract.get("lanes")
+   298	    if not isinstance(lanes, dict) or lanes.get(lane_name) is None:
+   299	        return list(default)
+   300	    return lanes[lane_name]
+   301	
+   302	
+   303	def is_orchestrator_owned(path, orchestrator_only):
+   304	    return any(path == declared or path.startswith(declared) for declared in orchestrator_only)
+   305	
+     1	---
+     2	issue: 1447
+     3	title: Acceptance relevance and complete outcome accounting
+     4	status: planned
+     5	created: 2026-11-12
+     6	updated: 2026-11-12
+     7	owner: Codex
+     8	doc_type: improvement
+     9	goal: Make acceptance relevance and incomplete requested outcomes visible without new machinery
+    10	---
+    11	
+    12	# Acceptance relevance and complete outcome accounting
+    13	
+    14	## Status
+    15	
+    16	| What was just completed | What's next |
+    17	|---|---|
+    18	| Existing review/closeout and historical probe failure traced at 712a73b4. | Plan QA, two wording changes, one bounded replay, final QA and PR. |
+    19	
+    20	## Observed
+    21	
+    22	start-task Step6 already asks where the unchanged candidate is rejected; it does not explicitly ask what artifact/behavior the check observes. Flywheel existing handoff preserves objective/evidence/budgets, but lacks explicit final mapping of every outcome and later amendment. GH1386 retained 2026-11-11 SUMMARY records python3 -c promotion refusal before builder, repaired by unchanged assertions in manual_probe.py. Current jog_run.lint_probe checks trivial commands and filesystem paths; swarm_preflight.eval_probes evaluates command exit status. Neither proves semantic relevance.
+    23	
+    24	## Plan
+    25	
+    26	1. Extend existing start-task Step6 with the requested artifact/behavior-to-outcome question; no new review stage. Extend Flywheel existing handoff with current-request accounting and subtask/integration distinction.
+    27	2. One bounded offline replay: extract exact historical GH1171/GH1315 inline commands from f98ad1d9 and repaired file commands from811d5823; call current lint_probe without executing inherited commands. Use empty/trivial/missing/supported-file controls. Compare admission parsing/evaluation boundaries by source; do not claim live workflow or semantic correctness from lint success. Max one replay plus one correction of replay setup; no runtime implementation in this task.
+    28	3. Retain inputs, source hashes, results and manual content consumer checks under TESTS-RESULTS/2026-11-12+GH-1447. Determine whether a surgical validator follow-up is justified. File separate idea spike after replay with its uncertainty and existing fix site.
+    29	4. Independent final Codex relay, normal classified gate in disposable fullclone, PR to development. No merge/deploy.
+    30	
+    31	## Acceptance
+    32	
+    33	- [ ] Preparation review asks what each acceptance check observes and why it establishes the requested outcome.
+    34	- [ ] Flywheel final report maps every requested outcome/amendment to evidence or unresolved disposition; local completion does not imply integration.
+    35	- [ ] Bounded replay preserves real input provenance and tests empty/trivial refusal plus valid control; semantic validity remains explicitly unproved.
+    36	- [ ] Independent plan/final QA and applicable normal publication gate pass, and separate exploration issue is linked.
+    37	
+    38	## Blast radius and rollback
+    39	
+    40	Easy: only two skill instruction files plus docs/evidence/ledger. Consumers are existing review packets and Flywheel closeout, no runtime or authority change. Revert instruction commit to rollback. No new scripts installed, suites, gates, hooks, queue, provider calls from replay or unlazy imports. Potential follow-up runtime change requires its own plan/acceptance, not automatic expansion here.
+    41	
+    42	## Ratings
+    43	
+    44	rated65/55/50/80: user-directed priority; false readiness wastes runs and risks overstating results, no proven data loss; neutral appeal; cheap reused seams. Concrete GH1386 historical example and LTV1014 reported irrelevant green regressions; 14-day comparative recurrence trend unknown, not zero.
+    45	
+    46	## Verification
+    47	
+    48	Content red control is previous instruction absence; fixed exact sentence/placement checks and main/adjacent consumer read-through. Replay syntax result has no claim of final delivery. Existing classifier chooses normal gate; no new test suite. Independent QA recorded in relay-system.
+    49	
+    50	## Lessons Learned
+    51	
+    52	NO_ENTRY pending replay; wording alone cannot demonstrate improved agent compliance.
+
+web search: 
+web search: https://raw.githubusercontent.com/Leonxlnx/unlazy/16671491/scripts/gate-lint.mjs
+codex
+The retained replay supports the seven classifications claimed, and the code explains the `-c` refusal. It does not establish semantic adequacy. The main draft weakness is that its third acceptance item calls an architectural exclusion a “red control”; that exclusion can constrain the recommendation, but it does not test whether a proposed warning catches useful mistakes.
+
+exec
+/bin/zsh -lc "rg -n 'TRIVIAL_PROBE_PATTERNS|contract_probes_from_doc\\(|promote_contract_to_working\\(|extract_contract\\(' utils/py/jog_run.py utils/py/swarm_preflight.py utils/py/hq*.py; nl -ba utils/py/jog_run.py | sed -n '35,58p;1718,1768p'; nl -ba utils/py/swarm_preflight.py | sed -n '1385,1423p'; git log -1 --format='%h %s' -- TESTS-RESULTS/2026-11-12+GH-1447; shasum -a 256 utils/py/jog_run.py TESTS-RESULTS/2026-11-12+GH-1447/replay.py TESTS-RESULTS/2026-11-12+GH-1447/inputs.json TESTS-RESULTS/2026-11-12+GH-1447/replay-results.json TESTS-RESULTS/2026-11-12+GH-1447/replay.log" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-40359-66jqav_o
+ succeeded in 0ms:
+zsh:1: no matches found: utils/py/hq*.py
+    35	
+    36	# Ensure utils/py is in sys.path
+    37	sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    38	from harness_paths import (harness_home, repo_root, is_vendored, resolve_tool,
+    39	                           primary_config_key, require_primary, github_slug_from_origin,
+    40	                           LEDGER_REPAIR_PATHS)  # noqa: E402
+    41	from rtl import driver_lock_path  # noqa: E402
+    42	import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
+    43	from releases_app import (  # noqa: E402
+    44	    _ensure_jog_schema,
+    45	    connect,
+    46	    _require_jog_primary,
+    47	    _table_exists,
+    48	    jog_acquire_lease,
+    49	    jog_set_status,
+    50	    jog_reconcile_orphan_leases,
+    51	)
+    52	
+    53	
+    54	TRIVIAL_PROBE_PATTERNS = [
+    55	    re.compile(r"^(?:true|exit\s+0|:|echo\s+.*|sleep\s+.*)$", re.IGNORECASE),
+    56	]
+    57	
+    58	
+  1718	
+  1719	    probes = extract_probes_from_doc(doc_path)
+  1720	    valid_probes = []
+  1721	    for p in probes:
+  1722	        ok, reason = lint_probe(root, p)
+  1723	        if ok:
+  1724	            valid_probes.append(p)
+  1725	
+  1726	    contract_reason = None
+  1727	    if not valid_probes:
+  1728	        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+  1729	
+  1730	    if not valid_probes:
+  1731	        if not interactive:
+  1732	            detail = f"; {contract_reason}" if contract_reason else ""
+  1733	            return None, f"unreviewed-probe-contract (no valid probes in unattended mode{detail})"
+  1734	
+  1735	    if interactive and sys.stdin.isatty():
+  1736	        print(f"\n[jog] Auto-promoted contract for GH-{gh_num}:")
+  1737	        print(f"      Source: {doc_path}")
+  1738	        print(f"      Target: {new_doc_path}")
+  1739	        print(f"      Probes: {valid_probes or '(none declared)'}")
+  1740	        resp = input(f"Proceed with preflight for GH-{gh_num}? [Y/n] ").strip().lower()
+  1741	        if resp in ("n", "no"):
+  1742	            return None, "promotion-cancelled-by-operator"
+  1743	
+  1744	    # Move doc to 2-WORKING
+  1745	    os.makedirs(os.path.dirname(new_doc_path), exist_ok=True)
+  1746	    with open(new_doc_path, "w", encoding="utf-8") as f:
+  1747	        f.write(content)
+  1748	
+  1749	    # Use git mv or clean deletion
+  1750	    try:
+  1751	        git_res = subprocess.run(["git", "rm", "-f", doc_path], cwd=root, capture_output=True)
+  1752	        if git_res.returncode != 0 and os.path.exists(doc_path):
+  1753	            os.remove(doc_path)
+  1754	    except Exception:
+  1755	        if os.path.exists(doc_path):
+  1756	            os.remove(doc_path)
+  1757	
+  1758	    try:
+  1759	        subprocess.run(["git", "add", new_doc_path], cwd=root, capture_output=True)
+  1760	    except Exception:
+  1761	        pass
+  1762	
+  1763	    # Primary pointer changes when this clone doc lands, through wave_reconcile.
+  1764	    if primary and os.path.realpath(primary) != os.path.realpath(root):
+  1765	        jog_commit_execution_contract(root, gh_num)
+  1766	        return new_doc_path, None
+  1767	    # Repoint roadmap item
+  1768	    ledger_root = primary or root
+  1385	            emit(f"CONTRACT ERROR: artifacts_new entry '{a}' has no matching fix_probes entry of type path_absent on the same path")
+  1386	            sys.exit(3)
+  1387	            
+  1388	    fresh_blocked = 1 if fetch_ok == 0 else 0
+  1389	    
+  1390	    ref = merged["target"]["ref"]
+  1391	    try: ref_commit = subprocess.check_output(["git", "-C", target_root, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+  1392	    except: ref_commit = ""
+  1393	    
+  1394	    if not ref_commit:
+  1395	        emit(f"BLOCKED: contract target.ref '{ref}' does not resolve in {target_root} (fetch_ok={fetch_ok}).")
+  1396	        emit(f"  The marathon would branch from this ref; if it can't be resolved the preflight is blind.")
+  1397	        emit(f"  Remediation: push/fetch the ref, or correct target.ref in the contract.")
+  1398	        sys.exit(6)
+  1399	        
+  1400	    try: head_behind_ref = subprocess.check_output(["git", "-C", target_root, "rev-list", "--count", f"HEAD..{ref_commit}"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+  1401	    except: head_behind_ref = "0"
+  1402	    
+  1403	    checkout_matches_ref = 1 if commit == ref_commit else 0
+  1404	    
+  1405	    import tempfile
+  1406	    ref_wt = tempfile.mkdtemp(prefix="swarm-preflight-ref-")
+  1407	    shutil.rmtree(ref_wt)
+  1408	    try:
+  1409	        subprocess.check_call(["git", "-C", target_root, "worktree", "add", "--detach", "--quiet", ref_wt, ref_commit], stderr=subprocess.DEVNULL)
+  1410	    except subprocess.CalledProcessError:
+  1411	        emit(f"BLOCKED: could not create a worktree at target.ref '{ref}' ({ref_commit}) in {target_root}.")
+  1412	        sys.exit(6)
+  1413	        
+  1414	    probes_res, stale, blocked, ambig = eval_probes(ref_wt, merged)
+  1415	    
+  1416	    gh39_art_missing = ""
+  1417	    for a in merged.get("artifacts", []):
+  1418	        a = a.strip()
+  1419	        if not a: continue
+  1420	        if a in merged.get("artifacts_new", []): continue
+  1421	        if not os.path.exists(os.path.join(ref_wt, a)):
+  1422	            gh39_art_missing = a
+  1423	            break
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-gHO7Fv9W' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-EzM6vhl2' (errno=Operation not permitted)
+8f2aa802 docs(GH-1447): clarify acceptance relevance and outcome accounting
+4d7c2b1110abfc7c245941ac4d3c0b541580d85611179f70dcc5cd662acc769e  utils/py/jog_run.py
+0dbe08f1646c078048f0c57367a404d9b8e54a4610ff3f3c76c110a228673216  TESTS-RESULTS/2026-11-12+GH-1447/replay.py
+427da70b2c2c4f0ed30935594446325bf0ea3a676bb48f2f69a95cdcc39a6f2d  TESTS-RESULTS/2026-11-12+GH-1447/inputs.json
+1fc9533e2694053874209e6fc498749cf6e6f20de558a0b715f77811cdb85fb2  TESTS-RESULTS/2026-11-12+GH-1447/replay-results.json
+b8cb2b82150a9553ddfe219adb7dfd7e2b83b62fc107c3b49aac790bf4af17c2  TESTS-RESULTS/2026-11-12+GH-1447/replay.log
+
+mcp: codex_apps/github.fetch_issue started
+mcp: codex_apps/github.fetch_issue (completed)
+mcp: codex_apps/github.fetch_issue started
+mcp: codex_apps/github.fetch_issue (completed)
+mcp: codex_apps/github.fetch_issue started
+mcp: codex_apps/github.fetch_issue (completed)
+mcp: codex_apps/github.fetch_issue started
+mcp: codex_apps/github.fetch_issue (completed)
+web search: 
+web search: https://github.com/Leonxlnx/unlazy/blob/16671491/scripts/gate-lint.mjs
+codex
+**ANSWER:** The spike is grounded and distinct enough to file. It proposes no duplicate writer or runtime change. Tighten the acceptance criteria and evidence references before pickup; no blocker requires new machinery.
+
+**What this proposes:** A bounded investigation into whether existing contract validators could flag useful preparation mistakes. Its deliverable is a recommendation identifying an existing fix site—or recommending no code—with implementation deferred to a later authorized task.
+
+**How the existing system works per this document:** The draft describes Jog admission as checking command form and paths, and preflight as evaluating exit status. Existing HQ/PRS mechanisms own captures and contracts; GH1447 supplies historical offline replay evidence. This is the document’s account, distinguished from the source findings below.
+
+**What it is not:** The Non-goals explicitly exclude installation, new runners, ledgers, approval systems and runtime changes during this spike. Implementation is deferred, while lexical proof of semantic relevance is expressly disclaimed. I infer that a shared command-shape rule remains an option to evaluate, not an agreed design.
+
+**FINDINGS**
+
+- **[Pass] The concrete disagreement is real and narrowly evidenced.** `lint_probe` splits on whitespace and treats the second token after `python3` as a filesystem target, explaining rejection at `-c` (`utils/py/jog_run.py:1578`). Preflight executes command probes through the shell and interprets return status using `expect_nonzero` (`utils/py/swarm_preflight.py:271`). That supports investigating supported command forms; it does not establish a production semantic failure. **Disposition: retain this distinction.**
+
+- **[Should] “Syntax filter” overstates what the existing lint validates.** It rejects selected trivial patterns and checks certain target paths; it does not parse Python or shell syntax (`utils/py/jog_run.py:54`, `utils/py/jog_run.py:1568`). Likewise, `eval_probes` supports path and regex probes as well as command exit status (`utils/py/swarm_preflight.py:255`). **Disposition: call the first row “Existing command-form/path filter,” and qualify exit-status wording as applying to command probes.**
+
+- **[Pass] GH1447’s retained evidence supports the claimed 7/7 classification result.** The replay extracts the actual function and trivial-pattern definitions, reconstructs historical script files, and never executes inherited commands (`TESTS-RESULTS/2026-11-12+GH-1447/replay.py:6`, `:13`, `:23`). I checked that the four artifact hashes match the receipt and that current `jog_run.py` matches its recorded source hash (`TESTS-RESULTS/2026-11-12+GH-1447/provenance.jsonl:1`). This verifies retained evidence, not an independently rerun replay. **Disposition: cite these exact artifacts and publication commit; keep live delivery and semantic adequacy unverified.**
+
+- **[Should] Acceptance item three names a constraint as a red control.** Rejecting a parallel ledger/runner or a semantic-proof claim tests recommendation compliance, not heuristic usefulness. Also, “useful warnings” and “bounded” lack a concrete sampling boundary. **Disposition: use a small named retained corpus or explicit case/time cap; record expected classifications before evaluation and per-case false positives/negatives. Treat the architectural exclusions as recommendation constraints. No numerical success threshold or new harness is necessary.**
+
+- **[Pass] Scope is distinct, with one overlap to keep explicit.** GH1447 already owns the replay and a surgical-validator recommendation (`PROJECT/2-WORKING/GH-1447-ACCEPTANCE-RELEVANCE.md:27`). This spike adds the broader warning-versus-refusal and false-positive study. The fetched [GH1439](https://github.com/HiQS-Labs/XYZ-forge/issues/1439), [GH1296](https://github.com/HiQS-Labs/XYZ-forge/issues/1296), [GH1386](https://github.com/HiQS-Labs/XYZ-forge/issues/1386) and [GH1414](https://github.com/HiQS-Labs/XYZ-forge/issues/1414) address different preparation, packet, run-accounting and review concerns. **Disposition: consume GH1447’s recommendation as input rather than repeat its replay.**
+
+- **[Pass] No duplicate writer is proposed, but ownership remains investigation work.** Jog reuses preflight’s contract parser (`utils/py/jog_run.py:1640`) and owns working-contract promotion (`utils/py/jog_run.py:1744`). “Existing HQ/PRS writers” is therefore an incomplete ownership map, appropriately unresolved by plan step one. **Disposition: distinguish authoring, parsing, promotion and ledger writes in that map.**
+
+- **[Should] Ratings need narrower evidence language.** Appeal 50 is neutral; effort 70 is plausible for a genuinely bounded study. Priority’s “repeated preparation friction” risks implying an established recurrence trend, which GH1447 explicitly leaves unknown (`TESTS-RESULTS/2026-11-12+GH-1447/SUMMARY.md:13`). **Disposition: say “retained examples justify a bounded study; recurrence unknown.” Severity 55 is a proposed judgment, not a measured incident severity.**
+
+- **[Nit] External-reference verification remains unresolved.** Both attempts to retrieve the pinned unlazy file failed. **Disposition: retain its exact permalink, mark the characterization unverified until inspected, and keep it nonessential to the spike’s justification.**
+
+**RECOMMENDATION:** File with these small clarifications; authorize only bounded research, preserving no-code as a fully acceptable outcome.
+tokens used
+66,069
+**ANSWER:** The spike is grounded and distinct enough to file. It proposes no duplicate writer or runtime change. Tighten the acceptance criteria and evidence references before pickup; no blocker requires new machinery.
+
+**What this proposes:** A bounded investigation into whether existing contract validators could flag useful preparation mistakes. Its deliverable is a recommendation identifying an existing fix site—or recommending no code—with implementation deferred to a later authorized task.
+
+**How the existing system works per this document:** The draft describes Jog admission as checking command form and paths, and preflight as evaluating exit status. Existing HQ/PRS mechanisms own captures and contracts; GH1447 supplies historical offline replay evidence. This is the document’s account, distinguished from the source findings below.
+
+**What it is not:** The Non-goals explicitly exclude installation, new runners, ledgers, approval systems and runtime changes during this spike. Implementation is deferred, while lexical proof of semantic relevance is expressly disclaimed. I infer that a shared command-shape rule remains an option to evaluate, not an agreed design.
+
+**FINDINGS**
+
+- **[Pass] The concrete disagreement is real and narrowly evidenced.** `lint_probe` splits on whitespace and treats the second token after `python3` as a filesystem target, explaining rejection at `-c` (`utils/py/jog_run.py:1578`). Preflight executes command probes through the shell and interprets return status using `expect_nonzero` (`utils/py/swarm_preflight.py:271`). That supports investigating supported command forms; it does not establish a production semantic failure. **Disposition: retain this distinction.**
+
+- **[Should] “Syntax filter” overstates what the existing lint validates.** It rejects selected trivial patterns and checks certain target paths; it does not parse Python or shell syntax (`utils/py/jog_run.py:54`, `utils/py/jog_run.py:1568`). Likewise, `eval_probes` supports path and regex probes as well as command exit status (`utils/py/swarm_preflight.py:255`). **Disposition: call the first row “Existing command-form/path filter,” and qualify exit-status wording as applying to command probes.**
+
+- **[Pass] GH1447’s retained evidence supports the claimed 7/7 classification result.** The replay extracts the actual function and trivial-pattern definitions, reconstructs historical script files, and never executes inherited commands (`TESTS-RESULTS/2026-11-12+GH-1447/replay.py:6`, `:13`, `:23`). I checked that the four artifact hashes match the receipt and that current `jog_run.py` matches its recorded source hash (`TESTS-RESULTS/2026-11-12+GH-1447/provenance.jsonl:1`). This verifies retained evidence, not an independently rerun replay. **Disposition: cite these exact artifacts and publication commit; keep live delivery and semantic adequacy unverified.**
+
+- **[Should] Acceptance item three names a constraint as a red control.** Rejecting a parallel ledger/runner or a semantic-proof claim tests recommendation compliance, not heuristic usefulness. Also, “useful warnings” and “bounded” lack a concrete sampling boundary. **Disposition: use a small named retained corpus or explicit case/time cap; record expected classifications before evaluation and per-case false positives/negatives. Treat the architectural exclusions as recommendation constraints. No numerical success threshold or new harness is necessary.**
+
+- **[Pass] Scope is distinct, with one overlap to keep explicit.** GH1447 already owns the replay and a surgical-validator recommendation (`PROJECT/2-WORKING/GH-1447-ACCEPTANCE-RELEVANCE.md:27`). This spike adds the broader warning-versus-refusal and false-positive study. The fetched [GH1439](https://github.com/HiQS-Labs/XYZ-forge/issues/1439), [GH1296](https://github.com/HiQS-Labs/XYZ-forge/issues/1296), [GH1386](https://github.com/HiQS-Labs/XYZ-forge/issues/1386) and [GH1414](https://github.com/HiQS-Labs/XYZ-forge/issues/1414) address different preparation, packet, run-accounting and review concerns. **Disposition: consume GH1447’s recommendation as input rather than repeat its replay.**
+
+- **[Pass] No duplicate writer is proposed, but ownership remains investigation work.** Jog reuses preflight’s contract parser (`utils/py/jog_run.py:1640`) and owns working-contract promotion (`utils/py/jog_run.py:1744`). “Existing HQ/PRS writers” is therefore an incomplete ownership map, appropriately unresolved by plan step one. **Disposition: distinguish authoring, parsing, promotion and ledger writes in that map.**
+
+- **[Should] Ratings need narrower evidence language.** Appeal 50 is neutral; effort 70 is plausible for a genuinely bounded study. Priority’s “repeated preparation friction” risks implying an established recurrence trend, which GH1447 explicitly leaves unknown (`TESTS-RESULTS/2026-11-12+GH-1447/SUMMARY.md:13`). **Disposition: say “retained examples justify a bounded study; recurrence unknown.” Severity 55 is a proposed judgment, not a measured incident severity.**
+
+- **[Nit] External-reference verification remains unresolved.** Both attempts to retrieve the pinned unlazy file failed. **Disposition: retain its exact permalink, mark the characterization unverified until inspected, and keep it nonessential to the spike’s justification.**
+
+**RECOMMENDATION:** File with these small clarifications; authorize only bounded research, preserving no-code as a fully acceptable outcome.
