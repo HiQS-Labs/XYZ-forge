@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-12 — GH-1443 target-aware Jog readiness
+
+Explicit-target dry-run now refuses invalid roles, promotion probes, static publication-clone
+constraints and any failed/unevaluated selected preflight, while still displaying every selected
+outcome. Bare queue preview is unchanged. Existing promotion/publication owners are shared; live
+recovery ordering and queue state are unchanged. This deliberately tightens readiness exit status,
+not live execution. Environment/services, provider credits, remote freshness and recovery eligibility
+remain unverified. Revert this PR to undo the CLI change; no schema or data conversion.
+Evidence: `TESTS-RESULTS/2026-11-12+GH-1443/`.
+
 ## 2026-11-11 — GH-1430 board_sync reads Rebalance's WAL DB under Apple SQLite
 
 `board_sync`'s Rebalance `repos_source` reader now opens the DB `mode=rw` with
