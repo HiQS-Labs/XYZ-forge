@@ -143,3 +143,11 @@ The remaining F1 blocker is resolved by retaining ordinary read-only access plus
 Nonblocking editorial cleanup: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md:152-153` still says “one retry” despite step 5 removing retries; `:156-157` still says a second connect trips the ratchet despite the corrected annotation account. Follow step 5 and the corrected Observed section during implementation. For the new warning at `:123-125`, prefer “may be the WAL/no-sidecar failure documented in GH-1421” to a categorical diagnosis: SQLITE_CANTOPEN plus absent sidecars alone does not establish WAL mode or exclude other open failures. This only affects diagnostic precision; fallback and membership behavior remain unchanged.
 
 Read-only inspection `nl -ba PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md | sed -n '112,185p'` exited 0; decisive output was “Keep today's single ?mode=ro open”, “No immutable read”, and “Using it needs a stable-read contract or an explicit operator decision, neither of which this task has.” The source-reading commands completed successfully. Requirements query `gh api repos/HiQS-Labs/XYZ-forge/issues/1421 --jq '.body'` exited 1 with “error connecting to api.github.com”; requirements were assessed from the supplied quotation, and the upstream schema was not independently available. No SQLite connection, executable fixture, suite, pytest, validate.sh or git command was run. Runtime claims and the final acceptance matrix remain **[Unverified — needs clone run]**, with commands, exit statuses and committed provenance still required at implementation QA. Only this relay file was edited.
+
+### Attestation · relay-drive — 2026-11-12T01:23:00Z
+task: GH1421-PLAN-QA
+reviewer: codex
+status: Approved
+reviewed-head: cfbd809738bf41f8f3fd23cb51a283206c10ed4b
+added-range: 19872+3962
+added-sha256: fc7dd18a484cbfb48eae919904175a8012935ccc29ef1b3008d01ff141096779
