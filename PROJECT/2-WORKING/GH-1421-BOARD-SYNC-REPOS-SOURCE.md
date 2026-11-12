@@ -2,7 +2,7 @@
 gh_issue: 1421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1421
 title: "board_sync repos_source: opt-in read of Rebalance agent_session_activity (T3 work signal)"
-status: Active (2-WORKING — plan written, awaiting Codex plan QA)
+status: Active (2-WORKING — implemented and verified; final QA pending)
 created: 2026-11-11
 updated: 2026-11-11
 owner: claude (start-task)
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon (base `046b41538`), root cause of the `mode=ro` failure confirmed, RELEASES pickup `rated 50/45/50/75`, plan below. | Codex relay plan QA, then `--accepted-start` and implementation. |
+| Plan QA Approved (Codex, round 3; `relay-system/2026-11-11/gh1421-plan.codex.md`), `--accepted-start` recorded, implemented in `utils/py/board_sync.py`, verified (`TESTS-RESULTS/2026-11-11+GH-1421/SUMMARY.md`). | Codex final QA, routed gate, ready PR; afterwards the follow-up decision on reading the no-sidecar WAL DB (step 5). |
 
 ## Key concepts
 
@@ -177,27 +177,27 @@ existing suites `test/gh402-board-sync.sh`, `test/gh405-mock-board-harness.sh`, 
 behind `policy-preview` (`_resolve_policy_and_label`) and the offline `config` subcommand; a live
 `policy-preview` needs GitHub and is run once as the smoke.
 
-- [ ] **Key off is unchanged.** Resolved policy and `config` stdout are identical to base for every DB; the
+- [x] **Key off is unchanged.** Resolved policy and `config` stdout are identical to base for every DB; the
   only key-off difference is the stderr wording of the no-sidecar WAL warning (step 5). On a fixture DB holding both tables, the key absent and `false` yield a
   resolved policy and `config` output byte-identical to the base commit's `board_sync.py` (loaded from
   `git show 046b41538:utils/py/board_sync.py`). Red control: the key on, same fixture, changes the list.
-- [ ] **Agent-only repo joins when on.** Fixture with a repo only in `agent_session_activity` (runs > 0):
+- [x] **Agent-only repo joins when on.** Fixture with a repo only in `agent_session_activity` (runs > 0):
   key on → it appears after every GitHub-active repo; a zero-runs and an out-of-window agent repo do not;
   a GitHub repo that also has agent runs keeps its GitHub position. Red control: key off omits it.
-- [ ] **Missing table falls back.** A DB with `github_activity` only, key on: no exception, one warning naming
+- [x] **Missing table falls back.** A DB with `github_activity` only, key on: no exception, one warning naming
   `agent_session_activity`, the GitHub-derived list. Red control: the same DB plus the table yields the
   agent repo.
-- [ ] **Other agent-query error keeps GitHub rows.** An `agent_session_activity` table without `runs`, key on:
+- [x] **Other agent-query error keeps GitHub rows.** An `agent_session_activity` table without `runs`, key on:
   one warning, the unchanged non-empty GitHub list. Red control: a disposable-clone mutation that lets that
   error reach the outer fallback fails this check.
-- [ ] **No-sidecar WAL fixture.** First-SELECT failure reproduced on the base reader (red: generic "is
+- [x] **No-sidecar WAL fixture.** First-SELECT failure reproduced on the base reader (red: generic "is
   unreadable" warning). The new reader, key off and on: the pinned-list fallback, one warning naming the
   WAL/no-sidecar cause, no exception. Control: the same DB while a writer connection holds it open (sidecars
   present) reads normally, and with the key on merges the agent repo.
-- [ ] **Validation.** `include_agent_sessions: "yes"` / `1` raise `ValueError`.
-- [ ] **Live open: cause documented.** On the live DB, the base reader's generic warning (red) vs the new
+- [x] **Validation.** `include_agent_sessions: "yes"` / `1` raise `ValueError`.
+- [x] **Live open: cause documented.** On the live DB, the base reader's generic warning (red) vs the new
   reader's named-cause warning, key off and on; `?mode=ro&immutable=1` reads it (the recorded working mode).
-- [ ] **Ratchet unchanged.** `test/gh777-inventory-ratchet.sh` passes; one annotated connect site, by inspection.
+- [x] **Ratchet unchanged.** `test/gh777-inventory-ratchet.sh` passes; one annotated connect site, by inspection.
 
 ## Rating rationale (2026-11-11)
 
@@ -218,11 +218,11 @@ carries that commit and promotes the file, so land #1424 first or drop the GH-14
 
 ### QA checklist — Phase 1
 
-- [ ] Codex plan QA approved.
-- [ ] `--accepted-start` recorded.
-- [ ] Acceptance matrix green with red controls witnessed.
-- [ ] Existing suites green; routed gate green on the final commit.
-- [ ] Live smoke (main path + adjacent path) recorded.
+- [x] Codex plan QA approved.
+- [x] `--accepted-start` recorded.
+- [x] Acceptance matrix green with red controls witnessed.
+- [x] Existing suites green (gh402, gh405, gh549, gh605-board-policy, gh777). Routed gate on the final commit: pending.
+- [x] Live smoke (main path + adjacent path) recorded.
 - [ ] Codex final QA approved.
 
 ## Lessons Learned

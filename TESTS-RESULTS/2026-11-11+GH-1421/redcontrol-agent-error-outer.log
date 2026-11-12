@@ -1,0 +1,30 @@
+PASS A1 key off identical to base resolver (key absent)
+PASS A1 key off identical to base resolver (key false)
+PASS A1 key off config output byte-identical to base (key absent)
+PASS A1 key off config output byte-identical to base (key false)
+PASS A1 red control: key on changes the repo list
+PASS A2 key on: GitHub order kept, agent-only appended by runs DESC; zero/old/case-dup excluded
+PASS A2 label on success
+PASS A2 no warning on success
+PASS A2 red control: key off omits the agent-only repo
+PASS A2 top_n cap still applies (agent repos rank last)
+PASS A2 no GitHub activity in window: agent repos still added, no empty-window warning
+FAIL A3 missing table: GitHub-derived list, no exception :: ['o/pinned']
+FAIL A3 missing table: exactly one warning naming agent_session_activity :: board_sync: repos_source: rebalanceOS DB has no github_activity table; using the pinned repos
+
+PASS A3 red control: same DB plus the table yields the agent repo
+FAIL A3b agent table without runs: unchanged GitHub list :: ['o/pinned']
+FAIL A3b agent table without runs: one warning naming agent_session_activity :: board_sync: repos_source: rebalanceOS DB is unreadable (no such column: runs); using the pinned repos
+
+PASS A4 ValueError: include_agent_sessions='yes'
+PASS A4 ValueError: include_agent_sessions=1
+PASS A4 ValueError: include_agent_sessions=None
+PASS A5 fixture is WAL with no sidecars
+PASS A5 red control: base reader fails with the generic unreadable warning
+PASS A5 new reader (key off): pinned fallback, one warning naming the WAL/no-sidecar cause
+PASS A5 new reader (key on): pinned fallback, one warning naming the WAL/no-sidecar cause
+PASS A5 failed read created no sidecar on this build
+PASS A5 control: with a writer holding the DB open, key on reads and merges
+
+FAIL: 4 failure(s)
+rc=1
