@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -78,5 +78,40 @@ Write graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with file:line. 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: The five issue criteria have supporting code and captured evidence, but the new summary helper has a measured exception path contrary to the requested robustness/fallback contract. One small correction is needed; no new suite is requested. I swept the whole `utils/py/jog_run.py`; no additional pre-existing defect was established.
+
+- [Should] **S1 — malformed verdict output crashes the summary rather than falling back** (`utils/py/jog_run.py:571`). The prefix check accepts `verdict pending`, then indexes element 1 of a colon split that has only one element. Both dry-run reporting (`:2228`) and live refusal reporting (`:649`) use this helper. Parse only a colon-delimited verdict field (or use a guarded partition), and let malformed lines use the existing fallback. This is a synthetic boundary input, not a claim that the current preflight normally emits it (`swarm_preflight.py:1707` emits the valid format).
+  Observed input: `subprocess.CompletedProcess([], 2, "verdict pending", "")`.
+  Affected scope: text-mode preflight output containing a line starting `verdict ` without a colon.
+  Falsifier: that completed process must return a nonempty fallback without raising; valid `verdict : ready (exit 0)` must still yield `ready (exit 0)`, and rc 1 with stderr `late failure` must retain `preflight exited 1`.
+  Probe command (no module imports or dispatch; AST-extracted actual helper): `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with body below; exit status **0**, decisive output **`IndexError: list index out of range`**. The probe caught the exception for reporting; it did not treat it as success.
+
+  ```python
+  import ast, re, subprocess
+  from pathlib import Path
+  p = Path('utils/py/jog_run.py')
+  n = next(x for x in ast.parse(p.read_text()).body
+           if isinstance(x, ast.FunctionDef) and x.name == '_preflight_summary')
+  ns = {'re': re}
+  exec(compile(ast.Module(body=[n], type_ignores=[]), str(p), 'exec'), ns)
+  try:
+      print(ns['_preflight_summary'](subprocess.CompletedProcess([], 2, 'verdict pending', '')))
+  except Exception as e:
+      print(type(e).__name__ + ': ' + str(e))
+  ```
+
+- [Pass] **Acceptance 1–2 / effect contract:** `jog_run.py:2290–2325` opens SQLite with `mode=ro` and returns before the supervisor lock/lease path; `:2204–2228` delegates per-item readiness with pinned cwd/root, explicit prospective `--out`, and child bytecode disabled. `r1-post-dryrun.txt` names `.venv/bin/pytest` and the GH-1427 contract error; the supplied R1 snapshots compare byte-equal. `r3-pre-samestate-notarget.txt` and `r3-post-dryrun-notarget.txt` also compare byte-equal. My Python byte comparisons exited 0 and printed `R1 snapshots equal: True` and `R3 outputs equal: True`. Target fetch/worktree/probe effects remain the explicitly accepted preflight effects, not a promise of filesystem immutability.
+- [Pass] **Acceptance 3–4 / plan Steps 3–5:** `jog_run.py:634`, `:649–651`, `:2473–2475`, and `:2497–2500` implement the starting-preflight label, refusal cause, actual halt reason, and legacy summary. `r2-pre-live.txt` contains the old landing-boundary line; `r2-post-live.txt` contains `preflight refused: NOT-READY (exit 5) — next: gate program not found` and the matching halt reason. README truthfully identifies this post run as attempt 2/retry-build.
+- [Pass] **Acceptance 5, evidence and rating:** the supplied gh280 log ends `227 pass, 0 fail`; jog-queue ends `34 passed, 0 failed`. `provenance.jsonl` names code SHA `8ad2ff6326485707f553b648f4debc2dc9dfabf3`, base `0f21b761a`, commands and disposable-clone identity. `releases.sql:990` persists 55/45/50/70, matching the plan's PRS rationale. These are captured producer results, not fresh suite execution in this turn.
+- [Pass] **Helper composition and planned exceptional cases:** `jog_run.py:530–561` separates the primary pin from target checks and retains target → vendored `.xyz` → harness lookup; `:612–614` retains the outside-root notice; `:635–647` retains state writes and exit-4 handling. `:2210–2223` handles missing scripts and mismatched 1-INBOX identity without promotion. `swarm_preflight.py:1012–1019` only reads frontmatter; its module startup (`:1–29`, main guard `:1901`) adjusts import paths but does not run preflight. `swarm_preflight.py:1715–1735` shows why explicit `--out` avoids archive resolution and dry-run exits before packet creation. The contract-error stderr substitution at `jog_run.py:583–586` is in scope: `swarm_preflight.py:1258` otherwise says `see message above`, and R1/R4 retain the actual cause. Reuse stays within the existing owner; no new readiness engine is present in this file.
+- [Unverified — needs clone run] No suites or executable fixtures were run here, as instructed. The full post-review gate remains the harness's responsibility. No git command was run, so exact base-to-HEAD diff equality, changed-file inventory (including the absence of new test files), committed evidence membership and provenance SHA binding were not independently established; source/evidence inspection supports the narrower findings above. No other artifact was edited.
+
+Handing off to Producer (claude-a) — disposition S1, make the bounded parser correction, and record a manual red/green check using the existing evidence workflow; then take the next relay turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
