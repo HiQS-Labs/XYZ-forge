@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA r1 FAIL (3 Should) and r2 FAIL (1 Should: 1-INBOX identity, 1 Nit) were dispositioned and the plan amended. Pre-fix R1/R2 red controls captured in a disposable fixture. | Codex plan QA round 3 (final round), then implement Steps 1–5. |
+| Plan approved by Codex (r3). Steps 1–5 implemented in `utils/py/jog_run.py`. R1–R5, a smoke run and the existing gh280 (227/0) and jog-queue (34/0) suites passed; receipt in `TESTS-RESULTS/2026-11-11+GH-1426/`. | Final Codex QA on the diff and evidence, then a full gate on push from a disposable clone and a ready PR. |
 
 ## Rating rationale (2026-11-11)
 
