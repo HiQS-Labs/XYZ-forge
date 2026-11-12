@@ -166,6 +166,27 @@ between docs and code is a defect rather than untidiness. That is why the checks
 
 ---
 
+## Flywheel - Beta
+
+Flywheel connects task intake, queued execution, independent review, landing, and
+continuation to the next eligible task through the existing Forge workflows.
+It coordinates those workflows with bounded recovery and recorded evidence;
+it does not add another runner or queue.
+
+- **[flywheel](skills/2-daily/flywheel/SKILL.md)** coordinates the delivery cycle,
+  using Jog, relay review, and merge-cleanup within their existing authority.
+- **[conveyor](skills/1-hourly/conveyor/SKILL.md)** prepares existing issues for
+  execution; **[idea](skills/1-hourly/idea/SKILL.md)** captures new requests as
+  admission-ready issues.
+- **[close-the-loop](skills/2-daily/close-the-loop/SKILL.md)** recovers unfinished
+  commitments; **[todo-list](skills/2-daily/todo-list/SKILL.md)** drives follow-through
+  with the existing Handsfree continuation workflow.
+
+Real fixes have been built, independently reviewed, and landed through this work.
+**Beta limitation:** two useful tasks advancing end to end without intervention
+remain unproven. Admission mismatches, reviewer capacity, and coordination overhead
+have required agent assistance; a successful delivery is not proof of unattended operation.
+
 ## Scope — what this is and is not
 
 The canonical product purpose is in [Guiding Principles](GUIDING-PRINCIPLES.md#purpose); this section
