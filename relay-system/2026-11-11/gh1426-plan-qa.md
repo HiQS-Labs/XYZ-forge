@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -96,5 +96,46 @@ Write graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with file:line. 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes:** Reuse existing preflight in target-root dry-runs to report readiness per pending item, then preserve its diagnostic in live park messages. Extract shared lookup/target-validation/summary helpers in jog_run.py and retain queue-only output without a target.
+
+**How the existing system works, per this document:** Dry-run currently reads the queue without inspecting the target or requiring a primary pin. Live execution validates a separate clone, promotes inbox docs, creates an execution record, then invokes preflight; its current last-line summary drops the readiness cause and its generic halt message mislabels preflight parks.
+
+**What it's not:** No clone bootstrapping, readiness-rule changes, dry-run promotion, new suites, or work on #1427/#1428 (Plan/Non-goals).
+
+**Input boundary:** Read Status, Recon (including its base-qualified heading), Plan and all subsections, Acceptance, and Non-goals before source/issue inspection. Relay instructions and ROUTER were also read; no source or issue had been opened.
+
+**Source-backed assessment**
+
+swept file: yes
+
+- [Should] **The dry-run side-effect contract is incomplete.** Plan lines 132–134 say the only side effect is fetch, but `swarm_preflight.py:1365–1391` creates/removes/prunes registered worktrees, and `:231–235` executes arbitrary contract command probes before the dry-run exit at `:1727`. Python imports can also create bytecode unless suppressed. This is existing preflight behavior newly reached by Jog dry-run, not a reason to invent a second readiness engine. Amend Recon/Plan to inventory the actual effects, define “zero locks” as zero Jog supervisor locks/leases (fetch/worktree operations use Git locks), and explicitly bound the read-only claim for command probes. Pin bytecode suppression for the child and record a manual before/after check of both ledgers, Jog state, tracked/untracked files and worktree registrations. If literal zero mutation remains required, the proposed invocation does not satisfy it; resolve that contract before implementation.
+  Observed input: `PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md:59–62` declares a command probe invoking `python3 TESTS-RESULTS/2026-11-11+GH-1171/manual_probe.py`; preflight executes command probes without a dry-run guard (`swarm_preflight.py:231–235,1374`). Plan Step 2 invokes this same path for inbox candidates.
+  Affected scope: target-root dry-runs that reach ref evaluation, especially contracts with command probes; no-target queue listing stays unchanged.
+  Falsifier: a manual ready-target run with a command probe that writes a marker to a supplied external scratch path; strict read-only semantics require the marker absent. If normal preflight probe execution is deliberately retained, document the marker as an allowed effect instead of claiming read-only execution. Run this only in the disposable clone.
+
+- [Should] **Supply a non-created `--out` path for the dry-run child and account for post-verdict failures.** Step 2 omits `--out`, unlike the live call (`jog_run.py:598`). After printing READY, preflight resolves the archive through a shell-out (`swarm_preflight.py:1715–1721`); an invalid `XYZ_ARCHIVE_ROOT` exits 1 even though live's explicit output path bypasses it. `rtl_transcript_root` itself is read-only (`relay-turn-lib.sh:134–159`), but this extra dependency makes parity false. Specify an explicit prospective output path without creating it, and require `_preflight_summary` not to report an unqualified ready verdict if a later process error contradicts it. Add this case to existing manual checks, not a new suite.
+  Observed input: `XYZ_ARCHIVE_ROOT=relative` with an otherwise ready target and Step 2's no-`--out` invocation; `relay-turn-lib.sh:144–146` returns 1, and `swarm_preflight.py:1719–1720` exits 1 after the verdict line. The real Jog invocation supplies `--out`.
+  Affected scope: ready dry-run candidates with archive resolution failure; summary inputs with a printed verdict and a contradictory process return code.
+  Falsifier: in a disposable clone, ready live-equivalent preflight with explicit `--out` and ready dry-run with the planned explicit `--out`, both under `XYZ_ARCHIVE_ROOT=relative`, must return 0; a synthetic completed process containing `verdict : ready (exit 0)` but returncode 1 must not summarize as unqualified ready.
+
+- [Should] **Repair the plan's existing executable contract.** Whole-file sweep found `PROJECT/2-WORKING/GH-1426-JOG-DRYRUN-TARGET-READINESS.md:222–226` has a string `target`, a descriptive non-command gate, and unsupported probe type `grep`. This is pre-existing but in the reviewed artifact. Use the existing object target schema, a real focused gate command, and a supported, discriminating probe; the retained legacy landing string makes a blanket absence probe wrong.
+  Observed input: the exact contract at lines 222–226. Read-only probe command: `PYTHONDONTWRITEBYTECODE=1 python3 -B` importing `extract_contract` from `utils/py` and calling `extract_contract('PROJECT/2-WORKING/GH-1426-JOG-DRYRUN-TARGET-READINESS.md')`; exit **3**, output: `contract in PROJECT/2-WORKING/GH-1426-JOG-DRYRUN-TARGET-READINESS.md missing required field: target` and `extract_contract exit: 3`. No fixture or executable test ran.
+  Affected scope: this plan's own preflight contract, not production readiness rules.
+  Falsifier: the corrected contract parses successfully; its probe distinguishes the specific preflight diagnostic fix before/after while allowing the intentionally retained legacy landing message.
+
+- [Pass] Core recon and surgical approach are grounded: dry-run precedes primary validation (`jog_run.py:2221–2243`), and `SKILL.md:141` explicitly exempts read-only dry-run from the pin. Reusing target validation and existing preflight avoids parallel readiness rules. Changing every marathon park halt is appropriate because the reason retains awaiting-landing information (`jog_run.py:2374–2395`); legacy landing remains separately handled at `:2453`.
+- [Pass] Inbox substitution preserves basename-derived slug (`swarm_preflight.py:1285–1288`) and checklist source (`:1509–1514`); issue fidelity/state use frontmatter in project-doc mode (`:1494–1504`). Promotion preserves basename and acceptance content (`jog_run.py:1638–1677`). This is an approximation of post-promotion preflight, not proof promotion itself succeeds: the existing unattended probe-validation refusal at `:1687–1691` remains separate. The plan should describe that qualification and require matching `gh_issue` identity for this substitution rather than silently evaluating a different issue.
+- [Pass] Summary fallback design covers printed verdicts 0/4/5/6/7, early BLOCKED/CONTRACT ERROR, die's stderr prefix, and empty output via `exit N` (`swarm_preflight.py:43–45,1256–1278,1649–1655,1704–1713`). It must inspect stdout and stderr together; post-verdict return-code handling is the finding above.
+- [Pass] Static consumer search found G8's prefix assertion (`test/gh280-jog-marathon-adapter.sh:710`) compatible with the proposed suffix, I7's substring/no-notice/pending assertions (`:795–803`) compatible with added target output, and no-target case 12 (`test/jog-queue.sh:172–185`) compatible with the untouched branch. No other parser of the changed halt/execution strings was found in skills/docs/utils/test. **[Unverified — needs clone run]** Actual suite success is deferred to the harness/disposable full clone; no suites ran here.
+- [Pass] All five Acceptance bullets map to R1/R2/R3 or existing suites (`plan:155–168,210–216`), with pre-fix controls capable of failing. Extend the manual matrix for the side-effect and archive cases above; no new test machinery is needed.
+
+**VERDICT: FAIL**
+
+**Basis:** The small shared-helper/message change is sound, but Step 2's claimed effect boundary and live parity are not yet accurate, and the artifact's existing contract fails its parser. Resolve the three Should findings before implementation. No source or artifact was edited; only this relay file changed.
+
+Handing off to Producer (claude-a) — amend the plan and disposition these findings, then request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
