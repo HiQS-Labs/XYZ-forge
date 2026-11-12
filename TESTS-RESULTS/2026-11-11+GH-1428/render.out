@@ -1,0 +1,11 @@
+gh955-focused          3a. GATE EVIDENCE (GH-1428): before writing Approved, run this phase's gate yourself: `.venv/bin/pytest -q tests/test_da
+node-selector          3a. GATE EVIDENCE (GH-1428): before writing Approved, run this phase's gate yourself: `.venv/bin/pytest -q tests/test_da
+default-gate           3a. GATE EVIDENCE (GH-1428): this phase's gate (`bash <clones>/XYZ-forge-gh1428-reviewer-unverifi
+unscoped-pytest        3a. GATE EVIDENCE (GH-1428): this phase's gate (`python3 -m pytest`) is not a focused file-only command, so it runs only
+file-plus-dir          3a. GATE EVIDENCE (GH-1428): this phase's gate (`pytest tests/test_dashboard_snapshot_refresh_filter.py tests/`) is not 
+compound               3a. GATE EVIDENCE (GH-1428): this phase's gate (`pytest tests/test_dashboard_snapshot_refresh_filter.py && true`) is not
+gh54-fixtures          3a. GATE EVIDENCE (GH-1428): this phase's gate (`.venv/bin/pytest -q tests/test_dashboard_snapshot_refresh_filter.py`) i
+--- builder unverified: line rendered?
+1
+--- worktree/tooling-only fallback wording (gh955-focused):
+cwd = your worktree, so the tests and source under test are the reviewed revision. Only TOOLING missing from your worktree (e.g. an untracked .venv/bin/pytest) may be taken from <work>/tgt; if a test or source path is missing, do NOT substitute that checkout's copy.

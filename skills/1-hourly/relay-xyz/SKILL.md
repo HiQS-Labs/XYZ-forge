@@ -602,6 +602,9 @@ they share the same env shape:
 
 If a fresh device's `codex` still blocks writes, escalate autonomy:
 `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'`.
+For a Codex builder that must reach a localhost service (test DB), opt in per run with
+`CODEX_FLAGS='-s workspace-write -c approval_policy=never -c sandbox_workspace_write.network_access=true'`.
+This opens all outbound network for that turn (GH-1428; see the relay-automation README).
 For agy, the common failure is different: sandboxed runs can exit `0` with empty
 output, so run the lane sandbox-OFF before concluding the worker is broken.
 

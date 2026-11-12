@@ -158,6 +158,15 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 - **date**: 2026-11-04
 
+## Before blaming a turn for skipping verification, read every instruction it was given
+
+- **cue**: A relay or marathon reviewer (or builder) "should have run" a test or gate and did not, and the fix being planned is a stronger obligation on that agent.
+- **lesson**: Read the shared turn prompt (`rtl_turn_prompt` in `relay-automation/relay-turn-lib.sh`), the preflight brief and the rendered TAKE YOUR TURN steps before diagnosing. The reviewer had been told "Do NOT run … pytest" and graded the claim `[Unverified — needs clone run]` exactly as instructed. Adding a new obligation without amending the prohibition would leave the two in conflict. Resolve that conflict with a narrow, named exception.
+- **evidence**: TESTS-RESULTS/2026-11-11+GH-1428/gh955-reviewer.md, TESTS-RESULTS/2026-11-11+GH-1428/red-control.out, https://github.com/HiQS-Labs/XYZ-forge/issues/1428
+- **confidence**: medium. One incident (two attempts on one item). The prohibition text is in `relay-automation/relay-turn-lib.sh:1067`.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1428
+
 ## A failed `claude -p` JSON result zeroes `usage`; count tokens from `modelUsage`
 - **cue**: harness code that reads token counts or cost from a `claude -p --output-format json` result on a non-success turn (budget or turn ceiling, error subtype)
 - **lesson**: in `utils/py/claude-turn.py` (and any other reader of the Claude CLI result), do not trust `usage` alone on an error result; when its input/cache-read/output totals are zero, sum the per-model `modelUsage` counts, and verify against one live bounded error result instead of a fixture
