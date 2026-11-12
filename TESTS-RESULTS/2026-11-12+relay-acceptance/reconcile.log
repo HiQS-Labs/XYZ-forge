@@ -1,0 +1,11 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/Users/noelsaw/Documents/GitHub/XYZ-forge)
+wave-reconcile: Processing commit b05b90d5d35c...
+wave-reconcile:   commit b05b90d5d35c closes []; references []
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping marathon-plan.sh — canonical inputs unchanged)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> leaderboard.sh
+wave-reconcile: Running PDDA doc-hygiene gate...
+wave-reconcile: Wave reconciliation completed successfully! ✅
