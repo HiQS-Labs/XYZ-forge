@@ -1,0 +1,19 @@
+### RED @ 0f21b761
+host ignores relay-system/logs? no
+== M1 budget-stop (fake CLI exit 1) ==
+shim exit: 5
+claude-turn: claude -p failed (exit 1)
+json log after turn: MISSING
+stderr sibling: PRESENT
+tick cost rows for M1-BUDGET: 0
+== M1 success (fake CLI exit 0) ==
+shim exit: 0
+tick cost rows for M1-OK: 0
+== M2 role defaults (argv of the CLI) ==
+builder: --max-turns 12 --max-budget-usd 0.50
+reviewer: --max-turns 12 --max-budget-usd 0.50
+reviewer+CLAUDE_MAX_BUDGET=1.25: --max-turns 12 --max-budget-usd 1.25
+builder+CLAUDE_MAX_BUDGET=1.25,TURNS=7: --max-turns 7 --max-budget-usd 1.25
+== ESCALATION builder_diag parse on the M1 log ==
+host git status after all turns:
+?? relay-system/

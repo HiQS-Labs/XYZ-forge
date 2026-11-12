@@ -15,6 +15,23 @@ no schema bump, and the record field is optional. Expected signal: the next DB-b
 with a Codex builder either verifies in the builder or gets a reviewer gate run before approval.
 Evidence: `TESTS-RESULTS/2026-11-11+GH-1428/`.
 
+## 2026-11-11 — GH-1427 Claude turn ceilings by role; failed turns keep their reason, log and cost
+
+A Claude builder turn under Marathon/Jog ran with the same $0.50 / 12-turn ceiling as a reviewer, so a
+small feature build (LTVera-Pandas GH-993) was stopped mid-Write at $0.51, and #1420's live reviewer
+stopped at $0.53. `claude-turn.py` now picks defaults by role from the existing resolver
+(`rtl.is_reviewer_turn`, i.e. the driver's `RELAY_ROLE`): builders get $3.00 / 40, reviewers $1.50 / 20.
+An explicit `CLAUDE_MAX_BUDGET` / `CLAUDE_MAX_TURNS` still overrides both. A nonzero `claude -p` exit now
+prints the CLI's own reason (`failed (exit 1): error_max_budget_usd: Reached maximum budget ($3.00)`), and
+the existing GH-379 `builder-diagnostic:` line in ESCALATION.md gains `errors`. The turn transcript was
+being deleted by `rtl_enforce`'s own-log cleanups whenever the host repo does not gitignore
+`relay-system/logs/`, which explains `turn-log: … (missing)` next to a surviving `.stderr`. A log under
+the durable transcript root is now kept (`rtl_own_log_is_durable`). A failed turn also records its
+`tick cost` row, so the end-of-run summary no longer reads `tokens: 0 total`. The `warn_opus_budget`
+advisory now triggers on any budget below $3.00. Consult and the frozen Bash twin keep $0.50 / 12.
+Revert by reverting the PR, or pin the old ceilings with `CLAUDE_MAX_BUDGET=0.50 CLAUDE_MAX_TURNS=12`.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1427/`.
+
 ## 2026-11-11 — GH-1421 board_sync agent-session repos (opt-in)
 
 `board_sync`'s Rebalance `repos_source` takes an opt-in `include_agent_sessions: true`
