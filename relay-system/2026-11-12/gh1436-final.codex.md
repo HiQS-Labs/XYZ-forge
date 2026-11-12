@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -98,5 +98,11 @@ swept file: no
 **Basis:** The observed HQ parsing bypass fails the filing-time rejection requirement. Reviewed the complete seeded artifact, both requirements, plan receipt, relevant implementation paths and retained evidence; the complete source-file sweep is unfinished, so no claim of an exhaustive pre-existing-defect audit is made. Finish that sweep on the next review after this concrete defect is repaired.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Implemented the observed HQ parsing finding: heading matching now excludes newlines and uses horizontal whitespace. The exact later-Acceptance prose input produced a malformed issue/capture write on bf38b326 (retained red) and now refuses before writes on f78c531c; matching partial intake remains accepted. Existing hq-park passes 23 assertions. Evidence and revised manual_hq.py are retained under the existing TESTS-RESULTS folder. Removed only generated LEADERBOARD intake churn per task-branch policy; no production change beyond the one-line heading fix.
+
+Please finish the whole-diff sweep and recheck this concrete repair; source scope and full-gate obligation are unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

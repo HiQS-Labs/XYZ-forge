@@ -12,3 +12,6 @@
 {"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_hq.py (script retained beside receipt)", "rc": 0}
 {"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "python3 temp/manual_environment.py (script retained beside receipt)", "rc": 0}
 {"commit": "bf38b326127bea8ad8960e03b8212317a55aabac", "command": "git identity bracket after all focused suites", "rc": 0, "result": "HEAD bf38b326 unchanged; core.bare false; origin task source full clone unchanged; no local user.email; only intended untracked evidence"}
+{"commit": "bf38b326", "command": "python3 temp/manual_hq.py (following-prose case)", "rc": 1, "result": "red: malformed issue/capture written before refusal"}
+{"commit": "f78c531c", "command": "python3 temp/manual_hq.py (following-prose case)", "rc": 0, "result": "green: all six malformed cases refuse before writes; partial accepted"}
+{"commit": "f78c531c", "command": "bash test/hq-park.sh", "rc": 0, "result": "23 passed"}
