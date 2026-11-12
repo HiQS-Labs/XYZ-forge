@@ -117,3 +117,7 @@ Determine whether existing contract validators can provide useful bounded adviso
 ### QA checklist — Phase 0
 
 - [ ] TODO: acceptance criteria for the Phase 0 pass above.
+
+## Merge evidence
+
+- PR #1449 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

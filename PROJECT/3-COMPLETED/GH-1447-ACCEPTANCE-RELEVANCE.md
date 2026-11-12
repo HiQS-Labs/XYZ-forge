@@ -1,7 +1,7 @@
 ---
 issue: 1447
 title: Acceptance relevance and complete outcome accounting
-status: implemented
+status: Complete
 created: 2026-11-12
 updated: 2026-11-12
 owner: Codex
