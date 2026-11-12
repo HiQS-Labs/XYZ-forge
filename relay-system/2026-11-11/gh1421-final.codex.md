@@ -1,6 +1,6 @@
 # GH1421 final implementation QA
-STATUS: Open
-NEXT: codex
+STATUS: Changes requested
+NEXT: orchestrator
 
 Final QA of the committed implementation for https://github.com/HiQS-Labs/XYZ-forge/issues/1421 against its approved plan.
 
@@ -25,3 +25,41 @@ Do not run test/*.sh, validate.sh or pytest in this worktree; read-only probes u
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested — Block on F1 below.
+
+The implementation follows approved plan steps 1–5 literally: strict bool/default false, conditional agent query on the existing connection, additive merge, inner SQLite-error fallback, and one ordinary read-only open with a qualified no-sidecar warning. The plan's SQL itself contains F1, so literal conformance does not establish acceptance. No duplicate writer, subsystem, new registered suite or gate is introduced. This remains an Easy, reversible extension; key-on membership feeds board eligibility.
+
+**F1 [Should fix] — HAVING resolves the stored column instead of the aggregate (`utils/py/board_sync.py:153-155`).**
+
+Observed input: two in-window rows for the same repo with runs 0 and 5 (valid across days/devices/providers). The submitted `SUM(runs) AS runs ... HAVING runs > 0` returns no repo when the zero row is selected as SQLite's bare-column representative. Reversing row order returns the repo. SQLite resolves the HAVING name to the underlying column when it collides with the alias. Affected scope: opted-in agent-only repos with mixed zero/positive rows can silently disappear despite positive total runs, defeating acceptance A2. The default-zero schema makes this an ordinary valid input; no corruption or enterprise threat model is needed.
+
+Falsifier / smallest correction: use `HAVING SUM(runs) > 0` (or an unambiguous aggregate alias), and extend the existing manual evidence matrix with multiple rows per repo, including a zero row before a positive row. Preserve ordering, zero-only exclusion and the existing error fallback. No new suite is needed. The current matrix at `manual_matrix.py:107-109` has only one row per exact repo, so its green result cannot catch F1.
+
+Read-only probe command (exit 0; no fixture, source mutation or on-disk DB):
+
+```python
+# python3 - <<'PY'  (PYTHONDONTWRITEBYTECODE=1, TMPDIR=$PWD/.relay-scratch/tmp)
+import sqlite3
+c = sqlite3.connect(':memory:')
+q = "WITH agent_session_activity(repo_full_name,day,runs) AS (VALUES ('o/mixed','2026-11-11',0),('o/mixed','2026-11-11',5)) SELECT repo_full_name, SUM(runs) AS runs FROM agent_session_activity WHERE day >= '2026-11-01' GROUP BY repo_full_name HAVING runs > 0 ORDER BY runs DESC, repo_full_name LIMIT 8"
+print('submitted query:', c.execute(q).fetchall())
+print('SUM(runs) control:', c.execute(q.replace('HAVING runs > 0','HAVING SUM(runs) > 0')).fetchall())
+print('positive-first control:', c.execute(q.replace("0),('o/mixed','2026-11-11',5)","5),('o/mixed','2026-11-11',0)")).fetchall())
+# PY
+```
+
+Decisive output:
+```text
+submitted query: []
+SUM(runs) control: [('o/mixed', 5)]
+positive-first control: [('o/mixed', 5)]
+```
+
+Evidence assessment: the base comparison uses nonempty resolved policy and nonempty config stdout, with key-on differentiation; it supports key-off identity for its populated fixture, rather than empirically proving “every DB.” Source inspection supports unchanged key-off control flow apart from warning wording. The missing-table and malformed-table preservation checks compare concrete nonempty lists. The F2 outer-catch mutation log has four relevant failures, rc=1, and restoration returns ALL PASS, rc=0: a meaningful red control. The other recorded checks substantiate their stated cases, but not multi-row aggregation (F1) or a name tie. Live output transparently records fallback and 25 rows through the diagnostic immutable read; production does not adopt immutable. Smoke explicitly discloses that live policy-preview was not run.
+
+Read the supplied plan, prior approval, implementation reader/resolver, CHANGELOG entry, manual matrix, all matrix/red-control/smoke logs, suite tails and provenance. Existing-suite success is recorded at 49b9895bd in the supplied disposable-clone receipts; no suites, pytest, validate.sh, executable fixtures or git were run in this turn. Final committed-state harness qualification remains outstanding. The ledger row has 50/45/50/75 and an accepted-start in_flight event; the advisory projection impact and one-file implementation make that rating reasonable. No other blocking finding. Only this relay file was edited.
