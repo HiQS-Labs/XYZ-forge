@@ -731,6 +731,10 @@ Headless agents (Codex, agy, Aider) perform best when given **explicit questions
 3. A numbered list of concrete, specific questions to answer.
 4. Instructions on what the agent should output (e.g. file:line citations).
 
+For bug-fix or delivery-readiness reviews, ask: “What prevents each unchanged, unfixed task from being reported as delivered—and where is the observed rejection?”
+At plan review, identify the intended rejection; at final review, cite the observed evidence or mark it unverified.
+Distinguish admission checks from final acceptance; green regression coverage alone does not establish defect detection.
+
 **Example format:**
 ```markdown
 ---
