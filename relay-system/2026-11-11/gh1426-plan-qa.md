@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -150,5 +150,35 @@ Dispositions (plan amended in `PROJECT/2-WORKING/GH-1426-JOG-DRYRUN-TARGET-READI
 Pre-fix red controls are already captured in a disposable fixture (primary + target clones, isolated `GIT_CONFIG_GLOBAL`). R1 pre: `would process 2 pending item(s)`, no reason, rc 0. R2 pre: the exact four-line console from the issue, with the row reason `preflight-refused (exit 5): No packet written — …`.
 
 Handing off to Reviewer (codex): re-review the amended plan and approve, or list the remaining findings.
+
+### Reviewer · Round 2
+
+**What this proposes:** Add per-item target preflight summaries to Jog dry-run and preserve those diagnostics when live execution parks. Reuse the existing validator and preflight lookup in jog_run.py, with explicit output paths and return-code-aware summaries.
+
+**How the existing system works, per this document:** Queue-only dry-run precedes primary validation and never checks target readiness. Live execution promotes inbox docs, records execution state, then runs preflight; its current output loses the readiness cause. Preflight dry-run itself fetches, creates temporary ref worktrees and runs contract probes.
+
+**What it's not:** No new readiness engine, clone bootstrapping, promotion during dry-run, new suites, or sibling #1427/#1428 changes (Plan/Non-goals).
+
+**Input boundary:** Status, Recon, Plan including subsections, Acceptance and Non-goals were read before source inspection this turn; the full artifact was also read for the sweep. This is a second review with the prior relay assessment already available, not a blind paraphrase.
+
+**Source-backed assessment**
+
+swept file: yes
+
+- [Should] **Canonical lookup does not guarantee project-doc preflight issue identity.** The amended Recon says `find_issue_doc` supplies the doc for N, but its accepted identity formats exceed those of preflight. `wave_reconcile.py:1072-1082` accepts URL-valued frontmatter and filename fallback; `swarm_preflight.py:1012-1018` accepts only numeric frontmatter. Thus Step 2's substitution can pass no issue to acceptance fidelity / issue-state checks (`swarm_preflight.py:1494-1504,641-652`), whereas live `--gh-issue N` supplies N explicitly (`:1249-1250`). Amend Step 2 to require identity equivalence before the substitution and report an explicit unavailable/approximate readiness diagnostic when it cannot establish it; alternatively specify an existing supported way to retain N without source changes outside the declared scope. Do not silently claim live-equivalent readiness for these inputs. Add a focused manual identity case to the existing verification matrix, not a new suite.
+  Observed input: `PROJECT/1-INBOX/GH-1292-HARNESS-RECAP-HOOKS.md:6` has `gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1292`. Read-only probe: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -B` importing `doc_issue_number` and `doc_frontmatter_issue`, iterating inbox docs and printing unequal identities; exit 0, decisive output: `PROJECT/1-INBOX/GH-1292-HARNESS-RECAP-HOOKS.md resolver= 1292 preflight= None` (same mismatch for GH-1293 and GH-341). This measures identity loss, not those documents' full readiness or live GitHub state; no executable fixture ran.
+  Affected scope: inbox substitution where the canonical resolver returns N but `doc_frontmatter_issue(doc)` does not return the same numeric N (URL-valued, absent, or other supported nonnumeric declarations).
+  Falsifier: manual disposable-clone inputs with numeric `gh_issue: 1292` and the observed URL spelling, otherwise identical valid contracts; both must retain issue 1292 for fidelity/state evaluation, or the latter must explicitly report that live-equivalent readiness was not established. A numeric matching document must continue through normal preflight.
+
+- [Pass] The previous effect-boundary and archive findings are addressed in the executable plan (`plan:138-153`): child bytecode suppression, prospective explicit `--out`, no Jog writes/locks/leases, and documented target preflight effects. The post-verdict rc mismatch and empty-output checks are specified at `plan:130-136,183`. These resolve the prior findings without introducing another readiness engine.
+- [Pass] The repaired contract parses and its probe distinguishes the base from a helper-presence control (`plan:240-248`; `swarm_preflight.py:226-230`). Probe command: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -B` calling `extract_contract(plan)`, then `re.search(pattern, source)` and `re.search(pattern, source + "\ndef _preflight_summary(proc):\n    pass\n")`; exit 0. Decisive output: `target: {'repo': '.', 'ref': 'development'}`, `base matches: False`, `helper control matches: True`. This proves probe discrimination, not implementation correctness.
+- [Pass] Existing text assertions remain compatible by inspection: G8 preserves the reason prefix (`test/gh280-jog-marathon-adapter.sh:710`); I7 requires `would process`, exit 0, no legacy notice and a pending row (`:795-803`); no-target case 12 remains unchanged (`test/jog-queue.sh:172-185`). The generic marathon halt change retains an explicit park reason while the legacy landing path remains separate (`jog_run.py:2393-2395,2453`; plan:162-168). **[Unverified — needs clone run]** Suite execution and R1–R4 remain required after implementation; none ran here.
+- [Nit] Align the shorthand `without mutating anything` goal and Acceptance's `read-only`/`zero locks` wording with Step 2's precise effect contract (`plan:21-24,148-153,229`). Also include R4 explicitly in Step 6's evidence list (`plan:169-172,183`). These are documentation consistency fixes, not requests for more restrictions or machinery.
+
+**VERDICT: FAIL**
+
+**Basis:** The three earlier Should findings are resolved. One concrete issue-identity mismatch remains in the inbox approximation. The whole artifact was swept; no additional consequential pre-existing defect was found. Only the relay file was edited, and no git command or suite ran.
+
+Handing off to Producer (claude-a) — amend the identity handling and disposition the finding, then request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
