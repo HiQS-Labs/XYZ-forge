@@ -10,9 +10,9 @@ with tempfile.TemporaryDirectory(prefix='gh1443-helper-') as d:
  legacy='---\ngh_issue: 99001\nfix_probes:\n  - python3 probe.py\n---\n'
  doc.write_text(legacy+'## Preflight Contract\n```json\nINVALID\n```\n')
  p,r=j.promotion_probes(str(root),str(doc));check('valid legacy wins over invalid contract',p==['python3 probe.py'] and r is None,[p,r])
- with patch.object(j,'contract_probes_from_doc',return_value=(['path_absent:missing'],None)) as fallback:
-  doc.write_text(legacy.replace('python3 probe.py','python3 missing.py'))
-  p,r=j.promotion_probes(str(root),str(doc));check('invalid legacy falls back once',p==['path_absent:missing'] and fallback.call_count==1,[p,r])
+ contract={'target':{'repo':str(root),'ref':'development'},'gate':'python3 probe.py','fix_probes':[{'type':'path_absent','path':'missing'}],'artifacts':['probe.py']}
+ doc.write_text(legacy.replace('python3 probe.py','python3 missing.py')+'## Preflight Contract\n```json\n'+json.dumps(contract)+'\n```\n')
+ p,r=j.promotion_probes(str(root),str(doc));check('invalid legacy uses real contract fallback',p==['path_absent:missing'] and r is None,[p,r])
  doc.write_text('---\ngh_issue: 99001\n---\n')
  p,r=j.promotion_probes(str(root),str(doc));check('neither source supplies probes',p==[],[p,r])
  with patch.object(j,'_resolve_preflight_py',return_value=str(root/'absent')):

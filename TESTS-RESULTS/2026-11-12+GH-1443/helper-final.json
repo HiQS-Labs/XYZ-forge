@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "case": "valid legacy wins over invalid contract",
+      "passed": true,
+      "observed": [
+        [
+          "python3 probe.py"
+        ],
+        null
+      ]
+    },
+    {
+      "case": "invalid legacy uses real contract fallback",
+      "passed": true,
+      "observed": [
+        [
+          "path_absent:missing"
+        ],
+        null
+      ]
+    },
+    {
+      "case": "neither source supplies probes",
+      "passed": true,
+      "observed": [
+        [],
+        null
+      ]
+    },
+    {
+      "case": "missing helper not evaluated",
+      "passed": true,
+      "observed": [
+        2,
+        "not evaluated \u2014 swarm_preflight not found at /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-helper-ivskwdvl/absent"
+      ]
+    },
+    {
+      "case": "mixed queue visits all and refuses",
+      "passed": true,
+      "observed": {
+        "rc": 2,
+        "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-helper-ivskwdvl)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 2 pending item(s) (capped at 2):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: already landed (exit 4)\n  2. GH-99002 (builder=codex, auto_merge=False)\n     preflight: ready (exit 0)\n"
+      }
+    },
+    {
+      "case": "mixed queue preserved",
+      "passed": true,
+      "observed": "DB bytes unchanged; no .tick"
+    },
+    {
+      "case": "bare preview no role requirement",
+      "passed": true,
+      "observed": "returned normally"
+    },
+    {
+      "case": "role admission preserves ambient state",
+      "passed": true,
+      "observed": "--reviewer <agent> is required with --executor marathon (the default executor since the Phase 5 flip) \u2014 Jog does not select a reviewer by default (GH-280: no silent cost-bearing or same-agent route)"
+    }
+  ],
+  "passed": 8,
+  "total": 8
+}
