@@ -120,9 +120,9 @@ new subcommand.
    the GitHub list: the agent signal is additive and must never remove GitHub repos.
 5. **Open mode (revised after plan QA rounds 1-2).** Keep today's single `?mode=ro` open and its
    warn-and-fall-back path. No `immutable` read, no `mode=rw`. When the read fails with "unable to open database
-   file" and neither `<db>-wal` nor `<db>-shm` exists, the warning names the cause: "rebalanceOS DB is in WAL mode
-   with no -shm sidecar, which this SQLite cannot open read-only; it opens while Rebalance holds the DB open
-   (GH-1421)". Other failures keep today's wording.
+   file" and neither `<db>-wal` nor `<db>-shm` exists, the warning says this *may be* that cause (CANTOPEN plus absent
+   sidecars does not by itself prove WAL mode): "…is unreadable (unable to open database file); this may be the
+   WAL DB with no -shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421)". Other failures keep today's wording.
    *Why not `immutable=1`.* It opens this DB, but it disables locking and change detection. Checking for
    sidecars before and after the read only detects a race; it cannot prove the file stayed still, and the
    resolved list feeds board-mutation eligibility (GH-898), where the preview/apply/restore equality checks
@@ -148,13 +148,13 @@ map: names are deduped case-insensitively as today.
 ### Preflight bet check
 
 - *Outcome sought:* agent-only repos can reach the board when the operator opts in, and the
-  reader actually works on a WAL-mode DB.
-- *Smallest viable bet:* one optional key, one extra query on the existing connection, one retry
-  of the existing connect. Not built: re-scoring, aliasing, source/device filters, rw opens.
+  WAL-mode open failure is root-caused and named.
+- *Smallest viable bet:* one optional key, one extra query on the existing connection, one more
+  specific warning. Not built: immutable reads, re-scoring, aliasing, source/device filters, rw opens.
 - *Alternatives rejected:* writing agent rows into `github_activity` (operator rejected 2026-11-11);
   importing rebalanceOS's `agent_session_repos` (board_sync deliberately has no rebalance import, GH-898);
   opening `mode=rw` to get sidecars (writes to the Rebalance dir, violates the non-goal); a second
-  connect for the agent table (trips the GH-777 ratchet and adds nothing).
+  connect for the agent table (a second annotated GH-777 exception that adds nothing).
 - *Rollback / containment:* key defaults off; reverting the single-file change restores today's
   behaviour. The open mode is unchanged.
 
