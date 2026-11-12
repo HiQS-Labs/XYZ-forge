@@ -15,7 +15,7 @@ goal: Fix the reported contract and environment failure using existing validatio
 
 | What was just completed | What's next |
 |---|---|
-| Issue and current source inspected. | Shared plan QA, implementation, focused and full verification. |
+| Implementation, focused verification and independent final QA approved. | Full push qualification and one PR for both issues. |
 
 ## Symptom
 
@@ -68,8 +68,8 @@ Base: `3ad3c0d88fb3d10a0e685b34544264143290f1e1`; one branch and one PR for both
 
 | Issue | Scope | Dependencies | Rating | State |
 |---|---|---|---|---|
-| #1436 | Planner contract shape and intake rejection | None | 70/65/50/70 | Plan QA approved; implementing |
-| #1437 | Existing gate environment probe and documentation | None | 55/40/50/75 | Plan QA approved; implementing |
+| #1436 | Planner contract shape and intake rejection | None | 70/65/50/70 | Final QA approved; full gate pending |
+| #1437 | Existing gate environment probe and documentation | None | 55/40/50/75 | Final QA approved; full gate pending |
 
 Clone/branch: `XYZ-forge-gh1436-contract-environment-2026-11-12` / `fix/XYZ-forge-gh1436-contract-environment-2026-11-12`. Both PR links pending. #1437 retains its own capture and ledger row.
 
@@ -97,12 +97,16 @@ Ratings preserve issue proposals except #1437 appeal uses neutral 50 (the issue 
 ## Acceptance & Quality Checklist
 
 - [x] Independent plan QA approved before implementation; [receipt](../../relay-system/2026-11-12/gh1436-plan.codex.md), reviewed 1a1a636d.
-- [ ] Both issues' acceptance checks reproduced and verified with committed provenance.
+- [x] Both issues' focused acceptance checks reproduced and verified with committed provenance.
 - [ ] Final independent QA approved and required gate passes.
 - [ ] One PR targets development with both issue closeouts.
 
 ## Lessons Learned (For Future Agents)
 
-Pending evidence; no generalization from an unverified fix.
+NO_ENTRY: this bounded run supports the recorded fixes; no additional general lesson is asserted.
 
 Plan QA nits: accepted partial-contract matrix addition. The reviewer read the actual committed plan path (seed mirror was absent), explicitly recorded that boundary, and the harness attested reviewed HEAD 1a1a636d; final QA will use --artifact-file correctly. Planner emits existing needs-contract finding with malformed-contract message/row flag so wave_reconcile retains attributable held-item semantics.
+
+## Final review
+
+Codex final QA Approved after two concrete findings and bounded repairs; [receipt](../../relay-system/2026-11-12/gh1436-final.codex.md), reviewed 9c506687. Existing focused suites and manual controls passed; [evidence](../../TESTS-RESULTS/2026-11-12+GH-1436-1437/SUMMARY.md). Full gate and PR publication remain pending. Edit verdicts: contract/helper/intake helped (discriminating controls); environment refusal helped; optional-null merge helped; documentation has no observed runtime effect.

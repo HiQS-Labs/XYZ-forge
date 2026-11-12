@@ -15,7 +15,7 @@ goal: Fix the reported contract and environment failure using existing validatio
 
 | What was just completed | What's next |
 |---|---|
-| Issue and current source inspected. | Shared plan QA, implementation, focused and full verification. |
+| Implementation, focused verification and independent final QA approved. | Full push qualification and one PR for both issues. |
 
 Shared plan: [GH-1436](GH-1436-CONTRACT-ENVIRONMENT.md).
 
@@ -76,4 +76,3 @@ effort 75: one probe block in `validate.sh`, plus an optional PATH line in the h
 
 - Making the codebase 3.9-compatible again.
 - Installing or upgrading the system Python, or creating the venv automatically.
-
