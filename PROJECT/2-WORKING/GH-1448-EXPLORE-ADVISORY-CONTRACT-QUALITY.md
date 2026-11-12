@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Reused canonical capture; rated and traced current validators at development `7acaa245`. | Independent plan QA, then bounded eight-case study; implementation only if findings justify a reviewed amendment. |
+| Plan QA Approved; eight-case study finished. H produced two false positives and one false negative; no runtime change recommended. | Final QA and classified publication gate, then evidence PR for parent review. |
 
 ## Current authorized plan (2026-11-12)
 
@@ -171,7 +171,7 @@ Determine whether existing contract validators can provide useful bounded adviso
 
 ### Checklist
 
-- [ ] Eight-case report and sourced go/no-go recommendation.
+- [x] Eight-case report and sourced no-code recommendation: [evidence](../../TESTS-RESULTS/2026-11-12+GH-1448/SUMMARY.md).
 
 ### QA checklist — Phase 0
 
@@ -180,3 +180,16 @@ Determine whether existing contract validators can provide useful bounded adviso
 ## Merge evidence
 
 - PR #1449 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Investigation result
+
+See [committed report](../../TESTS-RESULTS/2026-11-12+GH-1448/SUMMARY.md) and cases/results/provenance.
+Eight expected admission classifications matched; candidate H produced 1 true positive, 2 false
+positives, 1 false negative, 4 true negatives. No runtime change recommended. This does not
+disprove narrower unevaluated diagnostics or establish semantic relevance from syntax.
+Plan QA Approved in round 1; reviewer scaffold nit accepted for the final review packet
+(canonical path and concrete Definition of Done). No changes to the approved research scope.
+
+## Lessons Learned
+
+NO_ENTRY; task-specific lexical limits recorded in the report, no operational-effectiveness claim.
