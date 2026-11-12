@@ -2,7 +2,7 @@
 gh_issue: 1437
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1437
 title: Fail fast for unsuitable gate Python
-status: In progress
+status: Complete
 created: 2026-11-12
 updated: 2026-11-12
 owner: Codex

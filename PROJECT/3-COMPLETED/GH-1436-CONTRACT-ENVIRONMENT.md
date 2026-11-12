@@ -2,7 +2,7 @@
 gh_issue: 1436
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1436
 title: Malformed contracts must not halt unrelated reconciliation
-status: In progress
+status: Complete
 created: 2026-11-12
 updated: 2026-11-12
 owner: Codex
