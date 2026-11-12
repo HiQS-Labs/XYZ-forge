@@ -94,3 +94,11 @@ PASS: nonempty aggregate, zero exclusion, name tie; old query drops mixed
 Re-read the reader/resolver, plan and prior plan approval, updated manual matrix, SUMMARY, matrix and alias-red logs, F2 mutation/restoration outcomes, smoke disclosures, provenance, existing-suite tails, CHANGELOG entry and GH-1421 ledger records. The strict default-off bool, same-connection conditional query, GitHub-first merge and existing resolver cap/dedupe remain intact. The inner SQLite-error catch preserves GitHub rows; ordinary read-only opening and the qualified no-sidecar warning remain unchanged. No additional writer, subsystem, registered suite or gate is introduced. The populated-fixture base comparison supports key-off identity within its measured scope; source inspection supports the broader control-flow claim. The existing rating 50/45/50/75 and accepted-start event remain consistent with the bounded advisory-reader change.
 
 Recorded disposable-clone receipts at 2565f073b report gh402 34/0, gh405 19/0, gh549 125/0, gh605 OK and gh777 PASS. Those are supplied evidence, not suites rerun by this reviewer. The live reader still falls back on this Mac; the documented working immutable diagnostic mode remains outside production, as approved. Final committed-state harness qualification remains outstanding. No git, executable fixtures, pytest, test suites or validate.sh were run in this turn. Only this relay file was edited. No remaining blocking finding.
+
+### Attestation · relay-drive — 2026-11-12T01:31:53Z
+task: GH1421-FINAL-QA
+reviewer: codex
+status: Approved
+reviewed-head: d93799e0fa0aeb96b94ab3f32893b11920e48753
+added-range: 8447+2707
+added-sha256: debb809849aac5768fd613268be095fc5620592e7330004e1438d17a16c51648
