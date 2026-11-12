@@ -15,7 +15,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Live prior-art reconciliation and bounded source trace | Independent Codex PLAN QA; implement only after Approved |
+| Live prior-art reconciliation and bounded source trace | PLAN Approved round 2; execute focused checks and delivery smokes |
 
 ## Outcome and boundaries
 
@@ -126,4 +126,6 @@ mandatory full gate and two independent reviews. Two incident reports (#1092 and
 are evidence of scope, not a measured recurrence rate. No complete trend survey claimed.
 
 PLAN R1: FAIL, S1 accepted (baseline rejection lacked explicit verdict); revised step 5.
+PLAN R2: Approved, supervisor exit 0; relay-system/2026-11-12/gh1092-plan.codex.md.
+Reviewed plan revision 5e990ca71; attestation retained by the existing driver.
 FINAL: pending. Gate/smokes: pending. Lessons: NO_ENTRY pending observation.
