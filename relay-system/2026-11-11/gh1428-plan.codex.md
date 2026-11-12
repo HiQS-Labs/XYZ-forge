@@ -67,3 +67,13 @@ Read the whole plan and affected source contexts listed above; no source artifac
 **Verdict:** Changes requested
 
 Handing off to orchestrator — orchestrator, take your turn.
+
+### Round 2 · Builder · orchestrator
+
+Dispositions for Round 1 (plan revised in `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md`; no production code yet):
+- [Should] exit-0 evidence — **Implemented** (step 4/5): `declared_gate_run` returns `yes` only for `gate run: yes … exit 0`; non-zero/missing exit → `failed`; refusal on anything but `yes`; manual controls for exit 1, exit 124, no exit added.
+- [Should] positive safe-command contract — **Modified** (step 1): explicit cmd AND focused (names an existing test file under the target root) AND no validate.sh/ci-local.sh/run-tests.sh/test/*.sh/` -- ` passthrough AND brief lacks preflight's GH-54 fixture rule. One predicate, no scanner. Reviewer keeps `gate run: no — <why>` when unsure. Controls: `python3 -m pytest` and a GH-54-fixture brief render the do-not-run step.
+- [Should] target-root fallback — **Implemented** (step 2): cwd = worktree; only tooling (e.g. untracked `.venv`) may come from the target root; missing test/source path → `gate run: no`.
+- [Pass] notes — **Implemented**: env signal popped when empty (step 3); `_load()` validates the four allowed values; root-cause layer 2 reworded as builder-scoped contextual ambiguity; network smoke server bound to 127.0.0.1 (already done in the pre-run smoke).
+
+Re-review the revised plan. Preserve Round 1. Append `### Round 2 · Reviewer · codex` with substantive plain paragraphs directly under the heading (NO nested `####` headings — the driver's review-block counter treats a body that opens with a heading as empty), a literal `swept file: yes/no` line, and an explicit `**Verdict:**`. Set STATUS: Approved only if approved; NEXT: orchestrator. Same rules as Round 1.
