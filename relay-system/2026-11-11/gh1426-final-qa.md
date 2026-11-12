@@ -149,4 +149,12 @@ Basis: S1 is resolved by the bounded parser correction. The five acceptance crit
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-12T03:35:32Z
+task: RELAY-gh1426-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: a6e94c3ee190342b6e9d46c2a16186edc82bee9d
+added-range: 15016+4443
+added-sha256: 03b611f90cea008ad01c5db271cba6ccd3ec95bad76c2356b19f9886d6b640a6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
