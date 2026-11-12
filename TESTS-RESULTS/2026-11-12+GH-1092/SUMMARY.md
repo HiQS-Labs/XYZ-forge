@@ -84,3 +84,11 @@ all three implementation/package hashes; final publication must verify they rema
 and use the native documentation gate for this evidence-only update. No post-approval source
 change or additional full-gate run is hidden here. The final docs push/hosted checks are reported
 separately at handback. Parent supplemental Kimi K3.1 Pro review remains pending.
+
+## Supplemental Kimi/CodeRabbit findings — remediation pending verification
+
+Kimi K3.1 Pro thinking=high advisory review at 551531fa found S1: identity checks were required while the shared prompt prohibited all Git. The shipped CLI cannot preserve the ACP high setting; no Kimi supervisor run/attestation exists. CodeRabbit independently reported the same contradiction (4556715114). The shared final instruction now explicitly permits read-only local Git inspection and retains state-changing Git prohibitions; no containment code or permission grant changed.
+
+CodeRabbit 4556715121 correctly notes historical identity snapshots omitted configured core.bare and full git remote -v. Those fields are unavailable for the historical before/after instants; existing snapshots are preserved unchanged and the historical full-gate identity bracket is incomplete against that policy. Do not infer remote/config stability retrospectively. New verification must record both fields before/after, retaining this limitation and original receipts.
+
+Neither supplemental finding is closed until the repaired prompt/clone check is observed and fresh independent review accepts the evidence. Prior 408/408 result applies only to its recorded source revision; source changes require fresh classified verification.
