@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -92,5 +92,41 @@ Commensurate complexity applies. Reviewer writes only this relay file; no suites
    with limits and a reviewed amendment before any production change?
 
 ## Log
+
+### Reviewer · Round 1
+
+**Input boundary:** Read the entire canonical PROJECT/2-WORKING/GH-1448-EXPLORE-ADVISORY-CONTRACT-QUALITY.md before supplementary evidence or implementation. The Setup seed path was absent: `cat .relay-artifacts/GH-1448-EXPLORE-ADVISORY-CONTRACT-QUALITY.md` exited 1, `No such file or directory`; used the canonical path explicitly named in Review packet instead.
+
+**What this proposes**
+
+The current authorized plan is an eight-case, non-executing comparison of existing Jog admission with a simple advisory hypothesis, capped at 30 minutes. It permits a no-code recommendation; implementation requires evidence and an independently reviewed amendment. Current authorization supersedes the historical intake's later-authorization wording, while leaving merge and cleanup outside scope.
+
+**How the existing system works, per this document**
+
+Jog filters command forms and paths, while preflight evaluates command exit status. Neither establishes semantic correspondence between a probe and the requested outcome. Existing HQ/PRS writers retain admission and contract ownership; the study consumes GH1447 receipts without replaying them.
+
+**What it’s not**
+
+This is not runtime delivery, semantic proof, automatic admission, a new linter runner, or a population accuracy measurement. No-code research may complete this study without improving runtime or establishing agent effectiveness.
+
+**Source-backed assessment — Ship the bounded study**
+
+swept file: yes
+
+- [Pass] Admission, evaluation and relevance are separate. `utils/py/jog_run.py:1568` strips/rejects trivial commands and resolves selected token-1 paths; `:1624` validates JSON probe shape without executing it. `utils/py/swarm_preflight.py:243` runs command probes and interprets status with `expect_nonzero`; its `landed` label is a preflight state, not semantic acceptance. The plan explicitly says “Lexical command-form recognition cannot establish the task's outcome.” Preserve that distinction in the report.
+- [Pass] Controls are predeclared in `TESTS-RESULTS/2026-11-12+GH-1448/cases.json`: constant-printf/wrapped-constant desire warnings; input-dependent-printf/specialized-pipeline desire silence despite starting with printf; option-refusal expects rejection. GH1243's command matches `PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md:48`; GH1254's matches `PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md:134`. These deliberately adverse controls support a bounded go/no-go comparison, not population accuracy or permission to tune until green.
+- [Pass] No-code is explicitly valid: step 3 says “publish a no-code recommendation and evidence”; step 4 requires source unchanged on that path and forbids runtime-delivery claims. The amendment review condition prevents study approval from authorizing a particular implementation. Eight cases/30 minutes are proportionate to rejecting or retaining this narrow lexical hypothesis, not establishing general effectiveness.
+- [Pass] Existing refusals have retained observations in GH1447 `replay-results.json`: empty → “empty probe command”, trivial → “trivial probe pattern rejected: 'echo ok'”, missing → “probe target path does not resolve: missing.py”, originals → unresolved -c. These are prior recorded observations, not a new execution this turn. GH1448 explicitly consumes rather than replays them.
+- [Pass] Existing writers remain owners: `utils/py/jog_run.py:1677` guards promotion with `_require_jog_primary`; its subsequent promotion path writes the doc and invokes `releases_app.py roadmap repoint`/pickup. This study calls only lint_probe and H and inspects extraction/promotion statically, avoiding those write paths. “No new tests, registry, runner, ledger, hook or telemetry machinery” bounds maintenance cost and blast radius.
+- [Nit] Setup still names an absent seed path and leaves Definition of Done as a placeholder. The canonical artifact was available and Review packet's five explicit questions plus its envelope supplied review criteria, so this did not obstruct this turn. On future scaffolds, point Setup at the actually seeded artifact and populate Definition of Done.
+- [Unverified — source evidence only] The numeric PRS readback and historical recurrence search were not independently queried this turn. The plan gives rating rationales and explicitly says trend is unknown; no execution/admission or recurrence claim is certified by this approval. Evaluation order, retained hashes, measured classifications and final gate remain future work.
+
+No additional pre-existing material defect found in the whole plan. Historical “no runtime changes” wording is explicitly superseded by the current authorized section; runtime remains outside this initial study until amendment review. No suites, executable fixtures, inherited command probes, Git operations or runtime evaluations ran during this review. Read commands exited 0 except the missing Setup seed lookup recorded above; no harness gate result is claimed.
+
+**VERDICT: PASS**
+
+**Basis:** Approve the initial bounded research plan against Review packet questions 1–5, with no runtime change approved. Its chosen sample can expose the stated heuristic's limits while preserving refusals, current writers and an honest no-code outcome. Later implementation needs the specified reviewed amendment and final evidence.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
