@@ -213,6 +213,9 @@ Then begin work.
    accepted risks or rejected findings stay settled absent materially new evidence.
    Never describe a same-context author read-through as independent review.
    Ask specific questions: Are claims grounded in the actual paths? Is any requirement missing?
+   For each task, what prevents an unchanged, unfixed candidate from being reported as delivered—
+   and where is the observed rejection? Distinguish admission probes from final acceptance;
+   passing regression coverage alone does not establish defect detection.
    Does the plan extend the existing subsystem and writer? Are blast radius,
    dependency ordering, rollback, and falsifiable checks sufficient? Are per-task
    ratings grounded, recurrence claims supported, appeal neutral unless the user
