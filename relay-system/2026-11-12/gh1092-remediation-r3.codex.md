@@ -138,4 +138,13 @@ Read-only identity probe results (each command invoked through Python `subproces
 
 Relay closed (Approved), no further turn needed. Parent: run the fresh classified gate on the approved revised source, retain the complete identity bracket and historical limits, and block publication on gate failure; broader GH1092/GH981 requirements remain open. Harness owns the relay-only commit.
 
+
+### Attestation · relay-drive — 2026-11-12T22:05:22Z
+task: RELAY-GH1092-REMEDIATION-R3
+reviewer: codex
+status: Approved
+reviewed-head: 32c838c80d6a7c80aa1f1d8552fa26a26e4c3050
+added-range: 9092+6858
+added-sha256: 534d9ba72eb80edf334dac5c4ab3c289a01f09f5a2ab362762481c8286c2bad7
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
