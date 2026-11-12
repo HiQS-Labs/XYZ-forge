@@ -236,3 +236,7 @@ carries that commit and promotes the file, so land #1424 first or drop the GH-14
   the first SELECT; it does not create the sidecars SQLite's docs describe.
 - LESSONS-LEARNED.md: `NO_ENTRY`. Both are code-local facts recorded here; neither fits the ledger's
   areas (relay, marathon, pdda, gate, skills, releases).
+
+## Merge evidence
+
+- PR #1429 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
