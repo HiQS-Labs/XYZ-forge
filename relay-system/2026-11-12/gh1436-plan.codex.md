@@ -114,4 +114,13 @@ Whole-plan sweep included both captures' acceptance, ratings, non-goals, and ver
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-12T16:28:46Z
+task: RELAY-gh1436-plan
+reviewer: codex
+status: Approved
+reviewed-head: 1a1a636d5f198462cd07b4f5c486d1be76a625e0
+added-range: 6986+5428
+added-sha256: 3509e9f0c93fe485693f61e5bd2de957e09bbf9bc910eebb4c49bcad628b7e80
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
