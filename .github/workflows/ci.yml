@@ -523,7 +523,7 @@ jobs:
   # local evidence) stalled the trunk once; every job in this workflow is GitHub-hosted since then.
   vendored-smoke:
     name: vendored smoke gate (blocking on development + main)
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     continue-on-error: false
     timeout-minutes: 15
     steps:
