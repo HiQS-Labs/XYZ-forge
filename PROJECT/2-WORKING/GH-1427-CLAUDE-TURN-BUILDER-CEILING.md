@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from 1-INBOX; recon traced the log loss to `rtl_enforce`'s transcript sweep; plan written (below) | Codex plan QA via relay-xyz, then implementation |
+| Plan QA Approved (r3); implemented (e9ff76adc, a4836f6c6); suites + manual M1/M2 + red control + live smoke green (`TESTS-RESULTS/2026-11-11+GH-1427/`) | Final Codex QA, then PR (full gate in pre-push) |
 
 ## Table of contents
 
@@ -265,3 +265,11 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only o
 | Turn log survives at the named path | 3 | M1 red/green, smoke |
 | Cost recorded on a failed turn | 2c | M1 `tick cost` row |
 | Existing suites pass, evidence under TESTS-RESULTS | — | focused suites + gate receipt |
+
+### Implementation notes (2026-11-11)
+
+- The live smoke r1 found that a real `error_max_budget_usd` JSON has `usage` all-zero, with per-model counts only in `modelUsage`.
+  `record_cost` now falls back to summing `modelUsage` (`inputTokens + cacheReadInputTokens` / `outputTokens`) when `usage` is
+  zero (a4836f6c6). That is the acceptance gap plan QA asked to be checked rather than assumed.
+- The base red control also showed that on a non-ignoring host, base never recorded Claude cost even for successful turns,
+  because `rtl_enforce` deleted the log before the cost block read it.
