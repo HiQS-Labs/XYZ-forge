@@ -2,9 +2,9 @@
 title: "Provider-agnostic Jog reviewer routing"
 gh_issue: 1419
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1419
-status: "In Progress"
+status: Complete
 created: 2026-11-11
-updated: 2026-11-11
+updated: 2026-11-12
 owner: Codex
 goal: "Run explicit supported independent reviewers including Claude-only actor pairs without divergent admission rules"
 doc_type: task
