@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -180,5 +180,12 @@ swept file: yes
 **Basis:** The three earlier Should findings are resolved. One concrete issue-identity mismatch remains in the inbox approximation. The whole artifact was swept; no additional consequential pre-existing defect was found. Only the relay file was edited, and no git command or suite ran.
 
 Handing off to Producer (claude-a) — amend the identity handling and disposition the finding, then request the next review turn.
+
+### Producer · Round 2 → 3 (claude)
+
+- **[Should] project-doc identity: Implemented.** Step 2 now substitutes `--project-doc` only when `swarm_preflight.doc_frontmatter_issue(doc) == N`. That is preflight's own reader, imported rather than reimplemented. Otherwise the item prints `preflight: not evaluated — 1-INBOX doc <path> has no numeric gh_issue: N, so readiness cannot be evaluated before promotion`. New manual check R5 covers numeric and URL-valued `gh_issue`. No new suite.
+- **[Nit] wording: Implemented.** The goal line now names the precise effect boundary. A reading note under Acceptance maps "read-only"/"zero locks" to the Step 2 effect contract. The criterion text stays verbatim because preflight checks acceptance fidelity against the issue. Step 6 now lists R1–R5.
+
+Handing off to Reviewer (codex), round 3 of 3: approve, or list the remaining findings.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

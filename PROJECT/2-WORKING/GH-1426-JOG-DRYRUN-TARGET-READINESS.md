@@ -19,7 +19,8 @@ non_goals:
   - Changing swarm_preflight readiness rules
 goal: >
   `jog run --dry-run --target-root <clone>` surfaces each pending item's preflight verdict and
-  readiness reason without mutating anything, and a live preflight park prints the real reason
+  readiness reason without Jog ledger, queue, lock or lease writes (target-side preflight effects as
+  documented in Plan Step 2), and a live preflight park prints the real reason
   instead of "advancing halted at landing boundary".
 ---
 
@@ -29,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex) returned FAIL with 3 Should findings; all were dispositioned and the plan amended (effect contract, `--out`, summary rc check, repaired preflight contract). Pre-fix R1/R2 red controls captured in a disposable fixture. | Codex plan QA round 2, then implement Steps 1–5. |
+| Plan QA r1 FAIL (3 Should) and r2 FAIL (1 Should: 1-INBOX identity, 1 Nit) were dispositioned and the plan amended. Pre-fix R1/R2 red controls captured in a disposable fixture. | Codex plan QA round 3 (final round), then implement Steps 1–5. |
 
 ## Rating rationale (2026-11-11)
 
@@ -142,8 +143,13 @@ No schema, ledger or contract changes. Reversibility: **Easy**.
    with `cwd=target, SWARM_PREFLIGHT_ROOT=target`, as the live call does. Also set
    `PYTHONDONTWRITEBYTECODE=1` for the child. `<path>` is a prospective, never-created directory under the
    system temp dir. It keeps the archive-root shell-out off the dry-run path, as in live (plan QA r1). If `find_issue_doc(target, N)`
-   resolves to a 1-INBOX doc, run `--project-doc <that doc> --dry-run` instead, and label the line
-   `(1-INBOX doc; live run promotes it first)`. Print `     preflight: <summary>` under each item. Without
+   resolves to a 1-INBOX doc **and** preflight's own `doc_frontmatter_issue(doc)` (imported from
+   `swarm_preflight`, the same reader that `--project-doc` mode uses) equals `N`, run `--project-doc <that doc>
+   --dry-run` instead, and label the line `(1-INBOX doc; live run promotes it first)`. If the identities
+   differ (e.g. a URL-valued or absent `gh_issue`), do not run the substitution. Print
+   `preflight: not evaluated — 1-INBOX doc <path> has no numeric gh_issue: N, so readiness cannot be
+   evaluated before promotion` (plan QA r2: the canonical resolver accepts identity forms that
+   preflight's frontmatter reader does not). Print `     preflight: <summary>` under each item. Without
    `--target-root`, output is byte-identical to today.
    **Effect contract** (plan QA r1): no write to the primary's `releases.db`/`releases.sql`, no
    `.tick/jog` state, no Jog supervisor lock, no lease, no packet. In the target, preflight's own
@@ -167,7 +173,7 @@ No schema, ledger or contract changes. Reversibility: **Easy**.
 5. **Legacy relay preflight park** (`jog_run.py:2415-2417`): append `: <summary>` to the existing print and
    failure reason, using the same helper. This is a one-line change in the same defect class.
 6. **Verify:** run the focused suites `bash test/gh280-jog-marathon-adapter.sh` and `bash test/jog-queue.sh` in
-   a disposable full clone (`…-gate`). Record manual checks R1/R2/R3 under
+   a disposable full clone (`…-gate`). Record manual checks R1/R2/R3/R4/R5 under
    `TESTS-RESULTS/2026-11-11+GH-1426/` with `provenance.jsonl`. Then run the final gate on the route
    `utils/ci-route.sh` assigns (Python change → full route), once, on the final commit.
 
@@ -180,6 +186,7 @@ No schema, ledger or contract changes. Reversibility: **Easy**.
 | Live preflight park prints the verdict and `next:`, not "landing boundary" | **R2 (red control, manual):** a live run against the same unready clone. Pre-fix console = the four lines in the report. Fixed: `preflight refused: NOT-READY (exit 5) — next: …` and `advancing halted: GH-N parked — preflight-refused (exit 5): …`. G8 (existing) still matches its prefix. |
 | `marathon execution <id>` not printed before preflight | R2 console shows `running preflight for GH-N (execution …)`. A grep shows no `marathon execution` print precedes the preflight `subprocess.run`. |
 | Existing Jog suites pass; evidence in TESTS-RESULTS | gh280 + jog-queue runs in a disposable clone, provenance committed. |
+| (plan QA r2) 1-INBOX substitution only with matching issue identity | **R5 (manual):** in the fixture target, a 1-INBOX doc with numeric `gh_issue: N` is evaluated via `--project-doc`. The same doc with `gh_issue: <issue URL>` prints `preflight: not evaluated — … no numeric gh_issue: N …`. |
 | (plan QA r1) Summary never hides a post-verdict failure | **R4 (manual, one-liner):** `_preflight_summary` on a synthetic completed process with stdout `  verdict     : ready (exit 0)` and returncode 1 → output contains `preflight exited 1`. On empty output with returncode 2 → `exit 2`. |
 
 **Test non-scope:** no new suite, registry entry, fixture runner or guard (GH-831). Existing tests are
@@ -234,6 +241,10 @@ Root cause: `jog run --dry-run` is hermetic toward the ledger, and it also does 
 - [ ] When a live item parks at preflight, the console prints the preflight verdict and its `next:` reason, not `advancing halted at landing boundary.` Red control: the console output above.
 - [ ] The `marathon execution <id>` line is printed only after preflight returns ready, or is reworded to say preflight is starting.
 - [ ] Existing Jog suites (gh280 / Jog adapter) still pass; evidence recorded under `TESTS-RESULTS/` (no new suites, GH-831).
+
+> **Reading note (plan QA r2):** the issue's "read-only" and "zero locks" in the first criterion mean what
+> Plan Step 2's effect contract says: no Jog ledger, queue, state, lock or lease writes. Target-side
+> preflight effects are documented there. The criterion text stays verbatim from the issue.
 
 ## Preflight Contract
 
