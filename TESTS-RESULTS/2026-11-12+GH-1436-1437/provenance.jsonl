@@ -15,3 +15,6 @@
 {"commit": "bf38b326", "command": "python3 temp/manual_hq.py (following-prose case)", "rc": 1, "result": "red: malformed issue/capture written before refusal"}
 {"commit": "f78c531c", "command": "python3 temp/manual_hq.py (following-prose case)", "rc": 0, "result": "green: all six malformed cases refuse before writes; partial accepted"}
 {"commit": "f78c531c", "command": "bash test/hq-park.sh", "rc": 0, "result": "23 passed"}
+{"commit": "f78c531c", "command": "pure merge_contracts first/later optional-null control (probe in final QA receipt)", "rc": 0}
+{"commit": "ebbe5877", "command": "pure merge_contracts absent/empty/first-null/later-null/nonempty control", "rc": 0}
+{"commit": "ebbe5877", "command": "bash test/swarm-preflight.sh", "rc": 0}

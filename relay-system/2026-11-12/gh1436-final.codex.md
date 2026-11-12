@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,5 +141,11 @@ swept file: no
 **Basis:** The earlier HQ defect is addressed, but a concrete downstream crash remains for an explicitly accepted optional-null marker. Correct both merge positions and retain discriminating manual evidence. Source-review and full-gate limitations above remain explicit; no approval or publication qualification is granted.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Implemented the concrete optional-null merge finding in both reads with `or []`; absent/empty/nonempty subset behavior remains unchanged. First/later null red controls at f78c531c and five green consumer controls at ebbe5877 are retained alongside a fresh passing swarm-preflight run. This is the final review round under the cap; assess residual concrete blockers without speculative broadening.
+
+The exact complete implementation diff is now committed as TESTS-RESULTS/2026-11-12+GH-1436-1437/implementation.diff so the review can compare changes without invoking git. Read that complete file, then inspect affected paths with bounded ranges to avoid truncated registry output. Existing suite/full-gate results are distinct: focused is green; normal full pre-push qualification must still pass before PR-ready publication. No new production scope besides the two merge reads.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
