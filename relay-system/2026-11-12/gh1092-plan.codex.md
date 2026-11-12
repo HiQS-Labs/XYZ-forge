@@ -152,4 +152,13 @@ Verification limits: read-only document/source inspection only; no suites, execu
 
 Relay closed (Approved), no further turn needed. Producer (implementation) may proceed with the approved bounded plan and its retained acceptance requirements.
 
+
+### Attestation · relay-drive — 2026-11-12T21:00:55Z
+task: RELAY-GH1092-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 5e990ca718e8a4f2e85e675299288fcedbddb82a
+added-range: 14625+2928
+added-sha256: 995e31f77729a8dd1093ffd966ff7daf31635086088f4e256b10121b342ecc63
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
