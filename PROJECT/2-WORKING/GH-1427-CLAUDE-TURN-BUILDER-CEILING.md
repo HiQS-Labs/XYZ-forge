@@ -141,7 +141,8 @@ undiagnosable. It is recoverable (GH-432 persists partial edits), so it sits at 
 **pri 80:** severity-led; it blocks #1418's Claude-only proving goal. **appeal 50:** neutral. The issue's 60 was
 an author proposal, not an operator value. **effort 60:** three small code sites plus docs. **Recurrence:**
 2 incidents in the last 14 days (#1420's live turn and the LTVera-Pandas GH-993 run, which are distinct runs).
-The preceding 14 days had none found, but this is a newly enabled route (#1420), so the trend is unknown.
+None were found in the preceding 14 days. The search was not exhaustive, and this is a newly enabled route (#1420), so the
+trend is unknown. The ratings are a judgment grounded in queue blockage, not a measured recurrence score.
 
 ### Bet check
 
@@ -164,14 +165,22 @@ The preceding 14 days had none found, but this is a newly enabled route (#1420),
 
 | Role (as resolved by `rtl.is_reviewer_turn`) | `--max-budget-usd` | `--max-turns` |
 |---|---|---|
-| reviewer | 0.50 (unchanged) | 12 (unchanged) |
+| reviewer | **1.00** (was 0.50) | 12 (unchanged) |
 | builder / producer (everything else) | **3.00** | **40** |
+
+**Why the reviewer budget moves too (plan-QA r1 evidence):** #1420's live Claude **reviewer** turn died with
+`error_max_budget_usd` at $0.5283504 against $0.50 (`TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15`). That is the
+"second occurrence" the issue cites. A reviewer that reads a sizeable AGENTS.md plus sources does not fit in $0.50 on
+Sonnet 4.6, so the reviewer budget doubles to $1.00, which is still cheap. Reviewer turns stay at 12 because no evidence
+shows the turn cap biting a reviewer.
 
 An explicit `CLAUDE_MAX_BUDGET` / `CLAUDE_MAX_TURNS` overrides both roles, as it does today. The builder values are the
 operator's proven override from the LTVera-Pandas run. The failed builder turn reached $0.51 at 12 turns while still
 mid-Write, so roughly 6x headroom covers a small-to-medium feature. The 900s wall cap and the GH-492 idle bound
 still bound a runaway turn. For Max-subscription operators the budget is notional list-price usage; for API users
-it is billed, which is why reviewers stay cheap. `warn_opus_budget` keeps firing for an Opus reviewer on $0.50.
+it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only on the literal `"0.50"`, which would no longer be any role's default. Its condition becomes
+"Opus-class and budget below $3.00", with the message naming the actual budget. The call line stays byte-identical
+(pinned by gh642), and gh642's `("claude-opus-4-8","0.50") → WARNED` / Sonnet `→ SILENT` cases still hold.
 
 ### Implementation (ordered, verification inline)
 
@@ -180,7 +189,7 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` keeps firing
    unparseable. This is a read-only helper beside `read_result`, the existing JSON reader. *Check:* a python -c
    probe on an `error_max_budget_usd` sample and on an empty file.
 2. `utils/py/claude-turn.py`:
-   a. Select the ceiling: `reviewer = rtl.is_reviewer_turn(me)`. The defaults are `("0.50","12")` for a reviewer
+   a. Select the ceiling: `reviewer = rtl.is_reviewer_turn(me)`. The defaults are `("1.00","12")` for a reviewer
       and `("3.00","40")` otherwise, and env overrides win. Keep the line `warn_opus_budget(model, max_budget)`
       byte-identical (pinned by `test/gh642-consumer-fruit.sh`).
    b. Failure message: for the `CalledProcessError` and `read_result` ValueError branches, append
@@ -203,7 +212,10 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` keeps firing
    the category token (`relay-failed-before-gate`), because Jog and the escalation consumers key on it. The cause
    travels in the adjacent existing field, which also fixes the "turn-log missing" line through step 3.
    *Check:* `test/gh379-claude-builder-diagnosis.sh`, `test/gh372-escalation-log-tail.sh`.
-5. Docs: update `README.md:125-126`, `relay-automation/README.md:123-124`, `HOW-TO-USE.md:79`, and the
+5. Package: `relay-turn-lib.sh` and `relay-automation/README.md` are members of the shipped
+   `skills/1-hourly/relay-automation/relay-pkg.tar.gz`. Regenerate it with `bash skills/1-hourly/relay-automation/make-pkg.sh`
+   and commit it. *Check:* `bash test/relay-pkg-freshness.sh`. (plan-QA r1 [Should] 1)
+6. Docs: update `README.md:125-126`, `relay-automation/README.md:123-124`, `HOW-TO-USE.md:79`, and the
    `MARATHON.example.yaml:21-22` comment to state the role-aware defaults. Add a `CHANGELOG.md` entry. The frozen
    twin's header (`claude-turn.sh:50-51`, pinned by gh379) stays accurate for the twin it describes.
 
@@ -221,7 +233,11 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` keeps firing
   - **M2 (role defaults):** the fake CLI echoes its argv. Under `RELAY_DRIVER_LOCKED=1`, `RELAY_ROLE=builder` →
     `--max-budget-usd 3.00 --max-turns 40`; `RELAY_ROLE=reviewer` → `0.50 / 12`; `CLAUDE_MAX_BUDGET=1.25` wins for both.
   - **Smoke (GH-1088), main path:** one bounded live `claude -p` turn through claude-turn.py with `CLAUDE_MAX_BUDGET=0.01`.
-    Expect exit 5, the console subtype `error_max_budget_usd`, and the log surviving. **Adjacent path:** a rerun of the
+    Expect exit 5, the console subtype `error_max_budget_usd`, and the log surviving. In addition (plan-QA r1 [Should] 2):
+    retain the real error JSON; record its `usage` token fields; assert **exactly one** `tick cost` row for that task,
+    with tokens_in/tokens_out equal to `usage.input_tokens+cache_read_input_tokens` / `usage.output_tokens`. If the real
+    error result carries no usage, record that acceptance gap honestly instead of claiming it from M1. M1 also asserts one
+    row on an exit-0 fake result. **Adjacent path:** a rerun of the
     same turn with the default builder ceiling on a trivial relay prompt, which exits 0 (spend ≈ $0.06).
   - **ESCALATION check:** M1's log fed through the GH-379 `builder_diag` parse, showing `errors=` present.
 
@@ -238,7 +254,7 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` keeps firing
 
 | Issue acceptance | Plan step | Witness |
 |---|---|---|
-| Builder ceiling sized for implementation, env-overridable | 2a | M2 |
+| Builder ceiling sized for implementation, env-overridable (reviewer raised to $1.00 on #1420 evidence) | 2a | M2 |
 | Nonzero exit prints subtype/errors; carried into ESCALATION.md | 1, 2b, 4 | M1, ESCALATION check, smoke |
 | Turn log survives at the named path | 3 | M1 red/green, smoke |
 | Cost recorded on a failed turn | 2c | M1 `tick cost` row |

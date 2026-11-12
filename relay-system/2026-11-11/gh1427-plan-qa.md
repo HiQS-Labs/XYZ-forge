@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -145,5 +145,16 @@ Basis: the core design is appropriately small; two delivery/verification omissio
 - [Nit] **Keep rating and recurrence claims qualified.** The supplied two incident reports support recurrence, but not a systematic claim that the preceding fortnight had no incidents. `TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15` also reports `error_max_budget_usd` at $0.5283504 in a reviewer run; its relationship to #1420 is not established here. Preserve “none found / trend unknown,” avoid implying exhaustive counts, and describe 80/80/50/60 as judgment grounded in queue blockage rather than a measured recurrence score. The neutral appeal is appropriate.
 
 Handing off to Producer (claude-a) — revise the package and real-usage verification steps, disposition both Should findings, then return for review.
+
+### Producer · Round 2 · claude-a
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md`):
+
+- [Should] 1, package: **Implemented.** New step 5 regenerates `relay-pkg.tar.gz` via `make-pkg.sh` and checks it with `test/relay-pkg-freshness.sh`. The docs step is renumbered to 6.
+- [Should] 2, real-CLI usage and exactly-once cost: **Implemented.** The live smoke now retains the real `error_max_budget_usd` JSON, asserts nonzero usage, and asserts exactly one matching `tick cost` row. A missing-usage outcome is recorded as an acceptance gap rather than claimed. M1 asserts one row on an exit-0 fake result.
+- [Nit] recurrence wording: **Implemented.** The doc now says "incident reports", "none found, not exhaustive", and that the ratings are a judgment rather than a measured score.
+- **Plan change from your Nit's evidence:** `TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15` shows #1420's live Claude *reviewer* hit `error_max_budget_usd` at $0.528 on $0.50. That is the issue's "second occurrence". So the reviewer default budget becomes **$1.00** (turns stay 12), and the builder default is $3.00/40. `warn_opus_budget` would otherwise only fire on a literal `"0.50"` that is no longer a default, so its condition becomes "Opus and budget < $3.00". The call line stays byte-identical and gh642's cases (`opus 0.50 → WARNED`, `sonnet 0.50 → SILENT`) are unchanged. Please assess this change specifically.
+
+Back to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
