@@ -37,3 +37,11 @@ Ship the bounded GH-1430 implementation. No blocking finding in the supplied imp
 Inspection receipt: source/evidence reads and `rg -n '1430' releases.sql` exited 0. A `/usr/bin/python3` read-only AST/ledger probe (with `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR="$PWD/.relay-scratch/tmp"`) exited 0. Its decisive operations were `ast.parse(Path('utils/py/board_sync.py').read_text())`, inspection of the reader's inner try, and `sqlite3.connect(Path('releases.db').resolve().as_uri()+'?mode=ro&immutable=1', uri=True)` followed by `select gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,doc_path from roadmap_items where gh_number=?` with `('1430',)`. Decisive output: `first protected statement: conn.execute('PRAGMA query_only=ON')`; `finally: conn.close()`; `persisted rating: [(1430, 60, 55, 50, 95, 'PROJECT/2-WORKING/GH-1430-BOARD-SYNC-WAL-READ.md')]`.
 
 No git command, suite, pytest, validate.sh or executable fixture was run. I did not rerun the matrix because its implementation invokes git, forbidden in this turn; runtime outcomes above are assessed from the committed receipts and script, not claimed as independent reruns. No full base-to-head diff was obtained under that restriction; scope assessment uses the seeded changed-file list and affected contexts. Only this relay file was changed outside exempt scratch.
+
+### Attestation · relay-drive — 2026-11-12T03:44:24Z
+task: RELAY-gh1430-final-r1
+reviewer: codex
+status: Approved
+reviewed-head: 3e84400c3957d0456467f33fef15d8b9f679f272
+added-range: 3029+5290
+added-sha256: d843a8fc0ac4341fc6dd09103565552e4c8e7bca5984db17f60be028564fadab
