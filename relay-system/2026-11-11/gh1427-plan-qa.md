@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -106,5 +106,44 @@ Write your verdict and change STATUS to Approved if it passes; otherwise leave i
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**What this proposes**
+Raise Claude builder defaults to $3.00 / 40 turns while retaining reviewer defaults and existing env overrides. Surface JSON failure details, preserve durable stdout logs, and record failed-turn usage through existing writers.
+
+**How the existing system works, per this document**
+The document says the shim currently applies $0.50 / 12 to all roles, and the driver already supplies authoritative role information. It attributes missing logs to containment cleanup and zero-token summaries to cost recording after early failure exits.
+
+**What it's not**
+No new ceiling knobs, retry system, model selection policy, or Jog/Marathon ceiling owner. Input boundary for this paraphrase: only the seeded plan document (plus relay instructions and ROUTER startup routing); no source or issue had been opened at that point.
+
+**source-backed**
+swept file: yes
+
+VERDICT: FAIL
+Basis: the core design is appropriately small; two delivery/verification omissions need plan updates before implementation. Reviewed the whole plan, not only Phase 1. No additional pre-existing defect requiring expansion of this task was established. GitHub query `gh issue view 1427 --repo HiQS-Labs/XYZ-forge` failed with `error connecting to api.github.com`; acceptance review uses the copied Acceptance section as permitted by Setup. No suites or executable fixtures were run.
+
+- [Should] **Include the shipped package in implementation and verification.** Step 3 changes `relay-automation/relay-turn-lib.sh`, and step 5 changes `relay-automation/README.md`; both are explicitly packaged by `skills/1-hourly/relay-automation/make-pkg.sh`. `test/relay-pkg-freshness.sh` compares every packaged member with its live source and reports `relay-pkg.tar.gz is stale` on drift. The current plan never regenerates or commits the tarball. Add `bash skills/1-hourly/relay-automation/make-pkg.sh`, the resulting tarball, and the existing freshness check to the ordered work/evidence.
+  Observed input: planned edits to the two packaged paths above; `make-pkg.sh` explicitly lists both.
+  Affected scope: the distribution artifact for this PR's packaged source edits.
+  Falsifier: after implementation, extract the committed tarball and compare both members with final source; byte equality without regeneration would make this request unnecessary. Expect equality after regeneration.
+
+- [Should] **Verify failed usage with the real CLI, including exactly-once recording.** M1 proves only that invented JSON usage can be recorded. The proposed real budget-error smoke asserts exit/message/log survival but never asserts that its JSON contains nonzero `usage` or that those values reach tick. `claude-turn.py:283-304` reads only `usage` token fields, not `total_cost_usd`, and suppresses malformed-result exceptions. Thus preservation alone does not establish the failed-cost acceptance criterion. Extend the existing bounded smoke: retain the nonempty real error JSON, record its usage fields, compare the emitted cost row's token values, and assert one row for that invocation. Retain an exit-0 fake case demonstrating one row as well. No new suite is needed. If a real budget-error result has no usage, explicitly resolve that acceptance gap rather than claiming success from M1.
+  Observed input: Verification/M1 uses fake error JSON; Smoke's stated assertions omit usage and cost rows; current `claude-turn.py:283-304` requires nonzero token usage to emit a row.
+  Affected scope: successful and budget-failed invocations covered by the moved cost block.
+  Falsifier: retained real `error_max_budget_usd` JSON with nonzero usage and exactly one matching tick cost row proves the proposed move sufficient; missing usage or duplicate rows disproves it.
+
+- [Pass] **F5 and the narrow durable-log exemption are source-grounded.** `relay-turn-lib.sh:1310` removes the exact own-log path; `:1751-1759` separately removes a nonignored leftover. `.gitignore` explicitly documents that an unignored own log is wiped. Preserving only the own log under `<transcript root>/logs/` is narrower than GH-261's existing transcript-root exemption (`:1315-1317`). It intentionally relaxes GH-161's clean-tree outcome for nonignoring hosts; document that trade as the plan already does. The CLI opens the absolute root log in the parent process (`claude-turn.py:222`), outside the child worktree; it does not depend on allowlist copy-back. `relay-turn-lib.sh:1589-1621` stages/commits the allowlist, so a normal log outside that allowlist does not ride into the commit. This is not a guarantee for an explicitly broad log-containing allowlist.
+
+- [Pass] **Reuse the existing role resolver and knobs.** `rtl.py:871-874` delegates to `rtl_is_reviewer_turn`; `relay-turn-lib.sh:90-114` prioritizes locked driver role, then the distinct builder/reviewer directive, then the first NEXT header. `relay_drive.py:856-859` exports the dispatched role. This covers supported driven and conventional hand-run reviewer turns. Existing limitations remain: absent role metadata or inherited stale driver variables can misclassify a hand-run reviewer, as the resolver's own comment warns. No additional role subsystem is justified here. The proposed defaults are an operator-informed bounded choice, not evidence that every feature fits $3 / 40.
+
+- [Pass] **Keep escalation categories stable and extend the existing cause field.** `marathon_drive.py:2217-2221` already builds diagnostic fields, and `:2260-2263` writes `reason: {reason}` followed by `builder-diagnostic`. Carrying subtype/errors in that adjacent existing field satisfies the diagnostic intent while preserving category consumers; this is an explicit interpretation of the copied acceptance, not literal insertion into `reason:`. Keep the exact failed-turn log/tail as evidence as well.
+
+- [Pass] **The cost move has no inherent double-count or exit-code change.** Current success-only block at `claude-turn.py:283-304` is best-effort. A single call before terminal branching (or mutually exclusive success/failure calls) preserves that property; retain containment exit-6 precedence. Execution verification remains owed, including the real-result check above. Existing suites/manual red controls, isolated full gate, and reverting the PR are proportionate; no new suite or machinery is warranted.
+
+- [Nit] **Keep rating and recurrence claims qualified.** The supplied two incident reports support recurrence, but not a systematic claim that the preceding fortnight had no incidents. `TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15` also reports `error_max_budget_usd` at $0.5283504 in a reviewer run; its relationship to #1420 is not established here. Preserve “none found / trend unknown,” avoid implying exhaustive counts, and describe 80/80/50/60 as judgment grounded in queue blockage rather than a measured recurrence score. The neutral appeal is appropriate.
+
+Handing off to Producer (claude-a) — revise the package and real-usage verification steps, disposition both Should findings, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
