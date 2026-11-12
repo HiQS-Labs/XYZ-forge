@@ -4,6 +4,24 @@
 
 Malformed Preflight Contract shapes now produce attributable needs-contract planner findings instead of crashing unrelated reconciliation; HQ park rejects supplied malformed shapes before writes. The existing preflight validator owns the shared shape check, while partial intake and optional null markers retain their earlier meaning. The full gate now refuses unsuitable Python before suites with exit 3 and the explicit gate-toolchain PATH remedy. Existing focused suites and manual red/green controls are recorded in `TESTS-RESULTS/2026-11-12+GH-1436-1437/`; final full qualification is recorded there separately. Easy rollback: revert these bounded validation changes; no schema migration or automatic environment installation.
 
+## 2026-11-11
+
+- GH-1422 review follow-up: fixed the drift-check path, delegated duplicate roadmap prose
+  to mandatory canonical reads, and scoped QA claims to reviewed revisions. AGENTS.md is
+  27,686 bytes; fresh byte/link/chain checks pass.
+
+
+- GH-1422 consult follow-up: restored the necessity trigger and explicit idle reporting,
+  clarified clone identity sequencing, and corrected the telemetry example. AGENTS.md is
+  27,812 bytes; fresh byte/link/chain checks pass. Dispositions and provenance are retained
+  in TESTS-RESULTS/2026-11-11+GH-1422/consult-corrections.md.
+
+
+- GH-1422: compressed AGENTS.md from 42,768 to 27,756 bytes, retaining operative rules and
+  existing canonical owners. Manual byte-budget red controls, local links and default project
+  instruction-chain smoke pass; docs gate passes (zero errors, 99 backlog warnings); final omission QA Approved after restoring the same-PR provenance requirement.
+  Evidence: TESTS-RESULTS/2026-11-11+GH-1422/.
+
 ## 2026-11-11 — GH-1430 board_sync reads Rebalance's WAL DB under Apple SQLite
 
 `board_sync`'s Rebalance `repos_source` reader now opens the DB `mode=rw` with
