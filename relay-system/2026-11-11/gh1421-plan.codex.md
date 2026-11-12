@@ -1,6 +1,6 @@
 # GH1421 independent plan review
 STATUS: Open
-NEXT: codex
+NEXT: orchestrator
 
 Artifact under review: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md`
 
@@ -22,3 +22,58 @@ Read whole affected contexts, not just the proposed lines. Do not run test/*.sh,
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+#### What this proposes
+
+The plan adds an opt-in `include_agent_sessions` flag to the existing Rebalance repo source. It preserves the GitHub-ranked contribution and appends agent-only repositories ranked by summed runs, within the existing resolver cap. It also proposes an immutable retry to repair the reported local WAL read failure.
+
+#### How the existing system works per this document
+
+According to Observed, one helper opens Rebalance, scores GitHub activity, and returns a contribution that the resolver merges after pinned repositories. The resolver removes source configuration from policy identity, while the resolved repo list remains part of that identity. The document describes warnings and pinned-repo fallback on read failures, and config exposes the resolved list offline.
+
+#### What it's not
+
+The Non-goals exclude Rebalance writes, GitHub score changes, new board columns, modules, env vars and suites. The Preflight bet rejects importing Rebalance or copying agent rows into GitHub activity. No source/device filtering or rename alias mapping is proposed; upstream schema correctness is quoted rather than independently established here.
+
+#### Source-backed technical validation
+
+The plan was read before supplementary source. Read the reader/resolver and config contexts, `resolve_device_block`, GH-777 suite/scanner, and GH-898 plan/manual matrix. `board_sync.py:133-161` has one annotated connect, error fallback and empty-window warning; `:169-232` pops source config and performs the stated validation, merge and cap. `device_config.py:82-125` supports the nested-object account; `board_sync.py:1505-1517` supports the config account.
+
+The GitHub-first merge is faithful to the quoted requirement and avoids an unnecessary score change. Existing limits and pinned-first behavior remain appropriate. No parallel owner or writer is needed. Reversibility is Easy for the flag/query, but the open-mode assumption affects enabled Rebalance sources even when the new flag is off.
+
+The ratchet account needs a factual qualification: `utils/pdda/check_inventory_ratchet.py:65-83` skips annotated lines, and GH-898's Ratchet exception record explains that exception. It counts unexempt connect occurrences, not all call sites. Keeping one site is reasonable reuse, but the green ratchet alone cannot prove that invariant.
+
+#### Required changes
+
+**F1 [High] — Replace the asserted immutable safety argument with a valid read contract.**
+
+Observed input: plan `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md:114-119,126,146` infers that missing `-shm` makes immutable safe, treats concurrent-write problems as caught exceptions, and implies that `mode=ro` cannot create sidecars. SQLite's primary documentation says immutable skips locking and change detection and can return incorrect results as well as errors if the file changes ([URI parameters](https://www.sqlite.org/uri.html), immutable section). Its [WAL documentation](https://www.sqlite.org/wal.html), section 5 and overview item 4, explicitly permits read-only WAL access by creating sidecars when directory permissions allow. Missing `-shm` at a check is not a lifetime guarantee against a later writer, and does not rule out an existing `-wal` needing recovery.
+
+Affected scope: every configured Rebalance source through `board_sync.py:133-161`, including flag-off reads. A silent incorrect repo list is not caught by the fallback and becomes policy membership through `:205-214`; the GH-898 precedent already records downstream apply/restore identity implications. This is a local correctness issue, not a multi-tenant threat model.
+
+Requested correction: explicitly distinguish no changes to main DB contents from no sidecar writes; choose behavior consistent with the actual requirement. Do not present a live mutable file as a safe immutable snapshot. The smallest safe baseline is ordinary read-only access plus existing fallback when SQLite cannot open it; if repairing that environment is mandatory, specify an actually stable snapshot or quiescence contract, or an explicit operator acceptance of potentially stale/inconsistent advisory results. An extra absence check alone does not establish immutability. Avoid inventing a new service or gate.
+
+Falsifier: demonstrate a contract that prevents changes for the immutable read's lifetime, or obtain/document the explicit bounded advisory-risk tradeoff; then verify both normal WAL and no-sidecar paths in the existing manual matrix in a disposable full clone. Include sidecar existence/content checks if no source-directory writes is required. Current runtime behavior: **[Unverified — needs clone run]**. No executable fixture or live SQLite connection was run here, since even a nominally read-only WAL connection can create sidecars.
+
+**F2 [Medium] — Make the open-mode acceptance distinguish open from first-read failure, and retain additive results on other agent errors.**
+
+Observed input: plan `:114-119` describes retry when connect raises, but `board_sync.py:148-158` wraps connect and execute together; the reported whole-reader warning does not establish which operation failed. Acceptance `:158-171` only exercises the live happy path and missing agent table, although step 4 promises GitHub preservation on every other agent-query error.
+
+Affected scope: retry placement and the inner agent-query exception boundary. A connection that succeeds but fails when SQLite first accesses the schema can bypass a connect-only retry; an overly broad outer catch can erase already-read GitHub rows on a malformed agent schema.
+
+Requested correction: in the manual matrix, record separately whether connection creation or first SELECT fails for the reported WAL case, and make the chosen repair cover the measured operation. Add a malformed agent-table case (for example missing `runs`) that asserts a warning and the unchanged nonempty GitHub list. Use this existing manual matrix, not a new suite. This acceptance request is contingent on the final open strategy selected for F1.
+
+Falsifier: clone-run evidence identifying the failing operation and proving the selected open strategy handles it, plus a non-missing-table agent-query error retaining the GitHub list; a controlled mutation routing that error to the outer empty-list fallback must fail the same assertion. **[Unverified — needs clone run]**.
+
+#### Acceptance and evidence limits
+
+The key-off base comparison is sound for the same ordinary fixture, environment, dependency paths and serialization, with nonempty output assertions. It cannot establish universal byte identity: the plan deliberately changes behavior for the formerly unreadable WAL case even with the flag off. Say so explicitly. Key on/off controls establish feature sensitivity; missing-table recovery is useful, but should not substitute for the error-preservation control above. Preserve commands, exit statuses and provenance in the eventual committed evidence directory as required by repo policy.
+
+No suites, pytest, fixtures, or git commands were executed. Read-only requirements query `gh api repos/HiQS-Labs/XYZ-forge/issues/1421 --jq '.body'` exited 1 with `error connecting to api.github.com`; the issue requirements were therefore assessed from the supplied plan quotation, not independently verified live. SQLite primary docs were fetched successfully; no upstream schema checkout was available. No source/artifact edits were made.
