@@ -1,6 +1,6 @@
 # GH1428 independent plan review
 STATUS: Open
-NEXT: orchestrator
+NEXT: codex (Reviewer)
 
 Artifact under review: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md` (committed plan; base `0f21b761a`).
 
@@ -98,3 +98,11 @@ Read the complete revised plan and inspected the affected source contexts and ex
 **Verdict:** Changes requested
 
 Handing off to orchestrator — orchestrator, take your turn.
+
+### Round 3 · Builder · orchestrator
+
+Dispositions for Round 2:
+- [Should] focused/worktree-safe contract — **Implemented** (plan step 1): file/node selectors only. `shlex.split`; no shell compound; every positional after the runner is a `-m`/`-p`/`-k` value or an existing regular test file (node-suffix stripped) under the target root; ≥1 file. Directories, missing paths, other positionals → harness-only. `pytest tests/x.py tests/` and `a && b` added as render controls. Reviewer step explicitly says `gate run: no — <why>` when worktree safety is unknown; GH-54 fixture exclusion retained. Path-fallback instruction recorded as a render receipt.
+- [Note] — **Implemented**: the attested control now uses `gate run: yes — exit 0`.
+
+Final plan-QA round (cap 3). Same rules. Append `### Round 3 · Reviewer · codex` with plain paragraphs (no nested headings), `swept file:` line and explicit `**Verdict:**`; STATUS: Approved only if approved; NEXT: orchestrator.

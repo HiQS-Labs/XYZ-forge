@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA R1 Changes requested (3 Should) — all accepted and folded into steps 1–5 | Plan QA R2 |
+| Plan QA R2 Changes requested (1 Should, 1 Note) — accepted; selector shape tightened | Plan QA R3 (final round) |
 
 ## Table of contents
 
@@ -159,14 +159,21 @@ The network part is docs-only. Splitting would ship a refusal with no remedy.
    `pre_advance_cmd` is resolved (`:1539`), set `reviewer_gate_cmd = pre_advance_cmd` only when ALL hold,
    otherwise `""`:
    - `args.pre_advance_cmd` was passed explicitly (defaults are full-suite by construction);
-   - **focused**: at least one argument (after stripping a `::node` suffix) is an existing test file under
-     the target root (`args.target_root or root`), so an unscoped `python3 -m pytest` does not qualify;
+   - **focused, file/node selectors only** (plan-QA R2): `shlex.split` the command; no shell compound
+     (`&&`, `||`, `;`, `|`, `$(`, backtick); after the first token (the runner), every positional token is
+     either the value of `-m`/`-p`/`-k` or a test **file** (after stripping a `::node` suffix) that exists
+     as a regular file under the target root (`args.target_root or root`), and at least one such file is
+     named. A directory, a missing path, or any other positional keeps the gate harness-only, so
+     `python3 -m pytest` and `pytest tests/x.py tests/` do not qualify;
    - no full-suite runner or passthrough: none of `validate.sh`, `ci-local.sh`, `run-tests.sh`, a
      `test/*.sh` script, or a ` -- ` passthrough (GH-108 caveat);
    - the brief does not carry preflight's GH-54 fixture rule ("create temporary git fixtures"), which
      marks covering tests that mutate Git state.
-   One small predicate, no scanner. → expect GH-955's `.venv/bin/pytest -q tests/…py` yields the command;
-   `bash …/validate.sh`, `tc run --strict`, `python3 -m pytest`, and a GH-54-fixture brief yield `""`.
+   One small predicate, no scanner. Unknown or broad shapes stay harness-only, and the selector is a
+   scope check, not proof of fixture safety, so the reviewer step also says: if you cannot tell that the
+   run is worktree-safe, declare `gate run: no — <why>`. → expect GH-955's
+   `.venv/bin/pytest -q tests/…py` yields the command; `bash …/validate.sh`, `tc run --strict`,
+   `python3 -m pytest`, `pytest tests/x.py tests/`, `a && b`, and a GH-54-fixture brief yield `""`.
 2. **Same file — template.** BUILDER step 2 gains one sentence: a verification the brief asks for that
    could not run (e.g. sandbox denied a local service) goes on its own `unverified: <what> — <why>`
    line. REVIEWER gains step `3a. GATE EVIDENCE (GH-1428)`:
@@ -218,11 +225,15 @@ The network part is docs-only. Splitting would ship a refusal with no remedy.
     through relay-drive with a scripted reviewer (gh505 fixture pattern, in scratch, not a new suite).
     With `MARATHON_REVIEWER_GATE_CMD` set → exit 4, reason `unverified-approval`; also refused for
     `gate run: yes — exit 1`, `— exit 124` and `gate run: yes` with no exit. Same pair with
-    `gate run: yes` → attested, record `gate_run: yes`. Same pair without the env → attested as today,
+    `gate run: yes — exit 0` → attested, record `gate_run: yes`. Same pair without the env → attested as today,
     `gate_run: undeclared`. Pre-fix code on the same pair is attested (the witnessed red).
   - **Render (acceptance 1):** `marathon-drive --dry-run` with GH-955's explicit focused
     `--pre-advance-cmd` shows the run-the-gate step; the default `validate.sh` gate, an unscoped
-    `python3 -m pytest`, and a brief with the GH-54 fixture rule show the do-not-run step.
+    `python3 -m pytest`, `pytest tests/x.py tests/`, a compound `a && b`, and a brief with the GH-54
+    fixture rule show the do-not-run step.
+  - **Path fallback (plan-QA R1/R2):** the render tells the reviewer cwd = worktree, tooling-only
+    fallback, and `gate run: no` on a missing test/source path. Recorded as a render receipt; a live
+    reviewer turn is out of scope for this verification.
   - **Codex network (acceptance 3):** with `python3 -m http.server --bind 127.0.0.1` on a free port,
     `codex exec` under the default flags fails to fetch it (red); with
     `-c sandbox_workspace_write.network_access=true` it succeeds.
