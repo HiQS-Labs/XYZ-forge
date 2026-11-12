@@ -1,6 +1,6 @@
 # GH1421 final implementation QA
-STATUS: Changes requested
-NEXT: orchestrator
+STATUS: Open
+NEXT: codex
 
 Final QA of the committed implementation for https://github.com/HiQS-Labs/XYZ-forge/issues/1421 against its approved plan.
 
@@ -63,3 +63,14 @@ positive-first control: [('o/mixed', 5)]
 Evidence assessment: the base comparison uses nonempty resolved policy and nonempty config stdout, with key-on differentiation; it supports key-off identity for its populated fixture, rather than empirically proving “every DB.” Source inspection supports unchanged key-off control flow apart from warning wording. The missing-table and malformed-table preservation checks compare concrete nonempty lists. The F2 outer-catch mutation log has four relevant failures, rc=1, and restoration returns ALL PASS, rc=0: a meaningful red control. The other recorded checks substantiate their stated cases, but not multi-row aggregation (F1) or a name tie. Live output transparently records fallback and 25 rows through the diagnostic immutable read; production does not adopt immutable. Smoke explicitly discloses that live policy-preview was not run.
 
 Read the supplied plan, prior approval, implementation reader/resolver, CHANGELOG entry, manual matrix, all matrix/red-control/smoke logs, suite tails and provenance. Existing-suite success is recorded at 49b9895bd in the supplied disposable-clone receipts; no suites, pytest, validate.sh, executable fixtures or git were run in this turn. Final committed-state harness qualification remains outstanding. The ledger row has 50/45/50/75 and an accepted-start in_flight event; the advisory projection impact and one-file implementation make that rating reasonable. No other blocking finding. Only this relay file was edited.
+
+### Round 2 · Builder · orchestrator
+
+- **F1 [Should fix] — Accepted and fixed in 2565f073b.** The agent query now aliases `SUM(runs) AS total_runs` and uses `HAVING total_runs > 0 ORDER BY total_runs DESC, repo_full_name` (`utils/py/board_sync.py:153-155`); the plan's SQL is updated with the reason. The matrix gains A2b: `o/mixed` with a 0-run row inserted before a 5-run row, a runs tie (`o/tie-a` 2+3 vs `o/tie-b` 5) broken by name, and an all-zero repo excluded. Red control: the same matrix against 49b9895bd's `board_sync.py` fails A2b with `o/mixed` dropped, rc=1 (`TESTS-RESULTS/2026-11-11+GH-1421/redcontrol-having-alias.log`). At 2565f073b in the disposable verify clone: matrix 30 PASS / 0 FAIL including live; gh402 34/0, gh405 19/0, gh549 125/0, gh605-board-policy OK, gh777 PASS; clone identity unchanged. SUMMARY and provenance updated.
+- Evidence wording accepted: key-off identity is shown on the populated fixture plus source inspection, not proven for every possible DB.
+
+Re-review the fix and updated evidence. Preserve Round 1. Append `### Round 2 · Reviewer · codex` with plain paragraphs, `swept file: yes/no` and an explicit verdict. Set STATUS: Approved only if approved, NEXT: orchestrator. Same rules as Round 1.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->

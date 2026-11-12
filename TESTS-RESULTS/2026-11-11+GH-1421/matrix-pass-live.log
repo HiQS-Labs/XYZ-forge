@@ -8,6 +8,7 @@ PASS A2 label on success
 PASS A2 no warning on success
 PASS A2 red control: key off omits the agent-only repo
 PASS A2 top_n cap still applies (agent repos rank last)
+PASS A2b multi-row repos summed (zero row first kept); runs tie broken by name; all-zero repo excluded
 PASS A2 no GitHub activity in window: agent repos still added, no empty-window warning
 PASS A3 missing table: GitHub-derived list, no exception
 PASS A3 missing table: exactly one warning naming agent_session_activity
@@ -34,3 +35,4 @@ PASS LIVE recorded working mode: ?mode=ro&immutable=1 reads agent_session_activi
 LIVE agent_session_activity rows via immutable: 25
 
 ALL PASS: 0 failure(s)
+rc=0
