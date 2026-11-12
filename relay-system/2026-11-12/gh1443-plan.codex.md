@@ -56,3 +56,12 @@ No blocking findings in the revised plan or advisory. Approval is for implementa
 ### Round 2 evidence and remaining proof
 
 Read-only inspection of the revised plan, spikes, advisory, seeded CLI baseline, source owners and existing suite text; no executable fixtures, suites, provider calls, network or git commands. Source-reading commands exited 0. The displayed baseline reports `passed: 3`, `total: 16`, `all_preserved: true`; these are inspected recorded results, not a new replay. Final mixed-item aggregation, exact probe fallback controls, no-Jog-write behavior, unchanged actual dispatch/recovery, and successful real CLI preparation remain **[Unverified — needs clone run]**. Run the planned existing coverage/manual controls in a disposable full clone and obtain independent final QA before claiming completion.
+
+### Attestation · relay-drive — 2026-11-12T17:35:55Z
+task: GH1443-PLAN-QA-R2
+reviewer: codex
+status: Approved
+reviewed-head: 16a23a602b32602b7da93e4a9a2cf2b02db29442
+added-range: 7544+3897
+added-sha256: b7b699356b6fcafefe7b9fcccc7d200d7c03acb50f79e7673adec2cdf47e2b04
+gate-run: undeclared
