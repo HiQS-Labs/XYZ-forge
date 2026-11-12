@@ -1,0 +1,8 @@
+
+============================================================
+jog: processing GH-1426 (attempt 2) at position 1
+============================================================
+jog: running preflight for GH-1426 (execution gh1426-exec2, packet: <verify>/primary/.tick/jog/jog-01M76W5AZPG7F5C13RGN6PQ5P3/gh1426-exec2/preflight)
+jog: GH-1426 preflight refused: NOT-READY (exit 5) — next: gate program not found under target_root <verify>/target: .venv/bin/pytest
+jog: advancing halted: GH-1426 parked — preflight-refused (exit 5): NOT-READY (exit 5) — next: gate program not found under target_root <verify>/target: .venv/bin/pytest
+rc=0

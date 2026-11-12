@@ -1,0 +1,7 @@
+jog: [dry-run] simulating queue execution (root: <verify>/primary)
+jog: [dry-run] would process 2 pending item(s):
+  1. GH-1427 (builder=codex, auto_merge=False)
+     preflight: CONTRACT ERROR: contract in <verify>/target/PROJECT/1-INBOX/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md missing required field: target (1-INBOX doc; live run promotes it first)
+  2. GH-1426 (builder=codex, auto_merge=False)
+     preflight: NOT-READY (exit 5) — next: gate program not found under target_root <verify>/target: .venv/bin/pytest
+rc=0
