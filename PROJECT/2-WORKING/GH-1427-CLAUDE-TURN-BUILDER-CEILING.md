@@ -191,7 +191,10 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only o
 2. `utils/py/claude-turn.py`:
    a. Select the ceiling: `reviewer = rtl.is_reviewer_turn(me)`. The defaults are `("1.00","12")` for a reviewer
       and `("3.00","40")` otherwise, and env overrides win. Keep the line `warn_opus_budget(model, max_budget)`
-      byte-identical (pinned by `test/gh642-consumer-fruit.sh`).
+      byte-identical (pinned by `test/gh642-consumer-fruit.sh`). In the same step, edit `warn_opus_budget`'s condition
+      to "Opus-class and `float(max_budget) < 3.0`", with a malformed value treated as not warning (try/except, so it
+      never raises). Manual check: Opus/0.50 → warned, Opus/1.00 → warned, Opus/3.00 → silent, Sonnet/0.50 → silent,
+      Opus/"abc" → silent with no exception.
    b. Failure message: for the `CalledProcessError` and `read_result` ValueError branches, append
       `result_error_summary(claude_log)` when it is non-empty. The output becomes
       `claude-turn: claude -p failed (exit 1): error_max_budget_usd: Reached maximum budget ($3.00)`.
@@ -212,12 +215,15 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only o
    the category token (`relay-failed-before-gate`), because Jog and the escalation consumers key on it. The cause
    travels in the adjacent existing field, which also fixes the "turn-log missing" line through step 3.
    *Check:* `test/gh379-claude-builder-diagnosis.sh`, `test/gh372-escalation-log-tail.sh`.
-5. Package: `relay-turn-lib.sh` and `relay-automation/README.md` are members of the shipped
-   `skills/1-hourly/relay-automation/relay-pkg.tar.gz`. Regenerate it with `bash skills/1-hourly/relay-automation/make-pkg.sh`
-   and commit it. *Check:* `bash test/relay-pkg-freshness.sh`. (plan-QA r1 [Should] 1)
-6. Docs: update `README.md:125-126`, `relay-automation/README.md:123-124`, `HOW-TO-USE.md:79`, and the
+5. Docs: update `README.md:125-126`, `relay-automation/README.md:123-124`, `HOW-TO-USE.md:79`, and the
    `MARATHON.example.yaml:21-22` comment to state the role-aware defaults. Add a `CHANGELOG.md` entry. The frozen
    twin's header (`claude-turn.sh:50-51`, pinned by gh379) stays accurate for the twin it describes.
+   Also refresh the now-stale own-log comments in touched files: `.gitignore:23-26` and `relay-turn-lib.sh:197-203`, which
+   say an un-ignored log "would be silently deleted"; after step 3 a log under the transcript root is kept. Historical
+   frozen-twin comments are left alone. (plan-QA r2 [Nit])
+6. Package (after every packaged edit, including step 5's README): `relay-turn-lib.sh` and `relay-automation/README.md` are members of the shipped
+   `skills/1-hourly/relay-automation/relay-pkg.tar.gz`. Regenerate it with `bash skills/1-hourly/relay-automation/make-pkg.sh`
+   and commit it. *Check:* `bash test/relay-pkg-freshness.sh`. (plan-QA r1 [Should] 1)
 
 ### Verification (no new suites, GH-831)
 
@@ -231,7 +237,7 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only o
     turn at the `CLAUDE_LOG` path; a `tick cost` row is recorded. **Red control:** the same script on base
     `0f21b761a` shows a bare `failed (exit 1)` and the log is deleted.
   - **M2 (role defaults):** the fake CLI echoes its argv. Under `RELAY_DRIVER_LOCKED=1`, `RELAY_ROLE=builder` →
-    `--max-budget-usd 3.00 --max-turns 40`; `RELAY_ROLE=reviewer` → `0.50 / 12`; `CLAUDE_MAX_BUDGET=1.25` wins for both.
+    `--max-budget-usd 3.00 --max-turns 40`; `RELAY_ROLE=reviewer` → `1.00 / 12` (emitting `0.50` fails); `CLAUDE_MAX_BUDGET=1.25` wins for both.
   - **Smoke (GH-1088), main path:** one bounded live `claude -p` turn through claude-turn.py with `CLAUDE_MAX_BUDGET=0.01`.
     Expect exit 5, the console subtype `error_max_budget_usd`, and the log surviving. In addition (plan-QA r1 [Should] 2):
     retain the real error JSON; record its `usage` token fields; assert **exactly one** `tick cost` row for that task,
@@ -244,8 +250,8 @@ it is billed, which is why reviewers stay cheap. `warn_opus_budget` fired only o
 ### Risks
 
 - The kernel change touches every shim's log handling. It is scoped to paths under the transcript root, which GH-161
-  and GH-388 already define as durable, and the files are still untracked, so they never ride into a commit
-  (the commit step is allowlist-scoped). A host that previously had no `?? relay-system/logs/` dirt now does: that is
+  and GH-388 already define as durable, and the files are still untracked. The commit step is allowlist-scoped (`relay-turn-lib.sh:1589-1621`), so they do not ride
+  into a commit unless an operator's allowlist explicitly covers the logs directory. A host that previously had no `?? relay-system/logs/` dirt now does: that is
   the persistent record GH-161 promised, and `rtl_before` treats it as ambient on the next turn.
 - **Overlap:** #1428 (parallel) may touch `claude-turn.py` / `marathon_drive.py`. This diff touches a few lines in each,
   so rebase conflicts should be trivial.

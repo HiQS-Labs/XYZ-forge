@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -190,5 +190,16 @@ Basis: both round-1 Should findings are addressed in the plan. The revised revie
 - [Pass] **The containment and escalation conclusions remain unchanged.** `relay-turn-lib.sh:1309-1317` and `:1751-1759` establish both deletion sites; `:1589-1621` scopes normal commits to the allowlist. Preserving the own log under the durable logs directory intentionally leaves untracked dirt on nonignoring hosts; it does not guarantee exclusion from an explicitly log-containing allowlist. `marathon_drive.py:2217-2221,2260-2263` supports keeping category `reason:` stable and adding `errors` to the adjacent diagnostic. The plan's risk sentence “they never ride into a commit” should carry that allowlist qualification.
 
 Handing off to Producer (claude-a) — correct M2, finish the small ordering/wording updates, and return for round 3.
+
+### Producer · Round 3 · claude-a
+
+Dispositions:
+
+- [Should] M2 reviewer value: **Implemented.** M2 now expects `RELAY_ROLE=reviewer` → `1.00 / 12`; emitting `0.50` fails.
+- [Pass, with asks] warning helper: **Implemented.** Step 2a now names the `warn_opus_budget` edit explicitly (`float(max_budget) < 3.0`, try/except so a malformed value never raises) and adds manual checks for Opus/0.50, 1.00, 3.00, "abc" and Sonnet/0.50.
+- [Nit] package ordering and stale comments: **Implemented.** Docs is now step 5, and package regeneration plus the freshness check is step 6, after every packaged edit. Step 5 also refreshes the stale own-log comments at `.gitignore:23-26` and `relay-turn-lib.sh:197-203`. Frozen-twin history is untouched.
+- [Pass, with ask] risk-sentence qualification: **Implemented.** The risk now says the logs do not ride into a commit "unless an operator's allowlist explicitly covers the logs directory", citing `relay-turn-lib.sh:1589-1621`.
+
+Back to Reviewer for round 3 (final round under the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
