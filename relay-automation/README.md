@@ -441,6 +441,24 @@ proving Codex can write the relay file. `codex-turn.sh` defaults to
 fix that before running the shim; override the binary with
 `CODEX_BIN=/path/to/codex` if needed.
 
+**Localhost services for a Codex builder (opt-in, GH-1428).** Codex's `workspace-write`
+sandbox has network off, so a builder cannot reach a local test database or server. A
+DB-backed test then fails with "connection refused" and the builder reports it as
+unverified. To let one run reach it, export:
+
+```bash
+CODEX_FLAGS='-s workspace-write -c approval_policy=never -c sandbox_workspace_write.network_access=true'
+```
+
+It is per run, inherited by Jog → marathon-drive → relay-drive → `codex-turn`. It opens all
+outbound network for that Codex turn, not only localhost, so set it only for lanes that need
+it. Without it, a marathon whose explicit gate is a focused file/node command has the
+**reviewer** run that gate. Each review block declares `gate run: yes — exit <rc>` or
+`gate run: no — <why>`, and the declaration is bound into the attestation as `gate-run:`.
+relay-drive refuses an Approved after a builder block that says anything is unverified
+unless the declaration is `yes — exit 0` (escalation reason `unverified-approval`).
+Full-suite gates (`validate.sh`, `test/*.sh`, defaults) stay harness-only.
+
 The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. The agy shim uses the same 900-second default `RELAY_TURN_TIMEOUT_S`, and passes that value through to `--print-timeout`. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); from the disposable full clone prepared in step 3, `AGY_BIN=~/.local/bin/agy bash ./test/agy-turn.sh` confirms the shim before a drive. Never run this suite in the maintained harness.
 
 The Pi check needs `PI_MODEL` set explicitly — `pi-turn.sh`/`pi-turn.py` **never

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-11 — GH-1428 reviewer gate evidence
+
+A marathon whose explicit `--pre-advance-cmd` is a focused file/node command now asks the
+reviewer to run that gate. File/node selectors only: no directories, compounds, full-suite
+runners, or GH-54 fixture briefs. Every review block declares `gate run: yes — exit <rc>` or
+`gate run: no — <why>`, and relay-drive binds the result into the attestation (`gate-run:`).
+An Approved after a builder block that says anything is unverified is refused
+(`unverified-approval`) unless the reviewer ran the gate to exit 0. Generic relays and
+full-suite gates keep today's behaviour. The existing `CODEX_FLAGS` knob is documented as the
+opt-in for builder localhost network
+(`-c sandbox_workspace_write.network_access=true`). Easy to reverse: revert the PR. There is
+no schema bump, and the record field is optional. Expected signal: the next DB-backed Jog item
+with a Codex builder either verifies in the builder or gets a reviewer gate run before approval.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1428/`.
+
 ## 2026-11-11 — GH-1421 board_sync agent-session repos (opt-in)
 
 `board_sync`'s Rebalance `repos_source` takes an opt-in `include_agent_sessions: true`

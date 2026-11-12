@@ -740,6 +740,16 @@ def main():
         added = post_canon[added_start:]
         if not added.strip():
             return ("refused", "empty-approval")
+        # GH-1428: marathon arms this only when the phase gate is one the reviewer may run. An
+        # Approved after the builder declared unverified work needs that gate run to exit 0.
+        gate_run = relay_attest.declared_gate_run(added)
+        reviewer_gate = get_env("MARATHON_REVIEWER_GATE_CMD", "")
+        if reviewer_gate and gate_run != "yes" and relay_attest.builder_declared_unverified(post_canon[:added_start]):
+            eprint(f"relay-drive: the builder's latest block declares unverified work and the review's gate run is "
+                   f"'{gate_run}', not 'yes — exit 0'. Reviewer: run `{reviewer_gate}` before approving. Or let a Codex "
+                   f"builder verify for itself: CODEX_FLAGS='-s workspace-write -c approval_policy=never "
+                   f"-c sandbox_workspace_write.network_access=true' (relay-automation/README.md, GH-1428)")
+            return ("refused", "unverified-approval")
         tstat, tactor = token_state()
         if tstat != "done":
             return ("refused", "close-mismatch" if tactor else "token-state")
@@ -766,6 +776,7 @@ def main():
         cfg_sha = get_env("MARATHON_CONFIG_SHA256", "")
         if cfg_sha:
             record["config_sha256"] = cfg_sha
+        record["gate_run"] = gate_run  # GH-1428: whether the reviewer declared a green gate run
         trailer = relay_attest.trailer_text(record)
         record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
         relay_attest.append_before_marker(relay_file, trailer)
