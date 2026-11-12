@@ -164,7 +164,7 @@ def main():
     #
     # The guess a reader would most likely make is "600 is a cost control, because a headless
     # `claude -p` bills per call". That is wrong, and the reason is three lines up: cost is already
-    # bounded by CLAUDE_MAX_BUDGET, passed to the CLI as `--max-budget-usd` (default $0.50). A
+    # bounded by CLAUDE_MAX_BUDGET, passed to the CLI as `--max-budget-usd` (role defaults, GH-1427). A
     # shorter wall cap buys no money that flag is not already saving; what it buys is a builder
     # killed mid-edit, which is the exact failure GH-320 fixed one notch lower and #386 observed
     # again at this one — a phase whose packet read 900 was killed at 600, partway through writing
