@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 — Permit required read-only Git inspection (GH-1092)
+
+Correct the shared final instruction to permit read-only local Git while prohibiting state changes; refresh the existing package. Kimi advisory S1 and CodeRabbit 4556715114 identified the contradiction. Fresh Codex round 3 Approved with actual Git probes and supervisor attestation; full gate at bf7b0920 passed 408/408 (Python 21), with complete identity snapshots unchanged. Historical missing core.bare/remote-v fields remain unavailable. Kimi configured-high review is advisory only, without driver attestation. Neither issue closes. Evidence: TESTS-RESULTS/2026-11-12+GH-1092/git-inspection-fix/.
+
 ## 2026-11-12 — Reviewer delivery normal QA and local gate evidence (GH-1092)
 
 Codex PLAN and FINAL both Approved in round 2 through the shipped supervisor. Independent

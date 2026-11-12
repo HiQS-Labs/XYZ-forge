@@ -15,7 +15,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Codex PLAN/FINAL Approved round 2; full local gate 408/408 at 70ebdeb4 | Parent supplemental Kimi review and hosted checks; both issues remain open |
+| Git-inspection correction: fresh Codex R3 Approved; full local gate 408/408 at bf7b0920, complete identity unchanged | Evidence docs publication and hosted checks; broader browser/policy work remains open |
 
 ## Outcome and boundaries
 
@@ -145,3 +145,35 @@ Full local gate on 70ebdeb4f4bb4ac9ea3ec8b7ccdbbac8b1417945 passed 408/408, Pyth
 This evidence-only closeout preserves implementation hashes and will receive the native docs
 push gate. Parent Kimi review remains pending; neither issue is closed or declared fully fixed.
 No merge/deploy/global update. Original LTVera task/PR992 scope remains untouched.
+
+## Current remediation verification — completed
+
+Source correction: 1d749cf738858b084816e1d11c61a6153e2ffcef; focused evidence:
+32c838c80d6a7c80aa1f1d8552fa26a26e4c3050; approved review-artifact/gated commit:
+bf7b0920399485b88f1b4e66c9e5afdb72ba7024. Fresh Codex remediation round 3 Approved,
+supervisor exit 0 and attestation in relay-system/2026-11-12/gh1092-remediation-r3.codex.md.
+Reviewer actually executed read-only Git probes; no suite run is attributed to that review.
+This closes Kimi advisory S1 / CodeRabbit 4556715114 through measured correction and independent QA.
+
+Fresh classified full/tier3 local gate on exact bf7b0920: **408/408 passed**, Python layer
+**21 passed**, native validate.sh receipt exit 0, mode parallel, scope full. Complete external
+before/after snapshots are identical, including configured core.bare and complete remote -v.
+Command: PATH=<prepared gate venv>/bin:$PATH RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh.
+The standard live self-sufficiency skip remains disclosed; this is not promotion qualification
+or a claim that every live integration ran. Gate ran once in the existing disposable full clone.
+Original session handle was unavailable at handoff; completion is established by the owned process
+ending, decisive log and native final receipt. No duplicate gate was launched.
+
+CodeRabbit 4556715121 is valid for historical snapshots: missing core.bare/remote-v fields remain
+unavailable and historical receipts unchanged. New complete full-before/full-after brackets,
+full-gate.log and full-gate-receipt.json are under git-inspection-fix/. Do not infer historical
+remote/config stability from this new run. New implementation-sha256.json is separate from
+original implementation hashes and pins the revised source/package.
+
+Source pushed first at tested bf7b0920 via canonical receipt writer/import for the same SHA and
+native full-receipt reuse (source-push.log), with no hook bypass. This evidence-only publication
+uses the native docs gate. Kimi at 551531fa was ACP-configured K3.1 Pro thinking=high advisory
+only: the shipped CLI cannot preserve high, so no Kimi driver exit/attestation or Kimi approval
+is claimed. Broader Forge1092/LTVera981 browser replay and policy-owner decisions remain open.
+No merge, deployment, installation, protected LTVera primary or PR992 change. Task/gate clones
+are retained for local evidence and parent handoff; no unsafe retirement attempted.

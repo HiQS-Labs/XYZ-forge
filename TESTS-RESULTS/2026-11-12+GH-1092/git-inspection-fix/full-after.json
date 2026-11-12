@@ -1,0 +1,34 @@
+{
+  "rev-parse --show-toplevel": {
+    "exit": 0,
+    "output": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12-gate"
+  },
+  "rev-parse HEAD": {
+    "exit": 0,
+    "output": "bf7b0920399485b88f1b4e66c9e5afdb72ba7024"
+  },
+  "remote -v": {
+    "exit": 0,
+    "output": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\ntask\t/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12/. (fetch)\ntask\t/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1092-reviewer-evidence-2026-11-12/. (push)"
+  },
+  "remote get-url origin": {
+    "exit": 0,
+    "output": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "config --get core.bare": {
+    "exit": 0,
+    "output": "false"
+  },
+  "rev-parse --is-bare-repository": {
+    "exit": 0,
+    "output": "false"
+  },
+  "config --local --get user.name": {
+    "exit": 1,
+    "output": ""
+  },
+  "config --local --get user.email": {
+    "exit": 1,
+    "output": ""
+  }
+}

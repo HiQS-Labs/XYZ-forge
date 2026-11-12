@@ -1,0 +1,3 @@
+pre-push: reusing the passing full-gate receipt for bf7b0920 (validate.sh, scope full) — the full gate already ran on this exact commit.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   551531fa7..bf7b09203  HEAD -> fix/XYZ-forge-gh1092-reviewer-evidence-2026-11-12
