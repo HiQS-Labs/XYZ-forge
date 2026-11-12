@@ -1,6 +1,6 @@
 ---
 title: "GH-1438: docs: introduce Flywheel - Beta in README"
-status: Active
+status: Complete
 created: 2026-11-12
 updated: 2026-11-12
 owner: operator (via /express)
