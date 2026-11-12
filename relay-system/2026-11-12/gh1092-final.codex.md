@@ -169,4 +169,13 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Parent proceeds to the required final-commit gate and separately planned additional review; neither is claimed complete here.
 
+
+### Attestation · relay-drive — 2026-11-12T21:17:04Z
+task: RELAY-GH1092-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: c460929878066a3f09d20dfff0f9d35a70fc9f4a
+added-range: 18606+6474
+added-sha256: 70e7ef9a7e9ddfe3c5acbe26fb95dfccaad40ec1c4c68a1e22cf4ec23e8070d5
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
