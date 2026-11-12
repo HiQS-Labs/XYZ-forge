@@ -124,3 +124,11 @@ Read the entire revised plan and reviewed the relevant prompt, preflight, enviro
 **Verdict:** Approved
 
 Handing off to orchestrator — orchestrator, proceed with implementation; no further plan-review turn needed.
+
+### Attestation · relay-drive — 2026-11-12T03:24:24Z
+task: RELAY-GH1428-PLAN-R3
+reviewer: codex
+status: Approved
+reviewed-head: 624976b95ef2760227507b2058a9f9457a7b3f83
+added-range: 17729+2984
+added-sha256: f8721ea98baadf41c36a272820da6150b1cecc8c96da192fa0e2485c9701f18b
