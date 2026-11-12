@@ -1,6 +1,6 @@
 # GH1428 final implementation QA
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: orchestrator
 
 Final independent QA of the committed implementation for https://github.com/HiQS-Labs/XYZ-forge/issues/1428 against its Codex-approved plan (`relay-system/2026-11-11/gh1428-plan.codex.md`, R3 Approved, attested `67fa20b09`). Review `git diff 0f21b761a..HEAD` (read it with `git diff`/`git show` read-only, or read the files). Plan: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md`. Evidence: `TESTS-RESULTS/2026-11-11+GH-1428/SUMMARY.md` (+ receipts, provenance.jsonl).
 
@@ -18,3 +18,28 @@ Questions:
 
 Rules: final QA only. Read whole affected contexts. Do NOT run validate.sh, test/*.sh, pytest or executable fixtures in this clone; read-only probes under `$TMPDIR` only. Behaviour-change [Blocker]/[Should] need `Observed input:`, `Affected scope:`, `Falsifier:` and file:line. Append `### Round 1 · Reviewer · codex` with plain paragraphs directly under the heading (no nested `####` headings), a literal `swept file: yes|no` line, and `**Verdict:** Approved` or `**Verdict:** Changes requested`. Set `STATUS: Approved` only if approved; set `NEXT: orchestrator`. Edit ONLY this file; do not run git commands that write.
 
+
+### Round 1 · Reviewer · codex
+
+Block pending the selector-path correction below. The implementation otherwise follows the approved extension points: render-time eligibility and child-environment set/pop in marathon_drive, declaration parsing and optional trailer binding in relay_attest, and the existing terminal-refusal seam in relay_drive. No parallel runner or new registered suite was introduced. The manual scripts are bounded receipts rather than new gate machinery.
+
+[Should] Enforce selector containment and preserve worktree-relative test selection at utils/py/marathon_drive.py:583-587.
+Observed input: an explicit command `pytest ../test_other_revision.py`, with that regular file in the target directory's parent, is returned unchanged by reviewer_runnable_gate. An absolute path to that external file also qualifies. os.path.join(target_root, path) does not enforce containment: parent traversal escapes it and an absolute path replaces it entirely. This contradicts approved step 1's requirement that selectors be under the target root. Absolute selectors even inside the original target checkout also remain anchored there when the rendered instruction runs from a review worktree, undermining the reviewed-revision promise at lines 3142-3145.
+Affected scope: focused explicit gates using parent-relative or absolute selectors, including ordinary commands copied from another checkout. The generated reviewer exception can authorize execution against files outside the reviewed worktree and produce evidence for another revision. This is a path/revision correctness issue, not a demand for a general shell security scanner.
+Falsifier: a narrow inert-file probe must reject selectors escaping the root (including symlink escapes) and either reject absolute selectors or render a contained worktree-relative equivalent. Retain the existing relative-file/node positive control and directory/missing-path negatives. Resolve containment against the real target root before qualifying the command; do not solve this by falling back to another checkout's source.
+
+Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PY' … PY`. The Python body parsed marathon_drive.py with ast, extracted only reviewer_runnable_gate, supplied its re/os/shlex globals and unchanged _FULL_SUITE_RE, then created an inert target/test_one.py and sibling test_other_revision.py in tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']). It called reviewer_runnable_gate(cmd, True, str(root), '') for each input; no tests, fixtures, imports of application modules, or subprocesses were executed. Exit status 0. Decisive output: `'pytest test_one.py' -> 'pytest test_one.py'`; `'pytest ../test_other_revision.py' -> 'pytest ../test_other_revision.py'`; the absolute sibling selector was likewise returned unchanged; `'pytest test_one.py -- --collect-only' -> ''`. All created files stayed under sanctioned scratch.
+
+[Unverified — no citation] The terminal refusal is after empty-approval and before token validation. Both accepted prefix paths use an added_start in post_canon, so post_canon[:added_start] contains the preserved pre-turn history rather than the new reviewer block. The builder regex stops at another level-three heading, retains level-four subheadings, and selects the last Builder block. The declaration parser selects the last matching declaration and distinguishes yes/failed/no/undeclared for the documented inputs. The absent environment signal bypasses the new refusal; marathon_drive explicitly removes an inherited signal for harness-only gates. The new field is always emitted for new records, is optional for legacy loads, and is bound by trailer recomputation. I found no incompatible consumer in the inspected attestation path.
+
+[Pass with evidence limits] The committed SUMMARY, provenance, red-control.out and load-check.out support the stated base-attests/fix-refuses control, failed/missing-exit cases, exit-zero positive, unarmed compatibility, and legacy/tamper loading claims. render.out supports the seven listed render variants and instruction-only tooling fallback. The network receipts support the documented per-turn opt-in; they do not establish a live DB-backed reviewer run, which SUMMARY correctly excludes. The Bash role note uses “the REVIEWER steps in your relay file” and introduces no apostrophe into its single-quoted string; existing gh681 wording is preserved. Package regeneration has an existing freshness-suite receipt. The 65/55/50/60 rating remains reasonable for the reported incident and limited field evidence.
+
+[Note] The active task document's near-top Status table still says plan QA R3 is next, despite completed implementation and final QA. Update that existing table during closeout. Final full-gate verification remains [Unverified — needs clone run]; it was neither run nor claimed by this reviewer and is explicitly deferred to the harness after this turn.
+
+swept file: no
+
+Read the complete final relay, approved plan and review history, affected implementation contexts, documentation changes and committed evidence summaries/receipts. This was a scoped review of the affected paths, not a claim to have swept every line of the large pre-existing driver modules. No git command, validate.sh, test/*.sh, pytest, executable fixture or network server was run. Only this relay file was edited outside sanctioned scratch.
+
+**Verdict:** Changes requested
+
+Handing off to orchestrator — orchestrator, take your turn.
