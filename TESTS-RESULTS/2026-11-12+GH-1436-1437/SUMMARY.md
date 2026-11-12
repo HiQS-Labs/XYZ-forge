@@ -29,3 +29,5 @@ The automated request to expand validation to all intake writers is declined: #1
 ### Scoped ledger restoration completed
 
 Operator authorized a one-time exception on 2026-11-12. Rehearsal and task repair restored exactly the original GH-1430 row and three events from `43265eed`, preserving first_seen 03:35:55Z and accepted_start 03:38:50Z. All other business rows and prior receipts compared unchanged; canonical rebuild added its one merge-rebuild receipt and advanced generation. `releases check` reports zero failures (10 existing warnings). Backups retained outside committed artifacts. Earlier pending-approval status above is superseded. Full verification of the combined review follow-up remains pending.
+
+Full normal pre-push gate passed at `4c85ee2a7ff5814fb35e78537fae83f26a8c4700` in 646 seconds, with clone identity invariant passing and a successful non-bypassed push. This supersedes the pending full-verification note above. Subsequent log/status changes are documentation-only.
