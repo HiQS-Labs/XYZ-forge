@@ -1,1 +1,2 @@
 {"artifact": "TESTS-RESULTS/2026-11-12+GH-1439/preparation-replay.json", "sha256": "f184f90f5093c60c7a1d6765563986002ed538860ab0dc0f10ab266ec46224c7", "bytes": 1183, "observed_at": "2026-11-12T17:08:33.081396+00:00", "kind": "manual-instruction-replay"}
+{"artifact": "relay-system/2026-11-12/gh1439-final.codex.md", "sha256": "ac2a4f6418a6bfb24a92dd8f0312cae7a0a0342f1911ff9ab4716acdce78a29b", "bytes": 725, "observed_at": "2026-11-12T17:09:37.564619+00:00", "kind": "independent-review"}

@@ -14,7 +14,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| LTVera1014 preparation landed; gaps traced to skill handoff and environment assumptions | Codify existing commands in Jog, link consumers, independently review and publish |
+| LTVera1014 preparation landed; gaps traced to skill handoff and environment assumptions | Independent final QA Approved; normal documentation qualification/publication next |
 
 ## Grounded plan
 
@@ -28,10 +28,10 @@ An issue-only checklist already exists in1418 but is not a reusable skill entry 
 
 ## Acceptance
 
-- [ ] Jog owns one reusable preparation recipe and concise readiness record.
-- [ ] Contract, environment, integration and dispatch evidence are distinguished without a new state machine.
-- [ ] Consumers link to this owner; no duplicate runner/checklist or changed authorization.
-- [ ] GH1014 negative/positive evidence replay and independent final review recorded.
+- [x] Jog owns one reusable preparation recipe and concise readiness record.
+- [x] Contract, environment, integration and dispatch evidence are distinguished without a new state machine.
+- [x] Consumers link to this owner; no duplicate runner/checklist or changed authorization.
+- [x] GH1014 negative/positive evidence replay and independent final review recorded.
 
 ## Recon
 
