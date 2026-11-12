@@ -79,3 +79,7 @@ effort 55: prompt/attestation contract plus one Codex config knob.
 - [ ] Repro confirmed from the report, not assumed
 - [ ] Existing suite or recorded manual check covers the failure path before the fix lands (GH-831)
 - [ ] Fix composes with the existing harness rather than adding a parallel path
+
+## Merge evidence
+
+- PR #1433 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
