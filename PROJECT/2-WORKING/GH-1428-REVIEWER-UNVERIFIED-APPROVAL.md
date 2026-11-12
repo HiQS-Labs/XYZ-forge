@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA R2 Changes requested (1 Should, 1 Note) — accepted; selector shape tightened | Plan QA R3 (final round) |
+| Plan QA R3 Approved; implemented; focused suites + manual checks green; final QA R1 selector-containment fix applied | Final QA R2, full gate on the approved head, ready PR |
 
 ## Table of contents
 
@@ -162,7 +162,8 @@ The network part is docs-only. Splitting would ship a refusal with no remedy.
    - **focused, file/node selectors only** (plan-QA R2): `shlex.split` the command; no shell compound
      (`&&`, `||`, `;`, `|`, `$(`, backtick); after the first token (the runner), every positional token is
      either the value of `-m`/`-p`/`-k` or a test **file** (after stripping a `::node` suffix) that exists
-     as a regular file under the target root (`args.target_root or root`), and at least one such file is
+     as a regular file under the target root (`args.target_root or root`) — relative, and contained after
+     resolving symlinks (final QA R1: no `../`, absolute or symlink-escaping selectors) — and at least one such file is
      named. A directory, a missing path, or any other positional keeps the gate harness-only, so
      `python3 -m pytest` and `pytest tests/x.py tests/` do not qualify;
    - no full-suite runner or passthrough: none of `validate.sh`, `ci-local.sh`, `run-tests.sh`, a

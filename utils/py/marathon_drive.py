@@ -571,6 +571,7 @@ def reviewer_runnable_gate(cmd, explicit, target_root, brief_text):
     except ValueError:
         return ""
     files, skip = 0, False
+    root_real = os.path.realpath(target_root)
     for tok in tokens[1:]:
         if skip:
             skip = False
@@ -581,7 +582,11 @@ def reviewer_runnable_gate(cmd, explicit, target_root, brief_text):
         if tok.startswith("-"):
             continue
         path = tok.split("::", 1)[0]
-        if _FULL_SUITE_RE.search(path) or not os.path.isfile(os.path.join(target_root, path)):
+        # Relative, contained in the target (symlinks resolved), so it names the same file in the
+        # reviewer's worktree — never another checkout's copy (final QA R1).
+        real = os.path.realpath(os.path.join(root_real, path))
+        if (os.path.isabs(path) or _FULL_SUITE_RE.search(path) or not os.path.isfile(real)
+                or os.path.commonpath([root_real, real]) != root_real):
             return ""
         files += 1
     return cmd if files and not _FULL_SUITE_RE.search(tokens[0]) else ""

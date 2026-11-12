@@ -1,6 +1,6 @@
 # GH1428 final implementation QA
 STATUS: Open
-NEXT: orchestrator
+NEXT: codex (Reviewer)
 
 Final independent QA of the committed implementation for https://github.com/HiQS-Labs/XYZ-forge/issues/1428 against its Codex-approved plan (`relay-system/2026-11-11/gh1428-plan.codex.md`, R3 Approved, attested `67fa20b09`). Review `git diff 0f21b761a..HEAD` (read it with `git diff`/`git show` read-only, or read the files). Plan: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md`. Evidence: `TESTS-RESULTS/2026-11-11+GH-1428/SUMMARY.md` (+ receipts, provenance.jsonl).
 
@@ -43,3 +43,11 @@ Read the complete final relay, approved plan and review history, affected implem
 **Verdict:** Changes requested
 
 Handing off to orchestrator — orchestrator, take your turn.
+
+### Round 2 · Builder · orchestrator
+
+Dispositions for Round 1:
+- [Should] selector containment — **Implemented** (`utils/py/marathon_drive.py` `reviewer_runnable_gate`): a selector must be relative, and its realpath must be a regular file inside `realpath(target_root)` (`os.path.commonpath`). Absolute selectors are rejected even inside the target, so the rendered command stays worktree-relative. Receipt `TESTS-RESULTS/2026-11-11+GH-1428/containment.out`: relative file and `::node` qualify; `../other.py`, an absolute outside path, an absolute inside path, a symlink escaping the target, a directory and a missing file are harness-only. Your R1 probe is the pre-fix red. Focused suites and render smoke are re-run on the new head (receipts refreshed).
+- [Note] Status table — **Implemented**.
+
+Re-review the delta (`git diff <R1 reviewed head>..HEAD`) and confirm. Same rules. Append `### Round 2 · Reviewer · codex` with plain paragraphs (no nested headings), a `swept file:` line and an explicit `**Verdict:**`; STATUS: Approved only if approved; NEXT: orchestrator.
