@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon + surgical plan written; ledger row picked up (rated 65/55/50/60) | Codex plan QA via relay-xyz |
+| Plan QA R1 Changes requested (3 Should) — all accepted and folded into steps 1–5 | Plan QA R2 |
 
 ## Table of contents
 
@@ -78,8 +78,10 @@ harness layers tell it *not* to run the gate, and none asks for gate evidence:
    prompt by `rtl.turn_prompt`): "Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures
    here — … a claim that can only be measured that way is graded [Unverified — needs clone run], and
    the harness gate runs after your turn." Pinned by `test/gh681-reviewer-probe-rules.sh:49-50`.
-2. `utils/py/swarm_preflight.py:1427` (brief "Scope lock — builder"): "Do NOT run the full gate
-   (`<gate>`) yourself". It is builder-scoped, but the reviewer reads the whole brief.
+2. `utils/py/swarm_preflight.py:1418-1430` (brief "Scope lock — builder", GH-54): "Do NOT run the full
+   gate (`<gate>`) yourself", or, when covering tests create git fixtures, "Do NOT run ANY test or
+   gate yourself". Builder-scoped, so for the reviewer it is contextual ambiguity rather than a
+   binding prohibition; the fixture variant is a real safety signal the exception must preserve.
 3. `utils/py/marathon_drive.py:3134-3160` (REVIEWER TAKE YOUR TURN): requires `swept file:`, says
    nothing about the gate. The Bash twin `relay-automation/marathon-drive.sh:1067` already lags
    (no 4b/4c/swept-file); Python is the default runtime (`XYZ_PYTHON-1`).
@@ -153,38 +155,50 @@ The network part is docs-only. Splitting would ship a refusal with no remedy.
 
 ### Ordered implementation (verification inline)
 
-1. **`utils/py/marathon_drive.py` — reviewer-runnable gate.** After `pre_advance_cmd` is resolved
-   (`:1539`), set `reviewer_gate_cmd = pre_advance_cmd` only when `args.pre_advance_cmd` was passed
-   explicitly AND the command names none of `validate.sh`, `ci-local.sh`, `run-tests.sh`, or a
-   `test/*.sh` script; otherwise `""`. → expect GH-955's `.venv/bin/pytest -q tests/…` yields the
-   command; default `bash …/validate.sh` and `tc run --strict` yield `""`.
+1. **`utils/py/marathon_drive.py` — reviewer-runnable gate (positive contract, plan-QA R1).** After
+   `pre_advance_cmd` is resolved (`:1539`), set `reviewer_gate_cmd = pre_advance_cmd` only when ALL hold,
+   otherwise `""`:
+   - `args.pre_advance_cmd` was passed explicitly (defaults are full-suite by construction);
+   - **focused**: at least one argument (after stripping a `::node` suffix) is an existing test file under
+     the target root (`args.target_root or root`), so an unscoped `python3 -m pytest` does not qualify;
+   - no full-suite runner or passthrough: none of `validate.sh`, `ci-local.sh`, `run-tests.sh`, a
+     `test/*.sh` script, or a ` -- ` passthrough (GH-108 caveat);
+   - the brief does not carry preflight's GH-54 fixture rule ("create temporary git fixtures"), which
+     marks covering tests that mutate Git state.
+   One small predicate, no scanner. → expect GH-955's `.venv/bin/pytest -q tests/…py` yields the command;
+   `bash …/validate.sh`, `tc run --strict`, `python3 -m pytest`, and a GH-54-fixture brief yield `""`.
 2. **Same file — template.** BUILDER step 2 gains one sentence: a verification the brief asks for that
    could not run (e.g. sandbox denied a local service) goes on its own `unverified: <what> — <why>`
    line. REVIEWER gains step `3a. GATE EVIDENCE (GH-1428)`:
    - with `reviewer_gate_cmd`: before writing Approved, run the gate from your worktree
-     (`{reviewer_gate_cmd}`; relative paths that do not exist there resolve against the target root),
-     scratch env exported, caches out of the tree (pytest `-p no:cacheprovider`). Every review block
-     carries a literal `gate run: yes — exit <rc>` or `gate run: no — <why>` line. If the builder's
-     latest block says anything is unverified and you did not run the gate green, do not approve:
-     relay-drive refuses it (`unverified-approval`).
+     (`{reviewer_gate_cmd}`), with cwd = your worktree so the tests and source under test are the
+     reviewed revision. Only *tooling* missing from the worktree (e.g. an untracked `.venv/bin/pytest`)
+     may be taken from the target root; if a test or source path is missing, do not substitute the
+     target root's copy and declare `gate run: no — <why>`. Scratch env exported, caches out of the tree
+     (pytest `-p no:cacheprovider`). Every review block carries a literal
+     `gate run: yes — exit <rc>` or `gate run: no — <why>` line. If the builder's latest block says
+     anything is unverified and you did not run the gate to `exit 0`, do not approve: relay-drive refuses
+     it (`unverified-approval`).
    - without: the phase gate is a full suite that runs only in the harness after your turn. Do not run
      it, and declare `gate run: no — harness gate` in your block.
    → expect `--dry-run` renders each variant (step 7 smoke).
-3. **Same file — signal.** In `_run_relay_drive`, set `env2["MARATHON_REVIEWER_GATE_CMD"]` only when
-   `reviewer_gate_cmd` is non-empty. (One line beside `MARATHON_CONFIG_SHA256`. Kept minimal for #1427
+3. **Same file — signal.** In `_run_relay_drive`, set `env2["MARATHON_REVIEWER_GATE_CMD"]` when
+   `reviewer_gate_cmd` is non-empty and `pop` it otherwise, so an ambient value cannot leak in. (One line beside `MARATHON_CONFIG_SHA256`. Kept minimal for #1427
    overlap.)
-4. **`utils/py/relay_attest.py` — parse + record.** Add `declared_gate_run(added) -> "yes"|"no"|None`
-   (last `^\s*[-*]?\s*gate run:\s*(yes|no)\b`, case-insensitive) and
+4. **`utils/py/relay_attest.py` — parse + record.** Add `declared_gate_run(added)` returning
+   `"yes"` only for a last `gate run: yes … exit 0` declaration, `"failed"` for `yes` with a non-zero or
+   missing exit, `"no"`, or `"undeclared"` (case-insensitive, last declaration wins) and
    `builder_declared_unverified(pre_text) -> bool`. That second check reads the **latest**
    `### Round N · Builder ·` block for `\bunverified\b`; that matches both the instructed `unverified:`
    line and GH-955's prose. Make `trailer_text()` bind `gate-run: <v>` when `record["gate_run"]` is
-   present, as `config_sha256` already does, and have `_load()` validate the optional field.
+   present, as `config_sha256` already does, and have `_load()` validate the optional field against
+   the four allowed values.
    → expect legacy records still load (gh505 B/C cases).
 5. **`utils/py/relay_drive.py` — refusal.** In `judge_terminal()`, after `empty-approval` and before
    the token check, compute `gate_run`. If `MARATHON_REVIEWER_GATE_CMD` is set, the builder declared
-   unverified, and `gate_run != "yes"`, eprint the remedy (reviewer runs the gate, or opt the Codex
+   unverified, and `gate_run != "yes"` (so `failed`, `no` and `undeclared` all refuse), eprint the remedy (reviewer runs the gate, or opt the Codex
    builder into localhost network per README) and return `("refused", "unverified-approval")`. Always
-   store `record["gate_run"] = gate_run or "undeclared"`. → expect generic relays (no env) unchanged.
+   store `record["gate_run"] = gate_run`. → expect generic relays (no env) unchanged.
 6. **`relay-automation/relay-turn-lib.sh:1067` — exception clause.** After "executable fixtures here",
    insert ", except a phase gate command your relay file's REVIEWER steps explicitly tell you to run
    (GH-1428)". The pinned needles in `test/gh681-reviewer-probe-rules.sh` are unchanged.
@@ -202,13 +216,14 @@ The network part is docs-only. Splitting would ship a refusal with no remedy.
 - Manual checks under `TESTS-RESULTS/2026-11-11+GH-1428/` with `provenance.jsonl`:
   - **Red control (acceptance 2):** feed the real GH-955 builder block and reviewer Approved block
     through relay-drive with a scripted reviewer (gh505 fixture pattern, in scratch, not a new suite).
-    With `MARATHON_REVIEWER_GATE_CMD` set → exit 4, reason `unverified-approval`. Same pair with
+    With `MARATHON_REVIEWER_GATE_CMD` set → exit 4, reason `unverified-approval`; also refused for
+    `gate run: yes — exit 1`, `— exit 124` and `gate run: yes` with no exit. Same pair with
     `gate run: yes` → attested, record `gate_run: yes`. Same pair without the env → attested as today,
     `gate_run: undeclared`. Pre-fix code on the same pair is attested (the witnessed red).
   - **Render (acceptance 1):** `marathon-drive --dry-run` with GH-955's explicit focused
-    `--pre-advance-cmd` shows the run-the-gate step; with the default `validate.sh` gate it shows the
-    do-not-run step.
-  - **Codex network (acceptance 3):** with `python3 -m http.server` on a free localhost port,
+    `--pre-advance-cmd` shows the run-the-gate step; the default `validate.sh` gate, an unscoped
+    `python3 -m pytest`, and a brief with the GH-54 fixture rule show the do-not-run step.
+  - **Codex network (acceptance 3):** with `python3 -m http.server --bind 127.0.0.1` on a free port,
     `codex exec` under the default flags fails to fetch it (red); with
     `-c sandbox_workspace_write.network_access=true` it succeeds.
 - Final gate: `utils/ci-route.sh` routes `.py`/`.sh` changes to the full gate. Run full
