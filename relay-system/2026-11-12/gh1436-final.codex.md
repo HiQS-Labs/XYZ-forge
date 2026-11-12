@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -147,5 +147,38 @@ Handing off to Producer — go to the Producer window and say 'take your turn'.
 Implemented the concrete optional-null merge finding in both reads with `or []`; absent/empty/nonempty subset behavior remains unchanged. First/later null red controls at f78c531c and five green consumer controls at ebbe5877 are retained alongside a fresh passing swarm-preflight run. This is the final review round under the cap; assess residual concrete blockers without speculative broadening.
 
 The exact complete implementation diff is now committed as TESTS-RESULTS/2026-11-12+GH-1436-1437/implementation.diff so the review can compare changes without invoking git. Read that complete file, then inspect affected paths with bounded ranges to avoid truncated registry output. Existing suite/full-gate results are distinct: focused is green; normal full pre-push qualification must still pass before PR-ready publication. No new production scope besides the two merge reads.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Pass] Round 2 optional-null crash is repaired at both merge positions (utils/py/swarm_preflight.py:219, :238). Pure-function replay exited 0 and printed `absent -> []`, `empty -> []`, `first-null -> []`, `later-null -> []`, `nonempty -> ['README.md']`. The retained red log separately witnesses both prior TypeErrors; optional-null-green.log and provenance.jsonl retain the five green controls and the ebbe5877 swarm-preflight receipt (swarm-r3.log: `100 passed, 0 failed`). These suite receipts were read, not rerun.
+  Probe command:
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PYPROBE'
+  import sys, copy
+  sys.path.insert(0, 'utils/py')
+  from swarm_preflight import contract_shape_error, merge_contracts
+  c={'target':{'repo':'.','ref':'development'},'gate':'true','fix_probes':[{'type':'path_absent','path':'missing'}],'artifacts':['README.md']}
+  for label, cs, expected in [('absent',[c],[]),('empty',[dict(c,artifacts_new=[])],[]),('first-null',[dict(c,artifacts_new=None)],[]),('later-null',[c,dict(c,artifacts_new=None)],[]),('nonempty',[dict(c,artifacts_new=['README.md'])],['README.md'])]:
+      assert all(contract_shape_error(x) is None for x in cs)
+      got=merge_contracts(copy.deepcopy(cs))['artifacts_new']
+      assert got==expected,(label,got)
+      print(label, '->', got)
+  PYPROBE
+  ```
+- [Pass] Shared shape checks precede bounded consumers in registered and unregistered paths; both extraction callers unpack the new tuple (utils/py/_marathon_plan.py:175, :1138), and malformed rows emit the existing `needs-contract` finding before probe evaluation (:1171-1178). Optional-null lanes remain accepted and partial intake remains distinct from execution completeness (utils/py/swarm_preflight.py:80, :138-158). The retained manual_matrix.py exercises 20 cases and the real reconciliation result handler: contract-green.log says `unrelated reconcile continues; owned reconcile refuses`; wave_reconcile.py:1832 and :1901-1917 preserve that attribution without production changes there.
+- [Pass] HQ validates the final selected request after adoption/body selection and before issue/capture writes (utils/hq/hq.sh:313, :323-342, :453-472). The Round 1 line-bounded heading repair remains present at :328. Retained manual_hq.py includes the following-Acceptance-prose case, and hq-following-prose-green.log records refusal before writes. Shape validation imports the pure helper and never evaluates contract probes.
+- [Pass] Environment refusal remains before tier-1 execution, telemetry setup and suite dispatch (validate.sh:1033-1043, :1065 onward); it exits 3 and gives the interpreter/version/modules plus exact PATH remedy. PHP handling is unchanged at :1026-1031. README.md:285 documents the floor and toolchain. Retained environment-green.log includes each missing module, healthy sentinel reachability and real Apple Python `version 3.9.6` refusal. The complete supplied implementation.diff changes the existing gh251 assertions without adding a suite, registry entry, interpreter installer or schema framework.
+- [Nit] Pre-existing display defect found during the whole-source sweep: DB ratings use the legacy 1–5 formatter, so ordinary 0–100 PRS axes render as dashes (utils/py/_marathon_plan.py:114-118, :1614-1618). Concrete input `(70,65,50,70)` renders `—/—/—/—`; scores still use dbRank (:1372 onward), so this does not block the contract/environment repair. Optional follow-up: render DB axes as their actual numbers while retaining the legacy formatter for legacy ratings.
+  Probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" "$HOME/.cache/xyz-forge-test-venv/bin/python3" -` with `import sys; sys.path.insert(0,'utils/py'); from _marathon_plan import _rating_num; print('DB axes 70/65/50/70 render as:', '/'.join(_rating_num(v) for v in (70,65,50,70)))`. Exit 0; decisive output: `DB axes 70/65/50/70 render as: —/—/—/—`.
+- [Unverified — needs clone run] Full push qualification remains pending. No suites, executable fixtures, validate.sh, pytest or git commands ran in this turn. Approval is independent source QA, not full-gate qualification or permission to publish as PR-ready before that gate passes. The complete comparison used the author's retained implementation.diff, not an independently queried origin/development ancestry.
+
+**VERDICT: PASS**
+
+**Basis:** Reviewed the complete seeded artifact, both requirements, plan receipt, complete supplied implementation diff, retained manual evidence, and surrounding implementation across all five affected executable source files (including the gate's full executable registry and dispatch paths). The two prior concrete findings are resolved; no additional blocking pre-existing defect was found. The pre-existing ratings-display nit above is nonblocking. Required exact-state full-gate evidence remains the Producer's publication obligation under the explicit Final QA scope.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
