@@ -1,0 +1,1395 @@
+> **ATTESTATION**
+> Model: gpt-6.1-sol
+> Provider: openai
+> Sandbox: read-only
+
+Reading additional input from stdin...
+OpenAI Codex v0.167.0-alpha.3.2
+--------
+workdir: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-65642-n6y18hon
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: low
+reasoning summaries: none
+session id: 01a1d0d0-d4ab-7560-ba37-32223fbb31ec
+--------
+user
+You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy).
+
+=== CONSULT QUESTION ===
+Review GH1443 plan PROJECT/1-INBOX/GH-1443-JOG-READINESS.md and TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md against utils/py/jog_run.py. Is this the smallest safe fix for false target-aware readiness without a new subsystem? Local CLI scope; preserve bare preview, simulation, live recovery, queue state. Ground blockers with concrete inputs/source. Decide exit4 handling. Advisory only: no writes, tests/network/provider calls. Checkpoint static checks only; remote freshness/capacity/environment unknown. No suites in valued clone.
+codex
+I’ll read the plan, spikes, and runner, then check the proposed readiness boundary against the paths that must stay unchanged.
+exec
+/bin/zsh -lc 'cat ROUTER.md; cat GUIDING-PRINCIPLES.md; cat PROJECT/1-INBOX/GH-1443-JOG-READINESS.md; cat TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md' in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-65642-n6y18hon
+ succeeded in 0ms:
+# ROUTER.md
+
+XYZ Forge exists for cross-model reviews and agentic work on business information, including private code, within the task’s authorized scope and applicable data-protection requirements.
+
+This file is the first entry point for an AI agent working in this repo: it tells you what to read, what to run, and which files are canonical.
+
+XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md`); **PDDA**, project-doc governance (`PROJECT/PDDA.md`); and **PRS**, the Product Release System, which is the RELEASES ledger (`RELEASES-DB-FAQS.md`). Definition: [HOW-TO-USE.md → Glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first).
+
+## Role split
+
+- `ROUTER.md` = startup order and canonical entry points
+- `GUIDING-PRINCIPLES.md` = XYZ Forge’s product purpose, scope and *why*, and the canonical North Star: durable, reversible, DRY — extend what exists rather than forking a parallel system
+- `AGENTS.md` = behavioral rules, decision quality, reversibility, blast radius, proof
+- `README.md` = human-facing repo/product overview
+- `ROADMAP.md` = LEGACY pointer ledger, frozen since the `ROADMAP_SOURCE=releases` flip — the RELEASES DB (`releases.db` via `releases.sql`) is the source of truth; write via `releases roadmap add`, never by editing this file
+- `CHANGELOG.md` = the end-of-iteration running log (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
+- `RELEASES DB` = the single runtime and release-planning ledger (`releases.db` via `releases.sql`; operated through `releases_app.py`); `RELEASES.md` is retired (GH-568)
+- `HARNESS-MODELS-REGISTRY.md` = evaluated agent harnesses, supported model grades (A/B/C), and CLI flags
+- `MACHINE-CONTRACTS.md` = the Jog ↔ Preflight ↔ Marathon machine-contract reference (`marathon-invocation@1`, `marathon-drive/result@1`) and their version/deprecation policy
+- `PROJECT/**` docs = canonical execution detail for a specific effort
+- `PARKED/` = root holding area for incidental agent findings outside the current task; triage may promote an item into issue-first PDDA intake
+- `PROJECT/PDDA.md` = shared PDDA document contract maintained in Forge (incl. CHANGELOG); repo-specific adoption policy stays in this router
+- `PROJECT/CONSTITUTION.md` = locally maintained PDDA-layer policy of record, with verified-success, reversibility and local-first safeguards adopted by XYZ; advisory-only LLM checking is PDDA-specific and does not replace XYZ relay approval
+- `PROJECT/DO-NOT-BUILD.md` = locally maintained PDDA anti-scope; XYZ product scope remains in GUIDING-PRINCIPLES, not a blanket prohibition on coordination or execution
+- `PROJECT/PDDA-MODE-GUIDE.md` = XYZ-maintained guidance for selecting PDDA’s enforcement mode
+- `PROJECT/PDDA-SYNC-POLICY.md` = binding XYZ-owned review policy for PDDA distribution updates
+
+## Startup sequence
+
+1. Read `ROUTER.md` to understand the repo's operating order and canonical files. -> expect one clear next file, not a repo-wide scavenger hunt.
+2. Read `AGENTS.md` before making recommendations or edits. -> expect explicit assumptions, a reversibility read on consequential changes, and verified claims only.
+3. Run `python3 utils/py/releases_app.py roadmap list` to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)
+4. Read the linked `PROJECT/**` document that owns the work you are touching. -> expect the near-top `## Status` table to tell you what was just completed and what is next.
+5. If the task touches project docs, read `PROJECT/PDDA.md` and follow the PDDA contract. -> expect `PROJECT/2-WORKING` docs to have frontmatter, the exact status table, and QA gates when phased.
+6. Before reporting success on code or runtime work, check that the same `python3` used by the gate imports `requests`, `yaml` (PyYAML), and `pytest`, then run `./validate.sh`. -> expect the suite to stay green; do not claim completion if it fails or was skipped.
+7. Before reporting success on doc-hygiene or roadmap work, run `utils/pdda/pdda.sh run` (or the relevant `utils/pdda/pdda.sh <check>` subcommand). -> expect deterministic findings first, then any LLM review.
+
+## Canonical rules
+
+- Do not put phase checklists, build steps, or deep execution notes in the roadmap ledger.
+- Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer row in the roadmap ledger (the RELEASES DB) that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Governance lives in `PROJECT/PDDA.md` → "ROADMAP contract".
+- Promoting a capture from `1-INBOX` to `2-WORKING` is a DB-verb procedure (`roadmap repoint` + `roadmap update` / `roadmap move`), never a markdown edit — the exact steps and their two known gate traps (`updated:` frontmatter key, bullet-format `raw_text`) live in `SOP.md` → "Step 1b: Promoting a capture from 1-INBOX to 2-WORKING (releases-mode)".
+- Captured GitHub issue docs in `PROJECT/1-INBOX/GH-*.md` exist as unstarted capture docs without a roadmap ledger row. Under GH-1340 / GH-1345 decision 6, the ledger row is created when work starts (at pickup/selection: `start-task`, Jog, `start-marathon`, `10days`), while active `2-WORKING` docs must have their pointer row. Governance lives in `PROJECT/PDDA.md` → "GitHub issue intake" + "ROADMAP contract".
+- Incidental findings outside the active task go first to root `PARKED/` under its README contract.
+  They need no issue or roadmap row until triage promotes them. “Queue / parked intake” in RELEASES
+  names the later, formal issue queue; it is not a replacement for the root folder. Required work
+  in the current task remains in its active plan rather than being parked.
+- Do not create a second competing plan when a canonical `PROJECT/**` doc already exists.
+- Issue-first: any change beyond a **2–3 line** fix opens a GitHub issue first, then a pointer doc **named after the issue** (`GH-<number>-VERY-SHORT-DESC.md`, e.g. `GH-1234-SHOWME-COMMAND.md`). Under decision 6, filing creates the issue and capture doc; the ledger row and stored rating are created when work starts (at pickup/selection) before execution begins. The issue is the signal stream; the pointer doc is the execution surface of record. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt. Governed by `PROJECT/PDDA.md` → "GitHub issue intake".
+- Issue-first applies when a parked observation is promoted into work, not when an agent first
+  records an out-of-scope observation in `PARKED/`.
+- Runtime triage labels: since the `XYZ_PYTHON` flip the harness is dual-runtime, so any harness-bug issue gets a `runtime:` label — `runtime:python` (default path), `runtime:bash` (`XYZ_PYTHON=0` opt-out), or `runtime:parity` (the twins diverge). `/file-xyz-bug` harvests and applies it; for in-repo intake (`/triage`, hand-filed `gh issue create`) apply it by hand. Omit rather than guess — a wrong runtime tag misroutes triage.
+- **`GH-<n>` numbering spans two repos.** This repo succeeded [`Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm) and the migration did **not** renumber references, so a `GH-<n>` in a source comment, test name, or CHANGELOG entry may belong to either repo. Upstream ledger entries are preserved verbatim in [`docs/ROADMAP-UPSTREAM-ARCHIVE.md`](docs/ROADMAP-UPSTREAM-ARCHIVE.md), which states its own numbering caveat and is not parsed by anything. Where an upstream number is cited from code that ships here, mirror it as a closed `[upstream archive]` issue so the citation resolves locally (#407, #408 are the pattern) rather than editing the comment. Raised externally as GH-406 §3.1.
+- Do not override deterministic PDDA findings with prose.
+- Do not report a win you did not verify with the relevant script or test.
+- Update `CHANGELOG.md` at the end of each iteration; its governance lives in `PROJECT/PDDA.md` — do not re-specify CHANGELOG rules in `AGENTS.md` or elsewhere.
+
+## PDDA distribution
+
+Forge is canonical for PDDA. `utils/pdda/pdda-install.sh` installs governance into targets;
+`utils/pdda/pdda-sync.sh` updates registered targets from the shared manifest.
+Read [PDDA migration](docs/PDDA-MIGRATION.md) before switching an existing distributor.
+Targets own their startup documents; generic templates live under `utils/pdda/templates/`.
+
+## Command rails
+
+For repo correctness:
+
+```bash
+bash githooks/install.sh        # ONCE PER CLONE — wires the pre-push gate (GH-544)
+bash githooks/install.sh --check # is this clone gated? exit 1 if not
+./validate.sh              # the gate — PARALLEL by default (GH-544), auto-sized to the host (GH-35)
+./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
+./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
+./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
+./validate.sh --sequential --subsystem small  # GH-831: the Small list — locally a self-check; hosted, the reconcile's qualifying run for docs/ledger/skill landings
+./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
+./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
+bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
+```
+
+**Both gate entry points refuse to run from a linked git worktree (GH-45)** — a worktree shares
+the parent clone's `.git`, and an observed suite escape corrupted the parent (core.bare, origin,
+remote refs, development). Run the gate from a separate disposable full clone; `XYZ_ALLOW_WORKTREE_GATE=1` is the
+announced override for disposable runs.
+
+**Local push checks and hosted CI both apply.** This repository is public; the workflow covers
+pushes and pull requests to `main` and `development`. Hosted macOS promotion evidence requires an
+actual passing run for the exact commit; the Ubuntu canary remains advisory. Install the local
+hook with `githooks/install.sh` for each clone — `.git/hooks/` does not travel with a clone. One
+installation covers that clone’s branches and linked worktrees. Run mutation-heavy gates and
+pushes that invoke them from a separate disposable full clone, as required by AGENTS.md.
+Bypasses (`git push --no-verify`, `XYZ_SKIP_PREPUSH=1`) announce that the local gate was skipped.
+**Draft-review publication is distinct from merge readiness (GH-487):** an operator-requested WIP
+draft may use a bypass only with (a) current focused evidence for the changed area — e.g. the
+mapped subsystem's suites run green — (b) the hook's skipped-gate disclosure echoed into the PR
+description, and (c) merge readiness still outstanding. A bypassed push never authorises merge,
+promotion, or teardown, and a published draft is never approval.
+
+**Parallel became the default on 2026-08-14 (GH-544)** when the local gate was the only gate during
+the private phase, and a slow gate risks being skipped; use the hook’s measured `GREEN in Ns` line for current cost. **GH-35 (2026-08-18) rebalanced the width to `cores/2` (floor 2, cap 4) and put every
+worker under `nice -n 10`** — the original `cores − 2` (up to 8) saturated developer machines badly
+enough to wedge the editor; `--burst` buys the old full-core width back for unattended runs, and
+`--throttle`/`--quiet-cpu` pins 2 workers. Ambient levers: `XYZ_VALIDATE_THROTTLE=1`,
+`XYZ_VALIDATE_MAX_JOBS=N`, `XYZ_VALIDATE_PARALLEL` (flags > MAX_JOBS > THROTTLE > PARALLEL > host
+detection; malformed values exit 2 naming the variable). Below 4 cores, or where `xargs -P` is
+unsupported, the run **falls back to sequential and says so** — every run prints the mode it chose
+and the reason, so a fallback is never silent.
+
+**GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
+owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
+agent-chorus, standup, skills-army-hq, plus `small`, a gate-only list that claims no paths); a push the classifier rates `tier=2` runs only those focused
+suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
+test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
+Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
+sequential full run qualifies (GH-509).
+
+**GH-1127 (2026-10-18, decision #1131): no hosted run per merge.** Development merges reconcile locally
+(merge-cleanup → `wave_reconcile.py --pr N`). `wave-reconcile.yml` is dispatch-only; before each promotion
+it runs `--promotion`, which always uses the full registry (`validate.sh --parallel 4`, #1134) on the
+development tip and qualifies every landing since the last receipt together (procedure: AGENTS.md
+**Promotion**). The GH-831 tiers below remain the classifier for a non-promotion `--qualify` run.
+
+**GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
+A non-promotion `--qualify` run picks **one** gate by classifying the landings' changes at the tested commit:
+
+- **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
+  `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
+  and the Python layer. The receipt records the list it ran.
+- **Medium** — mapped non-core code (tier 2): the full registry at the reconcile, the area's suites at push.
+- **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
+
+Promotion always runs the full registry. Eight skill-text suites are off, recorded in
+`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
+core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
+docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
+full-gate surfaces for every file. merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` are full-gate files too:
+they are what `gh436-merge-cleanup` reads, and GH-836 D1 moved that suite from Small to Large.
+Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
+
+`--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
+Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run
+(`nice` protects the editor, not the wall-clock).
+
+**What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
+`ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it
+stays sequential. The post-push macOS boundary on main in `ci.yml` pins `--sequential` explicitly for the
+same reason. The hosted pre-promotion qualification is the parallel exception (#1134 operator override;
+its receipt records `mode`, `width` and any first-attempt failures). GH-528 Phase 2 (multi-width stress evidence) is still **owed** — the flip was an operator
+decision taken with that evidence outstanding, mitigated by the announced fallback rather than
+discharged. See `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md`, #509 and #544.
+
+For document hygiene:
+
+```bash
+utils/pdda/pdda.sh run
+```
+
+For targeted PDDA debugging (subcommands of the single dispatcher):
+
+```bash
+utils/pdda/pdda.sh frontmatter
+utils/pdda/pdda.sh status-table
+utils/pdda/pdda.sh hardcoded-paths
+utils/pdda/pdda.sh roadmap
+utils/pdda/pdda.sh roadmap-coverage
+utils/pdda/pdda.sh changelog
+utils/pdda/pdda.sh stale
+utils/pdda/pdda.sh issue-doc-sync   # warn-only: flags 2-WORKING/GH-*.md docs drifted from their GitHub issue state
+utils/pdda/pdda.sh releases         # legacy releases check (skips when RELEASES.md is retired)
+utils/pdda/pdda.sh releases-current # read-only roll-up: queries releases.db (GH-568)
+utils/pdda/pdda.sh quad-concepts    # opt-in: requires a "## Quad Concepts" section of 1-4 bullets (lever: .pdda-quad / PDDA_QUAD)
+utils/pdda/pdda.sh glance           # read-only roll-up: title + Quad Concepts for each PROJECT/2-WORKING doc
+utils/pdda/pdda.sh governance       # repo-root governance-doc cross-reference + doc/code drift
+utils/pdda/pdda.sh marathon-qa      # mechanical marathon Wave QA receipt & checklist gate (GH-784)
+utils/pdda/pdda.sh gh-refresh       # refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
+utils/pdda/pdda.sh catchup          # LLM repo triage + ROUTER.md recommendations (delegates to pdda-catchup.sh)
+utils/pdda/pdda.sh doc-ready        # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
+```
+
+## The RELEASES DB — two subsystems, one ledger (GH-32 / GH-69)
+
+`releases.db` + `releases.sql` hold TWO mirrored subsystems, both operated through ONE CLI,
+`utils/py/releases_app.py` (alias: the `/releases` skill). Read
+[RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md) before merging either file — the SQLite binary is
+derived; the SQL dump is what git actually merges, and a conflicted merge has a one-command
+resolver (`utils/releases-merge-resolve.sh`).
+
+```bash
+python3 utils/py/releases_app.py check          # trio consistency, receipt chain, crash recovery
+python3 utils/py/releases_app.py next           # the next unshipped release, by target date
+python3 utils/py/releases_app.py add|ship ...   # RELEASE writes — never hand-edit releases.sql
+python3 utils/py/releases_app.py roadmap pickup ... # GH-1345: create rated row at work pickup (start-task, Jog, marathon)
+python3 utils/py/releases_app.py roadmap add ...    # low-level write path; puts row directly in roadmap
+                                                   #   GH-249: put `rated N/N/N/N [ovr N]` in --raw-text to score it
+python3 utils/py/releases_app.py roadmap rate ...   # GH-253: score a row that is ALREADY parked (--force to re-score)
+python3 utils/py/releases_app.py roadmap list      # read the roadmap rows (--json for machine consumers)
+python3 utils/py/releases_app.py roadmap sync      # LEGACY-mode only (mirrors ROADMAP.md); a guarded no-op in this repo
+```
+
+**Subsystem 1 — releases** (GH-32 / GH-568): the release ledger. App-managed writes
+only; `releases.db` and the `releases` CLI (`releases list`, `releases show`) are the sole source of truth (`RELEASES.md` is retired per GH-568).
+**Subsystem 2 — the roadmap ledger** (GH-69 shadow → GH-238/GH-243 canonical → GH-269 retired ROADMAP.md → GH-567 retired ROADMAP-DASHBOARD.md): since the
+`ROADMAP_SOURCE=releases` flip, `roadmap_items` IS the ledger — write rows at pickup with
+`releases roadmap pickup` (or `roadmap add`), read with `roadmap list`. `hq park` creates captures without premature ledger rows.
+The legacy markdown roadmap files (ROADMAP and ROADMAP-DASHBOARD) have been retired. `roadmap sync` exists for legacy-mode repos only and
+no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-roadmap-shadow.sh`,
+`test/gh238-hq-releases-mode.sh`, `test/gh269-roadmap-retired.sh`, and `test/gh567-roadmap-dashboard-retired.sh`.
+
+## Routing hints
+
+- If the task is about current priorities or active work, start with `releases roadmap list`, then follow the linked `PROJECT/**` doc.
+- If the task changes the roadmap ledger, write through the CLI (`releases roadmap pickup` at pickup/start time; start paths route there automatically).
+- If the task touches `releases.db`, `releases.sql`, or a merge conflict on either, start in [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md); writes go through the CLI, never a hand-edit.
+- If the task is about fresh GitHub intake or duplicate-prevention, start in `PROJECT/1-INBOX/` and open issues (duplicate issue search + capture reuse), then inspect the roadmap ledger at pickup.
+- If the task is about document quality, active-doc lifecycle, roadmap sprawl, or automation policy, start in `PROJECT/PDDA.md`.
+- If the task is about the CHANGELOG, provenance, or end-of-iteration logging, the governance is in `PROJECT/PDDA.md` (the "CHANGELOG.md — end-of-iteration record" contract).
+- If the task is about release planning, ledger health, cleanup, authoring, or publishing, invoke `/releases`. It operates against `releases.db` via `releases_app.py`; `RELEASES.md` has been retired (GH-568). It conditionally points strategic drift to `/radar` and a frozen path-to-ship to `/finish-line` without duplicating either workflow.
+- If the task is about the `tick` runtime, event projection, or multi-agent coordination kernel, start in `README.md`, then `bin/`, `src/`, `test/`, and the active project doc.
+- If the task is about the **Aider ↔ OpenRouter** turn-taker lane (`relay-automation/aider-turn.sh` — an OpenAI-standard build lane discrete from Codex; `AIDER_MODEL`/`OPENROUTER_API_KEY`, `--builder aider`), start in `PROJECT/3-COMPLETED/GH-77-AIDER-OPENROUTER-LANE.md`. The shim owns the tick token ops (Aider can't run shell mid-turn), asserts token ownership before launching Aider, and runs Aider `--no-auto-commits` (the harness commits).
+- If the task is about running, driving, or reviewing via the relay (`relay-automation/` — `relay-drive.sh`, `poll.sh`, the turn shims, `marathon*.sh`), **invoke the `relay-xyz` skill first — do not improvise the handoff or hand-roll a harness from `ls relay-automation/`.** The skill owns the locator, sandbox rules, exit codes, and the safety boundary; a `PreToolUse` guard (`relay-automation/hooks/relay-xyz-guard.sh`) blocks driving a harness driver before the skill is loaded. For the two live-Claude-windows, same-machine duel recipe (Reporter↔Maintainer with a human go-gate), the copy-paste form is [relay-automation/DUELING-CLAUDES.md](relay-automation/DUELING-CLAUDES.md).
+- If the task is about the ATE (Automated Testing Environment) skill — unattended variation-test fuzzing whose implementation lives under `utils/ate/` — start at its canonical interface in `skills/4-occasional/ate/SKILL.md`.
+- If the task is about relay session telemetry, the `focus5float` health feed, or extraction scripts under `utils/telemetry/`, start in `PROJECT/1-INBOX/GH-24-RELAY-TELEMETRY-EXTRACTOR.md`.
+- If the task is about live per-session completion telemetry — the `XYZ.json` log every relay/marathon/swarm session appends to at the harness repo root (schema: `harness`/`sessionId`/`health`/`title`/`description`/`updatedAt`), the shared writer `utils/telemetry/append-xyz-completion.sh`, or the shared health mapping `utils/telemetry/health-lib.sh` — start in `PROJECT/1-INBOX/GH-75-XYZ-JSON-COMPLETION-TELEMETRY.md`. `XYZ.json` is local + gitignored (machine-specific).
+- If the task is about cross-repo HQ tooling (`utils/hq/` — `hq.sh` single-repo actions, `rollup.sh` the Obsidian daily ROADMAP rollup, `marathon-scan.sh` the cross-repo marathon-preflight aggregator, `hq-lib.sh` the shared repo registry), start in `PROJECT/3-COMPLETED/GH-27-ROADMAP-DASHBOARD.md` and `PROJECT/3-COMPLETED/GH-158-HQ-MARATHON-SCAN.md`. The two rollups are deliberately separate today (`rollup.sh` → Obsidian, generic; `marathon-scan.sh` → hub repo, preflight-aware) and are not yet bridged — tracked in `PROJECT/1-INBOX/GH-192-HQ-MARATHON-OBSIDIAN-ROLLUP.md`.
+- If the task is about a proposed roadmap-steward agent, start here, then read `PROJECT/PDDA.md` and its `Proposed roadmap steward extension` section.
+- If the task is about finding or picking a skill for a job, see `ARCHITECTURE.md` → "Skills Index" for a one-line inventory of every skill in `skills/`.
+- If the task is blocked by a failing test, unexpected error, or disputed requirement, invoke the `sanity-check` skill (`skills/1-hourly/sanity-check/SKILL.md`) to establish whether the obstacle must block the goal before spending hours debugging or repairing it.
+- If the task is about **managing skills for the system** — adding a skill to the machine-wide collection, deploying/refreshing/removing it across the configured app targets (`targets.json`, machine-local), or asking what is deployed — the mechanism is the `skills-army-hq` skill (`skills/3-weekly/skills-army-hq/SKILL.md`). Forge authors its own skills in `skills/`, Skills Army HQ included; XYZ-skills-army-mini and the other standalone repos are published children (`push-downstream`, GH-955). Intake accepts any local folder. The durable collection lives wherever `XYZ_SKILLS_ROOT` points (machine-local, never committed; falls back to `~/git-pulse-sync/Deployed Skills`), and only `intake.py` / `sync.py` mutate it or the app symlinks. Never hand-copy a skill folder into an app's skills directory.
+- Issue-first SOP: any change beyond a 2–3 line fix (and every project plan) opens a GitHub issue *first*, then gets a pointer doc named after the issue at `PROJECT/1-INBOX/GH-<number>-VERY-SHORT-DESC.md` — e.g. `GH-1234-SHOWME-COMMAND.md`. Row creation and stored rating are deferred to pickup/selection when work starts (decision 6), following the normal `1-INBOX` → `2-WORKING` flow. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt and commit directly.
+# Guiding Principles
+
+North star for **XYZ Forge**, the multi-agent coordination harness behind the `tick` event-log kernel and `relay-automation/` relay stack. When a choice is unclear, the option that keeps agents synchronized, contained, and verifiable — without leaking or destroying work — wins. AGENTS.md is the behavioral playbook; ROUTER.md is the entry-point map; this is the *why*.
+
+## The North Star
+
+There is no perfect architecture and no finished codebase. The bar is not perfection — it is that
+every change leaves the harness **more durable, more reversible, and less duplicated** than it found
+it, and that the three stay in balance:
+
+- **Durable** — it removes the root cause and the next planned change builds on it, rather than being
+  torn out when the obvious next feature lands.
+- **Reversible** — the cost of being wrong is known and bounded before the change lands. A change
+  nobody can undo is a bet, not a fix, and gets treated as one.
+- **DRY** — nothing canonical lives in two places where it can drift. One source of truth, and every
+  other surface is a pointer or a projection of it.
+
+**Do not build a new layer, module, or sub-system when an existing piece of code can be extended
+easily, logically, and safely.** Extending an existing abstraction beats standing up a parallel,
+siloed system, even when the parallel path is faster to write today — the parallel path is what
+later has to be kept in sync, and what silently drifts when it isn't. If the existing abstraction
+genuinely cannot carry the new case, say so in one line, with the reason, before forking.
+
+These three pull against each other, and that tension is the decision, not a problem to average
+away: the most durable fix is often the least reversible, and collapsing two near-duplicates is a
+DRY win that can widen the blast radius. Name the trade and pick; do not split the difference by
+building both.
+
+**Rigor must earn its cost.** Strong technical rigor supports useful, reliable work; it is not
+an end in itself. Choose controls proportionate to the demonstrated risk, the task's scope and
+the cost of recovery. Count their operational burden too: time, repeated reviews, maintenance
+and interruptions. Prefer the simplest control that addresses the concrete failure, and simplify
+or remove a rule when its burden outweighs its benefit. Explain the tradeoff so the operator can
+choose; honor an explicit choice without quietly recreating the rejected restriction elsewhere.
+Keep evidence honest about what was reviewed, tested and delivered, including any gaps. A
+bookkeeping milestone need not repeat every quality gate: distinguish recording an outcome from
+certifying its quality. This principle calls for deliberate changes to specific controls, not a
+blanket bypass of containment, verification or protection against data loss.
+
+This section is canonical. `AGENTS.md` owns how it is applied to a given change — the reversibility
+scale (§3) and blast-radius sizing (§4) — and principles 6, 7, and 10 below are the build-time and
+done-time expressions of it. Where another doc restates this, that doc is the copy and this is the
+original.
+
+## Purpose
+
+XYZ Forge is a local-first operations system for humans directing agents across their repositories:
+capture → rate → plan → preflight → execute → gate → land → record. Its `tick` kernel coordinates
+local claims through an event log and exclusive locks; its relay and Marathon tooling drive bounded
+build and review work. Containment controls reduce accidental writes but do not guarantee safety
+outside their enforced boundaries; linked worktrees share Git state. The product prioritizes
+coordination, recoverability and verifiable outcomes. The operator remains the decision authority.
+
+XYZ is not enterprise application lifecycle management or an agent marketplace. It currently
+assumes specified work rather than providing a structured spec/PRD-generation pipeline of its own;
+that capability gap is not a permanent prohibition on future product work. PDDA’s governance-layer
+anti-scope does not prohibit XYZ’s coordination and execution features.
+
+## The quality bar
+
+Every agent turn is a signal. A turn is high-quality only when it is all four:
+
+- **Attested** — carries its receipts: source, evidence, confidence. Never a bare verdict. A relay review names which claim is wrong and why; a build turn names the seam it touched.
+- **Relevant** — ranked, not dumped. Volume is not value. One real bug beats five nits and a phantom.
+- **Fresh** — current, not stale. A turn that reads a stale `STATE.md` or misses an epoch fence is wrong by construction.
+- **Structured** — one shape, clean for the operator to read and for downstream agents to feed on.
+
+Fail a pillar, and the turn, feature, or relay review isn't done.
+
+## Adaptive work and continuous handoff
+
+For semi-autonomous work, choose the operating mode before execution: formal unattended work or setup/repair work. Judge proposed work by meaningful capability gain, a discriminating real-world test, and decision value for its cost. These are work-selection and continuation rules, not a reason to halt for every routine problem.
+
+Bounded autonomous repair is normal operation. Recover through an existing supported path, make the smallest authorized repair and verify it, keep independent eligible work moving, and escalate only genuine authority, safety, spending, access, destructive-action or control-bypass boundaries. Record repairs, changed running versions and human assistance without reopening routine authorization in each session.
+
+A handoff preserves the current objective, selected mode, observed baseline, budgets, repair history, evidence and next owner. The operational rubrics and standing authorization ladder live in [flywheel](skills/2-daily/flywheel/SKILL.md); this section owns the product principle and does not duplicate that workflow.
+
+## How it's built
+
+1. **Coordination is local-transport only.** `.tick/events/` is the shared bus; claims resolve from there, not from a remote. No per-event push/fetch; no remote dependency at runtime. A coordination primitive that reaches out is a coordination primitive that can fail or leak.
+
+2. **One canonical event log for tick coordination.** `.tick/events/` records coordination events; `.tick/STATE.md` is a derived view. Coordination verbs read and fold the events and append changes through the event API. Other subsystems retain their own documented sources of truth, including the RELEASES roadmap ledger. Do not create competing copies of canonical state.
+
+3. **Containment is non-negotiable.** A headless turn must not: self-commit mid-turn, orphan a peer's concurrent commit, or write outside its allowlist. The allowlist, worktree isolation, and commit-bypass guard exist because a driven agent will do all three if unconstrained — not hypothetically, but as documented live incidents (GH-13, GH-14, GH-17). New relay paths must clear the containment bar before they ship.
+
+4. **Skill-first; never improvise the harness.** The `relay-xyz` skill owns the locator, sandbox rules, exit codes, and the safety boundary. A session that improvises those from `ls relay-automation/` silently skips the skill's safety layer. In sessions that install and invoke the `PreToolUse` hook, `relay-automation/hooks/relay-xyz-guard.sh` checks supported driver invocations for the skill’s setup evidence; this is not a guarantee that every runtime invokes that hook. Add capabilities to the skill; do not work around it.
+
+5. **Adversarially proven before commercially viable.** The harness exists to run against real codebases. Features in the adversarial-hardening track (epoch fencing, chaos suite, cross-repo E2E) must be verified to survive deliberate abuse — stale writers, zombie claims, macOS case-sensitivity, concurrent peer commits — not just the happy path. A feature that clears the happy path and skips chaos is half-done.
+
+6. **Build durable, not band-aid.** Durable means it removes the root cause and the next planned change builds on it — not a patch torn out when the obvious next feature lands. A band-aid is wasted work unless a demo strictly needs one, and a demo band-aid is tagged for removal so it isn't silently inherited.
+
+7. **Least code that clears the bar.** The `tick` coordination kernel uses Node's standard library. The repository also ships `package.json` and `package-lock.json` for Acorn-based source analysis. Prefer reusing or extending what exists; the smallest change that stays correct, contained, and durable wins. Net-new code is a cost to justify. Deleting code counts as progress.
+
+8. **Honest; the operator decides.** Surface what failed and why — never mask a stall as success or an escalation as a stall. A headless turn self-repairs within a bounded exit-code menu (`exit 3` stall, `exit 4` escalated-by-design, `exit 6` containment revert), then stops; it never loops forever or silently swallows an error. Destructive actions require explicit authorization.
+
+9. **Docs support resumable work (PDDA).** ROUTER points to the governing contracts; the RELEASES DB owns this repository's roadmap ledger (queried via `python3 utils/py/releases_app.py roadmap list`). Linked PROJECT documents hold plans, decisions and handoff detail; CHANGELOG records dated outcomes. Resume execution using those documents together with the relevant runtime state and evidence. If current documentation contradicts the implementation, correct it or explicitly record the unresolved discrepancy.
+
+10. **Done means verified.** "Done" is `validate.sh` green, the relevant PDDA checks passing, and any relay review returning `Approved` — not work that looks finished. An unverified success claim is itself a low-quality signal.
+
+11. **Issue-first; every non-trivial change has a signal stream.** Any change beyond a 2–3 line fix opens a GitHub issue first, then gets a `GH-<number>` in-repo pointer doc, then lands. The issue is the machine-queryable signal stream; the `PROJECT/**` doc is the execution surface of record. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt.
+
+12. **Independent Verification (Separated Grading)** — The agent that produces a turn must not be the sole grader of its own quality. Verification must be performed by an independent deterministic check or a separate reviewing agent before the lock releases. Applies to: the relay's structural block validator (`bin/validate-relay-block` — Phase 1 of GH-21), consult-verify diversity (Phase 3), and any other post-generation quality gate.
+
+13. **A green gate without a witnessed red control is not evidence.** Every new or materially changed decision gate needs a recorded demonstration that it fails for the right reason: a pre-fix replay, deliberate mutation, or controlled bad input. Witness it on an existing suite, or record it as a manual check under `TESTS-RESULTS/`. Never add a new test suite to do it (GH-831: no new tests). Do not mistake a check that validates the artifact it just generated (#351) or a parity check that compares a lane to itself (#348) for evidence; both shapes are structurally unable to falsify their claim.
+
+## Applying this
+
+Adding a feature or weighing a tradeoff, ask: *does this keep agents coordinated without collision, contained within their scope, and verifiable to an outside observer? And is "done" provable by running `validate.sh`?* If any answer is no, reconsider.
+
+---
+
+## Conventions
+
+### Strict-mode policy (bash `set -e`)
+
+Python is the default implementation for the twelve frozen Tier-A entry points. Existing Bash
+bodies are compatibility fallbacks selected with `XYZ_PYTHON=0`; their strict-mode choices remain
+subsystem-specific. Consult each existing script’s header and error handling before changing it.
+New executables under `utils/` or `relay-automation/` follow AGENTS.md’s Python and exception rules.
+This section does not authorize edits to frozen Bash twins.
+
+### Tool install paths — never inside another app's folder (GH-347)
+
+**This harness's tool binaries never live inside another application's private directory.** Not the
+worker CLIs (`codex`, `agy`, `pi`, `aider`), not `tick`, not anything the harness shells out to.
+
+The failure mode is specific and quiet: a foreign app owns its own directory, so its next update or
+reinstall deletes our dependency with it — on that app's schedule, with no signal we control. Worse, the
+readiness check cannot tell the two apart. `find-harness.sh --check` tests only whether a worker is *on
+PATH*, so "the neighbouring app just wiped our tool" and "never installed" produce the byte-identical
+line. That is the same disease as GH-315/GH-319: a broken observation layer where failure is invisible
+and every available signal agrees.
+
+**The `npm install -g` trap — this is how GH-347 actually happened.** npm derives its global prefix from
+whichever `npm` is on PATH, so a bare `npm install -g <pkg>` inherits a foreign app's runtime silently
+and exits 0. On the machine that filed GH-347, another agent app had symlinked its bundled Node onto PATH
+(`~/.local/bin/npm -> ~/.hermes/node/bin/npm`) with no `~/.npmrc` involved at all, so `pi` installed into
+that app's folder and — because only `node`/`npm` were symlinked out, not `pi` — was invisible to every
+shell while being perfectly functional. **Run `npm config get prefix` before any global install and
+confirm it is a path this repo's tooling owns.** Never assume.
+
+The positive pattern is already on disk in the two lanes that have never had this problem: a tool's own
+app directory with a symlink onto PATH (`~/.local/bin/codex -> ~/.codex/packages/…/bin/codex`), or a real
+binary in a shared user-local `bin`. Either is fine. Someone else's runtime is not.
+
+**Scope note:** where a *working* binary lives stays the operator's call. This is a convention and a
+warning, deliberately **not** a gate — a false positive that blocks a relay is worse than the papercut it
+prevents.
+
+### Marathon builder default & plan location (GH-212)
+
+Two vendored-harness defaults, made explicit so an agent given only the vendored bundle picks the
+right behavior without pattern-matching a downstream repo's prior drift:
+
+- **Builder default is `codex`.** Marathon’s current implementation defaults to Codex; agy is
+  another supported builder. Choosing Claude remains an explicit, cost-acknowledged operator
+  decision under AGENTS.md. Actual billing depends on the selected tool’s authentication and
+  account configuration; a default executable name does not establish a billing guarantee. The
+  Python implementation is the default, with the existing Bash fallback available through
+  `XYZ_PYTHON=0`.
+- **A marathon's plan lives under `PROJECT/2-WORKING/`.** The `MARATHON.yaml` + its phase briefs
+  belong under `PROJECT/2-WORKING/<capture-doc>/` — never a standalone top-level folder (e.g.
+  `marathon-plans/<slug>/`). `marathon.sh --plan` enforces this: it refuses (exit 2) a plan that
+  resolves outside `PROJECT/2-WORKING/`, exempting only paths under the harness's own home
+  (`MARATHON_HOME` — shipped reference examples like `MARATHON.example.yaml`) or an explicit
+  `MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1` override for a genuinely non-default location.
+
+---
+
+## Appendix: AI Doc Review Heuristics
+
+When reviewing any repo doc (roadmap entries, plans, architecture notes, audits, task writeups), apply these. Priority: containment > coordination correctness > signal quality > implementation speed and operator friction.
+This ordering guides doc-review tie-breakers; it does not exempt a control from
+[the North Star](#the-north-star)’s proportionality assessment. Preserve containment while
+considering simpler controls that adequately address the concrete failure.
+
+**Heuristics**
+
+1. **Containment preserved?** Any headless path that could self-commit, touch off-allowlist files, or orphan a peer commit without an explicit containment argument → reject or escalate.
+2. **Skill-first respected?** Any plan that bypasses `relay-xyz` or improvises the harness from scratch without the skill layer → reject. Add to the skill instead.
+3. **Coordination through the event log?** Tick coordination state uses `tick` verbs; other subsystems use their documented canonical writers. Competing state copies need explicit justification.
+4. **Done verifiable?** Names runnable gates (`validate.sh`, specific tests, `utils/pdda/pdda.sh run`). None = low-quality signal.
+5. **Drift reduced, not created?** No duplicated docs, no execution detail in the roadmap ledger or its generated dashboard, no reinventing a path the event-log contract already documents.
+6. **Next action singular?** One explicit next step, not buried in prose; status cells non-empty.
+7. **Operator control explicit?** No silent retry, no auto-repair outside the bounded exit-code menu, no masked failure; destructive ops surface before executing.
+8. **Four pillars pass?** Each turn/output is Attested, Relevant, Fresh, Structured. Fail one → not done.
+
+**Tie-breakers**
+
+- **Containment vs speed:** choose containment; flag friction as a design question, not a shortcut.
+- **New relay path vs reuse:** extend the existing skill and harness over forking a parallel path; if the harness can't accommodate it, surface the gap.
+- **Ambitious vs resumable:** a shorter plan an agent can resume cold beats a comprehensive one that buries state in prose.
+
+**Reject or escalate when**
+
+- A headless path has no allowlist, no worktree isolation, and no commit-bypass guard — and the doc doesn't justify why.
+- "Done" has no runnable verification step.
+- Adding a new relay lane requires editing the event-log kernel or the `tick` verb schema without a decision record under `decisions/`.
+- Hardcoded absolute paths, silent destructive operations, or opaque epoch-fence assumptions.
+- The roadmap ledger would need execution detail to make the plan legible.
+---
+title: Close proven Jog preparation automation gaps
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/1443
+status: queued
+created: 2026-11-12
+updated: 2026-11-12
+owner: Codex
+goal: Make target-aware Jog dry-run expose real admission failures before spending a builder turn
+risk: 2
+phases: 1
+---
+
+# GH1443 — Jog readiness automation
+
+## Status
+| What was just completed | What's next |
+|---|---|
+| Prior-art scan found no existing fix for the selected gaps | Three bounded spikes, then independent plan review before runtime changes |
+
+## Scope
+Follow-up to source-instruction PR1442; it remains unmerged. Current development already owns the runtime checks being reused, so no unmerged code dependency or implicit merge/install. User authorizes up to three technical spikes and start-task execution with workhorse. No factory dispatch or product changes.
+
+## Initial recon
+`jog_run_main` target-aware dry-run validates execution target, prints `_dry_run_preflight` strings, but returns0 regardless of their errors. It skips real executor validation and checkpoint initialization entirely. `validate_marathon_executor` already owns role/binary checks and makes no capacity request. `JogCheckpoint` owns clone/origin and publication checks; its begin/finish mutate state, so must not be called by dry-run. Promotion `contract_probes_from_doc`/`lint_probe` already own syntax acceptance but are absent from dry-run. Environment gates are arbitrary target commands; automatic execution/install in readiness would duplicate qualification and may touch services.
+
+## Three spikes
+1. Readiness parity: controlled current entry-point cases for failed per-item preflight, invalid publication root and unsupported promotion command; witness current0 and identify shared read-only owners.
+2. Environment: inspect real LTVera1014 incompatible dependency pins and explicit interpreter controls; determine what can safely be known without running arbitrary gates. Do not invent a package solver or wrapper.
+3. Roles: compare missing/same/unsupported reviewer dry-run with existing real route validator, capture no-write checks; capacity/auth remain distinct from binary/route validation.
+
+## Proposed minimal implementation (subject to spikes/review)
+1. Keep bare queue preview compatibility. In explicit target-aware dry-run reuse real executor validation before reporting readiness; emit that live provider capacity and gate environment remain unverified, without calling models.
+2. Return a numeric per-item outcome from existing preflight helper and aggregate nonzero into a nonzero dry-run exit; preserve useful output for each item. Reuse promotion probe extraction/lint for inbox docs before preflight. No repeated probe execution.
+3. When checkpoint root is explicitly supplied, reuse/refactor existing read-only publication checks and validate existing option/root constraints before preview. Never call checkpoint begin/finish, fetch/push for publication, write journal, pin globals, acquire lock/lease or reset counters. Leave current live recovery semantics intact.
+4. Update existing Jog skill CLI explanation only. Manual controls plus existing gh280 adapter/jog suites in separate disposable clone; final existing classifier chooses qualification. No new suite/registry/gate runner.
+
+## Bet and rollback
+Easy local-branch reversal: existing runtime function changes only, no persistent schema/state migration. Blast radius is target-aware dry-run readiness/exit semantics; bare list/preview and actual dispatch must retain behavior. A green dry-run will still not certify credit capacity, incompatible dependencies, deadline monitoring or five useful deliveries. Rollback is revert this PR; no data conversion. The simpler docs-only option already exists in1442 but leaves known machine-detectable failures reporting0. A new prepare command/setup engine would duplicate owners and is rejected.
+
+## Acceptance
+- [ ] At most3 spikes with concrete red controls and explicit implement/defer decisions.
+- [ ] Invalid target-aware role/checkpoint/probe/preflight is nonzero, while valid nonempty preparation passes.
+- [ ] No queue/DB/journal/lock/lease changes or provider calls in checks; bare preview stays compatible.
+- [ ] Main/adjacent actual-entry smoke, existing focused coverage, independent plan/final QA, classified final qualification.
+
+## Ratings
+2026-11-12 provisional65/55/50/65. Consequence: false-ready preparation wastes admission/build opportunities; no newly established loss/corruption. Same-class examples include LTVera1014 and earlier1386 promotion-shape/provider stops; no complete14-vs14-day incidence count, trend unknown. Appeal neutral; estimated focused implementation. Preserve historical run caps.
+# Three bounded preparation spikes
+
+## 1. Readiness parity — implement
+Controlled jog_run_main with nonempty queue returns0 for failed preflight and invalid checkpoint options. baseline.json records unchanged fixture DB/no .tick state; readiness-controls.py is a manual replay, not a suite. Existing lint_probe separately rejects python3 -c as path -c, but dry-run never calls promotion lint. Share read-only owners; aggregate nonzero (including already-landed4: not ready for new work), retaining all item output.
+Falsifier: failed readiness becomes nonzero; bare preview stays0. Checkpoint scope is static options/clone/origin/clean publication/development branch, not remote freshness or recovery.
+
+## 2. Gate environment — defer installation/execution
+LTVera-Pandas cde22b467 pyproject.toml requires Python>=3.11,<3.12 and pydantic2.13.4; buffer-server/requirements.txt pins pydantic2.10.4. One environment cannot satisfy both. Existing separate interpreter gates are legitimate; Jog/Marathon preserve caller variables. Arbitrary gate commands are not dependency manifests.
+Decision: report environment/services unverified, do not execute gates twice or install/guess dependencies. User verifies chosen interpreter/services per1442/1014. Future falsifier: distinguish actual interpreter/import errors from product failure.
+
+## 3. Reviewer route — implement static checks, defer capacity
+Controlled entry point accepts missing reviewer and same codex/codex. Existing validate_marathon_executor rejects these and probes configured routes/binaries without provider requests, restoring imported state. Reuse only target-aware real Marathon readiness; retain bare preview/simulation. Executable presence cannot prove live credits/capacity. Report that unknown without silent paid probes or fallback.
+Falsifier: invalid roles refuse before mutations/provider calls; valid roles reach per-item evaluation.
+
+## Limits
+Baseline stubs target/preflight seams: it proves orchestration behavior, not live preflight/provider success. Final evidence includes actual CLI and helper controls. No production change/gate/provider run during these three spikes. No new setup subsystem or schema.
+
+exec
+/bin/zsh -lc "rg -n 'def |dry_run|checkpoint|preflight|lint_probe|contract_probes|return 4|simulate' utils/py/jog_run.py" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-65642-n6y18hon
+ succeeded in 0ms:
+9:5. Executes swarm-preflight (ready -> drive, already-landed -> drop, not-ready -> park).
+11:7. Parks real execution at the primary publication / merge-cleanup landing checkpoint.
+16:`--simulate` during a documented compatibility window; every such run prints a deprecation
+66:MARATHON_INVOCATION_SCHEMA = "swarm-preflight/marathon-invocation@1"
+74:def _load_contract_json(path, expected_schema, what):
+92:def load_marathon_invocation(path):
+93:    """Load and validate a swarm-preflight/marathon-invocation@1 artifact.
+134:def load_marathon_result(path):
+146:def _validate_marathon_result(obj):
+180:# functional behind `--executor relay` (and `--simulate`) for a documented compatibility
+187:# `--executor relay`, or `--simulate` which stays on the relay machinery). Names the window
+198:    "use the primary publication checkpoint and merge-cleanup for delivery 1"
+202:def validate_marathon_executor(args):
+237:def _jog_state_paths(root, gid):
+242:def _ledger_abs_path(root, gid, path):
+254:def _ledger_rel_path(root, gid, path):
+269:def jog_commit_execution_contract(target, gh_num):
+285:def jog_resolve_ledger_gid(root, gh_num):
+317:def jog_load_state(root, gid):
+332:def jog_save_state(root, gid, state):
+343:def jog_current_gid(root, gh_num):
+355:def jog_verify_pr_before_merge(root, receipt, pr_number):
+386:def jog_project_marathon_outcome(root, gh_num, receipt, auto_merge=False,
+440:def jog_reconcile_cold_start(root, gh_nums):
+490:def _marathon_argv_from_invocation(invocation, builder, reviewer):
+519:def _marathon_env_from_invocation(invocation):
+530:def _execution_root(root, target):
+535:def _validate_execution_target(root, target):
+553:def _resolve_preflight_py(target):
+554:    """swarm_preflight.py for an execution clone: its own copy, then its vendored .xyz/, then the
+556:    preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
+557:    if not os.path.isfile(preflight_py):
+558:        preflight_py = os.path.join(target, ".xyz", "utils", "py", "swarm_preflight.py")
+559:    if not os.path.isfile(preflight_py):
+560:        preflight_py = os.path.join(harness_home(), "utils", "py", "swarm_preflight.py")
+561:    return preflight_py
+564:def _preflight_summary(proc):
+565:    """One non-empty line naming a completed swarm_preflight run's verdict and readiness cause
+579:            summary += f"; preflight exited {proc.returncode}: {lines[-1]}"
+582:                        if ln.startswith(("BLOCKED", "CONTRACT ERROR", "swarm-preflight:"))), None)
+584:        # The CONTRACT ERROR headline says "see message above"; the cause is preflight's stderr line.
+591:def _ledger_bytes(root):
+596:def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, mode="run",
+604:    # GH-1093/GH-1098 A1: prefer the preflight that ships IN this repo so a disposable clone is
+609:    preflight_py = _resolve_preflight_py(target)
+610:    if not os.path.isfile(preflight_py):
+611:        return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
+613:    if os.path.realpath(os.path.dirname(os.path.dirname(os.path.dirname(preflight_py)))) != os.path.realpath(target):
+614:        print(f"jog: preflight script resolved outside this root ({preflight_py}); "
+620:    packet_dir = os.path.join(exec_dir, "preflight")
+634:    # GH-1426: no Marathon execution has happened yet; say that preflight is starting.
+635:    print(f"jog: running preflight for GH-{gh_num} (execution {exec_id}, packet: {packet_dir})")
+638:        [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
+642:        record["status"] = "completed-preflight-stale"
+644:        return "completed", "preflight: already-landed"
+646:        record["status"] = "preflight-refused"
+650:        summary = _preflight_summary(pf)
+651:        print(f"jog: GH-{gh_num} preflight refused: {summary}")
+652:        return "parked", f"preflight-refused (exit {pf.returncode}): {summary}"
+660:            raise ContractError("preflight invocation did not pin both roots to the execution clone")
+733:def _jog_latest_receipt(root, gid, outcomes=None):
+758:def _jog_exec_dir(root, gid, record):
+764:def jog_resume(root, gh_num, args=None):
+831:def jog_retry_gate(root, gh_num, args):
+854:def _is_relay_receipt_tail(target_root, prior_head, curr_head, invocation, receipt):
+944:def _jog_retry_gate_locked(root, gh_num, args):
+1050:def jog_retry_build(root, gh_num, args):
+1071:def _jog_retry_build_locked(root, gh_num, args):
+1098:def _gh_pr_view(root, pr_number):
+1116:def _git(root, *args, env=None, input=None):
+1124:def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, push=True):
+1189:def _committed_jog_receipt(root, gh_num, pr_number=None):
+1238:def _stripped_tree(root, revision):
+1247:def _landing_tail_proof(root, approved, head, integration, bundle):
+1285:def _markdown_shipped(root, gh_num, pr_number):
+1300:def _close_delivered_issue(root, gh_num, pr_number, head, receipt):
+1347:def jog_land(root, gh_num, pr_arg=None):
+1351:    post-merge commit, or the documented manual checkpoint until delivery 2 lands.
+1503:    def __init__(self, root):
+1508:    def acquire(self):
+1558:    def release(self):
+1568:def lint_probe(root, probe_cmd):
+1590:def find_issue_doc(root, gh_num):
+1596:def extract_probes_from_doc(doc_path):
+1624:def contract_probes_from_doc(root, doc_path):
+1628:    preflight's verdict, made next in its ref-pinned worktree. Running the probes here would judge
+1637:    if not re.search(r'^#{1,6}\s+.*preflight\s+contract', text, re.IGNORECASE | re.MULTILINE):
+1640:        from swarm_preflight import extract_contract
+1642:        return [], f"could not load the preflight contract parser ({e})"
+1661:            ok, why = lint_probe(root, cmd)
+1677:def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
+1722:        ok, reason = lint_probe(root, p)
+1728:        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+1740:        resp = input(f"Proceed with preflight for GH-{gh_num}? [Y/n] ").strip().lower()
+1810:def run_single_phase_drive(root, gh_num, builder="agy", reviewer=None, simulate=False):
+1816:    if simulate:
+1817:        print(f"jog: [simulate] simulated single-phase drive on GH-{gh_num} with builder={builder}")
+1934:def _verify_legacy_pr_before_merge(root, pr_num):
+1951:def _tick_bin(root):
+1959:def _token_done(root, task):
+1977:def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
+2015:def _legacy_attestation(root, gh_num, reviewer):
+2028:def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None, simulate=False):
+2034:    if simulate:
+2036:        print(f"jog: [simulate] simulated landing for GH-{gh_num} (no PR, no merge)")
+2115:    def __init__(self, root, publication_root):
+2118:        self.journal = Path(root, ".tick", "jog", "checkpoint.json")
+2122:            raise ContractError("checkpoint root must be a separate full clone with the same origin")
+2125:    def save(self):
+2131:    def dirty(self, root):
+2135:    def check_owned(self):
+2138:            raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
+2140:    def begin(self):
+2152:            raise ContractError("checkpoint refuses pre-existing ledger changes without an active journal")
+2157:            raise ContractError("checkpoint requires primary HEAD at published origin/development")
+2162:    def finish(self):
+2171:                raise ContractError("checkpoint primary HEAD changed outside this wake")
+2174:                raise ContractError("checkpoint has new changes after its recorded commit")
+2182:            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
+2184:            raise ContractError("checkpoint publication clone must be on development")
+2188:            raise ContractError("publication clone contains commits beyond this checkpoint")
+2199:        print("jog: published primary checkpoint " + self.state["commit"])
+2201:    def message(self):
+2202:        return "jog: publish wake checkpoint " + self.state["base"]
+2205:def _dry_run_preflight(target, gh_num):
+2206:    """GH-1426: preflight's own --dry-run for one queued item against the execution clone, as the
+2208:    no Jog state; preflight's target-side effects (fetch, transient ref worktree, contract command
+2209:    probes) are the same as an operator's manual `swarm-preflight.sh --dry-run`."""
+2210:    preflight_py = _resolve_preflight_py(target)
+2211:    if not os.path.isfile(preflight_py):
+2212:        return f"not evaluated — swarm_preflight not found at {preflight_py}"
+2213:    argv = [sys.executable, preflight_py, "--gh-issue", str(gh_num)]
+2217:        # A live run promotes a 1-INBOX doc before preflight; dry-run must not. Evaluate the doc in
+2218:        # place only when preflight's own frontmatter reader yields the same issue (plan QA r2).
+2219:        from swarm_preflight import doc_frontmatter_issue
+2223:        argv = [sys.executable, preflight_py, "--project-doc", doc_path]
+2225:    out_dir = os.path.join(tempfile.gettempdir(), f"jog-dry-run-preflight-gh{gh_num}-{os.getpid()}")
+2229:    return _preflight_summary(proc) + label
+2232:def jog_run_main(args=None):
+2249:        parser.add_argument("--checkpoint-root", help="dedicated disposable publication clone; bounded serial run")
+2251:        parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
+2252:        parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
+2258:    simulate = getattr(args, "simulate", False)
+2259:    dry_run = getattr(args, "dry_run", False)
+2261:    # Delivery 1 needs an explicit primary publication checkpoint before landing,
+2263:    if not simulate and not dry_run and getattr(args, "auto_merge", False):
+2268:    # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
+2271:    if executor == "marathon" and not simulate and not dry_run:
+2278:    # `--executor relay` (THE documented rollback path) or `--simulate` (which stays on the
+2280:    if not dry_run and (executor == "relay" or simulate):
+2291:    if getattr(args, "dry_run", False):
+2294:        # dry-run is documented not to need one) and run preflight's own --dry-run per item.
+2322:                    print(f"     preflight: {_dry_run_preflight(dry_target, r['gh_number'])}")
+2333:    checkpoint_root = getattr(args, "checkpoint_root", None)
+2334:    if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
+2335:        print("jog: --checkpoint-root requires positive --max-tasks and the real Marathon executor", file=sys.stderr)
+2337:    if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
+2343:    def _cleanup():
+2348:    def _signal_handler(signum, frame):
+2355:    checkpoint = None
+2357:        if checkpoint_root:
+2358:            checkpoint = JogCheckpoint(root, checkpoint_root)
+2359:            if not checkpoint.begin():
+2360:                checkpoint = None
+2366:            if executor == "marathon" and not simulate:
+2396:            if checkpoint:
+2404:                        raise ContractError("checkpoint execution clone is dirty; preserve it before dispatch")
+2415:            if checkpoint:
+2431:                    if checkpoint:
+2440:            # via --executor relay or --simulate during the compatibility window.
+2441:            if executor == "marathon" and not simulate:
+2451:                    if not checkpoint:
+2454:                if checkpoint and action == "parked":
+2474:                    # GH-1426: a park is not always a landing boundary (preflight refusal, invalid
+2480:            preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
+2481:            if os.path.isfile(preflight_py) and not getattr(args, "simulate", False):
+2483:                    # swarm_preflight.py has no --root flag (it resolves the repo from cwd,
+2486:                    [sys.executable, preflight_py, "--gh-issue", str(gh_num)],
+2493:                    print(f"jog: GH-{gh_num} preflight reported already-landed (auto-dropping).")
+2494:                    jog_set_status(root, gh_num, "completed", failure_reason="preflight: already-landed")
+2498:                    summary = _preflight_summary(pf_res)  # GH-1426
+2499:                    print(f"jog: GH-{gh_num} preflight failed (exit {pf_res.returncode}): {summary}; parking item.")
+2501:                                   failure_reason=f"preflight-refused (exit {pf_res.returncode}): {summary}")
+2511:                simulate=getattr(args, "simulate", False),
+2524:            # Real legacy execution needs the same primary publication checkpoint as
+2526:            if not getattr(args, "simulate", False):
+2531:                    simulate=True)
+2540:        if checkpoint:
+2541:            checkpoint.finish()
+
+exec
+/bin/zsh -lc "nl -ba utils/py/jog_run.py | sed -n '198,238p;530,554p;1568,1676p;2110,2343p'" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-65642-n6y18hon
+ succeeded in 0ms:
+   198	    "use the primary publication checkpoint and merge-cleanup for delivery 1"
+   199	)
+   200	
+   201	
+   202	def validate_marathon_executor(args):
+   203	    """Fail-closed executor validation. Returns an error string or None; called before any
+   204	    lease mutation, lock acquisition, or dispatch (GH-280 reviewer policy: explicit only)."""
+   205	    if getattr(args, "auto_merge", False):
+   206	        return JOG_AUTO_MERGE_CHECKPOINT
+   207	    reviewer = getattr(args, "reviewer", None)
+   208	    if not reviewer:
+   209	        return ("--reviewer <agent> is required with --executor marathon (the default "
+   210	                "executor since the Phase 5 flip) — Jog does not select a reviewer by "
+   211	                "default (GH-280: no silent cost-bearing or same-agent route)")
+   212	    if reviewer == args.builder:
+   213	        return f"--reviewer must differ from --builder (both are '{reviewer}')"
+   214	    import contextlib
+   215	    import io
+   216	    import marathon_drive
+   217	
+   218	    # Reuse execution's route/probe owners before any lease mutation. Keep the
+   219	    # imported driver's result state untouched by this admission-only call.
+   220	    diagnostic = io.StringIO()
+   221	    saved_result = marathon_drive._RESULT.copy()
+   222	    try:
+   223	        with contextlib.redirect_stderr(diagnostic):
+   224	            for role, actor in (("builder", args.builder), ("reviewer", reviewer)):
+   225	                marathon_drive.route_agent(actor, {})
+   226	                marathon_drive._probe_agent_bin(actor, role)
+   227	    except ValueError as exc:
+   228	        return str(exc)
+   229	    except SystemExit:
+   230	        return diagnostic.getvalue().strip() or "marathon agent admission failed"
+   231	    finally:
+   232	        marathon_drive._RESULT.clear()
+   233	        marathon_drive._RESULT.update(saved_result)
+   234	    return None
+   235	
+   236	
+   237	def _jog_state_paths(root, gid):
+   238	    base = os.path.join(root, ".tick", "jog", gid)
+   530	def _execution_root(root, target):
+   531	    _require_jog_primary(root)
+   532	    return _validate_execution_target(root, target)
+   533	
+   534	
+   535	def _validate_execution_target(root, target):
+   536	    """The read-only target checks of _execution_root, minus the primary pin (GH-1426: dry-run
+   537	    validates the same target without the pin that read-only dry-run is documented not to need)."""
+   538	    if not target:
+   539	        raise ContractError("--target-root <disposable-full-clone> is required for Jog dispatch")
+   540	    target = os.path.realpath(os.path.expanduser(target))
+   541	    if target == os.path.realpath(root) or not os.path.isdir(os.path.join(target, ".git")):
+   542	        raise ContractError("execution target must be a separate full clone, not the primary or a worktree")
+   543	    if primary_config_key(root) != primary_config_key(target):
+   544	        raise ContractError("execution target origin differs from the primary")
+   545	    dirty_ledger = _git(target, "diff", "--name-only", "HEAD", "--", "releases.db", "releases.sql")
+   546	    lane_ledger = _git(target, "diff", "--name-only", "origin/development...HEAD", "--",
+   547	                       "releases.db", "releases.sql")
+   548	    if dirty_ledger.strip() or lane_ledger.strip():
+   549	        raise ContractError("execution clone already has ledger changes; preserve and reconcile before dispatch")
+   550	    return target
+   551	
+   552	
+   553	def _resolve_preflight_py(target):
+   554	    """swarm_preflight.py for an execution clone: its own copy, then its vendored .xyz/, then the
+  1568	def lint_probe(root, probe_cmd):
+  1569	    """Lint a probe command to ensure it is non-trivial and resolves to a real target."""
+  1570	    cmd = probe_cmd.strip()
+  1571	    if not cmd:
+  1572	        return False, "empty probe command"
+  1573	    for pat in TRIVIAL_PROBE_PATTERNS:
+  1574	        if pat.match(cmd):
+  1575	            return False, f"trivial probe pattern rejected: {cmd!r}"
+  1576	
+  1577	    # Verify referenced file/glob resolves if command specifies a test path
+  1578	    tokens = cmd.split()
+  1579	    if len(tokens) >= 2 and tokens[0] in ("bash", "sh", "python3", "pytest"):
+  1580	        target_path = tokens[1]
+  1581	        # Resolve target relative to root
+  1582	        full_pattern = os.path.join(root, target_path)
+  1583	        matches = glob.glob(full_pattern)
+  1584	        if not matches and not os.path.exists(full_pattern):
+  1585	            return False, f"probe target path does not resolve: {target_path}"
+  1586	
+  1587	    return True, "ok"
+  1588	
+  1589	
+  1590	def find_issue_doc(root, gh_num):
+  1591	    """Use reconciliation's canonical issue identity resolver."""
+  1592	    from wave_reconcile import find_issue_doc as resolve_issue_doc
+  1593	    return resolve_issue_doc(root, gh_num)
+  1594	
+  1595	
+  1596	def extract_probes_from_doc(doc_path):
+  1597	    """Extract fix_probes from doc frontmatter or body."""
+  1598	    if not os.path.isfile(doc_path):
+  1599	        return []
+  1600	    try:
+  1601	        with open(doc_path, "r", encoding="utf-8") as f:
+  1602	            content = f.read()
+  1603	    except Exception:
+  1604	        return []
+  1605	
+  1606	    probes = []
+  1607	    fm_match = re.search(r"^---\n(.*?)\n---", content, re.DOTALL)
+  1608	    if fm_match:
+  1609	        fm_text = fm_match.group(1)
+  1610	        probes_match = re.search(r"fix_probes:\s*\n((?:\s+-\s+.*\n?)+)", fm_text)
+  1611	        if probes_match:
+  1612	            for line in probes_match.group(1).splitlines():
+  1613	                line = line.strip()
+  1614	                if line.startswith("- "):
+  1615	                    p = line[2:].strip().strip("\"'")
+  1616	                    if p:
+  1617	                        probes.append(p)
+  1618	    return probes
+  1619	
+  1620	
+  1621	_CONTRACT_PROBE_TYPES = ("path_absent", "path_present", "grep_present", "grep_absent", "command")
+  1622	
+  1623	
+  1624	def contract_probes_from_doc(root, doc_path):
+  1625	    """GH-1232: the Preflight Contract's JSON fix_probes, checked for shape only.
+  1626	
+  1627	    Returns (labels, reason). Nothing is evaluated: whether a probe still reads "unfixed" is
+  1628	    preflight's verdict, made next in its ref-pinned worktree. Running the probes here would judge
+  1629	    the mutable checkout instead and execute shell `command` probes twice (plan QA round 1).
+  1630	    """
+  1631	    try:
+  1632	        with open(doc_path, "r", encoding="utf-8") as f:
+  1633	            text = f.read()
+  1634	    except OSError:
+  1635	        return [], None
+  1636	    # extract_contract sys.exit(3)s on a doc without the heading; check first (marathon_drive idiom).
+  1637	    if not re.search(r'^#{1,6}\s+.*preflight\s+contract', text, re.IGNORECASE | re.MULTILINE):
+  1638	        return [], None
+  1639	    try:
+  1640	        from swarm_preflight import extract_contract
+  1641	    except Exception as e:
+  1642	        return [], f"could not load the preflight contract parser ({e})"
+  1643	    try:
+  1644	        contract = extract_contract(doc_path)
+  1645	    except (SystemExit, Exception):
+  1646	        # SystemExit(3) on a contract error; a non-object JSON value raises inside its validation.
+  1647	        contract = None
+  1648	    if not isinstance(contract, dict):
+  1649	        return [], "contract did not parse"
+  1650	    labels = []
+  1651	    for n, p in enumerate(contract.get("fix_probes") or [], 1):
+  1652	        if not isinstance(p, dict):
+  1653	            return [], f"contract probe {n} malformed: not an object"
+  1654	        ptype = p.get("type")
+  1655	        if ptype not in _CONTRACT_PROBE_TYPES:
+  1656	            return [], f"contract probe {n} malformed: unknown type {ptype!r}"
+  1657	        if ptype == "command":
+  1658	            cmd = p.get("cmd")
+  1659	            if not isinstance(cmd, str) or not cmd.strip():
+  1660	                return [], f"contract probe {n} malformed: command needs a non-empty cmd"
+  1661	            ok, why = lint_probe(root, cmd)
+  1662	            if not ok:
+  1663	                return [], f"contract probe {n}: {why}"
+  1664	            labels.append(f"command:{cmd}")
+  1665	            continue
+  1666	        path = p.get("path")
+  1667	        if not isinstance(path, str) or not path.strip():
+  1668	            return [], f"contract probe {n} malformed: {ptype} needs a non-empty path"
+  1669	        if ptype.startswith("grep_"):
+  1670	            pattern = p.get("pattern")
+  1671	            if not isinstance(pattern, str) or not pattern:
+  1672	                return [], f"contract probe {n} malformed: {ptype} needs a non-empty pattern"
+  1673	        labels.append(f"{ptype}:{path}")
+  1674	    return labels, None
+  1675	
+  1676	
+  2110	    disposable full clone. A retained journal makes a failed push retry publication
+  2111	    before another queue effect; interrupted execution still uses Jog cold recovery.
+  2112	    """
+  2113	    paths = ("releases.db", "releases.sql")
+  2114	
+  2115	    def __init__(self, root, publication_root):
+  2116	        self.root = root
+  2117	        self.publication = os.path.realpath(publication_root)
+  2118	        self.journal = Path(root, ".tick", "jog", "checkpoint.json")
+  2119	        if (self.publication == os.path.realpath(root)
+  2120	                or not Path(self.publication, ".git").is_dir()
+  2121	                or primary_config_key(root) != primary_config_key(self.publication)):
+  2122	            raise ContractError("checkpoint root must be a separate full clone with the same origin")
+  2123	        self.state = None
+  2124	
+  2125	    def save(self):
+  2126	        self.journal.parent.mkdir(parents=True, exist_ok=True)
+  2127	        temporary = self.journal.with_suffix(".tmp")
+  2128	        temporary.write_text(json.dumps(self.state, indent=2) + "\n")
+  2129	        os.replace(temporary, self.journal)
+  2130	
+  2131	    def dirty(self, root):
+  2132	        # Porcelain -z avoids quoting/whitespace ambiguity. Renames are foreign too.
+  2133	        return _git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all").decode().split("\0")
+  2134	
+  2135	    def check_owned(self):
+  2136	        foreign = [r for r in self.dirty(self.root) if r and r[3:] not in self.paths]
+  2137	        if foreign:
+  2138	            raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
+  2139	
+  2140	    def begin(self):
+  2141	        _require_jog_primary(self.root)
+  2142	        self.check_owned()
+  2143	        if self.journal.exists():
+  2144	            self.state = json.loads(self.journal.read_text())
+  2145	            if self.state.get("phase") != "published":
+  2146	                # Never dispatch a new task to recover an interrupted wake.
+  2147	                reconciled = jog_reconcile_orphan_leases(self.root)
+  2148	                jog_reconcile_cold_start(self.root, reconciled)
+  2149	                self.finish()
+  2150	                return False
+  2151	        if any(self.dirty(self.root)):
+  2152	            raise ContractError("checkpoint refuses pre-existing ledger changes without an active journal")
+  2153	        _git(self.root, "fetch", "origin", "development")
+  2154	        head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+  2155	        remote = _git(self.root, "rev-parse", "origin/development").decode().strip()
+  2156	        if head != remote:
+  2157	            raise ContractError("checkpoint requires primary HEAD at published origin/development")
+  2158	        self.state = {"base": head, "phase": "running"}
+  2159	        self.save()
+  2160	        return True
+  2161	
+  2162	    def finish(self):
+  2163	        self.check_owned()
+  2164	        head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+  2165	        expected = self.state.get("commit", self.state["base"])
+  2166	        if head != expected:
+  2167	            # A crash immediately after commit is recognized by its exact parent/message.
+  2168	            parent = _git(self.root, "rev-parse", "HEAD^").decode().strip()
+  2169	            message = _git(self.root, "log", "-1", "--format=%s").decode().strip()
+  2170	            if parent != self.state["base"] or message != self.message():
+  2171	                raise ContractError("checkpoint primary HEAD changed outside this wake")
+  2172	        if any(self.dirty(self.root)):
+  2173	            if self.state.get("commit"):
+  2174	                raise ContractError("checkpoint has new changes after its recorded commit")
+  2175	            _git(self.root, "add", "--", *self.paths)
+  2176	            _git(self.root, "commit", "-m", self.message(), "--", *self.paths)
+  2177	        self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+  2178	        self.state["phase"] = "committed"
+  2179	        self.save()
+  2180	        pub = self.publication
+  2181	        if any(self.dirty(pub)):
+  2182	            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
+  2183	        if _git(pub, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
+  2184	            raise ContractError("checkpoint publication clone must be on development")
+  2185	        _git(pub, "fetch", self.root, self.state["commit"])
+  2186	        _git(pub, "merge", "--ff-only", self.state["commit"])
+  2187	        if _git(pub, "rev-parse", "HEAD").decode().strip() != self.state["commit"]:
+  2188	            raise ContractError("publication clone contains commits beyond this checkpoint")
+  2189	        # An empty wake or a crash after successful push needs no second push gate.
+  2190	        # Read the live ref, not a potentially stale local tracking ref.
+  2191	        published = _git(pub, "ls-remote", "--exit-code", "origin",
+  2192	                         "refs/heads/development").decode().split()[0]
+  2193	        if published != self.state["commit"]:
+  2194	            # Normal push: never bypass the clone's configured gate or force a ref.
+  2195	            _git(pub, "push", "origin", self.state["commit"] + ":refs/heads/development")
+  2196	        _git(self.root, "fetch", "origin", "development")
+  2197	        self.state["phase"] = "published"
+  2198	        self.save()
+  2199	        print("jog: published primary checkpoint " + self.state["commit"])
+  2200	
+  2201	    def message(self):
+  2202	        return "jog: publish wake checkpoint " + self.state["base"]
+  2203	
+  2204	
+  2205	def _dry_run_preflight(target, gh_num):
+  2206	    """GH-1426: preflight's own --dry-run for one queued item against the execution clone, as the
+  2207	    live call runs it (cwd + SWARM_PREFLIGHT_ROOT pinned, explicit never-created --out). It writes
+  2208	    no Jog state; preflight's target-side effects (fetch, transient ref worktree, contract command
+  2209	    probes) are the same as an operator's manual `swarm-preflight.sh --dry-run`."""
+  2210	    preflight_py = _resolve_preflight_py(target)
+  2211	    if not os.path.isfile(preflight_py):
+  2212	        return f"not evaluated — swarm_preflight not found at {preflight_py}"
+  2213	    argv = [sys.executable, preflight_py, "--gh-issue", str(gh_num)]
+  2214	    label = ""
+  2215	    doc_path = find_issue_doc(target, gh_num)
+  2216	    if doc_path and "/PROJECT/1-INBOX/" in doc_path:
+  2217	        # A live run promotes a 1-INBOX doc before preflight; dry-run must not. Evaluate the doc in
+  2218	        # place only when preflight's own frontmatter reader yields the same issue (plan QA r2).
+  2219	        from swarm_preflight import doc_frontmatter_issue
+  2220	        if str(doc_frontmatter_issue(doc_path) or "") != str(gh_num):
+  2221	            return (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
+  2222	                    f"gh_issue: {gh_num}, so readiness cannot be evaluated before promotion")
+  2223	        argv = [sys.executable, preflight_py, "--project-doc", doc_path]
+  2224	        label = " (1-INBOX doc; live run promotes it first)"
+  2225	    out_dir = os.path.join(tempfile.gettempdir(), f"jog-dry-run-preflight-gh{gh_num}-{os.getpid()}")
+  2226	    proc = subprocess.run(argv + ["--dry-run", "--out", out_dir], cwd=target, capture_output=True,
+  2227	                          text=True, env={**os.environ, "SWARM_PREFLIGHT_ROOT": target,
+  2228	                                          "PYTHONDONTWRITEBYTECODE": "1"})
+  2229	    return _preflight_summary(proc) + label
+  2230	
+  2231	
+  2232	def jog_run_main(args=None):
+  2233	    """Main execution loop for jog supervisor."""
+  2234	    if args is None:
+  2235	        parser = argparse.ArgumentParser(description="Jog serial execution runner")
+  2236	        parser.add_argument("--root", default=None, help="repository root path")
+  2237	        parser.add_argument("--target-root", help="disposable full execution clone")
+  2238	        parser.add_argument("--auto-merge", action="store_true", help="auto-merge passing PRs")
+  2239	        parser.add_argument("--builder", default="agy", help="builder turn-taker (agy, codex, aider)")
+  2240	        parser.add_argument("--reviewer", default=None,
+  2241	                            help="reviewer agent — REQUIRED with --executor marathon (the "
+  2242	                                 "default executor; no default is selected; must differ from "
+  2243	                                 "--builder)")
+  2244	        parser.add_argument("--executor", choices=["relay", "marathon"], default="marathon",
+  2245	                            help="per-task executor (GH-280 Phase 5): 'marathon' is the default — "
+  2246	                                 "the reviewed one-phase driver via the structured contracts, "
+  2247	                                 "requires --reviewer; 'relay' is the legacy rollback path kept "
+  2248	                                 "for a documented compatibility window")
+  2249	        parser.add_argument("--checkpoint-root", help="dedicated disposable publication clone; bounded serial run")
+  2250	        parser.add_argument("--max-tasks", type=int, default=None, help="max tasks to process")
+  2251	        parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
+  2252	        parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
+  2253	        args = parser.parse_args()
+  2254	
+  2255	    # GH-280 Phase 5: marathon is the default executor. A namespace without an `executor`
+  2256	    # attribute (programmatic callers) resolves to the same default as the CLI.
+  2257	    executor = getattr(args, "executor", "marathon") or "marathon"
+  2258	    simulate = getattr(args, "simulate", False)
+  2259	    dry_run = getattr(args, "dry_run", False)
+  2260	
+  2261	    # Delivery 1 needs an explicit primary publication checkpoint before landing,
+  2262	    # regardless of executor. Refuse before any supervisor state mutation.
+  2263	    if not simulate and not dry_run and getattr(args, "auto_merge", False):
+  2264	        print(f"jog: {JOG_AUTO_MERGE_CHECKPOINT}", file=sys.stderr)
+  2265	        sys.exit(2)
+  2266	
+  2267	    # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
+  2268	    # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
+  2269	    # excluded: both stay on the hermetic/relay machinery and dispatch no Marathon execution,
+  2270	    # so the reviewer policy (which governs real dispatches) does not apply to them.
+  2271	    if executor == "marathon" and not simulate and not dry_run:
+  2272	        executor_error = validate_marathon_executor(args)
+  2273	        if executor_error:
+  2274	            print(f"jog: {executor_error}", file=sys.stderr)
+  2275	            sys.exit(2)
+  2276	
+  2277	    # GH-280 Phase 5: anything still on the relay machinery is legacy — explicit
+  2278	    # `--executor relay` (THE documented rollback path) or `--simulate` (which stays on the
+  2279	    # relay machinery by design). --dry-run dispatches nothing, so it stays silent.
+  2280	    if not dry_run and (executor == "relay" or simulate):
+  2281	        print(JOG_RELAY_DEPRECATION_NOTICE, file=sys.stderr)
+  2282	
+  2283	    root = os.path.abspath(getattr(args, "root", None) or os.getcwd())
+  2284	    db_path = os.path.join(root, "releases.db")
+  2285	
+  2286	    if not os.path.exists(db_path):
+  2287	        print(f"jog: releases.db not found at {db_path}", file=sys.stderr)
+  2288	        sys.exit(1)
+  2289	
+  2290	    # Hermetic --dry-run: zero Jog ledger/queue/state writes, zero Jog locks or leases.
+  2291	    if getattr(args, "dry_run", False):
+  2292	        print(f"jog: [dry-run] simulating queue execution (root: {root})")
+  2293	        # GH-1426: with --target-root, also validate the target (no primary pin — read-only
+  2294	        # dry-run is documented not to need one) and run preflight's own --dry-run per item.
+  2295	        dry_target = getattr(args, "target_root", None)
+  2296	        if dry_target:
+  2297	            try:
+  2298	                dry_target = _validate_execution_target(root, dry_target)
+  2299	            except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+  2300	                print(f"jog: [dry-run] live run would refuse --target-root: {exc}", file=sys.stderr)
+  2301	                sys.exit(2)
+  2302	        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+  2303	        conn.row_factory = sqlite3.Row
+  2304	        try:
+  2305	            if not _table_exists(conn, "jog_queue"):
+  2306	                print("jog: [dry-run] queue is empty (not initialized).")
+  2307	                return
+  2308	            rows = conn.execute(
+  2309	                "SELECT gh_number, position, attempt_count FROM jog_queue WHERE status = 'pending' ORDER BY position ASC"
+  2310	            ).fetchall()
+  2311	            if not rows:
+  2312	                print("jog: [dry-run] queue is empty (0 pending items).")
+  2313	                return
+  2314	            max_t = getattr(args, "max_tasks", None)
+  2315	            limit_str = f" (capped at {max_t})" if max_t is not None else ""
+  2316	            print(f"jog: [dry-run] would process {len(rows)} pending item(s){limit_str}:")
+  2317	            for idx, r in enumerate(rows):
+  2318	                if max_t is not None and idx >= max_t:
+  2319	                    break
+  2320	                print(f"  {r['position']}. GH-{r['gh_number']} (builder={args.builder}, auto_merge={args.auto_merge})")
+  2321	                if dry_target:
+  2322	                    print(f"     preflight: {_dry_run_preflight(dry_target, r['gh_number'])}")
+  2323	        finally:
+  2324	            conn.close()
+  2325	        return
+  2326	
+  2327	    _require_jog_primary(root)
+  2328	    try:
+  2329	        target = _execution_root(root, getattr(args, "target_root", None))
+  2330	    except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+  2331	        print(f"jog: {exc}", file=sys.stderr)
+  2332	        sys.exit(2)
+  2333	    checkpoint_root = getattr(args, "checkpoint_root", None)
+  2334	    if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
+  2335	        print("jog: --checkpoint-root requires positive --max-tasks and the real Marathon executor", file=sys.stderr)
+  2336	        sys.exit(2)
+  2337	    if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
+  2338	        print("jog: publication and execution clones must be distinct", file=sys.stderr)
+  2339	        sys.exit(2)
+  2340	    supervisor_lock = JogSupervisorLock(root)
+  2341	    supervisor_lock.acquire()
+  2342	
+  2343	    def _cleanup():
+
+exec
+/bin/zsh -lc "nl -ba PROJECT/1-INBOX/GH-1443-JOG-READINESS.md; nl -ba TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md; rg -n 'def validate|def .*publication|def .*clone|return 4|already-landed' utils/py/swarm_preflight.py utils/py/jog_run.py utils/py/*executor*" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-65642-n6y18hon
+ exited 1 in 0ms:
+     1	---
+     2	title: Close proven Jog preparation automation gaps
+     3	source: https://github.com/HiQS-Labs/XYZ-forge/issues/1443
+     4	status: queued
+     5	created: 2026-11-12
+     6	updated: 2026-11-12
+     7	owner: Codex
+     8	goal: Make target-aware Jog dry-run expose real admission failures before spending a builder turn
+     9	risk: 2
+    10	phases: 1
+    11	---
+    12	
+    13	# GH1443 — Jog readiness automation
+    14	
+    15	## Status
+    16	| What was just completed | What's next |
+    17	|---|---|
+    18	| Prior-art scan found no existing fix for the selected gaps | Three bounded spikes, then independent plan review before runtime changes |
+    19	
+    20	## Scope
+    21	Follow-up to source-instruction PR1442; it remains unmerged. Current development already owns the runtime checks being reused, so no unmerged code dependency or implicit merge/install. User authorizes up to three technical spikes and start-task execution with workhorse. No factory dispatch or product changes.
+    22	
+    23	## Initial recon
+    24	`jog_run_main` target-aware dry-run validates execution target, prints `_dry_run_preflight` strings, but returns0 regardless of their errors. It skips real executor validation and checkpoint initialization entirely. `validate_marathon_executor` already owns role/binary checks and makes no capacity request. `JogCheckpoint` owns clone/origin and publication checks; its begin/finish mutate state, so must not be called by dry-run. Promotion `contract_probes_from_doc`/`lint_probe` already own syntax acceptance but are absent from dry-run. Environment gates are arbitrary target commands; automatic execution/install in readiness would duplicate qualification and may touch services.
+    25	
+    26	## Three spikes
+    27	1. Readiness parity: controlled current entry-point cases for failed per-item preflight, invalid publication root and unsupported promotion command; witness current0 and identify shared read-only owners.
+    28	2. Environment: inspect real LTVera1014 incompatible dependency pins and explicit interpreter controls; determine what can safely be known without running arbitrary gates. Do not invent a package solver or wrapper.
+    29	3. Roles: compare missing/same/unsupported reviewer dry-run with existing real route validator, capture no-write checks; capacity/auth remain distinct from binary/route validation.
+    30	
+    31	## Proposed minimal implementation (subject to spikes/review)
+    32	1. Keep bare queue preview compatibility. In explicit target-aware dry-run reuse real executor validation before reporting readiness; emit that live provider capacity and gate environment remain unverified, without calling models.
+    33	2. Return a numeric per-item outcome from existing preflight helper and aggregate nonzero into a nonzero dry-run exit; preserve useful output for each item. Reuse promotion probe extraction/lint for inbox docs before preflight. No repeated probe execution.
+    34	3. When checkpoint root is explicitly supplied, reuse/refactor existing read-only publication checks and validate existing option/root constraints before preview. Never call checkpoint begin/finish, fetch/push for publication, write journal, pin globals, acquire lock/lease or reset counters. Leave current live recovery semantics intact.
+    35	4. Update existing Jog skill CLI explanation only. Manual controls plus existing gh280 adapter/jog suites in separate disposable clone; final existing classifier chooses qualification. No new suite/registry/gate runner.
+    36	
+    37	## Bet and rollback
+    38	Easy local-branch reversal: existing runtime function changes only, no persistent schema/state migration. Blast radius is target-aware dry-run readiness/exit semantics; bare list/preview and actual dispatch must retain behavior. A green dry-run will still not certify credit capacity, incompatible dependencies, deadline monitoring or five useful deliveries. Rollback is revert this PR; no data conversion. The simpler docs-only option already exists in1442 but leaves known machine-detectable failures reporting0. A new prepare command/setup engine would duplicate owners and is rejected.
+    39	
+    40	## Acceptance
+    41	- [ ] At most3 spikes with concrete red controls and explicit implement/defer decisions.
+    42	- [ ] Invalid target-aware role/checkpoint/probe/preflight is nonzero, while valid nonempty preparation passes.
+    43	- [ ] No queue/DB/journal/lock/lease changes or provider calls in checks; bare preview stays compatible.
+    44	- [ ] Main/adjacent actual-entry smoke, existing focused coverage, independent plan/final QA, classified final qualification.
+    45	
+    46	## Ratings
+    47	2026-11-12 provisional65/55/50/65. Consequence: false-ready preparation wastes admission/build opportunities; no newly established loss/corruption. Same-class examples include LTVera1014 and earlier1386 promotion-shape/provider stops; no complete14-vs14-day incidence count, trend unknown. Appeal neutral; estimated focused implementation. Preserve historical run caps.
+     1	# Three bounded preparation spikes
+     2	
+     3	## 1. Readiness parity — implement
+     4	Controlled jog_run_main with nonempty queue returns0 for failed preflight and invalid checkpoint options. baseline.json records unchanged fixture DB/no .tick state; readiness-controls.py is a manual replay, not a suite. Existing lint_probe separately rejects python3 -c as path -c, but dry-run never calls promotion lint. Share read-only owners; aggregate nonzero (including already-landed4: not ready for new work), retaining all item output.
+     5	Falsifier: failed readiness becomes nonzero; bare preview stays0. Checkpoint scope is static options/clone/origin/clean publication/development branch, not remote freshness or recovery.
+     6	
+     7	## 2. Gate environment — defer installation/execution
+     8	LTVera-Pandas cde22b467 pyproject.toml requires Python>=3.11,<3.12 and pydantic2.13.4; buffer-server/requirements.txt pins pydantic2.10.4. One environment cannot satisfy both. Existing separate interpreter gates are legitimate; Jog/Marathon preserve caller variables. Arbitrary gate commands are not dependency manifests.
+     9	Decision: report environment/services unverified, do not execute gates twice or install/guess dependencies. User verifies chosen interpreter/services per1442/1014. Future falsifier: distinguish actual interpreter/import errors from product failure.
+    10	
+    11	## 3. Reviewer route — implement static checks, defer capacity
+    12	Controlled entry point accepts missing reviewer and same codex/codex. Existing validate_marathon_executor rejects these and probes configured routes/binaries without provider requests, restoring imported state. Reuse only target-aware real Marathon readiness; retain bare preview/simulation. Executable presence cannot prove live credits/capacity. Report that unknown without silent paid probes or fallback.
+    13	Falsifier: invalid roles refuse before mutations/provider calls; valid roles reach per-item evaluation.
+    14	
+    15	## Limits
+    16	Baseline stubs target/preflight seams: it proves orchestration behavior, not live preflight/provider success. Final evidence includes actual CLI and helper controls. No production change/gate/provider run during these three spikes. No new setup subsystem or schema.
+zsh:1: no matches found: utils/py/*executor*
+
+exec
+/bin/zsh -lc "nl -ba utils/py/jog_run.py | sed -n '1677,1745p;2375,2440p;635,650p'; rg -n 'already.landed|exit\\(4\\)|return 4|def _probe_agent_bin' utils/py/swarm_preflight.py utils/py/marathon_drive.py; rg -n 'jog_run_main' utils/py/jog.py utils/jog*" in /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/consult-wt-65642-n6y18hon
+ exited 1 in 0ms:
+   635	    print(f"jog: running preflight for GH-{gh_num} (execution {exec_id}, packet: {packet_dir})")
+   636	
+   637	    pf = subprocess.run(
+   638	        [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
+   639	        cwd=target, capture_output=True, text=True,
+   640	        env={**os.environ, "SWARM_PREFLIGHT_ROOT": target})
+   641	    if pf.returncode == 4:
+   642	        record["status"] = "completed-preflight-stale"
+   643	        jog_save_state(root, gid, state)
+   644	        return "completed", "preflight: already-landed"
+   645	    if pf.returncode != 0:
+   646	        record["status"] = "preflight-refused"
+   647	        jog_save_state(root, gid, state)
+   648	        # GH-1426: the last output line is "No packet written — …"; surface the verdict and the
+   649	        # readiness `next:` cause on the console and in the parked row instead.
+   650	        summary = _preflight_summary(pf)
+  1677	def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
+  1678	    """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
+  1679	    _require_jog_primary(primary or root)
+  1680	    basename = os.path.basename(doc_path)
+  1681	    new_doc_path = os.path.join(root, "PROJECT", "2-WORKING", basename)
+  1682	    rel_new_path = os.path.relpath(new_doc_path, root)
+  1683	
+  1684	    with open(doc_path, "r", encoding="utf-8") as f:
+  1685	        content = f.read()
+  1686	
+  1687	    # Ensure status table exists
+  1688	    status_table = ""
+  1689	    if "## Status" not in content:
+  1690	        status_table = (
+  1691	            "\n## Status\n\n"
+  1692	            "| What was just completed | What's next |\n"
+  1693	            "|---|---|\n"
+  1694	            "| Promoted to active working contract via jog | Execute implementation and verify probes |\n\n"
+  1695	        )
+  1696	    # GH-1098 A2: a 2-WORKING doc must carry title/status/created/updated/owner/goal
+  1697	    # (utils/pdda/pdda.sh REQUIRED_KEYS); 1-INBOX docs often lack the last three, and a
+  1698	    # verbatim copy then fails the PDDA gate after the build (observed 2026-10-16). Fill only
+  1699	    # the absent keys; never overwrite an existing owner/goal.
+  1700	    parts = content.split("---", 2)
+  1701	    if content.startswith("---") and len(parts) >= 3:
+  1702	        fm = re.sub(r"(?m)^status:\s*.*$", "status: Active", parts[1])
+  1703	        today = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d")
+  1704	        fm = re.sub(r"(?m)^updated:\s*.*$", f"updated: {today}", fm)
+  1705	        if not re.search(r"(?m)^updated:", fm):
+  1706	            fm = fm.rstrip("\n") + f"\nupdated: {today}\n"
+  1707	        if not re.search(r"(?m)^owner:", fm):
+  1708	            owner = subprocess.run(["git", "config", "user.name"], cwd=root,
+  1709	                                   capture_output=True, text=True).stdout.strip() or "operator"
+  1710	            fm = fm.rstrip("\n") + f"\nowner: {owner}\n"
+  1711	        if not re.search(r"(?m)^goal:", fm):
+  1712	            title = re.search(r"(?m)^title:\s*(.*)$", fm)
+  1713	            goal = (title.group(1).strip().strip('"') if title else f"GH-{gh_num}").replace('"', "'")
+  1714	            fm = fm.rstrip("\n") + f'\ngoal: "{goal}"\n# jog: goal auto-filled from title; refine\n'
+  1715	        content = f"---{fm}---{status_table}{parts[2].lstrip() if status_table else parts[2]}"
+  1716	    elif status_table:
+  1717	        content = status_table + content
+  1718	
+  1719	    probes = extract_probes_from_doc(doc_path)
+  1720	    valid_probes = []
+  1721	    for p in probes:
+  1722	        ok, reason = lint_probe(root, p)
+  1723	        if ok:
+  1724	            valid_probes.append(p)
+  1725	
+  1726	    contract_reason = None
+  1727	    if not valid_probes:
+  1728	        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+  1729	
+  1730	    if not valid_probes:
+  1731	        if not interactive:
+  1732	            detail = f"; {contract_reason}" if contract_reason else ""
+  1733	            return None, f"unreviewed-probe-contract (no valid probes in unattended mode{detail})"
+  1734	
+  1735	    if interactive and sys.stdin.isatty():
+  1736	        print(f"\n[jog] Auto-promoted contract for GH-{gh_num}:")
+  1737	        print(f"      Source: {doc_path}")
+  1738	        print(f"      Target: {new_doc_path}")
+  1739	        print(f"      Probes: {valid_probes or '(none declared)'}")
+  1740	        resp = input(f"Proceed with preflight for GH-{gh_num}? [Y/n] ").strip().lower()
+  1741	        if resp in ("n", "no"):
+  1742	            return None, "promotion-cancelled-by-operator"
+  1743	
+  1744	    # Move doc to 2-WORKING
+  1745	    os.makedirs(os.path.dirname(new_doc_path), exist_ok=True)
+  2375	                break
+  2376	
+  2377	            # Query next pending task
+  2378	            conn = sqlite3.connect(db_path)
+  2379	            conn.row_factory = sqlite3.Row
+  2380	            try:
+  2381	                _ensure_jog_schema(conn)
+  2382	                row = conn.execute(
+  2383	                    """SELECT id, global_id, gh_number, position, attempt_count
+  2384	                       FROM jog_queue
+  2385	                       WHERE status = 'pending'
+  2386	                       ORDER BY position ASC, id ASC
+  2387	                       LIMIT 1"""
+  2388	                ).fetchone()
+  2389	            finally:
+  2390	                conn.close()
+  2391	
+  2392	            if not row:
+  2393	                print("jog: queue complete (0 pending tasks).")
+  2394	                break
+  2395	
+  2396	            if checkpoint:
+  2397	                # A previous lane stays on its branch. Start the next scheduled task
+  2398	                # from the prepared base so Marathon owns branch selection and PR creation.
+  2399	                runner_lock = JogSupervisorLock(target)
+  2400	                runner_lock.acquire()
+  2401	                try:
+  2402	                    branch = _git(target, "symbolic-ref", "--short", "HEAD").decode().strip()
+  2403	                    if _git(target, "status", "--porcelain=v1", "--untracked-files=all").strip():
+  2404	                        raise ContractError("checkpoint execution clone is dirty; preserve it before dispatch")
+  2405	                    if branch != "development":
+  2406	                        _git(target, "switch", "development")
+  2407	                finally:
+  2408	                    runner_lock.release()
+  2409	
+  2410	            gh_num = row["gh_number"]
+  2411	            att = row["attempt_count"] + 1
+  2412	
+  2413	            # Acquire lease via perform_write
+  2414	            jog_acquire_lease(root, gh_num, os.getpid())
+  2415	            if checkpoint:
+  2416	                tasks_processed += 1
+  2417	
+  2418	            print(f"\n{'=' * 60}")
+  2419	            print(f"jog: processing GH-{gh_num} (attempt {att}) at position {row['position']}")
+  2420	            print(f"{'=' * 60}")
+  2421	
+  2422	            doc_path = find_issue_doc(target, gh_num)
+  2423	            if doc_path and "/PROJECT/1-INBOX/" in doc_path:
+  2424	                print(f"jog: promoting 1-INBOX contract for GH-{gh_num} to 2-WORKING...")
+  2425	                promoted_path, err = promote_contract_to_working(
+  2426	                    target, gh_num, doc_path, interactive=sys.stdin.isatty(), primary=root
+  2427	                )
+  2428	                if err:
+  2429	                    print(f"jog: contract promotion failed: {err}")
+  2430	                    jog_set_status(root, gh_num, "parked", failure_reason=err)
+  2431	                    if checkpoint:
+  2432	                        break
+  2433	                    continue
+  2434	                doc_path = promoted_path
+  2435	
+  2436	            # GH-280 Phase 5: the DEFAULT Marathon executor — Jog leases the row, delegates
+  2437	            # execution to the reviewed one-phase driver through the structured contracts, and
+  2438	            # projects the receipt's outcome. No Tick seeding, relay rendering, branch choice,
+  2439	            # gate, or PR discovery happens here; the legacy relay path below is reached only
+  2440	            # via --executor relay or --simulate during the compatibility window.
+utils/py/marathon_drive.py:907:def _probe_agent_bin(agent_id, role_label):
+utils/py/marathon_drive.py:2076:            sys.exit(4)
+utils/py/marathon_drive.py:2856:                sys.exit(4)
+utils/py/marathon_drive.py:2880:                sys.exit(4)
+utils/py/marathon_drive.py:3013:            sys.exit(4)
+utils/py/marathon_drive.py:3649:        # GH-205: a relay timeout (exit 7) whose declared artifact already landed AND left a live
+utils/py/marathon_drive.py:3745:        sys.exit(4)
+zsh:1: no matches found: utils/jog*
+
+codex
+**ANSWER:** Yes—the proposed reuse of existing validators is the smallest sensible fix, but tighten promotion parity and CLI exit propagation before implementation. No new subsystem is needed.
+
+**FINDINGS**
+
+- **[Blocker] Match promotion’s acceptance rule exactly.** The plan’s “reuse promotion probe extraction/lint” is underspecified ([plan:33](PROJECT/1-INBOX/GH-1443-JOG-READINESS.md:33)). Live promotion accepts **any valid legacy probe**, falling back to contract probes only when none survive ([jog_run.py:1719](utils/py/jog_run.py:1719)). Concrete input: one valid legacy probe plus a contract command `python3 -c ...`. Live promotion accepts the legacy probe; unconditional contract lint would falsely reject readiness. Extract/reuse the existing selection logic, including rejection when neither source supplies valid probes.
+
+- **[Should] Make the process exit explicit.** Returning a numeric result from `_dry_run_preflight` alone cannot fix the CLI: the current caller prints its string and then returns normally ([jog_run.py:2322](utils/py/jog_run.py:2322)). Preserve diagnostic text alongside status, aggregate across selected items, and ensure the actual CLI exits nonzero. Missing helper and inbox identity mismatch must also count as unevaluated/nonzero ([jog_run.py:2210](utils/py/jog_run.py:2210)).
+
+- **[Pass] Treat preflight exit 4 as nonzero readiness, explicitly labeled “already landed.”** Agree with [SPIKES.md:4](TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md:4): it means no new work is admissible for that item. Keep evaluating remaining selected items; do not drop or complete queue rows. Preserve live handling, which records completion for exit 4 ([jog_run.py:641](utils/py/jog_run.py:641)). This is a readiness refusal, not a provider escalation.
+
+- **[Should] Keep checkpoint extraction narrowly static.** Validate option constraints and distinct roots ([jog_run.py:2333](utils/py/jog_run.py:2333)), clone/origin ([jog_run.py:2115](utils/py/jog_run.py:2115)), and publication cleanliness/development branch ([jog_run.py:2180](utils/py/jog_run.py:2180)). Do not move these checks earlier in **live** recovery: `begin()` intentionally resumes an unfinished journal before new-work admission ([jog_run.py:2143](utils/py/jog_run.py:2143)). Report remote freshness and recovery eligibility as unknown.
+
+- **[Pass] Scope and preservation are sound.** Apply Marathon role validation only to target-aware, nonsimulated Marathon readiness; retain bare preview and simulation exemptions ([jog_run.py:2267](utils/py/jog_run.py:2267)). Existing preflight dry-run can fetch, create transient worktrees, and execute contract probes; describe the guarantee as **no Jog state writes**, not universally side-effect-free ([jog_run.py:2205](utils/py/jog_run.py:2205)). Capacity and environment remain unknown.
+
+Static source review only; no tests, network, or provider calls performed.
+
+**RECOMMENDATION:** Proceed after specifying exact promotion-selection reuse and observable CLI exit semantics; retain exit 4 as labeled nonzero readiness and leave live recovery untouched.
+tokens used
+47,269
+**ANSWER:** Yes—the proposed reuse of existing validators is the smallest sensible fix, but tighten promotion parity and CLI exit propagation before implementation. No new subsystem is needed.
+
+**FINDINGS**
+
+- **[Blocker] Match promotion’s acceptance rule exactly.** The plan’s “reuse promotion probe extraction/lint” is underspecified ([plan:33](PROJECT/1-INBOX/GH-1443-JOG-READINESS.md:33)). Live promotion accepts **any valid legacy probe**, falling back to contract probes only when none survive ([jog_run.py:1719](utils/py/jog_run.py:1719)). Concrete input: one valid legacy probe plus a contract command `python3 -c ...`. Live promotion accepts the legacy probe; unconditional contract lint would falsely reject readiness. Extract/reuse the existing selection logic, including rejection when neither source supplies valid probes.
+
+- **[Should] Make the process exit explicit.** Returning a numeric result from `_dry_run_preflight` alone cannot fix the CLI: the current caller prints its string and then returns normally ([jog_run.py:2322](utils/py/jog_run.py:2322)). Preserve diagnostic text alongside status, aggregate across selected items, and ensure the actual CLI exits nonzero. Missing helper and inbox identity mismatch must also count as unevaluated/nonzero ([jog_run.py:2210](utils/py/jog_run.py:2210)).
+
+- **[Pass] Treat preflight exit 4 as nonzero readiness, explicitly labeled “already landed.”** Agree with [SPIKES.md:4](TESTS-RESULTS/2026-11-12+GH-1443/SPIKES.md:4): it means no new work is admissible for that item. Keep evaluating remaining selected items; do not drop or complete queue rows. Preserve live handling, which records completion for exit 4 ([jog_run.py:641](utils/py/jog_run.py:641)). This is a readiness refusal, not a provider escalation.
+
+- **[Should] Keep checkpoint extraction narrowly static.** Validate option constraints and distinct roots ([jog_run.py:2333](utils/py/jog_run.py:2333)), clone/origin ([jog_run.py:2115](utils/py/jog_run.py:2115)), and publication cleanliness/development branch ([jog_run.py:2180](utils/py/jog_run.py:2180)). Do not move these checks earlier in **live** recovery: `begin()` intentionally resumes an unfinished journal before new-work admission ([jog_run.py:2143](utils/py/jog_run.py:2143)). Report remote freshness and recovery eligibility as unknown.
+
+- **[Pass] Scope and preservation are sound.** Apply Marathon role validation only to target-aware, nonsimulated Marathon readiness; retain bare preview and simulation exemptions ([jog_run.py:2267](utils/py/jog_run.py:2267)). Existing preflight dry-run can fetch, create transient worktrees, and execute contract probes; describe the guarantee as **no Jog state writes**, not universally side-effect-free ([jog_run.py:2205](utils/py/jog_run.py:2205)). Capacity and environment remain unknown.
+
+Static source review only; no tests, network, or provider calls performed.
+
+**RECOMMENDATION:** Proceed after specifying exact promotion-selection reuse and observable CLI exit semantics; retain exit 4 as labeled nonzero readiness and leave live recovery untouched.

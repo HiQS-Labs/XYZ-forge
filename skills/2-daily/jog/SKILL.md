@@ -78,7 +78,16 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 ## Runner Execution Lifecycle (`jog run`)
 
 1. **Outer Driver Lock & Hermetic Dry-Run:**
-   - `--dry-run`: Hermetic simulation with zero locks and zero mutations (leaves queue and DB untouched).
+   - Bare `--dry-run`: queue preview with zero Jog state writes, locks or leases.
+   - With `--target-root`, dry-run checks explicit Marathon roles/binaries, inbox promotion probes,
+     and per-item preflight. Any selected nonzero preflight (including already-landed) exits 2
+     after displaying all outcomes. Empty queues remain an empty preview, not workload readiness.
+     When supplied, `--checkpoint-root` also checks bounded-run options, separate full-clone origin,
+     clean publication tree and development branch. It never begins checkpoint recovery/publication.
+     Preflight itself can fetch, create transient worktrees and execute contract probes; this is
+     not a universally side-effect-free command. Live provider capacity, gate environments/services,
+     remote freshness and recovery eligibility remain unverified. Follow preparation instructions
+     before dispatch; a passing dry-run does not certify an unattended run.
    - Real run: Acquires `relay-driver.lock` via `rtl.driver_lock_path()`, sets `RELAY_DRIVER_LOCKED=1`, and registers a clean exit handler. Concurrently running marathons or relays in the same clone are safely excluded (GH-42 / GH-354).
 
 2. **Receipt-Backed State Transitions:**

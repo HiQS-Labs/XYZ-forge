@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "query": "Jog preparation readiness dry-run checkpoint reviewer",
+  "open_prs_count": 0,
+  "open_prs": [],
+  "merged_prs_count": 0,
+  "merged_prs": [],
+  "issues_count": 2,
+  "issues": [
+    {
+      "number": 1022,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "Umbrella: Daily issue intake and weekly auto-* Jog/Marathon planning branches",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1022",
+      "repo": "current"
+    },
+    {
+      "number": 1048,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "Weekly Plan Outline \u2014 2026-10-13",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1048",
+      "repo": "current"
+    }
+  ],
+  "existing_fix_candidates_count": 0,
+  "existing_fix_candidates": [],
+  "roadmap_items_count": 0,
+  "roadmap_items": [],
+  "existing_helpers_count": 0,
+  "existing_helpers": [],
+  "errors": []
+}
