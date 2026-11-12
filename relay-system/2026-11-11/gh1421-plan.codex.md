@@ -1,6 +1,6 @@
 # GH1421 independent plan review
 STATUS: Open
-NEXT: codex
+NEXT: orchestrator
 
 Artifact under review: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md`
 
@@ -92,3 +92,25 @@ Re-review the revised plan. Preserve Round 1. Append `### Round 2 · Reviewer ·
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+The revised plan still proposes one optional additive query in the existing reader, with GitHub ordering preserved and agent-only repos appended. It now distinguishes connection creation from first-read failure and retains GitHub rows on malformed agent schemas. Per the document, the existing resolver owns validation, dedupe, cap and policy identity; the existing reader owns warnings and fallback. The Non-goals still exclude new writers, modules, suites, source/device filters and alias mapping. The revised plan was read before supplementary source in this turn.
+
+Source-backed validation: re-read the reader/resolver and config contexts, device configuration resolver, GH-777 scanner/suite, and GH-898 precedent/manual matrix. F2 is addressed at plan level: step 5 covers SELECT failure, and Acceptance now includes malformed-agent-schema preservation with an outer-catch mutation control. GitHub-first ordering, strict bool validation and the scoped base comparison remain sound. The annotation qualification is corrected in Observed, although the acceptance parenthetical “still one connect site” must be established by inspection rather than inferred from the ratchet. No parallel subsystem is proposed.
+
+**F1 [Medium, remaining] — Sidecar bracketing is a race detector, not a quiescence contract; the claimed risk acceptance needs an actual decision.**
+
+Observed input: `PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md:126-133` says absence after the read proves no connection opened during it and therefore consistent data, immediately followed by a writer-session counterexample. Neither endpoint observation excludes that counterexample. The builder's “accepted as bounded advisory risk” is not evidence of the explicit operator tradeoff requested in Round 1. SQLite documents that immutable disables locking/change detection and can produce incorrect results if the file changes ([URI documentation](https://www.sqlite.org/uri.html)). The revised language acknowledges the race but still asserts the guarantee it invalidates.
+
+Affected scope: all enabled Rebalance sources, including new-key-off reads. The list feeds board policy eligibility, not only display. `utils/py/board_sync.py:1235-1244` compares current policy with preview, and `:1315-1322` compares with the saved apply result; those checks catch differing lists, not an incorrect list repeated at both reads. GH-898's “Mutation eligibility” section explicitly identifies the board moves enabled by allow-list expansion. This is a bounded local correctness tradeoff, not a request for enterprise machinery.
+
+Requested correction: remove the inference that endpoint absence proves quiescence and describe the bracket as best-effort detection only. Either retain ordinary read-only access plus fallback until a stable-read contract exists, or cite an explicit operator decision accepting possible inconsistent membership and its board-mutation consequences. The author/reviewer cannot supply that operator decision by declaring it accepted. No new gate, service or suite is requested. Also qualify `:134-136` as this build's measured behavior: ordinary read-only WAL access can create sidecars on supported SQLite builds ([WAL documentation, read-only databases](https://www.sqlite.org/wal.html)); the current retry design does not generally enforce no source-directory writes.
+
+Falsifier: a stable-read contract excluding concurrent main-file changes, or a recorded operator acceptance of this precise best-effort behavior, removes the remaining blocker. The ordinary-read-only fallback option requires no new operator approval. A no-sidecar happy-path fixture alone cannot falsify the race. Runtime measurements in the builder response remain **[Unverified — needs clone run]** until commands, outcomes and provenance are available in the eventual committed evidence.
+
+Read-only inspection command `nl -ba PROJECT/2-WORKING/GH-1421-BOARD-SYNC-REPOS-SOURCE.md | sed -n '114,150p'` exited 0 and printed the decisive claims: “No sidecar after the read means none opened during it either” and the acknowledged “whole writer session ... completing inside ... read window.” Source inspection `rg -n 'policy changed|policy.*!=|def apply_policy|def restore_policy|allowed =|In review' utils/py/board_sync.py` exited 0 and located the equality checks at 1243 and 1321. SQLite primary documentation was opened successfully. No executable fixture, SQLite connection, test suite, pytest or git command was run; no artifact/source file was changed. Plan approval remains blocked only on the read-contract correction/decision above; implementation and clone-run verification are still future work.
