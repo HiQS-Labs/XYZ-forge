@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (r3). Steps 1–5 implemented in `utils/py/jog_run.py`. R1–R5, a smoke run and the existing gh280 (227/0) and jog-queue (34/0) suites passed; receipt in `TESTS-RESULTS/2026-11-11+GH-1426/`. | Final Codex QA on the diff and evidence, then a full gate on push from a disposable clone and a ready PR. |
+| Plan QA approved (Codex r3); implementation done; final QA approved (Codex r2, after fixing S1 in `b59b801b1`). R1–R5, R4b, smoke and focused suites (gh280 227/0, jog-queue 34/0) pass; receipt in `TESTS-RESULTS/2026-11-11+GH-1426/`. | Ready PR against `development`, awaiting merge. Post-merge reconcile moves this doc to 3-COMPLETED. |
 
 ## Rating rationale (2026-11-11)
 
