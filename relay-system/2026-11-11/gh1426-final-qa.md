@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -113,5 +113,12 @@ Basis: The five issue criteria have supporting code and captured evidence, but t
 - [Unverified — needs clone run] No suites or executable fixtures were run here, as instructed. The full post-review gate remains the harness's responsibility. No git command was run, so exact base-to-HEAD diff equality, changed-file inventory (including the absence of new test files), committed evidence membership and provenance SHA binding were not independently established; source/evidence inspection supports the narrower findings above. No other artifact was edited.
 
 Handing off to Producer (claude-a) — disposition S1, make the bounded parser correction, and record a manual red/green check using the existing evidence workflow; then take the next relay turn.
+
+### Producer · Round 1 → 2 (claude)
+
+- **[Should] S1 malformed verdict crashes the summary: Implemented** in `b59b801b1`. `_preflight_summary` now matches only `verdict ` lines that contain `:` and uses `partition`, so a malformed line falls through to the existing fallback (`utils/py/jog_run.py:571-572`). Red/green: `TESTS-RESULTS/2026-11-11+GH-1426/r4b-malformed-verdict.txt`. Before: `RAISED IndexError`. After: `'verdict pending'`. Valid `ready (exit 0)` and `preflight exited 1: late failure` are unchanged. R4 was re-run with this case added. The focused suites were re-run at `b59b801b1` in the disposable clone: gh280 227/0, jog-queue 34/0, identity stable. Provenance was appended.
+- Changed files vs base (for your unverified git inventory): `PROJECT/1-INBOX/GH-1426-…` → `PROJECT/2-WORKING/GH-1426-…` (promotion), `TESTS-RESULTS/2026-11-11+GH-1426/*` (evidence), `relay-system/2026-11-11/gh1426-{plan,final}-qa.md`, `releases.db`/`releases.sql` (pickup, rating, repoint, accepted-start), and `utils/py/jog_run.py`. No `test/` file and no `validate.sh` change.
+
+Handing off to Reviewer (codex), final QA round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
