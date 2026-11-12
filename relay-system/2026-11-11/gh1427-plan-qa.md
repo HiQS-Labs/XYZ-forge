@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-11.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -201,5 +201,29 @@ Dispositions:
 - [Pass, with ask] risk-sentence qualification: **Implemented.** The risk now says the logs do not ride into a commit "unless an operator's allowlist explicitly covers the logs directory", citing `relay-turn-lib.sh:1589-1621`.
 
 Back to Reviewer for round 3 (final round under the cap).
+
+### Reviewer · Round 3 · codex
+
+**What this proposes**
+Give builders $3.00 / 40 turns and reviewers $1.00 / 12, with existing global overrides. Preserve durable logs, surface result errors, record failed usage, and regenerate the shipped package after documentation changes.
+
+**How the existing system works, per this document**
+The plan says the shim currently uses one ceiling for all roles, while the existing role resolver already knows the dispatched role. It traces missing logs to two cleanup sites and missing cost rows to failure exits ahead of the existing writer.
+
+**What it's not**
+No new role knobs, retry mechanism, suites, or Jog/Marathon ceiling owner. Step A input boundary: the entire revised plan plus relay/startup instructions only; sources and issue query followed.
+
+**source-backed**
+swept file: yes
+
+VERDICT: PASS
+Basis: approve the plan for implementation. The round-2 Should is resolved, and the requested ordering, warning-helper, and risk qualifications are present. Reviewed the whole plan and relevant source paths; no additional pre-existing defect requiring expansion of this task was established. This approves design and planned verification, not implemented behavior. No suites, executable fixtures, provider calls, or git commands were run. Query `gh issue view 1427 --repo HiQS-Labs/XYZ-forge` exited 1 with `error connecting to api.github.com`; acceptance review uses the copied Acceptance section as permitted.
+
+- [Pass] **Role verification now agrees with the design.** Plan `PROJECT/2-WORKING/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md:192-197,239-240` specifies reviewer 1.00 / 12 in both implementation and M2, rejects the old 0.50 result, and explicitly covers malformed warning input. The role choice reuses `rtl.py:871-874` and `relay-turn-lib.sh:90-114`; no second role owner is introduced.
+- [Pass] **Package ordering and log qualifications are corrected.** Plan `:218-226` puts regeneration/freshness after packaged documentation edits and updates stale own-log comments. Plan `:252-255` now qualifies commit exclusion by the operator allowlist, consistent with `relay-turn-lib.sh:1589-1621`. The deliberate untracked-log trade remains explicit; both deletion sites (`relay-turn-lib.sh:1309-1310,1751-1759`) remain in scope.
+- [Pass] **Failure evidence and cost checks remain falsifiable.** Plan `:235-248` retains the base red control, real error JSON, exactly-one matching usage row, exit-0 duplicate control, and escalation check. Actual CLI usage availability remains an implementation-time acceptance question, not an established fact. The existing writer at `claude-turn.py:283-304` and diagnostic at `marathon_drive.py:2217-2221,2260-2263` are the appropriate extension points; retain containment exit-6 precedence.
+- [Pass] **The budget and rating judgments stay bounded.** The reviewer increase has the concrete incident at `TESTS-RESULTS/2026-11-11+GH-1419/SUMMARY.md:15`; the plan labels recurrence search incomplete and ratings as judgment. No evidence establishes universal adequacy of either cap. Existing-suite checks, manual red controls, disposable-clone gate, and PR rollback are proportionate for this plan.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and retain the planned evidence before claiming acceptance.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
