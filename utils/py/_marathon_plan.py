@@ -186,6 +186,7 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None 
                         contract_error = contract_shape_error(contract)
                     except ValueError:
                         contract = None
+                        contract_error = "invalid JSON contract"
 
     if contract_error:
         contract = None
@@ -1169,12 +1170,15 @@ class Engine:
         # ── per-item validation signals ────────────────────────────────────────
         for r in deduped:
             if r.get("contractError"):
-                r["state"] = "needs-contract"
+                terminal = r["section"] in ("Completed", "Deferred · vision")
                 r["flags"].append("malformed-contract")
-                self._flag("warn", "needs-contract", r,
+                self._flag("warn", "malformed-contract" if terminal else "needs-contract", r,
                            "malformed-contract: " + r["contractError"],
                            "correct the Preflight Contract shape before execution")
-                continue
+                if not terminal:
+                    r["state"] = "needs-contract"
+                    continue
+                r["state"] = "completed-ref" if r["section"] == "Completed" else "deferred"
             if r["gh"] is None and not r["docRel"]:
                 r["state"] = "note-only"
                 self._flag("info", "note-only", r,

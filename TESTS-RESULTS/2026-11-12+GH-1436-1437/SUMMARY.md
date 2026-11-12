@@ -17,3 +17,11 @@ Final independent QA Approved at 9c506687 after the retained HQ parser and optio
 First full push qualification at 8d0f73af failed honestly: 407/408, sole gh139 quiet-grep inventory failure; push refused after 534 seconds. The retained log includes successful clone identity invariant. Seven test assertions were mechanically changed from printf pipelines to equivalent grep here-strings (84728877), outer-reviewed by the supervising agent with unchanged predicates and nonempty/rc checks; the obsolete three-site baseline row was removed (c48c940c). Fresh gh251 and gh139 rechecks passed. No production change followed independent final approval. Integrated full qualification at c48c940c is pending.
 
 Final integration qualification: **408/408 PASS** at `c48c940c89cc04435714fa5be89ef2dad1af6bbf`, normal pre-push full gate, 567 seconds. Branch push succeeded without bypass. The first failed run remains retained. Identity bracket passed, and post-run HEAD/origin/bare/status were unchanged and clean. Subsequent changes contain evidence and status documentation only; normal documentation pre-push applies to their publication.
+
+## CodeRabbit follow-up — 2026-11-12
+
+Three code findings reproduced and corrected locally: unterminated HQ JSON fences, missing issue-body JSON error attribution, and terminal-state preservation (including OPEN issue drift). Old-code red/new-code green controls and three existing suites pass; no full-gate or independent re-review claim for this follow-up.
+
+GH-1430 ledger finding confirmed: the merge replay replaced its original row identity, first_seen and three lifecycle events with a fresh identity/two events. Original source is development commit 43265eed2359f781f942543af74c6d12c990cf00. Ordinary CLI verbs cannot restore exact immutable identity/timestamps. Restoration is pending a scoped operator exception to the no-direct-ledger-edit rail; do not merge meanwhile.
+
+The automated request to expand validation to all intake writers is declined: #1436 explicitly permits intake (including HQ) **or** PDDA validation. HQ rejects supplied malformed contracts before writes, covered by existing/manual checks; this PR makes no claim to validate every authoring surface.

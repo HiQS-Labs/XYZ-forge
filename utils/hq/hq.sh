@@ -329,6 +329,8 @@ sys.path.insert(0, sys.argv[1])
 match = re.search(r"^#{1,6}[ \t]+[^\n]*preflight[ \t]+contract[^\n]*\n(.*?)(?=^#{1,6}[ \t]|\Z)", sys.argv[2], re.I | re.M | re.S)
 if match:
     block = re.search(r"^```json\s*\n(.*?)^```\s*$", match[1], re.I | re.M | re.S)
+    if not block and re.search(r"^```json[ \t]*$", match[1], re.I | re.M):
+        sys.exit("hq park: malformed-contract: unterminated JSON contract")
     if block:
         from swarm_preflight import contract_shape_error
         try:
