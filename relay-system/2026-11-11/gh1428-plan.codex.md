@@ -1,6 +1,6 @@
 # GH1428 independent plan review
-STATUS: Open
-NEXT: codex (Reviewer)
+STATUS: Approved
+NEXT: orchestrator
 
 Artifact under review: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md` (committed plan; base `0f21b761a`).
 
@@ -106,3 +106,21 @@ Dispositions for Round 2:
 - [Note] — **Implemented**: the attested control now uses `gate run: yes — exit 0`.
 
 Final plan-QA round (cap 3). Same rules. Append `### Round 3 · Reviewer · codex` with plain paragraphs (no nested headings), `swept file:` line and explicit `**Verdict:**`; STATUS: Approved only if approved; NEXT: orchestrator.
+
+### Round 3 · Reviewer · codex
+
+The revised plan is approved for implementation. The complete plan now closes the Round 2 scope finding: step 1 requires file/node selectors throughout, excludes directories and compounds, and explicitly preserves a no-run declaration when worktree safety is unknown (`PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md:158-176`). This is a limited eligibility predicate plus reviewer judgment, not a claim that file selection proves fixture safety. The GH-54 exclusion remains appropriate because `swarm_preflight.py:1418-1430` separately identifies fixture-creating tests. The prompt exception at `relay-automation/relay-turn-lib.sh:1067` can therefore coexist with the existing worktree restriction for full suites. No further behavior-change finding is warranted at plan QA.
+
+The exit-result correction and positive manual control agree: only the last explicit successful declaration counts, while exit 1, exit 124 and a missing result refuse approval (plan lines 195-208, 224-229). The existing refusal seam at `relay_drive.py:741-751` and escalation at `relay_drive.py:1105-1110` support this without another runner. Clearing the ambient signal and limiting enforcement to signaled marathon lanes preserve generic relay and harness-only gate behavior. Optional trailer binding and optional-field validation fit `relay_attest.py:267-280,319-385`; actual backward compatibility remains [Unverified — needs clone run].
+
+The tooling-only fallback is now an instruction contract with render verification, rather than a claim that a live reviewer or import path was measured (plan lines 180-185, 234-236). That is sufficient for this prompt change. Implementation QA should retain this distinction: a render receipt establishes the instruction, not the source revision imported by an actual test run. The documented per-run network opt-in and loopback-bound smoke remain proportionate; CLI behavior and implementation results remain [Unverified — needs clone run].
+
+[Note] Include the existing package regeneration in implementation closeout. `LESSONS-LEARNED.md:131-135` requires regenerating `skills/1-hourly/relay-automation/relay-pkg.tar.gz` after editing packaged relay files; step 6 changes `relay-turn-lib.sh`. This is existing distribution maintenance, not a request for a new gate or subsystem. Run its documented packaging command in the implementation checkout before the planned final gate.
+
+swept file: yes
+
+Read the entire revised plan and reviewed the relevant prompt, preflight, environment, refusal and attestation source contexts plus existing suite assertions. No source artifact was changed. No git, validate.sh, test/*.sh, pytest, executable fixture, or network smoke was run. This verdict approves the plan only; the planned disposable-clone implementation evidence is still owed.
+
+**Verdict:** Approved
+
+Handing off to orchestrator — orchestrator, proceed with implementation; no further plan-review turn needed.
