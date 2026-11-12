@@ -15,7 +15,7 @@ goal: Make acceptance relevance and incomplete requested outcomes visible withou
 
 | What was just completed | What's next |
 |---|---|
-| Existing review/closeout and historical probe failure traced at 712a73b4. | Plan QA, two wording changes, one bounded replay, final QA and PR. |
+| Existing review/closeout and historical probe failure traced at 712a73b4. | Plan QA Approved; wording and7-case replay complete; spike1448 filed. Final QA and normal gated PR publication next. |
 
 ## Observed
 
@@ -50,3 +50,7 @@ Content red control is previous instruction absence; fixed exact sentence/placem
 ## Lessons Learned
 
 NO_ENTRY pending replay; wording alone cannot demonstrate improved agent compliance.
+
+## Replay disposition and follow-up
+
+7/7 expected command-form/path classifications. Inline python -c mismatch reproduced; no inherited command executed or semantic validity proved. Follow-up https://github.com/HiQS-Labs/XYZ-forge/issues/1448 is NEEDS-SPIKE, rated proposal60/55/50/70, not admitted/no ledger row. Codex advisory answered, Agy credit429; all findings dispositioned in committed evidence. No current runtime fix.
