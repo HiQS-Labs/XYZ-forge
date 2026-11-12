@@ -133,4 +133,12 @@ Basis: the Round 1 accounting-evidence gap is resolved. Re-read the whole primar
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-file commit; the producer's remaining delivery boundary is the disposable-clone full gate.
 
+
+### Attestation · relay-drive — 2026-11-12T03:34:19Z
+task: RELAY-gh1427-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 426bae2176191809be30d6ff53760cf06dd2bd0c
+added-range: 14968+3944
+added-sha256: 3a0000f7e204a1a1073757143bfb6ca9ab52e6947a067af6c11a92fc469be0e0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
