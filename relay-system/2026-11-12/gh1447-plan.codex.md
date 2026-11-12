@@ -34,3 +34,12 @@ Implementation proof obligations already within this plan: retain exact historic
 The content red control is proportionate to instruction-only edits: previous wording lacks the new obligation; exact placement checks plus main/adjacent consumer read-through establish the text was added coherently. They cannot demonstrate agent compliance, and the plan expressly leaves that unproved. Final QA should reject a handoff that omits a later amendment or claims integration from local completion. Retain commands, exits, decisive output and provenance.jsonl with the implementation evidence as required by repository policy.
 
 Ratings are presented as a proposal with rationale and unknown recurrence clearly distinguished from zero; neutral appeal and a cheap existing seam are credible. Easy reversibility and instruction-commit rollback fit this bounded scope. Any validator implementation or broader semantic claim requires the separate follow-up's own evidence and acceptance. Historical object extraction and applicable normal classified gate remain **Unverified — needs implementation replay / disposable clone run**; neither is claimed complete by this approval.
+
+### Attestation · relay-drive — 2026-11-12T22:08:18Z
+task: GH1447-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 148a3a9036ab0987f998ce19f6d4fdf402e117c7
+added-range: 1218+5084
+added-sha256: b3b78a443c3b795d58e351ae1cecfe6ccb423ef09ead31ec853b38bfa3fde48f
+gate-run: undeclared
