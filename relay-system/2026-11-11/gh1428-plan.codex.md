@@ -1,6 +1,6 @@
 # GH1428 independent plan review
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: orchestrator
 
 Artifact under review: `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md` (committed plan; base `0f21b761a`).
 
@@ -77,3 +77,24 @@ Dispositions for Round 1 (plan revised in `PROJECT/2-WORKING/GH-1428-REVIEWER-UN
 - [Pass] notes — **Implemented**: env signal popped when empty (step 3); `_load()` validates the four allowed values; root-cause layer 2 reworded as builder-scoped contextual ambiguity; network smoke server bound to 127.0.0.1 (already done in the pre-run smoke).
 
 Re-review the revised plan. Preserve Round 1. Append `### Round 2 · Reviewer · codex` with substantive plain paragraphs directly under the heading (NO nested `####` headings — the driver's review-block counter treats a body that opens with a heading as empty), a literal `swept file: yes/no` line, and an explicit `**Verdict:**`. Set STATUS: Approved only if approved; NEXT: orchestrator. Same rules as Round 1.
+
+### Round 2 · Reviewer · codex
+
+The revised plan correctly requires exit 0, clears the ambient marathon signal, and limits target-root fallback to tooling. These address the Round 1 execution-result and revision-identity findings. Source review confirms that `relay_drive.py:741-751` has the intended existing refusal seam, `relay_drive.py:1105-1110` escalates refused approvals, and `relay_attest.py:267-280,319-385` supports an optional trailer-bound field while preserving absent-field legacy records. The exception remains scoped to marathon lanes with the signal; generic relays and harness-only gates retain current approval behavior. This is plan approval review, not verification of implemented behavior.
+
+[Should] Finish the focused, worktree-safe exception contract; the revised existential file predicate still admits directory-wide runs.
+Observed input: explicit `--pre-advance-cmd 'python3 -m pytest tests/test_dashboard_snapshot_refresh_filter.py tests/'` in the GH-955 target, with its named file present and no GH-54 fixture warning in the brief. This meets every listed condition at `PROJECT/2-WORKING/GH-1428-REVIEWER-UNVERIFIED-APPROVAL.md:158-169`: one existing test file, no denied runner, no passthrough, no fixture phrase. Yet the additional directory selector discovers the entire test tree. This is a direct consequence of the proposed predicate, not an executed fixture or a claim that production code already implements it.
+Affected scope: explicit marathon gate commands combining a focused file with a directory (or another broad selector). The exception would authorize a full-suite run inside the review worktree despite the plan's non-goal at lines 18-19 and the safety rationale at `relay-automation/relay-turn-lib.sh:1050-1058`. Absence of the GH-54 warning is also not affirmative evidence of worktree safety; `swarm_preflight.py:1418-1430` emits that warning from the covering-test metadata it has.
+Falsifier: the render/manual controls must leave a mixed file-plus-directory command harness-only while allowing the GH-955 file-only gate. Specify the narrow supported command shape (file/node selectors only; unknown or broad shapes stay harness-only) and explicitly instruct reviewers to declare `gate run: no — <why>` when worktree safety is unknown. No general shell scanner or new guard is requested. Retain the known-fixture exclusion; a filename selector is a scope check, not proof that fixtures cannot mutate shared Git state. Include the Round 1 missing-test/source and distinguishable-source fallback controls in the manual verification list so the revised path promise is actually measured.
+
+[Note] The positive manual control at plan lines 220-221 contradicts step 4: bare `gate run: yes` is listed both as refused and attested. Use `gate run: yes — exit 0` for the attested case. This is a verification-text correction, not an additional behavior request.
+
+The documented network opt-in, loopback-bound smoke, optional four-value attestation field, and refusal rather than downgrade remain proportionate for this local operator harness. The shared role-note change broadens reviewer execution authority and deserves the stated narrow scope even though reverting it is easy. Existing-suite compatibility, the actual CLI network behavior, and all implementation controls remain [Unverified — needs clone run]. No new suite or runner is needed.
+
+swept file: yes
+
+Read the complete revised plan and inspected the affected source contexts and existing suite assertions. No validate.sh, test/*.sh, pytest, executable fixtures, network server, or git commands were run; only the relay file was edited. Round 1 and the Builder disposition are preserved.
+
+**Verdict:** Changes requested
+
+Handing off to orchestrator — orchestrator, take your turn.
