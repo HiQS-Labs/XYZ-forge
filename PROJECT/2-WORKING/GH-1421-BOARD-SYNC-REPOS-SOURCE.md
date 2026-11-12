@@ -2,7 +2,7 @@
 gh_issue: 1421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1421
 title: "board_sync repos_source: opt-in read of Rebalance agent_session_activity (T3 work signal)"
-status: Active (2-WORKING — implemented and verified; final QA pending)
+status: Active (2-WORKING — PR ready; awaiting merge)
 created: 2026-11-11
 updated: 2026-11-11
 owner: claude (start-task)
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, round 3; `relay-system/2026-11-11/gh1421-plan.codex.md`), `--accepted-start` recorded, implemented in `utils/py/board_sync.py`, verified (`TESTS-RESULTS/2026-11-11+GH-1421/SUMMARY.md`). | Codex final QA, routed gate, ready PR; afterwards the follow-up decision on reading the no-sidecar WAL DB (step 5). |
+| Plan QA Approved (Codex, round 3; `relay-system/2026-11-11/gh1421-plan.codex.md`), `--accepted-start` recorded, implemented in `utils/py/board_sync.py`, verified (`TESTS-RESULTS/2026-11-11+GH-1421/SUMMARY.md`). | Codex final QA Approved (round 2, `relay-system/2026-11-11/gh1421-final.codex.md`; round 1 caught a `HAVING` alias bug, fixed in 2565f073b). Routed gate at push; ready PR; awaiting merge. Then the follow-up decision on reading the no-sidecar WAL DB (step 5). |
 
 ## Key concepts
 
@@ -225,8 +225,14 @@ carries that commit and promotes the file, so land #1424 first or drop the GH-14
 - [x] Acceptance matrix green with red controls witnessed.
 - [x] Existing suites green (gh402, gh405, gh549, gh605-board-policy, gh777). Routed gate on the final commit: pending.
 - [x] Live smoke (main path + adjacent path) recorded.
-- [ ] Codex final QA approved.
+- [x] Codex final QA approved (round 2).
 
 ## Lessons Learned
 
-- (filled at closeout)
+- An aggregate alias that reuses a column name (`SUM(runs) AS runs`) makes SQLite resolve `HAVING runs`
+  to the stored column, so the filter depends on which row SQLite picks. Single-row fixtures hide it; the
+  red control is a multi-row fixture with a zero row first (`redcontrol-having-alias.log`).
+- On this Mac's SQLite build, a `mode=ro` reader of a WAL DB with no sidecars connects and then fails on
+  the first SELECT; it does not create the sidecars SQLite's docs describe.
+- LESSONS-LEARNED.md: `NO_ENTRY`. Both are code-local facts recorded here; neither fits the ledger's
+  areas (relay, marathon, pdda, gate, skills, releases).
