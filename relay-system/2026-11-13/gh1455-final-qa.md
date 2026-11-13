@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -80,5 +80,33 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a c
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The one-line code fix is sound and the red/green logs are internally consistent. Two small documentation corrections remain; no runtime change or new test is requested.
+
+swept file: no
+Scope disclosure: read all nine lines of `pdda_fn.sh`, the complete GH-1452 summary, PARKED note, GH-1455 README, provenance and all three logs. Reviewed the new CHANGELOG entry and established that the older content is unchanged; did not re-audit the entire 1,152,189-byte historical CHANGELOG. No demonstrated pre-existing runtime defect in the helper was found by this static review; execution of its eval/resolver was deliberately not attempted under the reviewer restrictions. The extraction itself is nonempty and passes `bash -n`; this is syntax evidence, not execution evidence. MCP's nearest XYZ-forge index is a different checkout with generation `2026-09-01T15:54:30Z`; coverage reports changed/missing paths, so findings use current source and read-only object inspection instead.
+
+- [Pass] **Q1 — scope/minimality.** Read the base/head Git objects directly with Python (no git invocation): `37ca5e0d272c04fd2a9cd02ef4b0cfd1bbf5d2c8` → `500872b424bf6a0d740355da531e9e45c87403d6` has exactly these nine files: `CHANGELOG.md:3` (required change record); `PARKED/2026-11-13-pre-push-shellcheck.md:3` (required paused decision); `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh:1` (fix); `TESTS-RESULTS/2026-11-13+GH-1452/qualifying-gate-summary.md:39` (required correction); `TESTS-RESULTS/2026-11-13+GH-1455/README.md:1` (evidence interpretation); `TESTS-RESULTS/2026-11-13+GH-1455/provenance.jsonl:1` (required receipts); and that folder's `shellcheck-before.log:1`, `shellcheck-base-blob.log:2`, `shellcheck-after.log:1` (red/green evidence). Each is needed. Object comparison returned `ONLY_SHEBANG True MODE 100644`; no test or registry change. Fix: retain this scope.
+
+- [Pass] **Q2 — observed rejection and hashes.** `shellcheck-before.log:6` and `shellcheck-base-blob.log:4` retain SC2148; their final lines say `scan exit=1` and `shellcheck exit=1`; `shellcheck-after.log:6` says `scan exit=0`. Recomputed SHA-256 for each nonempty log against `provenance.jsonl:1-3`: all three match. Narrow local commands `shellcheck -S error TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` and `bash -n TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` each exited 0 with empty output. A controlled copy made with Python `Path('.relay-scratch/tmp/unfixed-pdda.sh').write_bytes(Path('TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh').read_bytes().split(b'\n',1)[1])`, then `shellcheck -S error .relay-scratch/tmp/unfixed-pdda.sh`, exited 1 and printed `SC2148 (error): Tips depend on target shell and yours is unknown`. That rejects the unfixed content; it does not assert a new full qualifying run. Fix: retain receipts and the explicit full-gate limitation.
+
+- [Pass] **Q3 — correction's source basis.** `.github/workflows/ci.yml:306-324` gates both installation and scan on `steps.route.outputs.docs_only != 'true'`, enumerates `git ls-files -- '*.sh'`, and invokes `shellcheck -S error`. `ci-local.sh:193-195` uses the same selection and severity with NUL-safe parallel enumeration. `utils/ci-route.sh:65` includes `TESTS-RESULTS/*` as docs. Thus the correction at `qualifying-gate-summary.md:39-43` correctly distinguishes a skipped scan from a passing scan. Fix: retain that distinction.
+
+- [Unverified — needs network] **Q3/Q5 — particular hosted executions.** The latest two development runs being skipped (`qualifying-gate-summary.md:42`) and this PR's actual hosted steps (`GH-1455/README.md:25-26`) were not checked against the GitHub API. The workflow supports the conditional statement but does not establish those particular run outcomes. Fix: cite run IDs/step outcomes when available, or describe the configured docs-only behavior rather than asserting this PR's observed result. This limitation alone is not a failure under Setup.
+
+- [Should] **Q4/Q5/Q6 — state the shebang census in the past tense.** `PARKED/2026-11-13-pre-push-shellcheck.md:16-17` says “It is currently the only tracked `.sh` without a shebang”; `GH-1455/README.md:22` likewise says “it is the only tracked `.sh` without a shebang.” Those statements are false in the reviewed tree. Read-only base/head object census exited 0 and printed `TRACKED_SH 656`, `BASE_NO_SHEBANG ['TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh']`, `HEAD_NO_SHEBANG []`; the new shebang is at `pdda_fn.sh:1`. Fix both to “Before this fix, it was the only tracked .sh without a shebang; afterward none remain.” This requests only a prose correction.
+
+- [Should] **Q4 — distinguish repository scanning from the registered suite's fixture scans.** The premise that `validate.sh` does not execute shellcheck is too broad: `validate.sh:301` registers `test/gh365-shellcheck-parallel.sh`; that suite's `scan()` runs `shellcheck -S error` on its scratch corpus, including the shebang-less mutant. Its own comment explicitly says “this census suite itself must run shellcheck to test the shapes — self is the one exemption.” Consequently `PARKED/2026-11-13-pre-push-shellcheck.md:20` (“the pre-push hook runs the test pool, not shellcheck”) should say that pre-push/validate do not scan the actual tracked repository scripts. Fix: retain the timing-gap argument, but name the real missing coverage and acknowledge the fixture scan. No suite execution or new machinery is needed; this is a source-demonstrated prose correction.
+
+- [Nit] **Q5 — invocation claim is stronger than the evidence.** `GH-1455/README.md:19-21` infers “can only be run as bash” from mode 644. That mode rules out ordinary direct execution; it does not exclude sourcing or another explicitly selected interpreter. There is also an existing recorded invocation beyond the witness comment: `TESTS-RESULTS/2026-11-04+GH-1344/provenance.jsonl:1` records `bash pdda_fn.sh <tree> <fixture> 1292`. Fix: say “The recorded invocation uses bash; the file is non-executable and its body is unchanged.” This directly supports the intended behavior claim.
+
+- [Unverified — needs history evidence] **Q4 — introduction date.** The 2026-11-05 addition date in `PARKED/2026-11-13-pre-push-shellcheck.md:9` was not independently checked against commit history. The directory name is 2026-11-04 and the old provenance date is 2026-11-06, neither establishes the addition date. Fix: cite the introduction commit if retaining the precise eight-day claim. The #121 precedent is grounded in `.github/workflows/ci.yml:50-53` (“Fixed in #121 (e9b9b07)”).
+
+- [Pass] **Q5/Q7 — bounded claims and helper sweep.** `CHANGELOG.md:5` claims a shellcheck scan pass, not a fresh full `ci-local.sh` pass; `GH-1455/README.md:26` explicitly says the full runner was not rerun. `pdda_fn.sh:3-9` still sets fixture paths, extracts function definitions, evals them and prints the resolver return code. The shebang is the only body-independent addition. It remains a trusted-tree manual witness, not a new gate; no demonstrated defect justifies expanding this one-line fix. Fix: retain that boundary and correct the prose above.
+
+Handing off to Producer (claude-a) — address the two Should prose corrections, disposition the remaining notes, then return for review. No source or artifact was edited by Reviewer; only this relay file changed. The harness owns the commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
