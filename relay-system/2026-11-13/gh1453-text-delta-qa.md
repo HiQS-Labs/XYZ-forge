@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -84,5 +84,50 @@ Write graded findings, then a VERDICT. Set STATUS to Approved only if no `[Block
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**What this section tells an agent to do:** run the bounded wake from primary local state, let publication reconcile moved development, cite this section in directives, and retry the same command after fixing a reported hold.
+**What counts as a stop, per this section:** only a Jog-emitted `jog: checkpoint held:` message with exit 2 from the listed checkpoint reasons, plus the subsequent Git-command-failure category.
+**What it's not:** predicted conflicts, remote movement alone, or unrelated sessions' ledger commits.
+**Input boundary:** a `jog run --checkpoint-root <publication-clone> --max-tasks N` wake, its own queue rows in the primary, and its publication clone. The unqualified “Anything that is not on it is not a stop … continue” appears broader than that boundary.
+_Step A recorded before reading implementation; source-backed findings follow._
+
+swept file: no
+Scope: read the entire Jog skill and GH-1453 plan, the entire GH-1453 CHANGELOG entry, all of `JogCheckpoint`, `JogSupervisorLock` and `jog_run_main`, and relevant primary/target/Git helpers. Historical CHANGELOG entries and unrelated `jog_run.py` functions were not exhaustively swept. Graph tools were unavailable; direct source reads supplied the evidence. Pre-existing prose defects found in the reviewed sections are included below; this is not a claim that the entire underlying runner has no other defects. No Git command, gate, test suite, pytest, or executable fixture was run.
+
+- **[Should] F1 — Scope “continue” and make the closed list describe actual message families.** `skills/2-daily/jog/SKILL.md:192-195` says “Anything that is not on it is not a stop … continue.” Real refusals outside that list include the primary refusal at `jog_run.py:2537` (via `releases_app.py:4717-4722` and `harness_paths.py:177-184`), origin-mismatched execution target at `jog_run.py:543-544,2539-2542`, live supervisor lock at `:1530-1536,2550-2551`, execution-clone dirty exception at `:2619-2620` (outside the checkpoint handlers), and failed task / gate-derived park at `:2687-2693`. These must not become instructions to ignore observed failures. The class's named literal reasons are represented, and every listed fragment occurs in the code, but several are **prefixes**, not exact messages: e.g. `:2264-2265` appends `3 reconcile attempts; rerun the same command`, and `:2402-2403` appends the operation, issue and exit. Also `:2341-2345` converts `OSError`, `sqlite3.Error`, and `subprocess.SubprocessError` to `ContractError(str(exc))`; therefore “Any other message … is a git command that failed” (`SKILL.md:227-228`) is false. Missing/unreadable origin configuration in `primary_config_key` (`harness_paths.py:158-159`, called at `jog_run.py:2132`) can raise `CalledProcessError` before a checkpoint handler can normalize it; filesystem/JSON/SQLite failures in `begin` (`:2183,2206-2208`) can likewise produce a traceback. Smallest correction: say “For checkpoint publication, do not invent a hold from predicted remote movement; follow Jog's observed outcome. This list does not override task/gate failures, other Jog refusals, or unexpected errors.” Identify the enumerated entries as exact fixed prefixes with diagnostic suffixes (or full templates), and explicitly treat an unrecognized emitted error as an error to report, not permission to continue. Preserve the prohibition on invented stops; no new runtime machinery requested.
+  Observed input: `jog_run.py:2341-2345` accepts non-Git exception text; `:2687-2689` prints `jog: stopping queue execution on task failure.`, a concrete unlisted outcome. Read command `nl -ba utils/py/jog_run.py | sed -n '2299,2767p'`, exit 0, decisive spans: `raise ContractError(str(exc)) from exc` and `print("jog: stopping queue execution on task failure.")`.
+  Affected scope: only the skill/plan closed-list prose and its interpretation; checkpoint publication policy must not replace unrelated execution/error handling.
+  Falsifier: a failed task or primary/target refusal must still halt its affected operation; a merely predicted conflict with no emitted failure must not halt a wake. An explicit exclusion already attached to “continue” would remove the scope finding; none is present.
+
+- **[Should] F2 — The writer definition understates the protected input and overstates local replay detection.** `SKILL.md:179-183` restricts a competing writer to the same primary clone. The overlap check instead compares remote values with the saved start values for every touched issue, regardless of which clone/machine wrote them (`jog_run.py:2385-2392`). A second device can have its own primary pin (`harness_paths.py:156-174`) and local supervisor lock (`rtl.py:983-994`), push a change to the same queue row, and trigger that check. Conversely, the assertion “the replay check … stops on” an operator verb is conditional: replay is called only when development diverged and its ledger changed (`jog_run.py:2251-2267,2323-2325`); an unmoved branch goes straight to `_push`. Correction: define overlap once by the wake's own queue rows, including remote writers, distinguish the clone-local supervisor lock, and qualify unsupported-receipt detection as occurring when replay is required. Do not introduce a global coordinator or quiet-window requirement.
+  Observed input: existing A3 evidence explicitly records a remote overlap on GH-1315, with a named hold and exit 2 (`TESTS-RESULTS/2026-11-13+GH-1453/SUMMARY.md:18`); `jog_run.py:2389` uses `remote.get(gh) != start.get(gh)`, without a same-clone predicate.
+  Affected scope: changes to this wake's touched rows, versus disjoint remote ledger writes; local operator receipts only on the replay path.
+  Falsifier: the recorded A3 no-overlap control (`SUMMARY.md:19`) must reconcile, while the recorded remote same-row case must hold. An unmoved remote must not be described as running replay. These are source/evidence checks, not freshly executed clone checks.
+
+- **[Should] F3 — Step 10 duplicates the definition it promises to cite.** `PROJECT/2-WORKING/GH-1453-JOG-LOCAL-RECONCILE.md:244-247` proposes “as the Jog skill defines it (a second process writing this run's own queue rows in the same primary clone)”. The parenthesis is a paraphrase, contradicting both its own expected result and `SKILL.md:183-184`. The prerequisite replacement (`plan:241-243`) also restates exclusions rather than only pointing to the canonical conditions. Correction: keep the coordinator/gate operational constraint and replace the stop-policy text with a link to the Jog checkpoint section; remove the parenthetical definition and duplicated exclusion.
+  Observed input: the exact parenthetical at `plan:245-246`, immediately followed by “expect neither sentence to restate a Jog stop condition in its own words.”
+  Affected scope: the two proposed downstream replacement sentences only; do not edit the downstream issue in this review.
+  Falsifier: the proposed sentences contain a resolvable canonical section reference and no copied definition/exclusion; currently the quoted parenthesis disproves that.
+
+- **[Should] F4 — The universal retry promise is false for start-time holds.** `SKILL.md:230-234` says rerunning “retries publication first and dispatches no task” for all stops, including the start list. A fresh wake with no journal that fails `checkpoint requires a local origin/development ref` (`jog_run.py:2201-2202`) has not saved state; after repair, `begin()` saves a new running journal and returns True (`:2205-2209`), so dispatch is possible. Only the committed-journal branch calls `finish()` and returns False before dispatch (`:2182-2189,2575-2577`).
+  Observed input: fresh wake/no journal plus absent local tracking ref, the literal start refusal at `jog_run.py:2202`.
+  Affected scope: the “At a stop” recovery paragraph; distinguish pre-start refusals from a retained unpublished checkpoint.
+  Falsifier: after fixing that pre-start refusal, a successful rerun may execute the scheduled tasks; after a committed publication hold it must retry publication without dispatch. Correction: limit the no-dispatch promise to retained unpublished checkpoints and state that a pre-start refusal reruns admission.
+
+- **[Should] F5 — CHANGELOG's “only when” contradicts the closed list.** `CHANGELOG.md:10-13` says it stops only on same-row overlap, non-ledger conflict, or unreplayable writes. The concrete publication-clone dirty refusal at `jog_run.py:2275-2276`, already listed at `SKILL.md:223`, is a counterexample. Correction: describe those three as examples and point to the canonical section for the full list; do not create a second list.
+  Observed input: `checkpoint publication clone is dirty; preserve it before retry` (`jog_run.py:2276`), absent from CHANGELOG's exclusive three-case statement.
+  Affected scope: GH-1453 entry's exclusive stop claim.
+  Falsifier: a dirty publication clone still refuses even without row overlap, file conflicts or unreplayable writes; the changelog must allow that outcome.
+
+- **[Nit] F6 — “Contacts origin/development once” should say “only during publication.”** `SKILL.md:175` suggests a single contact; `jog_run.py:2247,2257,2268` fetches repeatedly, and `:2285-2286` reads the live ref during push. The intended phase boundary is sound, but “once” is inaccurate on retry/reconcile paths. Correct the word without adding a stop condition.
+- **[Pass] Directive-author placement is discoverable.** The instruction is next to the definition at `SKILL.md:179-184` inside the clearly titled checkpoint section. Its cite-only policy is coherent; F3 concerns the proposed consumer text, not its placement.
+- **[Pass] The corrected attribution and duration are internally consistent.** The plan's rating records 17:24–18:11 UTC and “47 minutes” (`plan:45-47`); “Where the stop came from” quotes the two source sentences and repeats 47 minutes (`:90-97`); step 10 explicitly identifies both as the operator's own text (`:238-240`). The GH-1453 CHANGELOG entry makes no conflicting authorship/duration claim. This establishes internal consistency only, not an independent verification of the downstream issue history.
+
+**VERDICT: FAIL**
+**Basis:** The prose still permits an agent to ignore real emitted failures, narrows the writer definition beyond the remote overlap check, and duplicates that definition in the proposed downstream fix. F4 and F5 are additional concrete prose/code contradictions. Findings request text corrections only. Runtime behavior and gates were not re-certified in this turn; any claim requiring execution remains **[Unverified — needs clone run]**.
+
+Handing off to Producer (claude-a) — adjudicate these findings under the operator's one-round limit; no second reviewer round is implied.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
