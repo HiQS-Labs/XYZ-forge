@@ -2104,13 +2104,24 @@ def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None, simul
 
 
 class JogCheckpoint:
-    """Opt-in publication around one existing Jog invocation (GH-1207/1358).
+    """Opt-in publication around one existing Jog invocation (GH-1207/1358/1453).
 
-    The primary owns only the two ledger artifacts. Push hooks run in a dedicated,
-    disposable full clone. A retained journal makes a failed push retry publication
+    The primary owns the two ledger artifacts and the views a write refreshes. Push hooks run in
+    a dedicated, disposable full clone. A retained journal makes a failed publication retry
     before another queue effect; interrupted execution still uses Jog cold recovery.
+
+    GH-1453: the wake depends on local state only. It contacts origin/development at publication,
+    and a development that moved meanwhile is reconciled there as a normal outcome: merge it,
+    take the remote ledger, replay this wake's own Jog writes through the canonical writers.
     """
     paths = ("releases.db", "releases.sql")
+    # perform_write's refresh_preview rewrites these two when the repo adopts them.
+    refreshed_views = ("RELEASES-PREVIEW.html", "LEADERBOARD.html")
+    # Every path a reconcile merge may rewrite; the resolver also regenerates LEADERBOARD.md.
+    merge_paths = paths + refreshed_views + ("LEADERBOARD.md",)
+    replay_statuses = ("completed", "parked", "failed", "pending")
+    reconcile_subject = "jog: reconcile wake checkpoint "
+    attempts = 3
 
     def __init__(self, root, publication_root):
         self.root = root
@@ -2132,71 +2143,277 @@ class JogCheckpoint:
         # Porcelain -z avoids quoting/whitespace ambiguity. Renames are foreign too.
         return _git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all").decode().split("\0")
 
+    def owned(self):
+        return self.paths + tuple(v for v in self.refreshed_views if Path(self.root, v).exists())
+
     def check_owned(self):
-        foreign = [r for r in self.dirty(self.root) if r and r[3:] not in self.paths]
+        owned = self.owned()
+        foreign = [r for r in self.dirty(self.root) if r and r[3:] not in owned]
         if foreign:
             raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
 
+    def _try(self, *args):
+        return subprocess.run(["git", "-C", self.root, *args], capture_output=True)
+
+    def _merging(self):
+        return self._try("rev-parse", "-q", "--verify", "MERGE_HEAD").returncode == 0
+
+    def _queue(self, db_path):
+        """gh_number -> [status, attempt_count, failure_reason], read-only."""
+        conn = connect(str(db_path), readonly=True)
+        try:
+            if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='jog_queue'").fetchone():
+                return {}
+            return {str(gh): [status, attempts, reason] for gh, status, attempts, reason in conn.execute(
+                "SELECT gh_number, status, attempt_count, failure_reason FROM jog_queue")}
+        finally:
+            conn.close()
+
+    def _anchor(self):
+        conn = connect(os.path.join(self.root, "releases.db"), readonly=True)
+        try:
+            row = conn.execute("SELECT txn_id FROM op_receipts ORDER BY id DESC LIMIT 1").fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
+
     def begin(self):
         _require_jog_primary(self.root)
-        self.check_owned()
         if self.journal.exists():
             self.state = json.loads(self.journal.read_text())
+            if self.state.get("phase") == "committed":
+                # A committed checkpoint only retries publication. After a reconcile merge the
+                # primary holds the remote's queue, whose running rows rebuild with a NULL lease
+                # PID; the orphan scan below would reset rows this wake never touched.
+                self.finish()
+                return False
+            self.check_owned()
             if self.state.get("phase") != "published":
                 # Never dispatch a new task to recover an interrupted wake.
                 reconciled = jog_reconcile_orphan_leases(self.root)
                 jog_reconcile_cold_start(self.root, reconciled)
                 self.finish()
                 return False
+        self.check_owned()
         if any(self.dirty(self.root)):
             raise ContractError("checkpoint refuses pre-existing ledger changes without an active journal")
-        _git(self.root, "fetch", "origin", "development")
+        # Local state only: no fetch, and no demand that the primary equal the remote.
+        if self._try("rev-parse", "-q", "--verify", "refs/remotes/origin/development").returncode:
+            raise ContractError("checkpoint requires a local origin/development ref")
+        if _git(self.root, "rev-list", "--count", "refs/remotes/origin/development..HEAD").strip() != b"0":
+            raise ContractError("checkpoint refuses unpublished local commits")
         head = _git(self.root, "rev-parse", "HEAD").decode().strip()
-        remote = _git(self.root, "rev-parse", "origin/development").decode().strip()
-        if head != remote:
-            raise ContractError("checkpoint requires primary HEAD at published origin/development")
-        self.state = {"base": head, "phase": "running"}
+        self.state = {"base": head, "phase": "running", "anchor": self._anchor(),
+                      "queue": self._queue(Path(self.root, "releases.db"))}
         self.save()
         return True
 
     def finish(self):
-        self.check_owned()
         head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        if self._merging():
+            # Only a merge this wake recorded before opening it is restored: same merge target,
+            # and HEAD still at the journal's commit. Anything else is someone's work in progress.
+            target = _git(self.root, "rev-parse", "MERGE_HEAD").decode().strip()
+            if not self.state.get("merging") or self.state["merging"] != target \
+                    or head != self.state.get("commit"):
+                raise ContractError("checkpoint refuses a merge in progress that this wake did not start")
+            self._abort_merge()
+            del self.state["merging"]
+            self.save()
+        self.check_owned()
         expected = self.state.get("commit", self.state["base"])
         if head != expected:
-            # A crash immediately after commit is recognized by its exact parent/message.
+            # A crash immediately after a commit is recognized by its exact parent/message.
             parent = _git(self.root, "rev-parse", "HEAD^").decode().strip()
             message = _git(self.root, "log", "-1", "--format=%s").decode().strip()
-            if parent != self.state["base"] or message != self.message():
+            ours = message == self.message() if "commit" not in self.state else (
+                message.startswith(self.reconcile_subject + self.state["base"] + " onto "))
+            if parent != expected or not ours:
                 raise ContractError("checkpoint primary HEAD changed outside this wake")
         if any(self.dirty(self.root)):
             if self.state.get("commit"):
                 raise ContractError("checkpoint has new changes after its recorded commit")
-            _git(self.root, "add", "--", *self.paths)
-            _git(self.root, "commit", "-m", self.message(), "--", *self.paths)
+            owned = self.owned()
+            _git(self.root, "add", "--", *owned)
+            _git(self.root, "commit", "-m", self.message(), "--", *owned)
         self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        if "anchor" in self.state:
+            self.state.setdefault("source", self.state["commit"])
         self.state["phase"] = "committed"
         self.save()
+        reconciles = 0
+        while True:
+            commit = self.state["commit"]
+            _git(self.root, "fetch", "origin", "development")
+            live = _git(self.root, "rev-parse", "refs/remotes/origin/development").decode().strip()
+            if live == commit or not self._try("merge-base", "--is-ancestor", commit, live).returncode:
+                break  # published already, or this wake has nothing the remote lacks
+            if not self._try("merge-base", "--is-ancestor", live, commit).returncode:
+                try:
+                    self._push(commit)
+                    break
+                except ContractError:
+                    # A rejection is a reason to reconcile only when development really moved.
+                    _git(self.root, "fetch", "origin", "development")
+                    if _git(self.root, "rev-parse", "refs/remotes/origin/development").decode().strip() == live:
+                        raise
+                    continue
+            if "source" not in self.state:
+                raise ContractError("development moved and this checkpoint journal predates automatic reconcile")
+            if reconciles == self.attempts:
+                raise ContractError("development kept moving through %d reconcile attempts; "
+                                    "rerun the same command" % self.attempts)
+            reconciles += 1
+            self._reconcile(live)
+        _git(self.root, "fetch", "origin", "development")
+        self.state["phase"] = "published"
+        self.save()
+        print("jog: published primary checkpoint " + self.state["commit"])
+
+    def _push(self, commit):
         pub = self.publication
         if any(self.dirty(pub)):
             raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
         if _git(pub, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
             raise ContractError("checkpoint publication clone must be on development")
-        _git(pub, "fetch", self.root, self.state["commit"])
-        _git(pub, "merge", "--ff-only", self.state["commit"])
-        if _git(pub, "rev-parse", "HEAD").decode().strip() != self.state["commit"]:
+        _git(pub, "fetch", self.root, commit)
+        _git(pub, "merge", "--ff-only", commit)
+        if _git(pub, "rev-parse", "HEAD").decode().strip() != commit:
             raise ContractError("publication clone contains commits beyond this checkpoint")
         # An empty wake or a crash after successful push needs no second push gate.
         # Read the live ref, not a potentially stale local tracking ref.
         published = _git(pub, "ls-remote", "--exit-code", "origin",
                          "refs/heads/development").decode().split()[0]
-        if published != self.state["commit"]:
+        if published != commit:
             # Normal push: never bypass the clone's configured gate or force a ref.
-            _git(pub, "push", "origin", self.state["commit"] + ":refs/heads/development")
-        _git(self.root, "fetch", "origin", "development")
-        self.state["phase"] = "published"
+            _git(pub, "push", "origin", commit + ":refs/heads/development")
+
+    def _app(self, *args):
+        app = os.path.join(os.path.dirname(os.path.abspath(__file__)), "releases_app.py")
+        proc = subprocess.run([sys.executable, app, "--root", self.root, *args],
+                              cwd=self.root, capture_output=True, text=True)
+        if proc.returncode:
+            raise ContractError("checkpoint ledger command failed: releases %s: %s" % (
+                " ".join(args), (proc.stderr.strip() or proc.stdout.strip())[-400:]))
+
+    def _abort_merge(self):
+        """Restore the pre-merge head. Staging the full write set first leaves the abort nothing
+        unstaged to trip on: rebuild and the view generators write without staging."""
+        for path in self.merge_paths:
+            self._try("add", "-A", "--", path)
+        _git(self.root, "merge", "--abort")
+        Path(self.root, "releases.db.bak").unlink(missing_ok=True)
+
+    def _reconcile(self, live):
+        """Merge the moved development into the primary and commit once; the journal's commit
+        becomes that merge. Any failure while the merge is open restores the pre-merge head."""
+        merge_base = _git(self.root, "merge-base", "HEAD", live).decode().strip()
+        self.state["merging"] = live  # recorded before the merge opens, so a rerun can own it
         self.save()
-        print("jog: published primary checkpoint " + self.state["commit"])
+        started = self._try("merge", "--no-commit", "--no-ff", live)
+        if not self._merging():
+            # No merge is open, so nothing may claim one later: clear the ownership marker.
+            del self.state["merging"]
+            self.save()
+            raise ContractError("checkpoint reconcile could not merge development: "
+                                + started.stderr.decode(errors="replace").strip()[-300:])
+        try:
+            unmerged = set(filter(None, _git(
+                self.root, "diff", "--name-only", "--diff-filter=U", "-z").decode().split("\0")))
+            foreign = sorted(unmerged - set(self.merge_paths))
+            if foreign:
+                raise ContractError("development moved and conflicts outside the ledger: " + ", ".join(foreign))
+            remote_ledger = bool(self._try("diff", "--quiet", merge_base, live, "--", "releases.sql").returncode)
+            if remote_ledger:
+                self._replay(live)
+            if remote_ledger or unmerged:
+                resolver = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                        "releases-merge-resolve.sh")
+                proc = subprocess.run(["bash", resolver, "--root", self.root],
+                                      cwd=self.root, capture_output=True, text=True)
+                if proc.returncode:
+                    raise ContractError("ledger merge resolver refused: "
+                                        + (proc.stderr.strip() or proc.stdout.strip())[-400:])
+                self._app("check")
+                Path(self.root, "releases.db.bak").unlink(missing_ok=True)
+            for path in self.merge_paths:
+                self._try("add", "-A", "--", path)
+            if _git(self.root, "ls-files", "-u").strip() or self._try("diff", "--quiet").returncode:
+                raise ContractError("unmerged or unstaged changes remain after the ledger merge resolver")
+            _git(self.root, "commit", "-q", "-m", self.reconcile_subject + self.state["base"] + " onto " + live)
+        except (ContractError, OSError, sqlite3.Error, subprocess.SubprocessError, SystemExit) as exc:
+            # SystemExit: the ledger gateway and writers refuse by exiting (releases_app.refuse).
+            self._abort_merge()
+            del self.state["merging"]
+            self.save()
+            if isinstance(exc, SystemExit):
+                raise ContractError("checkpoint ledger command failed: the ledger gateway refused "
+                                    "(exit %s)" % exc.code) from exc
+            raise ContractError(str(exc)) from exc
+        self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        del self.state["merging"]
+        self.save()
+        print("jog: reconciled wake checkpoint onto moved development " + live)
+
+    def _replay(self, live):
+        """Put the remote ledger in place and replay this wake's own Jog writes onto it through
+        the canonical writers. The writes are the source commit's receipts after the start anchor."""
+        Path(self.root, "releases.sql").write_bytes(_git(self.root, "show", live + ":releases.sql"))
+        _git(self.root, "add", "--", "releases.sql")
+        self._app("check", "--rebuild")
+        with tempfile.TemporaryDirectory() as tmp:
+            source_db = Path(tmp, "source.db")
+            source_db.write_bytes(_git(self.root, "show", self.state["source"] + ":releases.db"))
+            final = self._queue(source_db)
+            conn = connect(str(source_db), readonly=True)
+            try:
+                floor = 0
+                if self.state.get("anchor"):
+                    row = conn.execute("SELECT id FROM op_receipts WHERE txn_id = ?",
+                                       (self.state["anchor"],)).fetchone()
+                    if row is None:
+                        raise ContractError("checkpoint cannot replay this wake onto a moved development: "
+                                            "its start receipt is missing from the wake's ledger")
+                    floor = row[0]
+                receipts = conn.execute("SELECT op, target_gid FROM op_receipts WHERE id > ? ORDER BY id",
+                                        (floor,)).fetchall()
+            finally:
+                conn.close()
+        plan = []
+        for op, target in receipts:
+            match = re.fullmatch(r"GH-(\d+)", target or "")
+            kind = op[4:] if op.startswith("jog-") else None
+            if not match or (kind != "lease" and kind not in self.replay_statuses):
+                # jog-reconcile is a global orphan scan: replayed against another ledger it can
+                # reset rows this wake never touched, so it is a stop, never a replay.
+                raise ContractError("checkpoint cannot replay this wake onto a moved development: "
+                                    "it wrote %s %s" % (op, target))
+            plan.append((kind, match.group(1)))
+        touched = sorted({gh for _, gh in plan}, key=int)
+        db = Path(self.root, "releases.db")
+        remote = self._queue(db)
+        start = self.state.get("queue") or {}
+        overlap = [gh for gh in touched if remote.get(gh) != start.get(gh)]
+        if overlap:
+            raise ContractError("development changed the same Jog queue row(s) as this wake: "
+                                + ", ".join("GH-" + gh for gh in overlap))
+        last_status = {gh: i for i, (kind, gh) in enumerate(plan) if kind != "lease"}
+        for i, (kind, gh) in enumerate(plan):
+            try:
+                if kind == "lease":
+                    jog_acquire_lease(self.root, int(gh), os.getpid())
+                else:
+                    reason = (final.get(gh) or [None, None, None])[2] if last_status[gh] == i else None
+                    jog_set_status(self.root, int(gh), kind, failure_reason=reason)
+            except SystemExit as exc:
+                raise ContractError("canonical writer refused the replay of jog-%s GH-%s (exit %s)"
+                                    % (kind, gh, exc.code)) from exc
+        after = self._queue(db)
+        wrong = [gh for gh in touched if after.get(gh) != final.get(gh)]
+        wrong += [gh for gh, row in remote.items() if gh not in touched and after.get(gh) != row]
+        if wrong:
+            raise ContractError("checkpoint replay did not reproduce the wake's queue state: "
+                                + ", ".join("GH-" + gh for gh in sorted(wrong, key=int)))
 
     def message(self):
         return "jog: publish wake checkpoint " + self.state["base"]
@@ -2355,8 +2572,14 @@ def jog_run_main(args=None):
     checkpoint = None
     try:
         if checkpoint_root:
-            checkpoint = JogCheckpoint(root, checkpoint_root)
-            if not checkpoint.begin():
+            try:
+                checkpoint = JogCheckpoint(root, checkpoint_root)
+                started = checkpoint.begin()
+            except ContractError as exc:
+                # GH-1453: a checkpoint stop is a message and exit 2, never a traceback.
+                print(f"jog: checkpoint held: {exc}", file=sys.stderr)
+                sys.exit(2)
+            if not started:
                 checkpoint = None
                 return
         # Reconcile orphan leases via perform_write on startup
@@ -2538,7 +2761,11 @@ def jog_run_main(args=None):
                 break
 
         if checkpoint:
-            checkpoint.finish()
+            try:
+                checkpoint.finish()
+            except ContractError as exc:
+                print(f"jog: checkpoint held: {exc}", file=sys.stderr)
+                sys.exit(2)
     finally:
         _cleanup()
 

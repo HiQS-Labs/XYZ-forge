@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-11-13 — GH-1453: Jog checkpoint works from local state and reconciles a moved development
+
+A `jog run --checkpoint-root` wake no longer fetches at start or requires the primary to equal
+`origin/development`, and it no longer ends in a traceback when `development` moved during the run.
+At publication, `JogCheckpoint` (`utils/py/jog_run.py`) merges the moved branch into the primary,
+takes the remote ledger, replays the wake's own `jog-lease` / `jog-<status>` writes (read from the
+ledger's `op_receipts`) through the canonical writers, runs `utils/releases-merge-resolve.sh` and
+publishes the merge. A stop prints `jog: checkpoint held: <message>` and exits 2; for a moved branch
+the main ones are that both sides changed the same queue row, a non-ledger file conflicts, or the wake
+contains a write it will not replay (an orphan-lease reconcile or an operator queue verb). The full
+list is in the Jog skill, section *Checkpoint publication*. A rerun retries publication without
+dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
+before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
+longer has its checkpoint refused after one queue write. The Jog skill now carries the closed list
+of checkpoint stops, each the fixed start of a message, and the one definition of "competing
+writer", which run directives cite instead of restating. Nobody adds a checkpoint stop: a predicted
+conflict with no failed command is not one. A failed task or gate, another Jog refusal, or an
+unexpected error is still reported as it is.
+
+**Bet (Easy to reverse):** replaying receipts in order reproduces the wake's queue state on the
+remote ledger whenever the remote left those rows alone; the replay is verified row by row and any
+mismatch stops before the merge is committed. The behaviour is behind the opt-in flag; revert the one
+PR to restore the plain push. Not covered: a wake that includes crash recovery and meets a moved
+branch still needs a hand reconcile.
+Evidence: `TESTS-RESULTS/2026-11-13+GH-1453/`.
+
 ## 2026-11-13 — GH-1452: merge-cleanup forecasts the landing plan at planning time
 
 A `merge-cleanup` dry run over 3 or more `--prs` now prints a Landing forecast and stores it with the head pins, so direct vs group is decided with evidence when the PR set is chosen rather than at the first `--execute` refusal. One disposable no-checkout clone simulates each PR alone, each pair and an ordered fold with `git merge-tree` (`ledger_merge.landing_forecast`, sharing B1's repair-path set through `ledger_repair_paths`), reports a churn-risk band instead of an exact repair count, and withholds the recommendation when any fetch, head check or merge-tree step is unknown. `pin_selection` publishes pins and forecast as one atomic snapshot under the record lock. The GH-1158 decision is unchanged and stays the operator's; the forecast only annotates it: the exit-5 refusal repeats the stored recommendation, and `batch_record.set_landing_plan` takes an optional comparison (match, override, stale) that the batch issue shows. The forecast covers the queue Phase 4 lands (every open PR sorted, then deferrals), so a collision edge through an unlisted PR cannot reorder it unseen. Evidence: existing `test/gh436-merge-cleanup.py` (227 tests) and 14 retained manual scenarios with red controls in `TESTS-RESULTS/2026-11-13+GH-1452/`.
