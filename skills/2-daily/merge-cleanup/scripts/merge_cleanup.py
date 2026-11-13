@@ -651,9 +651,12 @@ def forecast_comparison(primary: Path, integration: str, decision: str, pins: Di
         stale.append("pinned heads differ from the forecast's")
     if [int(n) for n in fc.get("order") or []] != [int(n) for n in order]:
         stale.append("sequence differs from the forecast's")
-    base_now = run_git(primary, ["rev-parse", f"origin/{integration}"])
-    if base_now.returncode == 0 and fc.get("base_sha") and base_now.stdout.strip() != fc["base_sha"]:
-        stale.append(f"base moved {fc['base_sha'][:10]} -> {base_now.stdout.strip()[:10]}")
+    # The early checkpoint runs before any fetch, so a cached origin/<integration> would hide drift:
+    # ask the remote (bounded, read-only). A failed lookup makes no drift claim either way.
+    tip = _net_git(primary, ["ls-remote", "origin", f"refs/heads/{integration}"], timeout=30)
+    base_now = tip.stdout.split()[0] if tip.returncode == 0 and tip.stdout.split() else ""
+    if base_now and fc.get("base_sha") and base_now != fc["base_sha"]:
+        stale.append(f"base moved {fc['base_sha'][:10]} -> {base_now[:10]}")
     rec = fc.get("recommendation")
     state = "no-recommendation" if rec is None else ("match" if rec == decision else "override")
     return {"state": state, "recommendation": rec, "stale": bool(stale), "stale_reasons": stale,
