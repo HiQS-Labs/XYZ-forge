@@ -1,21 +1,50 @@
-A6 skill text: listed stop messages = 17
-  found checkpoint root must be a separate full clone with the same origin
-  found checkpoint refuses unrelated changes
-  found checkpoint refuses pre-existing ledger changes without an active journal
-  found checkpoint requires a local origin/development ref
-  found checkpoint refuses unpublished local commits
-  found development changed the same Jog queue row(s) as this wake
-  found development moved and conflicts outside the ledger
-  found checkpoint cannot replay this wake onto a moved development
-  found checkpoint replay did not reproduce the wake's queue state
-  found canonical writer refused the replay of
-  found development kept moving through
-  found development moved and this checkpoint journal predates automatic reconcile
-  found checkpoint primary HEAD changed outside this wake
-  found checkpoint has new changes after its recorded commit
-  found checkpoint publication clone is dirty; preserve it before retry
-  found checkpoint publication clone must be on development
-  found publication clone contains commits beyond this checkpoint
+A6 skill text, forward: listed stop messages = 22
+  found   checkpoint root must be a separate full clone with the same origin
+  found   checkpoint refuses unrelated changes
+  found   checkpoint refuses pre-existing ledger changes without an active journal
+  found   checkpoint requires a local origin/development ref
+  found   checkpoint refuses unpublished local commits
+  found   development changed the same Jog queue row(s) as this wake
+  found   development moved and conflicts outside the ledger
+  found   checkpoint cannot replay this wake onto a moved development
+  found   checkpoint replay did not reproduce the wake's queue state
+  found   canonical writer refused the replay of
+  found   development kept moving through
+  found   development moved and this checkpoint journal predates automatic reconcile
+  found   checkpoint refuses a merge in progress that this wake did not start
+  found   unmerged or unstaged changes remain after the ledger merge resolver
+  found   checkpoint reconcile could not merge development
+  found   ledger merge resolver refused
+  found   checkpoint ledger command failed
+  found   checkpoint primary HEAD changed outside this wake
+  found   checkpoint has new changes after its recorded commit
+  found   checkpoint publication clone is dirty; preserve it before retry
+  found   checkpoint publication clone must be on development
+  found   publication clone contains commits beyond this checkpoint
+A6 reverse: ContractError literals in JogCheckpoint = 23
+  listed  checkpoint root must be a separate full clone with the same origin
+  listed  checkpoint refuses unrelated changes: 
+  listed  checkpoint refuses pre-existing ledger changes without an active journal
+  listed  checkpoint requires a local origin/development ref
+  listed  checkpoint refuses unpublished local commits
+  listed  checkpoint refuses a merge in progress that this wake did not start
+  listed  checkpoint primary HEAD changed outside this wake
+  listed  checkpoint has new changes after its recorded commit
+  listed  development moved and this checkpoint journal predates automatic reconcile
+  listed  development kept moving through %d reconcile attempts; 
+  listed  checkpoint publication clone is dirty; preserve it before retry
+  listed  checkpoint publication clone must be on development
+  listed  publication clone contains commits beyond this checkpoint
+  listed  checkpoint ledger command failed: releases %s: %s
+  listed  checkpoint reconcile could not merge development: 
+  listed  development moved and conflicts outside the ledger: 
+  listed  ledger merge resolver refused: 
+  listed  unmerged or unstaged changes remain after the ledger merge resolver
+  listed  checkpoint cannot replay this wake onto a moved development: 
+  listed  checkpoint cannot replay this wake onto a moved development: 
+  listed  development changed the same Jog queue row(s) as this wake: 
+  listed  canonical writer refused the replay of jog-%s GH-%s (exit %s)
+  listed  checkpoint replay did not reproduce the wake's queue state: 
 states remote ledger activity is not a stop: True
 red control, section present on base 6c0c76bb5: False
 VERDICT: PASS

@@ -22,7 +22,7 @@ jog_run.ContractError: checkpoint requires primary HEAD at published origin/deve
   parent_is_base: True
   one_parent: True
   subject: jog: publish wake checkpoint 6c0c76bb5cdca8dd4a70ec6cf0355c248355b5d0
-  console: jog: published primary checkpoint ce881dc3a28b9d67383d883bea9d931e6f550b44
+  console: jog: published primary checkpoint e90c37bb43599eb0d2e14593fb51475478f4f138
   remote_queue_row: ['parked', 1, 'fixture park']
   primary_clean: True
 

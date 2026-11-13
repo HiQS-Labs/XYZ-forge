@@ -10,7 +10,7 @@ ledger's `op_receipts`) through the canonical writers, runs `utils/releases-merg
 publishes the merge. It stops, with `jog: checkpoint held: <message>` and exit 2, only when both sides
 changed the same queue row, a non-ledger file conflicts, or the wake contains a write it will not
 replay (an orphan-lease reconcile or an operator queue verb). A rerun retries publication without
-dispatching a task. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
+dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
 before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
 longer has its checkpoint refused after one queue write. The Jog skill now lists every legal
 checkpoint stop and states that ledger writes by other sessions are never one.

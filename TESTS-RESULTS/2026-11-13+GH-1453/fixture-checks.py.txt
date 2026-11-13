@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GH-1453 manual checks A1-A12 against a local fixture (no suite, GH-831).
+"""GH-1453 manual checks A1-A14 against a local fixture (no suite, GH-831).
 
 Usage: fx.py <cand|base> <rev> <source-clone> <workdir> [check ...]
 
@@ -473,8 +473,57 @@ def a12():
            view_regenerated_from_ledger=regen, **state)
 
 
+def a13():
+    """A run dies while its own reconcile merge is open; the rerun restores it and publishes."""
+    fx = Fx("a13")
+    fx.begin(ok=True)
+    x = fx.other_roadmap(67)
+    rc, out = fx.py(
+        "c = JogCheckpoint(ROOT, PUB)\nc.state = json.loads(c.journal.read_text())\n"
+        "def killed(live):\n    raise KeyboardInterrupt('fixture: process killed mid-merge')\n"
+        "c._replay = killed\nc.finish()\n")
+    j = fx.journal()
+    died = {"rc": rc, "merge_left_open": fx.merging(), "journal_records_merge_target": j.get("merging") == x,
+            "journal_phase_when_killed": j.get("phase")}
+    rc2, out2 = fx.resume()
+    state = published_state(fx, [x, j.get("source")])
+    record("A13 own interrupted merge is restored on rerun",
+           rc != 0 and died["merge_left_open"] and died["journal_records_merge_target"] and rc2 == 0
+           and good(state) and "merging" not in fx.journal(),
+           **died, rerun_rc=rc2, rerun_out=out2[-240:], **state)
+
+
+def a14():
+    """A merge the operator opened is never aborted: the rerun refuses and leaves it intact."""
+    fx = Fx("a14")
+    fx.begin(ok=True)
+    hook = fx.pub / ".git/hooks/pre-push"
+    hook.write_text("#!/bin/sh\nexit 1\n")
+    hook.chmod(0o755)
+    rc, out = fx.finish()                               # checkpoint committed; the push is refused
+    hook.unlink()
+    source = fx.journal().get("source")
+    fx.other_sync()
+    (fx.other / "operator-repair.txt").write_text("operator work in progress\n")
+    y = fx.other_commit("operator: repair commit", paths=("operator-repair.txt",), push=False)
+    git(fx.primary, "fetch", "-q", str(fx.other), "development")
+    run(["git", "-C", str(fx.primary), "merge", "--no-commit", "--no-ff", y], ok=False)
+    opened = fx.merging() and git(fx.primary, "rev-parse", "MERGE_HEAD") == y
+    rc2, out2 = fx.resume()
+    kept = fx.merging() and git(fx.primary, "rev-parse", "MERGE_HEAD") == y \
+        and (fx.primary / "operator-repair.txt").exists()
+    record("A14 a merge this wake did not start is preserved",
+           rc != 0 and opened and rc2 != 0 and kept
+           and "checkpoint refuses a merge in progress that this wake did not start" in out2
+           and git(fx.primary, "rev-parse", "HEAD") == source and fx.journal().get("phase") == "committed",
+           first_rc=rc, operator_merge_open=opened, rerun_rc=rc2, rerun_tail=out2[-200:],
+           operator_merge_still_open_with_its_file=kept,
+           head_is_checkpoint_commit=git(fx.primary, "rev-parse", "HEAD") == source,
+           journal_phase=fx.journal().get("phase"))
+
+
 CHECKS = {"a1": a1, "a2": a2, "a3": a3_a5, "a3c": a3_control, "a4": a4, "a7": a7, "a8": a8, "a9": a9,
-          "a10": a10, "a11": a11, "a12": a12}
+          "a10": a10, "a11": a11, "a12": a12, "a13": a13, "a14": a14}
 BASE_DEFAULT = ("a1", "a2", "a4", "a9", "a10")
 
 if __name__ == "__main__":

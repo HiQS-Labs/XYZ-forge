@@ -1,7 +1,7 @@
 # GH-1453 manual checks: Jog checkpoint, local state and one reconcile
 
-Code under test: `utils/py/jog_run.py` at `f2eec6528` (unchanged through `7be8cfc02`, which adds the
-skill text). Base for red controls: `6c0c76bb5`. Platform: macOS, Python 3.
+Code under test: `utils/py/jog_run.py` at `33c8682c3` (the final-QA round 1 fixes on top of
+`f2eec6528`). Base for red controls: `6c0c76bb5`. Platform: macOS, Python 3.
 
 The checkpoint has no suite, and the repo adds none (GH-831). These are manual checks driven by
 `fixture-checks.py.txt` (run as `python3 fixture-checks.py.txt <cand|base> <rev> <source-clone> <workdir>`).
@@ -18,17 +18,19 @@ every write local. Nothing touches GitHub or the maintained primary.
 | A3 control (no overlap) | PASS: same fixture reconciles | not run |
 | A4 unmoved (preservation) | PASS | PASS (same parent, subject and console line) |
 | A5 rerun after a stop | PASS: publishes, no task dispatched | not run |
-| A6 skill text | PASS: 17 listed messages all found in `jog_run.py` | red: section absent |
+| A6 skill text | PASS: 22 listed messages all found in `JogCheckpoint`, and all 23 `ContractError` literals in the class are listed | red: section absent |
 | A7 moved again during publication | PASS: two reconciles, one publish, `attempt_count` 1 | not run |
 | A8 code-only movement | PASS: one merge commit, ledger files byte-equal to the checkpoint | not run |
 | A9 adopted view | PASS: view committed with the checkpoint; foreign file still refused | red: `checkpoint refuses unrelated changes: [' M RELEASES-PREVIEW.html']` |
 | A10 publication-only resume | PASS: merge recognised and published, no new receipt, row B unchanged | red: resume ran the orphan scan (receipts 2920 to 2921, row reset to pending) |
 | A11 restore after partial view output | PASS: no `MERGE_HEAD`, tree equals the checkpoint commit, no backup; retry publishes | not run |
 | A12 view conflict without a ledger change | PASS: view regenerated, nothing unmerged | not run |
+| A13 own interrupted merge | PASS: run killed with its merge open and the target recorded; the rerun restores it and publishes | not run |
+| A14 a merge this wake did not start | PASS: rerun refuses by name; the operator's merge and its file are still there | not run |
 
-Logs: `candidate-A1-A12.log` (12 checks, 0 failed), `base-red-controls.log` (5 checks, each showing
+Logs: `candidate-A1-A14.log` (14 checks, 0 failed), `base-red-controls.log` (5 checks, each showing
 the stated base behaviour), `a6-skill-text.log`. Fixture paths in the logs are replaced with
-`<fixture>` and `<task-clone>`.
+`<fixture>`, `<fixture-dir>` and `<task-clone>`.
 
 ## What these checks do not show
 
@@ -40,11 +42,15 @@ the stated base behaviour), `a6-skill-text.log`. Fixture paths in the logs are r
   line. No builder or reviewer turn was dispatched, so this is not evidence about a full multi-task run.
 - A9 shows the adopted-view gap is real on base: any repo with `RELEASES-PREVIEW.html` at its root has
   its checkpoint refused after one queue write. This repo has no such file.
-- One reviewed deviation from the plan: `finish()` aborts this wake's own merge if a previous run died
-  while it was open (journal has `source` and `MERGE_HEAD` exists). Not exercised by a fixture.
+- One addition beyond the approved plan: a rerun restores a merge only when the journal recorded that
+  merge's target before opening it and `HEAD` is still the journal's commit (A13). Any other open merge
+  is refused and left alone (A14). The first version inferred ownership from the journal alone; final
+  QA round 1 caught that it could abort an operator's merge.
+- A6's reverse direction matches each `ContractError` literal in the class by its leading text, so it
+  shows every Jog-authored stop is listed, not that the wording of each explanation is right.
 
 ## Existing suites
 
-Run at `f4626d09b` in a disposable full gate clone, identity unchanged before and after:
+Run at `f4626d09b` (before the round 1 fixes, which touch only `JogCheckpoint`) in a disposable full gate clone, identity unchanged before and after:
 `gh280-jog-marathon-adapter` 227 pass, 0 fail; `jog-queue` 34 passed, 0 failed. Logs are in this folder.
 Neither suite exercises `--checkpoint-root`; they show the rest of Jog did not regress.

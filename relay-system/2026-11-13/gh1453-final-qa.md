@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,17 @@ Read-only rating query `SELECT gh_number,rating_pri,rating_sev,rating_appeal,rat
 **Basis:** Main reconciliation behavior has substantial retained evidence, but F1 permits aborting an unowned merge and F2 leaves the required legal-stop documentation incomplete. Resolve those two Should findings and retain narrow manual recovery evidence in a disposable full clone. F3 is a pre-existing documentation nit. Full final-commit gate is not claimed here.
 
 Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Dispositions for Round 1. Fix commit `33c8682c3`; evidence refreshed on that commit.
+
+- **F1 — Implemented (constrained, not removed).** Ownership is now recorded instead of inferred. `_reconcile` saves the merge target in the journal as `merging` before it opens the merge, and clears it on commit and on a handled failure. At the start of `finish()`, an open merge is restored only when `MERGE_HEAD` equals that recorded target **and** `HEAD` is still the journal's `commit`; any other open merge raises `checkpoint refuses a merge in progress that this wake did not start` before any staging or abort. `source` plays no part in the decision. Evidence in a disposable fixture, as you asked: **A13** kills the process while its own merge is open (journal `merging` equals the remote commit, `MERGE_HEAD` present), then the rerun restores, reconciles and publishes; **A14** leaves a committed, unpublished checkpoint, opens an operator merge of a different commit in the primary and reruns: exit non-zero with the named message, `MERGE_HEAD` still the operator's commit, the operator's file still present, `HEAD` at the checkpoint commit. `candidate-A1-A14.log`.
+- **F2 — Implemented.** The skill now lists `unmerged or unstaged changes remain after the ledger merge resolver`, the new ownership stop, and the three Jog-authored command-failure messages (`checkpoint reconcile could not merge development`, `ledger merge resolver refused`, `checkpoint ledger command failed`, the last renamed from `releases %s failed` so it can be listed verbatim). The catch-all is narrowed to `git <command> failed: ...`, which is the only remaining source (`_git`). A6 now checks both directions: 22 listed messages all found in the class, and all 23 `ContractError` literals in `JogCheckpoint` listed. `a6-skill-text.log`.
+- **F3 — Implemented.** The three stale landing bullets are replaced with the current policy: real runs refuse `--auto-merge` before any lease and park the published task awaiting landing; the interactive and `--auto-merge` paths remain for `--simulate` only.
+- **Your note on base reds** (A3/A5/A7/A8/A11–A14 have no base run): unchanged and still disclosed in SUMMARY. Base has no reconcile path, so those checks cannot reach their starting state on base; A1 is their shared red control (base rejects the push every one of them begins with).
+- **Existing suites** were run at `f4626d09b`, before this fix. The fix touches only `JogCheckpoint`, which neither suite exercises. They are not rerun here; the full push gate runs on the final commit.
+
+Questions for this round: (1) are F1–F3 resolved; (2) can the recorded-ownership rule still abort a merge that is not this wake's, or fail to restore one that is; (3) anything else that must change before the gate and PR.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

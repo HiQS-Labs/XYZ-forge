@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Manual checks A1–A12 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Existing suites and the full gate in a disposable clone, final Codex QA, then a ready PR against `development`. |
+| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Final QA r1 findings fixed in `33c8682c3`. Manual checks A1–A14 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Existing suites and the full gate in a disposable clone, final Codex QA, then a ready PR against `development`. |
 
 ## Rating rationale (2026-11-13)
 
@@ -228,7 +228,7 @@ checkpoint commit first, then the latest reconcile merge.
 Each item is a manual check against a local fixture: a bare origin, a primary clone carrying the
 primary pin, a publication clone, and a third clone that plays the other session. As in the GH-1358
 controls, the checks drive `JogCheckpoint` and the supported ledger CLI directly; A3 also runs the
-`jog run` command line for the message and exit code. A1–A3 and A5–A12 are change checks and must fail on
+`jog run` command line for the message and exit code. A1–A3 and A5–A14 are change checks and must fail on
 base `6c0c76bb5` for the stated reason. A4 is a preservation check and must pass on base.
 
 - [x] **A1 moved, disjoint.** The other session pushes a roadmap write during the wake. The wake ends
@@ -278,6 +278,12 @@ base `6c0c76bb5` for the stated reason. A4 is a preservation check and must pass
   ledger change. The wake publishes with no unmerged entry and a view regenerated from the ledger.
   A8, with a disjoint code file, is the control where the ledger files stay byte-equal.
 
+- [x] **A13 own interrupted merge.** A run is killed while its reconcile merge is open. The journal
+  records the merge target; the rerun restores the merge, reconciles and publishes.
+- [x] **A14 a merge this wake did not start.** With a committed, unpublished checkpoint, the operator
+  opens their own merge in the primary and the command is rerun. It stops by name; the operator's merge
+  and its file are untouched.
+
 Not covered by a fixture: a writer refusal during replay (step 4.7). The overlap check runs first and
 catches every input found that would make a writer refuse, so this path is defence in depth; it is
 checked by reading and recorded as unverified by fixture.
@@ -287,7 +293,7 @@ checked by reading and recorded as unverified by fixture.
 - Existing suites, run in a disposable `-gate` clone: `test/gh280-jog-marathon-adapter.sh`,
   `test/jog-queue.sh`. Final gate by `utils/ci-route.sh` classification of the changed paths
   (`jog_run.py` is core, so the full qualifying run, once, on the approved commit).
-- A1–A12 as manual checks with commands, output and verdicts under
+- A1–A14 as manual checks with commands, output and verdicts under
   `TESTS-RESULTS/2026-11-13+GH-1453/`. Smoke: A1 is the main path; A5 is the adjacent path.
 - No new suite, registry entry or test file (GH-831).
 
@@ -308,10 +314,12 @@ checked by reading and recorded as unverified by fixture.
 
 ## Implementation notes (2026-11-13)
 
-- **One addition beyond the approved plan:** `finish()` first aborts this wake's own merge when a
-  previous run died while it was open (the journal has `source` and `MERGE_HEAD` exists). Without it,
-  the merged-in files would read as foreign dirt and the checkpoint could never retry. It uses the
-  same restore as step 6. Not exercised by a fixture.
+- **One addition beyond the approved plan:** a rerun restores this wake's own merge when a previous
+  run died while it was open. Ownership is recorded, not inferred: `_reconcile` saves the merge target
+  in the journal (`merging`) before opening the merge, and `finish()` restores only when `MERGE_HEAD`
+  equals it and `HEAD` is still the journal's commit. Any other open merge is the stop `checkpoint
+  refuses a merge in progress that this wake did not start`, and nothing is touched. Checks A13 and
+  A14. (The first version inferred ownership from the journal alone; final QA round 1, F1.)
 - **An empty wake publishes nothing.** When the checkpoint commit is already contained in the
   remote, `finish()` marks the journal published without a merge or a push.
 - **A rejected push is a reason to reconcile only when `development` really moved.** If the live ref
