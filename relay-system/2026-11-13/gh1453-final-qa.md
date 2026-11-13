@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -242,5 +242,65 @@ Disposition for Round 2. No product code changed; the code under review is still
 - **F4 — Implemented.** You are right: `Fx.remote_pri` read the other session's own clone. It now opens `releases.db` taken from the bare origin's `development` ref, read-only, and selects `rating_pri` from `roadmap_items` for the row (`fixture-checks.py.txt`, `Fx.remote_db(ref)` / `Fx.remote_pri(ref)`). All 14 checks were rerun on `33c8682c3` in the disposable fixture with the corrected reader: `candidate-A1-A14.log` line 14 `published_roadmap_pri: [61]` (A1), line 23 `[62]` (A2), line 87 `[65]` (A7). The controlled failure you asked for is retained as an observer control inside A1: the same reader against the origin's ledger at the wake's base, before the other session's write, returns `[60]` (line 15), and A1's verdict requires that it is not `[61]`. So the reader reports what the published ledger holds and distinguishes a kept write from a lost one. The log labels are renamed `published_roadmap_pri`. SUMMARY carries a correction section naming the earlier wrong-target runs; those logs remain in history at `95c3421ac`.
 
 Question for this round: is F4 resolved, and is anything left before the full gate and the PR?
+
+### Reviewer · Round 3
+
+**What this delivers:** A checkpoint wake runs against local state and publishes at the end. When development moved, it replays supported queue receipts onto the remote ledger through the canonical writers, or holds a retryable checkpoint with a named reason.
+
+**How the existing system works, per these documents:** Lease and status changes already use the canonical ledger writer and record receipts. The checkpoint journal identifies the wake and its replay source; publication uses a separate full clone. The existing merge resolver rebuilds the selected dump and regenerates adopted views.
+
+**What it's not:** Per-transition publication, a general ledger merger, changes to execution-clone preflight or merge-cleanup, or proof of a dispatched multi-task run (explicit document exclusions).
+
+**Input boundary:** User instructions and the entire relay, then plan and SUMMARY before source validation. Earlier relay turns already disclose source findings; this is a continuation, not a blind independent paraphrase. The paraphrase above reflects that document-only boundary.
+
+**Assessment: source-backed.**
+swept file: yes
+
+Swept the full Jog supervisor and skill, GH-1453 changelog entry, manual driver/results, canonical writer/lease/status/rebuild functions and merge resolver. No additional pre-existing runtime defect established. Graph Verify: list_projects has no project for this worktree; XYZ-forge lookup returns zero JogCheckpoint symbols, generation `2026-09-01T15:54:30Z`; coverage reports changed/missing metadata and excluded CHANGELOG. Current source fallback used. No git command, suite, executable fixture or phase gate ran. The requested base diff is unavailable under the explicit no-git instruction; base comparison uses the retained controls and plan recon. Final-commit gate remains the harness's subsequent work.
+
+**Findings / dispositions**
+
+- **[Pass] F4 resolved: the assertion now observes publication.** E denotes `TESTS-RESULTS/2026-11-13+GH-1453/`. `E/fixture-checks.py.txt:157–170` extracts `ref + ":releases.db"` from the bare origin and opens that snapshot with `mode=ro`; it no longer reads `self.other`. `:225–234` requires the published value `[61]` and a different base value; refreshed `E/candidate-A1-A14.log:14–15` records `published_roadmap_pri: [61]`, `observer_control_pri_at_base: [60]`. A2 and A7 record `[62]` and `[65]` at `:23` and `:87`. This resolves the wrong-target observation, without requiring a runtime change.
+  Independent observer control command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` (AST-parse the recorded driver, compile only `Fx.remote_pri`, bind `remote_db(ref)` to a scratch SQLite DB containing GH-1315; leave `other='OTHER_SESSION_61'`; read successive published values 61, 999 and missing, asserting results `[61]`, `[999]`, `[]` and three `development` snapshot requests). Exit **0**. Decisive output: `published=61 other=61 observed=[61] A1_priority_predicate=True`; `published=999 other=61 observed=[999] A1_priority_predicate=False`; `published=None other=61 observed=[] A1_priority_predicate=False`; `remote_db refs: ['development', 'development', 'development']`; `observer control PASS; no product fixture or git executed`. This exercises the current observer and A1 priority predicate, not the complete product fixture. All created DB files were under `.relay-scratch/tmp`.
+
+- **[Pass] F1–F3 remain resolved.** `utils/py/jog_run.py:2212–2222` admits abort only for recorded target plus matching HEAD; `:2311–2313` records ownership before opening the merge. Refreshed A13 log `:172–185` shows the open owned merge followed by clean publication; A14 `:192–195` shows the named refusal and `operator_merge_still_open_with_its_file: True`. Skill `:120–125` describes real-run parking and simulation-only merge behavior. A6 independently rechecked with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` (AST leading-literal versus listed-prefix comparison), exit **0**: `stop prefixes: 22 ContractError literals: 23 unlisted: []`. This covers Jog-authored ContractError text, not external exceptions.
+
+- **[Nit] F5 — distinguish implementation revision from actual fixture revision in the receipt.** `E/candidate-A1-A14.log:1` says `rev=a286e2ab27d99331f6a612b4129869d47055a836`, also visible in A4's base subject at `:78`; `E/provenance.jsonl:1` instead claims `tested_rev=33c8682c3a4f1290ba2844a40c3c736f11bb8caa` and a command using that revision. SUMMARY's opening and the Producer reply likewise name 33c8682c3. The results remain concrete observations and the Producer says product code is unchanged, but these are distinct commit identities. Optional record correction: retain the log's actual tested revision and separately name the implementation revision, with a source-equality receipt if desired. This review does **not** attest that the refreshed fixture ran at 33c8682c3, or that the final-commit gate has passed. No product behavior change requested.
+
+**Acceptance audit** — retained observations, not reruns. Source references below are in `utils/py/jog_run.py`; log references are E/candidate-A1-A14.log unless named otherwise.
+
+| Item | Code / decisive observation | Assessment |
+|---|---|---|
+| A1 | `:2354–2409`; log `:7–15`: published, wake row `['parked', 1, 'fixture park']`, ancestors/check/clean/equal true, published priority `[61]` | [Pass] Both sides measured in published DB. |
+| A2 | `:2200–2208`; log `:18–30`: `begin_rc: 0`, `tracking_ref_stale: True`, published priority `[62]`, published/clean/equal | [Pass] Behind-start plus preservation. |
+| A3 | `:2389–2392`, `:2341–2345`, `:2571`; log `:36–48`: named GH-1315 overlap, `cli_rc: 2`, `cli_no_traceback: True`, restored/remote unchanged | [Pass] Real refusal and CLI message; disjoint control at `:64–72`. |
+| A4 | `:2236–2239`, `:2251–2254`; log `:76–81`: `parent_is_base: True`, `one_parent: True`, original subject/console formats; same checks in base log | [Pass] Normal nonempty unmoved case preserved. |
+| A5 | `:2184–2189`; log `:51–62`: `no_dispatch: True`, published/clean/equal | [Pass] Retry observed through CLI. |
+| A6 | skill `:171–231`, class stops; E/a6-skill-text.log: `22` prefixes, `23` literals, `VERDICT: PASS`; fresh AST check above | [Pass] Both directions; base section absent. |
+| A7 | `:2244–2267`, immutable source `:2241`; log `:85–97`: `reconciles: 2`, priority `[65]`, wake attempt_count 1 | [Pass] Latest remote value preserved, no doubled lease. |
+| A8 | `:2323–2326`; log `:101–109`: `merge_parents_are_checkpoint_and_remote: True`, `ledger_files_byte_equal_to_checkpoint: True` | [Pass] Code-only control. |
+| A9 | `:2146–2153`, `:2236`; log `:112–118`: view committed, clean, `foreign_refused: True` | [Pass] Adopted view and unrelated-dirt control. |
+| A10 | `:2184`, `:2224–2232`; log `:126–131`: same published merge, receipts 2927 → 2927, running row B unchanged, no dispatch | [Pass] Committed-merge recovery. |
+| A11 | `:2299–2305`, `:2341`; log `:145–153`: no merge, tree equals HEAD, no backup, `retry_published: True` | [Pass] Controlled partial-output restore, not an actual generator death. |
+| A12 | `:2326–2339`; resolver `:161–237`; log `:157–168`: conflicting line 375, regenerated view, published/clean/equal | [Pass] Conflict resolved; no independent-render byte comparison. |
+
+None is merely a no-crash observation. A13/A14 add the owned-interruption/foreign-merge observations cited above; A13 injects KeyboardInterrupt before replay, not an OS kill. Fixture revision attribution is limited by F5.
+
+**Base rejection and falsification:** Driver `:217–221` requires A1's ContractError, committed journal and unchanged remote; base log records non-fast-forward rejection. A2 requires its exact equality refusal; A9 requires the adopted view and unrelated-change refusal; A10 observes receipt growth 2920 → 2921 and running → pending. A4 is preservation and passes on base. Those are the stated failure paths rather than incidental setup failures. A3/A5/A7/A8/A11–A14 were not separately run on base, explicitly disclosed in SUMMARY; A1 supplies their common publication-rejection control, not a case-for-case rehearsal. F4's reader is now falsified independently above. Existing suite logs end `227 pass, 0 fail` and `34 passed, 0 failed`, but provenance dates them to f4626d09b before the ownership fix; they are not final-commit gate evidence.
+
+**Plan and runtime assessment:** Steps 1–7 are represented by local admission, owned views, bounded publication, canonical replay, crash recognition, staged abort and CLI ContractError handling (`:2146–2409`, `:2565–2577`, `:2756–2761`). Divergences remain those identified in Round 2: disclosed target-recorded startup recovery; disclosed replay-status whitelist; already-published/empty-wake ancestor recognition; immediate refusal for a divergent legacy journal; conditional resolver/check for code-only movement; renamed command-failure prefix for documentation. No additional divergence established without the prohibited diff.
+
+Recovery now checks target and HEAD before abort; the recorded marker cannot distinguish an operator replacing the merge with exactly the same identities while keeping a stale marker. That special intervention is outside the demonstrated local-CLI recovery case. `_replay` selects the remote dump whole, then immutable source receipts (`:2354–2384`); retries do not replay onto the prior replayed ledger. Touched and untouched row triples are checked at `:2404–2409`. Caught ContractError/OSError/SQLite/subprocess failures abort at `:2341–2345`; writer SystemExit converts at `:2401`. Signals and unexpected exceptions may leave the recorded open merge for rerun. Writer refusal and arbitrary interruption points remain unverified by clone runs. No further concrete dirty-primary, replay omission, double replay or journal/HEAD defect established in the sweep.
+
+Unmoved behavior is preserved for A4, not literally unchanged except one fetch: adopted-view ownership, local-ref admission, snapshots, publication-only resume, CLI error conversion, extra fetches and already-reachable publication skipping also changed (`:2146`, `:2184–2208`, `:2247–2269`, `:2571`). This matches the intended scope and recorded qualifications.
+
+No second ledger writer appears: replay calls the canonical lease/status functions (`:2397–2400`), which invoke `perform_write` (`releases_app.py:5096`, `:5132`). Selecting the entire remote dump before rebuild is merge-side selection, not hand-synthesized ledger rows. `_rebuild` owns generation and serialization (`releases_app.py:6570`, `:6654–6659`). The receipt replay extends the checkpoint and existing resolver; no new general subsystem or suite is warranted. The small ownership marker is commensurate with the stated local single-operator envelope.
+
+Read-only SQLite query `SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort FROM roadmap_items WHERE gh_number=1453`, exit **0**, returns `[(1453, 75, 70, 50, 40)]`. `gh issue view 1453 --repo HiQS-Labs/XYZ-forge --json title,body`, exit **0**, still describes the downstream five-task run held for a day and proposes those same ratings. Rating remains consistent with the documented blockage, preserved state and reconcile effort.
+
+**VERDICT: PASS**
+**Basis:** F1–F4 resolved; no Blocker or Should remains. Source review and corrected checkpoint observations support the intended behavior. F5 is a nonblocking receipt-attribution nit; exact fixture-commit equivalence is not attested. Approval is for this final source review, with the full gate on the final commit still required from the harness before a ready PR. No commit or publication was performed by this reviewer.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
