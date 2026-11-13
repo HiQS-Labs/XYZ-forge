@@ -2209,10 +2209,18 @@ class JogCheckpoint:
         return True
 
     def finish(self):
-        if self.state.get("source") and self._merging():
-            self._abort_merge()  # this wake's own reconcile, interrupted while its merge was open
-        self.check_owned()
         head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        if self._merging():
+            # Only a merge this wake recorded before opening it is restored: same merge target,
+            # and HEAD still at the journal's commit. Anything else is someone's work in progress.
+            target = _git(self.root, "rev-parse", "MERGE_HEAD").decode().strip()
+            if not self.state.get("merging") or self.state["merging"] != target \
+                    or head != self.state.get("commit"):
+                raise ContractError("checkpoint refuses a merge in progress that this wake did not start")
+            self._abort_merge()
+            del self.state["merging"]
+            self.save()
+        self.check_owned()
         expected = self.state.get("commit", self.state["base"])
         if head != expected:
             # A crash immediately after a commit is recognized by its exact parent/message.
@@ -2285,7 +2293,7 @@ class JogCheckpoint:
         proc = subprocess.run([sys.executable, app, "--root", self.root, *args],
                               cwd=self.root, capture_output=True, text=True)
         if proc.returncode:
-            raise ContractError("releases %s failed: %s" % (
+            raise ContractError("checkpoint ledger command failed: releases %s: %s" % (
                 " ".join(args), (proc.stderr.strip() or proc.stdout.strip())[-400:]))
 
     def _abort_merge(self):
@@ -2300,6 +2308,8 @@ class JogCheckpoint:
         """Merge the moved development into the primary and commit once; the journal's commit
         becomes that merge. Any failure while the merge is open restores the pre-merge head."""
         merge_base = _git(self.root, "merge-base", "HEAD", live).decode().strip()
+        self.state["merging"] = live  # recorded before the merge opens, so a rerun can own it
+        self.save()
         started = self._try("merge", "--no-commit", "--no-ff", live)
         if not self._merging():
             raise ContractError("checkpoint reconcile could not merge development: "
@@ -2330,8 +2340,11 @@ class JogCheckpoint:
             _git(self.root, "commit", "-q", "-m", self.reconcile_subject + self.state["base"] + " onto " + live)
         except (ContractError, OSError, sqlite3.Error, subprocess.SubprocessError) as exc:
             self._abort_merge()
+            del self.state["merging"]
+            self.save()
             raise ContractError(str(exc)) from exc
         self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        del self.state["merging"]
         self.save()
         print("jog: reconciled wake checkpoint onto moved development " + live)
 

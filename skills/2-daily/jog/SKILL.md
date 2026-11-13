@@ -117,9 +117,12 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
    merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
    gate evidence after hosted or local `wave_reconcile` has recorded reconciliation — then completes
    the primary row and records its landing proof.
-   - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
-   - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
-   - **`--auto-merge` (verified, GH-300):** Verifies GitHub truth against the receipt BEFORE merging — the PR must still be OPEN on the receipt's base/head/head SHA in this repo with the gate green on that head — and refuses (parking the row) instead of merging blind; on pass, merges into `development` and re-anchors the checkout before advancing.
+   - **Real runs do not merge.** `jog run --auto-merge` is refused before any lease, and a published
+     task parks awaiting landing; independent pending work may continue. Land through
+     merge-cleanup, whose Jog hook calls `jog land` after reconciliation (see the interim publication
+     checkpoint below).
+   - **`--simulate` only:** the interactive confirm and `--auto-merge` paths remain for the hermetic
+     simulation and never touch a real PR.
 
 8. **Teardown Cleanliness:**
    Verifies clean worktree disposal, clean working tree status, and gate receipts between serial items.
@@ -206,17 +209,24 @@ At publication:
 - `canonical writer refused the replay of`
 - `development kept moving through` (three reconcile attempts in one run)
 - `development moved and this checkpoint journal predates automatic reconcile`
+- `checkpoint refuses a merge in progress that this wake did not start` (finish or abort your own
+  merge in the primary first; Jog only restores a merge it opened itself)
+- `unmerged or unstaged changes remain after the ledger merge resolver`
+- `checkpoint reconcile could not merge development`
+- `ledger merge resolver refused`
+- `checkpoint ledger command failed` (`releases check` or `check --rebuild`; the message quotes it)
 - `checkpoint primary HEAD changed outside this wake`
 - `checkpoint has new changes after its recorded commit`
 - `checkpoint publication clone is dirty; preserve it before retry`
 - `checkpoint publication clone must be on development`
 - `publication clone contains commits beyond this checkpoint`
 
-Any other message after `jog: checkpoint held:` is a command that failed (a `git` step, the
-publication clone's push gate, `releases check`, or the merge resolver); the message quotes it.
+Any other message after `jog: checkpoint held:` is a `git` command that failed, including the
+publication clone's push gate; it reads `git <command> failed: <git's own error>`.
 
 **At a stop:** state is preserved. A stop while the merge is open restores the primary to its
-checkpoint commit; a stop after a reconcile merge keeps that merge. Fix the named cause if there is
+checkpoint commit; a stop after a reconcile merge keeps that merge. If a run died while its own
+merge was open, the rerun restores it first. Fix the named cause if there is
 one, then **rerun the same command**: it retries publication first and dispatches no task. Never
 force-push, never `git reset` the primary, and never hand-edit `releases.db` or `releases.sql`.
 
