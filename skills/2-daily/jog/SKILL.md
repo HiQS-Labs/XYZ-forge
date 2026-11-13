@@ -178,13 +178,20 @@ A `jog run --checkpoint-root <publication-clone> --max-tasks N` wake works from 
 
 **"Competing writer", defined once.** A competing writer is anything else that changes *this
 wake's own queue rows* while the wake runs, from this clone or from another clone or machine. Jog
-handles each case itself: a second `jog run` in the same primary clone is refused by the supervisor
-lock; a change to the same rows pushed from elsewhere is the overlap stop at publication; an operator
-queue verb run in this primary during the wake is a stop when publication has to replay the wake
-(that is, when `development` moved). A session that pushes any other ledger change to `development`
-(a reconcile, intake, a rating, another coordinator's rows) is not a competing writer. Run directives,
-runbooks and issue checklists **cite this section** for Jog's stop conditions; they do not restate or
-paraphrase them.
+handles each case itself:
+
+- A second `jog run` in the same primary clone is refused by the supervisor lock.
+- A change pushed from elsewhere to the `status`, `attempt_count` or `failure_reason` of a row this
+  wake wrote is the overlap stop at publication. A change to only that row's queue position is not
+  a stop; the published order is the remote's.
+- A queue write made in this primary by another process during the wake counts as part of the wake
+  when publication has to replay it (that is, when `development` moved). A lease or a status write
+  (for example from `jog resume`) is replayed with the rest; any other queue verb (`add`, `drop`,
+  `skip`, `bump`, `clear`, `retry`) or an orphan-lease reconcile is a stop.
+
+A session that pushes any other ledger change to `development` (a reconcile, intake, a rating,
+another coordinator's rows) is not a competing writer. Run directives, runbooks and issue checklists
+**cite this section** for Jog's stop conditions; they do not restate or paraphrase them.
 
 **A moved `development` is reconciled automatically.** At publication Jog merges the remote into
 the primary, takes the remote ledger, replays this wake's own queue writes through the canonical
@@ -222,7 +229,9 @@ At publication:
 - `development kept moving through` (three reconcile attempts in one run)
 - `development moved and this checkpoint journal predates automatic reconcile`
 - `checkpoint refuses a merge in progress that this wake did not start` (finish or abort your own
-  merge in the primary first; Jog only restores a merge it opened itself)
+  merge in the primary first; Jog restores only a merge that matches the target it recorded and
+  whose `HEAD` is still its checkpoint, so a hand-made merge of that same commit from that same
+  `HEAD` would be treated as Jog's)
 - `unmerged or unstaged changes remain after the ledger merge resolver`
 - `checkpoint reconcile could not merge development`
 - `ledger merge resolver refused`
@@ -240,10 +249,11 @@ clone's push gate), otherwise a file or database error raised during the reconci
 **At a stop:** state is preserved. A stop while the merge is open restores the primary to its
 checkpoint commit; a stop after a reconcile merge keeps that merge. If a run died while its own
 merge was open, the rerun restores it first. Fix the named cause if there is one, then **rerun the
-same command**. After a publication stop the rerun retries publication first and dispatches no task.
-After a start stop nothing had run and no journal was kept, so the rerun is an ordinary start and
-may dispatch tasks. Never force-push, never `git reset` the primary, and never hand-edit
-`releases.db` or `releases.sql`.
+same command**. What the rerun does depends on whether an unpublished checkpoint is retained, not
+on which message was printed: if one is (the wake had already committed its checkpoint), the rerun
+retries publication first and dispatches no task; if none is, the rerun is an ordinary start and may
+dispatch tasks. Never force-push, never `git reset` the primary, and never hand-edit `releases.db` or
+`releases.sql`.
 
 Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
 clean `releases check`, hosted or local reconciliation evidence, and merge reachability from

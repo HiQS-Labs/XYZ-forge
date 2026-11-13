@@ -2312,6 +2312,9 @@ class JogCheckpoint:
         self.save()
         started = self._try("merge", "--no-commit", "--no-ff", live)
         if not self._merging():
+            # No merge is open, so nothing may claim one later: clear the ownership marker.
+            del self.state["merging"]
+            self.save()
             raise ContractError("checkpoint reconcile could not merge development: "
                                 + started.stderr.decode(errors="replace").strip()[-300:])
         try:
@@ -2338,10 +2341,14 @@ class JogCheckpoint:
             if _git(self.root, "ls-files", "-u").strip() or self._try("diff", "--quiet").returncode:
                 raise ContractError("unmerged or unstaged changes remain after the ledger merge resolver")
             _git(self.root, "commit", "-q", "-m", self.reconcile_subject + self.state["base"] + " onto " + live)
-        except (ContractError, OSError, sqlite3.Error, subprocess.SubprocessError) as exc:
+        except (ContractError, OSError, sqlite3.Error, subprocess.SubprocessError, SystemExit) as exc:
+            # SystemExit: the ledger gateway and writers refuse by exiting (releases_app.refuse).
             self._abort_merge()
             del self.state["merging"]
             self.save()
+            if isinstance(exc, SystemExit):
+                raise ContractError("checkpoint ledger command failed: the ledger gateway refused "
+                                    "(exit %s)" % exc.code) from exc
             raise ContractError(str(exc)) from exc
         self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
         del self.state["merging"]

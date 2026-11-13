@@ -14,8 +14,10 @@ list is in the Jog skill, section *Checkpoint publication*. A rerun retries publ
 dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
 before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
 longer has its checkpoint refused after one queue write. The Jog skill now carries the closed list
-of checkpoint stops by exact message (anything else: continue) and the one definition of "competing
-writer", which run directives cite instead of restating.
+of checkpoint stops, each the fixed start of a message, and the one definition of "competing
+writer", which run directives cite instead of restating. Nobody adds a checkpoint stop: a predicted
+conflict with no failed command is not one. A failed task or gate, another Jog refusal, or an
+unexpected error is still reported as it is.
 
 **Bet (Easy to reverse):** replaying receipts in order reproduces the wake's queue state on the
 remote ledger whenever the remote left those rows alone; the replay is verified row by row and any
