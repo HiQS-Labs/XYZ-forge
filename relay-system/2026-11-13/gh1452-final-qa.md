@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -156,5 +156,57 @@ Every Round 1 item was checked against the tree. Fix commit: `4e9dbda71`.
 swept file: n/a (Producer)
 
 Handing off to Reviewer (codex) for round 2. Re-check S1 and anything the fix newly broke; do not reopen the Pass items.
+
+### Reviewer · Round 2 (codex)
+
+**Approved — S1 is resolved through the existing ordering and deferral path.** No open Should or Blocker remains.
+
+swept file: yes
+
+gate run: no — final qualification remains the harness's post-review step.
+
+The Round 1 whole-file sweep and Q1–Q10 dispositions remain part of this review; settled Pass items are not reopened. This turn reread the changed sequence/deferral/comparison paths, their checkpoint and Phase 4/5 consumers, selection publication/verification, the forecast/resolver and batch-plan seams, documentation wording and refreshed evidence. No additional demonstrated pre-existing defect was found in those swept paths. Graph Verify startup found `XYZ-forge` at another checkout; symbol search returned zero matches (`has_more: false`), and coverage reported generation `2026-09-01T15:54:30Z`. That graph cannot establish this worktree's current code; findings use direct source reads. No Git command, suite, fixture, network call or workflow was executed in this reviewer turn.
+
+- [Pass] **S1 / Q3 / Q4 / Q10 — Shared effective sequence fixes the observed integration failure.** `merge_cleanup.py:558-578` extracts the existing hard-dependency deferral closure and uses the full open-PR sort before filtering. Forecast construction calls it at `:2350`, checkpoint comparison at `:2212-2214`, and Phase 4 applies the same closure at `:2365` before its consumer at `:2381`. Phase 4 refreshes the comparison with its actual ordered queue at `:2388-2389`; the batch receives that comparison through the existing plan mutator. Sorting recomputes dependency annotations from the full input, so the early selected-only sort does not carry stale annotations into the forecast. Retained S14 receipts (`manual-check-run.log:64-66`, driver `:403-448`) cover the original input, three selected disjoint PRs, an unlisted hard prerequisite and stale-order rejection. Concrete disposition: accept the correction; retain the shared closure and these receipts.
+
+- [Pass] **Q1 / Q2 — Refreshed controls reject the old ordering and preserve the other acceptance evidence.** Log `:64` gives old `[1,2,3]`, effective/Phase 4 `[2,3,1]`, disjoint-only `[1,2,3]` and hard-prerequisite `[2,1]`; `:65` rejects the old forecast with `sequence differs from the forecast's`, while the fixed order has no stale reasons. The subset comparison at `merge_cleanup.py:672-677` compares forecast-member heads and the whole effective order, so deferred listed members do not cause false head drift and membership/order differences still cause sequence drift. The refreshed README scenario map retains S1 broken-classifier, S7 repair-history, S10 naive-publication and S13 base-mutator controls; the actual base `TypeError` is retained at log `:62`, and absence-only admission evidence stays distinct at `:63`. The summary records `Ran 227 tests ... OK`, exit 0; manual log records `Ran 14 tests ... OK`. These are inspected author-run clone receipts, not reviewer reruns. All four nonempty artifacts named by provenance SHA256 fields matched their recorded hashes in the reviewer probe, exit 0. Concrete disposition: accept the refreshed focused evidence with the existing limitations.
+
+  Independent narrow probe, exit **0**: executed `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with an in-memory AST extraction of the actual `deferred_closure`, `effective_sequence` and `forecast_comparison` definitions and the imported pure `toposort_prs`. The decisive ordering probe is reproducible with:
+  ```python
+  import ast, copy, sys
+  from pathlib import Path
+  from typing import List, Dict, Any, Set
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  from toposort_prs import toposort_prs
+  src = Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+  tree = ast.parse(src.read_text())
+  ns = dict(List=List, Dict=Dict, Any=Any, Set=Set, toposort_prs=toposort_prs)
+  for name in ('deferred_closure', 'effective_sequence'):
+      node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == name)
+      exec(compile(ast.Module(body=[node], type_ignores=[]), str(src), 'exec'), ns)
+  def mk(n, files, date):
+      return dict(number=n, files=[{'path': f} for f in files], createdAt=date, body='')
+  prs = [mk(1,['a.py'],'2026-11-03'), mk(2,['b.py'],'2026-11-01'),
+         mk(3,['c.py'],'2026-11-01'), mk(4,['a.py','c.py'],'2026-11-02')]
+  listed = {1,2,3}
+  print([p['number'] for p in toposort_prs(copy.deepcopy(prs[:3]))[0]])
+  print([p['number'] for p in ns['effective_sequence'](copy.deepcopy(prs), listed)])
+  full = toposort_prs(copy.deepcopy(prs))[0]
+  print([p['number'] for p in full if p['number'] not in ns['deferred_closure'](full, listed)])
+  ```
+  The executed probe additionally asserted the disjoint and hard-prerequisite cases, supplied `forecast_comparison` with an in-memory selection and mocked successful remote-tip return (no Git subprocess), and checked receipt hashes. Decisive output:
+  ```text
+  orders: {"old": [1, 2, 3], "fixed": [2, 3, 1], "phase4": [2, 3, 1], "hard": [2, 1], "disjoint": [1, 2, 3]}
+  comparisons: {"old": ["sequence differs from the forecast's"], "fixed": [], "deferred": []}
+  nonempty SHA256 receipts matched: 4
+  ```
+
+- [Pass] **Q5–Q9 — Existing authority, writers and reporting limits remain intact.** The invalid-plan return still precedes Phase 0 (`merge_cleanup.py:2210`); comparison remains annotation and the reason remains operator-supplied (`:2212-2235`). Selection temp-write/replace stays inside the existing short lock (`:513-519`), and the existing batch mutator owns plan persistence (`batch_record.py:310-326`). Base lookup remains read-only and a failed lookup makes no drift claim (`merge_cleanup.py:680-683`). The planning contract now names full-sort/deferral semantics (`SKILL.md:275`), and CHANGELOG's GH-1452 entry claims focused evidence, not final qualification. README's “Not run” section still discloses the real downstream queue, fork topology and final gate limitations. Round 1's unverified per-mode base-tree reruns, inline-pin runtime and lock-timeout runtime remain unverified; approval does not claim those were run. PRS remains provisional at the working doc's stated 55/40/50/40. No new executor, duplicate writer or gate machinery is warranted for this advisory forecast. Concrete disposition: retain those boundaries and let the harness run final qualification; no source change requested.
+
+VERDICT: PASS
+
+Basis: The sole open finding has a concrete correction and both retained and independently measured order/staleness controls. The original acceptance assessment stands with its disclosed verification limits. This approves final QA, not a gate result or landing; the final qualifying gate remains pending.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
