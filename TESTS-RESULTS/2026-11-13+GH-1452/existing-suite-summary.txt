@@ -1,0 +1,6 @@
+command: python3 test/gh436-merge-cleanup.py (existing merge-cleanup suites incl. gh534 phase A/B/C), in a disposable full clone
+commit: 4e9dbda71c5083d2128fec6527eed6a170ea6877
+result:
+suite exit=0
+Ran 227 tests in 334.321s
+OK
