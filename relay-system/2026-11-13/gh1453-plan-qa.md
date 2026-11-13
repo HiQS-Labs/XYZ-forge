@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -164,5 +164,24 @@ Evidence scope: graph discovery used project `XYZ-forge` (nearest indexed root i
 **Basis:** The plan addresses the reported publication seam, but its written retry/rollback contract is internally inconsistent and global orphan replay can alter disjoint remote rows. F1–F6 and the receipt-marker/generation clarifications remain open; none needs a new test suite. Root cause: a moved development has only a plain-push path; Fix site: JogCheckpoint publication and its stop boundary; Why not upstream/downstream: execution/preflight and B1 do not own primary checkpoint publication.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Dispositions for Round 1. The plan doc was revised in place; section and step numbers below are the new ones.
+
+- **F1 — Implemented.** The journal now separates `source` (the wake's own checkpoint commit, the replay source, never rewritten) from `commit` (the current publication head). Plan step 5 defines resume recognition for a crash between a commit and the journal save. Step 6 no longer promises an abort after a commit: a stop while a merge is open stages the owned paths, aborts and removes `releases.db.bak`; a stop after a merge commit keeps the latest merge, which the publication clone has already fast-forwarded to. A3 asserts the restored tree, including `releases.db` and the absence of the backup; A7 covers moved-again; A10 covers the crash window.
+- **F2 — Implemented by removal.** The plan no longer replays `jog-reconcile`. A wake whose receipts include it is a named stop (step 4.5, Risks). Nothing reruns the global orphan detector against the remote ledger. Step 4.7 also verifies that every queue row the wake did not target has the same three values after the replay as on the remote before it.
+- **F3 — Implemented.** Step 4.4 puts the remote dump in place by writing the bytes of `origin/development:releases.sql` and staging them, independent of whether the textual merge conflicted, and uses no `git checkout`. The merge stays open through rebuild, replay, resolver and check and is committed once (4.8). The code-only case (4.3) skips the ledger work and commits once; A8 checks it.
+- **F4 — Modified.** The owned set gains `RELEASES-PREVIEW.html` and `LEADERBOARD.html` when they exist, since those are exactly the files `refresh_preview` rewrites on a write (step 2, A9). No projection setting is introduced. `LEADERBOARD.md` is not refreshed by writes, only by the resolver inside the merge, so it is in the merge's allowed set but not in the owned set.
+- **F5 — Implemented.** Step 4.7 converts a writer `SystemExit` to a stop; step 7 puts the constructor inside the handled scope. The refusal path has no fixture: the overlap check runs first and I found no input that passes it and still makes a writer refuse. Recorded in Acceptance as unverified by fixture.
+- **F6 — Implemented.** A4 is labelled a preservation check that passes on base, and no longer compares live DB trees. A2 now requires publication from a stale tracking ref. A1 asserts row values and ancestry. A7 (moved again), A8 (code-only), A9 (adopted view) and A10 (crash after the merge commit) are added as manual checks; no suite.
+- **Answer 2 (missing tracking ref) — Implemented:** named stop in step 1.
+- **Answer 4 (positions) — Modified:** untouched rows' `status`/`attempt_count`/`failure_reason` are verified (4.7); positions are left to the canonical writer on the remote queue and that is stated in Risks.
+- **Answer 5 (generation) — Implemented:** the unconditional write-count claim is gone. The stated argument is the rebuild's `max(dump, existing)+1`; a resolver refusal is a stop, with no padding writes.
+- **Answer 6 (marker) — Implemented:** `txn_id` is an anchor resolved to an `id` inside the `source` commit's database file, then `id` order; never compared lexically, never carried across a rebuild. Null anchor for an empty log.
+- **Answer 8 (second merge) — Implemented:** a later attempt extends the previous merge commit; the primary is never moved back to the checkpoint commit.
+- **Answer 9 (skill scope) — Implemented:** the skill section is scoped to checkpoint publication and says per-task preflight still fetches.
+
+Questions for this round: (1) is each Round 1 finding resolved by the revised text; (2) is step 6's open-merge restore (stage owned paths, then `git merge --abort`) sound from a clean pre-merge tree, or is there a state it cannot restore; (3) does anything in the revised plan exceed what the problem needs.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
