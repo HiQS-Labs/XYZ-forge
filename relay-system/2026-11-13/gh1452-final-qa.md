@@ -209,4 +209,13 @@ Basis: The sole open finding has a concrete correction and both retained and ind
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-13T19:09:07Z
+task: RELAY-gh1452-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 463522042b35930f4866cd445bbea9bee13017a0
+added-range: 25312+6882
+added-sha256: 37f0aef0533da68cee11060d98bcf0e7ebccfa6930e0c1b5055d2d0278d7b704
+gate-run: no
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
