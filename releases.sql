@@ -1,6 +1,6 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 2626
+-- generation: 2627
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
@@ -13,7 +13,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-12T16:07
 INSERT INTO schema_migrations(version, applied_at) VALUES('9', '2026-09-23T01:01:18Z');
 -- table: settings
 INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
-INSERT INTO settings(key, value, updated_at) VALUES('generation', '2626', '2026-11-13T21:09:42Z');
+INSERT INTO settings(key, value, updated_at) VALUES('generation', '2627', '2026-11-13T21:34:59Z');
 INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
 -- table: repos
 INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
@@ -3985,6 +3985,7 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-repoint', 'rmi-01M7BB4S09CCAYT3DKZ9E6Z5D9', '2026-11-13T21:03:18Z', 'da6701204c964862aa0a00e4b100699a', 'default', '627b1cdf38f21e6714256d6e9b53cce5816e62b6eb62de2b025e7c67aaa705d0', '54d19c1589576c1e0bb0b6931176273869e6003c790b2b7cf1fc46c757b13e8a');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M7BB4S09CCAYT3DKZ9E6Z5D9', '2026-11-13T21:03:18Z', '9383ea17c0594be1af2f4551e93e5431', 'default', '54d19c1589576c1e0bb0b6931176273869e6003c790b2b7cf1fc46c757b13e8a', 'c15bd12577d6f690be84e1d03de6a4f023e39b9d20a0574276b2d7259a1a4b12');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('work-emit', NULL, '2026-11-13T21:09:42Z', '491a156e3f3d4e9b91be2065af2512ef', 'default', 'c15bd12577d6f690be84e1d03de6a4f023e39b9d20a0574276b2d7259a1a4b12', 'c15bd12577d6f690be84e1d03de6a4f023e39b9d20a0574276b2d7259a1a4b12');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('work-emit', NULL, '2026-11-13T21:34:59Z', 'cada31fa482c4ae1ba61ab4be0c2646f', 'default', 'c15bd12577d6f690be84e1d03de6a4f023e39b9d20a0574276b2d7259a1a4b12', 'c15bd12577d6f690be84e1d03de6a4f023e39b9d20a0574276b2d7259a1a4b12');
 -- table: work_events
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CBC3C2HSWRSBY81TAZHYY0', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '568', 'df2ee890077d486dbe23311c5dd74d82', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-13T03:01:02Z');
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CGH1A7Z979TG5DQJHN8DX6', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '591', '6d3d7a7619c247b5a85a039ea98756bd', 'parked', '{"section": "Queue / parked intake"}', '2026-09-13T04:31:07Z');
@@ -5502,3 +5503,4 @@ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, 
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7BB4T0W5HJT2371AWF2G8S8', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1453', 'feba2fef21b14356b8747839390f71cf', 'in_flight', '{"accepted_start": true, "marker": "\ud83d\udea7", "section": "In progress", "source": "roadmap-update", "transition": true}', '2026-11-13T20:56:18Z');
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7BBHKNNXECK51RVR9PWGGH7', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1453', '9383ea17c0594be1af2f4551e93e5431', 'completed', '{"marker": "\u2705", "section": "Completed", "source": "roadmap-update", "transition": true}', '2026-11-13T21:03:18Z');
 INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7BBXAKZA6W0HS99YZ6MV9M5', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1453', '491a156e3f3d4e9b91be2065af2512ef', 'pr_merged', '{"base": "development", "pr": 1454}', '2026-11-13T21:09:42Z');
+INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7BDBM2AGV8969NZ7PWXKB2V', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1455', 'cada31fa482c4ae1ba61ab4be0c2646f', 'pr_merged', '{"base": "development", "pr": 1457}', '2026-11-13T21:34:59Z');
