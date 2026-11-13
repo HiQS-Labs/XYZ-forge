@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -173,5 +173,56 @@ Plan revised in `PROJECT/1-INBOX/GH-1452-MERGE-CLEANUP-PLAN-AHEAD.md` (new secti
 swept file: n/a (Producer)
 
 Handing off to Reviewer (codex) for round 2. Re-check S1-S3 and the nits only, plus anything these edits newly broke; do not reopen settled points.
+
+### Reviewer · Round 2
+
+Input boundary for Step A: the plan's Idea/issue-body sections (Observed through Preflight Contract), read before opening source this turn. `## Idea` itself is an empty heading; its sibling headings hold the issue body. The full capture was subsequently swept, including revisions and scaffold. Earlier relay history was necessarily read to establish this turn and its scope.
+
+**What this proposes**
+
+Provide a planning-time advisory forecast for a selected queue of at least three PRs. A disposable clone supplies individual, pairwise and ordered cumulative merge evidence; one snapshot publishes that evidence with its pins, sequence and base. Incomplete evidence withholds advice, and execution records how the explicit operator decision compares with the forecast.
+
+**How the existing system works, per this document**
+
+The dry run currently pins heads before ordering and prints generic direct/group guidance. Execution independently verifies pins and requires an explicit decision and reason at an early checkpoint. B1 has a bounded repair path and defers a repaired head; the current batch-record mutator records only decision, reason, PRs and time.
+
+**What it's not**
+
+The Non-goals exclude a group executor, automatic repairs, exact repair/reconcile predictions and new flags. Recommendation does not authorize execution. Reconcile-induced conflicts remain an acknowledged blind spot, and actual runtime verification is later work in a disposable full clone.
+
+**Source-backed — approve the plan for implementation.**
+
+swept file: yes
+
+Swept all 185 lines of the capture, not merely its revision summary. No additional blocking defect was found in that artifact; settled Round 1 findings remain settled except for the corrections checked below. This is plan approval only. Graph discovery used `XYZ-forge`; its root is another checkout, generation `2026-09-01T15:54:30Z`, symbol lookup returned zero matches with no further page, and coverage reports all five candidate scripts `freshness: not_tracked`. Material source checks therefore use this worktree's source. No Git command was run, so the reported base/origin equality remains author evidence.
+
+- [Pass] **S1 resolved without a second writer.** Plan step 6 explicitly extends `set_landing_plan` with an optional comparison argument; Blast radius, truthful write-set and Preflight artifacts now include `batch_record.py`. Acceptance requires old-call compatibility and persistence after reload. The present mutator owns replacement and sets `_landing_plan_touched` (`skills/2-daily/merge-cleanup/scripts/batch_record.py:310-319`); the existing save path preserves that intent under its lock (`:186-220`). This is the appropriate extension point. Concrete action: implement the optional metadata there and retain the planned old-caller, override, stale and reload receipts.
+
+- [Pass] **S2 resolved with a conditional, defensible metric.** Plan step 3 now says it “gives no CI-wait count” and describes deferral in the run that repairs a head. This matches the pin-mismatch deferral before the pending-only wait (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1651-1669`). The severity rationale explicitly says parking was estimated and never demonstrated (plan PRS proposal). Keep the count conditional on a repair occurring, as written; do not turn text conflicts into a promise that B1 can repair them.
+
+- [Pass] **S3 resolved by explicit precedence.** Plan step 4 says “any `unknown` result ... takes precedence and withholds the recommendation”; the failed-fetch Acceptance item requires no `direct` recommendation for one unknown plus two clean members, and preserves `direct` for complete disjoint input. Step 2 still stops the cumulative fold at its first conflict. These statements close the empty-path fall-through identified last round. Implement that precedence before evaluating the ordinary direct/group rule; conditional later members must stay labelled as not simulated.
+
+- [Pass] **The bounded design and publication contract remain coherent.** Plan steps 1 and 5 put network preparation in the caller, avoid a circular import, and hold `RecordLock` only for publication, reporting lock timeout. The helper locks `<record>.lock`, not simulation or the queue (`skills/2-daily/merge-cleanup/scripts/attempt_record.py:61-89`). `pin_selection` remains the sole selection writer (`merge_cleanup.py:491-510`); the old reader accesses only `prs` (`:522`). Serialization therefore covers publishing one complete selection snapshot, while execution still verifies its own pins. The specified frozen base, verified fetched heads and clean-only ancestry-preserving fold remain proportionate for advisory output; no extra module, gate or executor is needed. Preserve the existing semantic handoff boundary (`ledger_merge.py:543-573`), since “potentially B1-eligible” is not proof of resolvability.
+
+- [Pass] **The revised evidence requirements distinguish admission from delivery.** The capture's revision section requires that retained checks show deliberately wrong output being rejected, not just that an input ran (plan line 171). The Acceptance section has ten items, now including persisted comparison metadata, conflicting edits to the same lines, unknown-result precedence and mode/concurrency/refusal controls. Existing unchanged suites need no new mutation. The Preflight absence checks remain admission probes; neither a helper name nor a capability row proves delivered behavior. Keep the planned manual receipts and `provenance.jsonl`; do not add tests or runners. The Easy rollback and explicit limit that reverting cannot undo a later operator-authorized landing remain adequate (Risk and rollback).
+
+  Narrow in-memory probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` using `ast.parse` to extract only the current `set_landing_plan`, executing it with `save=lambda rec: None`, and checking source membership with `Path.read_text`. Exit 0; decisive output:
+  ```text
+  legacy keys: ['decided_at', 'decision', 'prs', 'reason']
+  forecast helper absent: True
+  capability absent: True
+  capture lines: 185 acceptance items: 10
+  ```
+  The executable probe body performed `r={}; ns['set_landing_plan'](r,'direct','override',[1,2,3])` and printed `sorted(r['landing_plan'])`; absence expressions were `'def landing_forecast' not in ledger_source` and `'landing-forecast' not in skill_source`. No module import, save, CLI, fixture or suite was executed. The earlier source-display command exited 1 after requesting lines past the end of `ledger_merge.py`; its missing range was subsequently read with a length-bounded display, exit 0. That display error is not behavioral evidence.
+
+- [Unverified — no citation] **PRS remains provisional and neutral.** The PRS proposal explicitly assigns appeal 50 as “neutral default”; pri 55 is justified by a lost planning cycle, sev 40 by wasted time without demonstrated data loss or parking, and effort 40 by simulation/snapshot/error-handling work. Those are reasonable planning judgments, not measured runtime impact. Keep that qualification.
+
+Actual merge-tree behavior, concurrent publication, refusal invariants, save/reload and suite outcomes: [Unverified — needs clone run]. No implementation is present; none of those future results is being certified here.
+
+VERDICT: PASS
+
+Basis: S1-S3 and the requested citation/evidence nits are addressed in the plan, with existing ownership preserved and no new blocking contradiction found. The plan is ready for implementation; completion still requires its retained manual checks and existing gates in a disposable full clone.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
