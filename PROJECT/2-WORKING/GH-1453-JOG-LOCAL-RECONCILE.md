@@ -378,3 +378,11 @@ and says when the replay check applies (F2); the two downstream sentences cite t
 restating it (F3); the rerun promise distinguishes a start stop from a publication stop (F4); the
 CHANGELOG no longer claims an exclusive three-case list (F5); "once" became "only during publication"
 (F6).
+
+## Gate-driven change after approval (2026-11-13)
+
+The first push was refused by the full pre-push gate: `gh777-inventory-ratchet` counts direct
+`sqlite3.connect` sites and found three new ones in `JogCheckpoint` (32 to 35). They now use the
+existing gateway `releases_app.connect(readonly=True)` (`0e8ade643`, three lines). Codex approved the
+code before this change and has not reviewed it. All 14 fixture checks were rerun on `0e8ade643` and
+pass.

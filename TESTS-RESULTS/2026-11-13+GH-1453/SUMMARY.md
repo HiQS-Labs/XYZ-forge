@@ -1,8 +1,11 @@
 # GH-1453 manual checks: Jog checkpoint, local state and one reconcile
 
-Code under test: `utils/py/jog_run.py` as of implementation commit `33c8682c3` (the final-QA round 1
-fixes on top of `f2eec6528`). The fixtures in `candidate-A1-A14.log` were built from `a286e2ab2`,
-where that file is byte-identical. Base for red controls: `6c0c76bb5`. Platform: macOS, Python 3.
+Code under test: `utils/py/jog_run.py` at `0e8ade643`, and the fixtures in `candidate-A1-A14.log` were
+built from that commit. It is the Codex-approved implementation (`33c8682c3`) plus one later change:
+three ledger reads now go through `releases_app.connect(readonly=True)` instead of opening SQLite
+directly. The first push was refused by the full gate on exactly that (`gh777-inventory-ratchet`:
+direct connect sites 32 to 35). Codex has not reviewed those three lines; all 14 checks were rerun on
+them. Base for red controls: `6c0c76bb5`. Platform: macOS, Python 3.
 
 The checkpoint has no suite, and the repo adds none (GH-831). These are manual checks driven by
 `fixture-checks.py.txt` (run as `python3 fixture-checks.py.txt <cand|base> <rev> <source-clone> <workdir>`).
