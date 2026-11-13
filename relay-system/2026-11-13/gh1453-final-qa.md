@@ -303,4 +303,13 @@ Read-only SQLite query `SELECT gh_number,rating_pri,rating_sev,rating_appeal,rat
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-13T19:25:36Z
+task: RELAY-gh1453-final-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 2ed9abb57b845b86bcc3110a216ba5937f94256f
+added-range: 41652+11926
+added-sha256: 919c72d50cb8082a4165c629d45f6a122c897a3522cf20da065de0708cf3053f
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
