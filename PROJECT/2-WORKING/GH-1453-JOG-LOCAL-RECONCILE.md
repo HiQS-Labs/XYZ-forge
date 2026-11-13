@@ -23,7 +23,8 @@ goal: >
   A `jog run --checkpoint-root` wake depends only on local state while it runs, and publishes
   once at the end. When `development` has moved in the meantime, the wake reconciles its own
   queue writes onto the moved ledger through the canonical writer and publishes, as a normal
-  outcome. The only stop is a real overlap, and the skill lists every legal stop by its message.
+  outcome. It stops only on a real overlap or a wake it cannot replay safely, and the skill lists
+  every legal stop by its message.
 ---
 
 # GH-1453 — Jog checkpoint: local state during the run, one reconcile at the end
@@ -120,9 +121,9 @@ goal: >
     the remote's changes then needs verbs that do not exist.
   - *Publish every transition immediately (GH-1108 delivery 2).* Stopped by the operator at 4,960
     added lines; it also couples every task to the remote, the opposite of this request.
-- **Rollback / containment:** the behaviour is behind the opt-in `--checkpoint-root` flag. Every
-  failure path aborts the merge and leaves the checkpoint commit and journal exactly as today.
-  Rollback is one revert.
+- **Rollback / containment:** the behaviour is behind the opt-in `--checkpoint-root` flag. A stop
+  while a merge is open restores the pre-merge head; a stop after a merge commit keeps that commit
+  for the next retry (Plan step 6). Nothing is force-pushed or reset. Rollback is one revert.
 
 ## Plan
 
@@ -136,7 +137,12 @@ own checkpoint commit, the replay source, never rewritten), `anchor` (the `txn_i
 `failure_reason` per `jog_queue` row at start). `commit` stays the current publication head: the
 checkpoint commit first, then the latest reconcile merge.
 
-1. **`begin()` uses local state only.** Remove the fetch and the equality check. Keep the primary
+1. **`begin()` uses local state only, and a committed checkpoint only retries publication.**
+   When an unpublished journal is at `phase: "committed"`, `begin()` calls `finish()` directly. It no
+   longer runs the orphan-lease scan and cold start first: after a reconcile merge the primary holds
+   the remote's queue, whose running rows rebuild with a NULL lease PID, and the scan would reset
+   them. A journal at `phase: "running"` (an interrupted wake that never committed) keeps today's
+   cold recovery. For a fresh wake: Remove the fetch and the equality check. Keep the primary
    pin, the foreign-dirt refusal and the pre-existing-ledger-change refusal. Add two local checks:
    the local `origin/development` ref exists, else `checkpoint requires a local origin/development
    ref`; and `HEAD` has no commit absent from it, else `checkpoint refuses unpublished local commits`.
@@ -171,8 +177,10 @@ checkpoint commit first, then the latest reconcile merge.
       targeted row now has the wake's final `status`, `attempt_count` and `failure_reason`, and every
       other queue row has the same three values it had on the remote before the replay. A mismatch is a
       stop.
-   8. Run `utils/releases-merge-resolve.sh --root <primary>` when step 4.4 ran (it rebuilds, regenerates
-      the adopted views and stages them), then `check`; remove `releases.db.bak`; commit the merge
+   8. Run `utils/releases-merge-resolve.sh --root <primary>` when step 4.4 ran or any path is still
+      unmerged (it rebuilds, regenerates the adopted views, resolves a conflicted view and stages them),
+      then `check`. When neither holds, the merge is clean and the ledger files are left exactly as the
+      checkpoint commit has them. Then remove `releases.db.bak`; commit the merge
       **once** as `jog: reconcile wake checkpoint <base> onto <remote sha>`; set the journal's `commit`
       to it.
    9. Publish through the existing publication-clone path. If the push is rejected and the live ref has
@@ -192,10 +200,11 @@ checkpoint commit first, then the latest reconcile merge.
    second form covers a crash between a commit and the journal save. Anything else is the existing
    `checkpoint primary HEAD changed outside this wake`.
 6. **The stop.** What is kept depends on where it happens:
-   - *While a merge is open* (4.2–4.8): stage the owned paths, `git merge --abort`, remove
-     `releases.db.bak`. `HEAD` stays at the journal's `commit`. The tree was clean before the merge,
-     and staging first leaves the abort nothing unstaged to trip on; the fixture asserts the restored
-     tree.
+   - *While a merge is open* (4.2–4.8): stage every path the reconcile may rewrite, which is the two
+     ledger files and all three views (`RELEASES-PREVIEW.html`, `LEADERBOARD.html`, `LEADERBOARD.md`),
+     including additions and deletions; then `git merge --abort`; then remove `releases.db.bak`. `HEAD`
+     stays at the journal's `commit`. The tree was clean before the merge, and staging the full write
+     set first leaves the abort nothing unstaged to trip on. A3 and A11 assert the restored tree.
    - *After a merge commit* (4.9, or three attempts used): nothing is undone. The latest merge commit
      is the journal's `commit` and the publication clone is already fast-forwarded to it.
    In both cases the journal stays at `committed`, and rerunning the same command retries the
@@ -219,7 +228,7 @@ checkpoint commit first, then the latest reconcile merge.
 Each item is a manual check against a local fixture: a bare origin, a primary clone carrying the
 primary pin, a publication clone, and a third clone that plays the other session. As in the GH-1358
 controls, the checks drive `JogCheckpoint` and the supported ledger CLI directly; A3 also runs the
-`jog run` command line for the message and exit code. A1–A3, A5–A9 are change checks and must fail on
+`jog run` command line for the message and exit code. A1–A3 and A5–A12 are change checks and must fail on
 base `6c0c76bb5` for the stated reason. A4 is a preservation check and must pass on base.
 
 - [ ] **A1 moved, disjoint.** The other session pushes a roadmap write during the wake. The wake ends
@@ -253,9 +262,21 @@ base `6c0c76bb5` for the stated reason. A4 is a preservation check and must pass
 - [ ] **A9 adopted view.** With `RELEASES-PREVIEW.html` present at the root, a wake with one queue
   write finishes and the view is committed with it; an unrelated dirty file is still refused. Red
   control on base: `checkpoint refuses unrelated changes` naming the view.
-- [ ] **A10 crash after the merge commit.** After A1's merge commit, the journal's `commit` is put
-  back to the checkpoint commit and the command is rerun: it recognises the merge and publishes it
-  rather than refusing.
+- [ ] **A10 publication-only resume.** The remote's queue contains a disjoint row B with
+  `status='running'`. After the reconcile merge is committed, the journal's `commit` is put back to
+  the checkpoint commit (the crash window) and the command is rerun. It recognises the merge and
+  publishes it; no new `op_receipts` row is written; B keeps its `status`, `attempt_count` and
+  `failure_reason`; no task is dispatched. Red control on base: the resume path runs the orphan scan
+  first.
+
+- [ ] **A11 restore after partial view output.** With a merge open and the remote dump in place, the
+  check overwrites `releases.db` and `LEADERBOARD.md` with partial content, as a generator that died
+  mid-write would, and calls the checkpoint's stop. No `MERGE_HEAD`; every tracked path equals the
+  pre-merge head; no backup file; the journal is retryable.
+- [ ] **A12 view conflict without a ledger change.** With `RELEASES-PREVIEW.html` adopted and
+  refreshed by the wake, the other session pushes a change to the same lines of that file and no
+  ledger change. The wake publishes with no unmerged entry and a view regenerated from the ledger.
+  A8, with a disjoint code file, is the control where the ledger files stay byte-equal.
 
 Not covered by a fixture: a writer refusal during replay (step 4.7). The overlap check runs first and
 catches every input found that would make a writer refuse, so this path is defence in depth; it is
@@ -266,7 +287,7 @@ checked by reading and recorded as unverified by fixture.
 - Existing suites, run in a disposable `-gate` clone: `test/gh280-jog-marathon-adapter.sh`,
   `test/jog-queue.sh`. Final gate by `utils/ci-route.sh` classification of the changed paths
   (`jog_run.py` is core, so the full qualifying run, once, on the approved commit).
-- A1–A10 as manual checks with commands, output and verdicts under
+- A1–A12 as manual checks with commands, output and verdicts under
   `TESTS-RESULTS/2026-11-13+GH-1453/`. Smoke: A1 is the main path; A5 is the adjacent path.
 - No new suite, registry entry or test file (GH-831).
 

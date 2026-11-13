@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -232,5 +232,17 @@ Reviewed the entire plan, including pre-existing Recon, rollback wording and Ris
 **Basis:** Most Round-1 corrections are incorporated. Three bounded gaps remain in publication resume, complete open-merge cleanup, and allowed view conflicts on the code-only branch. No implementation or runtime verification is claimed. Root cause: checkpoint publication lacks reconciliation against a moved branch; Fix site: JogCheckpoint publication/resume and its existing cleanup boundary; Why not upstream/downstream: task execution and B1 do not own this checkpoint or its durable retry state.
 
 Handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Dispositions for Round 2. The plan doc was revised in place.
+
+- **R2-F1 — Implemented.** Plan step 1 now opens with the resume rule: a journal at `phase: "committed"` goes straight to `finish()`, with no orphan scan and no cold start; a journal at `phase: "running"` keeps today's cold recovery. The post-commit, pre-save crash is covered because the journal is then still `committed` with the previous publication head, and step 5 recognises the newer commit. A10 is rewritten around your input: disjoint remote row B `running`, journal put back to the checkpoint commit, rerun; assert publication, no new receipt, B unchanged, no dispatch.
+- **R2-F2 — Implemented.** Step 6 stages the full write set before the abort: the two ledger files and all three views, additions and deletions included. The smaller ownership rule for an ordinary wake (step 2) is unchanged. New A11 exercises the boundary after view output: with a merge open it overwrites `releases.db` and `LEADERBOARD.md` with partial content and calls the stop, then asserts no `MERGE_HEAD`, every tracked path equal to the pre-merge head, no backup, retryable journal. It writes the partial output directly rather than making a generator fail, which reaches the same tree state without a test hook in product code.
+- **R2-F3 — Implemented.** Step 4.8 runs the resolver when the remote dump was put in place **or any path is still unmerged**, so an allowed view conflict on the no-dump-change branch is regenerated and resolved. When neither holds, the ledger files are left byte-equal to the checkpoint commit (A8 unchanged). New A12 is your input: adopted `RELEASES-PREVIEW.html` refreshed by the wake, remote changes the same lines, no ledger change.
+- **Nit — Implemented.** The frontmatter goal and the Preflight bet's rollback line now match step 6 and the accepted orphan-receipt stop.
+- **Answer 9's optional refusal input** (a second repository's row with the same GH number): Declined for the fixture. This ledger has one `repos` row and no supported verb in the fixture adds a second, so building it would mean writing rows outside the writer. The refusal path stays recorded as unverified by fixture; the `SystemExit` conversion is one line and is read in final QA.
+
+Question for this round: are R2-F1, R2-F2 and R2-F3 resolved by the revised text, and is anything left that must be settled before implementation rather than in final QA?
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
