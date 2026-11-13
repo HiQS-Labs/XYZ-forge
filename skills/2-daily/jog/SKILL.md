@@ -158,12 +158,67 @@ landing prerequisite.
 **Interim publication checkpoint:** delivery 1 does not automatically push queue transitions.
 Before merge-cleanup, inspect the primary's status, index and local supervisor commits. Commit
 only owned Jog ledger/view paths explicitly, then normally push development. Confirm a clean,
-published, fast-forward-ready primary. Unrelated changes, divergence or rejected push stop and
-preserve state for reconciliation; do not bypass Phase 0. The automatic direct-push/rebuild
+published, fast-forward-ready primary. Unrelated changes or a rejected hand push stop and
+preserve state; do not bypass Phase 0. The automatic direct-push/rebuild
 path is a separate PR so it can be reverted independently. `--auto-merge` on native Jog dispatch/retry refuses before leasing during this interim;
 it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
 its mapped Jog hook runs after hosted or local reconciliation and before the existing final post-merge
 commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
+
+### Checkpoint publication (`--checkpoint-root`): remote contact and legal stops (GH-1453)
+
+A `jog run --checkpoint-root <publication-clone> --max-tasks N` wake works from the primary's
+**local state**. It does not fetch at start and does not need the primary to equal
+`origin/development`. It contacts `origin/development` once, at publication, after the last task.
+(Per-task preflight in the execution clone still fetches, so each task's PR starts from current
+`development`; that is separate from the checkpoint.)
+
+**Other sessions writing to `development` is never a stop.** Reconciles, intake, ratings and
+other Jog coordinators may push ledger commits while a wake runs. Do not wait for a quiet branch,
+do not ask the operator for a "quiet window", and do not hold a run because the remote moved
+before or during it. The one-writer rule (GH-1108) means the primary is the only writer of *this
+wake's* queue rows; it does not mean nobody else may write the ledger.
+
+**A moved `development` is reconciled automatically.** At publication Jog merges the remote into
+the primary, takes the remote ledger, replays this wake's own queue writes through the canonical
+writers, runs `utils/releases-merge-resolve.sh` and publishes the merge. It prints
+`jog: reconciled wake checkpoint onto moved development <sha>` and then
+`jog: published primary checkpoint <sha>`. That is a normal successful run.
+
+**The legal checkpoint stops.** Each prints `jog: checkpoint held: <message>` and exits 2. Nothing
+else about the remote is a reason to stop.
+
+At start (nothing has run yet):
+
+- `checkpoint root must be a separate full clone with the same origin`
+- `checkpoint refuses unrelated changes` (a dirty path outside the ledger files and adopted HTML views)
+- `checkpoint refuses pre-existing ledger changes without an active journal`
+- `checkpoint requires a local origin/development ref`
+- `checkpoint refuses unpublished local commits`
+
+At publication:
+
+- `development changed the same Jog queue row(s) as this wake` (a real overlap; the rows are named)
+- `development moved and conflicts outside the ledger` (the primary's own files conflict with the remote)
+- `checkpoint cannot replay this wake onto a moved development` (the wake includes an orphan-lease
+  reconcile or an operator queue verb, which are not replayed against another ledger)
+- `checkpoint replay did not reproduce the wake's queue state`
+- `canonical writer refused the replay of`
+- `development kept moving through` (three reconcile attempts in one run)
+- `development moved and this checkpoint journal predates automatic reconcile`
+- `checkpoint primary HEAD changed outside this wake`
+- `checkpoint has new changes after its recorded commit`
+- `checkpoint publication clone is dirty; preserve it before retry`
+- `checkpoint publication clone must be on development`
+- `publication clone contains commits beyond this checkpoint`
+
+Any other message after `jog: checkpoint held:` is a command that failed (a `git` step, the
+publication clone's push gate, `releases check`, or the merge resolver); the message quotes it.
+
+**At a stop:** state is preserved. A stop while the merge is open restores the primary to its
+checkpoint commit; a stop after a reconcile merge keeps that merge. Fix the named cause if there is
+one, then **rerun the same command**: it retries publication first and dispatches no task. Never
+force-push, never `git reset` the primary, and never hand-edit `releases.db` or `releases.sql`.
 
 Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
 clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
