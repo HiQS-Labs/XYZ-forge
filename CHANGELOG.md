@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 — GH-1137: relay scratch sweep keeps host-tracked files
+
+`relay-automation/relay-turn-lib.sh` discarded `.relay-scratch/` with `rm -rf` after every turn, which deleted files a host repository tracks there (observed in HiQS-Labs/XYZ-layout-engine across Codex and Kimi turns). Both discard sites now run `git clean -ffdxq -- .relay-scratch`, which removes only untracked and ignored files (and a nested repo a turn created), and `rtl_check` exempts a scratch path only when it is untracked; a tracked path gets the normal off-allowlist revert and fails the turn like any other host file. Existing suites gh91/gh113/gh184/gh654 pass unchanged; manual red/green checks in `TESTS-RESULTS/2026-11-12+GH-1137/`.
+
 ## 2026-11-12 — GH-1436 / GH-1437 contract and gate environment faults
 
 Malformed Preflight Contract shapes now produce attributable needs-contract planner findings instead of crashing unrelated reconciliation; HQ park rejects supplied malformed shapes before writes. The existing preflight validator owns the shared shape check, while partial intake and optional null markers retain their earlier meaning. The full gate now refuses unsuitable Python before suites with exit 3 and the explicit gate-toolchain PATH remedy. Existing focused suites and manual red/green controls are recorded in `TESTS-RESULTS/2026-11-12+GH-1436-1437/`; final full qualification is recorded there separately. Easy rollback: revert these bounded validation changes; no schema migration or automatic environment installation.

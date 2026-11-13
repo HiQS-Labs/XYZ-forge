@@ -2,7 +2,10 @@
 gh_issue: 1137
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1137
 title: "relay: end-of-turn .relay-scratch sweep deletes host-tracked files (rm -rf in rtl_enforce/rtl_check)"
-status: "Proposed (1-INBOX — not yet active)"
+status: "Active (fix implemented and manually verified; full gate pending)"
+updated: 2026-11-12
+goal: "Relay turns discard only the scratch they created; host-tracked files under .relay-scratch/ are kept"
+owner: Claude Code
 created: 2026-11-12
 doc_type: bugfix
 reversibility: "Easy — two lines in relay-automation/relay-turn-lib.sh; revert restores the blanket sweep."
@@ -12,6 +15,12 @@ reversibility: "Easy — two lines in relay-automation/relay-turn-lib.sh; revert
 
 Capture of [#1137](https://github.com/HiQS-Labs/XYZ-forge/issues/1137). The live issue holds the
 original report (2026-10-18) and the 2026-11-12 recurrence with a deterministic repro.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan consulted (Codex + Kimi; agy quota-exhausted). Fix in `relay-turn-lib.sh` (`git clean -ffdxq` at both sweep sites; tracked paths fall through to normal containment). Existing suites gh91/gh113/gh184/gh654 pass; manual checks A–F in `TESTS-RESULTS/2026-11-12+GH-1137/`. | Tier-3 `validate.sh` once in a disposable full clone; PR to `development`. |
 
 ## Observed
 
@@ -54,6 +63,15 @@ tracked scratch.
 **Alternatives rejected.**
 - Refuse to run when a host tracks `.relay-scratch/`: blocks relays in repos that did nothing harmful.
 - Leave the code and tell hosts not to track there: the harness silently deletes data until someone reads the docs.
+
+**Consult (2026-11-12).** Codex and Kimi (agy quota-exhausted, re-fired with Kimi) both approved the
+design. Split: nested repo created inside scratch — Codex accepted it lingering with single `-f`;
+Kimi asked for `-ff`. Adopted `-ff`: today's `rm -rf` removes such a repo, so single `-f` would add a
+new lingering case, and `git clean` never removes tracked files at any force level. Inherited limits
+both noted, not changed here: `git checkout -- "$p"` restores from the index, so a staged rename or
+staged edit under scratch is not fully undone; a deleted tracked file gets no orphan backup (the
+restore comes from git). Transcripts: `relay-system/2026-11-12/gh1137-plan-181819/`,
+`relay-system/2026-11-12/gh1137-plan-kimi-181957/`.
 
 **Rollback.** Revert the commit; behaviour returns to the blanket sweep. Easy.
 

@@ -1314,10 +1314,16 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   # GH-91: same sanction on the non-worktree path, but here the dir lives in RTL_ROOT itself —
   # exempt AND discard (the transcript-log drop below is the precedent, not the .tick leave-in):
   # scratch is consumed by the turn that wrote it and must neither ride into a commit nor linger
-  # in the tree. ${RTL_ROOT:?} because rm -rf on an empty-prefix path would target /. — GH-567.
+  # in the tree. ${RTL_ROOT:?} guards an empty prefix — GH-567.
+  # GH-1137: only scratch the turn created is exempt. A path the HOST repo tracks under
+  # .relay-scratch/ is host content: it falls through to the normal off-allowlist revert below
+  # (restore + violation), and the discard removes only untracked/ignored files (git clean never
+  # touches tracked files; -ff also removes a nested repo a turn created, as rm -rf did).
   case "$p" in .relay-scratch|.relay-scratch/|.relay-scratch/*)
-    rm -rf "${RTL_ROOT:?}/.relay-scratch"
-    return 0
+    if ! git -C "${RTL_ROOT:?}" ls-files --error-unmatch -- "$p" >/dev/null 2>&1; then
+      git -C "$RTL_ROOT" clean -ffdxq -- .relay-scratch >/dev/null 2>&1 || true
+      return 0
+    fi
   ;; esac
   # the shim's own transcript log, if it lands in the tree, is not an agent edit — drop it, don't flag
   # (GH-1427: unless it is the durable transcript, which is kept — see rtl_own_log_is_durable)
@@ -1547,7 +1553,8 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   # GH-91 (PR #93 review): scratch must not survive the turn EVEN WHEN the host repo gitignores
   # it — porcelain omits ignored paths, so the per-path rtl_check discard above never fires and
   # the dir lingered in ROOT forever. Sweep unconditionally, independent of git visibility.
-  [[ -d "${RTL_ROOT:?}/.relay-scratch" ]] && rm -rf "${RTL_ROOT:?}/.relay-scratch"
+  # GH-1137: untracked and ignored files only — files the host repo tracks there are kept.
+  [[ -d "${RTL_ROOT:?}/.relay-scratch" ]] && { git -C "$RTL_ROOT" clean -ffdxq -- .relay-scratch >/dev/null 2>&1 || true; }
   rtl_trace "rtl_enforce: RTL_VIOLATION=$RTL_VIOLATION"
   ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; rtl_log_always "rtl_enforce: VIOLATION off-lane edits reverted; failing the turn"; exit 6; }
   # GH-173 B3: downgrade any uncited [Pass]/verified Reviewer finding BEFORE staging, so the fix lands

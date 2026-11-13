@@ -1,0 +1,7 @@
+FIRSTHAND_COUNT=0
+ECHOED_COUNT=5
+ECHOED `.relay-scratch/`
+ECHOED ` M`
+ECHOED `R`
+ECHOED `.relay-scratch`
+ECHOED `.relay-scratch`

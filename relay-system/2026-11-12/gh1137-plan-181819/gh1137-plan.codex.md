@@ -1,0 +1,19 @@
+**SINGLE-MODEL — NOT RECONCILED** (only codex answered; 1 of 2 requested advisor(s) failed — this is one model's read, not a cross-model consult. Do not treat any claim below as cross-verified.)
+
+**ANSWER:** Ship the two-edit fix for the reported deletion bug. It preserves host-tracked scratch files and retains ordinary scratch cleanup. Two qualifications matter: nested Git repositories survive cleanup, and existing containment does not fully undo staged changes.
+
+**FINDINGS**
+
+1. **[Pass] The proposed commands are correct for ordinary porcelain inputs.** Collapsed `.relay-scratch/`, `?? .relay-scratch/tmp/`, ignored scratch, and paths containing spaces are handled: the cleanup uses a fixed pathspec, and enforcement reads NUL-delimited paths. Unstaged ` M` and ` D` of tracked scratch fall through to backup/restore and set `RTL_VIOLATION=1`. `git -C` also works when `RTL_ROOT` is a linked worktree. See `relay-automation/relay-turn-lib.sh:1318`, `:1344`, `:1529`, `:1546`. Keep `${RTL_ROOT:?}` validation at the cleanup boundaries.
+
+2. **[Should] Qualify the “scratch disappears, folder included” promise.** Concrete counterexample: a turn creates a Git repository at `.relay-scratch/probe/`. Single-force `git clean -fdxq` deliberately preserves nested repositories, so scratch remains. This breaks the blanket cleanup wording, **not tracked-file preservation**. Accept that conservative behavior; do not add double-force cleanup or machinery. The acceptance wording is at `PROJECT/1-INBOX/GH-1137-RELAY-SCRATCH-TRACKED.md:62`.
+
+3. **[Should] Do not claim complete staged-change restoration.** Concrete input: `git mv .relay-scratch/a .relay-scratch/b`. The destination is index-tracked; the source is no longer index-tracked. Checking both fields detects a violation, but `git checkout -- "$p"` restores from the **index**, leaving the staged rename intact. Staged modifications/deletions have the same underlying limitation. This is inherited containment behavior, not introduced by this fix; keep it outside this small patch, but qualify the acceptance claim. See `relay-automation/relay-turn-lib.sh:1345`, `:1533`, and plan `:63`.
+
+4. **[Pass] No additional dedicated real-tree scratch sweep found in the reviewed drivers.** Python enforcement calls the same Bash function (`utils/py/rtl.py:899`). Scratch relocation rejects dot-prefixed paths and moves eligible probes into `.tick/scratch`; orphan backup copies content rather than moving scratch (`relay-automation/relay-turn-lib.sh:1252`, `:1271`, `:1219`). Worktree teardown removes the disposable worktree (`:981`). One qualification: generic allowlist copyback can replace/delete scratch **if explicitly allowlisted**, so “never copied back” is not unconditional (`:934`, `:966`, `:975`).
+
+5. **[Pass] gh91 sections 1, 2, and 6 should pass unchanged.** Their fixtures contain ordinary untracked scratch, including an ignored directory; `clean -fdxq` removes these directories. No assertion needs changing (`test/gh91-relay-scratch.sh:52`, `:67`, `:75`, `:140`). GH-184 remains Forge’s own tracked-scratch guard (`test/gh184-no-tracked-scratch.sh:25`). This is source-based assessment; suites were not executed in this read-only session.
+
+6. **[Pass] Exit 6 is appropriate for newly dirty, off-allowlist tracked scratch.** Probe permission authorizes creating output, not overwriting host content. The reviewer prompt already limits tracked edits to the relay file (`relay-automation/relay-turn-lib.sh:1067`); tracked-file violations elsewhere already fail (`test/gh113-headless-scratch.sh:85`). Preserve normal allowlist and pre-existing-WIP exceptions (`relay-automation/relay-turn-lib.sh:1333`, `:1542`).
+
+**RECOMMENDATION:** Implement the two edits, retain existing suites and manual red controls, and document nested-repository retention and inherited staged-change limitations without expanding scope.
