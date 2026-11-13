@@ -148,4 +148,13 @@ Scope disclosure: re-read the complete helper, PARKED note, GH-1452 summary, GH-
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-file commit; Reviewer changed no artifact or source file.
 
+
+### Attestation · relay-drive — 2026-11-13T21:22:16Z
+task: RELAY-gh1455-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 8520732868f9cf955dae15b053ba110955fe686c
+added-range: 18904+5018
+added-sha256: 47246d873fa4cb726547d1275043faacd2e3536c35f792bb5e065523817b4ecf
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
