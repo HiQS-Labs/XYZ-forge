@@ -1,0 +1,169 @@
+mode=cand rev=7be8cfc02a97fc97bd94757832aca3162a5dc575 source=<task-clone>
+
+=== A1 moved, disjoint [cand] PASS
+  rc: 0
+  out: jog: reconciled wake checkpoint onto moved development c0d24d043705601e112374835b4ae0751b415ae8
+jog: published primary checkpoint 31546908222f87bcef84841b396a2e2166ecef14
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+  remote_roadmap_pri: [61]
+
+=== A2 behind at start [cand] PASS
+  begin_rc: 0
+  tracking_ref_stale: True
+  finish_rc: 0
+  out: jog: reconciled wake checkpoint onto moved development a7053dd81e867f32f5cda47286ee21e9bc8d0ba8
+jog: published primary checkpoint 239f67104873f7820add62079d860407ccda8089
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+=== A3 overlap and restore [cand] PASS
+  rc: 1
+  tail: /2603f2de-bcf7-445a-a47b-44234e714b82/scratchpad/gh1453-fx/work/cand/a3/primary/utils/py/jog_run.py", line 2333, in _reconcile
+    raise ContractError(str(exc)) from exc
+jog_run.ContractError: development changed the same Jog queue row(s) as this wake: GH-1315
+  names_row: True
+  head_is_checkpoint_commit: True
+  no_merge_in_progress: True
+  tree_clean_db_matches_commit: True
+  no_backup: True
+  remote_unchanged: True
+  journal_phase: committed
+  check_clean: True
+  cli_rc: 2
+  cli_message: True
+  cli_no_traceback: True
+  cli_tail: jog: checkpoint held: development changed the same Jog queue row(s) as this wake: GH-1315
+
+=== A5 rerun after a stop [cand] PASS
+  rc: 0
+  out: jog: reconciled wake checkpoint onto moved development 5700a5c6a37eea95bee03a937fb745b5c37987c7
+jog: published primary checkpoint 5837393e1861891c09f486bb0ff212b6be0cdb73
+  no_dispatch: True
+  receipts_before: 2922
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+=== A3 control (no overlap reconciles) [cand] PASS
+  rc: 0
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+=== A4 unmoved (preservation) [cand] PASS
+  rc: 0
+  parent_is_base: True
+  one_parent: True
+  subject: jog: publish wake checkpoint 7be8cfc02a97fc97bd94757832aca3162a5dc575
+  console: jog: published primary checkpoint 6e06381f10b9236eb744b68cd93fa3b0f2c257d3
+  remote_queue_row: ['parked', 1, 'fixture park']
+  primary_clean: True
+
+=== A7 moved again during publication [cand] PASS
+  rc: 0
+  hook_fired: True
+  reconciles: 2
+  remote_roadmap_pri: [65]
+  out: jog: reconciled wake checkpoint onto moved development 2d55593ae82f8092f130c0f35d7e9451c310b6db
+jog: reconciled wake checkpoint onto moved development 6ce6c68da754ac9efd4c2810521e0e9f91d4fac8
+jog: published primary checkpoint 9bd1d7acbd1e208fefbb08669645fe3baabaeaa5
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+=== A8 code-only movement [cand] PASS
+  rc: 0
+  merge_parents_are_checkpoint_and_remote: True
+  ledger_files_byte_equal_to_checkpoint: True
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+=== A9 adopted view [cand] PASS
+  view_dirty_after_write: True
+  finish_rc: 0
+  view_committed_with_checkpoint: True
+  primary_clean: True
+  foreign_refused: True
+  foreign_tail:  ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
+jog_run.ContractError: checkpoint refuses unrelated changes: ['?? foreign-control.txt']
+
+=== A10 publication-only resume [cand] PASS
+  held_with_merge_committed: True
+  first_tail: ment failed: error: failed to push some refs to '<fixture>/cand/a10/remote.git'
+  resume_rc: 0
+  resume_out: jog: published primary checkpoint 3537d1e8898745f83ecd5e6060f3aaf61d8d77ca
+BEGIN False
+  published_head_is_the_merge: True
+  receipts_before: 2926
+  receipts_after: 2926
+  row_b_before: ['running', 1, None]
+  row_b_published: ['running', 1, None]
+  no_dispatch: True
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+=== A11 restore after partial view output [cand] PASS
+  rc: 1
+  tail: 234e714b82/scratchpad/gh1453-fx/work/cand/a11/primary/utils/py/jog_run.py", line 2333, in _reconcile
+    raise ContractError(str(exc)) from exc
+jog_run.ContractError: fixture: generator died mid-write
+  no_merge_head: True
+  head_is_checkpoint_commit: True
+  every_tracked_path_equals_head: True
+  no_backup: True
+  journal_phase: committed
+  check_clean: True
+  remote_unchanged: True
+  retry_rc: 0
+  retry_published: True
+
+=== A12 view conflict without a ledger change [cand] PASS
+  view_dirty_after_write: True
+  conflicting_lines: [375]
+  rc: 0
+  out: jog: reconciled wake checkpoint onto moved development f8c6a1fe5dc85f6fbdcb8d2ea03010d61e5e42d9
+jog: published primary checkpoint dd479a1cfbcf74dc0b88be59860b3d3d385d9059
+  view_regenerated_from_ledger: True
+  journal_phase: published
+  remote_queue_row: ['parked', 1, 'fixture park']
+  ancestors_ok: True
+  check_clean: True
+  primary_clean: True
+  primary_equals_remote: True
+  no_backup: True
+
+SUMMARY mode=cand: 12 check(s), 0 failed
+exit=0

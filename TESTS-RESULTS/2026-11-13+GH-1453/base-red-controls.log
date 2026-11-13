@@ -1,0 +1,47 @@
+mode=base rev=6c0c76bb5 source=<task-clone>
+
+=== A1 moved, disjoint (red control) [base] PASS
+  rc: 1
+  tail:  the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+  journal_phase: committed
+  remote_unchanged: True
+
+=== A2 behind at start (red control) [base] PASS
+  rc: 1
+  tail:  line 2157, in begin
+    raise ContractError("checkpoint requires primary HEAD at published origin/development")
+jog_run.ContractError: checkpoint requires primary HEAD at published origin/development
+  tracking_ref_stale: True
+
+=== A4 unmoved (preservation) [base] PASS
+  rc: 0
+  parent_is_base: True
+  one_parent: True
+  subject: jog: publish wake checkpoint 6c0c76bb5cdca8dd4a70ec6cf0355c248355b5d0
+  console: jog: published primary checkpoint ce881dc3a28b9d67383d883bea9d931e6f550b44
+  remote_queue_row: ['parked', 1, 'fixture park']
+  primary_clean: True
+
+=== A9 adopted view (red control) [base] PASS
+  view_dirty_after_write: True
+  finish_rc: 1
+  tail: cratchpad/gh1453-fx/work/base/a9/primary/utils/py/jog_run.py", line 2138, in check_owned
+    raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
+jog_run.ContractError: checkpoint refuses unrelated changes: [' M RELEASES-PREVIEW.html']
+
+=== A10 publication-only resume (red control) [base] PASS
+  journal_phase: committed
+  receipts_before: 2920
+  receipts_after: 2921
+  row_before: ['running', 1, None]
+  row_after: ['pending', 1, None]
+  resume_tail: cratchpad/gh1453-fx/work/base/a10/primary/utils/py/jog_run.py", line 2174, in finish
+    raise ContractError("checkpoint has new changes after its recorded commit")
+jog_run.ContractError: checkpoint has new changes after its recorded commit
+
+SUMMARY mode=base: 5 check(s), 0 failed
+exit=0

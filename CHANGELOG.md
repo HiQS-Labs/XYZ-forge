@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-11-13 — GH-1453: Jog checkpoint works from local state and reconciles a moved development
+
+A `jog run --checkpoint-root` wake no longer fetches at start or requires the primary to equal
+`origin/development`, and it no longer ends in a traceback when `development` moved during the run.
+At publication, `JogCheckpoint` (`utils/py/jog_run.py`) merges the moved branch into the primary,
+takes the remote ledger, replays the wake's own `jog-lease` / `jog-<status>` writes (read from the
+ledger's `op_receipts`) through the canonical writers, runs `utils/releases-merge-resolve.sh` and
+publishes the merge. It stops, with `jog: checkpoint held: <message>` and exit 2, only when both sides
+changed the same queue row, a non-ledger file conflicts, or the wake contains a write it will not
+replay (an orphan-lease reconcile or an operator queue verb). A rerun retries publication without
+dispatching a task. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
+before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
+longer has its checkpoint refused after one queue write. The Jog skill now lists every legal
+checkpoint stop and states that ledger writes by other sessions are never one.
+
+**Bet (Easy to reverse):** replaying receipts in order reproduces the wake's queue state on the
+remote ledger whenever the remote left those rows alone; the replay is verified row by row and any
+mismatch stops before the merge is committed. The behaviour is behind the opt-in flag; revert the one
+PR to restore the plain push. Not covered: a wake that includes crash recovery and meets a moved
+branch still needs a hand reconcile.
+Evidence: `TESTS-RESULTS/2026-11-13+GH-1453/`.
+
 ## 2026-11-12 — GH-1137: relay scratch sweep keeps host-tracked files
 
 `relay-automation/relay-turn-lib.sh` discarded `.relay-scratch/` with `rm -rf` after every turn, which deleted files a host repository tracks there (observed in HiQS-Labs/XYZ-layout-engine across Codex and Kimi turns). Both discard sites now run `git clean -ffdxq -- .relay-scratch`, which removes only untracked and ignored files (and a nested repo a turn created), and `rtl_check` exempts a scratch path only when it is untracked; a tracked path gets the normal off-allowlist revert and fails the turn like any other host file. Existing suites gh91/gh113/gh184/gh654 pass unchanged; manual red/green checks in `TESTS-RESULTS/2026-11-12+GH-1137/`.

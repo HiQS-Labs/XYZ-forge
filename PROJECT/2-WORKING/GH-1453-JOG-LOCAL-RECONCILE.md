@@ -33,11 +33,11 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, task clone provisioned, recon and plan written (2026-11-13). | Codex plan QA, then implementation in `utils/py/jog_run.py` and `skills/2-daily/jog/SKILL.md`. |
+| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Manual checks A1–A12 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Existing suites and the full gate in a disposable clone, final Codex QA, then a ready PR against `development`. |
 
 ## Rating rationale (2026-11-13)
 
-`rated 75/70/50/40` (pri/sev/appeal/effort).
+`rated 75/70/50/40` (pri/sev/appeal/effort), row `rmi-01M7B290G7J0JNVKQ5A9V0N08F`.
 
 - **sev 70:** work-blocking for unattended multi-hour runs on a shared branch. When `development`
   moves during a wake, the run ends in a Python traceback and a hand repair of the ledger. No data is
@@ -231,49 +231,49 @@ controls, the checks drive `JogCheckpoint` and the supported ledger CLI directly
 `jog run` command line for the message and exit code. A1–A3 and A5–A12 are change checks and must fail on
 base `6c0c76bb5` for the stated reason. A4 is a preservation check and must pass on base.
 
-- [ ] **A1 moved, disjoint.** The other session pushes a roadmap write during the wake. The wake ends
+- [x] **A1 moved, disjoint.** The other session pushes a roadmap write during the wake. The wake ends
   `published`. On `origin/development`: the remote's roadmap row is present with its values; each
   queue row the wake wrote has the wake's `status`, `attempt_count` and `failure_reason`; the remote's
   commit and the checkpoint commit are both ancestors of the head; `check` is clean; the primary is
   clean and equal to the remote. Red control on base: rejected push, `ContractError`, journal
   `committed`.
-- [ ] **A2 behind at start.** The primary is one commit behind the remote and its tracking ref is
+- [x] **A2 behind at start.** The primary is one commit behind the remote and its tracking ref is
   stale. The wake starts and, after a queue write, publishes with the result of A1. Red control on
   base: `checkpoint requires primary HEAD at published origin/development`.
-- [ ] **A3 overlap and restore.** The other session changes the same `jog_queue` row. Through the
+- [x] **A3 overlap and restore.** The other session changes the same `jog_queue` row. Through the
   `jog run` command line: `jog: checkpoint held:` naming the row, exit 2, no traceback. The primary is
   at the checkpoint commit with no merge in progress, a clean tree whose `releases.db` matches that
   commit, and no `releases.db.bak`; the remote is unchanged. Control: without the overlapping write
   the same fixture reconciles.
-- [ ] **A4 unmoved (preservation).** With no remote movement the wake publishes one checkpoint commit
+- [x] **A4 unmoved (preservation).** With no remote movement the wake publishes one checkpoint commit
   whose parent is the base and whose message is unchanged, with the same console line. Passes on base
   and on the candidate; timestamps and receipt ids are not compared.
-- [ ] **A5 rerun after a stop.** After A3, the other session restores the row and the same command is
+- [x] **A5 rerun after a stop.** After A3, the other session restores the row and the same command is
   rerun: it reconciles and publishes without dispatching a task.
-- [ ] **A6 skill text.** Every stop message listed in `skills/2-daily/jog/SKILL.md` is found verbatim
+- [x] **A6 skill text.** Every stop message listed in `skills/2-daily/jog/SKILL.md` is found verbatim
   in `utils/py/jog_run.py`, and the section states that remote ledger activity is not a stop. Red
   control: the check fails on base, where the section does not exist.
-- [ ] **A7 moved again during publication.** A hook in the publication clone lets the other session
+- [x] **A7 moved again during publication.** A hook in the publication clone lets the other session
   push once more during the first push. The wake still ends `published` after a second attempt; the
   head has both remote commits and the checkpoint commit as ancestors; the queue rows carry the wake's
   values exactly once (`attempt_count` not doubled).
-- [ ] **A8 code-only movement.** The other session pushes a commit that does not touch the ledger. The
+- [x] **A8 code-only movement.** The other session pushes a commit that does not touch the ledger. The
   wake publishes exactly one merge commit and the ledger files equal the checkpoint commit's.
-- [ ] **A9 adopted view.** With `RELEASES-PREVIEW.html` present at the root, a wake with one queue
+- [x] **A9 adopted view.** With `RELEASES-PREVIEW.html` present at the root, a wake with one queue
   write finishes and the view is committed with it; an unrelated dirty file is still refused. Red
   control on base: `checkpoint refuses unrelated changes` naming the view.
-- [ ] **A10 publication-only resume.** The remote's queue contains a disjoint row B with
+- [x] **A10 publication-only resume.** The remote's queue contains a disjoint row B with
   `status='running'`. After the reconcile merge is committed, the journal's `commit` is put back to
   the checkpoint commit (the crash window) and the command is rerun. It recognises the merge and
   publishes it; no new `op_receipts` row is written; B keeps its `status`, `attempt_count` and
   `failure_reason`; no task is dispatched. Red control on base: the resume path runs the orphan scan
   first.
 
-- [ ] **A11 restore after partial view output.** With a merge open and the remote dump in place, the
+- [x] **A11 restore after partial view output.** With a merge open and the remote dump in place, the
   check overwrites `releases.db` and `LEADERBOARD.md` with partial content, as a generator that died
   mid-write would, and calls the checkpoint's stop. No `MERGE_HEAD`; every tracked path equals the
   pre-merge head; no backup file; the journal is retryable.
-- [ ] **A12 view conflict without a ledger change.** With `RELEASES-PREVIEW.html` adopted and
+- [x] **A12 view conflict without a ledger change.** With `RELEASES-PREVIEW.html` adopted and
   refreshed by the wake, the other session pushes a change to the same lines of that file and no
   ledger change. The wake publishes with no unmerged entry and a view regenerated from the ledger.
   A8, with a disjoint code file, is the control where the ledger files stay byte-equal.
@@ -305,3 +305,17 @@ checked by reading and recorded as unverified by fixture.
   wake never touched.
 - **Queue positions** of rows the wake did not touch are whatever the canonical writer computes on
   the remote queue; they are not compared with the wake's local positions.
+
+## Implementation notes (2026-11-13)
+
+- **One addition beyond the approved plan:** `finish()` first aborts this wake's own merge when a
+  previous run died while it was open (the journal has `source` and `MERGE_HEAD` exists). Without it,
+  the merged-in files would read as foreign dirt and the checkpoint could never retry. It uses the
+  same restore as step 6. Not exercised by a fixture.
+- **An empty wake publishes nothing.** When the checkpoint commit is already contained in the
+  remote, `finish()` marks the journal published without a merge or a push.
+- **A rejected push is a reason to reconcile only when `development` really moved.** If the live ref
+  is unchanged after the rejection (for example the publication clone's push gate failed), the
+  original error is the stop.
+- Replayed status values are limited to `completed`, `parked`, `failed` and `pending`; operator queue
+  verbs written during a wake are a stop, like `jog-reconcile`.

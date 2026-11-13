@@ -1,0 +1,488 @@
+#!/usr/bin/env python3
+"""GH-1453 manual checks A1-A12 against a local fixture (no suite, GH-831).
+
+Usage: fx.py <cand|base> <rev> <source-clone> <workdir> [check ...]
+
+Each check builds its own fixture: a bare origin whose `development` is <rev>, a primary clone
+carrying the primary pin, a publication clone, and an `other` clone that plays another session
+(pinned as its own primary so it can also write Jog rows). The code under test is the primary's
+checkout of <rev>. Ledger writes use the supported CLI and the canonical writers only.
+XYZ_WORK_CONNECTORS=0 keeps every write local. Exit 0 only if every selected check gives the
+verdict expected for the mode (cand: behaviour present; base: the stated red control).
+"""
+import json
+import os
+import shutil
+import sqlite3
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+MODE, REV, SOURCE, WORK = sys.argv[1], sys.argv[2], sys.argv[3], Path(sys.argv[4]).resolve()
+SELECTED = sys.argv[5:]
+ENV = {**os.environ, "XYZ_WORK_CONNECTORS": "0", "GIT_TERMINAL_PROMPT": "0"}
+N = 1315          # the queue row the wake writes (pending at <rev>)
+B_CANDIDATES = (1448, 1414, 1356, 1360)
+RESULTS = []
+
+PRELUDE = """
+import os, sys, json
+ROOT = os.environ['FX_ROOT']; PUB = os.environ['FX_PUB']; N = int(os.environ['FX_N'])
+sys.path.insert(0, ROOT + '/utils/py')
+import jog_run
+from jog_run import JogCheckpoint, ContractError
+from releases_app import jog_acquire_lease, jog_set_status
+"""
+
+
+def run(cmd, cwd=None, ok=True, env=None):
+    p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env or ENV)
+    out = (p.stdout + p.stderr).strip()
+    if ok and p.returncode:
+        raise SystemExit("FIXTURE ERROR rc=%s: %s\n%s" % (p.returncode, " ".join(map(str, cmd)), out))
+    return p.returncode, out
+
+
+def git(repo, *args, ok=True):
+    return run(["git", "-C", str(repo), *args], ok=ok)[1] if ok else run(["git", "-C", str(repo), *args], ok=False)
+
+
+def triple(db, gh):
+    conn = sqlite3.connect(Path(db).resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        row = conn.execute("SELECT status, attempt_count, failure_reason FROM jog_queue WHERE gh_number=?",
+                           (gh,)).fetchone()
+        return list(row) if row else None
+    finally:
+        conn.close()
+
+
+def receipts(db):
+    conn = sqlite3.connect(Path(db).resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        return conn.execute("SELECT count(*) FROM op_receipts").fetchone()[0]
+    finally:
+        conn.close()
+
+
+class Fx:
+    def __init__(self, name, view=False, with_b=False):
+        self.dir = WORK / MODE / name
+        if self.dir.exists():
+            shutil.rmtree(self.dir)
+        self.dir.mkdir(parents=True)
+        self.remote = self.dir / "remote.git"
+        run(["git", "clone", "-q", "--bare", SOURCE, str(self.remote)])
+        git(self.remote, "update-ref", "refs/heads/development", REV)
+        git(self.remote, "symbolic-ref", "HEAD", "refs/heads/development")
+        self.primary, self.pub, self.other = (self.dir / n for n in ("primary", "pub", "other"))
+        for clone in (self.primary, self.pub, self.other):
+            run(["git", "clone", "-q", str(self.remote), str(clone)])
+        key = run([sys.executable, "-c",
+                   "import sys;sys.path.insert(0,'utils/py');import harness_paths as h;print(h.primary_config_key('.'))"],
+                  cwd=self.primary)[1].strip()
+        for clone in (self.primary, self.other):
+            git(clone, "config", key, str(clone))   # LOCAL config only; never global
+        self.b = None
+        seed = []
+        if view:
+            run([sys.executable, "utils/timeline/export_timeline.py", "--db", "releases.db",
+                 "--preview", "RELEASES-PREVIEW.html"], cwd=self.primary)
+            seed.append("RELEASES-PREVIEW.html")
+        if with_b:
+            for cand in B_CANDIDATES:
+                if self.app(self.primary, "jog", "add", str(cand), ok=False)[0] == 0:
+                    self.b = cand
+                    break
+            assert self.b, "no second queue row could be added"
+            seed += ["releases.db", "releases.sql"]
+        if seed:
+            git(self.primary, "add", "--", *seed)
+            git(self.primary, "commit", "-q", "-m", "fixture seed")
+            git(self.primary, "push", "-q", "origin", "development")
+            for clone in (self.pub, self.other):
+                git(clone, "pull", "-q", "--ff-only")
+        assert triple(self.primary / "releases.db", N) == ["pending", 0, None], "seed row GH-%d not pending" % N
+        self.base = git(self.primary, "rev-parse", "HEAD")
+
+    def app(self, repo, *args, ok=True):
+        return run([sys.executable, str(repo / "utils/py/releases_app.py"), "--root", str(repo), *args],
+                   cwd=repo, ok=ok)
+
+    def py(self, code, root=None, ok=False):
+        env = {**ENV, "FX_ROOT": str(root or self.primary), "FX_PUB": str(self.pub), "FX_N": str(N)}
+        return run([sys.executable, "-c", PRELUDE + code], cwd=root or self.primary, ok=ok, env=env)
+
+    def begin(self, write=True, ok=False):
+        code = "c = JogCheckpoint(ROOT, PUB)\nassert c.begin()\n"
+        if write:
+            code += ("jog_acquire_lease(ROOT, N, os.getpid())\n"
+                     "jog_set_status(ROOT, N, 'parked', failure_reason='fixture park')\n")
+        return self.py(code, ok=ok)
+
+    def finish(self):
+        return self.py("c = JogCheckpoint(ROOT, PUB)\nc.state = json.loads(c.journal.read_text())\nc.finish()\n")
+
+    def resume(self):
+        """What a rerun of the same command does first: begin() on the retained journal."""
+        return self.py("c = JogCheckpoint(ROOT, PUB)\nprint('BEGIN', c.begin())\n")
+
+    def other_sync(self):
+        git(self.other, "pull", "-q", "--ff-only")
+
+    def other_commit(self, message, paths=("releases.db", "releases.sql"), push=True):
+        git(self.other, "add", "--", *paths)
+        git(self.other, "commit", "-q", "-m", message)
+        if push:
+            git(self.other, "push", "-q", "origin", "development")
+        return git(self.other, "rev-parse", "HEAD")
+
+    def other_roadmap(self, pri, push=True):
+        """A disjoint ledger write by another session: re-rate GH-N's ROADMAP row (not its queue row)."""
+        self.other_sync()
+        self.app(self.other, "roadmap", "rate", "--issue-num", str(N), "--rated", "%d/41/50/51" % pri, "--force")
+        return self.other_commit("other session: re-rate GH-%d pri %d" % (N, pri), push=push)
+
+    def other_queue(self, gh, status, reason=None, lease=False):
+        self.other_sync()
+        code = ("jog_acquire_lease(ROOT, %d, 999999)\n" % gh if lease else
+                "jog_set_status(ROOT, %d, %r, failure_reason=%r)\n" % (gh, status, reason))
+        self.py(code, root=self.other, ok=True)
+        return self.other_commit("other coordinator: GH-%d %s" % (gh, "lease" if lease else status))
+
+    def remote_head(self):
+        return git(self.remote, "rev-parse", "development")
+
+    def remote_db(self):
+        tmp = Path(tempfile.mkdtemp(dir=self.dir)) / "remote.db"
+        tmp.write_bytes(subprocess.run(["git", "-C", str(self.remote), "show", "development:releases.db"],
+                                       capture_output=True, check=True).stdout)
+        return tmp
+
+    def remote_pri(self):
+        rows = json.loads(self.app(self.other, "roadmap", "list", "--json")[1])
+        rows = rows if isinstance(rows, list) else rows.get("items", rows.get("rows", []))
+        return [r.get("rating_pri") for r in rows if str(r.get("gh_number")) == str(N)]
+
+    def journal(self):
+        return json.loads((self.primary / ".tick/jog/checkpoint.json").read_text())
+
+    def anc(self, a, b):
+        return run(["git", "-C", str(self.remote), "merge-base", "--is-ancestor", a, b], ok=False)[0] == 0
+
+    def clean(self, repo=None):
+        return git(repo or self.primary, "status", "--porcelain", "--untracked-files=all") == ""
+
+    def merging(self):
+        return run(["git", "-C", str(self.primary), "rev-parse", "-q", "--verify", "MERGE_HEAD"], ok=False)[0] == 0
+
+    def check_clean(self):
+        return self.app(self.primary, "check", ok=False)[0] == 0
+
+
+def record(name, verdict, **obs):
+    RESULTS.append((name, verdict))
+    print("\n=== %s [%s] %s" % (name, MODE, "PASS" if verdict else "FAIL"))
+    for k, v in obs.items():
+        text = str(v)
+        print("  %s: %s" % (k, text if len(text) < 700 else text[:340] + " ... " + text[-340:]))
+
+
+def published_state(fx, remote_commits):
+    """The A1 result: wake's queue values and the remote's rows both published, cleanly."""
+    head = fx.remote_head()
+    return {
+        "journal_phase": fx.journal().get("phase"),
+        "remote_queue_row": triple(fx.remote_db(), N),
+        "ancestors_ok": all(fx.anc(c, head) for c in remote_commits),
+        "check_clean": fx.check_clean(),
+        "primary_clean": fx.clean(),
+        "primary_equals_remote": git(fx.primary, "rev-parse", "HEAD") == head,
+        "no_backup": not (fx.primary / "releases.db.bak").exists(),
+    }
+
+
+def good(state):
+    return (state["journal_phase"] == "published" and state["remote_queue_row"] == ["parked", 1, "fixture park"]
+            and state["ancestors_ok"] and state["check_clean"] and state["primary_clean"]
+            and state["primary_equals_remote"] and state["no_backup"])
+
+
+def a1():
+    fx = Fx("a1")
+    fx.begin(ok=True)
+    x = fx.other_roadmap(61)
+    rc, out = fx.finish()
+    if MODE == "base":
+        record("A1 moved, disjoint (red control)",
+               rc != 0 and "ContractError" in out and fx.journal().get("phase") == "committed"
+               and fx.remote_head() == x,
+               rc=rc, tail=out[-300:], journal_phase=fx.journal().get("phase"), remote_unchanged=fx.remote_head() == x)
+        return
+    source = fx.journal().get("source")
+    state = published_state(fx, [x, source])
+    state["remote_roadmap_pri"] = fx.remote_pri()
+    record("A1 moved, disjoint", rc == 0 and good(state) and state["remote_roadmap_pri"] == [61],
+           rc=rc, out=out[-300:], **state)
+
+
+def a2():
+    fx = Fx("a2")
+    x = fx.other_roadmap(62)          # the remote moves BEFORE the wake; the primary does not fetch
+    stale = git(fx.primary, "rev-parse", "refs/remotes/origin/development") == fx.base
+    rc, out = fx.begin()
+    if MODE == "base":
+        record("A2 behind at start (red control)",
+               rc != 0 and "checkpoint requires primary HEAD at published origin/development" in out,
+               rc=rc, tail=out[-200:], tracking_ref_stale=stale)
+        return
+    rc2, out2 = fx.finish()
+    state = published_state(fx, [x, fx.journal().get("source")])
+    record("A2 behind at start", rc == 0 and stale and rc2 == 0 and good(state) and fx.remote_pri() == [62],
+           begin_rc=rc, tracking_ref_stale=stale, finish_rc=rc2, out=out2[-200:], **state)
+
+
+def a3_a5():
+    fx = Fx("a3")
+    fx.begin(ok=True)
+    x = fx.other_queue(N, "parked", "other coordinator parked it")
+    rc, out = fx.finish()
+    source = fx.journal().get("source")
+    restored = {
+        "names_row": "GH-%d" % N in out and "same Jog queue row" in out,
+        "head_is_checkpoint_commit": git(fx.primary, "rev-parse", "HEAD") == source,
+        "no_merge_in_progress": not fx.merging(),
+        "tree_clean_db_matches_commit": fx.clean(),
+        "no_backup": not (fx.primary / "releases.db.bak").exists(),
+        "remote_unchanged": fx.remote_head() == x,
+        "journal_phase": fx.journal().get("phase"),
+        "check_clean": fx.check_clean(),
+    }
+    # The command line: a rerun with the journal committed goes straight to publication.
+    exe = fx.dir / "exec"
+    run(["git", "clone", "-q", str(fx.remote), str(exe)])
+    rc_cli, out_cli = fx.app(fx.primary, "jog", "run", "--checkpoint-root", str(fx.pub), "--max-tasks", "1",
+                             "--target-root", str(exe), "--builder", "agy", "--reviewer", "codex", ok=False)
+    cli = {"cli_rc": rc_cli, "cli_message": "jog: checkpoint held:" in out_cli,
+           "cli_no_traceback": "Traceback" not in out_cli, "cli_tail": out_cli[-260:]}
+    record("A3 overlap and restore", rc != 0 and all(v for k, v in restored.items() if k != "journal_phase")
+           and restored["journal_phase"] == "committed" and rc_cli == 2 and cli["cli_message"] and cli["cli_no_traceback"],
+           rc=rc, tail=out[-260:], **restored, **cli)
+    # A5: the other session restores the row to its start values; the same command is rerun.
+    x2 = fx.other_queue(N, "pending", None)
+    before = receipts(fx.primary / "releases.db")
+    rc5, out5 = fx.app(fx.primary, "jog", "run", "--checkpoint-root", str(fx.pub), "--max-tasks", "1",
+                       "--target-root", str(exe), "--builder", "agy", "--reviewer", "codex", ok=False)
+    state = published_state(fx, [x, x2, source])
+    record("A5 rerun after a stop", rc5 == 0 and good(state) and "processing GH-" not in out5,
+           rc=rc5, out=out5[-300:], no_dispatch="processing GH-" not in out5,
+           receipts_before=before, **state)
+
+
+def a3_control():
+    fx = Fx("a3-control")
+    fx.begin(ok=True)
+    x = fx.other_roadmap(63)            # same fixture, minus the overlapping queue write
+    rc, out = fx.finish()
+    state = published_state(fx, [x, fx.journal().get("source")])
+    record("A3 control (no overlap reconciles)", rc == 0 and good(state), rc=rc, **state)
+
+
+def a4():
+    fx = Fx("a4")
+    fx.begin(ok=True)
+    rc, out = fx.finish()
+    head = fx.remote_head()
+    obs = {"rc": rc, "parent_is_base": git(fx.remote, "rev-parse", head + "^") == fx.base,
+           "one_parent": len(git(fx.remote, "rev-list", "--parents", "-n", "1", head).split()) == 2,
+           "subject": git(fx.remote, "log", "-1", "--format=%s", head),
+           "console": out.strip().splitlines()[-1] if out.strip() else "",
+           "remote_queue_row": triple(fx.remote_db(), N), "primary_clean": fx.clean()}
+    record("A4 unmoved (preservation)",
+           rc == 0 and obs["parent_is_base"] and obs["one_parent"]
+           and obs["subject"] == "jog: publish wake checkpoint " + fx.base
+           and obs["console"] == "jog: published primary checkpoint " + head
+           and obs["remote_queue_row"] == ["parked", 1, "fixture park"] and obs["primary_clean"], **obs)
+
+
+def a7():
+    fx = Fx("a7")
+    fx.begin(ok=True)
+    x1 = fx.other_roadmap(64)
+    x2 = fx.other_roadmap(65, push=False)        # prepared, pushed by the hook during the first push
+    hook = fx.pub / ".git/hooks/pre-push"
+    marker = fx.dir / "hook-fired"
+    hook.write_text("#!/bin/sh\n[ -e '%s' ] && exit 0\n: > '%s'\ngit -C '%s' push -q origin development\nexit 0\n"
+                    % (marker, marker, fx.other))
+    hook.chmod(0o755)
+    rc, out = fx.finish()
+    state = published_state(fx, [x1, x2, fx.journal().get("source")])
+    record("A7 moved again during publication",
+           rc == 0 and marker.exists() and good(state) and out.count("jog: reconciled wake checkpoint") == 2
+           and fx.remote_pri() == [65],
+           rc=rc, hook_fired=marker.exists(), reconciles=out.count("jog: reconciled wake checkpoint"),
+           remote_roadmap_pri=fx.remote_pri(), out=out[-420:], **state)
+
+
+def a8():
+    fx = Fx("a8")
+    fx.begin(ok=True)
+    fx.other_sync()
+    (fx.other / "fixture-other-session.txt").write_text("code-only movement\n")
+    x = fx.other_commit("other session: code only", paths=("fixture-other-session.txt",))
+    rc, out = fx.finish()
+    source = fx.journal().get("source")
+    head = fx.remote_head()
+    parents = git(fx.remote, "rev-list", "--parents", "-n", "1", head).split()[1:]
+    same = all(git(fx.remote, "rev-parse", head + ":" + p) == git(fx.remote, "rev-parse", source + ":" + p)
+               for p in ("releases.db", "releases.sql"))
+    state = published_state(fx, [x, source])
+    record("A8 code-only movement", rc == 0 and good(state) and sorted(parents) == sorted([source, x]) and same,
+           rc=rc, merge_parents_are_checkpoint_and_remote=sorted(parents) == sorted([source, x]),
+           ledger_files_byte_equal_to_checkpoint=same, **state)
+
+
+def a9():
+    fx = Fx("a9", view=True)
+    rc, out = fx.begin()
+    view_dirty = "RELEASES-PREVIEW.html" in git(fx.primary, "status", "--porcelain")
+    rc2, out2 = fx.finish()
+    if MODE == "base":
+        record("A9 adopted view (red control)",
+               view_dirty and rc2 != 0 and "checkpoint refuses unrelated changes" in out2
+               and "RELEASES-PREVIEW.html" in out2,
+               view_dirty_after_write=view_dirty, finish_rc=rc2, tail=out2[-260:])
+        return
+    head = fx.remote_head()
+    committed = "RELEASES-PREVIEW.html" in git(fx.remote, "show", "--name-only", "--format=", head)
+    # Unrelated dirt is still refused.
+    (fx.primary / "foreign-control.txt").write_text("peer work\n")
+    rc3, out3 = fx.begin(write=False)
+    (fx.primary / "foreign-control.txt").unlink()
+    record("A9 adopted view",
+           view_dirty and rc2 == 0 and committed and fx.clean() and rc3 != 0
+           and "checkpoint refuses unrelated changes" in out3,
+           view_dirty_after_write=view_dirty, finish_rc=rc2, view_committed_with_checkpoint=committed,
+           primary_clean=fx.clean(), foreign_refused=rc3 != 0, foreign_tail=out3[-160:])
+
+
+def a10():
+    if MODE == "base":
+        # Red control: on base the resume path runs the orphan scan before retrying publication.
+        fx = Fx("a10")
+        fx.py("c = JogCheckpoint(ROOT, PUB)\nassert c.begin()\njog_acquire_lease(ROOT, N, 999999)\n", ok=True)
+        hook = fx.pub / ".git/hooks/pre-push"
+        hook.write_text("#!/bin/sh\nexit 1\n")
+        hook.chmod(0o755)
+        rc, out = fx.finish()                      # commits, push refused -> journal committed
+        before = receipts(fx.primary / "releases.db")
+        row_before = triple(fx.primary / "releases.db", N)
+        hook.unlink()
+        rc2, out2 = fx.resume()
+        after = receipts(fx.primary / "releases.db")
+        record("A10 publication-only resume (red control)",
+               fx.journal().get("phase") == "committed" and after > before
+               and triple(fx.primary / "releases.db", N) != row_before,
+               journal_phase=fx.journal().get("phase"), receipts_before=before, receipts_after=after,
+               row_before=row_before, row_after=triple(fx.primary / "releases.db", N), resume_tail=out2[-240:])
+        return
+    fx = Fx("a10", with_b=True)
+    fx.begin(ok=True)
+    x = fx.other_queue(fx.b, "running", lease=True)     # disjoint remote row B is running
+    hook = fx.pub / ".git/hooks/pre-push"
+    hook.write_text("#!/bin/sh\nexit 1\n")
+    hook.chmod(0o755)
+    rc, out = fx.finish()                               # reconcile merge commits; the push is refused
+    j = fx.journal()
+    merge, source = j.get("commit"), j.get("source")
+    held = rc != 0 and j.get("phase") == "committed" and merge != source and git(fx.primary, "rev-parse", "HEAD") == merge
+    hook.unlink()
+    j["commit"] = source                                # the crash window: merge committed, journal not saved
+    (fx.primary / ".tick/jog/checkpoint.json").write_text(json.dumps(j, indent=2) + "\n")
+    before = receipts(fx.primary / "releases.db")
+    b_before = triple(fx.primary / "releases.db", fx.b)
+    rc2, out2 = fx.resume()
+    state = published_state(fx, [x, source])
+    record("A10 publication-only resume",
+           held and rc2 == 0 and good(state) and fx.remote_head() == merge
+           and receipts(fx.primary / "releases.db") == before
+           and b_before == ["running", 1, None] and triple(fx.remote_db(), fx.b) == b_before
+           and "BEGIN False" in out2,
+           held_with_merge_committed=held, first_tail=out[-200:], resume_rc=rc2, resume_out=out2[-200:],
+           published_head_is_the_merge=fx.remote_head() == merge, receipts_before=before,
+           receipts_after=receipts(fx.primary / "releases.db"), row_b_before=b_before,
+           row_b_published=triple(fx.remote_db(), fx.b), no_dispatch="BEGIN False" in out2, **state)
+
+
+def a11():
+    fx = Fx("a11")
+    fx.begin(ok=True)
+    x = fx.other_roadmap(66)
+    # With the merge open, the remote dump in place and the resolver done, a generator "dies":
+    # partial content is written to releases.db and LEADERBOARD.md, then the step fails.
+    rc, out = fx.py(
+        "c = JogCheckpoint(ROOT, PUB)\nc.state = json.loads(c.journal.read_text())\n"
+        "real = c._app\n"
+        "def dying(*args):\n"
+        "    if args == ('check',):\n"
+        "        open(os.path.join(ROOT, 'releases.db'), 'wb').write(b'partial')\n"
+        "        open(os.path.join(ROOT, 'LEADERBOARD.md'), 'w').write('partial generator output\\n')\n"
+        "        open(os.path.join(ROOT, 'releases.db.bak'), 'wb').write(b'displaced')\n"
+        "        raise ContractError('fixture: generator died mid-write')\n"
+        "    return real(*args)\n"
+        "c._app = dying\nc.finish()\n")
+    source = fx.journal().get("source")
+    obs = {"rc": rc, "tail": out[-200:], "no_merge_head": not fx.merging(),
+           "head_is_checkpoint_commit": git(fx.primary, "rev-parse", "HEAD") == source,
+           "every_tracked_path_equals_head": fx.clean(),
+           "no_backup": not (fx.primary / "releases.db.bak").exists(),
+           "journal_phase": fx.journal().get("phase"), "check_clean": fx.check_clean(),
+           "remote_unchanged": fx.remote_head() == x}
+    rc2, out2 = fx.resume()                              # retryable: the same journal now publishes
+    state = published_state(fx, [x, source])
+    record("A11 restore after partial view output",
+           rc != 0 and "generator died" in out and obs["no_merge_head"] and obs["head_is_checkpoint_commit"]
+           and obs["every_tracked_path_equals_head"] and obs["no_backup"] and obs["journal_phase"] == "committed"
+           and obs["check_clean"] and obs["remote_unchanged"] and rc2 == 0 and good(state),
+           **obs, retry_rc=rc2, retry_published=good(state))
+
+
+def a12():
+    fx = Fx("a12", view=True)
+    fx.begin(ok=True)
+    view_dirty = "RELEASES-PREVIEW.html" in git(fx.primary, "status", "--porcelain")
+    changed = [int(l.split()[1].split(",")[0].lstrip("-")) for l in
+               git(fx.primary, "diff", "-U0", "--", "RELEASES-PREVIEW.html").splitlines()
+               if l.startswith("@@")] if view_dirty else []
+    fx.other_sync()
+    view = fx.other / "RELEASES-PREVIEW.html"
+    lines = view.read_text().split("\n")
+    for ln in changed[:3]:                               # same lines, different content, no ledger change
+        lines[ln - 1] = lines[ln - 1] + "<!-- other session edit -->"
+    view.write_text("\n".join(lines))
+    x = fx.other_commit("other session: hand edit of the generated view", paths=("RELEASES-PREVIEW.html",))
+    rc, out = fx.finish()
+    source = fx.journal().get("source")
+    state = published_state(fx, [x, source])
+    regen = "other session edit" not in git(fx.remote, "show", "development:RELEASES-PREVIEW.html")
+    record("A12 view conflict without a ledger change",
+           view_dirty and bool(changed) and rc == 0 and good(state) and regen
+           and git(fx.primary, "ls-files", "-u") == "",
+           view_dirty_after_write=view_dirty, conflicting_lines=changed[:3], rc=rc, out=out[-260:],
+           view_regenerated_from_ledger=regen, **state)
+
+
+CHECKS = {"a1": a1, "a2": a2, "a3": a3_a5, "a3c": a3_control, "a4": a4, "a7": a7, "a8": a8, "a9": a9,
+          "a10": a10, "a11": a11, "a12": a12}
+BASE_DEFAULT = ("a1", "a2", "a4", "a9", "a10")
+
+if __name__ == "__main__":
+    names = SELECTED or (BASE_DEFAULT if MODE == "base" else tuple(CHECKS))
+    print("mode=%s rev=%s source=%s" % (MODE, REV, SOURCE))
+    for name in names:
+        CHECKS[name]()
+    failed = [n for n, v in RESULTS if not v]
+    print("\nSUMMARY mode=%s: %d check(s), %d failed%s" % (MODE, len(RESULTS), len(failed),
+                                                          (": " + "; ".join(failed)) if failed else ""))
+    sys.exit(1 if failed else 0)
