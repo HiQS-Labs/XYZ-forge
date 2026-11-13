@@ -45,6 +45,7 @@ A6 reverse: ContractError literals in JogCheckpoint = 23
   listed  development changed the same Jog queue row(s) as this wake: 
   listed  canonical writer refused the replay of jog-%s GH-%s (exit %s)
   listed  checkpoint replay did not reproduce the wake's queue state: 
-states remote ledger activity is not a stop: True
+closed list stated (only stops; anything else continue): True
+competing writer defined once, directives told to cite it: True
 red control, section present on base 6c0c76bb5: False
 VERDICT: PASS

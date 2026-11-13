@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Final QA r1 findings fixed in `33c8682c3`. Manual checks A1–A14 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Existing suites and the full gate in a disposable clone, final Codex QA, then a ready PR against `development`. |
+| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Final QA r1 findings fixed in `33c8682c3`. Manual checks A1–A14 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Final QA approved (Codex r3, attested at `2ed9abb57`). After that approval the operator directed four text changes (closed stop list, one definition of "competing writer", corrected source of the stop, plan step 10); they are applied and have **not** had independent review. Next: operator decision on a text-only review, then the full gate and a PR against `development`. Plan step 10 (two sentences on LTVera-Pandas issue 1014) waits for the operator's go. |
 
 ## Rating rationale (2026-11-13)
 
@@ -42,8 +42,9 @@ goal: >
 - **sev 70:** work-blocking for unattended multi-hour runs on a shared branch. When `development`
   moves during a wake, the run ends in a Python traceback and a hand repair of the ledger. No data is
   lost: the checkpoint commit and journal are kept.
-- **pri 75:** it held a real five-task downstream run for a day (LTVera-Pandas issue 1014,
-  2026-11-13), and the operator asked for it to be fixed now. Kept close to severity.
+- **pri 75:** it held a real five-task downstream run for 47 minutes (LTVera-Pandas issue 1014,
+  hold posted 2026-11-13 17:24 UTC, released 18:11 UTC), the run still faced a likely hand repair at
+  its end, and the operator asked for it to be fixed now. Kept close to severity.
 - **appeal 50:** neutral; the operator gave no preference.
 - **effort 40:** one core file behind the full gate, with a real merge-and-replay path that has no
   suite and needs manual fixture verification.
@@ -85,8 +86,15 @@ goal: >
   which rebuilds the DB from the merged dump, regenerates the views, stages them, and refuses a dump
   whose generation is below either parent.
 - **Skill text** (`skills/2-daily/jog/SKILL.md:158-162`): "Unrelated changes, divergence or rejected
-  push stop and preserve state for reconciliation." It does not say what is not a stop. The phrases
-  "quiet window", "competing writer" and "one coordinator" appear nowhere in the Jog skill or code.
+  push stop and preserve state for reconciliation." It does not say what is not a stop.
+- **Where the stop came from** (corrected 2026-11-13; the first version of this doc said the rule was
+  "not in the repo", which was true of this repo and missed the source). The agent followed two
+  hand-written sentences on LTVera-Pandas issue 1014: prerequisite 2 in the issue body, "One
+  coordinator/primary writer and one heavy gate per host", and step 7 of the operator directive
+  (comment 6834653930), "Stop only for a concrete boundary: unresolved competing writer; …". Neither
+  phrase is defined anywhere, and neither appears in the Jog skill or code, so "competing writer" was
+  read as "any other session writing the ledger". The agent then asked for a "ledger-quiet window".
+  The hold lasted 47 minutes.
 - **Coverage:** no suite references `--checkpoint-root` or `JogCheckpoint`
   (`git grep -l -E "checkpoint-root|JogCheckpoint" -- test` is empty). GH-1358 verified the checkpoint
   with manual rehearsals under `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/checkpoint/`.
@@ -214,12 +222,29 @@ checkpoint commit first, then the latest reconcile merge.
    the `JogCheckpoint` constructor, `begin()` and `finish()`, prints `jog: checkpoint held: <reason>`
    and exits 2.
 8. **Skill text**, scoped to checkpoint publication. Replace the open-ended stop sentence in
-   `skills/2-daily/jog/SKILL.md` with a short section: the checkpoint contacts `origin/development`
-   only at publication (per-task preflight in the execution clone still fetches); ledger writes by
-   other sessions are never a stop and a quiet window is never requested; a moved `development` is
-   reconciled automatically; the legal checkpoint stops, each by its exact message; what to do at a
-   stop (rerun the same command; never force-push, reset or hand-edit the ledger). -> expect each
-   listed message to be found verbatim in `jog_run.py`.
+   `skills/2-daily/jog/SKILL.md` with a short section (revised 2026-11-13 on operator direction):
+   - the checkpoint contacts `origin/development` only at publication (per-task preflight in the
+     execution clone still fetches); a moved `development` is reconciled automatically;
+   - **a closed list:** a stop exists only when Jog prints `jog: checkpoint held:` with one of the
+     listed messages, by exact string; anything else, continue. No sentence bans a particular phrase
+     such as "quiet window": a ban on one phrase does not stop the next invented rule, a closed list
+     does;
+   - **"competing writer" defined once, here:** a second process writing this wake's own queue rows
+     in the same primary clone. Run directives, runbooks and issue checklists cite the section instead
+     of restating it;
+   - what to do at a stop (rerun the same command; never force-push, reset or hand-edit the ledger).
+   -> expect each listed message to be found verbatim in `jog_run.py`, and every `ContractError`
+   literal in the class to be listed.
+10. **Fix the source sentences** on LTVera-Pandas issue 1014. Both are the operator's own text, so
+    they are edited only on the operator's go, under the operator's account:
+    - Prerequisite 2 (issue body), from "One coordinator/primary writer and one heavy gate per host."
+      to "One Jog coordinator per primary clone and one heavy gate per host. Jog's stop conditions are
+      the closed list in the Jog skill, section *Checkpoint publication*; other sessions writing the
+      ledger on `development` is not one."
+    - Directive step 7 (comment 6834653930), from "unresolved competing writer;" to "a competing
+      writer as the Jog skill defines it (a second process writing this run's own queue rows in the
+      same primary clone);".
+    -> expect neither sentence to restate a Jog stop condition in its own words.
 9. **Records.** `CHANGELOG.md` entry; manual-check receipts and `provenance.jsonl` under
    `TESTS-RESULTS/2026-11-13+GH-1453/`.
 
@@ -251,7 +276,8 @@ base `6c0c76bb5` for the stated reason. A4 is a preservation check and must pass
 - [x] **A5 rerun after a stop.** After A3, the other session restores the row and the same command is
   rerun: it reconciles and publishes without dispatching a task.
 - [x] **A6 skill text.** Every stop message listed in `skills/2-daily/jog/SKILL.md` is found verbatim
-  in `utils/py/jog_run.py`, and the section states that remote ledger activity is not a stop. Red
+  in `utils/py/jog_run.py`, every `ContractError` literal in the class is listed, and the section states
+  the closed list and the one definition of "competing writer". Red
   control: the check fails on base, where the section does not exist.
 - [x] **A7 moved again during publication.** A hook in the publication clone lets the other session
   push once more during the first push. The wake still ends `published` after a second attempt; the

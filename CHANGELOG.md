@@ -12,8 +12,9 @@ changed the same queue row, a non-ledger file conflicts, or the wake contains a 
 replay (an orphan-lease reconcile or an operator queue verb). A rerun retries publication without
 dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
 before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
-longer has its checkpoint refused after one queue write. The Jog skill now lists every legal
-checkpoint stop and states that ledger writes by other sessions are never one.
+longer has its checkpoint refused after one queue write. The Jog skill now carries the closed list
+of checkpoint stops by exact message (anything else: continue) and the one definition of "competing
+writer", which run directives cite instead of restating.
 
 **Bet (Easy to reverse):** replaying receipts in order reproduces the wake's queue state on the
 remote ledger whenever the remote left those rows alone; the replay is verified row by row and any

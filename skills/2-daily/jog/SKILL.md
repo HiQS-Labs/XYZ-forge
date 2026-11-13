@@ -176,11 +176,12 @@ A `jog run --checkpoint-root <publication-clone> --max-tasks N` wake works from 
 (Per-task preflight in the execution clone still fetches, so each task's PR starts from current
 `development`; that is separate from the checkpoint.)
 
-**Other sessions writing to `development` is never a stop.** Reconciles, intake, ratings and
-other Jog coordinators may push ledger commits while a wake runs. Do not wait for a quiet branch,
-do not ask the operator for a "quiet window", and do not hold a run because the remote moved
-before or during it. The one-writer rule (GH-1108) means the primary is the only writer of *this
-wake's* queue rows; it does not mean nobody else may write the ledger.
+**"Competing writer", defined once.** A competing writer is a second process writing *this wake's
+own queue rows* in the same primary clone while the wake runs: a second `jog run`, or an operator
+queue verb on those rows. The supervisor lock refuses the first and the replay check below stops on
+the second. Another session pushing ledger commits to `development` (a reconcile, intake, a rating,
+another coordinator's rows) is not a competing writer. Run directives, runbooks and issue checklists
+**cite this section** for Jog's stop conditions; they do not restate or paraphrase them.
 
 **A moved `development` is reconciled automatically.** At publication Jog merges the remote into
 the primary, takes the remote ledger, replays this wake's own queue writes through the canonical
@@ -188,8 +189,10 @@ writers, runs `utils/releases-merge-resolve.sh` and publishes the merge. It prin
 `jog: reconciled wake checkpoint onto moved development <sha>` and then
 `jog: published primary checkpoint <sha>`. That is a normal successful run.
 
-**The legal checkpoint stops.** Each prints `jog: checkpoint held: <message>` and exits 2. Nothing
-else about the remote is a reason to stop.
+**These are the only checkpoint stops.** A stop exists only when Jog itself prints
+`jog: checkpoint held: <message>` and exits 2, with one of the messages below. The list is closed.
+Anything that is not on it is not a stop, including a conflict an agent or a runbook predicts but
+no command has reported: continue.
 
 At start (nothing has run yet):
 
