@@ -154,16 +154,20 @@ class Fx:
     def remote_head(self):
         return git(self.remote, "rev-parse", "development")
 
-    def remote_db(self):
+    def remote_db(self, ref="development"):
         tmp = Path(tempfile.mkdtemp(dir=self.dir)) / "remote.db"
-        tmp.write_bytes(subprocess.run(["git", "-C", str(self.remote), "show", "development:releases.db"],
+        tmp.write_bytes(subprocess.run(["git", "-C", str(self.remote), "show", ref + ":releases.db"],
                                        capture_output=True, check=True).stdout)
         return tmp
 
-    def remote_pri(self):
-        rows = json.loads(self.app(self.other, "roadmap", "list", "--json")[1])
-        rows = rows if isinstance(rows, list) else rows.get("items", rows.get("rows", []))
-        return [r.get("rating_pri") for r in rows if str(r.get("gh_number")) == str(N)]
+    def remote_pri(self, ref="development"):
+        """GH-N's roadmap priority read from the PUBLISHED ledger (the bare origin's releases.db at
+        <ref>), never from the other session's clone, which keeps its own write either way."""
+        conn = sqlite3.connect(self.remote_db(ref).resolve().as_uri() + "?mode=ro", uri=True)
+        try:
+            return [r[0] for r in conn.execute("SELECT rating_pri FROM roadmap_items WHERE gh_number=?", (N,))]
+        finally:
+            conn.close()
 
     def journal(self):
         return json.loads((self.primary / ".tick/jog/checkpoint.json").read_text())
@@ -222,8 +226,12 @@ def a1():
         return
     source = fx.journal().get("source")
     state = published_state(fx, [x, source])
-    state["remote_roadmap_pri"] = fx.remote_pri()
-    record("A1 moved, disjoint", rc == 0 and good(state) and state["remote_roadmap_pri"] == [61],
+    state["published_roadmap_pri"] = fx.remote_pri()
+    # Observer control: the same reader on the published ledger BEFORE the other session's write
+    # must not report 61, or it could not tell a lost write from a preserved one.
+    state["observer_control_pri_at_base"] = fx.remote_pri(fx.base)
+    record("A1 moved, disjoint", rc == 0 and good(state) and state["published_roadmap_pri"] == [61]
+           and state["observer_control_pri_at_base"] != [61],
            rc=rc, out=out[-300:], **state)
 
 
@@ -240,7 +248,8 @@ def a2():
     rc2, out2 = fx.finish()
     state = published_state(fx, [x, fx.journal().get("source")])
     record("A2 behind at start", rc == 0 and stale and rc2 == 0 and good(state) and fx.remote_pri() == [62],
-           begin_rc=rc, tracking_ref_stale=stale, finish_rc=rc2, out=out2[-200:], **state)
+           begin_rc=rc, tracking_ref_stale=stale, finish_rc=rc2, out=out2[-200:],
+           published_roadmap_pri=fx.remote_pri(), **state)
 
 
 def a3_a5():
@@ -322,7 +331,7 @@ def a7():
            rc == 0 and marker.exists() and good(state) and out.count("jog: reconciled wake checkpoint") == 2
            and fx.remote_pri() == [65],
            rc=rc, hook_fired=marker.exists(), reconciles=out.count("jog: reconciled wake checkpoint"),
-           remote_roadmap_pri=fx.remote_pri(), out=out[-420:], **state)
+           published_roadmap_pri=fx.remote_pri(), out=out[-420:], **state)
 
 
 def a8():

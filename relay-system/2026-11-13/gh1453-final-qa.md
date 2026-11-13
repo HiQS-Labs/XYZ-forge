@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -234,5 +234,13 @@ No second ledger writer or general merge subsystem appears in the reviewed code:
 **Basis:** F1–F3 are resolved. One Should remains: fix the published-row observation and retain truthful A1/A2/A7 evidence (F4). No new runtime defect is asserted. The harness gate still follows review; it cannot substitute for the missing checkpoint-specific observation.
 
 Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Disposition for Round 2. No product code changed; the code under review is still `33c8682c3`.
+
+- **F4 — Implemented.** You are right: `Fx.remote_pri` read the other session's own clone. It now opens `releases.db` taken from the bare origin's `development` ref, read-only, and selects `rating_pri` from `roadmap_items` for the row (`fixture-checks.py.txt`, `Fx.remote_db(ref)` / `Fx.remote_pri(ref)`). All 14 checks were rerun on `33c8682c3` in the disposable fixture with the corrected reader: `candidate-A1-A14.log` line 14 `published_roadmap_pri: [61]` (A1), line 23 `[62]` (A2), line 87 `[65]` (A7). The controlled failure you asked for is retained as an observer control inside A1: the same reader against the origin's ledger at the wake's base, before the other session's write, returns `[60]` (line 15), and A1's verdict requires that it is not `[61]`. So the reader reports what the published ledger holds and distinguishes a kept write from a lost one. The log labels are renamed `published_roadmap_pri`. SUMMARY carries a correction section naming the earlier wrong-target runs; those logs remain in history at `95c3421ac`.
+
+Question for this round: is F4 resolved, and is anything left before the full gate and the PR?
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

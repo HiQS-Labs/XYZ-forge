@@ -32,6 +32,15 @@ Logs: `candidate-A1-A14.log` (14 checks, 0 failed), `base-red-controls.log` (5 c
 the stated base behaviour), `a6-skill-text.log`. Fixture paths in the logs are replaced with
 `<fixture>`, `<fixture-dir>` and `<task-clone>`.
 
+## Correction to the first evidence run (final QA round 2, F4)
+
+The first two runs of A1, A2 and A7 read the other session's roadmap priority from the other
+session's own clone, which holds that value whether or not the reconcile preserved it. The reader now
+opens `releases.db` from the bare origin's `development` (`Fx.remote_pri`). Rerun on `33c8682c3`:
+published priority `[61]` (A1), `[62]` (A2), `[65]` (A7). A1 also records the same reader on the
+origin before the other session's write, `[60]`, so the reader can tell a kept write from a lost one.
+The earlier logs are in git history at `95c3421ac`.
+
 ## What these checks do not show
 
 - A writer refusal during replay (plan step 4.7) has no fixture. The overlap check runs first, and no
