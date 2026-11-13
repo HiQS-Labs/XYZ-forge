@@ -47,3 +47,7 @@ updated: 2026-11-07
 ## Context
 
 Filed 2026-11-07 after reviewing PR #1351 (the GH-1345 cutover). The full review — verdict, four findings, receipt discrepancy, and the design discussion that produced these recommendations — is recorded as a comment on the flywheel arc issue #1298. The immediate code findings belong to #1345; this doc tracks what comes after the cutover lands.
+
+## Merge evidence
+
+- PR #1355 merged 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

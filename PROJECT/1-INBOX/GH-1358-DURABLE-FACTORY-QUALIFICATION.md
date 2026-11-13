@@ -223,3 +223,15 @@ Recovery outcome: PR1379 head18e5df165, full408/408 in536s, finaldocs67s. Finalp
 ## Merge evidence
 
 - PR #1388 merged 2026-11-09 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 3bf02f73ce0c landed 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 88ec08d7551d landed 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 5077656710b8 landed 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

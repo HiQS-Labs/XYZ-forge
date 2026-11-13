@@ -106,3 +106,31 @@ pri 90 / sev 80 / appeal 85 / effort 50 (validates core product flywheel on live
 ## Terminal attempt accounting
 
 Agent-assisted partial / not qualified; NOT acceptance-complete. Issue remains open. Full live-acceptance matrix and preserved friction history: `TESTS-RESULTS/2026-11-08+GH-1356-closeout/SUMMARY.md`. No unmet criterion waived; no further #1344 attempt or stale #1345 dispatch.
+
+## Merge evidence
+
+- PR #1357 merged 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 0b24095502b9 landed 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit feb2196b8b30 landed 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 938a96e60542 landed 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 70847aa14bdf landed 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 15c8d356756c landed 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit bc2d79398ed4 landed 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

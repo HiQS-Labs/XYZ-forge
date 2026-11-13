@@ -95,3 +95,7 @@ Planning reversible; scheduling/effect ownership migration is Costly and crossin
 Unstarted implementation intake; no ledger row. Related #1168, #1248, #1200, #1175, #1188, #1358, #1359.
 
 
+
+## Merge evidence
+
+- commit 92b785461279 landed 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

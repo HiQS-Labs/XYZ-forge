@@ -125,3 +125,7 @@ tuning across unrelated documents. Verification scratch belongs outside the tree
 ## Merge evidence
 
 - PR #1371 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1355 merged 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -2,8 +2,8 @@
 gh_issue: 1137
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1137
 title: "relay: end-of-turn .relay-scratch sweep deletes host-tracked files (rm -rf in rtl_enforce/rtl_check)"
-status: "Active (fix implemented and manually verified; full gate pending)"
-updated: 2026-11-12
+status: Complete
+updated: 2026-11-13
 goal: "Relay turns discard only the scratch they created; host-tracked files under .relay-scratch/ are kept"
 owner: Claude Code
 created: 2026-11-12
