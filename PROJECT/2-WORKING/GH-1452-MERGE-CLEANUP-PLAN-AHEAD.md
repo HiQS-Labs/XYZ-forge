@@ -2,7 +2,7 @@
 gh_issue: 1452
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1452
 title: "merge-cleanup: plan-ahead landing forecast so direct-vs-group is decided with evidence at planning time"
-status: "Working — build and manual checks done; final QA pending"
+status: "Working — PR ready; awaiting merge (final QA Approved; gate 9 of 10, shellcheck fails on an untouched file)"
 created: 2026-11-13
 updated: 2026-11-13
 owner: Claude
@@ -42,7 +42,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in round 2 (Codex relay). Forecast built in `ledger_merge.py`, wired through `merge_cleanup.py` and `batch_record.py`, documented in `SKILL.md`. Existing suite (227 tests) and 14 retained manual scenarios pass (`TESTS-RESULTS/2026-11-13+GH-1452/`). | Final Codex relay QA, then open the PR against `development`; landing and the deployed-copy refresh are separate steps. |
+| Plan QA Approved in round 2 (Codex relay). Forecast built in `ledger_merge.py`, wired through `merge_cleanup.py` and `batch_record.py`, documented in `SKILL.md`. Existing suite (227 tests) and 14 retained manual scenarios pass (`TESTS-RESULTS/2026-11-13+GH-1452/`). | Final Codex QA Approved in round 2 (after a sequence fix, S14). Qualifying gate on the final commit: 9 of 10 steps pass; the shellcheck step fails on an untouched pre-existing file (`TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh`), identical on the base. PR opened against `development`. | Merge (merge-cleanup, only this PR), then refresh the deployed copy with `intake.py --apply update merge-cleanup`. |
 
 ## Idea
 
@@ -98,16 +98,16 @@ None hard. Soft: #1076 (selective-CI and batch-qualification policy) is adjacent
 
 ## Acceptance
 
-- [ ] A dry run (`--prs`) over 3 or more PRs prints a Landing forecast with, per PR, conflicts alone, conflicts in sequence or "conditional", B1-eligible vs needs-review paths, consumed repairs, a churn-risk band, and the recommended `direct` or `group` with its numbers. Red control: on `development@6c0c76bb5` the same command prints no forecast and the `grep_absent` probe below passes.
-- [ ] A disposable-clone queue of 3 PRs that each make a different edit to the same lines of `releases.sql` and `CHANGELOG.md` (shared paths alone do not conflict) forecasts `group`; 3 PRs with disjoint files forecast `direct`. Red control: break the classifier (treat every path as non-conflicting) and the first queue must stop forecasting `group`; a queue of fewer than 3 PRs prints no forecast.
-- [ ] A conflict before the cumulative sequence ends stops the cumulative projection, and later PRs read "conditional". Red control: a queue whose first PR conflicts must not print a clean cumulative result for the PRs after it.
-- [ ] A failed fetch, a missing fork object or a head that differs from its pin yields `unknown` for that PR, never `clean`. Red control: point one PR ref at a nonexistent object and the forecast must say `unknown` and print no recommendation: a three-PR queue with one failed fetch and two clean PRs must not recommend `direct`, while a complete disjoint queue still does.
-- [ ] One pin snapshot holds pins and forecast together, written atomically, and a pin file from the old code (no forecast key) still passes `verify_selection`. Red control: run two dry runs with different `--prs` against one primary at once; the surviving file's forecast heads must equal its own pins.
-- [ ] `--scan-only` writes no forecast, a dry run without `--prs` writes nothing executable, and a dry-run `--prs-only` forecasts. Red control: each mode checked against the unfixed tree and the fixed tree.
-- [ ] `--execute` on 3 or more PRs without `--landing-plan` and `--landing-reason` still exits 5 at the early checkpoint before any ref, marker or batch-record change, and a decision that differs from the stored forecast is recorded as an override. Red control: capture refs, markers and batch records before and after the refused run, and require them unchanged.
-- [ ] A decision recorded at the early checkpoint stores forecast match, override or stale metadata through `set_landing_plan`, it survives a save and reload of the batch record, and a caller that omits the new argument still records exactly decision, reason, PRs and time. Red control: record an override, reload the record and read it back; the unchanged function must not retain it.
-- [ ] `SKILL.md` states that the forecast and the sequence review run at planning time and has the `landing-forecast` capability row. Red control: the `grep_absent` probe below fails on the fixed tree (it passes on the unfixed tree, which is its purpose).
-- [ ] The existing suites `test/gh534_phase_a_tests.py`, `gh534_phase_b_tests.py` and `gh534_phase_c_tests.py` pass in a disposable full clone, with the result retained under `TESTS-RESULTS/`.
+- [x] A dry run (`--prs`) over 3 or more PRs prints a Landing forecast with, per PR, conflicts alone, conflicts in sequence or "conditional", B1-eligible vs needs-review paths, consumed repairs, a churn-risk band, and the recommended `direct` or `group` with its numbers. Red control: on `development@6c0c76bb5` the same command prints no forecast and the `grep_absent` probe below passes.
+- [x] A disposable-clone queue of 3 PRs that each make a different edit to the same lines of `releases.sql` and `CHANGELOG.md` (shared paths alone do not conflict) forecasts `group`; 3 PRs with disjoint files forecast `direct`. Red control: break the classifier (treat every path as non-conflicting) and the first queue must stop forecasting `group`; a queue of fewer than 3 PRs prints no forecast.
+- [x] A conflict before the cumulative sequence ends stops the cumulative projection, and later PRs read "conditional". Red control: a queue whose first PR conflicts must not print a clean cumulative result for the PRs after it.
+- [x] A failed fetch, a missing fork object or a head that differs from its pin yields `unknown` for that PR, never `clean`. Red control: point one PR ref at a nonexistent object and the forecast must say `unknown` and print no recommendation: a three-PR queue with one failed fetch and two clean PRs must not recommend `direct`, while a complete disjoint queue still does.
+- [x] One pin snapshot holds pins and forecast together, written atomically, and a pin file from the old code (no forecast key) still passes `verify_selection`. Red control: run two dry runs with different `--prs` against one primary at once; the surviving file's forecast heads must equal its own pins.
+- [x] `--scan-only` writes no forecast, a dry run without `--prs` writes nothing executable, and a dry-run `--prs-only` forecasts. Red control: each mode checked against the unfixed tree and the fixed tree.
+- [x] `--execute` on 3 or more PRs without `--landing-plan` and `--landing-reason` still exits 5 at the early checkpoint before any ref, marker or batch-record change, and a decision that differs from the stored forecast is recorded as an override. Red control: capture refs, markers and batch records before and after the refused run, and require them unchanged.
+- [x] A decision recorded at the early checkpoint stores forecast match, override or stale metadata through `set_landing_plan`, it survives a save and reload of the batch record, and a caller that omits the new argument still records exactly decision, reason, PRs and time. Red control: record an override, reload the record and read it back; the unchanged function must not retain it.
+- [x] `SKILL.md` states that the forecast and the sequence review run at planning time and has the `landing-forecast` capability row. Red control: the `grep_absent` probe below fails on the fixed tree (it passes on the unfixed tree, which is its purpose).
+- [x] The existing suites `test/gh534_phase_a_tests.py`, `gh534_phase_b_tests.py` and `gh534_phase_c_tests.py` pass in a disposable full clone, with the result retained under `TESTS-RESULTS/`.
 
 ## Verification
 
@@ -186,8 +186,10 @@ A 3+ PR landing queue forces the direct-vs-group decision only at --execute, so 
 - [x] Plan QA: Codex relay `RELAY-gh1452-plan-qa`, Approved in round 2 (`relay-system/2026-11-13/gh1452-plan-qa.md`).
 - [x] `ledger_merge.landing_forecast` and the shared `ledger_repair_paths`; the `merge_cleanup.py` dry-run print, `pin_selection` snapshot and early-checkpoint annotation; the `batch_record.set_landing_plan` forecast argument and issue line; `SKILL.md`.
 - [x] Existing suite `test/gh436-merge-cleanup.py` (227 tests) and the manual scenarios retained in `TESTS-RESULTS/2026-11-13+GH-1452/`.
-- [ ] Final Codex relay QA Approved; PR ready against `development`.
+- [x] Final Codex relay QA Approved, round 2 (`relay-system/2026-11-13/gh1452-final-qa.md`); round 1 found a real sequence defect, fixed in `4e9dbda71` with scenario S14.
+- [x] PR opened against `development`.
 
 ### QA checklist — Phase 1
 
-- [ ] Each Acceptance item above has retained evidence, or a recorded reason it did not run.
+- [x] Each Acceptance item above has retained evidence in `TESTS-RESULTS/2026-11-13+GH-1452/`, or a recorded reason it did not run. Not run, and not claimed: the real downstream 6-PR queue (private repo), fork topology, per-mode base-tree reruns (the base tree has no forecast code, S13), and dedicated inline-pin and lock-timeout runtime cases.
+- [x] Qualifying gate run once on the final commit (`qualifying-gate-summary.md`): not green, 9 of 10 steps; the failing shellcheck step is on an untouched file and fails identically on the base.

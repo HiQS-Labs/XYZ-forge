@@ -66,5 +66,6 @@ because the fold stops at the first conflict).
   stand in for it.
 - Forks: the fixture has no fork topology. The forecast fetches `pull/<N>/head` from the base repository,
   which GitHub serves for fork PRs, and verifies each against the pinned head; a missing object is S4.
-- The final qualifying gate (`ci-local.sh`) runs once on the final approved commit after final QA; its
-  receipt is recorded in the PR, not here.
+- Nothing else is outstanding for this folder. The qualifying gate ran once on the final approved commit
+  and is recorded in `qualifying-gate-summary.md`: 9 of 10 steps pass, and the shellcheck step fails on an
+  untouched file that fails identically on the base commit. The gate is not claimed green.
