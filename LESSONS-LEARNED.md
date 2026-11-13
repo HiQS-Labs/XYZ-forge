@@ -175,3 +175,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: relay
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1427
 - **date**: 2026-11-11
+
+## A check that asserts published state must read the published artifact, not the clone that wrote it
+
+- **cue**: writing a manual check or fixture that asserts "the other session's change survived on the remote" after a merge, reconcile or publish
+- **lesson**: read the value from the published artifact itself (for the ledger, `releases.db` taken from the remote ref), never from the clone that made the write, which holds the value whether or not publication kept it. Add one observer control: the same reader against the pre-change ref must return a different value, or the check cannot tell kept from lost.
+- **evidence**: `relay-system/2026-11-13/gh1453-final-qa.md` (Round 2, F4: the reviewer's stubbed reader returned `[61]` with zero published-ledger reads); `TESTS-RESULTS/2026-11-13+GH-1453/candidate-A1-A14.log` lines 14–15 after the fix (`published_roadmap_pri: [61]`, `observer_control_pri_at_base: [60]`); `TESTS-RESULTS/2026-11-13+GH-1453/fixture-checks.py.txt` (`Fx.remote_pri`)
+- **confidence**: medium. One incident. The first two evidence runs passed with the wrong-target reader and passed again with the corrected one, so the product result did not change; what changed is that the check could now fail.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1453
+- **date**: 2026-11-13
