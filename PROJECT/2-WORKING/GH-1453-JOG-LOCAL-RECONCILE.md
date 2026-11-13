@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Final QA r1 findings fixed in `33c8682c3`. Manual checks A1–A14 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Final QA approved (Codex r3, attested at `2ed9abb57`). After that approval the operator directed four text changes (closed stop list, one definition of "competing writer", corrected source of the stop, plan step 10); they are applied and have **not** had independent review. Next: operator decision on a text-only review, then the full gate and a PR against `development`. Plan step 10 (two sentences on LTVera-Pandas issue 1014) waits for the operator's go. |
+| Plan QA approved (Codex r3, attested at `248c75f4e`). Implemented in `utils/py/jog_run.py` (`f2eec6528`) and the Jog skill (`7be8cfc02`). Final QA r1 findings fixed in `33c8682c3`. Manual checks A1–A14 pass on the candidate; red controls A1, A2, A9, A10 show the stated base behaviour; receipts in `TESTS-RESULTS/2026-11-13+GH-1453/`. | Final QA approved (Codex r3, attested at `2ed9abb57`). After that approval the operator directed four text changes; one further Codex round on them returned six wording findings, all accepted and applied (see "Text review after approval"). Plan step 10 is done on LTVera-Pandas issue 1014. | Full gate on the final commit, then a PR against `development`, awaiting merge. Post-merge reconcile moves this doc to 3-COMPLETED. |
 
 ## Rating rationale (2026-11-13)
 
@@ -225,26 +225,30 @@ checkpoint commit first, then the latest reconcile merge.
    `skills/2-daily/jog/SKILL.md` with a short section (revised 2026-11-13 on operator direction):
    - the checkpoint contacts `origin/development` only at publication (per-task preflight in the
      execution clone still fetches); a moved `development` is reconciled automatically;
-   - **a closed list:** a stop exists only when Jog prints `jog: checkpoint held:` with one of the
-     listed messages, by exact string; anything else, continue. No sentence bans a particular phrase
-     such as "quiet window": a ban on one phrase does not stop the next invented rule, a closed list
-     does;
-   - **"competing writer" defined once, here:** a second process writing this wake's own queue rows
-     in the same primary clone. Run directives, runbooks and issue checklists cite the section instead
-     of restating it;
+   - **a closed list:** for checkpoint publication, a stop exists only when Jog prints
+     `jog: checkpoint held:` with a message that starts with one of the listed strings; a predicted
+     conflict with no failed command is not a stop. No sentence bans a particular phrase such as
+     "quiet window": a ban on one phrase does not stop the next invented rule, a closed list does.
+     The list is scoped: it does not override a failed task or gate, another Jog refusal, or an
+     unexpected error, which are reported verbatim (text-delta QA F1; see the note under
+     Implementation notes on how this differs from the operator's literal wording);
+   - **"competing writer" defined once, here:** anything else that changes this wake's own queue rows
+     while it runs, from this clone or another, with how Jog handles each case. Run directives,
+     runbooks and issue checklists cite the section instead of restating it;
    - what to do at a stop (rerun the same command; never force-push, reset or hand-edit the ledger).
    -> expect each listed message to be found verbatim in `jog_run.py`, and every `ContractError`
    literal in the class to be listed.
 10. **Fix the source sentences** on LTVera-Pandas issue 1014. Both are the operator's own text, so
     they are edited only on the operator's go, under the operator's account:
     - Prerequisite 2 (issue body), from "One coordinator/primary writer and one heavy gate per host."
-      to "One Jog coordinator per primary clone and one heavy gate per host. Jog's stop conditions are
-      the closed list in the Jog skill, section *Checkpoint publication*; other sessions writing the
-      ledger on `development` is not one."
+      to "One Jog coordinator per primary clone and one heavy gate per host. For Jog's stop conditions,
+      see the Jog skill, section *Checkpoint publication* (XYZ-forge GH-1453)."
     - Directive step 7 (comment 6834653930), from "unresolved competing writer;" to "a competing
-      writer as the Jog skill defines it (a second process writing this run's own queue rows in the
-      same primary clone);".
+      writer as defined in the Jog skill, section *Checkpoint publication* (XYZ-forge GH-1453);".
     -> expect neither sentence to restate a Jog stop condition in its own words.
+    Done 2026-11-13 with the operator's go, in two passes: the first wording carried a parenthetical
+    definition and an exclusion; text-delta QA F3 pointed out that this restated the rule, so both were
+    reduced to the citation above. Originals are in the issue's edit history.
 9. **Records.** `CHANGELOG.md` entry; manual-check receipts and `provenance.jsonl` under
    `TESTS-RESULTS/2026-11-13+GH-1453/`.
 
@@ -353,3 +357,24 @@ checked by reading and recorded as unverified by fixture.
   original error is the stop.
 - Replayed status values are limited to `completed`, `parked`, `failed` and `pending`; operator queue
   verbs written during a wake are a stop, like `jog-reconcile`.
+
+## Text review after approval (2026-11-13)
+
+Codex approved the code and evidence in final QA round 3 (attested at `2ed9abb57`). The operator then
+directed four text changes and allowed one more Codex round on them, with the Producer adjudicating.
+That round (`relay-system/2026-11-13/gh1453-text-delta-qa.md`) returned FAIL with five `[Should]`
+findings and one `[Nit]`, all about wording. All six were accepted and applied. Codex has not seen the
+corrected wording.
+
+One of them changes the operator's literal instruction. The operator asked for "these are the only
+stops, by exact error string; anything else, continue". Codex showed (F1) that read literally this
+tells an agent to continue past a failed task, a failed gate, a non-checkpoint Jog refusal or a
+traceback, and that several list entries are the fixed start of a message, not the whole string. The
+skill keeps the closed list and the rule that nobody adds a stop, and scopes "continue" to a predicted
+conflict with no failed command; any error Jog actually emits is reported, not skipped.
+
+The other five: the definition of "competing writer" now includes a writer on another clone or machine
+and says when the replay check applies (F2); the two downstream sentences cite the section without
+restating it (F3); the rerun promise distinguishes a start stop from a publication stop (F4); the
+CHANGELOG no longer claims an exclusive three-case list (F5); "once" became "only during publication"
+(F6).

@@ -7,9 +7,10 @@ A `jog run --checkpoint-root` wake no longer fetches at start or requires the pr
 At publication, `JogCheckpoint` (`utils/py/jog_run.py`) merges the moved branch into the primary,
 takes the remote ledger, replays the wake's own `jog-lease` / `jog-<status>` writes (read from the
 ledger's `op_receipts`) through the canonical writers, runs `utils/releases-merge-resolve.sh` and
-publishes the merge. It stops, with `jog: checkpoint held: <message>` and exit 2, only when both sides
-changed the same queue row, a non-ledger file conflicts, or the wake contains a write it will not
-replay (an orphan-lease reconcile or an operator queue verb). A rerun retries publication without
+publishes the merge. A stop prints `jog: checkpoint held: <message>` and exits 2; for a moved branch
+the main ones are that both sides changed the same queue row, a non-ledger file conflicts, or the wake
+contains a write it will not replay (an orphan-lease reconcile or an operator queue verb). The full
+list is in the Jog skill, section *Checkpoint publication*. A rerun retries publication without
 dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
 before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
 longer has its checkpoint refused after one queue write. The Jog skill now carries the closed list

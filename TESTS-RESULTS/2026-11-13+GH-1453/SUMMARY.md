@@ -19,7 +19,7 @@ every write local. Nothing touches GitHub or the maintained primary.
 | A3 control (no overlap) | PASS: same fixture reconciles | not run |
 | A4 unmoved (preservation) | PASS | PASS (same parent, subject and console line) |
 | A5 rerun after a stop | PASS: publishes, no task dispatched | not run |
-| A6 skill text | PASS: 22 listed messages all found in `JogCheckpoint`, and all 23 `ContractError` literals in the class are listed | red: section absent |
+| A6 skill text | PASS on the final wording: 22 listed message starts all found in `JogCheckpoint`, all 23 `ContractError` literals in the class listed, closed-list, scope and definition sentences present | red: section absent |
 | A7 moved again during publication | PASS: two reconciles, one publish, `attempt_count` 1 | not run |
 | A8 code-only movement | PASS: one merge commit, ledger files byte-equal to the checkpoint | not run |
 | A9 adopted view | PASS: view committed with the checkpoint; foreign file still refused | red: `checkpoint refuses unrelated changes: [' M RELEASES-PREVIEW.html']` |

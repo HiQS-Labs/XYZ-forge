@@ -1,4 +1,4 @@
-A6 skill text, forward: listed stop messages = 22
+A6 skill text, forward: listed stop-message starts = 22
   found   checkpoint root must be a separate full clone with the same origin
   found   checkpoint refuses unrelated changes
   found   checkpoint refuses pre-existing ledger changes without an active journal
@@ -45,7 +45,8 @@ A6 reverse: ContractError literals in JogCheckpoint = 23
   listed  development changed the same Jog queue row(s) as this wake: 
   listed  canonical writer refused the replay of jog-%s GH-%s (exit %s)
   listed  checkpoint replay did not reproduce the wake's queue state: 
-closed list stated (only stops; anything else continue): True
-competing writer defined once, directives told to cite it: True
+closed list stated; predicted conflict is not a stop: True
+scoped: emitted failures are reported, not skipped: True
+competing writer defined once (any clone), directives told to cite it: True
 red control, section present on base 6c0c76bb5: False
 VERDICT: PASS

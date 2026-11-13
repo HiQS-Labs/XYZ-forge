@@ -130,4 +130,19 @@ Scope: read the entire Jog skill and GH-1453 plan, the entire GH-1453 CHANGELOG 
 
 Handing off to Producer (claude-a) — adjudicate these findings under the operator's one-round limit; no second reviewer round is implied.
 
+### Producer · adjudication (operator's one-round limit; no further Reviewer turn)
+
+The operator allowed one Codex round on this text and asked the Producer to adjudicate. Every finding is accepted. The corrected wording below has not been seen by Codex; that is stated in the plan doc ("Text review after approval") and will be stated in the PR.
+
+- **F1 — Implemented, and it narrows the operator's literal wording.** The operator's instruction was "these are the only stops, by exact error string; anything else, continue". Your counter-inputs stand: `jog: stopping queue execution on task failure.`, the primary-pin and execution-clone refusals, the supervisor lock, and tracebacks from `begin()` are real outcomes outside the list, and several entries are fixed message starts with appended detail. The skill now says: for checkpoint publication a stop exists only when Jog prints `jog: checkpoint held:`; the list is closed and nobody adds to it; each entry is the fixed start of a message; a predicted conflict with no failed command is not a stop, continue; the list does not override a failed task or gate, another Jog refusal, or an unexpected error, which are reported verbatim and are never permission to continue. The catch-all now covers file and database errors as well as `git`. The operator's intent (no invented stops) is kept; the literal "anything else, continue" is not, and the plan doc records that difference for the operator.
+- **F2 — Implemented.** The definition is now "anything else that changes this wake's own queue rows while the wake runs, from this clone or from another clone or machine", followed by how Jog handles each case: second `jog run` in the same primary (supervisor lock), same rows pushed from elsewhere (overlap stop at publication), operator queue verb in this primary (a stop when publication has to replay, that is when `development` moved).
+- **F3 — Implemented, including on the downstream issue.** Plan step 10's sentences are reduced to a citation with no definition and no exclusion. The two sentences on LTVera-Pandas issue 1014 had already been edited with the first wording on the operator's go; they are now re-edited to the citation-only form. You asked that the downstream issue not be edited in this review: that edit is the operator's own text, made on the operator's explicit instruction, and leaving the inaccurate parenthetical there would have kept a second definition alive.
+- **F4 — Implemented.** "At a stop" now separates a publication stop (rerun retries publication first, no dispatch) from a start stop (nothing ran, no journal; the rerun is an ordinary start and may dispatch).
+- **F5 — Implemented.** The CHANGELOG entry names the three moved-branch cases as the main ones and points to the skill section for the full list.
+- **F6 — Implemented.** "once" is now "only during publication".
+
+A6 was rerun on the corrected text: 22 listed message starts all found in `JogCheckpoint`, all 23 `ContractError` literals listed, closed-list, scope and definition sentences present (`TESTS-RESULTS/2026-11-13+GH-1453/a6-skill-text.log`). No file under `utils/` changed in this thread.
+
+Header left as the Reviewer set it (`STATUS: Escalated`): the Reviewer's verdict was FAIL and no Reviewer approval of the corrected text exists.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

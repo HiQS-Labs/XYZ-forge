@@ -172,16 +172,19 @@ commit/push. A direct `jog land` call likewise needs that final publication chec
 
 A `jog run --checkpoint-root <publication-clone> --max-tasks N` wake works from the primary's
 **local state**. It does not fetch at start and does not need the primary to equal
-`origin/development`. It contacts `origin/development` once, at publication, after the last task.
+`origin/development`. It contacts `origin/development` only during publication, after the last task.
 (Per-task preflight in the execution clone still fetches, so each task's PR starts from current
 `development`; that is separate from the checkpoint.)
 
-**"Competing writer", defined once.** A competing writer is a second process writing *this wake's
-own queue rows* in the same primary clone while the wake runs: a second `jog run`, or an operator
-queue verb on those rows. The supervisor lock refuses the first and the replay check below stops on
-the second. Another session pushing ledger commits to `development` (a reconcile, intake, a rating,
-another coordinator's rows) is not a competing writer. Run directives, runbooks and issue checklists
-**cite this section** for Jog's stop conditions; they do not restate or paraphrase them.
+**"Competing writer", defined once.** A competing writer is anything else that changes *this
+wake's own queue rows* while the wake runs, from this clone or from another clone or machine. Jog
+handles each case itself: a second `jog run` in the same primary clone is refused by the supervisor
+lock; a change to the same rows pushed from elsewhere is the overlap stop at publication; an operator
+queue verb run in this primary during the wake is a stop when publication has to replay the wake
+(that is, when `development` moved). A session that pushes any other ledger change to `development`
+(a reconcile, intake, a rating, another coordinator's rows) is not a competing writer. Run directives,
+runbooks and issue checklists **cite this section** for Jog's stop conditions; they do not restate or
+paraphrase them.
 
 **A moved `development` is reconciled automatically.** At publication Jog merges the remote into
 the primary, takes the remote ledger, replays this wake's own queue writes through the canonical
@@ -189,10 +192,16 @@ writers, runs `utils/releases-merge-resolve.sh` and publishes the merge. It prin
 `jog: reconciled wake checkpoint onto moved development <sha>` and then
 `jog: published primary checkpoint <sha>`. That is a normal successful run.
 
-**These are the only checkpoint stops.** A stop exists only when Jog itself prints
-`jog: checkpoint held: <message>` and exits 2, with one of the messages below. The list is closed.
-Anything that is not on it is not a stop, including a conflict an agent or a runbook predicts but
-no command has reported: continue.
+**These are the only checkpoint stops.** For checkpoint publication, a stop exists only when Jog
+itself prints `jog: checkpoint held: <message>` and exits 2. The list below is closed: each entry is
+the fixed start of a message, and Jog appends the details (the rows, the paths, the failing command).
+Nobody adds to it. A conflict that an agent or a runbook predicts, with no command having failed, is
+not a stop: continue.
+
+This list covers checkpoint publication only. It does not override anything else Jog reports: a
+failed task or gate, a refusal that is not a checkpoint stop (the primary pin, the execution clone,
+the supervisor lock), or an unexpected error or traceback. Those are real outcomes; report them
+verbatim. An error you do not recognise is an error to report, never permission to continue.
 
 At start (nothing has run yet):
 
@@ -224,14 +233,17 @@ At publication:
 - `checkpoint publication clone must be on development`
 - `publication clone contains commits beyond this checkpoint`
 
-Any other message after `jog: checkpoint held:` is a `git` command that failed, including the
-publication clone's push gate; it reads `git <command> failed: <git's own error>`.
+Any other message after `jog: checkpoint held:` is a command or system call that failed and is
+quoted as it failed: usually `git <command> failed: <git's own error>` (this includes the publication
+clone's push gate), otherwise a file or database error raised during the reconcile.
 
 **At a stop:** state is preserved. A stop while the merge is open restores the primary to its
 checkpoint commit; a stop after a reconcile merge keeps that merge. If a run died while its own
-merge was open, the rerun restores it first. Fix the named cause if there is
-one, then **rerun the same command**: it retries publication first and dispatches no task. Never
-force-push, never `git reset` the primary, and never hand-edit `releases.db` or `releases.sql`.
+merge was open, the rerun restores it first. Fix the named cause if there is one, then **rerun the
+same command**. After a publication stop the rerun retries publication first and dispatches no task.
+After a start stop nothing had run and no journal was kept, so the rerun is an ordinary start and
+may dispatch tasks. Never force-push, never `git reset` the primary, and never hand-edit
+`releases.db` or `releases.sql`.
 
 Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
 clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
