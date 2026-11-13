@@ -307,14 +307,21 @@ def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
     save(rec)
 
 
-def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[int]) -> None:
-    """Record an intentional landing plan decision (GH-1066) for queues of 3+ PRs."""
+def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[int],
+                     forecast: Optional[Dict[str, Any]] = None) -> None:
+    """Record an intentional landing plan decision (GH-1066) for queues of 3+ PRs.
+
+    GH-1452: `forecast` is the optional comparison against the planning-time landing forecast
+    (state match|override|no-recommendation, recommendation, stale flag and reasons). It is advice
+    about the decision, never the decision itself; omitted, the record is exactly what it was."""
     rec["landing_plan"] = {
         "decision": str(decision).strip(),
         "reason": str(reason).strip(),
         "decided_at": _now(),
         "prs": sorted(int(p) for p in prs),
     }
+    if forecast:
+        rec["landing_plan"]["forecast"] = forecast
     rec["_landing_plan_touched"] = True
     save(rec)
 
@@ -345,8 +352,12 @@ def script_block(rec: Dict[str, Any]) -> str:
             f"- Plan: `{lp.get('decision', '—')}`",
             f"- Reason: {_cell(lp.get('reason') or '—')}",
             f"- Decided: `{lp.get('decided_at') or '—'}` for PRs {prs_str}",
-            "",
         ]
+        fc = lp.get("forecast")
+        if isinstance(fc, dict):  # GH-1452: how the explicit decision compares with the planning-time forecast
+            stale = f"; stale: {_cell('; '.join(fc.get('stale_reasons') or []))}" if fc.get("stale") else ""
+            lines.append(f"- Forecast (GH-1452): `{fc.get('state', '—')}`, recommended `{fc.get('recommendation') or 'none'}`{stale}")
+        lines.append("")
     allow = rec.get("allowlist")
     if allow and isinstance(allow, dict):
         lines += [

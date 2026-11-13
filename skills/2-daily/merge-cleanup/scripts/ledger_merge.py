@@ -525,6 +525,14 @@ def harness_paths_module(root: Path, source: Optional[Path] = None):
     return module
 
 
+def ledger_repair_paths(clone: Path) -> Set[str]:
+    """The conflict paths B1 may repair in `clone`, policy-aware. The resolver and the planning-time
+    landing forecast (GH-1452) both read this one set, so they cannot disagree about what B1 repairs."""
+    policy = harness_paths_module(clone)
+    # Older consumer runtimes retain B1's existing set until their harness is upgraded.
+    return set(getattr(policy, "LEDGER_REPAIR_PATHS", {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS, "CHANGELOG.md"}))
+
+
 def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     """B1 inside a clone with a conflicted merge in progress.
 
@@ -544,9 +552,7 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if excluded:
         res.update(handoff=True, reason=f"conflict in {', '.join(sorted(excluded))} — no resolver for harness telemetry yet")
         return res
-    policy = harness_paths_module(clone)
-    # Older consumer runtimes retain B1's existing set until their harness is upgraded.
-    allowed = getattr(policy, "LEDGER_REPAIR_PATHS", {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS, "CHANGELOG.md"})
+    allowed = ledger_repair_paths(clone)
     non_ledger = paths - allowed
     if non_ledger:
         res.update(handoff=True, reason=f"code/doc conflict outside the ledger set: {', '.join(sorted(non_ledger))}")
@@ -685,3 +691,156 @@ def pre_merge_ledger_gate(clone: Path, gh_bin: str = "gh", integration_branch: s
             verdict["failures"].append(f"{label}: {fails[0]}")
     verdict["green"] = not verdict["failures"]
     return verdict
+
+
+# --- GH-1452: planning-time landing forecast ----------------------------------------------------
+# Advice for the dry run of a 3+ PR queue, never a gate: it reads, simulates with `git merge-tree`
+# in a clone the caller prepared (network and clone ownership stay in merge_cleanup.py), and writes
+# nothing. It does NOT run B1, so "potentially B1-eligible" never means "B1 will repair it".
+
+FORECAST_ASSUMPTIONS = (
+    "text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off",
+    "reconcile commits written after each landing are not simulated and can add conflicts",
+    "a B1 repair pushes a new head, which defers that PR in the run that repairs it",
+)
+
+
+def _merge_tree(clone: Path, a: str, b: str, timeout: int) -> Tuple[int, str, Set[str], str]:
+    """`git merge-tree --write-tree` of two commits: (rc, tree, conflicted paths, error).
+    rc 0 = clean, 1 = conflicted, anything else = the simulation did not run (never read as clean)."""
+    r = _run(["git", "merge-tree", "--write-tree", "--name-only", "--no-messages", a, b], clone, timeout)
+    if r.returncode not in (0, 1):
+        return r.returncode, "", set(), (r.stderr.strip() or r.stdout.strip() or "no output")[:200]
+    lines = r.stdout.split("\n")
+    tree, paths = lines[0].strip(), set()
+    for line in lines[1:]:
+        if not line.strip():
+            break
+        paths.add(line.strip())
+    if not tree or (r.returncode == 1 and not paths):
+        return 2, "", set(), "merge-tree gave an unreadable result"
+    return r.returncode, tree, paths, ""
+
+
+def _split_paths(paths: Set[str], allowed: Set[str]) -> Tuple[List[str], List[str]]:
+    """(potentially B1-eligible, needs review): the same path set the resolver uses."""
+    eligible = sorted(p for p in paths if p in allowed and p not in B1_EXCLUDED)
+    review = sorted(p for p in paths if p not in allowed or p in B1_EXCLUDED)
+    return eligible, review
+
+
+def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[int, str],
+                     unknown: Optional[Dict[int, str]] = None, consumed: Optional[Dict[int, int]] = None,
+                     timeout: int = 120) -> Dict[str, Any]:
+    """Conflict forecast for a queue, in `clone` (objects only; no working tree needed).
+
+    `heads` maps every PR in `order` to its pinned head, which the caller already fetched and verified
+    for every PR not in `unknown` (PR -> reason it could not be fetched or verified). `consumed` maps a
+    PR to repairs already recorded for it. Each PR is simulated alone against `base_sha`, each pair of
+    members against each other, and cumulatively in `order`, advancing only through clean steps; a
+    conflicted merge-tree result is not a resolved landing, so the fold stops at the first conflict and
+    later PRs read `conditional`. Any failed or unverifiable step is `unknown`, which withholds the
+    recommendation rather than letting it fall through to `direct`."""
+    unknown = dict(unknown or {})
+    consumed = consumed or {}
+    allowed = ledger_repair_paths(clone)
+    prs: Dict[str, Dict[str, Any]] = {}
+    for n in order:
+        prs[str(n)] = {"head": heads.get(n), "repairs_consumed": int(consumed.get(n, 0)),
+                       "status": "unknown" if (n in unknown or not heads.get(n)) else "ok",
+                       "reason": unknown.get(n, "" if heads.get(n) else "no pinned head"),
+                       "alone": None, "sequence": None}
+    # (a) each PR alone against the frozen base
+    for n in order:
+        e = prs[str(n)]
+        if e["status"] != "ok":
+            continue
+        rc, _tree, paths, err = _merge_tree(clone, base_sha, e["head"], timeout)
+        if rc not in (0, 1):
+            e["status"], e["reason"] = "unknown", f"merge-tree failed: {err}"
+            continue
+        eligible, review = _split_paths(paths, allowed)
+        e["alone"] = {"conflict": rc == 1, "b1_eligible": eligible, "needs_review": review}
+    # (b) each pair of members, to surface overlap between PRs that each merge cleanly alone
+    pairs: List[Dict[str, Any]] = []
+    pair_unknown: List[Dict[str, Any]] = []
+    ok_nums = [n for n in order if prs[str(n)]["status"] == "ok"]
+    for i, a in enumerate(ok_nums):
+        for b in ok_nums[i + 1:]:
+            rc, _tree, paths, err = _merge_tree(clone, prs[str(a)]["head"], prs[str(b)]["head"], timeout)
+            if rc == 1:
+                eligible, review = _split_paths(paths, allowed)
+                pairs.append({"a": a, "b": b, "b1_eligible": eligible, "needs_review": review})
+            elif rc != 0:
+                pair_unknown.append({"a": a, "b": b, "reason": err})
+    # (c) cumulative fold in sequence order; clean steps advance through a synthetic commit
+    cur: str = base_sha
+    stopped: Optional[Tuple[int, str]] = None
+    for n in order:
+        e = prs[str(n)]
+        if stopped is not None:
+            e["sequence"] = {"state": "conditional", "after": stopped[0], "why": stopped[1]}
+            continue
+        if e["status"] != "ok":
+            e["sequence"] = {"state": "unknown"}
+            stopped = (n, "unknown")
+            continue
+        rc, tree, paths, err = _merge_tree(clone, cur, e["head"], timeout)
+        if rc == 0:
+            c = _run(["git", "-c", "user.name=merge-cleanup", "-c", "user.email=merge-cleanup@local",
+                      "commit-tree", tree, "-p", cur, "-p", e["head"], "-m", f"forecast fold #{n}"], clone, timeout)
+            if c.returncode != 0 or not c.stdout.strip():
+                e["sequence"] = {"state": "unknown", "reason": "synthetic fold commit failed"}
+                stopped = (n, "unknown")
+                continue
+            cur = c.stdout.strip()
+            e["sequence"] = {"state": "clean"}
+        elif rc == 1:
+            eligible, review = _split_paths(paths, allowed)
+            e["sequence"] = {"state": "conflict", "b1_eligible": eligible, "needs_review": review}
+            stopped = (n, "conflict")
+        else:
+            e["sequence"] = {"state": "unknown", "reason": err}
+            stopped = (n, "unknown")
+    # per-PR churn risk: low (no conflict), medium (conflicts only on potentially B1-eligible paths),
+    # high (any needs-review path, or a PR that already used a repair and conflicts with the base again)
+    for n in order:
+        e = prs[str(n)]
+        seq = e["sequence"] or {}
+        alone = e["alone"] or {}
+        conflicted = bool(alone.get("conflict")) or seq.get("state") == "conflict"
+        review = bool(alone.get("needs_review")) or bool(seq.get("needs_review"))
+        for p in pairs:
+            if n in (p["a"], p["b"]):
+                conflicted = True
+                review = review or bool(p["needs_review"])
+        e["conflicted"], e["code_overlap"] = conflicted, review
+        if e["status"] == "unknown" or seq.get("state") == "unknown":
+            e["churn_risk"] = "unknown"
+        elif review or (alone.get("conflict") and e["repairs_consumed"] >= 1):
+            e["churn_risk"] = "high"
+        else:
+            e["churn_risk"] = "medium" if conflicted else "low"
+    incomplete = [n for n in order if prs[str(n)]["churn_risk"] == "unknown"]
+    conflicted_nums = [n for n in order if prs[str(n)]["conflicted"]]
+    repeat = [n for n in order if (prs[str(n)]["alone"] or {}).get("conflict") and prs[str(n)]["repairs_consumed"] >= 1]
+    review_nums = [n for n in order if prs[str(n)]["code_overlap"]]
+    fmt = lambda nums: ", ".join(f"#{n}" for n in nums)
+    if incomplete or pair_unknown:
+        bits = [f"#{n} ({prs[str(n)]['reason'] or (prs[str(n)]['sequence'] or {}).get('reason') or 'not simulated'})" for n in incomplete]
+        bits += [f"pair #{p['a']}/#{p['b']} ({p['reason']})" for p in pair_unknown]
+        rec, reason = None, "forecast incomplete, no recommendation: " + "; ".join(bits)
+    elif review_nums:
+        rec, reason = "group", f"conflicts on code, excluded or unclassified paths ({fmt(review_nums)}); one reviewed resolution beats repeating it per PR"
+    elif len(conflicted_nums) >= 3:
+        rec, reason = "group", f"{len(conflicted_nums)} of {len(order)} PRs conflict ({fmt(conflicted_nums)}); each landing rewrites the shared ledger, so the rest conflict again"
+    elif repeat:
+        rec, reason = "group", f"{fmt(repeat)} already used a repair and conflict again"
+    elif conflicted_nums:
+        rec, reason = "direct", f"{len(conflicted_nums)} conflict(s) ({fmt(conflicted_nums)}), all on potentially B1-eligible paths"
+    else:
+        rec, reason = "direct", "no conflicts found"
+    deferrals = sum(1 for n in order if (prs[str(n)]["alone"] or {}).get("conflict"))
+    return {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
+            "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
+            "recommendation": rec, "reason": reason, "assumptions": list(FORECAST_ASSUMPTIONS)}
