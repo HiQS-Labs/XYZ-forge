@@ -1,6 +1,6 @@
 ---
 title: Jog checkpoint starts from local state and reconciles once when development has moved
-status: In progress
+status: Complete
 created: 2026-11-13
 updated: 2026-11-13
 owner: Noel Saw
