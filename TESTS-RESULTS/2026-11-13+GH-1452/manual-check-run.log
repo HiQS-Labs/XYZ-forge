@@ -1,0 +1,62 @@
+test_01_three_conflicting_ledger_prs_forecast_group (__main__.Manual.test_01_three_conflicting_ledger_prs_forecast_group) ... ok
+test_02_disjoint_queue_forecasts_direct (__main__.Manual.test_02_disjoint_queue_forecasts_direct) ... ok
+test_03_code_conflict_is_needs_review_and_group (__main__.Manual.test_03_code_conflict_is_needs_review_and_group) ... ok
+test_04_failed_fetch_is_unknown_and_withholds_direct (__main__.Manual.test_04_failed_fetch_is_unknown_and_withholds_direct) ... ok
+test_05_head_mismatch_is_unknown (__main__.Manual.test_05_head_mismatch_is_unknown) ... ok
+test_06_command_failure_is_unknown_not_clean (__main__.Manual.test_06_command_failure_is_unknown_not_clean) ... ok
+test_07_consumed_repair_flips_a_single_conflict_to_group (__main__.Manual.test_07_consumed_repair_flips_a_single_conflict_to_group) ... ok
+test_08_pair_conflict_and_conflict_before_sequence_ends (__main__.Manual.test_08_pair_conflict_and_conflict_before_sequence_ends) ... ok
+test_09_snapshot_compat_and_comparison (__main__.Manual.test_09_snapshot_compat_and_comparison) ... ok
+test_10_concurrent_snapshots_stay_coherent_and_naive_rmw_does_not (__main__.Manual.test_10_concurrent_snapshots_stay_coherent_and_naive_rmw_does_not) ... Landing forecast (GH-1452, advisory; origin/development @ d250de0485):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | CHANGELOG.md, releases.sql | — | 0 | medium |
+| #2 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md, releases.sql | — | 0 | medium |
+| #3 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md, releases.sql | — | 0 | medium |
+Members #1 and #2 conflict with each other on: CHANGELOG.md, releases.sql
+Members #1 and #3 conflict with each other on: CHANGELOG.md, releases.sql
+Members #2 and #3 conflict with each other on: CHANGELOG.md, releases.sql
+PRs a B1 repair would defer in the run that repairs them: 3
+Recommendation: group — 3 of 3 PRs conflict (#1, #2, #3); each landing rewrites the shared ledger, so the rest conflict again
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE S1 group forecast: {"deferrals": 3, "eligible": ["CHANGELOG.md", "releases.sql"], "reason": "3 of 3 PRs conflict (#1, #2, #3); each landing rewrites the shared ledger, so the rest conflict again", "recommendation": "group", "review": [], "seq": ["conflict", "conditional", "conditional"]}
+EVIDENCE S1 red control (classifier broken): {"recommendation": null}
+EVIDENCE S2 disjoint: {"reason": "no conflicts found", "recommendation": "direct", "risk": ["low", "low", "low"], "seq": ["clean", "clean", "clean"]}
+EVIDENCE S3 code conflict: {"recommendation": "group", "review": ["app.py"], "risk": "high"}
+EVIDENCE S4 failed fetch: {"reason": "forecast incomplete, no recommendation: #2 (fetch of pull/2/head failed: fatal: couldn't find remote ref pull/2/head)", "recommendation": null, "seq": ["clean", "unknown", "conditional"], "status2": "unknown"}
+EVIDENCE S5 head mismatch: {"reason": "fetched head fc0ef00ad8 differs from the pinned 1e2b96a300", "recommendation": null}
+EVIDENCE S6 merge-tree failure: {"reason": "forecast incomplete, no recommendation: #1 (merge-tree failed: usage: git merge-tree (simulated old git)); #2 (merge-tree failed: usage: git merge-tree (simulat", "recommendation": null}
+EVIDENCE S7 consumed repair: {"control": "direct", "reason": "#1 already used a repair and conflict again", "repairs_used": 1, "risk": "high", "with_record": "group"}
+EVIDENCE S8 pair + mid-sequence conflict: {"alone": [false, false, false], "pairs": [{"a": 1, "b": 2, "b1_eligible": ["releases.sql"], "needs_review": []}], "recommendation": "direct", "seq": [{"state": "clean"}, {"b1_eligible": ["releases.sql"], "needs_review": [], "state": "conflict"}, {"after": 2, "state": "conditional", "why": "conflict"}]}
+merge-cleanup: --prs pinned for --execute (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.77fdp4t7/primary/.tick/merge-cleanup/gh534b.77fdp4t7-origin/selection-development.json): #1 @ 5d9608d7c5, #2 @ 7487148315, #3 @ 5842a3bbd7
+merge-cleanup: Pinned for --execute: --prs 1@5d9608d7c5978aa07497f385eb6be272322ec30d,2@7487148315fa6bbe5261625d72ebe69fa1abee17,3@5842a3bbd7d80ba8256bd0c105800086b38b6c8b
+EVIDENCE S9 snapshot: {"forecast_heads_equal_pins": {"1": true, "2": true, "3": true}, "keys": ["forecast", "integration", "pinned_at", "prs"]}
+EVIDENCE S9 comparison: {"decision": "group", "stale": false, "state": "match"}
+EVIDENCE S9 comparison: {"decision": "direct", "stale": false, "state": "override"}
+EVIDENCE S9 stale reasons: {"heads": ["pinned heads differ from the forecast's"], "membership": ["pinned heads differ from the forecast's", "sequence differs from the forecast's"], "order": ["sequence differs from the forecast's"]}
+EVIDENCE S9 base moved: {"stale_reasons": ["base moved 590d91eb15 -> 5298761c35"]}
+EVIDENCE S9 old-format pin: {"comparison": null, "verifies": true}
+ok
+test_11_cli_dry_run_modes_and_execute_refusal (__main__.Manual.test_11_cli_dry_run_modes_and_execute_refusal) ... ok
+test_12_cli_override_and_stale (__main__.Manual.test_12_cli_override_and_stale) ... ok
+test_13_old_set_landing_plan_callers_unchanged (__main__.Manual.test_13_old_set_landing_plan_callers_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 53.684s
+
+OK
+EVIDENCE S10 concurrent snapshots: {"exit_codes": [0, 0], "final_coherent": true, "incoherent_or_torn_reads": 0, "reads": 2918}
+EVIDENCE S10 red control (naive read-modify-write): {"detected_mismatch": true}
+EVIDENCE S11 two PRs: {"forecast_key": false, "printed": false, "rc": 3}
+EVIDENCE S11 two PRs stderr tail: {"err": ["merge-cleanup: ERROR \u2014   conflict set: CHANGELOG.md, releases.sql", "merge-cleanup: ERROR \u2014   export MERGE_CLEANUP_RECORD=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.vpdebwyu/primary/.tick/merge-cleanup/gh534b.vpdebwyu-origin/pr-2.json  # caller ladder: /debug-mantra \u2192 /recon \u2192 /ponytail \u2192 /start-task \u2192 /unstuck", "merge-cleanup: ERROR \u2014 2 PR(s) did not land (0 deferred by network, 0 awaiting checks or a re-pin, 0 parked on resume, 2 handed off or parked): #1 (handoff), #2 (handoff)", "merge-cleanup: ERROR \u2014 Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing."]}
+EVIDENCE S11 three PRs: {"advice": true, "persisted": "group", "printed": true, "rc": 3, "recommendation_line": ["Recommendation: group \u2014 3 of 3 PRs conflict (#1, #2, #3); each landing rewrites the shared ledger, so the rest conflict again"]}
+EVIDENCE S11 scan-only / no --prs: {"unchanged": true}
+EVIDENCE S11 prs-only: {"forecast": true}
+EVIDENCE S11 execute refusal: {"advice_shown": true, "batch_records_unchanged": true, "mutating_calls": true, "rc": 5, "refs_unchanged": true}
+EVIDENCE S11 execute group (match): {"rc": 0, "reason_is_operators": "manual check: three ledger-conflicting PRs", "recommendation": "group", "rendered": ["- Forecast (GH-1452): `match`, recommended `group`"], "stale": false, "state": "match"}
+EVIDENCE S12 override + stale: {"rc": 0, "reasons": ["base moved 9566365400 -> cb9a19410c"], "recommendation": "direct", "stale": true, "state": "override"}
+EVIDENCE S13 set_landing_plan: {"old_caller_keys": ["decided_at", "decision", "prs", "reason"], "with_forecast_keys": ["decided_at", "decision", "forecast", "prs", "reason"]}
+EVIDENCE S13 red control (base commit 6c0c76bb5): {"outcome": "TypeError: set_landing_plan() got an unexpected keyword argument 'forecast'"}
+EVIDENCE S13 red control (base has no forecast): {"build_landing_forecast_in_base": false, "landing_forecast_in_base": false}

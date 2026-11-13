@@ -1,0 +1,404 @@
+#!/usr/bin/env python3
+"""GH-1452 manual check driver (throwaway, kept outside the repo; GH-831 forbids a new suite).
+
+Reuses test/gh534_phase_b_tests.py's LedgerFixture (bare origin + fake gh) from the disposable gate
+clone, adds `refs/pull/N/head` to the fake origin, and exercises the planning-time landing forecast
+through the real functions and the real CLI. Every scenario prints an EVIDENCE line.
+
+Usage: python3 gh1452-manual-check.py <gate-clone-root>
+"""
+import contextlib
+import io
+import json
+import multiprocessing
+import os
+import sys
+import unittest
+import unittest.mock as mock
+from pathlib import Path
+
+GATE = Path(sys.argv.pop(1)).resolve()
+sys.path[:0] = [str(GATE / "test"), str(GATE / "skills" / "2-daily" / "merge-cleanup" / "scripts"), str(GATE / "utils" / "py")]
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+import gh534_phase_b_tests as B  # noqa: E402
+import attempt_record  # noqa: E402
+import batch_record  # noqa: E402
+import ledger_merge  # noqa: E402
+import merge_cleanup  # noqa: E402
+
+DEV = "development"
+
+
+def ev(label, **kv):
+    print("EVIDENCE " + label + ": " + json.dumps(kv, sort_keys=True, default=str))
+
+
+def ins(path, text):
+    def f(root):
+        p = root / path
+        lines = p.read_text().splitlines(keepends=True)
+        lines.insert(1, text + "\n")
+        p.write_text("".join(lines))
+    return f
+
+
+def both(*fns):
+    def f(root):
+        for fn in fns:
+            fn(root)
+    return f
+
+
+def newfile(name):
+    return lambda root: (root / name).write_text(f"{name}\n")
+
+
+class _Pool:
+    pass
+
+
+def _snap_writer(args):
+    path, tag, rounds = args
+    for i in range(rounds):
+        pins = {str(n): f"{tag}{n:02d}{i:04d}" + "0" * 30 for n in range(1, 4)}
+        merge_cleanup.pin_selection.__globals__["selection_path"]  # name resolves in the real module
+        fc = {"version": 1, "order": [1, 2, 3], "prs": {n: {"head": h} for n, h in pins.items()}, "recommendation": "group"}
+        open_prs = [{"number": int(n), "headRefOid": h, "isDraft": False} for n, h in pins.items()]
+        with mock.patch.object(merge_cleanup, "selection_path", return_value=Path(path)), \
+             mock.patch.object(merge_cleanup, "origin_url", return_value="x"), \
+             contextlib.redirect_stdout(io.StringIO()):
+            assert merge_cleanup.pin_selection(Path("/nonexistent"), DEV, {1: None, 2: None, 3: None}, open_prs, forecast=fc)
+
+
+class Manual(B.LedgerFixture):
+    def setUp(self):
+        super().setUp()
+        (self.seed / "CHANGELOG.md").write_text("# Changelog\n\n## 2026-11-01\n- base\n")
+        (self.seed / "app.py").write_text("".join(f"line {i}\n" for i in range(1, 11)))
+        B.commit_all(self.seed, "add changelog and app")
+        B._git(self.seed, "push", "-q", "origin", DEV)
+        for c in (self.primary, self.probe):
+            B._git(c, "pull", "-q", "--ff-only")
+
+    # --- helpers ---
+    def pr(self, n, fn, pull=True):
+        self.branch(f"pr{n}", n, fn)
+        if pull:
+            B._git(self.probe, "fetch", "-q", "origin")
+            B._git(self.probe, "push", "-q", "origin", f"origin/pr{n}:refs/pull/{n}/head")
+
+    def advance(self, fn):
+        fn(self.seed)
+        B.commit_all(self.seed, "advance development")
+        B._git(self.seed, "push", "-q", "origin", DEV)
+        B._git(self.primary, "fetch", "-q", "origin")
+
+    def forecast(self, nums, mutate=None):
+        prs = merge_cleanup.fetch_open_prs_with_retry(str(self.primary))
+        by = {int(p["number"]): p for p in prs}
+        ordered, _, _ = merge_cleanup.toposort_prs([by[n] for n in nums])
+        if mutate:
+            mutate(ordered)
+        return merge_cleanup.build_landing_forecast(self.primary, DEV, ordered)
+
+    def ledger_conflicting_queue(self):
+        for n in (1, 2, 3):
+            self.pr(n, both(ins("releases.sql", f"-- pr{n} note"), ins("CHANGELOG.md", f"- pr{n} entry")))
+        self.advance(both(ins("releases.sql", "-- landed note"), ins("CHANGELOG.md", "- landed entry")))
+
+    def sel(self):
+        return merge_cleanup.selection_path(self.primary.resolve(), merge_cleanup.origin_url(self.primary) or "", DEV)
+
+    def cli(self, execute, extra):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = self.run_main(execute=execute, extra=extra)
+        return rc, out.getvalue()
+
+    def mutating_calls(self):
+        return [c for c in self.load().get("calls", []) if c[:2] in (["issue", "create"], ["issue", "edit"], ["pr", "merge"])]
+
+    def batch_files(self):
+        root = self.primary / ".tick" / "merge-cleanup"
+        return sorted(str(p.relative_to(root)) for p in root.rglob("batch-*.json")) if root.exists() else []
+
+    # --- scenarios ---
+    def test_01_three_conflicting_ledger_prs_forecast_group(self):
+        self.ledger_conflicting_queue()
+        fc = self.forecast([1, 2, 3])
+        text = merge_cleanup.format_landing_forecast(fc, DEV)
+        print(text)
+        ev("S1 group forecast", recommendation=fc["recommendation"], reason=fc["reason"], deferrals=fc["repair_deferrals"],
+           seq=[fc["prs"][str(n)]["sequence"]["state"] for n in (1, 2, 3)],
+           eligible=fc["prs"]["1"]["alone"]["b1_eligible"], review=fc["prs"]["1"]["alone"]["needs_review"])
+        self.assertEqual(fc["recommendation"], "group")
+        self.assertEqual([fc["prs"][str(n)]["sequence"]["state"] for n in (1, 2, 3)], ["conflict", "conditional", "conditional"])
+        self.assertEqual(sorted(fc["prs"]["1"]["alone"]["b1_eligible"]), ["CHANGELOG.md", "releases.sql"])
+        self.assertEqual(fc["prs"]["1"]["alone"]["needs_review"], [])
+        # RED CONTROL: break the classifier (every merge-tree reads clean) and the same queue must stop saying group.
+        with mock.patch.object(ledger_merge, "_merge_tree", return_value=(0, "t" * 40, set(), "")):
+            wrong = self.forecast([1, 2, 3])
+        ev("S1 red control (classifier broken)", recommendation=wrong["recommendation"])
+        self.assertNotEqual(wrong["recommendation"], "group")
+
+    def test_02_disjoint_queue_forecasts_direct(self):
+        for n in (1, 2, 3):
+            self.pr(n, newfile(f"file{n}.txt"))
+        fc = self.forecast([1, 2, 3])
+        ev("S2 disjoint", recommendation=fc["recommendation"], reason=fc["reason"],
+           seq=[fc["prs"][str(n)]["sequence"]["state"] for n in (1, 2, 3)], risk=[fc["prs"][str(n)]["churn_risk"] for n in (1, 2, 3)])
+        self.assertEqual(fc["recommendation"], "direct")
+        self.assertEqual([fc["prs"][str(n)]["sequence"]["state"] for n in (1, 2, 3)], ["clean"] * 3)
+
+    def test_03_code_conflict_is_needs_review_and_group(self):
+        self.pr(1, ins("app.py", "pr1 code"))
+        self.pr(2, newfile("b.txt"))
+        self.pr(3, newfile("c.txt"))
+        self.advance(ins("app.py", "landed code"))
+        fc = self.forecast([1, 2, 3])
+        ev("S3 code conflict", recommendation=fc["recommendation"], review=fc["prs"]["1"]["alone"]["needs_review"], risk=fc["prs"]["1"]["churn_risk"])
+        self.assertEqual(fc["recommendation"], "group")
+        self.assertEqual(fc["prs"]["1"]["alone"]["needs_review"], ["app.py"])
+        self.assertEqual(fc["prs"]["1"]["churn_risk"], "high")
+
+    def test_04_failed_fetch_is_unknown_and_withholds_direct(self):
+        self.pr(1, newfile("a.txt"))
+        self.pr(2, newfile("b.txt"), pull=False)  # no refs/pull/2/head on the fake origin: the fetch must fail
+        self.pr(3, newfile("c.txt"))
+        fc = self.forecast([1, 2, 3])
+        ev("S4 failed fetch", recommendation=fc["recommendation"], reason=fc["reason"], status2=fc["prs"]["2"]["status"],
+           seq=[fc["prs"][str(n)]["sequence"]["state"] for n in (1, 2, 3)])
+        self.assertIsNone(fc["recommendation"])
+        self.assertEqual(fc["prs"]["2"]["status"], "unknown")
+        self.assertIn("forecast incomplete", fc["reason"])
+        text = merge_cleanup.format_landing_forecast(fc, DEV)
+        self.assertIn("Recommendation: none", text)
+        self.assertEqual(fc["prs"]["3"]["sequence"]["state"], "conditional")
+
+    def test_05_head_mismatch_is_unknown(self):
+        for n in (1, 2, 3):
+            self.pr(n, newfile(f"f{n}.txt"))
+        base = B._git(self.probe, "rev-parse", "origin/" + DEV).stdout.strip()
+
+        def wrong_head(ordered):
+            ordered[1]["headRefOid"] = base
+        fc = self.forecast([1, 2, 3], mutate=wrong_head)
+        ev("S5 head mismatch", recommendation=fc["recommendation"], reason=fc["prs"][str(fc["order"][1])]["reason"])
+        self.assertIsNone(fc["recommendation"])
+        self.assertIn("differs from the pinned", fc["prs"][str(fc["order"][1])]["reason"])
+
+    def test_06_command_failure_is_unknown_not_clean(self):
+        for n in (1, 2, 3):
+            self.pr(n, newfile(f"f{n}.txt"))
+        real = ledger_merge._run
+
+        def failing(cmd, cwd, timeout=300):
+            if "merge-tree" in cmd:
+                import subprocess
+                return subprocess.CompletedProcess(args=cmd, returncode=129, stdout="", stderr="usage: git merge-tree (simulated old git)")
+            return real(cmd, cwd, timeout)
+        with mock.patch.object(ledger_merge, "_run", side_effect=failing):
+            fc = self.forecast([1, 2, 3])
+        ev("S6 merge-tree failure", recommendation=fc["recommendation"], reason=fc["reason"][:160])
+        self.assertIsNone(fc["recommendation"])
+        self.assertTrue(all(fc["prs"][str(n)]["status"] == "unknown" for n in (1, 2, 3)))
+
+    def test_07_consumed_repair_flips_a_single_conflict_to_group(self):
+        self.pr(1, ins("releases.sql", "-- pr1"))
+        self.pr(2, newfile("b.txt"))
+        self.pr(3, newfile("c.txt"))
+        self.advance(ins("releases.sql", "-- landed"))
+        control = self.forecast([1, 2, 3])
+        url = merge_cleanup.origin_url(self.primary)
+        rec_path = attempt_record.record_path(self.primary, url, 1)
+        rec = attempt_record.new_record(1, url)
+        rec["attempts"] = [{"by": "B1", "rung": "B1", "outcome": "resolved"}]
+        attempt_record.save(rec_path, rec)
+        fc = self.forecast([1, 2, 3])
+        ev("S7 consumed repair", control=control["recommendation"], with_record=fc["recommendation"], reason=fc["reason"],
+           repairs_used=fc["prs"]["1"]["repairs_consumed"], risk=fc["prs"]["1"]["churn_risk"])
+        self.assertEqual(control["recommendation"], "direct")
+        self.assertEqual(fc["recommendation"], "group")
+        self.assertEqual(fc["prs"]["1"]["repairs_consumed"], 1)
+
+    def test_08_pair_conflict_and_conflict_before_sequence_ends(self):
+        self.pr(1, ins("releases.sql", "-- pr1"))
+        self.pr(2, ins("releases.sql", "-- pr2"))
+        self.pr(3, newfile("c.txt"))
+        fc = self.forecast([1, 2, 3])
+        ev("S8 pair + mid-sequence conflict", seq=[fc["prs"][str(n)]["sequence"] for n in (1, 2, 3)], pairs=fc["pairs"],
+           alone=[fc["prs"][str(n)]["alone"]["conflict"] for n in (1, 2, 3)], recommendation=fc["recommendation"])
+        self.assertEqual([fc["prs"][str(n)]["alone"]["conflict"] for n in (1, 2, 3)], [False, False, False])
+        self.assertEqual(fc["prs"]["2"]["sequence"]["state"], "conflict")
+        self.assertEqual(fc["prs"]["3"]["sequence"]["state"], "conditional")
+        self.assertEqual(fc["prs"]["3"]["sequence"]["after"], 2)
+        self.assertEqual(len(fc["pairs"]), 1)
+
+    def test_09_snapshot_compat_and_comparison(self):
+        self.ledger_conflicting_queue()
+        fc = self.forecast([1, 2, 3])
+        prs = merge_cleanup.fetch_open_prs_with_retry(str(self.primary))
+        self.assertTrue(merge_cleanup.pin_selection(self.primary, DEV, {1: None, 2: None, 3: None}, prs, forecast=fc))
+        data = json.loads(self.sel().read_text())
+        ev("S9 snapshot", keys=sorted(data), forecast_heads_equal_pins={n: data["forecast"]["prs"][n]["head"] == h for n, h in data["prs"].items()})
+        self.assertEqual({n: e["head"] for n, e in data["forecast"]["prs"].items()}, data["prs"])
+        verified = merge_cleanup.verify_selection(self.primary, DEV, {1: None, 2: None, 3: None}, prs)
+        self.assertEqual({str(n): h for n, h in verified.items()}, data["prs"])
+        order = fc["order"]
+        pins = {n: h for n, h in verified.items()}
+        for decision, expect in (("group", "match"), ("direct", "override")):
+            cmp_ = merge_cleanup.forecast_comparison(self.primary, DEV, decision, pins, order)
+            ev("S9 comparison", decision=decision, state=cmp_["state"], stale=cmp_["stale"])
+            self.assertEqual(cmp_["state"], expect)
+            self.assertFalse(cmp_["stale"], cmp_)
+        wrong_order = merge_cleanup.forecast_comparison(self.primary, DEV, "group", pins, list(reversed(order)))
+        wrong_heads = merge_cleanup.forecast_comparison(self.primary, DEV, "group", {**pins, 1: "f" * 40}, order)
+        wrong_set = merge_cleanup.forecast_comparison(self.primary, DEV, "group", {1: pins[1], 2: pins[2]}, order[:2])
+        ev("S9 stale reasons", order=wrong_order["stale_reasons"], heads=wrong_heads["stale_reasons"], membership=wrong_set["stale_reasons"])
+        self.assertTrue(wrong_order["stale"] and wrong_heads["stale"] and wrong_set["stale"])
+        self.advance(ins("app.py", "base moves"))
+        moved = merge_cleanup.forecast_comparison(self.primary, DEV, "group", pins, order)
+        ev("S9 base moved", stale_reasons=moved["stale_reasons"])
+        self.assertTrue(any("base moved" in r for r in moved["stale_reasons"]))
+        # a pin file written by the old code (no forecast key) still verifies, and compares as None
+        self.sel().write_text(json.dumps({"integration": DEV, "prs": data["prs"]}))
+        self.assertIsNotNone(merge_cleanup.verify_selection(self.primary, DEV, {1: None, 2: None, 3: None}, prs))
+        self.assertIsNone(merge_cleanup.forecast_comparison(self.primary, DEV, "group", pins, order))
+        ev("S9 old-format pin", verifies=True, comparison=None)
+
+    def test_10_concurrent_snapshots_stay_coherent_and_naive_rmw_does_not(self):
+        path = self.tmp / "sel.json"
+        ctx = multiprocessing.get_context("fork")
+        procs = [ctx.Process(target=_snap_writer, args=((str(path), tag, 40),)) for tag in ("a", "b")]
+        for p in procs:
+            p.start()
+        bad, reads = 0, 0
+        while any(p.is_alive() for p in procs):
+            try:
+                d = json.loads(path.read_text())
+            except (OSError, ValueError):
+                if path.exists():
+                    bad += 1
+                continue
+            reads += 1
+            if {n: e["head"] for n, e in d["forecast"]["prs"].items()} != d["prs"]:
+                bad += 1
+        for p in procs:
+            p.join()
+        d = json.loads(path.read_text())
+        final_ok = {n: e["head"] for n, e in d["forecast"]["prs"].items()} == d["prs"]
+        ev("S10 concurrent snapshots", reads=reads, incoherent_or_torn_reads=bad, final_coherent=final_ok, exit_codes=[p.exitcode for p in procs])
+        self.assertEqual(bad, 0)
+        self.assertTrue(final_ok)
+        self.assertEqual([p.exitcode for p in procs], [0, 0])
+        # RED CONTROL: the naive pattern (write pins, later read-modify-write the forecast in) is detectably wrong.
+        naive = self.tmp / "naive.json"
+        naive.write_text(json.dumps({"prs": {"1": "A" * 40}}))                 # run A pins
+        naive.write_text(json.dumps({"prs": {"1": "B" * 40}}))                 # run B replaces the pin while A forecasts
+        d = json.loads(naive.read_text())
+        d["forecast"] = {"prs": {"1": {"head": "A" * 40}}}                      # run A attaches its forecast to B's pins
+        naive.write_text(json.dumps(d))
+        d = json.loads(naive.read_text())
+        mismatch = {n: e["head"] for n, e in d["forecast"]["prs"].items()} != d["prs"]
+        ev("S10 red control (naive read-modify-write)", detected_mismatch=mismatch)
+        self.assertTrue(mismatch)
+
+    def test_11_cli_dry_run_modes_and_execute_refusal(self):
+        self.ledger_conflicting_queue()
+        # fewer than 3 listed PRs: no forecast, no forecast key
+        rc, out = self.cli(False, ["--prs", "1,2"])
+        two = json.loads(self.sel().read_text())
+        ev("S11 two PRs", rc=rc, forecast_key="forecast" in two, printed="Landing forecast (GH-1452" in out)
+        ev("S11 two PRs stderr tail", err=[l for l in self.err.splitlines() if "ERROR" in l or "WARNING" in l][-4:])
+        self.assertNotIn("forecast", two)
+        self.assertNotIn("Landing forecast (GH-1452", out)
+        # three PRs: forecast printed and persisted with the pins
+        rc, out = self.cli(False, ["--prs", "1,2,3"])
+        three = json.loads(self.sel().read_text())
+        ev("S11 three PRs", rc=rc, printed="Landing forecast (GH-1452" in out, recommendation_line=[l for l in out.splitlines() if l.startswith("Recommendation:")],
+           advice="--landing-plan group --landing-reason" in out, persisted=three["forecast"]["recommendation"])
+        self.assertIn("Landing forecast (GH-1452", out)
+        self.assertEqual(three["forecast"]["recommendation"], "group")
+        self.assertIn("Forecast advice, not a decision", out)
+        # --scan-only and a dry run without --prs leave the stored snapshot byte-identical
+        before = self.sel().read_bytes()
+        self.cli(False, ["--scan-only"])
+        self.cli(False, [])
+        ev("S11 scan-only / no --prs", unchanged=self.sel().read_bytes() == before)
+        self.assertEqual(self.sel().read_bytes(), before)
+        # --prs-only dry run forecasts
+        self.cli(False, ["--prs", "1,2,3", "--prs-only"])
+        ev("S11 prs-only", forecast="forecast" in json.loads(self.sel().read_text()))
+        self.assertIn("forecast", json.loads(self.sel().read_text()))
+        # --execute without --landing-plan: exit 5 at the early checkpoint, nothing mutated, advice shown
+        refs_before = B._git(self.probe, "ls-remote", str(self.origin)).stdout
+        mut_before, batches_before = self.mutating_calls(), self.batch_files()
+        rc, out = self.cli(True, ["--prs", "1,2,3"])
+        ev("S11 execute refusal", rc=rc, advice_shown="recommends: group" in out, refs_unchanged=B._git(self.probe, "ls-remote", str(self.origin)).stdout == refs_before,
+           mutating_calls=self.mutating_calls() == mut_before, batch_records_unchanged=self.batch_files() == batches_before)
+        self.assertEqual(rc, merge_cleanup.EXIT_LANDING_PLAN_REQUIRED)
+        self.assertIn("The dry run's landing forecast recommends: group", out)
+        self.assertEqual(B._git(self.probe, "ls-remote", str(self.origin)).stdout, refs_before)
+        self.assertEqual(self.mutating_calls(), mut_before)
+        self.assertEqual(self.batch_files(), batches_before)
+        # explicit group decision matching the forecast: recorded as a match, survives reload, renders in the issue block
+        rc, out = self.cli(True, ["--prs", "1,2,3", "--landing-plan", "group", "--landing-reason", "manual check: three ledger-conflicting PRs"])
+        files = self.batch_files()
+        rec = json.loads((self.primary / ".tick" / "merge-cleanup" / files[0]).read_text())
+        fc = rec["landing_plan"]["forecast"]
+        block = batch_record.script_block(rec)
+        ev("S11 execute group (match)", rc=rc, state=fc["state"], recommendation=fc["recommendation"], stale=fc["stale"],
+           reason_is_operators=rec["landing_plan"]["reason"], rendered=[l for l in block.splitlines() if "Forecast (GH-1452)" in l])
+        self.assertEqual((rc, fc["state"], fc["stale"]), (0, "match", False))
+        self.assertEqual(rec["landing_plan"]["reason"], "manual check: three ledger-conflicting PRs")
+        self.assertIn("Forecast (GH-1452)", block)
+
+    def test_12_cli_override_and_stale(self):
+        for n in (1, 2, 3):
+            self.pr(n, newfile(f"file{n}.txt"))
+        rc, out = self.cli(False, ["--prs", "1,2,3"])
+        stored = json.loads(self.sel().read_text())["forecast"]["recommendation"]
+        self.assertEqual(stored, "direct")
+        self.advance(ins("app.py", "base moves after the dry run"))
+        rc, out = self.cli(True, ["--prs", "1,2,3", "--landing-plan", "group", "--landing-reason", "manual check: override a direct forecast"])
+        rec = json.loads((self.primary / ".tick" / "merge-cleanup" / self.batch_files()[0]).read_text())
+        fc = rec["landing_plan"]["forecast"]
+        ev("S12 override + stale", rc=rc, state=fc["state"], recommendation=fc["recommendation"], stale=fc["stale"], reasons=fc["stale_reasons"])
+        self.assertEqual((rc, fc["state"], fc["stale"]), (0, "override", True))
+        self.assertTrue(any("base moved" in r for r in fc["stale_reasons"]))
+
+    def test_13_old_set_landing_plan_callers_unchanged(self):
+        rec = {}
+        with mock.patch.object(batch_record, "save"):
+            batch_record.set_landing_plan(rec, "direct", "operator", [3, 1, 2])
+        keys_old = sorted(rec["landing_plan"])
+        with mock.patch.object(batch_record, "save"):
+            batch_record.set_landing_plan(rec, "direct", "operator", [3, 1, 2], forecast={"state": "override", "recommendation": "group", "stale": False, "stale_reasons": []})
+        ev("S13 set_landing_plan", old_caller_keys=keys_old, with_forecast_keys=sorted(rec["landing_plan"]))
+        self.assertEqual(keys_old, ["decided_at", "decision", "prs", "reason"])
+        self.assertIn("forecast", rec["landing_plan"])
+        # RED CONTROL (pre-fix behavior): the base commit's mutator cannot record the comparison at all.
+        import subprocess
+        src = subprocess.run(["git", "-C", str(GATE), "show", "6c0c76bb5:skills/2-daily/merge-cleanup/scripts/batch_record.py"],
+                             capture_output=True, text=True, check=True).stdout
+        ns = {"__name__": "batch_record_base"}
+        exec(compile(src, "batch_record_base.py", "exec"), ns)
+        ns["save"] = lambda r: None
+        try:
+            ns["set_landing_plan"]({}, "direct", "operator", [1, 2, 3], forecast={"state": "override"})
+            outcome = "accepted (unexpected)"
+        except TypeError as exc:
+            outcome = f"TypeError: {exc}"
+        ev("S13 red control (base commit 6c0c76bb5)", outcome=outcome)
+        self.assertTrue(outcome.startswith("TypeError"))
+        # RED CONTROL: the base commit has no forecast code at all.
+        base_mc = subprocess.run(["git", "-C", str(GATE), "show", "6c0c76bb5:skills/2-daily/merge-cleanup/scripts/merge_cleanup.py"],
+                                 capture_output=True, text=True, check=True).stdout
+        ev("S13 red control (base has no forecast)", build_landing_forecast_in_base="build_landing_forecast" in base_mc,
+           landing_forecast_in_base="landing_forecast" in subprocess.run(
+               ["git", "-C", str(GATE), "show", "6c0c76bb5:skills/2-daily/merge-cleanup/scripts/ledger_merge.py"], capture_output=True, text=True, check=True).stdout)
+        self.assertNotIn("build_landing_forecast", base_mc)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
