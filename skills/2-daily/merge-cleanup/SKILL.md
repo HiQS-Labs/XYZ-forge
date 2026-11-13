@@ -268,6 +268,19 @@ For queues of 3 or more PRs, `--execute` strictly requires an explicit landing d
 - `--resume`: Reuses a previously recorded landing decision without prompting if the batch record holds a plan for the identical PR set. If the queue membership changes or no plan was recorded, the checkpoint is re-enforced.
 - **Small queues (<3 PRs):** Unaffected; proceed without requiring `--landing-plan`.
 
+#### Planning-time landing forecast (GH-1452)
+
+Decide direct vs group when the PR set is chosen, not when `--execute` is first refused. A dry run (`--prs`) over **3 or more** PRs prints a **Landing forecast** and stores it with the head pins as one snapshot in the selection file, written atomically under the record lock. `--scan-only`, a dry run without `--prs` and queues of fewer than 3 PRs write none, and a pin file from an older driver still verifies.
+
+- The forecast covers the queue Phase 4 will land (every open PR is sorted so collision edges through unlisted PRs stay visible, then the allowlist and hard-dependency deferrals apply), and the comparison is refreshed against that queue after discovery.
+- One disposable clone with no working tree (never the primary) fetches each PR as `pull/<N>/head`, verifies it against the pinned head, and simulates with `git merge-tree`: each PR alone against one frozen base, each pair of members, and a cumulative fold in sequence order. The fold stops at the first conflict and later PRs read "conditional", because a conflicted merge-tree result is not a resolved landing.
+- Per PR it shows conflicts alone and in sequence, paths split into **potentially B1-eligible** (B1's own path set) and **needs review** (code, excluded or unclassified), repairs already used, and a churn-risk band (low, medium, high). It counts the PRs a B1 repair would defer in the run that repairs them, and gives **no CI-wait count**.
+- The recommendation (`group` or `direct`, with the numbers behind it) is **withheld** ("none: forecast incomplete") when any fetch, head check or merge-tree step failed. Unknown is never read as clean.
+- The forecast is advice. The GH-1158 decision stays explicit: pass `--landing-plan direct|group` with your own `--landing-reason` (the dry run prints the recommended flags with a placeholder reason). The exit-5 refusal repeats the stored recommendation. A decision that differs from it is recorded in the batch record and issue as an **override**, and a forecast whose pinned heads, sequence or base differ from the run is marked **stale**.
+- Blind spots, printed with every forecast: it is text-level (B1 is not run, so "potentially B1-eligible" can still hand off), it cannot see the reconcile commits written after each landing, and a B1 repair pushes a new head that defers that PR.
+
+Run the forecast, and the three-or-more-PR independent sequence review (step 5 below), **when the PR set is chosen**: the day before landing, not right before `--execute`. A changed member, order or integration base reopens that review as this contract already says; re-run the dry run to refresh the forecast and re-pin.
+
 1. **Map the cost and constraints.** Read the repo's required checks, push hooks, hosted
    triggers and reconciliation policy. Identify which pushes actually start broad CI and
    which existing path supports batching (merge queue, staging or aggregate landing PR).
@@ -364,6 +377,8 @@ never attempted:
 1. **Dry run first** (Phase 0 + audit + sequence), naming the PRs you mean to land:
    `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --prefix <name> --prs 783,811`
    This pins their heads. Vet the sequence; anything else open is only listed, never landed.
+   With 3 or more PRs the same dry run prints the **Landing forecast** (GH-1452): decide `direct` or
+   `group` from it now, and run the independent sequence review then, not at `--execute`.
 2. **Fix the primary** so Phase 0 reports landing-ready (commit or park the dirty intake files per
    the Phase 0 rules). A dirty primary is a blocker to FIX, not a reason to silently switch to
    `--teardown-only` and still report completion (the incident's S1 false-Done). If a blocker
@@ -562,6 +577,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
 | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
 | prs-allowlist | 4 | script | TestPhase5EndToEnd.test_unlisted_pr_is_never_sequenced |
+| landing-forecast | 4 | script | manual check, `TESTS-RESULTS/2026-11-13+GH-1452/` |
 | batch-issue-threshold | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
 | batch-issue-resume-append | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
 | batch-sweep-record | 5 | script | manual check, `TESTS-RESULTS/2026-10-14+GH-1064/` |

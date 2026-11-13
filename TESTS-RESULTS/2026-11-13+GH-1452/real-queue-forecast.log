@@ -1,0 +1,19 @@
+Landing forecast (GH-1452, advisory; origin/development @ 6c0c76bb5c):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1442 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #1444 | conflict | conditional (not simulated after #1442: conflict) | CHANGELOG.md, releases.db, releases.sql | — | 0 | medium |
+| #1446 | conflict | conditional (not simulated after #1442: conflict) | CHANGELOG.md, releases.db, releases.sql | skills/1-hourly/relay-automation/relay-pkg.tar.gz | 0 | high |
+| #1450 | conflict | conditional (not simulated after #1442: conflict) | releases.db, releases.sql | — | 0 | medium |
+Members #1442 and #1444 conflict with each other on: releases.db, releases.sql
+Members #1442 and #1446 conflict with each other on: releases.db, releases.sql
+Members #1442 and #1450 conflict with each other on: releases.db, releases.sql
+Members #1444 and #1446 conflict with each other on: CHANGELOG.md, releases.db, releases.sql
+Members #1444 and #1450 conflict with each other on: CHANGELOG.md, releases.db, releases.sql
+Members #1446 and #1450 conflict with each other on: releases.db, releases.sql
+PRs a B1 repair would defer in the run that repairs them: 4
+Recommendation: group — conflicts on code, excluded or unclassified paths (#1446); one reviewed resolution beats repeating it per PR
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+{"discovery_s": 5.6, "forecast_s": 13.7, "queue_requested": [1450, 1446, 1444, 1442], "queue_forecast_order": [1442, 1444, 1446, 1450], "base": "6c0c76bb5c"}
