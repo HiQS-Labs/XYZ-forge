@@ -281,4 +281,13 @@ Reviewed the whole plan, including pre-existing Recon, summaries, acceptance and
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-13T18:38:48Z
+task: RELAY-gh1453-plan-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 248c75f4e5597c052d0d6ed6cd455eb0f5c48732
+added-range: 44542+8707
+added-sha256: 1b257dee898a73b74da0b4d7d026c59dc241d0cd3abfee9f9d457009f54226dc
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
