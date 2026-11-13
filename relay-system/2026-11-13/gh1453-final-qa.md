@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -171,5 +171,68 @@ Dispositions for Round 1. Fix commit `33c8682c3`; evidence refreshed on that com
 - **Existing suites** were run at `f4626d09b`, before this fix. The fix touches only `JogCheckpoint`, which neither suite exercises. They are not rerun here; the full push gate runs on the final commit.
 
 Questions for this round: (1) are F1–F3 resolved; (2) can the recorded-ownership rule still abort a merge that is not this wake's, or fail to restore one that is; (3) anything else that must change before the gate and PR.
+
+### Reviewer · Round 2
+
+**What this delivers:** Jog starts a checkpoint wake using local state, then publishes at completion. A moved development is reconciled by replaying the wake's supported queue writes onto the remote ledger; unsafe overlap preserves a retryable checkpoint.
+
+**How the existing system works, per these documents:** Canonical queue writers already record receipts and refresh adopted views. The checkpoint journal records the wake's start and immutable replay source, while a separate publication clone runs push hooks. The resolver rebuilds the selected dump and regenerates views.
+
+**What it's not:** Per-transition publication, a general ledger merge, altered execution-clone preflight, or proof of a dispatched multi-task run (explicit exclusions).
+
+**Input boundary:** Entire relay (including earlier review and producer reply), ROUTER.md, GUIDING-PRINCIPLES.md, review-code-xyz skill, plan and SUMMARY.md. Step A was not pristine: startup policy was read before the plan; this paraphrase is recorded before further source validation, and does not claim independent blindness to the earlier review.
+
+**Assessment: source-backed.**
+swept file: yes
+
+Read the full Jog supervisor and skill, GH-1453 changelog entry, plan, manual driver and retained results, canonical writers/rebuild and merge resolver. No additional pre-existing runtime defect established. Graph Verify: no indexed project matches this worktree; nearest XYZ-forge generation `2026-09-01T15:54:30Z`, JogCheckpoint lookup zero, coverage changed/not-tracked (CHANGELOG excluded); current source fallback used. No git, suite, executable fixture or gate ran. Consequently no fresh base diff or final-commit gate is claimed. `gh issue view 1453 --repo HiQS-Labs/XYZ-forge --json title,body` exited 1: `error connecting to api.github.com`; issue assessment uses the retained plan and earlier relay read.
+
+**Findings / dispositions**
+
+- **[Pass] F1 resolved for the reported foreign-merge case.** `jog_run.py:2212`–`:2222` reads HEAD and MERGE_HEAD and refuses before staging unless both recorded identities match; `_reconcile` records the target before merging (`:2311`–`:2313`) and clears it on handled failure/success (`:2343`, `:2347`). E/candidate-A1-A14.log:170–183 observes `merge_left_open: True`, `journal_records_merge_target: True`, `rerun_rc: 0`, clean/published afterward. Lines 190–194 observe the named foreign-merge refusal and `operator_merge_still_open_with_its_file: True`. Driver:481–493 injects KeyboardInterrupt before replay; this is controlled interruption, not an OS-kill rehearsal. Driver:503–518 creates an actual separate-target operator merge and checks its preservation. A different HEAD also fails the source predicate, though that variant has no retained clone run. Identity matching cannot distinguish a manually replaced merge with exactly the same HEAD and target while a stale ownership marker remains; that operator intervention is outside the demonstrated recovery case, not a reason to add a new ownership framework in this envelope.
+
+- **[Pass] F2 resolved.** Skill:212–225 now includes the postcondition, ownership refusal and command-failure prefixes; `jog_run.py:2296`, `:2315`, `:2332`, `:2339` contain the corresponding stops. Retained A6 reports `22` messages / `23` literals. Independent non-mutating AST/text check (`PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`, exit 0) found `listed: 22 ContractError literals: 23 unlisted: []`: each ContractError's leading constant starts with a listed prefix. This checks message coverage, not every explanation or external exception.
+
+- **[Pass] F3 resolved.** Skill:120–125 now limits merge paths to simulation and describes real-run parking, matching admission at `jog_run.py:2473` and real legacy parking at `:2742`–`:2743`.
+
+- **[Should] F4 — measure the published roadmap row, not the other session's copy.** `E/fixture-checks.py.txt:163`–`:166` implements `remote_pri()` by running `roadmap list` in `self.other`. That clone still has its own write even if reconciliation loses that write in the published ledger. A1, A2 and A7 use this helper to assert preservation (`:225`–`:226`, `:242`, `:323`); their log label `remote_roadmap_pri` therefore overstates what was read. The source appears to preserve the remote dump, but the central disjoint-ledger acceptance claim lacks its asserted observation. This corrects Round 1's evidence assessment; earlier log text is preserved.
+  Observed input: AST-extracted current `Fx.remote_pri`, N=1315, `self.other='OTHER_SESSION_CLONE'`, app stub returning `[{'gh_number':1315,'rating_pri':61}]`; controlled published priority 999. Result remains `[61]`; the only read is `('OTHER_SESSION_CLONE', ('roadmap','list','--json'))`, with **zero published-ledger reads**. Command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'` (parse the recorded driver with `ast.parse`, compile only `Fx.remote_pri`, call with the above stub); exit **0**. Decisive output: `remote_pri returns: [61]`; `published ledger reads: 0; evidence blind spot reproduced`. No fixture or real git executed; this proves the observer's blind spot, not an observed production loss.
+  Affected scope: retained A1/A2/A7 preservation assertions and their reported remote priorities.
+  Falsifier: hold the other-session row at 61 but supply a published DB with priority 999 (or the row missing); the observation must report 999 (or absence), and A1 must fail. With the intact published DB at 61, A1 must pass.
+  Fix: read `roadmap_items` from the already available `fx.remote_db()` snapshot in read-only mode; refresh the affected manual evidence in a disposable full clone and retain that narrow controlled failure. No new suite, registry or runtime machinery. Root cause: the helper reads the producer clone instead of the assertion target; Fix site: `Fx.remote_pri`; Why not upstream/downstream: changing replay code or relabeling successful output would not establish the required preserved row.
+
+**Acceptance audit** (E = `TESTS-RESULTS/2026-11-13+GH-1453/`; candidate log below is `candidate-A1-A14.log`). These are retained observations, not reruns.
+
+| Item | Source / decisive retained observation | Assessment |
+|---|---|---|
+| A1 | `jog_run.py:2354`–`:2409`; log:7–14 `remote_queue_row: ['parked', 1, 'fixture park']`, ancestors/clean/equality true | Partial: queue and publication observed; roadmap priority reads wrong clone (F4). |
+| A2 | `:2200`–`:2208`; log:17–28 `begin_rc: 0`, `tracking_ref_stale: True`, published/clean/equal | Local-state admission passes; disjoint-row measurement inherits F4. |
+| A3 | `:2389`–`:2392`, `:2341`–`:2345`, `:2571`; log:34–46 named GH-1315, `cli_rc: 2`, `cli_no_traceback: True`, restored tree/remote unchanged | [Pass] Actual refusal and restore; log:62–70 disjoint control passes. |
+| A4 | `:2236`–`:2239`, `:2251`–`:2254`; log:74–79 `parent_is_base: True`, `one_parent: True`, original subject/console; base log same assertions | [Pass] Nonempty unmoved publication preserved. |
+| A5 | `:2184`–`:2189`; log:49–60 `rc: 0`, `no_dispatch: True`, published/clean/equal | [Pass] CLI retry measured. |
+| A6 | Skill:171–231 / entire class; A6 log `22` messages, `23` literals, `VERDICT: PASS`; independent AST count above | [Pass] Both directions checked; base section absent. |
+| A7 | `:2244`–`:2267`, immutable source `:2241`; log:83–95 `hook_fired: True`, `reconciles: 2`, final queue attempt 1 | Retry and no doubled lease pass; latest roadmap priority assertion inherits F4. |
+| A8 | `:2323`–`:2326`; log:99–107 `merge_parents_are_checkpoint_and_remote: True`, `ledger_files_byte_equal_to_checkpoint: True` | [Pass] Code-only merge preserves ledger bytes. |
+| A9 | `:2146`–`:2153`, `:2236`; log:110–116 `view_committed_with_checkpoint: True`, foreign file refused | [Pass] Adopted view plus foreign-dirt control. |
+| A10 | `:2184`, `:2224`–`:2232`; log:124–129 `published_head_is_the_merge: True`, receipts `2927` → `2927`, row B running unchanged | [Pass] Committed-merge resume, no orphan scan. |
+| A11 | `:2299`–`:2305`, `:2341`; log:142–151 injected partial output, `every_tracked_path_equals_head: True`, `retry_published: True` | [Pass] Restore measured; direct injection, not actual generator death. |
+| A12 | `:2326`–`:2339`, resolver:161–237; log:155–166 `conflicting_lines: [375]`, `view_regenerated_from_ledger: True`, clean/equal | [Pass] Conflicting edit removed and resolver succeeds; no independent render byte-comparison. |
+
+No acceptance observation above is merely “nothing crashed”; F4 is a wrong-target observation, a distinct limitation. A13/A14 supply the new ownership evidence described above.
+
+**Base / negative controls:** Driver:217–221 requires ContractError, committed journal and unchanged remote for A1; base log quotes non-fast-forward push rejection. A2 checks the precise equality refusal (`:235`–`:238`); A9 requires dirty adopted view plus its named refusal (`:351`–`:355`); A10 measures the orphan-scan receipt and row mutation (`:370`–`:388`, log `2920` → `2921`, running → pending). A4 preservation passes on base. These fail for the stated reasons, not incidental setup, but do not falsify roadmap-loss after successful reconciliation (F4). Missing base runs for A3/A5/A7/A8/A11–A14 remain disclosed; base cannot reach those reconcile states. A1 is their shared rejection control, not an identical per-case base rehearsal. Existing suite logs retain `227 pass, 0 fail` and `34 passed, 0 failed` at `f4626d09b`, before the ownership fix; SUMMARY and provenance state that limit. Full gate on the final commit remains outstanding by design.
+
+**Plan / runtime questions:** Plan steps 1–7 are represented in `begin`, publication loop, receipt replay, resume recognition, restore and CLI catches (`jog_run.py:2180`–`:2409`, `:2565`–`:2577`, `:2756`–`:2761`). Divergences: recorded-target startup recovery (disclosed and now bounded); four-status replay whitelist (disclosed); ancestor-based empty/already-published recognition (`:2249`); immediate divergent-legacy-journal refusal (`:2261`); and conditional resolver/check for clean code-only movement (`:2326`). Renamed command-failure text supports the stop list. No further implementation divergence established without the prohibited git diff.
+
+`_replay` always selects the remote dump whole (`:2354`), then replays immutable source receipts (`:2359`–`:2384`) and compares touched and untouched triples (`:2404`–`:2409`); successive reconciles therefore do not accumulate prior replay. Code-only movement intentionally needs no replay. Caught reconcile failures stage/abort/clear the marker (`:2341`–`:2345`); a commit-before-save interruption is recognized by first parent and subject (`:2224`–`:2232`). Signals and unexpected exceptions outside that catch can leave the recorded merge for rerun, now covered at the pre-replay interruption point only. Canonical writer SystemExit is converted (`:2401`); the writer-refusal branch remains unverified by clone evidence. No additional concrete dirty-primary, double-replay, skipped-replay or journal/HEAD defect established in this sweep.
+
+Unmoved behavior is not literally unchanged apart from one fetch: adopted-view ownership, local-ref admission, snapshots, committed-resume bypass of cold recovery, CLI error conversion, additional fetches and ancestor-based publication skipping are visible at `:2146`, `:2184`–`:2208`, `:2247`–`:2269`, `:2571`. A4 proves the narrower normal nonempty commit/message/console preservation.
+
+No second ledger writer or general merge subsystem appears in the reviewed code: replay calls canonical lease/status writers (`:2397`, `:2400`), which delegate to `perform_write` (`releases_app.py:5096`, `:5132`). Whole canonical remote dump selection before rebuild is merge-side selection, not hand-authored ledger rows; rebuild controls generation and serialization (`releases_app.py:6570`, `:6654`–`:6659`). The receipt replay and small ownership marker are commensurate with this local CLI; no new abstraction or suite is warranted. A read-only SQLite rating query exited 0 with `[(1453, 75, 70, 50, 40)]`; the documented downstream blockage and effort remain consistent with that rating (plan Rating rationale / SUMMARY).
+
+**VERDICT: FAIL**
+**Basis:** F1–F3 are resolved. One Should remains: fix the published-row observation and retain truthful A1/A2/A7 evidence (F4). No new runtime defect is asserted. The harness gate still follows review; it cannot substitute for the missing checkpoint-specific observation.
+
+Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
