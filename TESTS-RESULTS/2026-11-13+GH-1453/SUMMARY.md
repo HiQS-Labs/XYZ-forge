@@ -45,4 +45,6 @@ the stated base behaviour), `a6-skill-text.log`. Fixture paths in the logs are r
 
 ## Existing suites
 
-Run in a disposable gate clone; logs `gh280-jog-marathon-adapter.log` and `jog-queue.log` in this folder.
+Run at `f4626d09b` in a disposable full gate clone, identity unchanged before and after:
+`gh280-jog-marathon-adapter` 227 pass, 0 fail; `jog-queue` 34 passed, 0 failed. Logs are in this folder.
+Neither suite exercises `--checkpoint-root`; they show the rest of Jog did not regress.
