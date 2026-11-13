@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13 — GH-1452: merge-cleanup forecasts the landing plan at planning time
+
+A `merge-cleanup` dry run over 3 or more `--prs` now prints a Landing forecast and stores it with the head pins, so direct vs group is decided with evidence when the PR set is chosen rather than at the first `--execute` refusal. One disposable no-checkout clone simulates each PR alone, each pair and an ordered fold with `git merge-tree` (`ledger_merge.landing_forecast`, sharing B1's repair-path set through `ledger_repair_paths`), reports a churn-risk band instead of an exact repair count, and withholds the recommendation when any fetch, head check or merge-tree step is unknown. `pin_selection` publishes pins and forecast as one atomic snapshot under the record lock. The GH-1158 decision is unchanged and stays the operator's; the forecast only annotates it: the exit-5 refusal repeats the stored recommendation, and `batch_record.set_landing_plan` takes an optional comparison (match, override, stale) that the batch issue shows. Evidence: existing `test/gh436-merge-cleanup.py` (227 tests) and 13 retained manual scenarios with red controls in `TESTS-RESULTS/2026-11-13+GH-1452/`.
+
 ## 2026-11-12 — GH-1137: relay scratch sweep keeps host-tracked files
 
 `relay-automation/relay-turn-lib.sh` discarded `.relay-scratch/` with `rm -rf` after every turn, which deleted files a host repository tracks there (observed in HiQS-Labs/XYZ-layout-engine across Codex and Kimi turns). Both discard sites now run `git clean -ffdxq -- .relay-scratch`, which removes only untracked and ignored files (and a nested repo a turn created), and `rtl_check` exempts a scratch path only when it is untracked; a tracked path gets the normal off-allowlist revert and fails the turn like any other host file. Existing suites gh91/gh113/gh184/gh654 pass unchanged; manual red/green checks in `TESTS-RESULTS/2026-11-12+GH-1137/`.

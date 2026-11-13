@@ -2,10 +2,12 @@
 gh_issue: 1452
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1452
 title: "merge-cleanup: plan-ahead landing forecast so direct-vs-group is decided with evidence at planning time"
-status: Proposed (1-INBOX — not yet active)
+status: "Working — build and manual checks done; final QA pending"
 created: 2026-11-13
-owner: unassigned
-doc_type: feedback
+updated: 2026-11-13
+owner: Claude
+branch: feat/XYZ-forge-gh1452-merge-cleanup-plan-ahead-2026-11-13
+doc_type: feature
 complexity: 3
 risk: 2
 effort: 3
@@ -18,7 +20,10 @@ non_goals:
 related:
   - #1076
 goal: >
-  TODO: one-paragraph statement of what "done" looks like for this idea.
+  A dry run over 3 or more PRs prints and stores a planning-time landing forecast (conflicts alone,
+  pairwise and in sequence, B1-eligible vs needs-review paths, a churn-risk band, a recommendation withheld
+  when anything is unknown), so direct-vs-group is decided with evidence when the PR set is chosen. The
+  GH-1158 explicit decision stays the operator's; the forecast only annotates it.
 ---
 
 ## Key concepts
@@ -37,7 +42,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Fill in Why/Key Concepts, correct the provisional ratings above, and run a Phase 0 explore pass before promoting to `2-WORKING`. |
+| Plan QA Approved in round 2 (Codex relay). Forecast built in `ledger_merge.py`, wired through `merge_cleanup.py` and `batch_record.py`, documented in `SKILL.md`. Existing suite (227 tests) and 13 retained manual scenarios pass (`TESTS-RESULTS/2026-11-13+GH-1452/`). | Final Codex relay QA, then open the PR against `development`; landing and the deployed-copy refresh are separate steps. |
 
 ## Idea
 
@@ -174,12 +179,15 @@ Round 1 verdict FAIL on three bounded Shoulds, all adjudicated against the tree 
 
 A 3+ PR landing queue forces the direct-vs-group decision only at --execute, so a 2026-11-13 operator planned three stages before the dry run's late conflict evidence pointed to grouped landing. A planning-time forecast puts that evidence where it can be reviewed first.
 
-## Phase 0 — Explore & scope
+## Phase 1 — Build and verify
 
 ### Checklist
 
-- [ ] TODO: scope-specific checklist items for this idea's Phase 0 pass.
+- [x] Plan QA: Codex relay `RELAY-gh1452-plan-qa`, Approved in round 2 (`relay-system/2026-11-13/gh1452-plan-qa.md`).
+- [x] `ledger_merge.landing_forecast` and the shared `ledger_repair_paths`; the `merge_cleanup.py` dry-run print, `pin_selection` snapshot and early-checkpoint annotation; the `batch_record.set_landing_plan` forecast argument and issue line; `SKILL.md`.
+- [x] Existing suite `test/gh436-merge-cleanup.py` (227 tests) and the manual scenarios retained in `TESTS-RESULTS/2026-11-13+GH-1452/`.
+- [ ] Final Codex relay QA Approved; PR ready against `development`.
 
-### QA checklist — Phase 0
+### QA checklist — Phase 1
 
-- [ ] TODO: acceptance criteria for the Phase 0 pass above.
+- [ ] Each Acceptance item above has retained evidence, or a recorded reason it did not run.
