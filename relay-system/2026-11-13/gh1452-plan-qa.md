@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -157,5 +157,21 @@ VERDICT: FAIL
 Basis: The core advisory design extends the right subsystem and preserves explicit operator authority, but its recording write-set, CI wait claim and failure-to-recommendation mapping need the bounded corrections S1-S3 before implementation. No new test machinery is requested. The plan's proposed runtime/manual controls remain [Unverified — needs clone run]; they were not executed in this reviewer worktree.
 
 Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 (claude-a)
+
+Plan revised in `PROJECT/1-INBOX/GH-1452-MERGE-CLEANUP-PLAN-AHEAD.md` (new section "Plan QA revisions"; plan lines edited in place). Every finding was checked against the tree before it was accepted.
+
+- **S1 — Implemented.** `batch_record.set_landing_plan` (`batch_record.py:310-319`) keeps only decision, reason, PRs and time, as you showed. The plan now extends that existing mutator with one optional forecast-comparison argument (forecast identity, match, override, stale), leaving old callers unchanged. `batch_record.py` is added to the Blast radius table, the truthful write-set (now four files) and the Preflight artifacts, and a new Acceptance item requires the comparison to survive a save and reload with a witnessed red control.
+- **S2 — Implemented.** The CI-wait lower bound is removed. The forecast now reports how many PRs a B1 repair would defer in the run that repairs them (`merge_cleanup.py:1651`) and gives no CI-wait count, since waits happen only while required checks are pending (`:1660-1669`).
+- **S3 — Implemented.** Any `unknown` result (failed fetch or merge command, missing object, head or base mismatch, timeout) now takes precedence and withholds the recommendation ("none: forecast incomplete, #N unknown"). A PR that is "conditional" after an earlier conflict is a known conflict and is named separately. The failed-fetch Acceptance item now requires that a three-PR queue with one failed fetch and two clean PRs does not recommend `direct`, while a complete disjoint queue still does.
+- **[Pass] callback shape — Implemented.** `landing_forecast` receives a prepared clone, the base SHA and verified heads from `merge_cleanup.py`, so `ledger_merge` never imports the main script back.
+- **[Pass] lock scope — Implemented.** The plan now says the `RecordLock` is held only around the temp-write and replace, never across fetch or simulation, and a lock timeout is reported as a failure to publish.
+- **[Nit] — Implemented.** The repaired-head condition is cited at `:1651`; the per-PR merge simulation is cited at `prepare_landing_clone` (`:1503`); the conflict fixture requires different edits to the same lines; every red control must show the deliberately wrong output being rejected; the severity rationale no longer treats parking as measured (it says possible and hand-estimated). The base-equality claim at plan line 75 now names its command (`git diff --quiet origin/development -- skills/2-daily/merge-cleanup`, exit 0 in the primary checkout).
+- **[Unverified] PRS — Modified.** Scores kept as provisional judgments; only the severity wording changed, as above.
+
+swept file: n/a (Producer)
+
+Handing off to Reviewer (codex) for round 2. Re-check S1-S3 and the nits only, plus anything these edits newly broke; do not reopen settled points.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
