@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -118,10 +118,34 @@ All items checked against the tree; each is a prose correction, no code or scope
 - **[Nit] invocation claim — Implemented.** The README now cites the recorded invocation (`provenance.jsonl:1`, `bash pdda_fn.sh <tree> <fixture> 1292`), the 644 mode and the unchanged body, and drops the "can only be run as bash" inference.
 - **[Unverified] introduction date — Implemented.** The PARKED note now cites the introducing commit `0dc1d25fb` (2026-11-05); `git log --diff-filter=A` on the file returns it.
 - **[Unverified] hosted run outcomes — Modified.** The gate summary now cites the two run IDs (43504181832 and 43505530482) whose shellcheck steps read `skipped` (from the GitHub API during the session). The README no longer asserts this PR's hosted result: it says that by `ci-route.sh:65` every file here is a docs surface, so the steps are configured to be skipped, and the actual outcome was not checked.
-- **[Pass] items — Noted.**
+- **[Unverified — no citation] items — Noted.**
 
 swept file: n/a (Producer)
 
 Handing off to Reviewer (codex) for round 2. Re-check only the corrected statements and anything these edits newly broke.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: Ship. Both required prose corrections are implemented, the invocation claim is appropriately bounded, and the focused red/green check remains sensitive to the missing shebang. No blocking finding remains. This approves the stated one-line fix and documentation, not a full qualifying gate or a hosted execution result.
+
+swept file: no
+Scope disclosure: re-read the complete helper, PARKED note, GH-1452 summary, GH-1455 README, provenance and all three logs; read the GH-1455 CHANGELOG entry, not the entire historical CHANGELOG. Retain Round 1's nine-file scope/object comparison and unchanged-body assessment. No demonstrated pre-existing defect was found in the nine-line helper (`pdda_fn.sh:1-9`); its extracted functions were not executed. Verify-tier graph coverage was checked again: nearest XYZ-forge project is another checkout, generation `2026-09-01T15:54:30Z`, with missing/changed paths and excluded CHANGELOG; current source is the evidence instead. No git command, suite, executable fixture or full gate was run.
+
+- [Pass] **Q1/Q4/Q6 — required corrections resolved.** `PARKED/2026-11-13-pre-push-shellcheck.md:17-18` and `TESTS-RESULTS/2026-11-13+GH-1455/README.md:22` now put the no-shebang census before the fix. PARKED lines 21-23 distinguish scanning tracked repository scripts from the registered suite's scratch corpus, matching `validate.sh:301` and `test/gh365-shellcheck-parallel.sh:27,47-49`. The nine scoped files and their necessity are enumerated in Round 1 Q1; these corrections add no mechanism. Fix: none required; retain the distinctions.
+
+- [Pass] **Q2 — evidence integrity and observed rejection.** Recomputed each nonempty log's SHA-256 with Python `hashlib.sha256(b).hexdigest() == r['log_sha256']` for every row of `TESTS-RESULTS/2026-11-13+GH-1455/provenance.jsonl:1-3`; probe exit 0, decisive output: `shellcheck-before.log nonempty SHA256 MATCH`, `shellcheck-base-blob.log nonempty SHA256 MATCH`, `shellcheck-after.log nonempty SHA256 MATCH`. Commands `shellcheck -S error TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` and `bash -n TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` each exited 0 with empty output. Python wrote only `.relay-scratch/tmp/unfixed-r2.sh`, using `f.read_bytes().split(b'\n',1)[1]`; `shellcheck -S error .relay-scratch/tmp/unfixed-r2.sh` exited 1 with `SC2148 (error): Tips depend on target shell and yours is unknown`. This independently rejects unfixed content; retained logs report full-scan red/green, not a new full scan this turn. Fix: none.
+
+- [Pass] **Q3/Q5 — bounded correction and invocation claims.** `qualifying-gate-summary.md:39-46` distinguishes skipping from passing and explicitly states that a non-docs push would scan the file. Source basis remains `.github/workflows/ci.yml:306-324`, `ci-local.sh:193-195`, and `utils/ci-route.sh:63-65`. `GH-1455/README.md:19-27` now cites the recorded bash invocation, says actual hosted outcomes were not checked, and discloses that full `ci-local.sh` was not rerun. The helper's observed mode is `0o644`; `CHANGELOG.md:5` claims the retained shellcheck scan, not a full-run pass. Fix: none required.
+
+- [Nit] **Q3/Q4 — optional wording precision.** `PARKED/2026-11-13-pre-push-shellcheck.md:24-25` and `qualifying-gate-summary.md:44-45` say a script in TESTS-RESULTS “never” triggers/reaches the hosted scan and “only” ci-local scans every script. In context this means a docs-only change; a mixed change can select the hosted whole-tree scan (`ci.yml:318-324`), as the summary itself correctly explains at line 46. Optional fix: say “a change confined to those docs surfaces does not trigger the hosted scan.” The surrounding explicit docs-only condition prevents this shorthand from blocking delivery.
+
+- [Unverified — needs network] **Q3 — historical run outcomes.** `qualifying-gate-summary.md:42-43` now supplies run IDs `43504181832` and `43505530482`; their actual skipped steps were not independently retrieved this turn. Fix if further assurance is needed: inspect those runs' step outcomes. This is explicitly non-blocking under Setup.
+
+- [Unverified — needs history evidence] **Q4 — precise introduction date.** PARKED lines 16-17 now provide introduction commit `0dc1d25fb` alongside the date. The Producer records its history check, but this turn did not independently inspect that commit. The #121 precedent is directly documented at `.github/workflows/ci.yml:50-53`. Fix: none required for this bounded review; retain the supplied history anchor.
+
+- [Pass] **Q6/Q7 — no necessary scope expansion.** `pdda_fn.sh:3-9` remains the trusted-tree manual extraction/eval witness; the shebang at line 1 selects its documented Bash language without changing the body. No demonstrated helper defect or missing requirement warrants a runtime change or new test. Fix: none.
+
+Relay closed (Approved), no further turn needed. The harness owns the relay-file commit; Reviewer changed no artifact or source file.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
