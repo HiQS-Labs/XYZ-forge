@@ -35,4 +35,4 @@ rename or staged edit under `.relay-scratch` is not fully undone; a deleted trac
 
 ## Gate
 
-Tier-3 `validate.sh` result: see `provenance.jsonl` in this folder.
+Tier-3 `validate.sh` on `c7453098b`: 406/408. The two failures were `relay-pkg-freshness` (stale `relay-pkg.tar.gz`, refreshed in `86aac36dc`, re-run 3/3) and `relay-self-sufficiency` (live agy call refused: quota exhausted; re-run with codex on `86aac36dc`, 4/4). Details in `provenance.jsonl`.

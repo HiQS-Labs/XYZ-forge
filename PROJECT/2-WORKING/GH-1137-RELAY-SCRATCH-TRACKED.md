@@ -20,7 +20,7 @@ original report (2026-10-18) and the 2026-11-12 recurrence with a deterministic 
 
 | What was just completed | What's next |
 |---|---|
-| Plan consulted (Codex + Kimi; agy quota-exhausted). Fix in `relay-turn-lib.sh` (`git clean -ffdxq` at both sweep sites; tracked paths fall through to normal containment). Existing suites gh91/gh113/gh184/gh654 pass; manual checks A–F in `TESTS-RESULTS/2026-11-12+GH-1137/`. | Tier-3 `validate.sh` once in a disposable full clone; PR to `development`. |
+| Plan consulted (Codex + Kimi; agy quota-exhausted). Full gate 406/408 then both failures resolved (package refreshed; live suite 4/4 with codex). Fix in `relay-turn-lib.sh` (`git clean -ffdxq` at both sweep sites; tracked paths fall through to normal containment). Existing suites gh91/gh113/gh184/gh654 pass; manual checks A–F in `TESTS-RESULTS/2026-11-12+GH-1137/`. | PR to `development`; awaiting review and merge. |
 
 ## Observed
 
