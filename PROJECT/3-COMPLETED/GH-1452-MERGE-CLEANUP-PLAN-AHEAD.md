@@ -2,7 +2,7 @@
 gh_issue: 1452
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1452
 title: "merge-cleanup: plan-ahead landing forecast so direct-vs-group is decided with evidence at planning time"
-status: "Working — PR ready; awaiting merge (final QA Approved; gate 9 of 10, shellcheck fails on an untouched file)"
+status: Complete
 created: 2026-11-13
 updated: 2026-11-13
 owner: Claude
