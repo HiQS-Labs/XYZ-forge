@@ -225,4 +225,13 @@ Basis: S1-S3 and the requested citation/evidence nits are addressed in the plan,
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-13T18:17:05Z
+task: RELAY-gh1452-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0695451b19dc2dce7fd6f66ce550a7124c3166f8
+added-range: 26161+7752
+added-sha256: 7752d8e0481eb2bb8995117be4a4020daf96e5fa1a765bf8fe1dbbb2726580e5
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
