@@ -386,3 +386,22 @@ The first push was refused by the full pre-push gate: `gh777-inventory-ratchet` 
 existing gateway `releases_app.connect(readonly=True)` (`0e8ade643`, three lines). Codex approved the
 code before this change and has not reviewed it. All 14 fixture checks were rerun on `0e8ade643` and
 pass.
+
+## Second-reviewer pass on the PR (2026-11-13)
+
+After PR 1454 was opened the operator asked for a Kimi K3.1 Pro review of it
+(`relay-system/2026-11-13/gh1453-pr-qa.kimi.md`, one round), and CodeRabbit reviewed it on GitHub. The
+Kimi lane has no reasoning-effort setting, so the requested "high effort" could not be applied. Kimi's
+verdict was FAIL with four `[Should]` and two `[Nit]`; CodeRabbit posted one Major and one Minor. All
+eight were accepted and fixed in `e121c0b33`. No model has reviewed the fixes.
+
+- **Code (2):** a refusal from the ledger gateway is a `SystemExit`, which the reconcile's handler did
+  not catch, so the merge was left open with a traceback (Kimi F1, introduced by `0e8ade643`); and the
+  merge-ownership marker was left behind when git refused to start the merge, so an operator's later
+  merge of the same commit could have been aborted (CodeRabbit). Checks A15 and A16.
+- **Skill text (3):** which same-row changes stop (status, attempt count, failure reason; not queue
+  position) and which local queue writes are replayed (lease and status writes such as `jog resume`)
+  versus stop (the other verbs); the rerun behaviour depends on whether an unpublished checkpoint is
+  retained, not on which message printed; the merge-ownership sentence states its one limit.
+- **Records (3):** the CHANGELOG no longer says "anything else: continue" (Kimi F4 and CodeRabbit);
+  the A6 receipt names the revision whose text it checked.

@@ -21,7 +21,7 @@ A6 skill text, forward: listed stop-message starts = 22
   found   checkpoint publication clone is dirty; preserve it before retry
   found   checkpoint publication clone must be on development
   found   publication clone contains commits beyond this checkpoint
-A6 reverse: ContractError literals in JogCheckpoint = 23
+A6 reverse: ContractError literals in JogCheckpoint = 24
   listed  checkpoint root must be a separate full clone with the same origin
   listed  checkpoint refuses unrelated changes: 
   listed  checkpoint refuses pre-existing ledger changes without an active journal
@@ -40,6 +40,7 @@ A6 reverse: ContractError literals in JogCheckpoint = 23
   listed  development moved and conflicts outside the ledger: 
   listed  ledger merge resolver refused: 
   listed  unmerged or unstaged changes remain after the ledger merge resolver
+  listed  checkpoint ledger command failed: the ledger gateway refused 
   listed  checkpoint cannot replay this wake onto a moved development: 
   listed  checkpoint cannot replay this wake onto a moved development: 
   listed  development changed the same Jog queue row(s) as this wake: 
@@ -49,4 +50,5 @@ closed list stated; predicted conflict is not a stop: True
 scoped: emitted failures are reported, not skipped: True
 competing writer defined once (any clone), directives told to cite it: True
 red control, section present on base 6c0c76bb5: False
+text revision checked: e121c0b3333ceb616220a0f67aebde8eb4aa02c7
 VERDICT: PASS

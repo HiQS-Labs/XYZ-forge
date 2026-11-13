@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GH-1453 manual checks A1-A14 against a local fixture (no suite, GH-831).
+"""GH-1453 manual checks A1-A16 against a local fixture (no suite, GH-831).
 
 Usage: fx.py <cand|base> <rev> <source-clone> <workdir> [check ...]
 
@@ -531,8 +531,68 @@ def a14():
            journal_phase=fx.journal().get("phase"))
 
 
+def a15():
+    """The ledger gateway refuses (SystemExit) while the reconcile merge is open: still a clean stop."""
+    fx = Fx("a15")
+    fx.begin(ok=True)
+    x = fx.other_roadmap(68)
+    rc, out = fx.py(
+        "c = JogCheckpoint(ROOT, PUB)\nc.state = json.loads(c.journal.read_text())\n"
+        "real = c._queue\ncalls = []\n"
+        "def refusing(db_path):\n"
+        "    calls.append(str(db_path))\n"
+        "    if len(calls) == 2:\n        raise SystemExit(3)   # what releases_app.refuse() does\n"
+        "    return real(db_path)\n"
+        "c._queue = refusing\nc.finish()\n")
+    j = fx.journal()
+    source = j.get("source")
+    obs = {"rc": rc, "tail": out[-220:], "named_stop_not_bare_exit": "ContractError: checkpoint ledger command failed" in out,
+           "no_merge_head": not fx.merging(), "head_is_checkpoint_commit": git(fx.primary, "rev-parse", "HEAD") == source,
+           "tree_clean": fx.clean(), "no_backup": not (fx.primary / "releases.db.bak").exists(),
+           "marker_cleared": "merging" not in j, "journal_phase": j.get("phase"), "remote_unchanged": fx.remote_head() == x}
+    rc2, out2 = fx.resume()
+    state = published_state(fx, [x, source])
+    record("A15 gateway refusal during an open merge is a clean stop",
+           rc != 0 and obs["named_stop_not_bare_exit"] and obs["no_merge_head"] and obs["head_is_checkpoint_commit"]
+           and obs["tree_clean"] and obs["no_backup"] and obs["marker_cleared"] and obs["journal_phase"] == "committed"
+           and obs["remote_unchanged"] and rc2 == 0 and good(state),
+           **obs, retry_rc=rc2, retry_published=good(state))
+
+
+def a16():
+    """Git refuses to start the reconcile merge: no ownership marker is left behind."""
+    fx = Fx("a16")
+    fx.begin(ok=True)
+    x = fx.other_roadmap(69)
+    rc, out = fx.py(
+        "import subprocess\n"
+        "c = JogCheckpoint(ROOT, PUB)\nc.state = json.loads(c.journal.read_text())\n"
+        "real = c._try\n"
+        "def no_merge(*args):\n"
+        "    if args[:2] == ('merge', '--no-commit'):\n"
+        "        return subprocess.CompletedProcess(args, 128, b'', b'fatal: Unable to create index.lock: File exists.')\n"
+        "    return real(*args)\n"
+        "c._try = no_merge\nc.finish()\n")
+    j = fx.journal()
+    source = j.get("source")
+    obs = {"rc": rc, "tail": out[-200:], "named_stop": "checkpoint reconcile could not merge development" in out,
+           "marker_cleared": "merging" not in j, "no_merge_head": not fx.merging(),
+           "head_is_checkpoint_commit": git(fx.primary, "rev-parse", "HEAD") == source, "tree_clean": fx.clean()}
+    # The operator now opens a merge of that same remote commit by hand; a rerun must leave it alone.
+    run(["git", "-C", str(fx.primary), "merge", "--no-commit", "--no-ff", x], ok=False)
+    opened = fx.merging() and git(fx.primary, "rev-parse", "MERGE_HEAD") == x
+    rc2, out2 = fx.resume()
+    kept = fx.merging() and git(fx.primary, "rev-parse", "MERGE_HEAD") == x
+    record("A16 a merge that never started leaves no ownership marker",
+           rc != 0 and obs["named_stop"] and obs["marker_cleared"] and obs["no_merge_head"]
+           and obs["head_is_checkpoint_commit"] and obs["tree_clean"] and opened and rc2 != 0 and kept
+           and "checkpoint refuses a merge in progress that this wake did not start" in out2,
+           **obs, operator_merge_of_same_commit_open=opened, rerun_rc=rc2, rerun_tail=out2[-150:],
+           operator_merge_still_open=kept)
+
+
 CHECKS = {"a1": a1, "a2": a2, "a3": a3_a5, "a3c": a3_control, "a4": a4, "a7": a7, "a8": a8, "a9": a9,
-          "a10": a10, "a11": a11, "a12": a12, "a13": a13, "a14": a14}
+          "a10": a10, "a11": a11, "a12": a12, "a13": a13, "a14": a14, "a15": a15, "a16": a16}
 BASE_DEFAULT = ("a1", "a2", "a4", "a9", "a10")
 
 if __name__ == "__main__":

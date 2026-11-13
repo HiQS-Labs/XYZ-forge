@@ -1,11 +1,11 @@
 # GH-1453 manual checks: Jog checkpoint, local state and one reconcile
 
-Code under test: `utils/py/jog_run.py` at `0e8ade643`, and the fixtures in `candidate-A1-A14.log` were
-built from that commit. It is the Codex-approved implementation (`33c8682c3`) plus one later change:
-three ledger reads now go through `releases_app.connect(readonly=True)` instead of opening SQLite
-directly. The first push was refused by the full gate on exactly that (`gh777-inventory-ratchet`:
-direct connect sites 32 to 35). Codex has not reviewed those three lines; all 14 checks were rerun on
-them. Base for red controls: `6c0c76bb5`. Platform: macOS, Python 3.
+Code under test: `utils/py/jog_run.py` at `e121c0b33`, and the fixtures in `candidate-A1-A16.log` were
+built from that commit. It is the Codex-approved implementation (`33c8682c3`) plus two later changes
+that Codex has not reviewed: `0e8ade643` (three ledger reads go through `releases_app.connect(readonly=True)`,
+forced by the gate's `gh777-inventory-ratchet`) and `e121c0b33` (a gateway refusal during an open merge
+is a clean stop; no ownership marker is left when git refuses to start the merge), from the Kimi and
+CodeRabbit reviews of the PR. Base for red controls: `6c0c76bb5`. Platform: macOS, Python 3.
 
 The checkpoint has no suite, and the repo adds none (GH-831). These are manual checks driven by
 `fixture-checks.py.txt` (run as `python3 fixture-checks.py.txt <cand|base> <rev> <source-clone> <workdir>`).
@@ -31,8 +31,10 @@ every write local. Nothing touches GitHub or the maintained primary.
 | A12 view conflict without a ledger change | PASS: view regenerated, nothing unmerged | not run |
 | A13 own interrupted merge | PASS: run killed with its merge open and the target recorded; the rerun restores it and publishes | not run |
 | A14 a merge this wake did not start | PASS: rerun refuses by name; the operator's merge and its file are still there | not run |
+| A15 gateway refusal during an open merge | PASS: named stop, merge restored, marker cleared, no backup; retry publishes | not run |
+| A16 merge that never started | PASS: named stop, no marker left; an operator merge of the same commit is then refused and left open | not run |
 
-Logs: `candidate-A1-A14.log` (14 checks, 0 failed), `base-red-controls.log` (5 checks, each showing
+Logs: `candidate-A1-A16.log` (16 checks, 0 failed), `base-red-controls.log` (5 checks, each showing
 the stated base behaviour), `a6-skill-text.log`. Fixture paths in the logs are replaced with
 `<fixture>`, `<fixture-dir>` and `<task-clone>`.
 

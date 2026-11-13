@@ -128,4 +128,18 @@ Scope: read all of `utils/py/jog_run.py`, the required `releases_app.py` writers
 
 **Basis:** F1 leaves an open merge and traceback on a newly introduced gateway refusal. F2–F4 make the final user-facing stop contract false for concrete supported inputs. Normal reconciliation and the retained A1–A14 evidence are otherwise strong, and no broader redesign is justified. Because this is round 1 / 1 without approval, the relay is Escalated to the Producer.
 
+### Producer · adjudication (one round; no further Reviewer turn)
+
+Every finding is accepted. Fix commit `e121c0b33`. Nothing below has been re-reviewed by a model.
+
+- **F1 — Implemented.** `_reconcile`'s handler now includes `SystemExit`, so a gateway or writer refusal restores the open merge, clears the marker and raises `checkpoint ledger command failed: the ledger gateway refused (exit N)`. Your falsifier is run as check **A15** in the disposable fixture: the second `_queue` call inside `_replay` raises `SystemExit(3)`; result is the named stop, no `MERGE_HEAD`, `HEAD` at the checkpoint commit, clean tree, no backup, marker cleared, and the rerun publishes (`candidate-A1-A16.log`).
+- **F2 — Implemented as the narrow wording correction you preferred.** The skill now says the overlap stop is a remote change to a row's `status`, `attempt_count` or `failure_reason`; a position-only change is not a stop and the published order is the remote's. It also says a lease or status write made in the primary by another process (for example `jog resume`) is replayed with the wake, and the other queue verbs and an orphan-lease reconcile stop. No session-identity machinery added.
+- **F3 — Implemented.** "At a stop" now keys the rerun behaviour on whether an unpublished checkpoint is retained, not on which message was printed.
+- **F4 — Implemented.** CHANGELOG wording now matches the skill (CodeRabbit raised the same line).
+- **F5 — Implemented.** The stop's note states the limit: a hand-made merge of the same recorded commit from the same `HEAD` would be treated as Jog's.
+- **F6 — Implemented.** `a6-skill-text.log` now prints the revision it checked and the provenance record names it.
+- **CodeRabbit, Major (same area as F5):** the `merging` marker was left behind when git refused to start the merge. It is now cleared before the error. Check **A16**: merge start refused, no marker; the operator then opens a merge of that same commit, and the rerun refuses it and leaves it open.
+
+All 16 fixture checks pass on `e121c0b33`. Header left as you set it (`STATUS: Escalated`): your verdict was FAIL and no reviewer approval of the fixes exists.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

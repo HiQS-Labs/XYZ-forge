@@ -1,9 +1,9 @@
-mode=cand rev=0e8ade643fff7e0d28a3a00cc0a1562b5cc6aa29 source=<task-clone>
+mode=cand rev=e121c0b3333ceb616220a0f67aebde8eb4aa02c7 source=<task-clone>
 
 === A1 moved, disjoint [cand] PASS
   rc: 0
-  out: jog: reconciled wake checkpoint onto moved development a4cf203b23ef7784cd03672bc156138dfab62445
-jog: published primary checkpoint aab683e39ec52cc5751226ca194b364eaa1ea10e
+  out: jog: reconciled wake checkpoint onto moved development 0a21e1834baa75c85709c1dc12859711408dff8b
+jog: published primary checkpoint 4f2c99360b22678eda672129b9a5d14bde75bf5b
   journal_phase: published
   remote_queue_row: ['parked', 1, 'fixture park']
   ancestors_ok: True
@@ -18,8 +18,8 @@ jog: published primary checkpoint aab683e39ec52cc5751226ca194b364eaa1ea10e
   begin_rc: 0
   tracking_ref_stale: True
   finish_rc: 0
-  out: jog: reconciled wake checkpoint onto moved development 2607061f0f121ab99ff66c5da3eb034829a927b9
-jog: published primary checkpoint 7838f7946f3bcd15435f849a738ec732e60bb444
+  out: jog: reconciled wake checkpoint onto moved development 8944ac10a5fa04167fe83ba2a26c5327bc85c851
+jog: published primary checkpoint 3dcb0b064471f6da08f7ef9eaab81e5d119d7c44
   published_roadmap_pri: [62]
   journal_phase: published
   remote_queue_row: ['parked', 1, 'fixture park']
@@ -31,7 +31,7 @@ jog: published primary checkpoint 7838f7946f3bcd15435f849a738ec732e60bb444
 
 === A3 overlap and restore [cand] PASS
   rc: 1
-  tail: /2603f2de-bcf7-445a-a47b-44234e714b82/scratchpad/gh1453-fx/work/cand/a3/primary/utils/py/jog_run.py", line 2345, in _reconcile
+  tail: /2603f2de-bcf7-445a-a47b-44234e714b82/scratchpad/gh1453-fx/work/cand/a3/primary/utils/py/jog_run.py", line 2352, in _reconcile
     raise ContractError(str(exc)) from exc
 jog_run.ContractError: development changed the same Jog queue row(s) as this wake: GH-1315
   names_row: True
@@ -49,8 +49,8 @@ jog_run.ContractError: development changed the same Jog queue row(s) as this wak
 
 === A5 rerun after a stop [cand] PASS
   rc: 0
-  out: jog: reconciled wake checkpoint onto moved development 8077e9e5f44376c085206193e7e3c926874a8672
-jog: published primary checkpoint 3cdb133411bededf6b93ac38ed9252140195d8a4
+  out: jog: reconciled wake checkpoint onto moved development 57be849aa5a4ff0f1007af5f8664c13533f8ed31
+jog: published primary checkpoint 1eb69ec3d5ee660851e154f430a22d4f15bb124d
   no_dispatch: True
   receipts_before: 2923
   journal_phase: published
@@ -75,8 +75,8 @@ jog: published primary checkpoint 3cdb133411bededf6b93ac38ed9252140195d8a4
   rc: 0
   parent_is_base: True
   one_parent: True
-  subject: jog: publish wake checkpoint 0e8ade643fff7e0d28a3a00cc0a1562b5cc6aa29
-  console: jog: published primary checkpoint 262a9d5de210b863125a334eeecac5fde89e80bc
+  subject: jog: publish wake checkpoint e121c0b3333ceb616220a0f67aebde8eb4aa02c7
+  console: jog: published primary checkpoint a74acbab3c53f2c8f5e773ff13922195ab122b88
   remote_queue_row: ['parked', 1, 'fixture park']
   primary_clean: True
 
@@ -85,9 +85,9 @@ jog: published primary checkpoint 3cdb133411bededf6b93ac38ed9252140195d8a4
   hook_fired: True
   reconciles: 2
   published_roadmap_pri: [65]
-  out: jog: reconciled wake checkpoint onto moved development 47276566c5512805de38299bc2c2a11339580d78
-jog: reconciled wake checkpoint onto moved development 2ed4d04716f294aee51eed954d60dff3b5f7c1bc
-jog: published primary checkpoint d74aa45400e34967c734e99aabe4d5ef32d43fbb
+  out: jog: reconciled wake checkpoint onto moved development 99e0fe64240404ce27b1f6af16992e02130e7c8f
+jog: reconciled wake checkpoint onto moved development e6cf6b71e9a9c00b5bc0466e8ee98758a5694111
+jog: published primary checkpoint c7b3d52d8b28bf5cb5d8482ce88681bea7fb133d
   journal_phase: published
   remote_queue_row: ['parked', 1, 'fixture park']
   ancestors_ok: True
@@ -121,7 +121,7 @@ jog_run.ContractError: checkpoint refuses unrelated changes: ['?? foreign-contro
   held_with_merge_committed: True
   first_tail: ment failed: error: failed to push some refs to '<fixture>/cand/a10/remote.git'
   resume_rc: 0
-  resume_out: jog: published primary checkpoint 100f3db9fd88a91cae8d6c229bf51fcc74c9da93
+  resume_out: jog: published primary checkpoint 183763424526a0bec421c932b210c541365ec8ff
 BEGIN False
   published_head_is_the_merge: True
   receipts_before: 2927
@@ -139,7 +139,7 @@ BEGIN False
 
 === A11 restore after partial view output [cand] PASS
   rc: 1
-  tail: 234e714b82/scratchpad/gh1453-fx/work/cand/a11/primary/utils/py/jog_run.py", line 2345, in _reconcile
+  tail: 234e714b82/scratchpad/gh1453-fx/work/cand/a11/primary/utils/py/jog_run.py", line 2352, in _reconcile
     raise ContractError(str(exc)) from exc
 jog_run.ContractError: fixture: generator died mid-write
   no_merge_head: True
@@ -156,8 +156,8 @@ jog_run.ContractError: fixture: generator died mid-write
   view_dirty_after_write: True
   conflicting_lines: [375]
   rc: 0
-  out: jog: reconciled wake checkpoint onto moved development e8aaab01c3ae395b985bcd6cde4aa6faf2c85355
-jog: published primary checkpoint 5cdeb46c9854bdb36bf16411c246b16d20b777dd
+  out: jog: reconciled wake checkpoint onto moved development a344eb137574253e27da31a38ff4deb9c8331216
+jog: published primary checkpoint 4ea165538e9a80f60cd9acd6b6a6134eb0626c81
   view_regenerated_from_ledger: True
   journal_phase: published
   remote_queue_row: ['parked', 1, 'fixture park']
@@ -173,8 +173,8 @@ jog: published primary checkpoint 5cdeb46c9854bdb36bf16411c246b16d20b777dd
   journal_records_merge_target: True
   journal_phase_when_killed: committed
   rerun_rc: 0
-  rerun_out: jog: reconciled wake checkpoint onto moved development c4b9967d7507210a9de8bbf45ee88ef0bf288ac4
-jog: published primary checkpoint 8b005b5306b91157999273fd5ce010b9d1d155ec
+  rerun_out: jog: reconciled wake checkpoint onto moved development 5869af72564bbc7ee15d364c4e5d97a56c57f320
+jog: published primary checkpoint 8e0e456721b94eb0ea3c86cab9727aad7d97b76b
 BEGIN False
   journal_phase: published
   remote_queue_row: ['parked', 1, 'fixture park']
@@ -195,5 +195,36 @@ jog_run.ContractError: checkpoint refuses a merge in progress that this wake did
   head_is_checkpoint_commit: True
   journal_phase: committed
 
-SUMMARY mode=cand: 14 check(s), 0 failed
+=== A15 gateway refusal during an open merge is a clean stop [cand] PASS
+  rc: 1
+  tail: tError("checkpoint ledger command failed: the ledger gateway refused "
+                        "(exit %s)" % exc.code) from exc
+jog_run.ContractError: checkpoint ledger command failed: the ledger gateway refused (exit 3)
+  named_stop_not_bare_exit: True
+  no_merge_head: True
+  head_is_checkpoint_commit: True
+  tree_clean: True
+  no_backup: True
+  marker_cleared: True
+  journal_phase: committed
+  remote_unchanged: True
+  retry_rc: 0
+  retry_published: True
+
+=== A16 a merge that never started leaves no ownership marker [cand] PASS
+  rc: 1
+  tail:                      + started.stderr.decode(errors="replace").strip()[-300:])
+jog_run.ContractError: checkpoint reconcile could not merge development: fatal: Unable to create index.lock: File exists.
+  named_stop: True
+  marker_cleared: True
+  no_merge_head: True
+  head_is_checkpoint_commit: True
+  tree_clean: True
+  operator_merge_of_same_commit_open: True
+  rerun_rc: 1
+  rerun_tail:  refuses a merge in progress that this wake did not start")
+jog_run.ContractError: checkpoint refuses a merge in progress that this wake did not start
+  operator_merge_still_open: True
+
+SUMMARY mode=cand: 16 check(s), 0 failed
 exit=0
