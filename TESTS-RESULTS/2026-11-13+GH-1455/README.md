@@ -16,14 +16,15 @@ git ls-files -z -- '*.sh' | xargs -0 -P 4 -n 1 shellcheck -S error
 | `shellcheck-base-blob.log` (red control, one file) | the unfixed file extracted from the base commit | `shellcheck -S error` exit 1, SC2148 |
 | `shellcheck-after.log` | base plus the fix | exit 0, no findings, 656 tracked `.sh` files |
 
-Also checked: `bash -n` on the fixed file passes; the file mode is 644 (not executable), so it can only be
-run as `bash pdda_fn.sh ...`, and the shebang does not change how it runs (no caller was traced beyond a comment
-in `witness_1344.py`); no file in `TESTS-RESULTS/2026-11-04+GH-1344/` records a
-hash of it; it is the only tracked `.sh` without a shebang.
+Also checked: `bash -n` on the fixed file passes; the recorded invocation uses bash
+(`TESTS-RESULTS/2026-11-04+GH-1344/provenance.jsonl` records `bash pdda_fn.sh <tree> <fixture> 1292`), the file
+mode is 644 and its body is unchanged; no file in `TESTS-RESULTS/2026-11-04+GH-1344/` records a hash of it;
+before this fix it was the only tracked `.sh` without a shebang, and none remain.
 
 The scan covers the same files and flags as the hosted job (`.github/workflows/ci.yml`, "Shellcheck tracked
-shell scripts"), but the hosted steps are skipped on a docs-only route, so this PR does not show them
-running. The full `ci-local.sh` was not re-run: the only step that failed in the GH-1452 run was this scan.
+shell scripts"), but the hosted steps are skipped on a docs-only route. By `utils/ci-route.sh:65` every file in this change is a
+docs surface (`TESTS-RESULTS/*`, `*.md`, `PROJECT/*`), so the configured behavior is that they are skipped for
+this PR too; their actual outcome here was not checked. The full `ci-local.sh` was not re-run: the only step that failed in the GH-1452 run was this scan.
 
 Not done, by decision: running shellcheck on changed `.sh` files at pre-push is paused and documented in
 `PARKED/2026-11-13-pre-push-shellcheck.md`.

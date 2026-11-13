@@ -39,8 +39,11 @@ In TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh line 1:
 - Correction (GH-1455, 2026-11-13): an earlier version of this note said hosted CI was green, so the local
   run flagged a file the hosted job does not. That was wrong. The hosted job runs the same check on the same
   files (`.github/workflows/ci.yml`, `git ls-files -- '*.sh'` with `shellcheck -S error`), but its shellcheck
-  steps are skipped on a docs-only route, so the green runs on `development` meant the check did not run, not
-  that it passed. The file would fail the hosted job on any non-docs push.
+  steps are skipped on a docs-only route. On the latest two `development` runs (43504181832 and 43505530482)
+  both shellcheck steps show `skipped`, so green meant the check did not run, not that it passed. And
+  `utils/ci-route.sh:65` counts `TESTS-RESULTS/*` as a docs surface, so a script committed there never reaches
+  the hosted scan; only `ci-local.sh` scans every tracked `.sh`. The file would fail the hosted job on any
+  non-docs push.
 
 This gate is therefore **not green**, and it is not claimed as green. The failure pre-exists on the base,
 is unrelated to merge-cleanup, and was left unfixed in the GH-1452 PR: the repair would edit a committed

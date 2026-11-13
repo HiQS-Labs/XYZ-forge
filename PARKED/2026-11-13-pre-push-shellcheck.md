@@ -13,12 +13,16 @@ caught at push time?
 ## Why it is paused
 
 - Two occurrences in about three months: `utils/fuzzing/fuzz-loop.sh` (fixed in #121, described in the
-  `.github/workflows/ci.yml` header) and `pdda_fn.sh` (fixed under GH-1455). It is currently the only
-  tracked `.sh` without a shebang (656 tracked `.sh` files).
+  `.github/workflows/ci.yml` header) and `pdda_fn.sh` (fixed under GH-1455, introduced in `0dc1d25fb` on
+  2026-11-05). Before the fix it was the only tracked `.sh` without a shebang (656 tracked `.sh` files);
+  none remain.
 - The guard itself works. `ci-local.sh` `shellcheck_tracked` and the hosted `Shellcheck tracked shell
   scripts` step run the same scan; the local one caught this file.
-- The gap is timing, not coverage: the pre-push hook runs the test pool, not shellcheck, and the hosted
-  shellcheck steps are skipped on a docs-only route.
+- The gap is timing, not coverage. Neither `githooks/pre-push` nor `validate.sh` scans the repository's
+  tracked scripts (`validate.sh:301` registers only `test/gh365-shellcheck-parallel.sh`, a census suite that
+  runs shellcheck on its own scratch corpus). The hosted shellcheck steps are skipped on a docs-only route,
+  and `utils/ci-route.sh:65` counts `TESTS-RESULTS/*` as docs, so a script committed there never triggers
+  them; only `ci-local.sh` scans every tracked `.sh`.
 - AGENTS.md *No new tests* (GH-831) bars new gate machinery without an operator decision, and a hook
   step would be exactly that.
 

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -108,5 +108,20 @@ Scope disclosure: read all nine lines of `pdda_fn.sh`, the complete GH-1452 summ
 - [Pass] **Q5/Q7 — bounded claims and helper sweep.** `CHANGELOG.md:5` claims a shellcheck scan pass, not a fresh full `ci-local.sh` pass; `GH-1455/README.md:26` explicitly says the full runner was not rerun. `pdda_fn.sh:3-9` still sets fixture paths, extracts function definitions, evals them and prints the resolver return code. The shebang is the only body-independent addition. It remains a trusted-tree manual witness, not a new gate; no demonstrated defect justifies expanding this one-line fix. Fix: retain that boundary and correct the prose above.
 
 Handing off to Producer (claude-a) — address the two Should prose corrections, disposition the remaining notes, then return for review. No source or artifact was edited by Reviewer; only this relay file changed. The harness owns the commit.
+
+### Producer · Round 1 (claude-a)
+
+All items checked against the tree; each is a prose correction, no code or scope change.
+
+- **[Should] shebang census tense — Implemented.** `PARKED/2026-11-13-pre-push-shellcheck.md` and `TESTS-RESULTS/2026-11-13+GH-1455/README.md` now say "before this fix it was the only tracked `.sh` without a shebang; none remain".
+- **[Should] pre-push / validate coverage — Implemented, and the finding is right.** I had written that the hook "runs the test pool, not shellcheck". `validate.sh:301` registers `test/gh365-shellcheck-parallel.sh`, which does run shellcheck on its own scratch corpus. The PARKED note now says neither `githooks/pre-push` nor `validate.sh` scans the repository's tracked scripts, names that census suite, and acknowledges its fixture scan. While checking this I also found the root cause of why the file slipped through: `utils/ci-route.sh:65` counts `TESTS-RESULTS/*` as a docs surface, so a script committed there never triggers the hosted scan, and only `ci-local.sh` scans every tracked `.sh`. That is now stated in the PARKED note and in the corrected gate summary.
+- **[Nit] invocation claim — Implemented.** The README now cites the recorded invocation (`provenance.jsonl:1`, `bash pdda_fn.sh <tree> <fixture> 1292`), the 644 mode and the unchanged body, and drops the "can only be run as bash" inference.
+- **[Unverified] introduction date — Implemented.** The PARKED note now cites the introducing commit `0dc1d25fb` (2026-11-05); `git log --diff-filter=A` on the file returns it.
+- **[Unverified] hosted run outcomes — Modified.** The gate summary now cites the two run IDs (43504181832 and 43505530482) whose shellcheck steps read `skipped` (from the GitHub API during the session). The README no longer asserts this PR's hosted result: it says that by `ci-route.sh:65` every file here is a docs surface, so the steps are configured to be skipped, and the actual outcome was not checked.
+- **[Pass] items — Noted.**
+
+swept file: n/a (Producer)
+
+Handing off to Reviewer (codex) for round 2. Re-check only the corrected statements and anything these edits newly broke.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
