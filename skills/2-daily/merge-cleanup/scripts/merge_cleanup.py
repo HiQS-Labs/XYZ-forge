@@ -555,6 +555,29 @@ def verify_selection(primary: Path, integration: str, listed: Dict[int, Optional
     return {n: found[n]["headRefOid"] for n in listed}
 
 
+def deferred_closure(all_ordered: List[Dict[str, Any]], eligible: Set[int]) -> Set[int]:
+    """PRs Phase 4 will not sequence: those outside `eligible`, plus any PR that hard-depends on one,
+    transitively. Phase 4 and the landing forecast (GH-1452) both read this, so they see one queue."""
+    deferred = {int(p["number"]) for p in all_ordered if int(p["number"]) not in eligible}
+    changed = True
+    while changed:
+        changed = False
+        for p in all_ordered:
+            n = int(p["number"])
+            if n not in deferred and {int(d) for d in (p.get("_hard_deps") or [])} & deferred:
+                deferred.add(n)
+                changed = True
+    return deferred
+
+
+def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List[Dict[str, Any]]:
+    """The order Phase 4 will land the listed PRs in: every open PR is sorted so dependency and
+    collision edges through unlisted PRs stay visible, then deferrals are applied (GH-1226, GH-1452)."""
+    all_ordered, _, _ = toposort_prs(open_prs)
+    deferred = deferred_closure(all_ordered, listed)
+    return [p for p in all_ordered if int(p["number"]) not in deferred]
+
+
 def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[Dict[str, Any]]) -> Dict[str, Any]:
     """GH-1452: the planning-time landing forecast for a dry run over 3+ PRs, in dependency order.
 
@@ -647,7 +670,8 @@ def forecast_comparison(primary: Path, integration: str, decision: str, pins: Di
         return None
     stale: List[str] = []
     fc_heads = {int(n): (e or {}).get("head") for n, e in (fc.get("prs") or {}).items()}
-    if fc_heads != {int(n): sha for n, sha in pins.items()}:
+    # Only the forecast's own queue is compared: a listed PR deferred by an unlisted prerequisite is not in it.
+    if fc_heads != {n: {int(k): v for k, v in pins.items()}.get(n) for n in fc_heads}:
         stale.append("pinned heads differ from the forecast's")
     if [int(n) for n in fc.get("order") or []] != [int(n) for n in order]:
         stale.append("sequence differs from the forecast's")
@@ -2185,8 +2209,9 @@ def main():
                 print('  --landing-plan direct|group --landing-reason "<justification>"\n')
                 return EXIT_LANDING_PLAN_REQUIRED
 
-            args._forecast_cmp = forecast_comparison(primary_repo, args.integration_branch, args.landing_plan,
-                                                     args._pins, [int(p["number"]) for p in early_ordered])
+            args._forecast_cmp = forecast_comparison(
+                primary_repo, args.integration_branch, args.landing_plan, args._pins,
+                [int(p["number"]) for p in effective_sequence(early_prs, set(args._pins))])
             if args._forecast_cmp:
                 log(f"Landing forecast (GH-1452): your decision '{args.landing_plan}' is "
                     f"{args._forecast_cmp['state']} against the dry run's recommendation "
@@ -2317,13 +2342,14 @@ def main():
             log_err(f"PR #{n}: pinned but no longer open at Phase 4 discovery; not landed by this run")
             listed_deferred.add(n)
     if dry_run and args.prs and not (args.scan_only or args.teardown_only) and args.reconcile_pr == 0:
-        # GH-1452: with 3+ listed PRs, compute the landing forecast now (same open-PR list the pin reads,
-        # same ordering the early checkpoint uses) and publish it in the one pin snapshot.
+        # GH-1452: with 3+ listed PRs, compute the landing forecast now and publish it in the one pin
+        # snapshot. The queue is the one Phase 4 will land: every open PR sorted, then deferrals applied.
         forecast = None
         listed_found, listed_problems = _listed_open(list(args.prs), prs)
-        if not listed_problems and len(listed_found) >= 3:
-            listed_order, _, _ = toposort_prs([listed_found[n] for n in sorted(listed_found)])
-            forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
+        if not listed_problems:
+            listed_order = effective_sequence(prs, set(listed_found))
+            if len(listed_order) >= 3:
+                forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
         args._forecast = forecast
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
             return 2
@@ -2335,18 +2361,8 @@ def main():
     if prs:
         all_ordered, _, warnings = toposort_prs(prs)
         if eligible is not None:
-            deferred_set = {int(p["number"]) for p in all_ordered if int(p["number"]) not in eligible}
             # Transitive propagation: any retained PR depending on a deferred PR must also be deferred
-            changed = True
-            while changed:
-                changed = False
-                for p in all_ordered:
-                    p_num = int(p["number"])
-                    if p_num not in deferred_set:
-                        hard_deps = {int(d) for d in (p.get("_hard_deps") or [])}
-                        if hard_deps & deferred_set:
-                            deferred_set.add(p_num)
-                            changed = True
+            deferred_set = deferred_closure(all_ordered, eligible)
 
             for p in all_ordered:
                 p_num = int(p["number"])
@@ -2365,6 +2381,12 @@ def main():
             ordered_prs = [p for p in all_ordered if int(p["number"]) not in deferred_set]
         else:
             ordered_prs = all_ordered
+
+        if merging and getattr(args, "_forecast_cmp", None) is not None and args.landing_plan in ("direct", "group"):
+            # GH-1452: the comparison made at the early checkpoint is refreshed against the queue that
+            # will actually land, so a sequence that changed on discovery shows as stale before any merge.
+            args._forecast_cmp = forecast_comparison(primary_repo, args.integration_branch, args.landing_plan,
+                                                     args._pins, [int(p["number"]) for p in ordered_prs])
 
         print("=" * 80)
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
