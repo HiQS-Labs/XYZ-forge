@@ -400,5 +400,53 @@ class Manual(B.LedgerFixture):
         self.assertNotIn("build_landing_forecast", base_mc)
 
 
+    def test_14_forecast_sequence_is_the_phase4_sequence(self):
+        import copy
+
+        def mk(n, files, created, body=""):
+            return {"number": n, "files": [{"path": f} for f in files], "createdAt": created, "body": body,
+                    "title": f"PR {n}", "headRefName": f"pr{n}", "isDraft": False}
+        prs = [mk(1, ["a.py"], "2026-11-03"), mk(2, ["b.py"], "2026-11-01"), mk(3, ["c.py"], "2026-11-01"), mk(4, ["a.py", "c.py"], "2026-11-02")]
+        listed = {1, 2, 3}
+        selected_only = [p["number"] for p in merge_cleanup.toposort_prs(copy.deepcopy([p for p in prs if p["number"] in listed]))[0]]
+        effective = [p["number"] for p in merge_cleanup.effective_sequence(copy.deepcopy(prs), listed)]
+        # Phase 4's own inline path: full sort, then the shared deferral closure, then filter
+        full = merge_cleanup.toposort_prs(copy.deepcopy(prs))[0]
+        phase4 = [p["number"] for p in full if int(p["number"]) not in merge_cleanup.deferred_closure(full, listed)]
+        disjoint_only = [p["number"] for p in merge_cleanup.effective_sequence(copy.deepcopy(prs[:3]), listed)]
+        hard = copy.deepcopy(prs)
+        hard[2]["body"] = "depends on #4"
+        hard_eff = [p["number"] for p in merge_cleanup.effective_sequence(hard, listed)]
+        ev("S14 sequence", selected_only_order_pre_fix=selected_only, effective_order=effective, phase4_order=phase4,
+           three_disjoint_only=disjoint_only, unlisted_hard_prerequisite_for_3=hard_eff)
+        self.assertEqual(selected_only, [1, 2, 3])
+        self.assertEqual(effective, [2, 3, 1])
+        self.assertEqual(effective, phase4)
+        self.assertEqual(disjoint_only, [1, 2, 3])
+        self.assertNotIn(3, hard_eff)  # deferred, not simulated as an unconditional landing
+        # The stored forecast follows the effective order; the comparison now sees a pre-fix-ordered forecast as stale.
+        self.pr(1, newfile("a1.txt"))
+        base = B._git(self.probe, "ls-remote", str(self.origin), "refs/heads/" + DEV).stdout.split()[0]
+        pins = {1: "1" * 40, 2: "2" * 40, 3: "3" * 40}
+
+        def store(order):
+            self.sel().parent.mkdir(parents=True, exist_ok=True)
+            self.sel().write_text(json.dumps({"integration": DEV, "prs": {str(n): h for n, h in pins.items()},
+                                              "forecast": {"order": order, "base_sha": base, "recommendation": "direct",
+                                                           "prs": {str(n): {"head": pins[n]} for n in order}}}))
+        store([1, 2, 3])   # what the pre-fix code stored (selected-only order)
+        pre_fix = merge_cleanup.forecast_comparison(self.primary, DEV, "direct", pins, effective)
+        store(effective)   # what the fixed code stores
+        fixed = merge_cleanup.forecast_comparison(self.primary, DEV, "direct", pins, effective)
+        ev("S14 comparison", pre_fix_forecast_order_vs_effective=pre_fix["stale_reasons"], fixed=fixed["stale_reasons"], state=fixed["state"])
+        self.assertTrue(pre_fix["stale"] and any("sequence differs" in r for r in pre_fix["stale_reasons"]))
+        self.assertFalse(fixed["stale"])
+        # A listed PR deferred out of the queue is not in the forecast, so the forecast's own queue is what is compared.
+        store([2, 1])
+        subset = merge_cleanup.forecast_comparison(self.primary, DEV, "direct", pins, [2, 1])
+        ev("S14 deferred member", stale=subset["stale"], reasons=subset["stale_reasons"])
+        self.assertFalse(subset["stale"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

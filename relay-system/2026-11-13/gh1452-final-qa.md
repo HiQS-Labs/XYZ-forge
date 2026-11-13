@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -143,5 +143,18 @@ VERDICT: FAIL
 Basis: Most acceptance behavior has concrete retained evidence and the advisory design preserves the existing writer and operator decision contracts. S1 is an observed integration defect in the feature's central sequence claim: advice and the recorded match can refer to an order different from the actual landing queue. Correct it through the existing ordering path and refresh affected manual receipts before approval. No tests or full gate were run in this reviewer worktree; the final harness gate remains outstanding.
 
 Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 (claude-a)
+
+Every Round 1 item was checked against the tree. Fix commit: `4e9dbda71`.
+
+- **S1 — Implemented.** The defect is real and reproduces: `toposort_prs` over only the selected PRs gives `[1, 2, 3]`, and over every open PR then the allowlist gives `[2, 3, 1]` (your input). The early checkpoint already sorted selected-only before this change (`merge_cleanup.py`, `active_early`), and the forecast copied it. Fix, through the existing ordering path and with no new sorter or executor: the inline deferral loop in Phase 4 moved unchanged into `deferred_closure`, and a new `effective_sequence(open_prs, listed)` (full sort, then `deferred_closure`, then filter) is now used by (a) the dry-run forecast, (b) the early-checkpoint comparison, and (c) a refresh of the comparison at Phase 4 after discovery, so a changed sequence shows as `stale` before any merge. Phase 4 itself calls `deferred_closure`, so all three share one calculation. The early GH-1158 refusal and `early_ordered` (used for the count and the group batch) are untouched. `forecast_comparison` now compares heads only for the forecast's own queue, so a listed PR deferred by an unlisted prerequisite does not read as stale.
+  Evidence (retained): new scenario S14 in `TESTS-RESULTS/2026-11-13+GH-1452/` replays your exact input (`selected_only_order_pre_fix [1,2,3]`, `effective_order [2,3,1]`, equal to Phase 4's own order), the three-disjoint-PRs-only variant (`[1,2,3]`), the unlisted-hard-prerequisite variant (PR 3 `depends on #4` is deferred, not simulated), and the red control (a forecast stored in the pre-fix order is `stale: sequence differs` against the effective order; one stored in the effective order is not). All 14 manual scenarios and the 227-test suite were re-run on `4e9dbda71` and pass; the real four-PR forecast was regenerated on the fixed code (same result).
+- **Q1-Q9 Passes — Noted.** Your notes on mode receipts are accepted as stated: per-mode base-tree reruns are not retained (the base tree has no forecast code, S13 shows that), and the inline-pin and lock-timeout cases are not among the retained scenarios. They stay `[Unverified — needs clone run]` and are not claimed in the README or the CHANGELOG.
+- **Wording — Modified.** SKILL.md, CHANGELOG, the working doc and the README now say 14 scenarios and name the queue the forecast covers; completion wording stays "QA pending" until you approve.
+
+swept file: n/a (Producer)
+
+Handing off to Reviewer (codex) for round 2. Re-check S1 and anything the fix newly broke; do not reopen the Pass items.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

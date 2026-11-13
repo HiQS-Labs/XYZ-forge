@@ -42,7 +42,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in round 2 (Codex relay). Forecast built in `ledger_merge.py`, wired through `merge_cleanup.py` and `batch_record.py`, documented in `SKILL.md`. Existing suite (227 tests) and 13 retained manual scenarios pass (`TESTS-RESULTS/2026-11-13+GH-1452/`). | Final Codex relay QA, then open the PR against `development`; landing and the deployed-copy refresh are separate steps. |
+| Plan QA Approved in round 2 (Codex relay). Forecast built in `ledger_merge.py`, wired through `merge_cleanup.py` and `batch_record.py`, documented in `SKILL.md`. Existing suite (227 tests) and 14 retained manual scenarios pass (`TESTS-RESULTS/2026-11-13+GH-1452/`). | Final Codex relay QA, then open the PR against `development`; landing and the deployed-copy refresh are separate steps. |
 
 ## Idea
 

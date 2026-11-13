@@ -2,8 +2,11 @@
 
 Manual checks and existing-suite results for the forecast added to `skills/2-daily/merge-cleanup`
 (AGENTS.md *No new tests*, GH-831: no new suite, only existing coverage plus retained manual checks).
-Tested commit: `cc70b1c40143613a3b2d78aa8e00b99d33220e52` (code, SKILL.md, CHANGELOG, working doc).
-Later commits on the branch add only this evidence folder and review artifacts; any later code change
+Tested commit: `4e9dbda71c5083d2128fec6527eed6a170ea6877` (code, SKILL.md, CHANGELOG, working doc). An earlier
+run on `cc70b1c40` (13 scenarios) was superseded after final-QA round 1 found that the forecast sorted only the
+selected PRs; S14 below covers that fix and every scenario was re-run.
+Later commits on the branch change only documentation wording (SKILL.md, CHANGELOG, the working doc), this
+evidence folder and review artifacts, and the final qualifying gate covers the final commit; any later code change
 reopens these runs. Hashes for every file are in `provenance.jsonl`.
 
 ## How the checks ran
@@ -15,7 +18,7 @@ reopens these runs. Hashes for every file are in `provenance.jsonl`.
   and drives the real `build_landing_forecast`, `pin_selection`, `forecast_comparison` and the real CLI
   (`merge_cleanup.main`). It is kept as a `.txt` evidence file, is not collected by any runner and is not
   registered in `validate.sh`.
-- `manual-check-run.log` is its output: 13 scenarios, `Ran 13 tests ... OK`, with one `EVIDENCE` line each.
+- `manual-check-run.log` is its output: 14 scenarios, `Ran 14 tests ... OK`, with `EVIDENCE` lines for each.
 - `existing-suite-summary.txt`: `python3 test/gh436-merge-cleanup.py` (the collector for the gh534 phase A/B/C
   suites and the parity guard): `Ran 227 tests ... OK`, exit 0. The "ERROR/FAILED" lines inside that log are
   expected output of tests that exercise failure paths. The full log is not retained (about 4,000 lines).
@@ -41,6 +44,7 @@ reopens these runs. Hashes for every file are in `provenance.jsonl`.
 | S11 | CLI: two PRs write no forecast key and print none; three PRs print the table and the advice and persist the forecast; `--scan-only` and a dry run without `--prs` leave the snapshot byte-identical; `--prs-only` forecasts; `--execute` with no `--landing-plan` exits 5, repeats the recommendation, and leaves origin refs, mutating `gh` calls and batch records unchanged; `--execute --landing-plan group` records `match` with the operator's own reason, and the issue block renders the `Forecast (GH-1452)` line | refusal state captured before and after and required equal |
 | S12 | after the base moves, a `group` decision against a `direct` forecast is recorded as `override` and `stale: base moved` | S11 shows `match` and not stale |
 | S13 | an old caller of `set_landing_plan` records exactly decision, reason, PRs and time; with the argument it also stores the comparison, and it survives reload (S11 reads the record from disk) | the base commit `6c0c76bb5` rejects the new argument with `TypeError`, and has no forecast code |
+| S14 | the forecast and the early-checkpoint comparison use the queue Phase 4 lands: with `--prs 1,2,3` and an unselected #4 that overlaps files with #1 and #3, the selected-only sort gives `[1, 2, 3]` while the full sort then allowlist gives `[2, 3, 1]`, and `effective_sequence` equals Phase 4's own order; three disjoint PRs alone keep `[1, 2, 3]`; a selected PR with an unlisted hard prerequisite is deferred, not simulated; a stored forecast in the pre-fix order is `stale: sequence differs`, one in the effective order is not; a listed PR deferred out of the queue is not compared | the pre-fix (selected-only) order replayed against the effective order is rejected as stale |
 
 Note on `S11 two PRs rc=3`: the exit code comes from the existing dry-run landing simulation handing off
 the fixture's deliberately conflicting ledger PRs (B1 handoff). It is existing behavior, unrelated to the

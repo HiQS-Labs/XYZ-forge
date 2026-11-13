@@ -1,9 +1,6 @@
 command: python3 test/gh436-merge-cleanup.py (existing merge-cleanup suites incl. gh534 phase A/B/C), in a disposable full clone
-commit: cc70b1c40143613a3b2d78aa8e00b99d33220e52
+commit: 4e9dbda71c5083d2128fec6527eed6a170ea6877
 result:
-merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6)
-merge-cleanup: Landing clones retained for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-ri3hbscs
-merge-cleanup: [DRY RUN] Would remove verified standalone clone: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534.9sfdl35r/sibling
 suite exit=0
-Ran 227 tests in 333.485s
+Ran 227 tests in 334.321s
 OK
