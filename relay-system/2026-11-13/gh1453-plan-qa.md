@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -183,5 +183,54 @@ Dispositions for Round 1. The plan doc was revised in place; section and step nu
 - **Answer 9 (skill scope) — Implemented:** the skill section is scoped to checkpoint publication and says per-task preflight still fetches.
 
 Questions for this round: (1) is each Round 1 finding resolved by the revised text; (2) is step 6's open-merge restore (stage owned paths, then `git merge --abort`) sound from a clean pre-merge tree, or is there a state it cannot restore; (3) does anything in the revised plan exceed what the problem needs.
+
+### Reviewer · Round 2
+
+**What this proposes:** Admit a checkpoint wake from clean local state without fetching, then publish at the end. If development moved, merge it, rebuild from the remote dump and replay this wake's lease/status receipts through the existing writers. Keep the original replay source separate from the latest publication head so retries extend earlier merges.
+
+**How the existing system works, per this document:** Startup currently fetches and requires equality with development. The wake writes leases/status locally, then commits and publishes through a separate clone; a rejected push retains a committed journal. Canonical writes refresh adopted HTML views, while the merge resolver additionally regenerates LEADERBOARD.md.
+
+**What it's not:** Per-transition publication, execution preflight changes, B1/merge-cleanup changes or an external ledger (non_goals and Preflight bet). The revised Risks explicitly accept a named stop for a wake containing orphan reconciliation.
+
+**Input boundary:** Paraphrase formed from frontmatter non_goals, Status, Recon, Preflight bet, Plan, Acceptance, Verification and Risks before source/issue validation.
+
+**Assessment: source-backed.**
+swept file: yes
+
+Reviewed the entire plan, including pre-existing Recon, rollback wording and Risks, and the required source paths. No graph tools are exposed in this turn, so no current graph generation or coverage result can be claimed; conclusions use current source reads. Issue 1453 was read using `gh api repos/HiQS-Labs/XYZ-forge/issues/1453 --jq .body` (exit 0); the browser fetch failed, then the API supplied the body. No Git command, suite, executable fixture or merge probe was run. Runtime merge/abort, crash and acceptance outcomes remain **[Unverified — needs clone run]**.
+
+- **[Should] R2-F1 — Separate publication retry from execution cold recovery in `begin()`.** The revised plan distinguishes `source` and `commit`, but leaves the existing resume branch running the global orphan detector before `finish()` (`utils/py/jog_run.py:2143-2149`). A committed reconcile contains the remote's queue, whose running rows have NULL lease PIDs after rebuild (`utils/py/releases_app.py:1273-1277,6522-6529`). On rerun, that detector changes those rows (`:5146-5159,5177-5184`), even though step 4.7 just protected their terminal triple; existing `finish()` then refuses new dirt after a recorded commit (`jog_run.py:2172-2174`). Specify that a committed checkpoint retries publication directly, including recognition of the post-commit/pre-save crash, while execution cold recovery remains for an unfinished running wake. Extend the already planned A10 or A5 observation with this input.
+  Observed input: A10's retained reconcile commit includes disjoint remote row B with `status='running', attempt_count=1, lease_pid=NULL`; the journal is still `committed`. Existing `begin()` calls `jog_reconcile_orphan_leases` and resets B to pending before retrying publication.
+  Affected scope: publication-only resumes after a merge imported a remote running row; this is a pre-existing resume-path defect exposed by the new merge path, not a request to replay orphan receipts.
+  Falsifier: rerun that committed/crash-window case with B present; publish without any new orphan/status receipt, preserve B's status/attempt/reason and dispatch no task. Separately retain cold recovery for a genuinely running, interrupted wake.
+
+- **[Should] R2-F2 — Use the full merge-write set for open-merge cleanup.** Plan step 6 stages only the step-2 owned set (two ledger files and two HTML files), although the resolver also rewrites LEADERBOARD.md and stages only after all generators succeed (`utils/releases-merge-resolve.sh:215-237`). Thus the premise “fully staged before the abort” is not established for every listed failure. Include every path the reconcile may rewrite in its bounded cleanup set, with additions/deletions handled; keep the smaller ordinary-wake ownership rule if desired. Demonstrate the failure after view generation, not only A3's earlier overlap stop. The claim that abort succeeds in this case is **[Unverified — needs clone run]**, not an observed Git failure here.
+  Observed input: adopted LEADERBOARD.md was changed by the remote and cleanly merged into the index; its generator rewrites it and exits nonzero before resolver line 237 stages it. Step 6 stages only the owned paths, leaving this index/worktree difference outside its stated restore premise.
+  Affected scope: resolver failures after writing a merge-only adopted view, including a partial generator output.
+  Falsifier: inject that generator failure in the existing disposable manual rehearsal; require no MERGE_HEAD, every tracked path equal to the pre-merge committed head, no backup, and a retryable journal. A green overlap-only A3 does not exercise this boundary.
+
+- **[Should] R2-F3 — Handle allowed view conflicts on the no-dump-change branch.** Plan 4.2 allows unmerged views, but 4.3 skips to 4.8 when the remote dump is unchanged, and 4.8 runs the resolver only when 4.4 ran (`PROJECT/2-WORKING/GH-1453-JOG-LOCAL-RECONCILE.md:154-176`). An allowed view conflict consequently reaches the commit unresolved. Resolve/regenerate the allowed derived views when needed on this branch too, or explicitly define a safe named stop for that case; do not promise A8's success for it without a path. Preserve A8's exact-ledger equality for its ordinary code-only input rather than unconditionally rebuilding every code-only merge.
+  Observed input: adopted RELEASES-PREVIEW.html is refreshed by the wake (`utils/py/releases_app.py:1379-1386`); the remote changes the same rendered line/template output but leaves releases.sql unchanged. The merge has an allowed HTML conflict, so 4.2 proceeds, 4.3 bypasses replay and 4.8 bypasses the resolver.
+  Affected scope: remote movement without a dump delta but with an unmerged adopted view.
+  Falsifier: this variant either publishes with no unmerged entries and a view consistent with the chosen ledger, or takes the documented stop and restores cleanly. Ordinary A8 with a disjoint code file is the positive preservation control. Runtime result remains **[Unverified — needs clone run]**.
+
+- **[Nit] Align the remaining summary promises with the revised stop contract.** Preflight bet still says every failure aborts and leaves the original checkpoint (`plan:123-125`), while step 6 retains a committed merge (`:199-203`). Goal says “The only stop is a real overlap,” whereas Risks explicitly adds the accepted orphan-receipt stop (`:281-284`). Update these summaries; the detailed retained-merge policy is the sounder promise.
+
+**Round-1 dispositions and Step B answers:**
+
+1. **[Pass] Ledger-writer scope remains grounded:** separate-clone promotion returns before the primary roadmap writer (`jog_run.py:1763-1769`); startup/loop/cold recovery use reconcile, lease and status (`:2362-2369,2414,2449,474,480`). Additional reachable filesystem writes are adopted views and connector dispatch/cursors (`releases_app.py:1762-1775`), not another primary ledger-op family. F4's ordinary-wake view ownership is addressed by plan step 2 (`plan:145-148`).
+2. **[Pass] Local admission remains sufficient for the stated envelope:** HEAD ancestral to the local tracking ref excludes unrelated unpublished commits; execution runs in the separate target (`jog_run.py:2396-2408,2444-2448`), and finish still checks primary head ownership (`:2164-2171`). Plan now names the missing-ref stop (`plan:139-144`). No extra start-equality dependency was found in the required run path.
+3. **[Pass] Command legality:** the plan no longer proposes a tree-restoring checkout; bounded merge/rebuild/resolver/abort is compatible with the supplied AGENTS Danger/GH-527 rules. Resolver's own `checkout --ours -- <conflicted-path>` (`utils/releases-merge-resolve.sh:133,187`) is conflict-stage resolution. F1's post-commit retention is addressed (`plan:189-203`); the remaining open-merge completeness issue is R2-F2, and abort success must be witnessed in a clone.
+4. **[Pass] Replay is now bounded:** no replay of global jog-reconcile (`plan:161-165`), and untouched rows' triples are checked (`:170-173`). Lease increments attempts and status sets reason (`releases_app.py:5091-5096,5121-5133`); ordinary lease→terminal-status replay recovers the requested triple. Positions deliberately follow the canonical remote queue, which shifts other active rows (`:5124-5128`; plan Risks:285-286). This resolves F2's replay request, but not the separate resume scan in R2-F1.
+5. **[Pass] Generation reasoning is corrected for the normal replay branch:** `_rebuild` uses `max(dump_gen, old_gen)+1` (`releases_app.py:6563-6570`) before the resolver checks the two parent floors (`utils/releases-merge-resolve.sh:110-120`). The merge's binary DB worktree normally supplies HEAD's generation; keep that input explicit and verify it in the clone rehearsal. One replay per receipt alone would not guarantee a floor when original orphan scans become no-ops; the plan removes those replays and stops on resolver refusal (`plan:185-188`).
+6. **[Pass] Receipt marker clarified:** plan resolves txn_id to id inside the immutable source DB (`plan:161-165`); it neither sorts UUIDs nor carries ids across rebuild. This fits dump/load omitting/reassigning receipt ids (`releases_app.py:1283-1285,6530-6535`). Empty log is explicitly represented (`plan:133-137`).
+7. **[Pass] F6's acceptance distinction is addressed:** A1/A2 inspect merged values and ancestry/publication, A3/A5 inspect stop and retry, A7 checks single application, A8 code-only preservation, A9 adopted ownership and A10 crash recognition (`plan:225-258`). A4 now correctly passes base (`:239-241`). A6 checks a text contract, not runtime reconciliation. A3's disjoint control proves more than absence of traceback. These are specified controls, not executed results; R2-F1–F3 name the missing combinations in the existing manual checks.
+8. **[Pass] Retry ancestry is now sound in principle:** later attempts extend the latest merge while reading the original source (`plan:178-180,199-200`), permitting the publication clone's existing ff-only path (`jog_run.py:2185-2188`). Retaining the latest valid merge resolves the prior impossible post-commit abort promise; publication-only resume still needs R2-F1.
+9. **[Pass] Scope remains proportionate:** extending JogCheckpoint and canonical writers avoids a parallel merge subsystem (`plan:129-131`); B1's roadmap-only replay is an incompatible contract (`ledger_merge.py:228-234`). No new runner/suite is needed. F5's SystemExit conversion and protected constructor are specified (`plan:170,204-206`). A concrete optional refusal input exists: remote adds another repository's row with the same GH number while retaining the original row's triple; the canonical writers' LIMIT 2 identity check refuses it (`releases_app.py:5080-5089,5111-5118`). This can exercise the already planned refusal boundary without new machinery.
+
+**VERDICT: FAIL**
+**Basis:** Most Round-1 corrections are incorporated. Three bounded gaps remain in publication resume, complete open-merge cleanup, and allowed view conflicts on the code-only branch. No implementation or runtime verification is claimed. Root cause: checkpoint publication lacks reconciliation against a moved branch; Fix site: JogCheckpoint publication/resume and its existing cleanup boundary; Why not upstream/downstream: task execution and B1 do not own this checkpoint or its durable retry state.
+
+Handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
