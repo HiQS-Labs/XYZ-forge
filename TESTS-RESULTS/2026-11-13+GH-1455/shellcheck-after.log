@@ -1,0 +1,6 @@
+command: git ls-files -z -- '*.sh' | xargs -0 -P 4 -n 1 shellcheck -S error   (the exact scan in ci-local.sh shellcheck_tracked)
+shellcheck: version: 0.11.0
+tree: 37ca5e0d272c04fd2a9cd02ef4b0cfd1bbf5d2c8 + working-tree fix (shebang added)
+tracked .sh files: 656
+
+scan exit=0

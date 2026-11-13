@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # usage: pdda_fn.sh <tree> <fixture_root> <issue>
 tree=$1 root=$2 n=$3
 fns=$(awk '/^[A-Za-z_][A-Za-z0-9_]*\(\) *\{/{p=1} p{print} p&&/^\}/{p=0}' "$tree/utils/pdda/pdda.sh")

@@ -36,10 +36,17 @@ In TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh line 1:
 - `git diff --name-only 6c0c76bb5 HEAD -- TESTS-RESULTS/2026-11-04+GH-1344` lists zero files: the file is unchanged by this branch.
 - The same file extracted from the base commit `6c0c76bb5` fails the same rule when run through the local
   `shellcheck` directly (SC2148, no shebang).
-- Hosted CI on `development` is green at the same time (workflow `CI` concluded `success` on the latest
-  development merges), so the local shellcheck run flags a file the hosted job does not.
+- Correction (GH-1455, 2026-11-13): an earlier version of this note said hosted CI was green, so the local
+  run flagged a file the hosted job does not. That was wrong. The hosted job runs the same check on the same
+  files (`.github/workflows/ci.yml`, `git ls-files -- '*.sh'` with `shellcheck -S error`), but its shellcheck
+  steps are skipped on a docs-only route. On the latest two `development` runs (43504181832 and 43505530482)
+  both shellcheck steps show `skipped`, so green meant the check did not run, not that it passed. And
+  `utils/ci-route.sh:65` counts `TESTS-RESULTS/*` as a docs surface, so a script committed there never reaches
+  the hosted scan; only `ci-local.sh` scans every tracked `.sh`. The file would fail the hosted job on any
+  non-docs push.
 
 This gate is therefore **not green**, and it is not claimed as green. The failure pre-exists on the base,
-is unrelated to merge-cleanup, and was left unfixed here: the repair would edit a committed evidence file
-from another issue (GH-1344), outside this change's scope. It is reported in the PR as a remaining
-limitation, and a follow-up issue is filed for it.
+is unrelated to merge-cleanup, and was left unfixed in the GH-1452 PR: the repair would edit a committed
+evidence file from another issue (GH-1344), outside that change's scope. It was reported in that PR as a
+remaining limitation and tracked as GH-1455, and it is fixed there by adding a shebang to `pdda_fn.sh` (the
+same fix as #121 for `utils/fuzzing/fuzz-loop.sh`). Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.

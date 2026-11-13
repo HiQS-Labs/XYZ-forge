@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
+
+`ci-local.sh` failed its `shellcheck tracked scripts` step on `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` (SC2148, no shebang), the same class as `fuzz-loop.sh` in #121. Added `#!/usr/bin/env bash`; the repo's own scan over all 656 tracked `.sh` files now passes. The GH-1452 gate summary said hosted CI was green so the two disagreed; that was wrong (the hosted shellcheck steps are skipped on a docs-only route), and the note is corrected. Running shellcheck on changed scripts at pre-push is paused and documented in `PARKED/2026-11-13-pre-push-shellcheck.md`. Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.
+
 ## 2026-11-13 — GH-1453: Jog checkpoint works from local state and reconciles a moved development
 
 A `jog run --checkpoint-root` wake no longer fetches at start or requires the primary to equal
