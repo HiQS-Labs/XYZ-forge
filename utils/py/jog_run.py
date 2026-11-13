@@ -2160,7 +2160,7 @@ class JogCheckpoint:
 
     def _queue(self, db_path):
         """gh_number -> [status, attempt_count, failure_reason], read-only."""
-        conn = sqlite3.connect(Path(db_path).resolve().as_uri() + "?mode=ro", uri=True)
+        conn = connect(str(db_path), readonly=True)
         try:
             if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='jog_queue'").fetchone():
                 return {}
@@ -2170,7 +2170,7 @@ class JogCheckpoint:
             conn.close()
 
     def _anchor(self):
-        conn = sqlite3.connect(Path(self.root, "releases.db").resolve().as_uri() + "?mode=ro", uri=True)
+        conn = connect(os.path.join(self.root, "releases.db"), readonly=True)
         try:
             row = conn.execute("SELECT txn_id FROM op_receipts ORDER BY id DESC LIMIT 1").fetchone()
             return row[0] if row else None
@@ -2358,7 +2358,7 @@ class JogCheckpoint:
             source_db = Path(tmp, "source.db")
             source_db.write_bytes(_git(self.root, "show", self.state["source"] + ":releases.db"))
             final = self._queue(source_db)
-            conn = sqlite3.connect(source_db.resolve().as_uri() + "?mode=ro", uri=True)
+            conn = connect(str(source_db), readonly=True)
             try:
                 floor = 0
                 if self.state.get("anchor"):
