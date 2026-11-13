@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-13.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -244,5 +244,41 @@ Dispositions for Round 2. The plan doc was revised in place.
 - **Answer 9's optional refusal input** (a second repository's row with the same GH number): Declined for the fixture. This ledger has one `repos` row and no supported verb in the fixture adds a second, so building it would mean writing rows outside the writer. The refusal path stays recorded as unverified by fixture; the `SystemExit` conversion is one line and is read in final QA.
 
 Question for this round: are R2-F1, R2-F2 and R2-F3 resolved by the revised text, and is anything left that must be settled before implementation rather than in final QA?
+
+### Reviewer · Round 3
+
+**What this proposes:** Let a clean checkpoint wake start from local state and reconcile at publication when development moved. Replay only its lease/status receipts onto the remote ledger using canonical writers, with bounded retries and a retained publication journal. Separate committed publication retries from interrupted execution recovery.
+
+**How the existing system works, per this document:** Startup fetches and requires equality with development. Queue writes remain local until a checkpoint commit is pushed through a publication clone; remote movement rejects that push. Canonical writes refresh adopted HTML views, and the merge resolver additionally regenerates LEADERBOARD.md.
+
+**What it's not:** Per-transition publication, changes to execution preflight, B1/merge-cleanup, or an external ledger (frontmatter non_goals and Preflight bet). Risks explicitly accepts a named stop for orphan-reconcile receipts rather than replaying a global scan.
+
+**Input boundary:** Paraphrase formed from frontmatter non_goals, Status, Recon, Preflight bet, Plan, Acceptance, Verification and Risks before reading source or the issue this turn.
+
+**Assessment: source-backed.**
+swept file: yes
+
+Reviewed the whole plan, including pre-existing Recon, summaries, acceptance and Risks, against the required source paths and issue. No additional pre-existing defect requiring a plan change was found in this bounded review. Graph discovery tools are not exposed this turn; no project generation or coverage result is claimed, and evidence uses current source reads. Requirements query: `gh api repos/HiQS-Labs/XYZ-forge/issues/1453 --jq .body`, exit 0; decisive requirement: “when the live development is not the wake's base, merge it into the primary, take the remote ledger, replay this wake's ledger writes through the canonical writer”. No Git command, test suite, executable fixture or mutation probe was run. Only this relay file was changed.
+
+- **[Pass] R2-F1 resolved in the plan.** Step 1 explicitly sends `phase: "committed"` directly to `finish()` without orphan scanning, retaining cold recovery for a running journal (`PROJECT/2-WORKING/GH-1453-JOG-LOCAL-RECONCILE.md:140-145`). This removes the problematic ordering in `utils/py/jog_run.py:2143-2149`. A10 supplies the disjoint running-B/crash-window input and requires no new receipt or dispatch (Acceptance, “A10 publication-only resume”). This is approval of the specified correction, not an executed resume result.
+- **[Pass] R2-F2 resolved in the plan.** Step 6 now includes both ledger files and all three views, with additions/deletions, before abort (`plan:202-207`, where `plan` denotes the project document above). That matches the resolver's view set and delayed staging (`utils/releases-merge-resolve.sh:161,226-237`). A11 explicitly creates partial DB and LEADERBOARD.md output and checks every tracked path against the retained pre-merge head (Acceptance, “A11 restore after partial view output”). Directly creating that tree state is adequate for the cleanup claim; a product test hook is unnecessary. Actual abort/backup cleanup remains **[Unverified — needs clone run]**.
+- **[Pass] R2-F3 resolved in the plan.** Step 4.8 invokes the resolver when any path remains unmerged, even without a remote dump delta (`plan:180-185`); the resolver handles view conflicts and regenerates adopted outputs (`utils/releases-merge-resolve.sh:161-223`). A12 supplies the same-line HTML conflict with no ledger change; A8 retains the disjoint code-only preservation control. The revised summaries also match retained post-commit recovery (`plan:208-212`; Preflight bet, “A stop after a merge commit keeps that commit”).
+
+**Step B answers (1–9):**
+
+1. **[Pass] Writer scope:** for separate execution clones, promotion returns before the primary roadmap writer (`utils/py/jog_run.py:1763-1769`). Startup/cold recovery and the loop reach reconcile, lease and status (`:2147-2148,2362-2369,2414,2449`). No additional primary ledger-op family was found in that required path. Generated HTML and connector dispatch/cursors are separate filesystem effects of `perform_write` (`utils/py/releases_app.py:1767-1779`).
+2. **[Pass] Admission:** the planned ancestor test against an existing local tracking ref excludes unpublished local commits (`plan:145-150`). Task execution uses the separate target (`utils/py/jog_run.py:2396-2408,2444-2448`); finish retains head ownership checks (`:2164-2171`). No further start-equality dependency was found in the required path under the stated envelope.
+3. **[Pass] Command contract:** explicit remote dump bytes replace the proposed checkout (`plan:164-166`); bounded merge/resolver/abort does not prescribe a forbidden reset or tree-restoring checkout. The resolver's own conflict-stage checkout is at `utils/releases-merge-resolve.sh:133,187`. The full cleanup set now addresses the previously missing staged-state premise. Merge/abort restoration, including .bak removal, remains **[Unverified — needs clone run]**, assigned to A3/A11.
+4. **[Pass] Replay contract:** lease increments attempts and status assigns reason (`utils/py/releases_app.py:5091-5096,5121-5128`). Global reconcile is rejected, and targeted plus untouched triples are checked (`plan:167-179`); queue positions deliberately follow canonical remote-queue behavior (Risks, “Queue positions”). The old counterexample of resetting disjoint remote running B is excluded both during replay and committed resume (steps 4.5 and 1). No new sequence defeating the stated final-triple checks was established this turn.
+5. **[Pass] Generation:** one replay per original receipt alone is insufficient if an orphan scan becomes a no-op (`utils/py/releases_app.py:5163-5164`). The revised plan instead uses `max(dump_gen, old_gen)+1` (`:6568-6570`), rejects orphan receipts and stops on the resolver floor refusal (`plan:193-196`; `utils/releases-merge-resolve.sh:110-120`). Clone evidence must inspect the actual pre-rebuild DB generation, including retries; this review does not measure it.
+6. **[Pass] Receipt identity:** txn_id is resolved to an id in the immutable source DB, then enumeration uses id order (`plan:167-171`). This avoids comparing UUIDs or carrying ids across dump/load, which omits and recreates receipt ids (`utils/py/releases_app.py:1283-1287,6530-6535`). A stored source-local numeric id would be simpler but is not required for correctness.
+7. **[Pass] Acceptance discrimination:** A1/A2 require merged values, ancestry and publication; A3/A5 require named stop/restore and successful retry. Base instead fetches/refuses or plain-pushes (`utils/py/jog_run.py:2153-2157,2191-2195`). A4 is correctly a preservation control; A6 proves the new text contract against the current open-ended wording (`skills/2-daily/jog/SKILL.md:158-164`). A7–A12 target repeat push, code-only movement, ownership, committed resume, partial-output cleanup and view conflict. These are planned observations, not passing runtime results; A11's synthetic partial output measures cleanup rather than a real generator failure.
+8. **[Pass] Repeat ancestry:** later attempts extend the latest merge while retaining the immutable replay source (`plan:186-188,208-212`). That is compatible with the publication clone's ff-only update (`utils/py/jog_run.py:2185-2188`); it does not revert the primary beneath the publication clone. A7 and A10 must witness replay-once and resume behavior.
+9. **[Pass] Proportionate scope:** the plan extends JogCheckpoint and existing writers (`plan:130-137`), while B1 cannot express non-roadmap replay (`skills/2-daily/merge-cleanup/scripts/ledger_merge.py:228-234`). No new runner, suite or gate machinery is needed. The declined optional ambiguity fixture does not block plan approval: writer SystemExit conversion remains required (`plan:176`), and the missing runtime refusal evidence is explicitly disclosed in Acceptance. Final QA must preserve that disclosure rather than claim the refusal path was exercised.
+
+**VERDICT: PASS**
+**Basis:** R2-F1–R2-F3 and the summary nit are resolved in the revised text; no [Blocker] or [Should] remains. Approved for implementation only. Runtime reconciliation, retry, restore and crash behavior remain **[Unverified — needs clone run]** until the existing/manual checks and final gate produce retained evidence. Root cause: publication has only a plain-push path against a moving development. Fix site: JogCheckpoint publication/resume and its cleanup boundary. Why not upstream/downstream: execution preflight and B1 do not own the primary's checkpoint journal or retry state.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
