@@ -558,9 +558,9 @@ already-parity-clean harness from the root it was vendored from. Trying to run t
 on a leaf fails because there is no `validate.sh` to run — that is expected, not a blocker: it is the
 signal that you are on a Type-B target and Phase 1 is upstream's job, already done.
 A leaf vendored with `--ledger-only` (`.xyz/VERSION` says `tier=ledger`, GH-1466) is narrower still: it has
-no `relay-automation/` or shims at all, only the ledger, reconcile and PDDA scripts, so the runtime flip
-has nothing to toggle there. Switch tiers by re-vendoring: `--with-releases` upgrades it to Tier 2, and
-`--ledger-only` takes a Tier 1/2 leaf back down.
+no `relay-automation/` or relay/agent shims, only the ledger, reconcile, planner and PDDA scripts (the
+retained `utils/marathon-plan.sh` still follows its existing `XYZ_PYTHON` runtime selection). Switch tiers
+by re-vendoring: `--with-releases` upgrades it to Tier 2, and `--ledger-only` takes a Tier 1/2 leaf back down.
 
 When executing elsewhere:
 

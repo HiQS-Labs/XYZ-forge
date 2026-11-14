@@ -2433,7 +2433,7 @@ def main():
             sys.exit(re_err.code)
         return
 
-    lock_file = os.path.join(repo_root, ".git", "wave-reconcile.lock")
+    lock_file = str(reconciler_git_dir(repo_root) / "wave-reconcile.lock")
     journal = RollbackJournal(repo_root=repo_root)
     baseline = None
 

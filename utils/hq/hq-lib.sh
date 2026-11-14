@@ -59,8 +59,10 @@ hq_rebalance_lookup(){
   printf 'REBAL_REPOS=%s\n'  "$repos"
 }
 
-# hq_xyz_lookup <repo> [<slug_hint>] -> XYZ_PATH / XYZ_INSTALL / XYZ_TICK / XYZ_COMMIT for the LIVE
-# install whose coord basename matches <repo>. GH-132 hardening:
+# hq_xyz_lookup <repo> [<slug_hint>] -> XYZ_PATH / XYZ_INSTALL / XYZ_TICK / XYZ_COMMIT for a LIVE
+# driven-lane install whose coord basename matches <repo>, or XYZ_REG_PATH / XYZ_INSTALL / XYZ_TIER=ledger
+# for a ledger-only install (retains registry location and ambiguity/dedup without Tier A capability).
+# GH-132 hardening:
 #   * Blocker 2 — a registry row whose coord no longer exists on disk is NOT a usable install; skip it
 #     (so a stale row can't arm Tier A / `fire` at a dead path).
 #   * Blocker 1 — on a basename COLLISION among live installs, disambiguate by full `owner/repo` slug
@@ -76,7 +78,6 @@ hq_xyz_lookup(){
     case "$install" in ''|'#'*) continue;; esac
     [ -n "$coord" ] || continue
     [ -d "$coord" ] || continue                          # stale row -> not a usable install (Blocker 2)
-    grep -qx 'tier=ledger' "$install/VERSION" 2>/dev/null && continue  # GH-1466: ledger tier is not a driven-lane harness
     [ "$(hq_lc "$(hq_bare "$coord")")" = "$repo" ] || continue
     
     local i seen=-1
@@ -130,10 +131,19 @@ hq_xyz_lookup(){
   fi
 
   if [ -n "$chosen" ]; then
-    printf 'XYZ_PATH=%s\n'    "$(printf '%s' "$chosen" | cut -f2)"
-    printf 'XYZ_INSTALL=%s\n' "$(printf '%s' "$chosen" | cut -f1)"
-    printf 'XYZ_TICK=%s\n'    "$(printf '%s' "$chosen" | cut -f3)"
-    printf 'XYZ_COMMIT=%s\n'  "$(printf '%s' "$chosen" | cut -f4)"
+    local c_install c_coord
+    c_install="$(printf '%s' "$chosen" | cut -f1)"
+    c_coord="$(printf '%s' "$chosen" | cut -f2)"
+    if grep -qx 'tier=ledger' "$c_install/VERSION" 2>/dev/null; then
+      printf 'XYZ_REG_PATH=%s\n' "$c_coord"
+      printf 'XYZ_INSTALL=%s\n'  "$c_install"
+      printf 'XYZ_TIER=ledger\n'
+    else
+      printf 'XYZ_PATH=%s\n'     "$c_coord"
+      printf 'XYZ_INSTALL=%s\n'  "$c_install"
+      printf 'XYZ_TICK=%s\n'     "$(printf '%s' "$chosen" | cut -f3)"
+      printf 'XYZ_COMMIT=%s\n'   "$(printf '%s' "$chosen" | cut -f4)"
+    fi
     return 0
   fi
 
@@ -254,6 +264,7 @@ hq_repo_resolve(){
     return 0
   fi
   xyz_path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_PATH=//p')"   # already existence-filtered
+  [ -n "$xyz_path" ] || xyz_path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_REG_PATH=//p')"
   if [ -n "$xyz_path" ]; then src="xyz-registry"; path="$xyz_path"
   else path="$(hq_fs_find "$repo")"; [ -n "$path" ] && src="filesystem"; fi
   pdda="$(hq_pdda_lookup "$repo")"

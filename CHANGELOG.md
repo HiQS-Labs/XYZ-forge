@@ -9,8 +9,7 @@ about 1,760, with no skills, relay, marathon runtime, tick or tests. A missing m
 Python module both stop the vendor before the swap. `VERSION` records `tier=ledger`, and the tier now
 survives a flagless re-vendor, which `xyz-sync update` is; before this, `releases.db` turned every host back
 into Tier 2. Four readers were fixed so they don't treat a ledger install as a broken full one:
-`xyz-sync check` skips the relay guard probe for it, `hq_xyz_lookup` stops counting it as a driven-lane
-harness (the host reads as Tier B), and `releases jog` refuses with a message instead of a
+`xyz-sync check` skips the relay guard probe for it, `hq_xyz_lookup` retains registry location and ambiguity checks while declining driven-lane capability (the host reads as Tier B), and `releases jog` refuses with a message instead of a
 `ModuleNotFoundError`. Two path fixes help any vendored PDDA copy: `pdda-lib.sh` now resolves a vendored
 copy's root to the host (it used to scan `.xyz/`), and both `pdda.sh releases-current` and the reconcile PDDA
 gate fall back to the vendored writer and script. Evidence: `TESTS-RESULTS/2026-11-14+GH-1466/`.
