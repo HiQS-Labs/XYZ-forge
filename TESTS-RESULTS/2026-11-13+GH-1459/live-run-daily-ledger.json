@@ -1,0 +1,520 @@
+{
+  "operator_claim_issues": [
+    120,
+    467,
+    854,
+    1092,
+    1200,
+    1366,
+    1383
+  ],
+  "operator_claim_prs": [
+    1416,
+    1024
+  ],
+  "mode": "daily_ledger",
+  "date": "2026-11-13",
+  "timezone": "America/Los_Angeles",
+  "generated_at": "2026-11-14T02:01:44.418447+00:00",
+  "repo_slug": "HiQS-Labs/XYZ-forge",
+  "repo_mode": "forge",
+  "repo_mode_source": "auto (releases.db + utils/hq/hq.sh)",
+  "operator": "noelsaw1",
+  "authenticated_login": "noelsaw1",
+  "device": "mac-studio",
+  "today_ledger": null,
+  "today_duplicates": [],
+  "previous_ledger": null,
+  "previous_duplicates": [],
+  "earliest_starter": null,
+  "already_checked_out": [
+    {
+      "kind": "issue",
+      "number": 27,
+      "ref": "GH-27",
+      "owner": "jediwright",
+      "device": "github",
+      "started": "2026-08-18T03:17:11",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 120,
+      "ref": "GH-120",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-09-25T01:18:33",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 467,
+      "ref": "GH-467",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-09-23T03:10:34",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 854,
+      "ref": "GH-854",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-10-02T14:50:04",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1092,
+      "ref": "GH-1092",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-12T22:21:35",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1200,
+      "ref": "GH-1200",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-10-30T20:33:46",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1366,
+      "ref": "GH-1366",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-08T05:03:12",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1383,
+      "ref": "GH-1383",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-11T20:18:50",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1448,
+      "ref": "GH-1448 (via PR #1450)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-12T22:57:57",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1092,
+      "ref": "GH-1092 (via PR #1446)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-12T22:21:40",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1443,
+      "ref": "GH-1443 (via PR #1444)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-12T18:30:49",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1439,
+      "ref": "GH-1439 (via PR #1442)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-12T17:58:50",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1399,
+      "ref": "GH-1399 (via PR #1417)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-11T17:31:49",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1000,
+      "ref": "GH-1000 (via PR #1416)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-11T16:57:58",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1409,
+      "ref": "GH-1409 (via PR #1413)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-10T23:28:44",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1390,
+      "ref": "GH-1390 (via PR #1391)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-09T02:43:55",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 1022,
+      "ref": "GH-1022 (via PR #1024)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-08T08:06:09",
+      "provenance": "github-label-or-pr"
+    }
+  ],
+  "collisions": [],
+  "carryover_open_issues": [],
+  "carryover_open_prs": [],
+  "completed_since_last_ledger": [],
+  "unverified_carryover": [],
+  "assigned_open_issues": [
+    {
+      "number": 120,
+      "title": "Compatibility testing with stealth/ox-alpha",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/120",
+      "labels": [
+        "ci"
+      ]
+    },
+    {
+      "number": 467,
+      "title": "Umbrella - Side Quest: Cactus Needle Oracle for what to do next and doc governance sentinel",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/467",
+      "labels": []
+    },
+    {
+      "number": 854,
+      "title": "Stabilization window: a 10-day staging branch that runs only changed-code checks, to clear the #853 members and the landing-queue blockers",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/854",
+      "labels": [
+        "ci",
+        "ci:hosted",
+        "ci:local-gates",
+        "priority:high",
+        "stability"
+      ]
+    },
+    {
+      "number": 1092,
+      "title": "relay and radar: a reviewer that may not measure a claim can still approve the artifact, and an umbrella can be called solved on absence alone",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1092",
+      "labels": []
+    },
+    {
+      "number": 1200,
+      "title": "Factory flywheel experiment (supersedes #1199): prove the decision layer, not the build layer \u2014 foreman reconcile loop with heartbeat, measured against a 48-hour unattended window",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1200",
+      "labels": []
+    },
+    {
+      "number": 1366,
+      "title": "Audit: calibrate workflow restrictions to risk and reduce disproportionate delivery burden",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1366",
+      "labels": []
+    },
+    {
+      "number": 1383,
+      "title": "merge-cleanup: optimize merge sequences with intermediate canary gating, coalesced reconciliation, and automated post-merge QA sweep by default",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1383",
+      "labels": [
+        "enhancement",
+        "runtime:python"
+      ]
+    }
+  ],
+  "prs_awaiting_review": [],
+  "prs_needing_remediation": [
+    {
+      "number": 1416,
+      "title": "docs(GH-1000): consolidation inventory, GH-1254 evidence reconstruction and follow-on drafts",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1416",
+      "ci_status": "SUCCESS",
+      "review_decision": "",
+      "unresolved_threads": 5,
+      "reasons": [
+        "UNRESOLVED_THREADS(5)"
+      ]
+    },
+    {
+      "number": 1024,
+      "title": "feat(weekly): held intake and preserved rollover with tracked review limits (GH-1022)",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1024",
+      "ci_status": "SUCCESS",
+      "review_decision": "",
+      "unresolved_threads": 8,
+      "reasons": [
+        "UNRESOLVED_THREADS(8)"
+      ]
+    }
+  ],
+  "local_checkout": [],
+  "release_context": {
+    "target_release": {
+      "id": 6,
+      "version": "0.6.0",
+      "codename": "Front-Door",
+      "status": "draft",
+      "target_date": "2026-09-26",
+      "exit_criterion": "bash test/meter-release.sh --release-gate exits 0. NOT BUILT \u2014 written first, before any sanitization (the Litmus/Nightwatch ordering). Half A AUDITS the launch artifact: single-commit sanitized clone at the declared path; CHANGELOG.md byte-identical; .tick/, relay-system/, temp/ absent; PROJECT/ = PDDA scaffold + retained Meter example only; both LICENSE files present and consistent; secret-scan result names tool version and exact commit. Half B EXECUTES the stranger's path: a credential-less clone of the published commit completes one supported happy path with nothing author-machine-local. Negative control --mutate-evidence: plant a private path, remove CHANGELOG.md, leave a relay-system/ behind \u2014 detect all three, re-check unmutated inputs green in the same run. RED on arrival.",
+      "description": "XYZ can be handed to a stranger: an unauthenticated clone reaches a documented entry path and exercises a supported happy path with no private context, from a sanitized, secret-scanned tree. RE-SCOPED 2026-08-15 by explicit operator decision \u2014 originally the metering release; that work moved intact to Sundown (0.8.0). Deliverable is a sanitized fresh-history clone pushed to https://github.com/HiQS-Labs/XYZ-forge. Compacted 2026-08-20 with the RELEASES.md block; full prose in that file's git history.",
+      "milestone": "Front-Door"
+    },
+    "manifest_summary": {
+      "total_items": 22,
+      "shipped_count": 16,
+      "dialed_in_count": 6,
+      "cut_count": 0,
+      "burndown_pct": 72.7,
+      "shipped_issues": [
+        {
+          "state": "shipped",
+          "issue_number": 413,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/413",
+          "temp_id": null,
+          "dial_reason": "Front-Door Half A audits the launch artifact. This IS that audit, failed: a marker-only directory with no git history is accepted and cleared. E1-proven at HEAD."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 416,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/416",
+          "temp_id": null,
+          "dial_reason": "Every item is a document a stranger reads and finds untrue of the tree: the no-dependencies claim, three dead README paths, a CODEX_FLAGS escalation rung that is a no-op."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 414,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/414",
+          "temp_id": null,
+          "dial_reason": "The shipped tree's kernel comments cite ADRs the build drops. A stranger following them dead-ends, and no gate notices. Runs against the built artifact, which is Front-Door's subject."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 410,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/410",
+          "temp_id": null,
+          "dial_reason": "The separated-grading guarantee AGENTS.md \u00a712 advertises to a new reader is not enforced on the driven path. A documented guarantee that is not true is a front-door defect."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 411,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/411",
+          "temp_id": null,
+          "dial_reason": "A stranger following the README's operator path seeds .tick/ in the wrong directory; the driven path is protected only because it pins the root."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 415,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/415",
+          "temp_id": null,
+          "dial_reason": "AGENTS.md \u00a74 tells a new reader the guard blocks driver calls. It blocks six of twelve. Same class: a stated guarantee narrower than its mechanism."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 412,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/412",
+          "temp_id": null,
+          "dial_reason": "Flaky turns under concurrency are the first thing a new operator hits and the hardest to attribute; the transient case is indistinguishable from a real loss."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 418,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/418",
+          "temp_id": null,
+          "dial_reason": "A stranger following the documented intake rail parks an item the planner cannot see. Front-Door is about the path a new reader actually walks."
+        },
+        {
+          "state": "shipped",
+          "issue_number": 988,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/988",
+          "temp_id": null,
+          "dial_reason": "express hotfix 2026-10-07 (GH-267 lane)"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 989,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/989",
+          "temp_id": null,
+          "dial_reason": "express hotfix 2026-10-07 (GH-267 lane)"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 993,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/993",
+          "temp_id": null,
+          "dial_reason": "express hotfix 2026-10-07 (GH-267 lane)"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 995,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/995",
+          "temp_id": null,
+          "dial_reason": "express hotfix 2026-10-07 (GH-267 lane)"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 1005,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1005",
+          "temp_id": null,
+          "dial_reason": "express hotfix 2026-10-09 (GH-267 lane)"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 1057,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1057",
+          "temp_id": null,
+          "dial_reason": "express hotfix 2026-10-14 (GH-267 lane)"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 1174,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1174",
+          "temp_id": null,
+          "dial_reason": "Explicitly approved manual express documentation correction; no runtime changes; releases next selects this draft despite overdue target"
+        },
+        {
+          "state": "shipped",
+          "issue_number": 1438,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1438",
+          "temp_id": null,
+          "dial_reason": "express 2026-11-12 (GH-267 lane)"
+        }
+      ],
+      "dialed_in_issues": [
+        {
+          "state": "dialed_in",
+          "issue_number": 419,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/419",
+          "temp_id": null,
+          "dial_reason": "Front-Door is about the path a stranger walks. A marathon process nobody can follow reliably is that path failing one layer up."
+        },
+        {
+          "state": "dialed_in",
+          "issue_number": 342,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/342",
+          "temp_id": null,
+          "dial_reason": "Carried over from 0.9.0 Cargo at its 2026-09-25 release cut (GH-822); still open"
+        },
+        {
+          "state": "dialed_in",
+          "issue_number": 255,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/255",
+          "temp_id": null,
+          "dial_reason": "Carried over from 0.9.0 Cargo at its 2026-09-25 release cut (GH-822); still open"
+        },
+        {
+          "state": "dialed_in",
+          "issue_number": 256,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/256",
+          "temp_id": null,
+          "dial_reason": "Carried over from 0.9.0 Cargo at its 2026-09-25 release cut (GH-822); still open"
+        },
+        {
+          "state": "dialed_in",
+          "issue_number": 275,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/275",
+          "temp_id": null,
+          "dial_reason": "Carried over from 0.9.0 Cargo at its 2026-09-25 release cut (GH-822); still open"
+        },
+        {
+          "state": "dialed_in",
+          "issue_number": 345,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/345",
+          "temp_id": null,
+          "dial_reason": "Carried over from 0.9.0 Cargo at its 2026-09-25 release cut (GH-822); still open"
+        }
+      ],
+      "dialed_in_numbers": [
+        419,
+        342,
+        255,
+        256,
+        275,
+        345
+      ],
+      "cut_issues": []
+    }
+  },
+  "warnings": [],
+  "coverage": [
+    {
+      "source": "repo slug",
+      "status": "ok",
+      "detail": "HiQS-Labs/XYZ-forge"
+    },
+    {
+      "source": "authenticated login",
+      "status": "ok",
+      "detail": "noelsaw1"
+    },
+    {
+      "source": "operator login",
+      "status": "ok",
+      "detail": "noelsaw1"
+    },
+    {
+      "source": "open PRs",
+      "status": "ok",
+      "count": 9
+    },
+    {
+      "source": "open issues",
+      "status": "ok",
+      "count": 321
+    },
+    {
+      "source": "releases.db",
+      "status": "ok",
+      "detail": "target=0.6.0"
+    },
+    {
+      "source": "PR heads (all states)",
+      "status": "truncated",
+      "detail": "500 rows returned at limit 500",
+      "count": 500
+    },
+    {
+      "source": "ledger discovery",
+      "status": "ok",
+      "detail": "today=#none, prev=#none",
+      "count": 0
+    },
+    {
+      "source": "today ledger comments",
+      "status": "skipped",
+      "detail": "no ledger issue to read",
+      "count": 0
+    },
+    {
+      "source": "previous ledger comments",
+      "status": "skipped",
+      "detail": "no ledger issue to read",
+      "count": 0
+    },
+    {
+      "source": "PR review threads",
+      "status": "ok",
+      "count": 9
+    }
+  ],
+  "publish_receipt": null
+}
