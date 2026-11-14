@@ -135,3 +135,12 @@ No P0/P1/P2 blocker remains. Implementation should normalize REST issue fields (
 
 ### Verification limits / handoff
 This approves the plan, not runtime behavior. Runtime controls and gates remain **[Unverified — needs clone run]** and belong to the specified disposable full clone. No git commands, gates, pytest, executable fixtures, or implementation writes were run. Only this relay file was edited; temporary storage was initialized under `.relay-scratch/tmp`. Close the token with `done` and proceed to implementation under the approved plan.
+
+### Attestation · relay-drive — 2026-11-14T01:33:14Z
+task: gh1459-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 5e80a7dd01b1b497132911ca28219ac2770e1ff5
+added-range: 19213+2786
+added-sha256: 5c9b36f8342187852ede8cfa22b4d2e064fd181ec65494540b96f74e11c881e2
+gate-run: undeclared
