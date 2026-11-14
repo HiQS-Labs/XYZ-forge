@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -115,8 +115,76 @@ Handing off to Producer (claude-a) — disposition the M4 evidence request and a
   - **Sweep the enclosing function or block around each hunk** for one-line or one-function edits inside large pre-existing files: `xyz-sync.sh` `check_rows`, `hq-lib.sh` `hq_xyz_lookup`, `pdda-lib.sh` header (lines 1–30), `pdda.sh` `releases-current` function, `wave_reconcile.py` `run_validation_gate`, `releases_app.py` jog block (`:5195-5255`).
   - Mark the 7k-line `releases_app.py` and 2.7k-line `wave_reconcile.py` bodies outside those functions as out of scope for this change. Pre-existing defects found in the swept spans are in scope.
   - **Diff-scope probe:** `git diff --stat e0586fc30..HEAD -- . ':!relay-system' ':!TESTS-RESULTS' ':!PROJECT' ':!releases.*'` should list only the ten files.
-- **[Pass]/[Nit] items:** noted; rating unchanged at 55/30/50/40.
+- **[Unverified — no citation]/[Nit] items:** noted; rating unchanged at 55/30/50/40.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+VERDICT: FAIL
+Basis: M4's evidence gap is resolved, and the whole-file sweep is complete, including pre-existing code and historical docs. Two narrow read-only probes establish real failures: the new HQ filter loses registered host location, and the normal reconciler's pre-existing lock path fails for linked worktrees. These require disposition before approval. The final gate remains outstanding.
+
+- [Should] **R2-1 — Preserve registry location while declining driven-lane capability.** `utils/hq/hq-lib.sh:79` drops the entire ledger row; `:256–258` then falls back to filesystem search because no registry path survives. A ledger host outside the search roots becomes UNRESOLVED instead of the promised Tier B. M8's `runner-m1-m9.sh.txt:10` puts every fixture under `HQ_SEARCH_ROOTS`, and `logs/M8-status-candidate.log` explicitly reports `via filesystem`, so that evidence masks the lost locator. Preserve the existing registry's host identity/path independently of dispatch eligibility, retaining ambiguity/dedup guarantees; keep ledger hosts ineligible for driven lanes. No new registry or suite is needed.
+  Observed input: a single TSV row `<scratch>/outside-search/ledger-host/.xyz<TAB>2026-11-14<TAB>1<TAB>seed<TAB><scratch>/outside-search/ledger-host`, an existing coordinate directory, `VERSION=tier=ledger`, and an empty search root elsewhere.
+  Affected scope: registered ledger-only hosts whose path cannot be rediscovered through the depth-capped filesystem fallback.
+  Falsifier: that same ledger row resolves a nonempty `REPO_PATH` with exit 0 while status remains Tier B and fire refuses; an otherwise identical Tier 2 row retains Tier A. A result showing successful ledger resolution under the measured inputs would disprove this finding.
+  Probe command (scratch data only; no Git or executable fixture):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  P="$TMPDIR/hq-ledger-lookup"
+  mkdir -p "$P/outside-search/ledger-host/.xyz" "$P/search" "$P/pdda"
+  printf 'tier=ledger\n' > "$P/outside-search/ledger-host/.xyz/VERSION"
+  printf '%s\t2026-11-14\t1\tseed\t%s\n' "$P/outside-search/ledger-host/.xyz" "$P/outside-search/ledger-host" > "$P/registry.tsv"
+  export HQ_XYZ_REGISTRY="$P/registry.tsv" HQ_SEARCH_ROOTS="$P/search" HQ_PDDA_REGISTRY_DIR="$P/pdda" HQ_REBALANCE_DB="$P/absent.db"
+  bash -c 'source utils/hq/hq-lib.sh; hq_resolve ledger-host; printf "resolver_rc=%s\n" "$?"'
+  printf 'tier=2\n' > "$P/outside-search/ledger-host/.xyz/VERSION"
+  bash -c 'source utils/hq/hq-lib.sh; hq_resolve ledger-host; printf "resolver_rc=%s\n" "$?"'
+  printf 'tier=ledger\n' > "$P/outside-search/ledger-host/.xyz/VERSION"
+  ```
+  Shell exit 0. Decisive output: ledger `REPO_PATH=`, `REPO_PATH_SOURCE=unresolved`, `resolver_rc=1`; changing only the VERSION stamp to Tier 2 yields the registered path, `REPO_PATH_SOURCE=xyz-registry`, `resolver_rc=0`.
+  Root cause: capability filtering discards authoritative location; Fix site: existing HQ resolver/capability boundary; Why not downstream: searching more directories cannot preserve the registry's authoritative identity.
+
+- [Should] **R2-2 — Reuse the existing worktree-aware lock-directory helper.** Pre-existing, found by the required whole-file sweep: `utils/py/wave_reconcile.py:2436` constructs `<root>/.git/wave-reconcile.lock` and `:2479` acquires it. This checkout's `.git` is a file, so that acquisition fails before ledger work. `reconciler_git_dir()` at `:1132–1140` already handles linked-worktree gitdir/commondir and is used by the sweep and delivery paths (`:1148`, `:2267`). Reuse it in the normal reconciler instead of creating a second lock-resolution mechanism.
+  Observed input: this linked checkout's existing `.git` file and the normal main-path lock operand.
+  Affected scope: normal reconciliation with a root whose `.git` is a file; ordinary full clones retain their current lock location.
+  Falsifier: a linked-worktree root resolves/acquires the common-directory lock, and a full clone resolves the same `.git/wave-reconcile.lock` as before. The current file-based root acquiring the current main-path operand would disprove the observed failure.
+  Probe command (AST-extracted lock only, not main, no Git, no files written):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'PYPROBE'
+  from pathlib import Path
+  import ast, os, fcntl, sys
+  from datetime import datetime
+  p=Path('utils/py/wave_reconcile.py')
+  t=ast.parse(p.read_text())
+  ns={'os':os,'fcntl':fcntl,'datetime':datetime,'sys':sys}
+  for n in t.body:
+      if isinstance(n,(ast.ClassDef,ast.FunctionDef)) and n.name in {'ReconcileError','ReconcilerLock','die','log_err'}:
+          exec(compile(ast.Module(body=[n],type_ignores=[]),str(p),'exec'),ns)
+  print('dotgit_is_file=',Path('.git').is_file())
+  try:
+      with ns['ReconcilerLock'](str(Path.cwd()/'.git'/'wave-reconcile.lock')): print('acquired')
+  except ns['ReconcileError'] as e:
+      print('outcome=ReconcileError code=',e.code,'message=',str(e))
+  PYPROBE
+  ```
+  Probe exit 0; decisive output: `dotgit_is_file= True`, `outcome=ReconcileError code= 8`, `[Errno 20] Not a directory: '<cwd>/.git/wave-reconcile.lock'`. This measures the actual lock primitive/operand, not an end-to-end reconcile run.
+  Root cause: main assumes .git is a directory; Fix site: main's lock operand; Why not upstream/downstream: the existing helper already resolves the supported Git layout.
+
+- [Nit] **R2-3 — Narrow the runtime-flip wording.** `UPGRADE.md:560–562` says ledger installs have no “shims at all” and “nothing to toggle”. The manifest includes `utils/marathon-plan.sh`, whose `:19–43` selects Python/Bash via `XYZ_PYTHON`. Say no relay/agent shims; the retained planner still follows its existing runtime selection.
+
+- [Pass] **M4 request resolved; receipt bytes checked.** `logs/M4-run-valid-candidate.log` ends `PDDA run complete: no errors, 2 warning(s)`; the malformed counterpart names `PROJECT/2-WORKING/GH-4291-LEDGER.md:1 missing required frontmatter key 'updated'`; the base-lib control instead reports `no readable releases.db ledger present` while scanning .xyz. A read-only `python3 -B -` probe parsed every provenance row, asserted each named log was nonempty, checked SHA-256, asserted exactly 12 valid-host SUMMARY lines all contained `errors=0`, and asserted the candidate/base distinguishing strings. Exit 0: `receipt_logs_checked= 42 hash_mismatches=0 M4_valid_summaries= 12 M4_bad_host_finding=yes base_wrong_root=yes`. This validates retained evidence, not a fresh full-run execution.
+
+- [Pass] **Acceptance seams other than the HQ locator concern have support.** Inventory/source/import controls are retained in `logs/M1-inventory.txt`, `M2-vendor.log`, `M3-vendor.log`; sticky/conflict/upgrade/downgrade evidence is in `M5-*.log` and `M6-*.log`. The guard loop (`xyz-sync.sh:439`) breaks only its inner loop, and missing VERSION is safe in the AND list; `M7-check-candidate.log` and `M7-check-tier2.log` distinguish ledger exemption from Tier 2 missing-guard warnings. Jog runtime call sites all use the narrow missing-module helper (`releases_app.py:5198–5251`, reconcile alias `:7200`); M9 retains exit-2 candidate versus traceback base outputs. PDDA preserves explicit roots and host-first writer selection (`pdda-lib.sh:7–10`, `pdda.sh:976–981`); reconcile's changed fallback uses the existing `harness_tool` (`wave_reconcile.py:2098`). M10/M11 logs and deletion controls observe planner/view/PDDA/merge-resolve closure as recorded in round 1. No duplicate writer was established in the whole source-file sweep.
+
+- [Pass] **Import heredoc semantics measured in memory.** Extracted the actual Python body at `xyz-vendor.sh:518–528` and temporarily replaced `importlib.import_module` in a `python3 -B -` process with three controlled outcomes. Exit 0 after assertions; decisive output: `smoke_case=missing exit=1`, `smoke_case=other-error exit=0`, `smoke_case=ok exit=0`. Thus ModuleNotFoundError refuses while TypeError warns/proceeds as documented. The first extraction attempt mistakenly included the shell continuation and exited 1 with IndentationError; the corrected extraction began at `import importlib, sys` before any behavioral conclusion. `bash -n relay-automation/xyz-vendor.sh relay-automation/xyz-sync.sh utils/hq/hq-lib.sh utils/pdda/pdda-lib.sh utils/pdda/pdda.sh` also exited 0.
+
+- [Unverified — needs clone run] The final classified gate and fresh Tier 1/2 execution remain outstanding; the 25 existing suites are producer evidence. No Git command, suite, pytest or executable fixture was run this turn. The raw base-to-head file list was not independently regenerated under the explicit Git prohibition, so this review does not certify exact diff inventory/no added suite from a fresh diff. Whole-file coverage was completed collectively by this reviewer and read-only recon subagents: all ten Setup files, including all 4,718 CHANGELOG lines. Apart from R2-2, no additional pre-existing source defect was established. Historical changelog entries were treated as dated records, not current runtime promises.
+
+- [Nit] The plan's `55/30/50/40` rating still fits the bounded optional-footprint change; these observations do not justify an operator override.
+
+Handing off to Producer (claude-a) — disposition R2-1/R2-2, correct R2-3 if accepted, and retain focused red/green evidence in a disposable clone without adding a suite. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
