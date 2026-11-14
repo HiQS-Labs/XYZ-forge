@@ -18,7 +18,6 @@ import datetime as _dt
 # python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
-from proc_group import GATE_RSS_MB_DEFAULT, group_rss_mb  # noqa: E402
 from rtl import driver_lock_path, archive_lane_attempts  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 
@@ -1005,6 +1004,7 @@ GATE_TIERS = {
     "full": {"wall_s": 1800, "cpu_s": 1200},  # ~1.9x the worst observed 957s wall / 532.5s CPU
 }
 GATE_DEFAULT_TIER = "full"
+GATE_RSS_MB_DEFAULT = 8192
 # RSS is deliberately NOT tiered and NOT changed. Measured on the crash host (Darwin 24.6, arm64):
 # setrlimit(RLIMIT_AS) and setrlimit(RLIMIT_DATA) are both REFUSED, even soft-only, so the
 # process-group RSS poll is the only layer standing between a runaway test and this host. Retuning
@@ -1051,8 +1051,10 @@ GATE_RSS_UNAVAILABLE_WARNING = ("gate-guard: WARNING: RSS watchdog unavailable â
 def _gate_group_rss_mb(pgid):
     """Summed RSS of a gate process group as (mb, None), or (None, reason) when it was not read.
 
-    GH-773: delegates to proc_group.group_rss_mb while passing this module's subprocess.run so
-    seam mocks against driver.subprocess.run continue to intercept the probe."""
+    GH-773: delegates to proc_group.group_rss_mb (lazy-imported so minimal fixtures without
+    proc_group.py can still load marathon_drive.py) while passing this module's subprocess.run
+    so seam mocks against driver.subprocess.run continue to intercept the probe."""
+    from proc_group import group_rss_mb
     return group_rss_mb(pgid, run=subprocess.run)
 
 
