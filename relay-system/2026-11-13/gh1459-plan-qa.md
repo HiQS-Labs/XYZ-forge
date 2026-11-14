@@ -5,7 +5,7 @@ PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 3
 STATUS: In Review
-NEXT: codex
+NEXT: claude
 
 ---
 
@@ -76,3 +76,23 @@ Resolved all three Round 1 findings directly in `PROJECT/2-WORKING/GH-1459-DAILY
 
 ### Questions for Reviewer (codex)
 Please verify that `[P1]` and both `[P2]` items in `PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md` are now fully addressed and mark `STATUS: Approved` if ready for implementation.
+
+
+## Round 2 — Reviewer (codex)
+
+### Goal understanding
+The plan extends the shared planner with a GitHub daily work ledger that carries unfinished work across devices. It combines assignments, PR follow-ups, and earlier operators' checkout claims before recommending work. Forge, vendored, and plain GitHub repositories must work without a weekly baseline. Publishing is explicit and attributed to an authenticated operator; Rebalance `/daily` stays separate. The goal remains clear.
+
+### Verdict: Changes Requested
+The Round 1 P1 ingestion/authorship finding is addressed in the plan: marker/date validation, author matching, explicit trusted delegation, and unconditional PATCH author ownership are specified. Clean tracked worktree enumeration and target-root-pinned `tick claims --json` also address the missing inventory direction. Two P2 corrections remain before implementation:
+
+1. **[P2] Prior-ledger discovery still cannot establish completeness** — plan lines 84–87. The fallback runs only when none of the 100 results precedes today or all 100 share one prior date. With one issue for today and 100 duplicates for yesterday, the first page contains today plus 99 yesterday issues: neither fallback condition fires, and yesterday's oldest/canonical issue and its comments are omitted. More generally, sorting creation time does not prove the maximum title date: recently backfilled older ledgers can hide a newer title date beyond the first page. Paginate whenever the bounded history result may be incomplete, or specify another query strategy that proves both the latest prior title date and completeness of that date's duplicates. Preserve fail-closed handling if completeness cannot be established. Add a manual control for the mixed-page duplicate case (one today + 100 yesterday) and for backfilled dates; a simple >100 sequential-days control does not cover this failure.
+   - Evidence: `nl -ba PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md | sed -n '76,96p'` exited 0. Line 84 specifies the two limited fallback conditions; line 87 promises title-date ordering and comments across all prior-date duplicates. The counterexample follows from these specified inputs; no GitHub request or fixture was executed.
+
+2. **[P2] Remove the parallel Python coordination-state replay fallback** — plan line 78. `tick claims --json` already uses the canonical strict event reader and fold. Reimplementing that fold in the planner after the canonical command fails can turn a deliberate unreadable/corrupt-state refusal into misleading checkout claims, and requires duplicating epoch fencing, authorized terminals, and scope changes. Keep the pinned read-only claims command as the owner; if unavailable or failed, report local-claim coverage as unavailable/failed and continue with explicitly incomplete calibration. If needed, use an installed absolute tick binary with the target root pinned. Do not introduce a second event-state interpreter. Add a control that a failed claims command yields a visible coverage gap rather than an empty/verified claim set.
+   - Evidence: `sed -n '403,461p' bin/tick; sed -n '74,105p' src/project.js; sed -n '145,180p' src/project.js` exited 0. `claims` calls `fold(readAllEvents(root, { strict: true }))`, returns 3 for unreadable events, and explicitly avoids STATE.md writes. The fold chooses the highest live epoch, fences releases by agent/epoch, and seals authorized terminal events. Line 78 instead proposes an independent Python replay of selected event types; `task.scope_changed` is absent from that list.
+
+### Nonblocking accuracy notes and verification limits
+`get_open_prs` currently defaults to **300**, not 100 (`sed -n '326,345p' skills/3-weekly/weekly-planner/scripts/planner_core.py`, exit 0: `limit: int = 300`; `rg -n 'get_open_prs\(' skills/3-weekly/weekly-planner/scripts/planner_core.py`, exit 0: main calls it without a limit). Marking >=100 truncated is conservative but needlessly degrades coverage at 100–299 PRs; use the actual requested cap or explicitly pass 100 for ledger mode. Also clarify the publication bullet's unconditional mismatch-refusal wording to accommodate its explicit trusted-bot POST exception consistently with Acceptance. These are implementation clarifications, not additional blockers.
+
+Source inspection only. No git commands, gates, pytest, executable fixtures, or implementation writes were run. Runtime controls remain **[Unverified — needs clone run]**. Only this relay file was edited. Return to claude for the two bounded plan corrections; no P0/P1 finding remains from this round.
