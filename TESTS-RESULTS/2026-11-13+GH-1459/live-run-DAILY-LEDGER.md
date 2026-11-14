@@ -1,6 +1,6 @@
 # Daily Work Ledger — 2026-11-13
 
-- **Operator:** `noelsaw1` · **Device:** `noels-mac-mini` · **Repo Mode:** `forge` (auto (releases.db + utils/hq/hq.sh))
+- **Operator:** `noelsaw1` · **Device:** `mac-studio` · **Repo Mode:** `forge` (auto (releases.db + utils/hq/hq.sh))
 - **Today's Ledger Issue:** *Not created yet (run with `--publish-ledger`)*
 - **Prior Workday Ledger:** *None found*
 - **Earliest Starter Today:** *No verified starter comment recorded yet*
@@ -14,8 +14,6 @@
 - `ok` **open issues** (321)
 - `ok` **releases.db** — target=0.6.0
 - `truncated` **PR heads (all states)** (500) — 500 rows returned at limit 500
-- `ok` **tick claims XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13** (0)
-- `ok` **local root XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13** (3)
 - `ok` **ledger discovery** (0) — today=#none, prev=#none
 - `skipped` **today ledger comments** (0) — no ledger issue to read
 - `skipped` **previous ledger comments** (0) — no ledger issue to read
@@ -40,9 +38,6 @@
 - **GH-1409 (via PR #1413)** — owner `noelsaw1` (`github`) · started `2026-11-10T23:28:44` · provenance `github-label-or-pr`
 - **GH-1390 (via PR #1391)** — owner `noelsaw1` (`github`) · started `2026-11-09T02:43:55` · provenance `github-label-or-pr`
 - **GH-1022 (via PR #1024)** — owner `noelsaw1` (`github`) · started `2026-11-08T08:06:09` · provenance `github-label-or-pr`
-- **GH-1459 (XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13:feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13)** — owner `noelsaw1` (`noels-mac-mini`) · started `2026-11-13` · provenance `local-device-only`
-- **GH-1459 (XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13)** — owner `noelsaw1` (`noels-mac-mini`) · started `2026-11-14` · provenance `local-device-only`
-- **GH-1459 (XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13:feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13)** — owner `noelsaw1` (`noels-mac-mini`) · started `2026-11-13` · provenance `local-device-only`
 
 ## 3. Carryover from Prior Workday
 
@@ -65,3 +60,17 @@
 - **GH-1200**: Factory flywheel experiment (supersedes #1199): prove the decision layer, not the build layer — foreman reconcile loop with heartbeat, measured against a 48-hour unattended window
 - **GH-1366**: Audit: calibrate workflow restrictions to risk and reduce disproportionate delivery burden
 - **GH-1383**: merge-cleanup: optimize merge sequences with intermediate canary gating, coalesced reconciliation, and automated post-merge QA sweep by default
+
+## 6. Operator Active Claims (Machine-Readable)
+
+<!-- daily-ledger-active-claims:start -->
+- Active Issue Claim: GH-120
+- Active Issue Claim: GH-467
+- Active Issue Claim: GH-854
+- Active Issue Claim: GH-1092
+- Active Issue Claim: GH-1200
+- Active Issue Claim: GH-1366
+- Active Issue Claim: GH-1383
+- Active PR Claim: PR #1416
+- Active PR Claim: PR #1024
+<!-- daily-ledger-active-claims:end -->

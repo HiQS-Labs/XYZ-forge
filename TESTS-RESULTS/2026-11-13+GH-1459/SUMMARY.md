@@ -11,7 +11,7 @@
   - Zero new `sqlite3.connect` calls or scripts (`GH-777`, `check_inventory_ratchet.py --check` exits 0).
   - Rebalance's `/daily` skill remains untouched.
 
-## Verification & Red/Green Controls Executed (`31 PASS / 0 FAIL`)
+## Verification & Red/Green Controls Executed (`35 PASS / 0 FAIL`)
 
 1. **Pre-fix Red Control (`red-control-0`):**
    - Extracted `origin/development:skills/3-weekly/weekly-planner/scripts/planner_core.py` into `$TMPDIR` and invoked `--mode ledger`; exited `2` with `invalid choice: 'ledger'`.

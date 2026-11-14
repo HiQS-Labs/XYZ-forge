@@ -68,3 +68,13 @@
 - **GH-105**: Newly assigned issue 105
 - **GH-995**: Tick claimed issue 995
 - **GH-996**: Clean worktree issue 996
+
+## 6. Operator Active Claims (Machine-Readable)
+
+<!-- daily-ledger-active-claims:start -->
+- Active Issue Claim: GH-102
+- Active Issue Claim: GH-103
+- Active Issue Claim: GH-995
+- Active Issue Claim: GH-996
+- Active PR Claim: PR #56
+<!-- daily-ledger-active-claims:end -->

@@ -537,5 +537,14 @@
     "started": "2026-11-14T01:49:35Z",
     "created_count": 1,
     "patched_count": 0
-  }
+  },
+  "operator_claim_issues": [
+    102,
+    103,
+    995,
+    996
+  ],
+  "operator_claim_prs": [
+    56
+  ]
 }

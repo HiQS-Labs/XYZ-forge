@@ -1,14 +1,27 @@
 {
+  "operator_claim_issues": [
+    120,
+    467,
+    854,
+    1092,
+    1200,
+    1366,
+    1383
+  ],
+  "operator_claim_prs": [
+    1416,
+    1024
+  ],
   "mode": "daily_ledger",
   "date": "2026-11-13",
   "timezone": "America/Los_Angeles",
-  "generated_at": "2026-11-14T01:50:14.905058+00:00",
+  "generated_at": "2026-11-14T02:01:44.418447+00:00",
   "repo_slug": "HiQS-Labs/XYZ-forge",
   "repo_mode": "forge",
   "repo_mode_source": "auto (releases.db + utils/hq/hq.sh)",
   "operator": "noelsaw1",
   "authenticated_login": "noelsaw1",
-  "device": "noels-mac-mini",
+  "device": "mac-studio",
   "today_ledger": null,
   "today_duplicates": [],
   "previous_ledger": null,
@@ -167,36 +180,6 @@
       "device": "github",
       "started": "2026-11-08T08:06:09",
       "provenance": "github-label-or-pr"
-    },
-    {
-      "kind": "issue",
-      "number": 1459,
-      "ref": "GH-1459 (XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13:feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13)",
-      "owner": "noelsaw1",
-      "device": "noels-mac-mini",
-      "started": "2026-11-13",
-      "provenance": "local-device-only",
-      "local_kind": "branch"
-    },
-    {
-      "kind": "issue",
-      "number": 1459,
-      "ref": "GH-1459 (XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13)",
-      "owner": "noelsaw1",
-      "device": "noels-mac-mini",
-      "started": "2026-11-14",
-      "provenance": "local-device-only",
-      "local_kind": "worktree"
-    },
-    {
-      "kind": "issue",
-      "number": 1459,
-      "ref": "GH-1459 (XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13:feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13)",
-      "owner": "noelsaw1",
-      "device": "noels-mac-mini",
-      "started": "2026-11-13",
-      "provenance": "local-device-only",
-      "local_kind": "worktree_branch"
     }
   ],
   "collisions": [],
@@ -284,45 +267,7 @@
       ]
     }
   ],
-  "local_checkout": [
-    {
-      "kind": "branch",
-      "ref": "XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13:feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "device": "noels-mac-mini",
-      "last_activity": "2026-11-13",
-      "issue_numbers": [
-        1459
-      ],
-      "reason": "ahead 7 of origin/development (as of last fetch)",
-      "next_action": "inspect; push or open PR"
-    },
-    {
-      "kind": "worktree",
-      "ref": "XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "device": "noels-mac-mini",
-      "last_activity": "2026-11-14",
-      "issue_numbers": [
-        1459
-      ],
-      "reason": "6 uncommitted change(s)",
-      "next_action": "commit or stash"
-    },
-    {
-      "kind": "worktree_branch",
-      "ref": "XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13:feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "checkout": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "device": "noels-mac-mini",
-      "last_activity": "2026-11-13",
-      "issue_numbers": [
-        1459
-      ],
-      "reason": "checked out worktree on feat/XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "next_action": "active local checkout"
-    }
-  ],
+  "local_checkout": [],
   "release_context": {
     "target_release": {
       "id": 6,
@@ -546,16 +491,6 @@
       "status": "truncated",
       "detail": "500 rows returned at limit 500",
       "count": 500
-    },
-    {
-      "source": "tick claims XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "status": "ok",
-      "count": 0
-    },
-    {
-      "source": "local root XYZ-forge-gh1459-daily-planner-shared-daily-2026-11-13",
-      "status": "ok",
-      "count": 3
     },
     {
       "source": "ledger discovery",
