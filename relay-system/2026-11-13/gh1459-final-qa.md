@@ -4,7 +4,7 @@ ARTIFACT: skills/3-weekly/weekly-planner/scripts/planner_core.py
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 3
-STATUS: Changes Requested
+STATUS: Approved
 NEXT: claude
 
 ---
@@ -113,3 +113,64 @@ Output: `{56: {'unresolved_count': 0, 'truncated': False}} [{'source': 'PR revie
 Please verify the fixes for `[P1]` (`_extract_active_claim_refs` + fenced Section 6 active-claims block) and `[P2]` (`fetch_pr_review_threads` GraphQL errors/null-node validation), plus the updated `TESTS-RESULTS/2026-11-13+GH-1459/`.
 
 *(Important formatting note for `bin/validate-relay-block`: please include a `### Verdict` heading followed by exact lines `VERDICT: PASS` (or `VERDICT: FAIL`) and `Basis: <one-line summary>` in your review block, and set header `STATUS: Approved` and `NEXT: claude` if approved.)*
+
+
+## Round 2 — Reviewer (codex)
+
+The ledger engine combines repository activity and checkout observations into a daily report, with an optional authenticated comment for coordination and carryover. Its riskiest assumption is that an operator-owned claim can be distinguished from contextual references; the new explicit claim block addresses the aggregate-report contamination found in Round 1.
+
+### Verdict
+VERDICT: PASS
+Basis: Both Round 1 defects are resolved in the inspected code and independent in-memory probes; all seven evidence artifacts match their recorded hashes and sizes.
+
+### Findings and answers
+
+- **[Pass] P1:** `_extract_active_claim_refs` reads the explicit active-claims block emitted by `format_daily_ledger_markdown`, and rejects an unfenced aggregate digest. A verified Alice publication retained only Alice's GH-123 and PR #56, excluding Bob's GH-999 and the GH-1459 ledger link. The claim-set construction was inspected separately from the formatter/parser round trip.
+- **[Pass] P2:** `fetch_pr_review_threads` reports failed coverage and returns no verified results for GraphQL errors, a null pull request, or null reviewThreads. A valid empty node list still reports successful coverage with zero unresolved threads.
+- **[Pass] Evidence integrity:** 7/7 nonempty artifacts match both byte lengths and SHA-256 values in `provenance.jsonl`. The updated smoke output records 35 passing controls. Hash verification establishes integrity, not independent execution of every recorded control.
+- **Verification boundary:** Weekly/daily regression suites, pytest, full gate, and live publishing were not rerun in this reviewer worktree: **[Unverified — needs clone run]**. Approval covers this final QA re-review and resolves the prior findings; the harness must supply its post-turn gate before merge readiness is claimed. No further P0/P1 defect was established in this bounded re-review.
+
+### Independent probe receipt
+
+Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with the following in-memory probe body (no subprocess calls from the imported engine):
+
+```python
+import importlib.util, json, hashlib, re
+from pathlib import Path
+spec = importlib.util.spec_from_file_location('planner', 'skills/3-weekly/weekly-planner/scripts/planner_core.py')
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+d = {'date':'2026-11-13', 'operator':'alice', 'device':'mac', 'repo_mode':'gh-only',
+     'today_ledger':{'number':1459, 'url':'https://example.test/1459', 'title':'Daily Work Ledger'},
+     'already_checked_out':[{'ref':'GH-999', 'owner':'bob'}],
+     'operator_claim_issues':[123], 'operator_claim_prs':[56]}
+body = '<!-- daily-ledger:alice:mac:2026-11-13 started:2026-11-13T09:00:00Z -->\n' + m.format_daily_ledger_markdown(d, for_comment=True)
+p = m.parse_ledger_comment({'id':1, 'body':body, 'user':{'login':'alice'}}, '2026-11-13', False, set(), [])
+assert p['verified'] and p['issue_numbers'] == [123] and p['pr_numbers'] == [56]  [Unverified — no citation]
+legacy = re.sub(r'<!-- daily-ledger-active-claims:start -->.*?<!-- daily-ledger-active-claims:end -->', '', body, flags=re.S)
+assert m._extract_active_claim_refs(legacy) == ([], [])
+for payload, expected in [
+    ({'data':{'repository':{'pr_56':None}}, 'errors':[{'message':'unavailable'}]}, 'failed'),
+    ({'data':{'repository':{'pr_56':None}}}, 'failed'),
+    ({'data':{'repository':{'pr_56':{'reviewThreads':None}}}}, 'failed'),
+    ({'data':{'repository':{'pr_56':{'reviewThreads':{'nodes':[], 'pageInfo':{'hasNextPage':False}}}}}}, 'ok')]:
+    m.run_cmd = lambda *a, **k: json.dumps(payload)
+    cov = []; result = m.fetch_pr_review_threads(Path('.'), 'org/repo', [56], cov)
+    assert cov[-1]['status'] == expected
+    if expected == 'failed': assert result == {}
+for line in Path('TESTS-RESULTS/2026-11-13+GH-1459/provenance.jsonl').read_text().splitlines():
+    row = json.loads(line); b = Path(row['path']).read_bytes()
+    assert b and len(b) == row['bytes'] and hashlib.sha256(b).hexdigest() == row['sha256']
+# PY
+```
+
+Exit status: **0**. Decisive output from the executed probe (which additionally printed assertion results):
+
+```text
+round-trip: verified alice issues=[123] prs=[56]; contextual 999 and 1459 excluded  [Unverified — no citation]
+unfenced aggregate: zero claims
+errors: failed {}
+null-pr: failed {}
+null-threads: failed {}
+empty-valid: ok {"56": {"unresolved_count": 0, "truncated": false}}
+provenance: 7/7 nonempty artifacts match bytes and SHA-256
+```
