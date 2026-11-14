@@ -174,3 +174,12 @@ null-threads: failed {}
 empty-valid: ok {"56": {"unresolved_count": 0, "truncated": false}}
 provenance: 7/7 nonempty artifacts match bytes and SHA-256
 ```
+
+### Attestation · relay-drive — 2026-11-14T02:04:09Z
+task: gh1459-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9573f909bd74619ff18720cac42e07942dbfe0ae
+added-range: 12591+4566
+added-sha256: c4adac06e88d889340c2b10d8908c3becf33c0cbfe077bebc9572324a3525d40
+gate-run: undeclared
