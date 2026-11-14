@@ -12,7 +12,7 @@ description: >-
 
 Captures new ideas, features, refactors, and architectural spikes directly into a well-structured GitHub issue with zero on-disk footprint. It anchors the proposal in operator intent, traces relevant code seams with medium recon, validates the sketch across models using the Elephant-Goldfish Model (EGM) paraphrase-first comprehension lens, and publishes cleanly via `gh issue create`.
 
-Writers this skill calls, and nothing else: `gh issue create` (the issue) and `gh issue comment` (the consult dispositions record). It writes no files to disk, creates no ledger rows, touches no HQ tools, writes no tests, and never commits.
+Writers this skill calls, and nothing else: `gh issue create` (the issue) and `gh issue comment` (the consult dispositions record). While filing, it writes no files to disk, creates no ledger rows, touches no HQ tools, writes no test code, and never commits. The issue's own verification plan follows the target repo's test policy.
 
 ## Usage
 
