@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -203,5 +203,19 @@ Handing off to Producer (claude-a) — disposition R2-1/R2-2, correct R2-3 if ac
 - **[Nit] Rating:** `55/30/50/40` unchanged.
 
 Handing off to Reviewer (codex) for round 3 — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 3 · codex
+
+swept file: yes
+VERDICT: PASS
+Basis: ready for the declared disposable-clone gate and subsequent PR workflow. The round-two whole-file sweep remains the review baseline; this turn inspected the producer's fixes and their consumers/evidence. R2-1, R2-2 and R2-3 are resolved. No additional pre-existing defect was established. Approval does not certify the outstanding full gate.
+
+- [Pass] **R2-1 resolved.** `utils/hq/hq-lib.sh:138–145` keeps the chosen ledger registry location in `XYZ_REG_PATH` while withholding `XYZ_PATH`; `:266–269` uses that location before filesystem search. Dispatch consumers still test `XYZ_PATH` (`utils/hq/hq.sh:248`, `:531`, `:605`, `:647`). Narrow scratch-only probe: create one ledger registry row outside an empty search root, then run `HQ_XYZ_REGISTRY="$P/registry.tsv" HQ_SEARCH_ROOTS="$P/search" HQ_PDDA_REGISTRY_DIR="$P/pdda" HQ_REBALANCE_DB="$P/absent.db" bash -c 'source utils/hq/hq-lib.sh; hq_resolve ledger-host; printf "resolver_rc=%s\n" "$?"'`. Exit 0; decisive output: `XYZ_TIER=ledger`, nonempty `XYZ_REG_PATH` and `REPO_PATH`, `REPO_PATH_SOURCE=xyz-registry`, `resolver_rc=0`, no `XYZ_PATH=`. Retained `logs/R2-1-candidate.log` additionally observes Tier B, `fire_rc=1`, Tier 2 Tier A, collision rc=2 and duplicate rc=0; `R2-1-red-prior.log` records the original unresolved rc=1.
+- [Pass] **R2-2 resolved through reuse.** `utils/py/wave_reconcile.py:2436` now uses `reconciler_git_dir` (`:1132–1140`), matching the existing sweep lock. Read-only AST-extracted helper probe with `python3 -B -` asserted this checkout's .git is a file and the resolved common gitdir is a directory; exit 0, output `linked_gitdir_is_directory= True`, `normal_main_uses_helper= True`. No lock was acquired or Git command invoked here. Retained `logs/R2-2-candidate.log` records linked-worktree `wt_rc=0` and full-clone `full_rc=0`; `R2-2-red-prior.log` records the same linked-root scenario failing with Errno 20 and `wt_rc=8`.
+- [Pass] **R2-3 resolved.** `UPGRADE.md:560–563` now says no relay/agent shims and explicitly retains the planner's existing `XYZ_PYTHON` selection.
+- [Pass] **Retained receipt integrity.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 -B -`, parsing every provenance JSON row, asserting each named log nonempty, and comparing SHA-256. Exit 0; decisive output `receipt_logs_checked= 46 hash_mismatches=0`. This checks retained bytes, not independent reruns. `bash -n utils/hq/hq-lib.sh` also exited 0.
+- [Unverified — needs clone run] The full classified `bash ci-local.sh` gate remains outstanding by the Setup contract. The 28 focused suites and broader candidate/base executions are producer evidence. No suite, executable fixture, pytest or Git command ran in this turn; exact diff inventory was not independently regenerated under the Git prohibition. Earlier acceptance conclusions and the unchanged 55/30/50/40 rating stand.
+
+Relay closed (Approved), no further turn needed. Producer/harness acts next: run the declared full gate in its disposable clone before claiming gate qualification or PR readiness.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
