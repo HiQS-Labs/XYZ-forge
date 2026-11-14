@@ -21,7 +21,9 @@ CPU cap stays on `marathon_drive.py`'s `run_pre_advance_gate`.
 
 ## Full gate (pre-push, disposable `-verify` full clone)
 
-- Prior commit `4f3569a55` passed full `validate.sh` (`408 / 408`, Python layer `21 passed`, `621s`,
-  `full-gate-py312.log`).
-- Re-verification on `4ddc947e8`: pending full `validate.sh` run before push.
+- Re-verified on `fc673b1e6` (code at `4ddc947e8`, unchanged): `validate.sh --burst` with `uv` Python
+  3.12.14 (`pytest`, `requests`, `pyyaml`) passed **`408 / 408`**, Python layer **`21 passed in
+  9.84s`**, `clone-identity-invariant` + `gamma-poison-staleness-probe` green, clone identity
+  unchanged (`full-gate-py312.log`).
+- Prior commit `4f3569a55` also passed full `validate.sh` (`408 / 408`, `21 passed`, `621s`).
 - A local run is self-reported and is not promotion qualification (AGENTS.md, GH-509).
