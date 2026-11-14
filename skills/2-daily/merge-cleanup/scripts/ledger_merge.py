@@ -911,7 +911,7 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
                                     f"({counts}); the conflicts are spread across the queue, not held by a few hubs")
         else:
             rec, passes = "direct", [list(hubs["clean_set"]), list(hubs["later"])]
-            reason = f"in passes: {counts} and fold clean in sequence; land those first, then the hub(s)"
+            reason = f"{counts} and fold clean in sequence; land those first, then the hub(s)"
     elif conflicted_nums:
         rec, reason = "direct", f"{len(conflicted_nums)} conflict(s) ({fmt(conflicted_nums)}), all on potentially B1-eligible paths"
     else:

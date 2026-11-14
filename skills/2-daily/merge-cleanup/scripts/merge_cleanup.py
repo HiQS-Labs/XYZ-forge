@@ -2237,7 +2237,8 @@ def main():
                 print("Guidance: See skills/2-daily/merge-cleanup/SKILL.md (GH-1066 section).\n")
                 stored = (_read_selection(primary_repo, args.integration_branch) or {}).get("forecast")
                 if isinstance(stored, dict):  # GH-1452: advice from the dry run; the decision stays yours
-                    print(f"The dry run's landing forecast recommends: {stored.get('recommendation') or 'none'} — {stored.get('reason', '')}")
+                    print(f"The dry run's landing forecast recommends: {stored.get('recommendation') or 'none'}"
+                          f"{' in passes' if stored.get('passes') else ''} — {stored.get('reason', '')}")
                     for i, members in enumerate(stored.get("passes") or [], 1):  # GH-1470
                         print(f"  pass {i}: --prs {','.join(str(n) for n in members)}")
                     print()
