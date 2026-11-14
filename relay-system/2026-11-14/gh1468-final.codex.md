@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -107,5 +107,43 @@ were not exercised interactively; the `honest` body still uses "Baseline" as its
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+VERDICT: PASS
+Basis: Ship within the stated local, single-user envelope. No Blocker or Should findings; no pre-existing correctness defect found in the swept artifacts. Approval does not attest merge/deployment or the subsequent harness gate.
+swept file: yes
+
+- [Pass] **1 — Validator.** Swept the complete builder and template. Required text, list bounds/types, grade/type enums, ref/settle requirements, evidence-backed asks and question punctuation are enforced in skills/3-weekly/baseline/scripts/build_deck.py:30-141; main maps errors to exit 2 at :200-205. Exactly one terminal question mark is enforced; semantic yes/no wording remains prose-only. No accepted wrong-type, missing optional object or empty-list case found that breaks rendering. Optional quotes/not_saying/parked omission is handled by template guards.
+- [Pass] **2 — Injection.** build_deck.py:144-159 escapes every less-than sign in JSON, HTML-escapes the title and substitutes markers in one pass. Template el() creates text nodes; link() only accepts an anchored http/https prefix (assets/deck-template.html:181-197). In-memory serialization of a closing-script/script payload, HTML comment and both literal markers round-tripped exactly; output was `serialization True raw < in payload False script elements 2`. No spec-driven markup/script/non-http-link injection found.
+- [Pass] **3 — Rules and receipts.** Facts precede each item's ask structurally (deck-template.html:270-304); heard/facts/ask each receive one question block. Waiting for an answer remains presenter-enforced, accurately disclosed in SKILL Step 5. Completion includes heard and both answers per item (:347-380). Smoke a-h and j agree with inspected code and narrow probes; i agrees with the counting code, but its historical browser execution was not independently repeated. The receipt covers the acceptance cases rather than every validator branch; probes below checked additional branches. provenance.jsonl retains the manual-check summary.
+- [Pass] **4 — Skill accuracy.** SKILL.md:52-59 creates a root-relative ignored output directory through local info/exclude; shell inspected, not executed because this turn forbids Git. Local gh issue/pr view help lists every JSON field used at SKILL.md:67-70, including comments/reviews/files/mergedAt. Builder commands match argparse (build_deck.py:184-189). Ask/grade/schema/slide tables agree with code, including decide. All four relative links resolve. Commands containing placeholders need normal model substitution.
+- [Pass] **5 — Template.** Swept slide construction, storage, answer toggling, notes, reset, completion, Markdown, navigation and print CSS. Content-derived id changes with the spec (build_deck.py:146-149), preventing positional answers from carrying into changed items. Markdown table cells escape pipes and flatten newlines (deck-template.html:346-368). Keyboard handlers exclude text inputs/modifiers and navigation clamps bounds (:394-419). Print CSS exposes all slides with page-break requests (:130-139); exact pagination for every near-cap input is not proven. No concrete failing normal input/key sequence found. Interactive clipboard and cross-reload localStorage remain unverified, as disclosed.
+- [Pass] **6 — Scope.** Standard-library builder plus static DOM template is proportionate; no new suite/gate/runner was introduced. honest/SKILL.md frontmatter now uses “repo baseline” and its sibling list says “honest”; ARCHITECTURE.md:112 indexes the new skill separately. The disclosed historical Baseline heading/frontmatter terminology does not reintroduce the bare trigger.
+- [Pass] **7 — Public content.** Swept example-spec.json, skill text, builder, template, capture and receipts: the example repo is “example/widgets”, participants are roles, and no added private project/person/repository/channel identity was found. ARCHITECTURE.md:112 is only a public skill pointer.
+- [Nit] TESTS-RESULTS/2026-11-14+GH-1468/smoke.md says “Two controls that must be accepted” above e-j (six rows). Optional fix: “Acceptance and behavior controls”. Results themselves are consistent.
+
+Narrow probe receipt: exported PYTHONDONTWRITEBYTECODE=1 and TMPDIR=$PWD/.relay-scratch/tmp. Command: `python3 -` with inline Python importing the builder via `runpy.run_path('skills/3-weekly/baseline/scripts/build_deck.py')`, loading example-spec.json, deep-copying it per mutation and printing validate(spec). Process exit 0. Decisive output:
+
+```text
+base validation []
+missing title ['spec.title: required']
+bad grade ['items[0].evidence[0].grade: one of confirmed, partly, not-found, unverified']
+bad ask ['items[0].ask.type: one of change, carve-out, fix, explain, measure, keep, decide']
+two questions ["items[0].question: exactly one question, ending in '?'"]
+over cap ['items[0].event: 400 characters, the slide holds 320']
+checked no ref ['items[0].evidence[0].ref: required']
+unverified no settle ['items[1].evidence[1].settle: required']
+unsupported fix ["items[0].ask.type: 'fix' needs at least one confirmed or partly-confirmed claim; use measure, explain, keep or decide"]
+minimal optional []
+empty items ['spec.items: 0 entries, expected 1 to 7']
+wrong rule ['items[0].rule.text: required']
+null quotes ['heard.quotes: must be a list']
+serialization True raw < in payload False script elements 2
+id change c474c38a84d4 4407abf6b2ea True
+```
+
+Concrete mutations: remove title; set grade/type to wrong; question to First? Second?; event to 400 x characters; remove the first confirmed ref; remove item 1's unverified settle; replace item 0 evidence with claim=x/grade=unverified/settle=count and ask=fix; omit quotes/not_saying/parked; items=[]; rule=[]; quotes=null. Serialization probe set title and summary to `</script><script>alert(1)</script><!-- __DECK_DATA__ __DECK_TITLE__`, called render(), extracted deck-data and JSON-decoded it. Id probe appended ! to item 0 ask text. Relative-link Path.exists checks all returned True. These were function-return checks: CLI exit-2 mapping was inspected, not executed. `gh issue view --help` and `gh pr view --help` exited 0 and listed the required fields. No Git, suites, fixtures or full gate were run here; no artifact was edited.
+
+Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
