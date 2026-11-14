@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -90,5 +90,45 @@ Write graded findings with `file:line`. Set STATUS to Approved if the plan is re
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes** (written after reading only the plan doc): Add a persistent `--ledger-only` tier to the existing vendor, shipping the ledger, reconcile, PDDA and their planner/view dependencies. Keep the tier across sync, exclude it from HQ driven-lane eligibility, and refuse Jog execution cleanly.
+
+**How the existing system works, per this document:** The vendor mirrors a full harness and uses a deny-list for Tier 1; a root releases.db auto-selects Tier 2. Sync re-invokes the vendor without flags. Existing harness-tool resolution provides host-first lookup, while vendored PDDA currently derives the wrong host root.
+
+**What it's not:** Excluded: packaging, write-timing changes, host adoption/removal, registry schema changes, new suites and Tier 1/2 content changes (Non-goals). Deferred: packaging to #1224. Unresolved: whether the proposed reduced closure check and file count satisfy the issue's stronger acceptance contract; this requires an explicit disposition, not an inferred waiver.
+
+swept file: yes
+
+**source-backed — VERDICT: FAIL**
+
+**Basis:** The overall design reuses existing writers and seams, but verification and acceptance gaps below need a plan revision before implementation. This is a full sweep of the plan, including its recon, risks, rating and acceptance map; source inspection found the pre-existing vendored `releases-current` gap noted below. No code or suites were executed. Runtime claims requiring fixtures remain **[Unverified — needs clone run]**.
+
+- [Pass] Sticky tier selection is at the right boundary: `xyz-sync.sh:296` invokes the vendor without flags, and `xyz-vendor.sh:66-72` auto-promotes on releases.db. Implement plan step 1 before that branch, moving/initializing VENDOR_DIR before reading it (currently assigned at `xyz-vendor.sh:74`). Both single-target and `--all` updates share this invocation. Explicit upgrades/downgrades must override the persisted tier as specified.
+- [Pass] HQ filtering belongs before row deduplication in `utils/hq/hq-lib.sh:75-98`; all five callers then inherit it. `xyz-vendor.sh:196-199` reads the harness schema version, so retaining tick/source drift checks while skipping only the ledger relay-guard probe (`xyz-sync.sh:433-440`) is appropriate. No second registry writer/schema is needed.
+- [Pass] The manifest includes the identified default Python import chain (`_marathon_plan.py:33-35`, `work_connectors/__init__.py:35,95`, `work_connectors/github_board.py:58`), planner zones and timeline directory. PDDA root handling preserves explicit overrides and canonical layout; the wave fallback uses the existing resolver (`harness_paths.py:92-130`). These are static design assessments, not a successful offline run.
+
+- [Should] **Make M10/M11 branch-complete and reconcile the closure-check promise.** Plan lines 94-96 call the import smoke “the closure guard,” but it cannot detect missing shell scripts, lazy imports or the HTML template. Issue #1466 explicitly requested those paths, while the plan describes the gap as only future drift. M10 does not explicitly seed enabled projections/adopted views or assert their changed outputs; M11 does not seed adopted views at all. Thus the optional downstream branches can be skipped while these checks appear green.
+  Observed input: `wave_reconcile.py:2028-2045` skips exports when projections=off or adopted files are absent; `utils/releases-merge-resolve.sh:195-224` exports only entries in REGEN; `utils/timeline/export_timeline.py:521,570` reads RELEASES.html only during export. None is exercised by importing the five smoke modules.
+  Affected scope: the ledger installation's promised non-dry-run reconcile and merge-resolution closure, specifically adopted views, planner and PDDA subprocesses.
+  Falsifier: in a disposable full clone, remove the staged timeline template or planner shell entry point after a successful import smoke; the relevant offline operation must fail. The intact install must exit 0, regenerate adopted preview/leaderboard outputs from changed ledger data, execute the planner and use vendored PDDA with host copies absent.
+  Fix: retain the cheap import sanity check, explicitly label its limited coverage, and specify those seeded fixtures/output assertions and manual deletion controls under existing TESTS-RESULTS evidence. Explicitly disposition the issue's stronger automated-closure request under GH-831; do not add a suite or new guard framework.
+
+- [Should] **Give M4–M9 discriminating controls and failure assertions.** M4's “broken doc” is unspecified and the default PDDA mode reports errors with exit 0; M5's base cannot create a ledger install itself; M7/M8 may trivially pass with an empty/unselected registry. M9 covers only one of three guarded entry points. M6's conflict alone already exits 2 today as an unknown flag.
+  Observed input: plan lines 116-121; `pdda-lib.sh:40-58` defaults to observe and gates errors to zero; `xyz-sync.sh:420-421` returns early on no selection; `hq-lib.sh:70` returns on missing registry; `xyz-vendor.sh:43-45` rejects unknown flags with exit 2.
+  Affected scope: proof of the changed tier-persistence, relay-guard exemption, HQ filtering, PDDA host root and Jog refusal decisions.
+  Falsifier: replay each consumer against the same preseeded ledger VERSION/registry host with only its relevant fix absent; expect base guard warning, base Tier A eligibility, base tier=2 update, missing host-doc detection or Jog traceback respectively. Intact candidate must reverse those observations. Valid Tier 1/2 rows must retain guard/drift enforcement.
+  Fix: specify exact invalid host frontmatter and `PDDA_MODE=full` for M4; seed the same ledger install for base M5; require a selected matching registry row and inspect expected HQ refusal reason, not merely nonzero; exercise run/verb-dispatch/land refusal; assert M6 upgrade inventory and distinguish flag conflict from unknown-option failure. Keep M1/M2/M3 inventory/missing-source/import failures; these already describe meaningful rejection points. M10/M11 need the controls above. Smoke/regression checks need not each fail on the whole old implementation, but every changed decision needs an isolated red control.
+
+- [Should] **Account for the pre-existing PDDA releases-current host-only lookup.** The plan says PDDA's closure uses sibling paths, but `pdda.sh:976-978` still requires the writer at the host root. Correcting PDDA_REPO_ROOT alone leaves this shipped ledger command reporting no ledger when releases.db exists only at the host and the CLI exists only in .xyz.
+  Observed input: host `releases.db` present, host `utils/py/releases_app.py` and RELEASES.md absent, vendored writer present; `pdda.sh:976-984` bypasses the DB branch and prints “RELEASES.md not found.” Static source observation; not a runtime reproduction.
+  Affected scope: `pdda.sh releases-current` in vendored installs with a DB-only ledger; ordinary deterministic checks need not change.
+  Falsifier: execute that layout with an active release in a disposable clone; expect that release listed. A host-owned writer and a canonical checkout must still behave as before.
+  Fix: include a small sibling/host-aware lookup using an existing resolution convention, or explicitly exclude/disposition this command with the producer's rationale. Do not claim the full PDDA surface works offline without addressing it.
+
+- [Nit] Explicitly disposition issue inventory/docs deltas: the three recursive directory payloads alone contain 29 files, before 14 individually listed Python files and remaining entries. M1 records count but never checks the issue's “at most ~30 files”; the plan also drops the issue's UPGRADE.md note. Keeping dependency closure may justify a larger count, but name that accepted tradeoff rather than mapping M1 to full issue acceptance. Read-only probe: `python3` with `Path(d).rglob('*')` over utils/pdda, utils/timeline and utils/py/work_connectors, excluding pycache/pyc, exited 0: `recursive directory payload files: 29`; parsing the manifest's Python backtick names yielded `manifest explicitly enumerated Python files: 14`.
+
+Handing off to Producer (claude-a) — revise/disposition these findings and take the next turn. Only this relay file changed; no git commands, fixtures, tests or gates were run.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
