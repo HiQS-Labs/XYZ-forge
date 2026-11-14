@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import html
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -127,7 +128,7 @@ def validate(spec):
         elif ask["type"] in EVIDENCE_BACKED_ASKS and not held_up:
             errors.append(
                 "%s.ask.type: '%s' needs at least one confirmed or partly-confirmed claim; "
-                "use measure, explain or keep" % (path, ask["type"])
+                "use measure, explain, keep or decide" % (path, ask["type"])
             )
         text(item, "owner", path, 60)
         question = text(item, "question", path, 160)
@@ -142,16 +143,19 @@ def validate(spec):
 
 def render(spec):
     spec = dict(spec)
-    seed = "%s|%s" % (spec["title"], spec["date"])
+    # Saved answers are keyed by item position, so the id changes when the item list does.
+    seed = "|".join([spec["title"], spec["date"]] + [item["title"] for item in spec["items"]])
     spec["id"] = hashlib.sha1(seed.encode("utf-8")).hexdigest()[:12]
-    # "</" and "<!--" must not appear raw inside a <script> element.
-    payload = json.dumps(spec, ensure_ascii=False).replace("</", "<\\/").replace("<!--", "<\\!--")
+    # No raw "<" inside the <script> element: "</script" and "<!--" would end or derail it.
+    # \u003c is a valid JSON escape, so the text parses back unchanged.
+    payload = json.dumps(spec, ensure_ascii=False).replace("<", "\\u003c")
     template = TEMPLATE.read_text(encoding="utf-8")
     for marker in ("__DECK_TITLE__", "__DECK_DATA__"):
         if template.count(marker) != 1:
             raise ValueError("template %s must contain %s exactly once" % (TEMPLATE, marker))
-    page = template.replace("__DECK_TITLE__", html.escape("Baseline: " + spec["title"]))
-    return page.replace("__DECK_DATA__", payload)
+    # One pass, so a title or a quote that happens to contain a marker is left as text.
+    values = {"__DECK_TITLE__": html.escape("Baseline: " + spec["title"]), "__DECK_DATA__": payload}
+    return re.sub("__DECK_(?:TITLE|DATA)__", lambda match: values[match.group(0)], template)
 
 
 def warn_if_tracked(out):

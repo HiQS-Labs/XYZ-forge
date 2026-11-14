@@ -149,8 +149,8 @@ Each item is one chain. Write every link in plain words.
 6. **Who decides.** A role, not a committee.
 7. **Question.** One yes-or-no question the room can answer on that slide.
 
-An item whose claims are all `not-found` or `unverified` may only ask `measure`, `explain` or
-`keep`. The builder refuses a `change`, `carve-out` or `fix` that no checked claim supports.
+An item whose claims are all `not-found` or `unverified` may only ask `measure`, `explain`,
+`keep` or `decide`. The builder refuses a `change`, `carve-out` or `fix` that no checked claim supports.
 
 Also write the **heard** slide: a neutral summary of the whole concern, up to three exact
 quotes, and up to three lines of what the thread is *not* saying. That last list stops the room
@@ -204,7 +204,9 @@ The deck is one HTML file with no network calls and no dependencies:
 | The baseline | every answer in one table, plus the outcome as Markdown | none |
 
 Answers and notes are kept in the browser on the presenter's machine. Arrow keys move between
-slides, and printing gives one slide per page.
+slides, and printing gives one slide per page. The deck does not block moving on without an
+answer; the presenter holds that rule, and the last slide counts what is still open. Rebuilding
+with a different item list starts the answers fresh.
 
 ## Step 6 — Hand off
 

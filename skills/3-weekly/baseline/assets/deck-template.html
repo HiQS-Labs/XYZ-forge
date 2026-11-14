@@ -345,7 +345,7 @@ td.open { color: var(--muted); font-style: italic; }
     function answer(key) { var s = state[key] || {}; return { choice: s.choice || '', note: (s.note || '').trim() }; }
     function cell(text) { return String(text || '').replace(/\|/g, '\\|').replace(/\s*\n\s*/g, ' '); }
     function refresh() {
-      var md = [], open = 0, heard = answer('heard');
+      var md = [], heard = answer('heard'), open = heard.choice ? 0 : 1;
       var table = el('table', null, el('thead', null, el('tr', null,
         el('th', null, '#'), el('th', null, 'Item'), el('th', null, 'Facts'), el('th', null, 'Ask'),
         el('th', null, 'Decision'), el('th', null, 'Decides'), el('th', null, 'Notes'))));
@@ -376,7 +376,7 @@ td.open { color: var(--muted); font-style: italic; }
       }
       body.textContent = '';
       body.appendChild(el('p', { 'class': 'lede' }, open
-        ? open + ' of ' + (data.items.length * 2) + ' questions still open.'
+        ? open + ' of ' + (data.items.length * 2 + 1) + ' questions still open.'
         : 'Every question has an answer. This is the baseline.'));
       body.appendChild(el('div', { 'class': 'table-wrap' }, table));
       out.value = md.join('\n');

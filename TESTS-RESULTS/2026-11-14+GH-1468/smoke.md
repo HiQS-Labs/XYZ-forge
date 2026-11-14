@@ -30,18 +30,22 @@ Two controls that must be accepted:
 
 | Case | Mutation | Observed | Verdict |
 |---|---|---|---|
-| e | summary set to `</script><script>alert(1)</script>` | exit 0; the raw string occurs 0 times in the output and the escaped form `<\/script>` once | PASS |
+| e | summary set to `</script><script>alert(1)</script>` | exit 0; the raw string occurs 0 times in the output, `<` escapes as `\u003c`, and `json.loads` parses the exact original string | PASS |
 | f | case b with the ask type changed to `decide` | exit 0: `spec ok` (a ruling request does not need a confirmed claim) | PASS |
+| g | title and summary both contain the literal template markers `__DECK_DATA__` and `__DECK_TITLE__` | exit 0; the markers stay as text in `<title>` and in the data, the data block parses, and the page has 2 `<script` tags | PASS |
+| h | `heard.summary` set to `<!-- quoted comment -->` | exit 0; raw `<!--` occurs 0 times inside `#deck-data`; `json.loads` and headless Chrome DOM round-trip `<!-- quoted comment -->` | PASS |
+| i | headless Chrome DOM click probe on built `example.html` (all 6 item answers set, `heard` unset, then `heard` set) | `7 of 7 questions still open.` initially; `1 of 7 questions still open.` after item answers only; `Every question has an answer. This is the baseline.` after `heard` | PASS |
 
 ## Rendering
 
 Checked from headless Chrome screenshots at 1280x800, 1280x720 and 1440x900, light and dark, and
-from a DOM dump of the last slide (10 slides, 1 active, 7 question blocks, 3 summary rows).
+from headless Chrome `--dump-dom` probes of slide construction, completion counting, comment round-trip,
+and `#next` navigation (`10` slides, `1` active, `7` question blocks, `3` summary rows).
 
 ## Not verified
 
-- Clicking the answer buttons, the saved notes and the Markdown copy button in a live browser.
+- Clipboard copy button (`navigator.clipboard` / `execCommand`) and `localStorage` persistence across page reloads under an interactive browser session (`file://` headless probe exercised in-memory clicks).
 - The skill run by a model other than the author's session.
-- No independent review has run on this change.
+- Independent Codex review: driven via `relay-xyz` in `relay-system/2026-11-14/gh1468-final.codex.md` on this branch.
 
 Clone identity (`HEAD`, `core.bare`, `origin`) was the same before and after the runs.

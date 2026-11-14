@@ -11,7 +11,7 @@ The deliverable is a single Markdown file with two firewalled halves: a **plain-
 
 ## How this differs from the sibling skills
 
-- **baseline** (orientation) — "Where does this project actually stand, in ground truth?" Run once on entering or re-entering a repo, or before describing status externally.
+- **honest** (orientation) — "Where does this project actually stand, in ground truth?" Run once on entering or re-entering a repo, or before describing status externally.
 - **snapshot** (session re-entry) — "Where was I when I stopped?" Saves one working session so you can resume it.
 - **take-a-step-back / blast-radius / bottom-line** (decision moments) — challenge, size, or compress a specific choice.
 
