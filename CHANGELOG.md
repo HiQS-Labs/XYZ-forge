@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-14 — GH-1465: relay-drive runs the reviewer gate itself; an earlier finding stays open
+
+In a host relay run (BinoidCBD/LTVera-Pandas#981) AI reviews turned a FAIL with open findings into a PASS with no new evidence, and approved without running anything. Two operator rulings close the two gaps. The reviewer protocol (`relay-automation/new-relay.sh`, the marathon brief's step 4c and the relay and relay-xyz skills) now carries, next to the `[Blocker]` rule: "A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it." And when `MARATHON_REVIEWER_GATE_CMD` is set, `relay_drive.py` no longer trusts the reviewer's `gate run: yes` line (GH-1428): on an Approved it runs that command itself in the target checkout, through the existing `gate_env` scrub and `proc_group.run_bounded` (900-second cap), logs `driver-run gate … exit <rc>`, and binds `driver-gate: exit 0 — <cmd>` into the attestation. A non-zero exit refuses the approval: `unverified-approval` after a builder block that says anything is unverified, otherwise the new reason `gate-failed`. With no gate command configured nothing changes.
+
+Manual red control on the real GH-955 builder and reviewer blocks: the base attests a declared `yes — exit 0` over a gate that exits 1; the fix refuses it, also refuses when the builder declared nothing unverified, attests a green gate with no declaration, and leaves an unarmed relay as it was. Not exercised: the timeout path. In a marathon the focused gate now runs up to three times (reviewer, driver, pre-advance).
+Evidence: `TESTS-RESULTS/2026-11-14+GH-1465/`.
+
 ## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
 
 `ci-local.sh` failed its `shellcheck tracked scripts` step on `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` (SC2148, no shebang), the same class as `fuzz-loop.sh` in #121. Added `#!/usr/bin/env bash`; the repo's own scan over all 656 tracked `.sh` files now passes. The GH-1452 gate summary said hosted CI was green so the two disagreed; that was wrong (the hosted shellcheck steps are skipped on a docs-only route), and the note is corrected. Running shellcheck on changed scripts at pre-push is paused and documented in `PARKED/2026-11-13-pre-push-shellcheck.md`. Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.

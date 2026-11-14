@@ -1,0 +1,18 @@
+base-declared-yes-gate-red     rc=0 reason=-                   record=gate_run:yes,gate_exit:(absent),gate_cmd:(absent) trailer=- residue=
+fix-declared-yes-gate-red      rc=4 reason=unverified-approval record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `bash gate.sh 1` (cwd <scratch>/repo-fix-declared-yes-gate-red, reviewed a8f25f1e5c36) exit 1
+      | gate ran in repo-fix-declared-yes-gate-red RELAY_ROLE=scrubbed
+fix-clean-builder-gate-red     rc=4 reason=gate-failed         record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `bash gate.sh 1` (cwd <scratch>/repo-fix-clean-builder-gate-red, reviewed 56566d818270) exit 1
+      | gate ran in repo-fix-clean-builder-gate-red RELAY_ROLE=scrubbed
+fix-undeclared-gate-green      rc=0 reason=-                   record=gate_run:undeclared,gate_exit:0,gate_cmd:bash gate.sh 0 trailer=driver-gate: exit 0 — bash gate.sh 0 residue=
+    relay-drive: driver-run gate `bash gate.sh 0` (cwd <scratch>/repo-fix-undeclared-gate-green, reviewed c941a5db2d4f) exit 0
+    load: ok
+fix-gate-green-leaves-file     rc=0 reason=-                   record=gate_run:undeclared,gate_exit:0,gate_cmd:touch gate-residue.txt trailer=driver-gate: exit 0 — touch gate-residue.txt residue=?? gate-residue.txt 
+    relay-drive: driver-run gate `touch gate-residue.txt` (cwd <scratch>/repo-fix-gate-green-leaves-file, reviewed c941a5db2d4f) exit 0
+    load: ok
+fix-gate-not-runnable          rc=4 reason=unverified-approval record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `./no-such-gate` (cwd <scratch>/repo-fix-gate-not-runnable, reviewed c37101b97d54) exit 127
+      | /bin/bash: ./no-such-gate: No such file or directory
+fix-unarmed-generic            rc=0 reason=-                   record=gate_run:undeclared,gate_exit:(absent),gate_cmd:(absent) trailer=- residue=
+    load: ok

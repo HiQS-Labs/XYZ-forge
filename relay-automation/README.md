@@ -458,8 +458,13 @@ outbound network for that Codex turn, not only localhost, so set it only for lan
 it. Without it, a marathon whose explicit gate is a focused file/node command has the
 **reviewer** run that gate. Each review block declares `gate run: yes — exit <rc>` or
 `gate run: no — <why>`, and the declaration is bound into the attestation as `gate-run:`.
-relay-drive refuses an Approved after a builder block that says anything is unverified
-unless the declaration is `yes — exit 0` (escalation reason `unverified-approval`).
+On an Approved, relay-drive then runs that gate itself (GH-1465) in the target checkout and
+judges by its exit code, not by the declaration. It logs `driver-run gate … exit <rc>` and binds
+`driver-gate: exit 0 — <cmd>` into the attestation. A non-zero exit refuses the approval:
+escalation reason `unverified-approval` after a builder block that says anything is unverified,
+otherwise `gate-failed`. The switch is the `MARATHON_REVIEWER_GATE_CMD` environment variable,
+which marathon-drive sets from an explicit focused `--pre-advance-cmd`; a direct relay-drive run
+may export it. Unset, nothing runs. The run is capped at 900 seconds (exit 124).
 Full-suite gates (`validate.sh`, `test/*.sh`, defaults) stay harness-only.
 
 The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. The agy shim uses the same 900-second default `RELAY_TURN_TIMEOUT_S`, and passes that value through to `--print-timeout`. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); from the disposable full clone prepared in step 3, `AGY_BIN=~/.local/bin/agy bash ./test/agy-turn.sh` confirms the shim before a drive. Never run this suite in the maintained harness.
