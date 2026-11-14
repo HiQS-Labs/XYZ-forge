@@ -1,0 +1,541 @@
+{
+  "mode": "daily_ledger",
+  "date": "2026-11-13",
+  "timezone": "America/Los_Angeles",
+  "generated_at": "2026-11-14T01:49:35.797707+00:00",
+  "repo_slug": "HiQS-Labs/XYZ-forge",
+  "repo_mode": "gh-only",
+  "repo_mode_source": "auto (github + git fallback)",
+  "operator": "noelsaw1",
+  "authenticated_login": "noelsaw1",
+  "device": "studio-b",
+  "today_ledger": {
+    "number": 200,
+    "title": "Daily Work Ledger \u2014 2026-11-13",
+    "state": "OPEN",
+    "url": "https://example.com/issues/200",
+    "body": "",
+    "createdAt": "2026-11-13T08:00:00Z",
+    "author": {
+      "login": "bob"
+    },
+    "ledger_date": "2026-11-13"
+  },
+  "today_duplicates": [
+    200,
+    201
+  ],
+  "previous_ledger": {
+    "number": 100,
+    "title": "Daily Work Ledger \u2014 2026-11-12",
+    "state": "CLOSED",
+    "url": "https://example.com/issues/100",
+    "body": "",
+    "createdAt": "2026-11-12T07:55:00Z",
+    "author": {
+      "login": "noelsaw1"
+    },
+    "ledger_date": "2026-11-12"
+  },
+  "previous_duplicates": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199
+  ],
+  "earliest_starter": {
+    "operator": "bob",
+    "device": "bob-studio",
+    "started": "2026-11-13T08:00:00Z",
+    "comment_id": 6002,
+    "issue_numbers": [
+      999,
+      102
+    ],
+    "pr_numbers": []
+  },
+  "already_checked_out": [
+    {
+      "kind": "issue",
+      "number": 999,
+      "ref": "GH-999",
+      "owner": "bob",
+      "device": "bob-studio",
+      "started": "2026-11-13T08:00:00Z",
+      "provenance": "verified-ledger-claim"
+    },
+    {
+      "kind": "issue",
+      "number": 102,
+      "ref": "GH-102",
+      "owner": "bob",
+      "device": "bob-studio",
+      "started": "2026-11-13T08:00:00Z",
+      "provenance": "verified-ledger-claim"
+    },
+    {
+      "kind": "issue",
+      "number": 102,
+      "ref": "GH-102",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-13T01:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 105,
+      "ref": "GH-105",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-13T02:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 995,
+      "ref": "GH-995",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-13T02:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 996,
+      "ref": "GH-996",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-13T02:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 999,
+      "ref": "GH-999",
+      "owner": "bob",
+      "device": "github",
+      "started": "2026-11-13T02:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 102,
+      "ref": "GH-102 (via PR #56)",
+      "owner": "noelsaw1",
+      "device": "github",
+      "started": "2026-11-13T03:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 999,
+      "ref": "GH-999 (via PR #58)",
+      "owner": "bob",
+      "device": "github",
+      "started": "2026-11-13T03:00:00",
+      "provenance": "github-label-or-pr"
+    },
+    {
+      "kind": "issue",
+      "number": 996,
+      "ref": "GH-996 (repo:feat/gh-996-clean)",
+      "owner": "noelsaw1",
+      "device": "studio-b",
+      "started": "2026-11-13",
+      "provenance": "local-device-only",
+      "local_kind": "branch"
+    },
+    {
+      "kind": "issue",
+      "number": 996,
+      "ref": "GH-996 (wt-gh996:feat/gh-996-clean)",
+      "owner": "noelsaw1",
+      "device": "studio-b",
+      "started": "2026-11-13",
+      "provenance": "local-device-only",
+      "local_kind": "worktree_branch"
+    },
+    {
+      "kind": "issue",
+      "number": 995,
+      "ref": "GH-995 (repo:tick:gh-995)",
+      "owner": "claude",
+      "device": "studio-b",
+      "started": "2026-11-14",
+      "provenance": "local-device-only",
+      "local_kind": "tick_claim"
+    }
+  ],
+  "collisions": [
+    {
+      "number": 102,
+      "ref": "GH-102",
+      "claimants": [
+        {
+          "kind": "issue",
+          "number": 102,
+          "ref": "GH-102",
+          "owner": "bob",
+          "device": "bob-studio",
+          "started": "2026-11-13T08:00:00Z",
+          "provenance": "verified-ledger-claim"
+        }
+      ]
+    },
+    {
+      "number": 995,
+      "ref": "GH-995",
+      "claimants": [
+        {
+          "kind": "issue",
+          "number": 995,
+          "ref": "GH-995 (repo:tick:gh-995)",
+          "owner": "claude",
+          "device": "studio-b",
+          "started": "2026-11-14",
+          "provenance": "local-device-only",
+          "local_kind": "tick_claim"
+        }
+      ]
+    },
+    {
+      "number": 996,
+      "ref": "GH-996",
+      "claimants": [
+        {
+          "kind": "issue",
+          "number": 996,
+          "ref": "GH-996 (repo:feat/gh-996-clean)",
+          "owner": "noelsaw1",
+          "device": "studio-b",
+          "started": "2026-11-13",
+          "provenance": "local-device-only",
+          "local_kind": "branch"
+        },
+        {
+          "kind": "issue",
+          "number": 996,
+          "ref": "GH-996 (wt-gh996:feat/gh-996-clean)",
+          "owner": "noelsaw1",
+          "device": "studio-b",
+          "started": "2026-11-13",
+          "provenance": "local-device-only",
+          "local_kind": "worktree_branch"
+        }
+      ]
+    }
+  ],
+  "carryover_open_issues": [
+    {
+      "number": 102,
+      "title": "Open carryover issue 102",
+      "url": "https://example.com/issues/102",
+      "from_device": "laptop-a",
+      "from_date": "2026-11-12"
+    }
+  ],
+  "carryover_open_prs": [
+    {
+      "number": 56,
+      "title": "Open carryover PR 56",
+      "url": "https://example.com/pull/56",
+      "from_device": "laptop-a",
+      "from_date": "2026-11-12"
+    }
+  ],
+  "completed_since_last_ledger": [
+    {
+      "kind": "issue",
+      "number": 101,
+      "from_device": "laptop-a",
+      "from_date": "2026-11-12",
+      "status": "closed"
+    },
+    {
+      "kind": "pr",
+      "number": 55,
+      "from_device": "laptop-a",
+      "from_date": "2026-11-12",
+      "status": "merged_or_closed"
+    }
+  ],
+  "unverified_carryover": [],
+  "assigned_open_issues": [
+    {
+      "number": 105,
+      "title": "Newly assigned issue 105",
+      "url": "https://example.com/issues/105",
+      "labels": [
+        "in progress"
+      ]
+    },
+    {
+      "number": 995,
+      "title": "Tick claimed issue 995",
+      "url": "https://example.com/issues/995",
+      "labels": []
+    },
+    {
+      "number": 996,
+      "title": "Clean worktree issue 996",
+      "url": "https://example.com/issues/996",
+      "labels": []
+    }
+  ],
+  "prs_awaiting_review": [
+    {
+      "number": 58,
+      "title": "Teammate PR 58 requesting review",
+      "url": "https://example.com/pull/58",
+      "author": "bob",
+      "requested_via": "user:noelsaw1",
+      "team_requests": []
+    }
+  ],
+  "prs_needing_remediation": [
+    {
+      "number": 56,
+      "title": "Open carryover PR 56",
+      "url": "https://example.com/pull/56",
+      "ci_status": "SUCCESS",
+      "review_decision": "REVIEW_REQUIRED",
+      "unresolved_threads": 1,
+      "reasons": [
+        "UNRESOLVED_THREADS(1)"
+      ]
+    }
+  ],
+  "local_checkout": [
+    {
+      "kind": "branch",
+      "ref": "repo:feat/gh-996-clean",
+      "path": "/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/repo",
+      "device": "studio-b",
+      "last_activity": "2026-11-13",
+      "issue_numbers": [
+        996
+      ],
+      "reason": "no upstream (never pushed)",
+      "next_action": "inspect; push or open PR"
+    },
+    {
+      "kind": "worktree",
+      "ref": "repo",
+      "path": "/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/repo",
+      "device": "studio-b",
+      "last_activity": "2026-11-14",
+      "issue_numbers": [],
+      "reason": "1 uncommitted change(s)",
+      "next_action": "commit or stash"
+    },
+    {
+      "kind": "worktree_branch",
+      "ref": "wt-gh996:feat/gh-996-clean",
+      "path": "/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/wt-gh996",
+      "checkout": "/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/repo",
+      "device": "studio-b",
+      "last_activity": "2026-11-13",
+      "issue_numbers": [
+        996
+      ],
+      "reason": "checked out worktree on feat/gh-996-clean",
+      "next_action": "active local checkout"
+    },
+    {
+      "kind": "tick_claim",
+      "ref": "repo:tick:gh-995",
+      "path": "/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/repo",
+      "checkout": "/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/repo",
+      "device": "studio-b",
+      "agent": "claude",
+      "last_activity": "2026-11-14",
+      "issue_numbers": [
+        995
+      ],
+      "reason": "tick claim by claude on gh-995",
+      "next_action": "active tick claim"
+    }
+  ],
+  "release_context": {
+    "target_release": null,
+    "manifest_summary": null
+  },
+  "warnings": [
+    "Multiple ledger issues found for 2026-11-13; canonical is #200 (min(number)), reading comments across duplicates (#201).",
+    "Multiple prior ledger issues found for 2026-11-12; canonical is #100 (min(number)), reading comments across duplicates (#101, #102, #103, #104, #105, #106, #107, #108, #109, #110, #111, #112, #113, #114, #115, #116, #117, #118, #119, #120, #121, #122, #123, #124, #125, #126, #127, #128, #129, #130, #131, #132, #133, #134, #135, #136, #137, #138, #139, #140, #141, #142, #143, #144, #145, #146, #147, #148, #149, #150, #151, #152, #153, #154, #155, #156, #157, #158, #159, #160, #161, #162, #163, #164, #165, #166, #167, #168, #169, #170, #171, #172, #173, #174, #175, #176, #177, #178, #179, #180, #181, #182, #183, #184, #185, #186, #187, #188, #189, #190, #191, #192, #193, #194, #195, #196, #197, #198, #199).",
+    "Rejected forged/unverified ledger marker for operator 'noelsaw1' authored by 'mallory' (comment #5002)",
+    "Rejected forged/unverified ledger marker for operator 'alice' authored by 'mallory' (comment #6001)"
+  ],
+  "coverage": [
+    {
+      "source": "repo slug",
+      "status": "ok",
+      "detail": "HiQS-Labs/XYZ-forge"
+    },
+    {
+      "source": "authenticated login",
+      "status": "ok",
+      "detail": "noelsaw1"
+    },
+    {
+      "source": "operator login",
+      "status": "ok",
+      "detail": "noelsaw1"
+    },
+    {
+      "source": "open PRs",
+      "status": "ok",
+      "count": 3
+    },
+    {
+      "source": "open issues",
+      "status": "ok",
+      "count": 5
+    },
+    {
+      "source": "releases.db",
+      "status": "skipped",
+      "detail": "repo_mode=gh-only"
+    },
+    {
+      "source": "PR heads (all states)",
+      "status": "ok",
+      "count": 0
+    },
+    {
+      "source": "tick claims repo",
+      "status": "ok",
+      "count": 1
+    },
+    {
+      "source": "local root repo",
+      "status": "ok",
+      "count": 4
+    },
+    {
+      "source": "ledger discovery",
+      "status": "ok",
+      "detail": "today=#200, prev=#100",
+      "count": 102
+    },
+    {
+      "source": "today ledger comments",
+      "status": "ok",
+      "count": 2
+    },
+    {
+      "source": "previous ledger comments",
+      "status": "ok",
+      "count": 3
+    },
+    {
+      "source": "PR review threads",
+      "status": "ok",
+      "count": 2
+    }
+  ],
+  "publish_receipt": {
+    "action": "created",
+    "issue_number": 200,
+    "started": "2026-11-14T01:49:35Z",
+    "created_count": 1,
+    "patched_count": 0
+  }
+}
