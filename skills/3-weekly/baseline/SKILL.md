@@ -206,7 +206,7 @@ The deck is one HTML file with no network calls and no dependencies:
 Answers and notes are kept in the browser on the presenter's machine. Arrow keys move between
 slides, and printing gives one slide per page. The deck does not block moving on without an
 answer; the presenter holds that rule, and the last slide counts what is still open. Rebuilding
-with a different item list starts the answers fresh.
+a changed deck starts the answers fresh.
 
 ## Step 6 — Hand off
 

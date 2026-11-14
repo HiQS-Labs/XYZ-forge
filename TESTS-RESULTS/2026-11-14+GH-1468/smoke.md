@@ -35,6 +35,7 @@ Two controls that must be accepted:
 | g | title and summary both contain the literal template markers `__DECK_DATA__` and `__DECK_TITLE__` | exit 0; the markers stay as text in `<title>` and in the data, the data block parses, and the page has 2 `<script` tags | PASS |
 | h | `heard.summary` set to `<!-- quoted comment -->` | exit 0; raw `<!--` occurs 0 times inside `#deck-data`; `json.loads` and headless Chrome DOM round-trip `<!-- quoted comment -->` | PASS |
 | i | headless Chrome DOM click probe on built `example.html` (all 6 item answers set, `heard` unset, then `heard` set) | `7 of 7 questions still open.` initially; `1 of 7 questions still open.` after item answers only; `Every question has an answer. This is the baseline.` after `heard` | PASS |
+| j | mutate `items[0].ask.text` (same title/date/item list) vs identical rebuild | `spec.id` changes on mutated ask (`08de8fbbb20a` != `c474c38a84d4`); identical rebuild keeps `c474c38a84d4` | PASS |
 
 ## Rendering
 

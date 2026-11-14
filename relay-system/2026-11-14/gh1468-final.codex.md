@@ -82,7 +82,7 @@ ROUND: 1 / 2
 3. **What rejects a bad deck & completion state.** The skill's rules are "one slide, one question" and
    "facts before asks", plus the last slide counting open questions across `heard` + `items` (`items.length * 2 + 1`).
    What in the delivered code enforces each, what is prose-only, and are the recorded controls in
-   `TESTS-RESULTS/2026-11-14+GH-1468/smoke.md` (including `a`-`i`) truthful and complete?
+   `TESTS-RESULTS/2026-11-14+GH-1468/smoke.md` (including `a`-`j`) truthful and complete?
 4. **Skill text accuracy.** Are the commands in `SKILL.md` valid as written (the `gh` field lists, the
    Step 0 ignore snippet, the builder invocations)? Do the ask-type table, the grade table, the spec
    schema and the slide table match `build_deck.py` and the template (including `decide`)? Do the relative

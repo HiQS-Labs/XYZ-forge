@@ -143,8 +143,9 @@ def validate(spec):
 
 def render(spec):
     spec = dict(spec)
-    # Saved answers are keyed by item position, so the id changes when the item list does.
-    seed = "|".join([spec["title"], spec["date"]] + [item["title"] for item in spec["items"]])
+    spec.pop("id", None)
+    # Saved answers are keyed by slide position, so any spec change starts the answers fresh.
+    seed = json.dumps(spec, sort_keys=True, ensure_ascii=False)
     spec["id"] = hashlib.sha1(seed.encode("utf-8")).hexdigest()[:12]
     # No raw "<" inside the <script> element: "</script" and "<!--" would end or derail it.
     # \u003c is a valid JSON escape, so the text parses back unchanged.
