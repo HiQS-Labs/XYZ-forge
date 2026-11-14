@@ -187,4 +187,13 @@ VERDICT: PASS
 
 Relay closed (Approved), no further turn needed. Only this relay file changed; no git commands were run. The harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-11-14T18:52:47Z
+task: RELAY-gh1466-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: c1201e2bb0290683fb657f54e4d578d5c196a471
+added-range: 19894+4688
+added-sha256: 6d9405b8bcf5b991322ea43d52093164cccdaef335e2a1f6d2ec7f10f490f7d9
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
