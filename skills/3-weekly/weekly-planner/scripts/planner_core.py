@@ -2285,19 +2285,50 @@ def read_ledger_comments(repo_root: Path, slug: str | None, issues: list[dict], 
 
 
 def _extract_active_claim_refs(body: str) -> tuple[list[int], list[int]]:
-    """Extract issue numbers and PR numbers from a ledger comment body, ignoring the 'Completed Since Prior Ledger' section."""
-    active_lines: list[str] = []
-    in_completed = False
-    for line in body.splitlines():
-        stripped = line.strip()
-        if re.match(r"^#{1,4}\s+.*completed\s+since", stripped, re.IGNORECASE):
-            in_completed = True
-            continue
-        if in_completed and re.match(r"^#{1,4}\s+", stripped):
+    """Extract operator-owned active claim issue/PR numbers without contaminating from aggregate sections.
+
+    1. If a fenced `<!-- daily-ledger-active-claims:start --> ... <!-- daily-ledger-active-claims:end -->`
+       block is present (emitted by `format_daily_ledger_markdown(..., for_comment=True)`), parse ONLY
+       that block so other operators' checkouts, ledger issue links, and contextual references never
+       become claims by the comment publisher.
+    2. For concise hand-written comments without a full digest heading, parse non-marker lines outside
+       any `Completed Since` section, stopping if a multi-panel digest heading (`## 1.`, `## 2.`,
+       `Today's Ledger Issue:`, `Prior Workday Ledger:`, `Already Checked Out`) is encountered.
+    """
+    fenced = re.search(
+        r"<!--\s*daily-ledger-active-claims:start\s*-->(.*?)<!--\s*daily-ledger-active-claims:end\s*-->",
+        body,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    if fenced is not None:
+        active_text = fenced.group(1)
+    else:
+        has_digest_sections = bool(
+            re.search(
+                r"(?:^#{1,4}\s+\d+\.\s+|\bAlready Checked Out\b|\bToday's Ledger Issue:\b|\bPrior Workday Ledger:\b)",
+                body,
+                flags=re.MULTILINE | re.IGNORECASE,
+            )
+        )
+        if has_digest_sections:
+            # Digest comment lacking an active-claims fence -> fail closed (0 claims) rather than
+            # scraping contextual ledger links or other operators' checkouts.
+            active_text = ""
+        else:
+            active_lines: list[str] = []
             in_completed = False
-        if not in_completed:
-            active_lines.append(line)
-    active_text = "\n".join(active_lines)
+            for idx, line in enumerate(body.splitlines()):
+                stripped = line.strip()
+                if idx == 0 and LEDGER_MARKER_LINE_RE.match(stripped):
+                    continue
+                if re.match(r"^#{1,4}\s+.*completed\s+since", stripped, re.IGNORECASE):
+                    in_completed = True
+                    continue
+                if in_completed and re.match(r"^#{1,4}\s+", stripped):
+                    in_completed = False
+                if not in_completed:
+                    active_lines.append(line)
+            active_text = "\n".join(active_lines)
     pr_nums: list[int] = []
     for m in re.finditer(r"\bPR\s*#?(\d+)\b", active_text, re.IGNORECASE):
         val = int(m.group(1))
@@ -2382,20 +2413,33 @@ def fetch_pr_review_threads(repo_root: Path, slug: str | None, pr_numbers: list[
             cwd=repo_root, check=True,
         )
         payload = json.loads(out) if out else {}
+        gql_errors = payload.get("errors")
+        if isinstance(gql_errors, list) and gql_errors:
+            first_msg = str((gql_errors[0] or {}).get("message") or "GraphQL error")
+            raise ValueError(f"GraphQL errors present: {first_msg}")
         repo_node = (payload.get("data") or {}).get("repository")
         if not isinstance(repo_node, dict):
             raise ValueError("GraphQL repository node missing")
         result: dict[int, dict] = {}
         any_truncated = False
+        missing_prs: list[int] = []
         for n in pr_numbers:
-            pr_node = repo_node.get(f"pr_{int(n)}") or {}
-            rt = pr_node.get("reviewThreads") or {}
+            pr_node = repo_node.get(f"pr_{int(n)}")
+            if not isinstance(pr_node, dict):
+                missing_prs.append(int(n))
+                continue
+            rt = pr_node.get("reviewThreads")
+            if not isinstance(rt, dict) or not isinstance(rt.get("nodes"), list):
+                missing_prs.append(int(n))
+                continue
             has_next = bool((rt.get("pageInfo") or {}).get("hasNextPage"))
             if has_next:
                 any_truncated = True
             nodes = rt.get("nodes") or []
             unresolved = sum(1 for nd in nodes if isinstance(nd, dict) and not nd.get("isResolved", False))
             result[int(n)] = {"unresolved_count": unresolved, "truncated": has_next}
+        if missing_prs:
+            raise ValueError(f"GraphQL pullRequest/reviewThreads node missing or null for PR(s): {missing_prs}")
         coverage.append(
             _coverage(
                 "PR review threads",
@@ -2869,7 +2913,38 @@ def run_daily_ledger(
                 "claimants": claimants,
             })
 
+    # Compute the operator's own active claim set (excluding issues/PRs already claimed by another operator on GitHub/today's ledger)
+    github_or_peer_claimed_issues = {
+        inum for inum, rows in other_claimed_issues.items()
+        if any(r.get("provenance") in {"verified-ledger-claim", "github-label-or-pr"} for r in rows)
+    }
+    operator_claim_issues: list[int] = []
+    for item in carryover_open_issues:
+        inum = int(item["number"])
+        if inum not in github_or_peer_claimed_issues and inum not in operator_claim_issues:
+            operator_claim_issues.append(inum)
+    for lrow in local_rows:
+        for inum in lrow.get("issue_numbers") or []:
+            if int(inum) not in github_or_peer_claimed_issues and int(inum) not in operator_claim_issues:
+                operator_claim_issues.append(int(inum))
+    for item in assigned_issues:
+        inum = int(item["number"])
+        if inum not in github_or_peer_claimed_issues and inum not in operator_claim_issues:
+            operator_claim_issues.append(inum)
+
+    operator_claim_prs: list[int] = []
+    for item in carryover_open_prs:
+        pnum = int(item["number"])
+        if pnum not in operator_claim_prs:
+            operator_claim_prs.append(pnum)
+    for item in prs_needing_remediation:
+        pnum = int(item["number"])
+        if pnum not in operator_claim_prs:
+            operator_claim_prs.append(pnum)
+
     ledger_data = {
+        "operator_claim_issues": operator_claim_issues,
+        "operator_claim_prs": operator_claim_prs,
         "mode": "daily_ledger",
         "date": date_local,
         "timezone": resolved_tz,
@@ -3029,6 +3104,23 @@ def format_daily_ledger_markdown(ledger: dict, for_comment: bool = False) -> str
             lines.append(f"- **GH-{a['number']}**: {a.get('title')}")
     else:
         lines.append("- *No additional open issues assigned to you.*")
+
+    claim_issues = ledger.get("operator_claim_issues") or []
+    claim_prs = ledger.get("operator_claim_prs") or []
+    lines.extend([
+        "",
+        "## 6. Operator Active Claims (Machine-Readable)",
+        "",
+        "<!-- daily-ledger-active-claims:start -->",
+    ])
+    if claim_issues or claim_prs:
+        for inum in claim_issues:
+            lines.append(f"- Active Issue Claim: GH-{int(inum)}")
+        for pnum in claim_prs:
+            lines.append(f"- Active PR Claim: PR #{int(pnum)}")
+    else:
+        lines.append("- *No active operator claims.*")
+    lines.append("<!-- daily-ledger-active-claims:end -->")
 
     lines.append("")
     return "\n".join(lines)
