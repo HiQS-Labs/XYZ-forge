@@ -1,0 +1,13 @@
+HQ · project card
+  query:        ledger-m1
+  repo:         ledger-m1
+  path:         <work>/repos/ledger-m1  (via filesystem)
+  capability:   Tier B — PDDA only (intake only, no dispatch)
+
+  Rebalance:    (no project_registry match)
+  PDDA rails:   (not in any git-pulse registry)
+  local mode:   full
+  startup docs: ROUTER ✗  AGENTS ✗  RELEASES-DB ✗ (releases-mode declared, but releases.db or CLI missing)
+  active docs:  1 in PROJECT/2-WORKING
+  marathon:     (none open)
+  XYZ install:  no (cannot run driven lanes)

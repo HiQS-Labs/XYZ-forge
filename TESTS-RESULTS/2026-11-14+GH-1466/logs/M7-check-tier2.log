@@ -1,0 +1,3 @@
+ok    <work>/repos/tier2-m7/.xyz
+SAFETY GUARD MISSING <work>/repos/tier2-m7/.xyz (relay-target-root-containment)
+  inspected installed copy directly; source_commit=af858405d51de67dd09e4cd2d004e58d8a86bfc9 does not establish guard coverage

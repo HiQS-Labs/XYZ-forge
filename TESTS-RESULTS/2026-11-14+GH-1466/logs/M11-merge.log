@@ -1,0 +1,6 @@
+warning: Cannot merge binary files: releases.db (HEAD vs. s-a)
+Auto-merging releases.db
+CONFLICT (content): Merge conflict in releases.db
+Auto-merging releases.sql
+CONFLICT (content): Merge conflict in releases.sql
+Automatic merge failed; fix conflicts and then commit the result.

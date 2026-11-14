@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# M10 gate red control: same ledger fixture, base wave_reconcile.py swapped into the install.
+set -u
+SP="$1"; H="$2"; BASE="$3"; OUT="$4"
+src="$SP/gh1466-m10-m11.sh"
+# reuse the fixture builder from the smoke runner without running its checks
+eval "$(sed -n '/^set -u/,/^reconcile()/p' "$src" | sed '1d' | sed 's#^H="\$1"; OUT="\$2"#H="'"$H"'"; OUT="'"$OUT"'"#')"
+L="$(mk_ledger_host ledger-m10-basegate)"
+cp "$BASE/utils/py/wave_reconcile.py" "$L/.xyz/utils/py/wave_reconcile.py"
+reconcile "$L" > "$OUT/M10-red-gate-base.log" 2>&1; rc=$?
+grep -q 'utils/pdda/pdda.sh: No such file\|PDDA validation gate failed' "$OUT/M10-red-gate-base.log" && why=gate || why=other
+[ "$rc" != 0 ] && [ "$why" = gate ] && rec M10-red-gate PASS "base wave_reconcile.py in the same ledger host -> rc=$rc at the PDDA gate (host-relative utils/pdda/pdda.sh absent)" || rec M10-red-gate FAIL "rc=$rc why=$why"

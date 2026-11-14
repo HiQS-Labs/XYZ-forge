@@ -1,0 +1,14 @@
+M1	PASS	rc=0 files=52 tier=ledger absent:bin,src,skills,test,relay-automation
+M2	PASS	rc=1; die names utils/leaderboard.sh; no .xyz created
+M3	PASS	rc=1; import check names device_config; existing .xyz untouched
+M4	PASS	frontmatter: candidate rc=1 names host doc (1 hits), base lib rc=0 0 host hits; releases-current lists 9.9.0, base prints RELEASES.md not found
+M5	PASS	candidate update rc=0 keeps tier=ledger (52 files); base update on same shape -> tier=2 (1713 files)
+M6	PASS	conflict rc=2 'mutually exclusive' (base rc=2 'unknown option'); upgrade -> tier=2 full inventory; downgrade -> tier=ledger ledger inventory; relay-system state preserved
+M7	PASS	ledger row ok, no guard warning; base warns on same row; Tier 2 row without relay-drive.sh still warns
+M8	PASS	ledger host status Tier B; fire refuses 'is not Tier A' (rc=1); Tier 2 host Tier A; base hq-lib calls the ledger host Tier A
+M9	PASS	jog run/resume/land: rc=2 + message, no traceback; base: ModuleNotFoundError traceback for all three
+M10	PASS	check=0 add=0 rate=0 no-MNF; reconcile rc=0, doc->3-COMPLETED, row=Completed, planner ran, timeline ran (preview changed, LEADERBOARD.md changed), vendored PDDA gate ran; no host tool copies
+M10-red	PASS	template removed -> reconcile rc=6; marathon-plan.sh removed (fresh host, planner selected) -> rc=6
+M11	PASS	re-vendor (no flags) rc=0 keeps tier=ledger; merge conflicted on releases.db; union-resolved releases.sql; resolver rc=0, DB has both sides' releases, adopted views regenerated (preview changed)
+M11-red	PASS	leaderboard.sh removed -> resolver rc=1 at the leaderboard step
+M10-red-gate	PASS	base wave_reconcile.py in the same ledger host -> rc=7 at the PDDA gate (host-relative utils/pdda/pdda.sh absent)

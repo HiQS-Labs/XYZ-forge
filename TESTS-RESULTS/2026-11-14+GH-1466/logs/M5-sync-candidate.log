@@ -1,0 +1,6 @@
+existing .xyz/ is tier=ledger — keeping the ledger-only tier (pass --with-releases to upgrade)
+xyz-vendor.sh: warning: ledger import check: marathon_plan raised TypeError: unsupported operand type(s) for |: 'type' and 'NoneType' (interpreter 3.9.6)
+registry: updated <work>/reg.tsv
+vendored harness -> <work>/repos/ledger-m5/.xyz
+merge-cleanup batch sweeps: declare this repo's qualification command in .merge-cleanup.json (merge-cleanup SKILL.md, Project merge policy)
+ledger-only tier: RELEASES CLI, reconcile, merge-resolve and PDDA only (no relay/marathon/tick/skills)

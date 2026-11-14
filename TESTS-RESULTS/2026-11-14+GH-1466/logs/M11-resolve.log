@@ -1,0 +1,25 @@
+releases-merge-resolve: took either side of releases.db in the working tree (it is regenerated below, so the choice cannot matter)
+releases-merge-resolve: rebuilding releases.db from the merged releases.sql
+OK: foreign_keys pragma asserted per connection
+OK: receipt chain intact (4 receipt(s), business-state digest matches)
+info: 0 grandfather_entries pending disposition (the strict flip requires none pending)
+rebuilt releases.db from releases.sql (generation 5 -> 6); displaced DB backed up at <work>/ledger-m11/releases.db.bak
+OK: post-rebuild verification — DB rebuilt from releases.sql, displaced DB at releases.db.bak
+check: clean (0 failures, 0 warning(s))
+releases-merge-resolve: verifying
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 6 (DB <-> dump)
+OK: receipt chain intact (6 receipt(s), business-state digest matches, 2 merge fork(s) tolerated under the merge-rebuild receipt)
+info: 0 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 0 warning(s))
+releases-merge-resolve: regenerating adopted views: RELEASES-PREVIEW.html LEADERBOARD.html LEADERBOARD.md
+releases-merge-resolve:   -> export_timeline.py --preview
+wrote <work>/ledger-m11/RELEASES-PREVIEW.html (3 releases, self-contained, read-only snapshot of <work>/ledger-m11/releases.db)
+releases-merge-resolve:   -> export_timeline.py --leaderboard
+wrote <work>/ledger-m11/LEADERBOARD.html (1 rated task(s), self-contained)
+releases-merge-resolve:   -> leaderboard.sh
+leaderboard: wrote <work>/ledger-m11/LEADERBOARD.md
+releases-merge-resolve: resolving releases.db in the index now that the rebuild verified clean
+releases-merge-resolve: artifacts are consistent and staged. Review, then commit the merge yourself —
+releases-merge-resolve: this script deliberately does not commit.
+releases-merge-resolve: note: releases.db.bak holds the DB that was displaced; it is untracked and safe to delete.

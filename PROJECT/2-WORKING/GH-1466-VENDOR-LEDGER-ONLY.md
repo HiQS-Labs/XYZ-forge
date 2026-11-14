@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA **Approved** by Codex in round 2 (`relay-system/2026-11-14/gh1466-plan-qa.md`; round 1 FAIL dispositions applied, round 2 nits adopted). | Admit on ledger, then implement steps 1–8. |
+| Steps 1–8 implemented (`af858405d`). Manual checks M1–M11 pass, each with a red control that rejects the base code; 25 existing suites pass in a disposable clone (`TESTS-RESULTS/2026-11-14+GH-1466/`). | Final Codex relay QA, then the classified gate on the approved commit, then PR. |
 
 ## Problem
 

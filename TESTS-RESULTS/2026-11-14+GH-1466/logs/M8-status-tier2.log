@@ -1,0 +1,14 @@
+HQ · project card
+  query:        tier2-m7
+  repo:         tier2-m7
+  path:         <work>/repos/tier2-m7  (via xyz-registry)
+  capability:   Tier A — PDDA + XYZ (dispatch-eligible)
+
+  Rebalance:    (no project_registry match)
+  PDDA rails:   (not in any git-pulse registry)
+  local mode:   full
+  startup docs: ROUTER ✗  AGENTS ✗  RELEASES-DB ✗ (releases-mode declared, but releases.db or CLI missing)
+  active docs:  1 in PROJECT/2-WORKING
+  marathon:     (none open)
+  XYZ install:  yes · tick 0.2.0 · harness commit af858405d51de67dd09e4cd2d004e58d8a86bfc9
+                (run `relay-automation/xyz-sync.sh check` for the authoritative drift verdict)
