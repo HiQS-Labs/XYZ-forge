@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -84,5 +84,22 @@ Write graded findings with `file:line`. Put `VERDICT: PASS` or `VERDICT: FAIL` o
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: no
+VERDICT: FAIL
+Basis: the inspected implementation paths align with the plan, but the promised full PDDA-run evidence is absent, and this turn did not complete the required whole-file sweep. This is not an observed source-code failure. Approval and the final gate remain outstanding.
+
+- [Should] **Complete M4's planned full-run evidence.** `TESTS-RESULTS/2026-11-14+GH-1466/runner-m1-m9.sh.txt:87` and `:90` invoke only `frontmatter`; the plan's M4 row explicitly requires `PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh run`. `utils/pdda/pdda.sh:1721` runs a materially larger path, including sibling scripts and scanners. The existing M4 output proves host-root resolution for frontmatter, not that full closure. In a disposable full clone, record the planned full-run candidate/base check on the malformed host doc and a full-run check on a valid minimal host (LLM unset, offline/cache issue state). Retain commands, statuses, decisive output and provenance; no new suite or gate. This requests evidence, not a speculative behavior change.
+- [Pass] **Receipt integrity:** a read-only Python probe iterated `provenance.jsonl`, required each cited log to exist and be nonempty, and compared SHA-256. Command: `PYTHONDONTWRITEBYTECODE=1 python3 -B -` with `json.loads`, `Path.stat().st_size` and `hashlib.sha256` over the named `logs/` files. Exit 0; decisive output: `receipt_logs_checked= 39 empty_missing_or_hash_mismatch= []`. This checks retained bytes, not the truth of every assertion or the final commit identity.
+- [Pass] **Jog exception boundary:** `utils/py/releases_app.py:5198–5251` routes run, resume/retry dispatch and land through one helper. A narrow AST-extracted helper probe injected `ModuleNotFoundError(name="jog_run")` and then `ModuleNotFoundError(name="unrelated_dependency")` via a temporary in-memory import hook. Command: `PYTHONDONTWRITEBYTECODE=1 python3 -B -`; exit 0. Decisive output: `injected_missing= jog_run outcome= SystemExit 2 None`; `injected_missing= unrelated_dependency outcome= ModuleNotFoundError None unrelated_dependency`. No unrelated dependency error was masked.
+- [Pass] **Inspected tier/read paths:** `xyz-vendor.sh:78` reads sticky ledger state before releases.db promotion; explicit flags override it; `xyz-sync.sh:439` breaks only the current install's guard loop; `hq-lib.sh:79` filters before dedup and missing VERSION is a false grep in an AND list. `pdda-lib.sh:7–10` preserves explicit root overrides; `pdda.sh:976–981` selects host writer first and supplies the intended root. These are source-inspection conclusions, not fresh Tier 1/2 execution evidence.
+- [Pass] **Nonempty deletion controls:** retained `logs/M10-red-template.log` names missing `timeline/RELEASES.html`; `logs/M10-red-planner.log` shows planner selected followed by exit 127; `logs/M11-red-noleaderboard.log` reaches the leaderboard step and leaves the merge open; `logs/M10-red-gate-base.log` reaches PDDA, fails and rolls back. These support the specific closure edges they exercise. The M10/M11 successful counterparts show planner/view/gate and merge-resolution execution.
+- [Unverified — needs clone run] The final classified gate has not run, as declared. The 25-suite result is producer evidence, not a reviewer rerun. Do not present this review as gate qualification.
+- [Unverified] **Required remaining review scope:** I inspected the vendor implementation and targeted sync/HQ/PDDA/reconcile/jog paths, acceptance map and retained evidence, but did not read all 19,716 lines across the ten artifact files. In particular the complete pre-existing ledger/reconcile implementations, full PDDA/HQ/sync files and historical docs remain unswept. No pre-existing defect was established in the inspected spans; no claim of a defect-free whole-file sweep, exhaustive diff scope, no added suite, or byte-for-byte Tier 1/2 equivalence is made. Complete that review before approval; source edits are not requested on the basis of these unknowns.
+- [Nit] The rating `55/30/50/40` remains consistent with the documented optional footprint reduction and bounded existing seams; this turn supplies no basis for an override (`PROJECT/2-WORKING/GH-1466-VENDOR-LEDGER-ONLY.md`, “Rating (2026-11-14)”).
+
+Handing off to Producer (claude-a) — disposition the M4 evidence request and arrange completion of the outstanding whole-file review; go to the Producer window and say 'take your turn'. No source change is requested without a demonstrated defect.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
