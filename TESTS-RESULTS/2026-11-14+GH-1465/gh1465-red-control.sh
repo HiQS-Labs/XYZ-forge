@@ -25,10 +25,17 @@ exit 0
 STUBEOF
 chmod +x "$STUB"
 
-run() { # <label> <harness base|fix> <gate-env-or-empty> <extra reviewer line or empty> <builder file>
-  local label="$1" h="$W/$2" gate="$3" extra="$4" bld="$5" A="$W/repo-$1"
+run() { # <label> <harness base|fix> <gate-env-or-empty> <extra reviewer line or empty> <builder file> [extra env]
+  local label="$1" h="$W/$2" gate="$3" extra="$4" bld="$5" extra_env="${6:-}" A="$W/repo-$1"
   mkdir -p "$A"; printf '.tick/\n' >"$A/.gitignore"
   printf '#!/usr/bin/env bash\necho "gate ran in $(basename "$PWD") RELAY_ROLE=${RELAY_ROLE:-scrubbed}"; exit "${1:-0}"\n' >"$A/gate.sh"
+  cat >"$A/hog.py" <<'HOGEOF'
+import time
+b = bytearray(250 * 1024 * 1024)
+for i in range(0, len(b), 4096):
+    b[i] = 1
+time.sleep(2.5)
+HOGEOF
   { printf '# Marathon Phase gh-955\nSTATUS: Open\nNEXT: claude-reviewer (Reviewer)\n\n'; cat "$bld"; } >"$A/relay.md"
   git -C "$A" init -q && git -C "$A" add -A && git -C "$A" commit -qm seed
   { cat "$REV"; [ -n "$extra" ] && printf '%s\n' "$extra"; } >"$W/review-$label.md"
@@ -37,7 +44,7 @@ run() { # <label> <harness base|fix> <gate-env-or-empty> <extra reviewer line or
   TICK_REPO_ROOT="$A" "$T" log task.created "$task" --agent marathon >/dev/null
   TICK_REPO_ROOT="$A" "$T" claim "$task" --agent marathon --paths relay.md >/dev/null
   TICK_REPO_ROOT="$A" "$T" release "$task" --agent marathon --to claude-reviewer >/dev/null
-  ( cd "$h" && env -u RELAY_DRIVER_LOCKED -u MARATHON_REVIEWER_GATE_CMD ${gate:+MARATHON_REVIEWER_GATE_CMD="$gate"} \
+  ( cd "$h" && env -u RELAY_DRIVER_LOCKED -u MARATHON_REVIEWER_GATE_CMD -u MARATHON_GATE_GUARD -u MARATHON_GATE_RSS_MB $extra_env ${gate:+MARATHON_REVIEWER_GATE_CMD="$gate"} \
       RELAY_TARGET_ROOT="$A" TICK_REPO_ROOT="$A" TICK_BIN="$T" XYZ_ROOT="$h" RELAY_WORKTREE_ISOLATION=0 \
       REVIEW_TEXT_FILE="$W/review-$label.md" \
       python3 "$h/utils/py/relay_drive.py" --relay-file "$A/relay.md" --relay-task "$task" \
@@ -63,3 +70,5 @@ run fix-undeclared-gate-green    fix  "bash gate.sh 0" ""   "$BLD"              
 run fix-gate-green-leaves-file   fix  "touch gate-residue.txt" "" "$BLD"          # residue in the tree does not fail the driver
 run fix-gate-not-runnable        fix  "./no-such-gate" ""   "$BLD"                # exit 127 refuses
 run fix-unarmed-generic          fix  ""               ""   "$BLD"                # no gate configured: unchanged
+run fix-gate-rss-cap             fix  "python3 hog.py" ""   "$BLD" "MARATHON_GATE_RSS_MB=128"                        # RSS cap kills runaway allocator (exit 108)
+run fix-gate-rss-escape          fix  "python3 hog.py" ""   "$BLD" "MARATHON_GATE_GUARD=0 MARATHON_GATE_RSS_MB=128"  # MARATHON_GATE_GUARD=0 disables RSS cap

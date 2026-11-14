@@ -18,6 +18,7 @@ import datetime as _dt
 # python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
+from proc_group import GATE_RSS_MB_DEFAULT, group_rss_mb  # noqa: E402
 from rtl import driver_lock_path, archive_lane_attempts  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 
@@ -1008,7 +1009,6 @@ GATE_DEFAULT_TIER = "full"
 # setrlimit(RLIMIT_AS) and setrlimit(RLIMIT_DATA) are both REFUSED, even soft-only, so the
 # process-group RSS poll is the only layer standing between a runaway test and this host. Retuning
 # it alongside the CPU/wall tiers would confound two changes at once.
-GATE_RSS_MB_DEFAULT = 8192
 
 
 def _gate_tier():
@@ -1051,33 +1051,9 @@ GATE_RSS_UNAVAILABLE_WARNING = ("gate-guard: WARNING: RSS watchdog unavailable â
 def _gate_group_rss_mb(pgid):
     """Summed RSS of a gate process group as (mb, None), or (None, reason) when it was not read.
 
-    GH-773: this used to return -1 on an exception and 0 on an empty or refused listing, and the
-    caller folded both into "peak 0MB" with the cap unable to fire. `ps-failed` means the probe
-    itself did not work (a sandbox raises PermissionError at exec); `group-missing` means `ps`
-    worked but listed no row for the group, which the caller must tell apart from a gate that has
-    just exited."""
-    try:
-        res = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
-                             timeout=10)
-    except (OSError, subprocess.SubprocessError):
-        return None, "ps-failed"
-    if res.returncode != 0 or not res.stdout.strip():
-        return None, "ps-failed"
-    total_kb = 0
-    matched = False
-    for line in res.stdout.splitlines():
-        parts = line.split()
-        if len(parts) != 2:
-            continue
-        try:
-            if int(parts[0]) == pgid:
-                total_kb += int(parts[1])
-                matched = True
-        except ValueError:
-            continue
-    if not matched:
-        return None, "group-missing"
-    return total_kb // 1024, None
+    GH-773: delegates to proc_group.group_rss_mb while passing this module's subprocess.run so
+    seam mocks against driver.subprocess.run continue to intercept the probe."""
+    return group_rss_mb(pgid, run=subprocess.run)
 
 
 def _gate_rss_summary(peak_mb, readable, unreadable):

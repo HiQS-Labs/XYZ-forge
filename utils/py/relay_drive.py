@@ -754,17 +754,28 @@ def main():
         gate_exit = None
         if reviewer_gate:
             from gate_env import gate_env
-            from proc_group import run_bounded, TIMEOUT_RC
-            gate_cwd, gate_out = target_repo(), ""
+            from proc_group import GATE_RSS_MB_DEFAULT, RSS_KILL_RC, TIMEOUT_RC, run_bounded
+            gate_cwd, gate_out, rss_killed, peak_rss_mb = target_repo(), "", False, None
+            rss_cap = None
+            if (get_env("MARATHON_GATE_GUARD", "1") or "1").strip() != "0":
+                raw_rss = (get_env("MARATHON_GATE_RSS_MB") or "").strip()
+                try:
+                    rss_cap = int(raw_rss) if raw_rss else GATE_RSS_MB_DEFAULT
+                except ValueError:
+                    eprint(f"relay-drive: MARATHON_GATE_RSS_MB={raw_rss!r} is not an integer — falling back to {GATE_RSS_MB_DEFAULT}")
+                    rss_cap = GATE_RSS_MB_DEFAULT
             try:
                 res = run_bounded(["/bin/bash", "-c", reviewer_gate], cwd=gate_cwd, timeout=DRIVER_GATE_TIMEOUT_S,
-                                  env=dict(gate_env(), PYTHONDONTWRITEBYTECODE="1"))
-                gate_exit, gate_out = (TIMEOUT_RC if res.timed_out else res.rc), res.stdout + res.stderr
+                                  env=dict(gate_env(), PYTHONDONTWRITEBYTECODE="1"), max_rss_mb=rss_cap)
+                rss_killed, peak_rss_mb = res.rss_killed, res.peak_rss_mb
+                gate_exit = TIMEOUT_RC if res.timed_out else (RSS_KILL_RC if rss_killed else res.rc)
+                gate_out = res.stdout + res.stderr
             except (OSError, ValueError) as e:
                 gate_exit, gate_out = 127, f"could not launch: {e}"
             eprint(f"relay-drive: driver-run gate `{reviewer_gate}` (cwd {gate_cwd}, reviewed "
                    f"{pre['reviewed_head'][:12]}) exit {gate_exit}"
-                   + (f" — timed out after {DRIVER_GATE_TIMEOUT_S}s" if gate_exit == TIMEOUT_RC else ""))
+                   + (f" — timed out after {DRIVER_GATE_TIMEOUT_S}s" if gate_exit == TIMEOUT_RC else "")
+                   + (f" — killed: group RSS {peak_rss_mb}MB >= cap {rss_cap}MB" if rss_killed else ""))
             if gate_exit != 0:
                 eprint("\n".join("  | " + ln for ln in gate_out.splitlines()[-20:]))
                 if relay_attest.builder_declared_unverified(post_canon[:added_start]):

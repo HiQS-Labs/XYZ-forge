@@ -43,10 +43,14 @@ PASS with no new evidence, and approved without running anything, relying on the
 ## Write-set
 - `relay-automation/new-relay.sh` (canonical rule text) and its mirrors: `utils/py/marathon_drive.py`
   step 4c, `skills/1-hourly/relay/SKILL.md`, `skills/1-hourly/relay-xyz/SKILL.md`.
+- `utils/py/proc_group.py` (`group_rss_mb`, optional `max_rss_mb` on `run_bounded`,
+  `GATE_RSS_MB_DEFAULT = 8192`, `RSS_KILL_RC = 108`), shared with `utils/py/marathon_drive.py`
+  (`_gate_group_rss_mb` delegates to `group_rss_mb`).
 - `utils/py/relay_drive.py` `judge_terminal`: when `MARATHON_REVIEWER_GATE_CMD` is set, run it through
-  the existing `gate_env.gate_env()` and `proc_group.run_bounded` helpers in the target checkout;
-  refuse on non-zero (`unverified-approval` after a builder-declared unverified block, else
-  `gate-failed`). `utils/py/relay_attest.py` binds `driver-gate:` into the trailer.
+  `gate_env.gate_env()` and `proc_group.run_bounded(..., max_rss_mb=...)` (honoring
+  `MARATHON_GATE_RSS_MB` and `MARATHON_GATE_GUARD=0`) in the target checkout; refuse on non-zero
+  (`unverified-approval` after a builder-declared unverified block, else `gate-failed`).
+  `utils/py/relay_attest.py` binds `driver-gate:` into the trailer.
 
 ## Verification
 Manual red control and existing focused suites: `TESTS-RESULTS/2026-11-14+GH-1465/`. No new suite (GH-831).
@@ -54,4 +58,5 @@ Manual red control and existing focused suites: `TESTS-RESULTS/2026-11-14+GH-146
 ## Limits
 - Applies only when a gate command is configured; an unarmed relay is unchanged.
 - In a marathon the focused gate now runs up to three times (reviewer, driver, pre-advance gate).
-- The 900-second timeout path (exit 124) was not exercised.
+- The 900-second timeout path (exit 124) was not exercised; the driver-run gate uses wall-clock
+  and group-RSS caps (no `ulimit -t` CPU cap, which stays on `run_pre_advance_gate`).
