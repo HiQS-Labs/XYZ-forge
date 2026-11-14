@@ -1,0 +1,360 @@
+#!/usr/bin/env python3
+"""GH-1470 manual check driver (throwaway, kept outside the repo; GH-831 forbids a new suite).
+
+Reuses test/gh534_phase_b_tests.py's LedgerFixture (bare origin + fake gh, all under the system temp
+directory) from a disposable gate clone, adds `refs/pull/N/head` to the fake origin, and exercises the
+conflict-hub landing forecast through the real functions and the real CLI. Every scenario prints an
+EVIDENCE line.
+
+Usage: python3 gh1470-manual-check.py <gate-clone-root> [Manual.test_name ...]
+"""
+import contextlib
+import io
+import json
+import os
+import sys
+import unittest
+import unittest.mock as mock
+from pathlib import Path
+
+GATE = Path(sys.argv.pop(1)).resolve()
+sys.path[:0] = [str(GATE / "test"), str(GATE / "skills" / "2-daily" / "merge-cleanup" / "scripts"), str(GATE / "utils" / "py")]
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+import gh534_phase_b_tests as B  # noqa: E402
+import ledger_merge  # noqa: E402
+import merge_cleanup  # noqa: E402
+
+DEV = "development"
+HAS_HUBS = hasattr(ledger_merge, "_conflict_hubs")  # False on the base commit (red control run)
+
+
+def ev(label, **kv):
+    print("EVIDENCE " + label + ": " + json.dumps(kv, sort_keys=True, default=str))
+
+
+def line(i, text):
+    """Replace line i (1-based) of CHANGELOG.md."""
+    def f(root):
+        p = root / "CHANGELOG.md"
+        lines = p.read_text().splitlines(keepends=True)
+        lines[i - 1] = f"- {text}\n"
+        p.write_text("".join(lines))
+    return f
+
+
+def ins(path, text):
+    def f(root):
+        p = root / path
+        lines = p.read_text().splitlines(keepends=True)
+        lines.insert(1, text + "\n")
+        p.write_text("".join(lines))
+    return f
+
+
+def both(*fns):
+    def f(root):
+        for fn in fns:
+            fn(root)
+    return f
+
+
+def newfile(name):
+    return lambda root: (root / name).write_text(f"{name}\n")
+
+
+class Manual(B.LedgerFixture):
+    def setUp(self):
+        super().setUp()
+        (self.seed / "CHANGELOG.md").write_text("".join(f"- entry {i}\n" for i in range(1, 41)))
+        B.commit_all(self.seed, "add changelog")
+        B._git(self.seed, "push", "-q", "origin", DEV)
+        for c in (self.primary, self.probe):
+            B._git(c, "pull", "-q", "--ff-only")
+
+    # --- helpers ---
+    def pr(self, n, fn, pull=True):
+        self.branch(f"pr{n}", n, fn)
+        if pull:
+            B._git(self.probe, "fetch", "-q", "origin")
+            B._git(self.probe, "push", "-q", "origin", f"origin/pr{n}:refs/pull/{n}/head")
+
+    def advance(self, fn):
+        fn(self.seed)
+        B.commit_all(self.seed, "advance development")
+        B._git(self.seed, "push", "-q", "origin", DEV)
+        B._git(self.primary, "fetch", "-q", "origin")
+
+    def forecast(self, nums, mutate=None):
+        prs = merge_cleanup.fetch_open_prs_with_retry(str(self.primary))
+        ordered = merge_cleanup.effective_sequence(prs, set(nums))
+        if mutate:
+            mutate(ordered)
+        return merge_cleanup.build_landing_forecast(self.primary, DEV, ordered)
+
+    def two_hubs_six_clean(self, pull_all=True):
+        """The 2026-11-14 shape: #1 and #6 conflict with the base (ledger, changelog); #3 and #4 are clean
+        alone and conflict only with a hub; #2, #5, #7, #8 touch nothing shared."""
+        self.pr(1, both(lambda r: B.park(r, 201, "pr1 row"), line(30, "pr1 at 30")))
+        self.pr(2, newfile("f2.txt"))
+        self.pr(3, both(newfile("f3.txt"), line(30, "pr3 at 30")))
+        self.pr(4, both(newfile("f4.txt"), line(36, "pr4 at 36")))
+        self.pr(5, newfile("f5.txt"), pull=pull_all)
+        self.pr(6, both(line(20, "pr6 at 20"), line(36, "pr6 at 36")))
+        self.pr(7, newfile("f7.txt"))
+        self.pr(8, newfile("f8.txt"))
+        self.advance(both(lambda r: B.park(r, 202, "landed row"), line(20, "landed at 20")))
+
+    def sel(self):
+        return merge_cleanup.selection_path(self.primary.resolve(), merge_cleanup.origin_url(self.primary) or "", DEV)
+
+    def cli(self, execute, extra):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = self.run_main(execute=execute, extra=extra)
+        return rc, out.getvalue()
+
+    def show(self, fc):
+        text = merge_cleanup.format_landing_forecast(fc, DEV)
+        print(text)
+        return text
+
+    # --- scenarios ---
+    def test_h1_two_hubs_and_clean_members_recommend_passes(self):
+        self.two_hubs_six_clean()
+        fc = self.forecast(range(1, 9))
+        text = self.show(fc)
+        seq = {n: fc["prs"][str(n)]["sequence"]["state"] for n in fc["order"]}
+        if not HAS_HUBS:  # RED CONTROL: the base commit answers the same queue with `group`
+            ev("H1 red control (base commit)", recommendation=fc["recommendation"], reason=fc["reason"], order=fc["order"], seq=seq)
+            self.assertEqual(fc["recommendation"], "group")
+            self.assertNotIn("pass 1", text)
+            return
+        ev("H1 passes", recommendation=fc["recommendation"], reason=fc["reason"], order=fc["order"], seq=seq,
+           hubs=fc["hubs"], passes=fc["passes"], pairs=[(p["a"], p["b"]) for p in fc["pairs"]])
+        self.assertEqual(fc["recommendation"], "direct")
+        self.assertEqual(sorted(fc["hubs"]["base"]), [1, 6])
+        self.assertEqual(fc["hubs"]["greedy"], [])
+        self.assertEqual(sorted(fc["passes"][0]), [2, 3, 4, 5, 7, 8])
+        self.assertEqual(sorted(fc["passes"][1]), [1, 6])
+        self.assertEqual(fc["hubs"]["fold"], {"state": "clean"})
+        self.assertTrue(all({p["a"], p["b"]} & {1, 6} for p in fc["pairs"]))  # every pair involves a hub
+        self.assertIn("Recommendation: direct in passes", text)
+        self.assertIn("  pass 1: --prs " + ",".join(map(str, fc["passes"][0])), text)
+        self.assertIn("  pass 2: --prs " + ",".join(map(str, fc["passes"][1])), text)
+        self.assertIn("Conflict hubs (GH-1470): 2", text)
+        self.assertIn("Clean once hubs are set aside: 6 of 8", text)
+        self.assertIn("Clean-set fold (hubs set aside, sequence order): clean through all 6", text)
+        for blind in ledger_merge.FORECAST_ASSUMPTIONS + (ledger_merge.PASSES_ASSUMPTION,):
+            self.assertIn("Blind spot: " + blind, text)
+        # the clean set really is clean: forecasting pass 1 on its own says direct, nothing conflicts
+        p1 = self.forecast(fc["passes"][0])
+        ev("H1 pass 1 forecast on its own", recommendation=p1["recommendation"], reason=p1["reason"], hubs=p1["hubs"])
+        self.assertEqual((p1["recommendation"], p1["reason"], p1["hubs"], p1["passes"]), ("direct", "no conflicts found", None, None))
+
+    def test_h2_hub_found_by_degree_is_labelled_heuristic(self):
+        self.pr(1, both(line(5, "pr1 at 5"), line(15, "pr1 at 15"), line(25, "pr1 at 25")))
+        self.pr(2, line(5, "pr2 at 5"))
+        self.pr(3, line(15, "pr3 at 15"))
+        self.pr(4, line(25, "pr4 at 25"))
+        for n in (5, 6, 7):
+            self.pr(n, newfile(f"f{n}.txt"))
+        fc = self.forecast(range(1, 8))
+        text = self.show(fc)
+        ev("H2 greedy hub", recommendation=fc["recommendation"], reason=fc["reason"], hubs=fc["hubs"], passes=fc["passes"],
+           alone_conflicts=[n for n in fc["order"] if fc["prs"][str(n)]["alone"]["conflict"]])
+        self.assertEqual((fc["hubs"]["base"], fc["hubs"]["greedy"]), ([], [1]))
+        self.assertEqual(sorted(fc["passes"][0]), [2, 3, 4, 5, 6, 7])
+        self.assertEqual(fc["passes"][1], [1])
+        self.assertIn("picked by conflict degree (greedy heuristic, not a proven minimum): #1", text)
+
+    def test_h3_conflicts_spread_across_the_queue_stay_group(self):
+        for n in (1, 2, 3, 4, 5):
+            self.pr(n, line(5, f"pr{n} at 5"))  # every pair conflicts: no small set of hubs explains it
+        self.pr(6, newfile("f6.txt"))
+        fc = self.forecast(range(1, 7))
+        text = self.show(fc)
+        ev("H3 spread conflicts", recommendation=fc["recommendation"], reason=fc["reason"], hubs=fc["hubs"], passes=fc["passes"])
+        self.assertEqual(fc["recommendation"], "group")
+        self.assertIsNone(fc["passes"])
+        self.assertEqual(len(fc["hubs"]["greedy"]), 4)
+        self.assertIn("Recommendation: group —", text)
+        self.assertNotIn("pass 1", text)
+        self.assertNotIn(ledger_merge.PASSES_ASSUMPTION, text)
+
+    def test_h3b_clean_set_that_conflicts_in_sequence_stays_group(self):
+        """Pairwise-clean members that conflict only cumulatively are hard to build with text files, so the
+        second fold (the clean-set fold) is made to report a conflict at its third member. SIMULATED."""
+        self.two_hubs_six_clean()
+        real, calls = ledger_merge._fold, []
+
+        def fold(clone, base, order, prs, allowed, timeout):
+            calls.append(list(order))
+            out = real(clone, base, order, prs, allowed, timeout)
+            if len(calls) == 2:
+                bad = order[2]
+                out[bad] = {"state": "conflict", "b1_eligible": ["CHANGELOG.md"], "needs_review": []}
+                for n in order[3:]:
+                    out[n] = {"state": "conditional", "after": bad, "why": "conflict"}
+            return out
+        with mock.patch.object(ledger_merge, "_fold", side_effect=fold):
+            fc = self.forecast(range(1, 9))
+        text = self.show(fc)
+        ev("H3b clean-set fold conflict (simulated)", recommendation=fc["recommendation"], reason=fc["reason"],
+           fold=fc["hubs"]["fold"], passes=fc["passes"], fold_calls=calls)
+        self.assertEqual(fc["recommendation"], "group")
+        self.assertIsNone(fc["passes"])
+        self.assertIn("still conflicts in sequence", fc["reason"])
+        self.assertNotIn("pass 1", text)
+
+    def test_h3c_small_queue_rejects_bad_clean_fold_and_majority(self):
+        for n in (1, 2, 3):
+            self.pr(n, newfile(f"small{n}.txt"))
+        self.pr(4, line(20, "hub"))
+        self.advance(line(20, "base"))
+        real = ledger_merge._fold
+        calls = []
+        def fold(clone, base, order, prs, allowed, timeout):
+            calls.append(list(order))
+            out = real(clone, base, order, prs, allowed, timeout)
+            if len(calls) == 2:
+                out[order[0]] = {"state": "conflict", "b1_eligible": ["CHANGELOG.md"], "needs_review": []}
+            return out
+        with mock.patch.object(ledger_merge, "_fold", side_effect=fold):
+            fc = self.forecast(range(1, 5))
+        ev("H3c small clean-fold conflict", recommendation=fc["recommendation"], passes=fc["passes"])
+        self.assertEqual(fc["recommendation"], "group")
+        def deps(prs):
+            for pr in prs:
+                pr["_hard_deps"] = {4} if pr["number"] in (1, 2) else set()
+        fc = self.forecast(range(1, 5), mutate=deps)
+        ev("H3c dependent majority", recommendation=fc["recommendation"], hubs=fc["hubs"])
+        self.assertEqual(fc["recommendation"], "group")
+        self.assertIsNone(fc["passes"])
+
+    def test_h4_failed_step_withholds_the_recommendation(self):
+        self.two_hubs_six_clean(pull_all=False)  # no refs/pull/5/head on the fake origin: that fetch fails
+        fc = self.forecast(range(1, 9))
+        text = self.show(fc)
+        ev("H4 failed fetch", recommendation=fc["recommendation"], reason=fc["reason"], hubs=fc["hubs"], passes=fc["passes"],
+           status5=fc["prs"]["5"]["status"])
+        self.assertIsNone(fc["recommendation"])
+        self.assertIsNone(fc["passes"])
+        self.assertIsNone(fc["hubs"])  # no hub claim over an incomplete conflict picture
+        self.assertIn("Recommendation: none — forecast incomplete", text)
+        self.assertNotIn("pass 1", text)
+
+    def test_h4b_failure_inside_the_clean_set_fold_withholds_too(self):
+        self.two_hubs_six_clean()
+        real, calls = ledger_merge._fold, []
+
+        def fold(clone, base, order, prs, allowed, timeout):
+            calls.append(list(order))
+            out = real(clone, base, order, prs, allowed, timeout)
+            if len(calls) == 2:  # the clean-set fold: its second step "fails" (as merge-tree exit 129 would)
+                out[order[1]] = {"state": "unknown", "reason": "usage: git merge-tree (simulated old git)"}
+            return out
+        with mock.patch.object(ledger_merge, "_fold", side_effect=fold):
+            fc = self.forecast(range(1, 9))
+        text = self.show(fc)
+        ev("H4b clean-set fold unknown (simulated)", recommendation=fc["recommendation"], reason=fc["reason"], passes=fc["passes"])
+        self.assertIsNone(fc["recommendation"])
+        self.assertIsNone(fc["passes"])
+        self.assertIn("Recommendation: none — forecast incomplete", text)
+        # merge-tree failing everywhere (old git): every PR unknown, nothing recommended
+        real_run = ledger_merge._run
+
+        def failing(cmd, cwd, timeout=300):
+            if "merge-tree" in cmd:
+                import subprocess
+                return subprocess.CompletedProcess(args=cmd, returncode=129, stdout="", stderr="usage: git merge-tree (simulated old git)")
+            return real_run(cmd, cwd, timeout)
+        with mock.patch.object(ledger_merge, "_run", side_effect=failing):
+            fc2 = self.forecast(range(1, 9))
+        ev("H4b merge-tree fails everywhere", recommendation=fc2["recommendation"], hubs=fc2["hubs"], passes=fc2["passes"])
+        self.assertEqual((fc2["recommendation"], fc2["hubs"], fc2["passes"]), (None, None, None))
+
+    def test_h5_a_pr_that_hard_depends_on_a_hub_waits_for_it(self):
+        self.two_hubs_six_clean()
+
+        def stack(ordered):
+            next(p for p in ordered if p["number"] == 7)["_hard_deps"] = [1]
+        fc = self.forecast(range(1, 9), mutate=stack)
+        text = self.show(fc)
+        ev("H5 dependent of a hub", hubs=fc["hubs"], passes=fc["passes"])
+        self.assertEqual(fc["hubs"]["dependents"], [7])
+        self.assertNotIn(7, fc["passes"][0])
+        self.assertEqual(sorted(fc["passes"][1]), [1, 6, 7])
+        self.assertIn("Hard-depend on a hub, so they wait for it: #7", text)
+
+    def test_h6_unchanged_shapes(self):
+        for n in (1, 2, 3):
+            self.pr(n, newfile(f"g{n}.txt"))
+        fc = self.forecast([1, 2, 3])
+        text = self.show(fc)
+        ev("H6 disjoint", recommendation=fc["recommendation"], reason=fc["reason"], hubs=fc["hubs"], passes=fc["passes"])
+        self.assertEqual((fc["recommendation"], fc["reason"], fc["hubs"], fc["passes"]), ("direct", "no conflicts found", None, None))
+        self.assertNotIn("Conflict hubs", text)
+        # one base conflict among four: still plain direct (fewer than 3 PRs conflict), but the hub is named
+        self.pr(4, line(20, "pr4 at 20"))
+        self.advance(line(20, "landed at 20"))
+        fc = self.forecast([1, 2, 3, 4])
+        text = self.show(fc)
+        ev("H6 one conflict", recommendation=fc["recommendation"], reason=fc["reason"], hubs=fc["hubs"], passes=fc["passes"])
+        self.assertEqual(fc["recommendation"], "direct")
+        self.assertIsNone(fc["passes"])
+        self.assertEqual(fc["hubs"]["base"], [4])
+        self.assertIn("Recommendation: direct — 1 conflict(s)", text)
+
+    def test_h7_cli_dry_run_then_pass_one_execute(self):
+        self.two_hubs_six_clean()
+        allp = ",".join(map(str, range(1, 9)))
+        rc, out = self.cli(False, ["--prs", allp])
+        snap = json.loads(self.sel().read_text())
+        fc = snap["forecast"]
+        block = out[out.index("Landing forecast (GH-1452"):out.index("PHASE 5")]
+        print(block)
+        ev("H7 dry run", rc=rc, passes=fc["passes"], recommendation=fc["recommendation"])
+        p1, p2 = fc["passes"]
+        self.assertIn("Recommendation: direct in passes", out)
+        self.assertIn("run --execute once per pass", out)
+        self.assertNotIn("--landing-plan group", block.split("Queue holds")[0])
+        # comparison: pass 1 alone follows the forecast; the whole queue in one direct run does not
+        pins = {int(n): h for n, h in snap["prs"].items()}
+        one = merge_cleanup.forecast_comparison(self.primary, DEV, "direct", {n: pins[n] for n in p1}, p1)
+        whole = merge_cleanup.forecast_comparison(self.primary, DEV, "direct", pins, fc["order"])
+        grp = merge_cleanup.forecast_comparison(self.primary, DEV, "group", pins, fc["order"])
+        moved = merge_cleanup.forecast_comparison(self.primary, DEV, "direct", {n: "0" * 40 for n in p1}, p1)
+        ev("H7 comparison", pass_one=one, whole_queue_direct=whole, whole_queue_group=grp, pass_one_moved_heads=moved)
+        self.assertEqual((one["state"], one["stale"], one.get("pass"), one["recommendation"]), ("match", False, 1, "direct in passes"))
+        self.assertEqual((whole["state"], whole["stale"]), ("override", False))
+        self.assertEqual(grp["state"], "override")
+        self.assertTrue(moved["stale"])
+        # --execute on pass 1 without a plan: exit 5, the refusal repeats the passes, nothing mutated
+        before = B._git(self.probe, "ls-remote", str(self.origin), "refs/heads/" + DEV).stdout
+        rc, out = self.cli(True, ["--prs", ",".join(map(str, p1))])
+        ev("H7 exit-5 refusal", rc=rc, lines=[l for l in out.splitlines() if "recommends" in l or l.startswith("  pass ")])
+        self.assertEqual(rc, 5)
+        self.assertIn("  pass 1: --prs " + ",".join(map(str, p1)), out)
+        self.assertEqual(B._git(self.probe, "ls-remote", str(self.origin), "refs/heads/" + DEV).stdout, before)
+        # main path: land pass 1 for real in the fixture, with the pins from the one dry run
+        rc, out = self.cli(True, ["--prs", ",".join(map(str, p1)), "--landing-plan", "direct", "--landing-reason", "clean set first (GH-1470 manual check)"])
+        st = self.load()["prs"]
+        states = {n: st[str(n)]["state"] for n in range(1, 9)}
+        cmp_line = [l for l in self.err.splitlines() + out.splitlines() if "Landing forecast (GH-1452): your decision" in l or "landing forecast stale" in l]
+        ev("H7 pass 1 execute", rc=rc, states=states, comparison=cmp_line,
+           err_tail=[l for l in self.err.splitlines() if "ERROR" in l or "DEFERRED" in l or "handoff" in l.lower()][-6:])
+        self.assertEqual([n for n, s in states.items() if s == "MERGED"], sorted(p1))
+        self.assertEqual([n for n, s in states.items() if s == "OPEN"], sorted(p2))
+        self.assertTrue(any("is match against" in l for l in cmp_line))
+        self.assertFalse(any("stale" in l for l in cmp_line))
+        # adjacent path: the pass 2 dry run re-pins; two PRs is below the forecast threshold, so no forecast is stored
+        rc, out = self.cli(False, ["--prs", ",".join(map(str, p2))])
+        snap2 = json.loads(self.sel().read_text())
+        ev("H7 pass 2 dry run", rc=rc, pinned=sorted(snap2["prs"]), forecast_key="forecast" in snap2,
+           b1=[l for l in self.err.splitlines() if "B1" in l][:4])
+        self.assertEqual(sorted(map(int, snap2["prs"])), sorted(p2))
+        self.assertNotIn("forecast", snap2)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

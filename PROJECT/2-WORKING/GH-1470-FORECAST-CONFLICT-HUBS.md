@@ -15,7 +15,7 @@ risk: 2
 
 | What was just completed | What's next |
 |---|---|
-| Resumed committed hub forecast and completed operator guidance | Verify final artifact, publish ready PR, await merge |
+| 10 manual scenarios and 227 existing checks pass; PDDA/PRS checks have no errors | Push through final gate, publish ready PR, await merge |
 
 ## Scope and recon
 
@@ -34,7 +34,8 @@ incorrect advice could increase operator repair churn, while explicit landing de
 
 - Two hubs plus clean members: exact two pass lists, hub/clean counts, clean-set fold.
 - Greedy hub and hard-dependency closure: retained manual driver scenarios H2/H5.
-- Distributed conflicts or failed clean-set fold: group; unknown steps: withheld.
+- Distributed conflicts or failed clean-set fold: group; unknown steps: withheld. H3c also covers
+  small queues where fewer than three conflicts previously bypassed these rules.
 - Pass-aware comparison and CLI: H7, including whole-queue override, refusal and clean-first execution.
 - Existing merge-cleanup suite and parity guard, deterministic PDDA/PRS checks, disposable push gate.
 - Retained driver and logs: `TESTS-RESULTS/2026-11-14+GH-1470/`. No new test suite (GH-831).
