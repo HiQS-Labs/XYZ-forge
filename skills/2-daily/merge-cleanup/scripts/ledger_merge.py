@@ -729,9 +729,84 @@ def _split_paths(paths: Set[str], allowed: Set[str]) -> Tuple[List[str], List[st
     return eligible, review
 
 
+PASSES_ASSUMPTION = ("passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit "
+                     "moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair")
+HUB_MAX_SHARE = 0.5  # GH-1470: more than half the queue set aside is not a hub pattern; that queue stays `group`
+
+
+def _fold(clone: Path, base_sha: str, order: List[int], prs: Dict[str, Dict[str, Any]], allowed: Set[str],
+          timeout: int) -> Dict[int, Dict[str, Any]]:
+    """Cumulative fold of `order` onto `base_sha`: clean steps advance through a synthetic commit, and
+    the first conflict or unknown stops it, so every later PR reads `conditional` (never clean)."""
+    out: Dict[int, Dict[str, Any]] = {}
+    cur: str = base_sha
+    stopped: Optional[Tuple[int, str]] = None
+    for n in order:
+        e = prs[str(n)]
+        if stopped is not None:
+            out[n] = {"state": "conditional", "after": stopped[0], "why": stopped[1]}
+            continue
+        if e["status"] != "ok":
+            out[n] = {"state": "unknown"}
+            stopped = (n, "unknown")
+            continue
+        rc, tree, paths, err = _merge_tree(clone, cur, e["head"], timeout)
+        if rc == 0:
+            c = _run(["git", "-c", "user.name=merge-cleanup", "-c", "user.email=merge-cleanup@local",
+                      "commit-tree", tree, "-p", cur, "-p", e["head"], "-m", f"forecast fold #{n}"], clone, timeout)
+            if c.returncode != 0 or not c.stdout.strip():
+                out[n] = {"state": "unknown", "reason": "synthetic fold commit failed"}
+                stopped = (n, "unknown")
+                continue
+            cur = c.stdout.strip()
+            out[n] = {"state": "clean"}
+        elif rc == 1:
+            eligible, review = _split_paths(paths, allowed)
+            out[n] = {"state": "conflict", "b1_eligible": eligible, "needs_review": review}
+            stopped = (n, "conflict")
+        else:
+            out[n] = {"state": "unknown", "reason": err}
+            stopped = (n, "unknown")
+    return out
+
+
+def _conflict_hubs(order: List[int], prs: Dict[str, Dict[str, Any]], pairs: List[Dict[str, Any]],
+                   hard_deps: Dict[int, Set[int]]) -> Dict[str, List[int]]:
+    """GH-1470: the PRs to set aside so the rest have no pairwise conflict. `base` conflict alone against
+    the base. `greedy` are then picked one at a time by highest remaining conflict degree (ties: the
+    later PR in sequence, so the earlier one keeps its place); that is a heuristic, not a proven minimum.
+    `dependents` hard-depend on a set-aside PR, so they cannot land before it."""
+    base = [n for n in order if (prs[str(n)]["alone"] or {}).get("conflict")]
+    aside = set(base)
+    edges = [(p["a"], p["b"]) for p in pairs]
+    greedy: List[int] = []
+    while True:
+        degree: Dict[int, int] = {}
+        for a, b in edges:
+            if a not in aside and b not in aside:
+                degree[a] = degree.get(a, 0) + 1
+                degree[b] = degree.get(b, 0) + 1
+        if not degree:
+            break
+        pick = max(degree, key=lambda n: (degree[n], order.index(n)))
+        greedy.append(pick)
+        aside.add(pick)
+    dependents: List[int] = []
+    changed = True
+    while changed:
+        changed = False
+        for n in order:
+            if n not in aside and set(hard_deps.get(n) or ()) & aside:
+                dependents.append(n)
+                aside.add(n)
+                changed = True
+    return {"base": base, "greedy": sorted(greedy, key=order.index), "dependents": sorted(dependents, key=order.index),
+            "clean_set": [n for n in order if n not in aside]}
+
+
 def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[int, str],
                      unknown: Optional[Dict[int, str]] = None, consumed: Optional[Dict[int, int]] = None,
-                     timeout: int = 120) -> Dict[str, Any]:
+                     timeout: int = 120, hard_deps: Optional[Dict[int, Set[int]]] = None) -> Dict[str, Any]:
     """Conflict forecast for a queue, in `clone` (objects only; no working tree needed).
 
     `heads` maps every PR in `order` to its pinned head, which the caller already fetched and verified
@@ -740,7 +815,12 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
     members against each other, and cumulatively in `order`, advancing only through clean steps; a
     conflicted merge-tree result is not a resolved landing, so the fold stops at the first conflict and
     later PRs read `conditional`. Any failed or unverifiable step is `unknown`, which withholds the
-    recommendation rather than letting it fall through to `direct`."""
+    recommendation rather than letting it fall through to `direct`.
+
+    GH-1470: when PRs conflict, the conflict hubs are named (`_conflict_hubs`; `hard_deps` maps a PR to
+    the queue members it hard-depends on) and the fold is run again over the remaining members. If that
+    set folds clean and the set-aside PRs are at most HUB_MAX_SHARE of the queue, `passes` holds the two
+    `--prs` lists of a clean-first landing; the recommendation itself stays `direct`."""
     unknown = dict(unknown or {})
     consumed = consumed or {}
     allowed = ledger_repair_paths(clone)
@@ -774,34 +854,8 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
             elif rc != 0:
                 pair_unknown.append({"a": a, "b": b, "reason": err})
     # (c) cumulative fold in sequence order; clean steps advance through a synthetic commit
-    cur: str = base_sha
-    stopped: Optional[Tuple[int, str]] = None
-    for n in order:
-        e = prs[str(n)]
-        if stopped is not None:
-            e["sequence"] = {"state": "conditional", "after": stopped[0], "why": stopped[1]}
-            continue
-        if e["status"] != "ok":
-            e["sequence"] = {"state": "unknown"}
-            stopped = (n, "unknown")
-            continue
-        rc, tree, paths, err = _merge_tree(clone, cur, e["head"], timeout)
-        if rc == 0:
-            c = _run(["git", "-c", "user.name=merge-cleanup", "-c", "user.email=merge-cleanup@local",
-                      "commit-tree", tree, "-p", cur, "-p", e["head"], "-m", f"forecast fold #{n}"], clone, timeout)
-            if c.returncode != 0 or not c.stdout.strip():
-                e["sequence"] = {"state": "unknown", "reason": "synthetic fold commit failed"}
-                stopped = (n, "unknown")
-                continue
-            cur = c.stdout.strip()
-            e["sequence"] = {"state": "clean"}
-        elif rc == 1:
-            eligible, review = _split_paths(paths, allowed)
-            e["sequence"] = {"state": "conflict", "b1_eligible": eligible, "needs_review": review}
-            stopped = (n, "conflict")
-        else:
-            e["sequence"] = {"state": "unknown", "reason": err}
-            stopped = (n, "unknown")
+    for n, seq_state in _fold(clone, base_sha, order, prs, allowed, timeout).items():
+        prs[str(n)]["sequence"] = seq_state
     # per-PR churn risk: low (no conflict), medium (conflicts only on potentially B1-eligible paths),
     # high (any needs-review path, or a PR that already used a repair and conflicts with the base again)
     for n in order:
@@ -826,16 +880,38 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
     repeat = [n for n in order if (prs[str(n)]["alone"] or {}).get("conflict") and prs[str(n)]["repairs_consumed"] >= 1]
     review_nums = [n for n in order if prs[str(n)]["code_overlap"]]
     fmt = lambda nums: ", ".join(f"#{n}" for n in nums)
+    # GH-1470: name the hubs, fold the rest again, and count both. Only a complete forecast gets this:
+    # an unknown member or pair could hide a conflict, so the clean set would not be known to be clean.
+    hubs: Optional[Dict[str, Any]] = None
+    passes: Optional[List[List[int]]] = None
+    if conflicted_nums and not (incomplete or pair_unknown):
+        hubs = _conflict_hubs(order, prs, pairs, hard_deps or {})
+        clean_fold = _fold(clone, base_sha, hubs["clean_set"], prs, allowed, timeout)
+        bad = next((n for n in hubs["clean_set"] if clean_fold[n]["state"] != "clean"), None)
+        hubs["fold"] = {"state": "clean"} if bad is None else dict(clean_fold[bad], at=bad)
+        hubs["members"] = [n for n in order if n in set(hubs["base"]) | set(hubs["greedy"])]
+        hubs["later"] = [n for n in order if n not in hubs["clean_set"]]
     if incomplete or pair_unknown:
         bits = [f"#{n} ({prs[str(n)]['reason'] or (prs[str(n)]['sequence'] or {}).get('reason') or 'not simulated'})" for n in incomplete]
         bits += [f"pair #{p['a']}/#{p['b']} ({p['reason']})" for p in pair_unknown]
         rec, reason = None, "forecast incomplete, no recommendation: " + "; ".join(bits)
+    elif hubs and hubs["fold"]["state"] == "unknown":
+        rec, reason = None, f"forecast incomplete, no recommendation: clean-set fold did not run at #{hubs['fold']['at']} ({hubs['fold'].get('reason') or 'not simulated'})"
     elif review_nums:
         rec, reason = "group", f"conflicts on code, excluded or unclassified paths ({fmt(review_nums)}); one reviewed resolution beats repeating it per PR"
-    elif len(conflicted_nums) >= 3:
-        rec, reason = "group", f"{len(conflicted_nums)} of {len(order)} PRs conflict ({fmt(conflicted_nums)}); each landing rewrites the shared ledger, so the rest conflict again"
     elif repeat:
         rec, reason = "group", f"{fmt(repeat)} already used a repair and conflict again"
+    elif len(conflicted_nums) >= 3:
+        counts = (f"{len(hubs['members'])} conflict hub(s) ({fmt(hubs['members'])}); {len(hubs['clean_set'])} of {len(order)} PRs "
+                  f"are clean once they are set aside")
+        if hubs["fold"]["state"] != "clean":
+            rec, reason = "group", f"{counts}, but that set still conflicts in sequence at #{hubs['fold']['at']}; one combined resolution beats repeated repairs"
+        elif len(hubs["later"]) > HUB_MAX_SHARE * len(order):
+            rec, reason = "group", (f"{len(hubs['later'])} of {len(order)} PRs would have to wait for a second pass "
+                                    f"({counts}); the conflicts are spread across the queue, not held by a few hubs")
+        else:
+            rec, passes = "direct", [list(hubs["clean_set"]), list(hubs["later"])]
+            reason = f"in passes: {counts} and fold clean in sequence; land those first, then the hub(s)"
     elif conflicted_nums:
         rec, reason = "direct", f"{len(conflicted_nums)} conflict(s) ({fmt(conflicted_nums)}), all on potentially B1-eligible paths"
     else:
@@ -843,4 +919,5 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
     deferrals = sum(1 for n in order if (prs[str(n)]["alone"] or {}).get("conflict"))
     return {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
             "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
-            "recommendation": rec, "reason": reason, "assumptions": list(FORECAST_ASSUMPTIONS)}
+            "hubs": hubs, "passes": passes, "recommendation": rec, "reason": reason,
+            "assumptions": list(FORECAST_ASSUMPTIONS) + ([PASSES_ASSUMPTION] if passes else [])}

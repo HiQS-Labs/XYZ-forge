@@ -588,6 +588,8 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
     recommendation) and never blocks pinning."""
     nums = [int(p["number"]) for p in ordered]
     heads = {int(p["number"]): p["headRefOid"] for p in ordered}
+    # GH-1470: a PR that hard-depends on a set-aside hub cannot land in the clean-first pass
+    deps = {int(p["number"]): {int(d) for d in (p.get("_hard_deps") or [])} for p in ordered}
     try:
         url = origin_url(primary_repo)
         if not url:
@@ -620,7 +622,7 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
                     consumed[n] = attempt_record.repair_count(attempt_record.load(rec_path)) if rec_path.exists() else 0
                 except attempt_record.RecordError as exc:
                     unknown[n] = f"attempt record unreadable: {str(exc)[:100]}"
-            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed)
+            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed, hard_deps=deps)
     except Exception as exc:  # advisory only: nothing here may stop the dry run from pinning
         why = f"forecast did not run: {str(exc)[:160]}"
         return ledger_merge.landing_forecast(Path(tempfile.gettempdir()), "", nums, heads, {n: why for n in nums}, {})
@@ -654,7 +656,29 @@ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
         if e.get("status") == "unknown":
             out.append(f"#{n}: unknown — {e.get('reason') or 'not simulated'}")
     out.append(f"PRs a B1 repair would defer in the run that repairs them: {fc.get('repair_deferrals', 0)}")
-    out.append(f"Recommendation: {fc.get('recommendation') or 'none'} — {fc.get('reason', '')}")
+    nums = lambda ns: ", ".join(f"#{n}" for n in ns) or "none"
+    hubs = fc.get("hubs")
+    if hubs:  # GH-1470: who holds the conflicts, and whether the rest really fold clean without them
+        total, clean = len(fc.get("order") or []), hubs.get("clean_set") or []
+        out.append(f"Conflict hubs (GH-1470): {len(hubs.get('members') or [])} — conflict with the base: {nums(hubs.get('base'))}; "
+                   f"picked by conflict degree (greedy heuristic, not a proven minimum): {nums(hubs.get('greedy'))}")
+        if hubs.get("dependents"):
+            out.append(f"Hard-depend on a hub, so they wait for it: {nums(hubs['dependents'])}")
+        out.append(f"Clean once hubs are set aside: {len(clean)} of {total} — {nums(clean)}")
+        fold = hubs.get("fold") or {}
+        if fold.get("state") == "clean":
+            out.append(f"Clean-set fold (hubs set aside, sequence order): clean through all {len(clean)}")
+        else:
+            paths = ", ".join((fold.get("needs_review") or []) + (fold.get("b1_eligible") or [])) or fold.get("reason") or "—"
+            out.append(f"Clean-set fold (hubs set aside, sequence order): {fold.get('state', 'unknown')} at #{fold.get('at')} "
+                       f"({paths}); later members not simulated")
+    passes = fc.get("passes")
+    out.append(f"Recommendation: {fc.get('recommendation') or 'none'}{' in passes' if passes else ''} — {fc.get('reason', '')}")
+    if passes:
+        csv = lambda ns: ",".join(str(n) for n in ns)
+        out.append(f"  pass 1: --prs {csv(passes[0])}   (the clean set; `direct`, using the pins from this dry run)")
+        out.append(f"  pass 2: --prs {csv(passes[1])}   (after pass 1 has landed: dry run again to re-pin and re-forecast; "
+                   f"each hub expects one B1 repair, a new head, fresh checks and a re-pin)")
     out += [f"Blind spot: {a}" for a in fc.get("assumptions") or []]
     return "\n".join(out)
 
@@ -670,10 +694,15 @@ def forecast_comparison(primary: Path, integration: str, decision: str, pins: Di
         return None
     stale: List[str] = []
     fc_heads = {int(n): (e or {}).get("head") for n, e in (fc.get("prs") or {}).items()}
+    # GH-1470: a run over exactly one pass of a passes plan follows the forecast; compare that pass only.
+    passes = [[int(n) for n in p] for p in (fc.get("passes") or [])]
+    this_pass = next((i + 1 for i, p in enumerate(passes) if p == [int(n) for n in order]), None)
+    if this_pass:
+        fc_heads = {n: h for n, h in fc_heads.items() if n in passes[this_pass - 1]}
     # Only the forecast's own queue is compared: a listed PR deferred by an unlisted prerequisite is not in it.
     if fc_heads != {n: {int(k): v for k, v in pins.items()}.get(n) for n in fc_heads}:
         stale.append("pinned heads differ from the forecast's")
-    if [int(n) for n in fc.get("order") or []] != [int(n) for n in order]:
+    if not this_pass and [int(n) for n in fc.get("order") or []] != [int(n) for n in order]:
         stale.append("sequence differs from the forecast's")
     # The early checkpoint runs before any fetch, so a cached origin/<integration> would hide drift:
     # ask the remote (bounded, read-only). A failed lookup makes no drift claim either way.
@@ -682,9 +711,13 @@ def forecast_comparison(primary: Path, integration: str, decision: str, pins: Di
     if base_now and fc.get("base_sha") and base_now != fc["base_sha"]:
         stale.append(f"base moved {fc['base_sha'][:10]} -> {base_now[:10]}")
     rec = fc.get("recommendation")
-    state = "no-recommendation" if rec is None else ("match" if rec == decision else "override")
-    return {"state": state, "recommendation": rec, "stale": bool(stale), "stale_reasons": stale,
-            "forecast_base": fc.get("base_sha"), "forecast_pinned_at": (data or {}).get("pinned_at")}
+    # With a passes plan, `direct` over the whole queue in one run is not what was recommended.
+    state = "no-recommendation" if rec is None else ("match" if rec == decision and (this_pass or not passes) else "override")
+    out = {"state": state, "recommendation": f"{rec} in passes" if rec and passes else rec, "stale": bool(stale),
+           "stale_reasons": stale, "forecast_base": fc.get("base_sha"), "forecast_pinned_at": (data or {}).get("pinned_at")}
+    if this_pass:
+        out["pass"] = this_pass
+    return out
 
 
 def _read_selection(primary: Path, integration: str) -> Optional[Dict[str, Any]]:
@@ -2204,7 +2237,10 @@ def main():
                 print("Guidance: See skills/2-daily/merge-cleanup/SKILL.md (GH-1066 section).\n")
                 stored = (_read_selection(primary_repo, args.integration_branch) or {}).get("forecast")
                 if isinstance(stored, dict):  # GH-1452: advice from the dry run; the decision stays yours
-                    print(f"The dry run's landing forecast recommends: {stored.get('recommendation') or 'none'} — {stored.get('reason', '')}\n")
+                    print(f"The dry run's landing forecast recommends: {stored.get('recommendation') or 'none'} — {stored.get('reason', '')}")
+                    for i, members in enumerate(stored.get("passes") or [], 1):  # GH-1470
+                        print(f"  pass {i}: --prs {','.join(str(n) for n in members)}")
+                    print()
                 print("To proceed, re-run with:")
                 print('  --landing-plan direct|group --landing-reason "<justification>"\n')
                 return EXIT_LANDING_PLAN_REQUIRED
@@ -2409,7 +2445,11 @@ def main():
             dry_forecast = getattr(args, "_forecast", None)
             if dry_forecast:  # GH-1452: planning-time evidence; the decision and its reason stay the operator's
                 print(format_landing_forecast(dry_forecast, args.integration_branch) + "\n")
-                if dry_forecast.get("recommendation"):
+                if dry_forecast.get("passes"):  # GH-1470: `direct` run once per pass, each with its own --prs
+                    print("Forecast advice, not a decision. To act on it, run --execute once per pass with that pass's\n"
+                          "--prs list. A pass of 3 or more PRs needs your own reason:\n"
+                          "  --landing-plan direct --landing-reason \"<your reason>\"\n")
+                elif dry_forecast.get("recommendation"):
                     print(f"Forecast advice, not a decision. To act on it at --execute, state your own reason:\n"
                           f"  --landing-plan {dry_forecast['recommendation']} --landing-reason \"<your reason>\"\n")
             if args.landing_plan:
