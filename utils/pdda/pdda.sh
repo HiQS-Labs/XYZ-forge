@@ -973,9 +973,12 @@ cmd_releases_current() {
       printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
       return 0
     fi
-  elif [ -f "$PDDA_REPO_ROOT/releases.db" ] && [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ]; then
+  elif [ -f "$PDDA_REPO_ROOT/releases.db" ] && { [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ] || [ -f "$HERE/../py/releases_app.py" ]; }; then
+    # Host-owned writer first; else the sibling copy beside this script (a vendored .xyz/, GH-1466).
+    local writer="$PDDA_REPO_ROOT/utils/py/releases_app.py"
+    [ -f "$writer" ] || writer="$HERE/../py/releases_app.py"
     printf 'PDDA releases-current — releases.db active releases (GH-568):\n'
-    python3 "$PDDA_REPO_ROOT/utils/py/releases_app.py" list || true
+    python3 "$writer" --root "$PDDA_REPO_ROOT" list || true
     return 0
   elif [ -f "$PDDA_REPO_ROOT/RELEASES.md" ]; then
     RELEASES_FILE_EFF="$PDDA_REPO_ROOT/RELEASES.md"

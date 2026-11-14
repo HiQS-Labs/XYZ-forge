@@ -5195,21 +5195,32 @@ def jog_reconcile_orphan_leases(root):
         conn.close()
 
 
+def _import_jog_run():
+    """Import jog_run beside this file, or refuse cleanly where it is absent (GH-1466: a .xyz
+    tier=ledger install ships the ledger CLI without the jog runtime)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        import jog_run
+    except ModuleNotFoundError as exc:
+        if exc.name != "jog_run":
+            raise
+        print("jog: unavailable in this install (jog_run.py absent; is .xyz tier=ledger? "
+              "re-vendor with --with-releases for jog)", file=sys.stderr)
+        sys.exit(2)
+    return jog_run
+
+
 def cmd_jog_run(args):
     """Execute the serial jog queue supervisor."""
-    try:
-        from jog_run import jog_run_main
-    except ImportError:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from jog_run import jog_run_main
-    jog_run_main(args)
+    _import_jog_run().jog_run_main(args)
 
 
 def _jog_verb_dispatch(fn_name):
     """GH-280 Phase 3 verb dispatch: shared root/target resolution, then delegate to jog_run."""
     def handler(args):
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        import jog_run
+        jog_run = _import_jog_run()
         root = resolve_root(getattr(args, "root", None))
         gh_num = resolve_issue_number(args.target)
         try:
@@ -5234,8 +5245,7 @@ def cmd_jog_retry_build(args):
 
 
 def cmd_jog_land(args):
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    import jog_run
+    jog_run = _import_jog_run()
     root = resolve_root(getattr(args, "root", None))
     gh_num = resolve_issue_number(args.target)
     sys.exit(jog_run.jog_land(root, gh_num, getattr(args, "pr", None)))

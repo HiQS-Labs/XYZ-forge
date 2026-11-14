@@ -2,8 +2,12 @@
 set -u
 
 PDDA_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Runtime lives in <repo>/utils/pdda/, so the repo root is two levels up from the lib dir.
-PDDA_REPO_ROOT="${PDDA_REPO_ROOT:-$(cd "$PDDA_LIB_DIR/../.." && pwd)}"
+# Runtime lives in <repo>/utils/pdda/, so the repo root is two levels up from the lib dir -- or three
+# when this copy is vendored at <host>/.xyz/utils/pdda/ (GH-1466), so it scans the host, not .xyz/.
+case "$PDDA_LIB_DIR" in
+  */.xyz/utils/pdda) PDDA_REPO_ROOT="${PDDA_REPO_ROOT:-$(cd "$PDDA_LIB_DIR/../../.." && pwd)}" ;;
+  *)                 PDDA_REPO_ROOT="${PDDA_REPO_ROOT:-$(cd "$PDDA_LIB_DIR/../.." && pwd)}" ;;
+esac
 PDDA_INBOX_DIR="${PDDA_INBOX_DIR:-$PDDA_REPO_ROOT/PROJECT/1-INBOX}"
 PDDA_WORKING_DIR="${PDDA_WORKING_DIR:-$PDDA_REPO_ROOT/PROJECT/2-WORKING}"
 PDDA_COMPLETED_DIR="${PDDA_COMPLETED_DIR:-$PDDA_REPO_ROOT/PROJECT/3-COMPLETED}"

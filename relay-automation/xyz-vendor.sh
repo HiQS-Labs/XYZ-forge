@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage:
-  xyz-vendor.sh <target-repo> [--no-register] [--with-releases]
+  xyz-vendor.sh <target-repo> [--no-register] [--with-releases | --ledger-only]
   xyz-vendor.sh -h | --help
 
 Materialize a vendored xyz harness snapshot into <target-repo>/.xyz/.
@@ -12,6 +12,9 @@ Materialize a vendored xyz harness snapshot into <target-repo>/.xyz/.
 Options:
   --no-register    Skip recording this install in the registry.
   --with-releases  Include the Tier 2 RELEASES overlay (releases_app.py, timeline, etc.).
+  --ledger-only    Vendor ONLY the ledger tier (GH-1466): the RELEASES CLI, post-merge reconcile,
+                   merge-resolve and PDDA closure. No skills, relay, marathon runtime, tick or tests.
+                   Persists across re-vendors (incl. `xyz-sync update`) until --with-releases is given.
 
 Safety note: `xyz-sync update` refuses a dirty or non-canonical harness source by default before
 calling this script. For an intentional reviewed override, set XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1.
@@ -35,6 +38,7 @@ HARNESS_ROOT="$(cd "$SELF_DIR/.." >/dev/null 2>&1 && pwd)"
 
 REGISTER=1
 WITH_RELEASES=0
+LEDGER_ONLY=0
 TARGET_REPO=""
 XYZ_REGISTRY="${XYZ_REGISTRY:-${XDG_CONFIG_HOME:-$HOME/.config}/xyz/registry.tsv}"
 
@@ -42,6 +46,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --no-register) REGISTER=0; shift ;;
     --with-releases) WITH_RELEASES=1; shift ;;
+    --ledger-only) LEDGER_ONLY=1; shift ;;
     -h|--help) usage; exit 0 ;;
     -*) printf 'xyz-vendor.sh: unknown option %q\n\n' "$1" >&2; usage >&2; exit 2 ;;
     *)
@@ -57,21 +62,35 @@ while [ "$#" -gt 0 ]; do
 done
 
 [ -n "$TARGET_REPO" ] || { usage >&2; exit 2; }
+if [ "$WITH_RELEASES" -eq 1 ] && [ "$LEDGER_ONLY" -eq 1 ]; then
+  printf 'xyz-vendor.sh: --ledger-only and --with-releases are mutually exclusive tiers\n' >&2
+  exit 2
+fi
+EXPLICIT_TIER=$((WITH_RELEASES + LEDGER_ONLY))
 [ -d "$TARGET_REPO" ] || die "target repo not found: $TARGET_REPO"
 [ -f "$HARNESS_ROOT/bin/tick" ] || die "missing bin/tick under $HARNESS_ROOT"
 [ -d "$HARNESS_ROOT/src" ] || die "missing src/ under $HARNESS_ROOT"
 
 TARGET_REPO="$(cd "$TARGET_REPO" >/dev/null 2>&1 && pwd)"
+VENDOR_DIR="$TARGET_REPO/.xyz"
+
+# GH-1466: the ledger tier is sticky. With no explicit tier flag (the `xyz-sync update` call shape),
+# an existing `.xyz/VERSION` stamped tier=ledger keeps ledger mode, and it is read BEFORE the
+# releases.db auto-promotion below, which would otherwise turn every ledger host back into Tier 2.
+# An explicit --with-releases (upgrade) or --ledger-only (downgrade) always overrides.
+if [ "$EXPLICIT_TIER" -eq 0 ] && [ -f "$VENDOR_DIR/VERSION" ] && grep -qx 'tier=ledger' "$VENDOR_DIR/VERSION"; then
+  note "existing .xyz/ is tier=ledger — keeping the ledger-only tier (pass --with-releases to upgrade)"
+  LEDGER_ONLY=1
+fi
 
 # Auto-detect Tier 2 adoption: if releases.db exists at target root, treat as Tier 2 (sticky).
-if [ -f "$TARGET_REPO/releases.db" ]; then
+if [ "$LEDGER_ONLY" -eq 0 ] && [ -f "$TARGET_REPO/releases.db" ]; then
   if [ "$WITH_RELEASES" -eq 0 ]; then
     note "releases.db detected at target root — enabling Tier 2 RELEASES overlay"
   fi
   WITH_RELEASES=1
 fi
 
-VENDOR_DIR="$TARGET_REPO/.xyz"
 STAGE_DIR="$TARGET_REPO/.xyz.tmp.$$"
 
 cleanup() {
@@ -431,6 +450,16 @@ register_vendor() {
 #                     Retains the full overlay and stages RELEASES-DB-FAQS.md into .xyz/.
 VENDOR_DIRS="relay-automation bin src utils test skills"
 RELEASES_OVERLAY="utils/py/releases_app.py utils/py/releases_cycle.py utils/releases-merge-resolve.sh utils/release-lanes.sh utils/timeline relay-automation/xyz-releases-onboard.sh"
+#   Ledger tier (GH-1466, --ledger-only; sticky via VERSION tier=ledger): an ALLOW-list, the reverse
+#                     of Tier 1's deny-list, holding the ledger CLI's real closure and nothing else:
+#                     the CLI and its lazily-imported connectors (device_config, board_sync), post-merge
+#                     reconcile, the planner step reconcile runs (fatal on failure), the views reconcile
+#                     and merge-resolve regenerate, and PDDA. A missing source entry is a hard die (the
+#                     GH-77 drop failure made loud), and the staged copy must pass an import sanity check
+#                     before the swap. That check covers the Python import chain only, not shell/data
+#                     files or imports added lazily later; the GH-1466 manual evidence covers the rest.
+#                     jog_run is deliberately absent: `releases jog ...` refuses cleanly instead.
+LEDGER_MANIFEST="utils/py/releases_app.py utils/py/releases_cycle.py utils/py/wave_reconcile.py utils/py/harness_paths.py utils/py/gate_env.py utils/py/proc_group.py utils/py/device_config.py utils/py/board_sync.py utils/py/work_connectors utils/py/marathon_plan.py utils/py/_marathon_plan.py utils/py/router_audit.py utils/py/swarm_preflight.py utils/py/pdda_gov_scan.py utils/py/pdda_comment_refs.py utils/releases-merge-resolve.sh utils/release-lanes.sh utils/marathon-plan.sh utils/marathon-plan-zones.default.json utils/leaderboard.sh utils/timeline utils/pdda utils/pdda-local-checks.sh"
 
 materialize_vendor() {
   local d
@@ -438,12 +467,23 @@ materialize_vendor() {
   rm -rf "$STAGE_DIR"
   mkdir -p "$STAGE_DIR"
 
-  for d in $VENDOR_DIRS; do
-    [ -d "$HARNESS_ROOT/$d" ] || die "missing $d/ under $HARNESS_ROOT (cannot build a complete vendor)"
-    mkdir -p "$STAGE_DIR/$d"
-    # Trailing '/.' copies the directory *contents* (incl. nested hooks/, fixtures/) into the stage.
-    cp -Rp "$HARNESS_ROOT/$d/." "$STAGE_DIR/$d/"
-  done
+  if [ "$LEDGER_ONLY" -eq 1 ]; then
+    # GH-1466: copy exactly the ledger allow-list, with the same cp -Rp as the full mirror.
+    local entry
+    for entry in $LEDGER_MANIFEST; do
+      [ -e "$HARNESS_ROOT/$entry" ] || die "ledger manifest entry missing under $HARNESS_ROOT: $entry"
+      mkdir -p "$STAGE_DIR/$(dirname "$entry")"
+      cp -Rp "$HARNESS_ROOT/$entry" "$STAGE_DIR/$entry"
+    done
+    find "$STAGE_DIR" \( -name '__pycache__' -o -name '*.pyc' \) -prune -exec rm -rf {} + 2>/dev/null || true
+  else
+    for d in $VENDOR_DIRS; do
+      [ -d "$HARNESS_ROOT/$d" ] || die "missing $d/ under $HARNESS_ROOT (cannot build a complete vendor)"
+      mkdir -p "$STAGE_DIR/$d"
+      # Trailing '/.' copies the directory *contents* (incl. nested hooks/, fixtures/) into the stage.
+      cp -Rp "$HARNESS_ROOT/$d/." "$STAGE_DIR/$d/"
+    done
+  fi
 
   # GH-110: cp -Rp on macOS/BSD faithfully mirrors Finder-created .DS_Store cruft from the source
   # tree into every vendored copy. Strip it post-copy rather than reaching for rsync --exclude (no
@@ -451,7 +491,7 @@ materialize_vendor() {
   find "$STAGE_DIR" -name '.DS_Store' -delete
 
   # Tier split (GH-197): deny-list removal for Tier 1; Tier 2 retains overlay and includes RELEASES-DB-FAQS.md.
-  if [ "$WITH_RELEASES" -eq 1 ]; then
+  if [ "$WITH_RELEASES" -eq 1 ] || [ "$LEDGER_ONLY" -eq 1 ]; then
     if [ -f "$HARNESS_ROOT/RELEASES-DB-FAQS.md" ]; then
       cp -p "$HARNESS_ROOT/RELEASES-DB-FAQS.md" "$STAGE_DIR/RELEASES-DB-FAQS.md"
     fi
@@ -466,16 +506,39 @@ materialize_vendor() {
   # target repo's root `"type": "module"` and rejects bin/tick's require() calls before it can run.
   printf '{\n  "type": "commonjs"\n}\n' > "$STAGE_DIR/package.json"
 
-  # Runnability sanity — the two files every feature ultimately depends on.
-  [ -f "$STAGE_DIR/bin/tick" ] || die "vendor incomplete: bin/tick missing after mirror"
-  [ -f "$STAGE_DIR/relay-automation/relay-turn-lib.sh" ] \
-    || die "vendor incomplete: relay-turn-lib.sh missing after mirror"
+  if [ "$LEDGER_ONLY" -eq 1 ]; then
+    # GH-1466 runnability sanity for the ledger tier: the staged Python import chain resolves from the
+    # stage alone (-I: no user site, no cwd), before the destructive swap. Limited coverage by design
+    # (see LEDGER_MANIFEST): it cannot see shell/data files or imports added lazily later.
+    # Only a MISSING module fails it (that is a manifest gap). Any other import-time error -- e.g. the
+    # planner's Python >= 3.10 syntax on an older interpreter -- is the interpreter's, not the closure's,
+    # so it warns and the vendor proceeds.
+    PYTHONDONTWRITEBYTECODE=1 python3 -I - "$STAGE_DIR/utils/py" >/dev/null <<'PYCHECK' \
+      || die "vendor incomplete: ledger tier import check failed (a dependency is missing from LEDGER_MANIFEST)"
+import importlib, sys
+sys.path.insert(0, sys.argv[1])
+for name in ("releases_app", "wave_reconcile", "work_connectors", "board_sync", "marathon_plan"):
+    try:
+        importlib.import_module(name)
+    except ModuleNotFoundError as exc:
+        sys.stderr.write("xyz-vendor.sh: ledger import check: %s -> %s\n" % (name, exc))
+        sys.exit(1)
+    except Exception as exc:
+        sys.stderr.write("xyz-vendor.sh: warning: ledger import check: %s raised %s: %s (interpreter %s)\n"
+                         % (name, type(exc).__name__, exc, sys.version.split()[0]))
+PYCHECK
+  else
+    # Runnability sanity — the two files every feature ultimately depends on.
+    [ -f "$STAGE_DIR/bin/tick" ] || die "vendor incomplete: bin/tick missing after mirror"
+    [ -f "$STAGE_DIR/relay-automation/relay-turn-lib.sh" ] \
+      || die "vendor incomplete: relay-turn-lib.sh missing after mirror"
+  fi
 
   {
     printf 'source_commit=%s\n' "$(git -C "$HARNESS_ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"
     printf 'tick_version=%s\n' "$(tick_version)"
     printf 'vendored_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    printf 'tier=%s\n' "$([ "$WITH_RELEASES" -eq 1 ] && echo 2 || echo 1)"
+    printf 'tier=%s\n' "$([ "$LEDGER_ONLY" -eq 1 ] && echo ledger || { [ "$WITH_RELEASES" -eq 1 ] && echo 2 || echo 1; })"
   } > "$STAGE_DIR/VERSION"
 
   # GH-312: carry TARGET-owned runtime state across the swap. $STAGE_DIR is mirrored purely from
@@ -511,6 +574,8 @@ register_vendor
 
 note "vendored harness -> $VENDOR_DIR"
 note "merge-cleanup batch sweeps: declare this repo's qualification command in .merge-cleanup.json (merge-cleanup SKILL.md, Project merge policy)"
-if [ "$WITH_RELEASES" -eq 1 ]; then
+if [ "$LEDGER_ONLY" -eq 1 ]; then
+  note "ledger-only tier: RELEASES CLI, reconcile, merge-resolve and PDDA only (no relay/marathon/tick/skills)"
+elif [ "$WITH_RELEASES" -eq 1 ]; then
   note "RELEASES add-on included: run 'releases init' to enable (see RELEASES-DB-FAQS.md)"
 fi

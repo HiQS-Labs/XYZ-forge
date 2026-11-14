@@ -76,6 +76,7 @@ hq_xyz_lookup(){
     case "$install" in ''|'#'*) continue;; esac
     [ -n "$coord" ] || continue
     [ -d "$coord" ] || continue                          # stale row -> not a usable install (Blocker 2)
+    grep -qx 'tier=ledger' "$install/VERSION" 2>/dev/null && continue  # GH-1466: ledger tier is not a driven-lane harness
     [ "$(hq_lc "$(hq_bare "$coord")")" = "$repo" ] || continue
     
     local i seen=-1
