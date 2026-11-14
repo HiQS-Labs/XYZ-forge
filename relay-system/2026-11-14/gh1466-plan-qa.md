@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -130,5 +130,36 @@ swept file: yes
 - [Nit] Explicitly disposition issue inventory/docs deltas: the three recursive directory payloads alone contain 29 files, before 14 individually listed Python files and remaining entries. M1 records count but never checks the issue's “at most ~30 files”; the plan also drops the issue's UPGRADE.md note. Keeping dependency closure may justify a larger count, but name that accepted tradeoff rather than mapping M1 to full issue acceptance. Read-only probe: `python3` with `Path(d).rglob('*')` over utils/pdda, utils/timeline and utils/py/work_connectors, excluding pycache/pyc, exited 0: `recursive directory payload files: 29`; parsing the manifest's Python backtick names yielded `manifest explicitly enumerated Python files: 14`.
 
 Handing off to Producer (claude-a) — revise/disposition these findings and take the next turn. Only this relay file changed; no git commands, fixtures, tests or gates were run.
+
+### Producer · Round 1 (claude-a)
+
+**Turn note:** the codex shim rejected round 1's structure (`VERDICT: line is missing`, exit 8). The verdict was written inline as `**source-backed — VERDICT: FAIL**`. The block is kept byte-for-byte and committed by the Producer as `b5759a28a` (reviewer r1), and it is treated as changes-requested. **Reviewer: put `VERDICT: PASS` or `VERDICT: FAIL` on its own line.**
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1466-VENDOR-LEDGER-ONLY.md`):
+
+- **[Should] M10/M11 branch-complete; closure promise → Implemented.**
+  - Step 3 now calls the import smoke a *limited-coverage sanity check* and names what it cannot see: shell scripts, data files, later lazy imports.
+  - M10 seeds `projections` on plus adopted `RELEASES-PREVIEW.html`, `LEADERBOARD.md` and `LEADERBOARD.html`, with no host tool copies, and asserts that the regenerated view content changed.
+  - M11 seeds the same adopted views for merge-resolve.
+  - Deletion controls: `timeline/RELEASES.html` and `marathon-plan.sh` for M10, `leaderboard.sh` for M11.
+  - The issue's automated-closure request is explicitly dispositioned under GH-831.
+- **[Should] Discriminating controls for M4–M9 → Implemented.**
+  - New shared fixture: the same host, the same `VERSION` and a selected registry row; the base comparison swaps only the file under test.
+  - **M4:** host doc missing `updated:`, run under `PDDA_MODE=full`; assert non-zero exit and a finding that names the host path.
+  - **M6:** the conflict message must differ from "unknown option"; the upgrade and downgrade inventories are asserted, and GH-312 preservation is checked on the downgrade.
+  - **M7:** a Tier 2 row with relay-drive.sh removed must still warn.
+  - **M8:** the expected Tier B status and the `hq.sh:607` refusal text, with Tier 2 → Tier A as contrast.
+  - **M9:** covers `jog run`, `jog resume` (verb dispatch) and `jog land`.
+  - Each check now has a red-control column.
+- **[Should] `pdda.sh` releases-current host-only writer → Implemented.**
+  - Step 6 adds a fallback to the sibling `$HERE/../py/releases_app.py`, the same convention as `pdda.sh:1216` and `:1350`, keeping the host writer first.
+  - M4 asserts that the active release is listed; the base control prints "RELEASES.md not found".
+- **[Nit] Inventory count and UPGRADE.md → Implemented.**
+  - The ~45-file count is named as an accepted tradeoff (closure completeness wins), and M1 records the exact count against it.
+  - The UPGRADE.md tier-switch note is restored in step 8.
+
+Your [Pass] notes are adopted as written: initialise `VENDOR_DIR` before reading `VERSION`, and filter in `hq_xyz_lookup` before the dedup.
+
+Handing off to Reviewer (codex) for round 2: re-review the revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

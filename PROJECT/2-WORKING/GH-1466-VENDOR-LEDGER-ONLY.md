@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake, recon at `e0586fc30`, plan drafted. | Codex plan QA via relay-xyz. |
+| Plan QA round 1 (Codex): FAIL, 3 should-fix + 1 nit, all implemented in this revision. | Plan QA round 2. |
 
 ## Problem
 
@@ -92,45 +92,54 @@ phases: 1
    - *Verify:* M1 (file inventory) and M2 (red control: delete an entry in a scratch harness copy → vendor dies naming it).
 3. **Mode-aware runnability check.**
    - Under `tier=ledger`, replace the `bin/tick` / `relay-turn-lib.sh` checks with an import smoke on the staged copy: `python3 -I -c 'import sys; sys.path.insert(0, "<stage>/utils/py"); import releases_app, wave_reconcile, work_connectors, board_sync, marathon_plan'`. If it fails, `die` before the swap.
-   - This is the closure guard. It runs at every vendor, reuses the existing sanity-check slot, and adds no suite.
+   - **Limited coverage, stated plainly:** this is a cheap sanity check on the Python import chain, not a full closure guard. It cannot see missing shell scripts, data files (zones JSON, `timeline/RELEASES.html`) or imports added lazily later. Missing *source* entries are caught by the step 2 `die`. The rest of the closure is proven by the M10/M11 manual runs and their deletion controls.
+   - **Issue #1466's automated-closure request:** under GH-831 it is delivered as this runtime sanity check plus manual evidence under `TESTS-RESULTS/`. No suite or guard framework is added.
    - *Verify:* M3, a red control with `device_config.py` dropped from the manifest in a scratch harness → vendor dies.
 4. **`xyz-sync check`.** In `check_rows`, skip the safety-guard probe when `<install>/VERSION` contains `tier=ledger`. The guard protects relay targets, and a ledger install has no relay. *Verify:* M7.
 5. **HQ.** In `hq_xyz_lookup`'s read loop, skip a row whose `$install/VERSION` contains `tier=ledger`. All five `hq.sh` Tier A sites follow, and the repo reads as Tier B. *Verify:* M8 (`hq status` / `hq fire` on a ledger host).
 6. **PDDA host root.**
    - `pdda-lib.sh:6`: when the lib dir sits at `*/.xyz/utils/pdda`, default `PDDA_REPO_ROOT` to three levels up, the host, instead of two. An explicit `PDDA_REPO_ROOT` still wins. This also corrects the identical latent bug for Tier 1/2 vendored `pdda.sh`, which today scans `.xyz/`; nothing in-repo invokes that path.
    - `wave_reconcile.py:2098`: keep host-first and change the fallback from the literal `utils/pdda/pdda.sh` to `harness_tool(repo_root, "utils/pdda/pdda.sh")`.
+   - `pdda.sh:976-978` (`releases-current`): the DB branch requires `$PDDA_REPO_ROOT/utils/py/releases_app.py`. Keep the host writer first, then fall back to the sibling `$HERE/../py/releases_app.py`, the same `$HERE/../py/` convention `pdda.sh` already uses at `:1216` and `:1350`. A host-owned writer and a canonical checkout resolve exactly as before.
    - *Verify:* M4. A broken host capture doc makes vendored `pdda.sh` report an ERROR; before the fix it scans `.xyz/` and reports none.
 7. **Jog refusal.** One helper `_import_jog_run()` in `releases_app.py` that catches `ModuleNotFoundError`, prints `jog: unavailable in this install (jog_run.py absent; .xyz tier=ledger?)` and exits 2. It is used by `cmd_jog_run`, `_jog_verb_dispatch` and `cmd_jog_land`. *Verify:* M9.
-8. **Docs.** Add the `--ledger-only` usage line and a third tier row to the xyz-vendor.sh header, a short "Ledger-only tier" note in `RELEASES-DB-FAQS.md`, and a CHANGELOG entry.
+8. **Docs.** Add the `--ledger-only` usage line and a third tier row to the xyz-vendor.sh header, a short "Ledger-only tier" note in `RELEASES-DB-FAQS.md`, a short note in `UPGRADE.md` (how to switch tiers), and a CHANGELOG entry.
+   - **Accepted tradeoff:** the issue estimated "at most ~30 files". The real closure is about 45 (the three recursive directories `utils/pdda`, `utils/timeline` and `utils/py/work_connectors` hold 29 files on their own, plus 14 listed Python files and 8 other entries). Completeness of the closure wins over the estimate. M1 records the exact count, and the PR states the delta.
 
 **Verification.**
 - **Focused, during the build:** `bash test/gh197-vendor-tier-split.sh`, `gh105`, `gh312`, `gh358`, and the existing xyz-sync / hq / pdda suites touched by the change.
 - **Final:** the classifier route (`utils/ci-route.sh`), expected to be full. Run `bash ci-local.sh` once on the final commit, in a disposable `-gate` clone.
 - **Manual checks**, recorded under `TESTS-RESULTS/2026-11-14+GH-1466/` with `provenance.jsonl`. Each runs in a throwaway host repo (`git init` plus a seeded ledger copied from this repo's `releases.sql`), with the harness checkout made unreachable by copying `.xyz/` into a scratch host and calling it by absolute path. `harness_home()` anchors on the file location, so no fallback is possible.
 
-| Check | Expectation |
-|---|---|
-| **M1** | `--ledger-only`: no `bin/ src/ skills/ test/ relay-automation/`; `VERSION` has `tier=ledger`; file count recorded |
-| **M2** | Red control: missing manifest entry → `die` naming it |
-| **M3** | Red control: `device_config.py` removed → the import smoke dies |
-| **M4** | Vendored `pdda.sh` flags a broken host doc. Red control: same run on the base commit → no finding |
-| **M5** | `xyz-sync update <host>` with `releases.db` present keeps `tier=ledger`. Red control: base commit → `tier=2` |
-| **M6** | `--ledger-only --with-releases` → exit 2; `--with-releases` on a ledger host → `tier=2` |
-| **M7** | `xyz-sync check` on the ledger row: no `SAFETY GUARD MISSING` |
-| **M8** | `hq` reports the ledger host as not Tier A; `fire` refuses |
-| **M9** | `releases_app.py jog run --dry-run` → exit 2 with the message, no traceback |
-| **M10** (smoke, main path) | In the ledger host, `releases_app.py check` exits 0; `roadmap add` then `rate` writes with no `ModuleNotFoundError` on stderr; a non-dry-run `wave_reconcile.py --pr <N> --skip-branch-check` on an offline fixture runs the planner, timeline and PDDA gate |
-| **M11** (smoke, adjacent path) | Re-run the vendor on the same host (no flags) and run `releases-merge-resolve.sh` on a conflicted `releases.sql` |
+**Shared fixture (M4–M11).** One throwaway host per run:
+- `git init`, a ledger seeded by copying this repo's `releases.sql` and building `releases.db` with the CLI, and a `PROJECT/` tree.
+- `.xyz/` vendored with the candidate.
+- One selected registry row in a scratch `XYZ_REGISTRY` that points at that host.
+- The base comparison reuses **the same host and the same `.xyz/VERSION` and registry row**, swapping in the base commit's copy of only the file under test. The base vendor cannot create a ledger install itself.
+
+| Check | Expectation | Red control (only the relevant fix absent) |
+|---|---|---|
+| **M1** | `--ledger-only`: no `bin/ src/ skills/ test/ relay-automation/`; `VERSION` has `tier=ledger`; exact file count recorded vs the ~45 estimate | — (inventory) |
+| **M2** | Missing manifest source → `die` naming the entry | Scratch harness copy with `utils/leaderboard.sh` removed |
+| **M3** | Import smoke dies before the swap; the existing `.xyz/` is untouched | Scratch harness with `device_config.py` removed from the manifest |
+| **M4** | Host doc with invalid frontmatter (the `updated:` key removed) is flagged by vendored `PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh run`: non-zero exit, finding names the host path. `pdda.sh releases-current` lists the host DB's active release with the writer only in `.xyz/` | Base `pdda-lib.sh` → scans `.xyz/`, no host finding; base `pdda.sh` → "RELEASES.md not found" |
+| **M5** | `xyz-sync update <host>` (no flags, `releases.db` present) keeps `tier=ledger` and the ledger inventory | Base `xyz-vendor.sh` on the same host → `tier=2` and a full mirror |
+| **M6** | `--ledger-only --with-releases` → exit 2 with the **conflict** message, not "unknown option". `--with-releases` on a ledger host → `tier=2` plus the full Tier 2 inventory. `--ledger-only` on a Tier 2 host → ledger inventory, and GH-312 runtime paths preserved | Base → "unknown option" |
+| **M7** | `xyz-sync check <host>` with the selected ledger row → `ok`, no `SAFETY GUARD MISSING`. A Tier 2 row with relay-drive.sh removed still reports `SAFETY GUARD MISSING` | Base `xyz-sync.sh` on the same ledger row → `SAFETY GUARD MISSING` |
+| **M8** | With the matching registry row, `hq status` shows the host as Tier B, and `hq fire` refuses with its "is not Tier A" message (`hq.sh:607`). The same host vendored Tier 2 → Tier A | Base `hq-lib.sh` → Tier A |
+| **M9** | `releases_app.py jog run --dry-run`, `jog resume <N>` (verb dispatch) and `jog land <N>`: each exits 2 with the unavailable message, no traceback | Base `releases_app.py` in the ledger host → `ModuleNotFoundError` traceback |
+| **M10** (smoke, main path) | In the ledger host, with `projections` enabled and adopted `RELEASES-PREVIEW.html`, `LEADERBOARD.md` and `LEADERBOARD.html` present, and **no host copies** of the tools: `releases_app.py check` exits 0; `roadmap add` then `rate` → no `ModuleNotFoundError` on stderr. A non-dry-run `wave_reconcile.py --pr <N> --skip-branch-check` on offline landing metadata exits 0, runs the planner, **regenerates the preview and leaderboard with the new ledger data** (content diff recorded), and runs the vendored PDDA gate | Remove `.xyz/utils/timeline/RELEASES.html`, then separately `.xyz/utils/marathon-plan.sh`, from the installed copy → that reconcile fails |
+| **M11** (smoke, adjacent path) | Re-run the vendor on the same host (no flags) → still ledger. Then `releases-merge-resolve.sh` on a conflicted `releases.sql`, with the same adopted views → resolves, regenerates the views, exits 0 | Remove `.xyz/utils/leaderboard.sh` → merge-resolve dies at the leaderboard step |
 
 **Acceptance map → issue #1466 checklist.**
 
 | Issue item | Covered by |
 |---|---|
 | Inventory | M1 |
-| Ledger CLI, reconcile, PDDA work offline | M10, M4 |
+| Ledger CLI, reconcile, PDDA work offline (incl. `releases-current`) | M10, M4 |
 | Vendored PDDA scans the host | M4 |
 | Merge-resolve | M11 |
-| Closure test → runnability import smoke | M3 |
+| Closure test → import sanity check plus manual deletion controls (GH-831) | M2, M3, M10/M11 red controls |
 | Sticky across `xyz-sync update` | M5 |
 | `xyz-sync check` / hq | M7, M8 |
 | Flag conflict and upgrade | M6 |
