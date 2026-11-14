@@ -1,6 +1,6 @@
 ---
 name: honest
-description: Produce an honest, defensible ground-truth read of the current repo — how mature the codebase really is, how far along each feature actually is, and what can be safely claimed about it externally. Reads CHANGELOG, architecture/technical docs, and recent git history; never modifies the repo. Offers an Express (10–15 min) or Deep (30–40 min) scan. Trigger when the user says "baseline", "where do we actually stand", "what's the real state of this repo", "honest assessment of the codebase", "maturity assessment", "ground truth", "what's real vs aspirational here", "I inherited this repo", "assess the feature list", or "what can we honestly say about this" — and proactively before the user describes project status to a stakeholder, board, or sales without having verified it first.
+description: Produce an honest, defensible ground-truth read of the current repo — how mature the codebase really is, how far along each feature actually is, and what can be safely claimed about it externally. Reads CHANGELOG, architecture/technical docs, and recent git history; never modifies the repo. Offers an Express (10–15 min) or Deep (30–40 min) scan. Trigger when the user says "repo baseline", "where do we actually stand", "what's the real state of this repo", "honest assessment of the codebase", "maturity assessment", "ground truth", "what's real vs aspirational here", "I inherited this repo", "assess the feature list", or "what can we honestly say about this" — and proactively before the user describes project status to a stakeholder, board, or sales without having verified it first.
 ---
 
 # Baseline
@@ -11,7 +11,7 @@ The deliverable is a single Markdown file with two firewalled halves: a **plain-
 
 ## How this differs from the sibling skills
 
-- **baseline** (orientation) — "Where does this project actually stand, in ground truth?" Run once on entering or re-entering a repo, or before describing status externally.
+- **honest** (orientation) — "Where does this project actually stand, in ground truth?" Run once on entering or re-entering a repo, or before describing status externally.
 - **snapshot** (session re-entry) — "Where was I when I stopped?" Saves one working session so you can resume it.
 - **take-a-step-back / blast-radius / bottom-line** (decision moments) — challenge, size, or compress a specific choice.
 

@@ -109,6 +109,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | Skill | Purpose |
 |---|---|
 | [10days](skills/3-weekly/10days/SKILL.md) | Sweep recent GitHub issues, verify still-valid, build a marathon plan from survivors. |
+| [baseline](skills/3-weekly/baseline/SKILL.md) | Turn a circular complaint thread about a process or policy into graded evidence, one concrete ask per item and a local HTML deck with one question to agree on per slide. |
 | [converge](skills/3-weekly/converge/SKILL.md) | Cluster findings across several `/dry` Convergence Maps by shape to find what repeats. |
 | [dry](skills/3-weekly/dry/SKILL.md) | Trace a codebase resource-first and report the subsystems that should be one subsystem. |
 | [end-of-week](skills/3-weekly/end-of-week/SKILL.md) | Reconcile weekly governance evidence, file ranked gaps, correct metadata and verify the configured kanban projection. |

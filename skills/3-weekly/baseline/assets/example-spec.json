@@ -1,0 +1,74 @@
+{
+  "title": "Example: review wait on docs-only pull requests",
+  "date": "2026-01-15",
+  "repo": "example/widgets",
+  "commit": "abc1234",
+  "prepared_for": "the platform team and its engineering manager",
+  "sources": [
+    {"label": "GH #412", "url": "https://github.com/example/widgets/issues/412"},
+    {"label": "Slack thread pasted by the manager"}
+  ],
+  "heard": {
+    "summary": "Small documentation fixes take as long to land as code changes. The people fixing docs feel the review rule treats a typo like a schema migration, and several have stopped sending small fixes.",
+    "quotes": [
+      {"text": "I fixed a broken link on Monday. It merged on Thursday. Why do we even bother?", "who": "Backend developer", "source": "GH #412"},
+      {"text": "Nobody is saying reviews are bad. This is just absurd for a README.", "who": "Backend developer", "source": "GH #412, comment 6"}
+    ],
+    "not_saying": [
+      "That code changes should merge without review.",
+      "That any one reviewer is slow or careless."
+    ]
+  },
+  "items": [
+    {
+      "title": "Docs-only pull requests wait days for a second approval",
+      "said": {"text": "I fixed a broken link on Monday. It merged on Thursday.", "who": "Backend developer", "source": "GH #412"},
+      "event": "PR #398 changed one line in README.md. It was opened Monday 09:10, got its first approval at 09:40 and its second on Thursday 14:05.",
+      "evidence": [
+        {"claim": "PR #398 waited three days for its second approval.", "grade": "confirmed", "ref": "PR #398 review timeline", "url": "https://github.com/example/widgets/pull/398"},
+        {"claim": "This happens to every docs-only PR.", "grade": "partly", "ref": "last 30 docs-only PRs: 11 waited over 24 hours, 19 merged the same day"},
+        {"claim": "Two approvals are required on every path.", "grade": "confirmed", "ref": ".github/CODEOWNERS:1 and the branch protection on main"}
+      ],
+      "rule": {"text": "Two approvals were added after an unreviewed config change took checkout down in March. The rule was written for the whole repository because nobody listed the safe paths at the time.", "ref": "PR #201 and incident note docs/incidents/2025-03-checkout.md"},
+      "cost": "11 of the last 30 docs-only PRs waited more than a day. Median wait for those 11 was 2.4 days.",
+      "need": "A small, safe fix should land the day it is written.",
+      "ask": {"type": "carve-out", "text": "Require one approval, not two, for pull requests that only touch docs/ and *.md files."},
+      "owner": "Engineering manager",
+      "question": "Do we move docs-only pull requests to one approval?"
+    },
+    {
+      "title": "Nobody knows who the second reviewer should be",
+      "said": {"text": "I ping the channel and hope. Half the time nobody answers.", "who": "Frontend developer", "source": "Slack thread"},
+      "event": "PR #405 was posted to the team channel on Tuesday with a request for a second reviewer. The first reply came 26 hours later.",
+      "evidence": [
+        {"claim": "PR #405 had no assigned second reviewer for 26 hours.", "grade": "confirmed", "ref": "PR #405 timeline", "url": "https://github.com/example/widgets/pull/405"},
+        {"claim": "Half of review requests in the channel get no answer.", "grade": "unverified", "settle": "Count the review requests and replies in the channel for the last four weeks."}
+      ],
+      "rule": {"text": "CODEOWNERS assigns one owner per directory. The second reviewer was left to the author so that people could pick someone with context.", "ref": ".github/CODEOWNERS"},
+      "cost": "On PR #405, 26 hours passed before anyone was assigned. The wider cost is not measured yet.",
+      "need": "An author should know who reviews next without asking the whole channel.",
+      "ask": {"type": "fix", "text": "Turn on round-robin assignment for the second reviewer and count unanswered requests for four weeks."},
+      "owner": "Platform team lead",
+      "question": "Do we turn on round-robin assignment for the second reviewer?"
+    },
+    {
+      "title": "The reason for the rule is not written down",
+      "said": {"text": "Why do we even need two approvals? It feels like nobody trusts us.", "who": "Backend developer", "source": "GH #412, comment 9"},
+      "event": "The contributor guide states the two-approval rule in one line and gives no reason. The March incident is recorded in a folder the guide does not link to.",
+      "evidence": [
+        {"claim": "The rule exists because the team is not trusted.", "grade": "not-found", "ref": "PR #201 description cites the March outage, not a trust concern"},
+        {"claim": "The guide gives no reason for the rule.", "grade": "confirmed", "ref": "CONTRIBUTING.md:42"}
+      ],
+      "rule": {"text": "The rule answers one outage. Its reason lives in an incident note that new team members are never pointed to.", "ref": "docs/incidents/2025-03-checkout.md"},
+      "cost": "Two people in the thread joined after March and read the rule as a statement about them.",
+      "need": "People follow a rule more easily when they know what it protects.",
+      "ask": {"type": "explain", "text": "Add two sentences and a link to the incident note beside the rule in CONTRIBUTING.md."},
+      "owner": "Engineering manager",
+      "question": "Do we add the reason and the incident link to the contributor guide?"
+    }
+  ],
+  "parked": [
+    {"text": "Whether CI is too slow.", "why": "Raised once in the thread with no example. Needs its own look."},
+    {"text": "Moving from CODEOWNERS to team-based review.", "why": "A larger change than this conversation can decide."}
+  ]
+}
