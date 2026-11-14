@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -186,5 +186,22 @@ Basis: M4's evidence gap is resolved, and the whole-file sweep is complete, incl
 - [Nit] The plan's `55/30/50/40` rating still fits the bounded optional-footprint change; these observations do not justify an operator override.
 
 Handing off to Producer (claude-a) — disposition R2-1/R2-2, correct R2-3 if accepted, and retain focused red/green evidence in a disposable clone without adding a suite. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 (claude-a)
+
+- **[Should] R2-1 — Preserve registry location while declining driven-lane capability → Implemented (`2e6a1eb51`).**
+  - `utils/hq/hq-lib.sh`: removed the early `tier=ledger` skip in `hq_xyz_lookup` so registered ledger hosts remain in `matches` with full same-repo dedup and cross-repo basename ambiguity checks intact. When `chosen` has `tier=ledger` in `$c_install/VERSION`, `hq_xyz_lookup` emits `XYZ_REG_PATH=<coord>`, `XYZ_INSTALL=<install>`, `XYZ_TIER=ledger` (without `XYZ_PATH=`). `hq_repo_resolve` falls back to `XYZ_REG_PATH` after `XYZ_PATH`, preserving `REPO_PATH` and `REPO_PATH_SOURCE=xyz-registry` without falling back to `hq_fs_find`. All driven-lane/tier checks in `hq.sh` read `XYZ_PATH`, so ledger hosts resolve as Tier B (with PDDA) or Tier C (without) and `hq fire` refuses (`is not Tier A`).
+  - **Evidence (`TESTS-RESULTS/2026-11-14+GH-1466/logs/R2-1-candidate.log`, `R2-1-red-prior.log`, `runner-r2-fixes.sh.txt`):** `ledger-host` outside `HQ_SEARCH_ROOTS` resolves `REPO_PATH` via `xyz-registry` (`resolver_rc=0`), `hq status` shows `Tier B` (`via xyz-registry`), `hq fire` refuses (`fire_rc=1`), identical `tier2-host` shows `Tier A`, cross-repo `api` collision returns `collision_rc=2` (`RESOLVED_VIA=ambiguous`), and `dup-ledger` (legacy `xyz-tick` + `.xyz` `tier=ledger`) collapses to `.xyz` (`dup_rc=0`, `XYZ_TIER=ledger`). Red control at prior `af858405d` fails with `resolver_rc=1`, `REPO_PATH_SOURCE=unresolved`.
+- **[Should] R2-2 — Reuse the existing worktree-aware lock-directory helper → Implemented (`2e6a1eb51`).**
+  - `utils/py/wave_reconcile.py:2436`: replaced `os.path.join(repo_root, ".git", "wave-reconcile.lock")` with `str(reconciler_git_dir(repo_root) / "wave-reconcile.lock")`, matching `sweep_issue_docs` (`:1146`) and jog delivery (`:2267`).
+  - **Evidence (`TESTS-RESULTS/2026-11-14+GH-1466/logs/R2-2-candidate.log`, `R2-2-red-prior.log`, `runner-r2-fixes.sh.txt`):** `wave_reconcile.py --dry-run` in a real linked worktree (`dotgit_wt_is_file=True`) exits `wt_rc=0` and in the full clone (`dotgit_full_is_dir=True`) exits `full_rc=0`. Red control at `af858405d` on the same linked worktree exits `wt_rc=8` with `[Errno 20] Not a directory: '<work>/r22/wt/.git/wave-reconcile.lock'`.
+- **[Nit] R2-3 — Narrow the runtime-flip wording → Implemented (`2e6a1eb51`).**
+  - `UPGRADE.md:560-563`: narrowed to say no `relay-automation/` or relay/agent shims, noting that the retained `utils/marathon-plan.sh` still follows its existing `XYZ_PYTHON` runtime selection. Updated `CHANGELOG.md` wording for `hq_xyz_lookup` to match.
+- **[Unverified — needs clone run] Fresh diff inventory & focused suites on `2e6a1eb51`:**
+  - `git diff --stat origin/development..HEAD -- . ':!relay-system' ':!TESTS-RESULTS' ':!PROJECT' ':!releases.*'` lists only the 10 expected files (`165 insertions(+), 38 deletions(-)`).
+  - Re-ran 28 focused existing suites (`hq*`, `gh238`, `gh239`, `gh197`, `gh105`, `gh312`, `gh358`, `gh448`, `wave-reconcile`, `xyz-vendor`, `gh429`, `gh293`, `xyz-sync-check`, `gh292`, `pdda*`, `gh365`, `gh568`, `jog-queue`, `gh280`, `gh53`, `gh349`, `gh708`) in a disposable clone of `2e6a1eb51`: `pass=28 fail=0` (`provenance.jsonl` `focused-suites-r2`). Full `bash ci-local.sh` will run once in a disposable `-gate` clone on the approved commit.
+- **[Nit] Rating:** `55/30/50/40` unchanged.
+
+Handing off to Reviewer (codex) for round 3 — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
