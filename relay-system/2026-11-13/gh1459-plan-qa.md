@@ -4,8 +4,8 @@ ARTIFACT: PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 3
-STATUS: Changes Requested
-NEXT: claude
+STATUS: In Review
+NEXT: codex
 
 ---
 
@@ -51,3 +51,28 @@ The current function locations and the missing-ledger diagnosis agree with the s
 
 ### Verification limits / handoff
 Source inspection only; no git commands, gates, pytest, executable fixtures, or implementation writes were run. Runtime red/green controls and the full gate remain **[Unverified — needs clone run]**, correctly assigned to the producer's disposable-clone verification step. The existing `get_open_prs` only warns at its cap (lines 340–342); ensure ledger coverage explicitly marks that cap truncated as promised, rather than interpreting a returned list as complete. Canonical `min(number)`, preserved starter time, pagination of comment reads, and the existing PATCH author guard are sound directions once the ingestion contract above is closed.
+
+
+---
+
+## Round 2 — Producer (claude)
+
+### Summary of Revisions
+Resolved all three Round 1 findings directly in `PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md`:
+
+1. **[P1] Authenticate ledger claims on ingestion (first-line marker + comment author == marker operator) and on both POST and PATCH:**
+   - **Ingestion contract (`collect_operator_continuation_and_queue`):** Only comments whose **first non-empty line** (`body.lstrip().splitlines()[0].strip()`) matches `^<!-- daily-ledger:([a-zA-Z0-9._-]+):([a-zA-Z0-9._-]+):(\d{4}-\d{2}-\d{2})(?:\s+started:(\S+))? -->$` AND whose marker date matches the target ledger date (`prev_date` or `date_local`) are parsed (`LESSONS-LEARNED.md:154`). Shared issue `body` text and line-2+ quoted markers are never parsed as claims. Before trusting any comment for prior-workday carryover or `verified-ledger-claim` checkout calibration, the reader verifies `comment["user"]["login"].lower() == marker_op.lower()` (or an explicit `--allow-delegate-comment` trusted bot allowlist `XYZ_DAILY_LEDGER_TRUSTED_BOTS` / `daily_ledger_trusted_bots`, default empty). Any comment where `comment.user.login != marker_op` is rejected as `unverified-forged-marker` and excluded from carryover and collision suppression.
+   - **Publication contract (`sync_daily_ledger_comment`):** Enforces `operator.lower() == auth_login.lower()` before creating an issue, `POST`ing a new comment, or `PATCH`ing an existing comment, and unconditionally requires `comment["user"]["login"].lower() == auth_login.lower()` on `PATCH` even when delegation is enabled.
+   - **Controls added to Acceptance:** Added explicit controls for (a) a forged first-line comment (`comment.user.login="mallory"`, marker `"alice"`), (b) a line-2 quoted marker, (c) mismatched `--operator != auth_login` on first-time `POST`, (d) forged comment on `PATCH`, and (e) legitimate cross-device (`laptop-a` -> `studio-b`) carryover by the same authenticated operator.
+
+2. **[P2] Eliminated the 100-ledger historical cutoff in discovery (`find_or_create_daily_ledger_issue`):**
+   - Split discovery into (1) an exact-date today query (`"Daily Work Ledger — <date_local>" in:title sort:created-asc --limit 100`) and (2) a descending recent-history query (`"Daily Work Ledger — " in:title sort:created-desc --limit 100`) so the 100 newest ledger issues are returned first regardless of how many historical daily ledgers exist, with paginated `gh api --paginate --slurp search/issues` fallback if all 100 descending results are on/after `date_local` or share the same prior date.
+   - Added an explicit control in Acceptance with >100 historical ledger issues proving both today's canonical `min(number)` issue and the most recent prior workday (`date < today`) are resolved accurately while still refusing creation (exit 3) when discovery fails or remains incomplete.
+
+3. **[P2] Extended `scan_local_checkout` for linked worktrees and read-only `.tick` claims + `open_prs` cap truncation:**
+   - Specified that `scan_local_checkout(repo_root)` runs `git -C <repo_root> worktree list --porcelain` (read-only) to emit `kind: "worktree_branch"` rows with extracted issue numbers (`(?:#|GH-|gh)(\d+)`) even when clean/tracked/0-ahead, and reads active `.tick` claims read-only via `TICK_REPO_ROOT=<repo_root> <tick_bin> claims --json` (or pure-Python read-only replay of `<repo_root>/.tick/events/*.jsonl` without mutating state or invoking `claim`/`ping`), emitting `kind: "tick_claim"` rows for `local-device-only` checkout calibration and collision detection.
+   - Explicitly marks `coverage["open_prs"]["status"] = "truncated"` when `len(prs) >= 100`.
+   - Added explicit Acceptance controls for a clean tracked git worktree (0 dirty, 0 ahead) and a live `.tick` claim with 0 dirty/ahead git commits.
+
+### Questions for Reviewer (codex)
+Please verify that `[P1]` and both `[P2]` items in `PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md` are now fully addressed and mark `STATUS: Approved` if ready for implementation.
