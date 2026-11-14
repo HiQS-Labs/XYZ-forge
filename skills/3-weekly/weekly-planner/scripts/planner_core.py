@@ -12,6 +12,8 @@ Provides:
 - Consistent multi-format output (both .json and .md) and robust baseline lookup.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -331,7 +333,7 @@ def get_open_prs(repo_root: Path, gh_repo: str | None = None, limit: int = 300) 
         "--limit", str(limit),
         # `labels` is read only by the GH-1184 Stalled & stale section (hold/parked); every other
         # consumer ignores extra keys.
-        "--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft,labels,url"
+        "--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,reviewRequests,updatedAt,statusCheckRollup,files,body,isDraft,labels,url"
     ]
     if gh_repo:
         cmd.extend(["-R", gh_repo])
@@ -1349,12 +1351,37 @@ def discover_local_roots(repo_root: Path, roots: list[str], target_slug: str | N
     return selected
 
 
+def _extract_issue_numbers(text: str | None) -> list[int]:
+    if not text:
+        return []
+    found: list[int] = []
+    for m in re.finditer(r"(?:(?<![A-Za-z0-9])#(\d+)\b|\b(?:GH-|gh-?)(\d+)\b)", str(text)):
+        val = int(m.group(1) or m.group(2))
+        if val not in found:
+            found.append(val)
+    return found
+
+
+def _resolve_tick_bin(checkout_path: Path) -> Path | None:
+    engine_root = Path(__file__).resolve().parents[4]
+    for cand in (
+        checkout_path / "bin" / "tick",
+        checkout_path / ".xyz" / "bin" / "tick",
+        engine_root / "bin" / "tick",
+    ):
+        if cand.is_file() and os.access(cand, os.X_OK):
+            return cand
+    return None
+
+
 def scan_local_checkout(path: Path, pr_heads: dict[str, list[dict]], now: datetime, device: str,
                         coverage: list) -> list[dict]:
-    """Read-only: one for-each-ref and one status per checkout. No fetch, prune or write of any kind.
+    """Read-only: one for-each-ref, one status, worktree list --porcelain, and optional read-only tick claims
+    per checkout. No fetch, prune, claim, ping or write of any kind.
     `--no-optional-locks` keeps `status` from refreshing the index (git-status(1), BACKGROUND REFRESH)."""
     rows: list[dict] = []
     label = path.name
+    branch_dates: dict[str, str] = {}
     try:
         refs = run_cmd(["git", "-C", str(path), "for-each-ref", "refs/heads",
                         "--format=%(refname:short)%00%(upstream:short)%00%(upstream:track)%00%(committerdate:iso8601-strict)"])
@@ -1368,7 +1395,9 @@ def scan_local_checkout(path: Path, pr_heads: dict[str, list[dict]], now: dateti
         branch, upstream, track, cdate = parts
         age = _age_days(cdate, now)
         last = cdate[:10] if cdate else "unknown"
+        branch_dates[branch] = last
         ahead = re.search(r"ahead (\d+)", track or "")
+        iss_nums = _extract_issue_numbers(branch) or _extract_issue_numbers(label)
         # Integration branches are promotion PR heads (development -> main); a name match there is
         # never a retirement hint, and a local `development` is tracked by every clone anyway.
         matches = [] if branch in INTEGRATION_BRANCHES else pr_heads.get(branch, [])
@@ -1376,17 +1405,19 @@ def scan_local_checkout(path: Path, pr_heads: dict[str, list[dict]], now: dateti
         if closed and not any(str(m.get("state", "")).upper() == "OPEN" for m in matches):
             m = closed[0]
             rows.append({"kind": "branch", "ref": f"{label}:{branch}", "path": str(path), "device": device,
-                         "last_activity": last,
+                         "last_activity": last, "issue_numbers": iss_nums,
                          "reason": f"PR #{m.get('number')} is {str(m.get('state')).lower()} (name match, unverified)"
                                    + (f"; local ahead {ahead.group(1)} as of last fetch" if ahead else ""),
                          "next_action": "retire? name match — verify with /merge-cleanup"})
         elif not upstream and branch not in INTEGRATION_BRANCHES:
             rows.append({"kind": "branch", "ref": f"{label}:{branch}", "path": str(path), "device": device,
-                         "last_activity": last, "reason": "no upstream (never pushed)",
-                         "next_action": "inspect; push or delete"})
+                         "last_activity": last, "issue_numbers": iss_nums,
+                         "reason": "no upstream (never pushed)",
+                         "next_action": "inspect; push or open PR"})
         elif ahead:
             rows.append({"kind": "branch", "ref": f"{label}:{branch}", "path": str(path), "device": device,
-                         "last_activity": last, "reason": f"ahead {ahead.group(1)} of {upstream} (as of last fetch)",
+                         "last_activity": last, "issue_numbers": iss_nums,
+                         "reason": f"ahead {ahead.group(1)} of {upstream} (as of last fetch)",
                          "next_action": "inspect; push or open PR"})
         _ = age
     try:
@@ -1397,8 +1428,95 @@ def scan_local_checkout(path: Path, pr_heads: dict[str, list[dict]], now: dateti
     dirty = [l for l in porcelain.splitlines() if l.strip()]
     if dirty:
         rows.append({"kind": "worktree", "ref": label, "path": str(path), "device": device,
-                     "last_activity": now.date().isoformat(), "reason": f"{len(dirty)} uncommitted change(s)",
+                     "last_activity": now.date().isoformat(),
+                     "issue_numbers": _extract_issue_numbers(label),
+                     "reason": f"{len(dirty)} uncommitted change(s)",
                      "next_action": "commit or stash"})
+
+    # GH-1459: Enumerate checked-out linked worktrees (read-only) so clean tracked worktrees still
+    # surface their checked-out issue branch for checkout calibration.
+    try:
+        wt_out = run_cmd(["git", "-C", str(path), "worktree", "list", "--porcelain"])
+        cur_wt_path = ""
+        cur_wt_branch = ""
+        for wt_line in (wt_out.splitlines() + [""]):
+            if not wt_line.strip():
+                if cur_wt_path and cur_wt_branch and cur_wt_branch not in INTEGRATION_BRANCHES:
+                    wt_nums = _extract_issue_numbers(cur_wt_branch) or _extract_issue_numbers(Path(cur_wt_path).name)
+                    wt_label = Path(cur_wt_path).name
+                    rows.append({
+                        "kind": "worktree_branch",
+                        "ref": f"{wt_label}:{cur_wt_branch}",
+                        "path": cur_wt_path,
+                        "checkout": str(path),
+                        "device": device,
+                        "last_activity": branch_dates.get(cur_wt_branch, now.date().isoformat()),
+                        "issue_numbers": wt_nums,
+                        "reason": f"checked out worktree on {cur_wt_branch}",
+                        "next_action": "active local checkout",
+                    })
+                cur_wt_path = ""
+                cur_wt_branch = ""
+            elif wt_line.startswith("worktree "):
+                cur_wt_path = wt_line[len("worktree "):].strip()
+            elif wt_line.startswith("branch refs/heads/"):
+                cur_wt_branch = wt_line[len("branch refs/heads/"):].strip()
+    except Exception as exc:
+        coverage.append(_coverage(f"local root {label} worktrees", "failed", str(exc).splitlines()[-1]))
+
+    # GH-1459: Read active .tick claims via canonical `tick claims --json` only (target root pinned,
+    # zero STATE.md writes, and no parallel Python event-folding interpreter).
+    if (path / ".tick").is_dir():
+        tick_bin = _resolve_tick_bin(path)
+        if tick_bin is None:
+            coverage.append(_coverage(f"tick claims {label}", "unavailable", "tick binary not found"))
+        else:
+            env = dict(os.environ)
+            env["TICK_REPO_ROOT"] = str(path)
+            proc = subprocess.run(
+                [str(tick_bin), "claims", "--json"],
+                cwd=path,
+                env=env,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if proc.returncode != 0:
+                detail = (proc.stderr or proc.stdout or f"exit {proc.returncode}").strip().splitlines()[-1]
+                coverage.append(_coverage(f"tick claims {label}", "failed", detail))
+            else:
+                try:
+                    raw_claims = json.loads(proc.stdout.strip() or "{}")
+                    claims_data = raw_claims.get("claimed") if isinstance(raw_claims, dict) else raw_claims
+                    if not isinstance(claims_data, list):
+                        raise ValueError("tick claims --json did not return a claimed list")
+                    for c_item in claims_data:
+                        if not isinstance(c_item, dict):
+                            continue
+                        task_id = str(c_item.get("task") or c_item.get("id") or "")
+                        agent_id = str(c_item.get("agent") or c_item.get("owner") or "unknown")
+                        c_paths = c_item.get("paths") or []
+                        iss_nums = _extract_issue_numbers(task_id)
+                        for cp in c_paths if isinstance(c_paths, list) else [c_paths]:
+                            for n_val in _extract_issue_numbers(str(cp)):
+                                if n_val not in iss_nums:
+                                    iss_nums.append(n_val)
+                        rows.append({
+                            "kind": "tick_claim",
+                            "ref": f"{label}:tick:{task_id}",
+                            "path": str(path),
+                            "checkout": str(path),
+                            "device": device,
+                            "agent": agent_id,
+                            "last_activity": str(c_item.get("ts") or now.date().isoformat())[:10],
+                            "issue_numbers": iss_nums,
+                            "reason": f"tick claim by {agent_id} on {task_id}",
+                            "next_action": "active tick claim",
+                        })
+                    coverage.append(_coverage(f"tick claims {label}", "ok", count=len(claims_data)))
+                except Exception as exc:
+                    coverage.append(_coverage(f"tick claims {label}", "failed", str(exc).splitlines()[-1]))
+
     coverage.append(_coverage(f"local root {label}", "ok", count=len(rows)))
     return rows
 
@@ -1832,11 +1950,1095 @@ def format_daily_markdown(date_str: str, pivot_data: dict) -> str:
     return "\n".join(lines)
 
 
+
+# ---------------------------------------------------------------------------
+# GH-1459: Daily Work Ledger GH Issue, Carryover, Checkout Calibration & Repo Modes
+# ---------------------------------------------------------------------------
+
+LEDGER_TITLE_RE = re.compile(r"^Daily Work Ledger — (\d{4}-\d{2}-\d{2})$")
+LEDGER_MARKER_LINE_RE = re.compile(
+    r"^<!--\s*daily-ledger:([A-Za-z0-9._-]+):([A-Za-z0-9._-]+):(\d{4}-\d{2}-\d{2})(?:\s+started:(\S+))?\s*-->$"
+)
+
+
+def resolve_ledger_date(tz_name: str | None = None) -> tuple[str, str]:
+    """Return (YYYY-MM-DD, resolved_tz) in the shared ledger timezone (default America/Los_Angeles)."""
+    tz_raw = (tz_name or os.environ.get("XYZ_LEDGER_TZ") or "America/Los_Angeles").strip()
+    try:
+        from zoneinfo import ZoneInfo
+        tz_obj = ZoneInfo(tz_raw)
+        return datetime.now(tz_obj).strftime("%Y-%m-%d"), tz_raw
+    except Exception:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d"), "UTC"
+
+
+def _read_device_config_key(repo_root: Path, key: str, env_name: str | None = None):
+    for candidate in (repo_root / "utils" / "py", repo_root / ".xyz" / "utils" / "py"):
+        if (candidate / "device_config.py").is_file():
+            sys.path.insert(0, str(candidate))
+            try:
+                from device_config import resolve_device_setting  # noqa: E402
+                val = resolve_device_setting(key, env_name or "")
+                if val is not None and str(val).strip():
+                    return val
+            except Exception:
+                break
+    cfg_file = Path(os.environ.get("XYZ_DEVICE_CONFIG") or os.path.expanduser("~/.xyz/device_config.json"))
+    if cfg_file.is_file():
+        try:
+            data = json.loads(cfg_file.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and key in data:
+                return data[key]
+        except Exception:
+            pass
+    return None
+
+
+def resolve_repo_mode(repo_root: Path, explicit_mode: str | None = None) -> tuple[str, str]:
+    """Precedence: --repo-mode CLI > XYZ_DAILY_LEDGER_MODE env > device_config.json daily_ledger_mode > auto."""
+    valid = {"forge", "vendored", "gh-only"}
+    if explicit_mode and explicit_mode != "auto" and explicit_mode in valid:
+        return explicit_mode, "cli --repo-mode"
+    env_mode = (os.environ.get("XYZ_DAILY_LEDGER_MODE") or "").strip().lower()
+    if env_mode in valid:
+        return env_mode, "env XYZ_DAILY_LEDGER_MODE"
+    cfg_mode = _read_device_config_key(repo_root, "daily_ledger_mode", "XYZ_DAILY_LEDGER_MODE")
+    if isinstance(cfg_mode, str) and cfg_mode.strip().lower() in valid:
+        return cfg_mode.strip().lower(), "device_config daily_ledger_mode"
+    if (repo_root / "releases.db").is_file() and (repo_root / "utils" / "hq" / "hq.sh").is_file():
+        return "forge", "auto (releases.db + utils/hq/hq.sh)"
+    if (repo_root / ".xyz").is_dir():
+        return "vendored", "auto (.xyz/ directory)"
+    return "gh-only", "auto (github + git fallback)"
+
+
+def resolve_trusted_bots(repo_root: Path) -> set[str]:
+    bots: set[str] = set()
+    raw_env = os.environ.get("XYZ_DAILY_LEDGER_TRUSTED_BOTS") or ""
+    for part in raw_env.split(","):
+        if part.strip():
+            bots.add(part.strip().lower())
+    cfg_val = _read_device_config_key(repo_root, "daily_ledger_trusted_bots", "XYZ_DAILY_LEDGER_TRUSTED_BOTS")
+    if isinstance(cfg_val, list):
+        for item in cfg_val:
+            if str(item).strip():
+                bots.add(str(item).strip().lower())
+    elif isinstance(cfg_val, str):
+        for part in cfg_val.split(","):
+            if part.strip():
+                bots.add(part.strip().lower())
+    return bots
+
+
+def _flatten_gh_pages(raw) -> list[dict]:
+    items: list[dict] = []
+    for entry in raw if isinstance(raw, list) else []:
+        if isinstance(entry, list):
+            items.extend(x for x in entry if isinstance(x, dict))
+        elif isinstance(entry, dict):
+            items.append(entry)
+    return items
+
+
+def find_or_create_daily_ledger_issue(
+    repo_root: Path,
+    slug: str | None,
+    date_local: str,
+    ledger_issue_arg: int | None,
+    create_if_missing: bool,
+    operator: str | None,
+    auth_login: str | None,
+    allow_delegate: bool,
+    trusted_bots: set[str],
+    coverage: list[dict],
+    warnings: list[str],
+) -> dict:
+    """Resolve today's canonical Daily Work Ledger issue (min(number)) and most recent prior workday's ledger.
+    Unconditionally paginates when the 100-row search page is full so >100 historical ledgers, mixed-page
+    duplicate spikes (1 today + 100 yesterday), and backfilled dates never lose completeness."""
+    state = {
+        "today_ledger": None,
+        "today_duplicates": [],
+        "previous_ledger": None,
+        "previous_duplicates": [],
+        "created_issue": False,
+        "auth_refused": None,
+    }
+    if not slug:
+        coverage.append(_coverage("ledger discovery", "failed", "repo slug unresolved"))
+        return state
+
+    by_number: dict[int, dict] = {}
+    discovery_status = "ok"
+    discovery_detail = ""
+
+    # Optional explicit --ledger-issue override
+    override_issue = None
+    if ledger_issue_arg:
+        try:
+            out = run_cmd(
+                ["gh", "issue", "view", str(ledger_issue_arg), "-R", slug,
+                 "--json", "number,title,state,url,body,createdAt,author"],
+                cwd=repo_root, check=True
+            )
+            override_issue = json.loads(out) if out else None
+            if isinstance(override_issue, dict) and override_issue.get("number"):
+                by_number[int(override_issue["number"])] = override_issue
+        except Exception as exc:
+            discovery_status = "failed"
+            discovery_detail = f"--ledger-issue {ledger_issue_arg} lookup failed: {str(exc).splitlines()[-1]}"
+
+    # 1. Exact-date lookup for today's ledger
+    today_search = f'"Daily Work Ledger — {date_local}" in:title sort:created-asc'
+    try:
+        out_today = run_cmd(
+            ["gh", "issue", "list", "-R", slug, "--search", today_search,
+             "--state", "all", "--limit", "100",
+             "--json", "number,title,state,url,body,createdAt,author"],
+            cwd=repo_root, check=True,
+        )
+        raw_today = json.loads(out_today) if out_today else []
+        if not isinstance(raw_today, list):
+            raise ValueError("today ledger search did not return a list")
+        for iss in raw_today:
+            if isinstance(iss, dict) and iss.get("number"):
+                by_number[int(iss["number"])] = iss
+        today_capped = len(raw_today) >= 100
+    except Exception as exc:
+        today_capped = False
+        discovery_status = "failed"
+        discovery_detail = str(exc).splitlines()[-1] if str(exc) else repr(exc)
+
+    # 2. Descending history lookup for prior workday (and any additional ledgers)
+    hist_search = '"Daily Work Ledger — " in:title sort:created-desc'
+    hist_capped = False
+    if discovery_status == "ok":
+        try:
+            out_hist = run_cmd(
+                ["gh", "issue", "list", "-R", slug, "--search", hist_search,
+                 "--state", "all", "--limit", "100",
+                 "--json", "number,title,state,url,body,createdAt,author"],
+                cwd=repo_root, check=True,
+            )
+            raw_hist = json.loads(out_hist) if out_hist else []
+            if not isinstance(raw_hist, list):
+                raise ValueError("history ledger search did not return a list")
+            for iss in raw_hist:
+                if isinstance(iss, dict) and iss.get("number"):
+                    by_number[int(iss["number"])] = iss
+            hist_capped = len(raw_hist) >= 100
+        except Exception as exc:
+            discovery_status = "failed"
+            discovery_detail = str(exc).splitlines()[-1] if str(exc) else repr(exc)
+
+    # 3. Unconditional full pagination when either 100-row page is full
+    if discovery_status == "ok" and (today_capped or hist_capped):
+        try:
+            out_all = run_cmd(
+                ["gh", "api", "--paginate", "--slurp", f"repos/{slug}/issues?state=all&per_page=100"],
+                cwd=repo_root, check=True,
+            )
+            raw_all = _flatten_gh_pages(json.loads(out_all) if out_all else [])
+            if not raw_all:
+                discovery_status = "truncated"
+                discovery_detail = "100-row cap reached and paginated fallback returned no issues"
+            else:
+                for iss in raw_all:
+                    if isinstance(iss, dict) and iss.get("number") and "pull_request" not in iss:
+                        num = int(iss["number"])
+                        by_number[num] = {
+                            "number": num,
+                            "title": iss.get("title") or "",
+                            "state": str(iss.get("state") or "").upper(),
+                            "url": iss.get("html_url") or iss.get("url") or "",
+                            "body": iss.get("body") or "",
+                            "createdAt": iss.get("created_at") or iss.get("createdAt") or "",
+                            "author": iss.get("user") or iss.get("author") or {},
+                        }
+        except Exception as exc:
+            discovery_status = "truncated"
+            discovery_detail = f"100-row cap reached and pagination failed: {str(exc).splitlines()[-1]}"
+
+    def _partition_ledgers(issues_map: dict[int, dict]) -> tuple[list[dict], str | None, list[dict]]:
+        by_date: dict[str, list[dict]] = {}
+        for iss in issues_map.values():
+            title = str(iss.get("title") or "").strip()
+            m = LEDGER_TITLE_RE.match(title)
+            if not m:
+                continue
+            d_str = m.group(1)
+            cp = dict(iss)
+            cp["ledger_date"] = d_str
+            by_date.setdefault(d_str, []).append(cp)
+        for d_key in by_date:
+            by_date[d_key].sort(key=lambda x: int(x["number"]))
+        t_list = list(by_date.get(date_local, []))
+        prior_dates = sorted(d for d in by_date if d < date_local)
+        p_date = prior_dates[-1] if prior_dates else None
+        p_list = list(by_date.get(p_date, [])) if p_date else []
+        return t_list, p_date, p_list
+
+    today_list, prev_date, prev_list = _partition_ledgers(by_number)
+    if override_issue and override_issue not in today_list:
+        cp_ov = dict(override_issue)
+        cp_ov["ledger_date"] = date_local
+        today_list.insert(0, cp_ov)
+
+    # Create today's ledger issue only when --publish-ledger is set, discovery is 'ok', and none exists
+    if not today_list and create_if_missing:
+        if discovery_status != "ok":
+            warnings.append(
+                f"Refused to create Daily Work Ledger issue for {date_local}: discovery status is {discovery_status} ({discovery_detail})"
+            )
+        else:
+            auth_ok = bool(auth_login) and (
+                (bool(operator) and operator.lower() == auth_login.lower())
+                or (allow_delegate and auth_login.lower() in trusted_bots)
+            )
+            if not auth_ok:
+                state["auth_refused"] = (
+                    f"refused issue creation: operator '{operator}' does not match authenticated user '{auth_login or 'unresolved'}'"
+                )
+            else:
+                init_body = (
+                    f"# Daily Work Ledger — {date_local}\n\n"
+                    f"Shared daily coordination ledger for `{slug}` ({date_local}).\n"
+                    f"Operators post and update their calibrated daily work block via `/daily-planner` (`planner_core.py --mode ledger --publish-ledger`).\n"
+                )
+                try:
+                    run_cmd(
+                        ["gh", "issue", "create", "-R", slug,
+                         "--title", f"Daily Work Ledger — {date_local}",
+                         "--body", init_body],
+                        cwd=repo_root, check=True,
+                    )
+                    state["created_issue"] = True
+                    # Re-run exact-date discovery immediately to reconcile concurrent creation via min(number)
+                    out_re = run_cmd(
+                        ["gh", "issue", "list", "-R", slug, "--search", today_search,
+                         "--state", "all", "--limit", "100",
+                         "--json", "number,title,state,url,body,createdAt,author"],
+                        cwd=repo_root, check=True,
+                    )
+                    for iss in json.loads(out_re) if out_re else []:
+                        if isinstance(iss, dict) and iss.get("number"):
+                            by_number[int(iss["number"])] = iss
+                    today_list, prev_date, prev_list = _partition_ledgers(by_number)
+                except Exception as exc:
+                    discovery_status = "failed"
+                    discovery_detail = f"issue create/reconcile failed: {str(exc).splitlines()[-1]}"
+
+    if today_list:
+        state["today_ledger"] = today_list[0]
+        state["today_duplicates"] = today_list
+        if len(today_list) > 1:
+            dup_nums = ", ".join(f"#{x['number']}" for x in today_list[1:])
+            warnings.append(
+                f"Multiple ledger issues found for {date_local}; canonical is #{today_list[0]['number']} (min(number)), reading comments across duplicates ({dup_nums})."
+            )
+    if prev_list:
+        state["previous_ledger"] = prev_list[0]
+        state["previous_duplicates"] = prev_list
+        if len(prev_list) > 1:
+            dup_nums = ", ".join(f"#{x['number']}" for x in prev_list[1:])
+            warnings.append(
+                f"Multiple prior ledger issues found for {prev_date}; canonical is #{prev_list[0]['number']} (min(number)), reading comments across duplicates ({dup_nums})."
+            )
+
+    coverage.append(
+        _coverage(
+            "ledger discovery",
+            discovery_status,
+            discovery_detail or (f"today=#{state['today_ledger']['number'] if state['today_ledger'] else 'none'}, prev=#{state['previous_ledger']['number'] if state['previous_ledger'] else 'none'}"),
+            count=len(today_list) + len(prev_list),
+        )
+    )
+    return state
+
+
+def read_ledger_comments(repo_root: Path, slug: str | None, issues: list[dict], source_label: str,
+                         coverage: list[dict]) -> list[dict] | None:
+    if not issues:
+        coverage.append(_coverage(source_label, "skipped", "no ledger issue to read", count=0))
+        return []
+    if not slug:
+        coverage.append(_coverage(source_label, "failed", "repo slug unresolved"))
+        return None
+    merged: list[dict] = []
+    for iss in issues:
+        num = iss.get("number")
+        try:
+            out = run_cmd(
+                ["gh", "api", "--paginate", "--slurp", f"repos/{slug}/issues/{num}/comments?per_page=100"],
+                cwd=repo_root, check=True,
+            )
+            pages = _flatten_gh_pages(json.loads(out) if out else [])
+            for c in pages:
+                cp = dict(c)
+                cp["_ledger_issue_number"] = num
+                merged.append(cp)
+        except Exception as exc:
+            coverage.append(_coverage(source_label, "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
+            return None
+    coverage.append(_coverage(source_label, "ok", count=len(merged)))
+    return merged
+
+
+def _extract_active_claim_refs(body: str) -> tuple[list[int], list[int]]:
+    """Extract issue numbers and PR numbers from a ledger comment body, ignoring the 'Completed Since Prior Ledger' section."""
+    active_lines: list[str] = []
+    in_completed = False
+    for line in body.splitlines():
+        stripped = line.strip()
+        if re.match(r"^#{1,4}\s+.*completed\s+since", stripped, re.IGNORECASE):
+            in_completed = True
+            continue
+        if in_completed and re.match(r"^#{1,4}\s+", stripped):
+            in_completed = False
+        if not in_completed:
+            active_lines.append(line)
+    active_text = "\n".join(active_lines)
+    pr_nums: list[int] = []
+    for m in re.finditer(r"\bPR\s*#?(\d+)\b", active_text, re.IGNORECASE):
+        val = int(m.group(1))
+        if val not in pr_nums:
+            pr_nums.append(val)
+    # Remove `PR #N` substrings before scanning issue `#N` / `GH-N` so `PR #55` is not double-counted as issue `#55`
+    scrubbed = re.sub(r"\bPR\s*#?\d+\b", "", active_text, flags=re.IGNORECASE)
+    iss_nums = _extract_issue_numbers(scrubbed)
+    return iss_nums, pr_nums
+
+
+def parse_ledger_comment(
+    comment: dict,
+    expected_date: str,
+    allow_delegate: bool,
+    trusted_bots: set[str],
+    warnings: list[str],
+) -> dict | None:
+    """First-line marker parser + ingestion authorship verifier (LESSONS-LEARNED.md:154 & Codex P1 guard)."""
+    body = str(comment.get("body") or "")
+    non_empty = [ln.strip() for ln in body.splitlines() if ln.strip()]
+    if not non_empty:
+        return None
+    m = LEDGER_MARKER_LINE_RE.match(non_empty[0])
+    if not m:
+        return None
+    marker_op, marker_dev, marker_date, started_raw = m.group(1), m.group(2), m.group(3), m.group(4)
+    if marker_date != expected_date:
+        warnings.append(
+            f"Ignored comment #{comment.get('id')} marker date {marker_date} != expected ledger date {expected_date}"
+        )
+        return None
+    user_obj = comment.get("user") or comment.get("author") or {}
+    author_login = str(user_obj.get("login") or "").strip()
+    verified = bool(author_login) and (
+        author_login.lower() == marker_op.lower()
+        or (allow_delegate and author_login.lower() in trusted_bots)
+    )
+    iss_nums, pr_nums = _extract_active_claim_refs(body)
+    created_at = str(comment.get("created_at") or comment.get("createdAt") or "")
+    started_ts = started_raw or created_at
+    if not verified:
+        warnings.append(
+            f"Rejected forged/unverified ledger marker for operator '{marker_op}' authored by '{author_login or 'unknown'}' (comment #{comment.get('id')})"
+        )
+    return {
+        "comment_id": comment.get("id"),
+        "ledger_issue_number": comment.get("_ledger_issue_number"),
+        "operator": marker_op,
+        "device": normalize_device_id(marker_dev),
+        "date": marker_date,
+        "started": started_ts,
+        "created_at": created_at,
+        "author_login": author_login,
+        "verified": verified,
+        "provenance": "verified-ledger-claim" if verified else "unverified-forged-marker",
+        "issue_numbers": iss_nums,
+        "pr_numbers": pr_nums,
+        "body": body,
+    }
+
+
+def fetch_pr_review_threads(repo_root: Path, slug: str | None, pr_numbers: list[int],
+                            coverage: list[dict]) -> dict[int, dict]:
+    """Bounded GraphQL lookup of reviewThreads(first:100){pageInfo{hasNextPage} nodes{isResolved isOutdated}}."""
+    if not pr_numbers:
+        coverage.append(_coverage("PR review threads", "skipped", "no operator open PRs", count=0))
+        return {}
+    if not slug or "/" not in slug:
+        coverage.append(_coverage("PR review threads", "failed", "repo slug unresolved"))
+        return {}
+    owner, name = slug.split("/", 1)
+    fields = []
+    for n in pr_numbers:
+        fields.append(
+            f"pr_{int(n)}: pullRequest(number: {int(n)}) {{ reviewThreads(first: 100) {{ pageInfo {{ hasNextPage }} nodes {{ isResolved isOutdated }} }} }}"
+        )
+    query = f"query($owner: String!, $name: String!) {{ repository(owner: $owner, name: $name) {{ {' '.join(fields)} }} }}"
+    try:
+        out = run_cmd(
+            ["gh", "api", "graphql", "-f", f"query={query}", "-F", f"owner={owner}", "-F", f"name={name}"],
+            cwd=repo_root, check=True,
+        )
+        payload = json.loads(out) if out else {}
+        repo_node = (payload.get("data") or {}).get("repository")
+        if not isinstance(repo_node, dict):
+            raise ValueError("GraphQL repository node missing")
+        result: dict[int, dict] = {}
+        any_truncated = False
+        for n in pr_numbers:
+            pr_node = repo_node.get(f"pr_{int(n)}") or {}
+            rt = pr_node.get("reviewThreads") or {}
+            has_next = bool((rt.get("pageInfo") or {}).get("hasNextPage"))
+            if has_next:
+                any_truncated = True
+            nodes = rt.get("nodes") or []
+            unresolved = sum(1 for nd in nodes if isinstance(nd, dict) and not nd.get("isResolved", False))
+            result[int(n)] = {"unresolved_count": unresolved, "truncated": has_next}
+        coverage.append(
+            _coverage(
+                "PR review threads",
+                "truncated" if any_truncated else "ok",
+                "one or more PRs hit reviewThreads(first:100) cap" if any_truncated else "",
+                count=len(pr_numbers),
+            )
+        )
+        return result
+    except Exception as exc:
+        coverage.append(_coverage("PR review threads", "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
+        return {}
+
+
+import tempfile
+
+def sync_daily_ledger_comment(
+    repo_root: Path,
+    slug: str,
+    issue_num: int,
+    existing_comments: list[dict],
+    operator: str,
+    device: str,
+    date_local: str,
+    auth_login: str | None,
+    allow_delegate: bool,
+    trusted_bots: set[str],
+    body_md: str,
+    now_iso: str,
+) -> tuple[bool, str, dict]:
+    """Idempotent per-(operator, device, date_local) comment sync with strict POST & PATCH authorship verification
+    and preserved `started:<ISO-8601>` timestamp."""
+    if not auth_login:
+        return False, "authenticated GitHub login unresolved; refusing to publish", {"action": "refused", "reason": "no_auth_login"}
+
+    norm_dev = normalize_device_id(device)
+    matched_comment = None
+    matched_started = None
+    for c in existing_comments:
+        if c.get("_ledger_issue_number") and int(c["_ledger_issue_number"]) != int(issue_num):
+            continue
+        c_body = str(c.get("body") or "")
+        non_empty = [ln.strip() for ln in c_body.splitlines() if ln.strip()]
+        if not non_empty:
+            continue
+        m = LEDGER_MARKER_LINE_RE.match(non_empty[0])
+        if not m:
+            continue
+        m_op, m_dev, m_date, m_started = m.group(1), normalize_device_id(m.group(2)), m.group(3), m.group(4)
+        if m_op.lower() == operator.lower() and m_dev == norm_dev and m_date == date_local:
+            matched_comment = c
+            matched_started = m_started or str(c.get("created_at") or c.get("createdAt") or now_iso)
+            break
+
+    if matched_comment is not None:
+        c_user = matched_comment.get("user") or matched_comment.get("author") or {}
+        c_author = str(c_user.get("login") or "").strip()
+        if c_author.lower() != auth_login.lower() or operator.lower() != auth_login.lower():
+            return (
+                False,
+                f"refused PATCH on comment #{matched_comment.get('id')}: comment author '{c_author}' / operator '{operator}' mismatch with authenticated user '{auth_login}'",
+                {"action": "refused", "reason": "auth_mismatch_patch", "comment_id": matched_comment.get("id")},
+            )
+        started_ts = matched_started or now_iso
+        marker = f"<!-- daily-ledger:{operator}:{norm_dev}:{date_local} started:{started_ts} -->"
+        full_body = f"{marker}\n{body_md}"
+        comment_id = str(matched_comment.get("id"))
+        fd, tmp_path = tempfile.mkstemp(prefix="daily-ledger-", suffix=".json")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps({"body": full_body}))
+        try:
+            run_cmd(["gh", "api", "--method", "PATCH", f"repos/{slug}/issues/comments/{comment_id}", "--input", tmp_path], cwd=repo_root)
+            return True, f"patched comment {comment_id} (preserved started:{started_ts})", {
+                "action": "patched", "comment_id": comment_id, "started": started_ts, "created_count": 0, "patched_count": 1
+            }
+        except Exception as exc:
+            return False, str(exc).splitlines()[-1] if str(exc) else repr(exc), {"action": "failed"}
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
+    # POST path
+    post_ok = operator.lower() == auth_login.lower() or (allow_delegate and auth_login.lower() in trusted_bots)
+    if not post_ok:
+        return (
+            False,
+            f"refused POST: operator '{operator}' does not match authenticated user '{auth_login}'",
+            {"action": "refused", "reason": "auth_mismatch_post"},
+        )
+    started_ts = now_iso
+    marker = f"<!-- daily-ledger:{operator}:{norm_dev}:{date_local} started:{started_ts} -->"
+    full_body = f"{marker}\n{body_md}"
+    fd, tmp_path = tempfile.mkstemp(prefix="daily-ledger-", suffix=".json")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps({"body": full_body}))
+    try:
+        run_cmd(["gh", "api", "--method", "POST", f"repos/{slug}/issues/{issue_num}/comments", "--input", tmp_path], cwd=repo_root)
+        return True, f"created comment on #{issue_num} (started:{started_ts})", {
+            "action": "created", "issue_number": issue_num, "started": started_ts, "created_count": 1, "patched_count": 0
+        }
+    except Exception as exc:
+        return False, str(exc).splitlines()[-1] if str(exc) else repr(exc), {"action": "failed"}
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+def run_daily_ledger(
+    repo_root: Path,
+    gh_repo: str | None,
+    prs: list[dict],
+    sequence: dict,
+    args,
+    now: datetime,
+    prs_error: str | None = None,
+) -> tuple[dict, int]:
+    """Run the GH-1459 Daily Work Ledger scan and optional --publish-ledger sync."""
+    coverage: list[dict] = []
+    warnings: list[str] = []
+    date_local, resolved_tz = resolve_ledger_date(getattr(args, "ledger_tz", None))
+    repo_mode, repo_mode_how = resolve_repo_mode(repo_root, getattr(args, "repo_mode", "auto"))
+    device = resolve_device_id(repo_root, args.device_id)
+    trusted_bots = resolve_trusted_bots(repo_root)
+    allow_delegate = bool(getattr(args, "allow_delegate_comment", False))
+
+    slug = resolve_gh_slug(repo_root, gh_repo)
+    if not slug:
+        coverage.append(_coverage("repo slug", "failed", "gh repo view failed and --gh-repo not given"))
+    else:
+        coverage.append(_coverage("repo slug", "ok", slug))
+
+    auth_login = None
+    try:
+        auth_login = (run_cmd(["gh", "api", "user", "-q", ".login"], cwd=repo_root) or "").strip() or None
+        coverage.append(_coverage("authenticated login", "ok", auth_login or ""))
+    except Exception as exc:
+        coverage.append(_coverage("authenticated login", "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
+
+    operator = (args.operator or auth_login or "").strip() or None
+    if not operator:
+        coverage.append(_coverage("operator login", "failed", "unresolved (pass --operator or authenticate gh)"))
+    else:
+        coverage.append(_coverage("operator login", "ok", operator))
+
+    # Open PRs coverage (respecting get_open_prs limit=300)
+    if prs_error:
+        coverage.append(_coverage("open PRs", "failed", prs_error))
+        open_prs_ok = False
+    elif len(prs) >= 300:
+        coverage.append(_coverage("open PRs", "truncated", f"{len(prs)} rows returned at limit 300", count=len(prs)))
+        open_prs_ok = False
+    else:
+        coverage.append(_coverage("open PRs", "ok", count=len(prs)))
+        open_prs_ok = True
+
+    # Open issues coverage
+    open_issues: dict[int, dict] | None = None
+    open_issues_ok = False
+    try:
+        open_issues = get_open_issues(repo_root, slug or gh_repo)
+        coverage.append(_coverage("open issues", "ok", count=len(open_issues)))
+        open_issues_ok = True
+    except Exception as exc:
+        err_line = str(exc).splitlines()[-1] if str(exc) else repr(exc)
+        status_kind = "truncated" if "reached limit=" in err_line else "failed"
+        coverage.append(_coverage("open issues", status_kind, err_line))
+
+    # Optional Forge releases.db enrichment (read-only via existing get_release_milestones; GH-777 compliant)
+    release_context: dict = {}
+    if repo_mode == "forge":
+        try:
+            release_context = get_release_milestones(repo_root)
+            coverage.append(_coverage("releases.db", "ok", f"target={(release_context.get('target_release') or {}).get('version') or 'none'}"))
+        except Exception as exc:
+            coverage.append(_coverage("releases.db", "failed", str(exc).splitlines()[-1]))
+    else:
+        coverage.append(_coverage("releases.db", "skipped", f"repo_mode={repo_mode}"))
+
+    # Local checkouts, worktrees, and read-only .tick claims
+    all_prs = _gh_json(
+        ["gh", "pr", "list", "--state", "all", "--limit", "500", "--json", "number,headRefName,state"]
+        + (["-R", slug] if slug else (["-R", gh_repo] if gh_repo else [])),
+        repo_root, "PR heads (all states)", coverage, limit=500,
+    )
+    pr_heads: dict[str, list[dict]] = {}
+    for p_item in all_prs or []:
+        pr_heads.setdefault(str(p_item.get("headRefName")), []).append(p_item)
+    roots = list(args.local_roots or [str(repo_root), "~/marathon-clones/*"])
+    local_rows: list[dict] = []
+    for path in discover_local_roots(repo_root, roots, slug, coverage):
+        local_rows.extend(scan_local_checkout(path, pr_heads, now, device, coverage))
+
+    # Ledger discovery (and optional creation when --publish-ledger is set)
+    disc = find_or_create_daily_ledger_issue(
+        repo_root=repo_root,
+        slug=slug,
+        date_local=date_local,
+        ledger_issue_arg=getattr(args, "ledger_issue", None),
+        create_if_missing=bool(getattr(args, "publish_ledger", False)),
+        operator=operator,
+        auth_login=auth_login,
+        allow_delegate=allow_delegate,
+        trusted_bots=trusted_bots,
+        coverage=coverage,
+        warnings=warnings,
+    )
+    today_ledger = disc["today_ledger"]
+    previous_ledger = disc["previous_ledger"]
+    prev_date = previous_ledger.get("ledger_date") if previous_ledger else None
+
+    today_comments = read_ledger_comments(repo_root, slug, disc["today_duplicates"], "today ledger comments", coverage)
+    prev_comments = read_ledger_comments(repo_root, slug, disc["previous_duplicates"], "previous ledger comments", coverage)
+
+    # Parse and verify comments on previous_ledger and today_ledger
+    parsed_prev: list[dict] = []
+    for c in prev_comments or []:
+        pc = parse_ledger_comment(c, prev_date or "", allow_delegate, trusted_bots, warnings)
+        if pc is not None:
+            parsed_prev.append(pc)
+
+    parsed_today: list[dict] = []
+    for c in today_comments or []:
+        tc = parse_ledger_comment(c, date_local, allow_delegate, trusted_bots, warnings)
+        if tc is not None:
+            parsed_today.append(tc)
+
+    # 1. Prior-workday carryover for operator across ANY device (verified comments only)
+    carryover_open_issues: list[dict] = []
+    carryover_open_prs: list[dict] = []
+    completed_since_last: list[dict] = []
+    unverified_carryover: list[dict] = []
+    pr_by_num = {int(p["number"]): p for p in prs if p.get("number")}
+
+    seen_carry_iss: set[int] = set()
+    seen_carry_pr: set[int] = set()
+    for pc in parsed_prev:
+        if not pc["verified"]:
+            continue
+        if not operator or pc["operator"].lower() != operator.lower():
+            continue
+        src_dev = pc["device"]
+        for inum in pc["issue_numbers"]:
+            if inum in seen_carry_iss:
+                continue
+            seen_carry_iss.add(inum)
+            if not open_issues_ok or open_issues is None:
+                unverified_carryover.append({"kind": "issue", "number": inum, "from_device": src_dev, "reason": "open_issues coverage incomplete"})
+            elif inum in open_issues:
+                iss_obj = open_issues[inum]
+                carryover_open_issues.append({
+                    "number": inum,
+                    "title": iss_obj.get("title") or "",
+                    "url": iss_obj.get("url") or "",
+                    "from_device": src_dev,
+                    "from_date": prev_date,
+                })
+            else:
+                completed_since_last.append({"kind": "issue", "number": inum, "from_device": src_dev, "from_date": prev_date, "status": "closed"})
+        for pnum in pc["pr_numbers"]:
+            if pnum in seen_carry_pr:
+                continue
+            seen_carry_pr.add(pnum)
+            if not open_prs_ok:
+                unverified_carryover.append({"kind": "pr", "number": pnum, "from_device": src_dev, "reason": "open_prs coverage incomplete"})
+            elif pnum in pr_by_num:
+                pr_obj = pr_by_num[pnum]
+                carryover_open_prs.append({
+                    "number": pnum,
+                    "title": pr_obj.get("title") or "",
+                    "url": pr_obj.get("url") or "",
+                    "from_device": src_dev,
+                    "from_date": prev_date,
+                })
+            else:
+                completed_since_last.append({"kind": "pr", "number": pnum, "from_device": src_dev, "from_date": prev_date, "status": "merged_or_closed"})
+
+    # 2. Newly assigned open issues, PRs awaiting review, and PRs needing remediation
+    assigned_issues: list[dict] = []
+    if operator and open_issues:
+        for inum, iss_obj in sorted(open_issues.items()):
+            assignees = {str(a.get("login", "")).lower() for a in (iss_obj.get("assignees") or []) if isinstance(a, dict)}
+            if operator.lower() in assignees and inum not in seen_carry_iss:
+                assigned_issues.append({
+                    "number": inum,
+                    "title": iss_obj.get("title") or "",
+                    "url": iss_obj.get("url") or "",
+                    "labels": sorted(_labels(iss_obj)),
+                })
+
+    prs_awaiting_review: list[dict] = []
+    my_open_pr_nums: list[int] = []
+    for pr_obj in prs:
+        pnum = int(pr_obj.get("number") or 0)
+        author_login = str((pr_obj.get("author") or {}).get("login") or "").strip()
+        if operator and author_login.lower() == operator.lower():
+            my_open_pr_nums.append(pnum)
+        if pr_obj.get("isDraft"):
+            continue
+        req_list = pr_obj.get("reviewRequests") or []
+        matched_req = None
+        team_notes: list[str] = []
+        for req in req_list:
+            if not isinstance(req, dict):
+                continue
+            r_login = str(req.get("login") or "").strip()
+            r_slug = str(req.get("slug") or req.get("name") or "").strip()
+            if operator and r_login and r_login.lower() == operator.lower():
+                matched_req = f"user:{r_login}"
+            elif r_slug and not r_login:
+                team_notes.append(f"team:{r_slug}")
+        if matched_req or (team_notes and operator):
+            if matched_req:
+                prs_awaiting_review.append({
+                    "number": pnum,
+                    "title": pr_obj.get("title") or "",
+                    "url": pr_obj.get("url") or "",
+                    "author": author_login,
+                    "requested_via": matched_req,
+                    "team_requests": team_notes,
+                })
+
+    thread_map = fetch_pr_review_threads(repo_root, slug, my_open_pr_nums, coverage)
+    prs_needing_remediation: list[dict] = []
+    for pnum in my_open_pr_nums:
+        pr_obj = pr_by_num[pnum]
+        ci_st = eval_ci_status(pr_obj)
+        rev_dec = str(pr_obj.get("reviewDecision") or "")
+        t_info = thread_map.get(pnum) or {}
+        unresolved_cnt = int(t_info.get("unresolved_count") or 0)
+        reasons: list[str] = []
+        if rev_dec == "CHANGES_REQUESTED":
+            reasons.append("CHANGES_REQUESTED")
+        if ci_st == "FAILURE":
+            reasons.append("CI_FAILURE")
+        if unresolved_cnt > 0:
+            reasons.append(f"UNRESOLVED_THREADS({unresolved_cnt})")
+        if reasons:
+            prs_needing_remediation.append({
+                "number": pnum,
+                "title": pr_obj.get("title") or "",
+                "url": pr_obj.get("url") or "",
+                "ci_status": ci_st,
+                "review_decision": rev_dec,
+                "unresolved_threads": unresolved_cnt,
+                "reasons": reasons,
+            })
+
+    # 3. Earliest-Starter & Already Checked Out Calibration (with explicit provenance)
+    verified_today = [tc for tc in parsed_today if tc["verified"]]
+    verified_today.sort(key=lambda x: (x.get("started") or "9999", int(x.get("comment_id") or 0)))
+    earliest_starter = None
+    if verified_today:
+        es = verified_today[0]
+        earliest_starter = {
+            "operator": es["operator"],
+            "device": es["device"],
+            "started": es["started"],
+            "comment_id": es["comment_id"],
+            "issue_numbers": es["issue_numbers"],
+            "pr_numbers": es["pr_numbers"],
+        }
+
+    already_checked_out: list[dict] = []
+    other_claimed_issues: dict[int, list[dict]] = {}
+    other_claimed_prs: dict[int, list[dict]] = {}
+
+    # Source A: verified ledger comments on today's issue
+    for tc in verified_today:
+        op_name = tc["operator"]
+        is_other = not operator or op_name.lower() != operator.lower()
+        for inum in tc["issue_numbers"]:
+            claim_row = {
+                "kind": "issue",
+                "number": inum,
+                "ref": f"GH-{inum}",
+                "owner": op_name,
+                "device": tc["device"],
+                "started": tc["started"],
+                "provenance": "verified-ledger-claim",
+            }
+            already_checked_out.append(claim_row)
+            if is_other:
+                other_claimed_issues.setdefault(inum, []).append(claim_row)
+        for pnum in tc["pr_numbers"]:
+            claim_row = {
+                "kind": "pr",
+                "number": pnum,
+                "ref": f"PR #{pnum}",
+                "owner": op_name,
+                "device": tc["device"],
+                "started": tc["started"],
+                "provenance": "verified-ledger-claim",
+            }
+            already_checked_out.append(claim_row)
+            if is_other:
+                other_claimed_prs.setdefault(pnum, []).append(claim_row)
+
+    # Source B: live GitHub claims (in-progress labels, assignees, open PR branches)
+    for inum, iss_obj in sorted((open_issues or {}).items()):
+        labels = _labels(iss_obj)
+        assignees = [str(a.get("login") or "") for a in (iss_obj.get("assignees") or []) if isinstance(a, dict) and a.get("login")]
+        if (labels & IN_PROGRESS_LABELS) or assignees:
+            owner_str = ",".join(assignees) if assignees else "in-progress-label"
+            claim_row = {
+                "kind": "issue",
+                "number": inum,
+                "ref": f"GH-{inum}",
+                "owner": owner_str,
+                "device": "github",
+                "started": (iss_obj.get("updatedAt") or "")[:19],
+                "provenance": "github-label-or-pr",
+            }
+            already_checked_out.append(claim_row)
+            if assignees and operator and all(a.lower() != operator.lower() for a in assignees):
+                other_claimed_issues.setdefault(inum, []).append(claim_row)
+
+    for pr_obj in prs:
+        pnum = int(pr_obj.get("number") or 0)
+        p_author = str((pr_obj.get("author") or {}).get("login") or "")
+        head_ref = str(pr_obj.get("headRefName") or "")
+        for inum in _extract_issue_numbers(head_ref) or _extract_issue_numbers(pr_obj.get("title")):
+            claim_row = {
+                "kind": "issue",
+                "number": inum,
+                "ref": f"GH-{inum} (via PR #{pnum})",
+                "owner": p_author or "pr-author",
+                "device": "github",
+                "started": (pr_obj.get("updatedAt") or "")[:19],
+                "provenance": "github-label-or-pr",
+            }
+            already_checked_out.append(claim_row)
+            if p_author and operator and p_author.lower() != operator.lower():
+                other_claimed_issues.setdefault(inum, []).append(claim_row)
+
+    # Source C: local checkouts, linked worktrees, and read-only .tick claims on this device
+    for lrow in local_rows:
+        for inum in lrow.get("issue_numbers") or []:
+            claim_row = {
+                "kind": "issue",
+                "number": inum,
+                "ref": f"GH-{inum} ({lrow.get('ref')})",
+                "owner": lrow.get("agent") or operator or device,
+                "device": device,
+                "started": lrow.get("last_activity") or date_local,
+                "provenance": "local-device-only",
+                "local_kind": lrow.get("kind"),
+            }
+            already_checked_out.append(claim_row)
+            other_claimed_issues.setdefault(inum, []).append(claim_row)
+
+    # Detect collisions against operator's candidate issues (carryover + assigned + open release builds)
+    candidate_issues: list[int] = []
+    for item in carryover_open_issues:
+        if item["number"] not in candidate_issues:
+            candidate_issues.append(item["number"])
+    for item in assigned_issues:
+        if item["number"] not in candidate_issues:
+            candidate_issues.append(item["number"])
+
+    collisions: list[dict] = []
+    for inum in candidate_issues:
+        claimants = other_claimed_issues.get(inum, [])
+        if claimants:
+            collisions.append({
+                "number": inum,
+                "ref": f"GH-{inum}",
+                "claimants": claimants,
+            })
+
+    ledger_data = {
+        "mode": "daily_ledger",
+        "date": date_local,
+        "timezone": resolved_tz,
+        "generated_at": now.isoformat(),
+        "repo_slug": slug,
+        "repo_mode": repo_mode,
+        "repo_mode_source": repo_mode_how,
+        "operator": operator,
+        "authenticated_login": auth_login,
+        "device": device,
+        "today_ledger": today_ledger,
+        "today_duplicates": [x["number"] for x in disc["today_duplicates"]],
+        "previous_ledger": previous_ledger,
+        "previous_duplicates": [x["number"] for x in disc["previous_duplicates"]],
+        "earliest_starter": earliest_starter,
+        "already_checked_out": already_checked_out,
+        "collisions": collisions,
+        "carryover_open_issues": carryover_open_issues,
+        "carryover_open_prs": carryover_open_prs,
+        "completed_since_last_ledger": completed_since_last,
+        "unverified_carryover": unverified_carryover,
+        "assigned_open_issues": assigned_issues,
+        "prs_awaiting_review": prs_awaiting_review,
+        "prs_needing_remediation": prs_needing_remediation,
+        "local_checkout": local_rows,
+        "release_context": {
+            "target_release": (release_context.get("target_release") if isinstance(release_context, dict) else None),
+            "manifest_summary": (release_context.get("manifest_summary") if isinstance(release_context, dict) else None),
+        },
+        "warnings": warnings,
+        "coverage": coverage,
+        "publish_receipt": None,
+    }
+
+    rc = 0
+    if getattr(args, "publish_ledger", False):
+        disc_cov = next((c for c in coverage if c["source"] == "ledger discovery"), {})
+        tcomm_cov = next((c for c in coverage if c["source"] == "today ledger comments"), {})
+        if disc.get("auth_refused"):
+            print(f"[ERROR] daily ledger publish refused: {disc['auth_refused']}", file=sys.stderr)
+            ledger_data["publish_receipt"] = {"action": "refused", "detail": disc["auth_refused"]}
+            return ledger_data, 3
+        if disc_cov.get("status") != "ok" or tcomm_cov.get("status") not in {"ok", "skipped"} or today_ledger is None:
+            msg = f"coverage incomplete or today ledger unresolved (discovery={disc_cov.get('status')}, comments={tcomm_cov.get('status')}); refusing to publish blind"
+            print(f"[ERROR] daily ledger publish: {msg}", file=sys.stderr)
+            ledger_data["publish_receipt"] = {"action": "refused", "detail": msg}
+            return ledger_data, 3
+        comment_md = format_daily_ledger_markdown(ledger_data, for_comment=True)
+        ok, what, receipt = sync_daily_ledger_comment(
+            repo_root=repo_root,
+            slug=slug,
+            issue_num=int(today_ledger["number"]),
+            existing_comments=today_comments or [],
+            operator=operator or "",
+            device=device,
+            date_local=date_local,
+            auth_login=auth_login,
+            allow_delegate=allow_delegate,
+            trusted_bots=trusted_bots,
+            body_md=comment_md,
+            now_iso=now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+        ledger_data["publish_receipt"] = receipt
+        print(f"daily ledger comment on #{today_ledger['number']}: {what}" if ok else f"[ERROR] daily ledger comment on #{today_ledger['number']}: {what}",
+              file=sys.stdout if ok else sys.stderr)
+        rc = 0 if ok else 3
+
+    return ledger_data, rc
+
+
+def format_daily_ledger_markdown(ledger: dict, for_comment: bool = False) -> str:
+    """Render the Daily Work Ledger report (both full local MD and per-operator GitHub issue comment)."""
+    date_str = ledger.get("date") or ""
+    op = ledger.get("operator") or "unassigned"
+    dev = ledger.get("device") or "unknown-device"
+    rmode = ledger.get("repo_mode") or "gh-only"
+    t_iss = ledger.get("today_ledger")
+    p_iss = ledger.get("previous_ledger")
+    es = ledger.get("earliest_starter")
+
+    heading = f"### Daily Work Ledger — `{op}` (`{dev}`) — {date_str}" if for_comment else f"# Daily Work Ledger — {date_str}"
+    lines = [
+        heading,
+        "",
+        f"- **Operator:** `{op}` · **Device:** `{dev}` · **Repo Mode:** `{rmode}` ({ledger.get('repo_mode_source')})",
+        f"- **Today's Ledger Issue:** " + (f"[#{t_iss['number']}]({t_iss.get('url') or ''}) (`{t_iss.get('title')}`)" if t_iss else "*Not created yet (run with `--publish-ledger`)*"),
+        f"- **Prior Workday Ledger:** " + (f"[#{p_iss['number']}]({p_iss.get('url') or ''}) (`{p_iss.get('ledger_date')}`)" if p_iss else "*None found*"),
+        f"- **Earliest Starter Today:** " + (f"`{es['operator']}` on `{es['device']}` at `{es['started']}`" if es else "*No verified starter comment recorded yet*"),
+        "",
+        "## 1. Coverage & Verification Gate",
+        "",
+    ]
+    for c in ledger.get("coverage", []):
+        extra = f" — {c.get('detail')}" if c.get("detail") else ""
+        cnt = f" ({c.get('count')})" if c.get("count") is not None else ""
+        lines.append(f"- `{c.get('status')}` **{c.get('source')}**{cnt}{extra}")
+    for w in ledger.get("warnings", []):
+        lines.append(f"- ⚠️ **Warning:** {w}")
+
+    lines.extend(["", "## 2. Already Checked Out / Earliest-Starter Calibration", ""])
+    checked = ledger.get("already_checked_out") or []
+    if checked:
+        for row in checked:
+            lines.append(
+                f"- **{row.get('ref')}** — owner `{row.get('owner')}` (`{row.get('device')}`) · started `{row.get('started')}` · provenance `{row.get('provenance')}`"
+            )
+    else:
+        lines.append("- *No active checkouts observed across today's ledger comments, GitHub labels/PRs, or local checkouts.*")
+
+    collisions = ledger.get("collisions") or []
+    if collisions:
+        lines.append("")
+        lines.append("### ⚠️ Checkout Collisions Detected")
+        for col in collisions:
+            owners = ", ".join(f"{c['owner']} ({c['provenance']})" for c in col.get("claimants", []))
+            lines.append(f"- **COLLISION on {col['ref']}**: claimed/checked out by {owners}")
+
+    lines.extend(["", "## 3. Carryover from Prior Workday", ""])
+    c_iss = ledger.get("carryover_open_issues") or []
+    c_prs = ledger.get("carryover_open_prs") or []
+    if c_iss or c_prs:
+        for item in c_iss:
+            lines.append(f"- **GH-{item['number']}**: {item.get('title')} (carried from `{item.get('from_device')}` on `{item.get('from_date')}`)")
+        for item in c_prs:
+            lines.append(f"- **PR #{item['number']}**: {item.get('title')} (carried from `{item.get('from_device')}` on `{item.get('from_date')}`)")
+    else:
+        lines.append("- *No open carryover items from prior workday.*")
+
+    comp = ledger.get("completed_since_last_ledger") or []
+    if comp:
+        lines.extend(["", "### Completed Since Prior Ledger", ""])
+        for item in comp:
+            prefix = "GH-" if item.get("kind") == "issue" else "PR #"
+            lines.append(f"- ~~{prefix}{item['number']}~~ (`{item.get('status')}` since `{item.get('from_date')}`)")
+
+    lines.extend(["", "## 4. PR Reviews & Comment Remediations", ""])
+    revs = ledger.get("prs_awaiting_review") or []
+    rems = ledger.get("prs_needing_remediation") or []
+    if revs:
+        lines.append("### PRs Awaiting Your Review")
+        for r in revs:
+            lines.append(f"- **PR #{r['number']}** by `{r.get('author')}`: {r.get('title')} (`{r.get('requested_via')}`)")
+    else:
+        lines.append("- *No open PRs currently requesting your review.*")
+    if rems:
+        lines.append("")
+        lines.append("### Your Open PRs Needing Remediation")
+        for rm in rems:
+            lines.append(f"- **PR #{rm['number']}**: {rm.get('title')} — `{', '.join(rm.get('reasons') or [])}`")
+    else:
+        lines.append("- *No open PRs authored by you with failing CI, changes requested, or unresolved review threads.*")
+
+    lines.extend(["", "## 5. Newly Assigned Open Issues", ""])
+    ass = ledger.get("assigned_open_issues") or []
+    if ass:
+        for a in ass:
+            lines.append(f"- **GH-{a['number']}**: {a.get('title')}")
+    else:
+        lines.append("- *No additional open issues assigned to you.*")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")
     parser.add_argument("--repo-root", default=".", help="Path to repository root")
     parser.add_argument("--gh-repo", default=None, help="Target GitHub repo (e.g. Org/Name)")
-    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "stalled"], default="weekly")
+    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "stalled", "ledger"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
     parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int,
@@ -1851,6 +3053,15 @@ def main():
                         help="checkout path or glob to scan read-only (repeatable; default: --repo-root and ~/marathon-clones/*)")
     parser.add_argument("--device-id", help="device id for the comment marker (default: device_config device_id, normalized)")
     parser.add_argument("--operator", help="GitHub login whose assigned issues count as 'mine' (default: gh api user)")
+    # GH-1459 Daily Work Ledger & repo-mode support
+    parser.add_argument("--repo-mode", choices=["auto", "forge", "vendored", "gh-only"], default="auto",
+                        help="Repository operating mode (precedence: --repo-mode > XYZ_DAILY_LEDGER_MODE > device_config > auto)")
+    parser.add_argument("--publish-ledger", action="store_true",
+                        help="Create today's Daily Work Ledger GH issue if missing and POST/PATCH this operator+device comment")
+    parser.add_argument("--ledger-issue", type=int, help="Explicit GitHub issue number override for today's Daily Work Ledger")
+    parser.add_argument("--ledger-tz", help="IANA timezone for shared Daily Work Ledger date boundary (default: America/Los_Angeles)")
+    parser.add_argument("--allow-delegate-comment", action="store_true",
+                        help="Allow trusted delegate bot (in XYZ_DAILY_LEDGER_TRUSTED_BOTS / daily_ledger_trusted_bots) to POST ledger comments")
 
     args = parser.parse_args()
     if args.stale_days < 1 or args.draft_stale_days < 1:
@@ -1868,7 +3079,7 @@ def main():
     try:
         prs = get_open_prs(repo_root, args.gh_repo)
     except Exception as exc:
-        if args.mode not in {"stalled", "daily"}:
+        if args.mode not in {"stalled", "daily", "ledger"}:
             raise
         prs, prs_error = [], (str(exc).splitlines()[-1] if str(exc) else repr(exc))
         print(f"[WARN] open PR lookup failed; continuing with a coverage gap: {prs_error}", file=sys.stderr)
@@ -1885,6 +3096,20 @@ def main():
 
     now_utc = datetime.now(timezone.utc)
     date_str = now_utc.strftime("%Y-%m-%d")
+
+    if args.mode == "ledger":
+        ledger_data, rc = run_daily_ledger(repo_root, args.gh_repo, prs, sequence, args, now_utc, prs_error)
+        l_date = ledger_data.get("date") or date_str
+        out_json = temp_dir / f"daily-ledger-{l_date}.json"
+        out_json.write_text(json.dumps(ledger_data, indent=2), encoding="utf-8")
+        out_md = temp_dir / f"DAILY-LEDGER-{l_date}.md"
+        out_md.write_text(format_daily_ledger_markdown(ledger_data, for_comment=False), encoding="utf-8")
+        gaps = sum(1 for c in ledger_data["coverage"] if c.get("status") not in {"ok", "skipped"})
+        print(f"daily ledger ({ledger_data['repo_mode']}): {len(ledger_data['carryover_open_issues']) + len(ledger_data['carryover_open_prs'])} carryover, "
+              f"{len(ledger_data['assigned_open_issues'])} assigned, {len(ledger_data['prs_awaiting_review'])} reviews, "
+              f"{len(ledger_data['prs_needing_remediation'])} remediations, {len(ledger_data['collisions'])} collision(s), "
+              f"{gaps} coverage gap(s) → {out_md}")
+        sys.exit(rc)
 
     if args.mode == "stalled":
         # Headless GH-1184 entry point for the #1168 scheduler: only the read-only scan and, with

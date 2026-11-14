@@ -47,7 +47,7 @@ Orchestrate weekly sprint alignment and daily task execution across team members
    - **Mode B (Zero-Dependency Fallback):** Ingests open issues via `gh issue list`, executing a 2–3 pass scratch markdown process in `temp/planner/` to triage and sharpen tasks.
 7. **Shared Core Engine Architecture (Zero Skill Drift):**
    - The weekly planner owns the primary data models, merge-sequencer, and adversarial checks in `scripts/planner_core.py`.
-   - The `daily-planner` skill runs the same engine by subprocess (`planner_core.py --mode daily`, and `--mode stalled` for the GH-1184 Stalled & stale scan) rather than importing it, so the daily and weekly cadence never contradict each other.
+   - The `daily-planner` skill runs the same engine by subprocess (`planner_core.py --mode daily` for weekly-plan pivots, `--mode ledger` for the GH-1459 shared Daily Work Ledger GH issue & multi-operator checkout calibration across `forge`/`vendored`/`gh-only` repos, and `--mode stalled` for the GH-1184 Stalled & stale scan) rather than importing it, so the daily and weekly cadence never contradict each other.
 
 ---
 
@@ -151,3 +151,11 @@ python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode daily
 4. Promotes newly unblocked tasks to the top of today's operator queue.
 5. Runs the Adversarial Northstars check on the pivoted day plan before presenting to the user.
 6. Emits both `temp/planner/daily-pivot-<date>.json` and `temp/planner/DAILY-PIVOT-<date>.md`.
+
+### Daily Work Ledger Mode (`--mode ledger` · GH-1459)
+
+When no weekly baseline exists or when operators coordinate daily pickup on GitHub across `forge`, `vendored` (`.xyz/`), or `gh-only` repositories, `daily-planner` invokes:
+```bash
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode ledger --repo-mode auto [--publish-ledger]
+```
+This discovers (or creates with `--publish-ledger`) today's `"Daily Work Ledger — YYYY-MM-DD"` issue (`min(number)` canonical tie-break), carries forward verified operator items across devices from the most recent prior workday's ledger, surfaces newly assigned issues and PR reviews/unresolved review threads, calibrates against earlier starters' checkouts (`verified-ledger-claim`, `github-label-or-pr`, `local-device-only`), and writes `temp/planner/daily-ledger-<date>.json` + `temp/planner/DAILY-LEDGER-<date>.md`.

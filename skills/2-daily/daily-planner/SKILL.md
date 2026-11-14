@@ -1,10 +1,14 @@
 ---
 name: daily-planner
 description: >-
-  Adaptive daily planning skill that pivots the active weekly plan based on what closed
-  yesterday. Directly reuses the core engine and adversarial Northstars from weekly-planner
-  (skills/3-weekly/weekly-planner/) to eliminate logic drift and prevent planning contradictions.
-  Re-sequences the daily merge queue and highlights the immediate blocker for the operator.
+  Adaptive daily planning and GitHub Daily Work Ledger skill. Pivots the active weekly plan
+  (--mode daily) AND runs the shared Daily Work Ledger GitHub issue workflow (--mode ledger)
+  across XYZ Forge dogfooding, vendored .xyz/ repos, and plain GitHub repos without requiring
+  a weekly baseline. Discovers or creates today's "Daily Work Ledger — YYYY-MM-DD" issue,
+  carries forward the operator's unfinished items from the most recent prior workday across
+  devices, surfaces newly assigned issues and PR reviews/comment remediations, calibrates
+  against earlier starters' checkouts, and chains /recon and /debug-mantra to ground the plan.
+  Distinct from Rebalance's 15-minute /daily prompt-log synthesizer.
 ---
 
 # Daily Planner (Adaptive Daily Pivot)
@@ -118,3 +122,62 @@ but `temp/planner/*` and that one comment; it never fetches, prunes, deletes, or
 
 This change is forge-only: XYZ-mini's copies of both planner skills are `adapted` (`utils/py/xyz_mini_sync.py`)
 and are not refreshed from here.
+
+---
+
+## Daily Work Ledger (`--mode ledger` · GH-1459)
+
+Use `--mode ledger` when starting or calibrating a workday (`"daily work ledger"`, `"start my day"`, `"calibrate my day"`, `"what is already checked out today"`), or in repositories where no weekly plan baseline file exists.
+
+**Boundary with Rebalance `/daily`:** Rebalance's `/daily` skill (`rebalance-OS`) is the 15-minute local prompt/telemetry synthesizer (`temp/daily-log/YYYY-MM-DD.log`). Do **not** replace or invoke `/daily` for GitHub issue coordination; `/daily-planner` (`--mode ledger`) owns the repository-level GitHub Daily Work Ledger issue workflow.
+
+### Repository Operating Modes (`--repo-mode {auto,forge,vendored,gh-only}`)
+
+Precedence: `--repo-mode` CLI flag > `XYZ_DAILY_LEDGER_MODE` env var > `device_config.json` `daily_ledger_mode` > `auto` detection on `--repo-root`:
+- **`forge`:** Auto-selected when `releases.db` and `utils/hq/hq.sh` exist at `--repo-root`. Enriches the ledger with read-only `releases.db` milestone context (`get_release_milestones`), local worktrees, and `.tick` claims.
+- **`vendored`:** Auto-selected when `.xyz/` exists at `--repo-root`. Uses `.xyz/` device config and read-only `tick claims --json` + git worktree scanning without requiring `releases.db` or a weekly baseline.
+- **`gh-only`:** Zero-dependency fallback for any GitHub repository without `releases.db` or `.xyz/`.
+
+### Mandatory 4-Step `/recon` + `/debug-mantra` Grounding Ladder
+
+#### Step 1: Recite `/debug-mantra` & Run Live Ledger Discovery (Read-Only Default)
+
+Recite the four-mantra debugging discipline block verbatim, then run `planner_core.py --mode ledger` in read-only mode first:
+
+```bash
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode ledger --repo-mode auto
+```
+
+What the engine collects and verifies:
+- **Today's & Prior Workday's Ledger Issues:** Queries exact title regex `^Daily Work Ledger — (\d{4}-\d{2}-\d{2})$` in the shared ledger timezone (`--ledger-tz`, default `America/Los_Angeles`). When either 100-row search page is full, it **unconditionally paginates** `repos/<slug>/issues?state=all&per_page=100` so >100 historical ledgers, mixed-page duplicate spikes (`1 today + 100 yesterday`), and backfilled dates never lose completeness. If concurrent earliest starters created duplicate issues for the same date, `min(number)` is selected as canonical while comments across all same-date duplicates are merged.
+- **Ingestion Authorship Verification (`[P1]` guard):** Only comments whose **first non-empty line** matches `<!-- daily-ledger:<operator>:<device>:<YYYY-MM-DD> started:<ISO-8601> -->` with a date matching the target ledger issue AND `comment.user.login.lower() == marker_operator.lower()` (or an explicit `--allow-delegate-comment` bot in `XYZ_DAILY_LEDGER_TRUSTED_BOTS` / `daily_ledger_trusted_bots`) are trusted. Quoted markers on line 2+, shared issue body text, and forged comments where `comment.user.login != marker_operator` are rejected (`unverified-forged-marker`).
+- **Cross-Device Prior-Workday Carryover:** Aggregates the operator's verified comments from the most recent prior workday (`date < today`) across **any** device (so switching from laptop to Mac Studio preserves continuity), filtering out issues closed or PRs merged since that ledger when live GitHub lookups are `ok`.
+- **Assigned Issues, PR Reviews & Comment Remediations:** Surfaces newly assigned open issues (`assignees`), non-draft PRs requesting the operator's review (`reviewRequests`), and the operator's open PRs needing remediation (`CHANGES_REQUESTED`, failing `statusCheckRollup`, or unresolved review threads via bounded GraphQL `reviewThreads(first:100)` where `isResolved == false`).
+
+#### Step 2: Multi-Operator Checkout Calibration ("Already Checked Out")
+
+Inspect Section 2 of `temp/planner/DAILY-LEDGER-<date>.md` (`already_checked_out` and `collisions` in `temp/planner/daily-ledger-<date>.json`):
+- Starters on today's ledger issue are ordered by their preserved `started:<ISO-8601>` timestamp ascending (`earliest_starter`).
+- Every active claim carries an explicit provenance badge:
+  - `verified-ledger-claim` — verified first-line marker comment on today's ledger issue.
+  - `github-label-or-pr` — live GitHub `in progress`/`🚧` label, assignee, or open PR branch reference.
+  - `local-device-only` — local git branches, clean/dirty linked git worktrees (`git worktree list --porcelain`), and active `.tick` claims read via canonical `TICK_REPO_ROOT=<root> tick claims --json` (read-only; if `.tick/events` is corrupt or `tick` fails, `coverage` reports `tick claims` as `failed`/`unavailable` rather than guessing in Python).
+- De-conflict any item flagged under `### ⚠️ Checkout Collisions Detected` before selecting today's active queue.
+
+#### Step 3: Bounded `/recon` & `/debug-mantra` on Top Candidate Items
+
+Before publishing your daily claim comment or starting implementation:
+1. Run bounded `/recon` on the top carryover/assigned issue or PR remediation target to trace entry points, state writers, and N+1 downstream consumers.
+2. Apply `/debug-mantra` to verify raw PR review thread comments, failing check logs, and live `file:line` ground truth — falsifying stale assumptions from yesterday's notes before committing to today's plan.
+
+#### Step 4: Publish / Update Your Idempotent Comment on Today's Ledger Issue (`--publish-ledger`)
+
+When ready to publish (or update) today's claim block on GitHub:
+
+```bash
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode ledger --repo-mode auto --publish-ledger
+```
+
+- **Fail-Closed Coverage & Authorship Gate:** Refuses to create an issue or post/patch a comment (exits `3`) if ledger discovery or comment listing failed/truncated, if `auth_login` (`gh api user -q .login`) is unresolved, or if `--operator` does not match `auth_login` on `POST` or `PATCH` (with the sole `POST`/create exception of `--allow-delegate-comment` when `auth_login` is in `trusted_bots`).
+- **Unconditional `PATCH` Author Guard & Preserved Timestamp:** When updating an existing comment for `(operator, device, date)`, unconditionally verifies `comment.user.login.lower() == auth_login.lower()` and preserves the original `started:<ISO-8601>` timestamp so earliest-starter ordering never shifts on mid-day updates.
+
