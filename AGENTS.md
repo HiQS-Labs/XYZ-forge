@@ -159,7 +159,8 @@ local change.
 
 ## Repo-specific rails
 
-- **No new tests (GH-831, operator decision 2026-09-25).** No new `test/` suite,
+- **No new tests (GH-831, operator decision 2026-09-25). XYZ-forge repo only; a target
+  repository follows its own test policy.** No new `test/` suite,
   `validate.sh` TESTS entry, gate/guard/lane/runner/telemetry-stage machinery, or test to
   enforce this rule. Verify through existing coverage or manual checks retained under
   `TESTS-RESULTS/<date>+GH-<n>/` with `provenance.jsonl`. Edit an existing suite only to keep
