@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex): FAIL, 3 should-fix + 1 nit, all implemented in this revision. | Plan QA round 2. |
+| Plan QA **Approved** by Codex in round 2 (`relay-system/2026-11-14/gh1466-plan-qa.md`; round 1 FAIL dispositions applied, round 2 nits adopted). | Admit on ledger, then implement steps 1–8. |
 
 ## Problem
 
@@ -130,6 +130,10 @@ phases: 1
 | **M9** | `releases_app.py jog run --dry-run`, `jog resume <N>` (verb dispatch) and `jog land <N>`: each exits 2 with the unavailable message, no traceback | Base `releases_app.py` in the ledger host → `ModuleNotFoundError` traceback |
 | **M10** (smoke, main path) | In the ledger host, with `projections` enabled and adopted `RELEASES-PREVIEW.html`, `LEADERBOARD.md` and `LEADERBOARD.html` present, and **no host copies** of the tools: `releases_app.py check` exits 0; `roadmap add` then `rate` → no `ModuleNotFoundError` on stderr. A non-dry-run `wave_reconcile.py --pr <N> --skip-branch-check` on offline landing metadata exits 0, runs the planner, **regenerates the preview and leaderboard with the new ledger data** (content diff recorded), and runs the vendored PDDA gate | Remove `.xyz/utils/timeline/RELEASES.html`, then separately `.xyz/utils/marathon-plan.sh`, from the installed copy → that reconcile fails |
 | **M11** (smoke, adjacent path) | Re-run the vendor on the same host (no flags) → still ledger. Then `releases-merge-resolve.sh` on a conflicted `releases.sql`, with the same adopted views → resolves, regenerates the views, exits 0 | Remove `.xyz/utils/leaderboard.sh` → merge-resolve dies at the leaderboard step |
+
+**Execution notes from plan QA round 2 (Codex nits, adopted):**
+- **M10 planner-deletion control:** use a fresh host, or delete `.tick/marathon-plan.fingerprint` first. `wave_reconcile.py:2047-2058` deliberately skips an unchanged planner, so the receipt must show the planner step was selected.
+- **M11:** build a real merge conflict, resolve the `releases.sql` text before invoking the resolver (its first step refuses unresolved SQL), record that preparation, and require changed adopted-view output.
 
 **Acceptance map → issue #1466 checklist.**
 
