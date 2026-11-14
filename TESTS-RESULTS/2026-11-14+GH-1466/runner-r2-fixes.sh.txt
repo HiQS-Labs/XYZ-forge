@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+TASK_REPO="$1"
+CAND_SHA="$(git -C "$TASK_REPO" rev-parse --short HEAD)"
+PRIOR_SHA="af858405d"
+
+W="$(mktemp -d)" || exit 1
+trap 'rm -rf "$W"' EXIT
+
+mkdir -p "$W/bin"
+ln -s "$(command -v python3.13)" "$W/bin/python3"
+export PATH="$W/bin:$PATH"
+
+C="$W/cand"
+P="$W/prior"
+git clone -q --no-local "$TASK_REPO" "$C"
+git clone -q --no-local "$TASK_REPO" "$P"
+git -C "$C" checkout -q "$CAND_SHA"
+git -C "$P" checkout -q "$PRIOR_SHA"
+
+OUT="$W/logs"
+mkdir -p "$OUT"
+
+# ---------- R2-1: HQ registry locator outside search roots ----------
+R1="$W/r21"
+mkdir -p "$R1/outside-search/ledger-host/.xyz" "$R1/outside-search/ledger-host/PROJECT/2-WORKING" "$R1/outside-search/ledger-host/utils/pdda" \
+         "$R1/outside-search/tier2-host/.xyz" "$R1/outside-search/tier2-host/PROJECT/2-WORKING" "$R1/outside-search/tier2-host/utils/pdda" \
+         "$R1/search" "$R1/pdda"
+
+for h in ledger-host tier2-host; do
+  git -C "$R1/outside-search/$h" init -q
+  git -C "$R1/outside-search/$h" config user.email t@t
+  git -C "$R1/outside-search/$h" config user.name t
+  printf 'ROADMAP_SOURCE=releases\n' > "$R1/outside-search/$h/.pdda-mode"
+  : > "$R1/outside-search/$h/utils/pdda/pdda.sh"
+  git -C "$R1/outside-search/$h" add -A
+  git -C "$R1/outside-search/$h" commit -qm init
+done
+printf 'tier=ledger\n' > "$R1/outside-search/ledger-host/.xyz/VERSION"
+printf 'tier=2\n'      > "$R1/outside-search/tier2-host/.xyz/VERSION"
+
+# Cross-repo basename collision fixtures (both outside search roots)
+mkdir -p "$R1/outside-search/org1/api/.xyz" "$R1/outside-search/org2/api/.xyz"
+for d in "$R1/outside-search/org1/api" "$R1/outside-search/org2/api"; do
+  git -C "$d" init -q
+done
+printf 'tier=ledger\n' > "$R1/outside-search/org1/api/.xyz/VERSION"
+printf 'tier=2\n'      > "$R1/outside-search/org2/api/.xyz/VERSION"
+
+# Same-repo dedup fixture (legacy xyz-tick + tier=ledger .xyz)
+mkdir -p "$R1/outside-search/dup-ledger/xyz-tick" "$R1/outside-search/dup-ledger/.xyz"
+git -C "$R1/outside-search/dup-ledger" init -q
+printf 'tier=ledger\n' > "$R1/outside-search/dup-ledger/.xyz/VERSION"
+
+cat > "$R1/registry.tsv" <<REG
+$R1/outside-search/ledger-host/.xyz	2026-11-14	1	seed	$R1/outside-search/ledger-host
+$R1/outside-search/tier2-host/.xyz	2026-11-14	1	seed	$R1/outside-search/tier2-host
+$R1/outside-search/org1/api/.xyz	2026-11-14	1	seed	$R1/outside-search/org1/api
+$R1/outside-search/org2/api/.xyz	2026-11-14	1	seed	$R1/outside-search/org2/api
+$R1/outside-search/dup-ledger/xyz-tick	2026-11-14	0	old	$R1/outside-search/dup-ledger
+$R1/outside-search/dup-ledger/.xyz	2026-11-14	1	seed	$R1/outside-search/dup-ledger
+REG
+
+export HQ_XYZ_REGISTRY="$R1/registry.tsv"
+export HQ_SEARCH_ROOTS="$R1/search"
+export HQ_PDDA_REGISTRY_DIR="$R1/pdda"
+export HQ_REBALANCE_DB="$R1/absent.db"
+
+(
+  cd "$C" || exit 1
+  bash -c 'source utils/hq/hq-lib.sh; hq_resolve ledger-host; printf "resolver_rc=%s\n" "$?"'
+  echo "--- status ---"
+  bash utils/hq/hq.sh status ledger-host
+  echo "--- fire ---"
+  bash utils/hq/hq.sh fire ledger-host --gh-issue 4291 --risk 1; echo "fire_rc=$?"
+  echo "--- tier2 ---"
+  bash utils/hq/hq.sh status tier2-host
+  echo "--- collision ---"
+  bash -c 'source utils/hq/hq-lib.sh; hq_resolve api; printf "collision_rc=%s\n" "$?"'
+  echo "--- dup ---"
+  bash -c 'source utils/hq/hq-lib.sh; hq_resolve dup-ledger; printf "dup_rc=%s\n" "$?"'
+) > "$OUT/R2-1-candidate.log" 2>&1
+
+(
+  cd "$P" || exit 1
+  bash -c 'source utils/hq/hq-lib.sh; hq_resolve ledger-host; printf "resolver_rc=%s\n" "$?"'
+  echo "--- status ---"
+  bash utils/hq/hq.sh status ledger-host; echo "status_rc=$?"
+) > "$OUT/R2-1-red-prior.log" 2>&1
+
+# ---------- R2-2: wave_reconcile.py main lock in linked worktree vs full clone ----------
+R2="$W/r22"
+mkdir -p "$R2/bare.git" "$R2/host"
+git init --bare -q "$R2/bare.git"
+git clone -q "$R2/bare.git" "$R2/host"
+(
+  cd "$R2/host" || exit 1
+  git config user.email t@t
+  git config user.name t
+  git checkout -b development -q
+  mkdir -p PROJECT/1-INBOX PROJECT/2-WORKING PROJECT/3-COMPLETED PROJECT/4-MISC
+  printf 'ROADMAP_SOURCE=releases\n' > .pdda-mode
+  python3 "$C/utils/py/releases_app.py" --root "$R2/host" init >/dev/null
+  git add -A
+  git commit -qm "init"
+  git push -q -u origin development
+)
+git -C "$R2/host" worktree add -q -b wt-reconcile "$R2/wt" origin/development
+
+cat > "$R2/offline.json" <<JSON
+{"prs": [{"number": 9999, "title": "test", "state": "MERGED", "baseRefName": "development", "mergedAt": "2026-11-14T12:00:00Z", "body": "", "url": "https://example.test/pr/9999"}]}
+JSON
+
+(
+  echo "dotgit_wt_is_file=$([ -f "$R2/wt/.git" ] && echo True || echo False)"
+  python3 "$C/utils/py/wave_reconcile.py" --root "$R2/wt" --pr 9999 --offline "$R2/offline.json" --skip-branch-check --dry-run
+  echo "wt_rc=$?"
+  echo "dotgit_full_is_dir=$([ -d "$R2/host/.git" ] && echo True || echo False)"
+  python3 "$C/utils/py/wave_reconcile.py" --root "$R2/host" --pr 9999 --offline "$R2/offline.json" --skip-branch-check --dry-run
+  echo "full_rc=$?"
+) > "$OUT/R2-2-candidate.log" 2>&1
+
+(
+  echo "dotgit_wt_is_file=$([ -f "$R2/wt/.git" ] && echo True || echo False)"
+  python3 "$P/utils/py/wave_reconcile.py" --root "$R2/wt" --pr 9999 --offline "$R2/offline.json" --skip-branch-check --dry-run
+  echo "wt_rc=$?"
+) > "$OUT/R2-2-red-prior.log" 2>&1
+
+echo "=== R2-2-candidate.log ==="
+cat "$OUT/R2-2-candidate.log"
+
+DEST="$TASK_REPO/TESTS-RESULTS/2026-11-14+GH-1466"
+cp "$OUT"/R2-*.log "$DEST/logs/"
+cp /tmp/run_r2_evidence.sh "$DEST/runner-r2-fixes.sh.txt"
