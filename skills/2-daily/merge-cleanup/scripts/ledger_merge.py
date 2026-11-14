@@ -901,17 +901,20 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
         rec, reason = "group", f"conflicts on code, excluded or unclassified paths ({fmt(review_nums)}); one reviewed resolution beats repeating it per PR"
     elif repeat:
         rec, reason = "group", f"{fmt(repeat)} already used a repair and conflict again"
+    elif hubs and hubs["fold"]["state"] != "clean":
+        rec, reason = "group", (f"{len(hubs['members'])} conflict hub(s) ({fmt(hubs['members'])}); "
+                                f"{len(hubs['clean_set'])} of {len(order)} PRs are clean once they are set aside, "
+                                f"but that set still conflicts in sequence at #{hubs['fold']['at']}; "
+                                "one combined resolution beats repeated repairs")
+    elif hubs and len(hubs["later"]) > HUB_MAX_SHARE * len(order):
+        rec, reason = "group", (f"{len(hubs['later'])} of {len(order)} PRs would have to wait for a second pass "
+                                f"({len(hubs['members'])} conflict hub(s); {len(hubs['clean_set'])} clean); "
+                                "the conflicts are spread across the queue, not held by a few hubs")
     elif len(conflicted_nums) >= 3:
-        counts = (f"{len(hubs['members'])} conflict hub(s) ({fmt(hubs['members'])}); {len(hubs['clean_set'])} of {len(order)} PRs "
-                  f"are clean once they are set aside")
-        if hubs["fold"]["state"] != "clean":
-            rec, reason = "group", f"{counts}, but that set still conflicts in sequence at #{hubs['fold']['at']}; one combined resolution beats repeated repairs"
-        elif len(hubs["later"]) > HUB_MAX_SHARE * len(order):
-            rec, reason = "group", (f"{len(hubs['later'])} of {len(order)} PRs would have to wait for a second pass "
-                                    f"({counts}); the conflicts are spread across the queue, not held by a few hubs")
-        else:
-            rec, passes = "direct", [list(hubs["clean_set"]), list(hubs["later"])]
-            reason = f"{counts} and fold clean in sequence; land those first, then the hub(s)"
+        rec, passes = "direct", [list(hubs["clean_set"]), list(hubs["later"])]
+        reason = (f"{len(hubs['members'])} conflict hub(s) ({fmt(hubs['members'])}); "
+                  f"{len(hubs['clean_set'])} of {len(order)} PRs are clean once they are set aside "
+                  "and fold clean in sequence; land those first, then the hub(s)")
     elif conflicted_nums:
         rec, reason = "direct", f"{len(conflicted_nums)} conflict(s) ({fmt(conflicted_nums)}), all on potentially B1-eligible paths"
     else:
