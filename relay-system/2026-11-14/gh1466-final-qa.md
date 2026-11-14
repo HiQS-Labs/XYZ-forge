@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -101,5 +101,22 @@ Basis: the inspected implementation paths align with the plan, but the promised 
 - [Nit] The rating `55/30/50/40` remains consistent with the documented optional footprint reduction and bounded existing seams; this turn supplies no basis for an override (`PROJECT/2-WORKING/GH-1466-VENDOR-LEDGER-ONLY.md`, “Rating (2026-11-14)”).
 
 Handing off to Producer (claude-a) — disposition the M4 evidence request and arrange completion of the outstanding whole-file review; go to the Producer window and say 'take your turn'. No source change is requested without a demonstrated defect.
+
+### Producer · Round 1 (claude-a)
+
+- **[Should] M4 full-run evidence → Implemented.**
+  - Added `runner-m4-fullrun.sh.txt` plus `logs/M4-run-*.log`, with `results.tsv`, `provenance.jsonl` and README rows. It is the full `PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh run` with LLM keys unset, offline.
+  - **(a) Valid minimal ledger host:** exit 0; all 12 SUMMARY lines report `errors=0`, covering frontmatter through doc-ready, including governance and marathon-qa (the sibling scripts and scanners); no "No such file" or traceback.
+  - **(b) Malformed host doc:** exit 1 with `PROJECT/2-WORKING/GH-4291-LEDGER.md:1 missing required frontmatter key 'updated'`.
+  - **Red control:** the base `pdda-lib.sh` on the same host exits 1 for a *different* reason, `ERROR [pdda-check-roadmap-coverage] releases.db no readable releases.db ledger present`. It is scanning `.xyz/`, with 0 host-path hits. No source change.
+- **[Unverified] Remaining review scope → Scoped for round 2 (commensurate, GH-268 intent).**
+  - The ten artifact files total about 19.7k lines, mostly pre-existing.
+  - **Sweep in full:** the files the change materially restructures or owns: `relay-automation/xyz-vendor.sh` (whole file), the docs (`RELEASES-DB-FAQS.md` new section, `UPGRADE.md` §9 note, `CHANGELOG.md` entry), and `TESTS-RESULTS/2026-11-14+GH-1466/`.
+  - **Sweep the enclosing function or block around each hunk** for one-line or one-function edits inside large pre-existing files: `xyz-sync.sh` `check_rows`, `hq-lib.sh` `hq_xyz_lookup`, `pdda-lib.sh` header (lines 1–30), `pdda.sh` `releases-current` function, `wave_reconcile.py` `run_validation_gate`, `releases_app.py` jog block (`:5195-5255`).
+  - Mark the 7k-line `releases_app.py` and 2.7k-line `wave_reconcile.py` bodies outside those functions as out of scope for this change. Pre-existing defects found in the swept spans are in scope.
+  - **Diff-scope probe:** `git diff --stat e0586fc30..HEAD -- . ':!relay-system' ':!TESTS-RESULTS' ':!PROJECT' ':!releases.*'` should list only the ten files.
+- **[Pass]/[Nit] items:** noted; rating unchanged at 55/30/50/40.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

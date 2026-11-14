@@ -12,3 +12,4 @@ M10-red	PASS	template removed -> reconcile rc=6; marathon-plan.sh removed (fresh
 M11	PASS	re-vendor (no flags) rc=0 keeps tier=ledger; merge conflicted on releases.db; union-resolved releases.sql; resolver rc=0, DB has both sides' releases, adopted views regenerated (preview changed)
 M11-red	PASS	leaderboard.sh removed -> resolver rc=1 at the leaderboard step
 M10-red-gate	PASS	base wave_reconcile.py in the same ledger host -> rc=7 at the PDDA gate (host-relative utils/pdda/pdda.sh absent)
+M4-run	PASS	full pdda.sh run from .xyz: valid host rc=0, every SUMMARY errors=0, no missing-script/traceback lines; malformed host rc=1 with the host-path updated: error; base pdda-lib.sh rc=1, 0 host-path hits

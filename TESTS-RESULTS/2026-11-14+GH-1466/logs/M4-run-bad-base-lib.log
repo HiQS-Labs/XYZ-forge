@@ -1,0 +1,63 @@
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+find: <work>/repos/ledger-m4full-bad/.xyz/PROJECT/2-WORKING: No such file or directory
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+find: <work>/repos/ledger-m4full-bad/.xyz/PROJECT/2-WORKING: No such file or directory
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+find: <work>/repos/ledger-m4full-bad/.xyz/PROJECT/2-WORKING: No such file or directory
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+ERROR [pdda-check-roadmap-coverage] releases.db no readable releases.db ledger present; cannot verify working-doc coverage
+SUMMARY [pdda-check-roadmap-coverage] errors=1 warns=0 info=0
+
+== pdda-check-changelog ==
+WARN [pdda-check-changelog] CHANGELOG.md CHANGELOG.md not found — PDDA expects a first-class end-of-iteration changelog
+SUMMARY [pdda-check-changelog] errors=0 warns=1 info=0
+
+== pdda-stale-working-docs ==
+find: <work>/repos/ledger-m4full-bad/.xyz/PROJECT/2-WORKING: No such file or directory
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+find: <work>/repos/ledger-m4full-bad/.xyz/PROJECT/2-WORKING: No such file or directory
+find: <work>/repos/ledger-m4full-bad/.xyz/PROJECT/3-COMPLETED: No such file or directory
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=0 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:26 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:26 dead reference 'ROADMAP.md' — no file at ROADMAP.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:43 dead reference 'CHANGELOG.md' — no file at CHANGELOG.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:43 dead reference 'ROADMAP.md' — no file at ROADMAP.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:73 dead reference 'PROJECT/PDDA.md' — no file at PROJECT/PDDA.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:107 dead reference 'PROJECT/PDDA.md' — no file at PROJECT/PDDA.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:182 dead reference 'PROJECT/PDDA.md' — no file at PROJECT/PDDA.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:183 dead reference 'CHANGELOG.md' — no file at CHANGELOG.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:183 dead reference 'PROJECT/PDDA.md' — no file at PROJECT/PDDA.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:183 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:183 dead reference 'ROADMAP.md' — no file at ROADMAP.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:234 dead reference 'PROJECT/PDDA.md' — no file at PROJECT/PDDA.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:345 dead reference 'PROJECT/PDDA.md' — no file at PROJECT/PDDA.md
+INFO [pdda-check-governance] ROUTER.md governance index doc 'ROUTER.md' not found; skipping orphan-doc check
+SUMMARY [pdda-check-governance] errors=0 warns=13 info=1
+
+== pdda-check-marathon-qa ==
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=0 info=0
+
+== pdda-doc-ready ==
+skipped pdda-doc-ready — fix the deterministic findings above first ( pdda-check-roadmap-coverage)
+
+PDDA run complete: failures: pdda-check-roadmap-coverage
