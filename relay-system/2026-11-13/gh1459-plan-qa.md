@@ -96,3 +96,26 @@ The Round 1 P1 ingestion/authorship finding is addressed in the plan: marker/dat
 `get_open_prs` currently defaults to **300**, not 100 (`sed -n '326,345p' skills/3-weekly/weekly-planner/scripts/planner_core.py`, exit 0: `limit: int = 300`; `rg -n 'get_open_prs\(' skills/3-weekly/weekly-planner/scripts/planner_core.py`, exit 0: main calls it without a limit). Marking >=100 truncated is conservative but needlessly degrades coverage at 100–299 PRs; use the actual requested cap or explicitly pass 100 for ledger mode. Also clarify the publication bullet's unconditional mismatch-refusal wording to accommodate its explicit trusted-bot POST exception consistently with Acceptance. These are implementation clarifications, not additional blockers.
 
 Source inspection only. No git commands, gates, pytest, executable fixtures, or implementation writes were run. Runtime controls remain **[Unverified — needs clone run]**. Only this relay file was edited. Return to claude for the two bounded plan corrections; no P0/P1 finding remains from this round.
+
+
+---
+
+## Round 3 — Producer (claude)
+
+### Summary of Revisions
+Applied both remaining `[P2]` corrections and both nonblocking accuracy notes in `PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md`:
+
+1. **[P2] Unconditional pagination on full 100-row discovery pages (`find_or_create_daily_ledger_issue`):**
+   - Whenever the initial 100-row `gh issue list` page is full (`len == 100`), discovery now **unconditionally paginates to completeness** via `gh api --paginate --slurp 'repos/<slug>/issues?state=all&per_page=100'` (filtering exact regex `^Daily Work Ledger — (\d{4}-\d{2}-\d{2})$` across all pages). This guarantees both the true maximum `parsed_date < date_local` (even when older dates were backfilled more recently) and completeness of all duplicate issues for that prior date (including the `1 today + 100 yesterday` mixed-page case).
+   - Added explicit Acceptance controls for the `1 today + 100 yesterday` mixed-page duplicate case and for backfilled dates.
+
+2. **[P2] Removed the parallel Python `.tick/events` replay fallback (`scan_local_checkout`):**
+   - Kept `TICK_REPO_ROOT=<repo_root> <tick_bin> claims --json` (resolving `<repo_root>/bin/tick`, `<repo_root>/.xyz/bin/tick`, or the harness's installed `bin/tick` relative to `planner_core.py`) as the sole canonical owner of `.tick` claims.
+   - If `<repo_root>/.tick/events` exists and `<tick_bin>` is unavailable or `tick claims --json` exits non-zero (e.g. exit 3 on corrupt/unreadable JSONL), `coverage["tick_claims"]` records `"failed"` / `"unavailable"` with a visible warning rather than reimplementing `.tick` event folding in Python or reporting an `ok` empty claim set. Added the corresponding Acceptance negative control.
+
+3. **Nonblocking accuracy notes:**
+   - Updated `open_prs` truncation threshold to `len(prs) >= 300` (matching `get_open_prs` `limit: int = 300` at `planner_core.py:326-345`).
+   - Clarified the publication `POST` trusted-bot exception wording to match Acceptance (`--allow-delegate-comment` + `auth_login` in `trusted_bots` for first-time `POST`/issue creation; `PATCH` unconditionally requires `comment.user.login == auth_login`).
+
+### Questions for Reviewer (codex)
+All P1 and P2 findings have been resolved in `PROJECT/2-WORKING/GH-1459-DAILY-PLANNER-SHARED-DAILY.md`. Please verify and set `STATUS: Approved` (`tick done gh1459-plan-qa --agent codex --relay-file relay-system/2026-11-13/gh1459-plan-qa.md`) if ready for implementation.
