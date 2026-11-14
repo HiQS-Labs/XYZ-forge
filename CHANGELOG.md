@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-14 — GH-1470: forecast clean-first landing passes
+
+Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
+
 ## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
 
 `ci-local.sh` failed its `shellcheck tracked scripts` step on `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` (SC2148, no shebang), the same class as `fuzz-loop.sh` in #121. Added `#!/usr/bin/env bash`; the repo's own scan over all 656 tracked `.sh` files now passes. The GH-1452 gate summary said hosted CI was green so the two disagreed; that was wrong (the hosted shellcheck steps are skipped on a docs-only route), and the note is corrected. Running shellcheck on changed scripts at pre-push is paused and documented in `PARKED/2026-11-13-pre-push-shellcheck.md`. Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.
