@@ -146,4 +146,13 @@ Concrete mutations: remove title; set grade/type to wrong; question to First? Se
 
 Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-11-14T19:28:48Z
+task: RELAY-gh1468-final-codex
+reviewer: codex
+status: Approved
+reviewed-head: c387440735991df0aadc19df14b5c4b449e556e7
+added-range: 9302+6346
+added-sha256: 6a4f1452fc8b3c28143659cf00eabb9e98a344e69289c2a2f3a8eda820cbcf68
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
