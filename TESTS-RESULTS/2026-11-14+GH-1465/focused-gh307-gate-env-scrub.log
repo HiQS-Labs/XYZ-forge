@@ -1,0 +1,14 @@
+== test: gh307-gate-env-scrub ==
+  PASS: python twin scrubs all three GH-307 identity tags (set now has 28 entries, per GH-441)
+  PASS: python twin preserves MARATHON_ROOT
+  PASS: python twin preserves TICK_BIN
+  PASS: python twin preserves TICK_REPO_ROOT
+  PASS: python gate passes env=_gate_env() to subprocess.run
+  PASS: python _gate_env derives from GATE_SCRUBBED_ENV (not a hardcoded list)
+  PASS: bash twin scrubs XYZ_HARNESS_CONTEXT inside run_pre_advance_gate
+  PASS: bash twin scrubs XYZ_SESSION_ID inside run_pre_advance_gate
+  PASS: bash twin scrubs MARATHON_LANE_NS inside run_pre_advance_gate
+  PASS: bash twin preserves MARATHON_ROOT
+  PASS: bash twin preserves TICK_BIN
+  PASS: bash twin preserves TICK_REPO_ROOT
+  gh307-gate-env-scrub: 12 pass, 0 fail

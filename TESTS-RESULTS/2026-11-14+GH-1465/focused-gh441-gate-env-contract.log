@@ -1,0 +1,21 @@
+== test: gh441-gate-env-contract ==
+  workdir: <scratch>/tick-gh441-gate-env-contract.XXXXXX.aO3nkEXeev
+  PASS: the contract module exists at utils/py/gate_env.py
+  PASS: C1a found driver exports to check (25 names)
+  PASS: C1b every variable the drivers export is classified scrub-or-pass
+  PASS: C2a ALLOW_PATHS is scrubbed (the variable that flipped oracle-guard)
+  PASS: C2b RELAY_DRIVER_LOCKED SURVIVES — nested drivers need it; scrubbing it was reverted
+  PASS: C2c an unrelated variable is untouched (the contract is not a blanket wipe)
+  PASS: C3a the shell helper's list is generated from the same registry as the driver's
+  PASS: C3b gate-env.sh does not hardcode variable names (single source of truth)
+  PASS: C3c gate-env.sh applies the list without eval (GH-64 eval-unsanitized)
+  PASS: C3d the driver's literal is EXACTLY the registry (the two copies cannot drift)
+  PASS: C4a a custom gate sourcing the helper sees a CLEAN environment
+  PASS: C4b NEGATIVE CONTROL: the same gate without the helper IS contaminated
+  PASS: C5a the helper FAILS (rc=1) when it cannot resolve the registry
+  PASS: C5b the failure names the contract so it is diagnosable in one read
+  PASS: C6a validate.sh sources the shared helper
+  PASS: C6b validate.sh no longer hardcodes its own prologue
+  PASS: C7a ci-local.sh sources the shared helper
+  PASS: C8a the helper exports PYTHONDONTWRITEBYTECODE=1 and does not clobber a caller's _src/_hp_lib
+  gh441-gate-env-contract: 18 pass, 0 fail

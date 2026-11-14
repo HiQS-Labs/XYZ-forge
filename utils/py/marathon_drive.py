@@ -3211,8 +3211,9 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete
    input — a row, a value, a `file:line` — that fails under the current code (GH-681). Every
    `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,
-   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder
-   may disposition a request lacking these as `Declined — unproven generalization`.
+   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure.
+   A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it.
+   The Builder may disposition a request lacking these as `Declined — unproven generalization`.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to {args.builder} —
    {args.builder}, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the

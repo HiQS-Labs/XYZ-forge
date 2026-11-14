@@ -1,0 +1,20 @@
+== test: new-relay ==
+  workdir: <scratch>/tick-new-relay.XXXXXX.OJDI8Tm7kW
+  PASS: emits NEXT: Reviewer
+  PASS: emits STATUS: Open
+  PASS: emits the TAKE YOUR TURN block
+  PASS: references the read-only seed path
+  PASS: names the reviewer
+  PASS: emits a Log section
+  PASS: derives slug + dated default path
+  PASS: writes the thread file
+  PASS: embed fence (4 backticks) exceeds the inner 3-backtick run
+  PASS: artifact body is embedded
+  PASS: Setup marks the artifact embedded
+  PASS: fence scales past a 5-backtick run (6 >= 6)
+  PASS: errors without --title
+  PASS: errors on --embed without --artifact-file
+  PASS: scaffolded thread passes real validator
+  PASS: scaffolded thread passes real validator with PARKED verdict
+  PASS: scaffolded thread passes real validator with FAIL verdict
+  new-relay: 17 pass, 0 fail

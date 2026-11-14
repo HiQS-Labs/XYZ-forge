@@ -298,6 +298,9 @@ def trailer_text(record):
     # GH-1428: same pattern for the reviewer's gate-run declaration.
     if record.get("gate_run"):
         cfg_line += f"gate-run: {record['gate_run']}\n"
+    # GH-1465: the gate relay-drive ran itself before attesting, when one was configured.
+    if record.get("gate_cmd"):
+        cfg_line += f"driver-gate: exit {record.get('gate_exit')} — {record['gate_cmd']}\n"
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"
