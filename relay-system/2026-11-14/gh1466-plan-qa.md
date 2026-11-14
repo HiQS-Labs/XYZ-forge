@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -161,5 +161,30 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1466-VENDOR-LEDGER-ONLY.md`)
 Your [Pass] notes are adopted as written: initialise `VENDOR_DIR` before reading `VERSION`, and filter in `hq_xyz_lookup` before the dedup.
 
 Handing off to Reviewer (codex) for round 2: re-review the revised plan.
+
+### Reviewer · Round 2
+
+**What this proposes** (plan-only paraphrase, written after reading only the plan doc for this round): Add a persistent ledger-only vendor tier using an explicit payload in the existing vendor. Ship the real ledger/reconcile/PDDA/planner/view closure, filter ledger installs out of driven-lane eligibility, and refuse absent Jog execution cleanly.
+
+**How the existing system works, per this document:** Both existing tiers mirror the full harness, and a host ledger auto-selects Tier 2 when sync re-invokes the vendor without flags. Registry readers infer driven eligibility from installation presence; vendored PDDA currently derives the wrong root and reconcile does not resolve its fallback through the existing harness resolver.
+
+**What it's not:** Excluded: Tier 1/2 content changes, new suites, registry schema changes, host removal and write-timing changes (Non-goals). Deferred: packaging to #1224 and host adoption to LTVera-Pandas#1101. Unresolved: runtime outcomes, which remain build verification; the manifest count and narrower automated closure coverage are now explicit tradeoffs rather than hidden acceptance claims.
+
+swept file: yes
+
+**source-backed**
+
+VERDICT: PASS
+
+**Basis:** Ready to build. Re-reviewed the whole revised plan, its acceptance map, risks and prior dispositions against the cited source seams and issue #1466 plus its consult comment. No further blocking plan defect or additional pre-existing defect found in this sweep. This approves the design, not an implementation or a successful offline run. Runtime checks remain **[Unverified — needs clone run]**; no fixtures, suites or gates were executed here. The shell issue query failed (`gh issue view 1466 --repo HiQS-Labs/XYZ-forge --json body,comments`, exit 1, “error connecting to api.github.com”); the connected GitHub reader subsequently supplied the issue and comments.
+
+- [Pass] The earlier closure/acceptance finding is addressed: step 3 now says “not a full closure guard” and explicitly excludes shell/data/lazy coverage; M10/M11 seed adopted views and assert regeneration. The payload covers the inspected import seams (`_marathon_plan.py:33-35`, `work_connectors/__init__.py:35,95`, `work_connectors/github_board.py:58`) and downstream shell targets (`wave_reconcile.py:2002-2007`, `releases-merge-resolve.sh:195-224`). The issue's stronger automatic analysis and estimated file count are explicitly dispositioned. No parallel writer or new guard framework is proposed.
+- [Pass] Persistence and registry handling remain surgical: no-flag sync calls the vendor (`xyz-sync.sh:296`), so the prior VERSION check must precede DB auto-promotion (`xyz-vendor.sh:66-74`). Filtering before HQ dedup (`hq-lib.sh:75-98`) and skipping only the guard loop (`xyz-sync.sh:433-440`) retain ordinary drift comparison. Keep the existing five-field registry writer.
+- [Pass] The PDDA revision addresses the previously identified gap: host-first then sibling writer in step 6 covers `pdda.sh:976-984`, alongside the root correction (`pdda-lib.sh:6`) and resolver fallback (`wave_reconcile.py:2098`). M4 now specifies the missing `updated:` input and full enforcement; `pdda.sh:40` requires that key. The Jog helper covers all three actual import sites (`releases_app.py:5198-5241`).
+- [Pass] M1–M9 now have discriminating expectations: inventory, missing-source failure, staged import failure before swap, host-doc detection, sticky update, conflict-versus-unknown diagnostic plus tier transitions, selected-row guard contrast, Tier B refusal, and all three Jog import paths. M10/M11 exercise the optional exports that the first version could skip; the merge resolver fails a missing leaderboard invocation at `releases-merge-resolve.sh:218-224`. These are assessments of the specified checks, not witnessed red controls.
+- [Nit] When executing M10's planner-deletion control, use the promised fresh host or invalidate its planner fingerprint first: `wave_reconcile.py:2047-2058` deliberately skips an unchanged planner. Assert the planner step was selected; otherwise a repeated reconcile may legitimately bypass the missing script. No production behavior change is requested.
+- [Nit] For M11, “on a conflicted releases.sql” means a real merge fixture whose SQL text has been resolved before invocation: the resolver's documented first step is to refuse unresolved SQL, not choose its contents. Record that preparation and require changed adopted-view output. This clarifies execution evidence without expanding scope.
+
+Relay closed (Approved), no further turn needed. Only this relay file changed; no git commands were run. The harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
