@@ -42,3 +42,10 @@ the primary is explicitly added and preserved, and Phase 6 refreshes only the re
 `--prefix` does not suppress dangling-symlink pruning; the skill states this limit.
 
 Independent review did not run. No new test suite, flag, landing gate, or deployment was added.
+
+## Publication gate and moving base
+
+`prepush-summary.txt` and `prepush-full-gate.log.gz` retain the full gate on the first published head:
+408/408 pass, with eight pooled failures that passed isolated reruns. The base moved during that run.
+`base-repair.json` records the disjoint ledger-only B1 resolution; merge-cleanup code is unchanged.
+The updated head is pushed through the installed gate again; the prior gate is not presented as its receipt.
