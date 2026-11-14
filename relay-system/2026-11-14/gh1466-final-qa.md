@@ -218,4 +218,13 @@ Basis: ready for the declared disposable-clone gate and subsequent PR workflow. 
 
 Relay closed (Approved), no further turn needed. Producer/harness acts next: run the declared full gate in its disposable clone before claiming gate qualification or PR readiness.
 
+
+### Attestation · relay-drive — 2026-11-14T19:31:53Z
+task: RELAY-gh1466-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: d21e507ccd44dd87f9ec618628cab71fffeb3d77
+added-range: 29112+3109
+added-sha256: 675d3c573088e87bbcd7577fcfcab1c3a4ba2336ef90683e773e3feaf6582637
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
