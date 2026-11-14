@@ -13,3 +13,11 @@ Manual checks for #1465. No suite or registry entry was added (GH-831). Code und
 
 Not measured: the 900-second timeout path (exit 124); a live reviewer turn; a real host gate
 (for example a DB-backed pytest file) run by the driver.
+
+## Full gate (pre-push, disposable `-verify` full clone)
+
+- **GREEN.** Head `4f3569a55`, `python3` = 3.12.14 (throwaway uv venv with `pytest requests pyyaml`
+  first on PATH), `githooks/pre-push` → full `validate.sh` route: `passed: 408 / 408`, Python layer
+  `21 passed`, `full gate GREEN in 621s` (`full-gate-py312.log`). The push to `origin` happened from
+  that clone. `HEAD`, `core.bare`, remotes and local `user.email` were identical before and after.
+- A local run is self-reported and is not promotion qualification (AGENTS.md, GH-509).
