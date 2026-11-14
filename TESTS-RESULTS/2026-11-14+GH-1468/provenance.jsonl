@@ -1,0 +1,1 @@
+{"date":"2026-11-14","issue":1468,"kind":"manual-check","base":"e0586fc30","ci_route":"docs-only","pdda_gate":"pass","deploy_tests":"pass","builder_example":"pass","red_controls":"4/4 exit 2","injection_escape":"pass","live_browser_interaction":"not run","independent_review":"not run"}

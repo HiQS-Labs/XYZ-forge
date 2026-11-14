@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__DECK_TITLE__</title>
+<style>
+:root {
+  --bg: #f5f3ee; --surface: #ffffff; --ink: #1c1b19; --muted: #5d5a52; --line: #d9d4c8;
+  --accent: #1f5f5b; --accent-ink: #ffffff; --accent-soft: #e2eeec;
+  --ok: #2c6637; --ok-soft: #e3efe4;
+  --part: #7d5200; --part-soft: #f6ead0;
+  --none: #50555f; --none-soft: #e8e9ed;
+  --unv: #64517a; --unv-soft: #ede7f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a; --surface: #1e2124; --ink: #edebe6; --muted: #a8a59c; --line: #363a3f;
+    --accent: #74c7be; --accent-ink: #0e1a19; --accent-soft: #1b312f;
+    --ok: #93d39d; --ok-soft: #1c2e20;
+    --part: #e6ba60; --part-soft: #33290f;
+    --none: #b6bac4; --none-soft: #2a2d33;
+    --unv: #c9b1dc; --unv-soft: #2c2434;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(0.95rem, 0.6rem + 0.58vw, 1.25rem); line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+.bar {
+  position: fixed; inset: 0 0 auto 0; z-index: 2; background: var(--bg);
+  display: flex; justify-content: space-between; gap: 16px; align-items: center;
+  padding: 12px 24px; font-size: 0.8rem; color: var(--muted); border-bottom: 1px solid var(--line);
+}
+.bar .deck-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .where { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.meter { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--accent); transition: width .2s; }
+.slide { display: none; min-height: 100vh; min-height: 100dvh; padding: 60px 24px 80px; }
+.slide.is-active { display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; }
+.slide:focus { outline: none; }
+.card { width: 100%; max-width: 1040px; }
+.eyebrow {
+  margin: 0 0 8px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--accent);
+}
+h1, h2 { margin: 0 0 14px; line-height: 1.15; letter-spacing: -0.01em; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 1.1rem + 3.2vw, 3.4rem); }
+h2 { font-size: clamp(1.45rem, 0.9rem + 1.5vw, 2.2rem); }
+h3 {
+  margin: 0 0 6px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+}
+p { margin: 0 0 12px; }
+.lede { font-size: 1.25em; max-width: 46em; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85em; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.block p:last-child, .block ul:last-child { margin-bottom: 0; }
+.block.wide { margin-bottom: 12px; }
+blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--line); }
+blockquote p { margin-bottom: 6px; }
+.who { font-size: 0.85em; color: var(--muted); }
+ul.plain { list-style: none; margin: 0; padding: 0; }
+ul.plain li { padding: 6px 0; border-top: 1px solid var(--line); }
+ul.plain li:first-child { border-top: 0; padding-top: 2px; }
+ul.rules { margin: 0 0 20px; padding-left: 1.2em; max-width: 44em; }
+ul.rules li { margin-bottom: 6px; }
+.chip {
+  display: inline-block; margin-right: 10px; padding: 1px 9px; border-radius: 999px;
+  font-size: 0.75em; font-weight: 600; white-space: nowrap; vertical-align: 0.08em;
+}
+.chip.confirmed { color: var(--ok); background: var(--ok-soft); }
+.chip.partly { color: var(--part); background: var(--part-soft); }
+.chip.not-found { color: var(--none); background: var(--none-soft); }
+.chip.unverified { color: var(--unv); background: var(--unv-soft); }
+.chip.type { color: var(--accent); background: var(--accent-soft); }
+.ref { display: block; font-size: 0.82em; color: var(--muted); overflow-wrap: anywhere; }
+.proposal { border: 2px solid var(--accent); background: var(--accent-soft); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; }
+.proposal .text { font-size: 1.15em; font-weight: 600; margin: 6px 0 4px; }
+.proposal p:last-child { margin-bottom: 0; }
+/* The question and its answers stay in view even when a slide runs long. */
+.room {
+  position: sticky; bottom: 61px; z-index: 1; background: var(--bg);
+  margin-top: 14px; padding: 12px 0 10px; border-top: 2px solid var(--ink);
+}
+.room .question { font-size: 1.25em; font-weight: 600; margin-bottom: 10px; text-wrap: balance; }
+@media (max-width: 760px) { .room { position: static; } }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+button {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 7px 16px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+button:disabled { opacity: 0.4; cursor: default; }
+textarea {
+  width: 100%; font: inherit; font-size: 0.9em; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; resize: vertical;
+}
+.nav {
+  position: fixed; inset: auto 0 0 0; z-index: 2; background: var(--bg); border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 24px;
+}
+.nav .hint { font-size: 0.8rem; color: var(--muted); }
+@media (max-width: 760px) { .nav .hint { display: none; } }
+.table-wrap { overflow-x: auto; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-size: 0.8em; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.open { color: var(--muted); font-style: italic; }
+.export textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78em; }
+.export .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+@media print {
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --ink: #000000; --muted: #444444; --line: #bbbbbb;
+    --accent: #1f5f5b; --accent-ink: #ffffff; --accent-soft: #eef4f3;
+  }
+  .bar, .nav, .export .actions { display: none; }
+  .slide, .slide.is-active { display: block; min-height: 0; padding: 0 0 24px; page-break-after: always; }
+  .room { position: static; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <span class="deck-name" id="deck-name"></span>
+  <span class="where" id="where" aria-live="polite"></span>
+  <span class="meter" id="meter"></span>
+</header>
+<main id="stage"></main>
+<footer class="nav">
+  <button type="button" id="prev">&larr; Back</button>
+  <span class="hint">One slide, one question. Arrow keys move.</span>
+  <button type="button" id="next">Next &rarr;</button>
+</footer>
+<script type="application/json" id="deck-data">__DECK_DATA__</script>
+<script>
+(function () {
+  'use strict';
+  var data = JSON.parse(document.getElementById('deck-data').textContent);
+  var KEY = 'baseline:' + data.id;
+  var GRADES = { 'confirmed': 'Confirmed', 'partly': 'Partly', 'not-found': 'Not found', 'unverified': 'Unverified' };
+  var TYPES = {
+    'change': 'Change the rule', 'carve-out': 'Make an exception', 'fix': 'Fix the tool',
+    'explain': 'Explain the rule', 'measure': 'Measure first', 'keep': 'Keep as is', 'decide': 'Rule on it'
+  };
+  var FACT_CHOICES = [['agreed', 'Yes, agreed'], ['not-quite', 'Not quite']];
+  var ASK_CHOICES = [['agreed', 'Agreed'], ['changed', 'Agreed with changes'], ['parked', 'Parked'], ['declined', 'Not agreed']];
+  var HEARD_CHOICES = [['agreed', 'Yes, fair'], ['not-quite', 'Needs changes']];
+  var LABELS = {};
+  [FACT_CHOICES, ASK_CHOICES, HEARD_CHOICES].forEach(function (set) {
+    set.forEach(function (c) { LABELS[c[0]] = LABELS[c[0]] || c[1]; });
+  });
+  LABELS['agreed'] = 'Agreed';
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { state = {}; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* answers stay in memory */ } }
+
+  function el(tag, attrs) {
+    var node = document.createElement(tag), i, child;
+    for (var k in (attrs || {})) { node.setAttribute(k, attrs[k]); }
+    for (i = 2; i < arguments.length; i++) {
+      child = arguments[i];
+      if (child === null || child === undefined || child === '') { continue; }
+      node.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+    }
+    return node;
+  }
+  function link(label, url) {
+    if (url && /^https?:\/\//i.test(url)) { return el('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, label); }
+    return document.createTextNode(label);
+  }
+  function block(title) {
+    var b = el('div', { 'class': 'block' }, el('h3', null, title));
+    for (var i = 1; i < arguments.length; i++) { if (arguments[i]) { b.appendChild(arguments[i]); } }
+    return b;
+  }
+  function quote(q) {
+    var who = [q.who, q.source].filter(Boolean).join(' · ');
+    return el('blockquote', null, el('p', null, '“' + q.text + '”'), who ? el('p', { 'class': 'who' }, who) : null);
+  }
+
+  var slides = [];
+  var refreshers = [];
+  function addSlide(label, card) {
+    var s = el('section', { 'class': 'slide', tabindex: '-1', 'aria-label': label }, card);
+    slides.push({ label: label, node: s });
+    document.getElementById('stage').appendChild(s);
+  }
+  function room(key, question, choices) {
+    var wrap = el('div', { 'class': 'room' }, el('h3', null, 'To agree before the next slide'), el('p', { 'class': 'question' }, question));
+    var row = el('div', { 'class': 'choices', role: 'group', 'aria-label': 'Answer' });
+    var buttons = choices.map(function (c) {
+      var b = el('button', { type: 'button', 'aria-pressed': 'false' }, c[1]);
+      b.addEventListener('click', function () {
+        var cur = state[key] || {};
+        cur.choice = cur.choice === c[0] ? '' : c[0];
+        state[key] = cur; save(); sync(); refreshAll();
+      });
+      row.appendChild(b);
+      return [c[0], b];
+    });
+    var note = el('textarea', { rows: '1', placeholder: 'Note from the room (optional)', 'aria-label': 'Note for this slide' });
+    note.value = (state[key] && state[key].note) || '';
+    note.addEventListener('input', function () {
+      var cur = state[key] || {};
+      cur.note = note.value; state[key] = cur; save(); refreshAll();
+    });
+    function sync() {
+      var chosen = (state[key] && state[key].choice) || '';
+      buttons.forEach(function (pair) { pair[1].setAttribute('aria-pressed', pair[0] === chosen ? 'true' : 'false'); });
+    }
+    sync();
+    wrap.appendChild(row); wrap.appendChild(note);
+    return wrap;
+  }
+  function refreshAll() { refreshers.forEach(function (fn) { fn(); }); }
+
+  // 1. Cover
+  (function () {
+    var card = el('div', { 'class': 'card' },
+      el('p', { 'class': 'eyebrow' }, 'Baseline · ' + data.date),
+      el('h1', null, data.title),
+      data.prepared_for ? el('p', { 'class': 'lede muted' }, 'For ' + data.prepared_for) : null,
+      el('h3', null, 'How this works'),
+      el('ul', { 'class': 'rules' },
+        el('li', null, 'One slide, one question. We answer it before moving on.'),
+        el('li', null, 'First we agree on what happened. Then we talk about what to change.'),
+        el('li', null, 'Anything off topic goes on the parking slide, not into the room.'),
+        el('li', null, 'This is about the process, not about the people in it.')));
+    var src = el('p', { 'class': 'small muted' }, 'Sources: ');
+    (data.sources || []).forEach(function (s, i) {
+      if (i) { src.appendChild(document.createTextNode(', ')); }
+      src.appendChild(link(s.label, s.url));
+    });
+    card.appendChild(src);
+    var meta = [data.repo, data.commit ? 'checked at ' + data.commit : ''].filter(Boolean).join(' · ');
+    if (meta) { card.appendChild(el('p', { 'class': 'small muted' }, meta)); }
+    if (data.prepared_by) { card.appendChild(el('p', { 'class': 'small muted' }, 'Prepared by ' + data.prepared_by)); }
+    addSlide('Start', card);
+  })();
+
+  // 2. What we heard
+  (function () {
+    var h = data.heard, card = el('div', { 'class': 'card' },
+      el('p', { 'class': 'eyebrow' }, 'What we heard'),
+      el('p', { 'class': 'lede' }, h.summary));
+    var grid = el('div', { 'class': 'grid' });
+    if (h.quotes && h.quotes.length) {
+      var ql = el('ul', { 'class': 'plain' });
+      h.quotes.forEach(function (q) { ql.appendChild(el('li', null, quote(q))); });
+      grid.appendChild(block('In their words', ql));
+    }
+    if (h.not_saying && h.not_saying.length) {
+      var nl = el('ul', { 'class': 'plain' });
+      h.not_saying.forEach(function (t) { nl.appendChild(el('li', null, t)); });
+      grid.appendChild(block('What this is not saying', nl));
+    }
+    if (grid.childNodes.length) { card.appendChild(grid); }
+    card.appendChild(room('heard', 'Is this a fair summary of the concern?', HEARD_CHOICES));
+    addSlide('What we heard', card);
+  })();
+
+  // 3. Two slides per item: the facts, then the ask
+  data.items.forEach(function (it, i) {
+    var n = i + 1, of = 'Item ' + n + ' of ' + data.items.length;
+
+    var ev = el('ul', { 'class': 'plain' });
+    it.evidence.forEach(function (e) {
+      var li = el('li', null, el('span', { 'class': 'chip ' + e.grade }, GRADES[e.grade]), e.claim);
+      if (e.ref) { li.appendChild(el('span', { 'class': 'ref' }, link(e.ref, e.url))); }
+      if (e.settle) { li.appendChild(el('span', { 'class': 'ref' }, 'Would settle it: ' + e.settle)); }
+      ev.appendChild(li);
+    });
+    var evBlock = block('What the evidence shows', ev);
+    evBlock.className += ' wide';
+    addSlide(of + ' · The facts', el('div', { 'class': 'card' },
+      el('p', { 'class': 'eyebrow' }, of + ' · The facts'),
+      el('h2', null, it.title),
+      el('div', { 'class': 'grid' },
+        block('What was said', quote(it.said)),
+        block('What happened', el('p', null, it.event))),
+      evBlock,
+      room('facts:' + i, 'Is this what happened?', FACT_CHOICES)));
+
+    var rule = el('p', null, it.rule.text);
+    var ruleBlock = block('Why the rule exists', rule, it.rule.ref ? el('span', { 'class': 'ref' }, link(it.rule.ref, it.rule.url)) : null);
+    addSlide(of + ' · The ask', el('div', { 'class': 'card' },
+      el('p', { 'class': 'eyebrow' }, of + ' · The ask'),
+      el('h2', null, it.title),
+      el('div', { 'class': 'grid' }, ruleBlock, block('What it costs today', el('p', null, it.cost))),
+      el('div', { 'class': 'proposal' },
+        el('span', { 'class': 'chip type' }, TYPES[it.ask.type]),
+        el('span', { 'class': 'small muted' }, 'The need: ' + it.need),
+        el('p', { 'class': 'text' }, it.ask.text),
+        el('p', { 'class': 'small muted' }, 'Decides: ' + it.owner)),
+      room('ask:' + i, it.question, ASK_CHOICES)));
+  });
+
+  // 4. Parked
+  if (data.parked && data.parked.length) {
+    (function () {
+      var list = el('ul', { 'class': 'plain' });
+      data.parked.forEach(function (p) {
+        list.appendChild(el('li', null, p.text, p.why ? el('span', { 'class': 'ref' }, p.why) : null));
+      });
+      var note = el('textarea', { rows: '3', placeholder: 'Added in the room', 'aria-label': 'Topics parked in the room' });
+      note.value = (state.parked && state.parked.note) || '';
+      note.addEventListener('input', function () { state.parked = { note: note.value }; save(); refreshAll(); });
+      addSlide('Not today', el('div', { 'class': 'card' },
+        el('p', { 'class': 'eyebrow' }, 'Not today'),
+        el('h2', null, 'Raised in the thread, parked for another conversation'),
+        block('Parked', list), el('p', null), note));
+    })();
+  }
+
+  // 5. The baseline
+  (function () {
+    var body = el('div', null);
+    var out = el('textarea', { rows: '9', readonly: 'readonly', 'aria-label': 'Outcome as Markdown' });
+    var copied = el('span', { 'class': 'small muted', 'aria-live': 'polite' });
+    var copy = el('button', { type: 'button' }, 'Copy outcome as Markdown');
+    var reset = el('button', { type: 'button' }, 'Clear answers');
+    copy.addEventListener('click', function () {
+      out.focus(); out.select();
+      var done = function () { copied.textContent = 'Copied.'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(out.value).then(done, function () { document.execCommand('copy'); done(); });
+      } else { document.execCommand('copy'); done(); }
+    });
+    reset.addEventListener('click', function () {
+      if (!window.confirm('Clear every answer and note in this deck?')) { return; }
+      try { localStorage.removeItem(KEY); } catch (e) { /* nothing stored */ }
+      location.reload();
+    });
+    function answer(key) { var s = state[key] || {}; return { choice: s.choice || '', note: (s.note || '').trim() }; }
+    function cell(text) { return String(text || '').replace(/\|/g, '\\|').replace(/\s*\n\s*/g, ' '); }
+    function refresh() {
+      var md = [], open = 0, heard = answer('heard');
+      var table = el('table', null, el('thead', null, el('tr', null,
+        el('th', null, '#'), el('th', null, 'Item'), el('th', null, 'Facts'), el('th', null, 'Ask'),
+        el('th', null, 'Decision'), el('th', null, 'Decides'), el('th', null, 'Notes'))));
+      var tb = el('tbody');
+      md.push('## Baseline: ' + data.title + ' (' + data.date + ')', '');
+      md.push('Summary of the concern: ' + (LABELS[heard.choice] || 'not answered') + (heard.note ? ' — ' + heard.note : ''), '');
+      md.push('| # | Item | Facts | Ask | Decision | Decides | Notes |', '|---|---|---|---|---|---|---|');
+      data.items.forEach(function (it, i) {
+        var f = answer('facts:' + i), a = answer('ask:' + i);
+        var notes = [f.note, a.note].filter(Boolean).join(' / ');
+        if (!f.choice) { open++; }
+        if (!a.choice) { open++; }
+        tb.appendChild(el('tr', null,
+          el('td', null, String(i + 1)), el('td', null, it.title),
+          el('td', f.choice ? null : { 'class': 'open' }, LABELS[f.choice] || 'open'),
+          el('td', null, TYPES[it.ask.type] + ': ' + it.ask.text),
+          el('td', a.choice ? null : { 'class': 'open' }, LABELS[a.choice] || 'open'),
+          el('td', null, it.owner), el('td', null, notes)));
+        md.push('| ' + [i + 1, cell(it.title), LABELS[f.choice] || 'open', cell(TYPES[it.ask.type] + ': ' + it.ask.text),
+          LABELS[a.choice] || 'open', cell(it.owner), cell(notes)].join(' | ') + ' |');
+      });
+      table.appendChild(tb);
+      var parkedNote = ((state.parked && state.parked.note) || '').trim();
+      if ((data.parked && data.parked.length) || parkedNote) {
+        md.push('', '### Parked');
+        (data.parked || []).forEach(function (p) { md.push('- ' + p.text); });
+        parkedNote.split('\n').forEach(function (line) { if (line.trim()) { md.push('- ' + line.trim()); } });
+      }
+      body.textContent = '';
+      body.appendChild(el('p', { 'class': 'lede' }, open
+        ? open + ' of ' + (data.items.length * 2) + ' questions still open.'
+        : 'Every question has an answer. This is the baseline.'));
+      body.appendChild(el('div', { 'class': 'table-wrap' }, table));
+      out.value = md.join('\n');
+    }
+    refreshers.push(refresh);
+    addSlide('The baseline', el('div', { 'class': 'card' },
+      el('p', { 'class': 'eyebrow' }, 'The baseline'),
+      el('h2', null, 'What we agreed'),
+      body,
+      el('div', { 'class': 'export' }, el('h3', null, 'Take it back to the thread'), out,
+        el('div', { 'class': 'actions' }, copy, reset, copied))));
+    refresh();
+  })();
+
+  // Navigation
+  var current = 0;
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  document.getElementById('deck-name').textContent = data.title;
+  function show(i, focus) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, idx) { s.node.classList.toggle('is-active', idx === current); });
+    document.getElementById('where').textContent = slides[current].label + ' · ' + (current + 1) + ' / ' + slides.length;
+    document.getElementById('meter').style.width = ((current + 1) / slides.length * 100) + '%';
+    prev.disabled = current === 0; next.disabled = current === slides.length - 1;
+    try { history.replaceState(null, '', '#' + (current + 1)); } catch (e) { /* file:// may refuse */ }
+    window.scrollTo(0, 0);
+    if (focus) { slides[current].node.focus({ preventScroll: true }); }
+  }
+  prev.addEventListener('click', function () { show(current - 1, true); });
+  next.addEventListener('click', function () { show(current + 1, true); });
+  document.addEventListener('keydown', function (e) {
+    var t = e.target.tagName;
+    if (t === 'TEXTAREA' || t === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) { return; }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') { show(current + 1, true); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(current - 1, true); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0, true); e.preventDefault(); }
+    else if (e.key === 'End') { show(slides.length - 1, true); e.preventDefault(); }
+  });
+  window.addEventListener('hashchange', function () { show((parseInt(location.hash.slice(1), 10) || 1) - 1, false); });
+  show((parseInt(location.hash.slice(1), 10) || 1) - 1, false);
+})();
+</script>
+</body>
+</html>
