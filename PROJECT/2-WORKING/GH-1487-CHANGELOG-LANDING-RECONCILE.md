@@ -1,28 +1,4 @@
----
-gh_issue: 1487
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/1487
-title: "Architectural Plan: Eliminate CHANGELOG.md merge conflicts via landing reconcile writer and dogfood adoption"
-status: Active
-created: 2026-11-15
-updated: 2026-11-15
-owner: Claude
-doc_type: feature
-complexity: 2
-risk: 2
-effort: 2
-phases: 4
-non_goals:
-  - removing CHANGELOG.md from git
-  - changing releases.db / releases.sql writes (#1458)
-  - weekly integration branches
-  - retroactive history rewriting of existing duplicate or legacy entries
-goal: >
-  Eliminate CHANGELOG.md serial merge conflicts across PR branches by establishing
-  CHANGELOG_WRITES=off as the universal default, implementing an opt-in post-landing
-  reconcile writer (CHANGELOG_WRITES=landing) in wave_reconcile.py, and dogfooding it cleanly.
----
-
-# Plan: Eliminate CHANGELOG.md merge conflicts via landing reconcile writer and dogfood adoption (GH-1487)
+# Architectural Plan: Eliminate CHANGELOG.md merge conflicts via landing reconcile writer and dogfood adoption
 
 - **Issue**: [HiQS-Labs/XYZ-forge#1487](https://github.com/HiQS-Labs/XYZ-forge/issues/1487)
 - **Status**: 🚧 In progress
@@ -31,12 +7,34 @@ goal: >
 
 ## Status
 
+| What was just completed | What's next |
+|---|---|
+| Phase 0: Grounded recon, technical spike analysis, and multi-model consensus on GH-1487; Codex Plan QA Rounds 1-3 | Phase 1: Implement Foundation & Safety Surfaces (allowlist, B1 marker coexistence, pre-write snapshot) |
+
+## Table of contents
+- [Status](#status)
+- [Phase Gates](#phase-gates)
+- [1. Goal & Context](#1-goal--context)
+- [2. Recon & Code Seams](#2-recon--code-seams)
+- [3. Detailed Architectural Specifications](#3-detailed-architectural-specifications)
+  - [A. Configuration Parsing, Precedence & Cutover Boundary](#a-configuration-parsing-precedence--cutover-boundary)
+  - [B. Candidate Selection & Recovery Logic](#b-candidate-selection--recovery-logic)
+  - [C. Input Sanitization, Formatting & Deterministic Ordering](#c-input-sanitization-formatting--deterministic-ordering)
+  - [D. B1 Coexistence & Marker Exemption](#d-b1-coexistence--marker-exemption)
+  - [E. Idempotency & Transactional Rollback Safety](#e-idempotency--transactional-rollback-safety)
+  - [F. Publication & Race Retry Behavior](#f-publication--race-retry-behavior)
+- [4. Phased Implementation Plan](#4-phased-implementation-plan)
+- [5. Reversibility & Rollback Assessment](#5-reversibility--rollback-assessment)
+- [6. Acceptance & Verification](#6-acceptance--verification)
+
+## Phase Gates
+
 | Phase | Description | Observable Gate | Status |
 |---|---|---|---|
-| Phase 1 | Foundation & Safety: allowlist, B1 marker coexistence, pre-write rollback snapshot | `python3 -m unittest test/gh534_phase_b_tests.py` passes; B1 accepts generated marker and rejects malicious HTML | ⏳ Ready |
-| Phase 2 | Reconciler Engine & Dedicated Cutover Recovery (`wave_reconcile.py`) | `bash test/wave-reconcile.sh` passes; dry-run/off writes nothing; landing writes exact dated section with marker | ⏳ Ready |
+| Phase 1 | Foundation & Safety: allowlist, B1 marker coexistence, pre-write rollback snapshot | `python3 -m unittest test/gh534_phase_b_tests.py` passes; B1 accepts generated marker and rejects malicious HTML / conflict markers | ⏳ Ready |
+| Phase 2 | Reconciler Engine & Dedicated Cutover Recovery (`wave_reconcile.py`) | `bash test/wave-reconcile.sh` passes; dry-run/off writes nothing; landing writes exact dated section with marker; catch-up recovers missed PRs | ⏳ Ready |
 | Phase 3 | Config Parser, Distributed Templates & Governance Updates | `bash test/pdda-run.sh` & `utils/pdda/pdda.sh run` pass; distributed templates updated | ⏳ Ready |
-| Phase 4 | Verification (Manual Red Controls & Provenance) & Forge Dogfood Adoption | Manual red controls pass under `TESTS-RESULTS/2026-11-15+GH-1487/provenance.jsonl`; full `./validate.sh` passes | ⏳ Ready |
+| Phase 4 | Verification (Manual Red Controls & Provenance) & Forge Dogfood Adoption | Manual red controls (including raced push and absent-file rollback) pass under `TESTS-RESULTS/2026-11-15+GH-1487/provenance.jsonl`; full `./validate.sh` passes | ⏳ Ready |
 
 ---
 
@@ -47,7 +45,7 @@ Requiring every PR branch to append to `CHANGELOG.md` directly causes serial mer
 2. Invalidates CI checks and requires pushing a new remote head.
 3. Requires re-pinning and re-running gates, invalidating the base of subsequent PRs in a batch sequence.
 
-This task implements the solution specified in [GH-1487](https://github.com/HiQS-Labs/XYZ-forge/issues/1487), addressing all Codex Plan QA Round 1 and Round 2 findings:
+This task implements the architectural solution specified in [GH-1487](https://github.com/HiQS-Labs/XYZ-forge/issues/1487), addressing all Codex Plan QA findings:
 1. **Universal Default is OFF (`CHANGELOG_WRITES=off`):** When unset or `off`, PR branches do not write `CHANGELOG.md`, the reconciler writes nothing, and `pdda.sh run` omits aggregate changelog warnings.
 2. **Opt-in Landing Writer (`CHANGELOG_WRITES=landing`):** Authoritative single writer in `utils/py/wave_reconcile.py` synthesizes `CHANGELOG.md` from merged PR descriptions at landing time.
 3. **Legacy Mode (`CHANGELOG_WRITES=branch`):** Preserves legacy branch-level changelog updates and aggregate checks for repositories that explicitly request it.
@@ -58,18 +56,18 @@ This task implements the solution specified in [GH-1487](https://github.com/HiQS
 
 - **Landing PR Metadata Contract (`utils/py/wave_reconcile.py:390-420, 2510-2565`):**
   - In `wave_reconcile.py`, PR metadata is fetched via `gh pr view --json number,title,body,state,mergedAt,mergeCommit` (normalized to dictionary `pr_meta`).
-  - Merged check strictly tests: `pr_meta.get("state") == "MERGED"` and non-empty `pr_meta.get("mergedAt")` and real PR identity (`number > 0`). Synthetic direct commits or unmerged PRs are never processed by the changelog writer.
+  - Merged check strictly tests: `pr_meta.get("state") == "MERGED"`, non-empty `pr_meta.get("mergedAt")`, and real PR identity (`number > 0` with full 40-hex `merge_commit_sha`). Synthetic direct commits or unmerged PRs are never processed by the changelog writer.
 - **Pre-write Snapshot & Rollback (`utils/py/wave_reconcile.py:1935`):**
-  - `snapshot_ledger_artifacts(repo_root, dry_run, journal)` must snapshot `CHANGELOG.md` (or call `journal.track_created` if absent) **before** any write happens. If reconciliation errors out, `journal.rollback()` cleanly restores or deletes `CHANGELOG.md`.
+  - `snapshot_ledger_artifacts(repo_root, dry_run, journal)` must snapshot `CHANGELOG.md` (calling `journal.track_modified` if present, or `journal.track_created` if absent) **before** any write happens. If reconciliation errors out, `journal.rollback()` cleanly restores or removes `CHANGELOG.md`.
 - **Dedicated Changelog Cutover Boundary (`utils/py/wave_reconcile.py:1490`):**
   - `unreconciled_prs()` recovers lifecycle qualification receipts using `committed_qualifications()`.
   - The changelog writer does **not** modify this qualification activation boundary. Instead, changelog catch-up uses an independent forward boundary (`changelog_cutover_iso`), checking whether the PR's exact marker `<!-- pr:<number> merge:<sha> -->` is already present in `CHANGELOG.md`. Pre-cutover PRs or already-recorded PRs are skipped without altering qualification recovery.
 - **B1 Marker Coexistence (`skills/2-daily/merge-cleanup/scripts/ledger_merge.py:469`):**
   - Currently line 469 rejects all `"<!--"` and `<` additions with `ValueError("fenced or HTML additions require manual changelog resolution")`.
-  - Must explicitly permit the generated idempotency marker `<!-- pr:[0-9]+ merge:[0-9a-f]+ -->` at the expected position immediately following the entry heading, while strictly rejecting any other HTML tags or fenced code blocks.
-- **Hosted Publication Allowlist & Retry Seam (`utils/py/hosted_lane_publish.py:50, 225-245`):**
+  - Must explicitly permit the generated full-SHA marker line `<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->` at the expected position immediately following the entry heading, while strictly rejecting any other HTML tags, HTML comments, code fences, or conflict markers.
+- **Hosted Publication Allowlist & Retry Seam (`utils/py/hosted_lane_publish.py:50, 180-275`):**
   - Add `'CHANGELOG.md'` to `EXACT` allowlist so hosted lane runs cleanly publish changelog changes.
-  - On raced pushes, `hosted_lane_publish.py` re-runs `wave_reconcile.py` via `recompute()` against the refreshed integration tip. Because the writer re-reads the updated `CHANGELOG.md` from the newly fetched base and checks exact markers, it prepends the new entry without duplicating or clobbering concurrent landings. If the bounded retries exhaust, publication halts without corrupting git state.
+  - On raced pushes, `hosted_lane_publish.py` checks receipts: without receipts, it exits 1 immediately; with receipts, it retries pushing receipts up to `RECEIPT_ATTEMPTS`, then re-runs `wave_reconcile.py` once via `recompute()` with `--only-receipted`. The writer prepends the new entry on the fresh integration base.
 - **Branch-Writing Skills & Distributed Templates:**
   - `skills/2-daily/express/SKILL.md:29, 176` and `skills/4-occasional/install-improve-audit/SKILL.md:392`: Update instructions to make branch changelog edits conditional on `CHANGELOG_WRITES=branch`.
   - `utils/pdda/templates/ROUTER.target.md:40` and `utils/pdda/templates/ROUTER.releases.target.md:39`: Update distributed templates to document that PR branches do not edit `CHANGELOG.md` unless `CHANGELOG_WRITES=branch`.
@@ -80,41 +78,87 @@ This task implements the solution specified in [GH-1487](https://github.com/HiQS
 
 ## 3. Detailed Architectural Specifications
 
-### A. Configuration Parsing & Precedence
+### A. Configuration Parsing, Precedence & Cutover Boundary
 - **File Format in `.pdda-mode`:**
-  - Plain key-value lines: `CHANGELOG_WRITES=<value>` alongside existing enforcement mode and `ROADMAP_SOURCE=releases`.
-  - Comments (`#`) and empty lines ignored. Duplicate lines: last non-empty value wins.
-- **Precedence:**
+  - Plain key-value lines: `CHANGELOG_WRITES=<value>` and optional `CHANGELOG_CUTOVER=<ISO-8601-timestamp>`.
+  - Comments (`#`) and blank lines ignored. Duplicate lines: last non-empty value wins.
+- **Precedence for `CHANGELOG_WRITES`:**
   1. Environment variable `CHANGELOG_WRITES` (if set).
   2. Setting in `.pdda-mode` (if present).
   3. Built-in default: `off`.
 - **Allowed values:** `off`, `landing`, `branch` (case-insensitive, trimmed).
 - **Invalid value handling:** If value is unknown or malformed, log a warning to stderr and safely fall back to `off`.
-- **Parsing:** Consistent parser implemented in Python (`wave_reconcile.py`) and Shell (`pdda.sh`).
+- **Durable Cutover Boundary (`changelog_cutover_iso`):**
+  - **Purpose:** Decouples changelog catch-up from lifecycle qualification receipts so historical PRs merged before landing mode adoption are never backfilled.
+  - **Resolution hierarchy:**
+    1. If `CHANGELOG_CUTOVER` is explicitly configured in `.pdda-mode` or env, parse its ISO-8601 timestamp (`datetime.fromisoformat`).
+    2. Else, query git history for the first commit introducing `CHANGELOG_WRITES=landing` into `.pdda-mode`:
+       `git log -S "CHANGELOG_WRITES=landing" --diff-filter=A -1 --format=%cI -- .pdda-mode`
+    3. Else (if newly configured in working tree and uncommitted), use the earliest `mergedAt` timestamp of the explicit PRs in the current batch, or current UTC timestamp if bare `--catch-up`.
+  - **Comparison:** Only PRs with `mergedAt >= changelog_cutover_iso` are eligible for automatic catch-up.
 
-### B. Input Sanitization & Formatting
-- **Extraction:** Extract text under `## Changelog` (case-insensitive) up to the next Markdown H2 (`## `) or HTML comment.
+### B. Candidate Selection & Recovery Logic
+- **Explicit CLI Landings (`--pr <N>` or `--manifest`):**
+  - When `--pr <N>` is explicitly passed on the command line or via manifest, it is **always** evaluated as a changelog candidate, regardless of `changelog_cutover_iso`. If its exact marker `<!-- pr:N merge:<sha> -->` is not present in `CHANGELOG.md` and it is merged into development, its entry is generated.
+- **Catch-up Selection (`--catch-up` in landing mode):**
+  - `wave_reconcile.py` maintains separate selection paths for lifecycle qualifications vs changelog entries:
+    - Lifecycle qualifications continue to use `committed_qualifications()` to determine `pending` PRs.
+    - Changelog catch-up invokes `changelog_catchup_candidates(repo_root, repo_slug, cutover_iso, existing_markers)`. It queries closed development PRs since `cutover_iso`. Any merged PR whose exact marker `<!-- pr:N merge:<sha> -->` is missing from `CHANGELOG.md` is selected for changelog entry synthesis.
+  - This guarantees that PRs that were already qualified during a period when `CHANGELOG_WRITES=off` (or during a temporary publication race) are recovered when `CHANGELOG_WRITES=landing` is enabled, without mutating lifecycle eligibility or re-running qualifications.
+
+### C. Input Sanitization, Formatting & Deterministic Ordering
+- **Extraction:**
+  - Extract text under `## Changelog` (case-insensitive) in the PR body up to the next Markdown H2 (`## `) or EOF.
 - **Sanitization:**
-  - Strip all HTML comments (`<!-- ... -->`) from author input to prevent marker forgery.
-  - Strip conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`).
-  - Strip or down-level internal H1/H2 headings (`# `, `## `) to bullet points or bold text to prevent breaking section hierarchy.
-  - Strip leading/trailing whitespace.
-  - Sanitize PR title for heading summary (strip newlines, backticks, control characters).
-- **Fallback:** If section is absent or empty, use sanitized PR title with explicit flag: `changelog: fallback-title`.
-- **Format:**
+  - **PR Title Sanitization:** Strip all HTML tags (`<[^>]+>`), backticks, newlines, carriage returns, and conflict characters (`<`, `>`, `=`, `|`). Trim and collapse whitespace.
+  - **Body Comment Stripping:** Strip all HTML comments (`<!--[\s\S]*?-->`) from author body to prevent marker forgery or corrupted HTML.
+  - **Conflict Marker Elimination:** Strip any line matching `(?m)^[ \t]*(?:<{7}|={7}|>{7}|\|{7})(?: |$)` (including diff3 `|||||||` lines).
+  - **Code Fence Neutralization for B1 Safety:** To satisfy B1's strict rejection of line-leading fences (`^[ \t]{0,3}(?:`{3,}|~{3,}|<)`), indent author code blocks by 4 spaces instead of triple backticks/tildes, or sanitize line-leading backticks/tildes.
+  - **HTML Tag Elimination:** Strip all raw HTML tags (`<[^>]+>`) from author input to prevent unclosed elements and satisfy B1 safety.
+  - **Heading Down-leveling:** Convert any internal `# ` or `## ` headings to bold bullets (`- **...**`) so Markdown hierarchy is preserved and B1 does not misinterpret them as separate release entries.
+- **Fallback:** If `## Changelog` section is absent or whitespace-only, synthesize entry from sanitized PR title with explicit flag: `changelog: fallback-title`.
+- **Exact Generated Output Structure:**
   ```markdown
-  ## YYYY-MM-DD — <Sanitized Summary> (GH-N)
+  ## YYYY-MM-DD — <Sanitized Title Summary> (GH-N)
 
-  <!-- pr:N merge:<sha> -->
-  <Sanitized body>
+  <!-- pr:N merge:<sha40> -->
+  <Sanitized body text or fallback>
+
   ```
-  Heading date strictly uses `pr_meta['mergedAt']` converted to UTC (`YYYY-MM-DD`).
-- **Placement:** Inserted immediately after the preamble (identified by first `## ` heading) and before existing history, retaining exact byte-for-byte history integrity.
+  - Heading date strictly uses UTC `mergedAt` (`YYYY-MM-DD`).
+  - Marker line is strictly `<!-- pr:<number> merge:<sha40> -->` where `<sha40>` is the full 40-hex merge commit SHA.
+- **Deterministic Multi-Entry Ordering:**
+  - When multiple PR entries are written in a single run (batch landing or catch-up), sort candidates descending by `mergedAt` timestamp as primary key, and descending by PR `number` as tie-breaker.
+  - Prepend all new entries immediately after the preamble (identified by first `## ` heading) and before existing history, preserving exact byte-for-byte history integrity.
 
-### C. Idempotency & Transactional Safety
-- **Idempotency check:** Search existing `CHANGELOG.md` for exact regex `(?m)^<!-- pr:<number> merge:[0-9a-f]+ -->`. If found, write nothing.
-- **Transaction:** `snapshot_ledger_artifacts` captures `CHANGELOG.md` in `journal` before modification. Any unhandled exception during landing triggers journal rollback.
-- **Dry Run:** When `--dry-run` is active, write nothing to disk.
+### D. B1 Coexistence & Marker Exemption
+- **File:** `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:469` (`union_changelog`).
+- **Contract:**
+  - B1's line 469 currently rejects any additions containing `"<!--"` or matching `(?m)^[ \t]{0,3}(?:`{3,}|~{3,}|<)`.
+  - Update `union_changelog`:
+    - Allow each section body to contain **only** the exact marker line: `re.fullmatch(r"<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->", first_body_line.strip())`.
+    - Restrict the exemption to this exact position and format; any other HTML comments (`<!--`), arbitrary HTML tags (`<`), or code fences (```, ~~~) continue to be strictly rejected with `ValueError("fenced or HTML additions require manual changelog resolution")`.
+    - Retain conflict marker check `(?m)^(?:<{7}|={7}|>{7}|\|{7})(?: |$)` rejecting any conflict markers in base, ours, or theirs.
+
+### E. Idempotency & Transactional Rollback Safety
+- **Idempotency check:** Search existing `CHANGELOG.md` content for exact regex `(?m)^<!-- pr:<number> merge:[0-9a-f]{40} -->$`. If present, skip writing for this PR.
+- **Pre-write Transaction Snapshot:**
+  - `snapshot_ledger_artifacts` in `wave_reconcile.py:1935`:
+    - If `CHANGELOG.md` exists: call `journal.track_modified(changelog_path, original_bytes)`.
+    - If `CHANGELOG.md` does not exist: call `journal.track_created(changelog_path)`.
+  - On any unhandled exception or failure, `journal.rollback()` restores original bytes if modified, or completely removes `CHANGELOG.md` if newly created (absent-file rollback).
+- **Dry Run:** When `--dry-run` is active, compute and log entries but write 0 bytes to disk.
+
+### F. Publication & Race Retry Behavior
+- **File:** `utils/py/hosted_lane_publish.py:50, 180-275`.
+- **Allowlist:** Add `'CHANGELOG.md'` to `EXACT` allowlist so changes are committed and published.
+- **Raced Push Handling:**
+  - If a pushed commit is rejected by remote:
+    - If no qualification receipts were generated in the commit: `hosted_lane_publish` exits 1 immediately without pushing or corrupting remote state. The discarded local commit is abandoned, and the next run will fetch fresh `origin/development` and recompute.
+    - If qualification receipts exist: `hosted_lane_publish` resets to `origin/development`, extracts the receipts from the discarded commit, and pushes receipts up to `RECEIPT_ATTEMPTS` (3 attempts).
+    - Upon successful receipt push, it executes `recompute(retry_argv(args.reconcile_args, prs, commits), reconcile_cmd)` ONCE with `--only-receipted --skip-pull`.
+    - In `recompute`, `wave_reconcile.py` evaluates the receipted landings, reads the fresh `CHANGELOG.md` from the reset tip, sees that the exact markers are not yet in `CHANGELOG.md`, and prepends the entries.
+    - `hosted_lane_publish` commits `CHANGELOG.md` and transitions, and pushes them. If that second push is rejected, it fails closed; receipts remain safely published on origin, and the subsequent catch-up run will complete the changelog entry cleanly.
 
 ---
 
@@ -122,15 +166,16 @@ This task implements the solution specified in [GH-1487](https://github.com/HiQS
 
 ### Phase 1: Foundation & Safety Surfaces
 1. Add `'CHANGELOG.md'` to `EXACT` in `utils/py/hosted_lane_publish.py`.
-2. Update `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:469`: permit the exact generated marker line `(?m)^<!-- pr:[0-9]+ merge:[0-9a-f]+ -->$` while strictly rejecting all other HTML/fenced blocks.
-3. Update `wave_reconcile.py:snapshot_ledger_artifacts` to include `CHANGELOG.md` in pre-write snapshotting.
-*Gate:* Run `python3 -m unittest test/gh534_phase_b_tests.py` and dedicated unit assertion proving B1 accepts generated marker and rejects malicious HTML.
+2. Update `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:469`: permit the exact generated full-SHA marker line `(?m)^<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->$` while strictly rejecting all other HTML/fenced blocks and conflict markers.
+3. Update `wave_reconcile.py:snapshot_ledger_artifacts` to snapshot `CHANGELOG.md` (track modified if present, track created if absent).
+*Gate:* Run `python3 -m unittest test/gh534_phase_b_tests.py` and dedicated unit assertions proving B1 accepts generated marker and rejects malicious HTML / conflict markers.
 
-### Phase 2: Reconciler Engine & Independent Recovery
-1. Implement `read_changelog_writes_mode(repo_root)` in `wave_reconcile.py`.
-2. Implement `extract_changelog_section(body, pr_title)` with sanitization, heading generation, and idempotency comment injection.
+### Phase 2: Reconciler Engine & Dedicated Cutover Recovery
+1. Implement `read_changelog_writes_mode(repo_root)` and `read_changelog_cutover(repo_root)` in `wave_reconcile.py`.
+2. Implement `extract_changelog_section(body, pr_title)` with strict sanitization (HTML stripped, conflict markers stripped, headings down-leveled, code fences neutralized), heading generation, and idempotency comment injection.
 3. Implement `reconcile_changelog_entry(repo_root, pr_meta, merge_sha, dry_run, journal)`.
-4. Integrate into `wave_reconcile.py` merged-PR landing loop with separate cutover boundary and marker presence check.
+4. Implement dedicated `changelog_catchup_candidates(...)` decoupled from qualification receipts.
+5. Integrate into `wave_reconcile.py` landing loop and `--catch-up` workflow with deterministic sorting (newest first).
 *Gate:* Run `bash test/wave-reconcile.sh` ensuring all existing reconcile behavior passes cleanly.
 
 ### Phase 3: Governance, Distributed Templates & Deterministic Checks
@@ -142,14 +187,16 @@ This task implements the solution specified in [GH-1487](https://github.com/HiQS
 *Gate:* Run `bash test/pdda-run.sh` and `bash utils/pdda/pdda.sh run` in observe and full mode.
 
 ### Phase 4: Dogfood & Verification
-1. Dogfood decision: Explicitly keep XYZ-forge on default `CHANGELOG_WRITES=off` (or opt into `CHANGELOG_WRITES=landing` if dogfood test is authorized), recording the configuration line in `.pdda-mode`.
+1. Dogfood configuration: Explicitly verify XYZ-forge default is `CHANGELOG_WRITES=off` (no branch writes, no reconciler writes).
 2. Execute manual red controls under `TESTS-RESULTS/2026-11-15+GH-1487/`:
    - Red control 1: Verify default is `off` (no write on merge).
    - Red control 2: Verify invalid config falls back to `off`.
-   - Red control 3: Verify `landing` writes sanitized entry with exact marker.
+   - Red control 3: Verify `landing` writes sanitized entry with exact full-SHA marker.
    - Red control 4: Verify idempotency (second run writes 0 bytes).
-   - Red control 5: Verify B1 accepts generated marker and rejects malicious HTML.
+   - Red control 5: Verify B1 accepts generated marker and rejects malicious HTML / conflict markers.
    - Red control 6: Verify journal rollback restores original file on simulated error.
+   - Red control 7: Verify raced publication simulation (recompute retry with receipts; fail closed without receipts).
+   - Red control 8: Verify absent-file rollback (simulated failure when `CHANGELOG.md` is initially absent removes created file).
 3. Run existing full repository checks: `./validate.sh` and `python3 utils/py/releases_app.py check`.
 4. Retain test outputs and `provenance.jsonl`.
 *Gate:* `./validate.sh` exits 0 with zero regressions.
@@ -157,8 +204,11 @@ This task implements the solution specified in [GH-1487](https://github.com/HiQS
 ---
 
 ## 5. Reversibility & Rollback Assessment
-- **Reversibility:** High. All changes are strictly bounded behind the configuration setting `CHANGELOG_WRITES`.
-- **Rollback Procedure:** Setting `CHANGELOG_WRITES=off` immediately halts all reconciler changelog writes across the repository without reverting code. Setting `CHANGELOG_WRITES=branch` restores the legacy per-branch writing model.
+- **Reversibility Scale:** Costly / Reversible via configuration toggle and git correction.
+- **Rollback Procedure:**
+  - Setting `CHANGELOG_WRITES=off` in `.pdda-mode` or environment immediately halts all reconciler changelog writes across the repository without reverting code.
+  - Setting `CHANGELOG_WRITES=branch` restores the legacy per-branch writing model.
+  - For already-published entries on `origin/development`: switching to `off` prevents future writes, but does not alter already-committed history. If an erroneous or malformed entry was published to `CHANGELOG.md`, recovery is performed via standard `git revert` or manual excision commit of the specific dated entry in `CHANGELOG.md`, preserving the preamble and prior history byte-for-byte.
 - **Data Shape Integrity:** The format generated in landing mode strictly adheres to the standard date-first heading format `## YYYY-MM-DD — <Summary> (GH-N)` compatible with `test_ci_test_policy.py` and legacy changelog readers.
 
 ---
@@ -166,12 +216,12 @@ This task implements the solution specified in [GH-1487](https://github.com/HiQS
 ## 6. Acceptance & Verification
 
 - [ ] **Default is OFF:** In the absence of config or when `CHANGELOG_WRITES=off`, no changelog write occurs during landing, and `pdda.sh run` aggregate check skips warnings.
-- [ ] **Landing Writer:** When `CHANGELOG_WRITES=landing`, a merged PR produces exactly one dated entry with `<!-- pr:N merge:<sha> -->`.
+- [ ] **Landing Writer:** When `CHANGELOG_WRITES=landing`, a merged PR produces exactly one dated entry with `<!-- pr:N merge:<sha40> -->`.
 - [ ] **Idempotency:** Re-running reconciliation on an already-reconciled PR writes nothing.
 - [ ] **Fallback:** A PR without `## Changelog` falls back to the PR title with `fallback-title`.
-- [ ] **Sanitization:** HTML comments, forged markers, and H1/H2 headings in PR bodies are sanitized/stripped.
-- [ ] **B1 Coexistence:** `ledger_merge.py:union_changelog` accepts the exact generated marker line without raising a `ValueError`, but still rejects other HTML additions.
+- [ ] **Sanitization:** HTML comments, forged markers, HTML tags, conflict markers, and H1/H2 headings in PR bodies are sanitized/stripped/down-leveled.
+- [ ] **B1 Coexistence:** `ledger_merge.py:union_changelog` accepts the exact generated marker line without raising a `ValueError`, but still rejects other HTML additions and conflict markers.
 - [ ] **Allowlist:** `hosted_lane_publish.py:EXACT` includes `CHANGELOG.md`.
-- [ ] **Rollback:** `wave_reconcile` rollback journal snapshots `CHANGELOG.md` before write and restores original on failure.
+- [ ] **Rollback:** `wave_reconcile` rollback journal snapshots `CHANGELOG.md` before write and restores original (or removes if newly created) on failure.
 - [ ] **Legacy Preservation:** When `CHANGELOG_WRITES=branch`, legacy behavior is fully retained.
 - [ ] **Suites & Gates:** All existing test suites pass.
