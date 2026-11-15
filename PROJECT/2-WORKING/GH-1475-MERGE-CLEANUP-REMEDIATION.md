@@ -154,3 +154,7 @@ failure modes unknown).
   guard tripped; the first P1.3 evidence never exercised `clean=True, keep=True`.
 - Smoke on a real repo found every open PR conflicting, so dry runs still keep clones via the
   pre-existing B1 dry-run early return (P2.8); Phase 1 does not change that.
+
+## Merge evidence
+
+- PR #1478 merged 2026-11-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
