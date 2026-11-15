@@ -1,0 +1,4 @@
+{
+  "primary_failure": "cannot lock ref (concurrency/git state)",
+  "amplifying_symptom": "No space left on device (storage plane, retained clones)"
+}

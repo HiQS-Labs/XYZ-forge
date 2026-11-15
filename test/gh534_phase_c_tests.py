@@ -280,8 +280,7 @@ class TestCScript(LedgerFixture):
         self.save()
 
         rc = self.run_main()
-        self.assertEqual(rc, 3, self.err)  # GH-1226: PR 2's repaired head is deferred to a re-pin
-        rc = self.land_repaired(2)
+        self.assert_repinned(2)  # GH-1475 (P2.1): PR 2's repaired head is re-pinned in the same run
 
         self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
@@ -389,7 +388,7 @@ class TestCScript(LedgerFixture):
         self.assertEqual(rc, 3)
         self.assertIn("PR #3: NOT attempted — depends on #2 (handoff)", self.err)
         self.pruner.assert_not_called()  # a handoff is still a non-zero Phase 5; teardown does not run
-        self.land_repaired(4)  # GH-1226: independent PR 4 was B1-repaired; it lands after a re-pin
+        self.assert_repinned(4)  # GH-1475 (P2.1): independent PR 4 was B1-repaired and re-pinned in the same run
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
                          {"1": "MERGED", "2": "OPEN", "3": "OPEN", "4": "MERGED"})
@@ -453,8 +452,7 @@ class TestCScript(LedgerFixture):
         self.branch("feat/a", 1, pr1)
         self.branch("feat/b", 2, pr2)
         rc = self.run_main()
-        self.assertEqual(rc, 3, self.err)  # GH-1226: PR 2's repaired head is deferred to a re-pin
-        rc = self.land_repaired(2)
+        self.assert_repinned(2)  # GH-1475 (P2.1): PR 2's repaired head is re-pinned in the same run
         self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
@@ -661,7 +659,7 @@ class TestGh623Resilience(LedgerFixture):
         self.assertEqual(rc, 3, self.err)
         self.assertIn("attempting anyway", self.err)
         self.assertIn("PR #4: NOT attempted — depends on #2 (handoff)", self.err)
-        self.land_repaired(3)  # GH-1226: PR 3 was B1-repaired; it lands after a re-pin
+        self.assert_repinned(3)  # GH-1475 (P2.1): PR 3 was B1-repaired and re-pinned in the same run
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
                          {"1": "MERGED", "2": "OPEN", "3": "MERGED", "4": "OPEN"})

@@ -43,7 +43,7 @@ Other checks:
 
 | Check | Verdict | File |
 |---|---|---|
-| Existing suite `test/gh589-skill-viewer.sh` on the branch | 8 passed, 0 failed (disposable clone, commit `e571fab02`; not rerun after the later skill-text edits). | `existing-suite-summary.txt` |
+| Existing suite `test/gh589-skill-viewer.sh` on the branch | 8 passed, 0 failed at `e571fab02`, and again at `3285126df` after the later skill-text edits (disposable clone both times). | `existing-suite-summary.txt`, `existing-suite-rerun.txt` |
 | Keyword scanner on the same problem | 0 matching helpers for both phrasings. | `prior-art-keyword-baseline.txt` |
 | Rubric control | Two deliberately bad outputs rejected by the rubric. | below |
 

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# usage: p12.sh <merge_cleanup.py> <label>
+W=/tmp/gh1475-manual; P=$W/p11-new/primary; LOG=$W/p12-$2.log
+MERGE_CLEANUP_GH_BIN=$W/gh-sleep TMPDIR=/tmp python3 "$1" --primary "$P" --root "$W/p11-new" > "$LOG" 2>&1 &
+pid=$!; sleep 5
+alive=$(kill -0 $pid 2>/dev/null && echo alive || echo exited)
+echo "$2: process $alive at 5s; log lines=$(wc -l < "$LOG" | tr -d ' '); first: $(head -1 "$LOG" | cut -c1-100)"
+kill $pid 2>/dev/null; pkill -P $pid 2>/dev/null; wait $pid 2>/dev/null

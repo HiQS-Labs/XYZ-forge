@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Operator decision 2026-11-15: accept the skill as a reuse map that shows its dismissals; paraphrase-first lens (GH-1414) added. Runs 7 and 8 each meet 3 of 5 points of the rewritten check (one unopened citation and an incomplete sweep each). | Final review round 2, then PR against `development`. |
+| Final review approved in round 3 of 3 (Codex, `relay-system/2026-11-14/gh1484-final-qa.md`). Skill accepted by the operator as a reuse map that shows its dismissals; paraphrase-first step added. Rewritten check partly met: runs 7 and 8 each meet 3 of 5 points. | PR ready against `development`; awaiting merge. Not shipped until landed. |
 
 # GH-1484: connect-the-dots skill
 
