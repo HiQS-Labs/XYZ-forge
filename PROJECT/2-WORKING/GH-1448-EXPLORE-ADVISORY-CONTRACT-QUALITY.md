@@ -193,3 +193,7 @@ Plan QA Approved in round 1; reviewer scaffold nit accepted for the final review
 ## Lessons Learned
 
 NO_ENTRY; task-specific lexical limits recorded in the report, no operational-effectiveness claim.
+
+## Merge evidence
+
+- PR #1450 merged 2026-11-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

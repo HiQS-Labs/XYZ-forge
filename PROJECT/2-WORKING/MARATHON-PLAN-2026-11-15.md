@@ -142,6 +142,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1400 GH-1400 · Economical flywheel composition — `needs-contract`
 - #1000 GH-1000 · Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow — `needs-contract`
 - #1439 GH-1439 · Codify Jog preparation and truthful dispatch readiness — `needs-contract`
+- #1448 GH-1448 · Advisory contract-quality investigation — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
 - #61 GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) — `needs-doc`
@@ -200,7 +201,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1360 Task-agnostic supervisor with LTVera monitor pilot — `needs-contract`
 - #1414 Pilot paraphrase-first plan review and explicit reviewer context from EGM — `unrated`
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
-- #1448 Explore advisory contract-quality linting in existing Jog and preflight validators — `needs-contract`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
 - #1474 Research: adapt Agent Orchestrator's durable supervision concepts to Forge's daily-goals loop (explicit attribution) — `needs-doc`
 - #1473 PDDA: the landing reconcile writes CHANGELOG.md from a Changelog section in the PR body, so PR branches stop editing it — `needs-doc`
