@@ -162,4 +162,13 @@ Limitations: No git commands, suites, pytest, or executable fixtures run, per re
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T22:14:27Z
+task: RELAY-gh1479-test-pins-qa
+reviewer: codex
+status: Approved
+reviewed-head: 846771d06a4a9625b4ca2ba74a2f3e6a7ed80e75
+added-range: 9490+4944
+added-sha256: d0d36d67b48932951c4311518742c9e7c5be819705eb4793fa296a05fdac5c1c
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
