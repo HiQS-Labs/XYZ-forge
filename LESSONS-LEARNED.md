@@ -195,3 +195,12 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: gate
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1475
 - **date**: 2026-11-14
+
+## Source-text pins sit outside a refactor's focused suites
+- **cue**: a behavior-preserving refactor of a module, or a reworded workflow line, verified only by the suites that exercise its behavior
+- **lesson**: before the refactor, run `grep -rn '<module>\|<literal line>' test/` and add every suite that greps the source text to the focused set; in GH-1479 five behavior suites passed while `test/gh642-consumer-fruit.sh` and `test/gh421-auto-wave-reconcile.sh` failed in the full gate on literal-string pins
+- **evidence**: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
+- **confidence**: high, observed once in the full gate at `6ffa3f359` and resolved by re-pointing both pins
+- **area**: gate
+- **source**: #1479
+- **date**: 2026-11-15

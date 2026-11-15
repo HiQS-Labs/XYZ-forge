@@ -2,7 +2,7 @@
 gh_issue: 1479
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
 title: "refactor: add Python static analysis and decompose swarm-preflight main"
-status: Active — implemented and verified; final QA and draft PR (2-WORKING)
+status: Active — implemented, verified, final QA passed; draft PR open (2-WORKING)
 created: 2026-11-14
 updated: 2026-11-15
 owner: noelsaw
@@ -23,7 +23,7 @@ phases: 5
 
 | What was just completed | What's next |
 |---|---|
-| Codex approved the plan (forced round 2). Stage extraction, typed records, scoped mypy and the dependency manifest are implemented; focused suites, mypy with red control, and a byte-identical old-vs-new comparison pass. | Final gate and Codex final QA, then a draft PR. The PR stays draft until the operator promotes it. |
+| Implemented and verified. Codex final QA passed in round 1 at `058900491`. The full gate is green at `596375650` after two existing source-text pins were re-pointed. | Draft PR is open for the operator. It stays draft until the operator promotes it; the two test-pin edits came after Codex's review and are not reviewed. |
 
 ## Acceptance capture
 
@@ -122,6 +122,9 @@ Verification, all in the disposable verify clone at `b2c5c32a7` (logs and hashes
 - Scoped mypy passes; the red control (temporary copy with a wrong return type) fails with one `return-value` error.
 - Behavior comparison: instead of comparing against the recorded baseline with enumerated substitutions (plan step 5), the old executor (`a7104e323`) and the new one were run from the same checkout path against one fixed disposable target with the fixed clock. Ten scenarios covering exits 0, 2, 3, 4 and 5 produced byte-identical stdout, stderr, exit codes and all seven packet files, with no substitutions. This is stricter than the planned comparison and replaces it.
 
+- Full gate: the first run at `6ffa3f359` failed two suites the focused set did not include. `test/gh642-consumer-fruit.sh:307` grepped for the old argument spelling of the indented `warn_zero_criteria(` call, and `test/gh421-auto-wave-reconcile.sh:611` pinned the literal `pip install ... pytest` line in `wave-reconcile.yml`. Both pins were re-pointed (one line each, same intent) in `596375650`; the second run at that commit is green in 764s. Plan step 7 said to run the gate once; it ran twice because the first run found these.
+- Codex final QA: PASS in round 1 (`relay-system/2026-11-15/gh1479-final-qa.md`), reviewing `058900491`. The two pin edits came afterwards and are not covered by that review. Codex also recorded three pre-existing limitations it did not ask to fix here: non-atomic packet writes, stale-lock detection that assumes `.git` is a directory, and the `shutil.rmtree` fallback when worktree removal fails.
+
 Not changed: packet write mechanism (the atomic-write exception above stands), `marathon_drive.py`, `merge_cleanup.py`, `releases_app.py`, and no new test file, function, suite or registry entry.
 
 ## Lessons
@@ -132,3 +135,4 @@ Not changed: packet write mechanism (the atomic-write exception above stands), `
 - **Check that an identical comparison is not vacuous.** The first A/B run was byte-identical only because every scenario exited 6 at `project doc not found` (relative `--project-doc` resolves against the harness root, not the working directory). Read the exit codes before trusting a clean diff.
 - **The Python layer now needs mypy in the gate's interpreter.** A prepared gate venv without it fails `test_swarm_preflight_module_load` until `python3 -m pip install -r requirements-dev.txt` is run there.
 - **A mypy red control on a copied file needs `harness_paths.py` beside it,** or the fallback import adds an unrelated `import-not-found` error to the witness.
+- **Grep the tests for source-text pins before refactoring a module.** Two suites outside the focused set pinned this module's source text and a workflow line by literal string. `grep -rn 'swarm_preflight\|break-system-packages' test/` beforehand would have put them in the focused set instead of leaving them for the full gate.
