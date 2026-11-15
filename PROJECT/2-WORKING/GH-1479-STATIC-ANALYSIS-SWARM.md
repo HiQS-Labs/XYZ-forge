@@ -2,9 +2,9 @@
 gh_issue: 1479
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
 title: "refactor: add Python static analysis and decompose swarm-preflight main"
-status: Blocked — plan relay attempt cap (2-WORKING)
+status: Active — Codex plan QA resumed (2-WORKING)
 created: 2026-11-14
-updated: 2026-11-14
+updated: 2026-11-15
 owner: noelsaw
 goal: >
   Establish a reproducible typed Python baseline and decompose swarm-preflight's giant entry point
@@ -23,7 +23,7 @@ phases: 5
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan round 1 returned FAIL; all four findings and the count nit were dispositioned and committed. Baseline suites passed in a disposable clone. Round 2 is blocked by the two-attempt lane cap after one completed review and one failed re-dispatch. | Operator decides whether to authorize one forced Codex round 2 or hold the task. No accepted-start or production edit has occurred. |
+| Operator authorized up to two forced Codex rounds while preserving the existing attempt history. The revised plan and baseline evidence are committed. | Resume Codex round 2; stop on approval, or stop implementation after the second unsuccessful round. |
 
 ## Acceptance capture
 
