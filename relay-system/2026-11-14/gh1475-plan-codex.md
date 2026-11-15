@@ -203,4 +203,13 @@ Re-read the entire plan, including recon, all six changes, verification, rollbac
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T05:42:41Z
+task: RELAY-gh1475-plan-codex
+reviewer: codex
+status: Approved
+reviewed-head: 701f2af8a64573b51b18eb59b2c4c8896a37c6fd
+added-range: 18609+5720
+added-sha256: 17e5e70321671fea5ca14c0264f16932eab52d6930d2a7085cec8551910a8875
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
