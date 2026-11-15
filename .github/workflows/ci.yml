@@ -181,7 +181,7 @@ jobs:
       # GH-509's own headline defect was "the hosted route never ran the 20 python tests"; the
       # first time they ran on hosted macOS, the environment couldn't run them.
       - name: Install Python dependencies for the full suite
-        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
+        run: python3 -m pip install --quiet --break-system-packages -r requirements-dev.txt
 
       - name: Verify automatic wave reconciliation (GH-421)
         run: bash test/gh421-auto-wave-reconcile.sh
@@ -399,7 +399,7 @@ jobs:
       # refuses by design (#750), so gh425 went red here and the python lane was skipped (#886).
       - name: Install Python dependencies for the full suite
         if: steps.route.outputs.docs_only != 'true'
-        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
+        run: python3 -m pip install --quiet --break-system-packages -r requirements-dev.txt
 
       - name: Run Fast Gate tests (Pull Request)
         # Whole-job budget target: < 3 minutes for a code-only fast PR.
