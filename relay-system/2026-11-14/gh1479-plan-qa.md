@@ -326,4 +326,13 @@ Source assessment covered the whole preflight module, Python-layer file, and nam
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the approved implementation plan and its required evidence.
 
+
+### Attestation · relay-drive — 2026-11-15T15:08:31Z
+task: RELAY-gh1479-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 880a60b92568fc99a77777947504a665da920f59
+added-range: 39143+6194
+added-sha256: bb077c79a6b14076756df86f4ca376b703e459fac9cc7cb306600ad93a470eb6
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
