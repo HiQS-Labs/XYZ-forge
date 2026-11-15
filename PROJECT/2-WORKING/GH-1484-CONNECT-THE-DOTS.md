@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan review round 1: one Should (adjacent-check scope) and one Nit fixed | Codex round 2, then write the skill and run the manual red/green pair |
+| Plan approved by Codex (round 2); skill, `dry` pointer and index row written; manual red/green pair and adjacent check recorded | Final Codex review, docs gate, PR |
 
 # GH-1484: connect-the-dots skill
 
@@ -86,6 +86,8 @@ Each check names what it observes and what an unchanged repo would show.
   - **Rubric control:** one deliberately bad output (a candidate dropped, or a citation to a file that was not read) is graded with the same rubric and must fail.
 - [ ] Adjacent check, input and search scope fixed before running. Prompt: *"We need to render PDF invoices with embedded fonts."* Corpus: files tracked by git in this repo at base `5967bde25` (`git ls-files`). Excluded: the agent's installed skills and tools outside the repo, `relay-system/`, `PROJECT/`, `TESTS-RESULTS/`, `CHANGELOG.md`, `docs/`, and the ledger dumps (`releases.db`, `releases.sql`), which hold prose, not modules. Pre-run evidence, retained with the transcript: `git grep -il` for `pdf`, `invoice`, `embedded font`, `reportlab`, `weasyprint` over that corpus. Run on 2026-11-14 before freezing this case: `pdf` matched only the excluded ledger dumps; the other terms matched CI config, a fuzzy-match test fixture and gate baselines, none of them a rendering module. Expected: "not found in these searches", with the searches listed, and no invented fit. If the pre-run searches are repeated at execution and show a real candidate, this case is invalid and is replaced before it counts; a candidate is never suppressed to pass it.
 - [ ] `ARCHITECTURE.md` row present; `test/gh589-skill-viewer.sh` and `utils/pdda/pdda.sh run` green.
+
+**Deviation recorded 2026-11-14 (after plan approval).** The fixed capability-worded prompt above was found by the clean baseline without the skill, so under the rule in the Red item it was replaced with the operator's original wording: *"I've been struggling to get the outer loop for the software flywheel going. What should we build to get it running?"* On that wording the baseline names neither `tick` nor ATE and the skill run names both. Plan review had advised against the word "flywheel"; the runs showed it is what causes the miss. Evidence and grading: `TESTS-RESULTS/2026-11-14+GH-1484/README.md`.
 
 Limits: one passing pair shows the text works on the motivating case, not that it generalises. Fresh agents are Claude subagents in this session; a single model family.
 
