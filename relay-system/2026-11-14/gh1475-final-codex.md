@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed diff `git diff 5967bde25..HEAD -- skills/2-daily/merge-cleanup utils/py/wave_reconcile.py CHANGELOG.md` (code + doc), the plan `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md`, and the evidence under `TESTS-RESULTS/2026-11-14+GH-1475/` (README, manual-check-run.log, existing-suite-summary.txt, smoke.log, provenance.jsonl, drivers `manual-*.txt`).
+- Artifact under review: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, `skills/2-daily/merge-cleanup/scripts/batch_record.py`, `utils/py/wave_reconcile.py`, `skills/2-daily/merge-cleanup/SKILL.md`, `CHANGELOG.md` (review the diff from base 5967bde25: git diff 5967bde25..HEAD), the plan `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md`, and the evidence `TESTS-RESULTS/2026-11-14+GH-1475/README.md`, `TESTS-RESULTS/2026-11-14+GH-1475/manual-check-run.log`, `TESTS-RESULTS/2026-11-14+GH-1475/existing-suite-summary.txt`, `TESTS-RESULTS/2026-11-14+GH-1475/smoke.log`, `TESTS-RESULTS/2026-11-14+GH-1475/provenance.jsonl` (drivers alongside, named manual-p11.sh.txt … manual-p16.py.txt).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-11-14
 - Definition of Done: each of P1.1–P1.6 in the plan is implemented as approved (plan QA: Codex r2 in
