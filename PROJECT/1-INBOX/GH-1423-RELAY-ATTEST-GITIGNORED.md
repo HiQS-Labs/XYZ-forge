@@ -67,3 +67,7 @@ Plan-QA approvals refused in repos that ignore `relay-system/`; workaround: put 
 - [ ] The repro is confirmed from the report, not assumed
 - [ ] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
 - [ ] The fix composes with the existing harness rather than adding a parallel path
+
+## Merge evidence
+
+- PR #1424 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

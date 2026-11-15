@@ -1,0 +1,6 @@
+Command: git push origin HEAD:refs/heads/feat/XYZ-forge-gh1470-forecast-conflict-hubs-2026-11-14
+Head: 8b9f1ea0619bbc34ad5f3bae8352afcaaa7fa209
+Result: full pre-push gate GREEN, passed 408 / 408, 1108 seconds, push exit 0.
+Eight pooled failures passed the built-in isolated reruns; several first attempts hit disk exhaustion.
+Clone identity: unchanged HEAD and GitHub origin, clean before/after. No bypass.
+Development then advanced to e1085ff41; only ledger files conflicted. Canonical B1 resolver repaired them in merge 078962af849f891615ff15283054f284c4f55cfa; see base-repair.json.

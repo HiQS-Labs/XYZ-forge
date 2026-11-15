@@ -117,3 +117,7 @@ No full safety scan, lsof, remote PR/ancestry attribution, T3 internals or wrapp
 - appeal 50: neutral.
 - effort 45: bounded lifecycle audit and targeted repairs; T3 integration separately sized.
 Unstarted implementation intake; no ledger row. Planning is reversible; actual disposal crosses data-loss boundaries and requires current safety proof.
+
+## Merge evidence
+
+- commit 92b785461279 landed 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

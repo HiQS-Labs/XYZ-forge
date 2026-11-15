@@ -1,6 +1,6 @@
 ---
 title: "GH-1410: Verify symptom relevance and preserve guarantees"
-status: active
+status: Complete
 created: 2026-11-10
 updated: 2026-11-10
 owner: Codex

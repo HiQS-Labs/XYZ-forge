@@ -1,0 +1,3 @@
+FIRSTHAND_COUNT=3
+ECHOED_COUNT=1
+ECHOED `.relay-scratch/`
