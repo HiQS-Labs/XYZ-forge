@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -108,5 +108,49 @@ Grade each finding `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`, then VERDICT.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes** (input boundary: plan doc only). Six local Phase 1 changes address fetch races, buffered output, temporary landing-clone retention, recovery records, exit-code documentation and environment warnings. It reuses the existing retry, logging and batch writers, with manual red controls and existing suites as acceptance evidence.
+
+**How the existing system works, per this document.** Reconciliation currently pulls in the primary while cleanup fetches and fast-forwards separately. Landing scratch is always retained, recovery does not update the batch, and sweep hints cannot distinguish outstanding reconciliation from outstanding landing. Dry-run warnings already have an advisory logging path.
+
+**What it's not.** Explicitly excluded: Phase 2/3, merge-check pruning, locks, new gh calls and new suites. Deferred: retention policy and concurrency serialization. Inference: advisory probes deliberately do not certify that execution is safe.
+
+**Source-backed assessment** — **Block pending acceptance-plan corrections.**
+
+swept file: yes
+
+Read the complete plan, including recon, verification, rating and rollback, then inspected the cited source paths and relevant existing suite contracts. No additional pre-existing defect in the plan beyond the findings below. GitHub issue retrieval (`gh issue view 1475 -R HiQS-Labs/XYZ-forge --json body`) exited 1: `error connecting to api.github.com`; the packet-authorized Phase 1 list in the plan is the fallback. Graph search was denied by the runtime approval policy; source reads were used. No suites, fixtures or git commands were run; execution evidence remains **[Unverified — needs clone run]**.
+
+- [Should] **P1.4's check can pass without wiring the recovery entry point.** The verification table says “after the recovery write,” which permits manually calling `set_outcome` and then measuring existing `continuable`; that does not expose a missing recovery call. The smoke only drives `--reconcile-pr` in dry-run mode, where the proposed write is explicitly disabled. Require a scratch, execute-mode `main()` recovery with external reconciliation/push operations stubbed, then reload the actual persisted record and observe both its outcome and issue-update invocation. Also exercise dry run and failed reconciliation/push to show they leave the outcome unchanged. Keep this manual in a disposable clone, not a new suite.
+  Observed input: plan Verification P1.4, “after the recovery write”; smoke, “`--reconcile-pr` dry run (no writes)”; current recovery branch `merge_cleanup.py:2348-2370` returns without a batch write.
+  Affected scope: acceptance evidence for the new recovery-to-batch connection, including its success-only guard.
+  Falsifier: run the same execute-mode entry-point check against the unchanged tree; the reloaded row must remain reconcile-failed and fail the success assertion. If it already changes to `ok`, this finding is unnecessary.
+
+- [Should] **Make the buffering red control discriminate buffering from fast completion.** “Read the log within 5 s” is satisfied by an unchanged program that exits within five seconds and flushes at exit. Hold an existing downstream operation with a controlled delay, assert the process is still alive when reading, and require an early Phase 0 line before releasing the delay. Verify the same input on the base has no such line while alive.
+  Observed input: plan Verification P1.2, `merge_cleanup.py --primary <scratch> > log &` followed only by “read the log within 5 s”; no blocking input or live-process assertion is specified.
+  Affected scope: the manual P1.2 acceptance procedure, not the proposed line-buffering implementation.
+  Falsifier: under an identical controlled delay the unchanged implementation emits the expected Phase 0 line while still running; that would show this input does not witness F12 and another input is needed.
+
+- [Should] **P1.6 omits acceptance for the required-check warning.** The forced conditions cover TMPDIR, pmset, pgrep and disk, but never the separate `required_checks_state` branch. Add a manual dry-run input returning `("ok", "no required checks")`, require one F6 warning, and pair it with a named successful required check that emits none. Assert the existing gh-call count is unchanged. The unchanged tree must fail the warning assertion.
+  Observed input: plan Phase 1 step 6 includes the F6 warning; its Verification row lists only environment probes. Existing `merge_cleanup.py:1893-1916` prints ordinary required-check detail and continues the dry run without a PRE-FLIGHT warning; `test/gh436-merge-cleanup.py:453` already supplies the concrete no-checks tuple.
+  Affected scope: dry-run warning acceptance for positively absent required checks, distinct from unreadable/pending checks.
+  Falsifier: the unchanged tree prints the specified F6 PRE-FLIGHT warning for that tuple; then the stated missing behavior would be disproven.
+
+- [Pass] **P1.1/P1.3 have appropriate bounded surfaces, with implementation details to keep explicit.** `wave_reconcile.py:302-307` is the claimed one-shot pull; the plan replaces it with bounded fetch/merge retries rather than a new writer. Ensure the lock red control advances the remote ref, so fetching actually needs the held lock. The plan's resolved-parent/non-symlink checks constrain deletion to this run's scratch. `merge_cleanup.py:1802-1813,1820-1829,1857-1861` retains repair handoffs and draft-after-repair clones, while `:2059-2067` separates exit 3 from clean completion. Initialize `clean = False` before entering the protected body; setting it only before return 0 must not mask error paths with an unbound-local exception. Preserve the stated keep/deferred guards. A revert restores code, not deleted scratch: describe that limit rather than implying deletion itself is reversible.
+
+- [Pass] **P1.4's proposed writer reuse and lookup match the existing contract.** `batch_record.py:250-271` defines closed rows as terminal and selects an unfinished batch overlapping `[N]`. The proposed “per continuable's rule” must retain closed-row exclusion in mixed batches. `_record_batch_outcomes` at `merge_cleanup.py:1607-1614` already finalizes inputs and refreshes the issue; extracting that tail avoids a second writer. The positive merged status supports a recovery hint without querying gh again.
+
+- [Pass] **P1.5 identifies a real documentation contradiction.** SKILL.md says “Single-PR runs are unchanged: no issue, no exit 4.” The plan cites the broader QA-pending return at `merge_cleanup.py:2634-2663` and preserves the pinned “exit 4 is never Done” wording. A source-backed documentation correction plus the existing contract suite is proportionate; it needs no new runtime gate.
+
+- [Nit] **Keep probes bounded and evidence durable.** Step 6's silent-error contract is appropriate, but explicitly give pmset/pgrep finite timeouts so an advisory probe cannot stall startup. Existing tests patch the shared subprocess module (`test/gh436-merge-cleanup.py:965,991`), so parse only successful textual output and leave `_gh` untouched. Record manual commands, final revision, exit statuses and nonempty outputs in the already-planned evidence directory with `provenance.jsonl` (AGENTS.md GH-430); no new infrastructure is needed.
+
+- [Unverified — no citation] **Scope and rating are proportionate to the supplied evidence.** Plan “Rating” labels recurrence as one observed batch and explicitly says the trend for these failures is unknown; 60/65/50/75 is a reasonable provisional judgment rather than a measured recurrence claim. The “Smallest viable bet” excludes modules, flags, state files and new gh calls; retaining merge-check scratch and excluding flock respects the recorded decisions. Blast radius includes the vendored reconciliation consumer and wrapper interpretation, as the recon and P1.5 state. No distributed coordination is warranted.
+
+**VERDICT: FAIL**
+**Basis:** Implementation direction is sound, but the three acceptance gaps allow incomplete delivery to be reported green. Correct those procedures, clarify the small safety details above, then return for plan QA. Actual runs remain for the disposable-clone implementation phase.
+
+Handing off to Producer (claude-a) — address the findings and take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
