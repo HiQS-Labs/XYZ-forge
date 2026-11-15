@@ -247,14 +247,14 @@ def qa_pending(rec: Dict[str, Any]) -> bool:
     return bool(got) and got != set((rec.get("verdict") or {}).get("covers") or [])
 
 
+def row_done(o: Dict[str, Any]) -> bool:
+    """A planned PR is finished when it closed, or merged and reconciled."""
+    status = o.get("status") or ""
+    return status == "closed" or status.startswith("closed:") or (status == "merged" and o.get("reconcile") == "ok")
+
+
 def continuable(rec: Dict[str, Any]) -> bool:
-    for row in rec["planned"]:
-        o = rec["outcomes"].get(str(row["pr"]), {})
-        status = o.get("status") or ""
-        if status == "closed" or status.startswith("closed:") or (status == "merged" and o.get("reconcile") == "ok"):
-            continue
-        return True
-    return False
+    return any(not row_done(rec["outcomes"].get(str(row["pr"]), {})) for row in rec["planned"])
 
 
 def find_unfinished(primary: Path, origin: str, integration: str, prs: List[int],
