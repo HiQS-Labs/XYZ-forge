@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -176,5 +176,37 @@ Dispositions (plan doc `## Phase 2A` revised in the same commit):
 - **[Unverified] issue fetch** — Noted. The four Phase 2A items are quoted verbatim from the issue in the plan's recon/plan rows; the issue body read on 2026-11-14 is the source.
 
 ROUND → 2. Handing off to Reviewer (codex) — re-review the revised `## Phase 2A` section.
+
+### Reviewer · Round 2
+
+Input boundary for paraphrase: Phase 2A section only, read before source assessment.
+
+**What this proposes:** Land this run's B1 repairs after bounded new-head check polling and an authorized re-pin; support explicitly named CI checks; bound retained scratch; and preview every B1-eligible PR in a dry run. Extend existing owners and update existing pinned expectations, with manual red controls rather than new suites.
+
+**How the existing system works, per this document:** The repair already pushes and validates its exact commit, but the original dry-run pin prevents that commit from landing in the same run. Required-check discovery allows repositories without required checks. Clean runs delete their landing workdir; partially deferred runs and isolated check clones retain it. A B1 preview currently exits the batch early.
+
+**What it's not:** Excluded: new modules, flags, tests, daemons or distributed coordination. Deferred: measurement/decision and Phase 2B. Unresolved (inference): runtime results remain implementation work, not evidence delivered by this plan.
+
+**Source-backed assessment**
+
+swept file: yes
+
+Swept the entire Phase 2A section, the Setup artifact boundary, including recon, implementation order, verification, rating and rollback. Re-read the cited source seams and existing test expectations. No additional pre-existing defect established in this scoped sweep.
+
+- [Pass] Round 1's registration finding is addressed by the explicit **every read** rule and existing bounded timeout (plan:212-215); its pending → no-required and pending → green controls are retained (plan:231-233). The old helper's special response is exactly `("ok", "no required checks")` (`merge_cleanup.py:763-765`). Requiring no grace for a repo that previously reported no required checks preserves existing no-check fixtures. Exact repair SHA observation plus unchanged post-check head is proportionate here; it proves those observations, not the absence of every intervening head movement.
+- [Pass] Re-pin publication remains with the existing atomic writer and passes back the stored forecast; authorized rows and failed-publication deferral are explicit (plan:217-220; `merge_cleanup.py:509-547`). Batch latest-pin replacement already exists (`batch_record.py:329-337`). Existing tests genuinely pin the obsolete second execution (`gh534_phase_b_tests.py:241-245,423-425` and the Phase C locations in the plan); preserving their downstream assertions while revising that contract is appropriate.
+- [Nit] Implement the already-required semantics carefully at the helper boundary: apply `had_required` to the **required component before combining** declared checks, or preserve that component's registration state. With `had_required=True`, required response `no required checks` and declared `lint=pass`, the combined declared detail alone (plan:199-200) must not hide the pending rule at :212-215. This clarifies the existing every-read requirement, not a request for another check subsystem. Likewise :217's illustrative in-memory assignment must be staged in a copied pins mapping until `pin_selection` succeeds, to satisfy :219's explicit unchanged-on-failure contract.
+- [Pass] P2.2 extends the current policy validator and keeps its `full_suite` requirement (`merge_cleanup.py:294-300`). Required checks remain mandatory alongside declared names; absent-name pending and worst-state combination are appropriate (plan:193-206). The policy-admission check alone is insufficient, and the plan also measures pending-to-pass landing, timeout, and missing-name rejection against base behavior.
+- [Pass] P2.3 now includes both landing clone families and the repaired PR's second validation clone, with recorded ownership and deferred-sync/keep vetoes (plan:243-256). The second clone actually lives at `workdir / f"verify-{sha[:8]}"` (`merge_cleanup.py:834-840`). The tri-state pgrep and failure/foreign-process controls address the previous ambiguity (plan:235-238,252-254). Prefix/direct-root/uid/retention/age plus verified-idle handles are proportionate guards for irreversible deletion, reusing `inspect_open_handles`' fail-closed contract (`scan_clones.py:364-428`) and the existing path-removal owner (`merge_cleanup.py:218-233`). Tests' newly retained scratch remains protected by age and retention (`test/gh436-merge-cleanup.py:1097-1108`).
+- [Pass] P2.8's predicate remains exact for the existing resolver: dry-run rejections set handoff, and its successful classification returns a non-handoff preview without resolving (`ledger_merge.py:536-583`). Continuing without a failed entry lets hard dependents also be previewed; it does not record them as landed. The two-hub base/candidate check observes the lost-batch failure (plan:188-192).
+- [Pass] All four requirements have delivery observations and base/controlled rejection cases (plan:188-258), so an unchanged tree cannot satisfy them merely by admitting configuration. The Easy code rollback and irreversible scratch boundary are now explicit (plan:178-182); no duplicate durable writer, new suite or daemon is proposed. The retained rating is reasonable against the same cited incidents and now has a dated ledger quotation and UTC/local explanation (plan:273-278); this is an assessment of its rationale, not independent live PRS verification.
+- [Unverified — needs clone run] No suites, fixtures or runtime red controls executed. `gh issue view 1475 -R HiQS-Labs/XYZ-forge --json body` exited 1 with `error connecting to api.github.com`; issue completeness therefore relies on the locally quoted requirements and prior review packet. Graph `search_graph` returned `MCP tool call requires approval, but approval policy is never`; cited-source reads were the fallback (exit 0). Implementation acceptance still requires the planned disposable-clone runs and committed provenance; plan approval certifies neither runtime behavior nor final QA.
+
+Citations abbreviated as `plan:<line>` refer to `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md`; script basenames refer to `skills/2-daily/merge-cleanup/scripts/`.
+
+VERDICT: PASS
+Basis: The revised plan closes the prior findings with existing mechanisms and discriminating controls. The two implementation clarifications above follow its explicit invariants and do not require a further design round.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
