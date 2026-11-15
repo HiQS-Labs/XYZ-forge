@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -97,5 +97,29 @@ Grade each finding, then VERDICT.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: no
+
+Reviewed the plan, prior Codex plan dispositions, retained receipts and manual drivers, and the implementation seams for P1.1–P1.6, including the entire landing loop. This is not a completed whole-file sweep of both large orchestrators; no whole-file or base-diff approval is claimed. The current user prohibits all git commands, including the packet's suggested diff. Graph discovery returned `MCP tool call requires approval, but approval policy is never`; direct reads were the fallback. No git command, suite, executable fixture, or artifact mutation was run. No additional pre-existing defect was established in the inspected functions; the remaining whole-file sweep is outstanding before approval.
+
+- [Should] **P1.3's keep-flag safety gate lacks a discriminating negative control.** `manual-p13.py.txt:11,19-20` supplies an empty queue and an initial PR-read error. The latter returns before setting `keep_workdir`; it is not the planned forced-keep case. The smoke's B1 stop (`smoke.log:19`) sets keep but returns before `clean = True` (`merge_cleanup.py:2130`). Thus all retained scenarios would still pass if `not keep_workdir` were deleted from `:2136`. Add a recorded manual scenario in the disposable full clone that reaches the normal clean return with keep true (e.g. draft refusal after a B1 repair), observes retained contents, and witnesses the same scenario fail with only the keep guard removed. Retain the command, exit status, decisive output and provenance using the existing manual-evidence approach; no new suite or gate. Also record rejection inputs for the new containment predicate (symlink, outside temp root, wrong prefix) with a non-destructive observer for the removal call, since the current empty-directory success does not exercise those refusals.
+  Observed input: manual P1.3 `run("clean", [], False)` and `run("deferred", [{"number": 9001, ...}], True)`; smoke B1 early return. These cover `(clean, keep) = (True, False), (False, False), (False, True)`, never `(True, True)`.
+  Affected scope: evidence for the new scratch-deletion decision gate, not a request to change the production retention policy.
+  Falsifier: an existing retained receipt reaches `(True, True)` and fails when only `not keep_workdir` is removed; cite it instead of adding another check.
+  Probe: `PYTHONDONTWRITEBYTECODE=1 python3 -` parsed `_land_prs_loop` with `ast.parse`, printed its cleanup predicate, and compared `clean and not keep` with `clean` for the four pairs above; exit 0. Decisive output: `manual clean: original_delete=True without_keep_guard_delete=True`; `manual error: original_delete=False without_keep_guard_delete=False`; `smoke B1 early return: original_delete=False without_keep_guard_delete=False`; `missing retained-clean case: original_delete=False without_keep_guard_delete=True`. This is predicate analysis, not an executed clone scenario. Full execution remains **[Unverified — needs clone run]**.
+
+- [Pass] **P1.1/P1.2 match the approved local changes.** `wave_reconcile.py:302-320` bounds ref-lock retries to three fetch/remote-ref-merge attempts and dies on other errors. `merge_cleanup.py:128-132` extends the existing transient classifier; `:2203-2206` enables line buffering. `manual-check-run.log` reports two retries then matching HEAD, base `ReconcileError`, non-lock code 2, and a live sleeping process with 25 versus 0 buffered lines. These are retained observations, not reruns here.
+- [Pass] **P1.3's inspected production predicate matches the plan.** `merge_cleanup.py:218-232` checks prefix, non-symlink directory and resolved parent before removal; `:2130-2139` gates it on clean, no keep flag and no deferred sync, with retention otherwise. No production defect is asserted by the evidence finding above.
+- [Pass] **P1.4 reuses the existing owners.** `merge_cleanup.py:1645-1676` extracts the existing finalize/update tail into `_sync_batch`; `:2446-2454` updates the found batch only after non-dry-run reconcile/publication success. `batch_record.py:250-258` shares terminal-row semantics with `record_sweep` (`merge_cleanup.py:2872-2887`). The retained P1.4 output reports merged/ok plus issue edit on success, unchanged rows for dry run and reconcile/push failures, and distinct reconcile/resume hints. No duplicate writer was found in these paths.
+- [Pass] **P1.5/P1.6 have the planned bounded surface.** SKILL.md's “Exit codes for wrapper scripts” gives all six exits and its “Trigger & threshold” corrects the single-PR claim. `merge_cleanup.py:1112-1145` uses timeout-bounded local advisory probes, and `:2524-2525` prints warnings at the dry-run pin seam. The landing loop's existing required-check answer supplies the once-only F6 warning. `manual-check-run.log` records one versus zero F6 warnings with zero gh calls, four forced environment warnings and a silent clean environment. The inspected additions add no new gh query or refusal.
+- [Pass] **Receipt integrity is intact.** Read-only probe `python3 -` loaded each provenance row and compared `hashlib.sha256((evidence_dir / name).read_bytes()).hexdigest()` with its recorded digest; exit 0. All eight named logs/drivers were nonempty and printed `hash matches: True` (manual log 3525 bytes; suite summary 498; smoke 2425). `existing-suite-summary.txt` records 227 tests OK and all listed suites rc=0. The final full gate is explicitly pending in the review packet; these receipts do not qualify the final commit.
+- [Pass] **Rating rationale remains appropriately limited.** The plan's “Rating” says `rated 60/65/50/75`, ties severity to recoverable hours of disruption, and labels recurrence/trend unknown. That is consistent with the one-batch incident account. Persisted database rating was not independently queried here.
+
+**VERDICT: FAIL**
+**Basis:** The implementation seams inspected follow the approved plan, but a newly introduced deletion safety gate has no discriminating retained negative control. Supply that evidence before approval; the required whole-file sweep and final harness gate also remain outstanding. No source edits requested on speculation.
+
+Handing off to Producer (claude-a) — address the P1.3 evidence finding in a disposable full clone, then return for the next reviewer turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
