@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -83,5 +83,31 @@ Questions (cite `file:line`):
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The advisory skill is suitably small and its textual requirements are present. Two evidence claims need qualification before approval; neither calls for a script, suite or runtime change.
+swept file: yes
+
+- [Should] **F1 — distinguish guided retrieval from evidence for the discovery method.** `skills/3-weekly/connect-the-dots/SKILL.md:26` supplies both expected module names (`tick`, ATE), the motivating problem, and its capability translation. Run 3 explicitly reads that file before answering (`TESTS-RESULTS/2026-11-14+GH-1484/run-3-green-skill-operator-wording.md:9-17`). Thus its successful retrieval does not isolate capability translation from being told the answers. The prompt replacement is reasonable under the replacement rule, and run 2 genuinely misses both names, but README:22's causal interpretation and :61's claim that this shows the text works on the motivating case omit this material confound. The opening also says “the same agent found both in a minute”; the retained baselines have different agent IDs (run 1:3, run 2:3), not a timed same-agent comparison. Cheapest fix: retain the transcripts, label the green as answer-seeded guided retrieval, qualify the causal claim in README and plan:90-92, and make the opening's narrative match the retained evidence. No additional experiment is required if the claims are narrowed.
+  Observed input: the green instruction includes SKILL.md:26, which explicitly names both targets and the transformed question being credited for discovering them.
+  Affected scope: claims that this pair demonstrates the discovery procedure or wording caused the improvement, rather than that a supplied worked example led to correct source retrieval.
+  Falsifier: a retained otherwise comparable run given a version without those module names or the motivating worked answer, still producing correctly cited candidates, would support the stronger inference; the present run does not isolate it.
+
+- [Should] **F2 — grade the adjacent run's actual rule violation.** README:12,48 and provenance.jsonl:5 label run 4 a pass without mentioning its opening: “this repo has nothing that produces PDFs or embeds fonts” (`run-4-adjacent-no-match.md:70`). That is an absolute absence claim, despite the delivered skill requiring bounded wording at SKILL.md:106,126. Its rows do use “not found in these searches” and it invents no usable PDF module, but the opening violates the very rule this check is meant to exercise. Cheapest fix: preserve the historical transcript, mark the result partial in the README, provenance interpretation and plan acceptance accounting, and explicitly record this failure. The existing :50 observation about module-column formatting does not cover it.
+  Observed input: run-4-adjacent-no-match.md:70's quoted absolute absence statement.
+  Affected scope: evidence grading for the skill's bounded-absence requirement, not the factual existence of a PDF renderer.
+  Falsifier: a transcript whose conclusion consistently says “not found in these searches” would satisfy this wording criterion; bounded wording in table cells alone does not cancel the absolute conclusion.
+
+- [Pass] **Text and routing acceptance:** capabilities precede searches (SKILL.md:55-65); maps → index → grep and mode are explicit (:69-75); source-read prerequisite, cited owner/constraint fit table, new remainder and bounded absence are explicit (:77-106). The two existing ladders are linked at :72, with short summaries rather than a copied procedure. Trigger precedence and skip rules appear at :13-18,34-53. `dry/SKILL.md:4-18` retains the duplication triggers and sends the new-problem reuse meaning to this skill. ARCHITECTURE.md:113 adds the matching weekly pointer. No text acceptance item is missing; experimental acceptance is partial for F1/F2, and the docs gate remains outstanding.
+
+- [Pass] **Bounded source and integrity check:** the motivating tick/ATE statements correspond to the seeded source: `src/claim.js:30`, `src/take.js:23`, `src/lock.js:17-18`, `utils/ate/scripts/run_variations.py:5-27`, and `skills/4-occasional/ate/SKILL.md:48,63-69`. Run 3's opened list (:103-105) includes these files. Probe command: `python3 -c 'import pathlib,json,hashlib; p=pathlib.Path("TESTS-RESULTS/2026-11-14+GH-1484"); rows=[json.loads(x) for x in (p/"provenance.jsonl").read_text().splitlines()]; assert len(rows)==8; assert all((p/r["log"]).stat().st_size and hashlib.sha256((p/r["log"]).read_bytes()).hexdigest()==r["log_sha256"] for r in rows); print("8 nonempty logs; 8/8 hashes match")'`; exit 0; output: `8 nonempty logs; 8/8 hashes match`. Relative links in both skills and the weekly index resolve by direct filesystem inspection. README:45-46's bad samples fail the stated rubric as claimed.
+
+- [Pass] **Proportion and sweep:** `55/35/50/85` remains reasonable as a planning judgement for this small advisory change (plan:102-104); it is not an efficacy measurement. Read the entire new skill, plan, evidence set, `dry/SKILL.md`, and ARCHITECTURE's weekly table. No concrete pre-existing defect found in that bounded dry/table sweep. The seeded implementation contains no new writer or executable in these reviewed surfaces; the delivery's read-only boundary is explicit at SKILL.md:108-127.
+
+- [Unverified — needs clone run] No gate was run here. Existing-suite-summary.txt records 8/0 on `e571fab02`; it does not establish a docs-gate result on the final head. The user prohibits all git commands, so independent base-to-head diff scope, exact `5967bde25` source equivalence, and persisted ledger rating were not rechecked; the source checks above concern the seeded files. Harness/producer must establish those before claiming final delivery. Graph project `XYZ-forge` is a different checkout, generation `2026-09-01T15:54:30Z`; coverage reports missing/new docs and excluded ATE scripts, so this markdown review used direct reads, not stale graph claims.
+
+Handing off to Producer (claude) — correct the evidence claims and take the next turn in the Producer window.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
