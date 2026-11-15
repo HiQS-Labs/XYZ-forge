@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -102,5 +102,52 @@ findings require observed input/scope/falsifier. Maximum3 review rounds, no dele
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The composed wake demonstrates the intended controlled capability, but two existing gate-retry seams in the touched Jog owner still let older approval survive newer uncertainty. Address/disposition S1 and S2 before approval. Final full gate remains pending.
+
+swept file: yes
+
+Swept both complete production files, Jog instructions, owning project/recon/decision, plan review and dated evidence/scripts/inventories/results/provenance, including pre-existing behavior. Compared exact base 7dd85cd3a55303818ce61cbcc5d89b246d4a6449 to HEAD 0c4cd2aa54a97ba80c94bf415b766bd15362dbdd: 56 changed paths. Read-only Python Git-object decoding asserted object hashes; the retained original Jog blob matches that exact base. No Git command was invoked. Graph Verify discovery/coverage used primary project Users-noelsaw-Documents-GH-Repos-XYZ-forge, generation 2026-11-15T07:36:58Z, metadata_match/no recorded gaps for Jog/Releases/proc_group. That index belongs to another checkout; exact worktree source is authoritative. No children, suites, executable fixtures, live workers, provider calls, remote writes or source edits were performed this turn.
+
+- [Should] **S1 — direct resume substitutes an older approval for an uncertain latest gate retry.** utils/py/jog_run.py:750–762 skips absent/invalid retry receipts; :793–813 then accepts the enclosing execution ID, selects the original publication and projects it. The new supervisor validates the exact newest retry first, but explicit resume bypasses that check. Both retained missing/invalid retry seeds selected “gh901-exec1 approved” while their recorded newest retry is “gh901-exec1-gateretry1”. A narrow jog_resume call with publication/Git/state-write functions replaced by spies returned0 and requested publishing the original, then parked/awaiting-landing PR901. No actual publication occurred. Fix the existing resume selection boundary to require the newest recorded retry's exact result and issue/execution identity before publication/projection; absence/invalidity must hold visibly. Preserve valid historical no-retry and valid newest-retry recovery; do not globally remove historical searching from callers that deliberately need it.
+  Observed input: TESTS-RESULTS/2026-11-15+GH-1400/latest/results.json cases retry-missing and retry-invalid: issue901, original gh901-exec1 approved, newest retry gh901-exec1-gateretry1, whose JSON is absent or {}.
+  Affected scope: explicit jog resume where the newest recorded retry is missing/invalid; not every historical receipt or arbitrary corruption.
+  Falsifier: those same two seeds must hold without calling the publisher or claiming awaiting-landing from the old result. Valid no-retry history must still resume the original; a valid latest retry must select that retry. The read-only no-retry control returned “gh901-exec1 approved”.
+
+  Probe command: “python3 -” with PYTHONDONTWRITEBYTECODE=1 and the following read-only core (exit0):
+  ~~~python
+  import sys,json,pathlib
+  sys.path.insert(0,"utils/py")
+  import jog_run as j
+  prefix=pathlib.Path("/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest")
+  for case in ("retry-missing","retry-invalid"):
+      root=prefix/case/"primary"
+      p=next(p for p in (root/".tick/jog").glob("*/state.json")
+             if json.loads(p.read_text()).get("gh_number")==901)
+      rec,result=j._jog_latest_receipt(str(root),p.parent.name)
+      print(case,result["execution_id"],result["outcome"])
+  ~~~
+  Decisive reader output: “retry-missing ... selected= gh901-exec1 approved” and “retry-invalid ... selected= gh901-exec1 approved”. Separate resume-spy output for each: “rc: 0; effects: publish gh901-exec1; status parked; awaiting-landing (PR #901: https://example.invalid/pr/901)”. Its mutation boundaries were all mocked; source selection/load/projection logic was real.
+
+- [Should] **S2 — gate-retry intent is not saved before dispatch.** utils/py/jog_run.py:1013–1039 builds the retry argv, invokes the worker at1025, then first appends/saves the retry after the call returns. Ordinary execution already saves its result path before dispatch at :677–680. A narrow dispatch spy observed retry gh901-exec1-gateretry1 with zero prior saves and an empty retry list; a controlled pre-return interruption left zero saves. Thus exact-latest recovery cannot discover this newer intent after an interruption. Fix the existing retry writer: append/save the exact retry execution ID, result path and in-progress status before invoking Marathon; update that same entry on return. Preserve attempt numbering/history. No new schema, queue or suite is needed.
+  Observed input: the retained issue901 approved/unpublished original from latest/retry-missing, with gate_retries removed only in an in-memory copy. At the real retry function's dispatch boundary, argv requests gh901-exec1-gateretry1 but no retry has been saved. No worker was launched.
+  Affected scope: interrupted jog retry-gate between launching the retry and its first post-return state save, where recovery would otherwise see the older terminal result. This is ordinary process interruption, not power-loss/correlated-loss certification.
+  Falsifier: at dispatch the existing state writer must already have saved the exact retry identity/path. An interrupted retry lacking a valid matching result must hold through supervised recovery and explicit resume, while completed valid retries still publish normally. Actual killed-worker/restart qualification is [Unverified — needs clone run]; the spy establishes write ordering only.
+
+  Source probe command: “nl -ba utils/py/jog_run.py | sed -n '1007,1058p'”, exit0. Decisive output: “1025 proc = subprocess.run(...)” precedes both “1032 jog_save_state(...)” and “1039 jog_save_state(...)”. Non-mutating boundary probe command: “python3 -”, exit0; invoked _jog_retry_gate_locked with the above in-memory ledger, mocking target/Git operations, directory creation and saves; subprocess.run returned the receipt head for the pre-head read, then printed the dispatch state and raised KeyboardInterrupt before launching anything. Decisive output: “dispatch execution_id gh901-exec1-gateretry1”, “saved_before_dispatch 0 gate_retry_entries_at_dispatch []”, “controlled pre-return interruption; no worker launched”, “saved_after_interruption 0”.
+
+  Root cause: resume searches newest-loadable history, and retry intent is first recorded after dispatch; Fix sites: existing resume selection and retry dispatch writer; Why not upstream/downstream: the ledger gateway cannot infer an unrecorded retry, and a supervisor-only check cannot protect explicit resume or discover absent intent.
+
+- [Pass] **Capability and reuse:** attempt2/main-first.log says “recovered GH-901 without a new builder or attempt” then “processing GH-902 (attempt 1)”; check.py checks starts exactly “901\n902\n”, unchanged histories on repeat and both attempt counts1. adjacent/results.json records the exact-base red predicate “recovered approved A must publish its receipt before continuation”; the original lacks committed_receipt. These distinguish the new composition from unchanged code. Existing resume/publication, lease, preflight and Marathon owners remain in use (jog_run.py:2573, :2808, :2839–2845); no duplicate execution owner was added.
+- [Pass] **Preservation and bounded ownership:** dirty tracked target/dependent worktrees hold; ahead development is renamed without deletion and untracked-overwrite refusal is retained (jog_run.py:2505–2534). Unknown-owner refusal and live/stopped PID checks are present (:1531, :1541, :2541–2554). Deadline execution reuses proc_group.run_bounded, including its exception cleanup (proc_group.py:108–145). SUMMARY explicitly separates publication/cleanup clocks and excludes escaped children/PID reuse/correlated loss. Manual evidence establishes attempt retention; the existing integration log separately reports cap2/2 at jog-changed.log:58–60.
+- [Pass] **Evidence integrity and limits:** read-only JSON/hash checks found matching provenance hashes for attempt1/attempt2/adjacent/latest, record counts12/12/4/3 and all recorded predicates true; both attempt inventories exactly match their nonempty unique required-ID sets. Citations: dated provenance.jsonl, both required.json and corresponding results.json. jog-changed.log ends “227 pass, 0 fail”; provenance pins that integration run to b1d80f84, before final hardening. Candidate97aa938's12+3 manual checks are separate. SUMMARY.md:3–4 leaves final QA/full gate pending. Synthetic approval/gate/PR results establish no independent product acceptance.
+- [Unverified — no citation] **Rating and umbrella scope:** read-only exact-base/candidate SQLite comparison found all39 Jog rows unchanged; among500 roadmap rows only GH1400 changed (raw rating80→45, rating_effort80→45, updated_at). Other ratings, null override and status_label stayed unchanged. The implementation rationale calls trend unknown and distinguishes one assisted run from synthetic evidence (project “Rating rationale — implementation”). Whole-umbrella coverage is not established: honor the plan's “leave #1400 open unless whole-issue coverage is independently established.”
+
+S1/S2 are pre-existing defects in the touched owner, surfaced by the sweep; they do not mean the new supervised latest-entry controls failed their retained seeds. No other blocking pre-existing defect was established in this bounded review. Final gate, real product acceptance and the unperformed actual retry-kill run remain outstanding.
+
+Handing off to Producer — go to the producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
