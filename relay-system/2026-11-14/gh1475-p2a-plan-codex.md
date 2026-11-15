@@ -209,4 +209,13 @@ Basis: The revised plan closes the prior findings with existing mechanisms and d
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T07:24:08Z
+task: RELAY-gh1475-p2a-plan-codex
+reviewer: codex
+status: Approved
+reviewed-head: dfe2cc604d8f0cf420bb7442f833f116b56645f0
+added-range: 19806+6407
+added-sha256: 3d38bc4271d8ccb76dc71972b50a32ca148f5ee10f2aa992a07f28f94f44cd20
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
