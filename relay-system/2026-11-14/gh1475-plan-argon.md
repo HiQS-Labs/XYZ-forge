@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -282,5 +282,114 @@ swept file: yes
 **Basis:** Two blockers in Phase 1 (`B1`: `P1.3` deleting `merge-check-*` on clean exit breaks `test/gh436-merge-cleanup.py:1084-1109` and `SKILL.md:80`, while whole-workdir-only cleanup leaves per-PR clones behind whenever any PR in a batch defers or conflicts in dry-run at `merge_cleanup.py:1808-1813`; `B2`: `P1.1` merging `FETCH_HEAD` instead of `origin/<branch>` still races concurrent primary fetches via `.git/FETCH_HEAD`), plus four should-fix gaps (`S1`–`S4`) and missing red controls (`N1`).
 
 handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'
+
+### Producer · Round 1 · claude-a
+
+Every citation was checked against `5967bde25` before disposition. Adjudicated with `/ponytail`
+(Phase 1 stays small, local and read-only where possible; new machinery moves to Phase 2/3).
+
+**Paraphrase check:** the reviewer's artifact-only paraphrase matches the plan's intent; no
+explanation gap found. One inference corrected: Phase 2 items are not "later authorization", they
+are separate PRs not yet scheduled.
+
+**Dispositions**
+- **B1 [Blocker] P1.3 deletes `merge-check-*` against pinned tests; whole-workdir cleanup misses
+  rc 3.** Verified: `test/gh436-merge-cleanup.py` takeover tests assert the sweep clone and its
+  sentinel survive a 0 return; `keep_workdir` is assigned on failure paths but never read.
+  **Disposition: Modified.** `merge-check-*` stays retained in Phase 1 (moved to P2.3). P1.3 narrows
+  to honoring the existing `keep_workdir` flag: remove the `merge-cleanup-*` workdir only on loop
+  return 0 with no keep flag. Per-PR release inside a workdir kept for a later deferral is a
+  retention-policy decision → **P2.3** (Rejected for Phase 1, Ponytail). The dry-run early return at
+  the "B1 stopped" branch is real (`ledger_merge.py` returns `resolved=False` with `execute=False`)
+  but pre-existing and outside every F-row → recorded as **P2.8**, not fixed in Phase 1.
+- **B2 [Blocker] `merge --ff-only FETCH_HEAD` still races.** Verified: `merge_cleanup.py` merges
+  `origin/<branch>`; `FETCH_HEAD` is shared and rewritten by any fetch. **Disposition: Implemented.**
+  P1.1 now uses `origin/<branch>`, retries the fetch+merge pair on ref-lock errors, and adds the
+  ref-lock patterns to `TRANSIENT_RE`. Wrapping `merge_cleanup.py:1294/1308` in `_retry_call` →
+  **Declined** for Phase 1 (no observed failure at those sites; F5 named `wave_reconcile.py`). The
+  deterministic check (two-branch `FETCH_HEAD` + held `.lock`) is adopted as P1.1's manual check.
+- **S1 [Should] P1.4 omits status/merge_oid, issue refresh, dry-run guard, hint split.**
+  **Disposition: Implemented** as specified (non-dry-run only, after the Phase 5 push; `set_outcome`
+  with `status="merged"`, `merge_oid`, `reconcile="ok"`; `finalize_sweep_inputs` + `update` as in
+  `_record_batch_outcomes`; hint names `--reconcile-pr N --execute` vs `--resume --execute`).
+- **S2 [Should] Exit 4 fires on any `--execute` with QA debt; exit 1 missing.** Verified at
+  `merge_cleanup.py:2634-2663` and `:2127`. **Disposition: Implemented** in P1.5's wording and table.
+- **S3 [Should] P1.6 should reuse `required_checks_state`, use flock, specify probes.**
+  **Disposition: Modified.** F6 warning reuses `required_checks_state` (no new `gh` call) —
+  Implemented. Disk uses `shutil.disk_usage(tempfile.gettempdir())`; TMPDIR rule specified —
+  Implemented. `fcntl.flock` → **Rejected for Phase 1 (Out of Scope / Ponytail):** it makes
+  `--execute` create and hold a lockfile, a behaviour change in the execute path; Phase 1's probe stays
+  a read-only `pgrep -f`, and flock is noted as the likely shape of P3.6.
+- **S4 [Should] P2.1 needs check-registration grace and a pinned-test update.**
+  **Disposition: Implemented** in P2.1's text (plan only; Phase 2 is not in this PR).
+- **N1 [Nit] Red controls missing.** **Disposition: Modified.** Every P1 item now has a check and a
+  red control. Phase 2/3 items define theirs in their own `/start-task` plans when picked up
+  (stated in each phase header); writing them now for unscheduled work is Rejected (Ponytail).
+- **P1 [Pass]** noted.
+
+Revised plan (r1) — this replaces the embedded artifact for Round 2:
+
+````markdown
+## Ask
+Make `/merge-cleanup` batches fast enough and robust enough to run unattended, in three phases. Each failure mode from a real 13-PR batch maps to a fix below, or is marked out of scope for the script.
+
+**Evidence:** a downstream consumer repo's 13-PR batch on 2026-11-14 took about 9.5 hours. About 6.5 hours of that is per-PR overhead even when nothing fails (dry-run pin, CI, full reconcile); failures added about 3–5 hours. Full post-mortem: https://github.com/BinoidCBD/LTVera-Pandas/issues/1095#issuecomment-6889598174 · batch record notes: BinoidCBD/LTVera-Pandas#1102 · stacked-lane test: BinoidCBD/LTVera-Pandas#1106.
+
+Anchors are at `development` `5967bde25`: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, `scripts/batch_record.py`, `scripts/ledger_merge.py`, `utils/py/wave_reconcile.py`, `skills/2-daily/merge-cleanup/SKILL.md`.
+
+XYZ-forge forbids new test suites (GH-831). Every check below is an existing suite or a manual check recorded under `TESTS-RESULTS/`; each names its red control (what the unchanged tree shows).
+
+## Phase 1 — quick wins (one PR)
+Small, local and reversible. No change to merge or gate behaviour, except replacing the git pull.
+- [ ] **P1.1 Fetch, then fast-forward to the remote-tracking ref (F5).** In `wave_reconcile.py` `pull_upstream`, replace `git pull --ff-only origin <branch>` with `git fetch origin <branch>` then `git merge --ff-only origin/<branch>` (the pattern `merge_cleanup.py` already uses; not `FETCH_HEAD`, which a concurrent fetch rewrites). Retry the pair a few times with a short backoff when git reports a ref lock (`cannot lock ref`, `Unable to create '….lock'`). Add the same ref-lock patterns to `merge_cleanup.py` `TRANSIENT_RE` so its existing `_retry_call` sites retry them too. *Check (manual, deterministic):* in a scratch clone, (a) write a two-branch `.git/FETCH_HEAD` and hold `refs/remotes/origin/<branch>.lock` for ~1 s, then run `pull_upstream`: it succeeds after the lock clears. *Red control:* the old `git pull --ff-only` path fails under (a).
+- [ ] **P1.2 Flushed output (F12).** `merge_cleanup.py` sets line-buffered stdout and stderr at start-up. *Check:* `tail -f` on a redirected dry run shows Phase 0 within seconds. *Red control:* without the change the redirected log stays empty until exit or buffer fill.
+- [ ] **P1.3 Delete the landing workdir on success (F1).** Honor the existing, never-read `keep_workdir` flag: when the landing loop returns 0 and nothing set `keep_workdir`, remove the `merge-cleanup-*` workdir in the `finally` (path checked to be a `merge-cleanup-` directory under the temp root). Keep it on any non-zero exit or when `keep_workdir` is set, as now. `merge-check-*` clones stay retained (pinned by `test/gh436-merge-cleanup.py` takeover tests and `SKILL.md` "retained independent full clones"); pruning them moves to P2.3. *Check:* existing `test/gh436-merge-cleanup.py` and `test/gh534_phase_*` stay green; manual: a clean single-PR landing leaves no new `merge-cleanup-*` folder, a failed run keeps it. *Red control:* the unchanged tree logs "retained" and leaves the folder after a clean run.
+- [ ] **P1.4 `--reconcile-pr` updates the batch record (F8).** After a successful, non-dry-run `--reconcile-pr N` (after `commit_and_push_phase5_writes` succeeds), find the unfinished batch containing N (`batch_record.find_unfinished`) and record `status="merged"`, `merge_oid`, `reconcile="ok"` with `set_outcome`, then refresh sweep inputs and the batch issue the way `_record_batch_outcomes` does (`finalize_sweep_inputs`, `batch_record.update`). No batch → no write. `--record-sweep`'s hint names the right recovery per remaining PR: `--reconcile-pr N --execute` for a merged PR whose reconcile is not `ok`, `--resume --execute` only while a planned PR is still open. *Check (manual, scratch record):* a batch whose only unfinished row is merged-but-reconcile-failed stops reporting "Planned PRs remain" after the recovery. *Red control:* on the unchanged tree `continuable()` stays true and the hint says `--resume --execute`.
+- [ ] **P1.5 Exit-code contract in SKILL.md (F7).** Fix `SKILL.md:476`: a single-PR run opens no batch of its own, but any `--execute` run (with or without `--resume`) can exit 4 when it attaches to, or finds, a batch whose QA is still pending. Add one table of exit codes for wrapper scripts: 0 done; 4 landed, QA pending (treat as landed; record the sweep before Done); 3 deferred or handed off (retry or work the ladder); 5 landing-plan decision needed; 2 stop and diagnose; 1 `--retire-published-pr` could not retire a checkout. *Check:* existing `test/gh534_phase_c_tests.py` doc-contract tests stay green; each row cites the `return` it documents.
+- [ ] **P1.6 Read-only pre-flight warnings in the dry run (F1, F2, F6, F10).** One `PRE-FLIGHT` block, warnings only, nothing refuses, no new `gh` call:
+  - free disk under the temp root (`shutil.disk_usage(tempfile.gettempdir())`) below 20 GB;
+  - running on battery (`pmset -g batt` on macOS; silent elsewhere or on any error);
+  - `TMPDIR` set to a path other than `/tmp` or the OS default (a harness may delete a per-turn temp dir mid-run);
+  - another `merge_cleanup.py --execute` running on this machine (read-only `pgrep -f`; silent if `pgrep` is missing);
+  - no required checks: reuse the existing per-PR `required_checks_state` result and print the warning once when it reports "no required checks" ("the script will not wait for CI").
+
+  *Check (manual):* each warning fires under its forced condition (env override or stubbed probe) and stays silent otherwise. *Red control:* the unchanged dry run prints none of them.
+
+## Phase 2 — next easiest wins
+Behaviour changes with clear guards. Each can be its own PR, and each defines its check and red control in its own `/start-task` plan.
+- [ ] **P2.1 Re-pin after a B1 repair (F13).** When this run's own B1 repair produced the new head, its required or declared checks pass on that exact commit (allow a short registration grace poll after the push, per the note at `merge_cleanup.py` "checks may not even be registered yet"), and nothing else moved the head, re-pin (`args._pins`, the selection file, `batch_record.set_allowlist`) and continue in the same run. Updates the pinned expectation in `test/gh534_phase_b_tests.py` (rc 3 after a B1 repair) and keeps a red control where an external push still defers.
+- [ ] **P2.2 Opt-in CI wait without branch protection (F6).** Add `.merge-cleanup.json` `qualification.wait_for_checks: ["<check name>", ...]`. The existing pending, poll and defer logic then applies to those named checks even when GitHub reports no required checks.
+- [ ] **P2.3 Retained-clone pruning policy (F1).** Keep at most the last N failed-run workdirs (default 3) and prune older `merge-cleanup-*` and `merge-check-*` folders that belong to this tool and have no open handles. Also release each landed PR's clones inside a workdir that is kept only because a later PR deferred (exit 3).
+- [ ] **P2.4 Heartbeat during long steps (F12, F10).** One line per 60 s during the reconcile, CI wait and forecast, so watchers and harness timeouts can tell slow from stuck.
+- [ ] **P2.5 Stacked-lane detection at landing time (F4).** After landing a PR, list open members whose head contains the landed PR's original commits. Print a refresh instruction for each (merge the integration branch into it, then CI and a re-pin). If GitHub refuses one, classify it as "stacked-lane refusal", not a generic merge failure.
+- [ ] **P2.6 Forecast: all members are ledger-only hubs means one PR per pass (#1470 follow-up).** Recommend `direct`, one PR per pass, not `group`, when every conflict is B1-repairable.
+- [ ] **P2.7 Base-aware post-batch integrity check (unanticipated, #13).** Optional `--verify-landed`: for each landed PR, compare its own change (merge-base to head) with its squash commit by changed lines, and report a test count from the sweep, not an exit code alone.
+- [ ] **P2.8 Dry run stops at the first ledger-hub conflict (found in plan QA).** In a dry run, `resolve_ledger_conflict(execute=False)` returns `resolved=False`, so the loop logs "B1 stopped", sets `keep_workdir` and returns 0 at the first B1-repairable PR (`merge_cleanup.py` "B1 stopped" branch), leaving later PRs unpreviewed. Confirm, then let the dry run log the B1 preview and continue.
+
+## Phase 3 — riskier or more extensive (may be deferred)
+Each defines its check and red control in its own plan when picked up.
+- [ ] **P3.1 Reconcile stops appending to docs carried by open PRs (F4 root cause).** Only after the BinoidCBD/LTVera-Pandas#1106 test confirms the cause. Write merge evidence elsewhere, or after the doc moves to its completed folder.
+- [ ] **P3.2 Automatic stacked-lane refresh (F4).** Merge the integration branch into the next stacked lane and push it, guarded by the same-repo, fast-forward-only and attempt-record rules. This writes to contributor branches, hence Phase 3.
+- [ ] **P3.3 Changelog entries written at reconcile from the PR body (#1473).** Ledger writes only at landing (#1458). Together these remove most hub conflicts.
+- [ ] **P3.4 Durable driver state file (F11).** One `.tick/merge-cleanup/<slug>/driver-state.md`, appended by the script, recording pins, decisions, recoveries and open hypotheses. A resuming session reads it first.
+- [ ] **P3.5 Harness-safe launch (F10).** A `--detach` mode that re-executes under `nohup` with `TMPDIR=/tmp` and unbuffered output, writes its log path, and returns at once. This avoids harness command limits.
+- [ ] **P3.6 Per-machine landing lock (unanticipated, #10).** Turn the P1.6 concurrency warning into a refusal, with an explicit override (an `fcntl.flock` lockfile held by `--execute` is the likely shape).
+
+## Not fixable in the script (environment, policy or agent behaviour)
+- **F2, power and sleep:** wall power and `caffeinate`. P1.6 warns.
+- **F6, required checks:** repo branch protection is the consumer's decision. P1.6 warns and P2.2 offers an opt-in.
+- **F9, model usage cap and session switches:** agent orchestration. Check quota before starting; no sub-agents during landing.
+- **F14, unverified figures relayed:** agent discipline.
+- **Out-of-tool state changes by agents:** agent discipline. P3.4 makes them visible.
+
+## Failure-mode map
+F1 → P1.3, P1.6, P2.3 · F2 → P1.6 · F3 → done (#1472), P2.6 · F4 → P2.5, P3.1, P3.2 · F5 → P1.1 · F6 → P1.6, P2.2 · F7 → P1.5 · F8 → P1.4 · F9 → out of scope · F10 → P1.6, P2.4, P3.5 · F11 → P3.4 · F12 → P1.2, P2.4 · F13 → P2.1 · F14 → out of scope
+
+Relay QA of this plan (agy, Gemini 4 Argon High) is summarized in a comment.
+````
+
+Questions for Round 2: are B1/B2/S1–S3 resolved as dispositioned; is any rejection wrong on the evidence; is Phase 1 still small, low-risk and independent?
+
+handing off to Reviewer (agy) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
