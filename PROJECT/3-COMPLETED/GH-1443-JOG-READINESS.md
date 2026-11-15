@@ -1,9 +1,9 @@
 ---
 title: Close proven Jog preparation automation gaps
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1443
-status: Active
+status: Complete
 created: 2026-11-12
-updated: 2026-11-12
+updated: 2026-11-15
 owner: Codex
 goal: Make target-aware Jog dry-run expose real admission failures before spending a builder turn
 risk: 2
