@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implemented P1.1–P1.6 (`fb38cc5db`); focused suites green (gh436: 227 tests OK); manual checks pass with base red controls; smoke pass (`TESTS-RESULTS/2026-11-14+GH-1475/`). Plan QA: Argon r2 Approved, Codex r2 Approved | Codex final QA, full gate on the final commit, ready PR |
+| P1.1–P1.6 implemented and verified (suites, manual checks with red controls incl. the P1.3 keep-guard mutant, smoke); final Codex QA Approved r2 | Full gate via pre-push on the final commit, ready PR, awaiting merge |
 
 ## Table of contents
 - [Problem](#problem)
@@ -148,4 +148,9 @@ issues opened 2026-10-31..11-14: 6 vs 2026-10-17..10-30: 13 (all classes; trend 
 failure modes unknown).
 
 ## Lessons Learned
-_To be filled at handoff._
+- An independent plan review caught a race the author missed: `merge --ff-only FETCH_HEAD` still
+  reads the shared file a concurrent fetch rewrites; merge `origin/<branch>` instead.
+- A cleanup predicate with several guards needs a control that reaches the success path with each
+  guard tripped; the first P1.3 evidence never exercised `clean=True, keep=True`.
+- Smoke on a real repo found every open PR conflicting, so dry runs still keep clones via the
+  pre-existing B1 dry-run early return (P2.8); Phase 1 does not change that.

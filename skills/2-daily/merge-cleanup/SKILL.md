@@ -474,8 +474,8 @@ record; name the issue failure in the run summary.
 | 2 | stopped | diagnose the named gate; re-run only once it is fixed |
 | 1 | `--retire-published-pr` could not retire a checkout | read the printed reason; the checkout is preserved |
 
-A clean landing loop (exit 0 from Phase 5) removes its own `merge-cleanup-*` landing workdir; any
-other exit keeps it for inspection. `merge-check-*` canary and sweep clones are always retained.
+A landing loop that completes cleanly with no kept clone (no handoff, stop or kept B1 result) and no
+deferred sync removes its own `merge-cleanup-*` landing workdir; otherwise it is kept for inspection. `merge-check-*` canary and sweep clones are always retained.
 Before you `--execute` a batch, read the dry run's `PRE-FLIGHT:` warnings (low disk under the temp
 root, battery power, a harness `TMPDIR`, another `--execute` running, no required checks); they
 never refuse.
