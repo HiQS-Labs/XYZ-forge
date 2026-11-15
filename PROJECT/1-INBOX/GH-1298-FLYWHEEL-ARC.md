@@ -109,3 +109,7 @@ Three runs were reported only inside their own issues. #1298 puts them side by s
 ## Merge evidence
 
 - PR #1351 merged 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1355 merged 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

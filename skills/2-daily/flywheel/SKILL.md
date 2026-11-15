@@ -95,6 +95,9 @@ Keep the objective, exact work/PR identities and heads, dependencies, approved s
 remaining budgets, evidence and next owner in the existing plan or batch record.
 Re-read those facts on resume; a new conversation supplies no new attempt allowance.
 Preparation, execution and landing retain their own canonical writers.
+Before reporting completion, map every requested outcome and later amendment to observed
+evidence or an explicit unresolved disposition in that same plan or batch record. A completed
+subtask does not establish integration.
 
 **Prepared intake is a signal for selection.** When upstream preparation (such as
 `conveyor`, GH-1401) publishes a capture and Preflight Contract, the selected execution
@@ -207,7 +210,7 @@ needed and step 6 for verified ready PRs, preserving per-PR merge approval.
    add start-marathon confirmation to that explicitly requested sweep. For a prepared multi-lane
    marathon, retain start-marathon ownership and hand off to `/pre-marathon` only
    after the operator confirms the exact dry-run-approved plan and order. Do not
-   route that arc into serial Jog dispatch. For the Jog route, Jog owns pickup-time ledger registration,
+   route that arc into serial Jog dispatch. For the Jog route, use [Jog’s preparation handoff](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/jog/SKILL.md#preparation-handoff-gh-1439) for missing preparation and reuse its one readiness record; do not duplicate its environment/capacity/clone checklist here. Jog owns pickup-time ledger registration,
    admission, the primary writer, preflight, the driver lock and the separate full-clone
    runner. Preserve its explicit builder/reviewer split and existing attempt limits.
    Formal work verifies the selected deployment and observer before dispatch; setup and

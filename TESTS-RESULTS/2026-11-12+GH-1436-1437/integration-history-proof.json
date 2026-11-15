@@ -1,0 +1,24 @@
+{
+  "base": "43265eed2359f781f942543af74c6d12c990cf00",
+  "head": "784c79060d62fd2b24d372fc2413489bcf5d0131",
+  "integration": "b22a4989e03b5c8984da99f390f77fcc964ce52a",
+  "verdict": "PASS: no conflicting business keys; both parents exact events and receipts retained; one row per target issue",
+  "table_counts": {
+    "work_events": 1492,
+    "releases": 13,
+    "op_receipts": 2896,
+    "manifest_items": 101,
+    "repos": 1,
+    "legacy_lines": 28,
+    "grandfather_entries": 24,
+    "marathons": 8,
+    "jog_queue": 38,
+    "schema_migrations": 9,
+    "roadmap_items": 490,
+    "manifest_state_events": 92,
+    "doc_lines": 86,
+    "settings": 3,
+    "issue_refs": 106
+  },
+  "rebuilt_verdict": "PASS: all planned business rows identical after rebuild; previous receipts intact plus one canonical merge-rebuild receipt; reviewed runtime files unchanged"
+}

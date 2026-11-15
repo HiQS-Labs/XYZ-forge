@@ -1,0 +1,31 @@
+{
+  "kind": "manual instruction/evidence replay, not runtime test",
+  "source": "https://github.com/BinoidCBD/LTVera-Pandas/pull/1015",
+  "cases": [
+    {
+      "case": "unpublished ledger target",
+      "observed": "LTVera initial target-aware dry-run exit2",
+      "instruction": "step5 integration pending; cannot claim dispatch-ready"
+    },
+    {
+      "case": "incompatible app/Buffer pins",
+      "observed": "independent review found different FastAPI/Pydantic/asyncpg pins",
+      "instruction": "step3 separate environments and per-gate mapping"
+    },
+    {
+      "case": "missing interpreter",
+      "observed": "GH1014 environment-refusal.json four nonzero controls",
+      "instruction": "step3 missing config refuses"
+    },
+    {
+      "case": "aligned five-item dry-run",
+      "observed": "GH1014 landed-alignment result exit0,5 ready,hashes unchanged",
+      "instruction": "contract/integration evidence accepted; Jose capacity still unverified"
+    },
+    {
+      "case": "syntactic provider check",
+      "observed": "jog dry-run does not make live provider request",
+      "instruction": "step4 actual bounded capacity check distinct from dry-run"
+    }
+  ]
+}

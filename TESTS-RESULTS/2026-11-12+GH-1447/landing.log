@@ -1,0 +1,29 @@
+{"path": "~/Documents/GitHub/XYZ-forge", "integration_branch": "development", "current_branch": "development", "is_clean": true, "dirty_count": 0, "on_integration_branch": true, "unpushed_on_integration": 0, "can_ff": true, "operation_in_progress": "", "operation_evidence_ok": true, "evidence_complete": true, "landing_ready": true, "blockers": [], "stale_rebase_head": "", "ready_except_stale_rebase": true}
+merge-cleanup: --prs pinned for --execute (~/Documents/GitHub/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/selection-development.json): #1449 @ 08198506b6
+merge-cleanup: Pinned for --execute: --prs 1449@08198506b6361b4a07ae9f9fd4aa5de8c2fbc4da
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=~/Documents/GitHub/XYZ-forge/.merge-cleanup.json
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-F1CCB6 is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D7D2C4 is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D248B2 is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-79F036 is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-A993B3 is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-751A4C is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-7AFFE1 is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-AC68FA is 86 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 47 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.8.0 Sundown is still a draft and 26 day(s) past its target of 2026-10-17 — the plan has drifted from the calendar
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-216: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-255: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1075: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1087: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1410: Queue / parked intake -> Completed
+merge-cleanup: PR #1449: pre-merge ledger gate green on 08198506b6 + origin/development
+merge-cleanup: PR #1449: required checks: no required checks
+merge-cleanup: Merging PR #1449 via `gh pr merge 1449 --merge --match-head-commit 08198506b6361b4a07ae9f9fd4aa5de8c2fbc4da`...
+merge-cleanup: ✅ PR #1449 is MERGED as 4cf70d70d8
+merge-cleanup: Running post-merge reconciliation for PR #1449 in ~/Documents/GitHub/XYZ-forge...
+merge-cleanup: ✅ local wave_reconcile for PR #1449 passed
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: ✅ PR #1449 committed; primary is clean at origin/development
+merge-cleanup: Landing clones retained for inspection under /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/merge-cleanup-oxmtrzux

@@ -1,0 +1,3 @@
+PASS issue-body invalid JSON red: error missing
+PASS Completed state needs-contract old failure witnessed
+PASS Deferred · vision state needs-contract old failure witnessed

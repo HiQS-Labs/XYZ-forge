@@ -1,0 +1,8 @@
+
+In TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh line 1:
+# usage: pdda_fn.sh <tree> <fixture_root> <issue>
+^-- SC2148 (error): Tips depend on target shell and yours is unknown. Add a shebang or a 'shell' directive.
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2148 -- Tips depend on target shell and y...
+shellcheck exit=1

@@ -282,6 +282,11 @@ replace a live link it does not own (GH-678), so running one there is a no-op wi
 
 ---
 
+The gate toolchain requires **Python >=3.10** with `PyYAML`, `pytest`, and `requests`.
+If the gate reports an environment fault, use the prepared gate-toolchain venv:
+`PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh` (retain your gate arguments).
+The gate does not install Python or create this venv automatically.
+
 ## Hardware sizing for unattended runs
 
 **Recommended minimum: 16 GB RAM** for the serial `marathon.sh --plan` route. That covers one builder

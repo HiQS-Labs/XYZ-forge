@@ -10,6 +10,78 @@ not live execution. Environment/services, provider credits, remote freshness and
 remain unverified. Revert this PR to undo the CLI change; no schema or data conversion.
 Evidence: `TESTS-RESULTS/2026-11-12+GH-1443/`.
 
+## 2026-11-10 — GH-1000 consolidation inventory and evidence reconstruction
+
+- Documentation only. Inventoried the Storyline, Kanban and dashboard efforts with a recommended disposition each; they reduce to three systems. The Forge board policy, labels connector, Flightdeck and Paperclip already share one reader (`load_work_evidence`); the raw board connector, release cards and Rebalance's history layer read separately.
+- Reconstructed GH-1254 from committed records alone: six attempts found, none with a fully resolvable evidence chain. Manual check and its GH-1064 control are in `TESTS-RESULTS/2026-11-10+GH-1000/`.
+- Recommends Flightdeck as the first-slice interface and drafts five follow-on issues. None is filed; three operator decisions (board target, Paperclip, the unidentified knowledge-graph component) come first. The umbrella stays open and the interface demonstration is still owed.
+- 2026-11-11: board target decided as `noelsaw1` project 9. A read-only policy preview would add 206 cards; only this repo gets Ready and In progress cards because no other repo has a ledger. Handoff steps are in the plan doc.
+- No code, schema, contract, suite or gate change. Easy to revert.
+
+## 2026-11-14 — GH-1470: forecast clean-first landing passes
+
+Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. The dry run also warns, read-only, when a listed PR maps to an open Jog row while the Jog primary is unpinned, and the forecast names stacked members (branches sharing commits not on the base) as a blind spot. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
+
+## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
+
+`ci-local.sh` failed its `shellcheck tracked scripts` step on `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` (SC2148, no shebang), the same class as `fuzz-loop.sh` in #121. Added `#!/usr/bin/env bash`; the repo's own scan over all 656 tracked `.sh` files now passes. The GH-1452 gate summary said hosted CI was green so the two disagreed; that was wrong (the hosted shellcheck steps are skipped on a docs-only route), and the note is corrected. Running shellcheck on changed scripts at pre-push is paused and documented in `PARKED/2026-11-13-pre-push-shellcheck.md`. Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.
+
+## 2026-11-13 — GH-1453: Jog checkpoint works from local state and reconciles a moved development
+
+A `jog run --checkpoint-root` wake no longer fetches at start or requires the primary to equal
+`origin/development`, and it no longer ends in a traceback when `development` moved during the run.
+At publication, `JogCheckpoint` (`utils/py/jog_run.py`) merges the moved branch into the primary,
+takes the remote ledger, replays the wake's own `jog-lease` / `jog-<status>` writes (read from the
+ledger's `op_receipts`) through the canonical writers, runs `utils/releases-merge-resolve.sh` and
+publishes the merge. A stop prints `jog: checkpoint held: <message>` and exits 2; for a moved branch
+the main ones are that both sides changed the same queue row, a non-ledger file conflicts, or the wake
+contains a write it will not replay (an orphan-lease reconcile or an operator queue verb). The full
+list is in the Jog skill, section *Checkpoint publication*. A rerun retries publication without
+dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
+before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
+longer has its checkpoint refused after one queue write. The Jog skill now carries the closed list
+of checkpoint stops, each the fixed start of a message, and the one definition of "competing
+writer", which run directives cite instead of restating. Nobody adds a checkpoint stop: a predicted
+conflict with no failed command is not one. A failed task or gate, another Jog refusal, or an
+unexpected error is still reported as it is.
+
+**Bet (Easy to reverse):** replaying receipts in order reproduces the wake's queue state on the
+remote ledger whenever the remote left those rows alone; the replay is verified row by row and any
+mismatch stops before the merge is committed. The behaviour is behind the opt-in flag; revert the one
+PR to restore the plain push. Not covered: a wake that includes crash recovery and meets a moved
+branch still needs a hand reconcile.
+Evidence: `TESTS-RESULTS/2026-11-13+GH-1453/`.
+
+## 2026-11-13 — GH-1452: merge-cleanup forecasts the landing plan at planning time
+
+A `merge-cleanup` dry run over 3 or more `--prs` now prints a Landing forecast and stores it with the head pins, so direct vs group is decided with evidence when the PR set is chosen rather than at the first `--execute` refusal. One disposable no-checkout clone simulates each PR alone, each pair and an ordered fold with `git merge-tree` (`ledger_merge.landing_forecast`, sharing B1's repair-path set through `ledger_repair_paths`), reports a churn-risk band instead of an exact repair count, and withholds the recommendation when any fetch, head check or merge-tree step is unknown. `pin_selection` publishes pins and forecast as one atomic snapshot under the record lock. The GH-1158 decision is unchanged and stays the operator's; the forecast only annotates it: the exit-5 refusal repeats the stored recommendation, and `batch_record.set_landing_plan` takes an optional comparison (match, override, stale) that the batch issue shows. The forecast covers the queue Phase 4 lands (every open PR sorted, then deferrals), so a collision edge through an unlisted PR cannot reorder it unseen. Evidence: existing `test/gh436-merge-cleanup.py` (227 tests) and 14 retained manual scenarios with red controls in `TESTS-RESULTS/2026-11-13+GH-1452/`.
+
+## 2026-11-12 — GH-1137: relay scratch sweep keeps host-tracked files
+
+`relay-automation/relay-turn-lib.sh` discarded `.relay-scratch/` with `rm -rf` after every turn, which deleted files a host repository tracks there (observed in HiQS-Labs/XYZ-layout-engine across Codex and Kimi turns). Both discard sites now run `git clean -ffdxq -- .relay-scratch`, which removes only untracked and ignored files (and a nested repo a turn created), and `rtl_check` exempts a scratch path only when it is untracked; a tracked path gets the normal off-allowlist revert and fails the turn like any other host file. Existing suites gh91/gh113/gh184/gh654 pass unchanged; manual red/green checks in `TESTS-RESULTS/2026-11-12+GH-1137/`.
+
+## 2026-11-12 — GH-1436 / GH-1437 contract and gate environment faults
+
+Malformed Preflight Contract shapes now produce attributable needs-contract planner findings instead of crashing unrelated reconciliation; HQ park rejects supplied malformed shapes before writes. The existing preflight validator owns the shared shape check, while partial intake and optional null markers retain their earlier meaning. The full gate now refuses unsuitable Python before suites with exit 3 and the explicit gate-toolchain PATH remedy. Existing focused suites and manual red/green controls are recorded in `TESTS-RESULTS/2026-11-12+GH-1436-1437/`; final full qualification is recorded there separately. Easy rollback: revert these bounded validation changes; no schema migration or automatic environment installation.
+
+## 2026-11-11
+
+- GH-1422 review follow-up: fixed the drift-check path, delegated duplicate roadmap prose
+  to mandatory canonical reads, and scoped QA claims to reviewed revisions. AGENTS.md is
+  27,686 bytes; fresh byte/link/chain checks pass.
+
+
+- GH-1422 consult follow-up: restored the necessity trigger and explicit idle reporting,
+  clarified clone identity sequencing, and corrected the telemetry example. AGENTS.md is
+  27,812 bytes; fresh byte/link/chain checks pass. Dispositions and provenance are retained
+  in TESTS-RESULTS/2026-11-11+GH-1422/consult-corrections.md.
+
+
+- GH-1422: compressed AGENTS.md from 42,768 to 27,756 bytes, retaining operative rules and
+  existing canonical owners. Manual byte-budget red controls, local links and default project
+  instruction-chain smoke pass; docs gate passes (zero errors, 99 backlog warnings); final omission QA Approved after restoring the same-PR provenance requirement.
+  Evidence: TESTS-RESULTS/2026-11-11+GH-1422/.
+
 ## 2026-11-11 — GH-1430 board_sync reads Rebalance's WAL DB under Apple SQLite
 
 `board_sync`'s Rebalance `repos_source` reader now opens the DB `mode=rw` with
