@@ -202,4 +202,13 @@ Graph Verify context: list_projects returned 86 entries, no exact worktree; near
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T07:25:52Z
+task: RELAY-gh1486-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 55a3ca2859058b06af1f3e009328aa746799109a
+added-range: 24479+9956
+added-sha256: 44e3c7a805b0de079a3237b52da5d65ffdffbe1ca3562c374a88422ec75942fb
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
