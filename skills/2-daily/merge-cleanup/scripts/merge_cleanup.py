@@ -1999,7 +1999,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 if dry_run and not b1["resolved"]:
                     # GH-1475 (P2.8): in a dry run every non-handoff result is B1's preview, not a
                     # stop; show it and keep previewing the rest of the batch.
-                    log(f"[DRY RUN] PR #{p_num}: B1 would repair this ledger conflict ({b1['reason']}); "
+                    log(f"[DRY RUN] PR #{p_num}: B1 would repair this ledger conflict "
+                        f"({b1['reason'].removeprefix('[DRY RUN] ')}); "
                         "--execute repairs it, waits for the new head's checks and re-pins")
                     continue
                 if not b1["resolved"]:

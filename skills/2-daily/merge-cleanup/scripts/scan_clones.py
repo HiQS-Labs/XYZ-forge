@@ -411,7 +411,10 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
         elif tag == "c":
             cmd = val
         elif tag == "n" and pid is not None and pid not in skip:
-            if _within(Path(val), repo_path) or _within(Path(val), resolved_repo):
+            # GH-1475: the checkout root itself counts (a shell whose cwd is the clone holds it);
+            # `_within` alone is strictly-inside and missed that holder.
+            name = Path(val)
+            if name in (repo_path, resolved_repo) or _within(name, repo_path) or _within(name, resolved_repo):
                 holders.setdefault(pid, {"pid": pid, "command": cmd, "paths": []})["paths"].append(val)
     if holders:
         names = ", ".join(f"PID {h['pid']} ({h['command'] or '?'})" for h in holders.values())
