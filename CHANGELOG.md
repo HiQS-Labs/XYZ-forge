@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-12 — GH-1443 target-aware Jog readiness
+
+Explicit-target dry-run now refuses invalid roles, promotion probes, static publication-clone
+constraints and any failed/unevaluated selected preflight, while still displaying every selected
+outcome. Bare queue preview is unchanged. Existing promotion/publication owners are shared; live
+recovery ordering and queue state are unchanged. This deliberately tightens readiness exit status,
+not live execution. Environment/services, provider credits, remote freshness and recovery eligibility
+remain unverified. Revert this PR to undo the CLI change; no schema or data conversion.
+Evidence: `TESTS-RESULTS/2026-11-12+GH-1443/`.
+
 ## 2026-11-10 — GH-1000 consolidation inventory and evidence reconstruction
 
 - Documentation only. Inventoried the Storyline, Kanban and dashboard efforts with a recommended disposition each; they reduce to three systems. The Forge board policy, labels connector, Flightdeck and Paperclip already share one reader (`load_work_evidence`); the raw board connector, release cards and Rebalance's history layer read separately.
