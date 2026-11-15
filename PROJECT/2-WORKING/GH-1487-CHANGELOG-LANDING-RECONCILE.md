@@ -24,7 +24,7 @@ goal: Eliminate serial CHANGELOG.md merge conflicts by setting default writes to
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0: Grounded recon, technical spike analysis, and multi-model consensus on GH-1487; Codex Plan QA Rounds 1-4 | Phase 1: Implement Foundation & Safety Surfaces (allowlist, B1 marker coexistence, pre-write snapshot) |
+| Phase 0: Grounded recon, technical spike analysis, and multi-model consensus on GH-1487; Codex Plan QA Rounds 1-5 | Phase 1: Implement Foundation & Safety Surfaces (allowlist, B1 marker coexistence, pre-write snapshot) |
 
 ## Table of contents
 - [Status](#status)
@@ -113,18 +113,22 @@ This task implements the architectural solution specified in [GH-1487](https://g
 - **Invalid value handling:** If value is unknown or malformed, log a warning to stderr and safely fall back to `off`.
 - **Durable Adoption Boundary (`changelog_cutover_iso`):**
   - **Purpose:** Decouples changelog catch-up from lifecycle qualification receipts so historical PRs merged before landing mode adoption are never backfilled, while ensuring raced or missed PRs from previous days are reliably recovered.
-  - **Resolution hierarchy:**
-    1. Explicit config: If `CHANGELOG_CUTOVER` is configured in `.pdda-mode` or env, parse its ISO-8601 timestamp.
-    2. Git history discovery: Query git history for the *first* (oldest) commit that introduced `CHANGELOG_WRITES=landing` into `.pdda-mode`:
+  - **Resolution hierarchy & fail-closed contract:**
+    1. Environment variable precedence: If `CHANGELOG_CUTOVER` is set in the environment, parse its ISO-8601 timestamp.
+    2. Configuration file: If `CHANGELOG_CUTOVER` is configured in `.pdda-mode`, parse its ISO-8601 timestamp.
+    3. Git history discovery: If not explicitly configured, query git history for the *first* (oldest) commit that introduced `CHANGELOG_WRITES=landing` into `.pdda-mode`:
        `git log -S "CHANGELOG_WRITES=landing" --reverse --format=%cI -- .pdda-mode | head -n1`
-       (Note: `--reverse` establishes oldest adoption; `--diff-filter=A` is omitted so edits modifying existing `.pdda-mode` are found).
-    3. Immutable fallback: If no commit in history has `CHANGELOG_WRITES=landing` yet (e.g. newly configured in working tree and uncommitted), use the repository's workflow activation timestamp (`workflow_activation_timestamp(repo_root)` from `wave_reconcile.py:1460-1475`, derived from the creation of `.github/workflows/wave-reconcile.yml`).
-  - **Moving Clock Prohibition:** The system never substitutes a moving clock (such as current UTC or current run time) for the cutover boundary. This guarantees that a PR merged yesterday whose publication raced is older than the current run but strictly newer than `changelog_cutover_iso`, ensuring it is reliably caught up.
+       (Note: `--reverse` establishes oldest adoption; `--diff-filter=A` is omitted so edits modifying existing `.pdda-mode` are discovered).
+    4. Fail-closed contract (No moving clocks, No workflow-era fallback):
+       If no commit in history contains `CHANGELOG_WRITES=landing` AND no explicit `CHANGELOG_CUTOVER` is configured (e.g. uncommitted working tree edit or environment-only enablement), `wave_reconcile.py` **fails closed**:
+       `die("CHANGELOG_WRITES=landing requires explicit CHANGELOG_CUTOVER=<ISO-8601> when adoption history cannot be established from git", code=6)`
+       It strictly forbids falling back to workflow activation creation (which could be months in the past and backfill hundreds of historical PRs) and forbids falling back to a moving clock (which would drop yesterday's raced PRs).
   - **Timestamp Validation:**
     - Parse using `datetime.fromisoformat(ts.replace("Z", "+00:00"))`.
     - If the timestamp is timezone-naive, treat it as UTC (`replace(tzinfo=timezone.utc)`).
-    - If the configured `CHANGELOG_CUTOVER` is invalid or cannot be parsed, fail closed (`die("Invalid CHANGELOG_CUTOVER timestamp", code=6)`) when `CHANGELOG_WRITES=landing` is active.
+    - If the configured `CHANGELOG_CUTOVER` is invalid or cannot be parsed, fail closed (`die("Invalid CHANGELOG_CUTOVER timestamp; must be valid ISO-8601", code=6)`).
   - **Off-to-Landing Adoption:** When a repo switches from `off` to `landing`, the adoption boundary is the commit that added `CHANGELOG_WRITES=landing` (or explicit `CHANGELOG_CUTOVER`). All PRs merged on or after that boundary that lack an entry in `CHANGELOG.md` are recovered during `--catch-up`.
+  - **Lifecycle Isolation:** The repository's lifecycle recovery activation rule (`unreconciled_prs()` using workflow creation history in `wave_reconcile.py:1460-1475`) is completely separate and untouched.
 
 ### B. Candidate Selection & Recovery Logic
 - **Explicit CLI Landings (`--pr <N>` or `--manifest`):**
@@ -232,6 +236,7 @@ This task implements the architectural solution specified in [GH-1487](https://g
    - Red control 6: Verify journal rollback restores original file on simulated error.
    - Red control 7: Verify raced publication simulation (recompute retry with receipts; fail closed without receipts).
    - Red control 8: Verify absent-file rollback (simulated failure when `CHANGELOG.md` is initially absent removes created file).
+   - Red control 9: Verify missing adoption history fail-closed check (running in `landing` mode with uncommitted config and no `CHANGELOG_CUTOVER` fails closed with code 6, proving workflow-era PRs are never silently backfilled).
 3. Run existing full repository checks: `./validate.sh` and `python3 utils/py/releases_app.py check`.
 4. Retain test outputs and `provenance.jsonl`.
 *Gate:* `./validate.sh` exits 0 with zero regressions.
