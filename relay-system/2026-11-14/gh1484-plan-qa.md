@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -91,5 +91,45 @@ Questions (cite `file:line`; label this part **source-backed**):
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes:** Add a separately invocable weekly, advisory skill that translates a new problem into capabilities and finds existing modules covering them before designing anything new. It will produce a cited fit table with owners, limitations and remaining new work, supported by a small discovery-trigger clarification and an index row.
+
+**How the existing system works, per this document:** Existing skills require reuse but do not supply this cross-system capability-discovery method. Recon traces a named system, dry audits duplication, and ponytail sizes solutions; existing discovery ladders and purpose-written maps provide the search infrastructure this skill will reference.
+
+**What it's not:** The Non-goals and Preflight bet exclude tracing, duplicate auditing, value judgement, building, and new scripts/indexes. Child-repo publishing, device deployment and automatic wiring are explicitly deferred, rather than permanently excluded.
+
+**Input boundary:** Read the relay instructions and only `PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md` for the paraphrase; no source paths or external issue opened. The relay file exposes the requirements before Step A; I did not use them to construct this paraphrase.
+
+**source-backed**
+
+swept file: yes
+
+**VERDICT: FAIL**
+**Basis:** The bounded markdown-only approach meets the operator's discovery goal and the settled skill/tier decisions. One acceptance check still lacks the fixed search boundary required by the issue; correct it before implementation. No other pre-existing defect found in the full plan sweep beyond the findings below. This is plan QA, not implementation sign-off.
+
+- **[Should] S1 — Pin the adjacent check's search scope before asserting absence.** `PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md:87` fixes only the PDF prompt and dictates “not found in these searches.” Issue #1484's adjacent-check requirement explicitly says “the input and search scope fixed before running.” Neither the acceptance item nor Test scope identifies the target root/revision, included source surfaces, or whether installed external skills count. The same prompt evaluated against Forge source and against an agent's installed PDF tooling can legitimately yield different answers. Fix: name the bounded corpus/revision and exclusions, establish that this corpus has no reusable match before freezing the expected result, and retain those searches with the adjacent transcript. If it has a match, choose a different negative case before execution. No new fixture or script needed.
+  Observed input: the complete item at plan line 87 is `Adjacent check, input fixed before running: "We need to render PDF invoices with embedded fonts." Expected: "not found in these searches", with the searches listed, and no invented fit.` No search scope is specified there or in Test scope (line 94).
+  Affected scope: this one manual negative acceptance case; no change requested to runtime discovery or unrelated skills.
+  Falsifier: a pre-run record fixing corpus/revision and exclusions, with bounded searches supporting no fit, would remove this finding; a genuine reusable candidate inside that corpus must invalidate the chosen negative case rather than be suppressed to pass it.
+
+- **[Nit] N1 — Correct the suite classification.** Plan line 40 calls `test/gh589-skill-viewer.sh` “Small list.” Source inspection command `rg -n "gh589-skill-viewer" validate.sh utils/ci-route.sh` exited 0 and returned `utils/ci-route.sh:33:SUBSYSTEM_TESTS_skills_army_hq=... gh589-skill-viewer.sh` and `validate.sh:680: "gh589-skill-viewer.sh"`; it is absent from `SUBSYSTEM_TESTS_small` at `utils/ci-route.sh:38`. Remove “Small list” or name the actual subsystem. Keep the explicit focused suite invocation in Plan step 5.
+
+- **[Pass] Recon and Mode before skill, with N1 above.** `skills/README.md:23` requires the tier and index row; lines 25–28 require named alternatives. The plan's table at lines 49–58 supplies them and records the operator's separate-skill decision. `recon/SKILL.md:32` sends greenfield away, lines 44 and 126 establish its subject/map contract; `ponytail/SKILL.md:48` calls its ladder “a reflex, not a research project”; `sanity-check/SKILL.md:4` judges necessity; `better-options/SKILL.md:4` judges an option set; `triangulate/SKILL.md:45` judges competing evidence-depth demands. These support the distinction without reopening the settled choice. Paths in this bullet are under `skills/1-hourly/` unless stated otherwise.
+
+- **[Pass] Discovery and reuse obligations are preserved.** `skills/4-occasional/swe-diagram/SKILL.md:37` supplies the broad ladder; `skills/1-hourly/recon/SKILL.md:48` supplies graph freshness/source confirmation and its line 130 supplies `Mode:`. The maps-first adaptation is explicitly requested in issue #1484, and `ROUTER.md:219` / `:222` name tick and ATE by purpose. Plan lines 69 and 80–82 require citations to these ladders, source-read candidates and bounded absence. Plan line 69 incorporates the issue's four steps, including outcome/constraints, fit categories, adaptation cost, composition sketch, unknowns and one next action. No operator requirement identified as omitted; the final text must retain those incorporated details. Existing reuse obligations are visible at `skills/1-hourly/swe/SKILL.md:41`–46 and `skills/2-daily/workhorse/SKILL.md:42`.
+
+- **[Pass] Per-step rejection paths are proportionate, subject to S1.** Step 1's inventory check observes the actual candidate SKILL.md, rejecting missing/name-mismatched/invalid frontmatter (`mini/skills/skill-viewer/scripts/list_skills.py:83`–95); semantic reading at plan lines 80–82 rejects a syntactically valid but wrongly written skill. Step 2's diff inspection and precedence reading observe dry's actual description. Step 3's presence/link check observes the actual index row. Step 4 observes retained baseline/candidate transcripts and the deliberately bad output, not merely the skill author's assertions. Step 5 observes parser/suite and PDDA results; these are supporting compatibility checks and can pass on the unchanged repo, so they cannot replace steps 1–4. The existing suite checks actual disk names/counts and malformed frontmatter at `test/gh589-skill-viewer.sh:17`–25 and `:50`–56.
+
+- **[Pass] Planned red control is sound for the stated limited claim.** Plan lines 83–90 require an unfixed baseline miss, a fresh-agent green with source citations/capabilities/material limitations, and a bad output rejected by the same rubric. This combines a behavior comparison with a control on the grader; the stated one-case, one-family limitation avoids claiming generality. Retain prompts, supplied context, source reads, outputs and grades with the provenance required at plan line 72; those are what establish that the candidates were read and runs were fresh. These controls are specified, not witnessed in this review. `AGENTS.md:119` and `:122` require retained provenance and a witnessed red control during implementation.
+
+- **[Pass] A conditional description exclusion can settle dry's shared phrase without removing it.** `skills/3-weekly/dry/SKILL.md:6`–7 currently claims “is this already implemented somewhere”; lines 14–16 already use conditional exclusions. Plan line 70's new-problem exclusion plus the precedence contract at line 82 can route that phrase by the open question: reuse discovery here, consolidation of existing duplicates to dry. Retaining the phrase alone is not a conflict if the new sentence explicitly excludes the former meaning. Final QA should read the actual sentence against both meanings; no wider wiring required.
+
+- **[Pass] Scope and rating are proportionate.** Plan lines 63–65 and 94 exclude new scripts/suites/writers and make rollback a revert; the index insertion fits the existing tier table at `ARCHITECTURE.md:109`–114. Markdown routing is supported by `utils/ci-route.sh:63`–69 and `:475`–477. Plan line 102 grounds 55/35/50/85 in the current request, one reported motivating case, neutral appeal and cheap docs work, explicitly declining an invented recurrence window. These are reasoned ratings, not measured incident statistics. No additional machinery is warranted.
+
+**Evidence limits:** Verify-tier review of the seeded plan and cited local sources. MCP project listing (all 86 entries, no remaining page) had no matching current worktree project. The nearest Forge index was ready at generation `2026-11-15T06:36:06Z`, but belongs to the main checkout; coverage marked this plan missing there. The viewer-symbol query returned six results, no more pages; coverage reported no recorded gaps on the other supplied paths. Local source reads, rather than cross-checkout graph freshness, ground the findings. `gh issue view 1484 --repo HiQS-Labs/XYZ-forge --json body,comments` exited 0; its adjacent-check span quoted in S1 supplies the additional boundary requirement. No suites, fixtures, git commands, implementation edits or phase gates executed; implementation test results remain **[Unverified — needs clone run]**.
+
+Handing off to Producer — fix S1, disposition N1, and open the next review round. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
