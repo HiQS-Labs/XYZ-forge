@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -298,5 +298,32 @@ Use three small, immutable dataclasses, not one mutable context:
 Questions for round 2: are S1–S4 and N1 resolved as dispositioned; does the stage-owned data flow prevent a relocated monolith; is the direct-write exception explicit enough; is the plan now suitable for implementation without new scope?
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2
+
+Input boundary: embedded artifact only (including the Producer's round 2 replacement sections); paraphrase recorded before this turn's source assessment.
+
+**What this proposes:** Annotate and decompose one preflight executor while preserving observable behavior. Add scoped mypy through the existing module-load check and centralize its development dependencies.
+
+**How the existing system works, per this document:** The current entry point mixes source and contract loading, Git inspection, readiness decisions, normalization, reports, and packet writes. Existing helpers own much of that work, and retained baseline artifacts capture three CLI paths.
+
+**What it's not:** Other executor lanes, atomic publication repair, whole-repository typing, and new suites remain excluded. Implementation admission follows approval; final runtime and gate evidence come later. Inference: the three immutable records describe stage results, not a requirement to thread every record through every function.
+
+**VERDICT: PASS**
+**Basis:** Approve the revised first implementation group. The round 1 required changes are adequately dispositioned; implementation must still supply the promised equivalence, structural, type-error, and isolated gate evidence. This is plan approval only.
+
+swept file: yes
+
+- [Pass] S1 and N1 are resolved for planning. The retained `TESTS-RESULTS/2026-11-14+GH-1479/preflight-main.md` contains the actual frontmatter, contract, and input prose; the revised step 5 fixes the clock/ref/output and requires individually explained substitutions, forbidding changes to readiness, probes, lane plans, or packet semantics. The source has 42 module-level definitions and a 734-line main (`utils/py/swarm_preflight.py:1206-1939`). Preserve the baseline source-document path by reconstructing its original `temp/gh1479/preflight-main.md` from the retained file when replaying, so moving the retained input does not require broad text normalization. The baseline's `"criteria": 0` is a zero-checklist smoke case, not acceptance-rendering coverage; existing coverage and the final gate remain necessary.
+- [Pass] S2 now has an inspectable structural acceptance condition: the replacement plan's “three small, immutable dataclasses” have named producers, and it explicitly rejects “`locals()`, `vars()`, `**kwargs` pass-through” and a global context. This is adequate at plan stage; final signatures AND bodies must establish the separation. The existing normalization bridge (`utils/py/swarm_preflight.py:1649-1688`) is the dynamic JSON boundary, not justification for a second unrestricted state bag.
+- [Pass] S3 is resolved: revised step 4 explicitly assigns every focused shell/pytest run to “a separate disposable full clone” with identity checks and logs; step 7 retains that requirement for the final gate. S4 is also explicit: “This PR preserves that existing behavior” and makes no atomic-publication claim. Direct writes remain visible at `utils/py/swarm_preflight.py:1776-1788,1931-1932`; the known exception is disclosed rather than silently repaired.
+- [Pass] The complete entry-point review still supports the stated flow and behavioral boundaries: source/argument failures precede contract handling (`utils/py/swarm_preflight.py:1206-1323`); fetch, ref probing and cleanup precede readiness (`:1330-1432`); readiness/report precedence and exits remain at `:1516-1753`; dry-run warning/exit precedes packet writes (`:1763-1788`); packet completion exits 0 (`:1931-1939`). The extraction must preserve these positions, including the initial readiness assignments before the guarded first-failure chain. No additional pre-existing defect requiring a plan change was found in the whole-module sweep beyond the already dispositioned write exception.
+- [Pass] Scoped mypy remains an adequate extension of the existing check (`test/test_python_layer.py:44-46`, `validate.sh:1438-1458`), with `follow_imports=skip`, the active interpreter, explicit cwd/config, and a pinned `mypy==1.14.1`. Reusing a manifest at `.github/workflows/ci.yml:184,402` and `.github/workflows/wave-reconcile.yml:52` covers the identified hosted dependency seams; `README.md:285` supplies the Python >=3.10 local baseline. No new suite, executor, or whole-repository typing appears. The deliberate temporary return-type error is the required static-analysis red control; final code review must inspect its actual diagnostic, not merely a nonzero tool exit.
+- [Pass] Scope, rating and rollback remain proportionate. The artifact explicitly excludes the three active executor lanes and says severity is “maintenance risk rather than a current outage” with “the trend is unknown.” Its Costly review-size assessment and ordered-commit rollback fit a refactor with no schema migration. Shared dependency/validation consumers remain part of the blast radius, as already noted in round 1.
+- [Pass] Read-only integrity probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` using `ast.parse`, `Path.stat/read_bytes`, `json.loads`, and `hashlib.sha256` on the source and retained baseline. Exit 0; decisive output: `module_functions 42 main_lines 734`, `retained_input_nonempty True`, all three provenance logs `nonempty True hash_matches True`, and retained exits `0, 0, 2`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1479/provenance.jsonl:1-3` and corresponding named logs/rc files. This verifies retained evidence integrity, not a runtime replay.
+
+Source assessment covered the whole preflight module, Python-layer file, and named dependency/contract surfaces, including the revised plan rather than only its changed passages. Graph discovery was denied by the tool approval policy; direct source reads supplied the evidence. No git command, test suite, pytest, executable fixture, or gate ran. Runtime equivalence, mypy acceptance/red control, and final gate success remain **[Unverified — needs clone run]** until implementation; approval does not certify them.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the approved implementation plan and its required evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
