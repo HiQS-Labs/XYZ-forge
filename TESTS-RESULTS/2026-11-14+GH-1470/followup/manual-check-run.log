@@ -1,0 +1,107 @@
+== S1: two hubs + four clean members -> direct in passes, no stacked line
+    Landing forecast (GH-1452, advisory; origin/development @ c85632ba1c):
+    | PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+    |---|---|---|---|---|---|---|
+    | #100 | clean | clean | — | — | 0 | medium |
+    | #101 | conflict | conflict | CHANGELOG.md | — | 0 | medium |
+    | #102 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #103 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #104 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #105 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    Members #100 and #102 conflict with each other on: CHANGELOG.md
+    Members #100 and #103 conflict with each other on: CHANGELOG.md
+    Members #100 and #104 conflict with each other on: CHANGELOG.md
+    Members #100 and #105 conflict with each other on: CHANGELOG.md
+    PRs a B1 repair would defer in the run that repairs them: 1
+    Conflict hubs (GH-1470): 2 — conflict with the base: #101; picked by conflict degree (greedy heuristic, not a proven minimum): #100
+    Clean once hubs are set aside: 4 of 6 — #102, #103, #104, #105
+    Clean-set fold (hubs set aside, sequence order): clean through all 4
+    Recommendation: direct in passes — 2 conflict hub(s) (#100, #101); 4 of 6 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+      pass 1: --prs 102,103,104,105   (the clean set; `direct`, using the pins from this dry run)
+      pass 2: --prs 100,101   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+    Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+    Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+    Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+    Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+PASS S1 passes {"rec": "direct", "passes": [[102, 103, 104, 105], [100, 101]]}
+PASS S1 pass lists printed {}
+PASS S1 hub count {}
+PASS S1 no stacked line {}
+== S2: hubs are most of the queue (non-hubs conflict among themselves) -> group, no passes
+    Landing forecast (GH-1452, advisory; origin/development @ 8de9d5078f):
+    | PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+    |---|---|---|---|---|---|---|
+    | #200 | clean | clean | — | — | 0 | medium |
+    | #201 | clean | conflict | CHANGELOG.md | — | 0 | medium |
+    | #202 | clean | conditional (not simulated after #201: conflict) | — | — | 0 | medium |
+    | #203 | clean | conditional (not simulated after #201: conflict) | — | — | 0 | medium |
+    | #204 | conflict | conditional (not simulated after #201: conflict) | CHANGELOG.md | — | 0 | medium |
+    Members #200 and #201 conflict with each other on: CHANGELOG.md
+    Members #202 and #203 conflict with each other on: CHANGELOG.md
+    PRs a B1 repair would defer in the run that repairs them: 1
+    Conflict hubs (GH-1470): 3 — conflict with the base: #204; picked by conflict degree (greedy heuristic, not a proven minimum): #201, #203
+    Clean once hubs are set aside: 2 of 5 — #200, #202
+    Clean-set fold (hubs set aside, sequence order): clean through all 2
+    Recommendation: group — 3 of 5 PRs would have to wait for a second pass (3 conflict hub(s); 2 clean); the conflicts are spread across the queue, not held by a few hubs
+    Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+    Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+    Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+PASS S2 group, no passes {"rec": "group", "reason": "3 of 5 PRs would have to wait for a second pass (3 conflict hub(s); 2 clean); the conflicts are spread across the queue, not held by a few hubs"}
+== S3: a failed step (head fetch) -> recommendation withheld
+    Landing forecast (GH-1452, advisory; origin/development @ e9b37e21b6):
+    | PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+    |---|---|---|---|---|---|---|
+    | #100 | clean | clean | — | — | 0 | medium |
+    | #101 | conflict | conflict | CHANGELOG.md | — | 0 | medium |
+    | #102 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #103 | unknown | conditional (not simulated after #101: conflict) | — | — | 0 | unknown |
+    | #104 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #105 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    Members #100 and #102 conflict with each other on: CHANGELOG.md
+    Members #100 and #104 conflict with each other on: CHANGELOG.md
+    Members #100 and #105 conflict with each other on: CHANGELOG.md
+    #103: unknown — fetch of pull/103/head failed: simulated
+    PRs a B1 repair would defer in the run that repairs them: 1
+    Recommendation: none — forecast incomplete, no recommendation: #103 (fetch of pull/103/head failed: simulated)
+    Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+    Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+    Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+PASS S3 withheld {"reason": "forecast incomplete, no recommendation: #103 (fetch of pull/103/head failed: simulated)"}
+PASS S3b merge-tree failure withheld {"reason": "forecast incomplete, no recommendation: #104 (merge-tree failed: merge-tree gave an unreadable result)"}
+== S4: stacked member (#103 built on #102) -> blind-spot line printed
+    Landing forecast (GH-1452, advisory; origin/development @ 635d223fee):
+    | PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+    |---|---|---|---|---|---|---|
+    | #100 | clean | clean | — | — | 0 | medium |
+    | #101 | conflict | conflict | CHANGELOG.md | — | 0 | medium |
+    | #102 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #103 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #104 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #105 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    Members #100 and #102 conflict with each other on: CHANGELOG.md
+    Members #100 and #103 conflict with each other on: CHANGELOG.md
+    Members #100 and #104 conflict with each other on: CHANGELOG.md
+    Members #100 and #105 conflict with each other on: CHANGELOG.md
+    PRs a B1 repair would defer in the run that repairs them: 1
+    Conflict hubs (GH-1470): 2 — conflict with the base: #101; picked by conflict degree (greedy heuristic, not a proven minimum): #100
+    Clean once hubs are set aside: 4 of 6 — #102, #103, #104, #105
+    Clean-set fold (hubs set aside, sequence order): clean through all 4
+    Recommendation: direct in passes — 2 conflict hub(s) (#100, #101); 4 of 6 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+      pass 1: --prs 102,103,104,105   (the clean set; `direct`, using the pins from this dry run)
+      pass 2: --prs 100,101   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+    Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+    Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+    Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+    Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+    Blind spot: stacked members #102/#103: their branches share commits that are not on the base. After the earlier one is squash-merged, GitHub can mark the later one CONFLICTING even though merge-tree here is clean, and re-setting the PR base does not clear it; merge the base into the later branch (new head, fresh checks, re-pin)
+PASS S4 stacked detected {"stacked": ["#102/#103"]}
+PASS S4 blind-spot line {}
+== S5: Jog precondition (policy and Jog reader stubbed; real mapping and message)
+    Jog precondition (GH-1470): #1067 (GH-77), #1068 (GH-78) map to open Jog rows, and primary is not pinned; explicitly set `git config --global xyz.primary.repo-abc <primary-path>`. If such a PR lands a Jog delivery, the post-merge Jog step refuses (rule=jog-primary) and --execute stops with exit 2 after that merge. Pin the primary before --execute.
+PASS S5 unpinned + mapped warns {}
+PASS S5 unpinned, no mapped PR: silent {}
+PASS S5 pinned: silent, no ledger read {}
+PASS S5 unreadable Jog rows: named, not silent {"w": "Jog precondition not checked (cannot read Jog rows: dump unreadable); primary is not pinned; explicitly set `git config --global xyz.primary.repo-abc <primary-path>`"}
+
+RESULT: all checks passed
+exit 0
