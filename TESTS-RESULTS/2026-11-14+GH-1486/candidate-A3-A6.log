@@ -1,0 +1,97 @@
+== GH-1486 fixture checks; candidate eb9a4812; work <fixture>
+  block extracted: 86 lines, sha256 ffff7ee8337d7f1b
+  fixture: forge HEAD eb9a4812, targets vendored at 83fd77b5
+-- A4 stops (target is stale, so each stop is before a refresh that would otherwise run)
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | re-vendor-xyz: stopped: <fixture>/unreg/.xyz has no present row in xyz-sync.sh list; for a first install use /vendor-stack
+      | re-vendor-xyz: exit 3
+  PASS: A4a unregistered: exit 3
+  PASS: A4a unregistered: names the stop (has no present row)
+  PASS: A4a unregistered: no backup made
+  PASS: A4a unregistered: xyz-sync.sh update never invoked
+  PASS: A4a unregistered: .xyz/VERSION byte-identical
+  PASS: A4a contrast: bare update exits 0 as a no-op (rc=0)
+      | re-vendor-xyz: stopped: Forge source has uncommitted changes:
+      | ?? untracked-fx.txt
+      | re-vendor-xyz: exit 3
+  PASS: A4b dirty source: exit 3
+  PASS: A4b dirty source: names the stop (Forge source has uncommitted changes)
+  PASS: A4b dirty source: no backup made
+  PASS: A4b dirty source: xyz-sync.sh update never invoked
+  PASS: A4b dirty source: .xyz/VERSION byte-identical
+  PASS: A4b contrast: bare update vendors from the dirty source (rc=0)
+      | re-vendor-xyz: stopped: Forge source HEAD 13467b2c29d91057c115598d0e18f649d56a03ea is not origin/development: it carries unpublished commits:
+      | 13467b2c fx: unpublished
+      | re-vendor-xyz: exit 3
+  PASS: A4c source ahead of origin: exit 3
+  PASS: A4c source ahead of origin: names the stop (carries unpublished commits)
+  PASS: A4c source ahead of origin: no backup made
+  PASS: A4c source ahead of origin: xyz-sync.sh update never invoked
+  PASS: A4c source ahead of origin: .xyz/VERSION byte-identical
+  PASS: A4c contrast: bare update vendors the unpublished commit (rc=0)
+  PASS: A4d precondition: HEAD equals the cached origin/development
+      | re-vendor-xyz: stopped: fetch of origin/development failed:
+      | fatal: '<fixture>/nowhere.git' does not appear to be a git repository
+      | fatal: Could not read from remote repository.
+      | 
+  PASS: A4d fetch fails: exit 3
+  PASS: A4d fetch fails: names the stop (fetch of origin/development failed)
+  PASS: A4d fetch fails: no backup made
+  PASS: A4d fetch fails: xyz-sync.sh update never invoked
+  PASS: A4d fetch fails: .xyz/VERSION byte-identical
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | re-vendor-xyz: stopped: a driver lock is held: <fixture>/target/.xyz/.relay-driver.lock (wait for the run; if it crashed, use the relay's own recovery)
+      | re-vendor-xyz: exit 3
+  PASS: A4e vendored driver lock: exit 3
+  PASS: A4e vendored driver lock: names the stop (a driver lock is held: <fixture>/target/.xyz/.relay-driver.lock)
+  PASS: A4e vendored driver lock: no backup made
+  PASS: A4e vendored driver lock: xyz-sync.sh update never invoked
+  PASS: A4e vendored driver lock: .xyz/VERSION byte-identical
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | re-vendor-xyz: stopped: a driver lock is held: <fixture>/target/.git/relay-driver.lock (wait for the run; if it crashed, use the relay's own recovery)
+      | re-vendor-xyz: exit 3
+  PASS: A4f consumer-root driver lock: exit 3
+  PASS: A4f consumer-root driver lock: names the stop (a driver lock is held: <fixture>/target/.git/relay-driver.lock)
+  PASS: A4f consumer-root driver lock: no backup made
+  PASS: A4f consumer-root driver lock: xyz-sync.sh update never invoked
+  PASS: A4f consumer-root driver lock: .xyz/VERSION byte-identical
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | re-vendor-xyz: stopped: processes are running from <fixture>/target/.xyz/:
+      | 32805 perl -e sleep 120 <fixture>/target/.xyz/fx-live-run
+      | re-vendor-xyz: exit 3
+  PASS: A4g process running from the copy: exit 3
+  PASS: A4g process running from the copy: names the stop (processes are running from <fixture>/target/.xyz/)
+  PASS: A4g process running from the copy: no backup made
+  PASS: A4g process running from the copy: xyz-sync.sh update never invoked
+  PASS: A4g process running from the copy: .xyz/VERSION byte-identical
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | re-vendor-xyz: stopped: <fixture>/tier2/.xyz is tier 2 but <fixture>/tier2/releases.db is missing; a refresh would drop the RELEASES overlay
+      | re-vendor-xyz: exit 3
+  PASS: A4h tier 2 without releases.db: exit 3
+  PASS: A4h tier 2 without releases.db: names the stop (is tier 2 but)
+  PASS: A4h tier 2 without releases.db: no backup made
+  PASS: A4h tier 2 without releases.db: xyz-sync.sh update never invoked
+  PASS: A4h tier 2 without releases.db: .xyz/VERSION byte-identical
+-- A3 main path
+  PASS: A3 contrast: check before the refresh prints DRIFT
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | DRIFT <fixture>/target/.xyz (source_commit drifted)
+      |   recorded: tick_version=0.2.0 source_commit=83fd77b5aa2dbcb1bf8094a1fb93fc7309f4cdc9
+  PASS: A3: exit 0 and reports refreshed
+  PASS: A3: check prints the whole line ok for the copy
+  PASS: A3: no SAFETY GUARD MISSING line
+  PASS: A3: .xyz/VERSION source_commit equals Forge HEAD
+  PASS: A3: one non-empty backup zip
+-- A6 adjacent path: rerun when already current
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | ok    <fixture>/target/.xyz
+  PASS: A6: exit 0, reports already current
+  PASS: A6: no backup and no update invocation
+-- A5 ok plus SAFETY GUARD MISSING is not current
+  PASS: A5 precondition: check prints ok AND SAFETY GUARD MISSING for the copy
+      | re-vendor-xyz: Forge source <fixture>/forge on development at eb9a48126a1a00c3ed8b094a2f08ca55bc966829
+      | ok    <fixture>/target/.xyz
+      | SAFETY GUARD MISSING <fixture>/target/.xyz (relay-target-root-containment)
+  PASS: A5: not judged already current; refresh runs
+  PASS: A5: after the refresh the guard is back and exit 0
+== result: 55 passed, 0 failed

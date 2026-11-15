@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA round 1 (FAIL: S1 vendored relay lock, S2 failed fetch, plus nits) dispositioned and applied below (2026-11-14). | Codex plan QA round 2, then write the skill and run the fixture checks. |
+| Plan approved by Codex in round 2 (`relay-system/2026-11-14/gh1486-plan-qa.md`); skill, pointers and changelog written (`eb9a48126`); fixture checks 55/0, base reds, regression suites and docs gate recorded under `TESTS-RESULTS/2026-11-14+GH-1486/` (2026-11-14). | Codex final QA, then PR. |
 
 ## Rating rationale (2026-11-14)
 
@@ -86,13 +86,13 @@ Issue body records the observed traps with file:line receipts; re-verified here 
 
 Each item fails on base `5967bde25` because the skill does not exist; fixture items record the bare-command contrast in the same log.
 
-- [ ] A1 `skills/4-occasional/re-vendor-xyz/SKILL.md` exists with `name: re-vendor-xyz` and the triggers above; `test/gh589-skill-viewer.sh` passes (count and name set include it). Red control: `ls skills/*/re-vendor-xyz` fails on base.
-- [ ] A2 The skill states the closed list of stops and the three-part current test. Red control: `git grep -n "SAFETY GUARD MISSING" -- skills/` is empty on base.
-- [ ] A3 Fixture, main path: target vendored from an older Forge commit, private `XYZ_REGISTRY`, the skill's commands run in order end with all three current-test conditions true. Contrast: `check` before the refresh prints `DRIFT`.
-- [ ] A4 Fixture stops: unregistered target; dirty Forge source; Forge `HEAD` ahead of origin; source fetch failing (unreachable origin while `HEAD` equals the cached `origin/<branch>`); vendored lock `$T/.xyz/.relay-driver.lock` held with no matching process; consumer-root lock held; process running from `$T/.xyz/`; tier 2 without `releases.db`. Each case must print the named `re-vendor-xyz: stopped: <reason>`, make no backup, never invoke `xyz-sync.sh update` (the driver logs every writer invocation), and leave `$T/.xyz/VERSION` byte-identical. Contrast (not the safety proof): bare `xyz-sync.sh update` exits 0 on the unregistered, dirty and ahead fixtures.
-- [ ] A5 Fixture: a copy that `check` reports `ok` plus `SAFETY GUARD MISSING` (a guard pattern removed from the installed copy) is not judged "already current" before the refresh (the driver observes the decision, then the refresh may repair it).
-- [ ] A6 Adjacent path: rerun on an already-current target reports "already current"; the driver's invocation log shows no backup and no `xyz-sync.sh update` call.
-- [ ] A7 `ARCHITECTURE.md`, `README.md` and `vendor-stack/SKILL.md` name `re-vendor-xyz`; `test/path-integrity.sh` passes. Red control: `git grep -n re-vendor-xyz -- ARCHITECTURE.md README.md skills/4-occasional/vendor-stack/SKILL.md` is empty on base.
+- [x] A1 `skills/4-occasional/re-vendor-xyz/SKILL.md` exists with `name: re-vendor-xyz` and the triggers above; `test/gh589-skill-viewer.sh` passes (count and name set include it). Red control: `ls skills/*/re-vendor-xyz` fails on base. — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` a1-a2-a7-text.log; regression-suites.log (gh589 8/0); base-red-controls.log
+- [x] A2 The skill states the closed list of stops and the three-part current test. Red control: `git grep -n "SAFETY GUARD MISSING" -- skills/` is empty on base. — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` a1-a2-a7-text.log; base-red-controls.log
+- [x] A3 Fixture, main path: target vendored from an older Forge commit, private `XYZ_REGISTRY`, the skill's commands run in order end with all three current-test conditions true. Contrast: `check` before the refresh prints `DRIFT`. — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` candidate-A3-A6.log (A3 rows)
+- [x] A4 Fixture stops: unregistered target; dirty Forge source; Forge `HEAD` ahead of origin; source fetch failing (unreachable origin while `HEAD` equals the cached `origin/<branch>`); vendored lock `$T/.xyz/.relay-driver.lock` held with no matching process; consumer-root lock held; process running from `$T/.xyz/`; tier 2 without `releases.db`. Each case must print the named `re-vendor-xyz: stopped: <reason>`, make no backup, never invoke `xyz-sync.sh update` (the driver logs every writer invocation), and leave `$T/.xyz/VERSION` byte-identical. Contrast (not the safety proof): bare `xyz-sync.sh update` exits 0 on the unregistered, dirty and ahead fixtures. — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` candidate-A3-A6.log (A4a–A4h, 8 cases x 5 assertions + 3 contrasts)
+- [x] A5 Fixture: a copy that `check` reports `ok` plus `SAFETY GUARD MISSING` (a guard pattern removed from the installed copy) is not judged "already current" before the refresh (the driver observes the decision, then the refresh may repair it). — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` candidate-A3-A6.log (A5 rows)
+- [x] A6 Adjacent path: rerun on an already-current target reports "already current"; the driver's invocation log shows no backup and no `xyz-sync.sh update` call. — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` candidate-A3-A6.log (A6 rows)
+- [x] A7 `ARCHITECTURE.md`, `README.md` and `vendor-stack/SKILL.md` name `re-vendor-xyz`; `test/path-integrity.sh` passes. Red control: `git grep -n re-vendor-xyz -- ARCHITECTURE.md README.md skills/4-occasional/vendor-stack/SKILL.md` is empty on base. — evidence: `TESTS-RESULTS/2026-11-14+GH-1486/` a1-a2-a7-text.log; regression-suites.log (path-integrity 3/0); base-red-controls.log
 
 ## Verification
 

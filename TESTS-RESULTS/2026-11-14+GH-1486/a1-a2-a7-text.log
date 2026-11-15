@@ -1,0 +1,19 @@
+== A1/A2/A7 on candidate eb9a4812
+name: re-vendor-xyz
+trigger '/re-vendor-xyz'               1
+trigger 're-vendor'                    3
+trigger 'refresh the .xyz copy'        1
+trigger 'update the vendored harness'  1
+text 'The only reasons to stop'               1
+text 'Anything not on this list continues'    1
+text 'ok    <target>/.xyz'                    1
+text 'SAFETY GUARD MISSING <target>/.xyz'     1
+text 'source_commit='                         2
+text 'fetch'                                  3
+text 'relay-driver.lock'                      3
+text 'tier 2'                                 3
+text 'backup zip is missing or empty'         1
+-- A7
+ARCHITECTURE.md:146:| [re-vendor-xyz](skills/4-occasional/re-vendor-xyz/SKILL.md) | Refresh one repo's vendored `.xyz/` copy safely: publish
+README.md:263:flow. To refresh that `.xyz/` copy later, use [`/re-vendor-xyz`](skills/4-occasional/re-vendor-xyz/SKILL.md).
+skills/4-occasional/vendor-stack/SKILL.md:151:- **XYZ:** to refresh one repo's copy, use [`/re-vendor-xyz`](../re-vendor-xyz/SKILL.md): it c

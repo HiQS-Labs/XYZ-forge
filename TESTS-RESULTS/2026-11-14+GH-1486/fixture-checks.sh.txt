@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# GH-1486 manual fixture checks A3-A6 for skills/4-occasional/re-vendor-xyz/SKILL.md.
+# Not a registered suite (GH-831). Usage: bash fixture-checks.sh <disposable XYZ-forge full clone>
+# Runs the skill's own steps 1-8 block, extracted verbatim from SKILL.md in that clone, against
+# fixture targets with a private registry, backup folder and no Skills Army collection.
+set -u
+SRC="$(cd "$1" && pwd -P)"
+W="$(mktemp -d "${TMPDIR:-/tmp}/gh1486-fx.XXXXXX")"; W="$(cd "$W" && pwd -P)"
+export XYZ_REGISTRY="$W/registry.tsv" XDG_STATE_HOME="$W/state" XYZ_SKILLS_ROOT="$W/no-collection"
+export GIT_AUTHOR_NAME=fx GIT_AUTHOR_EMAIL=fx@example.invalid GIT_COMMITTER_NAME=fx GIT_COMMITTER_EMAIL=fx@example.invalid
+unset XYZ_FORGE_ROOT XYZ_HARNESS TICK_REPO_ROOT XYZ_SYNC_CANONICAL_BRANCHES XYZ_SYNC_ALLOW_UNSAFE_SOURCE
+PASS=0; FAIL=0
+ok()  { echo "  PASS: $*"; PASS=$((PASS+1)); }
+bad() { echo "  FAIL: $*"; FAIL=$((FAIL+1)); }
+chk() { if eval "$2"; then ok "$1"; else bad "$1"; fi; }
+
+echo "== GH-1486 fixture checks; candidate $(git -C "$SRC" rev-parse --short HEAD); work $W"
+
+# Extract the skill's steps 1-8 block (first ```bash block whose first line sets T=).
+SKILL="$SRC/skills/4-occasional/re-vendor-xyz/SKILL.md"
+python3 - "$SKILL" "$W/block.sh" <<'PY' || { echo "  FAIL: skill block not found in $SKILL"; echo "== result: 0 passed, 1 failed"; exit 1; }
+import sys, re
+s = open(sys.argv[1], encoding="utf-8").read()
+m = re.search(r"```bash\n(T=\"[^\n]*\n.*?)\n```", s, re.S)
+if not m: sys.exit(1)
+lines = m.group(1).split("\n")
+lines[0] = 'T="$FX_T"'
+lines = ['FORGE="$FX_F"' if l.startswith("# FORGE=") else l for l in lines]
+open(sys.argv[2], "w").write("\n".join(lines) + "\n")
+PY
+echo "  block extracted: $(wc -l < "$W/block.sh" | tr -d ' ') lines, sha256 $(shasum -a 256 "$W/block.sh" | cut -c1-16)"
+
+# Fixture Forge: a bare origin whose development is the candidate, and a clone of it.
+git clone -q --bare "$SRC" "$W/origin.git"
+git --git-dir="$W/origin.git" update-ref refs/heads/development "$(git -C "$SRC" rev-parse HEAD)"
+git --git-dir="$W/origin.git" symbolic-ref HEAD refs/heads/development
+git clone -q -b development "$W/origin.git" "$W/forge"; F="$W/forge"
+SYNC="$F/relay-automation/xyz-sync.sh"
+OLD="$(git -C "$F" rev-parse HEAD~2)"
+mk_target() { mkdir -p "$W/$1"; git -C "$W/$1" init -q; git -C "$W/$1" commit -q --allow-empty -m init; }
+vendor_old() { git -C "$F" checkout -q --detach "$OLD"; "$F/relay-automation/xyz-vendor.sh" "$@" >/dev/null 2>&1; local rc=$?; git -C "$F" checkout -q development; return $rc; }
+run_skill() { FX_T="$1" FX_F="$F" bash "$W/block.sh" > "$W/out" 2>&1; RC="$(sed -n 's/^re-vendor-xyz: exit //p' "$W/out" | tail -1)"; }
+nbk() { ls "$XDG_STATE_HOME/xyz/backups" 2>/dev/null | wc -l | tr -d ' '; }
+vsha() { shasum -a 256 "$1/.xyz/VERSION" | cut -c1-64; }
+show() { sed 's/^/      | /' "$W/out" | head -"${1:-6}"; }
+stop_case() {  # <label> <target> <expected reason substring>
+  local t="$W/$2" before b0; REASON="$3"; before="$(vsha "$t")"; b0="$(nbk)"
+  run_skill "$t"; show 4
+  chk "$1: exit 3" '[ "$RC" = 3 ]'
+  chk "$1: names the stop ($3)" 'grep -F "re-vendor-xyz: stopped:" "$W/out" | grep -Fq -- "$REASON"'
+  chk "$1: no backup made" '! grep -Fq "re-vendor-xyz: backup:" "$W/out" && [ "$(nbk)" = "$b0" ]'
+  chk "$1: xyz-sync.sh update never invoked" '! grep -Fq "re-vendor-xyz: running:" "$W/out"'
+  chk "$1: .xyz/VERSION byte-identical" '[ "$(vsha "$t")" = "$before" ]'
+}
+
+mk_target target;   vendor_old "$W/target"           # main target, tier 1, older commit
+mk_target contrast; vendor_old "$W/contrast"         # for bare-command contrasts
+mk_target unreg;    vendor_old "$W/unreg" --no-register
+mk_target tier2;    touch "$W/tier2/releases.db"; vendor_old "$W/tier2"; rm -f "$W/tier2/releases.db"
+X="$W/target/.xyz"
+echo "  fixture: forge HEAD $(git -C "$F" rev-parse --short HEAD), targets vendored at $(git -C "$F" rev-parse --short "$OLD")"
+
+echo "-- A4 stops (target is stale, so each stop is before a refresh that would otherwise run)"
+stop_case "A4a unregistered" unreg "has no present row"
+"$SYNC" update "$W/unreg/.xyz" > "$W/c" 2>&1; crc=$?
+chk "A4a contrast: bare update exits 0 as a no-op (rc=$crc)" '[ "$crc" = 0 ] && grep -Fq "No vendored registry rows matched" "$W/c"'
+
+touch "$F/untracked-fx.txt"
+stop_case "A4b dirty source" target "Forge source has uncommitted changes"
+"$SYNC" update "$W/contrast/.xyz" > "$W/c" 2>&1; crc=$?
+chk "A4b contrast: bare update vendors from the dirty source (rc=$crc)" '[ "$crc" = 0 ] && grep -q "^source_commit=$(git -C "$F" rev-parse HEAD)" "$W/contrast/.xyz/VERSION"'
+rm -f "$F/untracked-fx.txt"; vendor_old "$W/contrast"
+
+git -C "$F" commit -q --allow-empty -m "fx: unpublished"
+stop_case "A4c source ahead of origin" target "carries unpublished commits"
+"$SYNC" update "$W/contrast/.xyz" > "$W/c" 2>&1; crc=$?
+chk "A4c contrast: bare update vendors the unpublished commit (rc=$crc)" '[ "$crc" = 0 ] && grep -q "^source_commit=$(git -C "$F" rev-parse HEAD)" "$W/contrast/.xyz/VERSION"'
+git -C "$F" reset -q --hard origin/development; vendor_old "$W/contrast"
+
+git -C "$F" remote set-url origin "$W/nowhere.git"
+chk "A4d precondition: HEAD equals the cached origin/development" '[ "$(git -C "$F" rev-parse HEAD)" = "$(git -C "$F" rev-parse origin/development)" ]'
+stop_case "A4d fetch fails" target "fetch of origin/development failed"
+git -C "$F" remote set-url origin "$W/origin.git"
+
+mkdir "$X/.relay-driver.lock"
+stop_case "A4e vendored driver lock" target "a driver lock is held: $X/.relay-driver.lock"
+rmdir "$X/.relay-driver.lock"
+
+mkdir "$W/target/.git/relay-driver.lock"
+stop_case "A4f consumer-root driver lock" target "a driver lock is held: $W/target/.git/relay-driver.lock"
+rmdir "$W/target/.git/relay-driver.lock"
+
+perl -e 'sleep 120' "$X/fx-live-run" & PPROC=$!; sleep 1
+stop_case "A4g process running from the copy" target "processes are running from $X/"
+kill "$PPROC" 2>/dev/null; wait "$PPROC" 2>/dev/null
+
+stop_case "A4h tier 2 without releases.db" tier2 "is tier 2 but"
+
+echo "-- A3 main path"
+"$SYNC" check "$X" > "$W/c" 2>&1
+chk "A3 contrast: check before the refresh prints DRIFT" 'grep -q "^DRIFT $X " "$W/c"'
+b0="$(nbk)"; run_skill "$W/target"; show 3
+chk "A3: exit 0 and reports refreshed" '[ "$RC" = 0 ] && grep -Fq "re-vendor-xyz: refreshed $X to $(git -C "$F" rev-parse HEAD)" "$W/out"'
+"$SYNC" check "$X" > "$W/c" 2>&1
+chk "A3: check prints the whole line ok for the copy" 'grep -Fxq "ok    $X" "$W/c"'
+chk "A3: no SAFETY GUARD MISSING line" '! grep -Fq "SAFETY GUARD MISSING $X (" "$W/c"'
+chk "A3: .xyz/VERSION source_commit equals Forge HEAD" 'grep -q "^source_commit=$(git -C "$F" rev-parse HEAD)$" "$X/VERSION"'
+chk "A3: one non-empty backup zip" '[ "$(nbk)" = "$((b0+1))" ] && [ -s "$(ls -d "$XDG_STATE_HOME"/xyz/backups/* | tail -1)" ]'
+
+echo "-- A6 adjacent path: rerun when already current"
+b0="$(nbk)"; vt="$(vsha "$W/target")"; run_skill "$W/target"; show 2
+chk "A6: exit 0, reports already current" '[ "$RC" = 0 ] && grep -Fq "re-vendor-xyz: already current at" "$W/out"'
+chk "A6: no backup and no update invocation" '! grep -Fq "re-vendor-xyz: backup:" "$W/out" && ! grep -Fq "re-vendor-xyz: running:" "$W/out" && [ "$(nbk)" = "$b0" ] && [ "$(vsha "$W/target")" = "$vt" ]'
+
+echo "-- A5 ok plus SAFETY GUARD MISSING is not current"
+: > "$X/relay-automation/relay-drive.sh"
+"$SYNC" check "$X" > "$W/c" 2>&1
+chk "A5 precondition: check prints ok AND SAFETY GUARD MISSING for the copy" 'grep -Fxq "ok    $X" "$W/c" && grep -Fq "SAFETY GUARD MISSING $X (" "$W/c"'
+run_skill "$W/target"; show 3
+chk "A5: not judged already current; refresh runs" '! grep -Fq "already current" "$W/out" && grep -Fq "re-vendor-xyz: running:" "$W/out"'
+chk "A5: after the refresh the guard is back and exit 0" '[ "$RC" = 0 ] && ! "$SYNC" check "$X" 2>&1 | grep -Fq "SAFETY GUARD MISSING"'
+
+echo "== result: $PASS passed, $FAIL failed"
+rm -rf "$W"
+[ "$FAIL" = 0 ]
