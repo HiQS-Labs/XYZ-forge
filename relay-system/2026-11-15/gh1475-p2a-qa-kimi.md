@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -206,5 +206,24 @@ fails checks 1, 2 and 4) and the existing suite `bash test/gh436-merge-cleanup.s
 - **Nit, stale comments — Implemented** in both `merge_cleanup.py` and `scan_clones.py:373`.
 
 Round 2: re-check the three fixes only, at the new head.
+
+### Reviewer · Round 2 (kimi)
+
+swept file: yes
+
+Re-checked only the three Round 1 fixes against the current source and the new receipts. No additional pre-existing defect was established in this scoped sweep.
+
+- [Pass] **Q1(d): the repaired-head path now rejects a moved or unreadable integration base before re-pinning.** After the post-check head refresh, `merge_cleanup.py:2170-2179` reads the gated clone's `origin/<branch>`, obtains the live branch with bounded `ls-remote`, and defers on an empty or unequal result. Pin publication follows only at `:2180-2192`, so the observed B0→B1 sequence can no longer reach `execute_pr_merge` through this path.
+- [Blocker] **Q3(a,c): unique work still is not preserved; tracked modifications are explicitly ignored and unpushed refs/worktrees are never inspected.** `_scratch_keep_reason` returns a keep reason only for untracked (`??`) status lines or a stash (`merge_cleanup.py:226-235`), then `_remove_own_scratch` recursively deletes at `:249-254`. Scratch probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY' ... PY` invoked the real `_remove_own_scratch` on `merge-cleanup-track1/pr-7-aaaaaaaa-abcdefgh/repo` with open handles stubbed verified-idle and Git status stubbed to ` M tracked.txt`; exit **0**. Decisive output: `tracked-modification removal: removed=True; target_exists=False; unique_file_exists=False`; the only Git queries were `status --porcelain --untracked-files=normal` and `stash list`. The new receipt likewise covers untracked content but no tracked or unpushed state (`TESTS-RESULTS/2026-11-14+GH-1475-phase2a/manual-kimi-fixes.log:3-7`).
+  Observed input: a tool-shaped retained clone with the operator-only tracked modification `tracked.txt`; the current guard deleted the clone and file.
+  Affected scope: every retained-prune or exit-3 removal containing tracked edits, unpushed commits, stashes hidden by an unreadable probe, or registered dependent worktrees.
+  Falsifier: the same probe must preserve the tracked-modification target after the fix; controlled unpushed-commit and registered-worktree cases must also remain, while a verified-clean, idle, tool-owned folder may prune. Make `_scratch_keep_reason` fail closed on any uncommitted tracked change, unpushed commit, registered worktree, or unreadable state before `rmtree`, rather than treating the tool's usual dirty state as proof that all dirty state is disposable.
+- [Pass] **Q3(b): every scratch-removal caller now passes through the open-handle guard.** `_remove_own_scratch` calls `_scratch_keep_reason` before `rmtree` (`merge_cleanup.py:239-254`), which preserves active or unverifiable handles at `:223-225`; retained pruning, clean-run removal and exit-3 release all use that helper at `:327-332`, `:2351-2357`. The root-equality holder predicate remains at `scan_clones.py:413-418`, and the fixed/red receipt shows live-cwd preservation followed by removal after exit (`manual-kimi-fixes.log:8-16`).
+- [Unverified — needs clone run] No suite, executable loop fixture or phase gate was run in this turn. The base-moved rejection was source-traced; its receipt explicitly says it was not exercised in a loop fixture (`README.md:52-56`). The tracked-modification loss above was reproduced with a narrow helper-level scratch probe, not a full clone run.
+
+VERDICT: FAIL
+Basis: The moved-base and live-cwd blockers are fixed, but the original unique-work blocker remains reproduced: the revised prune guard still deletes tracked operator modifications and does not examine unpushed or dependent-worktree state. At ROUND 2 / 2 without approval, the relay is Escalated.
+
+Handing off to Producer (claude-a) — the remaining deletion-safety blocker needs an explicit operator/disposition decision; the round is Escalated.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
