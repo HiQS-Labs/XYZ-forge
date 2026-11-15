@@ -1,0 +1,152 @@
+# RELAY · GH-1475 Phase 2A independent QA of PR #1490 (Kimi)
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
+-->
+
+NEXT: Reviewer
+STATUS: Open
+ROUND: 1 / 1
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh1475-p2a-qa-kimi): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: **.relay-artifacts/pr1490.diff** — the read-only path that
+  `relay-drive.sh --artifact-file /tmp/kimi-qa-1490-eKvh/pr1490.diff` seeds into the isolated worktree (read it there; do NOT edit it).
+- Reviewer: kimi   ·   Producer: claude-a
+- Started: 2026-11-15
+- Definition of Done: PR #1490 delivers Phase 2A (P2.1, P2.2, P2.3, P2.8) of the GH-1475 merge-cleanup
+  remediation plan exactly as `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md` (Phase 2A section)
+  specifies, with no regression to existing merge-cleanup behaviour and no new tests (XYZ-forge GH-831).
+
+### Context
+This is an **independent third-seat QA** after Codex plan QA (round 2, approved) and Codex final QA (round 1,
+approved: `relay-system/2026-11-14/gh1475-p2a-final-codex.md`). Do not repeat their verdicts; look for what
+they missed. The worktree is checked out at the PR head (`2e11f3d2`), so the changed files are the real files.
+
+**Operational envelope:** local single-operator developer CLI that lands a batch of PRs from one primary clone.
+Machinery must be commensurate; do not ask for distributed locks, journaling or enterprise fail-safes.
+
+**Read:** the plan doc above (Phase 2A), the PR body summary below, `.relay-artifacts/pr1490.diff`, and in full:
+`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, `scripts/ledger_merge.py`, `scripts/scan_clones.py`,
+`skills/2-daily/merge-cleanup/SKILL.md`, plus `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/README.md`.
+
+### Questions (answer each by number, cite file:line)
+1. **P2.1 same-run re-pin after the script's own B1 repair.** After the repair push, does the run land *only*
+   the exact commit it pushed? Trace: what happens if (a) a third party pushes to the PR branch during the CI
+   wait, (b) a required or configured check fails or never reports, (c) GitHub still reports CONFLICTING /
+   UNKNOWN mergeability after the repair, (d) `development` moves again during the wait. Each must stop or
+   defer, never land an unverified head. Cite the observed rejection path.
+2. **P2.2 `qualification.wait_for_checks`.** Is the opt-in honoured when the repo has zero required checks?
+   What happens with a misspelled check name that never appears — bounded wait then stop, or silent pass?
+3. **P2.3 clone pruning (destructive).** Can the prune ever delete (a) a clone with unpushed commits or dirty
+   files, (b) a clone a live process has open — including the `scan_clones.inspect_open_handles` cwd fix,
+   (c) anything outside tool-owned `merge-cleanup-*` / `merge-check-*` folders in the temp root (symlinks,
+   name-prefix collisions, `TMPDIR` pointing somewhere odd), (d) a clone belonging to a concurrent run?
+   Also: on exit 3, are only clones of PRs that actually *landed* removed?
+4. **P2.8 dry-run past the first ledger hub.** Is the preview strictly non-mutating (no push, no pin
+   write that a later `--resume --execute` would trust incorrectly)?
+5. **Exit-code contract** (0/2/3/4/5 in SKILL.md): does every new path return a documented code, and does
+   SKILL.md describe the new behaviour accurately?
+6. **Test edits** in `test/gh534_phase_b_tests.py` / `phase_c_tests.py`: were assertions only *updated* to the
+   new single-run behaviour, or was any coverage weakened or any new test added?
+7. **Commensurate complexity:** flag anything over-built or under-built relative to the plan.
+
+Grade each finding `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]` with file:line; behaviour-change requests need
+`Observed input:` / `Affected scope:` / `Falsifier:`. You may run read-only probes under `.relay-scratch/`
+only; do not run `validate.sh`, `test/*.sh` or pytest here (mark such claims `[Unverified — needs clone run]`).
+
+### PR body (summary)
+## Summary
+Phase 2A of #1475 (P2.1, P2.2, P2.3, P2.8), from the 13-PR batch post-mortem (BinoidCBD/LTVera-Pandas#1095). Fewer cycles, fewer manual CI waits, bounded disk.
+
+- **P2.1 Re-pin after this run's own B1 repair (F13).** A head the run's B1 repair pushed (GitHub reports exactly that commit, second-clone validated and re-gated) no longer defers. The run waits for its checks on that commit. If the pre-repair head reported required checks, every "no required checks" read on the new head counts as *not registered yet* and is waited for. When the checks pass, the run refreshes once more. If the head is still the repair, it re-pins: `args._pins`, the selection file through the existing single writer `pin_selection` (stored forecast kept), and `batch_record.set_allowlist`. The PR then lands in the same run. Any other off-pin head, an external push, a failed publication or checks that never pass still defer.
+- **P2.2 `qualification.wait_for_checks: [names]` (F6).** An opt-in key in `.merge-cleanup.json`, validated in `resolve_merge_policy`. The new `checks_state` keeps `required_checks_state` unchanged and adds one `gh pr checks --json name,bucket` read only when names are declared. A failing name is failing; an absent or unfinished one is pending; the worse result wins. The existing pending, poll and defer logic then applies. The F6 dry-run warning is silent when checks are declared.
+- **P2.3 Retained-clone pruning (F1).** At every landing-loop end, older `merge-cleanup-*`/`merge-check-*` folders under the temp root are pruned. Per prefix it keeps the newest `MERGE_CLEANUP_KEEP_WORKDIRS` (default 3) and anything touched in the last hour, and only touches this uid's real directories. Removal goes through the existing `_remove_own_scratch` (now with an optional `root`), and only after `scan_clones.inspect_open_handles` verifies the folder idle. Pruning is skipped when `pgrep` sees another `merge_cleanup.py` or cannot answer. On exit 3, with nothing kept on purpose, the landed PRs' `pr-<n>-*` clones and their `verify-<sha8>` clone are released; deferred PRs' clones stay.
+- **P2.8 Dry run previews the whole batch.** A B1-repairable conflict in a dry run logs B1's preview and continues, instead of stopping at "B1 stopped".
+- **Pre-existing defect fixed (found by the P2.3 manual check).** `inspect_open_handles` used the strictly-inside `_within`, so a process whose cwd *is* the folder root (a shell sitting in a clone) was not counted as a holder. The root now counts. Teardown uses the same probe, so it now preserves such a checkout, as WORKTREE-SAFETY intends.
+
+Existing tests that pinned the old second cycle were updated truthfully: `gh534_phase_b_tests.py` `land_repaired` became `assert_repinned` (MERGED, no deferral, and the published selection pins the merged head), plus four `gh534_phase_c_tests.py` call sites. No new tests, suites or registry entries (GH-831).
+
+## Verification
+- Existing suite: `bash test/gh436-merge-cleanup.sh`, 227 tests OK (`TESTS-RESULTS/2026-11-14+GH-1475-phase2a/existing-suite-summary.txt`).
+- Manual checks with red controls on base `a9ece7fcf`, one driver run against both trees: P2.8 two-hub preview; P2.2 policy, wait, timeout, absent-name and no-key control; P2.1 (a)–(f), including external push, never-registered checks and failed publication; P2.3 open-handle red control, prune, four negative controls plus a positive case, exit-3 release. See `README.md` and `manual-check-run.log`.
+- Smoke on a disposable full clone of this repo: a real dry run of #1413/#1467/#1471 previews both B1 hubs after #1413's code handoff; pruning runs through the real CLI; a rerun; `--show-merge-policy` accepts `wait_for_checks` and refuses `[]` (`smoke.log`).
+- Pre-push full gate GREEN 408/408 on `5d9be5bf8`; the receipt-only commit on top passed the docs gate.
+- All local runs used an isolated `TMPDIR`. The policy prunes the temp root at every loop end, and pruning this machine's existing scratch was outside the task. **After merge, running the suites or the tool prunes old tool-owned folders in the user's temp root by design.**
+
+## QA
+- Plan QA (Codex, `relay-xyz`): Approved in round 2 of 3. Round 1 had three Shoulds, all implemented: the registration guard on every poll, the `verify-*` clone in the exit-3 release, and a tri-state pgrep with negative controls. Two round-2 nits were applied in the code. Thread: `relay-system/2026-11-14/gh1475-p2a-plan-codex.md`.
+- Final QA (Codex): Approved in round 1 with no findings; it also ran a read-only helper probe (6/6) and verified the receipt hashes. Thread: `relay-system/2026-11-14/gh1475-p2a-final-codex.md`.
+
+## Not in this PR
+- **P2A.measure** stays unchecked. How to measure: run the next real batch, or a fixture batch with at least one ledger hub, on this code. Record per-PR wall time, cycles per hub PR, manual CI waits, and retained-clone disk after the run, under `TESTS-RESULTS/`. Compare with the 2026-11-14 baseline: about 30 min per PR, two cycles per hub, every CI wait manual, 7–13 GB retained. P2A.decision follows.
+- Phase 2B (P2.4–P2.7) and Phase 3.
+
+Rating unchanged: `rated 60/65/50/75`. Rollback: revert the PR; pruned scratch is not restored by a revert.
+
+Refs #1475
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+<!-- codesmith:footer -->
+---
+<a href="https://backend.blacksmith.sh/track/enable-autofix?expires=1797321861&installation_model_id=449991&pr_number=1490&ref=codesmith_pr_footer&repository=HiQS-Labs%2FXYZ-forge&return_to=https%3A%2F%2Fgithub.com%2FHiQS-Labs%2FXYZ-forge%2Fpull%2F1490&signature=632f5990c589b97131be7375ef9eab5e0e67fad7118d199dd62ef68e8390814c"><picture><source media="(prefers-color-scheme: dark)" srcset="https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-light.svg"><img alt="Autofix with [code]smith" src="https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-dark-3x.png" width="190" height="28"></picture></a>
+<sup><a href="https://app.blacksmith.sh/HiQS-Labs/codesmith/XYZ-forge/pr/1490?autoLogin=true&ref=codesmith_pr_footer">Open in [code]smith</a> · Need help on this PR? Tag <code>@codesmith-bot</code> with what you need.</sup>
+
+<!-- codesmith:autofix:disabled -->
+<!-- /codesmith:footer -->
+
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
