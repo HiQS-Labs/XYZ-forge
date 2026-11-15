@@ -60,7 +60,7 @@ Phrases overlap ("is this already implemented somewhere" can mean two things). P
 - **How it is handled today, per the operator.**
 - **What it's not.**
 
-This is the paraphrase-first lens (Elephant-Goldfish Model, GH-1414). Its rules are written once in [`start-task` Step 6](../../1-hourly/start-task/SKILL.md); follow them, do not restate them: ground each exclusion in something the operator said, label inference as inference, never invent a non-goal. A heading that cannot be filled from the operator's words is the first unknown: write `not stated` and carry it to step 4. The capability list below is built from this paraphrase, so a wrong reading of the problem is visible here, before it decides what gets searched.
+This is a self-paraphrase adapted from the paraphrase-first lens (Elephant-Goldfish Model, GH-1414). The lens proper uses a reader with no session history; here the same agent says the operator's words back, and the independent form is the optional `consult` hand-off below. The rules are written once in [`start-task` Step 6](../../1-hourly/start-task/SKILL.md); follow them, do not restate them: ground each exclusion in something the operator said, label inference as inference, never invent a non-goal. A heading that cannot be filled from the operator's words is the first unknown: write `not stated` and carry it to step 4. The capability list below is built from this paraphrase, so a wrong reading of the problem is visible here, before it decides what gets searched.
 
 Then write down, still before any search:
 

@@ -6,13 +6,13 @@ Manual evidence for [GH-1484](https://github.com/HiQS-Labs/XYZ-forge/issues/1484
 
 The operator accepted the skill "as a reuse map that shows its dismissals" and asked for the Elephant-Goldfish paraphrase-first lens (GH-1414) in the vetting. The plan's rewritten check no longer requires `tick` or ATE. Its five-point rubric was committed (`436e06a88`) before run 7.
 
-**The rewritten check is partly met. Neither run passes all five points.**
+**The rewritten check is partly met. Each run fully meets 3 of 5 points (1, 4 and 5).**
 
 | Point | Run 7 (`run-7-skill-answer-free-paraphrase-first.md`) | Run 8 (`run-8-skill-answer-free-opened-files-and-count.md`) |
 |---|---|---|
 | 1. Three paraphrase headings before the capability list | Met | Met |
 | 2. Every row cites `file:line`; every cited file was opened | **Not met.** `MARATHON-PLAN-2026-11-15.md:250` is cited in the owner column and is not in the opened list. | **Not met.** `utils/py/releases_app.py:951,4725` is cited and is not in the opened list. |
-| 3. Sweep gives a verdict per subsystem; each `set aside` has a source line or `inferred` | Met for those listed. ATE is on the map and absent from the sweep. | Partly. The count is given (79 skills, about 10 routed subsystems); about 69 are dismissed as one group. |
+| 3. Sweep gives a verdict per subsystem; each `set aside` has a source line or `inferred` | **Not met.** The listed subsystems each have a verdict, but the sweep is incomplete: ATE is on the map (`ROUTER.md:222`) and absent. | **Not met.** The count is given (79 skills, about 10 routed subsystems); about 69 are dismissed as one group. |
 | 4. No unbounded absence claim | Met | Met |
 | 5. New remainder and one next action | Met | Met |
 
