@@ -1,0 +1,48 @@
+# tested_commit fb38cc5db2a43bbba1a6433cc28280d4f8e4f7e3 (new) vs base 5967bde25 (red control)
+## P1.1
+wave-reconcile: git ref lock held by another process; retry 2/3 in 1s
+wave-reconcile: git ref lock held by another process; retry 3/3 in 2s
+RESULT ok
+primary HEAD == origin development: yes
+-- base
+error: cannot lock ref 'refs/remotes/origin/development': Unable to create '<scratch>/p11-base/primary/.git/refs/remotes/origin/development.lock': File exists.
+RESULT fail ReconcileError
+primary HEAD == origin development: no
+-- new, non-lock error
+RESULT fail ReconcileError code 2
+## P1.2
+new: process alive at 5s; log lines=25; first: merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (
+base: process alive at 5s; log lines=0; first: 
+## P1.3
+merge-cleanup: Landing clones removed after a clean run (<scratch>/p13-new-clean-rlz2q05a/merge-cleanup-e8qcko5f)
+new clean: rc=0 merge-cleanup-* left=0
+merge-cleanup: Landing clones retained for inspection under <scratch>/p13-new-deferred-489s4o23/merge-cleanup-psacch73
+new deferred: rc=2 merge-cleanup-* left=1
+merge-cleanup: Landing clones retained for inspection under <scratch>/p13-base-clean-ygn982l0/merge-cleanup-ef9ds2in
+base clean: rc=0 merge-cleanup-* left=1
+merge-cleanup: Landing clones retained for inspection under <scratch>/p13-base-deferred-u1v0x_0u/merge-cleanup-d9z8noda
+base deferred: rc=2 merge-cleanup-* left=1
+## P1.4
+new execute: rc=0 row11=merged/ok continuable=False issue_edit=True
+new dry-run: rc=0 row11=merged/failed: simulated continuable=True issue_edit=False
+new reconcile-fails: rc=2 row11=merged/failed: simulated continuable=True issue_edit=False
+new push-fails: rc=2 row11=merged/failed: simulated continuable=True issue_edit=False
+new record-sweep merged-unreconciled: rc=0 hints=['merge-cleanup: PR #11 landed but is not reconciled: recover with --reconcile-pr 11 --execute.']
+new record-sweep plus-open-row: rc=0 hints=['merge-cleanup: PR #11 landed but is not reconciled: recover with --reconcile-pr 11 --execute.', 'merge-cleanup: Planned PRs remain: continue with --resume --execute.']
+base execute: rc=0 row11=merged/failed: simulated continuable=True issue_edit=False
+base dry-run: rc=0 row11=merged/failed: simulated continuable=True issue_edit=False
+base reconcile-fails: rc=2 row11=merged/failed: simulated continuable=True issue_edit=False
+base push-fails: rc=2 row11=merged/failed: simulated continuable=True issue_edit=False
+base record-sweep merged-unreconciled: rc=0 hints=['merge-cleanup: Planned PRs remain: continue with --resume --execute.']
+base record-sweep plus-open-row: rc=0 hints=['merge-cleanup: Planned PRs remain: continue with --resume --execute.']
+## P1.6
+new F6 checks='no required checks': rc=0 preflight_lines=1 gh_calls=0
+new F6 checks='1 required check(s) passing: ci': rc=0 preflight_lines=0 gh_calls=0
+new clean env: []
+new forced: 5.0 GB free under <scratch>/harness-turn-8iglrz6x (below 20 GB); landing and check clones may fill the disk
+new forced: running on battery; use wall power and caffeinate for an unattended batch
+new forced: TMPDIR is <scratch>/harness-turn-8iglrz6x; a harness may delete a per-turn temp dir mid-run. Prefer TMPDIR=/tmp
+new forced: another merge_cleanup.py --execute is running (pid 424242); run one landing batch per machine
+base F6 checks='no required checks': rc=0 preflight_lines=0 gh_calls=0
+base F6 checks='1 required check(s) passing: ci': rc=0 preflight_lines=0 gh_calls=0
+base: no preflight_warnings() (base tree)

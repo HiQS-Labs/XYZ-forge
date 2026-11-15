@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA of the 3-phase issue plan by agy Gemini 4 Argon High: Approved r2 ([comment](https://github.com/HiQS-Labs/XYZ-forge/issues/1475#issuecomment-6889783329)); recon and this Phase 1 plan | Codex plan QA of this doc, then implementation |
+| Implemented P1.1–P1.6 (`fb38cc5db`); focused suites green (gh436: 227 tests OK); manual checks pass with base red controls; smoke pass (`TESTS-RESULTS/2026-11-14+GH-1475/`). Plan QA: Argon r2 Approved, Codex r2 Approved | Codex final QA, full gate on the final commit, ready PR |
 
 ## Table of contents
 - [Problem](#problem)
