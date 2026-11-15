@@ -701,7 +701,7 @@ def pre_merge_ledger_gate(clone: Path, gh_bin: str = "gh", integration_branch: s
 FORECAST_ASSUMPTIONS = (
     "text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off",
     "reconcile commits written after each landing are not simulated and can add conflicts",
-    "a B1 repair pushes a new head, which defers that PR in the run that repairs it",
+    "a B1 repair pushes a new head, which must pass its checks again before it lands (it defers if they do not)",
 )
 
 

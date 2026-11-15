@@ -17,6 +17,7 @@ import sys
 import argparse
 import subprocess
 import shutil
+import stat
 import time
 import signal
 import shlex
@@ -215,21 +216,131 @@ def run_command_in_session(cmd: str, cwd: Path, timeout: Optional[int] = None) -
         return p.returncode, stdout, stderr
 
 
-def _remove_own_scratch(path: Path, prefix: str) -> bool:
-    """GH-1475 (F1): delete a scratch directory this run created with mkdtemp. Proven first
-    (GH-567): a real, non-symlink directory directly under the resolved temp root, named with
+def _scratch_keep_reason(path: Path) -> Optional[str]:
+    """GH-1475 (P2.3 QA): why a tool scratch folder must stay, or None when it may go. Kept when a
+    process holds it (or lsof cannot tell), or when a clone inside has untracked files, a stash, a
+    linked worktree, or tracked changes outside an in-progress merge. The tool's own simulations
+    leave tracked changes only under MERGE_HEAD, so anything else is someone's work."""
+    handles = scan_clones.inspect_open_handles(path)
+    if not handles.get("verified") or handles.get("active"):
+        return f"in use or unverifiable ({handles.get('details') or 'lsof'})"
+    for git_dir in [path / ".git", *path.glob("*/.git"), *path.glob("*/*/.git")]:
+        if not git_dir.exists():
+            continue
+        repo = git_dir.parent
+        st = run_git(repo, ["status", "--porcelain", "--untracked-files=normal"])
+        stash = run_git(repo, ["stash", "list"])
+        if st.returncode or stash.returncode:
+            return f"cannot read git state of {repo.name}"
+        lines = st.stdout.splitlines()
+        if any(line.startswith("??") for line in lines) or stash.stdout.strip():
+            return f"untracked files or a stash in {repo.relative_to(path)}"
+        merging = run_git(repo, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]).returncode == 0
+        if lines and not merging:
+            return f"tracked changes outside a merge in {repo.relative_to(path)}"
+        wt = run_git(repo, ["worktree", "list", "--porcelain"])
+        if wt.returncode or sum(l.startswith("worktree ") for l in wt.stdout.splitlines()) > 1:
+            return f"linked worktree or unreadable worktree list in {repo.relative_to(path)}"
+    return None
+
+
+def _remove_own_scratch(path: Path, prefix: str, root: Optional[Path] = None) -> bool:
+    """GH-1475 (F1): delete a tool-created scratch directory. Proven first (GH-567): a real,
+    non-symlink directory directly under the resolved `root` (default: the temp root), named with
     `prefix`. Anything else, or any error, keeps it and returns False."""
     try:
-        root = Path(tempfile.gettempdir()).resolve()
+        root = (root or Path(tempfile.gettempdir())).resolve()
         if (not path.name.startswith(prefix) or path.is_symlink() or not path.is_dir()
                 or path.resolve().parent != root):
             log_warn(f"Not removing {path}: not a {prefix}* directory under {root}")
+            return False
+        reason = _scratch_keep_reason(path)
+        if reason:
+            log(f"Keeping {path}: {reason}")
             return False
         shutil.rmtree(path)
         return True
     except OSError as exc:
         log_warn(f"Could not remove {path}: {exc}")
         return False
+
+
+KEEP_SCRATCH_ENV = "MERGE_CLEANUP_KEEP_WORKDIRS"
+SCRATCH_PREFIXES = ("merge-cleanup-", "merge-check-")
+SCRATCH_MIN_AGE_S = 3600
+# tempfile.mkdtemp names (8 chars) and the only entries the tool writes inside each folder.
+_SCRATCH_SHAPE = {p: re.compile(rf"^{p}[a-z0-9_]{{8}}$") for p in SCRATCH_PREFIXES}
+_SCRATCH_CHILD = {"merge-cleanup-": re.compile(r"^(pr-\d+-[0-9a-f]{8}-[a-z0-9_]{8}|verify-[0-9a-f]{8})$"),
+                  "merge-check-": re.compile(r"^repo$")}
+
+
+def _tool_shaped(d: Path, prefix: str) -> bool:
+    try:
+        return bool(_SCRATCH_SHAPE[prefix].match(d.name)) and all(
+            _SCRATCH_CHILD[prefix].match(c.name) for c in d.iterdir())
+    except OSError:
+        return False
+
+
+def _other_merge_cleanup_running() -> Optional[bool]:
+    """True/False from `pgrep -f merge_cleanup.py` (ignoring this process and its wrappers); None
+    when the probe cannot answer, which callers treat as "maybe"."""
+    try:
+        res = subprocess.run(["pgrep", "-f", r"merge_cleanup\.py"], capture_output=True, text=True,
+                             timeout=5, check=False)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+    if res.returncode == 1:
+        return False
+    if res.returncode != 0:
+        return None
+    mine = scan_clones._ancestor_pids()
+    return any(p.isdigit() and int(p) not in mine for p in res.stdout.split())
+
+
+def prune_retained_scratch(current: Optional[Path] = None) -> None:
+    """GH-1475 (P2.3, F1): bound retained landing and check clones. Per prefix, keep the newest
+    MERGE_CLEANUP_KEEP_WORKDIRS (default 3) and anything touched in the last hour; remove older ones
+    only when `lsof` verifies nothing holds them. Skipped while another merge_cleanup.py may run."""
+    try:
+        keep = int(os.environ.get(KEEP_SCRATCH_ENV, "3"))
+        keep = keep if keep >= 0 else 3
+    except ValueError:
+        keep = 3
+    other = _other_merge_cleanup_running()
+    if other is not False:
+        log(f"Scratch pruning skipped: {'another merge_cleanup.py is running' if other else 'process check unavailable'}")
+        return
+    root = Path(tempfile.gettempdir()).resolve()
+    now = time.time()
+    pruned, kept = [], []
+    for prefix in SCRATCH_PREFIXES:
+        found = []
+        try:
+            for d in root.iterdir():
+                try:
+                    st = d.lstat()
+                except OSError:
+                    continue
+                if (d.name.startswith(prefix) and stat.S_ISDIR(st.st_mode) and st.st_uid == os.getuid()
+                        and (current is None or d != current.resolve())):
+                    found.append((st.st_mtime, d))
+        except OSError as exc:
+            log_warn(f"Scratch pruning skipped: cannot list {root} ({exc})")
+            return
+        found.sort(reverse=True)
+        for mtime, d in found[keep:]:
+            if now - mtime < SCRATCH_MIN_AGE_S:
+                continue
+            if not _tool_shaped(d, prefix):
+                kept.append(f"{d.name} (not a tool-shaped folder)")
+            elif _remove_own_scratch(d, prefix):
+                pruned.append(d.name)
+            else:
+                kept.append(d.name)
+    if pruned or kept:
+        log(f"Scratch pruning: removed {len(pruned)} old retained clone folder(s) under {root}"
+            + (f"; kept {len(kept)}: " + ", ".join(kept) if kept else ""))
 
 
 def run_isolated_check(primary_repo: Path, command: str, timeout: int) -> Tuple[int, str, str]:
@@ -288,10 +399,12 @@ def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dic
     # GH-1159: the repo's own batch-sweep cadence; absent means no sweep command is printed.
     qual = data.get("qualification")
     if qual is not None:
-        if (not isinstance(qual, dict) or set(qual) - {"full_suite", "sweep_command", "canary_command"}
+        if (not isinstance(qual, dict)
+                or set(qual) - {"full_suite", "sweep_command", "canary_command", "wait_for_checks"}
                 or qual.get("full_suite") not in ("promotion", "per_batch", "none")):
             raise ValueError(f"{policy_path}: qualification must be an object with full_suite "
-                             "promotion|per_batch|none and optional sweep_command / canary_command")
+                             "promotion|per_batch|none and optional sweep_command / canary_command / "
+                             "wait_for_checks")
         cmd = qual.get("sweep_command")
         if cmd is not None and (not isinstance(cmd, str) or not cmd.strip()
                                 or qual["full_suite"] == "none"):
@@ -300,6 +413,12 @@ def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dic
         canary = qual.get("canary_command")
         if canary is not None and (not isinstance(canary, str) or not canary.strip()):
             raise ValueError(f"{policy_path}: qualification.canary_command must be a non-empty string")
+        # GH-1475 (F6): named checks to wait for even when the repo requires none.
+        names = qual.get("wait_for_checks")
+        if names is not None and (not isinstance(names, list) or not names
+                                  or not all(isinstance(n, str) and n.strip() for n in names)):
+            raise ValueError(f"{policy_path}: qualification.wait_for_checks must be a non-empty list of "
+                             "check names")
     if strategy not in (None, "merge", "squash", "rebase"):
         raise ValueError(f"unsupported merge strategy: {strategy!r}")
     if preserve and strategy not in (None, "merge"):
@@ -673,7 +792,8 @@ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
         e = (fc.get("prs") or {}).get(str(n), {})
         if e.get("status") == "unknown":
             out.append(f"#{n}: unknown — {e.get('reason') or 'not simulated'}")
-    out.append(f"PRs a B1 repair would defer in the run that repairs them: {fc.get('repair_deferrals', 0)}")
+    out.append(f"PRs needing a B1 repair (each lands in the same run once its new head's checks pass, "
+               f"else defers): {fc.get('repair_deferrals', 0)}")
     nums = lambda ns: ", ".join(f"#{n}" for n in ns) or "none"
     hubs = fc.get("hubs")
     if hubs:  # GH-1470: who holds the conflicts, and whether the rest really fold clean without them
@@ -770,6 +890,54 @@ def required_checks_state(pr_num: int, repo_path: Path) -> Tuple[str, str]:
     if pending or odd:
         return "pending", ", ".join(pending + odd)
     return "ok", f"{len(checks)} required check(s) green"
+
+
+NO_REQUIRED = "no required checks"
+_CHECK_RANK = {"ok": 0, "pending": 1, "unknown": 2, "failing": 3}
+
+
+def checks_state(pr_num: int, repo_path: Path, declared: Optional[List[str]] = None,
+                 had_required: bool = False) -> Tuple[str, str]:
+    """GH-1475: the merge's check verdict. The required part is `required_checks_state`, unchanged,
+    except that `had_required` (the head before this run's B1 repair reported required checks) reads
+    gh's "no required checks" as not yet registered (pending). `declared` (policy
+    `qualification.wait_for_checks`) adds one read of all checks: a declared name that fails is failing,
+    one absent or not finished is pending. The worse of the two parts wins."""
+    state, detail = required_checks_state(pr_num, repo_path)
+    if had_required and detail == NO_REQUIRED:
+        state, detail = "pending", "required checks not yet registered on the repaired head"
+    if not declared:
+        return state, detail
+    res = _gh(["pr", "checks", str(pr_num), "--json", "name,bucket"], repo_path)
+    try:
+        checks = json.loads(res.stdout) if res.stdout.strip() else None
+    except ValueError:
+        checks = None
+    if not isinstance(checks, list):
+        err = (res.stderr or "").strip()
+        if res.returncode != 0 and ("no checks reported" in err or "no required checks reported" in err):
+            checks = []
+        else:
+            d_state, d_detail = "unknown", (err or f"gh pr checks exited {res.returncode} with no JSON")[:200]
+            checks = None
+    if checks is not None:
+        buckets: Dict[str, Set[str]] = {}
+        for c in checks:
+            if isinstance(c, dict):
+                buckets.setdefault(c.get("name") or "?", set()).add(c.get("bucket") or "")
+        failing = [n for n in declared if buckets.get(n, set()) & {"fail", "cancel"}]
+        waiting = [n + ("" if n in buckets else " (not reported)") for n in declared
+                   if n not in buckets or not buckets[n] <= {"pass", "skipping"}]
+        if failing:
+            d_state, d_detail = "failing", ", ".join(failing)
+        elif waiting:
+            d_state, d_detail = "pending", ", ".join(waiting)
+        else:
+            d_state, d_detail = "ok", f"{len(declared)} declared check(s) green"
+    if detail == NO_REQUIRED:
+        return d_state, d_detail
+    worst = state if _CHECK_RANK.get(state, 2) >= _CHECK_RANK.get(d_state, 2) else d_state
+    return worst, f"{detail}; {d_detail}"
 
 
 def post_issue_marker(repo_path: Path, issue_num: int, body: str, dry_run: bool = True) -> bool:
@@ -1704,7 +1872,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
     deferred_sync_pending = False
     deferred_sync_prs: Set[int] = set()
     clean = False  # GH-1475 (F1): set only on the single clean return below
+    deferred_only = False
     no_checks_warned = False
+    landed_scratch: List[Tuple[Path, str]] = []  # GH-1475 (P2.3): landed PRs' clones, released on exit 3
     if track is not None:
         track["failed"] = failed
     pending = {pr["number"] for pr in ordered_prs}
@@ -1723,6 +1893,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             log(f"Merge policy: preserve_commit_history={policy['preserve_commit_history']}; "
                 f"strategy={strategy}; source={policy['source']}")
             p_num = pr["number"]
+            own_repair: Optional[str] = None  # GH-1475 (P2.1): the head this run's B1 repair pushed
+            had_required = False
             # C + GH-623: only HARD dependencies (explicit "depends on #N") block a PR on a
             # failed predecessor. Collision edges (`_soft_deps`) decide sequence only — a
             # dependent is attempted anyway and the landing simulation decides; a genuinely
@@ -1869,12 +2041,19 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     failed[p_num] = "handoff"
                     keep_workdir = True
                     continue
+                if dry_run and not b1["resolved"]:
+                    # GH-1475 (P2.8): in a dry run every non-handoff result is B1's preview, not a
+                    # stop; show it and keep previewing the rest of the batch.
+                    log(f"[DRY RUN] PR #{p_num}: B1 would repair this ledger conflict "
+                        f"({b1['reason'].removeprefix('[DRY RUN] ')}); "
+                        "--execute repairs it, waits for the new head's checks and re-pins")
+                    continue
                 if not b1["resolved"]:
                     if idx is not None:
                         attempt_record.finish(record, idx, "stopped", reason=b1["reason"])
                     log_err(f"PR #{p_num}: B1 stopped — {b1['reason']} (clone kept at {clone})")
                     keep_workdir = True
-                    return 2 if not dry_run else 0
+                    return 2
                 if idx is not None:
                     attempt_record.finish(record, idx, "resolved", commit=b1["commit"])
                 ok, why = validate_head_in_second_clone(primary_repo, clone, b1["commit"], workdir)
@@ -1882,6 +2061,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     log_err(f"PR #{p_num}: resolved head failed validation — {why}; NOT pushed")
                     keep_workdir = True
                     return 2
+                # GH-1475 (P2.1): did the pre-repair head report required checks? If so, "none" on
+                # the repaired head means they are not registered yet, never that none are required.
+                had_required = required_checks_state(p_num, primary_repo)[1] != NO_REQUIRED
                 ok, why = push_resolved_head(info, clone, b1["commit"], primary_repo)
                 if not ok and why == DRAFT_REFUSAL:
                     log(f"PR #{p_num}: SKIPPED (draft before repaired-head push; B1 result kept at {clone})")
@@ -1931,6 +2113,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     keep_workdir = True
                     return 2
                 clone = prep["clone"]
+                own_repair = b1["commit"]
 
             # E.6: the ledger gate on the simulated landing.
             gate = pre_merge_ledger_gate(clone, gh_bin=_gh_bin(), integration_branch=branch)
@@ -1945,8 +2128,11 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
 
             pinned = (getattr(args, "_pins", None) or {}).get(p_num)
-            if not dry_run and info.get("headRefOid") != pinned:
-                # GH-1226: a B1-repaired head is never the pin; defer before waiting on its new CI.
+            repinning = (not dry_run and own_repair is not None and pinned is not None
+                         and info.get("headRefOid") == own_repair)
+            if not dry_run and info.get("headRefOid") != pinned and not repinning:
+                # GH-1226: an off-pin head is never merged; GH-1475 (P2.1) only this run's own B1
+                # repair may be re-pinned, once its checks pass on that exact commit.
                 log_err(f"PR #{p_num}: DEFERRED — head {str(info.get('headRefOid'))[:10]} is not the dry-run pin "
                         f"{str(pinned)[:10]}; re-run the dry run to re-pin once its checks finish")
                 failed[p_num] = "deferred: head is not the dry-run pin"
@@ -1954,8 +2140,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             # GH-1226: the merge waits for this head's required checks — bounded (from #1231), then
             # pending or unreadable defers (exit 3; re-run once CI settles), failing is not merged;
             # neither stops the queue.
-            checks, detail = required_checks_state(p_num, primary_repo)
-            if dry_run and detail == "no required checks" and not no_checks_warned:
+            declared = (policy.get("qualification") or {}).get("wait_for_checks")
+            checks, detail = checks_state(p_num, primary_repo, declared, had_required and repinning)
+            if dry_run and detail == NO_REQUIRED and not declared and not no_checks_warned:
                 no_checks_warned = True  # GH-1475 (F6): once per run
                 log_warn("PRE-FLIGHT: no required status checks are reported for this repository's PRs; "
                          "the script will not wait for CI")
@@ -1967,7 +2154,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     log(f"PR #{p_num}: waiting for required check(s) {detail} ({int(waited)}s of {int(wait)}s)")
                     _sleep(poll)
                     waited += poll
-                    checks, detail = required_checks_state(p_num, primary_repo)
+                    checks, detail = checks_state(p_num, primary_repo, declared, had_required and repinning)
             if checks != "ok" and dry_run:  # a preview reports it; only --execute defers
                 log(f"[DRY RUN] PR #{p_num}: required checks {checks} ({detail}) — --execute would not merge it yet")
             elif checks != "ok":
@@ -1980,6 +2167,38 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 continue
             else:
                 log(f"PR #{p_num}: required checks: {detail}")
+            if repinning:
+                # GH-1475 (P2.1): checks passed on the repaired head; re-pin only if nothing else moved it.
+                now = refresh_pr_with_retry(p_num, primary_repo)
+                if now.get("error") or now.get("headRefOid") != own_repair:
+                    log_err(f"PR #{p_num}: DEFERRED — head {str(now.get('headRefOid') or now.get('error'))[:10]} "
+                            f"moved after this run's B1 repair {own_repair[:10]}; re-run the dry run to re-pin")
+                    failed[p_num] = "deferred: head moved after this run's B1 repair"
+                    continue
+                # The ledger gate ran against the clone's origin/<branch>; a base that moved during
+                # the wait was never gated, so that case goes back to a fresh dry run.
+                gated = run_git(clone, ["rev-parse", f"origin/{branch}"]).stdout.strip()
+                remote = _net_git(clone, ["ls-remote", "origin", f"refs/heads/{branch}"])
+                live_base = remote.stdout.split()[0] if remote.returncode == 0 and remote.stdout.split() else ""
+                if not gated or live_base != gated:
+                    log_err(f"PR #{p_num}: DEFERRED — origin/{branch} moved during the check wait "
+                            f"({gated[:10] or '?'} -> {live_base[:10] or 'unreadable'}); re-run the dry run to re-pin")
+                    failed[p_num] = f"deferred: {branch} moved after this run's B1 repair"
+                    continue
+                staged = dict(args._pins)
+                staged[p_num] = own_repair
+                stored = (_read_selection(primary_repo, branch) or {}).get("forecast")
+                if not pin_selection(primary_repo, branch, staged,
+                                     [{"number": n, "headRefOid": sha} for n, sha in staged.items()],
+                                     forecast=stored if isinstance(stored, dict) else None):
+                    log_err(f"PR #{p_num}: DEFERRED — re-pin not published; re-run the dry run to re-pin")
+                    failed[p_num] = "deferred: re-pin not published"
+                    continue
+                args._pins = staged
+                if batch is not None:
+                    batch_record.set_allowlist(batch, {p_num: own_repair})
+                log(f"PR #{p_num}: re-pinned to {own_repair[:10]} after this run's B1 repair "
+                    "(checks passed on that commit)")
 
             if dry_run:
                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
@@ -2008,8 +2227,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             pinned = (getattr(args, "_pins", None) or {}).get(p_num)
             if pinned is None or live.get("headRefOid") != pinned:
-                # GH-1226: only the head the dry run pinned may land. A B1 repair pushed a new head
-                # whose checks may not even be registered yet: defer it to a fresh dry run.
+                # GH-1226: only the head the dry run pinned (or this run's re-pinned B1 repair,
+                # GH-1475 P2.1) may land; anything else defers to a fresh dry run.
                 log_err(f"PR #{p_num}: DEFERRED — head {str(live.get('headRefOid'))[:10]} is not the dry-run pin "
                         f"{str(pinned)[:10]}; re-run the dry run to re-pin once its checks finish")
                 failed[p_num] = "deferred: head is not the dry-run pin"
@@ -2023,6 +2242,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             _MERGED_THIS_RUN.add(p_num)
             _record_merge_outcome(batch, p_num, merged_oid, primary_repo)
+            landed_scratch += [(d, f"pr-{p_num}-") for d in sorted(workdir.glob(f"pr-{p_num}-*"))]
+            if own_repair:
+                landed_scratch.append((workdir / f"verify-{own_repair[:8]}", "verify-"))
             # Land it locally before anything writes into the primary. In particular, emitting
             # pr_merged before this fast-forward dirties releases.sql and can block the landing
             # (GH-624). GH-623: the fetch is bounded and retried on transient network failures.
@@ -2126,6 +2348,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     f"{len(resumed_parked)} parked on resume, "
                     f"{other} handed off or parked): "
                     + ", ".join(f"#{n} ({w})" for n, w in failed.items()))
+            deferred_only = not keep_workdir  # GH-1475 (P2.3): nothing kept a clone on purpose
             return 3
         clean = True
         return 0
@@ -2136,7 +2359,14 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
         if clean and not keep_workdir and not deferred_sync_pending and _remove_own_scratch(workdir, "merge-cleanup-"):
             log(f"Landing clones removed after a clean run ({workdir})")
         else:
+            if deferred_only and not keep_workdir and not deferred_sync_pending and landed_scratch:
+                # GH-1475 (P2.3): kept only because a later PR deferred; landed PRs' clones are done.
+                gone = [d.name for d, prefix in landed_scratch
+                        if d.exists() and _remove_own_scratch(d, prefix, root=workdir)]
+                if gone:
+                    log(f"Released landed PRs' clones: {', '.join(gone)}")
             log(f"Landing clones retained for inspection under {workdir}")
+        prune_retained_scratch(workdir)
 
 
 def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:
