@@ -192,4 +192,13 @@ Reviewed the entire plan, not only the Round 2 changes, and reread the required 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T07:04:45Z
+task: RELAY-gh1486-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 1f4a53213d25a64ff27ba9c294cbd3a0e26a82a1
+added-range: 23276+8836
+added-sha256: 066fcd2befe6878fbd0ce0483e17f817dbccaaa9543462843d64395099665223
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
