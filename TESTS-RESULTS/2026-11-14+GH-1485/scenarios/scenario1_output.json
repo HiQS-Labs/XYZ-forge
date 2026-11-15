@@ -1,7 +1,11 @@
 {
   "test": "Control 1: Upstream/Downstream Correlation",
-  "input_consumer_issue": "BinoidCBD/LTVera-Pandas#1102",
-  "upstream_resolved": "HiQS-Labs/XYZ-forge",
+  "consumer_issue": "BinoidCBD/LTVera-Pandas#1102",
+  "resolved_upstream": "HiQS-Labs/XYZ-forge",
+  "mapped_paths": [
+    "utils/py/merge_cleanup.py",
+    "utils/py/wave_reconcile.py"
+  ],
   "signature_boundary": "repo-local",
   "verdict": "PASS"
 }

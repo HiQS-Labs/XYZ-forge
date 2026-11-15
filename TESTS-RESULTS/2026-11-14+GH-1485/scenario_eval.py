@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCENARIOS_DIR = os.path.join(HERE, "scenarios")
@@ -16,15 +15,26 @@ print("=== Running Scenario Evaluator for GH-1485 Controls ===")
 # Control 1: Upstream/Downstream Correlation
 with open(os.path.join(SCENARIOS_DIR, "scenario1_input.json")) as f:
     s1_in = json.load(f)
+
+for req in ["consumer_repo", "issue", "error_string", "tool_config", "upstream_repo", "upstream_paths"]:
+    if req not in s1_in:
+        raise ValueError(f"Control 1 input missing required field: {req}")
+
 assert "Tool dependency detection" in skill_text
 assert "Producer ↔ consumer correlation" in skill_text
 assert "The filed umbrella and its scored Cluster signature remain strictly **repo-local**" in skill_text
+
+# Verify upstream paths are repo-relative and do not leak foreign repo namespace
+paths_repo_relative = all(not os.path.isabs(p) and not p.startswith(s1_in["consumer_repo"]) for p in s1_in["upstream_paths"])
+assert paths_repo_relative, "Upstream paths must be strictly repo-relative to target repo"
+
 s1_out = {
     "test": "Control 1: Upstream/Downstream Correlation",
-    "input_consumer_issue": f"{s1_in['consumer_repo']}#{s1_in['issue']}",
-    "upstream_resolved": s1_in["upstream_repo"],
+    "consumer_issue": f"{s1_in['consumer_repo']}#{s1_in['issue']}",
+    "resolved_upstream": s1_in["upstream_repo"],
+    "mapped_paths": s1_in["upstream_paths"],
     "signature_boundary": "repo-local",
-    "verdict": "PASS"
+    "verdict": "PASS" if paths_repo_relative and s1_in["upstream_repo"] else "FAIL"
 }
 with open(os.path.join(SCENARIOS_DIR, "scenario1_output.json"), "w") as f:
     json.dump(s1_out, f, indent=2)
@@ -33,15 +43,28 @@ print("Control 1: PASS — Tool dependency linked without violating repo-local s
 # Control 2: Adjacency Negative Control
 with open(os.path.join(SCENARIOS_DIR, "scenario2_input.json")) as f:
     s2_in = json.load(f)
+
+for req in ["target_repo", "mention", "shared_paths", "shared_errors"]:
+    if req not in s2_in:
+        raise ValueError(f"Control 2 input missing required field: {req}")
+
 rule = "A cross-repo mention without matching error signature or file seam remains adjacent and is not counted."
 assert rule in skill_text
+
+shared_signals = len(s2_in["shared_paths"]) + len(s2_in["shared_errors"])
+is_cluster_member = shared_signals >= 2
+classification = "member" if is_cluster_member else "adjacent"
+
+assert not is_cluster_member, f"Expected mention with {shared_signals} signals to be rejected from membership"
+assert classification == "adjacent"
+
 s2_out = {
     "test": "Control 2: Adjacency Negative Control",
     "mention": s2_in["mention"],
-    "shared_signals": len(s2_in["shared_paths"]) + len(s2_in["shared_errors"]),
-    "cluster_member": False,
-    "classification": "adjacent",
-    "verdict": "PASS"
+    "shared_signals": shared_signals,
+    "cluster_member": is_cluster_member,
+    "classification": classification,
+    "verdict": "PASS" if (not is_cluster_member and classification == "adjacent") else "FAIL"
 }
 with open(os.path.join(SCENARIOS_DIR, "scenario2_output.json"), "w") as f:
     json.dump(s2_out, f, indent=2)
@@ -50,14 +73,47 @@ print("Control 2: PASS — Cross-repo mention without shared error/path rejected
 # Control 3: Catalyst Separation
 with open(os.path.join(SCENARIOS_DIR, "scenario3_input.json")) as f:
     s3_in = json.load(f)
+
+if not s3_in or not isinstance(s3_in, dict):
+    raise ValueError("Control 3 input must be a non-empty dictionary")
+if "primary_failure" not in s3_in or "amplifying_symptom" not in s3_in:
+    raise ValueError("Control 3 input missing required keys: 'primary_failure', 'amplifying_symptom'")
+
 assert "Primary Invariant Violation" in skill_text
 assert "Environmental Catalyst/Amplifier" in skill_text
 assert "Coincident resource pressure must not be mistaken for the primary invariant fault" in skill_text
+
+prim = s3_in["primary_failure"].lower()
+amp = s3_in["amplifying_symptom"].lower()
+
+# Dynamic plane classification
+if any(term in prim for term in ["lock ref", "race", "concurrency", "lock"]):
+    primary_category = "Concurrency / State"
+elif any(term in prim for term in ["space", "disk", "oom", "memory"]):
+    primary_category = "System / Resource"
+elif any(term in prim for term in ["platform", "harness", "driver"]):
+    primary_category = "Platform / Harness"
+else:
+    primary_category = "Domain Logic"
+
+if any(term in amp for term in ["space", "disk", "full", "retained"]):
+    catalyst_category = "System / Resource"
+elif any(term in amp for term in ["lock ref", "race", "concurrency"]):
+    catalyst_category = "Concurrency / State"
+else:
+    catalyst_category = "Other"
+
+assert primary_category == "Concurrency / State", f"Expected Concurrency/State, got {primary_category}"
+assert catalyst_category == "System / Resource", f"Expected System/Resource, got {catalyst_category}"
+assert primary_category != catalyst_category, "Catalyst and primary invariant must be in distinct planes"
+
 s3_out = {
     "test": "Control 3: Catalyst Separation",
-    "primary_invariant": "Concurrency / State (ref lock)",
-    "environmental_catalyst": "System / Resource (disk full from retained workdirs)",
-    "classification_held": True,
+    "primary_failure_raw": s3_in["primary_failure"],
+    "primary_plane": primary_category,
+    "amplifying_symptom_raw": s3_in["amplifying_symptom"],
+    "catalyst_plane": catalyst_category,
+    "planes_separated": primary_category != catalyst_category,
     "verdict": "PASS"
 }
 with open(os.path.join(SCENARIOS_DIR, "scenario3_output.json"), "w") as f:
@@ -68,7 +124,6 @@ print("Control 3: PASS — Storage exhaustion classified as catalyst, not root i
 with open(os.path.join(SCENARIOS_DIR, "scenario4_input.json")) as f:
     s4_in = json.load(f)
 
-# Evaluate whether s4_in meets SKILL.md contract
 required_keys = ["cluster", "run", "window", "weights", "paths", "errors", "issues", "commits", "signals"]
 missing_keys = [k for k in required_keys if k not in s4_in]
 has_absolute_path = any(os.path.isabs(p) for p in s4_in.get("paths", []))
@@ -83,7 +138,7 @@ assert len(rejection_reasons) > 0, "Expected malformed signature to be rejected"
 
 s4_out = {
     "test": "Control 4: Signature Rejection Control",
-    "input_cluster": s4_in["cluster"],
+    "input_cluster": s4_in.get("cluster", "unknown"),
     "witnessed_rejection": witnessed_rejection,
     "contract_enforced": True,
     "verdict": "PASS"
