@@ -7,7 +7,7 @@
   Uncertain latest results hold, existing attempt history remains, and preserved local branches
   and logs are retained. The bet is that composing existing owners removes the demonstrated
   manual handoff without another queue. Costly rollback disables the opt-in path and retains state.
-  Controlled CLI checks and existing Jog integration pass; final independent QA/full gate pending.
+  Controlled CLI checks cover recovery, continuation and preserved work; review and gate receipts are recorded with the implementation PR.
   Evidence: `TESTS-RESULTS/2026-11-15+GH-1400/SUMMARY.md`.
 
 ## 2026-11-14 — GH-1475: merge-cleanup Phase 2A (fewer cycles and waits)

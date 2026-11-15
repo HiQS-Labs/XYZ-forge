@@ -1,0 +1,53 @@
+[
+  {
+    "id": "detached-held",
+    "pass": true,
+    "detail": "jog: held: execution clone has detached HEAD; preserve it on a branch before alignment\n"
+  },
+  {
+    "id": "resume-missing",
+    "pass": true,
+    "detail": "jog: GH-901 resume held: latest gate retry has no valid matching result: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/resume-missing/primary/.tick/jog/jog-01M7G045X47BRNBBZVXY8WN3CT/retry.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/resume-missing/primary/.tick/jog/jog-01M7G045X47BRNBBZVXY8WN3CT/retry.json'\n"
+  },
+  {
+    "id": "resume-invalid",
+    "pass": true,
+    "detail": "jog: GH-901 resume held: latest gate retry has no valid matching result: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/resume-invalid/primary/.tick/jog/jog-01M7G0473J1FSS9P11HN86HKNQ/retry.json carries schema None; this Jog supports only 'marathon-drive/result@1' \u2014 refusing rather than guessing at an unknown contract\n"
+  },
+  {
+    "id": "resume-mismatch",
+    "pass": true,
+    "detail": "jog: GH-901 resume held: latest gate retry has no valid matching result: result receipt does not match the selected issue/execution\n"
+  },
+  {
+    "id": "resume-original",
+    "pass": true,
+    "detail": "jog: resume GH-901: terminal Marathon result re-projected (parked) \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\n"
+  },
+  {
+    "id": "resume-valid-retry",
+    "pass": true,
+    "detail": "jog: resume GH-901: terminal Marathon result re-projected (parked) \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\n"
+  },
+  {
+    "id": "retry-intent-kill-resume",
+    "pass": true,
+    "detail": {
+      "retry": [
+        {
+          "execution_id": "gh901-exec1-gateretry1",
+          "attempt": 1,
+          "status": "dispatched",
+          "result_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json"
+        }
+      ],
+      "resume": "jog: GH-901 resume held: latest gate retry has no valid matching result: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json'\n",
+      "wake": "jog: GH-901 held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json'\njog: execution clone aligned at f33b68b6fd4f89a843cb2b9765db40ca0d1dd338; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CVCHBNM9S71ZSAEA1C8/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: no pending tasks; held outcomes remain below.\njog: GH-901 parked: supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json'\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\n"
+    }
+  },
+  {
+    "id": "retry-completion",
+    "pass": true,
+    "detail": "jog: gate-only retry for GH-901 against head 76a2e3b0dc203cdc6b81d54f09f4aca7711f356b (no builder turn; satisfied-lane path)\njog: gate retry result: approved \u2192 queue parked \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\n"
+  }
+]

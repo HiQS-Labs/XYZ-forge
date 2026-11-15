@@ -39,3 +39,11 @@ PID-reuse or cold-lock-reclaim race qualification. Dispatch cutoff bounds prefli
 existing publication/cleanup clocks are separate. A child escaping the group/owner remains outside
 this demonstrated containment. No throughput or zero-cost claim. NO_ENTRY: observations are bounded
 controlled evidence rather than a general operational lesson.
+
+## Review correction evidence
+
+Final QA round1 requested changes (S1 explicit resume fallback; S2 retry intent saved after dispatch). Both are fixed in d1b372874. The author also found detached unique work losing its named/current reference: `detached-before/result.json` deliberately remains false (the reporting script itself exits zero; that is not a green control). Alignment now holds before changing detached HEAD.
+
+`review-fixes/results.json` contains all eight required unique passing checks: detached hold; direct resume missing, invalid and mismatched retry holds; valid original and latest-retry publication; retry intent visible before a real local process-group kill followed by direct resume and supervised wake; completed retry publication. Synthetic worker/results remain provider-free. The killed process is a fixture worker, not a live provider or a power-loss guarantee. Replay from the full verify clone by copying retained check.py and review-fixes.py into temp/gh1400-manual and running the latter with an unused output directory (its output name is explicit in the script). Original failures and first review remain retained. Final independent approval and full gate remain pending.
+
+Existing Jog integration rerun after corrections: 227 pass, 0 fail at d1b372874; see jog-review-fixes.log.

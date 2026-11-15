@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| PR #1403 instruction slice merged; fresh implementation recon identifies Jog recovery/alignment seam. | Independent plan QA for the separately authorized implementation slice below. |
+| PR #1403 instruction slice preserved; bounded Jog wake implemented with focused verification and review corrections. | Complete independent implementation QA and classified full gate, then publish a separate implementation PR. |
 
 ## Quad Concepts
 
