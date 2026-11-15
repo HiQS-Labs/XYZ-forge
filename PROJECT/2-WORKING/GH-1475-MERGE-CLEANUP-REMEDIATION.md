@@ -126,7 +126,7 @@ recorded under `TESTS-RESULTS/2026-11-14+GH-1475/`:
 | P1.3 | Drive `_land_prs_loop` on a clean dry run in a scratch primary: no `merge-cleanup-*` left; a forced stop (`keep_workdir`) leaves it | old code leaves it in both cases |
 | P1.4 | Scratch batch record with one merged, reconcile-failed row: after the recovery write, `continuable()` is false and `record_sweep` prints no `--resume` hint; a merged-unreconciled row prints `--reconcile-pr N --execute` | old code: `continuable()` true, hint `--resume --execute` |
 | P1.5 | Doc read from the drive-loop entry point; doc-contract suite green | old `:476` text contradicts `:2634-2663` |
-| P1.6 | Force each condition (`TMPDIR=/tmp/x/y`, stub `pmset`/`pgrep` on PATH, low threshold via monkeypatched `shutil.disk_usage`): each warning fires; clean env prints none | old dry run prints none |
+| P1.6 | Force each condition (a `TMPDIR` override to a nested scratch dir, stub `pmset`/`pgrep` on PATH, low threshold via monkeypatched `shutil.disk_usage`): each warning fires; clean env prints none | old dry run prints none |
 
 Smoke (disposable clone): main path — a real `--prs` dry run of this repo against a scratch primary
 showing live log, PRE-FLIGHT block and no leftover workdir; adjacent path — `--record-sweep` /
