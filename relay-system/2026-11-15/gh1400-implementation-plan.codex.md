@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -61,7 +61,7 @@ Then perform source-backed validation against `utils/py/jog_run.py`, `utils/py/r
 `utils/py/proc_group.py`, Jog/Flywheel skills, AGENTS and GUIDING-PRINCIPLES.
 
 Requirements: user explicitly authorized BUILD a thin deterministic supervisor around existing
-owners, through reviewed verified PR; no new queue/ledger/schema or framework, no scheduler
+owners, through reviewed verified PR; no new queue/ledger/schema or framework, no scheduler  [Unverified — no citation]
 activation/live LTVera/API spend/merge. RAW intake belongs to preparation, fresh readiness at
 execution. Preserve old PR1403 instruction-only evidence/caps as history. New review cap3.
 Current plan is proposed implementation; challenge concrete safety or requirement gaps before code.
@@ -94,5 +94,41 @@ findings must name concrete failing input/scope/falsifier. Approval is plan appr
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+#### What this proposes
+
+The implementation slice adds an opt-in, finite Jog wake that recovers an approved execution receipt, safely aligns its execution clone, and selects eligible pending work through existing owners. It keeps native attempt limits and requires fresh execution readiness, with an absolute dispatch deadline and explicit holds on uncertainty. This review treats approval as permission to implement the plan, not evidence that its runtime behavior works.
+
+#### How the existing system works, per this document
+
+The document says Jog owns selection and execution records, while Marathon owns build attempts and the target execution lock. Interrupted wake recovery currently projects cold state, and publishing an approved receipt requires a separate resume command; development alignment also needs manual intervention. These are document claims awaiting source validation; the exact subprocess timeout API, lock lifetime across recovery, and historical-state validation are not established by the document alone.
+
+#### What it's not
+
+No new queue, ledger, scheduler, model dispatch, merge authority, or simulator guarantee is proposed. Input boundary: only the complete GH-1400 project document was read before this paraphrase; historical instruction-only evidence and exhausted repair caps remain historical.
+
+#### Source-backed assessment
+
+swept file: yes
+
+Reviewed the entire project document, including historical instruction-only delivery, integration repairs and the implementation slice. Source fallback used because this session exposes no graph tools; no current graph generation or coverage result is independently claimed. Read the relevant Jog run/recovery/publication/checkpoint paths, Releases queue writers/parser, proc_group, Jog/Flywheel instructions, AGENTS and GUIDING-PRINCIPLES. No suites, executable fixtures, Git commands, model calls or remote mutations were run.
+
+- [Pass] **Existing owner and intervention:** the plan extends the actual CLI owner, not a parallel supervisor. Releases delegates directly to `jog_run_main` (`utils/py/releases_app.py:5198`); interrupted checkpoint recovery currently projects and returns (`utils/py/jog_run.py:2195`), while separate resume publishes (`:790`). Existing alignment only switches branches (`:2645`). The proposed recovery-before-selection and preservation/alignment path addresses both demonstrated intervention classes (project document:198–215). Implementation must still demonstrate this through the planned CLI smoke.
+- [Pass] **Deadline/cancel and locks are implementable:** `proc_group.run_bounded` creates a process group, accepts a timeout and cleans it up on exceptions (`utils/py/proc_group.py:108`, `:124`, `:139`); Jog currently uses unbounded calls at `utils/py/jog_run.py:637` and `:694`. The planned bounded calls and retained dispatch record are concrete work, not existing guarantees. Primary exclusion, target alignment exclusion and Marathon execution ownership are separated in the contract (project document:193–211). Publication/cleanup overrun is disclosed rather than hidden.
+- [Pass] **Selection, adoption and uncertainty:** latest matching issue/execution evidence, publication before projection, no inferred retry, and selected-item accounting including preflight holds are explicit (project document:196–215). The existing run writes the result path before worker dispatch (`utils/py/jog_run.py:675`); publication validates approved/green evidence, branch identity and candidate gate (`:1124`). Retaining those owners while strengthening identity checks is sufficient at plan level.
+- [Pass] **Preservation:** the contract preserves unique development commits under a branch name, holds tracked dirt and dependent worktrees, retains untracked files/logs, and refuses overwrite rather than resetting (project document:202–207). That directly fills the clean-local-switch gap at `utils/py/jog_run.py:2645`. Preservation-name collisions must consequently hold rather than replace a ref; this follows the existing “preserve every branch” requirement.
+- [Pass] **Discriminating acceptance:** real CLI adoption of A plus selection of B, an adjacent unchanged-attempt/receipt rerun, pre-change intervention controls, and a nonempty complete required-check list are explicit (project document:230–240). Unchanged baseline behavior cannot satisfy that full acceptance. Final exact-revision QA and a disposable-clone gate remain separate requirements (`:241`). These are planned checks, not executed results.
+- [Pass] **Bounded scope and history:** the new slice expressly preserves old PR #1403 caps and evidence (project document:146–148), excludes scheduler/spend/merges and strong crash guarantees (`:176–180`, `:216–219`), and supplies a Costly rollback retaining native history (`:221–224`). This fits GUIDING-PRINCIPLES' “extend” North Star and Flywheel's “Flywheel selects and resumes existing skills; it does not reimplement their commands, state, locks, limits or evidence.” No simulator or new framework is needed.
+- [Pass] **Rating rationale:** 75/60/50/45 with null override distinguishes runtime recovery work from historical docs-only cheapness 80; one assisted run and synthetic evidence are not inflated into a recurrence trend (project document:247–251). This is a coherent qualitative rationale. The primary writer read-back itself was not independently queried in this review.
+- [Nit] **Current-state wording overstates attempt ownership:** project document:165–166 says queue attempt_count is “never a second retry budget,” but `utils/py/releases_app.py:5177` currently parks dead-owner running rows when `attempt_count >= 3`, with “orphan lease: max attempts exceeded.” Correct the recon sentence to identify this legacy recovery threshold and distinguish it from the intended supervised contract. This does not block the plan: its no-reset/no-second-budget requirement and native-attempt controls already state the intended behavior. Include the existing threshold in implementation analysis; do not quietly remove unrelated legacy behavior.
+
+Pre-existing issues in the relevant source were considered: malformed execution JSON silently becomes fresh state (`utils/py/jog_run.py:317`); unknown lock owners are reclaimed (`:1513–1544`); cold receipt projection lacks publication (`:467`); result shape validation alone does not bind expected issue/execution (`:146`). The plan explicitly addresses these through refusal, owner exclusion and exact-result recovery (project document:198–211). No additional unaddressed blocking defect was identified in the artifact sweep. This is not an exhaustive audit of all runtime modules.
+
+VERDICT: PASS
+Basis: Approve the bounded implementation plan. It names the actual owner, concrete intervention seams, preservation rules, refusal behavior and discriminating clone verification without adding a second system. The recon wording nit is nonblocking. Runtime correctness, long-horizon qualification, hosted results and primary rating persistence remain unverified; no implementation or gate approval is implied.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
