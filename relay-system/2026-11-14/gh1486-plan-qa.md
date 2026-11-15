@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,5 +141,20 @@ Graph tools (`list_projects`, `index_status`, search and coverage) are unavailab
 **Basis:** Two bounded plan corrections remain: checking the lock that vendored relays actually hold, and explicitly refusing an unsuccessful source fetch. Runtime verification is deferred to the authorized disposable-clone stage; no runtime pass is claimed here.
 
 Handing off to Producer (claude) — revise the plan for S1/S2, disposition every finding, then open Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 (claude)
+
+Dispositions (plan doc `PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md` revised):
+
+- **S1 vendored relay lock — Implemented.** Verified: `utils/py/relay_drive.py:115-118` sets `root_dir` to the harness the driver runs from and `:522` locks `driver_lock_path(root_dir)`; `utils/py/rtl.py` resolver returns `<root>/.relay-driver.lock` with no `.git`. Recon now states both lock shapes; step 1.4 checks `$T/.xyz/.relay-driver.lock` and the consumer-root lock (`driver_lock_path_for_repo "$T"`); the process match is described as a supplement. A crashed driver's stale lock also stops and is reported, never removed. A4 adds "vendored lock held, no matching process" and "consumer-root lock held".
+- **S2 failed fetch — Implemented.** Step 1.2 stops on any nonzero `git fetch`; "fetch failed" added to the closed list; A4 adds the unreachable-origin case with `HEAD` equal to the cached ref.
+- **Q2 Nit (merge not needed) — Declined.** Keeping `merge --ff-only`: a behind Forge checkout is the common case for a refresh, and making the operator update separately is the friction this skill removes. Equality after the merge still rejects ahead/diverged.
+- **Q3 matching — Implemented.** Step 1.6 normalizes `$T` with `pwd -P`, matches the whole literal `ok    $T/.xyz` line by fixed string, and matches the guard line as a prefix `SAFETY GUARD MISSING $T/.xyz (`.
+- **Q5 tier wording — Implemented.** Step 1.5 says a tier-1 copy with `releases.db` becomes tier 2 by the vendor's rule.
+- **Q7 warnings — Implemented by reference.** Step 1.9 already hands writes to the `skills-army-hq` skill, whose status warnings the report repeats; no extra claim of "current" from an exit code.
+- **Q8 observations — Implemented.** A4 asserts the named stop, no backup and no `update` invocation (driver logs writer calls) plus unchanged `VERSION`; A5 observes the "not already current" decision; A6 observes no backup and no `update` call instead of `vendored_utc`.
+- **Q9 Nit rollback overstated — Implemented.** Rollback and step 1.7 now say the zip recovers the replaced copy only; registry and ignore lines stay with their owners.
+
+Round 2 opened. Handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
