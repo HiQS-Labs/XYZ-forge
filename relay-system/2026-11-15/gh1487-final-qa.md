@@ -7,8 +7,8 @@ ARTIFACT: PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 4
-STATUS: Reviewing
-NEXT: codex
+STATUS: Open
+NEXT: claude
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -106,5 +106,68 @@ VERDICT: PASS
 Basis: Scaffolding Round 1 turn for Reviewer (codex).
 
 Handing off to Reviewer (codex) — take your turn.
+
+## Round 1 — Reviewer (codex)
+
+VERDICT: FAIL
+Basis: Block. Generated fallback entries fail B1, and B1's marker exemption accepts comments outside the required position. Default-off author guidance and race evidence also remain incomplete.
+
+swept file: yes
+
+Reviewed the entire canonical plan and the implementation seams named in Setup by source inspection; no git commands or mutation-heavy suites were run. The following includes existing contradictions in touched files. Review edits are Easy to reverse; the implementation affects shared landing/publication and conflict resolution, so its rollback/race claims remain consequential.
+
+1. **[Blocker] Generated fallback is incompatible with B1.** `utils/py/wave_reconcile.py:2088` and `:2116` emit `<!-- changelog: fallback-title -->` in addition to the identity marker. `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:474` strips only identity markers and then rejects the fallback comment. A normal PR without Changelog content therefore produces an entry that cannot pass additive conflict resolution. **Fix:** emit the specified `changelog: fallback-title` flag as plain text, retaining exactly the one permitted HTML identity marker; exercise actual writer output through B1 for absent and sanitized-empty sections.
+
+2. **[Blocker] Marker exemption is global, rather than position-specific.** `ledger_merge.py:474` removes every syntactically valid marker before the HTML check, while `:490-493` checks only whether the first body line is valid. A second exact marker after arbitrary body text is accepted. This violates DoD 4's requirement to reject all comments outside the expected position. **Fix:** validate/remove only the single first-nonblank-body-line marker per parsed section, then reject all remaining comments/tags/fences. Retain rejection controls for a second marker, misplaced marker and arbitrary HTML.
+
+   **Reproduction for findings 1–2 (read-only AST extraction, exit 0):** ran `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with the following body (no module entry points or fixtures executed):
+
+   ```python
+   import ast, re
+   from pathlib import Path
+   from datetime import datetime, timezone, date
+   ns = dict(re=re, datetime=datetime, timezone=timezone, date=date)
+   for path, name in [
+       ('utils/py/wave_reconcile.py', 'format_changelog_entry'),
+       ('skills/2-daily/merge-cleanup/scripts/ledger_merge.py', 'union_changelog')]:
+       nodes = [n for n in ast.parse(Path(path).read_text()).body
+                if isinstance(n, ast.FunctionDef) and n.name == name]
+       assert len(nodes) == 1
+       exec(compile(ast.Module(body=nodes, type_ignores=[]), path, 'exec'), ns)
+   preamble = '# Changelog\n\n'
+   history = '## 2026-11-01 — Old\n\nOriginal.\n'
+   base = preamble + history
+   meta = dict(number=1487, mergeCommit={'oid': 'a'*40},
+               mergedAt='2026-11-15T00:00:00Z', title='Example', body='')
+   entry = ns['format_changelog_entry'](meta)
+   try:
+       ns['union_changelog'](base, preamble + entry + history, base)
+       print('fallback: ACCEPTED')
+   except ValueError as e:
+       print('fallback: REJECTED:', e)
+   marker = '<!-- pr:1487 merge:' + 'a'*40 + ' -->'
+   block = '## 2026-11-15 — Example (GH-1487)\n\n' + marker + '\nText.\n' + marker + '\n\n'
+   try:
+       ns['union_changelog'](base, preamble + block + history, base)
+       print('second marker outside first body line: ACCEPTED')
+   except ValueError as e:
+       print('second marker: REJECTED:', e)
+   ```
+
+   Decisive output:
+   ```text
+   fallback: REJECTED: fenced or HTML additions require manual changelog resolution
+   second marker outside first body line: ACCEPTED
+   ```
+
+3. **[Should] Canonical author instructions still mandate branch writes by default.** `PROJECT/PDDA.md:1057` says “updated **at the end of each iteration**”; its later enforcement text at `:1092` still describes unconditional freshness warnings. `ROUTER.md` also says “Update `CHANGELOG.md` at the end of each iteration”; `skills/2-daily/express/SKILL.md:195` says “plus the CHANGELOG entry appended in the same motion.” These compete with the new mode-aware text at PDDA `:462-465` and the distributed templates. Changing the warning alone does not stop agents following canonical instructions from causing branch conflicts. **Fix:** make the owning CHANGELOG contract and remaining executable author instructions consistently mode-aware; preserve branch mode explicitly.
+
+4. **[Should] Phase 4 race/red-control evidence is insufficient. [Unverified — needs clone run]** `TESTS-RESULTS/2026-11-15+GH-1487/red_controls.log` Control 7 records only `EXACT has CHANGELOG.md=True, retry_argv=['--pr', '1487', '--only-receipted', '--skip-pull']`. This does not drive a rejected push, recomputation on the newer integration base, or recovery of a receipted PR missing its marker. The nine provenance records contain timestamps/status/detail but no revision, command or retained executable procedure, so they cannot independently reproduce the asserted controls. The plan's Phase 4 full gate also is not evidenced by the reported 17-suite subsystem run. **Fix:** in a disposable full clone, retain actual controlled publication-race/recovery evidence and reproducible commands with candidate revision and nonempty outputs in the existing evidence location; distinguish ordinary passing checks from witnessed red controls. Run the required full gate through the harness; do not represent the subsystem result as that gate.
+
+5. **[Should] Mode parsers disagree on supported whitespace and empty environment precedence.** `utils/pdda/pdda.sh:459-464` neither trims environment values nor accepts `.pdda-mode` values with spaces after `=`; it also falls through to file configuration for an explicitly empty environment value. Python `read_changelog_writes_mode` at `wave_reconcile.py:1944-1961` trims values and treats an explicitly empty environment value as invalid/off. For example, `CHANGELOG_WRITES=" branch "` enables legacy mode in Python but suppresses freshness checking in Bash. **Fix:** align the existing Bash parser with the specified trimmed, case-insensitive env-over-file semantics, including invalid/off handling, without creating a parallel config subsystem.
+
+[Pass] Default-off writer short-circuit and journal enrollment are present in source: `wave_reconcile.py:2188-2190` returns unless mode is landing; `:2230` snapshots before writing and `:2272` enrolls CHANGELOG.md in existing snapshot/created-file tracking. This is source-level evidence, not an end-to-end rollback/race certification.
+
+Handing off to Producer (claude). No source or evidence artifact changed; harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
