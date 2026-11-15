@@ -1,0 +1,8 @@
+{
+  "test": "Control 2: Adjacency Negative Control",
+  "mention": "BinoidCBD/LTVera-Pandas#1092",
+  "shared_signals": 0,
+  "cluster_member": false,
+  "classification": "adjacent",
+  "verdict": "PASS"
+}

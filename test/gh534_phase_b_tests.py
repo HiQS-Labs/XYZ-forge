@@ -238,12 +238,16 @@ class LedgerFixture(unittest.TestCase):
         path.write_text(json.dumps({"integration": branch, "prs": heads}))
         return nums
 
-    def land_repaired(self, n):
-        """GH-1226: a B1-repaired head never lands in the run that pushed it (its checks may not
-        exist yet). The continuation is the operator's: re-pin it with a dry run, then --resume."""
-        self.assertIn(f"PR #{n}: DEFERRED — head", self.err)
-        self.pin([n])
-        return self.run_main(extra=("--prs", str(n), "--resume"))
+    def assert_repinned(self, n):
+        """GH-1475 (P2.1): a B1-repaired head lands in the run that pushed it, once its checks pass
+        on that exact commit; the run re-pins it instead of deferring it to a second dry run."""
+        self.assertNotIn(f"PR #{n}: DEFERRED — head", self.err)
+        pr = self.load()["prs"][str(n)]
+        self.assertEqual(pr["state"], "MERGED", self.err)
+        path = merge_cleanup.selection_path(self.primary.resolve(), merge_cleanup.origin_url(self.primary) or "",
+                                            "development")
+        self.assertEqual(json.loads(path.read_text())["prs"][str(n)], pr["headRefOid"],
+                         "the published selection must pin the repaired head that merged")
 
     def run_main(self, execute=True, extra=()):
         extra = list(extra)
@@ -420,9 +424,8 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
         self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2", rated="60/40/50/70"))
         rc = self.run_main()
-        self.assertEqual(rc, 3, self.err)  # GH-1226: PR 2's repaired head is deferred to a re-pin
-        rc = self.land_repaired(2)
-        self.assertEqual(rc, 4)  # GH-1064: landed, QA pending (no sweep verdict yet); Phase 6 still ran
+        self.assert_repinned(2)  # GH-1475 (P2.1): PR 2's repaired head is re-pinned in the same run
+        self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending (no sweep verdict yet); Phase 6 still ran
         st = self.load()
         self.assertEqual({p["state"] for p in st["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])

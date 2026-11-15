@@ -195,3 +195,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: relay
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1486
 - **date**: 2026-11-14
+
+## A deletion guard is only as good as the probe it trusts: drive the held case end to end
+
+- **cue**: adding or reviewing code that deletes a folder only when an existing "is it in use" probe (lsof, session or claim checks) says it is idle
+- **lesson**: before trusting the probe, run one manual check where a real process holds the target in the most common way (a shell whose cwd is the folder root, not just an open file inside it). Then watch the deletion path refuse. A probe whose tests only cover a file held inside the folder can still report a held root as idle.
+- **evidence**: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/manual-check-run.log` ("P2.3 open-handle probe, process cwd = folder root": base `active=False`, new `active=True`; prune row: `held-open` kept on new). `README.md` in the same folder records that the first prune run removed the held-open folder before the `scan_clones.inspect_open_handles` fix. The existing suite pins only a held file (`test/gh534_phase_a_tests.py` `test_ix_held_descriptor_is_active_process_naming_the_pid`).
+- **confidence**: medium. One incident, observed deterministically against base and fix; the same probe gates teardown.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1475
+- **date**: 2026-11-14

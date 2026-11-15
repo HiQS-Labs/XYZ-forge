@@ -73,11 +73,12 @@ Historical squash provenance and all dirty/stash/session/teardown checks remain 
 change future behavior, review and commit the project setting; never rewrite old history.
 
 The same file declares the repo's batch-sweep cadence (GH-1159) as an optional key:
-`"qualification": {"full_suite": "promotion"|"per_batch"|"none", "sweep_command": "<command>", "canary_command": "<command>"}`.
+`"qualification": {"full_suite": "promotion"|"per_batch"|"none", "sweep_command": "<command>", "canary_command": "<command>", "wait_for_checks": ["<check name>", ...]}`.
 With `promotion`, Forge's classifier picks the gate and a full sweep is deferred to
 `sweep_command`. With `per_batch`, `sweep_command` runs in a throwaway clone. With `none`, the
 batch issue says the repo has no full suite. `sweep_command` is printed verbatim. An optional
 `canary_command` specifies a fast local test command to execute between intermediate batch merges (GH-1383). Canary and automatic local sweep commands run in retained independent full clones, never primary. Command limits are 300s and 900s respectively, plus the separate bounded clone operation (180s). A failed canary stops before the next merge; any deferred issue/doc sync remains explicitly unreconciled until existing recovery succeeds. Merging preserves source branches; checkout retirement remains a separately authorized operation.
+An optional `wait_for_checks` (GH-1475) names checks the merge waits for even when GitHub reports no required checks (a repo without branch protection). Each named check must pass or be skipped; one that is pending or not reported yet is waited for like a pending required check, then deferred (exit 3); a failing one is not merged. Required checks still apply alongside the named ones.
 Without the key, the issue says no sweep command is declared and shows no Forge gate or workflow. An invalid value
 fails closed, and `--show-merge-policy` prints the key. A merge-cleanup older than this key refuses
 the file ("expected an object with only preserve_commit_history"): update the harness. The globally
@@ -256,7 +257,8 @@ Parking preserves work for later review; it never qualifies it for integration o
 ### Phase 5: required checks and pinned heads (GH-1226)
 - Before each merge the script reads `gh pr checks <n> --required --json name,bucket`. `pass`/`skipping` proceed, and so does gh's "no required checks reported". Failing or cancelled checks mean the PR is not merged (exit 3).
 - While required checks are pending, the script re-reads them every `MERGE_CLEANUP_CHECKS_POLL_S` (default 30 s) for up to `MERGE_CLEANUP_CHECKS_WAIT_S` (default 1800 s). Still pending after that defers the PR (exit 3), and so does an unreadable answer. It never merges on a guess. A dry run only reports the check state; it does not change its exit code.
-- At final eligibility the live head must equal the dry-run pin. A B1 repair pushes a new head, so a repaired PR is always **deferred** in the run that repaired it. Wait for its checks, re-run the dry run to re-pin, then `--execute` again.
+- At final eligibility the live head must equal the dry-run pin. A B1 repair pushes a new head. When that head is the one this run pushed and nothing else moved it, the run waits for its checks (required checks, plus any `wait_for_checks`) on that exact commit. If the pre-repair head reported required checks, "no required checks" on the new head counts as not registered yet and is waited for. When they pass, the run re-checks the head, re-pins it (the selection file and the batch allowlist), and lands it in the same run (GH-1475). Checks that fail, stay pending past the wait or never register, or a head another push moved, defer it as before: re-run the dry run to re-pin, then `--execute` again.
+- A dry run that reaches a B1-repairable ledger conflict logs B1's preview and continues with the next PR, so the whole batch is previewed.
 
 ### CI-heavy repositories: plan merge groups before qualification (GH-1066)
 
@@ -284,12 +286,12 @@ Decide direct vs group when the PR set is chosen, not when `--execute` is first 
 
 - The forecast covers the queue Phase 4 will land (every open PR is sorted so collision edges through unlisted PRs stay visible, then the allowlist and hard-dependency deferrals apply), and the comparison is refreshed against that queue after discovery.
 - One disposable clone with no working tree (never the primary) fetches each PR as `pull/<N>/head`, verifies it against the pinned head, and simulates with `git merge-tree`: each PR alone against one frozen base, each pair of members, and a cumulative fold in sequence order. The fold stops at the first conflict and later PRs read "conditional", because a conflicted merge-tree result is not a resolved landing.
-- Per PR it shows conflicts alone and in sequence, paths split into **potentially B1-eligible** (B1's own path set) and **needs review** (code, excluded or unclassified), repairs already used, and a churn-risk band (low, medium, high). It counts the PRs a B1 repair would defer in the run that repairs them, and gives **no CI-wait count**.
+- Per PR it shows conflicts alone and in sequence, paths split into **potentially B1-eligible** (B1's own path set) and **needs review** (code, excluded or unclassified), repairs already used, and a churn-risk band (low, medium, high). It counts the PRs that need a B1 repair (each waits for fresh checks on its new head and lands in the same run, or defers if they do not pass), and gives **no CI-wait count**.
 - When conflicts exist, GH-1470 also names the **conflict hubs**: every PR that conflicts alone with the base, plus PRs chosen greedily by remaining pairwise-conflict degree until the others have no pairwise conflicts (ties go to the later PR in sequence). The greedy choice is labelled as a heuristic, not a proven minimum. The forecast says how many PRs are clean once the hubs are set aside and runs a second cumulative fold over just that set. A PR that hard-depends on a hub waits for it and joins the second pass.
 - **Direct in passes** is recommended when at least 3 PRs conflict, the clean set folds clean, and the second pass holds **at most half** the queue. The forecast prints both exact `--prs` lists: run pass 1 as `direct` with the pins from that dry run, then run a fresh dry run for pass 2 to re-pin and re-forecast against the moved base. Each hub should be planned for one B1 repair, a new head, fresh checks and another re-pin. The recommendation stays `group` when the clean set still conflicts in sequence or more than half the queue must wait; existing code-path and repeated-repair rules also stay `group`. Zero conflicts stays plain `direct`, as does the case of fewer than 3 conflicting PRs on potentially B1-eligible paths when the clean fold is clean and at most half the queue must wait.
 - The recommendation (`group`, `direct`, or `direct in passes`, with the numbers behind it) is **withheld** ("none: forecast incomplete") when any fetch, head check or merge-tree step failed, including a failure in the clean-set fold. Unknown is never read as clean.
 - The forecast is advice. The GH-1158 decision stays explicit: `--landing-plan` remains `direct|group`, and a passes plan is simply `direct` run once per pass with narrowed `--prs` and your own `--landing-reason` whenever that pass has 3 or more PRs. The exit-5 refusal repeats the stored recommendation and pass lists. A whole-queue decision that does not follow the passes plan is recorded as an **override**; an exact pass is a **match**. A forecast whose pinned heads, sequence or base differ from the run is marked **stale**.
-- Blind spots, printed with every forecast: it is text-level (B1 is not run, so "potentially B1-eligible" can still hand off), it cannot see the reconcile commits written after each landing, and a B1 repair pushes a new head that defers that PR. A passes plan adds an explicit warning that pass 1 is forecast against the frozen base only: reconcile commits move the base, so even a pass-1 PR touching the ledger or changelog can still need a B1 repair. When two members' branches share commits that are not on the base (stacked lanes, or a lane carrying an earlier lane's preparation commits), a further line names them: after the earlier one is squash-merged, GitHub can mark the later one CONFLICTING while local merge-tree stays clean, and re-setting its PR base does not clear that. Merging the integration branch into the later branch does, and that gives a new head, fresh checks and a re-pin. The forecast cannot simulate the squash itself.
+- Blind spots, printed with every forecast: it is text-level (B1 is not run, so "potentially B1-eligible" can still hand off), it cannot see the reconcile commits written after each landing, and a B1 repair pushes a new head that must pass its checks again before it lands. A passes plan adds an explicit warning that pass 1 is forecast against the frozen base only: reconcile commits move the base, so even a pass-1 PR touching the ledger or changelog can still need a B1 repair. When two members' branches share commits that are not on the base (stacked lanes, or a lane carrying an earlier lane's preparation commits), a further line names them: after the earlier one is squash-merged, GitHub can mark the later one CONFLICTING while local merge-tree stays clean, and re-setting its PR base does not clear that. Merging the integration branch into the later branch does, and that gives a new head, fresh checks and a re-pin. The forecast cannot simulate the squash itself.
 - **Jog precondition (GH-1470).** Any dry run with `--prs` also checks, read-only, whether the Jog primary pin is missing while a listed PR maps to an open Jog row (it closes the issue, or its branch names `gh<N>`). If so it prints a warning naming those PRs. Without a pin, the post-merge Jog step refuses (`rule=jog-primary`) and `--execute` stops with exit 2 after the first such merge. Pin the primary before you execute.
 
 **End-of-batch reconciliation does not defer branch repairs.** Issue/doc sync and the regression sweep may wait until the end of a batch, but every PR branch must merge cleanly into the integration branch at its own turn. A PR touching the ledger or changelog can therefore need its B1 repair during the sequence, followed by a new head, fresh checks and a re-pin; those steps cannot be postponed to the final reconciliation.
@@ -418,8 +420,11 @@ never attempted:
    record `verdict: deferred` naming it until its receipt exists. Then run the `/debug-mantra` cross-PR
    review over the recorded inputs, write the verdict file, and
    record it with `merge_cleanup.py --primary "$PRIMARY" --record-sweep <file>`. If it reports that
-   planned PRs remain, continue with `--resume --execute`; a `--resume` run with nothing left to land
-   still reports 4 until a verdict covers every landing.
+   planned PRs remain, continue with `--resume --execute`; if it names a landed PR that is not
+   reconciled, recover that PR with `--reconcile-pr N --execute` instead (GH-1475: a successful
+   `--reconcile-pr` records the PR as merged and reconciled in its unfinished batch, and exits 4 while
+   that batch still lacks a covering sweep verdict). A `--resume` run
+   with nothing left to land still reports 4 until a verdict covers every landing.
 
 ### Continuation contract — do not hand back reversible steps (GH-985 pattern)
 
@@ -461,6 +466,23 @@ exit 4 is the script saying that has not happened, so exit 4 is never Done. When
 could not be created or updated (see *Non-blocking*), the verdict still lands in the local batch
 record; name the issue failure in the run summary.
 
+**Exit codes for wrapper scripts (GH-1475).** One table; treat anything else as 2.
+
+| Exit | Meaning | Wrapper action |
+|---|---|---|
+| 0 | done | stop; report the result |
+| 4 | landed, QA pending (any `--execute` that finds a batch whose sweep verdict is missing) | treat the merges as landed; record the sweep with `--record-sweep` before Done |
+| 3 | deferred or handed off | work the caller ladder, then re-run with `--resume --execute` (re-run the dry run first to re-pin a moved head; a head this run repaired is re-pinned in the run when its checks pass) |
+| 5 | landing-plan decision needed | decide `--landing-plan`, then re-run |
+| 2 | stopped | diagnose the named gate; re-run only once it is fixed |
+| 1 | `--retire-published-pr` could not retire a checkout | read the printed reason; the checkout is preserved |
+
+A landing loop that completes cleanly with no kept clone (no handoff, stop or kept B1 result) and no
+deferred sync removes its own `merge-cleanup-*` landing workdir; otherwise it is kept for inspection. When the only reason to keep it is a deferred PR (exit 3), the clones of PRs that landed in the run are released and the deferred PRs' clones stay. At the end of every landing loop, older retained `merge-cleanup-*` and `merge-check-*` folders under the temp root are pruned (GH-1475): per prefix the newest `MERGE_CLEANUP_KEEP_WORKDIRS` (default 3) and anything touched in the last hour are kept, and an older folder is removed only when its name and contents are the tool's own shape. Every removal (clean run, exit-3 release, pruning) keeps a folder that `lsof` cannot verify as idle, or whose clones hold untracked files, a stash, a linked worktree, or tracked changes outside an in-progress merge. A re-pinned B1 repair also defers when the integration branch moved during its check wait. Pruning is skipped while another `merge_cleanup.py` may be running.
+Before you `--execute` a batch, read the dry run's `PRE-FLIGHT:` warnings (low disk under the temp
+root, battery power, a harness `TMPDIR`, another `--execute` running, no required checks); they
+never refuse.
+
 **Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
 retry the identical command once before escalating to the operator — a block that succeeds on a
 verbatim retry was non-deterministic, and surrendering the run to it is how an operator ends up
@@ -473,7 +495,9 @@ issue's marked block, the outcomes, the sweep **inputs** and the verdict **recor
 any test suite (GH-831): the caller still runs the sweep and writes the verdict.
 
 - **Trigger & threshold.** An executing run whose Phase 4 sequence holds **two or more PRs**, after
-  the `--prs` allowlist is applied, gets a batch. Single-PR runs are unchanged: no issue, no exit 4.
+  the `--prs` allowlist is applied, gets a batch. A single-PR run opens no batch of its own, but any
+  `--execute` run (with or without `--resume`) exits 4 when it attaches to, or finds, a batch for this
+  repo and integration branch whose QA is still pending.
 - **`--resume` continues the batch, whatever the queue size.** A resume first looks for an
   unfinished batch (planned PRs not yet landed-and-reconciled, or landings no verdict covers) for
   this repo and integration branch. A non-empty queue must overlap its planned PRs; an empty queue

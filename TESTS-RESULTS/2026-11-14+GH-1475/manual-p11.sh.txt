@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# usage: p11.sh <dir-with-wave_reconcile.py> <label>
+set -u; W=/tmp/gh1475-manual/p11-$2; rm -rf "$W"; mkdir -p "$W"; cd "$W"
+git init -q --bare -b development origin.git
+git clone -q origin.git seed 2>/dev/null; cd seed; git checkout -q -b development; git commit -q --allow-empty -m one; git push -q origin development; git checkout -q -b other; git push -q origin other; cd ..
+git clone -q -b development origin.git primary
+cd seed; git checkout -q development; git commit -q --allow-empty -m two; git push -q origin development; cd ..
+L=primary/.git/refs/remotes/origin/development.lock; touch "$L"
+printf '%s\t\tbranch '"'"'development'"'"' of x\n%s\t\tbranch '"'"'other'"'"' of x\n' "$(git -C seed rev-parse development)" "$(git -C seed rev-parse other)" > primary/.git/FETCH_HEAD
+(sleep 1.5; rm -f "$L") &
+python3 -c "import sys; sys.path.insert(0, '$1'); import wave_reconcile as w
+try:
+    w.pull_upstream('$W/primary', 'development'); print('RESULT ok')
+except Exception as e: print('RESULT fail', type(e).__name__)"
+wait
+echo "primary HEAD == origin development: $( [ "$(git -C primary rev-parse HEAD)" = "$(git -C seed rev-parse development)" ] && echo yes || echo no)"
