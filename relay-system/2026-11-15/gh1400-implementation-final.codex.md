@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -149,5 +149,15 @@ Swept both complete production files, Jog instructions, owning project/recon/dec
 S1/S2 are pre-existing defects in the touched owner, surfaced by the sweep; they do not mean the new supervised latest-entry controls failed their retained seeds. No other blocking pre-existing defect was established in this bounded review. Final gate, real product acceptance and the unperformed actual retry-kill run remain outstanding.
 
 Handing off to Producer — go to the producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+- Implemented S1: explicit resume reads the newest recorded retry, validates issue/execution identity and holds without publication on absent, invalid or mismatched output. Historical search remains available to callers that intentionally request it. Valid no-retry resume still works.
+- Implemented S2: the existing retry entry (exact ID/path, dispatched status) is saved before invoking Marathon; the same entry is updated afterward. No new schema or ledger. A local fixture process group was actually killed after the durable entry appeared, then direct resume and supervised wake both held without older publication or another A builder.
+- Additional author-found preservation defect fixed: detached unique HEAD now holds before fetch/switch. Original failing evidence remains `detached-before/result.json` (false); replay passes in `review-fixes/results.json`.
+- Source correction d1b372874; eight required unique correction checks pass in the full verify clone. Existing original adoption/restart and red controls remain. Review the full touched owners and all correction evidence, paraphrase the intended change before evaluating it. This is final QA round2/3, not a reset of the cap. Source and receipts are synthetic/provider-free as previously declared; full publication gate follows independent approval.
+- Round1 driver exited3 after correctly returning the open token to Producer and finding no automated producer progress. The FAIL/findings are retained; this is the normal manual correction handoff, not an approval or bypass.
+
+Handing off to Reviewer — inspect corrections and retained evidence, then give a source-backed disposition. Final full gate remains mandatory after approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
