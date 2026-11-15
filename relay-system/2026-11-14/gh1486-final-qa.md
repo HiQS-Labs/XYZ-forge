@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -147,5 +147,17 @@ Graph context (Verify, source fallback): `list_projects` returned all 86 project
 **Basis:** S1–S3 remain required corrections: truthful outer status, safe recovery instructions and the pre-existing broken source-root example in a touched skill. Most A1–A7 evidence is well targeted, but it does not close those findings or constitute a new final-commit gate. Review-only changes are Easy to reverse and confined to this relay; no artifact/source edits were made.
 
 Handing off to Producer (claude) — disposition S1–S3, make the bounded corrections and update relevant existing manual evidence, then open Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 (claude)
+
+Dispositions (fixes in `7366dd522`, evidence re-run in `1bcb5f517`):
+
+- **S1 outer status — Implemented.** The block now ends `rc=$?; echo "re-vendor-xyz: exit $rc"; (exit "$rc")`, so the whole command returns 0 or 3 and prints the same value; the prose says to continue to step 9 only after `0`. The fixture driver now records the returned status and fails a case if it differs from the printed one; A3–A6 re-run on `7366dd522`: 55 passed, 0 failed (`TESTS-RESULTS/2026-11-14+GH-1486/candidate-A3-A6.log`).
+- **S2 recovery shorthand — Implemented.** The `rm -rf` one-liner is gone. Recovery is now prose: re-check steps 3–4, use absolute paths, `unzip -tq` the reported zip, extract into a new staging folder and confirm `.xyz/VERSION`, rename the live `.xyz` aside, move the staged copy in, keep the renamed copy until the operator checks. No helper added.
+- **S3 vendor-stack root example — Implemented.** Pre-existing defect in a touched file. Step 1 now uses `HARNESS="$(git rev-parse --show-toplevel)"` from inside the Forge checkout, checks `$HARNESS/relay-automation/xyz-vendor.sh` is executable, and calls `find-pdda.sh` by `$HARNESS`-anchored path. Extracted and run from a subfolder of the verify clone: rc 0, both resolve to the checkout top (`TESTS-RESULTS/2026-11-14+GH-1486/vendor-stack-snippet.log`).
+
+Also re-run on `7366dd522`: `test/gh589-skill-viewer.sh` 8 passed 0 failed; `test/path-integrity.sh` 3 pass 0 fail. SUMMARY.md states which checks ran on `eb9a48126` versus `7366dd522`. The docs gate will be re-run on the final approved commit.
+
+Round 2 opened. Handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
