@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -176,5 +176,31 @@ Plan doc updated in place: `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.
 table, Phase 1 steps 3 and 6, Rollback). Please re-review.
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2
+
+**What this proposes** (input boundary: plan doc only). Six bounded Phase 1 changes improve fetch retries, live logging, successful-run scratch cleanup, recovery bookkeeping, exit documentation and advisory warnings. The revised acceptance procedures explicitly distinguish the unchanged tree from delivery.
+
+**How the existing system works, per this document.** Reconciliation pulls once; landing scratch is always retained. Recovery reconciles and pushes without updating the batch, while the existing batch writer owns persistence and issue refresh. Required-check information already exists, so the warning needs no new gh query.
+
+**What it's not.** Explicit exclusions: Phase 2/3, locks, merge-check retention changes, new suites and new gh calls. Deferred: broader retention and serialization. Inference: these advisory warnings do not certify the environment safe.
+
+**Source-backed assessment**
+
+swept file: yes
+
+Re-read the entire plan, including recon, all six changes, verification, rollback and rating; inspected the cited source seams and existing test contracts. No additional pre-existing defect in the plan requiring another cycle. Graph discovery returned `MCP tool call requires approval, but approval policy is never`; direct source reads were the fallback. `gh issue view 1475 -R HiQS-Labs/XYZ-forge --json body` exited 1, `error connecting to api.github.com`; used the packet-authorized Phase 1 list in the plan. No git commands, suites or executable fixtures were run. Runtime acceptance remains **[Unverified — needs clone run]**; this approves the plan, not delivery.
+
+- [Pass] **Round 1 acceptance findings are addressed.** Verification P1.4 now says “call `main()` with `--reconcile-pr N --execute`” and “reload the persisted record,” including issue update, dry-run and failed reconcile/push controls. That measures the missing connection at `merge_cleanup.py:2348-2370`, rather than manually invoking the new writer. P1.2 now requires “process is still alive” with a sleeping downstream stub and an absent-line base control. P1.6 explicitly supplies `("ok", "no required checks")`, a named passing check and unchanged `_gh` count. These are discriminating planned checks; their execution is still outstanding.
+- [Pass] **P1.1–P1.3 remain bounded.** `wave_reconcile.py:302-307` is the one-shot pull; Verification P1.1 now advances the remote branch before holding its tracking-ref lock, forcing a real update. The plan's “initialise `clean = False` before the `try`” and “clean and not keep_workdir and not deferred_sync_pending” preserve nonzero exits and retained repair handoffs (`merge_cleanup.py:1799-1829,1856-1868,2040-2067`). Resolved-parent, directory, prefix and symlink checks constrain removal to this invocation's temporary root. No clean-success path inspected retains a unique unpublished repair without the keep flag. Rollback now explicitly says deleted scratch is not restored; this is bounded deletion of owned scratch, not operator-checkout retirement.
+- [Pass] **Recovery and hint changes reuse existing ownership.** `_record_batch_outcomes` already finalizes sweep inputs and calls `batch_record.update` (`merge_cleanup.py:1605-1614`); the `_sync_batch` extraction shares that tail. `find_unfinished(..., [N])` matches the overlap contract (`batch_record.py:260-270`). “per `continuable`'s rule” preserves terminal closed rows (`batch_record.py:250-257`); positive merged state justifies the recovery hint without another query. Verification P1.4 now includes closed-row silence and the old resume-hint red control.
+- [Pass] **P1.5/P1.6 preserve existing contracts with proportionate surface.** The contradictory single-PR statement remains at `SKILL.md:475-476`; the plan corrects it while retaining drive-loop contracts exercised by `test/gh534_phase_c_tests.py:906-921`. Step 6 now bounds pmset/pgrep at 5 s and parses only successful textual output. That avoids interpreting failed shared subprocess mocks as warnings (`test/gh436-merge-cleanup.py:965-966,991-993`); full mock compatibility remains a focused-suite obligation. Disk, battery, unusual temp root and concurrent execution are reasonable advisory probes for the observed local batch hazards.
+- [Nit] **Use the actual gh override in the buffering receipt.** Verification P1.2 calls it `GH_BIN`; the environment key is `MERGE_CLEANUP_GH_BIN` (`scan_clones.py:36`, read through `merge_cleanup.py:82-83`). Use that spelling in the eventual manual command so the sleeping stub is actually selected. This is a recipe correction, not a design blocker; require the specified live-process/line observations before counting the check as evidence.
+- [Pass] **Scope, rating and evidence obligations are adequate.** “six local edits in two Python files and one doc” and “no new module, flag, config key, state file or gh call” keep the design local. Recon names the vendored reconciliation consumer; rollback states its deletion limit. Rating explicitly distinguishes one observed batch from an unknown recurrence trend and labels 60/65/50/75 with its rationale. Verification requires commands, revision, exit statuses, outputs and `provenance.jsonl`; QA gate still requires focused/full disposable-clone runs and final independent review. The bounded scratch deletion warrants care at implementation QA but no distributed machinery.
+
+**VERDICT: PASS**
+**Basis:** The revised plan covers P1.1–P1.6 through existing owners, and resolves the acceptance gaps with meaningful red controls. No blocking plan finding remains. Runtime proof and final implementation QA remain required before reporting delivery.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
