@@ -790,8 +790,22 @@ def jog_resume(root, gh_num, args=None):
         return 0
 
     latest = executions[-1]
-    record, receipt = _jog_latest_receipt(root, gid)
+    if latest.get("gate_retries"):
+        try:
+            publication = latest["gate_retries"][-1]
+            receipt = load_marathon_result(_ledger_abs_path(root, gid, publication.get("result_path")) or "")
+            _jog_result_identity(receipt, gh_num, publication.get("execution_id"))
+            record = latest
+        except (ContractError, AttributeError, TypeError) as exc:
+            reason = f"resume held: latest gate retry has no valid matching result: {exc}"
+            jog_set_status(root, gh_num, "parked", failure_reason=reason)
+            print(f"jog: GH-{gh_num} {reason}")
+            return 1
+    else:
+        record, receipt = _jog_latest_receipt(root, gid)
     if record is not None and record.get("execution_id") == latest.get("execution_id"):
+        _jog_result_identity(receipt, gh_num, latest["gate_retries"][-1]["execution_id"]
+                             if latest.get("gate_retries") else latest.get("execution_id"))
         publication = next((entry for entry in reversed(latest.get("gate_retries") or [])
                             if entry.get("execution_id") == receipt.get("execution_id")), latest)
         invocation_path = os.path.join(_ledger_abs_path(root, gid, latest.get("packet_dir")) or "", "marathon-invocation.json")
@@ -1022,20 +1036,22 @@ def _jog_retry_gate_locked(root, gh_num, args):
     env.pop("RELAY_DRIVER_LOCKED", None)
     print(f"jog: gate-only retry for GH-{gh_num} against head {prior_head} "
           f"(no builder turn; satisfied-lane path)")
-    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
     result_path = os.path.join(retry_dir, "marathon-result.json")
+    retry = {"execution_id": f"{record['execution_id']}-gateretry{attempt_no}",
+             "attempt": attempt_no, "status": "dispatched", "result_path": result_path}
+    gate_retries.append(retry)
+    jog_save_state(root, gid, state)
+    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
     try:
         new_receipt = load_marathon_result(result_path)
     except ContractError as exc:
-        gate_retries.append({"execution_id": record["execution_id"], "attempt": attempt_no,
-                             "status": "no-valid-result", "drive_exit": proc.returncode})
+        retry.update(status="no-valid-result", drive_exit=proc.returncode)
         jog_save_state(root, gid, state)
         print(f"jog: gate retry exited {proc.returncode} without a valid receipt: {exc}",
               file=sys.stderr)
         sys.exit(2)
-    gate_retries.append({"execution_id": new_receipt["execution_id"], "attempt": attempt_no,
-                         "status": new_receipt.get("outcome"),
-                         "result_path": result_path})
+    _jog_result_identity(new_receipt, gh_num, retry["execution_id"])
+    retry["status"] = new_receipt.get("outcome")
     jog_save_state(root, gid, state)
 
     if _ledger_bytes(invocation["target_root"]) != ledger_before:
@@ -2507,6 +2523,10 @@ def _jog_align_target(target):
             raise ContractError("execution clone has dependent worktrees; alignment held")
         if _git(target, "status", "--porcelain=v1", "--untracked-files=no").strip():
             raise ContractError("execution clone has tracked changes; preserve them before alignment")
+        attached = subprocess.run(["git", "-C", target, "symbolic-ref", "-q", "HEAD"],
+                                  capture_output=True, text=True)
+        if attached.returncode != 0:
+            raise ContractError("execution clone has detached HEAD; preserve it on a branch before alignment")
         _git(target, "fetch", "origin", "development")
         base = _git(target, "rev-parse", "refs/remotes/origin/development").decode().strip()
         local = subprocess.run(["git", "-C", target, "rev-parse", "--verify", "refs/heads/development"],

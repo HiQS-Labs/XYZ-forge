@@ -260,3 +260,5 @@ Implementation in progress; no runtime acceptance or qualified final gate claime
 Required checks: real wake adoption/continuation; adjacent repeat; readiness red; result identity red;
 missing-result hold; malformed state hold; stopped-owner exclusion; deadline/cancel; attempt retention;
 safe branch/log preservation; explicit complete evidence aggregation. Gate/review remain separate.
+
+Implementation review correction (2026-11-15): supervised clone alignment also holds on a detached HEAD, preserving its unique commits in place. Explicit resume holds when the newest recorded gate retry lacks a valid matching result. Gate retry records its exact identity and result path before dispatch, so an interrupted retry remains visible without adding a new ledger.
