@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -99,5 +99,47 @@ Write graded findings, then a VERDICT. Set STATUS to Approved only if no `[Block
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes.** Add a separate `/re-vendor-xyz` instruction-only skill to refresh one registered repository's `.xyz/` using existing writers. It checks published source, inactivity and tier retention, backs up the copy, verifies three currentness conditions, then hands deployed-skill drift to Skills Army HQ. Three existing documents gain pointers.
+
+**How the existing system works, per this document.** `xyz-sync.sh` selects registry rows and delegates replacement to `xyz-vendor.sh`, which preserves selected runtime state and writes VERSION and registry metadata. Bare single-target updates lack the source guard, while `check` compares registry metadata to local Forge HEAD and can report both `ok` and a missing safety guard. Skills Army owns collection updates through preview/apply.
+
+**What it's not.** Per `non_goals` and Preflight bet, this is not first installation, fleet refresh, script changes, collection deployment, or detection of hand edits inside `.xyz/`.
+
+**Input boundary:** Before writing this paraphrase I read the relay instructions and the plan's `non_goals`, Status, Recon, Preflight bet, Plan, Acceptance, Verification and Risks. The read command also displayed the title, remaining frontmatter and Rating rationale; no source or issue had been opened.
+
+**Assessment: source-backed — Block pending two plan corrections.**
+swept file: yes
+
+Graph tools (`list_projects`, `index_status`, search and coverage) are unavailable in this session's tool inventory; validation used exact source reads and targeted text searches. Read the complete plan and `xyz-sync.sh`, the requested source ranges and pointer documents, and issue #1486 plus its first comment through read-only `gh api` (exit 0). No suites, executable fixtures, or git commands were run. Runtime fixture claims remain **[Unverified — needs clone run]**. No additional pre-existing defect was found in the plan beyond the findings below; this is not an exhaustive audit of the underlying harness.
+
+- **[Should] S1 — Resolve the vendored relay lock against the harness root, not only the consumer repository.** Recon/step 1.4 currently describe `$T/.git/relay-driver.lock` (`PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md:52,71`). The relay actually derives `root_dir` from its own file (`utils/py/relay_drive.py:115-118`) and locks `driver_lock_path(root_dir)` (`:522`); the resolver's no-git fallback is `<root>/.relay-driver.lock` (`utils/py/rtl.py:983-1005`). Thus a vendored relay locks `$T/.xyz/.relay-driver.lock`. The Bash twin likewise uses its harness ROOT_DIR (`relay-automation/relay-drive.sh:157`). Call the existing resolver for `$T/.xyz` as well as `$T` (the latter covers consumer-root drivers), correct Recon, and exercise the vendored lock case in A4. This is one extra existing-resolver call, not a new detector.
+  Observed input: the source's `driver_lock_path(root_dir)` with `root_dir = $T/.xyz`; a direct relative invocation from that directory, `python3 utils/py/relay_drive.py --relay-file relay-system/live.md --agent-cmd '<configured turn command>'`, has no absolute `$T/.xyz/` in its argv. During an idle/waiting turn the driver lock can be the only durable signal.
+  Affected scope: a relay using the installed `.xyz` harness and relative argv, while the consumer-root lock is absent. An absolute-path subprocess may mask the gap temporarily but does not correct the lock lookup.
+  Falsifier: in the disposable clone, hold only `$T/.xyz/.relay-driver.lock`, with no absolute-path process match. The skill must stop before backup/update and name that lock. If the actual vendored driver instead locks `$T/.git/relay-driver.lock`, this source-based finding is disproven. No live driver was launched in this review.
+
+- **[Should] S2 — Include failed source fetch explicitly in the closed stop contract.** Step 1.2 fetches but the closed list includes only `cannot fast-forward` and `HEAD not equal to origin` for this part (`PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md:69,78`), followed by “Anything else continues.” A failed fetch can leave the old remote-tracking ref equal to HEAD; a subsequent merge/equality test does not establish fresh published state. State that any nonzero fetch stops, and retain its output; add that input to the existing manual verification, without adding a suite.
+  Observed input: the plan's `git fetch origin <branch>` returning nonzero while the previously stored `origin/<branch>` equals HEAD. Neither subsequent condition in the stated closed list rejects that input.
+  Affected scope: failure to fetch the selected source branch (network/authentication/missing ref), not ordinary target drift or optional collection absence.
+  Falsifier: make the disposable source's origin unreachable while HEAD equals its cached remote-tracking ref. Expect `re-vendor-xyz: stopped: ...` before backup/update. If the extracted skill commands already terminate and report fetch failure explicitly, no further runtime mechanism is needed; make that rule explicit in the plan. This scenario was not executed here.
+
+**Answers to the requested technical questions**
+
+1. **[Pass] Recon's writer and drift claims are grounded.** Selection uses normalized exact equality (`xyz-sync.sh:193-197`); update delegates without flags (`:291-296`), and only `--all` invokes source safety (`:284-289`). VERSION is staged before the swap and runtime preservation precedes replacement (`xyz-vendor.sh:474-503`). The live-lock claim is wrong as detailed in S1. “Tier 2 kept only if releases.db” is accurate specifically for sync's no-flag invocation; direct vendor also accepts `--with-releases` (`xyz-vendor.sh:42-44,66-72`). Machine-local canonical configuration and the historical unchanged-since-base claim were not independently established.
+2. **[Pass] Successful fetch plus merge and final equality rejects ahead and diverged histories as designed** (plan step 1.2: “`HEAD` equals `origin/<branch>`”). An ahead merge may succeed with “already up to date,” so equality is essential. Fast-forwarding a behind checkout intentionally changes its tracked files; this is explicit in the plan and issue. **[Nit]** Merge is not needed to prove publication: fetching and stopping unless equal is smaller, but requiring the operator to update separately adds friction. Either policy is reasonable; do not require a redesign. S2 concerns failure handling, not the successful sequence.
+3. **[Pass] `$T/.xyz` is the right selector for ordinary registered nested repositories and spaces.** Selection compares normalized whole strings (`xyz-sync.sh:175,193-197`); `check` emits the raw install directory via `printf 'ok    %s\n'` (`:442-443`). Match that entire literal line, not whitespace fields, a regex, or a substring. Normalize `$T` physically to agree with vendor's `cd ... && pwd` (`xyz-vendor.sh:64`); registry aliases can otherwise produce a safe false stop. The missing-guard line includes a parenthesized suffix (`xyz-sync.sh:449-450`), so match the target followed by ` (` rather than requiring the bare prefix to be the whole line.
+4. **[Should] S1 answers the missed live-run shape.** Relative argv defeats the absolute substring test, and checking the wrong lock matters directly to the #1011 protection. The process check is supplementary, not a proof of inactivity. A separate lock/journal/fleet service is unnecessary within this envelope.
+5. **[Pass] The tier rule prevents the demonstrated downgrade.** `xyz-vendor.sh:66-72` automatically includes tier 2 when the root DB exists; a VERSION tier of 1 does not trigger the proposed stop (plan step 1.5). A tier-1 copy with a root DB becomes tier 2 by existing vendor policy; the skill should describe that accurately rather than promise immutable tiers.
+6. **[Pass] Three-part currentness closes the registry/VERSION disagreement.** `check` reads selected registry fields (`xyz-sync.sh:427-431`), inspects the installed safety marker (`:434-439`), and can emit both messages (`:442-451`). Comparing installed VERSION source_commit with source HEAD (plan step 1.6) adds the missing copy-side provenance check. This is not whole-tree integrity; hand-edit detection is explicitly excluded in Preflight bet.
+7. **[Pass] Step 1.9 delegates to the correct owner.** Explicit canonical selection avoids stale fallback (`skills-army-hq/SKILL.md:30-40,229-244`); that owner's preview/apply and verification procedure governs writes (`:160-173`). Treat its warnings and partial results as reportable, not “deployed skills current” merely because status exits zero (`:24-29,46-58`). The new skill's handoff does not itself authorize collection expansion or installing this new skill.
+8. **[Pass] Acceptance has a meaningful skill-presence boundary, with distinct runtime limits.** A1 checks new file/name/triggers; A2 checks its stop/currentness instructions; A7 checks the three new pointers (plan Acceptance A1/A2/A7). Their claimed base red controls still need the clone run. A3's before-DRIFT/after-three-conditions is functional success, not a stop control. A4 must assert the named stop and no writer invocation as well as unchanged VERSION; bare exit 0 is only the contrast, not safety proof. A5 must observe rejection of “already current” before repair; eventual successful repair is allowed. A6 must observe no backup/update invocation; unchanged second-resolution vendored_utc alone cannot prove that. A3–A6 fail base only when the driver requires and extracts the new skill, as Verification promises (`PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md:99`); the underlying writer can already satisfy their happy-path state predicates.
+9. **[Pass] The instruction-only scope is proportionate.** Existing sync/vendor writers and HQ collection ownership remain intact (plan Preflight bet and steps 1.8–1.9); pointers match `vendor-stack/SKILL.md:146-156`, `README.md:254-263`, and `ARCHITECTURE.md:145-147`. Markdown/docs routing matches `utils/ci-route.sh:63-68`. Required missing cases are S1/S2, not new automation. **[Nit]** The rollback sentence overstates the `.xyz` zip: it does not contain the registry or `.git/info/exclude` (plan step 1.7 vs Preflight bet Rollback). Describe it as recovery of the replaced copy; registry/exclude reconciliation belongs to their existing owners.
+
+**VERDICT: FAIL**
+**Basis:** Two bounded plan corrections remain: checking the lock that vendored relays actually hold, and explicitly refusing an unsuccessful source fetch. Runtime verification is deferred to the authorized disposable-clone stage; no runtime pass is claimed here.
+
+Handing off to Producer (claude) — revise the plan for S1/S2, disposition every finding, then open Round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
