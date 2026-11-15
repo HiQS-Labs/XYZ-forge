@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -137,5 +137,38 @@ Handing off to Producer — fix S1, disposition N1, and open the next review rou
 - **S1 — Implemented.** The adjacent check in the plan's Acceptance now fixes the corpus (git-tracked files at base `5967bde25`), the exclusions (installed skills and tools outside the repo, relay threads, project docs, test receipts, changelog, docs, ledger dumps), the pre-run searches and their recorded result, and the rule that a real candidate invalidates the case rather than being suppressed. Pre-run searches were run before freezing: `pdf` matches only the excluded ledger dumps; `invoice` / `embedded font` / `reportlab` / `weasyprint` match CI config, a fuzzy-match test fixture and gate baselines, no rendering module.
 - **N1 — Implemented.** Recon now names `SUBSYSTEM_TESTS_skills_army_hq` (`utils/ci-route.sh:33`) and the full `validate.sh` list, and says the suite is not in the Small list. Plan step 5 keeps the explicit suite invocation.
 - No other change to the plan. Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 2
+
+**What this proposes:** Add a weekly advisory skill that breaks a new problem into capabilities, searches for existing owners, and returns a cited fit table and composition sketch before new implementation is designed. The delivery is one skill file, a conditional exclusion in dry's description, and an index row, with bounded manual evidence.
+
+**How the existing system works, per this document:** Existing skills require reuse but start from a named system, solution, duplication concern or option set. Existing maps describe modules by purpose, while existing graph/RAG discovery ladders supply leads that must be checked against source. The viewer and index already provide registration surfaces.
+
+**What it's not:** The Non-goals section excludes tracing, duplicate auditing, value judgement, building and new discovery infrastructure. Child-repo publishing, device deployment and automatic wiring into other skills are deferred (Non-goals and Preflight bet).
+
+**Input boundary:** For this turn's paraphrase, read the whole relay (including historical review and embedded requirements) and then only the current plan; no source files or issue were opened until afterward. This is a round-2 paraphrase with that prior context, not a blind first exposure.
+
+**source-backed**
+
+swept file: yes
+
+**VERDICT: PASS**
+**Basis:** Approve the plan. S1 and N1 are resolved in the seeded artifact. The whole-plan sweep found no additional pre-existing defect requiring a change. This verdict authorizes proceeding to implementation review; it does not certify unexecuted acceptance checks.
+
+- **[Pass] S1 resolved.** `PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md:87` now pins the PDF prompt to git-tracked repository files at `5967bde25`, enumerates exclusions, specifies search terms, requires retaining pre-run evidence and says a genuine candidate invalidates the negative case. This supplies the missing boundary from issue #1484's “input and search scope fixed before running.” The reported preliminary search result is Producer-supplied evidence; I did not rerun git searches. Implementation must retain the actual searches and outputs as promised, rather than treat this plan's summary as a receipt.
+
+- **[Pass] N1 resolved; Recon remains grounded.** Plan line 40 names `SUBSYSTEM_TESTS_skills_army_hq` and explicitly excludes Small, matching `utils/ci-route.sh:33` and `:38`; the suite remains in `validate.sh:680`. The viewer reads both skill-folder depths and rejects folder/name mismatch (`mini/skills/skill-viewer/scripts/list_skills.py:83`–95). Maps name tick and ATE by purpose (`ROUTER.md:219`, `:222`); discovery/source-confirmation claims match `skills/4-occasional/swe-diagram/SKILL.md:37`–64 and `skills/1-hourly/recon/SKILL.md:48`–60, with its mode stamp at line 130. No materially wrong Recon claim remains.
+
+- **[Pass] Requirements and Mode before skill.** Plan lines 49–58 name neighboring skills and distinguish the capability-list unit and chat output from recon's named-system map; this meets `skills/README.md:25`–28 under the settled separate-skill decision. Recon's greenfield skip is at `skills/1-hourly/recon/SKILL.md:32`; ponytail's deliberately light ladder is at `skills/1-hourly/ponytail/SKILL.md:48`; sanity-check's necessity question and better-options' option-set trigger are in their frontmatter. Plan line 69 incorporates the issue's four steps, including outcome/constraints, fit categories, adaptation cost/risk, composition, unknowns and next action. Lines 80–82 retain maps → index → grep, stated mode, source-read candidates and bounded absence. No operator requirement is missing or narrowed.
+
+- **[Pass] Each implementation step has an observable rejection path.** Plan steps 1–3 (lines 69–71) are observed by inventory plus semantic file reading (lines 79–82), dry's actual description/diff, and the actual index row/link (line 88). Missing files, wrong frontmatter, missing capability/source/precedence obligations and a missing row therefore cannot count as delivery. Step 4 observes retained baseline/candidate transcripts and the bad sample (lines 83–87), with provenance required at line 72. Step 5 observes the existing suite and PDDA results (line 73); those can pass unchanged and are supporting compatibility evidence, not substitutes for steps 1–4. The suite's disk/name assertions and malformed-frontmatter red controls are visible at `test/gh589-skill-viewer.sh:17`–25 and `:50`–56.
+
+- **[Pass] Red control and scope are proportionate.** Plan lines 84–86 require a baseline miss before the green counts, correct citations/capability/limitation for both candidates, and rejection of a deliberately deficient output by the same rubric. Line 87 independently observes bounded absence rather than invented fit. Line 90 limits the inference to one case and one model family. This is a sound planned red/green and grader control for a markdown skill; it is not yet witnessed evidence. No new suite, script, writer or duplicated ladder is proposed (lines 63, 81, 94); the new row extends the existing weekly table (`ARCHITECTURE.md:109`–114).
+
+- **[Pass] Trigger collision and rating are addressed without extra machinery.** Plan line 70's conditional “Do NOT fire” clause, coupled with line 82's precedence requirement, can distinguish discovery for a new problem from consolidation of already duplicated paths despite retaining dry's shared phrase (`skills/3-weekly/dry/SKILL.md:6`–16). Final QA must read the delivered sentence against both meanings. Plan line 102 grounds 55/35/50/85 in the current request, one motivating case, neutral appeal and cheap markdown work, explicitly rejecting an invented recurrence window. No over- or under-building identified for this envelope.
+
+**Evidence limits:** Verify-tier, source-backed plan review. MCP listed all 86 projects with no remaining page and no current-worktree index. The inspected `XYZ-forge` project belongs to the main checkout; its coverage generation is `2026-09-01T15:54:30Z`, with missing/not-tracked/changed freshness on the supplied paths, so local source reads and targeted text checks ground this review, not that stale graph. `gh issue view 1484 --repo HiQS-Labs/XYZ-forge --json body` exited 0 and supplied the four-step contract and adjacent-check requirement. No git commands, suites, executable fixtures or phase gates were run. Implementation behavior and gate results remain **[Unverified — needs clone run]**.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the approved plan and retain the promised implementation evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
