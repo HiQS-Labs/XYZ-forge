@@ -468,7 +468,11 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
         additions = text[len(preamble):len(text) - len(history)]
         # This deliberately narrow resolver does not interpret fenced/HTML Markdown blocks:
         # a heading inside an example must never become a separately sorted release entry.
-        if "<!--" in additions or re.search(r"(?m)^[ \t]{0,3}(?:`{3,}|~{3,}|<)", additions):
+        # GH-1487: permit only the exact generated full-SHA marker line:
+        # <!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->
+        # at the first non-blank line of the section body.
+        stripped_additions = re.sub(r"(?m)^<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->\n?", "", additions)
+        if "<!--" in stripped_additions or re.search(r"(?m)^[ \t]{0,3}(?:`{3,}|~{3,}|<)", stripped_additions):
             raise ValueError("fenced or HTML additions require manual changelog resolution")
         starts = list(re.finditer(r"(?m)^## ", additions))
         if additions and (not starts or starts[0].start() != 0):
@@ -483,6 +487,10 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
                 raise ValueError("malformed or empty dated section")
             # Calendar validation is cheap and prevents impossible dates sorting as real entries.
             date.fromisoformat(date_match[1])
+            body_lines = [l.strip() for l in body.splitlines() if l.strip()]
+            if any("<!--" in l for l in body_lines):
+                if not (body_lines and re.fullmatch(r"<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->", body_lines[0])):
+                    raise ValueError("fenced or HTML additions require manual changelog resolution")
             if heading in seen:
                 raise ValueError("duplicate heading on one side")
             seen.add(heading)

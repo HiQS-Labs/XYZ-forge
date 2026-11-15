@@ -1944,6 +1944,7 @@ def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
         "releases.db", "releases.sql",
         "RELEASES-PREVIEW.html",
         "LEADERBOARD.html", "LEADERBOARD.md",
+        "CHANGELOG.md",
         os.path.join(".tick", "marathon-plan.fingerprint"),
     ):
         path = os.path.abspath(os.path.join(repo_root, name))
