@@ -15,7 +15,7 @@ risk: 2
 
 | What was just completed | What's next |
 |---|---|
-| 10 manual scenarios and 227 existing checks pass; PDDA/PRS checks have no errors | Push through final gate, publish ready PR, await merge |
+| Follow-up: Jog precondition warning and stacked-member blind spot added, manual check S1-S5 passes | Push through gate, keep PR ready, await merge |
 
 ## Scope and recon
 
@@ -39,6 +39,8 @@ incorrect advice could increase operator repair churn, while explicit landing de
 - Pass-aware comparison and CLI: H7, including whole-queue override, refusal and clean-first execution.
 - Existing merge-cleanup suite and parity guard, deterministic PDDA/PRS checks, disposable push gate.
 - Retained driver and logs: `TESTS-RESULTS/2026-11-14+GH-1470/`. No new test suite (GH-831).
+- Follow-up (same day): read-only Jog primary precondition in the dry run and a stacked-member blind-spot
+  line. Manual check: `TESTS-RESULTS/2026-11-14+GH-1470/followup/` (S1-S5, red control on the prior head).
 
 ## Rating rationale (2026-11-14)
 

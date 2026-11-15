@@ -2,7 +2,7 @@
 
 ## 2026-11-14 — GH-1470: forecast clean-first landing passes
 
-Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
+Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. The dry run also warns, read-only, when a listed PR maps to an open Jog row while the Jog primary is unpinned, and the forecast names stacked members (branches sharing commits not on the base) as a blind spot. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
 
 ## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
 

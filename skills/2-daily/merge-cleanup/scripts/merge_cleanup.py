@@ -1053,31 +1053,76 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     return False
 
 
+def jog_open_issues(repo_path: Path) -> Set[int]:
+    """Issue numbers of the open (pending/running/failed/parked) Jog rows; empty when the ledger has
+    no Jog queue. Read-only. Raises OSError, subprocess.TimeoutExpired, ValueError, TypeError or
+    KeyError when the canonical rows cannot be read."""
+    if not (repo_path / "releases.db").is_file():
+        return set()
+    releases_cli = tool_path(repo_path, "releases_app.py")
+    # Use the canonical root-bound reader: B1's conservative line classifier
+    # deliberately preserves unsupported SQL as `other`, including multiline reasons.
+    dump = (repo_path / LEDGER_DUMP).read_text(encoding="utf-8")
+    if not dump.strip():
+        raise ValueError("canonical releases dump is empty")
+    # A qualified pre-Jog ledger has neither surface. This is only a presence
+    # check: never use B1's parsed row count to decide that a queue is absent.
+    if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
+        return set()
+    listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
+                             "jog", "list", "--all", "--json"],
+                            cwd=str(repo_path), capture_output=True, text=True, timeout=300)
+    if listed.returncode:
+        raise ValueError((listed.stderr or listed.stdout).strip())
+    rows = json.loads(listed.stdout)
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise ValueError("Jog JSON reader did not return a row list")
+    return {int(row["gh_number"]) for row in rows
+            if row.get("status") in {"pending", "running", "failed", "parked"}}
+
+
+def jog_issues_for(pr: Dict[str, Any]) -> Set[int]:
+    """Issues a PR may deliver as Jog rows: the ones it closes, plus gh<N> in its branch name."""
+    issues = set(linked_issues(pr))
+    issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
+    return issues
+
+
+def jog_primary_precondition(primary_repo: Path, listed: List[Dict[str, Any]]) -> Optional[str]:
+    """GH-1470: read-only dry-run check of the Jog primary pin that the post-merge Jog step needs.
+    Returns a warning when a listed PR maps to an open Jog row and the primary is not pinned (or
+    the check could not run); None when there is nothing to warn about."""
+    policy = ledger_merge.harness_paths_module(primary_repo)
+    if not policy or not hasattr(policy, "primary_root"):
+        return None
+    try:
+        policy.primary_root(str(primary_repo))
+        return None  # pinned; startup already refuses a --primary that differs from the pin
+    except ValueError as exc:
+        unpinned = str(exc)
+    except (OSError, subprocess.CalledProcessError):
+        return None  # no origin identity; Phase 0 owns repository readiness
+    try:
+        queue = jog_open_issues(primary_repo)
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as exc:
+        return f"Jog precondition not checked (cannot read Jog rows: {str(exc)[:160]}); {unpinned}"
+    mapped = {int(p["number"]): sorted(jog_issues_for(p) & queue) for p in listed}
+    mapped = {n: rows for n, rows in mapped.items() if rows}
+    if not mapped:
+        return None
+    which = ", ".join(f"#{n} (GH-{', GH-'.join(str(r) for r in rows)})" for n, rows in sorted(mapped.items()))
+    return (f"Jog precondition (GH-1470): {which} map to open Jog rows, and {unpinned}. If such a PR lands a "
+            "Jog delivery, the post-merge Jog step refuses (rule=jog-primary) and --execute stops with exit 2 "
+            "after that merge. Pin the primary before --execute.")
+
+
 def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
     if not (repo_path / "releases.db").is_file():
         return True
     releases_cli = tool_path(repo_path, "releases_app.py")
-    # Use the canonical root-bound reader: B1's conservative line classifier
-    # deliberately preserves unsupported SQL as `other`, including multiline reasons.
     try:
-        dump = (repo_path / LEDGER_DUMP).read_text(encoding="utf-8")
-        if not dump.strip():
-            raise ValueError("canonical releases dump is empty")
-        # A qualified pre-Jog ledger has neither surface. This is only a presence
-        # check: never use B1's parsed row count to decide that a queue is absent.
-        if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
-            return True
-        listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
-                                 "jog", "list", "--all", "--json"],
-                                cwd=str(repo_path), capture_output=True, text=True, timeout=300)
-        if listed.returncode:
-            raise ValueError((listed.stderr or listed.stdout).strip())
-        rows = json.loads(listed.stdout)
-        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
-            raise ValueError("Jog JSON reader did not return a row list")
-        queue = {int(row["gh_number"]) for row in rows
-                 if row.get("status") in {"pending", "running", "failed", "parked"}}
+        queue = jog_open_issues(repo_path)
     except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as exc:
         log_err(f"Cannot read canonical Jog rows: {exc}")
         return False
@@ -1102,9 +1147,7 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     except ValueError as exc:
         log_err(f"Cannot map PR #{pr_num} to Jog rows: {exc}")
         return False
-    issues = set(linked_issues(pr))
-    issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
-    mapped = issues & queue
+    mapped = jog_issues_for(pr) & queue
     if not mapped:
         return True
     # A mapped row is a Jog delivery only when the merged tree carries its committed
@@ -2390,6 +2433,9 @@ def main():
         args._forecast = forecast
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
             return 2
+        jog_warning = jog_primary_precondition(primary_repo, [p for p in prs if int(p.get("number", 0)) in args.prs])
+        if jog_warning:
+            log_warn(jog_warning)
     if prs and not args.prs:
         log("Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).")
     # GH-1226: sequence every open PR (dependency edges need them all), then keep only the allowlist.

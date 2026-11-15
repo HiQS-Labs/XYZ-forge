@@ -731,6 +731,10 @@ def _split_paths(paths: Set[str], allowed: Set[str]) -> Tuple[List[str], List[st
 
 PASSES_ASSUMPTION = ("passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit "
                      "moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair")
+STACKED_ASSUMPTION = ("stacked members {pairs}: their branches share commits that are not on the base. After the "
+                      "earlier one is squash-merged, GitHub can mark the later one CONFLICTING even though merge-tree "
+                      "here is clean, and re-setting the PR base does not clear it; merge the base into the later "
+                      "branch (new head, fresh checks, re-pin)")
 HUB_MAX_SHARE = 0.5  # GH-1470: more than half the queue set aside is not a hub pattern; that queue stays `group`
 
 
@@ -853,6 +857,20 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
                 pairs.append({"a": a, "b": b, "b1_eligible": eligible, "needs_review": review})
             elif rc != 0:
                 pair_unknown.append({"a": a, "b": b, "reason": err})
+    # GH-1470: stacked members, i.e. a pair whose merge base is not on the base, so one carries the
+    # other's commits. Advisory only (a blind-spot line); a failed check is named, never read as "not stacked".
+    stacked: List[str] = []
+    for i, a in enumerate(ok_nums):
+        for b in ok_nums[i + 1:]:
+            mb = _run(["git", "merge-base", prs[str(a)]["head"], prs[str(b)]["head"]], clone, timeout)
+            if mb.returncode == 1 and not mb.stdout.strip():
+                continue  # unrelated histories share nothing
+            on_base = (_run(["git", "merge-base", "--is-ancestor", mb.stdout.strip(), base_sha], clone, timeout)
+                       if mb.returncode == 0 and mb.stdout.strip() else None)
+            if on_base is None or on_base.returncode not in (0, 1):
+                stacked.append(f"#{a}/#{b} (check did not run)")
+            elif on_base.returncode == 1:
+                stacked.append(f"#{a}/#{b}")
     # (c) cumulative fold in sequence order; clean steps advance through a synthetic commit
     for n, seq_state in _fold(clone, base_sha, order, prs, allowed, timeout).items():
         prs[str(n)]["sequence"] = seq_state
@@ -923,4 +941,6 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
     return {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
             "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
             "hubs": hubs, "passes": passes, "recommendation": rec, "reason": reason,
-            "assumptions": list(FORECAST_ASSUMPTIONS) + ([PASSES_ASSUMPTION] if passes else [])}
+            "stacked": stacked,
+            "assumptions": list(FORECAST_ASSUMPTIONS) + ([PASSES_ASSUMPTION] if passes else [])
+            + ([STACKED_ASSUMPTION.format(pairs=", ".join(stacked))] if stacked else [])}
