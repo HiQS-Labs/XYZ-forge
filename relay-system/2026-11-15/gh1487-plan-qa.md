@@ -301,3 +301,12 @@ Evidence: Read-only command `sed -n '110,142p' PROJECT/2-WORKING/GH-1487-CHANGEL
 Approval is plan QA, not runtime qualification. Runtime behavior, history discovery, sanitization, retries, rollback and all planned gates remain **[Unverified — needs clone run]**. Execute the planned checks in a disposable full clone and retain results with provenance before claiming implementation success. No embedded TAKE YOUR TURN block or reviewer phase-gate command is present in this relay file.
 
 Review applied the SWE rubric through non-mutating document reads. No git commands, suites, executable fixtures, gates, source edits or external publication were performed. Only this relay file was edited; scratch setup was confined to `.relay-scratch/tmp`.
+
+### Attestation · relay-drive — 2026-11-15T20:37:33Z
+task: gh1487-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0dda2da0b9322170a64e041c99e601f5539ae0a6
+added-range: 39780+1763
+added-sha256: 6cf12af22f0b0eae9a380d727917b621bce9d72ab2754ac81441e1420863a7b0
+gate-run: undeclared
