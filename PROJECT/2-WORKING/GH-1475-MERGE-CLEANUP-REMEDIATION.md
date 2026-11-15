@@ -1,7 +1,7 @@
 ---
 gh_issue: 1475
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1475
-title: "merge-cleanup: 3-phase remediation from a 13-PR batch post-mortem (Phase 1)"
+title: "merge-cleanup: 3-phase remediation from a 13-PR batch post-mortem (Phase 1, Phase 2A)"
 status: Active
 created: 2026-11-14
 updated: 2026-11-14
@@ -10,14 +10,15 @@ doc_type: bugfix
 complexity: 2
 risk: 2
 effort: 2
-phases: 1
+phases: 2
 non_goals:
-  - Phase 2 and Phase 3 items (P2.1–P2.8, P3.1–P3.6)
-  - pruning merge-check-* clones or per-PR clones on exit 3 (P2.3)
+  - Phase 2B and Phase 3 items (P2.4–P2.7, P3.1–P3.6)
+  - P2A.measure and P2A.decision (separate, after Phase 2A lands)
   - any refusal, lock file or new gh call in the dry run
   - new tests, suites or gate machinery (GH-831)
 goal: >
-  Ship the six Phase 1 quick wins from issue 1475 as one small, reversible PR
+  Ship the six Phase 1 quick wins (landed in PR 1478), then Phase 2A (P2.1, P2.2, P2.3, P2.8)
+  as one small, reversible PR each
 ---
 
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
@@ -29,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| P1.1–P1.6 implemented and verified (suites, manual checks with red controls incl. the P1.3 keep-guard mutant, smoke); final Codex QA Approved r2 | Full gate via pre-push on the final commit, ready PR, awaiting merge |
+| Phase 1 landed (PR #1478); Phase 2A plan written (P2.1, P2.2, P2.3, P2.8) | Codex plan QA on the Phase 2A plan, then implementation |
 
 ## Table of contents
 - [Problem](#problem)
@@ -39,6 +40,7 @@ goal: >
 - [Verification](#verification)
 - [QA gate](#qa-gate)
 - [Rating](#rating)
+- [Phase 2A](#phase-2a)
 - [Lessons Learned](#lessons-learned)
 
 ## Problem
@@ -146,6 +148,121 @@ neutral (no operator value). Effort 75: six local edits, no new subsystem. Recur
 produced the observed incidents (one incident each, not a rising trend); `merge-cleanup` in-title
 issues opened 2026-10-31..11-14: 6 vs 2026-10-17..10-30: 13 (all classes; trend for these specific
 failure modes unknown).
+
+## Phase 2A
+Scope: P2.1, P2.2, P2.3, P2.8 of the issue body. P2A.measure and P2A.decision are not in this PR.
+Base: `origin/development` `a9ece7fcf` (Phase 1 merged as `4306cba77`). Paths below are
+`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` unless named; line numbers are at the base.
+
+### Phase 2A recon
+| Item | Entry point → state | Observation |
+|---|---|---|
+| P2.1 | `_land_prs_loop` B1 branch `:1812-1933` → `push_resolved_head` → re-fetch until GitHub reports `b1["commit"]` (`:1898-1915`) → re-gate clone → ledger gate `:1936` → pin check `:1947-1953` | After a successful repair the loop already proves GitHub reports exactly `b1["commit"]` (`:1907`, `:1912`) and re-gates it, then **always** defers at `:1948` because the head is not `args._pins[n]` (exit 3). The checks wait (`:1957-1982`) is never reached for a repaired head. The final eligibility re-read (`:1987-2016`) stops on a head change (`:2006`, rc 2) and refuses an unpinned head (`:2010`). Writers that hold the pin: `args._pins` (in memory, from `verify_selection` `:2320`), the selection file (single writer `pin_selection` `:509`, GH-1452, keeps the stored forecast only when passed back), and `batch_record.set_allowlist` (`batch_record.py:329`, latest pin wins). `required_checks_state` (`:750`) reads `gh pr checks <n> --required`, which reports the PR's current head; right after a push, checks may not be registered, and gh then answers "no required checks reported", which the function maps to `ok`. Tests pinning the deferral: `test/gh534_phase_b_tests.py:423-424` (`land_repaired` `:241-245`), `test/gh534_phase_c_tests.py:283-284, :392, :456-457, :664`. Forecast text: `merge_cleanup.py:676` and `ledger_merge.py:704` say a repair defers the PR; `SKILL.md:259`, `:287`, `:292`, `:473` say the same. |
+| P2.2 | `resolve_merge_policy` `:270-311` (sole validator of `.merge-cleanup.json`), `required_checks_state` `:750-772`, the wait loop `:1962-1970`, the F6 dry-run warning `:1958-1961` | `qualification` accepts only `full_suite` (required), `sweep_command`, `canary_command`. The policy is re-read per PR in the loop (`:1717`), so `policy["qualification"]` is in scope where checks are read. Test stub (`gh534_phase_b_tests.py` GH_STUB `pr checks`) ignores `--required` and answers from `st["checks"][n]`, else "no required checks reported". Real gh without `--required` says "no checks reported" when none exist. |
+| P2.3 | `_land_prs_loop` `finally` `:2132-2139`; `run_isolated_check` `:235-248` (`merge-check-*`, retained, pinned by `test/gh436-merge-cleanup.py` takeover tests and `SKILL.md:479`); `prepare_landing_clone` `:807` (`pr-<n>-<sha8>-*` under the workdir); `validate_head_in_second_clone` `:834` (also under the workdir) | Phase 1 removes the workdir only on a clean 0 return with no `keep_workdir`. Exit 3 from deferrals alone (`:2119-2129`) never sets `keep_workdir`, so the whole workdir, including landed PRs' clones, is kept. Nothing ever prunes older `merge-cleanup-*`/`merge-check-*`. Existing helpers: `_remove_own_scratch` (`:218`, proves prefix + direct child of the resolved temp root + not a symlink) and `scan_clones.inspect_open_handles` (`scan_clones.py:364`, `lsof +D`, three outcomes, fails closed: `verified` False on any doubt). Suites run fixtures under the real `$TMPDIR`, so any prune also runs during tests against the developer's temp root. |
+| P2.8 | B1 branch `:1858-1877` | `resolve_ledger_conflict(execute=False)` (`ledger_merge.py:536-583`) returns `handoff=True` for every non-repairable case and otherwise `resolved=False` with reason `[DRY RUN] B1 would keep …` (`:581-583`). So in a dry run, a non-handoff result is always the B1 preview, and `:1872-1877` logs "B1 stopped", sets `keep_workdir`, and `return 0`, leaving later PRs unpreviewed. Confirmed in the Phase 1 smoke (`TESTS-RESULTS/2026-11-14+GH-1475/smoke.log`). |
+
+### Phase 2A preflight bet check
+- **Outcome sought:** a hub PR lands in one cycle when its repaired head goes green; a repo without
+  branch protection can still make the script wait for named CI; retained clones stop filling the
+  disk; a dry run previews the whole batch.
+- **Smallest viable bet:** edits inside `_land_prs_loop`, `resolve_merge_policy`, one small checks
+  helper, one prune helper reusing `_remove_own_scratch` + `inspect_open_handles`, wording in two
+  forecast strings and `SKILL.md`, and truthful updates to the existing tests that pin the old
+  deferral. No new module, state file, flag, or test.
+  Not built: heartbeat, stacked-lane detection, forecast pass rules (2B), measurement (P2A.measure).
+- **Alternatives rejected:** re-pin by running a fresh dry run inside the loop (re-plans the whole batch;
+  more gh calls); a CLI flag for declared checks (the policy file is where the repo's merge policy
+  already lives, so a per-run flag would drift); age-only pruning (cannot tell a live run's dir from an
+  old one; the open-handle probe is the existing safety check).
+- **Rollback / containment:** revert the PR. P2.1 only re-pins a head this run pushed and GitHub
+  reports unchanged after its checks pass; anything else keeps today's deferral. Pruned scratch is not
+  restored by a revert; pruning is limited to tool-named temp-root children, older than the newest N and
+  older than one hour, with a verified-idle `lsof` result, skipped while another `merge_cleanup.py` runs.
+
+### Phase 2A plan
+Ordered; verification inline. Writers extended: `args._pins` + `pin_selection` + `batch_record.set_allowlist`
+(P2.1), `resolve_merge_policy` (P2.2), `_remove_own_scratch` + `inspect_open_handles` (P2.3).
+
+1. **P2.8** In the B1 branch, when `dry_run` and `not b1["handoff"]` (the preview case), log
+   `[DRY RUN] PR #n: B1 would repair this ledger conflict (<reason>); --execute repairs it, waits for the new head's checks and re-pins` and `continue`
+   with no `failed` entry, no `keep_workdir`, no return. Execute-mode "B1 stopped" stays as is (rc 2).
+   *Check:* a two-hub dry run previews both PRs (each `[DRY RUN]` line present) and returns 0 with no
+   kept workdir. *Red control:* base logs "B1 stopped" for the first hub and never mentions the second.
+2. **P2.2** `resolve_merge_policy`: accept `qualification.wait_for_checks`, a non-empty list of non-empty
+   strings (still requires `full_suite`, as every `qualification` does today). New
+   `checks_state(p_num, repo, declared)`: calls `required_checks_state` unchanged; when `declared` is set,
+   one more `gh pr checks <n> --json name,bucket` read, and per declared name: any `fail`/`cancel` →
+   failing; absent ("not reported") or `pending`/unknown bucket → pending; all `pass`/`skipping` → ok.
+   gh's "no checks reported" means every declared name is absent (pending); any other unreadable answer
+   is `unknown` (defers, never merges). Combined result: when the required part is "no required checks",
+   the declared result alone; otherwise worst of the two (failing > unknown > pending > ok). The loop's
+   two `required_checks_state` calls (`:1957`, `:1970`) use `checks_state` with
+   `(policy.get("qualification") or {}).get("wait_for_checks")`. The F6 warning fires only when no checks
+   are declared. *Check:* policy validation accepts a list and refuses `[]`, `[""]`, a string; a fixture
+   PR with no required checks and declared `ci` pending waits, then lands when `ci` passes, and defers when
+   it stays pending past a short `MERGE_CLEANUP_CHECKS_WAIT_S`; a missing declared name defers. *Red control:*
+   base merges the same PR at once ("no required checks") and refuses the policy key.
+3. **P2.1** In the B1 success path (execute only), before `push_resolved_head`, read
+   `required_checks_state` once on the old head and remember whether the repo reported any required checks
+   (`had_required = detail != "no required checks"`; an unknown answer counts as having them). After the
+   push and the existing proof that GitHub reports `b1["commit"]`, set `own_repair = b1["commit"]`. At the
+   pin check (`:1947`): when the head is not the pin and equals `own_repair`, do not defer; go to the checks
+   wait. If `had_required` and the new head still reads "no required checks", poll every
+   `MERGE_CLEANUP_CHECKS_POLL_S` for up to `MERGE_CLEANUP_CHECKS_GRACE_S` (default 120 s) for them to
+   register; still none → defer `required checks not registered on the repaired head`. The existing
+   pending wait, failing and defer handling then apply. When checks are `ok`: one `refresh_pr_with_retry`;
+   if the head is no longer `own_repair` → defer `head moved after this run's B1 repair`; else re-pin:
+   `args._pins[n] = head`, `pin_selection(primary, branch, args._pins, <pins as open PRs>, forecast=<stored forecast>)`
+   (single writer kept), `batch_record.set_allowlist(batch, {n: head})` when a batch exists, and log
+   `PR #n: re-pinned to <sha> after this run's B1 repair (checks passed on that commit)`. The final
+   eligibility checks (`:2006`, `:2010`) are unchanged and now pass for the re-pinned head. Any other
+   off-pin head keeps today's deferral. Forecast wording (`merge_cleanup.py:676`, `ledger_merge.py:704`) and
+   `SKILL.md` (`:259`, `:287`, `:292`, `:473`) say a repaired PR lands in the same run once its new head's
+   checks pass, else defers. Update the pinned tests truthfully: `gh534_phase_b_tests.py:423-424` and
+   `gh534_phase_c_tests.py:283-284, :392, :456-457, :664` expect the repaired PR to land in the first run
+   (helper `land_repaired` becomes an assertion of the re-pin log line). *Check:* those suites green; manual:
+   repaired head with a pending required check that turns green lands in one run (rc 0/4) and the selection
+   file + batch allowlist hold the new head. *Red controls:* (a) base defers the repaired head (rc 3);
+   (b) an external push after the repair (head ≠ `own_repair` at the post-check refresh) still defers;
+   (c) a head moved off the pin before the run (`:1792`) still defers; (d) required checks that never
+   register within the grace defer.
+4. **P2.3** New `prune_retained_scratch(current)` called from the `finally`, after Phase 1's own-workdir
+   decision: skipped entirely when `pgrep -f merge_cleanup\.py` reports another process (reuses
+   `_probe_text`). For each prefix (`merge-cleanup-`, `merge-check-`): candidates are direct children of the
+   resolved temp root with that prefix, real directories owned by this uid, not `current`; sort newest-first
+   by mtime, keep the newest `MERGE_CLEANUP_KEEP_WORKDIRS` (default 3, invalid → 3), and also keep anything
+   modified within the last hour. Each remaining candidate is removed with `_remove_own_scratch` only when
+   `scan_clones.inspect_open_handles(path)` returns `verified` and not `active`; otherwise it is kept and
+   named. One summary line: pruned N, kept M (reasons). Also in the `finally`: when the loop returned 3,
+   `keep_workdir` is false and no deferred sync is pending, remove the clones of PRs merged in this run
+   (`workdir/pr-<n>-*` for `n` in this run's merged set) with `_remove_own_scratch(path, f"pr-{n}-", root=workdir)`
+   — `_remove_own_scratch` gains an optional `root` (default the temp root). The deferred PRs' clones stay.
+   `SKILL.md:479` updated. *Check (manual, scratch `TMPDIR`):* five old `merge-cleanup-*` and five old
+   `merge-check-*` → newest 3 of each kept, one held open by a `sleep` with cwd inside → kept, one under
+   an hour old → kept, a symlink and a foreign-prefix dir → untouched; an exit-3 loop with one landed and one
+   deferred PR leaves only the deferred PR's clone. Existing `gh436`/`gh534_*` suites green (takeover tests
+   keep their `merge-check-*`: newest and under an hour). *Red control:* base leaves all ten dirs and both
+   PR clones.
+5. CHANGELOG entry; doc Status; receipts under `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
+
+### Phase 2A verification
+No new tests (GH-831). Focused: `bash test/gh436-merge-cleanup.sh` (collects `gh534_phase_a/b/c`). Final
+gate: the route for `merge_cleanup.py`/`ledger_merge.py`/merge-cleanup `SKILL.md` is the full gate, run once
+by the pre-push hook on the final commit. Manual checks above with their red controls, recorded with
+commands, revision, exit codes and `provenance.jsonl`. Smoke in a disposable clone of this repo: main path
+a real `--prs` dry run over open PRs (P2.8 shows every PR, PRE-FLIGHT respects declared checks); adjacent
+path a second dry run (rerun) plus `--show-merge-policy` with a `wait_for_checks` policy.
+
+### Phase 2A QA gate
+Codex plan QA Approved; focused suite green; full gate green on the final commit; each manual check
+passes and its red control is observed on the base; smoke recorded; Codex final QA Approved.
+
+### Phase 2A rating
+2026-11-14 · retained `rated 60/65/50/75` (one row per issue; read back from the ledger). Phase 2A
+addresses the same observed batch (F13 two cycles per hub, F6 manual CI waits, F1 disk full twice); no new
+incidents since Phase 1 landed (window 2026-11-14..15). Severity and priority unchanged; Phase 2A is a
+little more work than Phase 1 but within the same cheapness band. Appeal 50 neutral.
 
 ## Lessons Learned
 - An independent plan review caught a race the author missed: `merge --ff-only FETCH_HEAD` still
