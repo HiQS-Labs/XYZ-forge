@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -190,5 +190,45 @@ Answer with file:line evidence:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Input boundary: embedded artifact only.
+
+**What this proposes:** Establish a scoped typed baseline for `swarm_preflight.py` and split its large `main()` into explicit stages. Reuse the existing Python-layer check and add a pinned development dependency manifest, preserving behavior.
+
+**How the existing system works, per this document:** Existing helpers implement contracts, probes, normalization, and invocation construction, while `main()` interleaves their orchestration with repository inspection and emission. The CLI writes reports and packets and can mutate git state through fetch/worktree operations; recorded smoke baselines cover ready JSON, packet generation, and invalid arguments.
+
+**What it's not:** Other executor lanes, whole-repository typing, Bash retirement, new test functions, and output changes are excluded. Later issue groups are serial follow-ups; implementation admission and final delivery remain subsequent steps. Inference: the proposed stage dataclasses are intended to carry bounded stage results rather than one mutable global context, but the artifact has not yet made that constraint explicit.
+
+**VERDICT: FAIL**
+**Basis:** The first group is appropriately bounded, but the baseline replay, structural acceptance, and verification isolation need concrete corrections before implementation admission.
+
+swept file: yes
+
+- [Pass] The proposed stage sequence matches the current entry point: CLI/source resolution (`utils/py/swarm_preflight.py:1206-1290`), contract handling (`:1292-1323`), repository/ref inspection and probes (`:1330-1432`), readiness (`:1516-1641`), normalization (`:1649-1688`), reporting and exit precedence (`:1690-1753`), and packet emission (`:1775-1939`). Keep the early exits and first-failure readiness ordering in their present positions; a refactor must preserve more than the final success packet.
+- [Pass] Extending the existing module check is proportionate and fits the stated GH-831 allowance: `test/test_python_layer.py:44-46` already owns module validation and `validate.sh:1438-1458` already invokes that file. This does add a static-analysis obligation, but does not require a parallel runner, suite, or registry. Hosted dependency setup exists at the three cited workflow install steps, and `README.md:285` already requires Python >=3.10. Use the running interpreter (`sys.executable`) and an explicit repository working directory/config path when invoking mypy. Implementation must demonstrate that imported untyped `harness_paths` does not accidentally widen the checking scope.
+- [Should] Make the baseline replay self-contained and comparisons field-specific. `TESTS-RESULTS/2026-11-14+GH-1479/provenance.jsonl:1-2` reference `temp/gh1479/preflight-main.md`, which is absent in this seeded checkout. The retained JSON contains a contract but not the source document's frontmatter, acceptance text, or complete replay environment. Plan step 5 permits unspecified “expected branch/freshness changes”; that could hide a regression in the very repository-state stage being extracted. Retain the exact input document or a complete deterministic reconstruction recipe with the existing evidence, and enumerate permitted path/SHA substitutions and individually justified freshness fields; assert all remaining output and artifacts unchanged. No new test file is needed.
+  Observed input: the two provenance commands use `--project-doc temp/gh1479/preflight-main.md`; the read-only probe below reports `baseline_input_exists False`.
+  Affected scope: replay of these recorded ready JSON and packet baselines in a clean disposable clone.
+  Falsifier: a documented reconstruction using retained inputs produces the baseline's semantic output and packet at the base revision; each changed freshness field is individually explained rather than blanket-normalized.
+- [Should] Add an observable structural constraint beyond `main() <100 lines`. Plan step 2's “no single extracted stage with the former 734-line control flow” permits a 600-line evaluation stage or a dataclass containing virtually every former local. Define stage-owned result records, their producer/consumer flow, and prohibit passing `locals()`, an unrestricted bag of stage state, or an ever-growing mutable context through every stage. Review the final stage signatures and bodies for distinct responsibilities and bounded dependencies; a small signature inventory in existing receipts is sufficient, without a new gate or arbitrary universal line limit.
+  Observed input: plan steps 1-2 name dataclasses only for “repository inspection and candidate evaluation,” while the current normalization bridge alone consumes dozens of independent values (`utils/py/swarm_preflight.py:1649-1685`). No proposed record ownership or stage interfaces are specified.
+  Affected scope: new stage interfaces and dataclasses in this one module.
+  Falsifier: an explicit stage/data-flow sketch and final signatures show each stage receives only its required inputs and returns a bounded result; `main()` is short without relocating the original monolith.
+- [Should] Explicitly put step 4's focused shell suites and pytest invocation in a separate disposable full clone too. Step 7 assigns that isolation only to the final full gate, leaving the earlier imperative commands unsafe to follow from the implementation checkout. The actual preflight worktree operations (`utils/py/swarm_preflight.py:1405-1432`) illustrate why a linked worktree does not contain Git metadata mutations. Apply the existing repository identity before/after checks to those clone runs; do not request an unsandboxed run from this reviewer window.
+  Observed input: step 4 directly says to run `bash test/swarm-preflight.sh` and four other checks “during implementation”; only step 7 specifies a disposable full clone.
+  Affected scope: all mutation-heavy verification commands in this plan.
+  Falsifier: the revised execution instructions place every listed shell/pytest run in disposable full-clone isolation with preserved evidence and identity checks.
+- [Should] Disposition the existing atomic-write contract mismatch before promising preservation of every output contract. `MACHINE-CONTRACTS.md`, Common rules, says “Artifacts land via write-temp-then-`os.replace`”; the structured invocation is instead opened directly with `"w"` at `utils/py/swarm_preflight.py:1786-1788`, as are other packet files at `:1776-1780`. A reader can see a partial invocation during emission. For this behavior-preserving refactor, explicitly identify preservation of current write behavior as a known unresolved conformance exception, or obtain a separately scoped decision to repair it; do not silently change writes or claim existing implementation already satisfies atomic publication.
+  Observed input: `with open(os.path.join(out_dir, "marathon-invocation.json"), "w")` followed by `json.dump(...)` (`:1786-1787`).
+  Affected scope: concurrent readers of the structured invocation while its single producer writes it.
+  Falsifier: source shows temporary-file publication followed by replacement, or the authoritative contract explicitly exempts this artifact. Neither appears in the reviewed sources.
+- [Pass] Lane exclusions and non-goals stay surgical: the artifact explicitly excludes `marathon_drive.py`, `merge_cleanup.py`, `releases_app.py`, and later Jog/wave refactors. Its rating paragraph explicitly says “maintenance risk rather than a current outage” and “the trend is unknown”; no fabricated incident trend is needed. Ordered-commit rollback is adequate for the stated absence of schema migration; the proposed shared validation/dependency changes also affect users running the Python layer, not only preflight users.
+- [Pass] Read-only baseline integrity probe: command `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` parsed the source with `ast`, inspected baseline input existence, recomputed each provenance log's SHA-256, and read the retained `.rc` files. Exit 0; decisive output: `module_functions 42 main_lines 734`, `baseline_input_exists False`, all three logs `nonempty True hash_matches True`, and baseline exits `0, 0, 2`. The document's 47-function count includes nested helpers rather than 47 module-level definitions; clarify that wording as a nit. Evidence paths: `utils/py/swarm_preflight.py:1206-1939` and `TESTS-RESULTS/2026-11-14+GH-1479/provenance.jsonl:1-3`.
+
+Source sweep covered the whole preflight module and the named validation/dependency/contract surfaces. The atomic-publication mismatch above is the pre-existing defect that requires an explicit plan disposition; no unrelated repair is requested. No suites or executable fixtures ran here. Runtime equivalence, mypy acceptance/red control, and full-gate success remain **[Unverified — needs clone run]** until implementation. The graph lookup was denied by tool approval policy, so assessment used direct source reads.
+
+Handing off to Producer (claude-a) — address each Should, revise the embedded plan, and open round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
