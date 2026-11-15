@@ -54,7 +54,15 @@ Phrases overlap ("is this already implemented somewhere" can mean two things). P
 
 ## Step 1 — State the problem as capabilities
 
-Write down, before any search:
+**Say it back first.** From the operator's words alone, before opening any file, write one to three sentences under each heading:
+
+- **What this asks for.**
+- **How it is handled today, per the operator.**
+- **What it's not.**
+
+This is the paraphrase-first lens (Elephant-Goldfish Model, GH-1414). Its rules are written once in [`start-task` Step 6](../../1-hourly/start-task/SKILL.md); follow them, do not restate them: ground each exclusion in something the operator said, label inference as inference, never invent a non-goal. A heading that cannot be filled from the operator's words is the first unknown: write `not stated` and carry it to step 4. The capability list below is built from this paraphrase, so a wrong reading of the problem is visible here, before it decides what gets searched.
+
+Then write down, still before any search:
 
 - **Outcome:** what is true when this is solved, in one sentence.
 - **Constraints:** what must not change, and what the operator has already ruled out.
@@ -75,6 +83,8 @@ Use what the repo already paid to describe itself before any grep. Work down and
 State the mode in the output: which maps, which index and at what revision, or `grep-only`. A missing or stale index is said in one line, not worked around silently.
 
 **Then sweep the maps in the other direction.** Searching by capability only finds what the capability list thought to ask for. Walk the purpose-written map once, top to bottom, and for every subsystem it names ask the reverse question: what does this do, and could any part of the problem use it? A subsystem the capability list never mentioned is the dot this skill exists to connect. List each subsystem considered with a one-line verdict (`candidate` or `set aside: <reason>`), so a reader can see what was looked at and dismissed. Bound it to the maps; this is not a walk of the source tree.
+
+A `set aside` reason says what the subsystem is not, and where that comes from: the map line or source line read, or the word `inferred`. A reason taken from the subsystem's name or from one phrase in a map is `inferred`. Before an `inferred` dismissal stands for a subsystem that shares a verb with any capability in step 1, open its source; then it is either a candidate or a dismissal with a line behind it. Silence in a map is not an exclusion.
 
 Then **read every shortlisted candidate's source.** A map line or an index hit is a lead. A candidate enters the fit table only after its source was opened, and the row cites the lines read.
 
@@ -102,7 +112,7 @@ Close with four short parts:
 
 - **Composition:** which existing owner carries which capability, and how they join.
 - **New remainder:** what no existing module covers. This is the only part that needs designing.
-- **Unknowns:** what was not read or could not be confirmed, and what would settle it.
+- **Unknowns:** what was not read or could not be confirmed, any `not stated` heading from step 1, and what would settle each.
 - **One next action:** a single hand-off, not a menu.
 
 Absence is always worded as "not found in these searches", with the searches listed, in the opening line and the summary as well as in the table. "This repo has nothing that does X" is the same claim without its bound; do not write it. A bounded search is not proof that nothing exists. If no capability has a candidate, say so plainly and stop; do not stretch a weak match into a fit.
@@ -115,14 +125,16 @@ This skill writes no code, no plan document and no ledger row. Output goes to ch
 - `ponytail` — shrink the new remainder.
 - `sanity-check` — when the search shows the problem itself is in doubt.
 - `dry` — when the search turned up paths that already duplicate each other.
+- `consult` — when the table will drive a build decision: a reader with no session history says the table back under the same three headings as step 1. A mismatch is a signal to investigate, not a verdict.
 - `/idea` or `start-task` — to file or start the work.
 
 Do not run the neighbours automatically.
 
 ## Rules
 
-- Capabilities before searches. No search runs on the problem's own name alone.
+- Say the problem back, then capabilities, then searches. No search runs on the problem's own name alone.
 - Both directions: capabilities to modules, then the map's subsystems back to the problem.
+- Every dismissal names its source line or says `inferred`.
 - Maps, then index, then grep; state the mode.
 - No unread candidate in the table; every row cites `file:line`.
 - Every `use as is` names the constraint that was checked.

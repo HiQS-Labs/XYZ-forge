@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1484
 title: "New weekly skill: connect-the-dots — find existing modules to reuse before designing something new"
 status: Active
 created: 2026-11-14
-updated: 2026-11-14
+updated: 2026-11-15
 doc_type: enhancement
 effort: 1
 complexity: 2
@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Skill, `dry` pointer and index row written; final review round 1 returned two findings; answer-free control runs show the headline acceptance check is not met | **Blocked on an operator decision** (see "Stop state"). No PR opened. |
+| Operator decision 2026-11-15: accept the skill as a reuse map that shows its dismissals; add the paraphrase-first lens (GH-1414). Acceptance rewritten below. | Run 7 against the rewritten check, final review round 2, PR against `development`. |
 
 # GH-1484: connect-the-dots skill
 
@@ -86,6 +86,22 @@ Each check names what it observes and what an unchanged repo would show.
   - **Rubric control:** one deliberately bad output (a candidate dropped, or a citation to a file that was not read) is graded with the same rubric and must fail.
 - [ ] Adjacent check, input and search scope fixed before running. Prompt: *"We need to render PDF invoices with embedded fonts."* Corpus: files tracked by git in this repo at base `5967bde25` (`git ls-files`). Excluded: the agent's installed skills and tools outside the repo, `relay-system/`, `PROJECT/`, `TESTS-RESULTS/`, `CHANGELOG.md`, `docs/`, and the ledger dumps (`releases.db`, `releases.sql`), which hold prose, not modules. Pre-run evidence, retained with the transcript: `git grep -il` for `pdf`, `invoice`, `embedded font`, `reportlab`, `weasyprint` over that corpus. Run on 2026-11-14 before freezing this case: `pdf` matched only the excluded ledger dumps; the other terms matched CI config, a fuzzy-match test fixture and gate baselines, none of them a rendering module. Expected: "not found in these searches", with the searches listed, and no invented fit. If the pre-run searches are repeated at execution and show a real candidate, this case is invalid and is replaced before it counts; a candidate is never suppressed to pass it.
 - [ ] `ARCHITECTURE.md` row present; `test/gh589-skill-viewer.sh` and `utils/pdda/pdda.sh run` green.
+
+## Operator decision and rewritten acceptance (2026-11-15)
+
+The operator's words: "I accept using it as a reuse map that shows its dismissals." and "Can and should we also use the Elephant Goldfish Model as part of the vetting part of skill?"
+
+This **replaces the Green item above**. The original Green item ("cites `tick` and ATE") stays recorded as not met; it is no longer a delivery condition. The skill does not promise a particular module.
+
+Added to the skill for the second sentence, citing `start-task` Step 6 as the one owner of the paraphrase-first rules: a three-heading paraphrase of the problem before the capability list; every `set aside` names its source line or says `inferred`, and an `inferred` dismissal of a subsystem sharing a capability verb is opened before it stands; `consult` as an optional hand-off for a fresh reader. No new reviewer turn, script or gate.
+
+- [ ] **Reuse-map check (run 7), rubric fixed before the run.** A fresh agent on base `5967bde25`, given an answer-free copy of the committed skill and the operator's original wording, passes only if all hold:
+  1. The three headings (What this asks for / How it is handled today, per the operator / What it's not) appear before the capability list.
+  2. Every fit-table row that names a module cites `file:line`, and every cited file is in the run's own opened list.
+  3. The reverse sweep lists subsystems with a verdict each; every `set aside` carries a source line or the word `inferred`.
+  4. No unbounded absence claim anywhere in the answer.
+  5. A new remainder and exactly one next action are named.
+  An unchanged repo (run 2, no skill) fails 1, 2 and 3. Whether `tick` or ATE appear is recorded, not graded.
 
 ## Stop state (2026-11-14)
 
