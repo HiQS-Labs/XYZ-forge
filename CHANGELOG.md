@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-15
+
+- **GH-1400: opt-in bounded Jog supervision.** `jog run --supervise-until` composes
+  approved-result recovery, safe execution-clone alignment and independent continuation.
+  Uncertain latest results hold, existing attempt history remains, and preserved local branches
+  and logs are retained. The bet is that composing existing owners removes the demonstrated
+  manual handoff without another queue. Costly rollback disables the opt-in path and retains state.
+  Controlled CLI checks and existing Jog integration pass; final independent QA/full gate pending.
+  Evidence: `TESTS-RESULTS/2026-11-15+GH-1400/SUMMARY.md`.
+
 ## 2026-11-14 — GH-1475: merge-cleanup Phase 2A (fewer cycles and waits)
 
 A hub PR that this run B1-repaired no longer needs a second dry run and execute. The run waits for the new head's checks on that exact commit, re-checks that nothing else moved it, re-pins it (selection file and batch allowlist), and lands it. Anything else off its pin still defers. `.merge-cleanup.json` gains the opt-in `qualification.wait_for_checks: [names]`, so the existing pending, poll and defer logic applies to named checks even when GitHub reports no required checks. Retained clones are bounded: per prefix, the newest 3 (`MERGE_CLEANUP_KEEP_WORKDIRS`) and anything touched in the last hour are kept, and older `merge-cleanup-*`/`merge-check-*` folders are removed only when `lsof` verifies them idle and no other `merge_cleanup.py` is running. On exit 3, landed PRs' clones are released. The shared open-handle probe now also counts a process whose cwd is the folder root (it missed that holder before, which affected teardown too). A dry run now previews B1-repairable PRs and continues instead of stopping at the first one. Existing tests that pinned the old second cycle were updated; no new tests. Code revert is easy; pruned scratch is not restored by a revert. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
