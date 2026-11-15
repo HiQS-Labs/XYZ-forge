@@ -84,9 +84,9 @@ State the mode in the output: which maps, which index and at what revision, or `
 
 **Then sweep the maps in the other direction.** Searching by capability only finds what the capability list thought to ask for. Walk the purpose-written map once, top to bottom, and for every subsystem it names ask the reverse question: what does this do, and could any part of the problem use it? A subsystem the capability list never mentioned is the dot this skill exists to connect. List each subsystem considered with a one-line verdict (`candidate` or `set aside: <reason>`), so a reader can see what was looked at and dismissed. Bound it to the maps; this is not a walk of the source tree.
 
-A `set aside` reason says what the subsystem is not, and where that comes from: the map line or source line read, or the word `inferred`. A reason taken from the subsystem's name or from one phrase in a map is `inferred`. Before an `inferred` dismissal stands for a subsystem that shares a verb with any capability in step 1, open its source; then it is either a candidate or a dismissal with a line behind it. Silence in a map is not an exclusion.
+A `set aside` reason says what the subsystem is not, and where that comes from: the map line or source line read, or the word `inferred`. A reason taken from the subsystem's name or from one phrase in a map is `inferred`. Before an `inferred` dismissal stands for a subsystem that shares a verb with any capability in step 1, open its source; then it is either a candidate or a dismissal with a line behind it. Silence in a map is not an exclusion. Close the sweep with a count: how many subsystems the map names, and how many got a verdict. If the numbers differ, say which were skipped.
 
-Then **read every shortlisted candidate's source.** A map line or an index hit is a lead. A candidate enters the fit table only after its source was opened, and the row cites the lines read.
+Then **read every shortlisted candidate's source.** A map line or an index hit is a lead. A candidate enters the fit table only after its source was opened, and the row cites the lines read. That holds for every column: a line cited for an owner or a constraint also comes from a file that was opened. A search hit that was not opened is written as a search hit, not as a citation.
 
 ## Step 3 — Fit table
 
@@ -136,7 +136,7 @@ Do not run the neighbours automatically.
 - Both directions: capabilities to modules, then the map's subsystems back to the problem.
 - Every dismissal names its source line or says `inferred`.
 - Maps, then index, then grep; state the mode.
-- No unread candidate in the table; every row cites `file:line`.
+- No unread candidate in the table; every row cites `file:line`, and every cited file was opened.
 - Every `use as is` names the constraint that was checked.
 - "Not found in these searches", never "does not exist".
 - Read-only.
