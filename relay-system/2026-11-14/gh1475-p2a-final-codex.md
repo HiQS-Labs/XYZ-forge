@@ -52,9 +52,9 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed Phase 2A implementation on this branch, diff `a9ece7fcf..HEAD`
-  (ignore the merge of `origin/development`, which brought only unrelated files: see
-  `git diff a9ece7fcf HEAD --stat -- skills test CHANGELOG.md PROJECT TESTS-RESULTS`).
+- Artifact under review: `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md` plus the committed Phase 2A
+  implementation it describes. Review the diff with `git diff a9ece7fcf HEAD -- skills test CHANGELOG.md PROJECT TESTS-RESULTS`
+  (the merge of `origin/development` brought only unrelated files).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-11-14
 - Definition of Done: each of P2.1, P2.2, P2.3, P2.8 (issue #1475) is delivered as the approved plan says
