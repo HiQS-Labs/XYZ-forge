@@ -2,7 +2,7 @@
 gh_issue: 1479
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
 title: "refactor: add Python static analysis and decompose swarm-preflight main"
-status: Active — Codex plan QA resumed (2-WORKING)
+status: Active — implemented and verified; final QA and draft PR (2-WORKING)
 created: 2026-11-14
 updated: 2026-11-15
 owner: noelsaw
@@ -23,7 +23,7 @@ phases: 5
 
 | What was just completed | What's next |
 |---|---|
-| Operator authorized up to two forced Codex rounds while preserving the existing attempt history. The revised plan and baseline evidence are committed. | Resume Codex round 2; stop on approval, or stop implementation after the second unsuccessful round. |
+| Codex approved the plan (forced round 2). Stage extraction, typed records, scoped mypy and the dependency manifest are implemented; focused suites, mypy with red control, and a byte-identical old-vs-new comparison pass. | Final gate and Codex final QA, then a draft PR. The PR stays draft until the operator promotes it. |
 
 ## Acceptance capture
 
@@ -110,4 +110,25 @@ Use three small, immutable dataclasses, not one mutable context:
 
 The first driver attempt completed Codex round 1 (`FAIL`), then escalated when the producer token did not advance. A second invocation attempted to open round 2 without first claiming the token and failed before dispatch; it nevertheless consumed the lane's second attempt. The corrected third invocation was refused by `lane-attempt-cap` at 2/2. No `--force`, new token, history reset, or accepted-start was used. Resume only with an explicit operator decision to authorize one forced Codex round 2 or to hold the task.
 
-NO_ENTRY for lessons: plan review is unfinished and the block is coordination-specific; no implementation effect exists to grade.
+Resolved 2026-11-15: the operator authorized up to two more Codex rounds; the first forced round returned Approved (attested at `7b1f4f43c`).
+
+## Implementation receipt — 2026-11-15
+
+Implementation commit `b2c5c32a7`; accepted-start `ab1fb7fbc`. Stage signatures and the annotation inventory are in `TESTS-RESULTS/2026-11-14+GH-1479/stage-signatures.md`: `main()` is 11 lines (was 734), 57 functions fully annotated, no `locals()`/`vars()` forwarding, no `type: ignore` or casts. The largest stage is `evaluate_candidate` at 250 lines; it keeps the existing first-failure readiness order in one place rather than splitting it across helpers.
+
+Verification, all in the disposable verify clone at `b2c5c32a7` (logs and hashes in `provenance.jsonl`):
+
+- Focused suites: preflight 100/100, unknown arguments 20/20, gate paths 4/4, contract goldens 20/20, Python layer 21/21.
+- Scoped mypy passes; the red control (temporary copy with a wrong return type) fails with one `return-value` error.
+- Behavior comparison: instead of comparing against the recorded baseline with enumerated substitutions (plan step 5), the old executor (`a7104e323`) and the new one were run from the same checkout path against one fixed disposable target with the fixed clock. Ten scenarios covering exits 0, 2, 3, 4 and 5 produced byte-identical stdout, stderr, exit codes and all seven packet files, with no substitutions. This is stricter than the planned comparison and replaces it.
+
+Not changed: packet write mechanism (the atomic-write exception above stands), `marathon_drive.py`, `merge_cleanup.py`, `releases_app.py`, and no new test file, function, suite or registry entry.
+
+## Lessons
+
+- **Commit a sub-agent's work before reviewing it.** The 750-line implementation sat uncommitted for four hours after the driving session died silently; three operator messages got empty turns. A checkpoint commit on return would have made the state obvious and recoverable from any session.
+- **A failed dispatch spends a relay attempt.** Releasing a token that was never claimed consumed the lane's second attempt before Codex ran, parking the review on coordination rather than substance. Claim before release; the cap does not distinguish the two.
+- **Compare old and new from the same path, not against a stored baseline.** Running both executors from one checkout path against a fixed target removes every path, SHA and dirty-state substitution, so the comparison is a plain `diff -r`.
+- **Check that an identical comparison is not vacuous.** The first A/B run was byte-identical only because every scenario exited 6 at `project doc not found` (relative `--project-doc` resolves against the harness root, not the working directory). Read the exit codes before trusting a clean diff.
+- **The Python layer now needs mypy in the gate's interpreter.** A prepared gate venv without it fails `test_swarm_preflight_module_load` until `python3 -m pip install -r requirements-dev.txt` is run there.
+- **A mypy red control on a copied file needs `harness_paths.py` beside it,** or the fallback import adds an unrelated `import-not-found` error to the witness.
