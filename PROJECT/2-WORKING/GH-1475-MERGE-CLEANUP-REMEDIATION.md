@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 landed (PR #1478); Phase 2A plan written (P2.1, P2.2, P2.3, P2.8) | Codex plan QA on the Phase 2A plan, then implementation |
+| Phase 2A implemented and verified (Codex plan QA Approved r2; existing suite 227 OK; manual checks with red controls; smoke) | Codex final QA, full gate via pre-push, ready PR, awaiting merge; P2A.measure afterwards |
 
 ## Table of contents
 - [Problem](#problem)
@@ -258,6 +258,17 @@ Ordered; verification inline. Writers extended: `args._pins` + `pin_selection` +
    PR clones.
 5. CHANGELOG entry; doc Status; receipts under `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
 
+### Phase 2A implementation notes
+- The P2.3 held-open manual check found a pre-existing defect: `scan_clones.inspect_open_handles` matched
+  lsof paths with the strictly-inside `_within`, so a process whose cwd *is* the folder root (a shell in a
+  clone) was not a holder. Fixed in place (root counts) instead of adding a second probe. This also makes
+  teardown preserve such a checkout, which WORKTREE-SAFETY intends. Red control in the receipts.
+- Re-pin evidence in the existing tests is the published selection file, not a log line: `log()` writes
+  stdout and the suites capture stderr only.
+- All suites and the gate run with an isolated `TMPDIR`: the policy now prunes the temp root at every loop
+  end, and this machine's default temp root held 80 tool-owned folders. Pruning them was outside this task.
+- Receipts: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
+
 ### Phase 2A verification
 No new tests (GH-831). Focused: `bash test/gh436-merge-cleanup.sh` (collects `gh534_phase_a/b/c`). Final
 gate: the route for `merge_cleanup.py`/`ledger_merge.py`/merge-cleanup `SKILL.md` is the full gate, run once
@@ -284,6 +295,8 @@ little more work than Phase 1 but within the same cheapness band. Appeal 50 neut
   guard tripped; the first P1.3 evidence never exercised `clean=True, keep=True`.
 - Smoke on a real repo found every open PR conflicting, so dry runs still keep clones via the
   pre-existing B1 dry-run early return (P2.8); Phase 1 does not change that.
+- Phase 2A: a deletion guard is only as good as the probe it trusts. Exercising the held-open case
+  end to end showed the shared open-handle probe had never counted a cwd at the folder root.
 
 ## Merge evidence
 
