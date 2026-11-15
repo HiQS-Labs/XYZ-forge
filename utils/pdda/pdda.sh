@@ -455,9 +455,28 @@ _pdda_cl_epoch() {  # YYYY-MM-DD -> epoch seconds (portable BSD/GNU); prints not
   fi
 }
 
+pdda_changelog_writes_mode() {
+  local mode="${CHANGELOG_WRITES:-}"
+  if [ -z "$mode" ] && [ -f "$PDDA_REPO_ROOT/.pdda-mode" ]; then
+    mode="$(grep -E '^[[:space:]]*CHANGELOG_WRITES=[^[:space:]]+' "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*CHANGELOG_WRITES=([^[:space:]#]+).*/\1/' || true)"
+  fi
+  mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
+  case "$mode" in
+    landing|branch) printf '%s\n' "$mode" ;;
+    *) printf 'off\n' ;;
+  esac
+}
+
 check_changelog() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-changelog" rc=0
+  local writes_mode
+  writes_mode="$(pdda_changelog_writes_mode)"
+  if [ "${PDDA_IN_RUN:-0}" = "1" ] && { [ "$writes_mode" = "off" ] || [ "$writes_mode" = "landing" ]; }; then
+    pdda_record_finding info "$CHECK_NAME" "${PDDA_CHANGELOG:-$PDDA_REPO_ROOT/CHANGELOG.md}" 0       "CHANGELOG_WRITES=$writes_mode — aggregate freshness warnings skipped (reconciler/off mode)" "skip"
+    pdda_emit_summary "$CHECK_NAME" "$rc"
+    return "$(pdda_gated_exit "$rc")"
+  fi
   local PDDA_CHANGELOG="${PDDA_CHANGELOG:-$PDDA_REPO_ROOT/CHANGELOG.md}"
   local PDDA_CHANGELOG_STALE_DAYS="${PDDA_CHANGELOG_STALE_DAYS:-0}"
   local cl_line cl_date commit_date cl_epoch commit_epoch gap_days
@@ -1718,6 +1737,7 @@ pdda-check-marathon-qa:check_marathon_qa
 cmd_run() {
   local EXIT_CODE=0 FAILED="" entry label fn MODE_NOTE
   local timing_on=0 t_start t_end
+  local PDDA_IN_RUN=1
 
   case "$PDDA_MODE" in
     observe) MODE_NOTE="observe (report-only; never blocks)" ;;

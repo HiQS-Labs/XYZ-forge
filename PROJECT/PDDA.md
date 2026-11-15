@@ -459,6 +459,10 @@ script only catches the unambiguous signals.
 
 Purpose:
 - nudge that `CHANGELOG.md` (the first-class end-of-iteration record) was updated this iteration
+- governed by `CHANGELOG_WRITES` configuration (`off` / `landing` / `branch`):
+  - `off` (universal default): PR branches do not write `CHANGELOG.md`, the post-landing reconciler writes nothing, and `pdda.sh run` skips aggregate changelog freshness warnings. Eliminates merge conflicts with zero author ceremony.
+  - `landing` (opt-in): Authoritative single writer in `utils/py/wave_reconcile.py` synthesizes `CHANGELOG.md` entries from merged PR descriptions at merge time. PR branches do not write `CHANGELOG.md`, and `pdda.sh run` skips aggregate warnings.
+  - `branch` (legacy opt-in): PR branches author entries in `CHANGELOG.md`, and `pdda.sh run` warns if commits postdate the newest entry.
 
 Minimum behavior:
 - read `CHANGELOG.md` (override via `PDDA_CHANGELOG`); find the newest dated heading, accepting
