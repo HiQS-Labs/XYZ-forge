@@ -44,7 +44,7 @@ through the real CLI; the run's own workdir was excluded. The adjacent path is a
 folder is under an hour old and is kept. A second adjacent path: `--show-merge-policy` accepts
 `wait_for_checks: ["validate"]` and refuses `[]`.
 
-## Kimi K3.1 Pro QA fixes (`c544c3884`)
+## Kimi K3.1 Pro QA fixes (`c544c3884`, `345d60532`)
 
 Third-seat QA (`relay-system/2026-11-15/gh1475-p2a-qa-kimi.md`) failed the PR on three blockers; all
 three were confirmed in the code and fixed:
@@ -52,7 +52,7 @@ three were confirmed in the code and fixed:
 | Finding | Fix | Evidence |
 |---|---|---|
 | P2.1: `development` can move during the repaired-head check wait, and the ledger gate never saw the new base | after the wait, compare the clone's `origin/<branch>` with `ls-remote`; defer (exit 3) on change or unreadable | source change only; the base-unchanged re-pin paths stay green in the existing suite. Not exercised in a loop fixture |
-| P2.3: a name prefix was the only proof of ownership; unique content could be deleted | pruning takes only `mkdtemp`-shaped folders whose entries are all tool-made; every removal keeps a clone with untracked files or a stash | `manual-kimi-fixes.log` checks 1-3; PR head red on 1 and 2 |
+| P2.3: a name prefix was the only proof of ownership; unique content could be deleted | pruning takes only `mkdtemp`-shaped folders whose entries are all tool-made; every removal keeps a clone with untracked files, a stash, a linked worktree, or tracked changes outside an in-progress merge (round 2) | `manual-kimi-fixes.log` checks 1-3 and 6-8; PR head red on 1, 2, 6, 7 |
 | P2.3: the exit-3 release skipped the open-handle probe | the probe moved into `_remove_own_scratch`, so the clean-run removal, the exit-3 release and pruning all use it | checks 4-5; PR head removed the live-cwd folder |
 
-Existing suite on `c544c3884`: 227 tests OK.
+Existing suite on `345d60532`: 227 tests OK. Not adopted: keeping clones whose HEAD is "unpushed". The tool pushes B1 merge commits by URL, so they have no remote-tracking ref; on the real temp root about 20 tool-made merge commits read as unpushed, and the rule would stop pruning. Those commits are reproducible by re-running B1.
