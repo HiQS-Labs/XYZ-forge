@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -325,7 +325,7 @@ are separate PRs not yet scheduled.
 - **N1 [Nit] Red controls missing.** **Disposition: Modified.** Every P1 item now has a check and a
   red control. Phase 2/3 items define theirs in their own `/start-task` plans when picked up
   (stated in each phase header); writing them now for unscheduled work is Rejected (Ponytail).
-- **P1 [Pass]** noted.
+- **P1 [Unverified — no citation]** noted.
 
 Revised plan (r1) — this replaces the embedded artifact for Round 2:
 
@@ -391,5 +391,24 @@ Relay QA of this plan (agy, Gemini 4 Argon High) is summarized in a comment.
 Questions for Round 2: are B1/B2/S1–S3 resolved as dispositioned; is any rejection wrong on the evidence; is Phase 1 still small, low-risk and independent?
 
 handing off to Reviewer (agy) — take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+- **[Pass] P1 — B1 and B2 are cleanly resolved in `r1` (`relay-system/2026-11-14/gh1475-plan-argon.md:344, 346, 362, 367`), and the Phase 1 / Phase 2 Ponytail split is sound on the evidence.**
+  - `P1.3` (`relay-system/2026-11-14/gh1475-plan-argon.md:346`) honors `keep_workdir` (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1630, 2067`) by removing the `merge-cleanup-*` workdir (`:1629`) only when `_land_prs_loop` returns `0` and `not keep_workdir` (with temp-root path containment), while keeping `merge-check-*` clones (`:219`) retained as pinned by `test/gh436-merge-cleanup.py:1084-1109` and `skills/2-daily/merge-cleanup/SKILL.md:80` (`"retained independent full clones, never primary"`). Deferring `merge-check-*` pruning and per-PR clone release on exit `3` to `P2.3` (`relay-system/2026-11-14/gh1475-plan-argon.md:362`) and capturing the pre-existing dry-run early exit (`merge_cleanup.py:1808-1813`) as `P2.8` (`relay-system/2026-11-14/gh1475-plan-argon.md:367`) keeps Phase 1 local and low-risk.
+  - `P1.1` (`relay-system/2026-11-14/gh1475-plan-argon.md:344`) replaces `git pull --ff-only origin <branch>` in `utils/py/wave_reconcile.py:302-307` (`pull_upstream`) with `git fetch origin <branch>` then `git merge --ff-only origin/<branch>` (matching `merge_cleanup.py:1227, 1966`), retries the pair on ref-lock errors (`cannot lock ref`, `Unable to create '….lock'`), adds those patterns to `TRANSIENT_RE` (`merge_cleanup.py:125-129`), and defines a deterministic manual check and red control. Declining new `_retry_call` wrappers at `merge_cleanup.py:1294, 1308` is justified because `F5` occurred in `wave_reconcile.py:304` and expanding `TRANSIENT_RE` already covers `_net_git` retry sites (`:1961, 2528`).
+
+- **[Pass] P2 — S1, S2, S3, S4, and N1 are resolved with falsifiable checks and red controls (`relay-system/2026-11-14/gh1475-plan-argon.md:340-360, 370, 376`).**
+  - `P1.4` (`relay-system/2026-11-14/gh1475-plan-argon.md:347`) gates batch writes on `not dry_run` after `commit_and_push_phase5_writes` (`merge_cleanup.py:2367-2369`), calls `batch_record.set_outcome` (`skills/2-daily/merge-cleanup/scripts/batch_record.py:291-307`) with `status="merged"`, `merge_oid`, and `reconcile="ok"`, refreshes sweep inputs and the issue via `finalize_sweep_inputs` + `batch_record.update` (`merge_cleanup.py:1605-1614`), and splits `record_sweep`'s recovery hint (`merge_cleanup.py:2785-2786`) between `--reconcile-pr N --execute` and `--resume --execute`.
+  - `P1.5` (`relay-system/2026-11-14/gh1475-plan-argon.md:348`) corrects `skills/2-daily/merge-cleanup/SKILL.md:476` for single-PR `--execute` runs encountering QA debt (`merge_cleanup.py:2634-2663`) and documents all exit codes (`0`, `4`, `3`, `5` at `merge_cleanup.py:79`, `2`, and `1` at `:2127`) while preserving `test/gh534_phase_c_tests.py:896-994`.
+  - `P1.6` (`relay-system/2026-11-14/gh1475-plan-argon.md:349-356`) reuses `required_checks_state` (`merge_cleanup.py:732-745, 1893`) with no extra `gh` call, specifies `shutil.disk_usage(tempfile.gettempdir())` and `TMPDIR` rules, and keeps the concurrency probe strictly read-only (`pgrep -f`) in Phase 1 while placing the `fcntl.flock` lockfile in `P3.6` (`relay-system/2026-11-14/gh1475-plan-argon.md:376`) so Phase 1 introduces no new state in `--execute`.
+  - `P2.1` (`relay-system/2026-11-14/gh1475-plan-argon.md:360`) includes the check-registration grace poll on `b1["commit"]` (`merge_cleanup.py:1943-1944`), pin updates (`args._pins`, selection file, `batch_record.set_allowlist`), and the `test/gh534_phase_b_tests.py:423` update + red control; every Phase 1 item (`:344-356`) carries an explicit check and red control, and Phases 2–3 (`:359, 370`) bind theirs to each item's `/start-task` plan.
+
+**VERDICT:** PASS
+**Basis:** All Round 1 blockers (`B1`, `B2`), should-fix items (`S1`–`S4`), and red-control requirements (`N1`) are resolved in `r1` (`relay-system/2026-11-14/gh1475-plan-argon.md:332-389`). Phase 1 (`P1.1`–`P1.6`) is small, local, reversible, and independent of Phases 2–3, and every scope boundary deferred to Phases 2–3 (`P2.3`, `P2.8`, `P3.6`) is justified by the code evidence.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
