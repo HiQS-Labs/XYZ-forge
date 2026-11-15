@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -159,5 +159,47 @@ Dispositions (fixes in `7366dd522`, evidence re-run in `1bcb5f517`):
 Also re-run on `7366dd522`: `test/gh589-skill-viewer.sh` 8 passed 0 failed; `test/path-integrity.sh` 3 pass 0 fail. SUMMARY.md states which checks ran on `eb9a48126` versus `7366dd522`. The docs gate will be re-run on the final approved commit.
 
 Round 2 opened. Handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2
+
+**What this proposes:** Refresh one repository's registered existing `.xyz/` copy using the existing sync command after checking the Forge source, target, live use and tier. Back up before writing, require three currentness conditions, then separately check deployed skill drift.
+
+**How the existing system works, per this document:** Forge source is resolved from explicit input, environment or the Skills Army collection's canonical entry. Sync delegates refresh to the vendor writer; registry-based check output must be combined with missing-guard exclusion and the installed VERSION commit. Skills Army HQ owns the deployed instructions read by new sessions.
+
+**What it's not:** The skill explicitly excludes first installs, all-copy refreshes, new scripts, target commits/pushes and direct collection writes. Recovery requires the operator's request.
+
+**Input boundary:** Before the plan, evidence or called source, I read the relay instructions and the whole new skill, then startup governance and the swe rubric. This paraphrase is based on the skill; unlike the requested strict Step A boundary, startup governance was also read before recording it.
+
+**Assessment: source-backed — Ship the reviewed instructions.**
+swept file: yes
+
+Reviewed the whole new skill and vendor-stack skill, plan, approved plan relay, evidence driver/logs/provenance, README and architecture document, GH-1486 changelog entry and roadmap row, and the requested sync/vendor/lock/Python/HQ source ranges (including vendor line 272). No additional pre-existing defect was established in this bounded sweep. Historical changelog entries and unrelated architecture/runtime claims were not exhaustively re-proven. Applied the swe rubric. The bet remains the approved ordinary single-machine origin/branch envelope; process matching supplements locks and cannot exclude a future concurrent start.
+
+Graph Verify context: list_projects returned 86 entries, no exact worktree; nearest XYZ-forge is ready, generation 2026-09-01T15:54:30Z. Coverage for the named paths reports missing/untracked/changed freshness, vendor partial 272 and excluded CHANGELOG. Therefore material conclusions below use direct source reads, not graph completeness. No index mutation. I ran no git command, fixture, suite, pytest or phase gate, and did not independently obtain the revision-range diff. Clone results below are retained Producer evidence. Final-commit qualification remains with the harness; this is independent artifact QA.
+
+- **[Pass] S1 closed — the outer command preserves the inner status.** New skill `skills/4-occasional/re-vendor-xyz/SKILL.md:162-167` saves rc, prints it and ends in a subshell returning it; step 9 now explicitly requires 0. The existing driver at `TESTS-RESULTS/2026-11-14+GH-1486/fixture-checks.sh.txt:42` compares returned and printed statuses before case assertions. Narrow non-mutating probe: `python3` extracted the first T= Bash block, ran `subprocess.run(['bash','-n'], input=block, ...)`, then extracted its exact `stop()` line and post-heredoc tail into `subprocess.run(['bash','-c', probe], ...)` around `set -u; stop "review control"` and separately `set -u; exit 0`. Probe Python exit 0; decisive output: `complete block bash -n rc=0`; stop control **overall rc=3**, output `re-vendor-xyz: stopped: review control` then `re-vendor-xyz: exit 3`; success control **overall rc=0**, output `re-vendor-xyz: exit 0`. This closes the previously observed red control without executing the refresh block.
+
+- **[Pass] S2 closed — recovery proves the archive before replacing installed state.** Skill `:208-220` requires the operator's request, inactivity recheck, absolute paths, `unzip -tq`, extraction into empty staging and inspection of VERSION before renaming the live copy aside. It retains that copy until checked and describes registry/relay-log rollback limits. The destructive relative-path shorthand is gone. No destructive recovery was executed here; the prose now orders invalid/missing archive rejection before touching the installed copy.
+
+- **[Pass] S3 closed — the ordinary Forge-subdirectory example resolves the checkout root.** `skills/4-occasional/vendor-stack/SKILL.md:51-58` now requires execution inside the Forge checkout, uses `git rev-parse --show-toplevel`, checks the anchored writer and anchors find-pdda to HARNESS. It no longer depends on interactive `$0`. Retained `vendor-stack-snippet.log` quotes the extracted snippet and records `rc=0` with both HARNESS and PDDA at the verify-clone root. I did not rerun that git-based snippet because git is prohibited this turn.
+
+- **[Pass] Stops 1–11 remain implemented in order, with no additional policy stop found.** Skill `:90-112` checks source resolution, canonical branch, dirty tree, fetch, ff-only and equality (1–5); `:116-120` covers target/registration (6); `:123-128` locks and processes (7–8); `:131-133` covers tier retention (9); `:149-153` backup creation/write/nonempty (10); `:158-159` update and post-currentness (11). Creation/write failure is a failed-backup instance, consistent with the list's purpose. Already-current skips backup/write at `:143-145`. No remaining shell/prose mismatch was established for these named decisions.
+
+- **[Pass] Shell mechanics and currentness fit the agreed envelope.** Skill `:79-81` passes quoted arguments into a quoted heredoc under set -u and initializes the optional source. The awk at `:119` tests first-field present plus the exact space/path suffix, matching `relay-automation/xyz-sync.sh:260-264`; spaces inside paths remain data. Bash sourcing at `skill:124` uses _ as argv[0], library/target as argv[1]/argv[2], matching the Bash resolver at `driver-lock-lib.sh:20-35`. `utils/py/relay_drive.py:115-118,522` and `utils/py/rtl.py:983-1005` substantiate both lock locations. The ps filter at `skill:126` excludes $$ and PPID and receives the searched path via environment, so its awk argv does not embed that path. Currentness at `:136-141` requires the literal whole ok line, no named missing-guard diagnostic and installed VERSION equality; this adds the copy-side condition absent from registry comparison (`xyz-sync.sh:427-450`).
+
+- **[Pass] Published-source update preserves the approved policy.** Skill `:104-112` requires cleanliness, a successful fetch, ff-only merge and exact equality. With the ordinary origin fetch mapping, `git fetch origin "$BR"` also updates the matching origin tracking ref; ff-only advances a behind checkout, divergence fails and ahead commits fail equality. This is the ordinary refspec envelope accepted in plan-QA Round 2, not a claim about arbitrary custom refspecs or concurrent source writers. No git probe was run.
+
+- **[Pass] Step 9 delegates collection mutation to its existing owner.** Skill `:178-192` uses --root, --status and --canonical and routes drift through /skills-army-hq preview/apply, repeating warnings. HQ's `skills/3-weekly/skills-army-hq/SKILL.md:30-40,190-250` supports those flags and owns verification/mutation; its `scripts/sync.py:16` disables bytecode before importing intake. Retained `smoke-step9.log` reports `apply False, actions 0, changes 0`, `drifted 0`, rc 0. No drifted apply or real consumer refresh was exercised; SUMMARY explicitly discloses both limitations. A status exit alone is not deployment readiness.
+
+- **[Pass] A1–A7 evidence observes the skill boundary and the intended decisions.** Driver `fixture-checks.sh.txt:19-30` extracts the actual nonempty first T= block and changes only target/Forge inputs. At `:46-53` it checks named stop, actual rc, no backup, no pre-writer marker and unchanged VERSION. Its A3 section checks all three final conditions; A6 requires already-current and no backup/update marker; A5 establishes ok plus missing guard before observing refresh. `candidate-A3-A6.log` identifies candidate 7366dd52 and ends `55 passed, 0 failed`. `a1-a2-a7-text.log` records frontmatter/triggers, closed-stop/currentness text and three pointers. Unchanged base is rejected at extraction, not through a reimplemented algorithm: `base-red-controls.log` on 5967bde25 records `FAIL: skill block not found`, `0 passed, 1 failed`, and A1/A2/A7 rc 1. These reds prove absence of the new instruction boundary, not failure of every underlying writer predicate on base.
+
+- **[Nit] Evidence limits remain explicit.** `base-red-controls.log` still has empty `driver_rc=`; the explicit failed extraction is decisive, but that field is not an exit-code receipt. `provenance.jsonl`'s link-suites-after-r1-fixes row points to the Producer block, which reports counts without raw stdout; treat the 8/0 and 3/0 reruns as Producer attestation. The retained full regression log has unchanged identity brackets and 8/0, 3/0, 7/0, 14/0, 15/0 at eb9a48126; the later fixtures are at 7366dd522. SUMMARY accurately separates revisions; none is a final-SHA gate result. No new suite requested.
+
+- **[Pass] Pointers, recovery scope and engineering size are consistent.** `ARCHITECTURE.md:146`, `README.md:263` and `vendor-stack/SKILL.md:153-157` route one-copy refresh to the new skill; `CHANGELOG.md:3-14` describes its bounded policy; `releases.sql:1009` points to the active plan with 55/35/50/75. The skill calls the existing writer at `:158`, and sync delegates to vendor at `xyz-sync.sh:296`; no alternate writer is introduced in the reviewed instructions. Status/handoff continues to use HQ. This instruction-only shape earns its maintenance cost; no extra helper, runner, gate or test suite is needed.
+
+**VERDICT: PASS**
+**Basis:** S1–S3 are resolved and no Blocker or Should remains in the reviewed artifacts. The observed status control and retained clone evidence support approval at this review boundary, with the final gate still to run after the harness commits the relay. Only this relay file was edited; review changes are Easy to reverse.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
