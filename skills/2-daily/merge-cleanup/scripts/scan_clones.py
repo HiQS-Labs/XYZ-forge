@@ -370,7 +370,7 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
       1. absent binary / timeout / launch failure            -> incomplete
       2. not a normal exit with return code 0 or 1           -> incomplete (signal-killed etc.)
       3. anything on stderr (`lsof: WARNING: can't opendir`) -> incomplete: the tree was not covered
-      4. completed + empty stderr -> parse records; keep `n` paths strictly within the checkout,
+      4. completed + empty stderr -> parse records; keep `n` paths at or within the checkout,
          drop our own PID and ancestors; matches -> ACTIVE_PROCESS, none -> verified idle.
     Returns {"verified": bool, "active": bool, "details": str, "holders": [{"pid","command","paths"}]}.
     """

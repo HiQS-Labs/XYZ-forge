@@ -216,6 +216,26 @@ def run_command_in_session(cmd: str, cwd: Path, timeout: Optional[int] = None) -
         return p.returncode, stdout, stderr
 
 
+def _scratch_keep_reason(path: Path) -> Optional[str]:
+    """GH-1475 (P2.3 QA): why a tool scratch folder must stay, or None when it may go. Kept when a
+    process holds it (or lsof cannot tell), or when a clone inside has untracked files or a stash:
+    the tool's own merge simulations only leave tracked changes, so either one is someone's work."""
+    handles = scan_clones.inspect_open_handles(path)
+    if not handles.get("verified") or handles.get("active"):
+        return f"in use or unverifiable ({handles.get('details') or 'lsof'})"
+    for git_dir in [path / ".git", *path.glob("*/.git"), *path.glob("*/*/.git")]:
+        if not git_dir.exists():
+            continue
+        repo = git_dir.parent
+        st = run_git(repo, ["status", "--porcelain", "--untracked-files=normal"])
+        stash = run_git(repo, ["stash", "list"])
+        if st.returncode or stash.returncode:
+            return f"cannot read git state of {repo.name}"
+        if any(line.startswith("??") for line in st.stdout.splitlines()) or stash.stdout.strip():
+            return f"untracked files or a stash in {repo.relative_to(path)}"
+    return None
+
+
 def _remove_own_scratch(path: Path, prefix: str, root: Optional[Path] = None) -> bool:
     """GH-1475 (F1): delete a tool-created scratch directory. Proven first (GH-567): a real,
     non-symlink directory directly under the resolved `root` (default: the temp root), named with
@@ -225,6 +245,10 @@ def _remove_own_scratch(path: Path, prefix: str, root: Optional[Path] = None) ->
         if (not path.name.startswith(prefix) or path.is_symlink() or not path.is_dir()
                 or path.resolve().parent != root):
             log_warn(f"Not removing {path}: not a {prefix}* directory under {root}")
+            return False
+        reason = _scratch_keep_reason(path)
+        if reason:
+            log(f"Keeping {path}: {reason}")
             return False
         shutil.rmtree(path)
         return True
@@ -236,6 +260,18 @@ def _remove_own_scratch(path: Path, prefix: str, root: Optional[Path] = None) ->
 KEEP_SCRATCH_ENV = "MERGE_CLEANUP_KEEP_WORKDIRS"
 SCRATCH_PREFIXES = ("merge-cleanup-", "merge-check-")
 SCRATCH_MIN_AGE_S = 3600
+# tempfile.mkdtemp names (8 chars) and the only entries the tool writes inside each folder.
+_SCRATCH_SHAPE = {p: re.compile(rf"^{p}[a-z0-9_]{{8}}$") for p in SCRATCH_PREFIXES}
+_SCRATCH_CHILD = {"merge-cleanup-": re.compile(r"^(pr-\d+-[0-9a-f]{8}-[a-z0-9_]{8}|verify-[0-9a-f]{8})$"),
+                  "merge-check-": re.compile(r"^repo$")}
+
+
+def _tool_shaped(d: Path, prefix: str) -> bool:
+    try:
+        return bool(_SCRATCH_SHAPE[prefix].match(d.name)) and all(
+            _SCRATCH_CHILD[prefix].match(c.name) for c in d.iterdir())
+    except OSError:
+        return False
 
 
 def _other_merge_cleanup_running() -> Optional[bool]:
@@ -288,11 +324,12 @@ def prune_retained_scratch(current: Optional[Path] = None) -> None:
         for mtime, d in found[keep:]:
             if now - mtime < SCRATCH_MIN_AGE_S:
                 continue
-            handles = scan_clones.inspect_open_handles(d)
-            if not handles.get("verified") or handles.get("active"):
-                kept.append(f"{d.name} ({handles.get('details') or 'in use'})")
+            if not _tool_shaped(d, prefix):
+                kept.append(f"{d.name} (not a tool-shaped folder)")
             elif _remove_own_scratch(d, prefix):
                 pruned.append(d.name)
+            else:
+                kept.append(d.name)
     if pruned or kept:
         log(f"Scratch pruning: removed {len(pruned)} old retained clone folder(s) under {root}"
             + (f"; kept {len(kept)}: " + ", ".join(kept) if kept else ""))
@@ -2130,6 +2167,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                             f"moved after this run's B1 repair {own_repair[:10]}; re-run the dry run to re-pin")
                     failed[p_num] = "deferred: head moved after this run's B1 repair"
                     continue
+                # The ledger gate ran against the clone's origin/<branch>; a base that moved during
+                # the wait was never gated, so that case goes back to a fresh dry run.
+                gated = run_git(clone, ["rev-parse", f"origin/{branch}"]).stdout.strip()
+                remote = _net_git(clone, ["ls-remote", "origin", f"refs/heads/{branch}"])
+                live_base = remote.stdout.split()[0] if remote.returncode == 0 and remote.stdout.split() else ""
+                if not gated or live_base != gated:
+                    log_err(f"PR #{p_num}: DEFERRED — origin/{branch} moved during the check wait "
+                            f"({gated[:10] or '?'} -> {live_base[:10] or 'unreadable'}); re-run the dry run to re-pin")
+                    failed[p_num] = f"deferred: {branch} moved after this run's B1 repair"
+                    continue
                 staged = dict(args._pins)
                 staged[p_num] = own_repair
                 stored = (_read_selection(primary_repo, branch) or {}).get("forecast")
@@ -2172,8 +2219,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             pinned = (getattr(args, "_pins", None) or {}).get(p_num)
             if pinned is None or live.get("headRefOid") != pinned:
-                # GH-1226: only the head the dry run pinned may land. A B1 repair pushed a new head
-                # whose checks may not even be registered yet: defer it to a fresh dry run.
+                # GH-1226: only the head the dry run pinned (or this run's re-pinned B1 repair,
+                # GH-1475 P2.1) may land; anything else defers to a fresh dry run.
                 log_err(f"PR #{p_num}: DEFERRED — head {str(live.get('headRefOid'))[:10]} is not the dry-run pin "
                         f"{str(pinned)[:10]}; re-run the dry run to re-pin once its checks finish")
                 failed[p_num] = "deferred: head is not the dry-run pin"
