@@ -1,7 +1,7 @@
 {
-  "taxonomy_rule": true,
-  "catalyst_rule": true,
-  "primary_invariant": "Concurrency / State",
-  "catalyst": "System / Resource",
+  "test": "Control 3: Catalyst Separation",
+  "primary_invariant": "Concurrency / State (ref lock)",
+  "environmental_catalyst": "System / Resource (disk full from retained workdirs)",
+  "classification_held": true,
   "verdict": "PASS"
 }

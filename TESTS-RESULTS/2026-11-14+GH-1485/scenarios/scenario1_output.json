@@ -1,6 +1,7 @@
 {
-  "tool_dependency_detected": true,
-  "producer_consumer_correlation": true,
-  "signature_repo_local": true,
+  "test": "Control 1: Upstream/Downstream Correlation",
+  "input_consumer_issue": "BinoidCBD/LTVera-Pandas#1102",
+  "upstream_resolved": "HiQS-Labs/XYZ-forge",
+  "signature_boundary": "repo-local",
   "verdict": "PASS"
 }

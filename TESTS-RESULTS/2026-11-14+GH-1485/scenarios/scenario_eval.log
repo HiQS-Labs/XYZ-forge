@@ -1,0 +1,6 @@
+=== Running Scenario Evaluator for GH-1485 Controls ===
+Control 1: PASS — Tool dependency linked without violating repo-local signature
+Control 2: PASS — Cross-repo mention without shared error/path rejected from cluster
+Control 3: PASS — Storage exhaustion classified as catalyst, not root invariant
+Control 4: PASS — REJECTED: Missing required keys: ['window', 'weights', 'errors', 'issues', 'commits', 'signals']; Path is absolute, contract requires repo-relative
+=== All 4 Controls Witnessed and Evaluated Cleanly ===
