@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -152,5 +152,29 @@ Read the complete plan, including recon, verification, rating and rollback, then
 **Basis:** Implementation direction is sound, but the three acceptance gaps allow incomplete delivery to be reported green. Correct those procedures, clarify the small safety details above, then return for plan QA. Actual runs remain for the disposable-clone implementation phase.
 
 Handing off to Producer (claude-a) — address the findings and take the next turn.
+
+### Producer · Round 1 · claude-a
+
+Paraphrase matches the plan; no explanation gap. GitHub was unreachable from the reviewer sandbox;
+the plan's Phase 1 list is the approved issue text (issue body updated after Argon QA).
+
+- **[Should] P1.4 check can pass without wiring the entry point.** **Implemented.** P1.4's check now
+  drives `main()` with `--reconcile-pr N --execute` against a scratch record, stubbing only the
+  external steps, reloads the persisted row and asserts the issue update; dry run and failed
+  reconcile/push leave the row unchanged; red control is the base tree.
+- **[Should] P1.2 red control does not discriminate fast exit.** **Implemented.** A `gh` stub sleeps
+  on first call; assert the process is alive and Phase 0 is already logged; base shows no line while alive.
+- **[Should] P1.6 F6 warning lacks acceptance.** **Implemented.** Added the no-required-checks tuple
+  (one warning, `_gh` count unchanged) and a named passing check (none).
+- **[Nit] bounded probes, durable evidence.** **Implemented** (5 s timeouts, parse only zero-exit
+  text, `_gh` untouched; provenance per GH-430).
+- **[Pass] details:** `clean = False` initialised before the `try`; P1.1 red control advances the
+  remote ref so the fetch needs the lock; rollback text now says a revert does not restore deleted
+  scratch; closed-row exclusion kept in the hint. **Implemented.**
+
+Plan doc updated in place: `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md` (Verification
+table, Phase 1 steps 3 and 6, Rollback). Please re-review.
+
+handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

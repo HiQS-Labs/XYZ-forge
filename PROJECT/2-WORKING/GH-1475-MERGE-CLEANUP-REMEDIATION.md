@@ -73,8 +73,9 @@ Untraced: hosted CI behaviour of these paths (none run them); Windows/Linux `pgr
 - **Alternatives rejected:** documenting the pre-flight list only (already in the post-mortem; it was
   not followed under pressure); moving workdirs to Trash (keeps the bytes on disk, so F1 is unfixed);
   an `fcntl.flock` lock (adds state to `--execute`; P3.6).
-- **Rollback / containment:** one revert of the PR. Every change is additive or local; P1.3 deletes
-  only this run's own `mkdtemp` workdir after a 0 return.
+- **Rollback / containment:** one revert of the PR restores the code. Deleted scratch is not
+  restored by a revert; P1.3 deletes only this run's own `mkdtemp` workdir after a clean 0 return,
+  never a kept or failed one.
 
 ## Phase 1 plan
 Ordered; verification inline. Existing writers extended: `batch_record.set_outcome` / `update`,
@@ -87,7 +88,7 @@ Ordered; verification inline. Existing writers extended: `batch_record.set_outco
    `cannot lock ref|Unable to create .*\.lock|unable to update local ref`; otherwise `die()` with the
    stderr as today. Add `cannot lock ref|unable to create .*\.lock` to `merge_cleanup.py`
    `TRANSIENT_RE`.
-3. **P1.3** `_land_prs_loop`: set `clean = True` immediately before the single `return 0`; in the
+3. **P1.3** `_land_prs_loop`: initialise `clean = False` before the `try`, set `clean = True` immediately before the single `return 0`; in the
    `finally`, when `clean and not keep_workdir and not deferred_sync_pending`, remove `workdir` with
    `shutil.rmtree` after proving it is a resolved, non-symlink directory whose parent is the resolved
    `tempfile.gettempdir()` and whose name starts with `merge-cleanup-`; log the removal. Otherwise keep
@@ -107,7 +108,8 @@ Ordered; verification inline. Existing writers extended: `batch_record.set_outco
 6. **P1.6** add `preflight_warnings(primary_repo) -> List[str]` (disk under the temp root < 20 GB;
    macOS on battery via `pmset -g batt`; `TMPDIR` set and resolving outside `/tmp` and the OS default
    `/var/folders`; another `merge_cleanup.py … --execute` from `pgrep -f`, excluding this PID). Each
-   probe is wrapped so any error is silent. Call it in the merging dry run next to the Jog warning and
+   probe is wrapped so any error is silent; `pmset`/`pgrep` run with a 5 s timeout and only a zero
+   exit with text output is parsed; `_gh` is not touched. Call it in the merging dry run next to the Jog warning and
    print each as `PRE-FLIGHT: …` via `log_warn`. In `_land_prs_loop`, when `dry_run` and
    `required_checks_state` returns `"no required checks"`, print the F6 `PRE-FLIGHT:` warning once.
 
@@ -117,16 +119,16 @@ merge-cleanup Python suites including `gh436`/`gh534_*`), `bash test/gh202-wave-
 `bash test/gh168-wave-reconcile-scope.sh`. Final gate: the classifier routes `merge_cleanup.py`,
 `wave_reconcile.py` and `skills/*/merge-cleanup/SKILL.md` to the full gate, run once on the final
 commit in a disposable full clone (and again by the pre-push hook). Manual checks with red controls,
-recorded under `TESTS-RESULTS/2026-11-14+GH-1475/`:
+recorded under `TESTS-RESULTS/2026-11-14+GH-1475/` with commands, revision, exit statuses, outputs and `provenance.jsonl` (GH-430):
 
 | Item | Check | Red control (unchanged tree) |
 |---|---|---|
-| P1.1 | Scratch repo with origin: hold `refs/remotes/origin/<b>.lock` ~1.5 s and write a two-branch `FETCH_HEAD`, run `pull_upstream`: succeeds after retry; non-lock error still dies | old `git pull --ff-only` fails under the same setup |
-| P1.2 | `merge_cleanup.py --primary <scratch> > log &` then read the log within 5 s: Phase 0 lines present | old code: log empty until exit |
+| P1.1 | Scratch repo with origin whose `<b>` has advanced (so the fetch must update the ref): hold `refs/remotes/origin/<b>.lock` ~1.5 s and write a two-branch `FETCH_HEAD`, run `pull_upstream`: succeeds after retry; non-lock error still dies | old `git pull --ff-only` fails under the same setup |
+| P1.2 | Run `merge_cleanup.py --primary <scratch> > log` with a `gh` stub (`GH_BIN`) that sleeps 20 s on its first call, so the process is held after Phase 0; at ~5 s assert the process is still alive and the log already has a Phase 0 line | same input on the base: process alive, no Phase 0 line yet |
 | P1.3 | Drive `_land_prs_loop` on a clean dry run in a scratch primary: no `merge-cleanup-*` left; a forced stop (`keep_workdir`) leaves it | old code leaves it in both cases |
-| P1.4 | Scratch batch record with one merged, reconcile-failed row: after the recovery write, `continuable()` is false and `record_sweep` prints no `--resume` hint; a merged-unreconciled row prints `--reconcile-pr N --execute` | old code: `continuable()` true, hint `--resume --execute` |
+| P1.4 | Scratch primary + batch record with one merged, reconcile-failed row; call `main()` with `--reconcile-pr N --execute`, stubbing only `refresh_pr_with_retry` (MERGED + OID), `run_post_merge_reconcile` and `commit_and_push_phase5_writes` (True) and `_gh`; reload the persisted record: row is `merged`/`reconcile: ok`, the issue update ran, `record_sweep` prints no `--resume` hint. Same with the dry run, and with the reconcile or push stub returning False: row unchanged. A merged-unreconciled row prints `--reconcile-pr N --execute`; a closed row prints nothing | base tree: reloaded row still reconcile-failed, hint `--resume --execute` |
 | P1.5 | Doc read from the drive-loop entry point; doc-contract suite green | old `:476` text contradicts `:2634-2663` |
-| P1.6 | Force each condition (a `TMPDIR` override to a nested scratch dir, stub `pmset`/`pgrep` on PATH, low threshold via monkeypatched `shutil.disk_usage`): each warning fires; clean env prints none | old dry run prints none |
+| P1.6 | Dry run with `required_checks_state` stubbed to `("ok", "no required checks")`: exactly one F6 `PRE-FLIGHT` line, `_gh` call count unchanged; with a named passing check: none. Force each other condition (a `TMPDIR` override to a nested scratch dir, stub `pmset`/`pgrep` on PATH, low threshold via monkeypatched `shutil.disk_usage`): each warning fires; clean env prints none | old dry run prints none |
 
 Smoke (disposable clone): main path — a real `--prs` dry run of this repo against a scratch primary
 showing live log, PRE-FLIGHT block and no leftover workdir; adjacent path — `--record-sweep` /
