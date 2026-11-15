@@ -1,0 +1,9 @@
+{"timestamp": "2026-11-15T20:52:42.729822+00:00", "test": "red_control_1", "name": "Default is OFF", "status": "PASS", "detail": "mode=off, CHANGELOG.md exists=False"}
+{"timestamp": "2026-11-15T20:52:42.731794+00:00", "test": "red_control_2", "name": "Invalid config fallback", "status": "PASS", "detail": "mode returned: off"}
+{"timestamp": "2026-11-15T20:52:42.735712+00:00", "test": "red_control_3", "name": "Landing writes sanitized entry with exact marker", "status": "PASS", "detail": "all sanitization and exact marker verified"}
+{"timestamp": "2026-11-15T20:52:42.798420+00:00", "test": "red_control_4", "name": "Idempotency (0 bytes on rerun)", "status": "PASS", "detail": "bytes1=129, bytes2=129, mtime unchanged=True"}
+{"timestamp": "2026-11-15T20:52:42.800636+00:00", "test": "red_control_5", "name": "B1 accepts valid marker & rejects malicious HTML/conflicts", "status": "PASS", "detail": "ok_marker=True, rejected_html=True, rejected_conflict=True"}
+{"timestamp": "2026-11-15T20:52:42.805315+00:00", "test": "red_control_6", "name": "Journal rollback restores original file", "status": "PASS", "detail": "content matched original byte-for-byte: True"}
+{"timestamp": "2026-11-15T20:52:42.806009+00:00", "test": "red_control_7", "name": "Raced publication retry contract", "status": "PASS", "detail": "EXACT has CHANGELOG.md=True, retry_argv=['--pr', '1487', '--only-receipted', '--skip-pull']"}
+{"timestamp": "2026-11-15T20:52:42.808834+00:00", "test": "red_control_8", "name": "Absent-file rollback removes created file", "status": "PASS", "detail": "CHANGELOG.md deleted on rollback: True"}
+{"timestamp": "2026-11-15T20:52:42.844863+00:00", "test": "red_control_9", "name": "Missing adoption history fails closed (code 6)", "status": "PASS", "detail": "failed_closed=True, code=6"}
