@@ -88,6 +88,8 @@ A `set aside` reason says what the subsystem is not, and where that comes from: 
 
 Then **read every shortlisted candidate's source.** A map line or an index hit is a lead. A candidate enters the fit table only after its source was opened, and the row cites the lines read. That holds for every column: a line cited for an owner or a constraint also comes from a file that was opened. A search hit that was not opened is written as a search hit, not as a citation.
 
+If a shortlisted candidate fails the constraint check in step 3, continue down the ladder for that capability: the index next, then grep. The stop rule above holds only for candidates that pass.
+
 ## Step 3 — Fit table
 
 One row per capability:

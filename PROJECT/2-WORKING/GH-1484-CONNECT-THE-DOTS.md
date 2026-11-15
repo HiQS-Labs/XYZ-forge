@@ -105,6 +105,8 @@ Added to the skill for the second sentence, citing `start-task` Step 6 as the on
 
   **Result: partly met.** Run 7 and run 8 each meet 3 of 5 (points 1, 4, 5). Both cite one file that was searched and not opened (point 2), and neither sweep gives every mapped subsystem a verdict (point 3: run 7 omits ATE, run 8 dismisses about 69 as one group). A text change between the runs did not fix that. The skill now ends its output with a **Files opened** list and tells the reader to check citations; not rerun. Detail: `TESTS-RESULTS/2026-11-14+GH-1484/README.md`.
 
+**After final review (2026-11-15), from the automated PR review, not re-reviewed by Codex:** the skill now continues to the index and grep when a shortlisted candidate fails the constraint check. Lessons: `NO_ENTRY`. A drafted entry was withdrawn because its only support is single runs in which more than one thing changed, which the admission rule calls `confounded`; the observation stays in the evidence README.
+
 ## Stop state (2026-11-14)
 
 Final review round 1 (Codex, `relay-system/2026-11-14/gh1484-final-qa.md`): FAIL with two Should findings.
