@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -109,5 +109,32 @@ swept file: yes
 - [Unverified — needs clone run] No gate was run here. Existing-suite-summary.txt records 8/0 on `e571fab02`; it does not establish a docs-gate result on the final head. The user prohibits all git commands, so independent base-to-head diff scope, exact `5967bde25` source equivalence, and persisted ledger rating were not rechecked; the source checks above concern the seeded files. Harness/producer must establish those before claiming final delivery. Graph project `XYZ-forge` is a different checkout, generation `2026-09-01T15:54:30Z`; coverage reports missing/new docs and excluded ATE scripts, so this markdown review used direct reads, not stale graph claims.
 
 Handing off to Producer (claude) — correct the evidence claims and take the next turn in the Producer window.
+
+### Producer · Round 2
+
+Head under review: `cb4d87454` (`git diff 5967bde25..HEAD`, read-only). Operator decision since round 1, quoted: "I accept using it as a reuse map that shows its dismissals." and "Can and should we also use the Elephant Goldfish Model as part of the vetting part of skill?"
+
+**Dispositions**
+
+- **F1 — Implemented, and it changed the outcome.** Two answer-free control runs (5, 6) were added; neither names both modules. README no longer makes the causal claim; run 3 is labelled answer-seeded (`TESTS-RESULTS/2026-11-14+GH-1484/README.md`, table row for run 3 and "What the runs do and do not show"). The skill's opening no longer says "the same agent ... in a minute"; it says two fresh agents, one run each, and that the skill does not guarantee a particular module (`skills/3-weekly/connect-the-dots/SKILL.md:26`). The original Green item is recorded as not met and, by the operator's decision, replaced (plan, "Operator decision and rewritten acceptance (2026-11-15)").
+- **F2 — Implemented.** Run 4 is graded partial with the absolute opening line quoted (README, "Run 4 (adjacent), partial"); provenance row updated; the skill now forbids an unbounded opening line (SKILL.md Step 4, last paragraph). The tightened text was not rerun on that case; said so in the README.
+
+**New work since round 1, none of it reviewed yet**
+
+1. Reverse sweep of the maps with a verdict per subsystem (SKILL.md Step 2, "Then sweep the maps in the other direction").
+2. Paraphrase-first lens (GH-1414): three headings before the capability list, citing `skills/1-hourly/start-task/SKILL.md` Step 6 as the one owner of the rules (SKILL.md Step 1, "Say it back first"); every `set aside` names a source line or says `inferred`; `consult` listed as an optional hand-off for a fresh reader.
+3. Every cited file must be opened, in any column; the sweep closes with a count; the output ends with **Files opened** and a sentence telling the reader to check citations.
+4. Rewritten acceptance check with a five-point rubric, committed at `436e06a88` before run 7. Runs 7 and 8: **partly met** (4 of 5, then 3 of 5; one unopened citation each). README section "Update 2026-11-15".
+
+**Questions for this round (cite `file:line`)**
+
+1. Are F1 and F2 resolved as dispositioned? Reopen either if the text still overclaims.
+2. Is the rewritten check an honest reading of the operator's sentence, or does it lower the bar further than "a reuse map that shows its dismissals" allows? Is "partly met" the right grade for runs 7 and 8 given the transcripts, and does any sentence in the README, plan or skill claim more than they show?
+3. Paraphrase-first: does SKILL.md cite the rules from `start-task` Step 6 without restating or contradicting them? Does the link resolve? Is the use here (the author paraphrasing the operator, not a fresh reader paraphrasing a document) described accurately, or is it mislabelled as the full lens?
+4. Do items 1 to 3 above add anything outside a read-only advisory markdown skill: a script, a mandatory extra reviewer turn, a gate, a second owner of the paraphrase rules?
+5. Is delivering with a partly met check, stated plainly in the plan and PR, defensible for this envelope? If not, name the smallest change that would make it so.
+6. Rating `55/35/50/85`: still consistent?
+
+Handing off to Reviewer (codex) — take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
