@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -396,5 +396,25 @@ index fb6586d15..513eb5697 100755
 ```
 
 Please re-review (whole diff above plus SKILL.md as read). handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+**Ship, subject to the separately required final harness gate.** Read all three Python artifacts, the skill, plan and retained evidence; assessed the supplied base-to-head Python diff and the GH-1475 changelog entry. No additional pre-existing code defect was established in the whole-file sweep, including the existing landing/reconcile, batch persistence, teardown and rollback paths. No duplicate subsystem or writer found. Graph discovery again returned `MCP tool call requires approval, but approval policy is never`; direct reads were the fallback. No git command, suite, executable fixture or production mutation was run. Only this relay file was edited.
+
+- [Pass] **Round 1 evidence finding resolved.** `manual-p13b.py.txt` drives the real landing loop through repaired-head `DRAFT_REFUSAL`, rather than returning before the clean endpoint. `manual-check-run.log` now records `new clean+keep ... rc=0 workdir_left=1 B1-RESULT kept=True` versus `mutant clean+keep ... rc=0 workdir_left=0 B1-RESULT kept=False`. The mutation removes only the keep guard. Its containment observations record `returned=False rmtree_called=False` for symlink, outside-temp-root and wrong-prefix inputs, and `returned=True rmtree_called=True` for the valid input. This meets the requested discriminating control without a production change or new suite. These are inspected retained clone observations, not reruns here.
+- [Pass] **P1.1/P1.2 delivered as planned.** `wave_reconcile.py:302-320` fetches and merges the tracking ref, retries only the stated lock diagnostics, and stops after three attempts; `merge_cleanup.py:128-132` extends the existing transient classifier. `manual-check-run.log` records retries 2/3 and 3/3 followed by matching HEAD, base `ReconcileError`, and non-lock failure code 2. `merge_cleanup.py:2203-2206` line-buffers supported streams; the same receipt records the sleeping process alive at five seconds with 25 lines versus base zero. No broader retry policy or logging subsystem was added.
+- [Pass] **P1.3 deletion is bounded to owned landing scratch.** `merge_cleanup.py:218-232` requires the expected prefix, a non-symlink directory and resolved parent equal to the temp root before `rmtree`; errors warn and return False. The only caller, `:2136`, additionally requires clean completion, no keep flag and no deferred sync. Workdir originates in this invocation's `mkdtemp` (`:1688` vicinity); repair handoffs, failures and exit 3 retain it. `run_isolated_check` remains a retained, separate full-clone path. The new retained negative controls above supplement the earlier clean/base and error observations. No observed deletion-safety defect remains.
+- [Pass] **P1.4 extends existing ownership and guards recovery writes.** `merge_cleanup.py:1663-1676` shares the prior sweep-finalize/issue-refresh tail as `_sync_batch`; `:2446-2454` updates the overlapping unfinished batch only after successful reconciliation and publication, only outside dry run. `batch_record.py:250-258` shares the original terminal-row rule with `record_sweep` (`merge_cleanup.py:2872-2887`). `manual-p14.py.txt` exercises `main()` and reloads persisted state; its log records execute `merged/ok`, `continuable=False`, `issue_edit=True`, while dry run and reconcile/push failures leave the row failed. Base execute leaves it failed. Mixed-row hints discriminate reconcile from resume and exclude the closed row. No second persistence or issue writer was introduced.
+- [Pass] **P1.5/P1.6 remain bounded.** SKILL.md's “Exit codes for wrapper scripts” lists 0–5 and its “Trigger & threshold” corrects the single-PR exit-4 claim. `merge_cleanup.py:1112-1145` uses local advisory probes with five-second subprocess timeouts and silent unsuccessful probes; `:2524-2525` prints them at the dry-run pin seam. `:1958-1963` reuses the existing required-check answer once per dry run. `manual-check-run.log` records one versus zero F6 warnings, zero gh calls in both cases, four forced environment warnings, clean-env silence and absent warnings on base. The supplied diff adds no new test/suite/registry entry, gh query, refusal or lock mechanism.
+- [Pass] **Evidence integrity rechecked.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` loaded all four provenance rows, required each referenced log/driver to be nonempty, compared SHA-256 digests, and parsed the three Python artifacts with `ast.parse`; exit 0. Decisive output: `manual scenarios: nonempty hashes match`, `existing suites: nonempty hashes match`, `smoke: nonempty hashes match`, `manual scenario (final-QA r1): nonempty hashes match`, and three `AST OK` lines. `existing-suite-summary.txt` records all five suites rc=0 and `Ran 227 tests ... OK`. `smoke.log` honestly reports conflicting-PR retention rather than claiming real clean-path deletion. No full final-commit gate result is claimed: it remains **[Unverified — needs clone run]**, assigned to the harness after this turn.
+- [Pass] **Rating remains a provisional judgment consistent with the recorded incident.** Plan “Rating” retains `rated 60/65/50/75`, recoverable hours of disruption and explicitly unknown recurrence trend; this does not overclaim measured frequency. Stored database values were not queried, so persisted-rating equality is not independently verified by this turn.
+- [Nit] **Qualify the cleanup summary's exit-0 shorthand.** SKILL.md says “A clean landing loop (exit 0 from Phase 5) removes its own ... workdir”; CHANGELOG.md:5 similarly says a clean loop removes it. The new receipt itself witnesses exit 0 with retained B1 work. Optionally say “clean completion with no keep flag or deferred sync” to mirror `merge_cleanup.py:2136`. This is a wording improvement, not a request to alter retention behavior or a blocker.
+
+**VERDICT: PASS**
+**Basis:** P1.1–P1.6 match the approved Phase 1 plan through existing owners. The only required prior finding is resolved by discriminating retained evidence, and the whole-file sweep found no additional blocking defect. Approval is implementation review approval; final-commit full-gate qualification remains outstanding with the harness.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
