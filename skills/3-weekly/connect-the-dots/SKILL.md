@@ -115,6 +115,8 @@ Close with four short parts:
 - **Unknowns:** what was not read or could not be confirmed, any `not stated` heading from step 1, and what would settle each.
 - **One next action:** a single hand-off, not a menu.
 
+End with **Files opened**: the paths actually read, as distinct from searched. It lets a reader check any citation against what was opened. In two recorded runs each table carried one citation to a file that was searched but not opened, so check before relying on a row.
+
 Absence is always worded as "not found in these searches", with the searches listed, in the opening line and the summary as well as in the table. "This repo has nothing that does X" is the same claim without its bound; do not write it. A bounded search is not proof that nothing exists. If no capability has a candidate, say so plainly and stop; do not stretch a weak match into a fit.
 
 ## Hand off, do not build

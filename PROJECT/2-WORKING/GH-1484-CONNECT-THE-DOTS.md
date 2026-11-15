@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Operator decision 2026-11-15: accept the skill as a reuse map that shows its dismissals; add the paraphrase-first lens (GH-1414). Acceptance rewritten below. | Run 7 against the rewritten check, final review round 2, PR against `development`. |
+| Operator decision 2026-11-15: accept the skill as a reuse map that shows its dismissals; paraphrase-first lens (GH-1414) added. Runs 7 and 8 partly meet the rewritten check (one unopened citation each). | Final review round 2, then PR against `development`. |
 
 # GH-1484: connect-the-dots skill
 
@@ -102,6 +102,8 @@ Added to the skill for the second sentence, citing `start-task` Step 6 as the on
   4. No unbounded absence claim anywhere in the answer.
   5. A new remainder and exactly one next action are named.
   An unchanged repo (run 2, no skill) fails 1, 2 and 3. Whether `tick` or ATE appear is recorded, not graded.
+
+  **Result: partly met.** Run 7 meets 4 of 5 and run 8 meets 3 of 5; both cite one file that was searched and not opened (point 2). A text change between the runs did not fix that. The skill now ends its output with a **Files opened** list and tells the reader to check citations; not rerun. Detail: `TESTS-RESULTS/2026-11-14+GH-1484/README.md`.
 
 ## Stop state (2026-11-14)
 

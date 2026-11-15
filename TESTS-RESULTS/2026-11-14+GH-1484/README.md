@@ -2,7 +2,31 @@
 
 Manual evidence for [GH-1484](https://github.com/HiQS-Labs/XYZ-forge/issues/1484). No suite or script was added (AGENTS.md *No new tests*, GH-831). Every run used a fresh Claude subagent with no conversation history, reading a disposable clone at base `5967bde25191fc23712ed5e33d9f6ea6aa7a540f`. That clone holds no GH-1484 file. Run 0 is the exception and is discarded below.
 
-## Result: the headline acceptance check is NOT met
+## Update 2026-11-15: operator decision, rewritten check, runs 7 and 8
+
+The operator accepted the skill "as a reuse map that shows its dismissals" and asked for the Elephant-Goldfish paraphrase-first lens (GH-1414) in the vetting. The plan's rewritten check no longer requires `tick` or ATE. Its five-point rubric was committed (`436e06a88`) before run 7.
+
+**The rewritten check is partly met. Neither run passes all five points.**
+
+| Point | Run 7 (`run-7-skill-answer-free-paraphrase-first.md`) | Run 8 (`run-8-skill-answer-free-opened-files-and-count.md`) |
+|---|---|---|
+| 1. Three paraphrase headings before the capability list | Met | Met |
+| 2. Every row cites `file:line`; every cited file was opened | **Not met.** `MARATHON-PLAN-2026-11-15.md:250` is cited in the owner column and is not in the opened list. | **Not met.** `utils/py/releases_app.py:951,4725` is cited and is not in the opened list. |
+| 3. Sweep gives a verdict per subsystem; each `set aside` has a source line or `inferred` | Met for those listed. ATE is on the map and absent from the sweep. | Partly. The count is given (79 skills, about 10 routed subsystems); about 69 are dismissed as one group. |
+| 4. No unbounded absence claim | Met | Met |
+| 5. New remainder and one next action | Met | Met |
+
+Between the runs the skill text was tightened (`5eb32e299`): every cited file must be opened, and the sweep closes with a count. Run 8 broke the citation rule again, so the tightening did not fix it. After run 8 the skill gained a closing **Files opened** list and a sentence telling the reader to check citations; that last change was not rerun.
+
+Hand-checked against base `5967bde25`: the two unopened citations do say what the rows claim (`MARATHON-PLAN-2026-11-15.md:250` is the #1168 scheduler line; `releases_app.py:951` creates `jog_queue`, `:4725` defines `cmd_jog_add`). Also checked in run 7: `jog_run.py:2424-2432`, `harness.py:133-139`, `ARCHITECTURE.md:31-38`. Other citations were not checked.
+
+What the paraphrase step did: both runs wrote `not stated` for "how it is handled today" and "what it's not", and carried "outer loop is not defined" into Unknowns. Runs 5 and 6 had guessed silently. One run each; not a rate.
+
+`tick` and ATE, recorded and not graded: run 7 sets `tick` aside with a map line and omits ATE; run 8 lists `ate` as an unopened lead and does not name `tick`. Both runs again chose Jog's queue and supervisor lock.
+
+Extra limits for these two runs: run 7's answer refers to "your notes", so the subagent saw the session's memory index, which run 8's prompt told it to ignore. The skill is run by one agent, so the paraphrase is a self-paraphrase; the fresh-reader form of the lens is the optional `consult` hand-off, which was not exercised.
+
+## Result under the original criterion: NOT met (2026-11-14)
 
 The plan required that, with the skill, a fresh agent names `tick` and ATE as candidates for the motivating problem. On clean evidence it does not.
 
