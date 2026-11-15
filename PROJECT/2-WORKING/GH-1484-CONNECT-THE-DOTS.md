@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed with a Codex + agy consult; task clone, plan and rating recorded | Codex plan review, then write the skill and run the manual red/green pair |
+| Codex plan review round 1: one Should (adjacent-check scope) and one Nit fixed | Codex round 2, then write the skill and run the manual red/green pair |
 
 # GH-1484: connect-the-dots skill
 
@@ -37,7 +37,7 @@ Agents design from the problem statement outward. Across the sessions on the fly
 
 - `skills/README.md` "The contract": add a skill under the tier it is used at; the Skills Index row is part of the change; **Mode before skill (GH-1299)** requires naming the skills checked.
 - `ARCHITECTURE.md` Skills Index: alphabetical rows per tier; `baseline` at line 112, `dry` at 114. The new row sits between them.
-- `test/gh589-skill-viewer.sh` (Small list) runs `mini/skills/skill-viewer/scripts/list_skills.py` over `skills/*/*/SKILL.md`: `name` must equal the folder name; `description` must use an accepted scalar style.
+- `test/gh589-skill-viewer.sh` (in `SUBSYSTEM_TESTS_skills_army_hq`, `utils/ci-route.sh:33`, and the full `validate.sh` list; not in the Small list) runs `mini/skills/skill-viewer/scripts/list_skills.py` over `skills/*/*/SKILL.md`: `name` must equal the folder name; `description` must use an accepted scalar style.
 - Existing discovery ladders to cite: `skills/4-occasional/swe-diagram/SKILL.md` Step 1 (graphify → codebase-memory → `ask_self` → written maps → source) and `skills/1-hourly/recon/SKILL.md` Step 2 (graph first, revision check, "The graph is a lead, not a citation", grep fallback) plus the `Mode:` stamp in its Step 5 template.
 - `ROUTER.md` "Routing hints" already describes `tick` ("multi-agent coordination kernel") and ATE ("unattended variation-test fuzzing") by purpose.
 - `skills/3-weekly/dry/SKILL.md` description claims the phrase "is this already implemented somewhere".
@@ -84,7 +84,7 @@ Each check names what it observes and what an unchanged repo would show.
   - **Red (unfixed candidate):** a fresh agent on base `5967bde25` without the skill, plus `prior_art_recon.py --query` on the prompt's keywords. The pair counts only if this output does not cite both `tick` and ATE. If it does, the prompt is too easy: replace it and rerun before the green run counts. This is what stops an unchanged repo being reported as delivered.
   - **Green:** a fresh agent given the skill text and the same prompt cites `tick` and ATE, each with a correct `file:line`, the capability covered and one material limitation. A name without those fails.
   - **Rubric control:** one deliberately bad output (a candidate dropped, or a citation to a file that was not read) is graded with the same rubric and must fail.
-- [ ] Adjacent check, input fixed before running: *"We need to render PDF invoices with embedded fonts."* Expected: "not found in these searches", with the searches listed, and no invented fit.
+- [ ] Adjacent check, input and search scope fixed before running. Prompt: *"We need to render PDF invoices with embedded fonts."* Corpus: files tracked by git in this repo at base `5967bde25` (`git ls-files`). Excluded: the agent's installed skills and tools outside the repo, `relay-system/`, `PROJECT/`, `TESTS-RESULTS/`, `CHANGELOG.md`, `docs/`, and the ledger dumps (`releases.db`, `releases.sql`), which hold prose, not modules. Pre-run evidence, retained with the transcript: `git grep -il` for `pdf`, `invoice`, `embedded font`, `reportlab`, `weasyprint` over that corpus. Run on 2026-11-14 before freezing this case: `pdf` matched only the excluded ledger dumps; the other terms matched CI config, a fuzzy-match test fixture and gate baselines, none of them a rendering module. Expected: "not found in these searches", with the searches listed, and no invented fit. If the pre-run searches are repeated at execution and show a real candidate, this case is invalid and is replaced before it counts; a candidate is never suppressed to pass it.
 - [ ] `ARCHITECTURE.md` row present; `test/gh589-skill-viewer.sh` and `utils/pdda/pdda.sh run` green.
 
 Limits: one passing pair shows the text works on the motivating case, not that it generalises. Fresh agents are Claude subagents in this session; a single model family.

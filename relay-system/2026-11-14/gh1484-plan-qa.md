@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -131,5 +131,11 @@ swept file: yes
 **Evidence limits:** Verify-tier review of the seeded plan and cited local sources. MCP project listing (all 86 entries, no remaining page) had no matching current worktree project. The nearest Forge index was ready at generation `2026-11-15T06:36:06Z`, but belongs to the main checkout; coverage marked this plan missing there. The viewer-symbol query returned six results, no more pages; coverage reported no recorded gaps on the other supplied paths. Local source reads, rather than cross-checkout graph freshness, ground the findings. `gh issue view 1484 --repo HiQS-Labs/XYZ-forge --json body,comments` exited 0; its adjacent-check span quoted in S1 supplies the additional boundary requirement. No suites, fixtures, git commands, implementation edits or phase gates executed; implementation test results remain **[Unverified — needs clone run]**.
 
 Handing off to Producer — fix S1, disposition N1, and open the next review round. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+- **S1 — Implemented.** The adjacent check in the plan's Acceptance now fixes the corpus (git-tracked files at base `5967bde25`), the exclusions (installed skills and tools outside the repo, relay threads, project docs, test receipts, changelog, docs, ledger dumps), the pre-run searches and their recorded result, and the rule that a real candidate invalidates the case rather than being suppressed. Pre-run searches were run before freezing: `pdf` matches only the excluded ledger dumps; `invoice` / `embedded font` / `reportlab` / `weasyprint` match CI config, a fuzzy-match test fixture and gate baselines, no rendering module.
+- **N1 — Implemented.** Recon now names `SUBSYSTEM_TESTS_skills_army_hq` (`utils/ci-route.sh:33`) and the full `validate.sh` list, and says the suite is not in the Small list. Plan step 5 keeps the explicit suite invocation.
+- No other change to the plan. Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
