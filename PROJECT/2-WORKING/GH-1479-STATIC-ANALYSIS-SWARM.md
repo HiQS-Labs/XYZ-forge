@@ -23,7 +23,7 @@ phases: 5
 
 | What was just completed | What's next |
 |---|---|
-| Implemented and verified. Codex final QA passed in round 1 at `058900491`. The full gate is green at `596375650` after two existing source-text pins were re-pointed. | Draft PR is open for the operator. It stays draft until the operator promotes it; the two test-pin edits came after Codex's review and are not reviewed. |
+| Implemented and verified. Codex final QA passed in round 1 at `058900491`. The full gate is green at `596375650` after two existing source-text pins were re-pointed. | Draft PR is open for the operator. It stays draft until the operator promotes it. Codex reviewed the two test-pin edits separately and passed them in round 1. |
 
 ## Acceptance capture
 
@@ -123,7 +123,7 @@ Verification, all in the disposable verify clone at `b2c5c32a7` (logs and hashes
 - Behavior comparison: instead of comparing against the recorded baseline with enumerated substitutions (plan step 5), the old executor (`a7104e323`) and the new one were run from the same checkout path against one fixed disposable target with the fixed clock. Ten scenarios covering exits 0, 2, 3, 4 and 5 produced byte-identical stdout, stderr, exit codes and all seven packet files, with no substitutions. This is stricter than the planned comparison and replaces it.
 
 - Full gate: the first run at `6ffa3f359` failed two suites the focused set did not include. `test/gh642-consumer-fruit.sh:307` grepped for the old argument spelling of the indented `warn_zero_criteria(` call, and `test/gh421-auto-wave-reconcile.sh:611` pinned the literal `pip install ... pytest` line in `wave-reconcile.yml`. Both pins were re-pointed (one line each, same intent) in `596375650`; the second run at that commit is green in 764s. Plan step 7 said to run the gate once; it ran twice because the first run found these.
-- Codex final QA: PASS in round 1 (`relay-system/2026-11-15/gh1479-final-qa.md`), reviewing `058900491`. The two pin edits came afterwards and are not covered by that review. Codex also recorded three pre-existing limitations it did not ask to fix here: non-atomic packet writes, stale-lock detection that assumes `.git` is a directory, and the `shutil.rmtree` fallback when worktree removal fails.
+- Codex final QA: PASS in round 1 (`relay-system/2026-11-15/gh1479-final-qa.md`), reviewing `058900491`. The two pin edits came afterwards; a second Codex relay covering only those edits passed in round 1 (`relay-system/2026-11-15/gh1479-test-pins-qa.md`, reviewing `846771d06`). It checked by source probe that the gh642 pin still fails when the call is deleted or moved past the dry-run exit, and that `requirements-dev.txt` still supplies pytest. Its one nit, a stale "inside main()" comment above the gh642 pin, is fixed. Codex also recorded three pre-existing limitations it did not ask to fix here: non-atomic packet writes, stale-lock detection that assumes `.git` is a directory, and the `shutil.rmtree` fallback when worktree removal fails.
 
 Not changed: packet write mechanism (the atomic-write exception above stands), `marathon_drive.py`, `merge_cleanup.py`, `releases_app.py`, and no new test file, function, suite or registry entry.
 
