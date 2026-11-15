@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # GH-1486 manual fixture checks A3-A6 for skills/4-occasional/re-vendor-xyz/SKILL.md.
 # Not a registered suite (GH-831). Usage: bash fixture-checks.sh <disposable XYZ-forge full clone>
-# Runs the skill's own steps 1-8 block, extracted verbatim from SKILL.md in that clone, against
+# Runs the skill's own steps 1-8 block (its returned status must equal its printed status), extracted verbatim from SKILL.md in that clone, against
 # fixture targets with a private registry, backup folder and no Skills Army collection.
 set -u
 SRC="$(cd "$1" && pwd -P)"
@@ -39,7 +39,7 @@ SYNC="$F/relay-automation/xyz-sync.sh"
 OLD="$(git -C "$F" rev-parse HEAD~2)"
 mk_target() { mkdir -p "$W/$1"; git -C "$W/$1" init -q; git -C "$W/$1" commit -q --allow-empty -m init; }
 vendor_old() { git -C "$F" checkout -q --detach "$OLD"; "$F/relay-automation/xyz-vendor.sh" "$@" >/dev/null 2>&1; local rc=$?; git -C "$F" checkout -q development; return $rc; }
-run_skill() { FX_T="$1" FX_F="$F" bash "$W/block.sh" > "$W/out" 2>&1; RC="$(sed -n 's/^re-vendor-xyz: exit //p' "$W/out" | tail -1)"; }
+run_skill() { FX_T="$1" FX_F="$F" bash "$W/block.sh" > "$W/out" 2>&1; SRC_RC=$?; RC="$(sed -n 's/^re-vendor-xyz: exit //p' "$W/out" | tail -1)"; [ "$SRC_RC" = "$RC" ] || { RC="mismatch:printed=$RC,returned=$SRC_RC"; }; }
 nbk() { ls "$XDG_STATE_HOME/xyz/backups" 2>/dev/null | wc -l | tr -d ' '; }
 vsha() { shasum -a 256 "$1/.xyz/VERSION" | cut -c1-64; }
 show() { sed 's/^/      | /' "$W/out" | head -"${1:-6}"; }

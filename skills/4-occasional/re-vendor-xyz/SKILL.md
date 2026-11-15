@@ -159,10 +159,12 @@ echo "re-vendor-xyz: running: xyz-sync.sh update $X"
 current || stop "refresh did not verify as current (backup: $ZIP)"
 echo "re-vendor-xyz: refreshed $X to $HEAD (backup: $ZIP)"
 RE_VENDOR_XYZ
-echo "re-vendor-xyz: exit $?"
+rc=$?; echo "re-vendor-xyz: exit $rc"; (exit "$rc")
 ```
 
-Exit `0` means current (already, or after the refresh); exit `3` is one of the stops above.
+The whole command returns the block's status and also prints it as `re-vendor-xyz: exit <n>`:
+`0` means current (already, or after the refresh); `3` is one of the stops above. Continue to
+step 9 only after `0`.
 Repeat any `ROUTER DRIFT` line and any `xyz-vendor.sh: WARNING` line from the output to the
 operator verbatim. Do not run `router_audit.py --fix` unless asked (same rule as `/vendor-stack`).
 On a stop, report the stop line and its output and do nothing else for this target.
@@ -203,7 +205,16 @@ already open keep the old skill text until they are restarted.
 - Edit files under `.xyz/` by hand: the copy is replaced as a whole on every refresh, and the
   backup zip is the only way back to what was there.
 
-Recovery, only when the operator asks for it and nothing is running from the copy: replace
-`<target>/.xyz` with the backup (`cd <target> && rm -rf .xyz && unzip -q <zip>`). That also
-returns relay threads and tick logs under `.xyz/` to their state at backup time. The registry row
-keeps the new commit until the next refresh.
+Recovery, only when the operator asks for it and nothing is running from the copy (re-check
+steps 3 and 4 first). Use absolute paths throughout, and never delete the live copy before the
+backup is proven:
+
+1. Confirm the zip is the one this skill reported and test it: `unzip -tq "<zip>"`.
+2. Extract it into a new, empty staging folder outside the target and check that it contains
+   `.xyz/VERSION`.
+3. Rename the current `<target>/.xyz` aside (for example to `<target>/.xyz.before-restore-<UTC>`),
+   then move the staged `.xyz` into `<target>`. Keep the renamed copy until the operator has
+   checked the result.
+
+Restoring returns relay threads and tick logs under `.xyz/` to their state at backup time. The
+registry row keeps the new commit until the next refresh.

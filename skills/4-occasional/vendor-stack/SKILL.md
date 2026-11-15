@@ -48,12 +48,14 @@ The harness and governance retain separate target registries and installed paths
 
 ### 1. Resolve the Forge source
 
-The harness root is this skill's grandparent dir (`skills/4-occasional/vendor-stack/../..`).
-Resolve the PDDA distribution source with the shipped resolver — never hardcode a path:
+The harness root is the top of the Forge checkout this skill ships in (three levels above
+`skills/4-occasional/vendor-stack/`). Run from inside that checkout, then resolve the PDDA
+distribution source with the shipped resolver — never hardcode a path:
 
 ```bash
-HARNESS="$(cd "$(dirname "$0")/../.." && pwd)"        # or: git rev-parse --show-toplevel from a harness clone
-PDDA="$(skills/4-occasional/vendor-stack/find-pdda.sh --root)"     # exits non-zero if unresolved
+HARNESS="$(git rev-parse --show-toplevel)"              # run from inside the Forge checkout
+[ -x "$HARNESS/relay-automation/xyz-vendor.sh" ] || echo "not a Forge checkout: $HARNESS"
+PDDA="$("$HARNESS/skills/4-occasional/vendor-stack/find-pdda.sh" --root)"     # exits non-zero if unresolved
 ```
 
 `find-pdda.sh` uses an explicit `$PDDA_REPO`/`$PDDA_HOME` override or this
