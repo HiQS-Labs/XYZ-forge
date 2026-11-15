@@ -1,0 +1,7 @@
+{
+  "taxonomy_rule": true,
+  "catalyst_rule": true,
+  "primary_invariant": "Concurrency / State",
+  "catalyst": "System / Resource",
+  "verdict": "PASS"
+}

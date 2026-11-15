@@ -1,0 +1,7 @@
+{
+  "template_contract": false,
+  "repo_relative_paths_required": false,
+  "rejection_expected": true,
+  "witnessed_rejection": "REJECTED (missing keys and non-repo-relative path)",
+  "verdict": "PASS"
+}

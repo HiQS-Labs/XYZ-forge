@@ -1,0 +1,6 @@
+{
+  "tool_dependency_detected": true,
+  "producer_consumer_correlation": true,
+  "signature_repo_local": true,
+  "verdict": "PASS"
+}

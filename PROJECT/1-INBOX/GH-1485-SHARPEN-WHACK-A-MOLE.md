@@ -49,4 +49,3 @@ When run in a downstream repo, standard `whack-a-mole` currently only scans `gh 
    - For multi-domain clusters, format the remediation plan into phased lanes: Phase 1 (Defensive Guards/Pre-flights), Phase 2 (Core Invariant Repairs), Phase 3 (Architectural Decoupling).
 4. **Runtime Telemetry & Transcript Harvesting (§2 Scan)**:
    - Inspect local execution logs, test results, and issue comment addendums where crash/timeout telemetry resides.
-

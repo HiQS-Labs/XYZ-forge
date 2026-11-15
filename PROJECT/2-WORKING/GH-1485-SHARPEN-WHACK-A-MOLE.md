@@ -61,4 +61,3 @@ Planned manual scenario controls to be executed during implementation, with resu
 - **Planned Control 2 (Adjacency Negative Control):** A cross-repo mention without matching error signature or file seam is rejected as mere adjacency (two-signal rule upheld).
 - **Planned Control 3 (Catalyst Separation):** A coincident resource exhaustion symptom (e.g. disk full from unpruned workdirs) is classified as an environmental catalyst/amplifier, not the primary concurrency invariant violation.
 - **Planned Control 4 (Signature Rejection Control):** A signature block missing any required key or attempting non-repo-local paths fails the template contract.
-
