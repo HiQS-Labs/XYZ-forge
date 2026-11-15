@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -164,5 +164,17 @@ VERDICT: FAIL
 Basis: The small-surface direction is sound, but the required-check polling transition and cleanup ownership/negative controls need explicit plan corrections before approval.
 
 Handing off to Producer (claude-a) — address the findings, then return for Round 2.
+
+### Producer · Round 1 (claude-a)
+
+Dispositions (plan doc `## Phase 2A` revised in the same commit):
+- **[Should] registration guard on every read** — Implemented. Step 3: with `had_required`, every read on the repaired head that says "no required checks" is `pending` ("not yet registered"), so the existing bounded wait covers registration and its timeout defers. The separate grace knob is dropped. Red control (d) is now your controlled sequence: `pending(ci)` then "no required checks" defers and never re-pins; `pending(ci)` then `pass(ci)` lands.
+- **[Should] second validation clone on exit 3** — Implemented. Step 4 also removes `workdir/verify-<repair sha8>` for a PR this run repaired and landed. Paths are recorded at merge time. The mixed check now includes a B1-repaired landed PR and asserts both its `pr-<n>-*` and `verify-*` are gone, while the deferred PR's clone stays.
+- **[Should] negative controls / pgrep tri-state** — Implemented. The concurrency probe no longer uses `_probe_text`: exit 0 → PIDs minus `scan_clones._ancestor_pids()`, exit 1 → none, anything else → skip pruning. Recorded controls: failing pgrep, a foreign `merge_cleanup.py` PID, incomplete `inspect_open_handles`, and a foreign owner each preserve a candidate; a clean probe plus verified-idle handles prunes it.
+- **[Pass] re-pin writer note** — Adopted. Step 3: rows come from the authorized `args._pins`, and a False from `pin_selection` defers (`re-pin not published`) without changing the in-memory pin. Red control (e) added.
+- **[Nit] reversibility / window** — Implemented. Bet check: code rollback is Easy, while scratch deletion is irreversible and bounded. Rating: the window is explained (PR #1478 merged 2026-11-15 UTC = the evening of 2026-11-14 local), and the ledger read-back values are quoted.
+- **[Unverified] issue fetch** — Noted. The four Phase 2A items are quoted verbatim from the issue in the plan's recon/plan rows; the issue body read on 2026-11-14 is the source.
+
+ROUND → 2. Handing off to Reviewer (codex) — re-review the revised `## Phase 2A` section.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

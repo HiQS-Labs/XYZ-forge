@@ -175,7 +175,8 @@ Base: `origin/development` `a9ece7fcf` (Phase 1 merged as `4306cba77`). Paths be
   more gh calls); a CLI flag for declared checks (the policy file is where the repo's merge policy
   already lives, so a per-run flag would drift); age-only pruning (cannot tell a live run's dir from an
   old one; the open-handle probe is the existing safety check).
-- **Rollback / containment:** revert the PR. P2.1 only re-pins a head this run pushed and GitHub
+- **Rollback / containment:** code rollback is Easy (revert the PR). Scratch deletion (P2.3) is
+  irreversible; it is bounded by the retention policy and the negative controls in step 4. P2.1 only re-pins a head this run pushed and GitHub
   reports unchanged after its checks pass; anything else keeps today's deferral. Pruned scratch is not
   restored by a revert; pruning is limited to tool-named temp-root children, older than the newest N and
   older than one hour, with a verified-idle `lsof` result, skipped while another `merge_cleanup.py` runs.
@@ -208,13 +209,15 @@ Ordered; verification inline. Writers extended: `args._pins` + `pin_selection` +
    (`had_required = detail != "no required checks"`; an unknown answer counts as having them). After the
    push and the existing proof that GitHub reports `b1["commit"]`, set `own_repair = b1["commit"]`. At the
    pin check (`:1947`): when the head is not the pin and equals `own_repair`, do not defer; go to the checks
-   wait. If `had_required` and the new head still reads "no required checks", poll every
-   `MERGE_CLEANUP_CHECKS_POLL_S` for up to `MERGE_CLEANUP_CHECKS_GRACE_S` (default 120 s) for them to
-   register; still none → defer `required checks not registered on the repaired head`. The existing
-   pending wait, failing and defer handling then apply. When checks are `ok`: one `refresh_pr_with_retry`;
+   wait. If `had_required`, **every** read on the repaired head (the first and each poll) that says
+   "no required checks" is treated as `pending` ("required checks not yet registered on the repaired head"),
+   so the existing bounded wait (`MERGE_CLEANUP_CHECKS_WAIT_S`/`_POLL_S`) covers registration too and its
+   timeout defers; no separate grace knob. The existing failing and defer handling then apply. When checks are `ok`: one `refresh_pr_with_retry`;
    if the head is no longer `own_repair` → defer `head moved after this run's B1 repair`; else re-pin:
    `args._pins[n] = head`, `pin_selection(primary, branch, args._pins, <pins as open PRs>, forecast=<stored forecast>)`
-   (single writer kept), `batch_record.set_allowlist(batch, {n: head})` when a batch exists, and log
+   (single writer kept; rows built from the authorized `args._pins`, not fresh discovery); if it returns
+   False → defer `re-pin not published` and leave the in-memory pin unchanged; else
+   `batch_record.set_allowlist(batch, {n: head})` when a batch exists, and log
    `PR #n: re-pinned to <sha> after this run's B1 repair (checks passed on that commit)`. The final
    eligibility checks (`:2006`, `:2010`) are unchanged and now pass for the re-pinned head. Any other
    off-pin head keeps today's deferral. Forecast wording (`merge_cleanup.py:676`, `ledger_merge.py:704`) and
@@ -225,23 +228,32 @@ Ordered; verification inline. Writers extended: `args._pins` + `pin_selection` +
    repaired head with a pending required check that turns green lands in one run (rc 0/4) and the selection
    file + batch allowlist hold the new head. *Red controls:* (a) base defers the repaired head (rc 3);
    (b) an external push after the repair (head ≠ `own_repair` at the post-check refresh) still defers;
-   (c) a head moved off the pin before the run (`:1792`) still defers; (d) required checks that never
-   register within the grace defer.
+   (c) a head moved off the pin before the run (`:1792`) still defers; (d) controlled check responses
+   `old head: pass(ci)`, `repaired head: pending(ci)` then "no required checks" for the rest of a short wait
+   defer and never re-pin, while `pending(ci)` then `pass(ci)` lands; (e) a failed `pin_selection` defers.
 4. **P2.3** New `prune_retained_scratch(current)` called from the `finally`, after Phase 1's own-workdir
-   decision: skipped entirely when `pgrep -f merge_cleanup\.py` reports another process (reuses
-   `_probe_text`). For each prefix (`merge-cleanup-`, `merge-check-`): candidates are direct children of the
+   decision. Concurrency probe with three outcomes (not `_probe_text`, which folds failure into "no
+   match"): `pgrep -f merge_cleanup\.py` exit 0 → PIDs minus `scan_clones._ancestor_pids()` (this process
+   and its wrappers); any left → skip pruning; exit 1 → none; any other exit, missing `pgrep`, timeout or
+   error → skip pruning (unknown). For each prefix (`merge-cleanup-`, `merge-check-`): candidates are direct children of the
    resolved temp root with that prefix, real directories owned by this uid, not `current`; sort newest-first
    by mtime, keep the newest `MERGE_CLEANUP_KEEP_WORKDIRS` (default 3, invalid → 3), and also keep anything
    modified within the last hour. Each remaining candidate is removed with `_remove_own_scratch` only when
    `scan_clones.inspect_open_handles(path)` returns `verified` and not `active`; otherwise it is kept and
    named. One summary line: pruned N, kept M (reasons). Also in the `finally`: when the loop returned 3,
    `keep_workdir` is false and no deferred sync is pending, remove the clones of PRs merged in this run
-   (`workdir/pr-<n>-*` for `n` in this run's merged set) with `_remove_own_scratch(path, f"pr-{n}-", root=workdir)`
-   — `_remove_own_scratch` gains an optional `root` (default the temp root). The deferred PRs' clones stay.
+   (`workdir/pr-<n>-*` for `n` in this run's merged set) and, for a PR this run B1-repaired, its second validation clone
+   `workdir/verify-<repair sha8>` (`validate_head_in_second_clone` `:837`), each with
+   `_remove_own_scratch(path, prefix, root=workdir)` — `_remove_own_scratch` gains an optional `root`
+   (default the temp root). The loop records these paths when the PR merges. The deferred PRs' clones stay.
    `SKILL.md:479` updated. *Check (manual, scratch `TMPDIR`):* five old `merge-cleanup-*` and five old
    `merge-check-*` → newest 3 of each kept, one held open by a `sleep` with cwd inside → kept, one under
-   an hour old → kept, a symlink and a foreign-prefix dir → untouched; an exit-3 loop with one landed and one
-   deferred PR leaves only the deferred PR's clone. Existing `gh436`/`gh534_*` suites green (takeover tests
+   an hour old → kept, a symlink and a foreign-prefix dir → untouched; negative controls with every other
+   predicate eligible: a failing `pgrep` stub (exit 2), a matching foreign `merge_cleanup.py` PID, an
+   incomplete `inspect_open_handles` (`verified` False) and a foreign owner (stubbed uid) each preserve the
+   candidate, while a clean no-match probe plus verified-idle handles prunes it; an exit-3 loop where one PR
+   was B1-repaired and landed and another deferred leaves only the deferred PR's clone (both the landed
+   `pr-<n>-*` dirs and its `verify-<sha8>` are gone). Existing `gh436`/`gh534_*` suites green (takeover tests
    keep their `merge-check-*`: newest and under an hour). *Red control:* base leaves all ten dirs and both
    PR clones.
 5. CHANGELOG entry; doc Status; receipts under `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
@@ -261,7 +273,8 @@ passes and its red control is observed on the base; smoke recorded; Codex final 
 ### Phase 2A rating
 2026-11-14 · retained `rated 60/65/50/75` (one row per issue; read back from the ledger). Phase 2A
 addresses the same observed batch (F13 two cycles per hub, F6 manual CI waits, F1 disk full twice); no new
-incidents since Phase 1 landed (window 2026-11-14..15). Severity and priority unchanged; Phase 2A is a
+incidents since Phase 1 landed (PR #1478 merged 2026-11-15 UTC, the evening of 2026-11-14 local; window is
+those hours). Rating read back from the ledger 2026-11-14: `rating_pri 60, sev 65, appeal 50, effort 75, ovr null`. Severity and priority unchanged; Phase 2A is a
 little more work than Phase 1 but within the same cheapness band. Appeal 50 neutral.
 
 ## Lessons Learned
