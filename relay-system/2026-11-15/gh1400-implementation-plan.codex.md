@@ -131,4 +131,13 @@ Basis: Approve the bounded implementation plan. It names the actual owner, concr
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T15:56:22Z
+task: RELAY-gh1400-implementation-plan
+reviewer: codex
+status: Approved
+reviewed-head: 592f6c6457a3d59e66ee2fb7391b9d660a01b831
+added-range: 7767+7202
+added-sha256: 946a64e1667aa90ef53e6a3422678ea8a6ea49f5e3ed27479cc275d71d0ad91c
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
