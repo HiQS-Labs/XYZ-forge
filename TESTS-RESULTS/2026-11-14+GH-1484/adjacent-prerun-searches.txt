@@ -1,0 +1,22 @@
+# Pre-run searches for the adjacent no-match case
+corpus: git-tracked files at 5967bde25191fc23712ed5e33d9f6ea6aa7a540f; excluded: relay-system/ PROJECT/ TESTS-RESULTS/ CHANGELOG.md docs/ releases.db releases.sql
+
+$ git grep -il 'pdf' -- <corpus>
+exit=1
+
+$ git grep -il 'invoice' -- <corpus>
+.github/workflows/ci.yml
+evidence/marathons/run-3/artefacts/built/test/fuzzy-match.test.js
+test/baselines/GH-509-phase4-negative-control.md
+test/baselines/GH-509-phase5-negative-control.md
+test/baselines/GH-544-prepush-negative-control.md
+exit=0
+
+$ git grep -il 'embedded font' -- <corpus>
+exit=1
+
+$ git grep -il 'reportlab' -- <corpus>
+exit=1
+
+$ git grep -il 'weasyprint' -- <corpus>
+exit=1
