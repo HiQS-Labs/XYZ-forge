@@ -5198,11 +5198,15 @@ def jog_reconcile_orphan_leases(root):
 def cmd_jog_run(args):
     """Execute the serial jog queue supervisor."""
     try:
-        from jog_run import jog_run_main
+        from jog_run import ContractError, jog_run_main
     except ImportError:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from jog_run import jog_run_main
-    jog_run_main(args)
+        from jog_run import ContractError, jog_run_main
+    try:
+        jog_run_main(args)
+    except ContractError as exc:
+        print(f"jog: held: {exc}", file=sys.stderr)
+        sys.exit(2)
 
 
 def _jog_verb_dispatch(fn_name):
@@ -7144,6 +7148,8 @@ def build_parser():
                               "documented compatibility window")
     sp_jrun.add_argument("--checkpoint-root", help="dedicated disposable publication clone; requires positive --max-tasks")
     sp_jrun.add_argument("--max-tasks", type=int, default=None, help="maximum tasks to process in this run")
+    sp_jrun.add_argument("--supervise-until", type=int,
+                         help="opt-in composed wake; absolute UTC epoch dispatch deadline")
     sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
     sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
 

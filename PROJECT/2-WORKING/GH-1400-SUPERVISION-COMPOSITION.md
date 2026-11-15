@@ -162,8 +162,9 @@ publishing an approved receipt. `jog_resume` can publish it, but is a separate c
 `jog_run_main` switches a clean target to local development only with checkpoint mode;
 it neither refreshes that branch nor preserves an ahead development before realignment.
 `run_marathon_phase` already writes the execution record/result path before dispatch,
-then consumes Marathon's result and publishes it. Marathon owns attempt caps; Jog queue
-attempt_count is a lease history metric, never a second retry budget.
+then consumes Marathon's result and publishes it. Marathon owns lane attempt caps; legacy
+orphan recovery also parks at queue attempt_count >= 3. Supervised recovery does not reset
+either history or remove that legacy threshold.
 
 Verify graph: current project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation
 2026-11-15T07:36:58Z; jog_run_main/jog_resume direct both-direction traces and exact snippets;
@@ -252,7 +253,10 @@ runtime recovery and validation rather than the old instruction-only patch. Recu
 
 ### Acceptance and current state
 
-Plan QA pending. No runtime implementation, readiness, new acceptance or qualified gate claimed.
+Plan QA Approved round 1/3 at 592f6c6457a3, driver exit0; receipt
+`relay-system/2026-11-15/gh1400-implementation-plan.codex.md`. Nonblocking queue-threshold
+nit accepted above. Primary accepted-start read-back: already active, original start preserved.
+Implementation in progress; no runtime acceptance or qualified final gate claimed.
 Required checks: real wake adoption/continuation; adjacent repeat; readiness red; result identity red;
 missing-result hold; malformed state hold; stopped-owner exclusion; deadline/cancel; attempt retention;
 safe branch/log preservation; explicit complete evidence aggregation. Gate/review remain separate.
