@@ -141,6 +141,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1376 GH-1376 · Add flywheel skill for adaptive Jog orchestration — `needs-contract`
 - #1400 GH-1400 · Economical flywheel composition — `needs-contract`
 - #1000 GH-1000 · Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow — `needs-contract`
+- #1439 GH-1439 · Codify Jog preparation and truthful dispatch readiness — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
 - #61 GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) — `needs-doc`
@@ -209,7 +210,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1458 Ledger writes only at landing by default; each vendored repository can opt out — `needs-doc`
 - #1443 Close proven Jog preparation automation gaps after GH1442 — `needs-doc`
 - #1441 10days sweep 2026-11-11 (Steps 0–6.5, dry run): 10 valid, 0 fireable — capture docs and contracts needed — `needs-doc`
-- #1439 Codify Jog preparation and truthful dispatch readiness in existing skills — `needs-doc`
 - #1435 Default Claude spending caps to a subscription paradigm; apply API-billing caps only when the user opts in — `needs-doc`
 - #1418 Flywheel proving runs: two-bug automatic progression, then Jose’s five-bug overnight session — `needs-doc`
 - #1412 Merge batch 2026-11-10 — HiQS-Labs-XYZ-forge — #1403, #1404 — `needs-doc`

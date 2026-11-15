@@ -42,3 +42,7 @@ An issue-only checklist already exists in1418 but is not a reusable skill entry 
 ## Ratings
 
 Provisional pri60/sev45/appeal50/effort80: repeated operator preparation overhead, no new data-loss claim, neutral appeal and small source-skill edit.
+
+## Merge evidence
+
+- PR #1442 merged 2026-11-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
