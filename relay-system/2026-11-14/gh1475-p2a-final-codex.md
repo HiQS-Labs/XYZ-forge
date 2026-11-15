@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,29 @@ Grade each finding `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`, then VERDICT.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+
+swept file: yes
+
+Read the entire canonical task document, including Phase 1 context, Phase 2A recon/plan/implementation notes, verification, rating and lessons. Implementation review covered the named Phase 2A paths and their existing repair, publication, final-eligibility, merge and reconciliation consumers; this is not a claim of a repository-wide audit. No additional pre-existing defect established in those reviewed paths.
+
+- [Pass] P2.1 follows the approved ownership boundary. `merge_cleanup.py:1917-1925` rejects a pre-existing off-pin head; `:2021-2075` records this run's pushed repair only after the existing second-clone validation and refreshed-head proof. `:2085-2095` admits only that repair to re-pinning. `:2125-2147` refreshes its identity, stages a copied mapping, publishes through the existing `pin_selection`, then updates memory and the batch allowlist. Publication failure leaves memory unchanged. Final eligibility and head/pin equality remain at `:2151-2187`, with `--match-head-commit` supplied by the existing merge owner (`:421-427`). This proves observed identities at those checkpoints, not absence of every intervening remote movement; that matches the approved local CLI envelope.
+- [Pass] Both plan-QA clarifications are implemented: `checks_state` applies `had_required` to the required component before combining declared checks (`merge_cleanup.py:861-866`), and pin changes are staged until publication succeeds (`:2133-2143`). The registration guard is supplied on every poll (`:2099`, `:2112`). The bounded wait, failing/unknown deferral and F6 declared-check exemption are retained (`:2100-2124`). No parallel writer was introduced.
+- [Pass] P2.2 policy validation stays in the existing resolver (`merge_cleanup.py:363-388`). Declared names aggregate repeated buckets; any failure wins, absence/unknown buckets remain pending, and unreadable responses defer (`:868-903`). Narrow non-mutating probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'` extracting only `required_checks_state` and `checks_state` with `ast`, injecting `CompletedProcess` responses, then asserting six combinations. Exit **0**; decisive output: `registration plus green declared ('pending', 'required checks not yet registered on the repaired head; 1 declared check(s) green')`, `duplicate named failure ('failing', 'ci')`, `missing named check ('pending', 'ci (not reported)')`, `unknown bucket ('pending', 'ci')`, `required failure plus declared pass ('failing', 'required; 1 declared check(s) green')`, `required green plus declared unreadable ('unknown', '1 required check(s) green; API unavailable')`; `6/6 combinations passed`. This is helper-level evidence, not a GitHub integration run.
+- [Pass] P2.3 reuses the path remover and handle probe. Candidate selection enforces direct temp-root enumeration, real directory type, uid, current-workdir exclusion, newest-N retention and the hour floor (`merge_cleanup.py:257-299`); deletion rechecks prefix, symlink/type and resolved parent (`:219-234`). Process discovery distinguishes no-match from failure (`:241-254`), and incomplete/active handle results preserve candidates (`:291-296`). Landed-only scratch is recorded after a successful merge (`:2189-2192`) and released only on exit 3 without keep or unfinished-sync vetoes (`:2297-2315`). Deferred PR scratch remains. The shared probe's root equality addition (`scan_clones.py:420-425`) is a minimal correction to the existing holder predicate, consistent with protecting a shell at the checkout root; no separate probe was added.
+- [Pass] P2.8 continues only the resolver's non-handoff dry-run preview (`merge_cleanup.py:1993-2005`); execute-mode unresolved handling still stops. The committed `manual-check-run.log` shows base `B1 stopped` with `previewed #2=False`, candidate `previewed #1=True previewed #2=True`, and the real `smoke.log` shows #1467 and #1471 both previewed after #1413's conflict. These measure lost-batch behavior rather than merely policy admission.
+- [Pass] Existing test expectations now assert the published result: `test/gh534_phase_b_tests.py:241-251` requires MERGED, no head deferral, and selection SHA equality with the merged head. The four Phase C consumers (`:283`, `:391`, `:455`, `:662`) retain downstream return-code, dependency, row and merge-state checks. These are truthful replacements of the obsolete second-run contract. No new suite or registry entry is proposed by the reviewed implementation packet.
+- [Pass] The receipts distinguish admission from behavior. `README.md` explicitly discloses that merge-attempt scenarios deliberately return rc 2 at the stubbed merge, while the existing suite supplies end-to-end merge-state coverage. `manual-check-run.log` contains the pending-to-pass decision, timeout/absent-name deferrals, all six repair controls, held-root red control, prune guard controls and mixed landed/deferred cleanup. Its no-policy row demonstrates base merging without the new wait; base refusing the policy alone would not establish that. Controls (c)/(d)/(e) establish preservation, not newly failing base behavior. The root-holder fix is independently discriminated by base `active=False` versus new `active=True`.
+- [Pass] Receipt integrity probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'` loaded every provenance row, required nonempty referenced logs and compared SHA-256 for each log and the manual driver. Exit **0**; output: `manual-check-run.log nonempty True sha256 match True`, `manual-p2a.py.txt sha256 match True`, `existing-suite-summary.txt nonempty True sha256 match True`, `smoke.log nonempty True sha256 match True`. The suite summary reports 227 tests OK on runs 2 and 3 and discloses run 1's helper failure; these are inspected producer receipts, not suites rerun by this reviewer.
+- [Pass] Documentation describes the resulting behavior and irreversible scratch boundary (`SKILL.md:258-262,473-485`; `CHANGELOG.md:3-5`; task document:261-288). Retained 60/65/50/75 remains reasoned from the same F13/F6/F1 incidents; the task document quotes its dated PRS readback. No new incident or independently observed rating change is claimed here. Measurement/decision and Phase 2B remain out of scope.
+- [Unverified — needs clone run] No suites, executable fixtures or full gate run during this turn. The harness must run the final gate after the relay-file commit; this approval does not assert a passing gate on that future commit. Git commands, including the packet's suggested diff, were not run under the operator's explicit prohibition. Exact base-to-head changed-path completeness therefore relies on the seeded packet and receipts rather than an independently regenerated Git diff. Graph lookup returned `MCP tool call requires approval, but approval policy is never`; named source reads supplied the fallback.
+
+Script basenames above refer to `skills/2-daily/merge-cleanup/scripts/`; receipt basenames refer to `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
+
+VERDICT: PASS
+Basis: The four Phase 2A behaviors match the approved plan, its prior QA corrections are present, and the committed discriminating controls support the delivery claims. No blocking finding established. Final gate qualification remains the harness's subsequent responsibility.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
