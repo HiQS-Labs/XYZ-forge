@@ -1,0 +1,30 @@
+# Kimi QA fixes (commits c544c3884 + 345d60532), manual check — TMPDIR=<isolated scratch>
+## fixed code (345d60532)
+Automatic merge went well; stopped before committing as requested
+merge-cleanup: Keeping <scratch>/merge-cleanup-wtree123: linked worktree or unreadable worktree list in pr-10-eeeeeeee-abcdefgh/repo
+merge-cleanup: Keeping <scratch>/merge-cleanup-track123: tracked changes outside a merge in pr-9-dddddddd-abcdefgh/repo
+merge-cleanup: Keeping <scratch>/merge-cleanup-dirty123: untracked files or a stash in pr-7-aaaaaaaa-abcdefgh/repo
+merge-cleanup: Scratch pruning: removed 2 old retained clone folder(s) under <scratch>; kept 4: merge-cleanup-wtree123, merge-cleanup-track123, merge-cleanup-operator-notes-ky92ton_ (not a tool-shaped folder), merge-cleanup-dirty123
+1 prefix-collision kept=True (want True)
+2 tool clone with untracked file kept=True (want True)
+3 clean tool-shaped folder removed=True (want True)
+6 tracked operator edit (no merge) kept=True (want True)
+7 clone with a linked worktree kept=True (want True)
+8 tool's own in-progress merge removed=True (want True)
+merge-cleanup: Keeping <scratch>/merge-cleanup-exit3abc/pr-1-aaaaaaaa-zzzzzzzz: in use or unverifiable (PID 34431 (sleep))
+4 exit-3 release with live cwd: removed=False alive=True exists=True (want removed=False)
+5 after process exits: removed=True exists=False (want removed=True)
+## red control: PR head 2e11f3d21
+1 prefix-collision kept=False (want True)
+2 tool clone with untracked file kept=False (want True)
+3 clean tool-shaped folder removed=True (want True)
+6 tracked operator edit (no merge) kept=False (want True)
+7 clone with a linked worktree kept=False (want True)
+8 tool's own in-progress merge removed=True (want True)
+4 exit-3 release with live cwd: removed=True alive=True exists=False (want removed=False)
+5 after process exits: removed=False exists=False (want removed=True)
+## existing suite on 345d60532: bash test/gh436-merge-cleanup.sh
+Ran 227 tests in 190.158s
+
+OK
+## real temp root (read-only): 80 folders, all tool-shaped; 0 clones have tracked changes outside a merge; 6 kept by the untracked/stash rule; ~20 tool B1 merge commits read as unpushed (pushed by URL, no remote-tracking ref)
