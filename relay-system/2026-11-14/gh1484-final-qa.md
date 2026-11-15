@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -136,5 +136,35 @@ Head under review: `cb4d87454` (`git diff 5967bde25..HEAD`, read-only). Operator
 6. Rating `55/35/50/85`: still consistent?
 
 Handing off to Reviewer (codex) — take the next turn.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The read-only advisory skill is defensible under the operator's revised scope, including delivery with a plainly partial check. Two small evidence-accounting corrections remain; neither requires another run, a new gate, or more implementation.
+swept file: yes
+
+- [Should] **F1 — mostly resolved; mark the remaining old efficacy claim superseded.** The README now correctly calls run 3 answer-seeded and explicitly says the skill has not been shown to close the discovery gap (`TESTS-RESULTS/2026-11-14+GH-1484/README.md:36,52-55`). The opening's two-agent observation is appropriately limited (`skills/3-weekly/connect-the-dots/SKILL.md:26`). However, the plan's dated stop-state section still concludes: “one passing pair shows the text works on the motivating case” (`PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md:121`). That is the same stronger inference F1 asked to qualify. Cheapest fix: explicitly mark that historical interpretation superseded by the answer-seeding finding and the 2026-11-15 decision, or replace that sentence with the README's guided-retrieval interpretation. Preserve the historical runs.
+  Observed input: plan:121's quoted efficacy claim, alongside README:55's narrower “an agent told the answer can retrieve and cite it correctly.”
+  Affected scope: interpretation of the original paired experiment in the delivery plan; no change to skill behavior or operator acceptance.
+  Falsifier: a retained answer-free comparable run meeting the original two-module criterion would support the stronger claim; runs 5 and 6 do not, as recorded at README:37-38.
+
+- [Should] **F3 — run 7 also misses the sweep criterion; correct its score.** The fixed rubric requires a verdict per subsystem (`PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md:101`), matching the skill's “for every subsystem” instruction (`skills/3-weekly/connect-the-dots/SKILL.md:85`). Run 7's sweep lists a small subset (`run-7-skill-answer-free-paraphrase-first.md:35-40`), omitting ATE even though the opened map names it (`ROUTER.md:222`). README:15 acknowledges this omission but calls point 3 “Met for those listed”; plan:106 and provenance.jsonl:11 then count 4/5. That changes the denominator after the run. Cheapest fix: grade point 3 partly/not met, and report run 7 as 3/5 fully met with an incomplete sweep, consistently in README, plan and provenance. Run 8's 3/5 fully met is consistent with its grouped sweep and unopened-file citation (`run-8-skill-answer-free-opened-files-and-count.md:46-58,84-107`). Both remain partial; no rerun is required for this accounting correction.
+  Observed input: run 7's map sweep at :35-40 omits a mapped subsystem; README:15 explicitly records “ATE is on the map and absent from the sweep.”
+  Affected scope: grading point 3 of the already-fixed reuse-map rubric, not a restored requirement to choose tick or ATE as fits.
+  Falsifier: a retained run-7 sweep giving each mapped subsystem a verdict, including ATE as either candidate or set aside, would satisfy point 3; the retained answer lacks that sweep.
+
+- [Pass] **F2 is resolved as an evidence correction.** README:82 and provenance.jsonl:5 now label run 4 partial and quote the absolute opening; SKILL.md:120 explicitly prohibits that wording in openings and summaries. README:19,82 and plan:106,113 disclose that the last tightening was not rerun. No passing adjacent check is established by this review.
+
+- [Pass] **Rewritten scope and textual acceptance are sound.** The operator's “reuse map that shows its dismissals” is recorded at plan:92-94 and replaces only the original Green requirement. Dropping guaranteed discovery of two named modules follows that decision; it does not excuse unread citations or an incomplete sweep. The delivered text still requires paraphrase/capabilities before search (:55-73), maps then index then grep with mode and freshness (:75-89), a cited fit table with owner and limiting constraint (:91-107), bounded absence and the new remainder (:109-120), and one advisory hand-off (:122-133). These are citations to `skills/3-weekly/connect-the-dots/SKILL.md`. Delivering an explicitly limited reuse aid is reasonable for this Easy, markdown-only envelope after F1/F3's accounting fixes; passing efficacy is not established. The planning judgement `55/35/50/85` remains proportionate to the stated rationale (plan:131-133), rather than an experimental score.
+
+- [Pass] **Paraphrase reuse and scope:** SKILL.md:63 links to `start-task` Step 6, whose owned rules are at `skills/1-hourly/start-task/SKILL.md:197-214`; the skill applies the inference/exclusion discipline to the operator's words. README:27 accurately distinguishes that self-paraphrase from the unexercised fresh-reader form. The optional `consult` hand-off is explicit at SKILL.md:130,133; it creates no mandatory reviewer turn, writer or gate. The two discovery ladders remain references with short summaries (SKILL.md:80; `swe-diagram/SKILL.md:37-64`; `recon/SKILL.md:48-60`), rather than another maintained ladder implementation.
+
+- [Nit] **Make the lens adaptation explicit in the skill itself.** SKILL.md:63 says “This is the paraphrase-first lens,” whereas its default is the same agent paraphrasing the operator; the referenced owner uses an independent reader without author history (`start-task/SKILL.md:197-214`). Consider calling this a self-paraphrase adaptation and reserving independent vetting for the optional :130 hand-off. README:27 already makes this distinction correctly. This is a naming clarification, not a request for another reviewer or a new workflow.
+
+- [Pass] **Routing, links, integrity and bounded sweep:** `dry/SKILL.md:4-18` retains the existing duplication meaning and routes new-problem reuse to this skill. Read the entire new skill, dry skill, plan, retained run answers and evidence accounting, and ARCHITECTURE's weekly table (:105-128); no concrete pre-existing defect found in that dry/table scope. The new index row is at ARCHITECTURE.md:113. Direct filesystem inspection resolved all five relative links in the two skills and all weekly-table links. Integrity probe (with `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR="$PWD/.relay-scratch/tmp"`): `python3 -c 'import pathlib,json,hashlib; p=pathlib.Path("TESTS-RESULTS/2026-11-14+GH-1484"); rows=[json.loads(x) for x in (p/"provenance.jsonl").read_text().splitlines()]; assert len(rows)==12; assert all((p/r["log"]).stat().st_size and hashlib.sha256((p/r["log"]).read_bytes()).hexdigest()==r["log_sha256"] for r in rows); print("12 nonempty logs; 12/12 hashes match")'`; exit 0; decisive output: `12 nonempty logs; 12/12 hashes match`. This establishes retained-log integrity, not the correctness of their grades.
+
+- [Unverified — needs clone run] No tests, fixtures or gates were run. README:46's existing 8/0 result belongs to `e571fab02` before later edits; final-head gate evidence remains for the harness/producer. No git command was run, per the current instruction, so exact base-to-head scope, historical source equivalence, rubric commit ordering and persisted ledger rating were not independently established. No new executable, writer, test or registry mechanism appears in the named markdown artifacts, but an exhaustive diff claim needs that separate check. Graph inventory was fully paginated: this worktree is not indexed; nearest `XYZ-forge` is another checkout, generation `2026-09-01T15:54:30Z`. Coverage reported missing/unavailable/changed metadata for the reviewed docs and no recorded evidence-scope entries; this is a direct-source markdown review, with no graph completeness claim.
+
+Handing off to Producer (claude) — correct F1/F3's documentation accounting, disposition the optional naming nit, and take the next turn in the Producer window.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
