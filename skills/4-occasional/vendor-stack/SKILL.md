@@ -148,8 +148,10 @@ grep -F "$(cd /abs/path/to/target-repo && pwd)" ~/.config/pdda/registry.tsv   # 
 Each tool registered the target into its own machine-local registry, so future
 updates are pull-based and per-tool — you never re-run this skill to upgrade:
 
-- **XYZ:** `relay-automation/xyz-sync.sh check --all` (reports harness drift and `ROUTER.md` drift),
-  `xyz-sync.sh update <target>/.xyz` (re-vendor a pinned copy).
+- **XYZ:** to refresh one repo's copy, use [`/re-vendor-xyz`](../re-vendor-xyz/SKILL.md): it checks the
+  source is published, refuses during a live run, backs up and verifies the result (GH-1486). The
+  underlying commands are `relay-automation/xyz-sync.sh check --all` (reports harness drift and `ROUTER.md`
+  drift) and `xyz-sync.sh update <target>/.xyz` (re-vendor a pinned copy).
   When `ROUTER DRIFT` is flagged during checks or updates, prompt the user before running `router_audit.py --fix`.
 - **PDDA:** from the Forge clone, `utils/pdda/pdda-sync.sh status`,
   `pdda-sync.sh push [<target>]` (push the canonical runtime to registered

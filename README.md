@@ -260,7 +260,7 @@ bash relay-automation/xyz-vendor.sh /path/to/target
 Vendors the harness under `.xyz/` in the target repo. **Note:** the harness alone leaves that repo at
 HQ Tier C, which cannot be dispatched to. For the unattended path you also need PDDA installed at the
 target's root — see [`skills/4-occasional/vendor-stack/SKILL.md`](skills/4-occasional/vendor-stack/SKILL.md) for the two-step
-flow.
+flow. To refresh that `.xyz/` copy later, use [`/re-vendor-xyz`](skills/4-occasional/re-vendor-xyz/SKILL.md).
 
 ### Skills
 
