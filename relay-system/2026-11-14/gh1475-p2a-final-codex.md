@@ -142,4 +142,13 @@ Basis: The four Phase 2A behaviors match the approved plan, its prior QA correct
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-15T07:50:34Z
+task: RELAY-gh1475-p2a-final-codex
+reviewer: codex
+status: Approved
+reviewed-head: b15ff0037aead6331363b126ed0882d07a5ad540
+added-range: 9809+7411
+added-sha256: 04b606f3af01b509a8008b525f11e332a39e74b4836c2e3cb53f2b907fe3cee8
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
