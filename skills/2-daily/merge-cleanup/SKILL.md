@@ -418,8 +418,10 @@ never attempted:
    record `verdict: deferred` naming it until its receipt exists. Then run the `/debug-mantra` cross-PR
    review over the recorded inputs, write the verdict file, and
    record it with `merge_cleanup.py --primary "$PRIMARY" --record-sweep <file>`. If it reports that
-   planned PRs remain, continue with `--resume --execute`; a `--resume` run with nothing left to land
-   still reports 4 until a verdict covers every landing.
+   planned PRs remain, continue with `--resume --execute`; if it names a landed PR that is not
+   reconciled, recover that PR with `--reconcile-pr N --execute` instead (GH-1475: a successful
+   `--reconcile-pr` records the PR as merged and reconciled in its unfinished batch). A `--resume` run
+   with nothing left to land still reports 4 until a verdict covers every landing.
 
 ### Continuation contract — do not hand back reversible steps (GH-985 pattern)
 
@@ -461,6 +463,23 @@ exit 4 is the script saying that has not happened, so exit 4 is never Done. When
 could not be created or updated (see *Non-blocking*), the verdict still lands in the local batch
 record; name the issue failure in the run summary.
 
+**Exit codes for wrapper scripts (GH-1475).** One table; treat anything else as 2.
+
+| Exit | Meaning | Wrapper action |
+|---|---|---|
+| 0 | done | stop; report the result |
+| 4 | landed, QA pending (any `--execute` that finds a batch whose sweep verdict is missing) | treat the merges as landed; record the sweep with `--record-sweep` before Done |
+| 3 | deferred or handed off | work the caller ladder, then re-run with `--resume --execute` (re-run the dry run first to re-pin a moved head) |
+| 5 | landing-plan decision needed | decide `--landing-plan`, then re-run |
+| 2 | stopped | diagnose the named gate; re-run only once it is fixed |
+| 1 | `--retire-published-pr` could not retire a checkout | read the printed reason; the checkout is preserved |
+
+A clean landing loop (exit 0 from Phase 5) removes its own `merge-cleanup-*` landing workdir; any
+other exit keeps it for inspection. `merge-check-*` canary and sweep clones are always retained.
+Before you `--execute` a batch, read the dry run's `PRE-FLIGHT:` warnings (low disk under the temp
+root, battery power, a harness `TMPDIR`, another `--execute` running, no required checks); they
+never refuse.
+
 **Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
 retry the identical command once before escalating to the operator — a block that succeeds on a
 verbatim retry was non-deterministic, and surrendering the run to it is how an operator ends up
@@ -473,7 +492,9 @@ issue's marked block, the outcomes, the sweep **inputs** and the verdict **recor
 any test suite (GH-831): the caller still runs the sweep and writes the verdict.
 
 - **Trigger & threshold.** An executing run whose Phase 4 sequence holds **two or more PRs**, after
-  the `--prs` allowlist is applied, gets a batch. Single-PR runs are unchanged: no issue, no exit 4.
+  the `--prs` allowlist is applied, gets a batch. A single-PR run opens no batch of its own, but any
+  `--execute` run (with or without `--resume`) exits 4 when it attaches to, or finds, a batch for this
+  repo and integration branch whose QA is still pending.
 - **`--resume` continues the batch, whatever the queue size.** A resume first looks for an
   unfinished batch (planned PRs not yet landed-and-reconciled, or landings no verdict covers) for
   this repo and integration branch. A non-empty queue must overlap its planned PRs; an empty queue

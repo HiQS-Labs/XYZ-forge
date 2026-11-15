@@ -299,12 +299,25 @@ def check_current_branch(repo_root, expected_branch="development", skip_branch_c
         )
 
 
+_REF_LOCK_RE = re.compile(r"cannot lock ref|unable to create .*\.lock|unable to update local ref", re.I)
+
+
 def pull_upstream(repo_root, branch="development"):
-    """Fast-forward pull from origin."""
-    cmd = ["git", "-C", repo_root, "pull", "--ff-only", "origin", branch]
-    r = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    if r.returncode != 0:
-        die(f"git pull --ff-only failed: {r.stderr}")
+    """Fast-forward from origin. GH-1475 (F5): fetch, then merge the remote-tracking ref, not
+    `git pull` (which merges the shared FETCH_HEAD a concurrent fetch can rewrite). A ref lock held
+    by a concurrent fetch in the primary is retried briefly; any other error stops as before."""
+    for attempt, wait in enumerate((1, 2, None)):
+        r = subprocess.run(["git", "-C", repo_root, "fetch", "origin", branch],
+                           capture_output=True, text=True, check=False)
+        if r.returncode == 0:
+            r = subprocess.run(["git", "-C", repo_root, "merge", "--ff-only", f"origin/{branch}"],
+                               capture_output=True, text=True, check=False)
+            if r.returncode == 0:
+                return
+        if wait is None or not _REF_LOCK_RE.search(r.stderr or ""):
+            die(f"git fetch + merge --ff-only origin/{branch} failed: {r.stderr}")
+        log(f"git ref lock held by another process; retry {attempt + 2}/3 in {wait}s")
+        time.sleep(wait)
 
 
 def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
