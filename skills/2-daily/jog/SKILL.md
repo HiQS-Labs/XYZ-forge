@@ -25,6 +25,83 @@ When the operator speaks naturally:
   5. Enqueues into `jog_queue` (`releases jog add <num>`).
   6. Confirms the newly created issue number and queue position with the operator.
 
+## Preparation handoff (GH-1439)
+
+“Prepare N bugs for Jog”, “preflight this queue”, or “make this ready for another
+operator/device” uses the following existing workflow before enqueue/dispatch.
+Preparation alone does not fire builders. An explicit execution request continues
+through these steps into the existing runner without asking again for routine setup.
+For multi-lane marathon planning, use start-marathon instead; do not create a second
+queue or invent a JSON import format.
+
+1. **Reuse real work and authority.** Reconcile selected issues against current source,
+   open PRs, retained candidates and historical queue/native attempts. Name the ordered
+   IDs, exact acceptance and write sets; retain existing ratings/counters. Use the
+   existing capture/RELEASES writers and independent plan review where required.
+   Reuse already-valid preparation rather than repeating inventory or rebuilding a candidate.
+2. **Resolve the actual machine and engine.** Record canonical origin, integration ref,
+   harness source revision, skill deployment receipt and vendored runtime revision.
+   Skills Army HQ owns instruction installation; supported xyz-vendor owns `.xyz`.
+   Updating one does not update the other. Verify the harness interpreter and product
+   test interpreter separately; a binary named `python3` is not a version/dependency proof.
+   Preserve dirty/divergent clones; use the existing full-clone/primary-pin path, not
+   destructive cleanup or a hardcoded “main folder” assumption.
+3. **Map gates to environments.** Read the target's existing CI/dependency recipes.
+   Associate each declared gate with its actual interpreter, dependency set, local service
+   prerequisites and working directory. Do not combine incompatible app/service pins.
+   Where separate environments are needed, use existing gate commands with explicit
+   verified interpreter paths/configuration; do not add a wrapper runner. Prove required
+   configuration is nonempty and missing configuration refuses. Keep secrets out of receipts.
+   Run relevant baseline checks in disposable full clones; classify existing failures
+   separately from the intended bug control. No product/service deployment is implied.
+4. **Verify roles and capacity once, near dispatch.** Resolve explicit supported builder
+   and independent reviewer identities, exact model/effort/auth route and effective limits.
+   Same-provider roles must remain distinct. Reuse the installed route/auth validation
+   and one small bounded real request through the selected review route; version/help or
+   dry-run is not capacity proof. A successful request is availability now, not reserved
+   credits for the whole run. Record UNKNOWN when unavailable; stop on credit/auth failure,
+   with no silent model/account fallback. Do not probe once per queued task unless new
+   evidence invalidates the result. Honor Claude-builder's existing explicit-user-choice rule.
+5. **Publish and align, then exercise the real boundary.** For preparation-only work,
+   record unpublished integration as pending instead of claiming dispatch readiness.
+   Once landing/publication is authorized, use the normal path and reconcile. Choose one
+   exclusive clean published development coordinator plus separate full execution and
+   checkpoint-publication clones. Fetch and normally fast-forward; prove target ledger
+   has no delta against its fresh integration tracking ref. Use supported queue admission
+   or resume/retry, preserving history. Run actual target-aware `jog run --dry-run` with
+   explicit roles/max-tasks and inspect every selected result, not an empty-queue exit0.
+   Inspect generated packet roots, nonempty/lossless criteria, artifacts, effective caps
+   and promotion-probe lint as well as Swarm readiness. Command probes must use supported
+   committed paths; a packet that parses is not proof promotion accepts its command.
+6. **Hand off one bounded invocation and observe.** Record the actual command with
+   target/checkpoint roots, selected order, UTC deadline/closeout reserve, remaining
+   attempt budgets and owner. Individual turn/gate timeouts are not an overall deadline;
+   the supervising session must enforce the authorized wall window. Do not start work
+   whose allowed duration cannot fit. Preserve existing PR outer inspection, landing
+   authority and recovery verbs. Measure useful reviewed deliveries, engine-owned
+   advancement, interventions, elapsed time, observed API/CLI usage and repeated gates.
+   Unknown HTTP/token counts stay unknown. No automatic-success claim for manual dispatch.
+
+Keep one compact record in the existing umbrella issue and committed evidence/provenance;
+this is an instruction contract, **not a new runtime receipt schema or state machine**:
+
+| Evidence | Required record / honest limit |
+|---|---|
+| Selection | Ordered IDs, current base, retained candidates/attempts and declared acceptance |
+| Contract-ready | Actual per-item packet + promotion-lint results, nonempty criteria/artifacts |
+| Environment-verified | Per-gate interpreter/dependencies/services; actual role/model/auth/capacity observation |
+| Integration-aligned | Coordinator/execution/publication roots and SHAs, fresh tracking refs, clean/ledger checks |
+| Dispatch-ready | Prior evidence still applies, exact bounded invocation and active owner; otherwise name pending facts |
+| Result | Deliveries, advancement, interventions, time/calls/gate repeats; unknowns and preserved failures |
+
+Use these as evidence descriptions, never parallel queue statuses. Reuse valid observations
+and rerun only what changed. A prepared contract may be complete while dispatch is blocked
+by unpublished intake or another machine's unverified environment. After a metadata-only
+tail, record tested versus delivered SHAs and check the relevant unchanged boundaries rather
+than reflexively rerunning broad qualification. Do not label the whole run “ready” solely
+because preflight/dry-run returned zero. LTVera-Pandas#1014/#1015 is the worked example:
+its aligned five-item dry-run passed, but Jose's capacity and useful deliveries remained unproven.
+
 ## CLI Commands
 
 All commands run through `python3 utils/py/releases_app.py jog <subcommand>` (or `releases jog <subcommand>` when aliased):
