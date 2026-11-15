@@ -16,18 +16,25 @@ print("=== Running Scenario Evaluator for GH-1485 Controls ===")
 with open(os.path.join(SCENARIOS_DIR, "scenario1_input.json")) as f:
     s1_in = json.load(f)
 
-for req in ["consumer_repo", "issue", "error_string", "tool_config", "upstream_repo", "upstream_paths"]:
-    if req not in s1_in:
-        raise ValueError(f"Control 1 input missing required field: {req}")
-    if isinstance(s1_in[req], str) and not s1_in[req].strip():
-        raise ValueError(f"Control 1 input field '{req}' must not be empty")
+if not isinstance(s1_in, dict):
+    raise ValueError("Control 1 input must be a dictionary")
 
-if not s1_in.get("upstream_paths") or not isinstance(s1_in["upstream_paths"], list):
+for req in ["consumer_repo", "error_string", "tool_config", "upstream_repo"]:
+    val = s1_in.get(req)
+    if not isinstance(val, str) or not val.strip():
+        raise ValueError(f"Control 1 input field '{req}' must be a non-empty string, got {val!r}")
+
+issue_val = s1_in.get("issue")
+if not isinstance(issue_val, int) or issue_val <= 0:
+    raise ValueError(f"Control 1 input field 'issue' must be a positive integer, got {issue_val!r}")
+
+paths_val = s1_in.get("upstream_paths")
+if not isinstance(paths_val, list) or len(paths_val) == 0:
     raise ValueError("Control 1 upstream_paths must be a non-empty list")
 
-for p in s1_in["upstream_paths"]:
+for p in paths_val:
     if not isinstance(p, str) or not p.strip():
-        raise ValueError("Control 1 upstream path must be a non-empty string")
+        raise ValueError(f"Control 1 upstream path must be a non-empty string, got {p!r}")
     if os.path.isabs(p) or p.startswith("..") or "/../" in p or p.endswith("/.."):
         raise ValueError(f"Control 1 upstream path violates repo containment: {p}")
     if p.startswith(s1_in["consumer_repo"]):
@@ -53,9 +60,18 @@ print("Control 1: PASS — Tool dependency linked without violating repo-local s
 with open(os.path.join(SCENARIOS_DIR, "scenario2_input.json")) as f:
     s2_in = json.load(f)
 
-for req in ["target_repo", "mention", "shared_paths", "shared_errors"]:
-    if req not in s2_in:
-        raise ValueError(f"Control 2 input missing required field: {req}")
+if not isinstance(s2_in, dict):
+    raise ValueError("Control 2 input must be a dictionary")
+
+for req in ["target_repo", "mention"]:
+    val = s2_in.get(req)
+    if not isinstance(val, str) or not val.strip():
+        raise ValueError(f"Control 2 input field '{req}' must be a non-empty string, got {val!r}")
+
+for list_req in ["shared_paths", "shared_errors"]:
+    val = s2_in.get(list_req)
+    if not isinstance(val, list):
+        raise ValueError(f"Control 2 input field '{list_req}' must be a list, got {val!r}")
 
 rule = "A cross-repo mention without matching error signature or file seam remains adjacent and is not counted."
 assert rule in skill_text
@@ -85,8 +101,11 @@ with open(os.path.join(SCENARIOS_DIR, "scenario3_input.json")) as f:
 
 if not s3_in or not isinstance(s3_in, dict):
     raise ValueError("Control 3 input must be a non-empty dictionary")
-if "primary_failure" not in s3_in or "amplifying_symptom" not in s3_in:
-    raise ValueError("Control 3 input missing required keys: 'primary_failure', 'amplifying_symptom'")
+
+for req in ["primary_failure", "amplifying_symptom"]:
+    val = s3_in.get(req)
+    if not isinstance(val, str) or not val.strip():
+        raise ValueError(f"Control 3 input field '{req}' must be a non-empty string, got {val!r}")
 
 assert "Primary Invariant Violation" in skill_text
 assert "Environmental Catalyst/Amplifier" in skill_text
@@ -135,6 +154,9 @@ print("Control 3: PASS — Storage exhaustion classified as catalyst, not root i
 # Control 4: Signature Rejection Control
 with open(os.path.join(SCENARIOS_DIR, "scenario4_input.json")) as f:
     s4_in = json.load(f)
+
+if not isinstance(s4_in, dict):
+    raise ValueError("Control 4 input must be a dictionary")
 
 required_keys = ["cluster", "run", "window", "weights", "paths", "errors", "issues", "commits", "signals"]
 missing_keys = [k for k in required_keys if k not in s4_in]
