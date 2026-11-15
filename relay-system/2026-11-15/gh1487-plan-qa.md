@@ -153,3 +153,39 @@ Basis: Block implementation approval. Metadata naming, distributed template scop
    Evidence: `sed -n '1,130p' PROJECT/PDDA.md` (exit 0) explicitly requires the exact two-column table and multi-phase table of contents. This was source inspection only; no hygiene gate ran.
 
 Runtime behavior and all planned gates are **[Unverified — needs clone run]**. No embedded TAKE YOUR TURN block or reviewer phase-gate command exists in this relay file. Review used the SWE rubric and read-only source inspection; no git commands, suites, executable fixtures, source edits or publication occurred. Only this relay file changed, with scratch setup confined to `.relay-scratch/tmp`.
+
+## Round 4 — Producer (claude)
+
+### Summary of Changes
+Addressed all Codex Round 3 findings in `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md`:
+
+1. **Dedicated Cutover & Decoupled Catch-Up Selection (Finding 1):**
+   - Specified durable cutover boundary (`changelog_cutover_iso`):
+     - Hierarchy: (1) `CHANGELOG_CUTOVER=<ISO-8601>` in `.pdda-mode` or env, (2) git history inspection for first commit introducing `CHANGELOG_WRITES=landing` (`git log -S "CHANGELOG_WRITES=landing" --diff-filter=A -1 --format=%cI -- .pdda-mode`), (3) fallback to earliest PR `mergedAt` in batch or current UTC timestamp.
+     - Explicit `--pr <N>` rule: Always evaluated as a candidate regardless of cutover, skipped only if marker already in `CHANGELOG.md` or PR not merged into development.
+     - Decoupled changelog catch-up candidate selection (`changelog_catchup_candidates`) from qualification receipts: queries closed development PRs since `cutover_iso`. Merged PRs missing `<!-- pr:N merge:<sha40> -->` are recovered for changelog synthesis without mutating lifecycle `landing_items` or re-running qualification receipts.
+2. **Exact Full-SHA Identity, B1 Exemption & Strict Sanitization (Finding 2):**
+   - Marker regex anchored to full 40-hex SHA: `(?m)^<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->$`.
+   - B1 exemption in `union_changelog`: permits only the exact full-SHA marker line at the documented position (`first_body_line`). Any other HTML comment, arbitrary HTML tags (`<`), or code fences continue to raise `ValueError`. Retains strict rejection of conflict markers `(?m)^(?:<{7}|={7}|>{7}|\|{7})(?: |$)`.
+   - Author input sanitization:
+     - PR Title: Strips all HTML tags (`<[^>]+>`), backticks, newlines, carriage returns, and conflict characters (`<`, `>`, `=`, `|`).
+     - Body: Strips all HTML comments (`<!--[\s\S]*?-->`), eliminates conflict markers (`<{7}|={7}|>{7}|\|{7}` including diff3 `|||||||`), strips raw HTML tags (`<[^>]+>`), down-levels internal H1/H2 headings to bold bullets (`- **...**`), and neutralizes code fences by 4-space indenting so B1 line-leading fence regex never trips.
+   - Deterministic multi-entry ordering: sorted descending by UTC `mergedAt` timestamp as primary key, PR number descending as tie-breaker.
+3. **Publication Retry Limits & Missing Failure Controls (Finding 3):**
+   - Documented `hosted_lane_publish.py:180-275`: on race without receipts, exits 1 immediately; with receipts, retries receipt push up to `RECEIPT_ATTEMPTS` (3), then runs `recompute()` once with `--only-receipted --skip-pull`.
+   - Recompute evaluates receipted landings, detects absent markers on fresh base, and writes entries into `CHANGELOG.md`. If recompute push fails or PR had no receipts, subsequent `--catch-up` run discovers the unrecorded PR via marker check and writes it cleanly.
+   - Added Red Control 7 (raced publication simulation) and Red Control 8 (absent-file rollback simulation) to Phase 4.
+4. **PDDA Document Contract & Reversibility Scale (Finding 4):**
+   - Converted `## Status` to canonical 2-column table: `| What was just completed | What's next |`.
+   - Preserved phase gates in dedicated `## Phase Gates` table.
+   - Added complete `## Table of contents`.
+   - Updated reversibility to `Costly / Reversible via configuration toggle and git correction`, with explicit recovery procedures for published entries (git revert or manual excision commit).
+5. Committed revisions to git HEAD (`9ce4aaa33`).
+
+### Verification / Context
+- Git HEAD is commit `9ce4aaa33`.
+- Working tree clean.
+
+### Questions for Reviewer (codex)
+1. Does the revised plan in `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md` resolve all Round 3 findings?
+2. If satisfied, please emit `VERDICT: PASS` and `Basis: <reason>`.
