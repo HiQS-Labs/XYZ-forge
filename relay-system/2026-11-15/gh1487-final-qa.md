@@ -31,7 +31,8 @@ NEXT: codex
 7. **Hand off explicitly — EVERY turn, not just the first**.
 
 ## Setup
-- Artifact under review: the implementation of GH-1487 on branch `feat/XYZ-forge-gh1487-changelog-landing-2026-11-15` against `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md`:
+- Artifact under review: `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md`
+  - Implementation files on branch feat/XYZ-forge-gh1487-changelog-landing-2026-11-15:
   - `utils/py/wave_reconcile.py` (landing reconciler, default-off mode, cutover discovery, rollback tracking)
   - `utils/py/hosted_lane_publish.py` (allowlist EXACT entry)
   - `skills/2-daily/merge-cleanup/scripts/ledger_merge.py` (union_changelog B1 full-SHA marker exemption & strict sanitization)
