@@ -1,0 +1,34 @@
+Source: git archive of e060b6ad53c08b4691a18f837cdd06fbea51a7dd (PR head before this follow-up)
+== S1: two hubs + four clean members -> direct in passes, no stacked line
+    Landing forecast (GH-1452, advisory; origin/development @ ced654c004):
+    | PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+    |---|---|---|---|---|---|---|
+    | #100 | clean | clean | — | — | 0 | medium |
+    | #101 | conflict | conflict | CHANGELOG.md | — | 0 | medium |
+    | #102 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #103 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #104 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    | #105 | clean | conditional (not simulated after #101: conflict) | — | — | 0 | medium |
+    Members #100 and #102 conflict with each other on: CHANGELOG.md
+    Members #100 and #103 conflict with each other on: CHANGELOG.md
+    Members #100 and #104 conflict with each other on: CHANGELOG.md
+    Members #100 and #105 conflict with each other on: CHANGELOG.md
+    PRs a B1 repair would defer in the run that repairs them: 1
+    Conflict hubs (GH-1470): 2 — conflict with the base: #101; picked by conflict degree (greedy heuristic, not a proven minimum): #100
+    Clean once hubs are set aside: 4 of 6 — #102, #103, #104, #105
+    Clean-set fold (hubs set aside, sequence order): clean through all 4
+    Recommendation: direct in passes — 2 conflict hub(s) (#100, #101); 4 of 6 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+      pass 1: --prs 102,103,104,105   (the clean set; `direct`, using the pins from this dry run)
+      pass 2: --prs 100,101   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+    Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+    Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+    Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+    Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+PASS S1 passes {"rec": "direct", "passes": [[102, 103, 104, 105], [100, 101]]}
+PASS S1 pass lists printed {}
+PASS S1 hub count {}
+Traceback (most recent call last):
+  File "/private/tmp/gh1470-fu/driver.py", line 88, in <module>
+    check("S1 no stacked line", fc["stacked"] == [] and "stacked members" not in out)
+                                ~~^^^^^^^^^^^
+KeyError: 'stacked'

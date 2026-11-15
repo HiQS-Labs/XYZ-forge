@@ -1,0 +1,12 @@
+Commit: 2d1fc4eef05f078038d0a41519f72723a37216ce (disposable local clone /tmp/gh1470-fu/gate)
+Command: python3 test/gh436-merge-cleanup.py
+Ran 227 tests in 185.570s
+OK
+exit 0
+Command (from test/): python3 -m unittest gh534_phase_c_tests.TestParityGuard -> Ran 7 tests, OK
+Command: bash utils/pdda/pdda.sh run
+PDDA run complete: no errors, 691 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+exit 0
+Command: python3 utils/py/releases_app.py check
+check: clean (0 failures, 11 warning(s))
+exit 0

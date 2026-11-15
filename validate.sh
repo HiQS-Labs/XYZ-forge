@@ -1030,9 +1030,16 @@ if command -v php >/dev/null 2>&1; then
     echo "ENVIRONMENT FAULT: php present but unusable (${_php_error%%$'\n'*}) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)"
   fi
 fi
-if ! python3 -c "import yaml" >/dev/null 2>&1; then
-  XYZ_ENV_FAULTS="${XYZ_ENV_FAULTS:+$XYZ_ENV_FAULTS,}yaml"
-  echo "ENVIRONMENT FAULT: python3 ($(command -v python3)) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)"
+_python_version="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null)"
+_python_missing=""
+for _python_module in yaml pytest requests; do
+  if ! python3 -c "import $_python_module" >/dev/null 2>&1; then
+    _python_missing="${_python_missing:+$_python_missing,}$_python_module"
+  fi
+done
+if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1 || [ -n "$_python_missing" ]; then
+  echo "ENVIRONMENT FAULT: python3 ($(command -v python3 || echo unavailable)) version ${_python_version:-unavailable}; missing modules: ${_python_missing:-none}; requires Python >=3.10 with yaml/pytest/requests — rerun with PATH=\"\$HOME/.cache/xyz-forge-test-venv/bin:\$PATH\" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)"
+  exit 3
 fi
 export XYZ_ENV_FAULTS
 # GH-732 environment faults END

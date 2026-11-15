@@ -489,9 +489,15 @@ def _listed_open(listed: List[int], open_prs: List[Dict[str, Any]]) -> Tuple[Dic
 
 
 def pin_selection(primary: Path, integration: str, listed: Dict[int, Optional[str]],
-                  open_prs: List[Dict[str, Any]]) -> bool:
+                  open_prs: List[Dict[str, Any]], forecast: Optional[Dict[str, Any]] = None) -> bool:
     """Dry run: record each listed PR's head so --execute can refuse if anything moved, and print the
-    same pins as a self-contained `--prs N@sha` list (from #1231) for a run from another checkout."""
+    same pins as a self-contained `--prs N@sha` list (from #1231) for a run from another checkout.
+
+    GH-1452: this stays the single writer of the selection file. `forecast` (computed by the caller from
+    the same `open_prs` before this call) is published in the same snapshot as the pins, written to a
+    temp file and atomically replaced under the record lock, so a concurrent dry run can never leave a
+    forecast attached to another run's selection. Without a forecast the file is exactly as before, so
+    an older forecast is never left behind next to new pins."""
     found, problems = _listed_open(list(listed), open_prs)
     if problems:
         log_err("--prs: nothing pinned — " + "; ".join(problems))
@@ -499,8 +505,18 @@ def pin_selection(primary: Path, integration: str, listed: Dict[int, Optional[st
     path = selection_path(primary, origin_url(primary) or "", integration)
     path.parent.mkdir(parents=True, exist_ok=True)
     pins = {str(n): found[n]["headRefOid"] for n in sorted(found)}
-    path.write_text(json.dumps({"integration": integration, "pinned_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                                "prs": pins}, indent=1) + "\n")
+    snapshot: Dict[str, Any] = {"integration": integration, "pinned_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                "prs": pins}
+    if forecast is not None:
+        snapshot["forecast"] = forecast
+    try:
+        with attempt_record.RecordLock(path):
+            tmp = path.with_name(path.name + ".tmp")
+            tmp.write_text(json.dumps(snapshot, indent=1) + "\n")
+            os.replace(tmp, path)
+    except (attempt_record.RecordError, OSError) as exc:
+        log_err(f"--prs: nothing pinned — could not publish the selection snapshot ({exc})")
+        return False
     stale = [f"#{n} (given {sha[:10]}, now {found[n]['headRefOid'][:10]})"
              for n, sha in listed.items() if sha and not found[n]["headRefOid"].lower().startswith(sha)]
     if stale:
@@ -537,6 +553,180 @@ def verify_selection(primary: Path, integration: str, listed: Dict[int, Optional
         log_err("Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.")
         return None
     return {n: found[n]["headRefOid"] for n in listed}
+
+
+def deferred_closure(all_ordered: List[Dict[str, Any]], eligible: Set[int]) -> Set[int]:
+    """PRs Phase 4 will not sequence: those outside `eligible`, plus any PR that hard-depends on one,
+    transitively. Phase 4 and the landing forecast (GH-1452) both read this, so they see one queue."""
+    deferred = {int(p["number"]) for p in all_ordered if int(p["number"]) not in eligible}
+    changed = True
+    while changed:
+        changed = False
+        for p in all_ordered:
+            n = int(p["number"])
+            if n not in deferred and {int(d) for d in (p.get("_hard_deps") or [])} & deferred:
+                deferred.add(n)
+                changed = True
+    return deferred
+
+
+def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List[Dict[str, Any]]:
+    """The order Phase 4 will land the listed PRs in: every open PR is sorted so dependency and
+    collision edges through unlisted PRs stay visible, then deferrals are applied (GH-1226, GH-1452)."""
+    all_ordered, _, _ = toposort_prs(open_prs)
+    deferred = deferred_closure(all_ordered, listed)
+    return [p for p in all_ordered if int(p["number"]) not in deferred]
+
+
+def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """GH-1452: the planning-time landing forecast for a dry run over 3+ PRs, in dependency order.
+
+    This side owns the network and the clone: one disposable clone with no working tree (never the
+    primary, GH-564), one frozen base SHA, each PR fetched as `pull/<N>/head` and checked against the
+    head the dry run pins. `ledger_merge.landing_forecast` then does only the `git merge-tree` work.
+    Advisory: a failure here is reported inside the forecast as `unknown` (which withholds the
+    recommendation) and never blocks pinning."""
+    nums = [int(p["number"]) for p in ordered]
+    heads = {int(p["number"]): p["headRefOid"] for p in ordered}
+    # GH-1470: a PR that hard-depends on a set-aside hub cannot land in the clean-first pass
+    deps = {int(p["number"]): {int(d) for d in (p.get("_hard_deps") or [])} for p in ordered}
+    try:
+        url = origin_url(primary_repo)
+        if not url:
+            raise RuntimeError("primary has no origin remote")
+        with tempfile.TemporaryDirectory(prefix="merge-cleanup-forecast-") as holder:
+            hold = Path(holder)
+            clone = hold / "repo"
+            r = _retry_call(lambda: _net_git(hold, ["clone", "--quiet", "--no-checkout", url, str(clone)]), "forecast clone")
+            if r.returncode != 0:
+                raise RuntimeError(f"forecast clone failed: {r.stderr.strip()[:200]}")
+            r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", integration]), "forecast base fetch")
+            base = run_git(clone, ["rev-parse", f"origin/{integration}"]) if r.returncode == 0 else r
+            if r.returncode != 0 or base.returncode != 0 or not base.stdout.strip():
+                raise RuntimeError(f"could not freeze the base origin/{integration}: {(base.stderr or r.stderr).strip()[:200]}")
+            base_sha = base.stdout.strip()
+            unknown: Dict[int, str] = {}
+            consumed: Dict[int, int] = {}
+            for n in nums:
+                f = _retry_call(lambda n=n: _net_git(clone, ["fetch", "--quiet", "origin", f"+pull/{n}/head:refs/forecast/{n}"]),
+                                f"PR #{n} forecast fetch")
+                if f.returncode != 0:
+                    unknown[n] = f"fetch of pull/{n}/head failed: {f.stderr.strip()[:120]}"
+                    continue
+                got = run_git(clone, ["rev-parse", f"refs/forecast/{n}"]).stdout.strip()
+                if got.lower() != heads[n].lower():
+                    unknown[n] = f"fetched head {got[:10]} differs from the pinned {heads[n][:10]}"
+                    continue
+                try:
+                    rec_path = attempt_record.record_path(primary_repo, url, n)
+                    consumed[n] = attempt_record.repair_count(attempt_record.load(rec_path)) if rec_path.exists() else 0
+                except attempt_record.RecordError as exc:
+                    unknown[n] = f"attempt record unreadable: {str(exc)[:100]}"
+            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed, hard_deps=deps)
+    except Exception as exc:  # advisory only: nothing here may stop the dry run from pinning
+        why = f"forecast did not run: {str(exc)[:160]}"
+        return ledger_merge.landing_forecast(Path(tempfile.gettempdir()), "", nums, heads, {n: why for n in nums}, {})
+
+
+def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
+    """The Landing forecast block printed by the dry run: one row per PR, then pair overlaps, the
+    deferral count, the recommendation and the stated blind spots."""
+    base = (fc.get("base_sha") or "unknown")[:10]
+    out = [f"Landing forecast (GH-1452, advisory; origin/{integration} @ {base}):",
+           "| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |",
+           "|---|---|---|---|---|---|---|"]
+    for n in fc.get("order", []):
+        e = (fc.get("prs") or {}).get(str(n), {})
+        alone, seq = e.get("alone") or {}, e.get("sequence") or {}
+        a = "unknown" if e.get("status") == "unknown" else ("conflict" if alone.get("conflict") else "clean")
+        s = seq.get("state", "—")
+        if s == "conditional":
+            s = f"conditional (not simulated after #{seq.get('after')}: {seq.get('why')})"
+        eligible = sorted(set(alone.get("b1_eligible") or []) | set(seq.get("b1_eligible") or []))
+        review = sorted(set(alone.get("needs_review") or []) | set(seq.get("needs_review") or []))
+        out.append(f"| #{n} | {a} | {s} | {', '.join(eligible) or '—'} | {', '.join(review) or '—'} | "
+                   f"{e.get('repairs_consumed', 0)} | {e.get('churn_risk', 'unknown')} |")
+    for p in fc.get("pairs") or []:
+        paths = ", ".join((p.get("needs_review") or []) + (p.get("b1_eligible") or [])) or "—"
+        out.append(f"Members #{p['a']} and #{p['b']} conflict with each other on: {paths}")
+    for p in fc.get("pair_unknown") or []:
+        out.append(f"Members #{p['a']} and #{p['b']}: pair simulation did not run ({p['reason']})")
+    for n in fc.get("order", []):
+        e = (fc.get("prs") or {}).get(str(n), {})
+        if e.get("status") == "unknown":
+            out.append(f"#{n}: unknown — {e.get('reason') or 'not simulated'}")
+    out.append(f"PRs a B1 repair would defer in the run that repairs them: {fc.get('repair_deferrals', 0)}")
+    nums = lambda ns: ", ".join(f"#{n}" for n in ns) or "none"
+    hubs = fc.get("hubs")
+    if hubs:  # GH-1470: who holds the conflicts, and whether the rest really fold clean without them
+        total, clean = len(fc.get("order") or []), hubs.get("clean_set") or []
+        out.append(f"Conflict hubs (GH-1470): {len(hubs.get('members') or [])} — conflict with the base: {nums(hubs.get('base'))}; "
+                   f"picked by conflict degree (greedy heuristic, not a proven minimum): {nums(hubs.get('greedy'))}")
+        if hubs.get("dependents"):
+            out.append(f"Hard-depend on a hub, so they wait for it: {nums(hubs['dependents'])}")
+        out.append(f"Clean once hubs are set aside: {len(clean)} of {total} — {nums(clean)}")
+        fold = hubs.get("fold") or {}
+        if fold.get("state") == "clean":
+            out.append(f"Clean-set fold (hubs set aside, sequence order): clean through all {len(clean)}")
+        else:
+            paths = ", ".join((fold.get("needs_review") or []) + (fold.get("b1_eligible") or [])) or fold.get("reason") or "—"
+            out.append(f"Clean-set fold (hubs set aside, sequence order): {fold.get('state', 'unknown')} at #{fold.get('at')} "
+                       f"({paths}); later members not simulated")
+    passes = fc.get("passes")
+    out.append(f"Recommendation: {fc.get('recommendation') or 'none'}{' in passes' if passes else ''} — {fc.get('reason', '')}")
+    if passes:
+        csv = lambda ns: ",".join(str(n) for n in ns)
+        out.append(f"  pass 1: --prs {csv(passes[0])}   (the clean set; `direct`, using the pins from this dry run)")
+        out.append(f"  pass 2: --prs {csv(passes[1])}   (after pass 1 has landed: dry run again to re-pin and re-forecast; "
+                   f"each hub expects one B1 repair, a new head, fresh checks and a re-pin)")
+    out += [f"Blind spot: {a}" for a in fc.get("assumptions") or []]
+    return "\n".join(out)
+
+
+def forecast_comparison(primary: Path, integration: str, decision: str, pins: Dict[int, str],
+                        order: List[int]) -> Optional[Dict[str, Any]]:
+    """GH-1452: how the operator's explicit decision compares with the stored forecast, or None when
+    the dry run stored none. Annotation only: it never supplies, changes or blocks the decision.
+    `stale` names what differs from the forecast: pinned heads, sequence, or a moved base."""
+    data = _read_selection(primary, integration)
+    fc = (data or {}).get("forecast")
+    if not isinstance(fc, dict):
+        return None
+    stale: List[str] = []
+    fc_heads = {int(n): (e or {}).get("head") for n, e in (fc.get("prs") or {}).items()}
+    # GH-1470: a run over exactly one pass of a passes plan follows the forecast; compare that pass only.
+    passes = [[int(n) for n in p] for p in (fc.get("passes") or [])]
+    this_pass = next((i + 1 for i, p in enumerate(passes) if p == [int(n) for n in order]), None)
+    if this_pass:
+        fc_heads = {n: h for n, h in fc_heads.items() if n in passes[this_pass - 1]}
+    # Only the forecast's own queue is compared: a listed PR deferred by an unlisted prerequisite is not in it.
+    if fc_heads != {n: {int(k): v for k, v in pins.items()}.get(n) for n in fc_heads}:
+        stale.append("pinned heads differ from the forecast's")
+    if not this_pass and [int(n) for n in fc.get("order") or []] != [int(n) for n in order]:
+        stale.append("sequence differs from the forecast's")
+    # The early checkpoint runs before any fetch, so a cached origin/<integration> would hide drift:
+    # ask the remote (bounded, read-only). A failed lookup makes no drift claim either way.
+    tip = _net_git(primary, ["ls-remote", "origin", f"refs/heads/{integration}"], timeout=30)
+    base_now = tip.stdout.split()[0] if tip.returncode == 0 and tip.stdout.split() else ""
+    if base_now and fc.get("base_sha") and base_now != fc["base_sha"]:
+        stale.append(f"base moved {fc['base_sha'][:10]} -> {base_now[:10]}")
+    rec = fc.get("recommendation")
+    # With a passes plan, `direct` over the whole queue in one run is not what was recommended.
+    state = "no-recommendation" if rec is None else ("match" if rec == decision and (this_pass or not passes) else "override")
+    out = {"state": state, "recommendation": f"{rec} in passes" if rec and passes else rec, "stale": bool(stale),
+           "stale_reasons": stale, "forecast_base": fc.get("base_sha"), "forecast_pinned_at": (data or {}).get("pinned_at")}
+    if this_pass:
+        out["pass"] = this_pass
+    return out
+
+
+def _read_selection(primary: Path, integration: str) -> Optional[Dict[str, Any]]:
+    """The dry run's selection snapshot, or None if absent or unreadable."""
+    try:
+        data = json.loads(selection_path(primary, origin_url(primary) or "", integration).read_text())
+    except (OSError, ValueError, TypeError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def required_checks_state(pr_num: int, repo_path: Path) -> Tuple[str, str]:
@@ -863,31 +1053,76 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     return False
 
 
+def jog_open_issues(repo_path: Path) -> Set[int]:
+    """Issue numbers of the open (pending/running/failed/parked) Jog rows; empty when the ledger has
+    no Jog queue. Read-only. Raises OSError, subprocess.TimeoutExpired, ValueError, TypeError or
+    KeyError when the canonical rows cannot be read."""
+    if not (repo_path / "releases.db").is_file():
+        return set()
+    releases_cli = tool_path(repo_path, "releases_app.py")
+    # Use the canonical root-bound reader: B1's conservative line classifier
+    # deliberately preserves unsupported SQL as `other`, including multiline reasons.
+    dump = (repo_path / LEDGER_DUMP).read_text(encoding="utf-8")
+    if not dump.strip():
+        raise ValueError("canonical releases dump is empty")
+    # A qualified pre-Jog ledger has neither surface. This is only a presence
+    # check: never use B1's parsed row count to decide that a queue is absent.
+    if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
+        return set()
+    listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
+                             "jog", "list", "--all", "--json"],
+                            cwd=str(repo_path), capture_output=True, text=True, timeout=300)
+    if listed.returncode:
+        raise ValueError((listed.stderr or listed.stdout).strip())
+    rows = json.loads(listed.stdout)
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise ValueError("Jog JSON reader did not return a row list")
+    return {int(row["gh_number"]) for row in rows
+            if row.get("status") in {"pending", "running", "failed", "parked"}}
+
+
+def jog_issues_for(pr: Dict[str, Any]) -> Set[int]:
+    """Issues a PR may deliver as Jog rows: the ones it closes, plus gh<N> in its branch name."""
+    issues = set(linked_issues(pr))
+    issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
+    return issues
+
+
+def jog_primary_precondition(primary_repo: Path, listed: List[Dict[str, Any]]) -> Optional[str]:
+    """GH-1470: read-only dry-run check of the Jog primary pin that the post-merge Jog step needs.
+    Returns a warning when a listed PR maps to an open Jog row and the primary is not pinned (or
+    the check could not run); None when there is nothing to warn about."""
+    policy = ledger_merge.harness_paths_module(primary_repo)
+    if not policy or not hasattr(policy, "primary_root"):
+        return None
+    try:
+        policy.primary_root(str(primary_repo))
+        return None  # pinned; startup already refuses a --primary that differs from the pin
+    except ValueError as exc:
+        unpinned = str(exc)
+    except (OSError, subprocess.CalledProcessError):
+        return None  # no origin identity; Phase 0 owns repository readiness
+    try:
+        queue = jog_open_issues(primary_repo)
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as exc:
+        return f"Jog precondition not checked (cannot read Jog rows: {str(exc)[:160]}); {unpinned}"
+    mapped = {int(p["number"]): sorted(jog_issues_for(p) & queue) for p in listed}
+    mapped = {n: rows for n, rows in mapped.items() if rows}
+    if not mapped:
+        return None
+    which = ", ".join(f"#{n} (GH-{', GH-'.join(str(r) for r in rows)})" for n, rows in sorted(mapped.items()))
+    return (f"Jog precondition (GH-1470): {which} map to open Jog rows, and {unpinned}. If such a PR lands a "
+            "Jog delivery, the post-merge Jog step refuses (rule=jog-primary) and --execute stops with exit 2 "
+            "after that merge. Pin the primary before --execute.")
+
+
 def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
     if not (repo_path / "releases.db").is_file():
         return True
     releases_cli = tool_path(repo_path, "releases_app.py")
-    # Use the canonical root-bound reader: B1's conservative line classifier
-    # deliberately preserves unsupported SQL as `other`, including multiline reasons.
     try:
-        dump = (repo_path / LEDGER_DUMP).read_text(encoding="utf-8")
-        if not dump.strip():
-            raise ValueError("canonical releases dump is empty")
-        # A qualified pre-Jog ledger has neither surface. This is only a presence
-        # check: never use B1's parsed row count to decide that a queue is absent.
-        if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
-            return True
-        listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
-                                 "jog", "list", "--all", "--json"],
-                                cwd=str(repo_path), capture_output=True, text=True, timeout=300)
-        if listed.returncode:
-            raise ValueError((listed.stderr or listed.stdout).strip())
-        rows = json.loads(listed.stdout)
-        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
-            raise ValueError("Jog JSON reader did not return a row list")
-        queue = {int(row["gh_number"]) for row in rows
-                 if row.get("status") in {"pending", "running", "failed", "parked"}}
+        queue = jog_open_issues(repo_path)
     except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as exc:
         log_err(f"Cannot read canonical Jog rows: {exc}")
         return False
@@ -912,9 +1147,7 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     except ValueError as exc:
         log_err(f"Cannot map PR #{pr_num} to Jog rows: {exc}")
         return False
-    issues = set(linked_issues(pr))
-    issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
-    mapped = issues & queue
+    mapped = jog_issues_for(pr) & queue
     if not mapped:
         return True
     # A mapped row is a Jog delivery only when the merged tree carries its committed
@@ -2045,9 +2278,26 @@ def main():
                 print("            run preflight gates once on the combined tip, and land as a single merge.")
                 print("            Best when PRs are cross-dependent, touch shared subsystems, or to minimize gate churn.\n")
                 print("Guidance: See skills/2-daily/merge-cleanup/SKILL.md (GH-1066 section).\n")
+                stored = (_read_selection(primary_repo, args.integration_branch) or {}).get("forecast")
+                if isinstance(stored, dict):  # GH-1452: advice from the dry run; the decision stays yours
+                    print(f"The dry run's landing forecast recommends: {stored.get('recommendation') or 'none'}"
+                          f"{' in passes' if stored.get('passes') else ''} — {stored.get('reason', '')}")
+                    for i, members in enumerate(stored.get("passes") or [], 1):  # GH-1470
+                        print(f"  pass {i}: --prs {','.join(str(n) for n in members)}")
+                    print()
                 print("To proceed, re-run with:")
                 print('  --landing-plan direct|group --landing-reason "<justification>"\n')
                 return EXIT_LANDING_PLAN_REQUIRED
+
+            args._forecast_cmp = forecast_comparison(
+                primary_repo, args.integration_branch, args.landing_plan, args._pins,
+                [int(p["number"]) for p in effective_sequence(early_prs, set(args._pins))])
+            if args._forecast_cmp:
+                log(f"Landing forecast (GH-1452): your decision '{args.landing_plan}' is "
+                    f"{args._forecast_cmp['state']} against the dry run's recommendation "
+                    f"({args._forecast_cmp['recommendation'] or 'none'})")
+                if args._forecast_cmp["stale"]:
+                    log_warn("landing forecast stale: " + "; ".join(args._forecast_cmp["stale_reasons"]))
 
             if args.landing_plan == "group":
                 print("\n" + "=" * 80)
@@ -2056,7 +2306,8 @@ def main():
                 log(f"Landing decision recorded: GROUP ({args.landing_reason.strip()})")
                 log(f"Target PRs ({len(early_ordered)}): {pr_list_str}")
                 batch = batch_record.new(primary_repo, origin, args.integration_branch, early_ordered)
-                batch_record.set_landing_plan(batch, "group", args.landing_reason.strip(), current_pr_nums)
+                batch_record.set_landing_plan(batch, "group", args.landing_reason.strip(), current_pr_nums,
+                                              forecast=getattr(args, "_forecast_cmp", None))
                 batch_record.set_allowlist(batch, args._pins)
                 batch_record.create(batch, _gh, primary_repo, attempt_record.repo_slug(origin))
                 if batch.get("issue_error"):
@@ -2171,8 +2422,20 @@ def main():
             log_err(f"PR #{n}: pinned but no longer open at Phase 4 discovery; not landed by this run")
             listed_deferred.add(n)
     if dry_run and args.prs and not (args.scan_only or args.teardown_only) and args.reconcile_pr == 0:
-        if not pin_selection(primary_repo, args.integration_branch, args.prs, prs):
+        # GH-1452: with 3+ listed PRs, compute the landing forecast now and publish it in the one pin
+        # snapshot. The queue is the one Phase 4 will land: every open PR sorted, then deferrals applied.
+        forecast = None
+        listed_found, listed_problems = _listed_open(list(args.prs), prs)
+        if not listed_problems:
+            listed_order = effective_sequence(prs, set(listed_found))
+            if len(listed_order) >= 3:
+                forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
+        args._forecast = forecast
+        if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
             return 2
+        jog_warning = jog_primary_precondition(primary_repo, [p for p in prs if int(p.get("number", 0)) in args.prs])
+        if jog_warning:
+            log_warn(jog_warning)
     if prs and not args.prs:
         log("Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).")
     # GH-1226: sequence every open PR (dependency edges need them all), then keep only the allowlist.
@@ -2181,18 +2444,8 @@ def main():
     if prs:
         all_ordered, _, warnings = toposort_prs(prs)
         if eligible is not None:
-            deferred_set = {int(p["number"]) for p in all_ordered if int(p["number"]) not in eligible}
             # Transitive propagation: any retained PR depending on a deferred PR must also be deferred
-            changed = True
-            while changed:
-                changed = False
-                for p in all_ordered:
-                    p_num = int(p["number"])
-                    if p_num not in deferred_set:
-                        hard_deps = {int(d) for d in (p.get("_hard_deps") or [])}
-                        if hard_deps & deferred_set:
-                            deferred_set.add(p_num)
-                            changed = True
+            deferred_set = deferred_closure(all_ordered, eligible)
 
             for p in all_ordered:
                 p_num = int(p["number"])
@@ -2212,6 +2465,12 @@ def main():
         else:
             ordered_prs = all_ordered
 
+        if merging and getattr(args, "_forecast_cmp", None) is not None and args.landing_plan in ("direct", "group"):
+            # GH-1452: the comparison made at the early checkpoint is refreshed against the queue that
+            # will actually land, so a sequence that changed on discovery shows as stale before any merge.
+            args._forecast_cmp = forecast_comparison(primary_repo, args.integration_branch, args.landing_plan,
+                                                     args._pins, [int(p["number"]) for p in ordered_prs])
+
         print("=" * 80)
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
         print("=" * 80 + "\n")
@@ -2230,6 +2489,16 @@ def main():
             print("=" * 80)
             print("LANDING PLAN DECISION (GH-1066)")
             print("=" * 80 + "\n")
+            dry_forecast = getattr(args, "_forecast", None)
+            if dry_forecast:  # GH-1452: planning-time evidence; the decision and its reason stay the operator's
+                print(format_landing_forecast(dry_forecast, args.integration_branch) + "\n")
+                if dry_forecast.get("passes"):  # GH-1470: `direct` run once per pass, each with its own --prs
+                    print("Forecast advice, not a decision. To act on it, run --execute once per pass with that pass's\n"
+                          "--prs list. A pass of 3 or more PRs needs your own reason:\n"
+                          "  --landing-plan direct --landing-reason \"<your reason>\"\n")
+                elif dry_forecast.get("recommendation"):
+                    print(f"Forecast advice, not a decision. To act on it at --execute, state your own reason:\n"
+                          f"  --landing-plan {dry_forecast['recommendation']} --landing-reason \"<your reason>\"\n")
             if args.landing_plan:
                 print(f"Plan: {args.landing_plan.upper()}")
                 print(f"Reason: {args.landing_reason.strip() or '—'}")
@@ -2411,7 +2680,8 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
             batch_record.extend(batch, ordered_prs)
             if args.landing_plan:
                 batch_record.set_landing_plan(batch, args.landing_plan, args.landing_reason,
-                                              [pr["number"] for pr in ordered_prs])
+                                              [pr["number"] for pr in ordered_prs],
+                                              forecast=getattr(args, "_forecast_cmp", None))
             if args._pins:
                 batch_record.set_allowlist(batch, args._pins)
             log(f"Resuming merge batch {batch.get('issue_url') or batch['path']}")
@@ -2421,7 +2691,8 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
     batch = batch_record.new(primary_repo, origin, args.integration_branch, ordered_prs)
     if args.landing_plan:
         batch_record.set_landing_plan(batch, args.landing_plan, args.landing_reason,
-                                      [pr["number"] for pr in ordered_prs])
+                                      [pr["number"] for pr in ordered_prs],
+                                      forecast=getattr(args, "_forecast_cmp", None))
     if args._pins:
         batch_record.set_allowlist(batch, args._pins)
     batch_record.create(batch, _gh, primary_repo, attempt_record.repo_slug(origin))

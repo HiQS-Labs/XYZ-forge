@@ -1,0 +1,3 @@
+Draft consult: gh1447-lint-idea-141014, Codex answered; Agy failed RESOURCE_EXHAUSTED429. Single-model advisory, not consensus or admission approval. Preserved receipts will accompany GH1447 PR.
+
+Accepted findings: renamed syntax filter to command-form/path filter; qualified command exit-status scope; capped additional study at8 cases/30min and required expected outcomes before evaluation; separated recommendation constraints from heuristic controls; narrowed recurrence claim to unknown; distinguished authoring/parsing/promotion/ledger ownership. External pinned file was author-inspected; consultant retrieval failed, not independent confirmation. Existing replay consumed rather than repeated. No runtime implementation authorized by this intake.

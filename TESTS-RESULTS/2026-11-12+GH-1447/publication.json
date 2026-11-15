@@ -1,0 +1,49 @@
+{
+  "exit": 0,
+  "elapsed_s": 73.4291479587555,
+  "before": {
+    "head": [
+      0,
+      "92b7df05d359749c4f1fe4cc51cf39bdc507e2a0"
+    ],
+    "bare": [
+      0,
+      "false"
+    ],
+    "remote": [
+      0,
+      "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)"
+    ],
+    "email": [
+      1,
+      ""
+    ],
+    "status": [
+      0,
+      ""
+    ]
+  },
+  "after": {
+    "head": [
+      0,
+      "92b7df05d359749c4f1fe4cc51cf39bdc507e2a0"
+    ],
+    "bare": [
+      0,
+      "false"
+    ],
+    "remote": [
+      0,
+      "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)"
+    ],
+    "email": [
+      1,
+      ""
+    ],
+    "status": [
+      0,
+      ""
+    ]
+  },
+  "identity_equal": true
+}
