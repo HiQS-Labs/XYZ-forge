@@ -1,0 +1,102 @@
+---
+gh_issue: 1484
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/1484
+title: "New weekly skill: connect-the-dots — find existing modules to reuse before designing something new"
+status: Active
+created: 2026-11-14
+updated: 2026-11-14
+doc_type: enhancement
+effort: 1
+complexity: 2
+risk: 1
+phases: 1
+owner: Noel Saw
+goal: "Given a problem, name the existing modules that already cover parts of it, with citations, before anything new is designed"
+---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Issue filed with a Codex + agy consult; task clone, plan and rating recorded | Codex plan review, then write the skill and run the manual red/green pair |
+
+# GH-1484: connect-the-dots skill
+
+Tracking: https://github.com/HiQS-Labs/XYZ-forge/issues/1484 (the issue body is the full statement; its first comment holds the consult dispositions). Base: `origin/development@5967bde25`. Branch: `feat/XYZ-forge-gh1484-connect-the-dots-2026-11-14`.
+
+## Quad Concepts
+- Problem first, not subject first → Break the problem into the capabilities it needs (verbs), because a module is named for what it is, not for the problem it could solve.
+- Maps, then index, then grep → Read the repo's purpose-written maps, then a code graph or RAG where installed; grep is the last rung and the mode is stated.
+- A fit table, not a design → Each capability gets an existing module with `file:line`, its owner, the constraint that limits the fit, and the remainder that is new.
+- Read-only and advisory → Chat output; no files, no ledger rows, no code. It hands off to `recon`, `ponytail`, `sanity-check`.
+
+## Observed problem
+
+Agents design from the problem statement outward. Across the sessions on the flywheel outer loop (#1474), no agent proposed the `tick` kernel or ATE until the operator pointed at them. Reuse is already required by `workhorse` (`skills/2-daily/workhorse/SKILL.md`) and `swe` (`skills/1-hourly/swe/SKILL.md`), but neither says how to find a module whose name does not match the problem.
+
+## Recon (base 5967bde25; graph not used for this docs task, direct reads)
+
+- `skills/README.md` "The contract": add a skill under the tier it is used at; the Skills Index row is part of the change; **Mode before skill (GH-1299)** requires naming the skills checked.
+- `ARCHITECTURE.md` Skills Index: alphabetical rows per tier; `baseline` at line 112, `dry` at 114. The new row sits between them.
+- `test/gh589-skill-viewer.sh` (Small list) runs `mini/skills/skill-viewer/scripts/list_skills.py` over `skills/*/*/SKILL.md`: `name` must equal the folder name; `description` must use an accepted scalar style.
+- Existing discovery ladders to cite: `skills/4-occasional/swe-diagram/SKILL.md` Step 1 (graphify → codebase-memory → `ask_self` → written maps → source) and `skills/1-hourly/recon/SKILL.md` Step 2 (graph first, revision check, "The graph is a lead, not a citation", grep fallback) plus the `Mode:` stamp in its Step 5 template.
+- `ROUTER.md` "Routing hints" already describes `tick` ("multi-agent coordination kernel") and ATE ("unattended variation-test fuzzing") by purpose.
+- `skills/3-weekly/dry/SKILL.md` description claims the phrase "is this already implemented somewhere".
+- `utils/ci-route.sh`: a new `skills/3-weekly/**/SKILL.md` and `ARCHITECTURE.md` route as docs; final gate is `utils/pdda/pdda.sh run`.
+- Not traced: the publish manifests for child repos (publishing is out of scope here).
+
+## Mode before skill (GH-1299)
+
+| Skill checked | Why it cannot carry this |
+|---|---|
+| `recon` | Closest owner. Its skip rule sends this case away ("Greenfield — there is no existing system to trace … go plan"), and it judges one named system and writes a Recon Map file. This judges a problem's capability list across many systems and answers in chat. A mode would need its own trigger, skip rule and output contract. |
+| `ponytail` | Judges the size of a solution; keeps its own search deliberately light. |
+| `dry` | Audits the whole codebase for paths that already duplicate each other; takes no problem statement. |
+| `sanity-check` | Judges whether a problem is real and worth fixing, not what already exists to solve it. |
+| `triangulate`, `better-options` | Start from a known change or from options already on the table. |
+| `workhorse`, `swe` | State the reuse obligation inside a larger ladder; they would call this method. |
+
+The operator also asked for a separately invocable skill by name. Codex's consult preferred a `recon discover` mode; recorded on the issue with the reason it was not chosen.
+
+## Preflight bet
+
+- **Outcome sought:** when a problem looks new, the agent names the existing owners that cover parts of it before proposing a new subsystem.
+- **Smallest bet:** one `SKILL.md`, one Skills Index row, one sentence in `dry`'s description. Not built: any script, index, test suite, automatic wiring into `start-task` / `workhorse` / `flywheel`, child-repo publishing, device deployment.
+- **Alternatives rejected:** a recon mode (table above); a flag on `prior_art_recon.py` (keyword matching is the failure, and it only reads Python definitions).
+- **Rollback:** revert the commit; nothing else depends on the skill. Reversibility: Easy.
+
+## Plan
+
+1. Write `skills/3-weekly/connect-the-dots/SKILL.md`: frontmatter (`name: connect-the-dots`, folded `description` with triggers and a "Do NOT fire" clause), when to run / skip, the four steps from the issue, the fit-table template, trigger precedence, hand-offs. Cite the two existing ladders; do not restate them. -> expect `python3 mini/skills/skill-viewer/scripts/list_skills.py` to list it with no error.
+2. `skills/3-weekly/dry/SKILL.md` description: add one "Do NOT fire" clause sending "what do we already have for a new problem" to `/connect-the-dots`. `dry` keeps its phrase list. -> expect `git diff` to show one sentence added to the description and nothing else.
+3. `ARCHITECTURE.md`: add the Skills Index row between `baseline` and `dry`. -> expect the row link to resolve.
+4. Manual red/green pair and adjacent check, recorded under `TESTS-RESULTS/2026-11-14+GH-1484/` with `provenance.jsonl` (see Acceptance). -> expect red to miss, green to hit, the bad sample to be rejected.
+5. `bash test/gh589-skill-viewer.sh` and `utils/pdda/pdda.sh run`. -> expect both green.
+
+## Acceptance
+
+Each check names what it observes and what an unchanged repo would show.
+
+- [ ] Skill file present, `name` equals folder name. Observed by `list_skills.py`; before the change the skill is absent from its output.
+- [ ] Skill text requires: capabilities before any search; maps → index → grep with a stated mode; a fit table with `file:line`, owner, limiting constraint and a named new remainder; "not found in these searches" wording; no unread candidate. Observed by reading the file against this list.
+- [ ] Ladders are cited from `swe-diagram` Step 1 and `recon` Step 2, not rewritten. Observed by reading.
+- [ ] Trigger precedence against `recon`, `dry`, `triangulate`, `better-options`, and a "skip when" rule are in the text; `dry` points here.
+- [ ] Manual pair on a fixed prompt with no repo nouns and no "flywheel": *"We want an unattended overnight loop that claims tasks so two agents never collide, runs parameter variations to find edge-case failures, and records completion receipts. What should we build?"*
+  - **Red (unfixed candidate):** a fresh agent on base `5967bde25` without the skill, plus `prior_art_recon.py --query` on the prompt's keywords. The pair counts only if this output does not cite both `tick` and ATE. If it does, the prompt is too easy: replace it and rerun before the green run counts. This is what stops an unchanged repo being reported as delivered.
+  - **Green:** a fresh agent given the skill text and the same prompt cites `tick` and ATE, each with a correct `file:line`, the capability covered and one material limitation. A name without those fails.
+  - **Rubric control:** one deliberately bad output (a candidate dropped, or a citation to a file that was not read) is graded with the same rubric and must fail.
+- [ ] Adjacent check, input fixed before running: *"We need to render PDF invoices with embedded fonts."* Expected: "not found in these searches", with the searches listed, and no invented fit.
+- [ ] `ARCHITECTURE.md` row present; `test/gh589-skill-viewer.sh` and `utils/pdda/pdda.sh run` green.
+
+Limits: one passing pair shows the text works on the motivating case, not that it generalises. Fresh agents are Claude subagents in this session; a single model family.
+
+## Test scope
+
+No new suite, registry entry or script (AGENTS.md *No new tests*, GH-831). Existing: `test/gh589-skill-viewer.sh`, `utils/pdda/pdda.sh run`. Manual checks retained under `TESTS-RESULTS/2026-11-14+GH-1484/`.
+
+## Non-goals
+
+Not a tracer (`recon`), not a duplicate audit (`dry`), not a value judgement (`worth-it`), not a builder. No new index, graph, RAG or script. Deferred, not excluded: child-repo publishing, device deployment through Skills Army HQ, automatic wiring into other skills.
+
+## Rating (2026-11-14)
+
+`rated 55/35/50/85`. Severity 35: no defect or data loss; the cost is operator sessions spent re-deriving designs that existing modules already cover (one documented case, #1474). Priority 55: the operator asked for it now and it supports the active outer-loop work. Appeal 50: neutral, no operator score given. Effort 85: one markdown file plus two small doc edits. Recurrence: not a defect class; no incident window applies. No operator override.
