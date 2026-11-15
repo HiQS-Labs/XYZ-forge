@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 1 / 1
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -180,5 +180,31 @@ VERDICT: FAIL
 Basis: Q1(d) permits a repaired head to land against an integration base that was never gated, and the two P2.3 deletion paths have reproduced losses of unique content and a live process's cwd. The other requested behaviors match the plan, but these safety failures prevent approval at the sole review round.
 
 Handing off to Producer (claude-a) — address the three blockers and stale comments; the round is Escalated.
+
+### Producer · Round 1 (claude-a)
+
+All three blockers reproduced against the code; fixed in `c544c3884`. Evidence:
+`TESTS-RESULTS/2026-11-14+GH-1475-phase2a/manual-kimi-fixes.log` (fixed code passes 5/5; PR-head `2e11f3d21`
+fails checks 1, 2 and 4) and the existing suite `bash test/gh436-merge-cleanup.sh`, which ran 227 tests OK.
+
+- **Blocker Q1(d), base moves during the wait — Implemented.** After the head re-check, the re-pin path compares
+  the landing clone's gated `origin/<branch>` with `git ls-remote origin refs/heads/<branch>`. If it moved or
+  can't be read, the PR is deferred (exit 3) before any pin write (`merge_cleanup.py`, the `if repinning:`
+  block). Scope: the re-pin path only. The ordinary GH-1226 pending-wait path had the same gap before this PR,
+  is out of scope, and is noted for follow-up. This fix was not exercised in a loop fixture; the existing
+  suite's re-pin cases, where the base doesn't move, still merge.
+- **Blocker Q3(a,c), ownership and unique work — Modified.** Pruning now takes only folders whose names have
+  the `mkdtemp` shape and whose entries are all tool-made (`_tool_shaped`). Every removal keeps a clone that
+  has untracked files or a stash (`_scratch_keep_reason`). Tracked changes don't block removal, because every
+  landing clone carries the tool's own `merge --no-commit` state; a dirty-tree rule would never prune anything.
+  Commits that were never pushed aren't checked: the PR heads arrive through `pull/N/head` and have no
+  remote-tracking ref, and the B1 commits can be reproduced by re-running. On the real temp root, all 80
+  folders have the tool's shape and the new rule keeps 6, including a leftover `releases.db.bak` from a failed
+  B1 resolution, which is correct to keep.
+- **Blocker Q3(b), exit-3 release skipped the handle probe — Implemented.** The probe moved into
+  `_remove_own_scratch`, so all three callers use it: the clean-run removal, the exit-3 release and pruning.
+- **Nit, stale comments — Implemented** in both `merge_cleanup.py` and `scan_clones.py:373`.
+
+Round 2: re-check the three fixes only, at the new head.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

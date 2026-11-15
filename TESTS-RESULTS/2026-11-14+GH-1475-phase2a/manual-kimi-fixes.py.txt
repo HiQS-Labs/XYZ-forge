@@ -1,0 +1,33 @@
+"""Manual check (GH-831: not a suite) for the Kimi QA fixes on PR #1490. Run with TMPDIR set to an isolated dir."""
+import os, subprocess, sys, tempfile, time
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import merge_cleanup as mc
+mc._other_merge_cleanup_running = lambda: False
+root = Path(tempfile.gettempdir()).resolve()
+old = time.time() - 7200
+def mk(name, children=(), untracked=False):
+    d = root / name; d.mkdir()
+    for c in children:
+        repo = d / c / "repo" if c.startswith("pr-") else (d / c)
+        repo.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        if untracked: (repo / "NOTES.txt").write_text("mine")
+    os.utime(d, (old, old)); return d
+for i in range(3):  # three newer folders satisfy keep-3
+    mk(f"merge-cleanup-new{i:05d}"); os.utime(root / f"merge-cleanup-new{i:05d}", None)
+collide = mk("merge-cleanup-operator-notes-ky92ton_"); (collide / "UNIQUE-UNCOMMITTED.txt").write_text("x"); os.utime(collide, (old, old))
+dirty = mk("merge-cleanup-dirty123", ["pr-7-aaaaaaaa-abcdefgh"], untracked=True)
+clean = mk("merge-cleanup-clean123", ["pr-8-bbbbbbbb-abcdefgh", "verify-cccccccc"])
+mc.prune_retained_scratch()
+print(f"1 prefix-collision kept={collide.exists()} (want True)")
+print(f"2 tool clone with untracked file kept={dirty.exists()} (want True)")
+print(f"3 clean tool-shaped folder removed={not clean.exists()} (want True)")
+w = mk("merge-cleanup-exit3abc", ["pr-1-aaaaaaaa-zzzzzzzz"]); pr = next(w.glob("pr-1-*"))
+p = subprocess.Popen(["sleep", "30"], cwd=pr)
+time.sleep(1)
+r1 = mc._remove_own_scratch(pr, "pr-1-", root=w)
+print(f"4 exit-3 release with live cwd: removed={r1} alive={p.poll() is None} exists={pr.exists()} (want removed=False)")
+p.kill(); p.wait()
+r2 = mc._remove_own_scratch(pr, "pr-1-", root=w)
+print(f"5 after process exits: removed={r2} exists={pr.exists()} (want removed=True)")

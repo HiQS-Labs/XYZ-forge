@@ -1,0 +1,21 @@
+# Kimi QA fixes (commit c544c3884), manual check — TMPDIR=<isolated scratch>
+## fixed code
+merge-cleanup: Keeping <scratch>/merge-cleanup-dirty123: untracked files or a stash in pr-7-aaaaaaaa-abcdefgh/repo
+merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under <scratch>; kept 2: merge-cleanup-operator-notes-ky92ton_ (not a tool-shaped folder), merge-cleanup-dirty123
+1 prefix-collision kept=True (want True)
+2 tool clone with untracked file kept=True (want True)
+3 clean tool-shaped folder removed=True (want True)
+merge-cleanup: Keeping <scratch>/merge-cleanup-exit3abc/pr-1-aaaaaaaa-zzzzzzzz: in use or unverifiable (PID 15583 (sleep))
+4 exit-3 release with live cwd: removed=False alive=True exists=True (want removed=False)
+5 after process exits: removed=True exists=False (want removed=True)
+## red control: PR head 2e11f3d21
+1 prefix-collision kept=False (want True)
+2 tool clone with untracked file kept=False (want True)
+3 clean tool-shaped folder removed=True (want True)
+4 exit-3 release with live cwd: removed=True alive=True exists=False (want removed=False)
+5 after process exits: removed=False exists=False (want removed=True)
+## existing suite on c544c3884: bash test/gh436-merge-cleanup.sh
+Ran 227 tests in 182.621s
+
+OK
+## real temp root (read-only): 80 folders, all tool-shaped; 6 kept by the untracked/stash rule (a leftover releases.db.bak from a failed B1 resolution, and test sentinels)
