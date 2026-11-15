@@ -140,6 +140,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1383 GH-1383 · merge-cleanup: optimize merge sequences with intermediate canary gating, coalesced reconciliation, and automated post-merge QA sweep by default — `needs-contract`
 - #1376 GH-1376 · Add flywheel skill for adaptive Jog orchestration — `needs-contract`
 - #1400 GH-1400 · Economical flywheel composition — `needs-contract`
+- #1000 GH-1000 · Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
 - #61 GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) — `needs-doc`
@@ -296,7 +297,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1011 xyz-vendor.sh re-vendors a target with a live marathon; concurrent run dies with ModuleNotFoundError: harness_paths — `needs-doc`
 - #1008 Add a minimal performance-measurement skill using existing evidence — `needs-doc`
 - #1003 Merge batch 2026-10-08 — HiQS-Labs/XYZ-forge — #953 #966 #971 #979 #999 — `needs-doc`
-- #1000 Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow — `needs-doc`
 - #997 skills: governance-doc review & simplification skill (4-occasional) — high-effort sub-agent proposes, orchestrator adjudicates — `needs-doc`
 - #996 Exploration: lessons from Google ADK (adk-python) for XYZ-forge — umbrella, no commitment — `needs-doc`
 - #991 validate.sh: 13 harness/vendoring suites red on this Mac at clean development (env leak from live forge checkout and active sessions) — `needs-doc`

@@ -574,3 +574,7 @@ requests is acceptable or draft D should wait for those repos to have a ledger.
 | 4. Link implementation issues; update older efforts | After the operator accepts the dispositions | Open |
 
 The umbrella stays open after this PR.
+
+## Merge evidence
+
+- PR #1416 merged 2026-11-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
