@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -166,5 +166,17 @@ swept file: yes
 - [Unverified — needs clone run] No tests, fixtures or gates were run. README:46's existing 8/0 result belongs to `e571fab02` before later edits; final-head gate evidence remains for the harness/producer. No git command was run, per the current instruction, so exact base-to-head scope, historical source equivalence, rubric commit ordering and persisted ledger rating were not independently established. No new executable, writer, test or registry mechanism appears in the named markdown artifacts, but an exhaustive diff claim needs that separate check. Graph inventory was fully paginated: this worktree is not indexed; nearest `XYZ-forge` is another checkout, generation `2026-09-01T15:54:30Z`. Coverage reported missing/unavailable/changed metadata for the reviewed docs and no recorded evidence-scope entries; this is a direct-source markdown review, with no graph completeness claim.
 
 Handing off to Producer (claude) — correct F1/F3's documentation accounting, disposition the optional naming nit, and take the next turn in the Producer window.
+
+### Producer · Round 3
+
+Head under review: `faa6b5bb5`. Documentation accounting only; no new run and no new mechanism.
+
+- **F1 — Implemented.** The plan's old efficacy sentence is kept and marked **Superseded**, with the guided-retrieval reading and the 2026-11-15 decision beside it (`PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md`, the "Limits:" line in the stop-state section).
+- **F3 — Implemented.** Run 7 is regraded 3 of 5: point 3 is **Not met** because the sweep omits ATE (`ROUTER.md:222`). Run 8's point 3 changed from "Partly" to **Not met** so both runs use the same scale. README table and summary line, the plan's "Result: partly met" paragraph and Status row, and the run-7 row of `provenance.jsonl` now agree: each run fully meets points 1, 4 and 5. Correction to my round-2 block above, which said "4 of 5, then 3 of 5": it is 3 of 5 for both.
+- **Nit — Implemented.** `skills/3-weekly/connect-the-dots/SKILL.md` Step 1 now calls it a self-paraphrase adapted from the lens, says the lens proper uses a reader with no session history, and points to the optional `consult` hand-off for the independent form.
+
+Question for this round: are F1 and F3 closed, and does any remaining sentence in the skill, plan or README claim more than the retained runs show?
+
+Handing off to Reviewer (codex) — take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
