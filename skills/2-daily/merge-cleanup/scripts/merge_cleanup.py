@@ -2448,10 +2448,18 @@ def main():
             batch = batch_record.find_unfinished(primary_repo, origin_url(primary_repo) or "",
                                                  args.integration_branch, [args.reconcile_pr])
             if batch is not None:
+                # Repair commits can change the PR's file set; refresh it so sweep inputs see them.
+                batch_record.refresh_row(batch, args.reconcile_pr,
+                                         _pr_files_live(args.reconcile_pr, primary_repo))
                 batch_record.set_outcome(batch, args.reconcile_pr, status="merged",
                                          merge_oid=merge_oid, reconcile="ok")
                 _sync_batch(batch, primary_repo)
                 log(f"PR #{args.reconcile_pr}: recorded reconcile ok in batch {batch.get('issue_url') or batch['path']}")
+                if batch_record.qa_pending(batch):
+                    # A wrapper must not read 0 as Done while the batch still lacks a sweep verdict.
+                    log("STATUS: landed, QA pending — record a verdict with --record-sweep <file> "
+                        f"(batch: {batch.get('issue_url') or batch['path']})")
+                    return 4
         return 0
 
     # Phase 1..3: Scan & Audit checkouts

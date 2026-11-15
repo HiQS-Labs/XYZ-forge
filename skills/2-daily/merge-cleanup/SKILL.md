@@ -420,7 +420,8 @@ never attempted:
    record it with `merge_cleanup.py --primary "$PRIMARY" --record-sweep <file>`. If it reports that
    planned PRs remain, continue with `--resume --execute`; if it names a landed PR that is not
    reconciled, recover that PR with `--reconcile-pr N --execute` instead (GH-1475: a successful
-   `--reconcile-pr` records the PR as merged and reconciled in its unfinished batch). A `--resume` run
+   `--reconcile-pr` records the PR as merged and reconciled in its unfinished batch, and exits 4 while
+   that batch still lacks a covering sweep verdict). A `--resume` run
    with nothing left to land still reports 4 until a verdict covers every landing.
 
 ### Continuation contract — do not hand back reversible steps (GH-985 pattern)

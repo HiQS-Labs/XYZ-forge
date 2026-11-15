@@ -307,7 +307,9 @@ def pull_upstream(repo_root, branch="development"):
     `git pull` (which merges the shared FETCH_HEAD a concurrent fetch can rewrite). A ref lock held
     by a concurrent fetch in the primary is retried briefly; any other error stops as before."""
     for attempt, wait in enumerate((1, 2, None)):
-        r = subprocess.run(["git", "-C", repo_root, "fetch", "origin", branch],
+        # Explicit refspec: a clone whose fetch mapping excludes <branch> would not update origin/<branch>.
+        r = subprocess.run(["git", "-C", repo_root, "fetch", "origin",
+                            f"+{branch}:refs/remotes/origin/{branch}"],
                            capture_output=True, text=True, check=False)
         if r.returncode == 0:
             r = subprocess.run(["git", "-C", repo_root, "merge", "--ff-only", f"origin/{branch}"],
