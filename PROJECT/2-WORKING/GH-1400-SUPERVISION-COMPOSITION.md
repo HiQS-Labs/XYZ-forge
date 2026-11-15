@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1400
 title: Economical flywheel composition
 status: In progress
 created: 2026-11-09
-updated: 2026-11-09
+updated: 2026-11-15
 owner: Codex
 goal: Reduce downstream supervision by composing existing owners without new machinery.
 doc_type: project
@@ -20,7 +20,7 @@ phases: 2
 
 | What was just completed | What's next |
 |---|---|
-| PR #1403 published; Codex and additional Opus medium QA Approved; documentation gate and hosted smoke passed. | Await merge approval; retain open arc dependencies and real-work qualification. |
+| PR #1403 instruction slice merged; fresh implementation recon identifies Jog recovery/alignment seam. | Independent plan QA for the separately authorized implementation slice below. |
 
 ## Quad Concepts
 
@@ -139,3 +139,120 @@ under `TESTS-RESULTS/2026-11-09+GH-1400/`.
 ## Merge evidence
 
 - PR #1403 merged 2026-11-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+
+## Implementation slice — 2026-11-15
+
+This is newly authorized runtime work, separate from the completed PR #1403 instruction
+slice above. Its historical scope and exhausted 2/2 publication repairs remain unchanged.
+New limits: three repair rounds per blocker and three rounds each for plan/final review.
+
+Capability: replace Spike 0's agent-issued resume and clone handoff with one bounded,
+operator-invoked Jog wake that adopts an approved result and advances eligible pending work.
+Critical path: eliminate reconstruction of existing execution receipts and safe branch alignment.
+Evidence/budget: real CLI main/restart paths plus discriminating controls in the disposable
+verification clone; no model dispatch, scheduler installation, LTVera changes or merges.
+
+### Recon and solution fit
+
+Base `7dd85cd3a55303818ce61cbcc5d89b246d4a6449`. Existing owner is
+`utils/py/jog_run.py`, reached through `releases_app.py`'s `jog run` parser/handler.
+`JogCheckpoint.begin` recovers an interrupted wake but calls cold projection without
+publishing an approved receipt. `jog_resume` can publish it, but is a separate command.
+`jog_run_main` switches a clean target to local development only with checkpoint mode;
+it neither refreshes that branch nor preserves an ahead development before realignment.
+`run_marathon_phase` already writes the execution record/result path before dispatch,
+then consumes Marathon's result and publishes it. Marathon owns attempt caps; Jog queue
+attempt_count is a lease history metric, never a second retry budget.
+
+Verify graph: current project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation
+2026-11-15T07:36:58Z; jog_run_main/jog_resume direct both-direction traces and exact snippets;
+coverage for jog_run, releases_app, harness and proc_group reports metadata_match/no recorded
+gap (best effort). Trace contains heuristic false edges; exact task-clone source is authority.
+Prior-art thin-supervisor search found #280 (implemented underlying Jog owner) and #1081
+(exploratory shift proposal), plus #1474/#1477. Neither establishes this composition behavior.
+No overlapping open PR matched. #1360 health monitoring and #1254 prototype are different owners.
+
+Observed baseline: #1474 comment 6890286495 adopted #1098 without a rebuild, then ran #1099
+while #1098 awaited landing, but required manual preservation/alignment. #1477 reviewed
+artifact 55ed01192c3c58a9fc8716588515f3fd3e36917f supplies failure-model evidence, not production
+code or acceptance authority. Its independent witness assumes isolated note loss; no correlated
+rollback, power-loss, PID-reuse, live-worker recovery or context-continuity guarantee is imported.
+Attribution: Agent Orchestrator's durable result adoption and explicit waiting-state concepts
+in #1474 inform this composition; no AO source is copied.
+
+Smallest viable bet: add opt-in `jog run --supervise-until <UTC epoch seconds>` to the existing
+runner, requiring a positive `--max-tasks` and real Marathon executor. Existing manual run
+behavior remains available. This is one wake, not a daemon or skill/plugin interpreter.
+Reuse queue/state/checkpoint writers, preflight, receipt publication and proc_group cancellation.
+Alternative: documenting resume + handoff leaves the demonstrated intervention unchanged.
+A separate supervisor service would duplicate queue/attempt/receipt ownership and is rejected.
+
+### Contract and boundaries
+
+- Operator supplies an absolute deadline and finite task-selection limit. Deadline bounds new
+  dispatch and preflight/worker subprocesses; the existing publication gate retains its own
+  bounded clock. Cleanup/publication may finish after dispatch cutoff and are reported separately.
+  A wake never allocates a retry, resets native attempts, or treats queue attempt_count as budget.
+  An interrupted dispatched item without an exact valid result holds; retry-build remains explicit.
+- Under the existing primary driver lock, reconcile orphaned executions before selecting pending
+  work. Adopt only the latest execution's matching issue/execution result; approved receipts use
+  existing publication validation before projection. Invalid, missing or mismatched evidence holds
+  visibly without a builder. Malformed existing execution state must refuse, not become fresh state.
+- Execution-clone alignment takes its existing driver lock. A live or stopped holder blocks; an
+  initializing/unknown lock blocks. Preserve tracked dirty work by holding. Preserve every branch
+  and untracked file. Fetch development; switch to development only when safe. If local development
+  has unique commits, rename it to a deterministic preservation branch before recreating development
+  from origin. Never reset, clean, stash, delete refs, or discard logs. Git's untracked-overwrite
+  refusal stays a hold. Refuse dependent worktrees. A retained branch is reported to the operator.
+- Keep target lock during alignment only; Marathon owns target execution lock. Primary exclusion
+  serializes Jog wakes; target's live driver blocks recovery/alignment. No arbitrary stale-owner
+  killing. Recovery requires the previous execution owner to be absent. Cold-lock simultaneous
+  reclaim and malicious PID reuse are not newly certified by this slice.
+- Count every selected item toward max-tasks, including a preflight hold. Continue only after an
+  exact newly published approved receipt with PR identity (existing checkpoint continuation rule),
+  or after receipt recovery has placed the prior item at awaiting landing. Failed/uncertain rows
+  stay visibly held; no automatic retries. Preflight remains the execution-readiness authority.
+- RAW requests still enter Conveyor/preparation, never `jog add` as raw prose. #1476 owns medium
+  research/default policy. No new queue, ledger, schema, framework, scheduler, model route or spend.
+  No persistent agent context, external-effect exactly-once, automatic landing, live qualification,
+  whole-machine containment or arbitrary corrupted-state recovery claim.
+
+Blast radius: opt-in Jog wake, shared execution-state validation and resume receipt checking;
+existing run/retry readers must continue to accept valid historical state. Reversibility: Costly
+because orchestration crosses state and process boundaries; rollback disables the opt-in mode
+and reverts code while retaining native queue, receipts, history and preserved branches.
+
+### Ordered build and verification
+
+1. Record the owned PRS rating with its canonical writer on primary, preserve override and prior
+   accepted-start; commit plan/recon. Independent Codex plan QA must approve before production edits.
+2. Add the opt-in parser/validation and composed recovery/alignment path within Jog, reusing owners.
+   Early real CLI smoke in the verification clone must adopt A and select B without duplicate build;
+   adjacent rerun must leave A's attempts/receipt unchanged. Stop/replan if this requires a second ledger.
+3. Add bounded preflight/worker invocation through proc_group, retain dispatch state on cancellation,
+   and report held/stopped outcomes. Controls: expired deadline, stopped owner, missing/mismatched
+   receipt, malformed state, tracked dirty target, branch preservation, current readiness refusal,
+   native attempt exhaustion and repeat wake. Each must observe no unintended builder/queue effect.
+4. Run existing focused Jog/Marathon coverage as applicable and manual provenance checks only.
+   No new test suites, registry entries, fuzzers or production simulator dependency. Retain pre-change
+   red controls showing resume/alignment intervention and all failed attempts. Aggregate an explicit
+   nonempty required-check list; missing/duplicate/failed checks cannot yield PASS.
+5. Final exact-revision Codex QA, classify all changed paths, run the required final gate once in
+   the disposable full clone with before/after identity. Publish gated PR to development; leave #1400
+   open unless whole-issue coverage is independently established. Parent owns CI monitoring/cleanup.
+
+### Rating rationale — implementation
+
+Primary writer read-back 75/60/50/45, retained override null: priority/severity reflect demonstrated
+supervision/recovery cost, not proven irreversible loss; neutral appeal; lower cheapness reflects
+runtime recovery and validation rather than the old instruction-only patch. Recurrence window
+2026-11-02..15 versus 2026-10-19..11-01: #1474 is one concrete assisted run, #280 is older foundation,
+#1477 is synthetic evidence, not another production incident. Trend unknown; no inflated count.
+
+### Acceptance and current state
+
+Plan QA pending. No runtime implementation, readiness, new acceptance or qualified gate claimed.
+Required checks: real wake adoption/continuation; adjacent repeat; readiness red; result identity red;
+missing-result hold; malformed state hold; stopped-owner exclusion; deadline/cancel; attempt retention;
+safe branch/log preservation; explicit complete evidence aggregation. Gate/review remain separate.
