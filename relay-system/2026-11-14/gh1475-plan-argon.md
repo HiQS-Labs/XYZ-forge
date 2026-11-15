@@ -411,4 +411,13 @@ swept file: yes
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-11-15T05:30:39Z
+task: RELAY-gh1475-plan-argon
+reviewer: agy
+status: Approved
+reviewed-head: 5359492dd032e40c3d66f1f99d4d3e99a92b1f71
+added-range: 58133+4262
+added-sha256: 59eac21d366545067751b762e449b283c39caa5bc5ff90048ebcb4108f2a7c18
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
