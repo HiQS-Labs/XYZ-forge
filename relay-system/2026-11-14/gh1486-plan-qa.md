@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -156,5 +156,40 @@ Dispositions (plan doc `PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md` revise
 - **Q9 Nit rollback overstated — Implemented.** Rollback and step 1.7 now say the zip recovers the replaced copy only; registry and ignore lines stay with their owners.
 
 Round 2 opened. Handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2 (codex)
+
+**What this proposes.** Add one `/re-vendor-xyz` instruction-only skill for refreshing one registered repository's `.xyz/` copy through the existing sync/vendor writers. It checks published source, both driver-lock locations, processes and tier retention, backs up before replacement, and checks currentness before and after. It delegates deployed-skill updates to Skills Army HQ and adds three discovery pointers.
+
+**How the existing system works, per this document.** Sync selects registry rows and calls vendor without tier flags; vendor stages source, preserves named runtime state, replaces the copy and records provenance. Sync's `check` uses registry metadata and separately inspects a safety marker, so `ok` alone is insufficient. A vendored driver locks under `.xyz/`, while consumer-root drivers use the shared resolver; collection updates have their own owner and preview/apply procedure.
+
+**What it's not.** Per `non_goals` and Preflight bet: no first install, fleet refresh, script/helper changes, hand-edit detection, or deployment of this new skill into a collection or another person's machine. Refreshing already-installed Forge skills is the bounded Step 9 handoff, not collection expansion.
+
+**Input boundary:** This paraphrase was formed after reading the relay and the plan's non_goals, Status, Recon, Preflight bet, Plan, Acceptance, Verification and Risks, before opening source or the issue. The whole-file display also included the title, other frontmatter and Rating rationale.
+
+**Assessment: source-backed — Ship the plan.**
+swept file: yes
+
+Reviewed the entire plan, not only the Round 2 changes, and reread the required source and pointer surfaces plus issue #1486 and its first comment (`gh api`, exit 0). Applied the `swe` review rubric. Graph discovery was available this turn: `list_projects` had 86 entries with no exact task-worktree project; nearest canonical project `XYZ-forge` was ready, but coverage generation was `2026-09-01T15:54:30Z`. Symbol search returned an older `driver_lock_path` range; coverage reported changed/missing/untracked metadata and vendor's partial range 272. Therefore graph results were only provisional, and material claims below use this worktree's direct source, including that range. No index mutation was requested. No additional pre-existing defect was found in the plan during this sweep. This is a plan approval, not runtime qualification: all fixture/base-red claims remain **[Unverified — needs clone run]**. No git commands, suites, pytest, executable fixtures or phase gates were run.
+
+- **[Pass] S1 closed: the two lock checks now correspond to the drivers.** Plan `PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md:71` names both the vendored lock and `driver_lock_path_for_repo "$T"`; Recon at `:52` explains them. `utils/py/relay_drive.py:115-118,522` derives and locks the harness root; `utils/py/rtl.py:983-1005` and `relay-automation/driver-lock-lib.sh:20-34` establish the vendored and consumer/worktree resolutions. A4 (`plan:92`) now includes a vendored lock with no process match and a consumer-root lock. Stale locks stop without deletion. No extra detector or lock service is required.
+- **[Pass] S2 closed: unsuccessful fetch is explicitly a stop.** Plan `:69` says “stop on any nonzero exit”; the closed list `:78` includes “fetch failed”; A4 `:92` includes unreachable origin with equality to the cached ref. These clauses close the stale-ref failure without changing the writers.
+
+**Answers to the requested technical questions** (plan citations below refer to `PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md`):
+
+1. **[Pass] Recon's relevant contracts are grounded.** Exact selection is `relay-automation/xyz-sync.sh:193-197`; no-selection and missing-target exit-0 paths are `:241-246,282,292-295`; only fleet updates invoke source safety (`:284-289`). Vendor runtime carry-forward and VERSION staging are `relay-automation/xyz-vendor.sh:474-503`. The corrected lock claim is supported above. “Tier 2 kept only if releases.db” describes sync's no-flag call; direct vendor additionally supports `--with-releases` (`:44,66-72`). Historical unchanged-since-base and this machine's canonical key are assertions still requiring their implementation-stage receipts, not newly verified facts.
+2. **[Pass] The published-source policy is sufficient for the stated ordinary origin/branch setup.** Plan `:69` requires successful fetch, ff-only merge and final equality. Ahead history cannot satisfy equality, and diverged history cannot fast-forward. Bringing a behind source current intentionally changes that checkout, explicitly documented at `:69`; merge is unnecessary for a reject-if-behind policy, but the Producer's keep-and-update choice is reasonable within the operator's refresh request. No requirement to stop merely for being behind.
+3. **[Pass] Install-directory selection and literal output matching fit spaces and ordinary nested registered targets.** Sync normalizes the selector and compares whole paths (`:175,193-197`), then prints the raw install directory (`:443`). Plan `:73` requires fixed-string whole-line `ok` and the precise guard prefix including ` (`; this avoids substring/nested-row confusion. Physical normalization is explicit. A pre-existing registry alias spelling can still cause a conservative mismatch rather than a false success; no registry rewrite is required here.
+4. **[Pass] The demonstrated relative-driver hole is addressed within this envelope.** Relative argv such as `python3 utils/py/relay_drive.py ...` lacks `$T/.xyz/`, but its vendored lock is now checked (driver/resolver citations in S1). The process scan remains supplementary (`plan:52,71`), not exhaustive process identity or atomic exclusion against a new run starting after the check. An instruction-only single-machine refresh cannot promise those stronger properties; adding locks, journals or fleet coordination would exceed this plan's envelope.
+5. **[Pass] Tier handling matches the no-flag writer.** Vendor `:66-72` enables tier 2 from a root DB; Plan `:72` refuses the tier-2/no-DB downgrade and accurately allows tier-1/DB promotion. A tier-1 copy is not wrongly stopped by that predicate.
+6. **[Pass] Three-part currentness is the correct bounded contract.** Sync reads registry provenance (`:427-431`) and installed guard text (`:434-450`), while Plan `:73` separately requires installed VERSION source_commit to equal source HEAD. Thus a current registry cannot mask an older VERSION. This does not establish whole-tree integrity, explicitly excluded at `plan:61`.
+7. **[Pass] Skills Army remains the mutation owner.** Plan `:76` hands off after explicit-canonical read-only status. `skills/3-weekly/skills-army-hq/SKILL.md:30-40,160-173,229-244` owns source verification, preview/apply and warnings; `:24-29,46-58` forbids treating exit 0 or SKILL.md parity as full deployment readiness. The handoff inherits those requirements and authorizes no new collection membership or app targets.
+8. **[Pass] Acceptance now distinguishes stops, successful refresh and no-op behavior.** A1/A2/A7 (`plan:89-90,95`) depend on the new skill/text/pointers; their existing regression suites alone would pass base. A3 (`:91`) demonstrates refresh with before-DRIFT contrast, not a stop. A4 (`:92`) now requires the named stop, no backup/update invocation and unchanged VERSION; its bare exit-0 contrasts are explicitly not safety proof. A5 (`:93`) observes rejection of “already current” before repair; A6 (`:94`) observes the skip decision and no writer invocation rather than a timestamp. A3–A6 depend on extracting the new skill's actual commands (`:99`), so base cannot pass through a separately implemented fixture algorithm. The promised base reds and fixture outputs must still be retained with provenance; none were executed this turn.
+9. **[Pass] No additional machinery or required plan correction identified.** The one-file skill reuses the existing copy writer (`xyz-sync.sh:296`) and collection owner, with pointers into the existing surfaces (`ARCHITECTURE.md:145-147`, `README.md:254-263`, `vendor-stack/SKILL.md:146-156`). Markdown routing is supported by `utils/ci-route.sh:63-68`. The rollback wording now limits the zip to the replaced copy (`plan:63,74`). The accepted separate-skill decision is recorded in the issue's first comment and does not need reopening.
+
+**VERDICT: PASS**
+**Basis:** S1 and S2 are explicitly resolved, the remaining Round 1 observations were dispositioned, and no Blocker or Should remains against this instruction-only plan. Proceed to implementation and the already-planned disposable-full-clone verification; approval here does not claim that the unwritten skill or runtime fixtures pass.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
