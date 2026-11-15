@@ -19,14 +19,23 @@ with open(os.path.join(SCENARIOS_DIR, "scenario1_input.json")) as f:
 for req in ["consumer_repo", "issue", "error_string", "tool_config", "upstream_repo", "upstream_paths"]:
     if req not in s1_in:
         raise ValueError(f"Control 1 input missing required field: {req}")
+    if isinstance(s1_in[req], str) and not s1_in[req].strip():
+        raise ValueError(f"Control 1 input field '{req}' must not be empty")
+
+if not s1_in.get("upstream_paths") or not isinstance(s1_in["upstream_paths"], list):
+    raise ValueError("Control 1 upstream_paths must be a non-empty list")
+
+for p in s1_in["upstream_paths"]:
+    if not isinstance(p, str) or not p.strip():
+        raise ValueError("Control 1 upstream path must be a non-empty string")
+    if os.path.isabs(p) or p.startswith("..") or "/../" in p or p.endswith("/.."):
+        raise ValueError(f"Control 1 upstream path violates repo containment: {p}")
+    if p.startswith(s1_in["consumer_repo"]):
+        raise ValueError(f"Control 1 upstream path leaks consumer repo: {p}")
 
 assert "Tool dependency detection" in skill_text
 assert "Producer ↔ consumer correlation" in skill_text
 assert "The filed umbrella and its scored Cluster signature remain strictly **repo-local**" in skill_text
-
-# Verify upstream paths are repo-relative and do not leak foreign repo namespace
-paths_repo_relative = all(not os.path.isabs(p) and not p.startswith(s1_in["consumer_repo"]) for p in s1_in["upstream_paths"])
-assert paths_repo_relative, "Upstream paths must be strictly repo-relative to target repo"
 
 s1_out = {
     "test": "Control 1: Upstream/Downstream Correlation",
@@ -34,7 +43,7 @@ s1_out = {
     "resolved_upstream": s1_in["upstream_repo"],
     "mapped_paths": s1_in["upstream_paths"],
     "signature_boundary": "repo-local",
-    "verdict": "PASS" if paths_repo_relative and s1_in["upstream_repo"] else "FAIL"
+    "verdict": "PASS"
 }
 with open(os.path.join(SCENARIOS_DIR, "scenario1_output.json"), "w") as f:
     json.dump(s1_out, f, indent=2)
@@ -103,9 +112,12 @@ elif any(term in amp for term in ["lock ref", "race", "concurrency"]):
 else:
     catalyst_category = "Other"
 
-assert primary_category == "Concurrency / State", f"Expected Concurrency/State, got {primary_category}"
-assert catalyst_category == "System / Resource", f"Expected System/Resource, got {catalyst_category}"
-assert primary_category != catalyst_category, "Catalyst and primary invariant must be in distinct planes"
+if primary_category != "Concurrency / State":
+    raise ValueError(f"Expected Concurrency/State, got {primary_category}")
+if catalyst_category != "System / Resource":
+    raise ValueError(f"Expected System/Resource, got {catalyst_category}")
+if primary_category == catalyst_category:
+    raise ValueError("Catalyst and primary invariant must be in distinct planes")
 
 s3_out = {
     "test": "Control 3: Catalyst Separation",
