@@ -23,7 +23,7 @@ argument-hint: "<the problem or feature, in the operator's own words>"
 
 A module is named for what it is, not for the problem it could solve. Search for the problem's name and you find the documents about the problem. The parts that would solve it sit under other names, in other folders, and nobody proposes them.
 
-The case this skill was written for: sessions spent on "get the flywheel outer loop going" kept returning to the flywheel documents. None proposed the `tick` coordination kernel or the ATE variation runner, both already in the repo. Asked instead for "a loop that claims tasks so two agents never collide and runs parameter variations", the same agent found both in a minute (GH-1484). The difference was the wording of the question, so step 1 is the step that matters.
+The case this skill was written for (GH-1484): sessions spent on "get the flywheel outer loop going" kept returning to the flywheel documents and never weighed the repo's coordination kernel or its variation runner. In one recorded comparison, a fresh agent given that wording named neither; a second fresh agent asked for "a loop that claims tasks so two agents never collide and runs parameter variations" named both. One run each, so it is an observation, not a rate. It is why step 1 comes first, and why step 2 also sweeps the maps in reverse: a capability list only finds what it thought to ask for. This skill makes the candidates and the dismissals visible. It does not guarantee a particular module is chosen.
 
 ## When to run
 
@@ -74,6 +74,8 @@ Use what the repo already paid to describe itself before any grep. Work down and
 
 State the mode in the output: which maps, which index and at what revision, or `grep-only`. A missing or stale index is said in one line, not worked around silently.
 
+**Then sweep the maps in the other direction.** Searching by capability only finds what the capability list thought to ask for. Walk the purpose-written map once, top to bottom, and for every subsystem it names ask the reverse question: what does this do, and could any part of the problem use it? A subsystem the capability list never mentioned is the dot this skill exists to connect. List each subsystem considered with a one-line verdict (`candidate` or `set aside: <reason>`), so a reader can see what was looked at and dismissed. Bound it to the maps; this is not a walk of the source tree.
+
 Then **read every shortlisted candidate's source.** A map line or an index hit is a lead. A candidate enters the fit table only after its source was opened, and the row cites the lines read.
 
 ## Step 3 — Fit table
@@ -103,7 +105,7 @@ Close with four short parts:
 - **Unknowns:** what was not read or could not be confirmed, and what would settle it.
 - **One next action:** a single hand-off, not a menu.
 
-Absence is always worded as "not found in these searches", with the searches listed. A bounded search is not proof that nothing exists. If no capability has a candidate, say so plainly and stop; do not stretch a weak match into a fit.
+Absence is always worded as "not found in these searches", with the searches listed, in the opening line and the summary as well as in the table. "This repo has nothing that does X" is the same claim without its bound; do not write it. A bounded search is not proof that nothing exists. If no capability has a candidate, say so plainly and stop; do not stretch a weak match into a fit.
 
 ## Hand off, do not build
 
@@ -120,6 +122,7 @@ Do not run the neighbours automatically.
 ## Rules
 
 - Capabilities before searches. No search runs on the problem's own name alone.
+- Both directions: capabilities to modules, then the map's subsystems back to the problem.
 - Maps, then index, then grep; state the mode.
 - No unread candidate in the table; every row cites `file:line`.
 - Every `use as is` names the constraint that was checked.

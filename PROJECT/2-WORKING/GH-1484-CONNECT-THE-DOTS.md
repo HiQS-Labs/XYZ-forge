@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (round 2); skill, `dry` pointer and index row written; manual red/green pair and adjacent check recorded | Final Codex review, docs gate, PR |
+| Skill, `dry` pointer and index row written; final review round 1 returned two findings; answer-free control runs show the headline acceptance check is not met | **Blocked on an operator decision** (see "Stop state"). No PR opened. |
 
 # GH-1484: connect-the-dots skill
 
@@ -86,6 +86,17 @@ Each check names what it observes and what an unchanged repo would show.
   - **Rubric control:** one deliberately bad output (a candidate dropped, or a citation to a file that was not read) is graded with the same rubric and must fail.
 - [ ] Adjacent check, input and search scope fixed before running. Prompt: *"We need to render PDF invoices with embedded fonts."* Corpus: files tracked by git in this repo at base `5967bde25` (`git ls-files`). Excluded: the agent's installed skills and tools outside the repo, `relay-system/`, `PROJECT/`, `TESTS-RESULTS/`, `CHANGELOG.md`, `docs/`, and the ledger dumps (`releases.db`, `releases.sql`), which hold prose, not modules. Pre-run evidence, retained with the transcript: `git grep -il` for `pdf`, `invoice`, `embedded font`, `reportlab`, `weasyprint` over that corpus. Run on 2026-11-14 before freezing this case: `pdf` matched only the excluded ledger dumps; the other terms matched CI config, a fuzzy-match test fixture and gate baselines, none of them a rendering module. Expected: "not found in these searches", with the searches listed, and no invented fit. If the pre-run searches are repeated at execution and show a real candidate, this case is invalid and is replaced before it counts; a candidate is never suppressed to pass it.
 - [ ] `ARCHITECTURE.md` row present; `test/gh589-skill-viewer.sh` and `utils/pdda/pdda.sh run` green.
+
+## Stop state (2026-11-14)
+
+Final review round 1 (Codex, `relay-system/2026-11-14/gh1484-final-qa.md`): FAIL with two Should findings.
+
+- **F1, accepted and it turned out to matter.** The skill text named `tick` and ATE, so the green run was told the answer. Two control runs with an answer-free copy of the skill did not name both: one named neither, and after a reverse map sweep was added, `tick` was surfaced and set aside and ATE was not listed. The Green acceptance item below is **not met**.
+- **F2, accepted.** The adjacent run is graded partial: its opening line claims absolute absence. The skill text now forbids that; not rerun.
+
+Changes after plan approval, all unreviewed: the reverse map sweep in Step 2, the bounded-absence rule for opening lines, and the reworded opening example.
+
+Decision needed from the operator before more work: keep the "names `tick` and ATE" criterion and keep changing the skill; or accept the skill for what the runs show (a cited reuse table and visible dismissals, no guarantee of a particular module); or stop. Resume: on a decision, address it, then run final review round 2 (two rounds remain of three).
 
 **Deviation recorded 2026-11-14 (after plan approval).** The fixed capability-worded prompt above was found by the clean baseline without the skill, so under the rule in the Red item it was replaced with the operator's original wording: *"I've been struggling to get the outer loop for the software flywheel going. What should we build to get it running?"* On that wording the baseline names neither `tick` nor ATE and the skill run names both. Plan review had advised against the word "flywheel"; the runs showed it is what causes the miss. Evidence and grading: `TESTS-RESULTS/2026-11-14+GH-1484/README.md`.
 
