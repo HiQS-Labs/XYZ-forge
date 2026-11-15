@@ -46,3 +46,21 @@ new forced: another merge_cleanup.py --execute is running (pid 424242); run one 
 base F6 checks='no required checks': rc=0 preflight_lines=0 gh_calls=0
 base F6 checks='1 required check(s) passing: ci': rc=0 preflight_lines=0 gh_calls=0
 base: no preflight_warnings() (base tree)
+
+## P1.3 discriminating control (final-QA r1): clean return with keep_workdir set; mutant = tested code with only 'not keep_workdir' removed from the cleanup predicate (deterministic: run twice, same result)
+new clean+keep (draft refusal after B1): rc=0 workdir_left=1 B1-RESULT kept=True
+new   merge-cleanup: PR #1: SKIPPED (draft before repaired-head push; B1 result kept at <tmp>/merge-cleanup-q9jfzu5h/pr-1-clone)
+new   merge-cleanup: Skipped draft PR(s): #1
+new   merge-cleanup: Landing clones retained for inspection under <tmp>/merge-cleanup-q9jfzu5h
+new containment symlink: returned=False rmtree_called=False
+new containment outside temp root: returned=False rmtree_called=False
+new containment wrong prefix: returned=False rmtree_called=False
+new containment valid: returned=True rmtree_called=True
+mutant clean+keep (draft refusal after B1): rc=0 workdir_left=0 B1-RESULT kept=False
+mutant   merge-cleanup: PR #1: SKIPPED (draft before repaired-head push; B1 result kept at <tmp>/merge-cleanup-_c15yqww/pr-1-clone)
+mutant   merge-cleanup: Skipped draft PR(s): #1
+mutant   merge-cleanup: Landing clones removed after a clean run (<tmp>/merge-cleanup-_c15yqww)
+mutant containment symlink: returned=False rmtree_called=False
+mutant containment outside temp root: returned=False rmtree_called=False
+mutant containment wrong prefix: returned=False rmtree_called=False
+mutant containment valid: returned=True rmtree_called=True
