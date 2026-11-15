@@ -10,6 +10,7 @@ Manual evidence for [GH-1484](https://github.com/HiQS-Labs/XYZ-forge/issues/1484
 | Green: same wording, skill text supplied | **Pass.** Cites both, each with capability and a material limit. | `run-3-green-skill-operator-wording.md` |
 | Rubric control: two deliberately bad outputs | **Both rejected** by the same rubric. | this file, below |
 | Adjacent: a problem with no match | **Pass.** "Not found in these searches", searches listed, no invented fit. | `run-4-adjacent-no-match.md`, `adjacent-prerun-searches.txt` |
+| Existing suite `test/gh589-skill-viewer.sh` on the branch | 8 passed, 0 failed (disposable clone). | `existing-suite-summary.txt` |
 | Keyword scanner on the same problem | 0 matching helpers for both phrasings. | `prior-art-keyword-baseline.txt` |
 
 ## Deviation from the approved plan: the prompt was replaced
