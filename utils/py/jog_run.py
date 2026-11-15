@@ -2559,13 +2559,18 @@ def _jog_supervise_recover(root, target):
             latest = executions[-1]
             if not isinstance(latest, dict) or state.get("gh_number") != gh_num:
                 raise ContractError(f"GH-{gh_num} execution history identity is invalid")
-            record, receipt = _jog_latest_receipt(root, resolved)
             try:
-                if record is None or record.get("execution_id") != latest.get("execution_id"):
-                    raise ContractError("latest execution has no valid result; explicit retry decision required")
-                publication = next((entry for entry in reversed(latest.get("gate_retries") or [])
-                                    if entry.get("execution_id") == receipt.get("execution_id")), latest)
+                retries = latest.get("gate_retries") or []
+                if not isinstance(retries, list) or any(not isinstance(entry, dict) for entry in retries):
+                    raise ContractError("invalid gate retry history")
+                publication = retries[-1] if retries else latest
+                result_path = _ledger_abs_path(root, resolved, publication.get("result_path"))
+                if not result_path:
+                    raise ContractError("latest execution has no result path; explicit retry decision required")
+                receipt = load_marathon_result(result_path)
                 _jog_result_identity(receipt, gh_num, publication.get("execution_id"))
+                if os.path.realpath(receipt.get("target_repo", {}).get("path") or "") != os.path.realpath(target):
+                    raise ContractError("result receipt names a different execution target")
                 if receipt.get("outcome") != "approved":
                     raise ContractError("latest execution is not approved; explicit retry decision required")
                 invocation = load_marathon_invocation(os.path.join(
@@ -2776,7 +2781,8 @@ def jog_run_main(args=None):
                 conn.close()
 
             if not row:
-                print("jog: queue complete (0 pending tasks).")
+                print("jog: no pending tasks; held outcomes remain below." if supervised
+                      else "jog: queue complete (0 pending tasks).")
                 break
 
             if supervised:
@@ -2927,6 +2933,15 @@ def jog_run_main(args=None):
                 print("jog: advancing halted at landing boundary.")
                 break
 
+        if supervised:
+            conn = connect(db_path, readonly=True)
+            try:
+                for gh_num, status, reason in conn.execute(
+                        "SELECT gh_number, status, failure_reason FROM jog_queue "
+                        "WHERE status IN ('parked', 'failed', 'running') ORDER BY gh_number"):
+                    print(f"jog: GH-{gh_num} {status}: {reason or 'execution owner/result unresolved'}")
+            finally:
+                conn.close()
         if checkpoint:
             try:
                 checkpoint.finish()
