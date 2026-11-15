@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex in round 2 (`relay-system/2026-11-14/gh1486-plan-qa.md`); skill, pointers and changelog written (`eb9a48126`); fixture checks 55/0, base reds, regression suites and docs gate recorded under `TESTS-RESULTS/2026-11-14+GH-1486/` (2026-11-14). | Codex final QA, then PR. |
+| Plan approved (Codex r2, `relay-system/2026-11-14/gh1486-plan-qa.md`); skill, pointers, changelog written; final QA approved (Codex r2, `relay-system/2026-11-14/gh1486-final-qa.md`) after three fixes; evidence and docs gate on the approved commit under `TESTS-RESULTS/2026-11-14+GH-1486/` (2026-11-14). | PR ready; awaiting merge. Deploying the skill to a machine is a separate Skills Army HQ intake. |
 
 ## Rating rationale (2026-11-14)
 

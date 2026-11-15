@@ -185,3 +185,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: gate
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1453
 - **date**: 2026-11-13
+
+## Every backticked path on a relay's "Artifact under review" line must exist from the repo root
+
+- **cue**: writing the `## Setup` "Artifact under review:" line of a relay thread that `relay-drive.sh` will drive, especially when it names evidence files by bare filename
+- **lesson**: the driver checks every path-like backticked token on that line against the worktree root and exits 2 (`relay-drive: artifact path not found in worktree: <token>`) before the reviewer runs; write repo-relative paths in full (`TESTS-RESULTS/<date>+GH-<n>/SUMMARY.md`, not `SUMMARY.md`), or move bare filenames to another Setup line.
+- **evidence**: `utils/py/relay_drive.py:479-492` (the check); `relay-system/2026-11-14/gh1486-final-qa.md` history: the first drive exited 2 on `SUMMARY.md`, the second, after the Setup line was rewritten with full paths, ran the review.
+- **confidence**: high for the mechanism (read from source and reproduced once); one incident.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1486
+- **date**: 2026-11-14

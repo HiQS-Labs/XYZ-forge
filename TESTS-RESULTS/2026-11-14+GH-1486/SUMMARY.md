@@ -10,7 +10,8 @@ Candidate `7366dd522` (skill, pointers, changelog, final-QA round-1 fixes). Base
 | Regression suites | `gh589-skill-viewer`, `path-integrity`, `gh660-skill-drift`, `gh312-vendor-preserves-state`, `gh293-vendored-guard-drift`, run in the disposable verify clone with an identity bracket | 8/0, 3/0, 7/0, 14/0, 15/0 | `regression-suites.log` |
 | Smoke, step 9 | The skill's step 9 block as written, against this machine's real Skills Army collection, read-only | rc 0, `drifted 0`, collection unchanged | `smoke-step9.log` |
 | vendor-stack example | The corrected step 1 snippet from `vendor-stack/SKILL.md`, extracted and run from a subfolder of the verify clone | rc 0; `HARNESS` and `PDDA` resolve to the checkout top | `vendor-stack-snippet.log` |
-| Docs gate | `utils/ci-route.sh` route, then `utils/pdda/pdda.sh run` | `docs_only=true`, tier 1; no errors (698 repo-wide warnings; the two about GH-1486 say issue state was unavailable offline) | `pdda-run-summary.log` |
+| Docs gate | `utils/ci-route.sh` route, then `utils/pdda/pdda.sh run`, on `eb9a48126` and again on the final approved commit `61efc419e` | `docs_only=true`, tier 1; no errors both times (698 repo-wide warnings; the two about GH-1486 say issue state was unavailable offline) | `pdda-run-summary.log`, `pdda-run-final-summary.log` |
+| Link suites, final | `gh589-skill-viewer`, `path-integrity` on `61efc419e` | 8/0, 3/0 | `link-suites-final.log` |
 
 What each A4 case proves: the named `re-vendor-xyz: stopped:` line appears, no backup zip is made, `xyz-sync.sh update` is never invoked (the block prints `re-vendor-xyz: running:` immediately before calling it), and `.xyz/VERSION` is byte-identical. The bare-command contrasts (no-op exit 0 for an unregistered target; vendoring from a dirty source and from an unpublished commit) are recorded beside them to show what the skill prevents; they are not the safety proof.
 
