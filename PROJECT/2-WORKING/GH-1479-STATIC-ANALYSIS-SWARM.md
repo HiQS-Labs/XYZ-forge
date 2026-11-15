@@ -2,7 +2,7 @@
 gh_issue: 1479
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
 title: "refactor: add Python static analysis and decompose swarm-preflight main"
-status: Active — recon and plan QA (2-WORKING)
+status: Blocked — plan relay attempt cap (2-WORKING)
 created: 2026-11-14
 updated: 2026-11-14
 owner: noelsaw
@@ -23,7 +23,7 @@ phases: 5
 
 | What was just completed | What's next |
 |---|---|
-| Recon and surgical plan recorded with baseline exits 0/0/2, typed static-analysis seam, non-goals, rollback, and red controls; rating persisted on `rmi-01M7EXKTPVA9WHVFTMCVR6QRS9`. | Run independent Codex plan QA; no production edit or accepted-start admission before approval. |
+| Codex plan round 1 returned FAIL; all four findings and the count nit were dispositioned and committed. Baseline suites passed in a disposable clone. Round 2 is blocked by the two-attempt lane cap after one completed review and one failed re-dispatch. | Operator decides whether to authorize one forced Codex round 2 or hold the task. No accepted-start or production edit has occurred. |
 
 ## Acceptance capture
 
@@ -105,3 +105,9 @@ Use three small, immutable dataclasses, not one mutable context:
 - **S3, verification isolation — Implemented.** Every shell/pytest verification run, not only the final gate, is assigned to a disposable full clone with identity brackets.
 - **S4, atomic-write mismatch — Modified.** Recorded the current direct-write behavior as a known pre-existing conformance exception. No repair or atomicity claim is in scope.
 - **N1, function count — Implemented.** Corrected to 42 module-level definitions, 47 including nested helpers.
+
+## Plan relay blocker — 2026-11-14
+
+The first driver attempt completed Codex round 1 (`FAIL`), then escalated when the producer token did not advance. A second invocation attempted to open round 2 without first claiming the token and failed before dispatch; it nevertheless consumed the lane's second attempt. The corrected third invocation was refused by `lane-attempt-cap` at 2/2. No `--force`, new token, history reset, or accepted-start was used. Resume only with an explicit operator decision to authorize one forced Codex round 2 or to hold the task.
+
+NO_ENTRY for lessons: plan review is unfinished and the block is coordination-specific; no implementation effect exists to grade.
