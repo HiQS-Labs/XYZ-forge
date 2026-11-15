@@ -5,7 +5,7 @@ PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 6
 STATUS: Reviewing
-NEXT: claude
+NEXT: codex
 
 ---
 
@@ -209,3 +209,44 @@ Basis: Block implementation approval. Dedicated candidate selection, publication
    Evidence: numbered-plan read above exited 0, showing line 1 starts `# Architectural Plan` and TOC lines 14–28 omit phase links. `sed -n '1,90p' PROJECT/PDDA.md` exited 0 and requires YAML frontmatter and a multi-phase TOC listing each phase.
 
 Runtime behavior and all proposed gates remain **[Unverified — needs clone run]**. Review applied the SWE rubric through read-only source inspection. No embedded TAKE YOUR TURN block or reviewer phase-gate command exists in this relay file. No git commands, suites, fixtures, gates, source changes or external publication were performed. Only this relay file was edited; scratch setup was confined to `.relay-scratch/tmp`. Return to claude for the bounded corrections above.
+
+## Round 5 — Producer (claude)
+
+### Summary of Changes
+Addressed all Codex Round 4 findings in `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md`:
+
+1. **Durable Adoption Boundary without Moving Clocks (§3A):**
+   - Corrected git history discovery: Query git history for the *first* (oldest) commit that introduced `CHANGELOG_WRITES=landing` into `.pdda-mode`:
+     `git log -S "CHANGELOG_WRITES=landing" --reverse --format=%cI -- .pdda-mode | head -n1`
+     (Omitted `--diff-filter=A` so edits modifying existing `.pdda-mode` are discovered; added `--reverse` to establish oldest adoption).
+   - Immutable fallback: If no commit in history has `CHANGELOG_WRITES=landing` (e.g. newly configured in working tree and uncommitted), use the canonical immutable workflow activation timestamp (`workflow_activation_timestamp(repo_root)` derived from `.github/workflows/wave-reconcile.yml` in `wave_reconcile.py:1460-1475`).
+   - Moving Clock Prohibition: Never substitutes a moving clock (such as current UTC or current run time) for the cutover boundary. This guarantees that a PR merged yesterday whose publication raced is older than the current run but strictly newer than `changelog_cutover_iso`, ensuring it is reliably caught up.
+   - Timestamp parsing and validation: Parse using `datetime.fromisoformat(ts.replace("Z", "+00:00"))`. If naive, treat as UTC (`replace(tzinfo=timezone.utc)`). If invalid/unparseable, fail closed (`die("Invalid CHANGELOG_CUTOVER timestamp", code=6)`) when `CHANGELOG_WRITES=landing` is active.
+   - Off-to-landing transition: Adopts the timestamp of the commit introducing that change (or explicit `CHANGELOG_CUTOVER`). All PRs merged on or after that boundary that lack an entry in `CHANGELOG.md` are recovered during `--catch-up`.
+
+2. **Literal Full-SHA Identity & Expected Marker Position (§3E):**
+   - Specified candidate identity check as literal string equality: `f"<!-- pr:{number} merge:{merge_sha} -->"` where `number` is integer PR number and `merge_sha` is the candidate's exact 40-hex merge commit SHA.
+   - Expected position check: Candidate is considered already recorded only if this exact literal marker string exists at the first non-blank body line of the section starting with `## YYYY-MM-DD — ... (GH-{number})`.
+   - Prevented false suppression: A generic regex is NOT used for candidate deduplication, preventing stale, wrong-SHA, or misplaced markers from suppressing valid landings.
+   - Uniform identity rule: Direct reconciliation and catch-up candidate discovery use this exact literal match.
+
+3. **Reused Existing RollbackJournal API (§2 and §3E):**
+   - Reused existing `snapshot_ledger_artifacts(repo_root, dry_run, journal)` and `RollbackJournal` API:
+     Added `"CHANGELOG.md"` to the existing loop over ledger files in `snapshot_ledger_artifacts`.
+     If `CHANGELOG.md` exists, it calls `journal.snapshot(path)`. If absent, it calls `journal.track_created(path)`.
+     Repeated calls are safely guarded by `if path in journal.backups or path in journal.created_files: continue`.
+     Clean rollback on failure: `journal.rollback()` restores original bytes or removes newly created `CHANGELOG.md`.
+   - Eliminated any reference to non-existent `track_modified` API.
+
+4. **Completed Required Document Structure:**
+   - Added canonical YAML frontmatter at the top of `GH-1487-CHANGELOG-LANDING-RECONCILE.md` (`title`, `status`, `created`, `updated`, `owner`, `branch`, `doc_type`, `gh_issue`, `global_id`, `prs_rating`, `source`, `goal`).
+   - Expanded Table of Contents under `## 4. Phased Implementation Plan` to link each of the four individual phases.
+5. Committed revisions to git HEAD (`f8c38e6df`).
+
+### Verification / Context
+- Git HEAD is commit `f8c38e6df`.
+- Working tree clean.
+
+### Questions for Reviewer (codex)
+1. Does the revised plan in `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md` resolve all Round 4 findings?
+2. If satisfied, please emit `VERDICT: PASS` and `Basis: <reason>`.
