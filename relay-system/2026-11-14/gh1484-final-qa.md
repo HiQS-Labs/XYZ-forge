@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -178,5 +178,23 @@ Head under review: `faa6b5bb5`. Documentation accounting only; no new run and no
 Question for this round: are F1 and F3 closed, and does any remaining sentence in the skill, plan or README claim more than the retained runs show?
 
 Handing off to Reviewer (codex) — take the next turn.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: F1 and F3 are closed, F2 remains resolved, and the naming nit is addressed. Approve the read-only advisory skill under the operator's revised scope, with its partial experimental results explicitly retained. This approves the reviewed documents, not discovery efficacy or final-head gate readiness.
+swept file: yes
+
+- [Pass] **F1 closed.** The plan now explicitly marks the old interpretation **Superseded** and says the answer-seeded run establishes guided retrieval only (PROJECT/2-WORKING/GH-1484-CONNECT-THE-DOTS.md:121). README:31-38,52-55 records the answer-free failures and rejects the stronger efficacy inference. The skill's opening describes the two fresh-agent observations as one run each and promises no particular module (skills/3-weekly/connect-the-dots/SKILL.md:26). No remaining current efficacy claim in these documents exceeds that evidence; the dated stop-state and original acceptance remain recognizable historical context.
+
+- [Pass] **F3 closed; partial means partial.** README:9-19, plan:20,106 and provenance.jsonl:11-12 agree that runs 7 and 8 fully meet points 1, 4 and 5 only. Both incomplete sweeps and unopened citations remain disclosed. This matches the retained run-7 sweep and opened list (run-7-skill-answer-free-paraphrase-first.md:35-40,84-96) and run-8's grouped sweep and opened list (run-8-skill-answer-free-opened-files-and-count.md:46-58,84-107), under TESTS-RESULTS/2026-11-14+GH-1484/. F2 remains honestly partial at README:82 and provenance.jsonl:5, with the unrerun tightening disclosed at README:19,82. No new experiment is necessary for these accounting corrections.
+
+- [Pass] **Text, routing and paraphrase adaptation.** The entire new skill retains capabilities before search (:55-73), maps/index/grep and stated mode (:75-89), cited owner/constraint fit table (:91-107), bounded absence, unknowns and one next action (:109-120), and advisory-only hand-offs (:122-144). These references are to skills/3-weekly/connect-the-dots/SKILL.md. Its :63 now explicitly calls the default a self-paraphrase adaptation and reserves the independent form for optional consult (:130,133), consistent with start-task/SKILL.md:197-214. The discovery ladders remain references (:80). dry/SKILL.md:4-18 preserves duplication routing and sends new-problem reuse here; ARCHITECTURE.md:113 supplies the weekly index row. The rating remains a reasonable planning judgement, not a measured effect (plan:131-133).
+
+- [Pass] **Whole-file sweep and retained-log integrity.** Read the entire new skill, dry skill, plan, README, provenance and retained logs, plus ARCHITECTURE's weekly table (:105-128). No concrete pre-existing defect found in the bounded dry/table sweep; no new executable, writer, suite or registry mechanism appears in the named delivery documents. Relative-link probe resolved all 5 relative skill links and all 19 weekly-table links. Integrity probe, with PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp": `python3 -c 'import pathlib,json,hashlib; p=pathlib.Path("TESTS-RESULTS/2026-11-14+GH-1484"); rows=[json.loads(x) for x in (p/"provenance.jsonl").read_text().splitlines()]; assert len(rows)==12; assert all((p/r["log"]).stat().st_size and hashlib.sha256((p/r["log"]).read_bytes()).hexdigest()==r["log_sha256"] for r in rows); print("12 nonempty logs; 12/12 hashes match")'`; exit 0; decisive output: `12 nonempty logs; 12/12 hashes match`. This establishes log integrity, not efficacy.
+
+- [Unverified — needs clone run] No git command, test, executable fixture or gate was run. README:46's 8/0 suite result is explicitly for e571fab02 before later edits; final-head gate evidence belongs to the harness/producer. Exact base-to-head scope, historical source equivalence, rubric commit ordering and persisted ledger rating were not independently re-established. Graph inventory had 86 projects, fully paginated, with no index for this worktree; nearest XYZ-forge is another checkout. Coverage generation 2026-09-01T15:54:30Z reports missing/unavailable/changed metadata for these documents and no recorded evidence-scope entries. Direct reads were used; no graph-completeness claim.
+
+Relay closed (Approved), no further turn needed. Harness retains responsibility for the final gate and file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
