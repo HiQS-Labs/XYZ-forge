@@ -218,8 +218,9 @@ def run_command_in_session(cmd: str, cwd: Path, timeout: Optional[int] = None) -
 
 def _scratch_keep_reason(path: Path) -> Optional[str]:
     """GH-1475 (P2.3 QA): why a tool scratch folder must stay, or None when it may go. Kept when a
-    process holds it (or lsof cannot tell), or when a clone inside has untracked files or a stash:
-    the tool's own merge simulations only leave tracked changes, so either one is someone's work."""
+    process holds it (or lsof cannot tell), or when a clone inside has untracked files, a stash, a
+    linked worktree, or tracked changes outside an in-progress merge. The tool's own simulations
+    leave tracked changes only under MERGE_HEAD, so anything else is someone's work."""
     handles = scan_clones.inspect_open_handles(path)
     if not handles.get("verified") or handles.get("active"):
         return f"in use or unverifiable ({handles.get('details') or 'lsof'})"
@@ -231,8 +232,15 @@ def _scratch_keep_reason(path: Path) -> Optional[str]:
         stash = run_git(repo, ["stash", "list"])
         if st.returncode or stash.returncode:
             return f"cannot read git state of {repo.name}"
-        if any(line.startswith("??") for line in st.stdout.splitlines()) or stash.stdout.strip():
+        lines = st.stdout.splitlines()
+        if any(line.startswith("??") for line in lines) or stash.stdout.strip():
             return f"untracked files or a stash in {repo.relative_to(path)}"
+        merging = run_git(repo, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]).returncode == 0
+        if lines and not merging:
+            return f"tracked changes outside a merge in {repo.relative_to(path)}"
+        wt = run_git(repo, ["worktree", "list", "--porcelain"])
+        if wt.returncode or sum(l.startswith("worktree ") for l in wt.stdout.splitlines()) > 1:
+            return f"linked worktree or unreadable worktree list in {repo.relative_to(path)}"
     return None
 
 
