@@ -1,8 +1,8 @@
 ---
 title: "GH-1470: clean-first conflict-hub forecast"
-status: in-progress
+status: Complete
 created: 2026-11-14
-updated: 2026-11-14
+updated: 2026-11-15
 owner: Codex
 goal: "Identify clean-first landing passes without changing landing authority or gates"
 gh_issue: 1470
