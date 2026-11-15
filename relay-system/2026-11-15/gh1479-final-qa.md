@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -112,5 +112,21 @@ Output graded findings with `file:line` citations. A behaviour-change request ne
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship for the requested draft PR. No introduced correctness defect found in the whole-module sweep or implementation comparison. Approval is code-review evidence, not a full-gate or promotion receipt.
+swept file: yes
+
+- [Pass] Behavior preservation: compared the complete old source at `a7104e323` with the implementation at `b2c5c32a7`, reading objects directly without invoking git; the current module matches the implementation blob. Old `utils/py/swarm_preflight.py:1239-1328` maps to new `:1363-1464`; only pure primary-doc/slug computation moves ahead of contract loading. Bundle source order and primary-issue selection remain intact (old `:1279-1290,1534`; new `:1403-1414,1707`). Fetch, lock inspection, ref resolution, worktree add, probes, frozen scan, removal/prune retain their order (old `:1330-1432`; new `:1467-1569`). Candidate precedence remains blocked → ambiguous → stale (old `:1434-1437`; new `:1606-1610`), followed by the same readiness ladder. Report exits still precede packet writes (old `:1695-1750`; new `:1911-1956,2176-2181`). The packet's literal `Verdict: ready` replaces a variable that could only be ready on that path (old `:1894`; new `:2123`). No behavior-changing coercion found. Keep this extraction.
+- [Pass] A/B evidence is non-vacuous and the same-path substitution-free comparison is acceptable for its measured scope. `TESTS-RESULTS/2026-11-14+GH-1479/ab-compare/exit-codes.txt` covers exits 0/2/3/4/5; `run.sh:7-16` includes actual packet emission. Read-only Python probe compared every relative file in `ab-compare/old` and `new`, asserted exactly 37 equal files, seven nonempty packet files, parsed both ready JSON objects, and recomputed every `log_sha256` in `provenance.jsonl`: exit 0, decisive output `37 identical files; 7 nonempty packet files; both ready JSON objects; all 11 log hashes match`. Command form: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` using `Path.rglob`, byte equality, `json.loads`, and `hashlib.sha256`; no executor or fixture ran. This establishes retained-output integrity, not independent replay of their originating runs.
+- [Pass] Bounded decomposition and typing meet the plan: three frozen, named records at `utils/py/swarm_preflight.py:1259-1325`, explicit stage inputs, and an 11-line main at `:2170-2181`. The evaluation stage owns the existing ordered readiness decision, while writing owns packet presentation; no concrete hazard justifies another split. `Any` remains at JSON/dict payload seams; `fetch_issue_body:742-744` honestly forwards a dynamically decoded body. `mypy.ini:1-11` scopes one module and deliberately skips imported implementation checking. The retained `post-mypy-pass.log:1` and `post-mypy-red-control.log:1-2` witness acceptance and a return-value rejection. Keep the bounded scope; this does not prove imported helpers are typed.
+- [Pass] Gate wiring is consistent: `test/test_python_layer.py:47-51` uses the gate interpreter, explicit config, repository cwd, captured diagnostics and a nonzero assertion. Missing mypy therefore exposes the interpreter's `No module named mypy` diagnostic; installation is documented at `README.md:285-290` and `ROUTER.md:35`. `requirements-dev.txt:1-4` retains the three existing dependencies and pins mypy. All three install sites use it (`ci.yml:184,402`; `wave-reconcile.yml:52`); `--break-system-packages` was already present. No new test function/file/registry entry is introduced.
+- [Pass] Scope: implementation paths are the planned module, existing Python-layer check, config/manifest, CI and setup docs, plus the GH-1479 accepted-start ledger update. The `releases.sql` change is generation 2651→2652 and that row's `in_flight` receipt, not another executor lane. No changes to `marathon_drive.py`, `merge_cleanup.py`, or `releases_app.py` in the implementation comparison. Plan/CHANGELOG and evidence receipts describe the result and deferred atomic-write exception (`PROJECT/2-WORKING/GH-1479-STATIC-ANALYSIS-SWARM.md`, Implementation receipt and Recon).
+- [Nit] Pre-existing limitations observed during the sweep, unchanged by extraction: packet files publish sequentially with direct truncating writes (old `:1775-1788,1931-1932`; new `:1999-2015,2158-2159`), so a later write failure leaves a partial packet. Stale-lock detection assumes `.git` is a directory (old `:1374`; new `:1512`), omitting linked-worktree locks. Worktree-removal failure still falls back to `shutil.rmtree` (old `:1429-1430`; new `:1566-1567`). Record these as pre-existing; no repair requested in this behavior-preserving PR.
+- [Unverified — needs clone run] No full gate, pytest, shell suite, executable fixture, or hosted workflow ran in this reviewer worktree. Retained A/B does not exercise successful multi-issue bundles, stale locks, frozen/lane refusal, fetch failure, or exits 6/7; their preservation above is source-review evidence only. Hosted installation/runtime compatibility is not established by configuration inspection. The harness must run the final gate in a disposable full clone and retain its exact-commit receipt before merge readiness is claimed; no additional suite or gate requested.
+
+Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
