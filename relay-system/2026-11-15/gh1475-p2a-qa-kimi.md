@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -148,5 +148,37 @@ Refs #1475
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (kimi)
+
+swept file: yes
+
+Read the full Phase 2A plan, seeded diff, all named source/doc files and the receipt README; traced the surrounding landing, publication, teardown and cleanup consumers. No additional pre-existing defect was established beyond the stale comments below and the existing base-during-wait gap that P2.1 newly exposes after a B1 repair.
+
+- [Blocker] **Q1(d): `development` can move during the repaired-head check wait without any new base gate.** The repaired head is cloned and gated against the then-current base at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2065-2083`, but the wait at `:2104-2112` is followed only by PR-head reads at `:2127-2132` and `:2151-2184`. `execute_pr_merge` supplies only `--match-head-commit` (`:419-424`); nothing compares or re-gates the integration base. Thus a clean-on-B0 repair can be merged after B0→B1 without the ledger simulation/check ever seeing B1.
+  Observed input: source-traced sequence own repair C, integration B0 at `prepare_landing_clone`/`pre_merge_ledger_gate`, then B1 while `checks_state` is pending; the post-wait path still reaches `execute_pr_merge(C)`. No loop fixture was run in this review worktree.
+  Affected scope: every own-B1 repair admitted to same-run re-pinning, especially when its checks wait while the integration branch advances.
+  Falsifier: a controlled run with base unchanged at B0 may merge C; the same run with B0→B1 during the wait, or an unreadable fresh base lookup, must defer/stop before `execute_pr_merge`. Capture the simulated base and compare it fresh after the wait (defer on change), or re-run the landing clone and ledger gate against B1 before merging.
+- [Blocker] **Q3(a,c): pruning does not prove tool ownership or absence of unique work.** Candidate admission is only prefix + direct child + uid + age/retention (`merge_cleanup.py:273-295`), and `_remove_own_scratch` recursively deletes without inspecting Git status, refs, stashes or dependent worktrees (`:219-230`). This also violates the full-clone preflight in `WORKTREE-SAFETY.md:255-296`. Scratch-only probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY' ... PY` (real `prune_retained_scratch`; three newer dirs; process probe stubbed no-other and handle probe stubbed verified-idle), exit **0**. Decisive output: `prefix-collision target=merge-cleanup-operator-notes-ky92ton_; target_exists=False; unique_file_exists=False`. The old target contained `UNIQUE-UNCOMMITTED.txt`; neither the foreign-purpose name nor unique file preserved it. The same predicate admits an actual dirty or unpushed clone.
+  Observed input: an old uid-owned direct temp child named `merge-cleanup-operator-notes-*` with one unique file, plus three newer `merge-cleanup-*` directories under the default keep-3 policy.
+  Affected scope: all retained-prune candidates, including prefix-colliding non-tool folders and tool workdirs containing dirty, unpushed, stashed or dependent-clone state.
+  Falsifier: after the fix, that probe must preserve the foreign/unique target; a tool-owned clone with dirty/unpushed/unverifiable state must also remain, while a recognized, verified-clean and idle tool scratch folder may prune. Add fail-closed content/ownership inspection before `rmtree`, reusing existing safety inspection where practical; do not treat a name prefix as proof of disposability.
+- [Blocker] **Q3(b): the new exit-3 release bypasses the open-handle probe.** Landed paths are collected at `merge_cleanup.py:2190-2192`, then `:2307-2310` calls `_remove_own_scratch` directly; unlike retained pruning at `:291-294`, it never calls `inspect_open_handles`. The same scratch probe invoked the exact exit-3-style helper on `pr-1-aaaaaaaa-*` while `sleep` had that directory as cwd, exit **0**; decisive output: `exit-3-style removal with live cwd: removed=True; process_alive=True; target_exists=False`. The root-equality correction in `scan_clones.py:414-418` cannot protect this path because it is not consulted.
+  Observed input: a live `sleep 30` process whose cwd is the landed PR's clone directory when the deferred-only exit-3 cleanup runs.
+  Affected scope: every `pr-<n>-*` and `verify-<sha8>` path released by the new exit-3 branch.
+  Falsifier: with the process still holding cwd, release must preserve the path; after the process exits, a verified-idle result may release it. Apply the same verified-idle `inspect_open_handles` guard immediately before each exit-3 removal and preserve on active or incomplete results.
+- [Pass] **Q1(a–c): the other repaired-head identities fail closed.** Post-push polling rejects a head other than the pushed commit (`merge_cleanup.py:2035-2052`); non-MERGEABLE/unknown results stop at `:2048-2064`; failed, pending or unreadable checks do not merge at `:2113-2122`; a post-green external head change defers at `:2127-2132`; final head/pin checks and `--match-head-commit` remain at `:2170-2185`. These checkpoints cover the PR head, not the moved-base blocker above.
+- [Pass] **Q2: declared checks preserve the bounded fail-closed contract.** `checks_state` keeps required-check evaluation, applies the repaired-head registration guard before combining, treats absent/unknown named checks as pending and failure as failing (`merge_cleanup.py:825-895`). The existing bounded loop and exit-3 deferral are reused at `:2098-2122`; zero required checks therefore do not bypass a declared name.
+- [Pass] **Q3 remaining guards:** retained pruning excludes symlinks through `lstat`, resolves the temp root, checks uid/current/retention/age, and fails closed on process or handle uncertainty (`merge_cleanup.py:241-295`); deletion rechecks direct-parent/prefix/symlink shape at `:219-230`. The cwd-root fix is minimal at `scan_clones.py:414-418`. Landed-only exit-3 paths are recorded only after a verified merge (`merge_cleanup.py:2184-2192`), so deferred PR clones are not selected. The safety omissions are the blockers above, not over-built concurrency machinery.
+- [Pass] **Q4: the P2.8 preview itself adds no repair push or trusted repaired-head pin.** Only the non-handoff dry-run preview logs and continues (`merge_cleanup.py:1999-2005`); `resolve_ledger_conflict(execute=False)` returns before its write section (`ledger_merge.py:581-585`). The ordinary dry-run selection write remains at `merge_cleanup.py:2692-2703`, and execute revalidates it live at `:2495-2497` and `:621-647`. P2.3's documented scratch pruning still means the overall CLI dry run is not literally mutation-free.
+- [Pass] **Q5: new outcomes use documented codes.** Invalid policy/hard stops return 2, check/head/re-pin deferrals converge on 3, and clean previews continue to the existing outcome logic (`merge_cleanup.py:1999-2011,2088-2146,2286-2299`). SKILL.md describes declared checks, same-run re-pin, full-batch preview, exit codes and cleanup at `skills/2-daily/merge-cleanup/SKILL.md:257-261,469-481`.
+- [Pass] **Q6: test edits update the pinned one-run behavior without adding a test or removing downstream assertions.** `assert_repinned` requires MERGED, no head deferral and published-SHA equality (`test/gh534_phase_b_tests.py:241-250`); its callers retain rc, ledger, event, dependency and durability assertions (`:421-437`; `test/gh534_phase_c_tests.py:270-295,381-398,449-460,647-666`). The diff contains no new `test/` file or registry entry.
+- [Nit] **Q7/docs:** `scan_clones.py:373-374` still says handle paths are “strictly within” although root equality now counts, and `merge_cleanup.py:2175-2176` still says a B1-repaired head is deferred to a fresh dry run. Update both comments to the new behavior. Complexity is otherwise proportionate; P2.3 is under-built on safety, as blocked above.
+- [Unverified — needs clone run] No suites, executable fixtures or phase gate were run in this turn. The committed receipts were inspected but not rerun; in particular, the moved-base sequence above is source-traced and needs the stated controlled clone run as regression evidence. The harness gate remains responsible for final-commit qualification.
+
+VERDICT: FAIL
+Basis: Q1(d) permits a repaired head to land against an integration base that was never gated, and the two P2.3 deletion paths have reproduced losses of unique content and a live process's cwd. The other requested behaviors match the plan, but these safety failures prevent approval at the sole review round.
+
+Handing off to Producer (claude-a) — address the three blockers and stale comments; the round is Escalated.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
