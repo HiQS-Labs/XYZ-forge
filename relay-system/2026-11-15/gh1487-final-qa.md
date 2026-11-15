@@ -3,7 +3,7 @@
   Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
 -->
 
-ARTIFACT: feat/XYZ-forge-gh1487-changelog-landing-2026-11-15
+ARTIFACT: PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 4
