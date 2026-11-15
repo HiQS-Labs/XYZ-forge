@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -123,5 +123,43 @@ edits preserve the original intent of their tests.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Both seeded one-line pin updates preserve their original protective intent. Approval covers this source review and the narrow probes below, not an executed full gate.
+swept file: yes
+
+- [Pass] Reviewed the entire embedded brief and both existing test files, including their pre-existing assertions; no material pre-existing defect identified in that sweep. Acceptance used: preserve runtime-call-before-dry-run detection, preserve the workflow dependency-install marker with pytest still supplied, and sweep for missed old literals. `test/gh642-consumer-fruit.sh:305` describes the ordering contract; `test/gh421-auto-wave-reconcile.sh:612` still asserts marker presence.
+- [Pass] `test/gh642-consumer-fruit.sh:307` retains the four-space start anchor and literal call name plus opening parenthesis. It cannot match the column-zero definition at `utils/py/swarm_preflight.py:1240`; the only matching runtime line is :1990. That expression and the only matching dry-run `if` (:1992) are direct statements of `write_packet` (:1971), and its dry-run branch exits at :1998. They share the execution path reaching that branch. Deletion and movement beyond the exit both fail the unchanged nonempty-and-less-than predicate at test :309. The old argument spelling was a refactor detail, not the ordering contract.
+- [Pass] `test/gh421-auto-wave-reconcile.sh:611` matches the real install at `.github/workflows/wave-reconcile.yml:52`; `requirements-dev.txt:2` supplies `pytest`. Installation remains before the reconciliation command (:71). Neither the previous substring assertion nor the replacement independently proves step order or guards future deletion of pytest from the requirements file; those are existing source-pin limitations, not a regression introduced here. No additional gate is requested.
+- [Pass] Read-only literal sweep: `rg -n 'pip install|warn_zero_criteria\(acc_mode|^    if args.dry_run:' test/` exited 0, returning only the updated gh421 marker (:611). The broader `rg -n 'warn_zero_criteria|pip install[^\n]*pytest|requirements-dev.txt|acc_mode|^.*(grep|index\(|assertIn|assertRegex).*main\(' test/` exited 0 and returned only gh642 helper checks/comment/current pin and the gh421 marker. Also inspected source-pin expressions in the other swarm-preflight consumer suites (gh343/386/399/400/418/422/425/557); no missed old-main/install literal was identified. This is a source sweep, not a claim that those suites passed.
+- [Nit] `test/gh642-consumer-fruit.sh:305` still says “inside main()”; the call now lives in `write_packet`. Optional correction: say “runtime call” or “inside write_packet()”. A tighter argument-specific pattern such as `^    warn_zero_criteria(evaluation.acc_mode,` would reject unrelated first arguments, but argument identity was incidental to this ordering pin; no material need to couple it to the new representation.
+
+Probe receipt (non-mutating source analysis; shell exit 0). Ran `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"` and the following `python3 -` body (no imports/execution of the artifact or fixtures):
+
+```python
+from pathlib import Path
+import subprocess
+s = Path('utils/py/swarm_preflight.py').read_text()
+assert s.strip()
+call = next(l for l in s.splitlines(True) if l.startswith('    warn_zero_criteria('))
+for name, value in [('current', s), ('deleted', s.replace(call, '')),
+                    ('after-exit', s.replace(call, '').replace(
+                        '    os.makedirs(out_dir, exist_ok=True)',
+                        call + '    os.makedirs(out_dir, exist_ok=True)'))]:
+    def lines(pattern):
+        r = subprocess.run(['grep', '-n', pattern], input=value,
+                           text=True, capture_output=True)
+        return [int(x.split(':', 1)[0]) for x in r.stdout.splitlines()]
+    c, d = lines('^    warn_zero_criteria('), lines('^    if args.dry_run:')
+    print(name, c, d, bool(c and d and c[0] < d[0]))
+```
+
+Decisive output from the executed equivalent probe: `current call= [1990] dry= [1992] assertion= True`; `deleted call= [] dry= [1991] assertion= False`; `after-exit call= [1999] dry= [1991] assertion= False`. AST inspection additionally returned direct `Expr:1990`, `If:1992` in `write_packet`. Dependency source probe returned `workflow marker count= 1 pytest requirement= True install precedes reconcile= True`.
+
+Limitations: No git commands, suites, pytest, or executable fixtures run, per reviewer containment. Commit 596375650 and origin comparison were not independently read through git; conclusions apply to the seeded files and the old/new lines quoted in the brief. Graph discovery was attempted but denied by the tool approval policy; direct reads supplied the evidence. Full-suite execution remains [Unverified — needs clone run] and belongs to the harness after this turn.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
