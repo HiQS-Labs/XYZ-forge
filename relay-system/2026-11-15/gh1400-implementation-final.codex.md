@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -159,5 +159,35 @@ Handing off to Producer — go to the producer window and say 'take your turn'.
 - Round1 driver exited3 after correctly returning the open token to Producer and finding no automated producer progress. The FAIL/findings are retained; this is the normal manual correction handoff, not an approval or bypass.
 
 Handing off to Reviewer — inspect corrections and retained evidence, then give a source-backed disposition. Final full gate remains mandatory after approval.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Approve this bounded implementation slice and its retained synthetic evidence. S1 and S2 are resolved; the detached-HEAD correction preserves unique work. No additional blocking defect was established by the whole-file sweep. The required classified full gate on the final revision remains pending; this approval is not PR readiness, live-product acceptance or whole-umbrella completion.
+
+swept file: yes
+
+Intended change: one operator-invoked Jog wake adopts existing approved receipts and advances independently eligible pending work through the existing preflight/Marathon owners. The corrections make explicit resume respect the newest gate retry and persist that retry's identity before dispatch. Detached execution HEAD now holds in place. This remains a local bounded CLI composition, with explicit retries and separate publication/cleanup clocks.
+
+Read both complete production owners, Jog instructions, project/recon/decision, plan QA and the dated scripts, inventories, records, logs and provenance, including pre-existing behavior. Compared exact base 7dd85cd3a55303818ce61cbcc5d89b246d4a6449 with HEAD ecfee23b93fe5d31ce7f76513c9a3d5cacc69bca through read-only Python Git-object decoding with SHA assertions: 75 changed paths. Both current production files byte-match source correction d1b3728745935f0e55a730e417421d93503d7183. No Git command, suite, executable fixture, worker, provider request, child agent or remote write was run by this reviewer. Scratch stayed under .relay-scratch/. Graph Verify discovery returned the four existing receipt/resume/retry symbols with no pagination remaining; coverage reports metadata_match/no recorded gap for Jog, Releases and proc_group at generation 2026-11-15T07:36:58Z. That graph is a different checkout and lacks current supervision symbols; trace access was unavailable. Exact worktree reads and the complete base comparison supplied the authoritative fallback.
+
+- [Pass] **S1 resolved, including valid history.** `utils/py/jog_run.py:793` selects the newest recorded retry directly, validates its exact issue/execution, and returns a visible parked hold on missing/invalid/mismatched output before publication. The historical reader at :741 remains available. Retained `review-fixes/results.json` cases resume-missing/invalid/mismatch/original/valid-retry distinguish the refusal and success paths. A read-only resume boundary probe using the retained five seeds, removing publication cache flags only in memory and replacing all primary checks, writes, Git and publisher calls with spies, independently observed:
+  ~~~text
+  missing rc 1 effects ['status parked']
+  invalid rc 1 effects ['status parked']
+  mismatch rc 1 effects ['status parked']
+  original rc 0 effects ['publish gh901-exec1', 'status parked']
+  valid-retry rc 0 effects ['publish gh901-exec1-gateretry1', 'status parked']
+  ~~~
+  Command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`, exit0. Core call was `j.jog_resume(str(root),901)` with real receipt loading/identity/projection and mocked mutation boundaries; no publication occurred. This directly reverses Round1's older-approval selection without rejecting valid no-retry or latest-retry history.
+- [Pass] **S2 resolved.** `utils/py/jog_run.py:1040` creates the exact suffixed retry ID/path and dispatched status; :1042 appends it; :1043 saves it before :1044 invokes Marathon. The same entry receives return status at :1048/:1054. Retained `review-fixes.py` waits for the local fixture worker's marker, reads the saved retry entry, then kills that process group; `review-fixes/results.json` case retry-intent-kill-resume records that entry, direct resume refusal and supervised hold with no additional A builder. Case retry-completion records successful publication. These author-run receipts resolve the earlier actual retry-kill evidence gap for this synthetic local envelope; they do not certify provider or power-loss behavior.
+- [Pass] **Preservation correction and existing ownership.** `utils/py/jog_run.py:2526` checks attached HEAD before fetch/switch; `detached-before/result.json` retains pass=false and `review-fixes/results.json` detached-held requires exit2, unchanged unique HEAD and no B start. Existing dirty/worktree checks precede alignment (:2521), ahead development is renamed rather than deleted (:2537), and unknown/live/stopped owners block (:1547/:1558). Existing lease/publication/Marathon owners remain in use (:2828/:2859); no second execution owner, schema, queue, suite or registry appears in the exact diff.
+- [Pass] **Capability, latest binding, budgets and clocks remain bounded.** `attempt2/main-first.log` records “recovered GH-901 without a new builder or attempt” followed by GH902 attempt1; check.py requires starts exactly 901 then902 and byte-unchanged histories on repeat. `adjacent/results.json` retains the exact-base missing-publication red control. `latest/wrong-target.log` records “result receipt names a different execution target”; recovery checks exact issue/execution and both target bindings at `utils/py/jog_run.py:2592`. Dispatch uses the existing bounded process-group owner (:2508; `utils/py/proc_group.py:124`/:139); `adjacent/results.json` records cancellation exit130 and worker_absent=true. Deadline/held reporting remains visible (:2779/:2956). SUMMARY and the implementation contract expressly separate publication/cleanup clocks and exclude escaped children, PID reuse, correlated loss and context/external-effect guarantees.
+- [Pass] **Receipt integrity and verification limits.** A read-only Python JSON/hash/inventory check, command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`, exit0, printed “hash/inventory: attempt1 12 / 12”, “attempt2 12 / 12”, “adjacent 4 / 4”, “latest 3 / 3”, “detached-before 0 / 1”, and “review-fixes 8 / 8”. It required nonempty bytes, matching provenance SHA256, unique result IDs, exact required inventories where retained and true predicates, while requiring the detached red predicate to remain false. Sources: dated `provenance.jsonl`, corresponding results/required files and scripts. `jog-review-fixes.log` ends “gh280-jog-marathon-adapter: 227 pass, 0 fail”, with provenance at d1b372874; this is retained existing integration evidence, not a gate run in this turn. Synthetic approval/gate/PR receipts prove controlled composition only. The final classified full gate remains required after this approval.
+- [Pass] **Rating and umbrella disposition.** Read-only SQLite deserialization of exact-base/current blobs found all39 Jog rows unchanged; among500 roadmap rows only GH1400 changed, in raw_text/updated_at/rating_effort. Output: “ratings: [75, 60, 50, 45, None] label: in-progress”. `releases.sql`'s GH1400 row carries the same rating/null override; the original lifecycle label is retained. The project section “Rating rationale — implementation” honestly calls trend unknown and distinguishes the single assisted run from synthetic controls. Its final acceptance step says “leave #1400 open unless whole-issue coverage is independently established.” No such umbrella proof is supplied by this review; keep it open.
+
+S1/S2 were the pre-existing defects established in Round1 and are now addressed. No further unaddressed pre-existing blocking defect was identified in these touched files during this bounded sweep. No new suite or broader controller is requested.
+
+Relay closed (Approved), no further turn needed. Producer/harness next performs the required final classified gate in the disposable full clone and reports its exact revision/result before any ready-PR claim.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
