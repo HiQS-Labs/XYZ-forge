@@ -124,7 +124,8 @@ def _off_pin(info: Dict[str, Any], match_head: Optional[str]) -> bool:
 
 TRANSIENT_RE = re.compile(
     r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit"
-    r"|operation too slow|connection reset",
+    r"|operation too slow|connection reset"
+    r"|cannot lock ref|unable to create .*\.lock",  # GH-1475 (F5): a concurrent fetch's ref lock
     re.I,
 )
 
@@ -212,6 +213,23 @@ def run_command_in_session(cmd: str, cwd: Path, timeout: Optional[int] = None) -
         # A completed/nonzero leader can leave redirected descendants alive too.
         stop_group()
         return p.returncode, stdout, stderr
+
+
+def _remove_own_scratch(path: Path, prefix: str) -> bool:
+    """GH-1475 (F1): delete a scratch directory this run created with mkdtemp. Proven first
+    (GH-567): a real, non-symlink directory directly under the resolved temp root, named with
+    `prefix`. Anything else, or any error, keeps it and returns False."""
+    try:
+        root = Path(tempfile.gettempdir()).resolve()
+        if (not path.name.startswith(prefix) or path.is_symlink() or not path.is_dir()
+                or path.resolve().parent != root):
+            log_warn(f"Not removing {path}: not a {prefix}* directory under {root}")
+            return False
+        shutil.rmtree(path)
+        return True
+    except OSError as exc:
+        log_warn(f"Could not remove {path}: {exc}")
+        return False
 
 
 def run_isolated_check(primary_repo: Path, command: str, timeout: int) -> Tuple[int, str, str]:
@@ -1088,6 +1106,45 @@ def jog_issues_for(pr: Dict[str, Any]) -> Set[int]:
     return issues
 
 
+PREFLIGHT_MIN_FREE_GB = 20
+
+
+def _probe_text(cmd: List[str]) -> str:
+    """Advisory probe output: text from a zero exit, else "" (missing tool, error or timeout)."""
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=False)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return ""
+    return res.stdout if res.returncode == 0 and isinstance(res.stdout, str) else ""
+
+
+def preflight_warnings() -> List[str]:
+    """GH-1475 (F1, F2, F10): read-only hazards for an unattended batch. Warnings only; a probe
+    that cannot answer stays silent."""
+    out = []
+    try:
+        free_gb = shutil.disk_usage(tempfile.gettempdir()).free / 1e9
+        if free_gb < PREFLIGHT_MIN_FREE_GB:
+            out.append(f"{free_gb:.1f} GB free under {tempfile.gettempdir()} (below {PREFLIGHT_MIN_FREE_GB} GB); "
+                       "landing and check clones may fill the disk")
+    except OSError:
+        pass
+    if sys.platform == "darwin" and "'Battery Power'" in _probe_text(["pmset", "-g", "batt"]):
+        out.append("running on battery; use wall power and caffeinate for an unattended batch")
+    tmp = os.environ.get("TMPDIR")
+    if tmp:
+        real = os.path.realpath(tmp)
+        if real.rstrip("/") != os.path.realpath("/tmp") and not real.startswith(
+                (os.path.realpath("/var/folders") + "/", "/var/folders/")):
+            out.append(f"TMPDIR is {tmp}; a harness may delete a per-turn temp dir mid-run. Prefer TMPDIR=/tmp")
+    others = [pid for pid in _probe_text(["pgrep", "-f", r"merge_cleanup\.py.*--execute"]).split()
+              if pid.isdigit() and int(pid) != os.getpid()]
+    if others:
+        out.append(f"another merge_cleanup.py --execute is running (pid {', '.join(others)}); "
+                   "run one landing batch per machine")
+    return out
+
+
 def jog_primary_precondition(primary_repo: Path, listed: List[Dict[str, Any]]) -> Optional[str]:
     """GH-1470: read-only dry-run check of the Jog primary pin that the post-merge Jog step needs.
     Returns a warning when a listed PR maps to an open Jog row and the primary is not pinned (or
@@ -1602,6 +1659,11 @@ def _record_batch_outcomes(batch, ordered_prs, track, rc, primary_repo) -> None:
             batch_record.set_outcome(batch, n, status=track["skips"][n])
         elif n == track["current"] and rc == 2:
             batch_record.set_outcome(batch, n, status=f"stopped: {stopped}")
+    _sync_batch(batch, primary_repo)
+
+
+def _sync_batch(batch, primary_repo) -> None:
+    """Refresh the batch's sweep inputs and its issue after outcomes changed."""
     origin = origin_url(primary_repo) or ""
     try:  # GH-1159: a policy that broke mid-run still gets its batch issue, minus any command
         qualification = resolve_merge_policy(primary_repo)["qualification"]
@@ -1641,6 +1703,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
     failed: Dict[int, str] = {}
     deferred_sync_pending = False
     deferred_sync_prs: Set[int] = set()
+    clean = False  # GH-1475 (F1): set only on the single clean return below
+    no_checks_warned = False
     if track is not None:
         track["failed"] = failed
     pending = {pr["number"] for pr in ordered_prs}
@@ -1891,6 +1955,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             # pending or unreadable defers (exit 3; re-run once CI settles), failing is not merged;
             # neither stops the queue.
             checks, detail = required_checks_state(p_num, primary_repo)
+            if dry_run and detail == "no required checks" and not no_checks_warned:
+                no_checks_warned = True  # GH-1475 (F6): once per run
+                log_warn("PRE-FLIGHT: no required status checks are reported for this repository's PRs; "
+                         "the script will not wait for CI")
             if checks == "pending" and not dry_run:
                 wait = _seconds_from_env(CHECKS_WAIT_ENV, 1800.0)
                 poll = max(_seconds_from_env(CHECKS_POLL_ENV, 30.0), 1.0)
@@ -2059,12 +2127,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     f"{other} handed off or parked): "
                     + ", ".join(f"#{n} ({w})" for n, w in failed.items()))
             return 3
+        clean = True
         return 0
     finally:
         if deferred_sync_pending:
             log_err("Deferred issue/doc sync remains unfinished; affected landings are not reconciled. "
                     "Recover with the existing --reconcile-pr path before continuing.")
-        log(f"Landing clones retained for inspection under {workdir}")
+        if clean and not keep_workdir and not deferred_sync_pending and _remove_own_scratch(workdir, "merge-cleanup-"):
+            log(f"Landing clones removed after a clean run ({workdir})")
+        else:
+            log(f"Landing clones retained for inspection under {workdir}")
 
 
 def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:
@@ -2128,6 +2200,10 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
 
 
 def main():
+    # GH-1475 (F12): a redirected log shows progress live instead of after a buffer fills.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(line_buffering=True)
     # GH-852: every child git (including the pre-push hook's and releases_app's) aborts an HTTP
     # transfer stalled below 1000 B/s for 120 s instead of waiting on a dead socket after a
     # wake. An operator's own values win.
@@ -2367,6 +2443,23 @@ def main():
         if not dry_run and not commit_and_push_phase5_writes(
                 args.reconcile_pr, primary_repo, args.integration_branch):
             return 2
+        if not dry_run:
+            # GH-1475 (F8): a recovered PR counts as landed and reconciled in its unfinished batch.
+            batch = batch_record.find_unfinished(primary_repo, origin_url(primary_repo) or "",
+                                                 args.integration_branch, [args.reconcile_pr])
+            if batch is not None:
+                # Repair commits can change the PR's file set; refresh it so sweep inputs see them.
+                batch_record.refresh_row(batch, args.reconcile_pr,
+                                         _pr_files_live(args.reconcile_pr, primary_repo))
+                batch_record.set_outcome(batch, args.reconcile_pr, status="merged",
+                                         merge_oid=merge_oid, reconcile="ok")
+                _sync_batch(batch, primary_repo)
+                log(f"PR #{args.reconcile_pr}: recorded reconcile ok in batch {batch.get('issue_url') or batch['path']}")
+                if batch_record.qa_pending(batch):
+                    # A wrapper must not read 0 as Done while the batch still lacks a sweep verdict.
+                    log("STATUS: landed, QA pending — record a verdict with --record-sweep <file> "
+                        f"(batch: {batch.get('issue_url') or batch['path']})")
+                    return 4
         return 0
 
     # Phase 1..3: Scan & Audit checkouts
@@ -2436,6 +2529,8 @@ def main():
         jog_warning = jog_primary_precondition(primary_repo, [p for p in prs if int(p.get("number", 0)) in args.prs])
         if jog_warning:
             log_warn(jog_warning)
+        for warning in preflight_warnings():
+            log_warn(f"PRE-FLIGHT: {warning}")
     if prs and not args.prs:
         log("Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).")
     # GH-1226: sequence every open PR (dependency edges need them all), then keep only the allowlist.
@@ -2782,7 +2877,19 @@ def record_sweep(primary_repo: Path, integration: str, verdict_file: Path) -> in
     log(msg + (f" ({batch['issue_url']})" if batch.get("issue_url") else ""))
     if batch.get("issue_error"):
         log_warn(f"merge-batch issue: {batch['issue_error']}")
-    if batch_record.continuable(batch):
+    # GH-1475 (F8): name the right recovery per remaining PR; a merged PR is reconciled, not re-run.
+    unreconciled, open_rows = [], 0
+    for row in batch["planned"]:
+        o = batch["outcomes"].get(str(row["pr"]), {})
+        if batch_record.row_done(o):
+            continue
+        if o.get("status") == "merged":
+            unreconciled.append(row["pr"])
+        else:
+            open_rows += 1
+    for n in unreconciled:
+        log(f"PR #{n} landed but is not reconciled: recover with --reconcile-pr {n} --execute.")
+    if open_rows:
         log("Planned PRs remain: continue with --resume --execute.")
     return 0
 
