@@ -58,7 +58,7 @@ Trial #1386 owns one invocation, max_tasks=2, Codex builder/Agy reviewer, round_
   "fix_probes": [
     {
       "type": "command",
-      "cmd": "python3 -c 'import sys,tempfile,copy\nfrom pathlib import Path\nsys.path.insert(0,str(Path(\"skills/3-weekly/skills-army-hq/scripts\").resolve()))\nimport sync\nwith tempfile.TemporaryDirectory() as d:\n root=Path(d).resolve()/\"collection\"; target=Path(d).resolve()/\"target\"; root.mkdir(); target.mkdir()\n for parent in (root,target):\n  p=parent/\"example\"; p.mkdir(); (p/\"SKILL.md\").write_text(\"---\\nname: example\\ndescription: fixture\\n---\\n\")\n state={\"collection\":\"fixture\",\"skills\":{},\"links\":{}}\n config={\"targets\":[{\"path\":str(target),\"enabled\":True}]}\n found={\"example\":{\"digest\":sync.shared.digest(root/\"example\")}}\n actions,errors,changes=sync.reconcile(root,copy.deepcopy(state),config,found,legacy=[\"example\"],archive_directories=True,apply=False)\n assert errors and any(\"adopt\" in e[\"error\"].lower() for e in errors), (actions,errors,changes)\n assert not actions, actions\n assert not (root/\"backups\").exists()\n assert (target/\"example\").is_dir() and not (target/\"example\").is_symlink()\n print(\"unadopted preview refuses with adoption remedy before side effects\")\n'",
+      "cmd": "python3 TESTS-RESULTS/2026-11-11+GH-1315/manual_probe.py",
       "expect_nonzero": true
     }
   ],

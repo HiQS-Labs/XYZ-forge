@@ -1,6 +1,5 @@
 1 test/ci-workflow.sh
 1 test/gh103-timeline-exporter.sh
-3 test/gh251-validate-pytest-skip.sh
 26 test/gh268-relay-cue-and-target-checks.sh
 1 test/gh284-runlog-heartbeat.sh
 2 test/gh292-worktree-vendored-discovery.sh

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/TESTS-RESULTS/2026-11-11+GH-1171/manual_probe.py", line 20, in <module>
+    ns["preflight_setup_artifact_paths"]()
+  File "relay-preflight-probe", line 492, in preflight_setup_artifact_paths
+  File "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/TESTS-RESULTS/2026-11-11+GH-1171/manual_probe.py", line 9, in die
+    def die(message): raise RuntimeError(message)
+RuntimeError: artifact path not found in worktree: fix/gh1171-probe

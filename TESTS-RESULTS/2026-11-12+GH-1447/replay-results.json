@@ -1,0 +1,42 @@
+{
+  "source_revision": "fbe202b5b07d0ce9169dab6e4b8e4ae74444f5d7",
+  "source_sha256": "4d7c2b1110abfc7c245941ac4d3c0b541580d85611179f70dcc5cd662acc769e",
+  "results": [
+    {
+      "case": "1171-original",
+      "accepted": false,
+      "reason": "probe target path does not resolve: -c"
+    },
+    {
+      "case": "1171-repaired",
+      "accepted": true,
+      "reason": "ok"
+    },
+    {
+      "case": "1315-original",
+      "accepted": false,
+      "reason": "probe target path does not resolve: -c"
+    },
+    {
+      "case": "1315-repaired",
+      "accepted": true,
+      "reason": "ok"
+    },
+    {
+      "case": "empty",
+      "accepted": false,
+      "reason": "empty probe command"
+    },
+    {
+      "case": "trivial",
+      "accepted": false,
+      "reason": "trivial probe pattern rejected: 'echo ok'"
+    },
+    {
+      "case": "missing",
+      "accepted": false,
+      "reason": "probe target path does not resolve: missing.py"
+    }
+  ],
+  "limits": "Only current lint_probe executed. No historical shell commands, probe semantics, full Swarm CLI or end-to-end delivery replay executed."
+}

@@ -157,3 +157,31 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: skills
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 - **date**: 2026-11-04
+
+## Before blaming a turn for skipping verification, read every instruction it was given
+
+- **cue**: A relay or marathon reviewer (or builder) "should have run" a test or gate and did not, and the fix being planned is a stronger obligation on that agent.
+- **lesson**: Read the shared turn prompt (`rtl_turn_prompt` in `relay-automation/relay-turn-lib.sh`), the preflight brief and the rendered TAKE YOUR TURN steps before diagnosing. The reviewer had been told "Do NOT run … pytest" and graded the claim `[Unverified — needs clone run]` exactly as instructed. Adding a new obligation without amending the prohibition would leave the two in conflict. Resolve that conflict with a narrow, named exception.
+- **evidence**: TESTS-RESULTS/2026-11-11+GH-1428/gh955-reviewer.md, TESTS-RESULTS/2026-11-11+GH-1428/red-control.out, https://github.com/HiQS-Labs/XYZ-forge/issues/1428
+- **confidence**: medium. One incident (two attempts on one item). The prohibition text is in `relay-automation/relay-turn-lib.sh:1067`.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1428
+
+## A failed `claude -p` JSON result zeroes `usage`; count tokens from `modelUsage`
+- **cue**: harness code that reads token counts or cost from a `claude -p --output-format json` result on a non-success turn (budget or turn ceiling, error subtype)
+- **lesson**: in `utils/py/claude-turn.py` (and any other reader of the Claude CLI result), do not trust `usage` alone on an error result; when its input/cache-read/output totals are zero, sum the per-model `modelUsage` counts, and verify against one live bounded error result instead of a fixture
+- **evidence**: `TESTS-RESULTS/2026-11-11+GH-1427/smoke-live-r1.log` (real `error_max_budget_usd`, `usage` 0/0, 0 cost rows) vs `smoke-live-r3.log` + `accounting-SMOKE-BUDGET.json` (same path after the fallback: 1 row equal to the `modelUsage` sum, MATCH); the fake-JSON check `m1m2-green.log` passed throughout and could not see it
+- **confidence**: medium — observed on claude 2.1.322 only, with an isolated single-change before/after
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1427
+- **date**: 2026-11-11
+
+## A check that asserts published state must read the published artifact, not the clone that wrote it
+
+- **cue**: writing a manual check or fixture that asserts "the other session's change survived on the remote" after a merge, reconcile or publish
+- **lesson**: read the value from the published artifact itself (for the ledger, `releases.db` taken from the remote ref), never from the clone that made the write, which holds the value whether or not publication kept it. Add one observer control: the same reader against the pre-change ref must return a different value, or the check cannot tell kept from lost.
+- **evidence**: `relay-system/2026-11-13/gh1453-final-qa.md` (Round 2, F4: the reviewer's stubbed reader returned `[61]` with zero published-ledger reads); `TESTS-RESULTS/2026-11-13+GH-1453/candidate-A1-A14.log` lines 14–15 after the fix (`published_roadmap_pri: [61]`, `observer_control_pri_at_base: [60]`); `TESTS-RESULTS/2026-11-13+GH-1453/fixture-checks.py.txt` (`Fx.remote_pri`)
+- **confidence**: medium. One incident. The first two evidence runs passed with the wrong-target reader and passed again with the corrected one, so the product result did not change; what changed is that the check could now fail.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1453
+- **date**: 2026-11-13

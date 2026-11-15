@@ -602,6 +602,9 @@ they share the same env shape:
 
 If a fresh device's `codex` still blocks writes, escalate autonomy:
 `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'`.
+For a Codex builder that must reach a localhost service (test DB), opt in per run with
+`CODEX_FLAGS='-s workspace-write -c approval_policy=never -c sandbox_workspace_write.network_access=true'`.
+This opens all outbound network for that turn (GH-1428; see the relay-automation README).
 For agy, the common failure is different: sandboxed runs can exit `0` with empty
 output, so run the lane sandbox-OFF before concluding the worker is broken.
 
@@ -727,6 +730,10 @@ Headless agents (Codex, agy, Aider) perform best when given **explicit questions
 2. Explicit statement of commensurate complexity and non-goals.
 3. A numbered list of concrete, specific questions to answer.
 4. Instructions on what the agent should output (e.g. file:line citations).
+
+For bug-fix or delivery-readiness reviews, ask: “What prevents each unchanged, unfixed task from being reported as delivered—and where is the observed rejection?”
+At plan review, identify the intended rejection; at final review, cite the observed evidence or mark it unverified.
+Distinguish admission checks from final acceptance; green regression coverage alone does not establish defect detection.
 
 **Example format:**
 ```markdown

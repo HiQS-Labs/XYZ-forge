@@ -1,0 +1,33 @@
+[parallel] gh698-planner-db-ratings.sh rc=1
+[parallel] gh544-parallel-default.sh rc=1
+[parallel] gh142-ate-exit-contract.sh rc=1
+[parallel] gh362-marathon-plan-link-bullets.sh rc=1
+[parallel] gh57-live-merge-resolve.sh rc=1
+[parallel] marathon-plan.sh rc=1
+[parallel] gh423-roadmap-render.sh rc=1
+[parallel] gh418-planner-ledger-source.sh rc=1
+[parallel] gh425-gate-provenance-pr.sh rc=1
+[parallel] gh-gen4-phase2-adaptive-ate.sh rc=2
+FAILED in parallel (rc=1): gh698-planner-db-ratings.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+  FAIL: no MARATHON-PLAN doc written (rc=1)
+  FAIL: GH-710: planner rc=1 (expected 4 or 5)
+FAILED in parallel (rc=1): gh544-parallel-default.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=1): gh142-ate-exit-contract.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=1): gh362-marathon-plan-link-bullets.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=1): gh57-live-merge-resolve.sh — re-running it alone to see if that verdict survives
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+FAILED in parallel (rc=1): marathon-plan.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=1): gh423-roadmap-render.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=1): gh418-planner-ledger-source.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=1): gh425-gate-provenance-pr.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+FAILED in parallel (rc=2): gh-gen4-phase2-adaptive-ate.sh — re-running it alone to see if that verdict survives
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+pre-push: full validation RED (exit 1) after 895s — push REFUSED.

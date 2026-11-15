@@ -1,0 +1,7 @@
+PASS HQ rejects before any issue/capture write: {"target": "bad"}
+PASS HQ rejects before any issue/capture write: {"target": null}
+PASS HQ rejects before any issue/capture write: {"fix_probes": ["bad"]}
+PASS HQ rejects before any issue/capture write: {"artifacts": [1]}
+PASS HQ rejects before any issue/capture write: []
+PASS HQ rejects before any issue/capture write: null
+PASS HQ partial contract preview accepted; no external writes

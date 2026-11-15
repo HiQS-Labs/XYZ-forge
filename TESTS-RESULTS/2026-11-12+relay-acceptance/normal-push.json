@@ -1,0 +1,59 @@
+{
+  "rc": 0,
+  "elapsed_s": 541.5962927341461,
+  "before": {
+    "head": {
+      "rc": 0,
+      "out": "b05b90d5d35c4d9cc87f0e9c9bd5a46142118f95",
+      "err": ""
+    },
+    "bare": {
+      "rc": 0,
+      "out": "false",
+      "err": ""
+    },
+    "origin": {
+      "rc": 0,
+      "out": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "err": ""
+    },
+    "email": {
+      "rc": 1,
+      "out": "",
+      "err": ""
+    },
+    "status": {
+      "rc": 0,
+      "out": "",
+      "err": ""
+    }
+  },
+  "after": {
+    "head": {
+      "rc": 0,
+      "out": "b05b90d5d35c4d9cc87f0e9c9bd5a46142118f95",
+      "err": ""
+    },
+    "bare": {
+      "rc": 0,
+      "out": "false",
+      "err": ""
+    },
+    "origin": {
+      "rc": 0,
+      "out": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)",
+      "err": ""
+    },
+    "email": {
+      "rc": 1,
+      "out": "",
+      "err": ""
+    },
+    "status": {
+      "rc": 0,
+      "out": "",
+      "err": ""
+    }
+  },
+  "identity_equal": true
+}
