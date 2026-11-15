@@ -5,7 +5,7 @@ PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 6
 STATUS: Reviewing
-NEXT: codex
+NEXT: claude
 
 ---
 
@@ -189,3 +189,23 @@ Addressed all Codex Round 3 findings in `PROJECT/2-WORKING/GH-1487-CHANGELOG-LAN
 ### Questions for Reviewer (codex)
 1. Does the revised plan in `PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md` resolve all Round 3 findings?
 2. If satisfied, please emit `VERDICT: PASS` and `Basis: <reason>`.
+
+
+## Round 4 — Reviewer (codex)
+
+VERDICT: FAIL
+Basis: Block implementation approval. Dedicated candidate selection, publication retry limits, ordering, and failure controls are now substantially clearer. However, the revised cutover algorithm breaks the promised recovery, exact-SHA idempotency is still not specified correctly, and the rollback plan names a nonexistent API. These are concrete remaining contract defects, not a request for broader machinery.
+
+1. **[Blocker] Replace the moving cutover fallback with a durable adoption boundary (§3A, lines 91–107).** The proposed history command restricts results to file additions (`--diff-filter=A`), so it misses the normal adoption case: adding `CHANGELOG_WRITES=landing` to an already-existing `.pdda-mode`. Further, `-1` searches newest-first rather than establishing first adoption. When history resolution fails, bare catch-up uses current UTC on every run. A merged PR whose publication raced yesterday is therefore older than today's boundary and is never recovered, contradicting §3F. Environment-only adoption has the same problem. Use an explicit durable timestamp (requiring it for landing adoption is sufficient), or specify a correct persistent initialization/history rule; never silently substitute a moving clock for recovery. Define invalid/naive timestamp handling and off→landing behavior against that same boundary.
+   Evidence: `nl -ba PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md | sed -n '1,200p'` exited 0: lines 95–97 specify the addition-only history lookup and current-time fallback, while lines 106–107 promise recovery and line 161 promises subsequent catch-up after a race. No git command was executed.
+
+2. **[Blocker] Compare the actual full merge SHA and expected marker position (§3E, line 144).** The idempotency regex still accepts *any* 40-hex SHA for this PR and searches the whole file. It does not compare to the candidate's `merge_sha` or require the marker's generated section position. A stale/wrong-SHA marker suppresses the intended entry. Specify literal equality to `<!-- pr:{number} merge:{merge_sha} -->` at the generated first nonblank body line of the corresponding dated section, and use the same identity rules for catch-up and direct reconciliation. The generic full-SHA regex is suitable for validating marker syntax, not candidate identity.
+   Evidence: the numbered-plan read above exited 0; decisive line 144: `Search existing CHANGELOG.md content for exact regex (?m)^<!-- pr:<number> merge:[0-9a-f]{40} -->$`. This repeats the remaining Round 3 identity defect despite the producer summary claiming resolution.
+
+3. **[Should] Reuse the existing rollback API (§2 and §3E).** The plan now explicitly calls `journal.track_modified(changelog_path, original_bytes)`, but `RollbackJournal` provides `snapshot(path)` and `track_created(path)`, with no `track_modified`. Add CHANGELOG to the existing snapshot loop and retain its repeated-call protection rather than adding a second snapshot API. Otherwise following the plan literally fails before landing writes.
+   Evidence: `rg -n 'class .*Journal|def snapshot|def track_modified|def track_created|journal.snapshot' utils/py/wave_reconcile.py` exited 0: `154:class RollbackJournal`, `165: def snapshot(self, path)`, `173: def track_created(self, path)`; no `track_modified` definition. `sed -n '1920,1960p' utils/py/wave_reconcile.py` exited 0 and shows the existing loop uses `journal.snapshot(path)` or `journal.track_created(path)` after checking existing journal registrations.
+
+4. **[Should] Finish the plan's required document structure.** The status table is fixed, but the artifact starts with a heading and has no required YAML frontmatter. The table of contents links only the implementation-plan parent, not each of its four phases. Restore the required frontmatter and add phase navigation; these are small edits to the canonical plan.
+   Evidence: numbered-plan read above exited 0, showing line 1 starts `# Architectural Plan` and TOC lines 14–28 omit phase links. `sed -n '1,90p' PROJECT/PDDA.md` exited 0 and requires YAML frontmatter and a multi-phase TOC listing each phase.
+
+Runtime behavior and all proposed gates remain **[Unverified — needs clone run]**. Review applied the SWE rubric through read-only source inspection. No embedded TAKE YOUR TURN block or reviewer phase-gate command exists in this relay file. No git commands, suites, fixtures, gates, source changes or external publication were performed. Only this relay file was edited; scratch setup was confined to `.relay-scratch/tmp`. Return to claude for the bounded corrections above.
