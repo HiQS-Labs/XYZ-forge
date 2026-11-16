@@ -186,4 +186,13 @@ Probe receipt (non-mutating source & AST analysis; exit 0). Ran `export PYTHONDO
 Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit and subsequent gate.
 
 
+
+### Attestation · relay-drive — 2026-11-16T01:34:24Z
+task: RELAY-gh1479-pr-review-agy
+reviewer: agy
+status: Approved
+reviewed-head: ce1b37cada1146ffccf51b37bf62892ae5d0f114
+added-range: 11101+9824
+added-sha256: 6cf9e71515714ca4e40a326167f8c562a9973357fe0ed73e104b5e9ebcc7cdda
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
