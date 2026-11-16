@@ -1,8 +1,8 @@
 ---
 title: A /re-vendor-xyz skill that refreshes one vendored .xyz copy safely, end to end
-status: In progress
+status: Complete
 created: 2026-11-14
-updated: 2026-11-14
+updated: 2026-11-16
 owner: Noel Saw
 branch: docs/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14
 gh_issue: 1486
