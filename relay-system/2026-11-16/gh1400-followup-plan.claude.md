@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -188,8 +188,38 @@ Dispositions (plan section updated in the same commit):
 - [Should] restart-missing/corrupt B expectation — Accepted: A held with one start, B dispatched once (existing per-task hold then continue).
 - [Nit] (a) wait for the killed wake's worker to exit before restart — Accepted. (b) stop-owner next wake publishes A's failure through journal recovery, then B once — Accepted. (c) baseline asserts A failed, B pending, the stop line — Accepted.
 - [Should] dirty lane — Accepted: `local-failure-dirty-holds` control; real-red clone state added to Unproven.
-- [Pass] note on mid-wake checkpoint contradiction — stated explicitly as unchanged and not covered between tasks.
+- [Unverified — no citation] note on mid-wake checkpoint contradiction — stated explicitly as unchanged and not covered between tasks.
 
 Please re-review the revised follow-up section.
+
+### Reviewer · Round 2
+
+Re-read the revised follow-up section (`PROJECT/2-WORKING/GH-1400-SUPERVISION-COMPOSITION.md:266-369`) against my round 1 findings and re-probed source for the narrowed classifier.
+
+swept file: yes. Scope: the revised plan section in full, `marathon_drive.py` gate recording (`:2436-2459`, `:2556-2574`), both gate call sites (`:2811`, `:3618`), both `pre-advance-failed` emit sites (`:2822`, `:3767`) and the receipt `gate` block (`:317-320`). Pre-existing defects found in those regions that this plan makes worse: none.
+
+Round 1 dispositions, checked against the plan text:
+
+- **[Pass] Blocker (gate-killed) resolved.** The classifier now requires reason `pre-advance-failed` and exit 5 (plan `:293-295`), and `gate-killed` is named as a stop in both the prose (`:297`) and control 4's red list (`:351`). Source agrees with the claim: `marathon_drive.py:2816-2822` emits `gate-killed` for rc 108 and `pre-advance-failed` for any other nonzero gate exit, both with `sys.exit(5)`. The narrowing therefore separates the two receipts that were identical before.
+- **[Pass] Red list.** `:350-353` now lists `gate-killed`, `post-approve-failed`, `refused`, `interrupted`, `lock-contention`, `crashed`, gate not run, missing/corrupt receipt, mismatched execution id and clone ledger change. A red-only classifier fails on `gate-killed`. A blanket `continue` fails on every entry. A classifier that continues on `post-approve-failed` fails on that entry. This answers Q4.
+- **[Pass] Identity.** `:358-359` records HEAD, origin, `core.bare`, identity and tracked status before and after, refuses on drift, and records the baseline blob id.
+- **[Pass] Control 2 ordering.** A(red), B pre-parked, C ready, D refused, `--max-tasks 4` is coherent. A is leased (1), B is never selected because the query is `status = 'pending'` only (`jog_run.py:2796`), C is leased (2), D is leased (3) and parked by preflight and the wake halts. The budget check (`--max-tasks 2`, C pending) sits in control 1's run. Both match the arithmetic from round 1.
+- **[Pass] Restart variants, hygiene nits, dirty lane.** B's expected dispatch after a held A (`:343-345`), worker-exit wait (`:344-345`), stop-owner journal recovery then B once (`:346-348`), and the `local-failure-dirty-holds` control with the real-red clone state in Unproven (`:337`, `:363-364`) are all in the text. The baseline-red assertion (A failed, B pending, stop line) is partly in the text: `:354-355` says "leaves B undispatched" only. See the nit below.
+
+New findings (none block approval):
+
+- **[Nit] Add `gate.exit != 108` to the classifier as belt and braces.** The receipt carries the gate exit code (`marathon_drive.py:320`, `"exit": _RESULT.get("gate_exit")`), and `_RESULT` records the raw rc, 108 for a guard kill, at `:2459`/`:2573`. A second emit site, `:3767`, labels any relay-exit-5 with a gate that ran as `pre-advance-failed`, and a gate run during the stalled-lane probe (`:3618`) records its rc the same way. I could not construct a sequence that reaches `:3767` with a guard-killed gate: the probe at `:3618` runs on relay exit 3, and a failed probe returns 3 rather than 5. So the reason check alone holds on every path I found. Requiring the receipt's gate exit to be nonzero and not 108 costs one comparison and closes the gap if a later change connects those paths.
+  Observed input: none; no failing receipt found. I am not asking for a behaviour change on the evidence, only offering the cheap clause.
+  Affected scope: receipts with reason `pre-advance-failed`.
+  Falsifier: a `gate-killed`-shaped receipt relabelled `pre-advance-failed` with gate exit 108 should stop. If the fixture cannot produce one, drop the clause.
+- **[Nit] State the stop-line assertion for `baseline-red` in the plan text.** Round 1 nit (c) was accepted in the Producer block but the plan says only "leaves B undispatched" (`:354-355`). When the control is written, assert A `failed`, B `pending`, and the line `stopping queue execution on task failure` (`jog_run.py:2888`), so the red cannot come from some other fault.
+- **[Nit] `stop-owner` mechanics are unstated.** The plan does not say how a SIGSTOPped peer comes to own the execution clone lock after A's receipt is written (a worker-spawned process taking the lock file is the obvious route). Pin it in the control script. Not a plan defect, since it is the existing `JogSupervisorLock` path (`jog_run.py:1533-1563`).
+
+Q-by-Q after revision: Q1 fail-closed now holds for every `failed` path I can reach (the three situations in `run_marathon_phase` plus every non-`pre-advance-failed` escalation reason). Q2 and Q3 are unchanged from round 1 (shared checks run before B's lease at `:2808-2829`, `tasks_processed` counted at lease, deadline first each iteration). Q5 and Q6 unchanged. The plan states its limits honestly (shared-environment gate red costs later tasks one attempt each, bounded; clone state after a real red gate unproven).
+
+VERDICT: PASS
+Basis: the round 1 blocker is fixed by a one-clause narrowing the source confirms (`marathon_drive.py:2816-2822`), and the control list now fails a blanket `continue`, a red-only classifier, and a `post-approve-failed` classifier. The Should items are all in the plan text. Three nits remain for the implementer, none changes the plan. This approves the plan only. Nothing was run, and runtime behaviour is unproven until the controls are executed in a verify clone.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
