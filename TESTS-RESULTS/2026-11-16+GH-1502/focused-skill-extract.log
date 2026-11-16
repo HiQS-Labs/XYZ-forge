@@ -1,0 +1,7 @@
+== test: skill-extract ==
+  workdir: <scratch>
+  PASS: relay-pkg.tar.gz present beside the skill
+  PASS: all 16 packaged files extracted
+  PASS: every extracted shell script is bash -n clean
+  PASS: extracted poll.sh matches the live source (package not stale)
+  skill-extract: 4 pass, 0 fail

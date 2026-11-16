@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-16 — GH-1502: instructions given to relay turns agree with what the harness does
+
+Text only; no harness behavior changes. The turn prompt (`rtl_turn_prompt`) no longer says "The
+harness runs the gate after your turn": a gate command runs only when one is configured for the
+relay, and both roles are now told so. The thread scaffold (`new-relay.sh`) and `/relay` mark
+"commit only the relay file" and the "other window" wording as manual-relay instructions, because
+the turn prompt forbids git in a driven turn. `/relay` states that driven threads use
+`VERDICT: PASS|FAIL|PARKED`. `/start-task` no longer calls reviewer findings "advisory evaluations,
+NOT a mandate", and `/start-task` and `/relay-xyz` replace "not unrequested enterprise multi-tenant
+threat models" with "the target repository's own stated threat model governs". The `[Blocker]`
+rule is unchanged. Pinned assertions updated in `test/gh91`, `test/gh615`, `test/gh616`; no suite added;
+`relay-pkg.tar.gz` rebuilt. Evidence: `TESTS-RESULTS/2026-11-16+GH-1502/`.
+
 ## 2026-11-15 — GH-1479: typed swarm-preflight stages and a scoped mypy baseline
 
 `utils/py/swarm_preflight.py`'s 734-line `main()` is now an 11-line sequence over named stages (source resolution, contract loading, repository inspection, candidate evaluation, normalization, reporting, packet writing) that pass three frozen records instead of shared locals. Every function is annotated. `mypy.ini` checks this one module, `requirements-dev.txt` pins `mypy==1.14.1` beside the existing gate dependencies, and the three hosted install steps plus `README.md`/`ROUTER.md` point at it. The existing `test_swarm_preflight_module_load` now also runs the scoped mypy check, so the gate's Python needs mypy installed (`python3 -m pip install -r requirements-dev.txt`). No CLI, output, packet, exit-code or write-mechanism change: old and new executors produced byte-identical results across ten scenarios. No new tests. Revert the PR to undo. Evidence: `TESTS-RESULTS/2026-11-14+GH-1479/`.
