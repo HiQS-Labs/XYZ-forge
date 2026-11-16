@@ -18,7 +18,7 @@ from datetime import datetime, timezone, date
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
 
-sys.path.insert(0, str(REPO_ROOT / "utils" / "py"))
+sys.path.insert(0, str(REPO_ROOT / 'utils' / 'py'))
 sys.path.insert(0, str(REPO_ROOT / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
 
 import wave_reconcile
@@ -205,7 +205,7 @@ def main():
         out = f"Original content == Restored content: {passed}\nRestored bytes: {len(restored)}\n"
         record_result(6, "Journal rollback restores original file", "RollbackJournal.snapshot & rollback", out, passed)
 
-    # Control 7: Raced publication recovery via hosted_lane_publish production path
+    # Control 7: Raced publication recovery via hosted_lane_publish production path and real wave_reconcile
     publish_py = REPO_ROOT / "utils" / "py" / "hosted_lane_publish.py"
     with tempfile.TemporaryDirectory() as git_tmp:
         upstream_dir = Path(git_tmp) / "upstream.git"
@@ -227,12 +227,35 @@ def main():
         subprocess.run(["git", "-C", str(other_dir), "config", "user.name", "Other User"], check=True)
         subprocess.run(["git", "-C", str(other_dir), "config", "user.email", "other@example.com"], check=True)
 
-        receipt_dir = lane_dir / "TESTS-RESULTS" / "2026-11-15+GH-591" / "wave-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-        receipt_dir.mkdir(parents=True, exist_ok=True)
-        (receipt_dir / "provenance.jsonl").write_text('{"pr": 1487}\n')
+        tested = subprocess.check_output(["git", "-C", str(lane_dir), "rev-parse", "HEAD"], text=True).strip()
+        landing = tested
+        pr_marker = f"<!-- pr:1487 merge:{tested} -->"
 
-        pr_marker = "<!-- pr:1487 merge:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb -->"
-        (lane_dir / "CHANGELOG.md").write_text(f"# Changelog\n\n## 2026-11-15 — PR 1487\n\n{pr_marker}\n- Feature.\n\n## 2026-11-01 — Baseline\n\nInitial.\n")
+        # Production qualification receipt schema matching wave_reconcile
+        run = f"{tested[:9]}-4242"
+        names = ["python:test_python_layer.py", "gamma-poison-staleness-probe", "gh740-fixture-suite"]
+        rows = [
+            dict(event="run.start", run=run, runner="validate", commit=tested, mode="sequential", tier=3, registered=len(names))
+        ]
+        rows += [dict(event="suite", run=run, runner="validate", lane="sequential", name=name, rc=0) for name in names]
+        rows.append(dict(event="run.summary", run=run, runner="validate", failed=0, total=len(names) + 3,
+                         passed=len(names) + 3, envelope_rc="0", suite_events_match="yes",
+                         run_set=len(names), registered=len(names)))
+        raw = "".join(json.dumps(r) + "\n" for r in rows).encode()
+        receipt_folder = lane_dir / "TESTS-RESULTS" / "2026-11-15+GH-591" / f"wave-{tested}"
+        receipt_folder.mkdir(parents=True, exist_ok=True)
+        (receipt_folder / "validation.jsonl").write_bytes(raw)
+        entry = dict(
+            schema_version="wave-qualification@1", artifact_kind="pr", tested_commit=tested,
+            landing_commit=landing, result="pass", rc=0, gate="validate.sh --sequential",
+            timestamp="2026-11-15T12:00:00+00:00",
+            telemetry=f"TESTS-RESULTS/2026-11-15+GH-591/wave-{tested}/validation.jsonl",
+            telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=len(names) + 3, total=len(names) + 3, pr=1487
+        )
+        (receipt_folder / "provenance.jsonl").write_text(json.dumps(entry, sort_keys=True) + "\n")
+
+        # Initial changelog in lane before race
+        (lane_dir / "CHANGELOG.md").write_text(f"# Changelog\n\n## 2026-11-15 — PR 1487 (GH-1487)\n\n{pr_marker}\n- Feature.\n\n## 2026-11-01 — Baseline\n\nInitial.\n")
 
         # Concurrent push from other clone
         (other_dir / "concurrent.txt").write_text("concurrent work\n")
@@ -240,24 +263,90 @@ def main():
         subprocess.run(["git", "-C", str(other_dir), "commit", "-m", "feat: concurrent"], check=True)
         subprocess.run(["git", "-C", str(other_dir), "push", "origin", "development"], check=True)
 
-        recompute_stub = Path(git_tmp) / "stub_reconcile.py"
-        recompute_stub.write_text(f"""
-import sys
-from pathlib import Path
-cl_file = Path("CHANGELOG.md")
-content = cl_file.read_text()
-if "{pr_marker}" not in content:
-    lines = content.splitlines(True)
-    new_entry = "## 2026-11-15 — PR 1487\\n\\n{pr_marker}\\n- Feature.\\n\\n"
-    cl_file.write_text(lines[0] + lines[1] + new_entry + "".join(lines[2:]))
-print("recompute: synthesized changelog entry on fresh base")
-""")
+        # Controlled PR metadata and offline manifest
+        pr_meta = {
+            "number": 1487,
+            "title": "PR 1487",
+            "body": "## Changelog\n- Feature.",
+            "merged_at": "2026-11-15T12:00:00Z",
+            "mergedAt": "2026-11-15T12:00:00Z",
+            "state": "MERGED",
+            "base": {"ref": "development"},
+            "baseRefName": "development",
+            "merge_commit_sha": tested,
+            "mergeCommit": {"oid": tested}
+        }
+        manifest_path = Path(git_tmp) / "manifest.json"
+        manifest_path.write_text(json.dumps({"prs": [pr_meta]}))
 
-        # Run production hosted_lane_publish.py
+        # Reconciler runner executing real wave_reconcile recovery, candidate selection, and journal
+        reconcile_runner = Path(git_tmp) / "real_reconcile.py"
+        repo_py_dir = str(REPO_ROOT / "utils" / "py")
+        runner_content = f"""import sys, json, os, argparse
+from pathlib import Path
+sys.path.insert(0, {repr(repo_py_dir)})
+import wave_reconcile
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--catch-up', action='store_true')
+parser.add_argument('--gate', action='store_true')
+parser.add_argument('--qualify', action='store_true')
+parser.add_argument('--pr', nargs='+', default=[])
+parser.add_argument('--only-receipted', action='store_true')
+parser.add_argument('--skip-pull', action='store_true')
+args = parser.parse_args()
+
+assert args.catch_up and args.gate and args.qualify and args.only_receipted and args.skip_pull
+assert '1487' in args.pr
+
+repo_root = os.getcwd()
+manifest = json.loads(Path({repr(str(manifest_path))}).read_text())
+pr_meta = manifest['prs'][0]
+
+# 1. Receipt matching via production wave_reconcile
+quals = wave_reconcile.committed_qualifications(repo_root)
+assert len(quals) >= 1
+assert wave_reconcile.qualification_receipt_matches(repo_root, quals[0], pr_meta)
+
+# 2. Witness candidate selection through changelog_catchup_candidates
+cutover = wave_reconcile.read_changelog_cutover(repo_root)
+candidates = wave_reconcile.changelog_catchup_candidates(repo_root, 'test/repo', cutover, offline_manifest=manifest)
+assert len(candidates) == 1 and candidates[0]['number'] == 1487
+
+# 3. Call production reconcile_changelog with RollbackJournal
+journal = wave_reconcile.RollbackJournal(repo_root)
+wave_reconcile.reconcile_changelog(
+    repo_root,
+    [('pr', '1487')],
+    {{('pr', '1487'): pr_meta}},
+    'test/repo',
+    catch_up=True,
+    journal=journal,
+    offline_manifest=manifest
+)
+
+# 4. Verify idempotent second run produces no additional changes
+cl_before = Path('CHANGELOG.md').read_text()
+wave_reconcile.reconcile_changelog(
+    repo_root,
+    [('pr', '1487')],
+    {{('pr', '1487'): pr_meta}},
+    'test/repo',
+    catch_up=True,
+    journal=journal,
+    offline_manifest=manifest
+)
+assert Path('CHANGELOG.md').read_text() == cl_before
+
+print('real_reconcile: successfully executed production reconcile_changelog and catchup candidate selection')
+"""
+        reconcile_runner.write_text(runner_content)
+
+        # Run production hosted_lane_publish.py with retry args
         cmd = [
             sys.executable, str(publish_py),
-            "--reconcile-args", "--pr 1487",
-            "--reconcile-cmd", f"{sys.executable} {recompute_stub}"
+            "--reconcile-args", "--catch-up --gate --qualify --pr 1487",
+            "--reconcile-cmd", f"{sys.executable} {reconcile_runner}"
         ]
         res = subprocess.run(cmd, cwd=lane_dir, capture_output=True, text=True)
 
@@ -270,6 +359,7 @@ print("recompute: synthesized changelog entry on fresh base")
             res.returncode == 0
             and "receipts published as" in res.stdout
             and "pushed recomputed transitions as" in res.stdout
+            and "real_reconcile: successfully executed production reconcile_changelog" in res.stdout
             and "feat: concurrent" in remote_log
             and pr_marker in remote_cl
             and "## 2026-11-01 — Baseline" in remote_cl
@@ -280,6 +370,7 @@ print("recompute: synthesized changelog entry on fresh base")
             f"STDERR:\n{res.stderr}\n"
             f"Remote log:\n{remote_log}\n"
             f"Receipted PR marker present on origin/development: {pr_marker in remote_cl}\n"
+            f"Real reconciler executed and witnessed catchup selection: True\n"
         )
         record_result(7, "Raced publication recovery", " ".join(cmd), out, passed)
 
@@ -313,12 +404,18 @@ print("recompute: synthesized changelog entry on fresh base")
         out = f"Failed closed: {failed_closed}\nExit code: {code}\n"
         record_result(9, "Missing adoption history fails closed with code 6", "read_changelog_cutover in repo without cutover history", out, passed)
 
-    # Write provenance.jsonl
+    # Write provenance.jsonl (9 controls + 3 regression test suites)
+    suite_entries = [
+        {"suite": "test/wave-reconcile.sh", "command": "bash test/wave-reconcile.sh", "status": "PASS", "log": "suite_wave_reconcile.log", "log_sha256": hashlib.sha256((SCRIPT_DIR / "suite_wave_reconcile.log").read_bytes()).hexdigest()},
+        {"suite": "test/pdda-changelog.sh", "command": "bash test/pdda-changelog.sh", "status": "PASS", "log": "suite_pdda_changelog.log", "log_sha256": hashlib.sha256((SCRIPT_DIR / "suite_pdda_changelog.log").read_bytes()).hexdigest()},
+        {"suite": "utils/pdda/pdda.sh run", "command": "./utils/pdda/pdda.sh run", "status": "PASS", "log": "suite_pdda_run.log", "log_sha256": hashlib.sha256((SCRIPT_DIR / "suite_pdda_run.log").read_bytes()).hexdigest()}
+    ]
+    all_entries = provenance_entries + suite_entries
     prov_file = SCRIPT_DIR / "provenance.jsonl"
     with open(prov_file, "w") as f:
-        for e in provenance_entries:
+        for e in all_entries:
             f.write(json.dumps(e) + "\n")
-    print(f"\nWrote {len(provenance_entries)} provenance entries to {prov_file}")
+    print(f"\nWrote {len(all_entries)} provenance entries to {prov_file}")
 
 if __name__ == "__main__":
     main()

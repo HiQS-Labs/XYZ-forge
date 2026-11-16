@@ -1,11 +1,11 @@
 # Control 4: Idempotency zero bytes on rerun
 # Command: reconcile_changelog rerun on already reconciled PR
-# Candidate Revision: 53f062111d05b0c67da46f713b106d75a0e28ec7
-# Timestamp: 2026-11-16T19:00:13.261509+00:00
+# Candidate Revision: b459c3f15b2971852917caa36ac48f889ad04194
+# Timestamp: 2026-11-16T19:17:47.761032+00:00
 # Status: PASS
 
-Run 1 bytes: 259, mtime: 1794855613261372810
-Run 2 bytes: 259, mtime: 1794855613261372810
+Run 1 bytes: 259, mtime: 1794856667760902235
+Run 2 bytes: 259, mtime: 1794856667760902235
 Mtime unchanged: True
 Content identical: True
 Marker present: True
