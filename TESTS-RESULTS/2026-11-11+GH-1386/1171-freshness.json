@@ -1,0 +1,22 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": false,
+  "stale_index_lock": false,
+  "stale_index_lock_path": null,
+  "stale_index_lock_warning": null,
+  "evaluated_ref": "development",
+  "evaluated_ref_commit": "3d7f5dc00aef65343114188823aa97ceb7abd769",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "command",
+      "path": null,
+      "verdict": "unfixed"
+    }
+  ]
+}

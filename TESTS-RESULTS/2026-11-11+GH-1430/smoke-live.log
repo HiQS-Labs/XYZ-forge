@@ -1,0 +1,41 @@
+live DB before: mtime=1794454706 size=1375346688; sidecars: rebalance.db-shm rebalance.db-wal (created by this session's first new-code read at 19:39, which ran with none present) ; holders: 0
+## config (key on)
+{
+ "repos": [
+  "HiQS-Labs/XYZ-forge",
+  "Hypercart-Dev-Tools/rebalance-git-pulse",
+  "HiQS-Labs/rebalanceOS",
+  "BinoidCBD/LTVera-Pandas"
+ ],
+ "repos_source": "explicit+rebalance_active"
+}
+## policy-preview (key on)
+{
+  "preview": "<scratch>/smoke/preview.on.json",
+  "changes": 164,
+  "warnings": [],
+  "unresolved": "<688 entries elided from this receipt; full list in the scratch preview JSON>"
+}
+exit=0
+preview policy.repos: ['HiQS-Labs/XYZ-forge', 'Hypercart-Dev-Tools/rebalance-git-pulse', 'HiQS-Labs/rebalanceOS', 'BinoidCBD/LTVera-Pandas']
+## config (key off)
+{
+ "repos": [
+  "HiQS-Labs/XYZ-forge",
+  "Hypercart-Dev-Tools/rebalance-git-pulse",
+  "HiQS-Labs/rebalanceOS",
+  "BinoidCBD/LTVera-Pandas"
+ ],
+ "repos_source": "explicit+rebalance_active"
+}
+## policy-preview (key off)
+{
+  "preview": "<scratch>/smoke/preview.off.json",
+  "changes": 164,
+  "warnings": [],
+  "unresolved": "<688 entries elided from this receipt; full list in the scratch preview JSON>"
+}
+exit=0
+preview policy.repos: ['HiQS-Labs/XYZ-forge', 'Hypercart-Dev-Tools/rebalance-git-pulse', 'HiQS-Labs/rebalanceOS', 'BinoidCBD/LTVera-Pandas']
+live DB after: mtime=1794454706 size=1375346688
+ls: ~/.xyz/device_config.json: No such file or directory

@@ -1,0 +1,3 @@
+Traceback (most recent call last):
+  File "<string>", line 13, in <module>
+AssertionError: ([{'kind': 'link', 'root': '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmptfi7uf44/target', 'name': 'example', 'before': None, 'after': '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmptfi7uf44/collection/example'}], [], [{'migrate_legacy': '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tmptfi7uf44/target/example', 'digest': '2765a9a49220976ad93127ec8d5fcaaa210f9d1ff083f98feecd2b20cb827b4b', 'matches_managed': True}])

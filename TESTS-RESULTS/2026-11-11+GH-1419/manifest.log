@@ -1,0 +1,17 @@
+== test: marathon-yaml ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-marathon-yaml.XXXXXX.koy4yg42wx
+  PASS: linear chain parses (exit 0)
+  PASS: execution order resolves to p1,p2,p3
+  PASS: p2 fields parsed (reviewer|rounds|depends_on|turn_timeout_s, inline comment stripped)
+  PASS: p1 brief + artifact columns parsed
+  PASS: turn_timeout_s defaults empty when omitted
+  PASS: depends_on reorders out-of-order phases (a before b)
+  PASS: missing reviewer -> error
+  PASS: unknown depends_on -> error
+  PASS: dependency cycle -> error
+  PASS: duplicate phase id -> error
+  PASS: reviewer must be an accepted prefix -> error
+  PASS: --format json emits the marathon name
+  PASS: depends_on list form -> shape-specific 'flow sequence' error (not unknown-phase)
+  PASS: scalar depends_on still parses after the flow-sequence guard
+  marathon-yaml: 14 pass, 0 fail

@@ -183,10 +183,6 @@ def _validate_marathon_result(obj):
 
 JOG_EXECUTION_STATE_SCHEMA = "jog/execution-state@1"
 
-# Marathon's reviewed-phase contract (marathon_drive.py): reviewer ids must start with one of
-# these. Jog mirrors the rule so an invalid reviewer fails before ANY lease mutation.
-_MARATHON_REVIEWER_PREFIXES = ("codex", "gemini", "agy")
-
 # GH-280 Phase 5: one line, stderr, on every legacy-machinery invocation (explicit
 # `--executor relay`, or `--simulate` which stays on the relay machinery). Names the window
 # and the separate-removal fact — removal is NOT part of the flip commit.
@@ -215,17 +211,26 @@ def validate_marathon_executor(args):
                 "default (GH-280: no silent cost-bearing or same-agent route)")
     if reviewer == args.builder:
         return f"--reviewer must differ from --builder (both are '{reviewer}')"
-    if not reviewer.startswith(_MARATHON_REVIEWER_PREFIXES):
-        return (f"--reviewer '{reviewer}' must start with one of "
-                f"{'/'.join(_MARATHON_REVIEWER_PREFIXES)} (marathon's reviewed-phase contract)")
-    if reviewer.startswith("agy"):
-        bin_name = os.environ.get("AGY_BIN", "agy")
-    elif reviewer.startswith("codex"):
-        bin_name = os.environ.get("CODEX_BIN", "codex")
-    else:  # gemini*
-        bin_name = os.environ.get("GEMINI_BIN", "gemini")
-    if not (shutil.which(bin_name) or (os.path.isfile(bin_name) and os.access(bin_name, os.X_OK))):
-        return f"reviewer binary '{bin_name}' not found on PATH (--reviewer {reviewer})"
+    import contextlib
+    import io
+    import marathon_drive
+
+    # Reuse execution's route/probe owners before any lease mutation. Keep the
+    # imported driver's result state untouched by this admission-only call.
+    diagnostic = io.StringIO()
+    saved_result = marathon_drive._RESULT.copy()
+    try:
+        with contextlib.redirect_stderr(diagnostic):
+            for role, actor in (("builder", args.builder), ("reviewer", reviewer)):
+                marathon_drive.route_agent(actor, {})
+                marathon_drive._probe_agent_bin(actor, role)
+    except ValueError as exc:
+        return str(exc)
+    except SystemExit:
+        return diagnostic.getvalue().strip() or "marathon agent admission failed"
+    finally:
+        marathon_drive._RESULT.clear()
+        marathon_drive._RESULT.update(saved_result)
     return None
 
 
@@ -524,6 +529,12 @@ def _marathon_env_from_invocation(invocation):
 
 def _execution_root(root, target):
     _require_jog_primary(root)
+    return _validate_execution_target(root, target)
+
+
+def _validate_execution_target(root, target):
+    """The read-only target checks of _execution_root, minus the primary pin (GH-1426: dry-run
+    validates the same target without the pin that read-only dry-run is documented not to need)."""
     if not target:
         raise ContractError("--target-root <disposable-full-clone> is required for Jog dispatch")
     target = os.path.realpath(os.path.expanduser(target))
@@ -537,6 +548,44 @@ def _execution_root(root, target):
     if dirty_ledger.strip() or lane_ledger.strip():
         raise ContractError("execution clone already has ledger changes; preserve and reconcile before dispatch")
     return target
+
+
+def _resolve_preflight_py(target):
+    """swarm_preflight.py for an execution clone: its own copy, then its vendored .xyz/, then the
+    harness home (GH-1093/GH-1098 A1, GH-279 #2). Returns the last candidate even when missing."""
+    preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
+        preflight_py = os.path.join(target, ".xyz", "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
+        preflight_py = os.path.join(harness_home(), "utils", "py", "swarm_preflight.py")
+    return preflight_py
+
+
+def _preflight_summary(proc):
+    """One non-empty line naming a completed swarm_preflight run's verdict and readiness cause
+    (GH-1426): `<VERDICT> (exit N)[ — next: <reason>]`, else its first BLOCKED / CONTRACT ERROR /
+    die line, else its last output line, else `exit N`. A return code that contradicts the
+    printed verdict (a post-verdict failure) is appended so a `ready` is never reported unqualified."""
+    out_lines = (proc.stdout or "").splitlines()
+    lines = [ln.strip() for ln in out_lines + (proc.stderr or "").splitlines() if ln.strip()]
+    verdict = next((ln.partition(":")[2].strip() for ln in lines
+                    if ln.startswith("verdict ") and ":" in ln), None)
+    if verdict:
+        nxt = next((ln.split("— next:", 1)[1].strip() for ln in lines
+                    if ln.startswith("readiness ") and "— next:" in ln), None)
+        summary = verdict + (f" — next: {nxt}" if nxt else "")
+        m = re.search(r"\(exit (\d+)\)", verdict)
+        if m and int(m.group(1)) != proc.returncode:
+            summary += f"; preflight exited {proc.returncode}: {lines[-1]}"
+    else:
+        summary = next((ln for ln in lines
+                        if ln.startswith(("BLOCKED", "CONTRACT ERROR", "swarm-preflight:"))), None)
+        summary = summary or (lines[-1] if lines else f"exit {proc.returncode}")
+        # The CONTRACT ERROR headline says "see message above"; the cause is preflight's stderr line.
+        err = next((ln.strip() for ln in (proc.stderr or "").splitlines() if ln.strip()), "")
+        if summary.startswith("CONTRACT ERROR") and err:
+            summary = f"CONTRACT ERROR: {err}"
+    return summary[:300]
 
 
 def _ledger_bytes(root):
@@ -557,12 +606,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # root without its own copy (vendored .xyz/ layouts) falls through to the harness home.
     target = _execution_root(root, target_root)
     ledger_before = _ledger_bytes(target)
-    home = harness_home()
-    preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
-    if not os.path.isfile(preflight_py):
-        preflight_py = os.path.join(target, ".xyz", "utils", "py", "swarm_preflight.py")
-    if not os.path.isfile(preflight_py):
-        preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
+    preflight_py = _resolve_preflight_py(target)
     if not os.path.isfile(preflight_py):
         return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
                         f"(vendored installs resolve .xyz via the harness home — GH-279 #2)"
@@ -587,7 +631,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     state["executions"].append(record)
     state["gh_number"] = gh_num
     jog_save_state(root, gid, state)
-    print(f"jog: marathon execution {exec_id} for GH-{gh_num} (packet: {packet_dir})")
+    # GH-1426: no Marathon execution has happened yet; say that preflight is starting.
+    print(f"jog: running preflight for GH-{gh_num} (execution {exec_id}, packet: {packet_dir})")
 
     pf = subprocess.run(
         [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
@@ -600,9 +645,11 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     if pf.returncode != 0:
         record["status"] = "preflight-refused"
         jog_save_state(root, gid, state)
-        tail = (pf.stderr or pf.stdout or "").strip().splitlines()
-        detail = tail[-1][:200] if tail else ""
-        return "parked", f"preflight-refused (exit {pf.returncode}){': ' + detail if detail else ''}"
+        # GH-1426: the last output line is "No packet written — …"; surface the verdict and the
+        # readiness `next:` cause on the console and in the parked row instead.
+        summary = _preflight_summary(pf)
+        print(f"jog: GH-{gh_num} preflight refused: {summary}")
+        return "parked", f"preflight-refused (exit {pf.returncode}): {summary}"
 
     invocation_path = os.path.join(packet_dir, "marathon-invocation.json")
     try:
@@ -1627,6 +1674,12 @@ def contract_probes_from_doc(root, doc_path):
     return labels, None
 
 
+def promotion_probes(root, doc_path):
+    """Shared read-only promotion admission: valid legacy probes precede contract fallback."""
+    valid = [probe for probe in extract_probes_from_doc(doc_path) if lint_probe(root, probe)[0]]
+    return (valid, None) if valid else contract_probes_from_doc(root, doc_path)
+
+
 def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
     """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
     _require_jog_primary(primary or root)
@@ -1669,16 +1722,7 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primar
     elif status_table:
         content = status_table + content
 
-    probes = extract_probes_from_doc(doc_path)
-    valid_probes = []
-    for p in probes:
-        ok, reason = lint_probe(root, p)
-        if ok:
-            valid_probes.append(p)
-
-    contract_reason = None
-    if not valid_probes:
-        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+    valid_probes, contract_reason = promotion_probes(root, doc_path)
 
     if not valid_probes:
         if not interactive:
@@ -2057,13 +2101,24 @@ def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None, simul
 
 
 class JogCheckpoint:
-    """Opt-in publication around one existing Jog invocation (GH-1207/1358).
+    """Opt-in publication around one existing Jog invocation (GH-1207/1358/1453).
 
-    The primary owns only the two ledger artifacts. Push hooks run in a dedicated,
-    disposable full clone. A retained journal makes a failed push retry publication
+    The primary owns the two ledger artifacts and the views a write refreshes. Push hooks run in
+    a dedicated, disposable full clone. A retained journal makes a failed publication retry
     before another queue effect; interrupted execution still uses Jog cold recovery.
+
+    GH-1453: the wake depends on local state only. It contacts origin/development at publication,
+    and a development that moved meanwhile is reconciled there as a normal outcome: merge it,
+    take the remote ledger, replay this wake's own Jog writes through the canonical writers.
     """
     paths = ("releases.db", "releases.sql")
+    # perform_write's refresh_preview rewrites these two when the repo adopts them.
+    refreshed_views = ("RELEASES-PREVIEW.html", "LEADERBOARD.html")
+    # Every path a reconcile merge may rewrite; the resolver also regenerates LEADERBOARD.md.
+    merge_paths = paths + refreshed_views + ("LEADERBOARD.md",)
+    replay_statuses = ("completed", "parked", "failed", "pending")
+    reconcile_subject = "jog: reconcile wake checkpoint "
+    attempts = 3
 
     def __init__(self, root, publication_root):
         self.root = root
@@ -2085,74 +2140,326 @@ class JogCheckpoint:
         # Porcelain -z avoids quoting/whitespace ambiguity. Renames are foreign too.
         return _git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all").decode().split("\0")
 
+    def owned(self):
+        return self.paths + tuple(v for v in self.refreshed_views if Path(self.root, v).exists())
+
     def check_owned(self):
-        foreign = [r for r in self.dirty(self.root) if r and r[3:] not in self.paths]
+        owned = self.owned()
+        foreign = [r for r in self.dirty(self.root) if r and r[3:] not in owned]
         if foreign:
             raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
 
+    def _try(self, *args):
+        return subprocess.run(["git", "-C", self.root, *args], capture_output=True)
+
+    def _merging(self):
+        return self._try("rev-parse", "-q", "--verify", "MERGE_HEAD").returncode == 0
+
+    def _queue(self, db_path):
+        """gh_number -> [status, attempt_count, failure_reason], read-only."""
+        conn = connect(str(db_path), readonly=True)
+        try:
+            if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='jog_queue'").fetchone():
+                return {}
+            return {str(gh): [status, attempts, reason] for gh, status, attempts, reason in conn.execute(
+                "SELECT gh_number, status, attempt_count, failure_reason FROM jog_queue")}
+        finally:
+            conn.close()
+
+    def _anchor(self):
+        conn = connect(os.path.join(self.root, "releases.db"), readonly=True)
+        try:
+            row = conn.execute("SELECT txn_id FROM op_receipts ORDER BY id DESC LIMIT 1").fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
+
+    def check_publication(self):
+        """Static clone checks only; no freshness, recovery or fast-forward guarantee."""
+        if any(self.dirty(self.publication)):
+            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
+        if _git(self.publication, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
+            raise ContractError("checkpoint publication clone must be on development")
+
     def begin(self):
         _require_jog_primary(self.root)
-        self.check_owned()
         if self.journal.exists():
             self.state = json.loads(self.journal.read_text())
+            if self.state.get("phase") == "committed":
+                # A committed checkpoint only retries publication. After a reconcile merge the
+                # primary holds the remote's queue, whose running rows rebuild with a NULL lease
+                # PID; the orphan scan below would reset rows this wake never touched.
+                self.finish()
+                return False
+            self.check_owned()
             if self.state.get("phase") != "published":
                 # Never dispatch a new task to recover an interrupted wake.
                 reconciled = jog_reconcile_orphan_leases(self.root)
                 jog_reconcile_cold_start(self.root, reconciled)
                 self.finish()
                 return False
+        self.check_owned()
         if any(self.dirty(self.root)):
             raise ContractError("checkpoint refuses pre-existing ledger changes without an active journal")
-        _git(self.root, "fetch", "origin", "development")
+        # Local state only: no fetch, and no demand that the primary equal the remote.
+        if self._try("rev-parse", "-q", "--verify", "refs/remotes/origin/development").returncode:
+            raise ContractError("checkpoint requires a local origin/development ref")
+        if _git(self.root, "rev-list", "--count", "refs/remotes/origin/development..HEAD").strip() != b"0":
+            raise ContractError("checkpoint refuses unpublished local commits")
         head = _git(self.root, "rev-parse", "HEAD").decode().strip()
-        remote = _git(self.root, "rev-parse", "origin/development").decode().strip()
-        if head != remote:
-            raise ContractError("checkpoint requires primary HEAD at published origin/development")
-        self.state = {"base": head, "phase": "running"}
+        self.state = {"base": head, "phase": "running", "anchor": self._anchor(),
+                      "queue": self._queue(Path(self.root, "releases.db"))}
         self.save()
         return True
 
     def finish(self):
-        self.check_owned()
         head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        if self._merging():
+            # Only a merge this wake recorded before opening it is restored: same merge target,
+            # and HEAD still at the journal's commit. Anything else is someone's work in progress.
+            target = _git(self.root, "rev-parse", "MERGE_HEAD").decode().strip()
+            if not self.state.get("merging") or self.state["merging"] != target \
+                    or head != self.state.get("commit"):
+                raise ContractError("checkpoint refuses a merge in progress that this wake did not start")
+            self._abort_merge()
+            del self.state["merging"]
+            self.save()
+        self.check_owned()
         expected = self.state.get("commit", self.state["base"])
         if head != expected:
-            # A crash immediately after commit is recognized by its exact parent/message.
+            # A crash immediately after a commit is recognized by its exact parent/message.
             parent = _git(self.root, "rev-parse", "HEAD^").decode().strip()
             message = _git(self.root, "log", "-1", "--format=%s").decode().strip()
-            if parent != self.state["base"] or message != self.message():
+            ours = message == self.message() if "commit" not in self.state else (
+                message.startswith(self.reconcile_subject + self.state["base"] + " onto "))
+            if parent != expected or not ours:
                 raise ContractError("checkpoint primary HEAD changed outside this wake")
         if any(self.dirty(self.root)):
             if self.state.get("commit"):
                 raise ContractError("checkpoint has new changes after its recorded commit")
-            _git(self.root, "add", "--", *self.paths)
-            _git(self.root, "commit", "-m", self.message(), "--", *self.paths)
+            owned = self.owned()
+            _git(self.root, "add", "--", *owned)
+            _git(self.root, "commit", "-m", self.message(), "--", *owned)
         self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        if "anchor" in self.state:
+            self.state.setdefault("source", self.state["commit"])
         self.state["phase"] = "committed"
         self.save()
-        pub = self.publication
-        if any(self.dirty(pub)):
-            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
-        if _git(pub, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
-            raise ContractError("checkpoint publication clone must be on development")
-        _git(pub, "fetch", self.root, self.state["commit"])
-        _git(pub, "merge", "--ff-only", self.state["commit"])
-        if _git(pub, "rev-parse", "HEAD").decode().strip() != self.state["commit"]:
-            raise ContractError("publication clone contains commits beyond this checkpoint")
-        # An empty wake or a crash after successful push needs no second push gate.
-        # Read the live ref, not a potentially stale local tracking ref.
-        published = _git(pub, "ls-remote", "--exit-code", "origin",
-                         "refs/heads/development").decode().split()[0]
-        if published != self.state["commit"]:
-            # Normal push: never bypass the clone's configured gate or force a ref.
-            _git(pub, "push", "origin", self.state["commit"] + ":refs/heads/development")
+        reconciles = 0
+        while True:
+            commit = self.state["commit"]
+            _git(self.root, "fetch", "origin", "development")
+            live = _git(self.root, "rev-parse", "refs/remotes/origin/development").decode().strip()
+            if live == commit or not self._try("merge-base", "--is-ancestor", commit, live).returncode:
+                break  # published already, or this wake has nothing the remote lacks
+            if not self._try("merge-base", "--is-ancestor", live, commit).returncode:
+                try:
+                    self._push(commit)
+                    break
+                except ContractError:
+                    # A rejection is a reason to reconcile only when development really moved.
+                    _git(self.root, "fetch", "origin", "development")
+                    if _git(self.root, "rev-parse", "refs/remotes/origin/development").decode().strip() == live:
+                        raise
+                    continue
+            if "source" not in self.state:
+                raise ContractError("development moved and this checkpoint journal predates automatic reconcile")
+            if reconciles == self.attempts:
+                raise ContractError("development kept moving through %d reconcile attempts; "
+                                    "rerun the same command" % self.attempts)
+            reconciles += 1
+            self._reconcile(live)
         _git(self.root, "fetch", "origin", "development")
         self.state["phase"] = "published"
         self.save()
         print("jog: published primary checkpoint " + self.state["commit"])
 
+    def _push(self, commit):
+        pub = self.publication
+        self.check_publication()
+        _git(pub, "fetch", self.root, commit)
+        _git(pub, "merge", "--ff-only", commit)
+        if _git(pub, "rev-parse", "HEAD").decode().strip() != commit:
+            raise ContractError("publication clone contains commits beyond this checkpoint")
+        # An empty wake or a crash after successful push needs no second push gate.
+        # Read the live ref, not a potentially stale local tracking ref.
+        published = _git(pub, "ls-remote", "--exit-code", "origin",
+                         "refs/heads/development").decode().split()[0]
+        if published != commit:
+            # Normal push: never bypass the clone's configured gate or force a ref.
+            _git(pub, "push", "origin", commit + ":refs/heads/development")
+
+    def _app(self, *args):
+        app = os.path.join(os.path.dirname(os.path.abspath(__file__)), "releases_app.py")
+        proc = subprocess.run([sys.executable, app, "--root", self.root, *args],
+                              cwd=self.root, capture_output=True, text=True)
+        if proc.returncode:
+            raise ContractError("checkpoint ledger command failed: releases %s: %s" % (
+                " ".join(args), (proc.stderr.strip() or proc.stdout.strip())[-400:]))
+
+    def _abort_merge(self):
+        """Restore the pre-merge head. Staging the full write set first leaves the abort nothing
+        unstaged to trip on: rebuild and the view generators write without staging."""
+        for path in self.merge_paths:
+            self._try("add", "-A", "--", path)
+        _git(self.root, "merge", "--abort")
+        Path(self.root, "releases.db.bak").unlink(missing_ok=True)
+
+    def _reconcile(self, live):
+        """Merge the moved development into the primary and commit once; the journal's commit
+        becomes that merge. Any failure while the merge is open restores the pre-merge head."""
+        merge_base = _git(self.root, "merge-base", "HEAD", live).decode().strip()
+        self.state["merging"] = live  # recorded before the merge opens, so a rerun can own it
+        self.save()
+        started = self._try("merge", "--no-commit", "--no-ff", live)
+        if not self._merging():
+            # No merge is open, so nothing may claim one later: clear the ownership marker.
+            del self.state["merging"]
+            self.save()
+            raise ContractError("checkpoint reconcile could not merge development: "
+                                + started.stderr.decode(errors="replace").strip()[-300:])
+        try:
+            unmerged = set(filter(None, _git(
+                self.root, "diff", "--name-only", "--diff-filter=U", "-z").decode().split("\0")))
+            foreign = sorted(unmerged - set(self.merge_paths))
+            if foreign:
+                raise ContractError("development moved and conflicts outside the ledger: " + ", ".join(foreign))
+            remote_ledger = bool(self._try("diff", "--quiet", merge_base, live, "--", "releases.sql").returncode)
+            if remote_ledger:
+                self._replay(live)
+            if remote_ledger or unmerged:
+                resolver = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                        "releases-merge-resolve.sh")
+                proc = subprocess.run(["bash", resolver, "--root", self.root],
+                                      cwd=self.root, capture_output=True, text=True)
+                if proc.returncode:
+                    raise ContractError("ledger merge resolver refused: "
+                                        + (proc.stderr.strip() or proc.stdout.strip())[-400:])
+                self._app("check")
+                Path(self.root, "releases.db.bak").unlink(missing_ok=True)
+            for path in self.merge_paths:
+                self._try("add", "-A", "--", path)
+            if _git(self.root, "ls-files", "-u").strip() or self._try("diff", "--quiet").returncode:
+                raise ContractError("unmerged or unstaged changes remain after the ledger merge resolver")
+            _git(self.root, "commit", "-q", "-m", self.reconcile_subject + self.state["base"] + " onto " + live)
+        except (ContractError, OSError, sqlite3.Error, subprocess.SubprocessError, SystemExit) as exc:
+            # SystemExit: the ledger gateway and writers refuse by exiting (releases_app.refuse).
+            self._abort_merge()
+            del self.state["merging"]
+            self.save()
+            if isinstance(exc, SystemExit):
+                raise ContractError("checkpoint ledger command failed: the ledger gateway refused "
+                                    "(exit %s)" % exc.code) from exc
+            raise ContractError(str(exc)) from exc
+        self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        del self.state["merging"]
+        self.save()
+        print("jog: reconciled wake checkpoint onto moved development " + live)
+
+    def _replay(self, live):
+        """Put the remote ledger in place and replay this wake's own Jog writes onto it through
+        the canonical writers. The writes are the source commit's receipts after the start anchor."""
+        Path(self.root, "releases.sql").write_bytes(_git(self.root, "show", live + ":releases.sql"))
+        _git(self.root, "add", "--", "releases.sql")
+        self._app("check", "--rebuild")
+        with tempfile.TemporaryDirectory() as tmp:
+            source_db = Path(tmp, "source.db")
+            source_db.write_bytes(_git(self.root, "show", self.state["source"] + ":releases.db"))
+            final = self._queue(source_db)
+            conn = connect(str(source_db), readonly=True)
+            try:
+                floor = 0
+                if self.state.get("anchor"):
+                    row = conn.execute("SELECT id FROM op_receipts WHERE txn_id = ?",
+                                       (self.state["anchor"],)).fetchone()
+                    if row is None:
+                        raise ContractError("checkpoint cannot replay this wake onto a moved development: "
+                                            "its start receipt is missing from the wake's ledger")
+                    floor = row[0]
+                receipts = conn.execute("SELECT op, target_gid FROM op_receipts WHERE id > ? ORDER BY id",
+                                        (floor,)).fetchall()
+            finally:
+                conn.close()
+        plan = []
+        for op, target in receipts:
+            match = re.fullmatch(r"GH-(\d+)", target or "")
+            kind = op[4:] if op.startswith("jog-") else None
+            if not match or (kind != "lease" and kind not in self.replay_statuses):
+                # jog-reconcile is a global orphan scan: replayed against another ledger it can
+                # reset rows this wake never touched, so it is a stop, never a replay.
+                raise ContractError("checkpoint cannot replay this wake onto a moved development: "
+                                    "it wrote %s %s" % (op, target))
+            plan.append((kind, match.group(1)))
+        touched = sorted({gh for _, gh in plan}, key=int)
+        db = Path(self.root, "releases.db")
+        remote = self._queue(db)
+        start = self.state.get("queue") or {}
+        overlap = [gh for gh in touched if remote.get(gh) != start.get(gh)]
+        if overlap:
+            raise ContractError("development changed the same Jog queue row(s) as this wake: "
+                                + ", ".join("GH-" + gh for gh in overlap))
+        last_status = {gh: i for i, (kind, gh) in enumerate(plan) if kind != "lease"}
+        for i, (kind, gh) in enumerate(plan):
+            try:
+                if kind == "lease":
+                    jog_acquire_lease(self.root, int(gh), os.getpid())
+                else:
+                    reason = (final.get(gh) or [None, None, None])[2] if last_status[gh] == i else None
+                    jog_set_status(self.root, int(gh), kind, failure_reason=reason)
+            except SystemExit as exc:
+                raise ContractError("canonical writer refused the replay of jog-%s GH-%s (exit %s)"
+                                    % (kind, gh, exc.code)) from exc
+        after = self._queue(db)
+        wrong = [gh for gh in touched if after.get(gh) != final.get(gh)]
+        wrong += [gh for gh, row in remote.items() if gh not in touched and after.get(gh) != row]
+        if wrong:
+            raise ContractError("checkpoint replay did not reproduce the wake's queue state: "
+                                + ", ".join("GH-" + gh for gh in sorted(wrong, key=int)))
+
     def message(self):
         return "jog: publish wake checkpoint " + self.state["base"]
+
+
+def validate_checkpoint_options(args, target):
+    """Share existing live option checks with explicit-target readiness."""
+    checkpoint = getattr(args, "checkpoint_root", None)
+    if not checkpoint:
+        return
+    if (not args.max_tasks or args.max_tasks < 1 or getattr(args, "simulate", False)
+            or (getattr(args, "executor", "marathon") or "marathon") != "marathon"):
+        raise ContractError("--checkpoint-root requires positive --max-tasks and the real Marathon executor")
+    if os.path.realpath(checkpoint) == os.path.realpath(target):
+        raise ContractError("publication and execution clones must be distinct")
+
+
+def _dry_run_preflight(target, gh_num):
+    """GH-1426: preflight's own --dry-run for one queued item against the execution clone, as the
+    live call runs it (cwd + SWARM_PREFLIGHT_ROOT pinned, explicit never-created --out). It writes
+    no Jog state; preflight's target-side effects (fetch, transient ref worktree, contract command
+    probes) are the same as an operator's manual `swarm-preflight.sh --dry-run`."""
+    preflight_py = _resolve_preflight_py(target)
+    if not os.path.isfile(preflight_py):
+        return 2, f"not evaluated — swarm_preflight not found at {preflight_py}"
+    argv = [sys.executable, preflight_py, "--gh-issue", str(gh_num)]
+    label = ""
+    doc_path = find_issue_doc(target, gh_num)
+    if doc_path and "/PROJECT/1-INBOX/" in doc_path:
+        # A live run promotes a 1-INBOX doc before preflight; dry-run must not. Evaluate the doc in
+        # place only when preflight's own frontmatter reader yields the same issue (plan QA r2).
+        from swarm_preflight import doc_frontmatter_issue
+        if str(doc_frontmatter_issue(doc_path) or "") != str(gh_num):
+            return 2, (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
+                    f"gh_issue: {gh_num}, so readiness cannot be evaluated before promotion")
+        probes, reason = promotion_probes(target, doc_path)
+        if not probes:
+            return 2, "unreviewed-probe-contract: " + (reason or "no valid probes in unattended mode")
+        argv = [sys.executable, preflight_py, "--project-doc", doc_path]
+        label = " (1-INBOX doc; live run promotes it first)"
+    out_dir = os.path.join(tempfile.gettempdir(), f"jog-dry-run-preflight-gh{gh_num}-{os.getpid()}")
+    proc = subprocess.run(argv + ["--dry-run", "--out", out_dir], cwd=target, capture_output=True,
+                          text=True, env={**os.environ, "SWARM_PREFLIGHT_ROOT": target,
+                                          "PYTHONDONTWRITEBYTECODE": "1"})
+    return proc.returncode, _preflight_summary(proc) + label
 
 
 def jog_run_main(args=None):
@@ -2186,15 +2493,15 @@ def jog_run_main(args=None):
 
     # Delivery 1 needs an explicit primary publication checkpoint before landing,
     # regardless of executor. Refuse before any supervisor state mutation.
-    if not simulate and not dry_run and getattr(args, "auto_merge", False):
+    target_readiness = dry_run and bool(getattr(args, "target_root", None))
+    if not simulate and (not dry_run or target_readiness) and getattr(args, "auto_merge", False):
         print(f"jog: {JOG_AUTO_MERGE_CHECKPOINT}", file=sys.stderr)
         sys.exit(2)
 
     # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
-    # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
-    # excluded: both stay on the hermetic/relay machinery and dispatch no Marathon execution,
-    # so the reviewer policy (which governs real dispatches) does not apply to them.
-    if executor == "marathon" and not simulate and not dry_run:
+    # invalid configuration must not mutate queue state at all. Bare preview and simulation
+    # stay exempt; explicit-target readiness uses the same static route/binary checks.
+    if executor == "marathon" and not simulate and (not dry_run or target_readiness):
         executor_error = validate_marathon_executor(args)
         if executor_error:
             print(f"jog: {executor_error}", file=sys.stderr)
@@ -2213,9 +2520,25 @@ def jog_run_main(args=None):
         print(f"jog: releases.db not found at {db_path}", file=sys.stderr)
         sys.exit(1)
 
-    # Hermetic --dry-run: zero mutations, zero locks, zero DB writes
+    # Hermetic --dry-run: zero Jog ledger/queue/state writes, zero Jog locks or leases.
     if getattr(args, "dry_run", False):
         print(f"jog: [dry-run] simulating queue execution (root: {root})")
+        # GH-1426: with --target-root, also validate the target (no primary pin — read-only
+        # dry-run is documented not to need one) and run preflight's own --dry-run per item.
+        dry_target = getattr(args, "target_root", None)
+        if dry_target:
+            try:
+                dry_target = _validate_execution_target(root, dry_target)
+                validate_checkpoint_options(args, dry_target)
+                if getattr(args, "checkpoint_root", None):
+                    JogCheckpoint(root, args.checkpoint_root).check_publication()
+            except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+                print(f"jog: [dry-run] live run would refuse preparation: {exc}", file=sys.stderr)
+                sys.exit(2)
+        if dry_target:
+            print("jog: [dry-run] not verified: live provider capacity, gate environment/services, "
+                  "remote freshness or checkpoint recovery eligibility")
+        failed = False
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         try:
@@ -2235,8 +2558,14 @@ def jog_run_main(args=None):
                 if max_t is not None and idx >= max_t:
                     break
                 print(f"  {r['position']}. GH-{r['gh_number']} (builder={args.builder}, auto_merge={args.auto_merge})")
+                if dry_target:
+                    status, summary = _dry_run_preflight(dry_target, r['gh_number'])
+                    print(f"     preflight: {summary}")
+                    failed = failed or status != 0
         finally:
             conn.close()
+        if failed:
+            sys.exit(2)
         return
 
     _require_jog_primary(root)
@@ -2246,11 +2575,10 @@ def jog_run_main(args=None):
         print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
     checkpoint_root = getattr(args, "checkpoint_root", None)
-    if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
-        print("jog: --checkpoint-root requires positive --max-tasks and the real Marathon executor", file=sys.stderr)
-        sys.exit(2)
-    if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
-        print("jog: publication and execution clones must be distinct", file=sys.stderr)
+    try:
+        validate_checkpoint_options(args, target)
+    except ContractError as exc:
+        print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
@@ -2270,8 +2598,14 @@ def jog_run_main(args=None):
     checkpoint = None
     try:
         if checkpoint_root:
-            checkpoint = JogCheckpoint(root, checkpoint_root)
-            if not checkpoint.begin():
+            try:
+                checkpoint = JogCheckpoint(root, checkpoint_root)
+                started = checkpoint.begin()
+            except ContractError as exc:
+                # GH-1453: a checkpoint stop is a message and exit 2, never a traceback.
+                print(f"jog: checkpoint held: {exc}", file=sys.stderr)
+                sys.exit(2)
+            if not started:
                 checkpoint = None
                 return
         # Reconcile orphan leases via perform_write on startup
@@ -2386,7 +2720,9 @@ def jog_run_main(args=None):
                 if action == "failed":
                     print("jog: stopping queue execution on task failure.")
                 else:
-                    print("jog: advancing halted at landing boundary.")
+                    # GH-1426: a park is not always a landing boundary (preflight refusal, invalid
+                    # invocation, unpublished receipt); the reason says which one it was.
+                    print(f"jog: advancing halted: GH-{gh_num} parked — {reason}")
                 break
 
             # Swarm Preflight check
@@ -2408,8 +2744,10 @@ def jog_run_main(args=None):
                     tasks_processed += 1
                     continue
                 elif pf_res.returncode != 0:
-                    print(f"jog: GH-{gh_num} preflight failed (exit {pf_res.returncode}); parking item.")
-                    jog_set_status(root, gh_num, "parked", failure_reason=f"preflight-refused (exit {pf_res.returncode})")
+                    summary = _preflight_summary(pf_res)  # GH-1426
+                    print(f"jog: GH-{gh_num} preflight failed (exit {pf_res.returncode}): {summary}; parking item.")
+                    jog_set_status(root, gh_num, "parked",
+                                   failure_reason=f"preflight-refused (exit {pf_res.returncode}): {summary}")
                     continue
 
             # Execute single-phase drive, retaining the same lane-ledger invariant.
@@ -2449,7 +2787,11 @@ def jog_run_main(args=None):
                 break
 
         if checkpoint:
-            checkpoint.finish()
+            try:
+                checkpoint.finish()
+            except ContractError as exc:
+                print(f"jog: checkpoint held: {exc}", file=sys.stderr)
+                sys.exit(2)
     finally:
         _cleanup()
 

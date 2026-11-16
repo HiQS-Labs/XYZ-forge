@@ -1,0 +1,1 @@
+{"command": "Python exact-anchor insertion and consumer instruction read-through", "base": "956d9de6b7df863da34f9419ed6d960c5b485321", "result": "pass", "artifact": "skills/1-hourly/start-task/SKILL.md", "sha256": "7b386b577188f300fa9af05bcb487176fd2e6befd6f2f592b79356e02b0267af", "scope": "documentation content only; no runtime execution"}

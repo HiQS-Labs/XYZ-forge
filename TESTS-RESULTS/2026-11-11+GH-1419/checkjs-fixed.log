@@ -1,0 +1,10 @@
+== test: checkjs ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//checkjs-test.HzyfYq
+  PASS: real src/ tree: node --check + JSDoc coverage both pass
+  PASS: missing-jsdoc fixture: checker exits non-zero (1)
+  PASS: missing-jsdoc fixture: flagged with the right label
+  PASS: syntax-error fixture: checker exits non-zero (1)
+  PASS: syntax-error fixture: flagged with the right label
+  PASS: clean fixture: checker exits 0
+
+checkjs: 6 pass, 0 fail

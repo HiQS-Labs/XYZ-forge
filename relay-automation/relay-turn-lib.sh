@@ -196,10 +196,10 @@ rtl_log_always() {  # <message...> — see the API note above rtl_init; mirrors 
 
 # Persistent default transcript path, reusing rtl_transcript_root so no new path-resolution logic is
 # introduced. IMPORTANT: the resolved directory ("$root/relay-system/logs" on the common path) MUST
-# stay gitignored (see .gitignore's "relay-system/logs/" entry) — rtl_check already removes any file
-# that lands in the tracked tree matching RTL_LOG_REL ("the shim's own transcript log ... is not an
-# agent edit"), so an UN-ignored path here would be silently deleted at the end of every single turn,
-# defeating the entire point of "persistent." Falls back to today's PID-keyed tmp path (byte-identical
+# stay gitignored (see .gitignore's "relay-system/logs/" entry) so it never shows as tree dirt. Before
+# GH-1427 an UN-ignored path here was silently deleted at the end of every turn by rtl_check and the
+# rtl_enforce leftover sweep; both now keep it (rtl_own_log_is_durable), so a host that does not ignore
+# the directory sees untracked logs rather than losing them. Falls back to today's PID-keyed tmp path (byte-identical
 # to the pre-GH-161 default) on any resolver or mkdir failure — logging must never fail a turn.
 # GH-388: the $TMPDIR fallbacks below are GONE, and this now REFUSES (exit 5) rather than silently
 # relocating a turn transcript into storage a reboot erases. The header above ends "logging must never
@@ -1064,7 +1064,7 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     # --to target; tick refuses it too (src/scope.js). Reviewer-only: a builder never closes the relay,
     # and test/gh505 case G pins that the builder prompt never mentions Approved.
     handoff="if you set STATUS: Approved or Closed, close the token with: done ${task} --agent ${agent} (never release --to done — done is a verb, not an agent); otherwise ${handoff}"
-    role_note=' You are the REVIEWER this turn: do NOT edit or create any artifact or source file; the relay file is the only tracked file you may change. You MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim. Put probe output and temp files under .relay-scratch/ or $TMPDIR, never elsewhere in the tree: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR". Scratch is discarded after your turn, so quote the command, exit status and decisive output in the finding itself. Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures here — those belong in a disposable full clone; a claim that can only be measured that way is graded [Unverified — needs clone run], and the harness gate runs after your turn. Any other change to the tree is reverted and fails your turn. When approving, hand the token off with done and set STATUS: Approved.'
+    role_note=' You are the REVIEWER this turn: do NOT edit or create any artifact or source file; the relay file is the only tracked file you may change. You MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim. Put probe output and temp files under .relay-scratch/ or $TMPDIR, never elsewhere in the tree: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR". Scratch is discarded after your turn, so quote the command, exit status and decisive output in the finding itself. Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures here, except a phase gate command that the REVIEWER steps in your relay file explicitly tell you to run (GH-1428) — those belong in a disposable full clone; a claim that can only be measured that way is graded [Unverified — needs clone run], and the harness gate runs after your turn. Any other change to the tree is reverted and fails your turn. When approving, hand the token off with done and set STATUS: Approved.'
   fi
   # GH-31 / #15: point the reviewer at the seeded read-only artifact (worktree-relative; it is NOT a
   # writable edit target — an edit fails the turn).
@@ -1292,6 +1292,19 @@ rtl_scratch_relocate_dir() {  # <dir/> <src-root> <dest-root> — 0 = whole dir 
   return 0
 }
 
+# GH-1427: true when the shim's own transcript (RTL_LOG_REL) is the durable rtl_default_log path, i.e.
+# under <root>/relay-system/logs/ (the in-root transcript root; an XYZ_ARCHIVE_ROOT log is outside the
+# root and never reaches the two cleanup sites below). GH-161/GH-388 made that file the turn's
+# persistent record, yet both cleanups deleted it whenever the HOST repo does not gitignore
+# relay-system/logs/ (a vendored .xyz/ host need not). A Claude turn stopped by its spend ceiling
+# reports why ONLY in that JSON file, so the deletion erased the sole evidence while the .stderr
+# sibling survived (LTVera-Pandas GH-993, 2026-11-11). Keep it; a stray own-log elsewhere in the tree
+# (a custom in-repo *_LOG) is still dropped exactly as before.
+rtl_own_log_is_durable() {
+  [[ -n "${RTL_LOG_REL:-}" && "$RTL_LOG_REL" != /* && -z "${XYZ_ARCHIVE_ROOT:-}" ]] || return 1
+  [[ "$RTL_LOG_REL" == relay-system/logs/* ]]
+}
+
 rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLATION
   local p="$1"
   [[ -n "$p" ]] || return 0
@@ -1301,13 +1314,20 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   # GH-91: same sanction on the non-worktree path, but here the dir lives in RTL_ROOT itself —
   # exempt AND discard (the transcript-log drop below is the precedent, not the .tick leave-in):
   # scratch is consumed by the turn that wrote it and must neither ride into a commit nor linger
-  # in the tree. ${RTL_ROOT:?} because rm -rf on an empty-prefix path would target /. — GH-567.
+  # in the tree. ${RTL_ROOT:?} guards an empty prefix — GH-567.
+  # GH-1137: only scratch the turn created is exempt. A path the HOST repo tracks under
+  # .relay-scratch/ is host content: it falls through to the normal off-allowlist revert below
+  # (restore + violation), and the discard removes only untracked/ignored files (git clean never
+  # touches tracked files; -ff also removes a nested repo a turn created, as rm -rf did).
   case "$p" in .relay-scratch|.relay-scratch/|.relay-scratch/*)
-    rm -rf "${RTL_ROOT:?}/.relay-scratch"
-    return 0
+    if ! git -C "${RTL_ROOT:?}" ls-files --error-unmatch -- "$p" >/dev/null 2>&1; then
+      git -C "$RTL_ROOT" clean -ffdxq -- .relay-scratch >/dev/null 2>&1 || true
+      return 0
+    fi
   ;; esac
   # the shim's own transcript log, if it lands in the tree, is not an agent edit — drop it, don't flag
-  if [[ -n "$RTL_LOG_REL" && "$p" == "$RTL_LOG_REL" ]]; then rm -f "$RTL_ROOT/$p"; return 0; fi
+  # (GH-1427: unless it is the durable transcript, which is kept — see rtl_own_log_is_durable)
+  if [[ -n "$RTL_LOG_REL" && "$p" == "$RTL_LOG_REL" ]]; then rtl_own_log_is_durable || rm -f "$RTL_ROOT/$p"; return 0; fi
   # GH-261: the exact-match exemption above only fires for the ONE transcript file itself; when the
   # harness's own transcript-log directory is entirely new/untracked, git collapses it to one line
   # (e.g. "relay-system/"), which never equals $RTL_LOG_REL's deeper file path. Mirrors
@@ -1533,7 +1553,8 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   # GH-91 (PR #93 review): scratch must not survive the turn EVEN WHEN the host repo gitignores
   # it — porcelain omits ignored paths, so the per-path rtl_check discard above never fires and
   # the dir lingered in ROOT forever. Sweep unconditionally, independent of git visibility.
-  [[ -d "${RTL_ROOT:?}/.relay-scratch" ]] && rm -rf "${RTL_ROOT:?}/.relay-scratch"
+  # GH-1137: untracked and ignored files only — files the host repo tracks there are kept.
+  [[ -d "${RTL_ROOT:?}/.relay-scratch" ]] && { git -C "$RTL_ROOT" clean -ffdxq -- .relay-scratch >/dev/null 2>&1 || true; }
   rtl_trace "rtl_enforce: RTL_VIOLATION=$RTL_VIOLATION"
   ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; rtl_log_always "rtl_enforce: VIOLATION off-lane edits reverted; failing the turn"; exit 6; }
   # GH-173 B3: downgrade any uncited [Pass]/verified Reviewer finding BEFORE staging, so the fix lands
@@ -1755,7 +1776,8 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     # `test && action` returns the test's own (false) status when there is nothing to sweep, which
     # under the caller's `set -e` (every turn-taker shim) would silently exit the whole turn nonzero.
     # An `if` with no `else` always returns 0 when its condition is false.
-    if [[ -n "$_rtl_log_leftover" ]]; then
+    # GH-1427: never the durable transcript itself — a non-ignoring host would otherwise lose it here.
+    if [[ -n "$_rtl_log_leftover" ]] && ! rtl_own_log_is_durable; then
       rm -f "$RTL_ROOT/$RTL_LOG_REL"
     fi
   fi

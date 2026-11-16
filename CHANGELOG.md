@@ -1,5 +1,194 @@
 # Changelog
 
+## 2026-11-14 — GH-1486: `/re-vendor-xyz` refreshes one vendored `.xyz/` copy safely
+
+New instruction-only skill `skills/4-occasional/re-vendor-xyz/` that sequences the existing
+`xyz-sync.sh` refresh for one repository. The bare commands can report success while the copy is
+stale or built from unpublished code, or replace it under a live run (#1011). The skill stops,
+by a closed list, when the Forge source is dirty, not canonical, unfetchable or ahead of origin;
+when the target is unregistered; when a driver lock or a process uses the copy; or when a tier-2
+copy would lose its RELEASES overlay. It backs the copy up, refreshes, and counts the copy current
+only when `check` prints `ok`, prints no `SAFETY GUARD MISSING` line, and `.xyz/VERSION` matches the
+Forge `HEAD`. It then reads Skills Army HQ status and hands deployed-skill drift to `/skills-army-hq`.
+No script, flag or test suite added; `xyz-sync.sh` and `xyz-vendor.sh` are unchanged. Pointers in
+`ARCHITECTURE.md`, `README.md` and `vendor-stack`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1486/`.
+
+## 2026-11-14 — GH-1475: merge-cleanup Phase 2A (fewer cycles and waits)
+
+A hub PR that this run B1-repaired no longer needs a second dry run and execute. The run waits for the new head's checks on that exact commit, re-checks that nothing else moved it, re-pins it (selection file and batch allowlist), and lands it. Anything else off its pin still defers. `.merge-cleanup.json` gains the opt-in `qualification.wait_for_checks: [names]`, so the existing pending, poll and defer logic applies to named checks even when GitHub reports no required checks. Retained clones are bounded: per prefix, the newest 3 (`MERGE_CLEANUP_KEEP_WORKDIRS`) and anything touched in the last hour are kept, and older `merge-cleanup-*`/`merge-check-*` folders are removed only when `lsof` verifies them idle and no other `merge_cleanup.py` is running. On exit 3, landed PRs' clones are released. The shared open-handle probe now also counts a process whose cwd is the folder root (it missed that holder before, which affected teardown too). A dry run now previews B1-repairable PRs and continues instead of stopping at the first one. Existing tests that pinned the old second cycle were updated; no new tests. Code revert is easy; pruned scratch is not restored by a revert. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
+
+## 2026-11-14 — GH-1475: merge-cleanup Phase 1 quick wins
+
+From a 13-PR batch post-mortem. `wave_reconcile.py` now fetches and fast-forwards to `origin/<branch>` instead of `git pull`, retrying briefly when a concurrent fetch holds the ref lock; `merge_cleanup.py` treats that lock error as transient too. Output is line-buffered, so a redirected log shows progress live. A landing loop that completes cleanly with nothing marked for keeping removes its own `merge-cleanup-*` workdir; otherwise it is kept, and `merge-check-*` clones stay retained. A successful `--reconcile-pr` records the PR as merged and reconciled in its unfinished batch, and `--record-sweep` names `--reconcile-pr N` for a landed-but-unreconciled PR instead of always suggesting `--resume`. SKILL.md gains an exit-code table and corrects the "single-PR runs never exit 4" line. The dry run prints read-only `PRE-FLIGHT:` warnings (low disk, battery, harness `TMPDIR`, another `--execute` running, no required checks); nothing refuses. Revert the PR to undo; deleted scratch workdirs are not restored. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475/`.
+
+## 2026-11-12 — GH-1443 target-aware Jog readiness
+
+Explicit-target dry-run now refuses invalid roles, promotion probes, static publication-clone
+constraints and any failed/unevaluated selected preflight, while still displaying every selected
+outcome. Bare queue preview is unchanged. Existing promotion/publication owners are shared; live
+recovery ordering and queue state are unchanged. This deliberately tightens readiness exit status,
+not live execution. Environment/services, provider credits, remote freshness and recovery eligibility
+remain unverified. Revert this PR to undo the CLI change; no schema or data conversion.
+Evidence: `TESTS-RESULTS/2026-11-12+GH-1443/`.
+
+## 2026-11-10 — GH-1000 consolidation inventory and evidence reconstruction
+
+- Documentation only. Inventoried the Storyline, Kanban and dashboard efforts with a recommended disposition each; they reduce to three systems. The Forge board policy, labels connector, Flightdeck and Paperclip already share one reader (`load_work_evidence`); the raw board connector, release cards and Rebalance's history layer read separately.
+- Reconstructed GH-1254 from committed records alone: six attempts found, none with a fully resolvable evidence chain. Manual check and its GH-1064 control are in `TESTS-RESULTS/2026-11-10+GH-1000/`.
+- Recommends Flightdeck as the first-slice interface and drafts five follow-on issues. None is filed; three operator decisions (board target, Paperclip, the unidentified knowledge-graph component) come first. The umbrella stays open and the interface demonstration is still owed.
+- 2026-11-11: board target decided as `noelsaw1` project 9. A read-only policy preview would add 206 cards; only this repo gets Ready and In progress cards because no other repo has a ledger. Handoff steps are in the plan doc.
+- No code, schema, contract, suite or gate change. Easy to revert.
+
+## 2026-11-14 — GH-1470: forecast clean-first landing passes
+
+Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. The dry run also warns, read-only, when a listed PR maps to an open Jog row while the Jog primary is unpinned, and the forecast names stacked members (branches sharing commits not on the base) as a blind spot. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
+
+## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
+
+`ci-local.sh` failed its `shellcheck tracked scripts` step on `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` (SC2148, no shebang), the same class as `fuzz-loop.sh` in #121. Added `#!/usr/bin/env bash`; the repo's own scan over all 656 tracked `.sh` files now passes. The GH-1452 gate summary said hosted CI was green so the two disagreed; that was wrong (the hosted shellcheck steps are skipped on a docs-only route), and the note is corrected. Running shellcheck on changed scripts at pre-push is paused and documented in `PARKED/2026-11-13-pre-push-shellcheck.md`. Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.
+
+## 2026-11-13 — GH-1453: Jog checkpoint works from local state and reconciles a moved development
+
+A `jog run --checkpoint-root` wake no longer fetches at start or requires the primary to equal
+`origin/development`, and it no longer ends in a traceback when `development` moved during the run.
+At publication, `JogCheckpoint` (`utils/py/jog_run.py`) merges the moved branch into the primary,
+takes the remote ledger, replays the wake's own `jog-lease` / `jog-<status>` writes (read from the
+ledger's `op_receipts`) through the canonical writers, runs `utils/releases-merge-resolve.sh` and
+publishes the merge. A stop prints `jog: checkpoint held: <message>` and exits 2; for a moved branch
+the main ones are that both sides changed the same queue row, a non-ledger file conflicts, or the wake
+contains a write it will not replay (an orphan-lease reconcile or an operator queue verb). The full
+list is in the Jog skill, section *Checkpoint publication*. A rerun retries publication without
+dispatching a task, and restores a half-finished merge only if this wake recorded opening it. Also fixed on the way: a committed checkpoint no longer runs the orphan scan
+before retrying publication, and a repo that adopts `RELEASES-PREVIEW.html` or `LEADERBOARD.html` no
+longer has its checkpoint refused after one queue write. The Jog skill now carries the closed list
+of checkpoint stops, each the fixed start of a message, and the one definition of "competing
+writer", which run directives cite instead of restating. Nobody adds a checkpoint stop: a predicted
+conflict with no failed command is not one. A failed task or gate, another Jog refusal, or an
+unexpected error is still reported as it is.
+
+**Bet (Easy to reverse):** replaying receipts in order reproduces the wake's queue state on the
+remote ledger whenever the remote left those rows alone; the replay is verified row by row and any
+mismatch stops before the merge is committed. The behaviour is behind the opt-in flag; revert the one
+PR to restore the plain push. Not covered: a wake that includes crash recovery and meets a moved
+branch still needs a hand reconcile.
+Evidence: `TESTS-RESULTS/2026-11-13+GH-1453/`.
+
+## 2026-11-13 — GH-1452: merge-cleanup forecasts the landing plan at planning time
+
+A `merge-cleanup` dry run over 3 or more `--prs` now prints a Landing forecast and stores it with the head pins, so direct vs group is decided with evidence when the PR set is chosen rather than at the first `--execute` refusal. One disposable no-checkout clone simulates each PR alone, each pair and an ordered fold with `git merge-tree` (`ledger_merge.landing_forecast`, sharing B1's repair-path set through `ledger_repair_paths`), reports a churn-risk band instead of an exact repair count, and withholds the recommendation when any fetch, head check or merge-tree step is unknown. `pin_selection` publishes pins and forecast as one atomic snapshot under the record lock. The GH-1158 decision is unchanged and stays the operator's; the forecast only annotates it: the exit-5 refusal repeats the stored recommendation, and `batch_record.set_landing_plan` takes an optional comparison (match, override, stale) that the batch issue shows. The forecast covers the queue Phase 4 lands (every open PR sorted, then deferrals), so a collision edge through an unlisted PR cannot reorder it unseen. Evidence: existing `test/gh436-merge-cleanup.py` (227 tests) and 14 retained manual scenarios with red controls in `TESTS-RESULTS/2026-11-13+GH-1452/`.
+
+## 2026-11-12 — GH-1137: relay scratch sweep keeps host-tracked files
+
+`relay-automation/relay-turn-lib.sh` discarded `.relay-scratch/` with `rm -rf` after every turn, which deleted files a host repository tracks there (observed in HiQS-Labs/XYZ-layout-engine across Codex and Kimi turns). Both discard sites now run `git clean -ffdxq -- .relay-scratch`, which removes only untracked and ignored files (and a nested repo a turn created), and `rtl_check` exempts a scratch path only when it is untracked; a tracked path gets the normal off-allowlist revert and fails the turn like any other host file. Existing suites gh91/gh113/gh184/gh654 pass unchanged; manual red/green checks in `TESTS-RESULTS/2026-11-12+GH-1137/`.
+
+## 2026-11-12 — GH-1436 / GH-1437 contract and gate environment faults
+
+Malformed Preflight Contract shapes now produce attributable needs-contract planner findings instead of crashing unrelated reconciliation; HQ park rejects supplied malformed shapes before writes. The existing preflight validator owns the shared shape check, while partial intake and optional null markers retain their earlier meaning. The full gate now refuses unsuitable Python before suites with exit 3 and the explicit gate-toolchain PATH remedy. Existing focused suites and manual red/green controls are recorded in `TESTS-RESULTS/2026-11-12+GH-1436-1437/`; final full qualification is recorded there separately. Easy rollback: revert these bounded validation changes; no schema migration or automatic environment installation.
+
+## 2026-11-11
+
+- GH-1422 review follow-up: fixed the drift-check path, delegated duplicate roadmap prose
+  to mandatory canonical reads, and scoped QA claims to reviewed revisions. AGENTS.md is
+  27,686 bytes; fresh byte/link/chain checks pass.
+
+
+- GH-1422 consult follow-up: restored the necessity trigger and explicit idle reporting,
+  clarified clone identity sequencing, and corrected the telemetry example. AGENTS.md is
+  27,812 bytes; fresh byte/link/chain checks pass. Dispositions and provenance are retained
+  in TESTS-RESULTS/2026-11-11+GH-1422/consult-corrections.md.
+
+
+- GH-1422: compressed AGENTS.md from 42,768 to 27,756 bytes, retaining operative rules and
+  existing canonical owners. Manual byte-budget red controls, local links and default project
+  instruction-chain smoke pass; docs gate passes (zero errors, 99 backlog warnings); final omission QA Approved after restoring the same-PR provenance requirement.
+  Evidence: TESTS-RESULTS/2026-11-11+GH-1422/.
+
+## 2026-11-11 — GH-1430 board_sync reads Rebalance's WAL DB under Apple SQLite
+
+`board_sync`'s Rebalance `repos_source` reader now opens the DB `mode=rw` with
+`PRAGMA query_only=ON` instead of `mode=ro`. Under `/usr/bin/python3` (Apple SQLite), `mode=ro`
+cannot open a WAL DB whose `-wal`/`-shm` side files are gone, so the GH-1421 reader always fell
+back to the pinned repos. Writes are refused on the connection, and `mode=rw` never creates a
+missing file. One disclosed side effect: if a crash left committed WAL frames and board_sync is
+the last connection, its close checkpoints them into the main file (a byte change, no content
+change). `immutable=1` stays rejected. Revert by reverting the single-file change.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1430/`.
+
+## 2026-11-11 — GH-1428 reviewer gate evidence
+
+A marathon whose explicit `--pre-advance-cmd` is a focused file/node command now asks the
+reviewer to run that gate. File/node selectors only: no directories, compounds, full-suite
+runners, or GH-54 fixture briefs. Every review block declares `gate run: yes — exit <rc>` or
+`gate run: no — <why>`, and relay-drive binds the result into the attestation (`gate-run:`).
+An Approved after a builder block that says anything is unverified is refused
+(`unverified-approval`) unless the reviewer ran the gate to exit 0. Generic relays and
+full-suite gates keep today's behaviour. The existing `CODEX_FLAGS` knob is documented as the
+opt-in for builder localhost network
+(`-c sandbox_workspace_write.network_access=true`). Easy to reverse: revert the PR. There is
+no schema bump, and the record field is optional. Expected signal: the next DB-backed Jog item
+with a Codex builder either verifies in the builder or gets a reviewer gate run before approval.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1428/`.
+
+## 2026-11-11 — GH-1427 Claude turn ceilings by role; failed turns keep their reason, log and cost
+
+A Claude builder turn under Marathon/Jog ran with the same $0.50 / 12-turn ceiling as a reviewer, so a
+small feature build (LTVera-Pandas GH-993) was stopped mid-Write at $0.51, and #1420's live reviewer
+stopped at $0.53. `claude-turn.py` now picks defaults by role from the existing resolver
+(`rtl.is_reviewer_turn`, i.e. the driver's `RELAY_ROLE`): builders get $3.00 / 40, reviewers $1.50 / 20.
+An explicit `CLAUDE_MAX_BUDGET` / `CLAUDE_MAX_TURNS` still overrides both. A nonzero `claude -p` exit now
+prints the CLI's own reason (`failed (exit 1): error_max_budget_usd: Reached maximum budget ($3.00)`), and
+the existing GH-379 `builder-diagnostic:` line in ESCALATION.md gains `errors`. The turn transcript was
+being deleted by `rtl_enforce`'s own-log cleanups whenever the host repo does not gitignore
+`relay-system/logs/`, which explains `turn-log: … (missing)` next to a surviving `.stderr`. A log under
+the durable transcript root is now kept (`rtl_own_log_is_durable`). A failed turn also records its
+`tick cost` row, so the end-of-run summary no longer reads `tokens: 0 total`. The `warn_opus_budget`
+advisory now triggers on any budget below $3.00. Consult and the frozen Bash twin keep $0.50 / 12.
+Revert by reverting the PR, or pin the old ceilings with `CLAUDE_MAX_BUDGET=0.50 CLAUDE_MAX_TURNS=12`.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1427/`.
+
+## 2026-11-11 — GH-1421 board_sync agent-session repos (opt-in)
+
+`board_sync`'s Rebalance `repos_source` takes an opt-in `include_agent_sessions: true`
+(default false). When set, repos with T3 agent runs in Rebalance's `agent_session_activity`
+(rebalanceOS#375, migration 0010) over the same `since_days` follow the GitHub-active repos,
+ordered by runs then name, within the existing `top_n` cap. GitHub order is unchanged; a
+missing or unreadable agent table warns and keeps the GitHub list. With the key off the
+resolved list is unchanged. The `?mode=ro` failure on the live DB is root-caused: the DB
+is in persistent WAL mode with no `-wal`/`-shm` sidecars, and this SQLite build fails the
+first read-only SELECT. The warning now names that likely cause. `immutable=1` reads it but
+is deliberately not used (no stable-read contract), so on this Mac the feature stays inert
+until a follow-up decides how to read it safely. Revert by reverting the single-file change.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1421/`.
+
+## 2026-11-11 — GH-1419 explicit reviewer routing
+
+Jog and manifest validation reuse Marathon’s supported route owner. Distinct actors
+sharing a provider retain their identities through the dispatcher and turn shims.
+Provider selection is explicit; defaults, review attestation and caps stay intact.
+This Costly coordination change is reversible by reverting the scoped PR, with no
+schema migration. Focused controls and independent plan/final QA passed; full push
+qualification passed on a9090e72 (526s). The bounded live Claude turn failed and is not approval.
+Expected signal: correct distinct actor review and automatic advancement in #1418's
+next bounded two-task run, before Jose's five-task overnight run. Revisit on a
+misrouted actor, unsupported isolation claim, or failed review handoff. Graduate
+after the measured pair passes; iterate on a grounded routing defect; abandon and
+revert this change if it cannot preserve the review contract. SmallCode isolated
+reviewers are refused because their current shim disables isolation.
+Evidence: `TESTS-RESULTS/2026-11-11+GH-1419/`.
+
+## 2026-11-10 — GH-1414 paraphrase-first skill review
+
+Added document-only paraphrase and grounded scope boundaries to existing start-task
+plan QA, and an author comprehension check to file-xyz-bug’s redacted capture preview.
+The existing idea consult and preview now use the same lens, preserving its body
+schema, review hash and admission boundary. No extra approval checkpoint or automatic
+execution handoff. The initial Codex wording approval covers the original two-skill
+diff only. Claude Opus 5.5 reviewed all three skills and requested an evidence refresh;
+its exact-head re-check approved 6e040869. All three skill validators now pass after fixing
+pre-existing intake description syntax. The final push gate, full runtime gate and
+managed deployment remain outstanding at this checkpoint.
+Evidence: `TESTS-RESULTS/2026-11-10+GH-1414/`.
+
 ## 2026-11-10 — GH-1409 vendored-smoke pins its judge files to the PR base
 
 - On pull requests, `vendored-smoke` now restores the inventory ratchet, gh421, gh308 and the four vendored suites from the merge ref's first parent before running them. It refuses a grown inventory baseline (including effective bypass cardinality) or newly added `SQLITE-*-OK` markers; a `judge-change` label skips the pin. One inline step, no new suite, script or gate.
@@ -2091,6 +2280,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-11-12
+
+### Fixed
+- **GH-1438: docs: introduce Flywheel - Beta in README.** (express documentation update, GH-267 lane; existing suite test/pdda-repo-contract.sh as the landing gate.)
 
 ## [Unreleased] - 2026-10-14
 

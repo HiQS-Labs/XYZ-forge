@@ -76,7 +76,8 @@ execution-modes table in [README.md](README.md).)
 - **Marathon** (`relay-automation/marathon.sh`) — chains several relay build→review phases from a
   `MARATHON.yaml`, in `depends_on` order. The multi-agent coordinator built on the relay loop.
   Headless builders default to subscription-billed `codex`/`agy`; `--builder claude` is available as
-  an explicit per-call API opt-in (`CLAUDE_MAX_BUDGET` defaults to $0.50 and `CLAUDE_MAX_TURNS` to 12).
+  an explicit per-call API opt-in (a builder turn defaults to `CLAUDE_MAX_BUDGET` $3.00 and `CLAUDE_MAX_TURNS` 40,
+  a reviewer turn to $1.50 / 20; GH-1427).
 - **agy** — the Antigravity CLI (Google), one of the agents XYZ coordinates alongside Claude Code
   and Codex.
 - **PRS** — the **Product Release System**: the RELEASES ledger, `releases.db` with its git-mergeable dump
@@ -86,6 +87,19 @@ execution-modes table in [README.md](README.md).)
   XYZ Forge / PDDA / PRS trinity: **XYZ Forge**, the harness — tick, relay and marathon automation, and the
   gate ([ROUTER.md](ROUTER.md), [AGENTS.md](AGENTS.md)); **PDDA**, project-doc governance
   ([PROJECT/PDDA.md](PROJECT/PDDA.md)); and **PRS** ([RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md)).
+
+### More terms
+
+- **answer key / actor–verifier loop** — a way to check one fix. A separate agent makes the fix
+  (the **actor**). Before it starts, someone else writes down and locks the expected results: the
+  **answer key**. The actor cannot see or edit those results. An independent **verifier** then reruns
+  the frozen cases and grades the actual outputs, exit codes and state changes. There is no
+  self-acceptance. The verifier is calibrated first: it must reject a known-bad revision and accept a
+  known-good one. Outside XYZ this is usually called *held-out acceptance testing* with a
+  *test oracle*. The cases are evidence for that single task, kept under `TESTS-RESULTS/`. They are
+  not added to `validate.sh` or CI (GH-831). Precedents: calibration
+  [#1314](https://github.com/HiQS-Labs/XYZ-forge/issues/1314) (PR #1316) and repair pilot
+  [#1317](https://github.com/HiQS-Labs/XYZ-forge/issues/1317) (PR #1318).
 
 ## FAQ
 

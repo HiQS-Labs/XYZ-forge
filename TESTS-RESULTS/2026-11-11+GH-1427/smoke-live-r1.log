@@ -1,0 +1,22 @@
+### SMOKE r1 @ e9ff76ad (pre-modelUsage fix)
+2.1.322 (Claude Code)
+== MAIN: builder turn, CLAUDE_MAX_BUDGET=0.01 ==
+shim exit: 5
+claude-turn: CLI diagnostics: <W>/host/relay-system/logs/2026-11-11/claude-turn-SMOKE-BUDGET-64710.log.stderr
+claude-turn: claude -p failed (exit 1): error_max_budget_usd: Reached maximum budget ($0.01)
+json log: PRESENT
+subtype=error_max_budget_usd is_error=True errors=['Reached maximum budget ($0.01)'] total_cost_usd=0.07780959999999999
+usage: input=0 cache_read=0 output=0 -> expected tokens_in=0 tokens_out=0
+tick cost rows: 0
+== ADJACENT: rerun, default builder ceiling, trivial relay ==
+shim exit: 0
+claude-turn: CLI diagnostics: <W>/host/relay-system/logs/2026-11-11/claude-turn-SMOKE-OK-64871.log.stderr
+json log: PRESENT
+subtype=success is_error=False errors=None total_cost_usd=0.1522504
+usage: input=8 cache_read=218682 output=1197 -> expected tokens_in=218690 tokens_out=1197
+tick cost rows: 1
+row: tokens_in=218690 tokens_out=1197
+This is a harness smoke test. Do not read or edit any other file. Append exactly one line `smoke: ok` at the end of this file and stop.
+smoke: ok
+host status:
+?? relay-system/

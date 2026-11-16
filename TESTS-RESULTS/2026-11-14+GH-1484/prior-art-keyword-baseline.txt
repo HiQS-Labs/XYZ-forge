@@ -1,0 +1,41 @@
+$ python3 utils/py/prior_art_recon.py --query "outer loop flywheel"
+## Prior-Art Reconnaissance Summary
+- **Query**: `outer loop flywheel`
+- **Status**: `PASS`
+- ⛔ **Possible existing fix**: 9 merged PR(s) or completed issue(s) match. Confirm before planning new work.
+  - current #1355: docs(pdda): add preflight contracts and Phase 0 scopes for Batch 2 candidates (#1298) (https://github.com/HiQS-Labs/XYZ-forge/pull/1355)
+  - current #1260: GH-1257: read-only backlog-to-wave pilot (plan-draft tool) — stacked on GH-1248 (https://github.com/HiQS-Labs/XYZ-forge/pull/1260)
+  - current #1388: fix: preserve successful Marathon and relay attempt history (https://github.com/HiQS-Labs/XYZ-forge/pull/1388)
+  - current #1262: GH-1261: plan-draft resolves bare filenames and seeds issues with no ledger row — stacked on GH-1248 (https://github.com/HiQS-Labs/XYZ-forge/pull/1262)
+  - current #1438: docs: introduce Flywheel - Beta in README (https://github.com/HiQS-Labs/XYZ-forge/issues/1438)
+- **Open PRs Found**: 0
+- **Merged PRs (last 30 days)**: 4
+  - current #1355: docs(pdda): add preflight contracts and Phase 0 scopes for Batch 2 candidates (#1298)
+  - current #1260: GH-1257: read-only backlog-to-wave pilot (plan-draft tool) — stacked on GH-1248
+  - current #1388: fix: preserve successful Marathon and relay attempt history
+  - current #1262: GH-1261: plan-draft resolves bare filenames and seeds issues with no ledger row — stacked on GH-1248
+- **Matching Issues (any state)**: 14
+  - current #1400: Arc: Economical supervision and reliable multi-task composition in the factory flywheel [OPEN]
+  - current #1474: Research: adapt Agent Orchestrator's durable supervision concepts to Forge's daily-goals loop (explicit attribution) [OPEN]
+  - current #1356: Flywheel Batch 2: autonomous supervisor outerloop run across critical targets (#1296, #1288, #1287, #1254, #1344) [OPEN]
+  - current #1298: Factory flywheel arc: Phase 0 spike (#1175), planning soak (#1279) and ATE campaign (#1280): what each showed, where they converge, next experiment [OPEN]
+  - current #1484: New weekly skill: connect-the-dots — find existing modules to reuse before designing something new [OPEN]
+- **Active/Matching Roadmap Items**: 0
+- **Existing Matching Helpers**: 0
+- **Existing Matching Helpers**: 0
+
+$ python3 utils/py/prior_art_recon.py --query "overnight loop claim variations receipts"
+## Prior-Art Reconnaissance Summary
+- **Query**: `overnight loop claim variations receipts`
+- **Status**: `PASS`
+- ⛔ **Possible existing fix**: 1 merged PR(s) or completed issue(s) match. Confirm before planning new work.
+  - current #1081: Explore: /shift outer loop for a semi-autonomous 8-to-5 factory day (https://github.com/HiQS-Labs/XYZ-forge/issues/1081)
+- **Open PRs Found**: 0
+- **Merged PRs (last 30 days)**: 0
+- **Matching Issues (any state)**: 2
+  - current #1484: New weekly skill: connect-the-dots — find existing modules to reuse before designing something new [OPEN]
+  - current #1081: Explore: /shift outer loop for a semi-autonomous 8-to-5 factory day [CLOSED]
+- **Active/Matching Roadmap Items**: 0
+- **Existing Matching Helpers**: 0
+- **Existing Matching Helpers**: 0
+

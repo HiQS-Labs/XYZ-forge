@@ -1,0 +1,11 @@
+{
+  "consumer_repo": "BinoidCBD/LTVera-Pandas",
+  "issue": 1102,
+  "error_string": "cannot lock ref 'refs/remotes/origin/development'",
+  "tool_config": ".merge-cleanup.json",
+  "upstream_repo": "HiQS-Labs/XYZ-forge",
+  "upstream_paths": [
+    "utils/py/merge_cleanup.py",
+    "utils/py/wave_reconcile.py"
+  ]
+}

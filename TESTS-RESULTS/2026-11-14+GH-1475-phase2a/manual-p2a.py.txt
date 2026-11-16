@@ -1,0 +1,319 @@
+# usage: python3 p2a_manual.py <scripts-dir> <label>
+# GH-1475 Phase 2A manual checks (P2.8, P2.2, P2.1, P2.3) with red controls. Runs the real
+# _land_prs_loop against a scratch primary (bare origin + clone); only GitHub-facing calls and the
+# landing/B1 machinery are stubbed. Every scenario runs in its own scratch TMPDIR.
+import argparse, contextlib, io, json, os, subprocess, sys, tempfile, time
+from pathlib import Path
+
+scripts, label = sys.argv[1], sys.argv[2]
+sys.path.insert(0, scripts)
+import merge_cleanup as mc
+import scan_clones
+
+BASE = Path("/tmp/gh1475p2a-manual/work") / label
+BASE.mkdir(parents=True, exist_ok=True)
+A, C, D = "a" * 40, "c" * 40, "d" * 40
+
+
+def sh(*a, cwd=None):
+    return subprocess.run(list(a), cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+
+
+def scratch_primary(name):
+    root = Path(tempfile.mkdtemp(prefix=f"{name}-", dir=str(BASE)))
+    sh("git", "init", "-q", "--bare", "-b", "development", str(root / "origin.git"))
+    sh("git", "clone", "-q", str(root / "origin.git"), str(root / "primary"))
+    p = root / "primary"
+    sh("git", "-C", str(p), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base")
+    sh("git", "-C", str(p), "push", "-q", "origin", "development")
+    tmp = root / "tmp"; tmp.mkdir()
+    os.environ["TMPDIR"] = str(tmp); tempfile.tempdir = None
+    return p, tmp
+
+
+def pr_info(n, head, mergeable):
+    return {"number": n, "state": "OPEN", "mergeable": mergeable, "headRefOid": head, "headRefName": f"feat/{n}",
+            "baseRefName": "development", "labels": [], "mergeCommit": None, "isDraft": False, "title": f"PR {n}", "body": ""}
+
+
+def args_for(pins):
+    return argparse.Namespace(integration_branch="development", strategy=None, resume=False,
+                              prs=list(pins), _pins=dict(pins))
+
+
+def run_loop(prs, primary, args, dry_run):
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+        try:
+            rc = mc._land_prs_loop([{"number": n, "headRefName": f"feat/{n}", "baseRefName": "development",
+                                     "title": f"PR {n}", "labels": []} for n in prs], primary, args, dry_run=dry_run)
+        except Exception as e:  # report, do not hide
+            rc = f"raised {type(e).__name__}: {e}"
+    return rc, out.getvalue()
+
+
+def show(tag, rc, text, needles):
+    print(f"{label} {tag}: rc={rc}")
+    for line in text.splitlines():
+        if any(k in line for k in needles):
+            print(f"{label}   {line}")
+
+
+class GH:
+    """_gh stand-in: answers `pr checks` from per-head scripts; anything else fails loudly."""
+    def __init__(self, state):
+        self.state, self.calls = state, []
+
+    def __call__(self, argv, cwd, timeout=180):
+        self.calls.append(list(argv))
+        if argv[:2] == ["pr", "checks"]:
+            req = "--required" in argv
+            queue = self.state["checks"].setdefault((self.state["head"], req), [])
+            ans = queue.pop(0) if len(queue) > 1 else (queue[0] if queue else None)
+            if ans is None:
+                msg = "no required checks reported on the 'development' branch" if req else "no checks reported on the 'development' branch"
+                return subprocess.CompletedProcess(argv, 1, "", msg)
+            return subprocess.CompletedProcess(argv, 0, json.dumps(ans), "")
+        return subprocess.CompletedProcess(argv, 9, "", "stub: unexpected gh " + " ".join(argv))
+
+
+def common_stubs(state, merges, conflict_heads=()):
+    mc._sleep = lambda s: None
+    mc.check_merge_capability = lambda *a, **k: None
+    mc._gh = GH(state)
+    mc.refresh_pr_with_retry = lambda n, repo: dict(state["prs"][n], headRefOid=state["heads"][n])
+    mc._await_mergeable = lambda n, info, repo: info
+    mc._protect_stacked_dependents = lambda *a, **k: True
+    mc.pre_merge_ledger_gate = lambda *a, **k: {"green": True, "diagnostics": [], "failures": []}
+
+    def prep(pr, primary, branch, wd):
+        raw = Path(tempfile.mkdtemp(prefix=f"pr-{pr['number']}-{pr['headRefOid'][:8]}-", dir=str(wd)))
+        (raw / "repo").mkdir()
+        conflict = pr["headRefOid"] in conflict_heads
+        return {"clone": raw / "repo", "merge_rc": 1 if conflict else 0, "error": ""}
+    mc.prepare_landing_clone = prep
+
+    def merge(n, repo, strategy=None, dry_run=False):
+        merges.append((n, state["heads"][n]))
+        state["prs"][n]["state"] = "MERGED"
+        return False, ""  # stop before post-merge writes; the decision under test is the merge itself
+    mc.execute_pr_merge = merge
+
+
+# --- P2.8: dry run previews every B1-repairable PR ----------------------------------------------
+def p28():
+    primary, tmp = scratch_primary("p28")
+    state = {"head": A, "checks": {}, "heads": {1: A, 2: D}, "prs": {1: pr_info(1, A, "CONFLICTING"), 2: pr_info(2, D, "CONFLICTING")}}
+    common_stubs(state, [], conflict_heads=(A, D))
+    mc.resolve_ledger_conflict = lambda clone, execute: {
+        "resolved": False, "handoff": False, "commit": None, "conflict_set": ["releases.sql"], "log": [],
+        "reason": "[DRY RUN] B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver"}
+    rc, text = run_loop([1, 2], primary, args_for({1: A, 2: D}), dry_run=True)
+    show("P2.8 two-hub dry run", rc, text, ["B1 would repair", "B1 stopped", "Landing clones"])
+    print(f"{label}   previewed #1={'PR #1: B1 would repair' in text} previewed #2={'PR #2: B1 would repair' in text} "
+          f"workdirs_left={len(list(tmp.glob('merge-cleanup-*')))}")
+
+
+# --- P2.2: wait_for_checks ----------------------------------------------------------------------
+def p22_policy():
+    root = Path(tempfile.mkdtemp(prefix="p22pol-", dir=str(BASE)))
+    for name, val in (("list", ["ci"]), ("empty list", []), ("empty name", [""]), ("string", "ci")):
+        (root / ".merge-cleanup.json").write_text(json.dumps({"qualification": {"full_suite": "none", "wait_for_checks": val}}))
+        try:
+            got = mc.resolve_merge_policy(root)["qualification"].get("wait_for_checks")
+            print(f"{label} P2.2 policy {name}: accepted ({got})")
+        except ValueError as e:
+            print(f"{label} P2.2 policy {name}: refused ({str(e).split(': ', 1)[-1][:90]})")
+
+
+def p22_loop(tag, declared_answers, wait, policy=True):
+    primary, tmp = scratch_primary("p22")
+    if policy:
+        (primary / ".merge-cleanup.json").write_text(json.dumps({"qualification": {"full_suite": "none", "wait_for_checks": ["ci"]}}))
+    os.environ["MERGE_CLEANUP_CHECKS_WAIT_S"], os.environ["MERGE_CLEANUP_CHECKS_POLL_S"] = str(wait), "1"
+    state = {"head": A, "checks": {(A, False): declared_answers}, "heads": {1: A}, "prs": {1: pr_info(1, A, "MERGEABLE")}}
+    merges = []
+    common_stubs(state, merges)
+    rc, text = run_loop([1], primary, args_for({1: A}), dry_run=False)
+    show(f"P2.2 {tag}", rc, text, ["waiting for", "DEFERRED", "required checks:"])
+    print(f"{label}   merge attempted: {merges or 'no'}")
+
+
+# --- P2.1: re-pin after this run's own B1 repair ------------------------------------------------
+def p21(tag, old_required, new_required, after_check_head=None, pin_ok=True, head_at_start=A, wait=5):
+    primary, tmp = scratch_primary("p21")
+    os.environ["MERGE_CLEANUP_CHECKS_WAIT_S"], os.environ["MERGE_CLEANUP_CHECKS_POLL_S"] = str(wait), "1"
+    state = {"head": head_at_start, "checks": {(A, True): old_required, (C, True): new_required},
+             "heads": {1: head_at_start}, "prs": {1: pr_info(1, head_at_start, "CONFLICTING" if head_at_start == A else "MERGEABLE")}}
+    merges = []
+    common_stubs(state, merges, conflict_heads=(A,))
+    mc.resolve_ledger_conflict = lambda clone, execute: {"resolved": True, "handoff": False, "commit": C, "reason": "", "conflict_set": ["releases.sql"], "log": []}
+    mc.validate_head_in_second_clone = lambda *a, **k: (True, "clean in a second clone")
+
+    def push(info, clone, sha, primary_repo):
+        state["head"] = state["heads"][1] = sha
+        state["prs"][1]["mergeable"] = "MERGEABLE"
+        return True, f"pushed {sha[:10]}"
+    mc.push_resolved_head = push
+    if after_check_head:
+        real_checks = mc._gh
+
+        def moving(argv, cwd, timeout=180):
+            r = real_checks(argv, cwd, timeout)
+            if argv[:2] == ["pr", "checks"] and state["head"] == C and r.returncode == 0 and '"pass"' in r.stdout:
+                state["heads"][1] = after_check_head  # an external push lands while the run reads green
+            return r
+        mc._gh = moving
+    real_pin = mc.pin_selection
+    if not pin_ok:
+        mc.pin_selection = lambda *a, **k: False
+    args = args_for({1: A})
+    rc, text = run_loop([1], primary, args, dry_run=False)
+    mc.pin_selection = real_pin
+    show(f"P2.1 {tag}", rc, text, ["DEFERRED", "re-pinned", "waiting for", "not yet registered", "pushed"])
+    sel = mc.selection_path(primary, mc.origin_url(primary) or "", "development")
+    pinned = json.loads(sel.read_text())["prs"].get("1") if sel.exists() else None
+    print(f"{label}   merge attempted: {[(n, h[:6]) for n, h in merges] or 'no'}; in-memory pin={args._pins.get(1, '')[:6]}; "
+          f"selection file pin={(pinned or 'none')[:6]}")
+
+
+# --- P2.3: pruning and exit-3 release -----------------------------------------------------------
+def p23_prune():
+    primary, tmp = scratch_primary("p23")
+    now = time.time()
+    made = {}
+    for prefix in ("merge-cleanup-", "merge-check-"):
+        for i in range(5):
+            d = Path(tempfile.mkdtemp(prefix=prefix, dir=str(tmp)))
+            os.utime(d, (now - 7200 - i * 60, now - 7200 - i * 60))
+            made[d.name] = f"{prefix}old{i}"
+    held = Path(tempfile.mkdtemp(prefix="merge-cleanup-", dir=str(tmp)))
+    os.utime(held, (now - 9000, now - 9000)); made[held.name] = "held-open"
+    young = Path(tempfile.mkdtemp(prefix="merge-check-", dir=str(tmp)))
+    os.utime(young, (now - 600, now - 600)); made[young.name] = "young"
+    young_extra = sorted(tmp.glob("merge-check-*"), key=lambda p: p.stat().st_mtime)[0]  # oldest check stays old
+    other = Path(tempfile.mkdtemp(prefix="other-", dir=str(tmp))); os.utime(other, (now - 9000, now - 9000)); made[other.name] = "foreign-prefix"
+    target = Path(tempfile.mkdtemp(prefix="target-", dir=str(BASE)))
+    link = tmp / "merge-cleanup-link"; link.symlink_to(target); os.utime(link, (now - 9000, now - 9000), follow_symlinks=False); made[link.name] = "symlink"
+    sleeper = subprocess.Popen(["sleep", "60"], cwd=str(held))
+    try:
+        time.sleep(0.5)
+        state = {"head": A, "checks": {}, "heads": {}, "prs": {}}
+        common_stubs(state, [])
+        rc, text = run_loop([], primary, args_for({}), dry_run=True)  # a real loop end runs the policy
+    finally:
+        sleeper.kill()
+    left = {made.get(p.name, p.name) for p in tmp.iterdir()}
+    show("P2.3 prune via loop end", rc, text, ["Scratch pruning", "Landing clones"])
+    print(f"{label}   left: {sorted(left)}")
+
+
+def p23_controls():
+    if not hasattr(mc, "prune_retained_scratch"):
+        print(f"{label} P2.3 negative controls: no prune_retained_scratch in this tree (nothing is ever pruned)")
+        return
+    def one(tag, setup):
+        primary, tmp = scratch_primary("p23c")
+        d = Path(tempfile.mkdtemp(prefix="merge-check-", dir=str(tmp)))
+        os.utime(d, (time.time() - 9000,) * 2)
+        os.environ["MERGE_CLEANUP_KEEP_WORKDIRS"] = "0"
+        restore = setup()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            mc.prune_retained_scratch(None)
+        restore()
+        os.environ.pop("MERGE_CLEANUP_KEEP_WORKDIRS")
+        print(f"{label} P2.3 control {tag}: candidate {'kept' if d.exists() else 'pruned'} | {out.getvalue().strip()[:150]}")
+    real_run, real_handles, real_uid = subprocess.run, scan_clones.inspect_open_handles, os.getuid
+    def fake_pgrep(rc, stdout=""):
+        def run(argv, *a, **k):
+            if argv and argv[0] == "pgrep":
+                return subprocess.CompletedProcess(argv, rc, stdout, "")
+            return real_run(argv, *a, **k)
+        def setup():
+            mc.subprocess.run = run
+            return lambda: setattr(mc.subprocess, "run", real_run)
+        return setup
+    one("pgrep fails (exit 2)", fake_pgrep(2))
+    one("pgrep finds a foreign merge_cleanup.py pid", fake_pgrep(0, "999999\n"))
+    def incomplete():
+        fake_pgrep(1)()
+        scan_clones.inspect_open_handles = lambda p: {"verified": False, "active": False, "details": "lsof enumeration incomplete"}
+        return lambda: (setattr(mc.subprocess, "run", real_run), setattr(scan_clones, "inspect_open_handles", real_handles))
+    one("lsof incomplete", incomplete)
+    def foreign():
+        fake_pgrep(1)()
+        mc.os.getuid = lambda: real_uid() + 1
+        return lambda: (setattr(mc.subprocess, "run", real_run), setattr(mc.os, "getuid", real_uid))
+    one("foreign owner", foreign)
+    one("clean probe + verified idle (positive)", fake_pgrep(1))
+
+
+def p23_release():
+    primary, tmp = scratch_primary("p23r")
+    os.environ["MERGE_CLEANUP_CHECKS_WAIT_S"], os.environ["MERGE_CLEANUP_CHECKS_POLL_S"] = "2", "1"
+    state = {"head": A, "checks": {(A, True): [], (C, True): [[{"name": "ci", "bucket": "pass"}]],
+                                   (D, True): [[{"name": "ci", "bucket": "pending"}]]},
+             "heads": {1: A, 2: D}, "prs": {1: pr_info(1, A, "CONFLICTING"), 2: pr_info(2, D, "MERGEABLE")}}
+    merges = []
+    common_stubs(state, merges, conflict_heads=(A,))
+    mc.resolve_ledger_conflict = lambda clone, execute: {"resolved": True, "handoff": False, "commit": C, "reason": "", "conflict_set": [], "log": []}
+    def verify(primary_repo, src, sha, wd):
+        (Path(wd) / f"verify-{sha[:8]}").mkdir()
+        return True, "clean in a second clone"
+    mc.validate_head_in_second_clone = verify
+    def push(info, clone, sha, primary_repo):
+        state["heads"][1] = sha; state["prs"][1]["mergeable"] = "MERGEABLE"
+        return True, f"pushed {sha[:10]}"
+    mc.push_resolved_head = push
+    def gh_by_pr(argv, cwd, timeout=180):  # per-PR head selection for the checks stub
+        if argv[:2] == ["pr", "checks"]:
+            state["head"] = state["heads"][int(argv[2])]
+        return GH.__call__(gh, argv, cwd, timeout)
+    gh = GH(state); mc._gh = gh_by_pr
+    def merge(n, repo, strategy=None, dry_run=False):
+        merges.append(n); state["prs"][n]["state"] = "MERGED"
+        return True, "m" * 40
+    mc.execute_pr_merge = merge
+    mc._retry_call = lambda fn, d: subprocess.CompletedProcess([], 0, "", "")
+    mc.run_post_merge_reconcile = lambda *a, **k: True
+    mc.emit_pr_merged = lambda *a, **k: None
+    mc.commit_and_push_phase5_writes = lambda *a, **k: True
+    rc, text = run_loop([1, 2], primary, args_for({1: A, 2: D}), dry_run=False)
+    show("P2.3 exit-3 release", rc, text, ["Released", "DEFERRED", "re-pinned", "Landing clones retained"])
+    wd = sorted(tmp.glob("merge-cleanup-*"))
+    print(f"{label}   merged={merges}; workdir contents: {sorted(p.name.split('-')[0] + '-' + p.name.split('-')[1] for p in wd[0].iterdir()) if wd else 'no workdir'}")
+
+
+def p23_handles():
+    d = Path(tempfile.mkdtemp(prefix="merge-check-", dir=str(BASE)))
+    sleeper = subprocess.Popen(["sleep", "30"], cwd=str(d))
+    try:
+        time.sleep(0.5)
+        h = scan_clones.inspect_open_handles(d)
+    finally:
+        sleeper.kill()
+    print(f"{label} P2.3 open-handle probe, process cwd = folder root: verified={h['verified']} active={h['active']} ({h['details']})")
+
+
+scenario = sys.argv[3] if len(sys.argv) > 3 else "all"
+if scenario in ("all", "p28"): p28()
+if scenario in ("all", "p22"):
+    p22_policy()
+    p22_loop("declared ci pending then pass (no required checks)", [[{"name": "ci", "bucket": "pending"}], [{"name": "ci", "bucket": "pass"}]], 5)
+    p22_loop("declared ci stays pending past the wait", [[{"name": "ci", "bucket": "pending"}]], 2)
+    p22_loop("declared ci never reported", [[{"name": "lint", "bucket": "pass"}]], 2)
+    p22_loop("no policy key, ci pending (control: no wait without the opt-in)", [[{"name": "ci", "bucket": "pending"}]], 2, policy=False)
+if scenario in ("all", "p21"):
+    green = [[{"name": "ci", "bucket": "pass"}]]
+    p21("(a) own repair, ci pending then pass", green, [[{"name": "ci", "bucket": "pending"}], [{"name": "ci", "bucket": "pass"}]])
+    p21("(b) own repair, ci pending then never registered", green, [[{"name": "ci", "bucket": "pending"}], None], wait=3)
+    p21("(c) external push after green", green, [[{"name": "ci", "bucket": "pass"}]], after_check_head=D)
+    p21("(d) head moved off the pin before the run", green, green, head_at_start=D)
+    p21("(e) re-pin publication fails", green, [[{"name": "ci", "bucket": "pass"}]], pin_ok=False)
+    p21("(f) repo with no required checks", [], [])
+if scenario in ("all", "p23"):
+    p23_handles()
+    p23_prune()
+    p23_controls()
+    p23_release()

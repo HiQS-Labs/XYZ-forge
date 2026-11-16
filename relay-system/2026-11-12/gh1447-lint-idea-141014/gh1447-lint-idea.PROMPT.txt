@@ -1,0 +1,62 @@
+Review the attached spike issue draft first without conversation history. Before source inspection give What this proposes, How the existing system works per this document, What it is not (2–5 sentences each; distinguish inference/exclusion/deferred). Then verify cited current code and GH1447 evidence. Is scope grounded, distinct, small, no duplicate writer, ratings neutral, acceptance falsifiable and limits honest? Advisory only, no writes or suites; no new machinery requests absent concrete falsifier. Return concrete findings and dispositions proposed. The body follows:
+## Observed
+
+| Claim | Command / source | Observation |
+|---|---|---|
+| Existing syntax filter | GH1447 recorded replay.py using current jog_run.lint_probe | Two retained inline python commands refuse at -c; two repaired file commands pass; empty/trivial/missing controls refuse,7/7 expected classifications. This is offline function replay, not live delivery. |
+| Semantics not measured | utils/py/swarm_preflight.py eval_probes; utils/py/jog_run.py lint_probe | One evaluates exit status; the other syntax/path. Neither establishes correspondence to the requested outcome. |
+| External reference | Leonxlnx/unlazy@16671491 scripts/gate-lint.mjs | Non-executing lexical warnings for fixed-output checks, weak expectations, activity labels and unmeasured numbers. No imported code or installed hooks. |
+
+## Diagnosis / existing gap
+
+Determine whether a small advisory extension of existing Forge contract validation can catch useful preparation mistakes without adding another gate runner, contract ledger or approval system. Distinguish the concrete command-form disagreement from semantic relevance, which lexical lint cannot prove. GH1447 owns wording and the bounded historical replay; this spike owns follow-up design, not implementation.
+
+## Plan
+
+1. Trace existing jog_run.lint_probe, contract extraction and swarm_preflight.eval_probes plus their callers; record supported forms and canonical contract writer.
+2. Reuse GH1447 replay evidence and add only a bounded manual evaluation of real retained contracts: fixed-output checks, command-form mismatch, unrelated valid regression checks and valid specialized checks. Record false positives/negatives; do not execute inherited shell commands without inspection and existing isolation.
+3. Evaluate the smallest extension to existing validators, including a shared command-shape rule if justified. Compare advisory warnings with hard refusals; preserve existing safety checks. Do not add a second linter program by default.
+4. Produce a go/no-go recommendation with exact fix site, red controls, costs, rollout and rollback. Any implementation is a later authorized task.
+
+## Blast radius
+
+| Seam | Current owner | Proposed scope |
+|---|---|---|
+| Probe syntax/admission | utils/py/jog_run.py | Read-only investigation; no runtime writes in spike |
+| Preparation evaluation | utils/py/swarm_preflight.py | Read-only consistency trace |
+| Captures/contracts | Existing HQ/PRS writers | Idea capture only; no automatic admission |
+| Future verification | Existing suites/manual TESTS-RESULTS evidence | No new suite/runner |
+
+Recon712a73b4; integration base development@712a73b4. Codex builder and independent Codex relay reviewer if later picked up; this intake uses Codex/Agy advisory consult with actual returned seats disclosed.
+
+## Dependencies
+
+GH1447 replay evidence must be published before this investigation claims reproducible committed evidence. Related1439/1296/1386 and1414 remain distinct; no dependency on installing unlazy.
+
+## Acceptance
+
+- [ ] Produce a cited map of command-form and semantic boundaries; red control is the observed python -c disagreement, not an invented production failure.
+- [ ] Compare useful warnings against retained invalid and legitimate contracts, including empty input refusal and fixed-output positive control; record false positives/negatives without treating valid syntax as delivery proof.
+- [ ] Recommend the smallest existing extension or explicitly recommend no code; red control is a proposal requiring a parallel ledger/runner or claiming lexical checks prove relevance.
+- [ ] Preserve all prior receipts and distinguish source-derived conclusions from executed observations; absent evidence is unresolved, never pass.
+
+## Verification
+
+Bounded manual checks under TESTS-RESULTS with provenance when picked up; existing relevant suites only if an implementation is later authorized. Intake spike has no build contract or admission claim.
+
+## Non-goals
+
+No unlazy installation/vendoring, Stop hook, new test suite/gate/runner, separate GATES.md source of truth, automatic approvals, fullgate rerun mandate, model dispatch, runtime changes or deployment during this spike.
+
+## Risk and rollback
+
+Easy read-only research; retain evidence and close with no-code recommendation if burden exceeds value. Any future executable parsing change needs proportionate independent review and negative controls before rollout. Do not weaken current refusals to make a replay green.
+
+## PRS proposal
+
+- pri 60: Repeated preparation friction merits a bounded study after the current wording/replay delivery.
+- sev 55: Weak acceptance checks can waste bounded runs and overstate delivery without proven data loss.
+- appeal 50: Neutral operator appeal; no numeric preference supplied.
+- effort 70: Existing validator seams and retained evidence make investigation relatively inexpensive.
+
+Recon: 712a73b4f3b01c8acc2c5115d11f855c62a2e537 · base: development@712a73b4f3b01c8acc2c5115d11f855c62a2e537 · tier: spike · review: pending

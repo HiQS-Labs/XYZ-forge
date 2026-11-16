@@ -1,6 +1,7 @@
 ---
 name: file-xyz-bug
-description: File a bug against the xyz-3-agents-swarm harness from ANY repo or session — lands a PDDA-compliant capture in that repo's PROJECT/1-INBOX/ (GH-<n>-*.md), files the tracking GitHub issue, and parks a one-line ROADMAP pointer, without touching the repo you are standing in. Use when the xyz harness misbehaves while you are working somewhere else — a relay/marathon driver fails, `tick` misbehaves, a turn shim exits wrong, a vendored `.xyz/` drifts, an xyz skill (relay-xyz, consult, hq, xyz) breaks — and you want it recorded where it will actually be triaged instead of lost in the current session. Trigger on /file-xyz-bug, "file an xyz bug", "report this to the swarm repo", "log this harness bug upstream", "send this bug to xyz". NOT for bugs in the repo you are currently working on (use that repo's own intake, e.g. /idea or /triage).
+description: >-
+  File a bug against the xyz-3-agents-swarm harness from ANY repo or session — lands a PDDA-compliant capture in that repo's PROJECT/1-INBOX/ (GH-N-*.md), files the tracking GitHub issue, and parks a one-line ROADMAP pointer, without touching the repo you are standing in. Use when the xyz harness misbehaves while you are working somewhere else — a relay/marathon driver fails, `tick` misbehaves, a turn shim exits wrong, a vendored `.xyz/` drifts, an xyz skill (relay-xyz, consult, hq, xyz) breaks — and you want it recorded where it will actually be triaged instead of lost in the current session. Trigger on /file-xyz-bug, "file an xyz bug", "report this to the swarm repo", "log this harness bug upstream", "send this bug to xyz". NOT for bugs in the repo you are currently working on (use that repo's own intake, e.g. /idea or /triage).
 ---
 
 # /file-xyz-bug — cross-repo bug front-door into the xyz intake
@@ -84,6 +85,20 @@ you are standing in.
    `gh issue create` title + body, the full capture doc (with a `GH-<new>` placeholder), and the
    ROADMAP line. Say plainly which repo each lands in. This single preview **is** the human
    checkpoint — nothing is filed or written before the operator confirms once.
+   - **Comprehension lens (GH-1414):** Before presenting that same preview, read
+     the redacted capture as a new triager would. Include a brief **What this
+     proposes** (the reported failure and observable repair outcome), **How the
+     existing system works, per this capture**, and **What it's not** where a
+     consequential expectation could be mistaken. Cite the capture's evidence or
+     sections for boundaries; separate explicit exclusions from inference, deferred
+     work, unresolved choices and later authorization. Unknown behavior stays
+     unknown: do not invent a repro, root cause, non-goal or fix design. If an
+     expectation remains unclear, expose it in this preview using the existing
+     question budget. This is an author comprehension check, not independent QA;
+     it adds no reviewer, approval checkpoint, or permission to diagnose or fix.
+     Keep the useful clarification in the issue and capture so `/start-task` can
+     read it at pickup. Handoff to `/start-task` for its independent plan review
+     only when the operator asks to execute the bug; do not invoke it while filing.
    - **Task 12: structured issue body format.** The created issue body must render `/idea`'s standard sections:
      `## Observed` (measured table with claim, command, observed), `## Acceptance` (`- [ ]` items),
      `## Preflight Contract` (JSON block with target, gate, fix_probes, artifacts), and `## PRS proposal`

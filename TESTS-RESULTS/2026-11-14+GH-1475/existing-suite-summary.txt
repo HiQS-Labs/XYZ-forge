@@ -1,0 +1,10 @@
+tested_commit fb38cc5db2a43bbba1a6433cc28280d4f8e4f7e3, disposable full clone (git clone --no-local of the task clone), identity (HEAD, origin) identical before and after, clean after
+gh202-wave-reconcile-issue-state.sh rc=0 3s
+gh168-wave-reconcile-scope.sh rc=0 1s
+gh454-reconciler-defects.sh rc=0 0s
+gh421-auto-wave-reconcile.sh rc=0 3s
+gh436-merge-cleanup.sh rc=0 194s
+  gh202-wave-reconcile-issue-state: 40 pass, 0 fail
+  gh168-wave-reconcile-scope: 7 pass, 0 fail
+Ran 227 tests in 193.976s
+OK

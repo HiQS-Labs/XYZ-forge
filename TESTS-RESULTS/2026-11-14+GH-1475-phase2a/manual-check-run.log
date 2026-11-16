@@ -1,0 +1,122 @@
+base P2.8 two-hub dry run: rc=0
+base   merge-cleanup: ERROR — PR #1: B1 stopped — [DRY RUN] B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver (clone kept at <scratch>/base/p28-hpbj54ir/tmp/merge-cleanup-kk0nneya/pr-1-aaaaaaaa-4dea_1vp/repo)
+base   merge-cleanup: Landing clones retained for inspection under <scratch>/base/p28-hpbj54ir/tmp/merge-cleanup-kk0nneya
+base   previewed #1=False previewed #2=False workdirs_left=1
+base P2.2 policy list: refused (qualification must be an object with full_suite promotion|per_batch|none and optional swee)
+base P2.2 policy empty list: refused (qualification must be an object with full_suite promotion|per_batch|none and optional swee)
+base P2.2 policy empty name: refused (qualification must be an object with full_suite promotion|per_batch|none and optional swee)
+base P2.2 policy string: refused (qualification must be an object with full_suite promotion|per_batch|none and optional swee)
+base P2.2 declared ci pending then pass (no required checks): rc=2
+base   merge attempted: no
+base P2.2 declared ci stays pending past the wait: rc=2
+base   merge attempted: no
+base P2.2 declared ci never reported: rc=2
+base   merge attempted: no
+base P2.2 no policy key, ci pending (control: no wait without the opt-in): rc=2
+base   merge-cleanup: PR #1: required checks: no required checks
+base   merge attempted: [(1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')]
+base P2.1 (a) own repair, ci pending then pass: rc=3
+base   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head cccccccccc is not the dry-run pin aaaaaaaaaa; re-run the dry run to re-pin once its checks finish
+base   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+base P2.1 (b) own repair, ci pending then never registered: rc=3
+base   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head cccccccccc is not the dry-run pin aaaaaaaaaa; re-run the dry run to re-pin once its checks finish
+base   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+base P2.1 (c) external push after green: rc=3
+base   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head cccccccccc is not the dry-run pin aaaaaaaaaa; re-run the dry run to re-pin once its checks finish
+base   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+base P2.1 (d) head moved off the pin before the run: rc=3
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head dddddddddd moved off the dry-run pin aaaaaaaaaa during the run; re-run the dry run to re-pin
+base   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+base P2.1 (e) re-pin publication fails: rc=3
+base   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head cccccccccc is not the dry-run pin aaaaaaaaaa; re-run the dry run to re-pin once its checks finish
+base   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+base P2.1 (f) repo with no required checks: rc=3
+base   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head cccccccccc is not the dry-run pin aaaaaaaaaa; re-run the dry run to re-pin once its checks finish
+base   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+base P2.3 open-handle probe, process cwd = folder root: verified=True active=False (no open handles)
+base P2.3 prune via loop end: rc=0
+base   merge-cleanup: Landing clones removed after a clean run (<scratch>/base/p23-6o29557h/tmp/merge-cleanup-0z5chjnd)
+base   left: ['foreign-prefix', 'held-open', 'merge-check-old0', 'merge-check-old1', 'merge-check-old2', 'merge-check-old3', 'merge-check-old4', 'merge-cleanup-old0', 'merge-cleanup-old1', 'merge-cleanup-old2', 'merge-cleanup-old3', 'merge-cleanup-old4', 'symlink', 'young']
+base P2.3 negative controls: no prune_retained_scratch in this tree (nothing is ever pruned)
+base P2.3 exit-3 release: rc=3
+base   merge-cleanup: ERROR — PR #1: DEFERRED — head cccccccccc is not the dry-run pin aaaaaaaaaa; re-run the dry run to re-pin once its checks finish
+base   merge-cleanup: ERROR — PR #2: DEFERRED — required checks pending (ci)
+base   merge-cleanup: Landing clones retained for inspection under <scratch>/base/p23r-2ei4vp6d/tmp/merge-cleanup-viruodjg
+base   merged=[]; workdir contents: ['pr-1', 'pr-1', 'pr-2', 'verify-cccccccc']
+base exit=0
+new P2.8 two-hub dry run: rc=0
+new   merge-cleanup: [DRY RUN] PR #1: B1 would repair this ledger conflict (B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver); --execute repairs it, waits for the new head's checks and re-pins
+new   merge-cleanup: [DRY RUN] PR #2: B1 would repair this ledger conflict (B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver); --execute repairs it, waits for the new head's checks and re-pins
+new   merge-cleanup: Landing clones removed after a clean run (<scratch>/new/p28-r26iawx7/tmp/merge-cleanup-p39ao7lw)
+new   previewed #1=True previewed #2=True workdirs_left=0
+new P2.2 policy list: accepted (['ci'])
+new P2.2 policy empty list: refused (qualification.wait_for_checks must be a non-empty list of check names)
+new P2.2 policy empty name: refused (qualification.wait_for_checks must be a non-empty list of check names)
+new P2.2 policy string: refused (qualification.wait_for_checks must be a non-empty list of check names)
+new P2.2 declared ci pending then pass (no required checks): rc=2
+new   merge-cleanup: PR #1: waiting for required check(s) ci (0s of 5s)
+new   merge-cleanup: PR #1: required checks: 1 declared check(s) green
+new   merge attempted: [(1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')]
+new P2.2 declared ci stays pending past the wait: rc=3
+new   merge-cleanup: PR #1: waiting for required check(s) ci (0s of 2s)
+new   merge-cleanup: PR #1: waiting for required check(s) ci (1s of 2s)
+new   merge-cleanup: ERROR — PR #1: DEFERRED — required checks pending (ci)
+new   merge attempted: no
+new P2.2 declared ci never reported: rc=3
+new   merge-cleanup: PR #1: waiting for required check(s) ci (not reported) (0s of 2s)
+new   merge-cleanup: PR #1: waiting for required check(s) ci (not reported) (1s of 2s)
+new   merge-cleanup: ERROR — PR #1: DEFERRED — required checks pending (ci (not reported))
+new   merge attempted: no
+new P2.2 no policy key, ci pending (control: no wait without the opt-in): rc=2
+new   merge-cleanup: PR #1: required checks: no required checks
+new   merge attempted: [(1, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')]
+new P2.1 (a) own repair, ci pending then pass: rc=2
+new   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+new   merge-cleanup: PR #1: waiting for required check(s) ci (0s of 5s)
+new   merge-cleanup: PR #1: re-pinned to cccccccccc after this run's B1 repair (checks passed on that commit)
+new   merge attempted: [(1, 'cccccc')]; in-memory pin=cccccc; selection file pin=cccccc
+new P2.1 (b) own repair, ci pending then never registered: rc=3
+new   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+new   merge-cleanup: PR #1: waiting for required check(s) ci (0s of 3s)
+new   merge-cleanup: PR #1: waiting for required check(s) required checks not yet registered on the repaired head (1s of 3s)
+new   merge-cleanup: PR #1: waiting for required check(s) required checks not yet registered on the repaired head (2s of 3s)
+new   merge-cleanup: ERROR — PR #1: DEFERRED — required checks pending (required checks not yet registered on the repaired head)
+new   merge-cleanup: ERROR — 1 PR(s) did not land (0 deferred by network, 1 awaiting checks or a re-pin, 0 parked on resume, 0 handed off or parked): #1 (deferred: required checks pending (required checks not yet registered on the repaired head))
+new   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+new P2.1 (c) external push after green: rc=3
+new   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+new   merge-cleanup: ERROR — PR #1: DEFERRED — head dddddddddd moved after this run's B1 repair cccccccccc; re-run the dry run to re-pin
+new   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+new P2.1 (d) head moved off the pin before the run: rc=3
+new   merge-cleanup: ERROR — PR #1: DEFERRED — head dddddddddd moved off the dry-run pin aaaaaaaaaa during the run; re-run the dry run to re-pin
+new   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+new P2.1 (e) re-pin publication fails: rc=3
+new   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+new   merge-cleanup: ERROR — PR #1: DEFERRED — re-pin not published; re-run the dry run to re-pin
+new   merge attempted: no; in-memory pin=aaaaaa; selection file pin=none
+new P2.1 (f) repo with no required checks: rc=2
+new   merge-cleanup: PR #1: pushed cccccccccc; re-fetching and re-gating the new head
+new   merge-cleanup: PR #1: re-pinned to cccccccccc after this run's B1 repair (checks passed on that commit)
+new   merge attempted: [(1, 'cccccc')]; in-memory pin=cccccc; selection file pin=cccccc
+new P2.3 open-handle probe, process cwd = folder root: verified=True active=True (PID 47696 (sleep))
+new P2.3 prune via loop end: rc=0
+new   merge-cleanup: Landing clones removed after a clean run (<scratch>/new/p23-wz1covk1/tmp/merge-cleanup-4oa_ggbf)
+new   merge-cleanup: Scratch pruning: removed 5 old retained clone folder(s) under <scratch>/new/p23-wz1covk1/tmp; kept 1: merge-cleanup-tntes9gq (PID 47715 (sleep))
+new   left: ['foreign-prefix', 'held-open', 'merge-check-old0', 'merge-check-old1', 'merge-cleanup-old0', 'merge-cleanup-old1', 'merge-cleanup-old2', 'symlink', 'young']
+new P2.3 control pgrep fails (exit 2): candidate kept | merge-cleanup: Scratch pruning skipped: process check unavailable
+new P2.3 control pgrep finds a foreign merge_cleanup.py pid: candidate kept | merge-cleanup: Scratch pruning skipped: another merge_cleanup.py is running
+new P2.3 control lsof incomplete: candidate kept | merge-cleanup: Scratch pruning: removed 0 old retained clone folder(s) under <scratch>/new/p23c-22xymavl/tmp; kept 1: merge-c
+new P2.3 control foreign owner: candidate kept | 
+new P2.3 control clean probe + verified idle (positive): candidate pruned | merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under <scratch>/new/p23c-8ouozecz/tmp
+new P2.3 exit-3 release: rc=3
+new   merge-cleanup: PR #1: re-pinned to cccccccccc after this run's B1 repair (checks passed on that commit)
+new   merge-cleanup: ERROR — PR #2: DEFERRED — required checks pending (ci)
+new   merge-cleanup: Released landed PRs' clones: pr-1-aaaaaaaa-i6kdrixl, pr-1-cccccccc-4xgmui9d, verify-cccccccc
+new   merge-cleanup: Landing clones retained for inspection under <scratch>/new/p23r-abk8gqmh/tmp/merge-cleanup-vq1btjyr
+new   merged=[1]; workdir contents: ['pr-2']
+new exit=0
