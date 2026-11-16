@@ -187,4 +187,13 @@ Pending, not a finding: classified full gate (route=full, tier 3) runs once on t
 
 Handing off: relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-16T18:02:40Z
+task: RELAY-gh1400-followup-final
+reviewer: claude
+status: Approved
+reviewed-head: 185db9741037142a8c5219a7525ad63f96a5ca1d
+added-range: 8980+5512
+added-sha256: 35131d090309bd4fa700bb765f4bed88117c7f30b05dafb0b37518dfda585b84
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
