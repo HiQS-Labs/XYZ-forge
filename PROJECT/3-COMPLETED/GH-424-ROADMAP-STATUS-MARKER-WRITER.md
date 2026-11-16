@@ -1,9 +1,9 @@
 ---
 title: roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕
-status: 2-WORKING
+status: Complete
 marathon: gh-490
 created: 2026-09-04
-updated: 2026-09-09
+updated: 2026-11-16
 owner: noelsaw1
 gh_issue: 424
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/424

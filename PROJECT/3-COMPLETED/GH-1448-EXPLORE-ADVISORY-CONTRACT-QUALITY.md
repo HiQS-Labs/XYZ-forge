@@ -2,8 +2,8 @@
 gh_issue: 1448
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1448
 title: "Explore advisory contract-quality linting in existing Jog and preflight validators"
-status: Active
-updated: 2026-11-12
+status: Complete
+updated: 2026-11-16
 created: 2026-11-12
 owner: Codex
 doc_type: feedback

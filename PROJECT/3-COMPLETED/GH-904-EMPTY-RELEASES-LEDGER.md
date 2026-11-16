@@ -1,23 +1,23 @@
 ---
-gh_issue: 906
-source: https://github.com/HiQS-Labs/XYZ-forge/issues/906
-title: "Optional PDDA skill install"
-status: active
+gh_issue: 904
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/904
+title: "PDDA empty releases ledger"
+status: Complete
 created: 2026-10-01
-updated: 2026-10-01
+updated: 2026-11-16
 owner: XYZ Forge maintainers
 doc_type: bugfix
-complexity: 2
-risk: 2
-effort: 2
+complexity: 1
+risk: 1
+effort: 1
 phases: 1
 related:
   - "#908 — serial PDDA adopter Jog"
 goal: >
-  Treat the skill copy as optional, warn, and finish core installation with truthful verification.
+  Recognize a queryable empty roadmap_items table; still report unreadable DBs and uncovered working docs.
 ---
 
-# Optional PDDA skill install
+# PDDA empty releases ledger
 
 ## Status
 
@@ -27,7 +27,7 @@ goal: >
 
 ## Observed problem
 
-An unwritable .claude/skills path aborts before core installation finishes. Source: [issue #906](https://github.com/HiQS-Labs/XYZ-forge/issues/906).
+pdda.sh mistakes zero roadmap rows for an absent ledger. Source: [issue #904](https://github.com/HiQS-Labs/XYZ-forge/issues/904).
 
 ## Plan
 
@@ -37,13 +37,13 @@ An unwritable .claude/skills path aborts before core installation finishes. Sour
 
 ## Acceptance
 
-- [ ] Treat the skill copy as optional, warn, and finish core installation with truthful verification.
+- [ ] Recognize a queryable empty roadmap_items table; still report unreadable DBs and uncovered working docs.
 - [ ] Existing legacy and releases-mode behavior outside this issue still works.
 - [ ] No new suite, gate, runner, or telemetry stage (GH-831).
 
 ## Rating (2026-10-01)
 
-PRS pri/sev/appeal/effort = 80/75/50/75; appeal neutral. Effort is cheapness. This issue is one observed adopter report; recurrence trend is unknown. The installer failure (#906) blocks core setup, while #905 crosses mode and view contracts. Reassess on new evidence.
+PRS pri/sev/appeal/effort = 75/55/50/80; appeal neutral. Effort is cheapness. This issue is one observed adopter report; recurrence trend is unknown. The installer failure (#906) blocks core setup, while #905 crosses mode and view contracts. Reassess on new evidence.
 
 ## Swarm Preflight Contract
 
@@ -57,23 +57,27 @@ PRS pri/sev/appeal/effort = 80/75/50/75; appeal neutral. Effort is cheapness. Th
   "fix_probes": [
     {
       "type": "grep_present",
-      "path": "utils/pdda/pdda-install.sh",
-      "pattern": "\\n  mkdir -p \"\\$TARGET/\\.claude/skills/pdda\"",
+      "path": "utils/pdda/pdda.sh",
+      "pattern": "no releases.db ledger present",
       "note": "pre-fix symptom; verify against source before dispatch"
     }
   ],
   "artifacts": [
-    "utils/pdda/pdda-install.sh"
+    "utils/pdda/pdda.sh"
   ],
   "remediation": {
-    "source": "issue#906",
-    "criteria": "Treat the skill copy as optional, warn, and finish core installation with truthful verification."
+    "source": "issue#904",
+    "criteria": "Recognize a queryable empty roadmap_items table; still report unreadable DBs and uncovered working docs."
   },
   "lanes": {
     "agy_safe": [
-      "utils/pdda/pdda-install.sh"
+      "utils/pdda/pdda.sh"
     ],
     "orchestrator_only": []
   }
 }
 ```
+
+## Merge evidence
+
+- PR #936 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

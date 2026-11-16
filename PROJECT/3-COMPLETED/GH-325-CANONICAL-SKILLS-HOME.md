@@ -1,8 +1,8 @@
 ---
 title: Vendor legacy SWE skills and make skills/ canonical
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-30
-updated: 2026-08-30
+updated: 2026-11-16
 owner: noel
 gh_issue: 325
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/325

@@ -1,8 +1,8 @@
 ---
 title: "GH-491: roadmap move/update --section advertises names the renderer drops, and validates nothing"
-status: active
+status: Complete
 created: 2026-09-07
-updated: 2026-09-07
+updated: 2026-11-16
 owner: orchestrator (Claude Code)
 goal: the CLI cannot write a section the renderer will not render, and its help names the section vocabulary that actually exists
 gh_issue: 491

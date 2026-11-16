@@ -2,9 +2,9 @@
 gh_issue: 1087
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1087
 title: "docs: restore spacing in the GH-1051 work record"
-status: Active
+status: Complete
 created: 2026-10-16
-updated: 2026-10-16
+updated: 2026-11-16
 owner: noelsaw1
 goal: "PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md reads cleanly: joined words and identifiers (onlydevelopment, pushdevelopment/main, registeredci-workflow and any siblings) get their separators and code formatting back, with every fact, date and SHA unchanged."
 doc_type: fix

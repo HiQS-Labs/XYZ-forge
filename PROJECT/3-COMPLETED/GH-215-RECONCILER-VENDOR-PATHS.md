@@ -1,6 +1,6 @@
 ---
 title: wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-24
 owner: noel
 gh_issue: 215

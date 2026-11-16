@@ -2,9 +2,9 @@
 gh_issue: 905
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/905
 title: "Direct releases DB-only PDDA install"
-status: active
+status: Complete
 created: 2026-10-01
-updated: 2026-10-01
+updated: 2026-11-16
 owner: XYZ Forge maintainers
 doc_type: bugfix
 complexity: 3

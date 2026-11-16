@@ -1,8 +1,8 @@
 ---
 title: "GH-644: xyz-vendor.sh reconcile_ignore_state — part B: stop re-asserting .xyz/ on repos that deliberately track the harness"
-status: active
+status: Complete
 created: 2026-09-17
-updated: 2026-09-17
+updated: 2026-11-16
 owner: unassigned
 goal: decide and land the #314 refinement so a target that has committed .xyz/ keeps it tracked while its runtime-state subpaths stay ignored
 gh_issue: 644

@@ -1,8 +1,8 @@
 ---
 title: "GH-807: test/signal-triage.sh quiet-grep pipelines produce a false failure under load"
-status: active
+status: Complete
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-11-16
 owner: noel
 gh_issue: 807
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/807

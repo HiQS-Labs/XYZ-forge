@@ -2,7 +2,7 @@
 gh_issue: 1468
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1468
 title: "New weekly skill: baseline — turn a circular process or policy thread into graded evidence, one ask per item and a one-question-per-slide deck"
-status: "Proposed (1-INBOX — not yet active)"
+status: Complete
 created: 2026-11-14
 doc_type: enhancement
 effort: 2

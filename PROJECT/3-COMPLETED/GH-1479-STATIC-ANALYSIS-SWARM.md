@@ -2,9 +2,9 @@
 gh_issue: 1479
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
 title: "refactor: add Python static analysis and decompose swarm-preflight main"
-status: Active — implemented, verified, final QA passed; draft PR open (2-WORKING)
+status: Complete
 created: 2026-11-14
-updated: 2026-11-15
+updated: 2026-11-16
 owner: noelsaw
 goal: >
   Establish a reproducible typed Python baseline and decompose swarm-preflight's giant entry point

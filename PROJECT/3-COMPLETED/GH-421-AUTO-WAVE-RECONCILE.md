@@ -2,9 +2,9 @@
 gh_issue: 421
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/421
 title: "GH-421: wave reconciliation is never invoked automatically — fix its ledger write, then wire it post-merge"
-status: 2-WORKING
+status: Complete
 created: 2026-09-04
-updated: 2026-09-08
+updated: 2026-11-16
 owner: unassigned
 goal: "wave_reconcile writes the releases ledger correctly and is then invoked automatically on merged PRs"
 doc_type: bugfix

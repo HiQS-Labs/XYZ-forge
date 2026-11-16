@@ -2,9 +2,9 @@
 gh_issue: 1485
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1485
 title: "feat(whack-a-mole): sharpen for cross-repo topology, multi-domain failure taxonomy, and phased umbrellas"
-status: Active — Plan QA Round 3 (truthful verification labeling)
+status: Complete
 created: 2026-11-14
-updated: 2026-11-14
+updated: 2026-11-16
 owner: start-task lane
 goal: Sharpen whack-a-mole to detect cross-repo upstream/downstream boundaries, decompose compound multi-domain failure modes, and structure multi-domain umbrella remediation plans into phased delivery lanes.
 doc_type: enhancement

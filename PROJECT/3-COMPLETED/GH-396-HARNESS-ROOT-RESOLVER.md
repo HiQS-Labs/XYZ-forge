@@ -1,8 +1,8 @@
 ---
 title: Harness root resolution — one resolver, two roots, pinned; retire RADAR-class-vendored-root-resolution
-status: Active
+status: Complete
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-11-16
 owner: noel
 gh_issue: 396
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/396

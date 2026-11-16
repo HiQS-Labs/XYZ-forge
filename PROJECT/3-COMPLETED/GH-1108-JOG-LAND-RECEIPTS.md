@@ -2,9 +2,9 @@
 gh_issue: 1108
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1108#issuecomment-6231071222
 title: "Jog one-writer execution, receipts and landing hook (delivery 1 of 2)"
-status: Active
+status: Complete
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-11-16
 owner: noelsaw1
 goal: "Jog writes and publishes ledger transitions only in the primary; disposable execution clones deliver committed receipts for primary landing."
 doc_type: fix

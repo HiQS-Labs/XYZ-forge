@@ -2,7 +2,7 @@
 gh_issue: 18
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/18
 title: Harness Evaluation - Command Code (cmd) and Model Matrix
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-16
 doc_type: feedback
 effort: 2

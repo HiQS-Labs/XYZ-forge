@@ -2,9 +2,9 @@
 gh_issue: 425
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/425
 title: "GH-425: the --gate provenance check never compares the PR number"
-status: 2-WORKING
+status: Complete
 created: 2026-09-04
-updated: 2026-09-08
+updated: 2026-11-16
 owner: unassigned
 goal: "--gate verifies receipts by PR number, not just directory non-emptiness"
 doc_type: bugfix

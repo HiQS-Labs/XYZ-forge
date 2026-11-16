@@ -1,6 +1,6 @@
 ---
 title: marathon-drive's blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-08-26
 owner: noel
 gh_issue: 255

@@ -1,8 +1,8 @@
 ---
 title: "GH-589: XYZ mini — manifest-driven publisher into HiQS-Labs/XYZ-mini (MVP)"
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-13
-updated: 2026-09-13
+updated: 2026-11-16
 owner: unassigned
 goal: one small script in XYZ-forge that copies an embedded manifest of skills into the local XYZ-mini checkout, commits with the source SHA and pushes; plus the minimal source edits that let those skills run without forge governance
 gh_issue: 589

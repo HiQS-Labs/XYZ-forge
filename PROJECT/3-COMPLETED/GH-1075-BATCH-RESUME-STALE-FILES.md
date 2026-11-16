@@ -2,7 +2,7 @@
 gh_issue: 1075
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1075
 title: merge-cleanup batch record keeps stale per-PR file lists on resume
-status: Active
+status: Complete
 created: 2026-10-14
 fix_probes:
   - test -f skills/2-daily/merge-cleanup/scripts/batch_record.py
@@ -12,7 +12,7 @@ effort: 1
 complexity: 1
 risk: 1
 phases: 1
-updated: 2026-10-16
+updated: 2026-11-16
 owner: Noel Saw
 goal: "merge-cleanup batch record keeps stale per-PR file lists on resume"
 # jog: goal auto-filled from title; refine

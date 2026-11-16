@@ -2,9 +2,9 @@
 gh_issue: 886
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/886
 title: "Linux portability canary: 3 advisory failures (gh425, gh478, gh153)"
-status: active
+status: Complete
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-11-16
 owner: XYZ Forge maintainers
 doc_type: bugfix
 complexity: 2

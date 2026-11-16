@@ -2,9 +2,9 @@
 gh_issue: 454
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/454
 title: "GH-454: wave_reconcile dies on an unnamed release and enforces PDDA full-mode on an observe-mode repo"
-status: 2-WORKING
+status: Complete
 created: 2026-09-05
-updated: 2026-09-08
+updated: 2026-11-16
 owner: unassigned
 goal: "both reconciler defects fixed: unnamed releases render, PDDA gating scoped to mode"
 doc_type: bugfix

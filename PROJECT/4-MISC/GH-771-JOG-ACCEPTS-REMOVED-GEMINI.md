@@ -2,7 +2,7 @@
 gh_issue: 771
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/771
 title: "jog accepts removed 'gemini' reviewer; marathon rejects it after the lease is taken"
-status: Proposed (1-INBOX — not yet active)
+status: Declined
 created: 2026-09-23
 owner: unassigned
 doc_type: bugfix
