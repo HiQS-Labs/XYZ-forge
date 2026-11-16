@@ -7,8 +7,8 @@ ARTIFACT: PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 4
-STATUS: Open
-NEXT: claude
+STATUS: In Review
+NEXT: codex
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -169,5 +169,47 @@ Reviewed the entire canonical plan and the implementation seams named in Setup b
 [Pass] Default-off writer short-circuit and journal enrollment are present in source: `wave_reconcile.py:2188-2190` returns unless mode is landing; `:2230` snapshots before writing and `:2272` enrolls CHANGELOG.md in existing snapshot/created-file tracking. This is source-level evidence, not an end-to-end rollback/race certification.
 
 Handing off to Producer (claude). No source or evidence artifact changed; harness owns the relay-file commit.
+
+
+## Round 2 — Producer (claude)
+
+### Summary of Changes & Finding Dispositions
+Addressed all Codex Round 1 findings (F1–F5) in commit `9e18a91f2`:
+
+- **F1 — Implemented (Generated fallback incompatible with B1):**
+  Changed fallback title in `utils/py/wave_reconcile.py:2088,2116` to emit plain text `changelog: fallback-title\n{clean_title}.` instead of an HTML comment. Verified via Control 5 in `TESTS-RESULTS/2026-11-15+GH-1487/control_5_b1_marker_coexistence_and_rejections.log` that the generated fallback entry is accepted by `ledger_merge.union_changelog` without raising `ValueError`.
+
+- **F2 — Implemented (Marker exemption position-specific):**
+  Updated `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:union_changelog` to validate/exempt only the single exact full-SHA marker `<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->` at the first non-blank body line of each parsed section. All secondary markers, misplaced markers, raw HTML tags, code fences, and conflict markers trigger `ValueError("fenced or HTML additions require manual changelog resolution")`. Verified via `control_5_b1_marker_coexistence_and_rejections.log` and passing `test/gh534_phase_b_tests.py` (39/39 OK).
+
+- **F3 — Implemented (Canonical author instructions mode-aware):**
+  Updated `PROJECT/PDDA.md:1056-1065,1093-1099`, `ROUTER.md:56`, and `skills/2-daily/express/SKILL.md:195` to make author instructions explicitly mode-aware: PR branches do not write `CHANGELOG.md` under default `CHANGELOG_WRITES=off` or `CHANGELOG_WRITES=landing`; only under legacy opt-in `CHANGELOG_WRITES=branch` is it edited on branch.
+
+- **F4 — Implemented (Controlled publication-race and red-control evidence):**
+  Generated witnessed, reproducible evidence for all 9 manual red controls under `TESTS-RESULTS/2026-11-15+GH-1487/`:
+  - Control 1: `control_1_default_is_off.log`
+  - Control 2: `control_2_invalid_config_fallback.log`
+  - Control 3: `control_3_landing_writes_sanitized_entry_with_exact_marker.log`
+  - Control 4: `control_4_idempotency_zero_bytes_on_rerun.log`
+  - Control 5: `control_5_b1_marker_coexistence_and_rejections.log`
+  - Control 6: `control_6_journal_rollback_restores_original_file.log`
+  - Control 7: `control_7_raced_publication_recovery.log` (executes genuine git multi-commit repo simulation: staged landing -> concurrent upstream push -> local push race rejection -> pull --rebase on newer integration base -> recovery rerun with catch-up -> successful push with concurrent commit and PR marker retained)
+  - Control 8: `control_8_absent-file_rollback_removes_created_file.log`
+  - Control 9: `control_9_missing_adoption_history_fails_closed_with_code_6.log`
+  Recorded full provenance in `provenance.jsonl` with commands, candidate revision, log files, and sha256 checksums.
+  Executed full test suites: `test/wave-reconcile.sh` (`suite_wave_reconcile.log`), `test/pdda-changelog.sh` (`suite_pdda_changelog.log`), and `utils/pdda/pdda.sh run` (`suite_pdda_run.log`).
+
+- **F5 — Implemented (Parser whitespace and env-precedence alignment):**
+  Aligned `utils/pdda/pdda.sh:pdda_changelog_writes_mode` and `utils/py/wave_reconcile.py:read_changelog_writes_mode`:
+  - Env-over-file precedence: explicit empty or whitespace env value returns `off` and does not fall through to `.pdda-mode`.
+  - Trimmed, case-insensitive value extraction.
+  - Supported whitespace around `=` and inline `# comments` in `.pdda-mode`.
+  - Tested 9 parity test cases across Bash and Python with identical outputs.
+
+### Review Verdict
+VERDICT: PASS
+Basis: Addressed all Round 1 findings with source implementation, doc updates, and full witnessed test evidence.
+
+Handing off to Reviewer (codex) — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
