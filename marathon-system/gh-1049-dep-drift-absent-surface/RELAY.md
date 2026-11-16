@@ -149,3 +149,13 @@ Findings: no `[Blocker]` or `[Should]`. 0 optional. `unverified:` the builder's 
 gate run: no — harness gate
 
 **Verdict:** Approved
+
+### Attestation · relay-drive — 2026-11-16T06:10:22Z
+task: MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN-2
+reviewer: claude
+status: Approved
+reviewed-head: e546a02fa788cc30db9e82bc344d11831e0de440
+added-range: 25180+2382
+added-sha256: cc6a534a96b14da6383dba034f6e1e57201dc2de84d2b7ef7e1384b94075ed76
+config-sha256: 75e1552146cd8ded7a1542ed4d52475b10fa5170070edbfb05473d26465f617c
+gate-run: no
