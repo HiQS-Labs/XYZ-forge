@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-14 — GH-1486: `/re-vendor-xyz` refreshes one vendored `.xyz/` copy safely
+
+New instruction-only skill `skills/4-occasional/re-vendor-xyz/` that sequences the existing
+`xyz-sync.sh` refresh for one repository. The bare commands can report success while the copy is
+stale or built from unpublished code, or replace it under a live run (#1011). The skill stops,
+by a closed list, when the Forge source is dirty, not canonical, unfetchable or ahead of origin;
+when the target is unregistered; when a driver lock or a process uses the copy; or when a tier-2
+copy would lose its RELEASES overlay. It backs the copy up, refreshes, and counts the copy current
+only when `check` prints `ok`, prints no `SAFETY GUARD MISSING` line, and `.xyz/VERSION` matches the
+Forge `HEAD`. It then reads Skills Army HQ status and hands deployed-skill drift to `/skills-army-hq`.
+No script, flag or test suite added; `xyz-sync.sh` and `xyz-vendor.sh` are unchanged. Pointers in
+`ARCHITECTURE.md`, `README.md` and `vendor-stack`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1486/`.
+
 ## 2026-11-14 — GH-1475: merge-cleanup Phase 2A (fewer cycles and waits)
 
 A hub PR that this run B1-repaired no longer needs a second dry run and execute. The run waits for the new head's checks on that exact commit, re-checks that nothing else moved it, re-pins it (selection file and batch allowlist), and lands it. Anything else off its pin still defers. `.merge-cleanup.json` gains the opt-in `qualification.wait_for_checks: [names]`, so the existing pending, poll and defer logic applies to named checks even when GitHub reports no required checks. Retained clones are bounded: per prefix, the newest 3 (`MERGE_CLEANUP_KEEP_WORKDIRS`) and anything touched in the last hour are kept, and older `merge-cleanup-*`/`merge-check-*` folders are removed only when `lsof` verifies them idle and no other `merge_cleanup.py` is running. On exit 3, landed PRs' clones are released. The shared open-handle probe now also counts a process whose cwd is the folder root (it missed that holder before, which affected teardown too). A dry run now previews B1-repairable PRs and continues instead of stopping at the first one. Existing tests that pinned the old second cycle were updated; no new tests. Code revert is easy; pruned scratch is not restored by a revert. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
