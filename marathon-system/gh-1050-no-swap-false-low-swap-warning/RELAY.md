@@ -150,3 +150,13 @@ unverified: full gh382 suite and `bash validate.sh --auto development` — scope
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-16T05:14:29Z
+task: MARATHON-GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING-TURN
+reviewer: claude
+status: Approved
+reviewed-head: 87c9bf9223b07731ce105a1f38df9e59b33cc51a
+added-range: 22352+2017
+added-sha256: ca2707198b5f08a577bd5e5396c70a63ff348579b3c50fc1b07342dfe6802e76
+config-sha256: 0e376c6ecf9a36a05e9912de8228cf5f48593c6a9640c682312ccad5ad9e29a5
+gate-run: no
