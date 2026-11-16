@@ -1,6 +1,6 @@
 # Marathon Phase gh-1049-dep-drift-absent-surface
-STATUS: Open
-NEXT: claude (Reviewer)
+STATUS: Approved
+NEXT: none (closed)
 
 <!-- marathon-drive: task=MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN-2 builder=codex reviewer=claude round-cap=5 -->
 
@@ -130,3 +130,22 @@ unverified: `test/relay-dep-drift.sh`, `test/relay-pkg-freshness.sh`, and `test/
 unverified: full classified gate — harness-only after this turn; prior failure is not claimed resolved until it passes.
 
 Reversibility: Easy; one fixture precondition and a reproducible generated archive. No change to the event schema, watched surfaces, or turn outcome. Handing off to claude for independent review.
+
+### Round 2 · Reviewer · claude
+
+Both attempt-1 gate failures are addressed by the diff, and the production fix is intact. I read the code and probed the package. I did not run any test.
+
+swept file: yes — `relay-automation/relay-turn-lib.sh` (the drift block at 1730-1757 plus its `rtl_drift_brief` neighbour) and the whole of `test/relay-dep-drift.sh`. No pre-existing defects found in either.
+
+Evidence:
+- Production fix: `rev-parse --verify ... || _psha=""` (and `_csha`), then `[[ "$_psha" == "$_csha" ]] && continue`. Absent at both revs compares equal and emits nothing. One-sided additions still reach the emit with `${_psha:-none}`. This covers criteria 1 to 3.
+- Test cases: section 4 asserts exactly one event for `src/project.js` with real 40-char blob SHAs (criterion 2). Section 5 asserts a thread-only commit emits zero drift events, with a guard that real task events exist. Section 6 asserts an added surface emits once with `prior_sha` `none` (criterion 3). Criterion 4 is covered.
+- Package freshness: I extracted `relay-pkg.tar.gz` to `.relay-scratch/tmp/x` and ran `cmp` on every member against its live source. All 18 matched (`bad=0`). The archive has 0 `._*` AppleDouble entries. The earlier "stale" finding is resolved.
+- `mktemp-trap-guard.sh`: the audit tracks `$dir` (assigned from `mktemp` at line 29) forward through the file. It accepts a guard line that names `$dir` with both `-n` and `-d` tests chained to `|| return` or `|| exit`, before the bare `cd`. The new line `[[ -n "$dir" && -d "$dir" ]] || return 1` matches `n_re`, `d_re` and `abort_re` on one line. It sits before `cd "$dir"`, so the scan sets `guarded=1` and stops. The only other `cd "$dir"` is inside a `( ... )` subshell in `mkfixture`, which the audit already allows. Checked by reading the regex logic, not by running it. `bash -n test/relay-dep-drift.sh` exited 0.
+- Scope: `git diff HEAD~1` shows only the one-line test change and the regenerated archive, both on the allowed list.
+
+Findings: no `[Blocker]` or `[Should]`. 0 optional. `unverified:` the builder's runtime results for `test/relay-dep-drift.sh`, `test/relay-pkg-freshness.sh` and `test/mktemp-trap-guard.sh` are still unproven. They were deliberately not run here, so that gap is graded `[Unverified — needs clone run]` and settled by the harness gate.
+
+gate run: no — harness gate
+
+**Verdict:** Approved
