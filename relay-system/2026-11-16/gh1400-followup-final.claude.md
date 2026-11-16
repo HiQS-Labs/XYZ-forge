@@ -52,8 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed diff `1d9658c3c63c..HEAD` on this branch:
-  `utils/py/jog_run.py` (`_jog_task_local_failure` and the supervised `failed` branch in
+- Artifact under review: `utils/py/jog_run.py` and the rest of the committed diff from 1d9658c3c63c to HEAD: (`_jog_task_local_failure` and the supervised `failed` branch in
   `jog_run_main`), `skills/2-daily/jog/SKILL.md`, `CHANGELOG.md`, the plan follow-up section of
   `PROJECT/2-WORKING/GH-1400-SUPERVISION-COMPOSITION.md`, and `TESTS-RESULTS/2026-11-16+GH-1400/`
   (`followup.py`, `SUMMARY.md`, `provenance.jsonl`, `smoke/`, `repeat/`, failed attempts).
