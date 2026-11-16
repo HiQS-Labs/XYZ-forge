@@ -147,6 +147,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1475 GH-1475 · merge-cleanup: 3-phase remediation from a 13-PR batch post-mortem — `needs-contract`
 - #1484 GH-1484 · connect-the-dots skill — `needs-contract`
 - #1409 GH-1409 · ci(vendored-smoke): base-pin judge files against self-modification — `needs-contract`
+- #1479 GH-1479 · refactor: add Python static analysis and decompose swarm-preflight main — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
 - #61 GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) — `needs-doc`
@@ -212,7 +213,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1482 refactor: type and decompose releases_app boundaries after #1471 — `needs-doc`
 - #1481 refactor: decompose marathon-drive main after #1467 — `needs-doc`
 - #1480 refactor: decompose merge-cleanup entry point and landing loop after #1475 — `needs-doc`
-- #1479 refactor: add Python static analysis and decompose swarm-preflight main — `needs-doc`
 - #1477 Spike: local tick supervision simulator using existing ATE and semantic recovery controls — `needs-doc`
 - #1476 Plan: accept RAW intake, bound preparation research, and require fresh readiness at execution admission — `needs-doc`
 - #1474 Research: adapt Agent Orchestrator's durable supervision concepts to Forge's daily-goals loop (explicit attribution) — `needs-doc`

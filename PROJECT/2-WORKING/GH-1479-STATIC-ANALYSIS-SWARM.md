@@ -138,3 +138,7 @@ Not changed: packet write mechanism (the atomic-write exception above stands), `
 - **The Python layer now needs mypy in the gate's interpreter.** A prepared gate venv without it fails `test_swarm_preflight_module_load` until `python3 -m pip install -r requirements-dev.txt` is run there.
 - **A mypy red control on a copied file needs `harness_paths.py` beside it,** or the fallback import adds an unrelated `import-not-found` error to the witness.
 - **Grep the tests for source-text pins before refactoring a module.** Two suites outside the focused set pinned this module's source text and a workflow line by literal string. `grep -rn 'swarm_preflight\|break-system-packages' test/` beforehand would have put them in the focused set instead of leaving them for the full gate.
+
+## Merge evidence
+
+- PR #1494 merged 2026-11-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
