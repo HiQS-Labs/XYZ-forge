@@ -262,3 +262,94 @@ missing-result hold; malformed state hold; stopped-owner exclusion; deadline/can
 safe branch/log preservation; explicit complete evidence aggregation. Gate/review remain separate.
 
 Implementation review correction (2026-11-15): supervised clone alignment also holds on a detached HEAD, preserving its unique commits in place. Explicit resume holds when the newest recorded gate retry lacks a valid matching result. Gate retry records its exact identity and result path before dispatch, so an interrupted retry remains visible without adding a new ledger.
+
+## Follow-up — task-local failure continuation (2026-11-16)
+
+Authorized after the dogfood round (#1400 comment 6909393598): fix the existing supervisor so a
+provably task-local failure no longer halts independent ready work, and run the missing restart and
+global-stop controls before any readiness claim. Same branch and PR #1491; the dogfood runtime pin
+`1d9658c3c63c1b1a8780ad26e4962f808b3c7625` stays in history and its runtime clone is untouched.
+Budget recorded 2026-11-16T17:32Z: setup+implementation at most 3 h (to 20:32Z); plan QA and final
+QA at most 3 rounds each; at most 3 repair rounds per distinct blocker; synthetic controls 15 min
+smoke, then 15 min of variations only if the smoke passes. No real builder dispatch, merge, deploy
+or API fallback. Reviewer: Claude subscription through the existing relay harness.
+
+### Observed problem
+
+`jog_run_main` (supervised Marathon branch) projects the run's action and, for `failed`, prints
+"stopping queue execution on task failure" and breaks. Wake 1 stopped at GH-1023 whose receipt was
+`escalated` / `pre-advance-failed` / exit 5 / gate `red` with no PR; GH-1049 exec1 had the same
+shape. `run_marathon_phase` returns `failed` in three different situations: (a) a valid,
+identity-matched receipt whose outcome is not approved/parked (`projected-failed`); (b) no valid
+receipt (`no-valid-result`, unknown outcome); (c) the clone's ledger artifacts changed
+(`clone-ledger-changed`, shared clone contamination). Only part of (a) is task-local.
+
+### Classification (fail closed)
+
+A supervised wake continues past `failed` only when all hold, read back from durable state:
+the ledger's newest execution is the one just dispatched (count = prior + 1) with status
+`projected-failed` and recorded outcome `escalated`; its receipt reloads and validates, matches the
+issue and execution id, names this execution target, has outcome `escalated`, gate result `red`
+and no preserved approval. Anything else, including a load error, stops as today. Not task-local
+by construction: `lock-contention` (ownership), `interrupted`, `crashed`, `refused`,
+`post-approve-failed`, an escalation whose gate did not run red, no/corrupt/mismatched receipt,
+clone ledger change, deadline expiry and any exception. Legacy relay drive failure and the
+non-supervised checkpoint path keep breaking (scope is supervised real Marathon).
+
+Why this is safe: the failed row is already `failed` with its reason and receipt path persisted by
+the canonical writer before the decision, so it is never reselected or retried; `tasks_processed`
+was counted at lease and the deadline check runs first each iteration, so neither budget resets.
+The next dispatch still passes every shared check first: `_jog_align_target` takes the execution
+clone's conservative lock (a live or SIGSTOPped owner exits 4; unknown owner holds), refuses
+tracked dirt, detached HEAD and dependent worktrees; `_validate_execution_target` refuses ledger
+changes. A task failure never skips those checks. Limit: a gate red caused by a shared environment
+defect (wake 1's leaked reviewer variable) is indistinguishable from a task defect here; it can
+cost later tasks one attempt each, bounded by `--max-tasks` and the deadline, never a retry.
+
+Dependency: Jog has no dependency graph. A dependent task is held by preflight readiness
+(refusal parks it without a builder and halts the wake, unchanged); earlier `parked`/`failed`
+rows are never selected. Restart (requirement 3) and global stop (requirement 4) reuse existing
+code (`JogCheckpoint.begin(recover=…)`, `_jog_supervise_recover`, `JogSupervisorLock`); this
+follow-up adds no code there unless a control fails.
+
+### Smallest change and non-goals
+
+One helper in `utils/py/jog_run.py` implementing the classification above and one branch in the
+supervised loop that continues with a message naming the retained failure. No new ledger,
+status, flag, queue, daemon, retry, test suite or registry entry. No change to legacy drive,
+recovery, checkpoint publication, preflight or Marathon. Docs: `skills/2-daily/jog/SKILL.md`
+supervision paragraph and `CHANGELOG.md` entry updated in the same change.
+
+### Controls (manual, `TESTS-RESULTS/2026-11-16+GH-1400/`, real `releases_app.py jog run` entrypoint)
+
+Reuse PR #1491's retained `check.py` fixture (synthetic primary/remote/execution clone, controlled
+preflight and worker, no provider) by exec as its other scripts do, adding a publication clone for
+`--checkpoint-root` and a per-issue worker outcome. #1477's simulator is not reused: it exercises
+the tick kernel through an adapter, not this entrypoint; its two scenarios are adapted here.
+Every wake uses `--supervise-until` and `--checkpoint-root`. Each record carries the source HEAD.
+
+1. `local-failure-continues`: A escalates gate red; same invocation dispatches B once; A `failed`
+   with reason and receipt path, attempt 1, not redispatched; checkpoint published.
+2. `budgets-held`: A fails, B and C pending, `--max-tasks 2`: A and B dispatched, C not; a held
+   (parked) row and a preflight-refused dependent D are never given a builder.
+3. `restart-adopts-once`: worker writes an approved receipt and SIGKILLs the supervisor before
+   publication/acknowledgement; restart adopts A without a builder (starts count unchanged), attempt
+   retained, then B runs once. Variants `restart-missing` / `restart-corrupt` hold A, never rebuild.
+4. `stop-owner`: after A's task-local failure a SIGSTOPped peer owns the execution clone lock; the
+   wake stops, B undispatched. `stop-checkpoint`: a contradicted journal (foreign primary change)
+   refuses before any dispatch. Fail-closed red: receipts `lock-contention`, `crashed`, escalation
+   with gate not red, corrupt receipt and mismatched execution id each stop with B undispatched.
+5. `baseline-red`: the unfixed `1d9658c3c` `jog_run.py` on control 1's fixture leaves B
+   undispatched. Aggregation requires an explicit nonempty unique list; missing/failed rejects.
+
+Each control also asserts no duplicate worker (per-issue start counts) and that the source clone's
+HEAD, origin, `core.bare` and local identity are unchanged. Existing focused suite: the Jog–Marathon
+integration suite run in a disposable full clone. Final gate selected by `utils/ci-route.sh`.
+
+Unproven after this follow-up: production providers, real gate environment classification,
+power loss, context continuity, external exactly-once and PID reuse.
+
+### Rating
+
+Existing row retained (75/60/50/45, no override); this is the same task's scoped repair, so no
+re-score. Recurrence: one observed incident (wake 1); trend unknown.
