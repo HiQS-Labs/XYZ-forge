@@ -1,0 +1,2 @@
+$ bash test/gh589-skill-viewer.sh   (disposable full clone of the task branch at e571fab02; HEAD, origin and bare flag identical before and after)
+gh589-skill-viewer: 8 passed, 0 failed

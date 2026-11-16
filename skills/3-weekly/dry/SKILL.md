@@ -12,8 +12,10 @@ description: >-
   of them know about each other" failure that stays invisible until the bug count
   spikes. Produces a ranked Convergence Map naming the single gateway each cluster
   is missing. Do NOT fire to grade one diff (that is /code-review), to trace one
-  subject's blast radius (that is /recon), or to cluster recurring defects (that
-  is /radar).
+  subject's blast radius (that is /recon), to cluster recurring defects (that
+  is /radar), or to ask what already exists that a new problem or feature could
+  reuse (that is /connect-the-dots; /dry consolidates paths that already
+  duplicate each other).
 argument-hint: "[path or subsystem] [--depth quick|full]"
 ---
 
