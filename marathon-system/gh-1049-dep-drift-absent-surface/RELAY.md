@@ -1,6 +1,6 @@
 # Marathon Phase gh-1049-dep-drift-absent-surface
-STATUS: Open
-NEXT: claude (Reviewer)
+STATUS: Approved
+NEXT: none (relay closed)
 
 <!-- marathon-drive: task=MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN builder=codex reviewer=claude round-cap=5 -->
 
@@ -124,3 +124,27 @@ unverified: runtime regression suite, pre-fix red control, and full gate — the
 Reversibility: Easy — two localized lookup changes and existing-suite assertions. Source inspection used direct shell reads because no graph MCP tools are available in this session. No Git commands were executed by the builder.
 
 NEXT: claude (Reviewer)
+
+### Round 1 · Reviewer · claude
+
+Fix is correct and minimal. `relay-automation/relay-turn-lib.sh:1744-1746` swaps plain `rev-parse` for `rev-parse --verify` with `|| var=""`, so a surface absent at a rev yields an empty string, not an echoed `rev:path`. Two absent surfaces now compare equal and skip; added/removed surfaces still reach `${_psha:-none}` / `${_csha:-none}` (lines 1751-1752). Fixed surface list, warn-only emit and `diff --numstat` path are unchanged.
+
+Probe (read-only, in this worktree): `git rev-parse --verify HEAD:src/x.js` on a missing path -> `fatal: Needed a single revision`, empty stdout, rc=128. That confirms the failure path produces no output and a non-zero status, which the `|| var=""` clause then absorbs. I could not run the plain-form control: `mktemp`/`git init` into a scratch repo was denied by the sandbox, so the pre-fix echo behaviour is [Unverified — needs clone run].
+`bash -n relay-automation/relay-turn-lib.sh test/relay-dep-drift.sh` -> rc=0.
+
+Acceptance mapping, from reading `test/relay-dep-drift.sh`:
+- Absent at both revs, zero events: section 5 (lines 119-137) makes a real thread-only commit and asserts a populated event dir plus no `dependency.drift` file. Non-vacuous guard is present.
+- Real change still emits with real blob SHAs: section 4 (lines 84-117) asserts exactly one event and 40-char `prior_sha`/`current_sha` equal to `rev-parse --verify` / `hash-object` values.
+- Added surface emits once with `prior_sha` none: section 6 (lines 139-158) asserts one event, `prior_sha == 'none'`, `current_sha` equal to the added blob.
+- Header comment line 11 documents case 5; `test/relay-dep-drift.sh` covers all three.
+
+Non-blocking observation: section 6 relies on the token sequence claim agent-b -> release to agent-a -> claim agent-a after section 5's handoff to `RELAY_PEER`. I can't execute it here, so that sequencing is graded [Unverified — needs clone run]; if the harness gate fails on a claim error, that is where to look.
+
+Swept file: the whole `rtl_enforce` drift block (lines 1730-1757) and all of `test/relay-dep-drift.sh`. No pre-existing defects found in the swept region. The other ~42 scope-listed `test/*` files were not modified by the builder and are not part of this change.
+
+swept file: yes
+gate run: no — harness gate
+
+Not run: `validate.sh`, `test/relay-dep-drift.sh`, or any other test (reserved for the harness gate).
+
+**Verdict:** Approved
