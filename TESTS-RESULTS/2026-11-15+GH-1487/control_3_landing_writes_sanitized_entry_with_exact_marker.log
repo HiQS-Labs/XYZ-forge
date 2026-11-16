@@ -1,14 +1,15 @@
 # Control 3: Landing writes sanitized entry with exact marker
 # Command: format_changelog_entry(meta)
-# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
-# Timestamp: 2026-11-16T18:52:41.242952+00:00
+# Candidate Revision: 53f062111d05b0c67da46f713b106d75a0e28ec7
+# Timestamp: 2026-11-16T19:00:13.260556+00:00
 # Status: PASS
 
 Generated entry:
-## 2026-11-15 — Architectural Plan: Eliminate alert(1) merge conflicts (GH-1487)
+## 2026-11-15 — Architectural Plan: Eliminate alert(1) - merge conflicts (GH-1487)
 
 <!-- pr:1487 merge:0123456789abcdef0123456789abcdef01234567 -->
-- Added feature.
+- Added feature with x &lt; 5.
+ unfinished
     echo hello
 
 

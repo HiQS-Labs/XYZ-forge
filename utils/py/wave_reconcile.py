@@ -2067,7 +2067,7 @@ def format_changelog_entry(pr_meta):
     # Sanitize title
     raw_title = pr_meta.get("title") or f"PR #{number}"
     clean_title = re.sub(r"<[^>]+>", "", raw_title)
-    clean_title = clean_title.replace("`", "").replace("\r", " ").replace("\n", " ")
+    clean_title = clean_title.replace("`", "").replace("~", "-").replace("\r", " ").replace("\n", " ")
     for ch in ("<", ">", "=", "|"):
         clean_title = clean_title.replace(ch, "")
     clean_title = re.sub(r"\s+", " ", clean_title).strip()
@@ -2092,11 +2092,14 @@ def format_changelog_entry(pr_meta):
         # Sanitize body
         # 1. Strip all HTML comments
         s = re.sub(r"<!--[\s\S]*?-->", "", changelog_body)
+        s = s.replace("<!--", "")
         # 2. Strip conflict markers (<{7}|={7}|>{7}|\|{7})
         s = re.sub(r"(?m)^[ \t]*(?:<{7}|={7}|>{7}|\|{7})(?: |$).*\n?", "", s)
         # 3. Strip raw HTML tags
         s = re.sub(r"<[^>]+>", "", s)
-        # 4. Neutralize code fences for B1 safety: replace line-leading triple backticks/tildes with 4 spaces
+        # 4. Neutralize residual less-than characters (e.g. 'x < 5') so B1 does not see any '<'
+        s = s.replace("<", "&lt;")
+        # 5. Neutralize code fences for B1 safety: replace line-leading triple backticks/tildes with 4 spaces
         lines = []
         in_fence = False
         for line in s.splitlines():

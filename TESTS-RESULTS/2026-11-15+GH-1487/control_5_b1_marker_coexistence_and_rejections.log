@@ -1,10 +1,13 @@
 # Control 5: B1 marker coexistence and rejections
 # Command: ledger_merge.union_changelog with various inputs
-# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
-# Timestamp: 2026-11-16T18:52:41.244255+00:00
+# Candidate Revision: 53f062111d05b0c67da46f713b106d75a0e28ec7
+# Timestamp: 2026-11-16T19:00:13.271397+00:00
 # Status: PASS
 
-Fallback entry accepted: True
+Probe ('Example', ''): ACCEPTED
+Probe ('Improve ~ handling', ''): ACCEPTED
+Probe ('Example', '## Changelog\nUse x < 5.'): ACCEPTED
+Probe ('Example', '## Changelog\n<!-- unfinished'): ACCEPTED
 Second marker rejected: True
 Misplaced marker rejected: True
 Arbitrary HTML rejected: True

@@ -1,7 +1,7 @@
 # Control 2: Invalid config fallback
 # Command: read_changelog_writes_mode with invalid .pdda-mode
-# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
-# Timestamp: 2026-11-16T18:52:41.242554+00:00
+# Candidate Revision: 53f062111d05b0c67da46f713b106d75a0e28ec7
+# Timestamp: 2026-11-16T19:00:13.260051+00:00
 # Status: PASS
 
 .pdda-mode: CHANGELOG_WRITES=unsupported_mode

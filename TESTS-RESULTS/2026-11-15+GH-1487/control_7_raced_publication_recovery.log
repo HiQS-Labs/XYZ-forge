@@ -1,13 +1,32 @@
 # Control 7: Raced publication recovery
-# Command: Simulate publication push race, rebase, and receipted PR recovery
-# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
-# Timestamp: 2026-11-16T18:52:41.511720+00:00
+# Command: /Library/Developer/CommandLineTools/usr/bin/python3 /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1487-changelog-landing-2026-11-15/utils/py/hosted_lane_publish.py --reconcile-args --pr 1487 --reconcile-cmd /Library/Developer/CommandLineTools/usr/bin/python3 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmp3sil83zo/stub_reconcile.py
+# Candidate Revision: 53f062111d05b0c67da46f713b106d75a0e28ec7
+# Timestamp: 2026-11-16T19:00:13.757748+00:00
 # Status: PASS
 
-Simulated push rejected on race: True (exit 1)
-Rebase on newer integration base: SUCCESS
-Recovery rerun with catch_up / receipted PR missing marker: SUCCESS
-Recovery push to origin: SUCCESS (exit 0)
-Concurrent upstream work retained: True
-Receipted PR marker present in recovered changelog: True
+hosted_lane_publish exit code: 0
+STDOUT:
+hosted-lane-publish: push rejected — origin/development moved to ad8cb014bc47; discarding c8fb9f56fd75, publishing its 1 receipt file(s) first
+hosted-lane-publish: receipts published as 65057049157a (attempt 1)
+hosted-lane-publish: recompute: /Library/Developer/CommandLineTools/usr/bin/python3 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmp3sil83zo/stub_reconcile.py --pr 1487 --only-receipted --skip-pull
+recompute: synthesized changelog entry on fresh base
+hosted-lane-publish: pushed recomputed transitions as 49ccdda2ae93
+
+STDERR:
+To /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmp3sil83zo/upstream.git
+ ! [rejected]        HEAD -> development (fetch first)
+error: failed to push some refs to '/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmp3sil83zo/upstream.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+Remote log:
+49ccdda chore: reconcile merged development work
+6505704 chore: retain qualification receipts for bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+ad8cb01 feat: concurrent
+21f0a34 chore: baseline
+
+Receipted PR marker present on origin/development: True
 
