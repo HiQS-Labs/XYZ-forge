@@ -1,6 +1,6 @@
 # Marathon Phase gh-1050-no-swap-false-low-swap-warning
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: claude (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING-TURN builder=codex reviewer=claude round-cap=5 -->
 
@@ -106,3 +106,23 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-1050 in `utils/py/marathon_drive.py` and extended the existing `test/gh382-marathon-memory-telemetry.sh` suite only.
+
+Root cause: the sampler interpreted zero free swap without checking whether any swap existed; Fix site: platform swap parsing and the shared pre-telemetry normalization; Why not upstream/downstream: sysctl and /proc correctly report zero total, and normalization prevents both the warning and the tick cost argument from receiving a false exhausted-swap sample.
+
+- Darwin reads `total` from the same sysctl response; Linux reads `SwapTotal:` regardless of line order. An explicit zero total sets `swap_free_mb` to None before logging and tick emission. Missing total preserves prior behavior. Positive total with zero free still warns.
+- Added a Darwin no-swap fixture adjacent to the existing 512 MB low-swap fixture, checking successful execution, nonempty confirmation output, omitted free-swap sample and absence of warning / `swap_free=` output. Corrected the stale comment that claimed the sampler had no Linux branch.
+- Reversibility: Easy; only the existing memory sampler and its existing covering suite change. Phase start, complete and escalation callers retain the same interface; compressor telemetry is preserved.
+- Red control observed before editing: Darwin `total = 0.00M used = 0.00M free = 0.00M` returned swap_free_mb=0 and logged both the critically-low warning and `swap_free=0MB`.
+- Focused isolated sampler verification passed 8 cases: Darwin/Linux each with total/free MB 0/0, 3072/512, 3072/0 and 3072/2048. Checks covered returned values, exact 512 MB warning, absent no-swap warning/log bit/tick argument, preserved compressor sample and exhausted-swap warning. Python source parsing and `bash -n test/gh382-marathon-memory-telemetry.sh` passed. Probes/logs are transient under `.relay-scratch/` and are not committed gate receipts.
+- Graph tools unavailable in this session; inspected the exact sampler, its three callers and the covering suite by targeted source reads.
+
+unverified: full gh382 fixture suite and project gate — relay scope lock assigns execution to the harness outside this linked worktree; neither was run here.
+
+The top-level NEXT routing field was updated as explicitly required by the builder handoff instruction; other pre-existing relay text is unchanged.
+
+handing off to claude — claude, take your turn.

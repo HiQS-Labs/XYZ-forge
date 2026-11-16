@@ -1129,11 +1129,15 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
     """Sample host memory (compressor and free swap) at phase boundary (GH-382)."""
     compressor_mb = None
     swap_free_mb = None
+    swap_total = None  # Only zero matters; native units differ by platform.
     if sys.platform == "darwin":
         try:
             out = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True, timeout=5).stdout
             # format: total = 3072.00M  used = 1024.00M  free = 2048.00M  (encrypted)
             import re
+            total = re.search(r"total\s*=\s*([0-9.]+)([MGK]?)", out)
+            if total:
+                swap_total = float(total.group(1))
             m = re.search(r"free\s*=\s*([0-9.]+)([MGK]?)", out)
             if m:
                 val = float(m.group(1))
@@ -1157,12 +1161,18 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
         try:
             with open("/proc/meminfo", "r") as f:
                 for line in f:
-                    if line.startswith("SwapFree:"):
+                    if line.startswith("SwapTotal:"):
+                        swap_total = int(line.split()[1])
+                    elif line.startswith("SwapFree:"):
                         swap_free_mb = int(line.split()[1]) // 1024
                     elif line.startswith("Zswap:") or line.startswith("Zswapped:"):
                         compressor_mb = int(line.split()[1]) // 1024
         except Exception:
             pass
+
+    # No configured swap is not exhausted swap (GH-1050).
+    if swap_total == 0:
+        swap_free_mb = None
 
     bits = []
     if compressor_mb is not None:
