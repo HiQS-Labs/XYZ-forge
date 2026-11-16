@@ -397,4 +397,13 @@ Reviewed the canonical artifact, prior findings, current writer/configuration/ca
 
 STATUS set to Approved. Closing the token with the absolute env-pinned `tick done gh1487-final-qa --agent codex`; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-11-16T19:22:26Z
+task: gh1487-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 145a2594b552c920c3d05d24c2dd8a08876a64d1
+added-range: 33470+3622
+added-sha256: de9dd71da7f54f0c9317d3f0c91e23d349f0741c1e05d92ae9ea43dd0ddf1f71
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
