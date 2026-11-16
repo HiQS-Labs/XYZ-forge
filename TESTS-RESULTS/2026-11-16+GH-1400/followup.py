@@ -19,7 +19,7 @@ nopr={'number':None,'url':None,'state':None}
 if mode in ('red','stop-owner'):r.update(outcome='escalated',reason='pre-advance-failed',exit_code=5,gate={'result':'red','exit':1},pr=nopr)
 elif mode=='red-dirty':r.update(outcome='escalated',reason='pre-advance-failed',exit_code=5,gate={'result':'red','exit':1},pr=nopr)
 elif mode=='ledger':r.update(outcome='escalated',reason='pre-advance-failed',exit_code=5,gate={'result':'red','exit':1},pr=nopr);open(t/'releases.sql','a').write('-- fixture ledger change\\n')
-elif mode=='killed':r.update(outcome='escalated',reason='gate-killed',exit_code=5,gate={'result':'red','exit':108},pr=nopr)
+elif mode=='guardkill':r.update(outcome='escalated',reason='gate-killed',exit_code=5,gate={'result':'red','exit':108},pr=nopr)
 elif mode=='postapprove':r.update(outcome='post-approve-failed',reason='post-approve-failed',exit_code=9,approval_preserved=True,pr=nopr)
 elif mode=='refused':r.update(outcome='refused',reason='builder-equals-reviewer',exit_code=2,gate={'result':'not-run'},pr=nopr)
 elif mode=='interrupted':r.update(outcome='interrupted',reason='interrupted (exit 143)',exit_code=143,gate={'result':'not-run'},pr=nopr)
@@ -31,7 +31,7 @@ if mode in ('corrupt','kill-corrupt'):pathlib.Path(a.result).write_text('{"schem
 elif mode not in ('kill-missing','missing'):pathlib.Path(a.result).write_text(json.dumps(r))
 if mode=='red-dirty':(t/'feature.txt').write_text('uncommitted lane edit')
 if mode=='stop-owner':
- owner=subprocess.Popen([sys.executable,'-c','import time;time.sleep(300)'],start_new_session=True);os.kill(owner.pid,signal.SIGSTOP)
+ owner=subprocess.Popen([sys.executable,'-c','import time;time.sleep(300)'],start_new_session=True,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL);os.kill(owner.pid,signal.SIGSTOP)
  lock=t/'.git/relay-driver.lock';lock.mkdir();(lock/'pid').write_text(str(owner.pid));(t/'.tick/stopped-owner').write_text(str(owner.pid))
 if mode.startswith('kill'):
  sys.stdout.flush();os.kill(os.getppid(),signal.SIGKILL);time.sleep(1)
@@ -101,7 +101,7 @@ for mode,cid in [('kill-approve','restart-adopts-once'),('kill-missing','restart
  try:os.kill(int(wp.read_text()),0);orphan=True
  except ProcessLookupError:orphan=False
  killed=killed and not orphan
- p2=run(cid+'-restart',r,t,pb,{});s2=starts(t);q=byn(r);e=ex(r,901)
+ p2=run(cid+'-restart',r,t,pb,{},max_tasks=1);s2=starts(t);q=byn(r);e=ex(r,901)
  if mode=='kill-approve':ok=killed and p2.returncode==0 and s2=={901:1,902:1,903:0,904:0} and len(e)==1 and bool(e[0].get('committed_receipt')) and q[901]['attempt_count']==1 and q[901]['status']=='parked' and 'awaiting-landing' in (q[901]['failure_reason'] or '') and 'recovered GH-901' in p2.stdout and published(r)
  else:ok=killed and s2=={901:1,902:1,903:0,904:0} and len(e)==1 and not e[0].get('committed_receipt') and q[901]['status']=='parked' and 'supervision held' in (q[901]['failure_reason'] or '') and q[901]['attempt_count']==1
  ck(cid,ok,{'killed_rc':p.returncode,'after_kill':{'starts':s1,'row':mid[901],'journal_phase':journal.get('phase')},'restart_rc':p2.returncode,'starts':s2,'rows':q,'executions':e,'stdout':p2.stdout[-1200:],'stderr':p2.stderr[-600:]})
@@ -123,7 +123,7 @@ r,t,pb=setup('stop-checkpoint');old=git(r,'rev-parse','HEAD');(r/'foreign.txt').
 (r/'.tick/jog').mkdir(parents=True,exist_ok=True);(r/'.tick/jog/checkpoint.json').write_text(json.dumps({'base':old,'phase':'running','queue':{}}))
 p=run('stop-checkpoint',r,t,pb,{901:'red'});s=starts(t);q=byn(r)
 ck('stop-checkpoint-contradiction',p.returncode==2 and 'checkpoint held' in p.stderr and s=={901:0,902:0,903:0,904:0} and all(x['status']=='pending' and x['attempt_count']==0 for x in q.values()),{'rc':p.returncode,'starts':s,'stderr':p.stderr[-600:]})
-for mode,cid in [('killed','red-gate-killed'),('postapprove','red-post-approve-failed'),('refused','red-refused'),('interrupted','red-interrupted'),('missing','red-missing-receipt'),('ledger','red-clone-ledger-changed'),('lock','red-lock-contention'),('crashed','red-crashed'),('notrun','red-gate-not-run'),('corrupt','red-corrupt-receipt'),('mismatch','red-mismatched-receipt')]:
+for mode,cid in [('guardkill','red-gate-killed'),('postapprove','red-post-approve-failed'),('refused','red-refused'),('interrupted','red-interrupted'),('missing','red-missing-receipt'),('ledger','red-clone-ledger-changed'),('lock','red-lock-contention'),('crashed','red-crashed'),('notrun','red-gate-not-run'),('corrupt','red-corrupt-receipt'),('mismatch','red-mismatched-receipt')]:
  r,t,pb=setup(cid);p=run(cid,r,t,pb,{901:mode});s=starts(t);q=byn(r)
  ck(cid,s=={901:1,902:0,903:0,904:0} and q[901]['status']=='failed' and q[902]['status']=='pending' and 'stopping queue execution on task failure' in p.stdout and 'failed task-locally' not in p.stdout,{'rc':p.returncode,'starts':s,'rows':q,'stdout':p.stdout[-800:]})
 r,t,pb=setup('baseline');bl=out/'baseline_jog.py';bl.write_text(git(source,'show',baseline_rev+':utils/py/jog_run.py')+'\n')
