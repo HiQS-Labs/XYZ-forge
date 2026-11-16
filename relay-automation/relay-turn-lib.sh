@@ -1739,8 +1739,10 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     if [[ "$_newhead" != none && "$_newhead" != "$RTL_BEFORE_HEAD" ]]; then
       local _surf _psha _csha _dl
       for _surf in relay-automation/relay-turn-lib.sh src/project.js src/events.js; do
-        _psha="$(git -C "$RTL_ROOT" rev-parse "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null || true)"
-        _csha="$(git -C "$RTL_ROOT" rev-parse "$_newhead:$_surf" 2>/dev/null || true)"
+        # GH-1049: plain rev-parse can echo an unresolved rev:path on failure. Only
+        # verified object IDs are comparable; failed lookups represent absent surfaces.
+        _psha="$(git -C "$RTL_ROOT" rev-parse --verify "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null)" || _psha=""
+        _csha="$(git -C "$RTL_ROOT" rev-parse --verify "$_newhead:$_surf" 2>/dev/null)" || _csha=""
         [[ "$_psha" == "$_csha" ]] && continue   # unchanged (or absent at both revs) — no drift
         _dl="$(git -C "$RTL_ROOT" diff --numstat "$RTL_BEFORE_HEAD" "$_newhead" -- "$_surf" 2>/dev/null \
                 | awk '{a+=$1+0; d+=$2+0} END{print a+d+0}')"

@@ -1,6 +1,6 @@
 # Marathon Phase gh-1049-dep-drift-absent-surface
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: claude (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN builder=codex reviewer=claude round-cap=5 -->
 
@@ -106,3 +106,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented GH-1049 in `relay-automation/relay-turn-lib.sh` and updated the existing `test/relay-dep-drift.sh`; no other artifacts changed.
+
+Root cause: failed plain `git rev-parse rev:path` lookups can print the unresolved input, so two missing paths compare as different revision-prefixed strings; Fix site: the shared-surface blob lookups in `rtl_enforce`; Why not upstream/downstream: this is where failed Git output first becomes a supposed object ID, before event emission.
+
+Both lookups now use `rev-parse --verify` and explicitly clear the result on failure. Identical empty results skip emission; added or removed surfaces retain the existing `none` field encoding. Warn-only emission and the fixed surface list are unchanged.
+
+The existing suite now requires exactly one event for a changed surface and compares its emitted SHA fields to the actual expected blob IDs. It also exercises a real thread-only commit with all three surfaces absent (zero events), followed by adding `src/project.js` (one event, prior SHA `none`, actual current blob ID). The absent assertion first requires a populated event directory, avoiding vacuous success on missing fixture output. These are discriminating controls: the old lookups would report missing surfaces and fail the exact-count/zero-event assertions.
+
+Verification performed: `bash -n relay-automation/relay-turn-lib.sh test/relay-dep-drift.sh` passed; all three embedded Python assertion blocks compiled successfully without execution. Syntax output is in `.relay-scratch/gh1049-syntax.log` (ephemeral).
+unverified: runtime regression suite, pre-fix red control, and full gate — the embedded scope lock reserves test/gate execution for the harness outside this linked worktree; only syntax checks were run. No runtime pass is claimed.
+
+Reversibility: Easy — two localized lookup changes and existing-suite assertions. Source inspection used direct shell reads because no graph MCP tools are available in this session. No Git commands were executed by the builder.
+
+NEXT: claude (Reviewer)

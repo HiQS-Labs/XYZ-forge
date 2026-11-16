@@ -8,6 +8,7 @@ set -euo pipefail
 #   3. rtl_drift_brief surfaces a peer's unread drift once (watermark advances), and never the
 #      agent's OWN drift.
 #   4. rtl_enforce emits a drift event when a landed turn changes a shared surface (src/project.js).
+#   5. Surfaces absent at both revisions emit nothing; an added surface emits prior_sha none.
 # Warn-only invariant: none of this blocks or fails a turn.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -67,6 +68,19 @@ ok "no phantom 'post-commit' task in projection" "! grep -q 'post-commit' <<<\"\
 ) && pass=$((pass+3)) || fail=$((fail+1))
 rm -rf "$D"
 
+# Run the production emitter in a fixture; its git mutations remain in the fixture sandbox.
+enforce_turn() (
+  local dir="$1" artifact="$2"
+  require_fixture "$dir" "dep-drift enforcement"
+  cd "$dir"
+  export RELAY_FILE="relay-system/x/thread.md" RELAY_PEER="agent-b"
+  # shellcheck disable=SC1090
+  source "$LIB"
+  rtl_init "$dir" "relay-system/x/thread.md" "$artifact"
+  rtl_before
+  rtl_enforce RELAY-T agent-a /dev/null testtool
+)
+
 # --- 4: end-to-end detection in rtl_enforce ---------------------------------------------------------
 D2="$(mkfixture)"; export TICK_REPO_ROOT="$D2"; T2="$D2/bin/tick"
 mkdir -p "$D2/src" "$D2/relay-system/x"
@@ -75,24 +89,74 @@ printf '# thread\n\n**STATUS:** Open\n**NEXT:** agent-b\n' > "$D2/relay-system/x
 git -C "$D2" add -A >/dev/null 2>&1; git -C "$D2" commit -qm seed
 "$T2" log task.created RELAY-T --agent bootstrap >/dev/null
 "$T2" claim RELAY-T --agent agent-a --paths "src/project.js,relay-system/x/thread.md" >/dev/null
+prior_sha="$(git -C "$D2" rev-parse --verify HEAD:src/project.js)"
 # agent-a's turn changes the shared surface src/project.js (on-lane) + touches the relay file
 printf '// stub v2 — API changed\nmodule.exports = { changed: true };\n' > "$D2/src/project.js"
 printf 'turn note\n' >> "$D2/relay-system/x/thread.md"
-( cd "$D2"
-  export RELAY_FILE="relay-system/x/thread.md" RELAY_PEER="agent-b"
-  # shellcheck disable=SC1090
-  source "$LIB"
-  rtl_init "$D2" "relay-system/x/thread.md" "src/project.js"
-  rtl_before
-  rtl_enforce RELAY-T agent-a /dev/null testtool
-) >/dev/null 2>&1
+current_sha="$(git -C "$D2" hash-object src/project.js)"
+enforce_turn "$D2" "src/project.js" >/dev/null 2>&1
 drift_events="$(ls -1 "$D2/.tick/events/"*dependency.drift*.jsonl 2>/dev/null | wc -l | tr -d ' ')"
-ok "rtl_enforce emitted a drift event for the changed surface" "[[ '$drift_events' -ge 1 ]]"
+ok "rtl_enforce emitted exactly one drift event for the changed surface" "[[ '$drift_events' -eq 1 ]]"
 ok "emitted drift names src/project.js" "grep -lq '\"surface\":\"src/project.js\"' $D2/.tick/events/*dependency.drift*.jsonl 2>/dev/null"
+# Read emitted artifacts rather than merely recomputing the expected IDs.
+( python3 - "$D2/.tick/events" "$prior_sha" "$current_sha" <<'PYJSON'
+import json, pathlib, sys
+events = [json.loads(line) for path in pathlib.Path(sys.argv[1]).glob('*dependency.drift*.jsonl')
+          for line in path.read_text().splitlines() if line.strip()]
+assert len(events) == 1, events
+event = events[0]
+assert event['surface'] == 'src/project.js', event
+assert event['prior_sha'] == sys.argv[2], event
+assert event['current_sha'] == sys.argv[3], event
+assert len(event['prior_sha']) == len(event['current_sha']) == 40, event
+PYJSON
+) && pass=$((pass+1)) || fail=$((fail+1))
 # warn-only: the turn still committed (drift never fails the turn)
 turn_log="$(git -C "$D2" log --oneline 2>/dev/null || true)"
 ok "turn still committed (warn-only, non-blocking)" "[[ \"\$turn_log\" == *RELAY-T* ]]"
 rm -rf "$D2"
+
+# --- 5: absent at both revisions — a thread-only commit must emit no drift -------------------------
+D3="$(mkfixture)"; export TICK_REPO_ROOT="$D3"; T3="$D3/bin/tick"
+mkdir -p "$D3/relay-system/x"
+printf '# thread\n\n**STATUS:** Open\n**NEXT:** agent-b\n' > "$D3/relay-system/x/thread.md"
+git -C "$D3" add -A; git -C "$D3" commit -qm seed
+"$T3" log task.created RELAY-T --agent bootstrap >/dev/null
+"$T3" claim RELAY-T --agent agent-a --paths "relay-system/x/thread.md" >/dev/null
+printf 'thread-only turn\n' >> "$D3/relay-system/x/thread.md"
+enforce_turn "$D3" "relay-system/x/thread.md" >/dev/null 2>&1
+( python3 - "$D3/.tick/events" <<'PYJSON'
+import pathlib, sys
+event_dir = pathlib.Path(sys.argv[1])
+assert event_dir.is_dir(), event_dir
+assert list(event_dir.glob('*.jsonl')), 'fixture must contain real task events'
+assert not list(event_dir.glob('*dependency.drift*.jsonl'))
+PYJSON
+) && pass=$((pass+1)) || fail=$((fail+1))
+turn_log="$(git -C "$D3" log --oneline)"
+ok "absent-surface case made a real turn commit" "[[ \"\$turn_log\" == *RELAY-T* ]]"
+
+# --- 6: a newly added shared surface emits once, with none -> real blob SHA ------------------------
+"$T3" claim RELAY-T --agent agent-b --paths "src/project.js,relay-system/x/thread.md" >/dev/null
+# The next turn is by agent-a, so return the token before enforcing it.
+"$T3" release RELAY-T --agent agent-b --to agent-a >/dev/null
+"$T3" claim RELAY-T --agent agent-a --paths "src/project.js,relay-system/x/thread.md" >/dev/null
+mkdir -p "$D3/src"
+printf 'module.exports = { added: true };\n' > "$D3/src/project.js"
+printf 'added surface\n' >> "$D3/relay-system/x/thread.md"
+added_sha="$(git -C "$D3" hash-object src/project.js)"
+enforce_turn "$D3" "src/project.js" >/dev/null 2>&1
+( python3 - "$D3/.tick/events" "$added_sha" <<'PYJSON'
+import json, pathlib, sys
+events = [json.loads(line) for path in pathlib.Path(sys.argv[1]).glob('*dependency.drift*.jsonl')
+          for line in path.read_text().splitlines() if line.strip()]
+assert len(events) == 1, events
+assert events[0]['surface'] == 'src/project.js', events
+assert events[0]['prior_sha'] == 'none', events
+assert events[0]['current_sha'] == sys.argv[2], events
+PYJSON
+) && pass=$((pass+1)) || fail=$((fail+1))
+rm -rf "$D3"
 
 echo "  relay-dep-drift: $pass pass, $fail fail"
 [[ "$fail" -eq 0 ]]
