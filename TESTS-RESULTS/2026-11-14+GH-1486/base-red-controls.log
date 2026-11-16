@@ -1,0 +1,13 @@
+== base red controls on 5967bde25 (run 2026-11-15T07:10:22Z)
+-- A3-A6 driver on base:
+  FAIL: skill block not found in <repos>/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14-verify/skills/4-occasional/re-vendor-xyz/SKILL.md
+== result: 0 passed, 1 failed
+driver_rc=
+-- A1 red: ls skills/*/re-vendor-xyz
+(eval):4: no matches found: skills/*/re-vendor-xyz
+rc=1
+-- A2 red: git grep SAFETY GUARD MISSING -- skills/
+rc=1 (1 = no match)
+-- A7 red: git grep re-vendor-xyz in pointer files
+rc=1 (1 = no match)
+back on eb9a4812
