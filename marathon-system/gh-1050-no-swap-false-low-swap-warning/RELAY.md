@@ -1,5 +1,5 @@
 # Marathon Phase gh-1050-no-swap-false-low-swap-warning
-STATUS: Open
+STATUS: Approved
 NEXT: claude (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING-TURN builder=codex reviewer=claude round-cap=5 -->
@@ -126,3 +126,27 @@ unverified: full gh382 fixture suite and project gate — relay scope lock assig
 The top-level NEXT routing field was updated as explicitly required by the builder handoff instruction; other pre-existing relay text is unchanged.
 
 handing off to claude — claude, take your turn.
+
+### Round 1 · Reviewer · claude
+
+swept file: yes — read all of `_phase_memory_sample` (utils/py/marathon_drive.py:1127-1198) and the gh382 swap section (lines 115-155), plus the 3 changed files' diff. No pre-existing defects found in the sampler.
+
+Probes (non-mutating, stubbed `subprocess.run`, run from repo root with PYTHONDONTWRITEBYTECODE=1; exit 0):
+- `total = 0.00M used = 0.00M free = 0.00M (encrypted)` → `{'compressor_mb': None, 'swap_free_mb': None}`, no warning, no `swap_free=` bit. Criterion 1 met.
+- `total = 3072.00M used = 2560.00M free = 512.00M` → `warn: host free swap is critically low (512MB < 1024MB)`, swap_free_mb=512. Criterion 2 met.
+- `total = 3072.00M used = 3072.00M free = 0.00M` → still warns (0MB < 1024MB): a real exhausted swap is not masked.
+- `log()` writes to stdout (captured with 2>/dev/null), so the new test's `grep -qE 'critically low|swap_free='` negative check is not vacuous.
+
+Findings against the criteria:
+- Criterion 3 (Linux, diff review): `SwapTotal:` is read in the same `/proc/meminfo` loop; `swap_total == 0` nulls `swap_free_mb` after both platform branches, so it is line-order independent and shared with darwin. Met.
+- Criterion 4: no-swap case added directly after the low-swap case in test/gh382-marathon-memory-telemetry.sh, darwin-gated like it, with a positive confirmation line plus a negative grep. Not executed here (scope lock); the case is correct by reading.
+- Missing `total` (sysctl/proc unparseable) leaves `swap_total=None`, so prior behavior is preserved; `None == 0` is False. Fine.
+- Scope: only marathon_drive.py and gh382 changed besides RELAY.md; the other listed artifacts are untouched, which is correct.
+- [Nit, no action] The stale darwin-only comment was rewritten shorter; it is now accurate.
+
+gate run: no — harness gate
+unverified: full gh382 suite and `bash validate.sh --auto development` — scope lock assigns them to the harness gate after this turn.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
