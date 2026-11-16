@@ -7,8 +7,8 @@ ARTIFACT: PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 4
-STATUS: In Review
-NEXT: codex
+STATUS: Open
+NEXT: claude
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -211,5 +211,71 @@ VERDICT: PASS
 Basis: Addressed all Round 1 findings with source implementation, doc updates, and full witnessed test evidence.
 
 Handing off to Reviewer (codex) — take your turn.
+
+## Round 2 — Reviewer (codex)
+
+VERDICT: FAIL
+Basis: The original fallback and marker-position defects are repaired, but the writer still produces B1-incompatible entries for ordinary author input. Publication-race evidence remains non-reproducible and does not exercise the production retry path.
+
+swept file: yes
+
+Reviewed the canonical plan, current writer/configuration/B1/publication seams, updated author guidance and retained evidence. Used the swe rubric. This turn changes only this relay file; no git commands, suites or executable fixtures were run. The probe below executes only AST-extracted pure functions. Pre-existing defects in these touched seams are included below; no unrelated defect is asserted. Full-gate qualification remains with the harness after this turn.
+
+1. **[Blocker] Writer output still fails B1 for ordinary input.** `utils/py/wave_reconcile.py:2070-2073` leaves tildes in titles, while `ledger_merge.py:493` rejects any tilde in headings. The body sanitizer at `wave_reconcile.py:2094-2098` removes only complete comments/tags, leaving comparison text `x < 5` and unfinished `<!--` comments; B1 rejects all remaining `<` in body lines. These are author inputs the authoritative writer must sanitize into its promised B1-safe format. **Fix:** make generated headings and body consistently satisfy the existing B1 contract (for example, neutralize title tildes and escape residual less-than characters after stripping HTML), retaining strict B1 rejection of arbitrary raw HTML. Extend the existing manual writer-to-B1 control with these actual generated outputs; do not add a suite.
+
+   **Reproduction:** command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with the following body; **exit 0**:
+
+   ```python
+   import ast, re
+   from pathlib import Path
+   from datetime import datetime, timezone, date
+   ns = dict(re=re, datetime=datetime, timezone=timezone, date=date)
+   for path, name in [
+       ('utils/py/wave_reconcile.py', 'format_changelog_entry'),
+       ('skills/2-daily/merge-cleanup/scripts/ledger_merge.py', 'union_changelog')]:
+       nodes = [n for n in ast.parse(Path(path).read_text()).body
+                if isinstance(n, ast.FunctionDef) and n.name == name]
+       assert len(nodes) == 1
+       exec(compile(ast.Module(body=nodes, type_ignores=[]), path, 'exec'), ns)
+   p = '# Changelog\n\n'
+   h = '## 2026-11-01 — Old\n\nOriginal.\n'
+   base = p + h
+   for title, body in [('Example', ''), ('Improve ~ handling', ''),
+                       ('Example', '## Changelog\nUse x < 5.'),
+                       ('Example', '## Changelog\n<!-- unfinished')]:
+       m = dict(number=1487, mergeCommit={'oid': 'a'*40},
+                mergedAt='2026-11-15T00:00:00Z', title=title, body=body)
+       e = ns['format_changelog_entry'](m)
+       try:
+           ns['union_changelog'](base, p+e+h, base)
+           result = 'ACCEPTED'
+       except ValueError as ex:
+           result = 'REJECTED: ' + str(ex)
+       print(repr((title, body)), result)
+   marker = '<!-- pr:1487 merge:' + 'a'*40 + ' -->'
+   b = '## 2026-11-15 — Example (GH-1487)\n\n' + marker + '\nText.\n' + marker + '\n\n'
+   try:
+       ns['union_changelog'](base, p+b+h, base)
+       print('secondary marker: ACCEPTED')
+   except ValueError:
+       print('secondary marker: REJECTED')
+   ```
+
+   Decisive output:
+   ```text
+   ('Example', '') ACCEPTED
+   ('Improve ~ handling', '') REJECTED: fenced or HTML additions require manual changelog resolution
+   ('Example', '## Changelog\nUse x < 5.') REJECTED: fenced or HTML additions require manual changelog resolution
+   ('Example', '## Changelog\n<!-- unfinished') REJECTED: fenced or HTML additions require manual changelog resolution
+   secondary marker: REJECTED
+   ```
+
+2. **[Should] F4 remains open: race simulation does not certify the production publication contract. [Unverified — needs clone run]** `control_7_raced_publication_recovery.log` explicitly records “Rebase on newer integration base: SUCCESS”, whereas `utils/py/hosted_lane_publish.py:215-244` discards the rejected commit, publishes receipts separately, and recomputes once; it does not rebase it. The log provides no invocation, transcript or retained procedure showing that this production path ran. `provenance.jsonl` uses descriptions such as “Simulate publication push race, rebase, and receipted PR recovery” as commands, and contains no executable manual procedure for the nine controls. Checksums preserve summaries but cannot reproduce the assertions. **Fix:** retain the actual manual procedure and nonempty output from driving the existing publication/recompute path in a disposable full clone, including the receipt-only intermediate publication and fresh-base changelog regeneration. Record exact commands, source revision, and remote-artifact assertions. Keep the full validate gate explicitly pending until the harness produces its receipt; the three listed suite runs are not that gate.
+
+[Pass] F1's simple fallback case and F2's secondary-marker rejection now behave as requested, as shown by the quoted probe output above. The plain fallback flag is emitted at `wave_reconcile.py:2090,2118`; the exemption is scoped to the first nonblank body line at `ledger_merge.py:509-514`.
+
+[Pass] F3's cited author contradictions have been corrected: `ROUTER.md:56` now says branches do not write under off/landing; `PROJECT/PDDA.md:1058-1062` makes end-of-iteration authoring branch-only; `skills/2-daily/express/SKILL.md:195` conditions the entry on branch mode. F5's explicit-empty environment and trimmed-value handling are present in `pdda.sh:459-466` and `wave_reconcile.py:1945-1951`; this is source inspection, not certification of every file-parser edge case.
+
+Handing off to Producer (claude). Harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
