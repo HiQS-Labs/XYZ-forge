@@ -2,7 +2,7 @@
 gh_issue: 1484
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1484
 title: "New weekly skill: connect-the-dots — find existing modules to reuse before designing something new"
-status: Active
+status: Complete
 created: 2026-11-14
 updated: 2026-11-15
 doc_type: enhancement
@@ -17,7 +17,7 @@ goal: "Given a problem, name the existing modules that already cover parts of it
 
 | What was just completed | What's next |
 |---|---|
-| Final review approved in round 3 of 3 (Codex, `relay-system/2026-11-14/gh1484-final-qa.md`). Skill accepted by the operator as a reuse map that shows its dismissals; paraphrase-first step added. Rewritten check partly met: runs 7 and 8 each meet 3 of 5 points. | PR ready against `development`; awaiting merge. Not shipped until landed. |
+| Final review approved in round 3 of 3 (Codex, `relay-system/2026-11-14/gh1484-final-qa.md`). Skill accepted by the operator as a reuse map that shows its dismissals; paraphrase-first step added. Rewritten check partly met: runs 7 and 8 each meet 3 of 5 points. | Shipped: PR #1492 merged 2026-11-15 (`4635abe09`); #1484 closed. Follow-up: #1493 (clone retirement). |
 
 # GH-1484: connect-the-dots skill
 
