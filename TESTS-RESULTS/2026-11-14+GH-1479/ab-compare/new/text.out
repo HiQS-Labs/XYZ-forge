@@ -1,0 +1,15 @@
+swarm-preflight · project-doc · slug=preflight-main
+  target-root : /private/tmp/gh1479-ab.7EtceF/target (ab-work @ 4635abe09)
+  branch      : suggested=marathon/preflight-main-2026-11-14 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=0
+  ref-probed  : development @ 4635abe09 (checkout matches)
+  candidate   : ready
+  inlined-acc : 0 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1479 (https://github.com/HiQS-Labs/XYZ-forge/issues/1479)
+  acceptance  : match — 0/0 criteria copied verbatim from issue #1479
+  issue-state : OPEN — issue #1479 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+Packet written: /tmp/gh1479-ab.7EtceF/target/temp/gh1479/packet

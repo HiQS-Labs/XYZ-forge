@@ -302,9 +302,9 @@ out.close(); err.close()
 PYZ
 grep -q "Acceptance section with no" "$DBG/zerr.txt" && ! grep -q "Acceptance section with no" "$DBG/zout.txt" \
   && pass "zero-criteria warning defaults to stderr (not stdout)" || fail "zero-criteria warning default stream wrong"
-# ordering pin v2: the INDENTED runtime call inside main() must precede the dry-run exit — the
+# ordering pin v2: the INDENTED runtime call (in write_packet() since GH-1479) must precede the dry-run exit — the
 # column-0 `def warn_zero_criteria` line must NOT satisfy this (round-3 tautology fix).
-call_line=$(grep -n '^    warn_zero_criteria(acc_mode' "$PYPREFLIGHT" | head -1 | cut -d: -f1)
+call_line=$(grep -n '^    warn_zero_criteria(' "$PYPREFLIGHT" | head -1 | cut -d: -f1)
 dry_line=$(grep -n '^    if args.dry_run:' "$PYPREFLIGHT" | head -1 | cut -d: -f1)
 [ -n "$call_line" ] && [ -n "$dry_line" ] && [ "$call_line" -lt "$dry_line" ] \
   && pass "zero-criteria runtime call (indented) precedes the dry-run exit" || fail "runtime call moved/removed relative to dry-run exit (call=$call_line dry=$dry_line)"
