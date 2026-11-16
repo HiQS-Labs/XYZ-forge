@@ -2497,6 +2497,34 @@ def _jog_result_identity(receipt, gh_num, execution_id):
         raise ContractError("result receipt does not match the selected issue/execution")
 
 
+def _jog_task_local_failure(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected failed only because its own gate ran red, else None.
+
+    Fail closed: anything but a valid, identity-matched `pre-advance-failed` receipt whose gate
+    ran and exited nonzero (never the resource guard's 108) is treated as a shared stop."""
+    try:
+        executions = jog_load_state(root, gid).get("executions") or []
+        latest = executions[-1] if executions else {}
+        if (len(executions) != prior_executions + 1 or latest.get("status") != "projected-failed"
+                or latest.get("outcome") != "escalated"):
+            return None
+        receipt = load_marathon_result(_ledger_abs_path(root, gid, latest.get("result_path")))
+        _jog_result_identity(receipt, gh_num, latest.get("execution_id"))
+    except (ContractError, OSError, TypeError, ValueError, AttributeError):
+        return None
+    from marathon_drive import GATE_GUARD_KILL_EXIT
+    gate = receipt.get("gate") or {}
+    gate_exit = gate.get("exit")
+    if (receipt.get("outcome") != "escalated" or receipt.get("reason") != "pre-advance-failed"
+            or receipt.get("exit_code") != 5 or gate.get("result") != "red"
+            or not isinstance(gate_exit, int) or isinstance(gate_exit, bool)
+            or gate_exit in (0, GATE_GUARD_KILL_EXIT) or receipt.get("approval_preserved")
+            or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
+            != os.path.realpath(target)):
+        return None
+    return f"{receipt['reason']}, gate exit {gate_exit}; result: {latest.get('result_path')}"
+
+
 def _jog_process(argv, *, deadline=None, **kwargs):
     if deadline is None:
         return subprocess.run(argv, **kwargs)
@@ -2885,6 +2913,12 @@ def jog_run_main(args=None):
                             print(f"jog: GH-{gh_num} published awaiting approval; continuing independent pending work.")
                             continue
                 if action == "failed":
+                    local = supervised and _jog_task_local_failure(
+                        root, target, gh_num, ledger_gid, prior_executions)
+                    if local:
+                        print(f"jog: GH-{gh_num} failed task-locally ({local}); retained without "
+                              "retry; continuing independent pending work.")
+                        continue
                     print("jog: stopping queue execution on task failure.")
                 else:
                     # GH-1426: a park is not always a landing boundary (preflight refusal, invalid

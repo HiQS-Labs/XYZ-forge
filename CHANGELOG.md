@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-16
+
+- **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop
+  at any failed task, so independent ready work waited for a parent restart (dogfood wake 1).
+  It now continues only when the task's own receipt shows its gate ran and failed; the row stays
+  failed and is never retried. Shared conditions (lock owners, guard-killed gates, missing or
+  corrupt receipts, clone ledger changes) still stop all dispatch.
+  Evidence: `TESTS-RESULTS/2026-11-16+GH-1400/SUMMARY.md`.
+
 ## 2026-11-15
 
 - **GH-1400: opt-in bounded Jog supervision.** `jog run --supervise-until` composes

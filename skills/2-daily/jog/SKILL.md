@@ -24,8 +24,14 @@ changes, dependent worktrees, unknown/live/stopped lock owners or an untracked o
 collision hold; nothing is reset, cleaned or discarded. Keep preserved branches for review.
 
 Each selected pending item counts toward max-tasks, including a readiness refusal. Current
-Swarm preflight still gates dispatch. Only newly approved published PR results permit
-continued independent pending work; dependencies remain subject to preflight. Native Marathon
+Swarm preflight still gates dispatch. Newly approved published PR results permit
+continued independent pending work, and so does one task-local failure: a valid receipt for
+the execution just run whose own gate ran and failed (`escalated`, reason `pre-advance-failed`,
+exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row stays `failed`
+with its reason and receipt path and is never retried. Every other failure (lock contention,
+guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
+change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
+Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon
 attempts and legacy Jog orphan thresholds persist. This wake never calls retry-build or
 renews a retry budget. Reinvoke with the same absolute deadline after an interruption;
 expired deadlines refuse. Preflight/worker groups receive the remaining dispatch time;
