@@ -289,10 +289,13 @@ receipt (`no-valid-result`, unknown outcome); (c) the clone's ledger artifacts c
 A supervised wake continues past `failed` only when all hold, read back from durable state:
 the ledger's newest execution is the one just dispatched (count = prior + 1) with status
 `projected-failed` and recorded outcome `escalated`; its receipt reloads and validates, matches the
-issue and execution id, names this execution target, has outcome `escalated`, gate result `red`
-and no preserved approval. Anything else, including a load error, stops as today. Not task-local
+issue and execution id, names this execution target, has outcome `escalated`, reason
+`pre-advance-failed`, exit code 5, gate result `red` and no preserved approval. The reason pins
+the one escalation where the gate ran and found a defect (`marathon_drive.py` GH-390/GH-407);
+`gate-killed` (resource guard, same exit 5 and gate red) is a shared-host condition and stops. Anything else, including a load error, stops as today. Not task-local
 by construction: `lock-contention` (ownership), `interrupted`, `crashed`, `refused`,
-`post-approve-failed`, an escalation whose gate did not run red, no/corrupt/mismatched receipt,
+`post-approve-failed`, `gate-killed`, any other escalation reason, an escalation whose gate did not
+run red, no/corrupt/mismatched receipt,
 clone ledger change, deadline expiry and any exception. Legacy relay drive failure and the
 non-supervised checkpoint path keep breaking (scope is supervised real Marathon).
 
@@ -328,26 +331,37 @@ preflight and worker, no provider) by exec as its other scripts do, adding a pub
 the tick kernel through an adapter, not this entrypoint; its two scenarios are adapted here.
 Every wake uses `--supervise-until` and `--checkpoint-root`. Each record carries the source HEAD.
 
-1. `local-failure-continues`: A escalates gate red; same invocation dispatches B once; A `failed`
-   with reason and receipt path, attempt 1, not redispatched; checkpoint published.
-2. `budgets-held`: A fails, B and C pending, `--max-tasks 2`: A and B dispatched, C not; a held
-   (parked) row and a preflight-refused dependent D are never given a builder.
+1. `local-failure-continues`: A escalates `pre-advance-failed` gate red, worker leaves the lane
+   committed and clean; same invocation dispatches B once; A `failed` with reason and receipt path,
+   attempt 1; checkpoint published. `no-reentry-next-wake`: a second wake runs C, never A.
+   `local-failure-dirty-holds`: A's lane left tracked dirt; alignment holds, B undispatched.
+2. `budgets-held`: same run, `--max-tasks 2`, C pending: C undispatched, attempt 0.
+   `dependent-not-dispatched`: order A(red), B pre-parked (held), C ready, D preflight-refused,
+   `--max-tasks 4`: A and C dispatched once, B and D never; D parked and the wake halts there.
 3. `restart-adopts-once`: worker writes an approved receipt and SIGKILLs the supervisor before
    publication/acknowledgement; restart adopts A without a builder (starts count unchanged), attempt
-   retained, then B runs once. Variants `restart-missing` / `restart-corrupt` hold A, never rebuild.
+   retained, then B runs once. Variants `restart-missing` / `restart-corrupt` hold A (parked,
+   "supervision held", one start) and B is dispatched once. The killed wake's worker must have
+   exited before the restart.
 4. `stop-owner`: after A's task-local failure a SIGSTOPped peer owns the execution clone lock; the
-   wake stops, B undispatched. `stop-checkpoint`: a contradicted journal (foreign primary change)
-   refuses before any dispatch. Fail-closed red: receipts `lock-contention`, `crashed`, escalation
-   with gate not red, corrupt receipt and mismatched execution id each stop with B undispatched.
+   wake stops (exit 4), B undispatched; after the owner is gone the next wake publishes A's failed
+   row through journal recovery, then runs B once. `stop-checkpoint`: a contradicted journal
+   (foreign primary commit) refuses before any dispatch. Mid-wake checkpoint contradiction is not
+   checked between tasks (unchanged; `finish()` catches it afterwards). Fail-closed red, each with
+   B undispatched: `gate-killed` (gate red, exit 5), `post-approve-failed`, `refused`,
+   `interrupted`, `lock-contention`, `crashed`, escalation with gate not run, missing receipt,
+   corrupt receipt, mismatched execution id and clone ledger change.
 5. `baseline-red`: the unfixed `1d9658c3c` `jog_run.py` on control 1's fixture leaves B
    undispatched. Aggregation requires an explicit nonempty unique list; missing/failed rejects.
 
-Each control also asserts no duplicate worker (per-issue start counts) and that the source clone's
-HEAD, origin, `core.bare` and local identity are unchanged. Existing focused suite: the Jog–Marathon
+Each control also asserts no duplicate worker (per-issue start counts). The run records the
+verify clone's HEAD, origin, `core.bare`, local identity and tracked status before and after and
+refuses completion on drift or tracked edits; the baseline records its git blob id. Existing focused suite: the Jog–Marathon
 integration suite run in a disposable full clone. Final gate selected by `utils/ci-route.sh`.
 
 Unproven after this follow-up: production providers, real gate environment classification,
-power loss, context continuity, external exactly-once and PID reuse.
+power loss, context continuity, external exactly-once, PID reuse and the clone state a real red
+gate leaves (a tracked-dirty lane holds rather than dispatching).
 
 ### Rating
 

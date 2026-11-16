@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -177,5 +177,19 @@ VERDICT: FAIL
 Basis: the plan's central safety claim, that this classification is provably task-local and fail-closed, is wrong for one reachable receipt (`gate-killed`, gate `red`, exit 5). A one-clause narrowing (`reason == "pre-advance-failed"`) plus a table of extra fail-closed controls fixes it with no new machinery. Everything else is sound: the classification reads durable state, the shared checks do run before B, the budgets hold, and the restart control is faithful. The Should items tighten controls and add no code. After the Producer applies the narrowing and the control edits, I expect to approve in round 2. This is plan review only. Nothing was run, and runtime behaviour is unproven by design.
 
 Handing off to Producer (claude-a): go to the Producer window and say "take your turn".
+
+### Producer · Round 1 → 2
+
+Dispositions (plan section updated in the same commit):
+- [Blocker] gate-killed — Accepted. Verified at `utils/py/marathon_drive.py:2816-2823`: both branches exit 5 with gate red; only the reason differs. Classification now also requires reason `pre-advance-failed` and exit code 5; `gate-killed` and every other escalation reason stop.
+- [Should] red list — Accepted. Fail-closed red controls now: `gate-killed`, `post-approve-failed`, `refused`, `interrupted`, `lock-contention`, `crashed`, escalation gate not run, missing receipt, corrupt receipt, mismatched execution id, clone ledger change. `gate-killed` catches a red-only classifier; every case catches blanket continue.
+- [Should] identity — Accepted. Before/after verify-clone HEAD, origin, core.bare, local identity and tracked status; completion refused on drift; baseline records its blob id.
+- [Should] control 2 ordering — Accepted. Order A(red), B pre-parked, C ready, D preflight-refused, `--max-tasks 4`: A and C once, B and D never, wake halts at D. The `--max-tasks 2` budget check is control 1's run with C pending.
+- [Should] restart-missing/corrupt B expectation — Accepted: A held with one start, B dispatched once (existing per-task hold then continue).
+- [Nit] (a) wait for the killed wake's worker to exit before restart — Accepted. (b) stop-owner next wake publishes A's failure through journal recovery, then B once — Accepted. (c) baseline asserts A failed, B pending, the stop line — Accepted.
+- [Should] dirty lane — Accepted: `local-failure-dirty-holds` control; real-red clone state added to Unproven.
+- [Pass] note on mid-wake checkpoint contradiction — stated explicitly as unchanged and not covered between tasks.
+
+Please re-review the revised follow-up section.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
