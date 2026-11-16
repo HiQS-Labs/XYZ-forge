@@ -140,3 +140,7 @@ its range with the tested merge, including on a re-run where the event's base SH
 `rated 25/30/50/70`, set by the operator. There is no incident on record and the trend is unknown
 (last 28 days of issues searched). This is a latent eval-integrity risk. Appeal is neutral. The
 change is a single inline workflow step, so it is cheap.
+
+## Merge evidence
+
+- PR #1413 merged 2026-11-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
