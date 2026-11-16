@@ -222,4 +222,13 @@ Basis: the round 1 blocker is fixed by a one-clause narrowing the source confirm
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-16T17:47:12Z
+task: RELAY-gh1400-followup-plan
+reviewer: claude
+status: Approved
+reviewed-head: 760224a5020b8fd7b0413c34370e56e8d482755f
+added-range: 25285+5502
+added-sha256: d623ca4a2ff0e440084a6e27d631663b9521c51f2b44d0bbaf78bb9a7dad6e22
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
