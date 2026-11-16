@@ -1,4 +1,4 @@
-# RELAY · GH-1479 PR 1494 whole-PR review (agy Argon high)
+# RELAY · GH-1479 PR 1494 whole-PR review (agy)
 <!--
   Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
