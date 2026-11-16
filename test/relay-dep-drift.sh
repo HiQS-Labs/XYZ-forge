@@ -72,6 +72,7 @@ rm -rf "$D"
 enforce_turn() (
   local dir="$1" artifact="$2"
   require_fixture "$dir" "dep-drift enforcement"
+  [[ -n "$dir" && -d "$dir" ]] || return 1
   cd "$dir"
   export RELAY_FILE="relay-system/x/thread.md" RELAY_PEER="agent-b"
   # shellcheck disable=SC1090

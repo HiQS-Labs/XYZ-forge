@@ -1,6 +1,6 @@
 # Marathon Phase gh-1049-dep-drift-absent-surface
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: claude (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN-2 builder=codex reviewer=claude round-cap=5 -->
 
@@ -111,3 +111,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 2 · Builder · codex
+
+Kept the existing GH-1049 implementation: both surface lookups use `rev-parse --verify` with explicit empty values on failure; equality suppresses absent-at-both drift while additions retain `prior_sha: none`. The existing regression cases cover changed, absent, and added surfaces.
+
+Read `ESCALATION.md` and the capture document's “Correction after attempt 1”: the previous gate reported stale packaged sources and the fixture safety audit. Root cause of this retry's remaining work: the package still contained an older `relay-turn-lib.sh`, and the static audit only recognizes same-line subshell openings, not the existing multiline `enforce_turn() (` function. Fix site: the existing fixture boundary and generated package; no production behavior change was needed.
+
+Files changed this turn:
+- `test/relay-dep-drift.sh`: explicitly require a nonempty existing directory before `cd`, in addition to `require_fixture` containment and the existing subshell. This makes the safety precondition visible to the audit and aborts an invalid fixture path.
+- `skills/1-hourly/relay-automation/relay-pkg.tar.gz`: regenerated with the existing `make-pkg.sh` from live sources.
+- This relay file: builder record and the explicitly required NEXT handoff line; other prior text preserved.
+
+Verification: before regeneration, direct archive comparison reported `stale: relay-automation/relay-turn-lib.sh` (red control). After regeneration, all 18 packaged files were nonempty and matched their live sources byte-for-byte. `bash -n test/relay-dep-drift.sh relay-automation/relay-turn-lib.sh` exited 0. Scratch receipt: `.relay-scratch/package-verification.txt` (ephemeral; result retained here). No git commands, tests, or gates were run.
+
+unverified: `test/relay-dep-drift.sh`, `test/relay-pkg-freshness.sh`, and `test/mktemp-trap-guard.sh` runtime results — embedded scope lock forbids test execution in this worktree; harness must run them after handoff.
+unverified: full classified gate — harness-only after this turn; prior failure is not claimed resolved until it passes.
+
+Reversibility: Easy; one fixture precondition and a reproducible generated archive. No change to the event schema, watched surfaces, or turn outcome. Handing off to claude for independent review.
