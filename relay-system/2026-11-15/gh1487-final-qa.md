@@ -7,8 +7,8 @@ ARTIFACT: PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 4
-STATUS: In Review
-NEXT: codex
+STATUS: Approved
+NEXT: claude
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -370,5 +370,31 @@ VERDICT: PASS
 Basis: Resolved the remaining production-reconciler recovery finding with genuine reconciler qualification receipt matching, catchup candidate selection, publication race recovery, and clean evidence checksums.
 
 Handing off to Reviewer (codex) — take your turn.
+
+## Round 4 — Reviewer (codex)
+
+VERDICT: PASS
+Basis: The remaining hardcoded-writer evidence gap is resolved by a retained production-component integration procedure and publisher race transcript. No blocking source defect remains identified in the reviewed scope. Full gate qualification remains pending with the harness; this approval is the independent review result, not a claim that the full gate ran.
+
+swept file: yes
+
+Reviewed the canonical artifact, prior findings, current writer/configuration/catch-up/journal/B1/publication seams, and updated Control 7 procedure and evidence using the swe and relay-xyz review guidance. No additional pre-existing defect was identified in those seams. Only this relay file changed. No git commands, mutation-heavy suites, executable fixtures, or manual-control runner were executed this turn.
+
+1. **[Pass] Round 3 F1's hardcoded writer has been replaced with real recovery components.** `TESTS-RESULTS/2026-11-15+GH-1487/run_controls.py:307-314` checks committed qualifications with the production matcher and asserts the already-receipted, missing-marker PR is selected by `changelog_catchup_candidates`. Lines 317-339 invoke the real `reconcile_changelog` with a journal and assert an unchanged second run. Lines 345-365 drive the production publisher and inspect the fetched remote artifact, requiring its exact marker and baseline history. The retained `control_7_raced_publication_recovery.log` reports `hosted_lane_publish exit code: 0`, `receipts published as dd16d42ab118`, the real writer's `prepended 1 changelog entry/entries`, and `pushed recomputed transitions as 8687f17b5e8a`; its remote log includes the concurrent commit and receipt commit. This is sufficient evidence for the changed recovery components composed with the existing publisher. **Evidence limit:** the runner calls production components directly with controlled metadata; it does not execute the complete `wave_reconcile.main` lifecycle. Concurrent work in this control is a separate committed file, not a concurrent changelog addition. Neither broader claim is certified here. No further machinery is requested.
+
+2. **[Pass] Previously repaired writer/B1 cases still pass a narrow read-only probe.** Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` using the AST-extraction procedure retained in Round 2 (extract only `format_changelog_entry` and `union_changelog`, run its four inputs and secondary-marker rejection), followed by the checksum procedure below. Exit **0**. Decisive output:
+
+   ```text
+   ('Example', '') ACCEPTED
+   ('Improve ~ handling', '') ACCEPTED
+   ('Example', '## Changelog\nUse x < 5.') ACCEPTED
+   ('Example', '## Changelog\n<!-- unfinished') ACCEPTED
+   secondary marker: REJECTED
+   provenance records: 12 checksum mismatches: []
+   ```
+
+3. **[Pass] Retained log integrity remains intact.** The same read-only Python command parsed every nonempty record in `TESTS-RESULTS/2026-11-15+GH-1487/provenance.jsonl`, asserted the record list and each referenced log were nonempty, and compared `hashlib.sha256((directory / record['log']).read_bytes()).hexdigest()` with `record['log_sha256']`. Exit **0**, quoted result above. This verifies checksums, not an independent rerun of the controls. The Producer explicitly leaves the full validate gate pending in Round 4 item 5; the harness must produce that result before delivery is reported complete.
+
+STATUS set to Approved. Closing the token with the absolute env-pinned `tick done gh1487-final-qa --agent codex`; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
