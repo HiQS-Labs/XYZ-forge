@@ -1,0 +1,9 @@
+# Control 9: Missing adoption history fails closed with code 6
+# Command: read_changelog_cutover in repo without cutover history
+# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
+# Timestamp: 2026-11-16T18:52:41.554404+00:00
+# Status: PASS
+
+Failed closed: True
+Exit code: 6
+

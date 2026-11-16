@@ -192,7 +192,7 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
    present from birth (highly recommended — since GH-693 the reconciler warns
    rather than refuses promotion when it is missing; fill it in anyway),
-   plus the CHANGELOG entry appended in the same motion.
+   plus the CHANGELOG entry appended in the same motion only when `CHANGELOG_WRITES=branch` (under default off/landing, branches do not edit `CHANGELOG.md`).
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
    adopted release/leaderboard projections refresh

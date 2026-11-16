@@ -1950,6 +1950,7 @@ def read_changelog_writes_mode(repo_root):
         return "off"
 
     pdda_mode = os.path.join(repo_root, ".pdda-mode")
+    val = None
     if os.path.exists(pdda_mode):
         try:
             with open(pdda_mode, "r", encoding="utf-8") as f:
@@ -1957,8 +1958,9 @@ def read_changelog_writes_mode(repo_root):
                     line = line.strip()
                     if not line or line.startswith("#"):
                         continue
-                    if line.startswith("CHANGELOG_WRITES="):
-                        val = line.split("=", 1)[1].strip().lower()
+                    m = re.match(r"^CHANGELOG_WRITES\s*=\s*([^#\s]+)", line)
+                    if m:
+                        val = m.group(1).strip().lower()
         except Exception:
             pass
 
@@ -2085,7 +2087,7 @@ def format_changelog_entry(pr_meta):
     marker_line = f"<!-- pr:{number} merge:{sha} -->"
 
     if not changelog_body:
-        entry_body = f"<!-- changelog: fallback-title -->\n{clean_title}."
+        entry_body = f"changelog: fallback-title\n{clean_title}."
     else:
         # Sanitize body
         # 1. Strip all HTML comments
@@ -2113,7 +2115,7 @@ def format_changelog_entry(pr_meta):
                     lines.append(line)
         cleaned_text = "\n".join(lines).strip()
         if not cleaned_text:
-            entry_body = f"<!-- changelog: fallback-title -->\n{clean_title}."
+            entry_body = f"changelog: fallback-title\n{clean_title}."
         else:
             entry_body = cleaned_text
 

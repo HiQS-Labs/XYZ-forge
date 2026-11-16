@@ -1,0 +1,12 @@
+# Control 5: B1 marker coexistence and rejections
+# Command: ledger_merge.union_changelog with various inputs
+# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
+# Timestamp: 2026-11-16T18:52:41.244255+00:00
+# Status: PASS
+
+Fallback entry accepted: True
+Second marker rejected: True
+Misplaced marker rejected: True
+Arbitrary HTML rejected: True
+Conflict markers rejected: True
+

@@ -456,13 +456,21 @@ _pdda_cl_epoch() {  # YYYY-MM-DD -> epoch seconds (portable BSD/GNU); prints not
 }
 
 pdda_changelog_writes_mode() {
-  local mode="${CHANGELOG_WRITES:-}"
-  if [ -z "$mode" ] && [ -f "$PDDA_REPO_ROOT/.pdda-mode" ]; then
-    mode="$(grep -E '^[[:space:]]*CHANGELOG_WRITES=[^[:space:]]+' "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*CHANGELOG_WRITES=([^[:space:]#]+).*/\1/' || true)"
+  local mode=""
+  if [ -n "${CHANGELOG_WRITES+x}" ]; then
+    mode="$(printf '%s' "$CHANGELOG_WRITES" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')"
+    case "$mode" in
+      landing|branch|off) printf '%s\n' "$mode" ;;
+      *) printf 'off\n' ;;
+    esac
+    return 0
   fi
-  mode="$(printf '%s' "$mode" | tr '[:upper:]' '[:lower:]')"
+  if [ -f "$PDDA_REPO_ROOT/.pdda-mode" ]; then
+    mode="$(grep -E '^[[:space:]]*CHANGELOG_WRITES[[:space:]]*=' "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*CHANGELOG_WRITES[[:space:]]*=[[:space:]]*([^[:space:]#]+).*/\1/' || true)"
+  fi
+  mode="$(printf '%s' "$mode" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')"
   case "$mode" in
-    landing|branch) printf '%s\n' "$mode" ;;
+    landing|branch|off) printf '%s\n' "$mode" ;;
     *) printf 'off\n' ;;
   esac
 }

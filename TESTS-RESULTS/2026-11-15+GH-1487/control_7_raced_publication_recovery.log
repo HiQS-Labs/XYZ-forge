@@ -1,0 +1,13 @@
+# Control 7: Raced publication recovery
+# Command: Simulate publication push race, rebase, and receipted PR recovery
+# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
+# Timestamp: 2026-11-16T18:52:41.511720+00:00
+# Status: PASS
+
+Simulated push rejected on race: True (exit 1)
+Rebase on newer integration base: SUCCESS
+Recovery rerun with catch_up / receipted PR missing marker: SUCCESS
+Recovery push to origin: SUCCESS (exit 0)
+Concurrent upstream work retained: True
+Receipted PR marker present in recovered changelog: True
+

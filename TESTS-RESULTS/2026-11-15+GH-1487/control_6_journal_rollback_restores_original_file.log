@@ -1,0 +1,9 @@
+# Control 6: Journal rollback restores original file
+# Command: RollbackJournal.snapshot & rollback
+# Candidate Revision: c7e91a91652e12146f8129f1384c2f98682827c4
+# Timestamp: 2026-11-16T18:52:41.244729+00:00
+# Status: PASS
+
+Original content == Restored content: True
+Restored bytes: 31
+
