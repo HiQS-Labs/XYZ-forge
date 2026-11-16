@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -129,7 +129,7 @@ C. Tooling
 9. Does extending `test_swarm_preflight_module_load` to run mypy make the Python layer fail in an
    environment that previously passed (mypy absent)? Is that failure mode clear to the operator?
 
-Grade findings [Blocker]/[Should]/[Nit]/[Pass] with file:line citations. Flag anything wrong,
+Grade findings [Blocker]/[Should]/[Nit]/[Unverified — no citation] with file:line citations. Flag anything wrong,
 missing, weakened, or over-engineered. VERDICT PASS only if both test edits preserve their tests'
 intent and you find no behaviour change in the refactor.
 ```
@@ -144,5 +144,46 @@ intent and you find no behaviour change in the refactor.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Independent whole-PR review of draft PR #1494 on branch `feat/XYZ-forge-gh1479-static-analysis-swarm-2026-11-14` (commit `c8b2e7f6d`). Both existing-test pin updates preserve their original protective intent without weakening; the `swarm_preflight.py` decomposition into typed stage functions strictly preserves linear side-effect ordering, return values, and exit codes; and static-analysis configuration (`mypy.ini`, `requirements-dev.txt`, workflow updates) is sound and correctly scoped.
+swept file: yes
+
+- [Pass] Question A.1 (gh642 pin mechanics): `test/gh642-consumer-fruit.sh:307` loosened `call_line=$(grep -n '^    warn_zero_criteria(' "$PYPREFLIGHT" | head -1 | cut -d: -f1)`. The four-space start anchor strictly excludes the column-0 definition at `utils/py/swarm_preflight.py:1240` (`def warn_zero_criteria(`) and matches only the runtime call at `:1990` (`warn_zero_criteria(evaluation.acc_mode, evaluation.acc_items, selection.primary_doc, args.format)`). The call at `:1990` and the first dry-run check at `:1992` (`if args.dry_run:`) are direct sequential statements inside `write_packet()` (`:1971-2167`) on the identical execution path. The ordering condition at `test/gh642-consumer-fruit.sh:309` (`[ "$call_line" -lt "$dry_line" ]`) remains a real protective guarantee: deleting the call empties `call_line` and fails the test, and moving the call after the dry-run exit (`:1998`) makes `call_line > dry_line` and fails the test. AST parse and string-mutation probes confirmed this ordering cannot silently regress.
+- [Pass] Question A.2 (gh421 marker): `test/gh421-auto-wave-reconcile.sh:611` pins `'python3 -m pip install --quiet --break-system-packages -r requirements-dev.txt'` matching `.github/workflows/wave-reconcile.yml:52`. `requirements-dev.txt:1-4` explicitly supplies `pytest` along with `requests`, `PyYAML`, and `mypy==1.14.1`. The workflow step runs before the reconciliation execution step (`:54`), preserving the guarantee that Python test dependencies are installed prior to test runs.
+- [Pass] Question A.3 (evaluation of weakening): Neither edit is a material weakening. In `test/gh642-consumer-fruit.sh:307`, the previous pin specifically matched `acc_mode` only because `acc_mode` was the old local variable name in the monolith; refactoring into `evaluation.acc_mode` necessitated updating the argument pattern. Anchoring to `^    warn_zero_criteria(` preserves the indentation and call-before-dry-run exit ordering while avoiding unnecessary coupling to internal record field names. In `test/gh421-auto-wave-reconcile.sh:611`, updating the assertion to `-r requirements-dev.txt` matches the refactored installation method, where `pytest` is retained in `requirements-dev.txt:2`.
+- [Pass] Question A.4 (sweep of test/ for missed pins): A broad search across `test/` (`rg -n 'warn_zero_criteria|pip install|requirements-dev.txt|acc_mode|swarm_preflight' test/`) identified no stale pins or unhandled references to old `main()` internals. Literal checks in `test/gh386-turn-budget-honesty.sh:113` match the ladder at `utils/py/swarm_preflight.py:2085-2087`; `test/gh399-packet-acceptance-continuation.sh:217` matches `acc_lost = verify_inlined_acceptance(` at `utils/py/swarm_preflight.py:1727` and `ready, ready_next = 0, (` at `:1729`; and `test/gh557-unknown-blocks-manifest.sh:268` matches `"NOT verifiable as things stand"` at `utils/py/swarm_preflight.py:2042`.
+- [Pass] Question B.5 (behaviour preservation): Compared old `main()` at merge base `4635abe09:1225-1950` against the decomposed implementation at `c8b2e7f6d`:
+  - `parse_args()` and `resolve_source_selection()` (`utils/py/swarm_preflight.py:1338-1428`) preserve argument handling, mode mutual exclusivity, and target-root validation (old `:1225-1328`).
+  - `load_contracts()` (`:1431-1463`) preserves contract shape and merge validation (old `:1292-1324`).
+  - `inspect_repository()` (`:1466-1594`) preserves branch, fetch, status, index-lock detection, ref verification, and temporary worktree probe evaluation and cleanup (old `:1330-1440`).
+  - `evaluate_candidate()` (`:1597-1845`) preserves the readiness evaluation ladder, gate routing, acceptance fidelity, source URL check, inline checklist extraction, and lane planning (old `:1442-1685`).
+  - `normalize_candidate()` (`:1848-1886`) preserves construction of the candidate dictionary and normalization (old `:1645-1685`).
+  - `report_candidate()` (`:1889-1965`) preserves formatted console output, JSON serialization, and early exit codes (6 for BLOCKED, 7 for AMBIGUOUS, 4 for STALE, 5 for NOT-READY) (old `:1690-1755`).
+  - `write_packet()` (`:1968-2162`) preserves dry-run exit 0, packet directory creation, individual artifact writes, and final success exit 0 (old `:1757-1950`).
+  - Primary doc slug computation was moved ahead of contract loading; because slug derivation is a pure regex function on `primary_doc` without I/O or state modification, this pure reordering produces no change in behavior or error paths.
+- [Pass] Question B.6 (state hand-off): The three frozen dataclasses (`SourceSelection` at `:1260`, `RepositoryState` at `:1275`, `CandidateEvaluation` at `:1301`) faithfully encapsulate the intermediate state across stages. Mutable dictionaries and lists (`probes_res`, `frozen_artifacts`, `lane_plan_res`, `issue_state`) are created in their respective stages and passed forward strictly for reading, serialization, and reporting. No stage mutates container fields after instantiation.
+- [Pass] Question B.7 (commensurate decomposition): The extraction of 7 stage functions with an 11-line `main()` (`:2165-2178`) strikes an appropriate balance. Keeping `evaluate_candidate` (~248 lines) and `write_packet` (~194 lines) intact preserves the readability and coherence of the linear readiness and packet generation flows without introducing unnecessary abstractions or fragmented helper classes.
+- [Pass] Question C.8 (tooling and workflow portability): `mypy.ini:1-11` configures `python_version = 3.10` and `files = utils/py/swarm_preflight.py`. `follow_imports = skip` properly confines typechecking to the refactored module without erroring on untyped imported files. Workflows in `.github/workflows/ci.yml:184,402` and `.github/workflows/wave-reconcile.yml:52` install dependencies via `pip install --quiet --break-system-packages -r requirements-dev.txt`, which is compatible with GitHub Actions Ubuntu and macOS runner environments. `requirements-dev.txt` pins `mypy==1.14.1` while preserving `pytest`, `requests`, and `PyYAML`.
+- [Pass] Question C.9 (Python layer gate diagnostics): In `test/test_python_layer.py:47-51`, `test_swarm_preflight_module_load` executes `[sys.executable, "-m", "mypy", "--config-file", ...]` via `subprocess.run`. If mypy is missing from the environment, Python emits `No module named mypy` on stderr and exits with code 1, which is asserted and displayed in the test failure output. `README.md:285-288` and `ROUTER.md:35` clearly document `python3 -m pip install -r requirements-dev.txt` as a requirement.
+- [Pass] Evidence verification: Retained A/B comparison in `TESTS-RESULTS/2026-11-14+GH-1479/ab-compare/` contains 37 identical files between `old/` and `new/` across exits 0, 2, 3, 4, and 5. In `TESTS-RESULTS/2026-11-14+GH-1479/provenance.jsonl`, all 13 entries with `log_sha256` match their respective log files on disk byte-for-byte. Retained logs `post-mypy-pass.log:1` ("Success: no issues found in 1 source file") and `post-mypy-red-control.log:1-2` (incompatible return value type detected) confirm typechecking efficacy.
+- [Nit] Pre-existing limitations observed during whole-file sweep of `utils/py/swarm_preflight.py`:
+  1. Packet generation sequentially writes files (`:1999-2015`, `:2158-2159`) without writing to a staging directory first and performing an atomic rename, meaning an unexpected failure midway leaves a partial packet directory.
+  2. Index lock detection (`:1512`) checks `os.path.join(target_root, ".git", "index.lock")`, assuming `.git` is a directory; in linked worktrees where `.git` is a pointer file, `.git/index.lock` is not checked.
+  3. Worktree cleanup (`:1566-1567`) falls back to `shutil.rmtree` on remove failure, which could leave dangling worktree administrative entries in `.git/worktrees`.
+  All three behaviors pre-existed the refactor; no modifications requested in this PR.
+- [Unverified — needs clone run] In accordance with reviewer isolation rules, no full gate (`validate.sh`), pytest, or shell test suites were executed in this relay worktree. Final gate execution belongs in a disposable full clone managed by the harness.
+
+Probe receipt (non-mutating source & AST analysis; exit 0). Ran `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"` and executed python inspection of AST structures, regex boundaries, dependency pins, and artifact hashes:
+- AST confirmation: `write_packet` spans `:1971-2167`; `warn_zero_criteria` Call at `:1990`; `dry_run` If at `:1992`.
+- Regex matching: `^    warn_zero_criteria(` matched exactly line 1990; `^def warn_zero_criteria(` matched line 1240; `^    if args.dry_run:` matched line 1992.
+- Mutation simulation: Deletion of call yielded empty match (`call_match is None`); moving call after dry-run exit yielded `call_line (1992) < dry_line (1991) -> False`.
+- Dependency & workflow probe: Marker present in `.github/workflows/wave-reconcile.yml:52`; `requirements-dev.txt` contains `mypy==1.14.1`, `pytest`, `requests`, `PyYAML`.
+- Retained A/B parity: 37 of 37 files in `TESTS-RESULTS/2026-11-14+GH-1479/ab-compare/old` vs `new` identical byte-for-byte; all 13 provenance log SHA-256 hashes verified.
+
+Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit and subsequent gate.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
