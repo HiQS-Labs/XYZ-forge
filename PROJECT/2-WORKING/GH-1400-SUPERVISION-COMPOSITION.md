@@ -367,3 +367,11 @@ gate leaves (a tracked-dirty lane holds rather than dispatching).
 
 Existing row retained (75/60/50/45, no override); this is the same task's scoped repair, so no
 re-score. Recurrence: one observed incident (wake 1); trend unknown.
+
+### Follow-up current state
+
+Plan QA PASS round 2/3 (Claude). Implementation `720b9c9a5`: helper `_jog_task_local_failure` and
+one continuation branch in the supervised loop; jog skill and CHANGELOG updated. Controls complete
+23/23 (smoke and repeat) at `7f946cd1d`, two failed fixture attempts retained, existing Jog–Marathon
+integration 227/227; see `TESTS-RESULTS/2026-11-16+GH-1400/SUMMARY.md`. Final QA and the classified
+gate follow on the final commit. #1400 stays open.
