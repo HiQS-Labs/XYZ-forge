@@ -148,3 +148,13 @@ gate run: no — harness gate
 Not run: `validate.sh`, `test/relay-dep-drift.sh`, or any other test (reserved for the harness gate).
 
 **Verdict:** Approved
+
+### Attestation · relay-drive — 2026-11-16T05:50:29Z
+task: MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN
+reviewer: claude
+status: Approved
+reviewed-head: f64bc2ba4dbb50d098a6e20ef9831dc7bb2839cd
+added-range: 23419+2434
+added-sha256: 7190ee43d452aa6143669b82f5a1cab5767b90e2a536c8dede7aadb46fdd1809
+config-sha256: 736e47f38234e025cc7cb52d8a7e6f74dc6eb3690b3c6ce146ab2ad13ad181e6
+gate-run: no
