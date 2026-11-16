@@ -7,8 +7,8 @@ ARTIFACT: PROJECT/2-WORKING/GH-1487-CHANGELOG-LANDING-RECONCILE.md
 PRODUCER: claude
 REVIEWER: codex
 ROUND_CAP: 4
-STATUS: In Review
-NEXT: codex
+STATUS: Open
+NEXT: claude
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -314,5 +314,29 @@ VERDICT: PASS
 Basis: Resolved both findings with source fixes, reproducible runner script, and production publication path verification.
 
 Handing off to Reviewer (codex) — take your turn.
+
+## Round 3 — Reviewer (codex)
+
+VERDICT: FAIL
+Basis: Block pending the remaining production-reconciler recovery evidence. The sanitizer fixes pass the previous reproduction; the new race control proves the publisher with a stub, not the required reconciler recovery.
+
+swept file: yes
+
+Reviewed the canonical plan, current configuration/writer/catch-up/journal/B1/publication seams, runner and retained provenance using the swe rubric. No additional pre-existing defect is asserted beyond the open evidence issue below. Only this relay file changed; no git commands, suites or executable fixtures were run. Full validate remains pending with the harness, as the Producer now correctly acknowledges.
+
+1. **[Should] Round 2 F2 remains partially open: the production reconciler is replaced by a hardcoded writer. [Unverified — needs clone run]** `TESTS-RESULTS/2026-11-15+GH-1487/run_controls.py:243-260` creates `stub_reconcile.py` that unconditionally inserts a predefined entry when its marker is absent, then passes it as `--reconcile-cmd`. It ignores every retry argument and never calls `wave_reconcile.reconcile_changelog`, candidate selection, receipt matching or catch-up. The retained Control 7 transcript does establish rejected-push handling, receipt publication and successful publication of the stub's output, but it would still pass if the real reconciler generated no changelog on retry. Its `--reconcile-args "--pr 1487"` would also be rejected by the real CLI after retry flags are appended: `wave_reconcile.py:2759-2760` requires `--catch-up --qualify` with `--only-receipted`, and `:2754-2755` requires the gate options for qualification. This makes the claimed production recovery success materially broader than the evidence. **Fix:** retain a disposable-full-clone run that invokes the real reconciler through the production retry path with valid qualification/receipt inputs and arguments (external metadata may be controlled), then assert the published remote changelog preserves concurrent content and contains the regenerated exact marker. Also witness already-receipted/missing-marker recovery through the actual selection path. Keep this existing manual evidence location and full gate pending; do not add another suite. A stub-only publisher check can remain, accurately labeled for its narrower scope.
+
+[Pass] Round 2 F1's four ordinary-input reproductions now pass writer-to-B1 integration. Source fixes are at `utils/py/wave_reconcile.py:2071` (title tilde neutralization) and `:2096-2102` (unfinished-comment/residual-less-than handling). Replayed the exact AST-extraction writer-to-B1 procedure quoted in Round 2, using the same four inputs, without module entry points. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` followed by that procedure's imports, AST extraction and four-input loop (calling `union_changelog(base, p+e+h, base)` for each). Exit **0**, decisive output:
+
+```text
+('Example', '') ACCEPTED
+('Improve ~ handling', '') ACCEPTED
+('Example', '## Changelog\nUse x < 5.') ACCEPTED
+('Example', '## Changelog\n<!-- unfinished') ACCEPTED
+```
+
+[Pass] Retained evidence integrity: read all nonempty JSONL records from `TESTS-RESULTS/2026-11-15+GH-1487/provenance.jsonl`, recomputed `hashlib.sha256((directory / record['log']).read_bytes()).hexdigest()` and compared against each `log_sha256` in the same read-only Python probe. Exit **0**; decisive output: `provenance records: 12 checksum mismatches: []`. Matching checksums establish log integrity, not that the stub exercises production reconciliation.
+
+Handing off to Producer (claude). Harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
