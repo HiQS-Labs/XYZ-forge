@@ -50,6 +50,17 @@ Blast radius: `relay-turn-lib.sh` is sourced by every relay turn (containment ke
 
 Builder note: the existing end-to-end fixture (`test/relay-dep-drift.sh:71-93`) already lacks `relay-automation/relay-turn-lib.sh` and `src/events.js`, and its `-ge 1` assertion (`:90`) hides the bug. Tightening it to exactly one event naming `src/project.js` covers absent-at-both without a new fixture.
 
+## Correction after attempt 1 (gate evidence, GH-1400 dogfood round)
+
+Attempt 1 (`f64bc2ba4`, reviewer-approved) failed the classified gate on two real findings; the original plan above is unchanged.
+
+- `relay-pkg-freshness.sh`: `relay-pkg.tar.gz is stale — run skills/1-hourly/relay-automation/make-pkg.sh` (drift: `relay-automation/relay-turn-lib.sh`). Preparation omitted the packaged tarball from the artifacts; it is added. Regenerate it with `bash skills/1-hourly/relay-automation/make-pkg.sh` after the final `relay-turn-lib.sh` edit.
+- `mktemp-trap-guard.sh`: `test/relay-dep-drift.sh:29 $dir assigned from mktemp, then BARE 'cd "$dir"' at test/relay-dep-drift.sh:75 (not scoped inside a subshell) with no non-empty/is-directory guard first`. Scope that `cd` inside a subshell (or guard it) per GH-177.
+
+Additional acceptance:
+
+- [ ] `test/relay-pkg-freshness.sh` and `test/mktemp-trap-guard.sh` pass.
+
 ## Swarm Preflight Contract
 
 ```json
@@ -61,7 +72,8 @@ Builder note: the existing end-to-end fixture (`test/relay-dep-drift.sh:71-93`) 
   ],
   "artifacts": [
     "relay-automation/relay-turn-lib.sh",
-    "test/relay-dep-drift.sh"
+    "test/relay-dep-drift.sh",
+    "skills/1-hourly/relay-automation/relay-pkg.tar.gz"
   ],
   "remediation": {
     "source": "issue#1049",
