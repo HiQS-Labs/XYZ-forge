@@ -115,7 +115,7 @@ finally:
   try:os.kill(int(pid.read_text()),signal.SIGKILL);time.sleep(.3)
   except ProcessLookupError:pass
 journal=json.loads((r/'.tick/jog/checkpoint.json').read_text()).get('phase');unpub=not published(r)
-p2=run('stop-owner-next-wake',r,t,pb,{});s2=starts(t);q2=byn(r)
+p2=run('stop-owner-next-wake',r,t,pb,{},max_tasks=1);s2=starts(t);q2=byn(r)
 ck('stop-owner-next-wake-publishes',journal=='running' and unpub and p2.returncode==0 and s2=={901:1,902:1,903:0,904:0} and q2[901]['status']=='failed' and published(r),{'journal_before':journal,'unpublished_before':unpub,'rc':p2.returncode,'starts':s2,'rows':q2,'stdout':p2.stdout[-800:]})
 r,t,pb=setup('local-dirty');p=run('local-dirty',r,t,pb,{901:'red-dirty'});s=starts(t);q=byn(r)
 ck('local-failure-dirty-holds',p.returncode==2 and 'tracked changes' in p.stderr and s=={901:1,902:0,903:0,904:0} and q[901]['status']=='failed' and q[902]['status']=='pending' and (t/'feature.txt').read_text()=='uncommitted lane edit',{'rc':p.returncode,'starts':s,'rows':q,'stderr':p.stderr[-600:]})
