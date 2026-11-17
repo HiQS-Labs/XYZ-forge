@@ -2,7 +2,7 @@
 gh_issue: 1498
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1498
 title: "pr-minder: manually invoked PR remediation pass with an age-based stale ladder"
-status: Active — Final QA
+status: Active — PR ready, awaiting merge
 created: 2026-11-16
 updated: 2026-11-16
 owner: start-task lane
@@ -25,7 +25,7 @@ context_tags: [pr-minder, skills, merge-cleanup, weekly-planner, stale-prs]
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Final QA r1 (Codex FAIL F1–F8) fixed; manual check 19/19 | Re-gate, then final QA r2 (Codex), then agy seat |
+| Final QA approved: Codex r3 (`d03e81fcc`) and agy (`f8ecd37d7`); manual check 19/19; final gate green at `f8ecd37d7` | PR ready; awaiting merge |
 
 The issue body is the specification. This doc records only the decisions recon forced and the execution plan.
 

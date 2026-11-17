@@ -30,3 +30,13 @@ pre: 326b47088184fb9369c0cc792ad84a22a3126dcd        0
 post: 326b47088184fb9369c0cc792ad84a22a3126dcd        0
 gate-record: recorded .gate-evidence/326b4708.txt
 Later commits 07538331d (pr-minder clean exit on read failure, manual check 19/19) and a260bad2c (smoke log) post-date this run; a final gate runs on the approved head.
+
+## Final-commit gate — f8ecd37d7 (last code/evidence commit before PR; later commits are relay thread + this log only)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: f8ecd37d7fa58b5bfd6ec20069105aedf26e72d8        0
+post: f8ecd37d7fa58b5bfd6ec20069105aedf26e72d8        0
+gate-record: recorded .gate-evidence/f8ecd37d.txt
