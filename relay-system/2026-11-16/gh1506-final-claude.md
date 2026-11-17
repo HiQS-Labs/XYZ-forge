@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -82,5 +82,48 @@ Every severity finding needs concrete Observed input, Affected scope, Falsifier 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (claude)
+
+swept file: yes — agy-turn.py probe messages and headings, turn_diagnostics.py full classify path and constants, relay_drive.py label change, all four modified test files, GH-1506-TIMEOUT-DIAGNOSTIC-OVERCLAIMS.md full document.
+
+Pre-existing defects: none found.
+
+**Q1 — TTY/lock/socket messages state observations without inferring waiting, contention, or inactivity; headings accurate.**
+
+- [Pass] TTY message: before "it was waiting on a lock held by someone else, not working" / "no usable TTY…If AGY_PTY=0 was set, remove it"; after "this observation alone does not establish the current timeout cause or whether the turn was still working." (`agy-turn.py` diff lines ≈89–91) — purely observational. Citation: `agy-turn.py` diff hunk ≈L89 and ≈L100.
+- [Pass] Lock message: before "it was waiting on a lock held by someone else, not working"; after "this does not establish lock ownership, contention, waiting, or inactivity." (`agy-turn.py` diff ≈L100)
+- [Pass] Network message: before "it was waiting on a network call (most likely the model backend), not working"; after "this does not establish a stalled request, waiting, or inactivity." (`agy-turn.py` diff ≈L102)
+- [Pass] Heading renamed: `"agy-turn: idle-blocker attribution: blocker="` → `"agy-turn: timeout observation: category="` (`agy-turn.py:601`); log line `"[GH-114 idle-blocker] blocker="` → `"[GH-114 timeout observation] category="` (`agy-turn.py:604`). GH114 suite confirmed both grep assertions pass. Evidence: `TESTS-RESULTS/2026-11-16+GH-1506/gh114-headless-tty.log` lines 7–8.
+
+**Q2 — REASON_SLOW_PROGRESS symbol and value unchanged; file-activity detail; explicit log/scratch qualification; legacy category stated; machine consumers preserved.**
+
+- [Pass] `REASON_SLOW_PROGRESS = "timeout-slow-but-progressing"` at `turn_diagnostics.py:93` — identical in fc54f9ce and a71663d5 (probe: `git show fc54f9ce:utils/py/turn_diagnostics.py | grep REASON_SLOW_PROGRESS` → `93:REASON_SLOW_PROGRESS = "timeout-slow-but-progressing"` unchanged).
+- [Pass] Detail key renamed `worktree-progress=` → `file-activity=` (`turn_diagnostics.py:519`). Human prose changed from "genuinely slow; raising the turn budget is the appropriate response" to "file activity was observed; logs or scratch files can contribute. Useful work progress and a reason to increase the budget are not established. The reason code is a legacy category, not a progress verdict." (`turn_diagnostics.py:538–544`). Evidence: `result.json` trial 1 `log_only_classification[1]`.
+- [Pass] GH492 suite "PASS: the progressing turn still classifies as timeout-slow-but-progressing — not conflated with idle" confirms the classifier path is preserved. Evidence: `TESTS-RESULTS/2026-11-16+GH-1506/gh492-idle-kill.log` line 6.
+- [Nit] `turn_diagnostics.py:487` docstring for `idle_seconds()` cites `"cpu=0.02s/s, worktree-progress=no"` as a historical illustrative example, but live output now emits `file-activity=no`. No behavioral impact; the string is in a docstring describing an observed past incident, not a live output spec. Fix: update example to `file-activity=no` to avoid confusion when reading debug output. No behavior change required; this nit does not block approval.
+
+**Q3 — changed-files correctly labelled worktree state; predicates, sampler, interval, and cleanup unchanged.**
+
+- [Pass] `relay_drive.py:964` label changed from `"GH-370 progress (…) changed-files="` → `"GH-370 worktree state (…) changed-files="`. Only the string literal changed; no predicate, interval, or cleanup altered. Diff hunk is a single line. GH370 passed 4/0. Evidence: `TESTS-RESULTS/2026-11-16+GH-1506/gh370-progress-telemetry.log`.
+- [Pass] GH505 failure-message filter updated from `grep -v 'GH-370 progress'` → `grep -v 'GH-370 worktree state'` to match new label. Evidence: `TESTS-RESULTS/2026-11-16+GH-1506/gh505-relay-attest.log` exit 0, confirmed by `suites.json`.
+
+**Q4 — unchanged pre-fix diagnostics are not reported as delivered; before/after acceptance evidence.**
+
+- [Pass] `TESTS-RESULTS/2026-11-16+GH-1506/baseline-result.json` (source_head `0d1dc0fe`) contains old-format messages: `"worktree-progress=no"`, `"the process tree held a .lock file open … it was waiting on a lock held by someone else, not working."`, `"the agent was writing files but did not finish — genuinely slow; raising the turn budget is the appropriate response."` Evidence: `baseline-result.json` lines 13–17.
+- [Pass] `TESTS-RESULTS/2026-11-16+GH-1506/result.json` (source_head `a71663d52c35e5f7fa564759f6493a86f2b2e59d`) contains new-format messages: `"file-activity=no"`, `"the open-file listing contains .lock; this does not establish lock ownership, contention, waiting, or inactivity."`, `"file activity was observed; logs or scratch files can contribute. Useful work progress and a reason to increase the budget are not established."` Evidence: `result.json` lines 10–17.
+- [Pass] All six focused suites passed at a71663d5 per `suites.json` (all `"exit": 0`). GH390 "PASS: idle CPU + fresh worktree writes -> timeout-slow-but-progressing" and GH492 16/0 confirm existing logic unchanged. Evidence: `TESTS-RESULTS/2026-11-16+GH-1506/suites.json`.
+
+**Q5 — plan/docs/ledger accurate; no new suites or registry entries; repro only under TESTS-RESULTS; gate pending.**
+
+- [Pass] `GH-1506-TIMEOUT-DIAGNOSTIC-OVERCLAIMS.md` status table is current; plan section accurately describes what was implemented; frontmatter shows `status: active`, correct complexity/risk/effort. No new .sh test files or registry entries introduced — diff stat shows only 4 existing test files modified with string updates.
+- [Pass] Reproduction script lives at `TESTS-RESULTS/2026-11-16+GH-1506/repro.py`, not in the repo root or test/. Evidence: `provenance.jsonl` entry for `baseline-repro.py`.
+- [Pass] SUMMARY.md line 10: "Final independent QA and full classified gate remain pending." Gate run: not run. This review is scoped final QA only, not classified gate.
+
+---
+
+VERDICT: PASS
+
+Basis: All five Definition of Done questions confirmed by source inspection, diff review, and recorded evidence. Diagnostic messages are purely observational with no causal inference. `REASON_SLOW_PROGRESS` symbol and value `"timeout-slow-but-progressing"` are unchanged at `turn_diagnostics.py:93`. Changed-files relabeled as worktree state at `relay_drive.py:964`. Six existing suites passed at a71663d5. Before/after output difference recorded in `baseline-result.json` vs `result.json`. Plan, docs, and ledger are accurate; full classified gate is explicitly pending and not substituted by this review. One nit (stale docstring example) does not affect behavior. No pre-existing defects found in swept files. Approval is scoped to final independent QA; full classified gate remains pending.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
