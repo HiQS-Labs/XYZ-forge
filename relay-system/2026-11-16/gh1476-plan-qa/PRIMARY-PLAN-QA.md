@@ -43,3 +43,35 @@ Orchestrator recommendation: FAIL for this round on findings 2-5 (all plan-text 
 ## Reconciliation
 
 Independent reviewer VERDICT FAIL (B1, S1-S6, N1-N3). It independently found every orchestrator finding 1-5 and added: verdict enum lacks HELD (10days:264), preflight exit 4 dropped without delivering evidence (10days:430 vs conveyor:61), Step 3 rating write before selection (10days:254), budget recorded in a packet that does not yet exist (S4), and missing red-control scenarios (S6). Orchestrator concurs with all; none requires new machinery.
+
+## Round 2 receipt (plan review 2 of 3)
+
+- Reviewed plan: `c9168dc77` (`git diff 8293b014 c9168dc77` touches only the plan). Helper fast-forwarded from `8293b014` to `c9168dc77`; it was clean, with no driver lock, extra worktree or attempts record beforehand.
+- Thread: a new `gh1476-plan-qa-r2.md`, scaffolded by `relay-automation/new-relay.sh` at `1991a32c` with round-2 questions. The round-1 thread and its FAIL are unedited.
+- Driver: `relay-automation/relay-drive.sh` (Python lane) with `--reviewer claude-review --review-once --relay-task RELAY-gh1476-plan-qa-r2`, `--agent-cmd relay-automation/claude-turn.sh`, `RELAY_WORKTREE_ISOLATION=1` and `ALLOW_PATHS=""`.
+  - The first invocation refused before any dispatch: `RELAY-gh1476-plan-qa-r2 not found in the resolved tick log`, exit 4.
+  - No Claude call was made, so this was not a review attempt.
+  - The token was then seeded per relay-automation/README.md: `tick log task.created`, `claim`, `release --to claude-review`. One driven run followed.
+- Claude call:
+  - Auth: `CLAUDE_AUTH_MODE=subscription`, first-party claude.ai Max (`claude auth status` showed `apiProvider: firstParty`).
+  - Settings: `CLAUDE_MODEL=opus`, `CLAUDE_REASONING_EFFORT=high`, `CLAUDE_MAX_TURNS=40`, `CLAUDE_MAX_BUDGET=5`. Claude Code 2.1.321.
+  - Result: CLI `subtype: success`, 17 turns, 246 s.
+  - Models: claude-opus-5-5, plus the haiku-5-5 helper.
+  - Cost: $1.56 is the CLI's list-price estimate, not a bill.
+- Outcome:
+  - The reviewer turn committed `862fad45` (file-scoped, no push).
+  - The driver ended "escalated to human by design (STATUS: Escalated, token open:claude-a)", which is exit 4. That is expected when a one-round review ends without approval.
+  - The token is now `open`, handed to `claude-a`.
+- Attestation: none. `relay_attest` writes a record only for an Approved/Closed terminal, and `.git/relay-attest/` is absent. The driver watched only the claude-review turn it dispatched.
+- Reviewer limits: inside its sandbox, `gh issue view` returned rc=1 and was not retried, so the #1476 and #1400 wording was not rechecked. It did not read this notes file.
+- Verdict: FAIL.
+  - Resolved: B1, S1 and S5. The re-run exclusion sweep found no live silent-drop route.
+  - Partly resolved: S2, S3, S4 and S6.
+  - New Should findings:
+    - S-A: Conveyor's "before research dispatch" pickup conflicts with its Step 2→3→4 order and `--doc-path CAPTURE_PATH`.
+    - S-B: the second pickup instruction at 10days:338-343 (Step 5) is not reconciled with :393 (Step 4).
+    - S-C: "daily-goals issue" and linked-candidate selection are undefined and unbounded.
+    - S-D: the scenario table lacks the old-line red controls that plan:47 requires. Rows 1 (intake half) and 3 pass on unchanged text, and S6 (j) is missing with (h) and (i) implicit.
+  - Nits: N-A to N-E.
+- Orchestrator spot-check: confirmed 10days:338-339 `Persist ratings ... at survivor pickup/planning (Step 5)`, conveyor:33-36 pickup with `--doc-path CAPTURE_PATH`, and `--doc-path` optional at `utils/py/releases_app.py:7029`. I concur with S-A to S-D, and all of them are plan-text fixes.
+- Budget: 2 of 3 plan-review rounds used. One final round remains, after a Producer revision.
