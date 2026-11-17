@@ -231,4 +231,13 @@ Pre-existing scope: the refresh query's missing body and updatedAt clock are the
 
 Relay closed (Approved), no further turn needed. Implementation proceeds under the plan's verification and authorization boundaries; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-11-17T00:29:53Z
+task: RELAY-gh1498-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 1222985bb8f78239fc84ac6d883e02758850d507
+added-range: 33343+7152
+added-sha256: ef0edb2c8ef42044cfdaeb76d7f0aea191158073aabcb03c5c5159a2011b9188
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
