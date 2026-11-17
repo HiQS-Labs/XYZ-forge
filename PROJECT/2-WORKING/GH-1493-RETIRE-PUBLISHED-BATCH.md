@@ -2,7 +2,7 @@
 gh_issue: 1493
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1493
 title: "merge-cleanup: --retire-published-pr aborts the whole call on a -gate helper cloned from the task clone"
-status: Active — Plan QA
+status: Active — Final QA
 created: 2026-11-17
 updated: 2026-11-17
 owner: start-task lane
@@ -24,7 +24,7 @@ context_tags: [merge-cleanup, start-task, retirement, helpers]
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Recon at base `9331cec67`; plan written | Codex plan QA, then implement |
+| Plan QA Approved (r2); implemented in `0d1ccf8fa`; manual check, ci-local gate and PR #1516 smoke green (`TESTS-RESULTS/2026-11-17+GH-1493/`) | Final Codex relay QA, then PR ready; awaiting merge |
 
 ## Observed problem
 

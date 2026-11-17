@@ -29,4 +29,22 @@ the pre-push full gate: `pre-push: full gate GREEN in 799s`.
 
 ## Smoke (GH-1088)
 
-PENDING — real PR preview, see plan "Verification inline".
+Real PR #1516 (non-draft, live head `4355071e83c7e24a1c9e8639c3965e8010f96d27`), driver from the
+task clone at that head, preview only (no `--execute`), run from the primary as working directory:
+
+```
+merge_cleanup.py --primary <GH Repos>/XYZ-forge --retire-published-pr 1516 \
+  --checkout <task clone> --checkout <task>-gate --checkout <task>-localorigin --checkout <task>-verify
+```
+
+| Checkout | Setup | Run 1 (`smoke/run1-preview-pr1516.txt`) | Run 2, same call (`smoke/run2-…`) |
+|---|---|---|---|
+| task clone | HEAD `4355071e8` = PR head, clean | `SAFE_REMOVE_CLONE`, would remove | same |
+| `-gate` | cloned from task clone, origin set to canonical, HEAD `0d1ccf8fa` (on the PR branch) | `ACTIVE_PROCESS` (open handles from two leftover `sleep` processes of the stopped first push attempt), skipped | `SAFE_REMOVE_CLONE` (those processes had exited) |
+| `-localorigin` | `git clone <task clone>`, origin left as the local path | `PRESERVED …: checkout origin (<task clone>) differs from the protected primary (https://github.com/HiQS-Labs/XYZ-forge.git); a -gate/-verify helper must keep the canonical origin — clone the task clone, then: git -C <helper> remote set-url origin https://github.com/HiQS-Labs/XYZ-forge.git` | same |
+| `-verify` | canonical origin, clean, one empty local commit `3c660c33172ec9077083549557a22f8b9e69a27a` beyond the PR head | `PRESERVE_UNPUSHED` (unlanded local ref `refs/heads/fix/…` @ `3c660c3317`), skipped | same |
+
+Exit 1 both runs. Verdict: **pass.** The batch continued past a refused path and a preserved
+classification; the local-origin refusal names the helper recipe; the unpublished-commit control
+reached classification and was preserved for its unpushed ref, not an origin, dirt or session reason.
+The `-gate` change between runs is live session evidence working as designed, not a defect.
