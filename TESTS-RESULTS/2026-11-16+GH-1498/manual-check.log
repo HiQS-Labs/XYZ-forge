@@ -11,7 +11,7 @@ PASS A9: head SHA change or new body hold between measure and write -> 0 writes 
 PASS A10: every write has intent+result; failed update-branch / label-create recorded as failed | bad: result line skipped on failure -> rejected
 PASS A10b: shim write count equals result receipts (label creation receipted on its own) | bad: label creation folded into add-label -> rejected
 PASS A11: incomplete history or GraphQL error -> unknown, 0 writes (owned label kept) | bad: fallback to createdAt -> rejected
-PASS A12: failing check rendered as name + URL; missing URL -> 'link unavailable' | bad: — -> n/a
+PASS A12: failing check rendered as name + URL; missing URL -> 'link unavailable' | bad: check URL dropped -> rejected
 PASS A12b: conflict comment states measured drift; rung-3 re-cut names the PR's own commits and diff size | bad: — -> n/a
 PASS A13: a pr-minder:* label without an owning receipt is kept; with one, a fresh PR's label is cleared | bad: ownership inferred from the label name -> rejected
 PASS A14: rung-2 update-branch failure: one sync attempt, label added, failure diagnosis commented | bad: no fallback comment on failure -> rejected
@@ -20,5 +20,10 @@ PASS A16: flat install (skills/<name>/scripts siblings, no env) resolves both bu
 PASS A17: behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1 | bad: behind from mergeStateStatus only -> rejected
    A18 parts: {'quoted': True, 'draft_abort': True, 'label_race': True, 'thresholds': True, 'plan_shows_removal': True}
 PASS A18: repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals | bad: — -> n/a
-{"passed": 21, "failed": 0}
+PASS A19a: PR-controlled text is neutralised in comments (no @-ping, no code-span breakout) | bad: no sanitising -> rejected
+PASS A19b: a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own | bad: ownership by marker text only -> rejected
+PASS A19c: a failed update-branch counts toward the 2-per-episode cap (1 ok + 1 failed -> no 3rd attempt) | bad: cap counts ok only -> rejected
+PASS A19d: one PR raising does not end the pass: next PR still written, failed receipt, exit code 1 | bad: — -> n/a
+PASS A19e: a marker comment NOT written by the viewer still counts as author activity | bad: — -> n/a
+{"passed": 26, "failed": 0}
 rc=0

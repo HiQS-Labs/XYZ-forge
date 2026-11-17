@@ -1249,7 +1249,7 @@ _ACTIVITY_QUERY = (
     "pullRequests(states:OPEN,first:50,after:$cursor){pageInfo{hasNextPage endCursor} nodes{number createdAt "
     "commits(last:10){pageInfo{hasPreviousPage} nodes{commit{oid committedDate messageHeadline "
     "committer{email} parents(first:1){totalCount}}}} "
-    "comments(last:20){pageInfo{hasPreviousPage} nodes{createdAt body}} "
+    "comments(last:20){pageInfo{hasPreviousPage} nodes{createdAt body viewerDidAuthor}} "
     "reviews(last:10){pageInfo{hasPreviousPage} nodes{submittedAt}} "
     "reviewThreads(last:20){pageInfo{hasPreviousPage} nodes{comments(last:1){nodes{createdAt}}}}}}}}"
 )
@@ -1307,7 +1307,9 @@ def author_activity(node: dict | None, receipt_oids=frozenset()) -> tuple[dateti
     for key, pick in (
         ("commits", lambda n: None if is_maintenance_commit(n.get("commit") or {}, receipt_oids)
          else (n.get("commit") or {}).get("committedDate")),
-        ("comments", lambda n: None if PR_MINDER_MARKER in (n.get("body") or "") else n.get("createdAt")),
+        # a marker comment is excluded only when this viewer wrote it: the marker text is public
+        ("comments", lambda n: None if (PR_MINDER_MARKER in (n.get("body") or "") and n.get("viewerDidAuthor", True))
+         else n.get("createdAt")),
         ("reviews", lambda n: n.get("submittedAt")),
     ):
         nodes, more = conn(key)

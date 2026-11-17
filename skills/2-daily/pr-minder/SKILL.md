@@ -57,8 +57,8 @@ Rung floors use `S = --stale-days` (default 3). Drafts are shifted by `--draft-s
 - Drift beyond `--drift-bump` (default 30 base commits) moves a PR up one rung, but never from 0 and never into 4. On a busy base, raise `--drift-bump`.
 - At most one `update-branch` per PR per pass, and at most 2 per stale episode. After that the PR keeps aging.
 - No `update-branch` for drafts or for fork PRs without maintainer edits. Those get the comment instead.
-- One owned comment per PR (marker `<!-- pr-minder:v1 -->`), edited in place. A `pr-minder:*` label is removed only when a receipt proves pr-minder added it. A label added by hand, or from another device, is kept.
-- A failed `update-branch` is never retried. The label and a comment with the failure are posted instead.
+- One owned comment per PR (marker `<!-- pr-minder:v1 -->` **and** written by the operator running pr-minder; the marker text alone is public), edited in place. PR-controlled text in comments (file names, commit headlines, check names, branch names) is neutralised: no `@` pings, no code-span breakout, no links; check URLs are shown only if they are plain `https://`. A `pr-minder:*` label is removed only when a receipt proves pr-minder added it. A label added by hand, or from another device, is kept.
+- A failed `update-branch` is not retried within the pass; the label and a comment with the failure are posted instead. A failed attempt counts toward the 2-per-episode cap, so a later pass retries at most once more.
 - New author activity resets the PR to rung 0 on the next pass. pr-minder clears its owned labels and rewrites its existing comment to "rung 0 (fresh)". A PR it never commented on gets no comment.
 - **Held PRs are report-only.** Holds are the planner engine's holds, the `hold`/`parked` labels, an `owner decision: hold` body line, or merge-cleanup's `hold_label` veto. A PR stacked on a held PR is also report-only. Otherwise a stacked child is never on a lower rung than its parent.
 
@@ -72,6 +72,7 @@ PR isn't worth it when the link is one click away (GH-1498 spec deviation).
 - Each write has its own receipt pair, and creating the label in the repo counts as a write.
 - Every write records an `intent` line and a `result` line in `~/.local/state/pr-minder/<owner>/<repo>/actions.jsonl` (override with `PR_MINDER_STATE`). The result is `ok`, `failed`, `uncertain` or `aborted`.
 - Kill switch: a `paused` file in that directory stops `--apply` before any write.
+- One PR's failure does not end the pass. It gets a `failed` receipt, and the exit code is 1 when any write failed, came back uncertain, or was aborted (0 means a clean pass).
 - Conflict files come from `git merge-tree` on fetched refs. That touches no working tree, but it does fetch into the current checkout.
 
 ## Not this skill

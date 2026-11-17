@@ -16,6 +16,7 @@ import os
 import shlex
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -45,6 +46,19 @@ RUNG_NAMES = ["fresh", "nudge", "repair", "decide", "retire"]
 UPDATE_CAP = 2
 FAILING = {"FAILURE", "ERROR", "TIMED_OUT", "CANCELLED", "ACTION_REQUIRED", "STARTUP_FAILURE"}
 EXTRA_FIELDS = "number,mergeStateStatus,isCrossRepository,maintainerCanModify,headRefOid,createdAt"
+SYNC_POLL = (5, 2.0)   # update-branch is async (202): re-read the head up to 5 times, 2s apart
+
+
+def md_safe(text) -> str:
+    """PR-controlled text rendered into a comment posted with the operator's token: no code-span breakout,
+    no newlines, no @-mention pings, no link syntax."""
+    t = str(text or "").replace("`", "'").replace("\r", " ").replace("\n", " ")
+    return t.replace("@", "@\u200b").replace("[", "\\[").replace("]", "\\]")
+
+
+def safe_url(url) -> str:
+    u = str(url or "")
+    return u if u.startswith("https://") and not any(ch in u for ch in " \n\r`<>()[]") else ""
 
 
 def gh(args: list[str], root: Path, stdin: str | None = None) -> subprocess.CompletedProcess:
@@ -98,7 +112,7 @@ class Receipts:
         n = 0
         for r in self.rows:
             if (r.get("pr") == pr and r.get("phase") == "result" and r.get("action") == "update-branch"
-                    and r.get("outcome") == "ok"):
+                    and r.get("outcome") in ("ok", "failed")):   # a failed attempt counts toward the cap
                 ts = pc._parse_gh_time(r.get("ts"))
                 if since is None or (ts and ts >= since):
                     n += 1
@@ -182,7 +196,8 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
         node = (activity or {}).get(n) or {}
         ts, complete = pc.author_activity(node or None, sync_oids)
         cm = node.get("comments") or {}
-        row["has_owned_comment"] = any(pc.PR_MINDER_MARKER in (c.get("body") or "") for c in cm.get("nodes") or [])
+        row["has_owned_comment"] = any(pc.PR_MINDER_MARKER in (c.get("body") or "") and c.get("viewerDidAuthor", True)
+                                       for c in cm.get("nodes") or [])
         # the history window shows only the newest 20 comments: an older owned comment may exist beyond it
         row["owned_comment_maybe"] = row["has_owned_comment"] or bool((cm.get("pageInfo") or {}).get("hasPreviousPage"))
         commits = (node.get("commits") or {})
@@ -276,23 +291,27 @@ def _plan_bundle(row: dict, receipts: Receipts) -> dict:
                  if row.get("drift") is not None else "Base drift unknown.")
     if row["conflicting"]:
         files = row.get("conflict_files")
-        lines.append("Conflicts with base in: " + (", ".join(f"`{f}`" for f in files) if files else "files unknown")
+        lines.append("Conflicts with base in: " + (", ".join(f"`{md_safe(f)}`" for f in files) if files else "files unknown")
                      + f". {drift_txt}")
         if rung == 2:
-            head_q = shlex.quote(str(pr.get("headRefName") or ""))
-            base_q = shlex.quote(f"origin/{pr.get('baseRefName') or ''}")
-            lines.append(f"Repair in a disposable clone: `git fetch origin && git checkout {head_q} "
-                         f"&& git merge {base_q}` then resolve, commit and push.")
+            head, base = str(pr.get("headRefName") or ""), str(pr.get("baseRefName") or "")
+            if any(ch in head + base for ch in "`\n\r"):
+                lines.append("Repair: merge the base branch into this branch in a disposable clone "
+                             "(branch name not rendered: it contains characters unsafe in a comment).")
+            else:
+                lines.append(f"Repair in a disposable clone: `git fetch origin && git checkout {shlex.quote(head)} "
+                             f"&& git merge {shlex.quote('origin/' + base)}` then resolve, commit and push.")
         if rung == 3:
             own = row.get("own_commits") or []
             size = row.get("diff_size")
             lines.append("Option: re-cut — a fresh branch off base with this PR's own commits cherry-picked"
                          + (f" ({size})" if size else "") + ", instead of resolving this drift. Commits: "
-                         + (", ".join(f"`{c}`" for c in own) if own else "unknown")
+                         + (", ".join(f"`{md_safe(c)}`" for c in own) if own else "unknown")
                          + (" (newest 10 shown)" if row.get("own_commits_truncated") else "") + ".")
         b["why"] = "conflicting"
     elif row["failing"]:
-        lines += [f"Failing check: {c['name']} — {c['url'] or 'link unavailable'}" for c in row["failing"]]
+        lines += [f"Failing check: {md_safe(c['name'])} — {safe_url(c['url']) or 'link unavailable'}"
+                  for c in row["failing"]]
         b["why"] = "checks failing"
     elif row["behind"]:
         b["why"] = "behind base"
@@ -324,10 +343,25 @@ def _plan_bundle(row: dict, receipts: Receipts) -> dict:
 
 # ---------- apply ----------
 
+_VIEWER: dict = {}
+
+
+def viewer_login(root: Path) -> str:
+    if "login" not in _VIEWER:
+        r = gh(["api", "user", "-q", ".login"], root)
+        if r.returncode != 0 or not r.stdout.strip():
+            raise RuntimeError(f"cannot resolve the operator's GitHub login: {r.stderr.strip()[-160:]}")
+        _VIEWER["login"] = r.stdout.strip()
+    return _VIEWER["login"]
+
+
 def owned_comment(root: Path, slug: str, n: int):
+    """The marker comment written by THIS operator. The marker is public, so text alone is not ownership."""
+    me = viewer_login(root).lower()
     data = gh_json(["api", "--paginate", "--slurp", f"repos/{slug}/issues/{n}/comments"], root)
     flat = [c for page in (data or []) for c in (page if isinstance(page, list) else [page])]
-    return next((c for c in flat if MARKER in (c.get("body") or "")), None)
+    return next((c for c in flat if MARKER in (c.get("body") or "")
+                 and str((c.get("user") or {}).get("login") or "").lower() == me), None)
 
 
 def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engine_fn) -> list[str]:
@@ -396,8 +430,13 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
         if op[0] == "update-branch":
             def sync():
                 r = gh(["pr", "update-branch", str(n)], root)
-                v = gh(["pr", "view", str(n), "--json", "headRefOid", "-q", ".headRefOid"], root)
-                after = v.stdout.strip() if v.returncode == 0 else ""
+                after = ""
+                for attempt in range(SYNC_POLL[0] if r.returncode == 0 else 1):
+                    v = gh(["pr", "view", str(n), "--json", "headRefOid", "-q", ".headRefOid"], root)
+                    after = v.stdout.strip() if v.returncode == 0 else ""
+                    if r.returncode != 0 or (after and after != pr.get("headRefOid")):
+                        break
+                    time.sleep(SYNC_POLL[1])
                 if r.returncode != 0:
                     return "failed", {"head_after": after, "error": (r.stderr.strip() or "no diagnostic")[-200:]}
                 if not after:
@@ -505,11 +544,22 @@ def main(argv=None) -> int:
     if receipts.paused():
         print(f"pr-minder: paused ({receipts.dir / 'paused'} exists); no writes", file=sys.stderr)
         return 0
+    problems = 0
     for r in rows:
-        done = apply_row(root, slug, r, receipts, engine_holds)
+        try:
+            done = apply_row(root, slug, r, receipts, engine_holds)
+        except Exception as exc:   # one PR's failure must not end the pass
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            receipts.write(pr=r["pr"], phase="result", action="bundle", outcome="failed",
+                           reason=f"{type(exc).__name__}: {str(exc)[:200]}", rung=r.get("rung"))
+            done = [f"failed ({type(exc).__name__})"]
         if done:
             print(f"#{r['pr']}: {'; '.join(done)}")
-    return 0
+            problems += sum(1 for d in done if any(k in d for k in ("failed", "uncertain", "aborted")))
+    if problems:
+        print(f"pr-minder: {problems} write(s) failed, uncertain or aborted; see receipts", file=sys.stderr)
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":

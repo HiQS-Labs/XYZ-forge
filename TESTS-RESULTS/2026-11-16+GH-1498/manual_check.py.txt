@@ -46,7 +46,7 @@ if a[0] == "api" and a[1] == "-X" and a[2] == "PATCH":
     save(); sys.exit(0)
 if a[0] == "api" and a[1].endswith("/comments") and "-f" in a:
     log(a); n = a[1].split("/")[-2]; body = a[a.index("-f") + 1][5:]
-    st["comments"].setdefault(n, []).append({"id": 9000 + len(st["comments"][n]), "body": body})
+    st["comments"].setdefault(n, []).append({"id": 9000 + len(st["comments"][n]), "body": body, "user": {"login": "op"}})
     st["activity"].get(n, {}).get("comments", {}).get("nodes", []).append({"createdAt": NOWZ, "body": body})
     pr(n)["updatedAt"] = NOWZ; save(); sys.exit(0)
 if a[:2] == ["pr", "view"]:
@@ -179,16 +179,17 @@ def check(aid, desc, good, bad_desc, bad):
         g = bool(good())
     except Exception as exc:
         g = False; desc += f" [good raised {exc!r}]"
+    crashed = None
     try:
         b = bool(bad()) if bad else None
-    except Exception:
-        b = False
-    ok = g and (b is None or b is False)
+    except Exception as exc:   # a crashed bad candidate proves nothing: it is NOT a rejection
+        b, crashed = None, repr(exc)
+    ok = g and crashed is None and (b is None or b is False) and not (bad and b is None)
     RESULTS.append({"id": aid, "assertion": desc, "candidate": "PASS" if g else "FAIL",
                     "bad_candidate": bad_desc, "bad_rejected": None if b is None else (b is False),
-                    "verdict": "PASS" if ok else "FAIL"})
-    print(f"{'PASS' if ok else 'FAIL'} {aid}: {desc} | bad: {bad_desc} -> "
-          f"{'n/a' if b is None else ('rejected' if b is False else 'NOT rejected')}")
+                    "bad_crashed": crashed, "verdict": "PASS" if ok else "FAIL"})
+    state = "n/a" if not bad else (f"CRASHED {crashed}" if crashed else ("rejected" if b is False else "NOT rejected"))
+    print(f"{'PASS' if ok else 'FAIL'} {aid}: {desc} | bad: {bad_desc} -> {state}")
 
 
 def acts(row):
@@ -570,7 +571,13 @@ def a12b_ok():
             and "1 files, +10/-2" in c3 and "work" in c3)
 
 
-check("A12", "failing check rendered as name + URL; missing URL -> 'link unavailable'", a12_ok, "—", None)
+def a12_bad():
+    with patched(pm, "failing_checks", lambda pr: [{"name": "build", "url": ""} for _ in pr.get("statusCheckRollup") or []]):
+        return a12_ok()
+
+
+check("A12", "failing check rendered as name + URL; missing URL -> 'link unavailable'", a12_ok,
+      "check URL dropped", a12_bad)
 check("A12b", "conflict comment states measured drift; rung-3 re-cut names the PR's own commits and diff size", a12b_ok, "—", None)
 
 
@@ -618,8 +625,9 @@ def a15(bad=False):
     for n in ("122", "123"):
         act[n]["comments"]["pageInfo"]["hasPreviousPage"] = True
     e = Env([mkpr(n, 0.5, "clean") for n in (120, 121, 122, 123)], act)
-    e.state["comments"] = {"120": [{"id": 42, "body": marker}], "122": [{"id": 43, "body": marker}],
-                           "123": [{"id": 44, "body": "human, no marker"}]}
+    e.state["comments"] = {"120": [{"id": 42, "body": marker, "user": {"login": "op"}}],
+                           "122": [{"id": 43, "body": marker, "user": {"login": "op"}}],
+                           "123": [{"id": 44, "body": "human, no marker", "user": {"login": "x"}}]}
     e.save()
     ctx = contextlib.nullcontext()
     if bad:   # the r2 defect: presence inferred only from the visible window
@@ -706,6 +714,88 @@ def a18():
 
 check("A18", "repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals",
       a18, "—", None)
+
+# ---------------- A19 CodeRabbit #1510 second-pass fixes ----------------
+def a19a():
+    p = mkpr(140, 4.1, "failing"); p["statusCheckRollup"][0]["name"] = "@org/team `x`"
+    c = plans(Env([p]))[140]["plan"]["comment"]
+    return "@\u200borg/team" in c and "`x`" not in c
+
+
+def a19a_bad():
+    with patched(pm, "md_safe", lambda t: str(t)):
+        return a19a()
+
+
+check("A19a", "PR-controlled text is neutralised in comments (no @-ping, no code-span breakout)", a19a,
+      "no sanitising", a19a_bad)
+
+
+def a19b(bad=False):
+    e = Env([mkpr(141, 4.1, "dirty")])
+    e.state["comments"] = {"141": [{"id": 77, "body": "<!-- pr-minder:v1 --> fake", "user": {"login": "mallory"}}]}
+    e.save()
+    if bad:
+        def by_text(root, slug, n):
+            data = pm.gh_json(["api", "--paginate", "--slurp", f"repos/{slug}/issues/{n}/comments"], root)
+            return next((c for pg in data for c in pg if pm.MARKER in (c.get("body") or "")), None)
+        with patched(pm, "owned_comment", by_text):
+            w = apply(e)
+    else:
+        w = apply(e)
+    st = e.load()["comments"]["141"]
+    return (st[0]["body"].endswith("fake") and len(st) == 2 and st[1]["user"]["login"] == "op"
+            and not any(x[:3] == ["api", "-X", "PATCH"] for x in w))
+
+
+check("A19b", "a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own", a19b,
+      "ownership by marker text only", lambda: a19b(bad=True))
+
+
+def a19c(bad=False):
+    e = Env([mkpr(142, 8.1, "behind")])
+    rec = Path(os.environ["PR_MINDER_STATE"]) / "acme/repo"; rec.mkdir(parents=True, exist_ok=True)
+    rows = [{"ts": iso(7.5), "pr": 142, "phase": "result", "action": "update-branch", "outcome": o} for o in ("ok", "failed")]
+    (rec / "actions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    if bad:
+        def ok_only(self, pr, since):
+            return sum(1 for r in self.rows if r.get("pr") == pr and r.get("phase") == "result"
+                       and r.get("action") == "update-branch" and r.get("outcome") == "ok")
+        with patched(pm.Receipts, "updates_since", ok_only):
+            return not plans(e)[142]["plan"]["update_branch"]
+    return not plans(e)[142]["plan"]["update_branch"]
+
+
+check("A19c", "a failed update-branch counts toward the 2-per-episode cap (1 ok + 1 failed -> no 3rd attempt)", a19c,
+      "cap counts ok only", lambda: a19c(bad=True))
+
+
+def a19d():
+    e = Env([mkpr(143, 8.1, "dirty"), mkpr(144, 8.1, "dirty")]); e.activate()
+    orig = pm.owned_comment
+    def boom(root, slug, n):
+        if n == 143:
+            raise RuntimeError("simulated rate limit")
+        return orig(root, slug, n)
+    with patched(pm, "owned_comment", boom):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+            rc = pm.main(["--repo-root", str(e.dir / "repo"), "--apply"])
+    w = e.writes()
+    return (rc == 1 and any("issues/144/comments" in " ".join(x) for x in w)
+            and any(r.get("pr") == 143 and r.get("outcome") == "failed" for r in e.receipts()))
+
+
+check("A19d", "one PR raising does not end the pass: next PR still written, failed receipt, exit code 1", a19d, "—", None)
+
+
+def a19e():
+    node = history([commit(20)], [{"createdAt": iso(0.5), "body": "<!-- pr-minder:v1 --> hidden?", "viewerDidAuthor": False}])
+    ts, ok = pc.author_activity(dict(node, createdAt=iso(60)))
+    return ok and pc._age_days(ts, NOW) < 1
+
+
+check("A19e", "a marker comment NOT written by the viewer still counts as author activity", a19e, "—", None)
 
 print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
 (Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))
