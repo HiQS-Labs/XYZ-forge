@@ -52,7 +52,7 @@ ROUND: 1 / 1
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: scoped follow-up on PR #1491, `git diff 00db9d662..c03bdfb8f` only: fix 16e79acbf in `utils/py/jog_run.py` (_jog_align_target and the supervised jog_acquire_lease call) and `utils/py/releases_app.py` (jog_acquire_lease), and evidence c03bdfb8f in `TESTS-RESULTS/2026-11-16+GH-1400/landing-safety/check.py`, `TESTS-RESULTS/2026-11-16+GH-1400/landing-safety/baseline-red.json` and `TESTS-RESULTS/2026-11-16+GH-1400/followup.py` (published()).
+- Artifact under review: scoped follow-up on PR #1491, git diff 00db9d662..c03bdfb8f only: fix 16e79acbf in `utils/py/jog_run.py` (_jog_align_target and the supervised jog_acquire_lease call) and `utils/py/releases_app.py` (jog_acquire_lease), and evidence c03bdfb8f in `TESTS-RESULTS/2026-11-16+GH-1400/landing-safety/check.py`, `TESTS-RESULTS/2026-11-16+GH-1400/landing-safety/baseline-red.json` and `TESTS-RESULTS/2026-11-16+GH-1400/followup.py` (published()).
 - Reviewer: claude   ·   Producer: claude-a
 - Started: 2026-11-16
 - Definition of Done: (a) an ignored untracked file in the execution clone (e.g. `scratch.log`) is never overwritten by supervised alignment; alignment refuses instead; (b) a supervised wake leases a row only if its `global_id` still matches the selection and its status is still `pending`, checked inside the same `perform_write` transaction; a stale or held row is refused without changing status or attempt count; (c) non-supervised callers of `jog_acquire_lease` behave exactly as before; (d) evidence claims match the committed check and baseline.
