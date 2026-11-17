@@ -23,7 +23,7 @@ Canonical discussion: [Issue #1512](https://github.com/HiQS-Labs/XYZ-forge/issue
 
 | What was just completed | What's next |
 |---|---|
-| Step 7 implementation edits applied to whack-a-mole, debug-mantra, CHANGELOG, and admitted in releases.db. | Route verification, docs gate, and candidate-bound publisher suites. |
+| Step 7 executed: skill edits applied, pdda docs gate green (0 errors), candidate-bound publisher suites passed (gh620: 28/28, gh589: 39/39), smoke check complete, evidence recorded under TESTS-RESULTS/2026-11-17+GH-1512/. | Final Codex relay QA (Step 8). |
 
 ## Problem & Recon
 

@@ -1,0 +1,3 @@
+{"timestamp": "2026-11-17T16:56:59Z", "gate": "utils/pdda/pdda.sh run", "exit_code": 0, "status": "PASS", "errors": 0, "sha": "f6c9f646cbcb910b740bd9f77390b1d2d370012d"}
+{"timestamp": "2026-11-17T16:58:55Z", "suite": "test/gh620-skills-army-mini-sync.sh", "exit_code": 0, "status": "PASS", "passed": 28, "failed": 0, "clone": "XYZ-forge-gh1512-whack-a-mole-connect-the-dots-2026-11-17-gate", "sha": "f6c9f646cbcb910b740bd9f77390b1d2d370012d"}
+{"timestamp": "2026-11-17T16:59:33Z", "suite": "test/gh589-xyz-mini-sync.sh", "exit_code": 0, "status": "PASS", "passed": 39, "failed": 0, "clone": "XYZ-forge-gh1512-whack-a-mole-connect-the-dots-2026-11-17-gate", "sha": "f6c9f646cbcb910b740bd9f77390b1d2d370012d"}
