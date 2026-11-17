@@ -168,17 +168,21 @@ print(json.dumps({'scope':'component reproduction: exact AST-extracted probe, im
 Outcome: truthful diagnostic claims, while preserving existing timeout bounds, idle sampling and process-group cleanup. This is a message/diagnostic-label repair, not an idle-oracle redesign.
 
 1. In agy-turn.py keep probe timing and kill behavior unchanged. Describe TTY errors, open lock-named files and open sockets as observations, explicitly stating that file/socket presence does not establish waiting or inactivity. Rename printed attribution headings to timeout observations; preserve probe tuple categories for compatibility. Do not print raw paths or credentials.
-2. In turn_diagnostics.py keep sampling, mtime comparisons, idle_seconds, classifier ordering and security/CPU handling unchanged. Replace the slow/progress diagnostic string and prose with a neutral file-activity observation; preserve the imported constant symbol to avoid unnecessary API churn. Rename worktree-progress output to file-activity. Explicitly state that logs/scratch can contribute and useful progress/budget justification are not established. Do not exclude directories here: that would change idle-kill behavior and intentional transcript signals beyond this request.
+2. In turn_diagnostics.py keep sampling, mtime comparisons, idle_seconds, classifier ordering and security/CPU handling unchanged. Preserve both REASON_SLOW_PROGRESS and its existing machine-readable value for compatibility. Replace the human prose with a neutral file-activity observation and explicitly describe the retained reason code as a legacy category, not proof of useful progress. Rename worktree-progress output to file-activity. Explicitly state that logs/scratch can contribute and useful progress/budget justification are not established. Do not exclude directories here: that would change idle-kill behavior and intentional transcript signals beyond this request.
 3. In relay_drive.py label the existing changed-file count as worktree state, not progress. Keep interval and process behavior unchanged. Update only existing assertions/help text affected by output changes; no new suites/registry entries.
 4. Record model-free before/after controls under TESTS-RESULTS with provenance: benign open lock file, log-only writes with flat CPU, unchanged dirty scaffolds; positive real file/transcript activity still sampled; unchanged wall/idle exit and descendant cleanup using existing relevant suites in disposable full clone. Smoke actual stubbed shim main and adjacent timeout cases, no live model.
 5. Independent plan/final review and applicable classified final gate; dedicated PR Closes #1506, never change PR1491.
 
 Alternative rejected: exclusions for temp/log directories would change liveness decisions and still not prove useful progress; a new stream detector is outside this repair. Existing observations remain available with honest uncertainty.
 
-Blast radius: diagnostic consumers across turn shims and relay output assertions; not queue, ledger schema, ownership locks, auth, budgets or signal dispatch. Trace imported reason-string consumers before implementation; document any machine-facing label change.
+Blast radius: diagnostic consumers across turn shims and relay output assertions; not queue, ledger schema, ownership locks, auth, budgets or signal dispatch. Keep the machine-readable reason value unchanged. Update the known detail-key assertion in test/gh648-l1-turn-termination.sh:63 and existing GH114/GH370 output expectations; inspect GH390/GH492/GH505 consumers for affected wording. No new test suites.
 
 Rollback: one isolated task-branch change, reversible by reverting its commit. Original reproduction and PR1491 work remain untouched.
 
 Rating: 55/45/50/65, consequence is operational misdiagnosis, appeal neutral, focused repair. Historical #114/#608/#648/#1126 establish related prior art, not a measured increase in incident rate; 14-day trend unknown.
 
 QA: pending. Review should test whether neutral wording satisfies #1506 without changing watchdog behavior, and whether any label consumer requires compatibility treatment.
+
+## Plan QA round 1 disposition
+
+Accepted the Should: name and update test/gh648-l1-turn-termination.sh:63 for file-activity=. Resolved reason compatibility by retaining the existing constant and value, with explicit legacy-category qualification in human output. The reviewer PASS was substantive but STATUS remained Open; approval attestation is still pending. The controller correctly noted only part of relay_drive.py was inspected; no exhaustive driver sweep is claimed. Scope remains diagnostic output only, not liveness policy.
