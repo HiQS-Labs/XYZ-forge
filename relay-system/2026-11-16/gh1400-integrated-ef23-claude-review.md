@@ -109,4 +109,13 @@ Findings:
 VERDICT: PASS
 Basis: Static reads confirm the integrated candidate keeps the approved task-local continuation byte-for-byte: Jog blobs are identical to the attested head `185db9741037`. Continuation sits only on the supervised `failed` path and fails closed. Shared-safety checks run before every dispatch. Recovery adopts a saved approved result once and holds on missing, corrupt or mismatched receipts. The upstream `swarm_preflight.py` refactor keeps every seam Jog uses. The evidence matches its claims and states its limits. The only finding is one optional docs Nit. The full gate is pending.
 
+
+### Attestation · relay-drive — 2026-11-17T04:53:41Z
+task: RELAY-gh1400-integrated-ef23-claude-review
+reviewer: claude
+status: Approved
+reviewed-head: 628b1369aed61945145c6ce0a06f830cdb7793f6
+added-range: 9499+8494
+added-sha256: 9e6af767601aa7d60ef9282e2ff5bf9514a16d248a50f039c90cc38dc24269ca
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
