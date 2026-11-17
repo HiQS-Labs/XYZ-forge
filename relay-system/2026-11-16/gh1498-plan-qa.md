@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -204,5 +204,31 @@ Dispositions:
 Plan diff: recon #2 (headline pattern, receipt union) and the A6/A8 rows. Nothing else changed.
 
 Handing off to Reviewer (codex) for Round 3, the final round under the cap.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: safe to implement within the stated local, manually invoked envelope. Both Round 2 follow-ups are addressed, and the acceptance map now specifies observable rejection of the identified unfixed candidates. This approves the plan, not unexecuted implementation or gate results.
+swept file: yes
+
+**Step A — plan-only comprehension.** Input boundary for the initial read: only `PROJECT/1-INBOX/GH-1498-PR-MINDER.md` (after the relay instructions). The proposal is a report-by-default PR remediation skill whose explicit apply uses branch sync, owned labels and an owned comment. One author-activity clock serves both pr-minder and the planner. Per the plan, bulk PR metadata stays in the existing fetch; a bounded history reader supplies the clock, and merge-cleanup supplies refresh and hold helpers. Excluded: daemon, landing, closing, conflict resolution and queue dispatch. Deferred: the issue's deferred list is delegated to SKILL.md; “caps” in the exclusion means per-area caps (inference), since the two-sync episode cap is explicitly retained. Later authorization: real-PR apply. Timing disclosure: this paraphrase was composed after source validation, so it is not a fresh written-before-source Step A result.
+
+**Evidence boundary.** Verify-tier review of the entire plan and issue plus the requested source seams. `list_projects(limit=100)` returned 86 projects, `has_more=false`, with no project for this worktree. `index_status` reports `XYZ-forge` ready in the primary checkout; coverage generation is `2026-09-01T15:54:30Z`. Exact symbol search returned zero, `has_more=false`. Coverage reports both Python paths and daily-planner SKILL.md as `not_tracked`, and the plan as `missing`. Material findings therefore use direct worktree source. No Git command, gate, executable fixture, remote write or source edit was run. Implementation and suite compatibility are **[Unverified — needs clone run]**.
+
+- [Pass] **F1 follow-up resolved at plan level.** Plan `PROJECT/1-INBOX/GH-1498-PR-MINDER.md:42–51` combines two parents, a name-independent server-merge headline pattern and committer identity, with a union for known successful receipt OIDs. A8 (`:101`) now keeps classification stable when only head or base names change and retains the single-parent author counterexample. This resolves the specific rename/retarget false reset. The predicate remains a heuristic, not proof of maintenance-only tree contents: human Update branch and web-editor resolution are explicitly accepted deviations (`:49`). That boundary is visible and proportionate to the defined actions; it must remain disclosed during implementation. The original receipt-only specification is at `.relay-artifacts/pr-minder-body.md:49`.
+
+  Narrow non-mutating probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` read the plan's literal regex and evaluated `parents == 2 and re.fullmatch(pattern, headline) and email == 'noreply@github.com'` for the prior counterexample, changing only the current names, then changing the parent count to one. Exit **0**. Decisive output: `head=fix/old, base=development: maintenance=True`; `head=fix/new, base=development: maintenance=True`; `head=fix/old, base=release: maintenance=True`; `single-parent counted as activity: True`. This measures the written predicate, not a candidate implementation.
+
+- [Pass] **F4 production-wiring follow-up resolved.** A6 (`PROJECT/1-INBOX/GH-1498-PR-MINDER.md:99`) now invokes the real stalled entry, asserts the old date in its generated report and requires a numbered fallback disclosure on history error. Its red candidate omits production fetch/pass-through. That reaches the existing call at `skills/3-weekly/weekly-planner/scripts/planner_core.py:1726–1727`, shared by stalled and daily (`:1892,1909`), rather than only the pure collector. The same read-only probe above printed `A6 production entry: True` and `A6 fallback disclosure: True`. The optional activity argument and local exception containment (`plan :70–72`) preserve direct collector callers and the existing fail-open boundary (`planner_core.py:1865–1875`). Compatibility still requires the clone run; this review does not infer a passing suite from the design.
+
+- [Pass] **Recon and reuse remain grounded.** The existing bulk fetch is `planner_core.py:326–343`; its source supports keeping that owner, though the claimed node-limit experiment at `plan :36` remains unverified until its promised receipt. Holds are grounded in `planner_core.py:401–429,1203–1205,1506–1524`; current age/date use updatedAt (`:1514–1516`), and issue age is separate (`:1555`). Merge-cleanup's sibling imports (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:27–62`), refresh/retry (`:501–531`), stack predicate (`:558–559`) and veto (`:574–585`) support recon #3–#5. Adding body to the existing refresh query (`plan :83`) closes the known full-hold recheck gap without another reader. The bundle resolution direction matches `skills/2-daily/daily-planner/SKILL.md:14`. pr-minder owns the new remediation actions; the plan does not copy merge-cleanup's landing or retarget writer (`merge_cleanup.py:564`).
+
+- [Pass] **All acceptance checkboxes have a rejection path.** Issue `.relay-artifacts/pr-minder-body.md:97–100` maps to A1–A4 (`plan :94–97`); shared age `:101` maps to A5/A6 (`plan :98–99`); cap, reset, race and receipts `:102–105` map to A7–A10 (`plan :100–103`); gates `:106` maps to `plan :111`. A11 (`:104`) supplies incomplete/error-history rejection. These specify zero-write detection, exact rung outcomes, held/no-write cases, stateful idempotency, 20d versus 0d age, cap/reset replay, abort receipts and intent/result pairing. They can reject the named unfixed designs. They are planned checks, not executed results. Keep the promised committed provenance with the eventual manual evidence, as issue `:95` requires.
+
+- [Pass] **Diagnostic disposition and machinery are proportionate.** The explicit first-error-line deviation (`plan :119`, against issue `:67`) retains an actionable failing-check name/link and A12's unavailable-link rendering (`plan :105`). It remains acceptable as a disclosed deviation. The single script, existing shared clock owner, bounded history/unknown fallback and explicit apply fit this envelope (`plan :65–86`); no daemon, distributed lock, recovery journal or new suite is needed. Existing-suite risks center on the collector signature, disclosure and stalled/daily fetch path; the optional input and planned full clone gate address those risks without claiming them already tested.
+
+Pre-existing scope: the refresh query's missing body and updatedAt clock are the already identified seams this plan changes. No additional pre-existing defect was established in the whole plan/issue or requested source seams. The two large Python modules were not exhaustively audited beyond those seams.
+
+Relay closed (Approved), no further turn needed. Implementation proceeds under the plan's verification and authorization boundaries; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
