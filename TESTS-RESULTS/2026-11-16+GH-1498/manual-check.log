@@ -15,7 +15,7 @@ PASS A12: failing check rendered as name + URL; missing URL -> 'link unavailable
 PASS A12b: conflict comment states measured drift; rung-3 re-cut names the PR's own commits and diff size | bad: — -> n/a
 PASS A13: a pr-minder:* label without an owning receipt is kept; with one, a fresh PR's label is cleared | bad: ownership inferred from the label name -> rejected
 PASS A14: rung-2 update-branch failure: one sync attempt, label added, failure diagnosis commented | bad: no fallback comment on failure -> rejected
-PASS A15: managed PR with fresh author activity: owned comment PATCHed to rung 0 once; rerun no-op; unmanaged PR untouched | bad: reset ignores the existing owned comment -> rejected
+PASS A15: author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched | bad: presence inferred only from the visible window -> rejected
 PASS A16: flat install (skills/<name>/scripts siblings, no env) resolves both bundles | bad: pre-fix resolver (parents[1].parent) -> rejected
 {"passed": 19, "failed": 0}
 rc=0

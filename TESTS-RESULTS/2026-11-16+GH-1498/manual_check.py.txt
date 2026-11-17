@@ -610,28 +610,38 @@ check("A14", "rung-2 update-branch failure: one sync attempt, label added, failu
 # ---------------- A15 author reset rewrites the owned comment ----------------
 def a15(bad=False):
     marker = "<!-- pr-minder:v1 -->\n\n**pr-minder:** rung 3 (decide); old diagnosis"
-    act = {"120": history([commit(0.5)], [{"createdAt": iso(10), "body": marker}]), "121": history([commit(0.5)])}
-    e = Env([mkpr(120, 0.5, "clean"), mkpr(121, 0.5, "clean")], act)
-    e.state["comments"] = {"120": [{"id": 42, "body": marker}]}; e.save()
+    humans = [{"createdAt": iso(0.6 + i * 0.01), "body": f"human reply {i}"} for i in range(20)]
+    act = {"120": history([commit(0.5)], [{"createdAt": iso(10), "body": marker}]),     # marker inside the window
+           "121": history([commit(0.5)]),                                               # never managed
+           "122": history([commit(0.5)], humans),                                       # marker BEYOND the window
+           "123": history([commit(0.5)], humans)}                                       # truncated, never managed
+    for n in ("122", "123"):
+        act[n]["comments"]["pageInfo"]["hasPreviousPage"] = True
+    e = Env([mkpr(n, 0.5, "clean") for n in (120, 121, 122, 123)], act)
+    e.state["comments"] = {"120": [{"id": 42, "body": marker}], "122": [{"id": 43, "body": marker}],
+                           "123": [{"id": 44, "body": "human, no marker"}]}
+    e.save()
     ctx = contextlib.nullcontext()
-    if bad:
+    if bad:   # the r2 defect: presence inferred only from the visible window
         orig = pm.assess
-        def no_flag(*a, **k):
+        def visible_only(*a, **k):
             rows = orig(*a, **k)
             for r in rows:
-                r["has_owned_comment"] = False; r["plan"] = pm.plan_bundle(r, a[4])
+                r["owned_comment_maybe"] = r["has_owned_comment"]; r["plan"] = pm.plan_bundle(r, a[4])
             return rows
-        ctx = patched(pm, "assess", no_flag)
+        ctx = patched(pm, "assess", visible_only)
     with ctx:
         w1 = apply(e); w2 = apply(e)
-    body = e.load()["comments"]["120"][0]["body"]
-    patch = [x for x in w1 if x[:3] == ["api", "-X", "PATCH"]]
-    return (len(patch) == 1 and "rung 0 (fresh)" in body and len(w2) == len(w1)
-            and not e.load()["comments"].get("121"))
+    st = e.load()["comments"]
+    patched_ids = sorted(x[3].split("/")[-1] for x in w1 if x[:3] == ["api", "-X", "PATCH"])
+    created = [x for x in w1 if x[0] == "api" and x[1].endswith("/comments") and "-X" not in x]
+    return (patched_ids == ["42", "43"] and "rung 0 (fresh)" in st["120"][0]["body"]
+            and "rung 0 (fresh)" in st["122"][0]["body"] and not created and len(w2) == len(w1)
+            and st["123"][0]["body"] == "human, no marker" and not st.get("121"))
 
 
-check("A15", "managed PR with fresh author activity: owned comment PATCHed to rung 0 once; rerun no-op; unmanaged PR untouched",
-      a15, "reset ignores the existing owned comment", lambda: a15(bad=True))
+check("A15", "author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched",
+      a15, "presence inferred only from the visible window", lambda: a15(bad=True))
 
 
 # ---------------- A16 flat installed layout ----------------

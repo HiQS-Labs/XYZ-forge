@@ -182,8 +182,10 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
                "held": hold_reason(pr, held_by_engine), "pr_data": pr}
         node = (activity or {}).get(n) or {}
         ts, complete = pc.author_activity(node or None, sync_oids)
-        row["has_owned_comment"] = any(pc.PR_MINDER_MARKER in (c.get("body") or "")
-                                       for c in (node.get("comments") or {}).get("nodes") or [])
+        cm = node.get("comments") or {}
+        row["has_owned_comment"] = any(pc.PR_MINDER_MARKER in (c.get("body") or "") for c in cm.get("nodes") or [])
+        # the history window shows only the newest 20 comments: an older owned comment may exist beyond it
+        row["owned_comment_maybe"] = row["has_owned_comment"] or bool((cm.get("pageInfo") or {}).get("hasPreviousPage"))
         commits = (node.get("commits") or {})
         row["own_commits"] = [((c.get("commit") or {}).get("oid") or "")[:9] + " " +
                               ((c.get("commit") or {}).get("messageHeadline") or "")[:60]
@@ -253,9 +255,10 @@ def plan_bundle(row: dict, receipts: Receipts) -> dict:
     tail = ["_Web-editor conflict fixes that kept GitHub's default merge message are not counted as activity._"]
     if rung == 0:
         b["why"] = "fresh"
-        if row.get("has_owned_comment"):   # a managed PR whose author came back: reset the old diagnosis
+        if row.get("owned_comment_maybe"):   # a (possibly) managed PR whose author came back: reset the diagnosis
             b["comment"] = "\n\n".join([MARKER, f"**pr-minder:** rung 0 (fresh); author activity on {since}. "
                                           "No action needed."])
+            b["reset_only"] = True           # PATCH an existing owned comment; never create one
         return b
     lines = list(head)
     drift_txt = (f"Base has moved {row['drift']} commits since this branch's merge base."
@@ -332,6 +335,8 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
     def comment_op(body):
         if existing and (existing.get("body") or "").strip() == body.strip():
             return None
+        if plan.get("reset_only") and not existing:
+            return None                  # never-managed fresh PR: stay silent
         return ("comment", existing.get("id") if existing else None, body)
 
     if plan["comment"] and comment_op(plan["comment"]):

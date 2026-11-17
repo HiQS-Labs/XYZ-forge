@@ -137,9 +137,9 @@
   },
   {
     "id": "A15",
-    "assertion": "managed PR with fresh author activity: owned comment PATCHed to rung 0 once; rerun no-op; unmanaged PR untouched",
+    "assertion": "author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched",
     "candidate": "PASS",
-    "bad_candidate": "reset ignores the existing owned comment",
+    "bad_candidate": "presence inferred only from the visible window",
     "bad_rejected": true,
     "verdict": "PASS"
   },
