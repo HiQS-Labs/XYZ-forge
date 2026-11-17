@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,52 @@ Use exact standalone VERDICT: PASS|FAIL|PARKED and Basis: explanation in your re
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes — read agy-turn.py (680 lines), turn_diagnostics.py (591 lines), relay_drive.py:940–970; no pre-existing defects outside the three identified overclaims found.
+
+gate run: not applicable — no executable gate defined in the plan (Preflight Contract has `"gate":null,"ready":false`); per relay instructions this is [Unverified — needs clone run].
+
+**Plan paraphrase:** Repair three diagnostic overclaims by changing message strings only: (1) the lock/socket probe in `agy-turn.py:_probe_idle_blocker` removes "it was waiting… not working" assertions; (2) `turn_diagnostics.py:_classify_locked` replaces the slow-progress detail prose and renames the `worktree-progress=` key to `file-activity=`; (3) `relay_drive.py` relabels the dirty-file count from "GH-370 progress" to "worktree state." All sampler, classifier, idle_seconds, kill, and cleanup branches are explicitly preserved unchanged.
+
+---
+
+**Q1 — Neutral wording solves all three witnesses without altering sampler/liveness/kill?**
+
+[Pass] Yes. The three overclaims each live in a message string:
+- `agy-turn.py:104` — `"it was waiting on a lock held by someone else, not working."` (also `agy-turn.py:108` for network)
+- `turn_diagnostics.py:540–542` — `"the agent was writing files but did not finish — genuinely slow; raising the turn budget is the appropriate response."`
+- `relay_drive.py:967` — `eprint(f"relay-drive: GH-370 progress … changed-files={changed_count}")`
+
+None of these strings gates a kill or timeout decision; changing them is message-only. `_probe_idle_blocker` probe logic (`agy-turn.py:95–112`), `_classify_locked` ordering (`turn_diagnostics.py:522–568`), `idle_seconds` (`turn_diagnostics.py:478–498`), and `_kill_turn_group` are untouched.
+
+**Q2 — REASON_SLOW_PROGRESS symbol preserved; label-change consumers identified?**
+
+[Should] The plan correctly says to preserve the symbol (`REASON_SLOW_PROGRESS`) and to trace consumers before implementation. The trace can be completed now: `test/gh648-l1-turn-termination.sh:63` checks `"worktree-progress=yes" in record["detail"]` — a literal substring match on the detail string that WILL break if the plan renames the key to `file-activity=`. This is the only literal match in the tree (confirmed: `rg '"worktree-progress='` hits only `turn_diagnostics.py:519` and `test/gh648-l1-turn-termination.sh:63`; rc=0). The plan's step 3 says "Update only existing assertions/help text affected by output changes" but does not name this file.
+
+If the VALUE of `REASON_SLOW_PROGRESS` (`"timeout-slow-but-progressing"`) stays unchanged and only the detail prose and key name change, `test/gh390-timeout-attribution.sh:148` and `test/gh648-l1-turn-termination.sh:61` (which import the symbol) remain compatible. The fix: at pickup, add `test/gh648-l1-turn-termination.sh:63` to the named assertion list in the plan's blast-radius section. No plan rewrite required; plan is feasible.
+
+Observed input: `turn_diagnostics.py:519` — `bits.append("worktree-progress=" + ("yes" if progressed else "no"))`, matched by `test/gh648-l1-turn-termination.sh:63` — `check("worktree-progress=yes" in record["detail"], ...)`.
+Affected scope: any consumer that parses the detail string for the literal key `worktree-progress=`.
+Falsifier: if the rename is NOT applied (detail key stays `worktree-progress=`), gh648:63 passes unchanged; the plan's own alternative (rename skipped) would eliminate this breakage.
+
+**Q3 — Open socket/lock observations bounded and sanitized?**
+
+[Pass] The lsof call at `agy-turn.py:97–100` runs with `timeout=5, capture_output=True` and lowercases output — bounded. No raw paths are printed in the returned tuple; only category strings are emitted. The only repair needed is the message text. Network overclaim at `agy-turn.py:107–109` (`"it was waiting on a network call… not working"`) is the same class as the lock overclaim and covered by the same plan step 1.
+
+**Q4 — Intentional transcript signals retained; dirty state accurately labelled?**
+
+[Pass] Plan step 2 explicitly says "Do not exclude directories here." `_newest_mtime` at `turn_diagnostics.py:289–330` already prunes `.git/node_modules/.venv` only; the scan includes log/scratch paths, which is intentional for transcript signals. The plan preserves this. `relay_drive.py:967` label change from "progress" to "state" is an accurate description of a snapshot count. No behavioral changes.
+
+**Q5 — Before/after rejection gate for unchanged buggy diagnostics?**
+
+[Pass — plan-level feasibility only] Plan step 4 specifies three model-free controls matching the reproduction: benign open lock, log-only write with flat CPU, and unchanged dirty scaffolds. Step 5 requires independent plan/final review and a classified gate. The Preflight Contract has `"gate":null,"ready":false`, correctly representing that no enforcement exists yet. This is a plan review; implementation acceptance is a separate gate.
+
+---
+
+VERDICT: PASS
+
+Basis: The plan is feasible and truthful. All three overclaims are reachable by message-string repairs that leave sampler/liveness/kill branches intact. One [Should] gap: `test/gh648-l1-turn-termination.sh:63` is a known machine-facing string consumer that the plan's blast-radius text doesn't name; it must be added to the named assertion list at pickup. No blocker found. Plan may proceed to implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
