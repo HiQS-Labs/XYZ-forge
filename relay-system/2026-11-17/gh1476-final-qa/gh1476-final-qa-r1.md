@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -120,5 +120,61 @@ Grade each finding `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`. Cite `file:line` or 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (claude-review)
+
+Paraphrase: The change makes Conveyor the one owner of a research-depth policy for selected issues. RAW open issues and daily-goals issues are accepted. A selected issue that has not been prepared gets one bounded, read-only medium research child by default. Fresh, complete preparation is reused. Research goes deeper only on concrete risk or credible high actual effort, and risk is deferred only on explicit request. 10days links to that policy. It replaces its exclude-by-default routes with HELD, stops children from writing ratings or overrides, and moves pickup to one parent-owned write after the capture exists, with a real `--doc-path`, before Step 5. It explicitly does not claim OL-09 operational credit or OL-10 runtime admission, and it adds no tests, runtime, schema, queue or daemon.
+
+swept file: yes. I read both SKILL.md files in full at HEAD `e91e28ea` (the source is byte-identical to producer head `65663a06d`; `git diff --stat 65663a06d..HEAD` touches only this relay file). I also read: the full diff `9331cec67..HEAD` for skills/CHANGELOG/releases.sql; the plan in full; r4 lines 120–151; writer `releases_app.py:3747-3973` and parsers `:7019-7040`; `start-task/SKILL.md:380` (anchor only); `PDDA.md:285-310`; every file in the evidence directory; and the header of `find-doc.sh`. Not read: the r1–r3 plan threads, the full start-task rating-policy body, and `releases.db` beyond one read-only query.
+
+**Q1 — walks (10days Steps 1→8, Conveyor)**
+- [Pass] (a) RAW, `bucket: null`. 10days:222 `needs full Step 3 check and contract authoring in Step 4` → Step 3 INCLUDE is provisional (10days:281) → Step 4 selection note, then one medium child (10days:292-294; conveyor:39-44) → children make no writes (10days:296-298) → "No doc exists" authoring (10days:322-326) → sniff (10days:383-387) → one pickup with `--doc-path <EXISTING_CAPTURE_PATH>` (10days:389-396) → Step 5 intersection (10days:415). No write happens before the capture exists.
+- [Pass] (b) Reuse. 10days:221 → 10days:294 `Reuse applicable full preparation through the existing 2-WORKING / has_contract freshness route and Steps 5–6`. This is tightened by conveyor:38 `A contract alone is not that evidence`. Pickup then hits the preserved branch (`releases_app.py:3841-3862`).
+- [Pass] (c) Step 3 HELD. 10days:244 `Unknown reproduction ... means HELD with reason and next owner`; 10days:299-300 `Step 3 HELD/EXCLUDE items receive no selection/rating write`; 10days:415 drops held items; 10days:553 keeps them in Held.
+- [Pass] (d) Research-held. 10days:298-299 `An item held during research remains in the note; do not create a dangling row`; conveyor:58-59.
+- [Pass] (e) Budget exhausted. conveyor:40-41 `exhausted budget forbids launch`; 10days:294; Held lists `exhausted budgets` (10days:553).
+- [Pass] (f) Deeper. conveyor:45-48 `concrete uncertainty about state, authority, recovery or credible high actual effort`, consumed at 10days:294.
+- [Pass] (g) Unrated existing row. 10days:398 and conveyor:84 say `roadmap rate ... without --force`. Writer `releases_app.py:3787` refuses only when `row["rating_pri"] is not None and not args.force`, so an unrated row is rated without `--force`.
+- [Pass] (h) Operator `ovr`. Pickup's preserved branch does not touch any rating column (`:3841-3862` updates only `doc_path, raw_text, updated_at`). `rate` writes every `RATING_COLUMNS` entry from the token (`:3797`, `:3812-3815`), so omitting `--ovr` would null it. The instruction `retained --ovr when present` (10days:398, conveyor:84) is therefore necessary and correct.
+- [Pass] (i) Malformed `ovr`. 10days:232 `preserve its value and mark the item HELD for the operator; never clear it automatically`; 10days:246.
+- [Pass] (j) Daily goals. conveyor:25-30: the two links are reported as candidates and prepared only if selected or covered by batch scope. The unlinked goal is `held for decomposition`. 10days:300-301 defers this intake to Conveyor.
+- [Pass] (k) Exit 4. 10days:436-441 `Exit 4 alone is not delivery evidence ... Every nonzero outcome remains HELD unless supported exclusion evidence exists`.
+- [Nit] (l) An open issue with a `3-COMPLETED` capture. 10days:220 now routes it to Step 3 reconciliation (correct). If it survives as INCLUDE, though, Step 4 offers only `Doc already exists (1-INBOX or 2-WORKING)` (10days:318) or `No doc exists` (10days:322). A completed-folder capture fits neither branch, and Conveyor's `multiple plausible docs ... mean hold, not a second plan` (conveyor:65) is not linked from 10days. Ledger rows of this shape exist: `sqlite3 -readonly 'file:releases.db?mode=ro' "SELECT gh_number, section, status_marker, doc_path FROM roadmap_items WHERE doc_path LIKE 'PROJECT/3-COMPLETED/%' AND section <> 'Completed'"` rc=0 → `1468|Queue / parked intake|🆕|PROJECT/3-COMPLETED/GH-1468-BASELINE-SKILL.md`, `1439|In progress|🚧|PROJECT/3-COMPLETED/GH-1439-JOG-PREPARATION.md` (+6 more). I did not check whether those issues are open (no `gh` in this sandbox). The most natural reading ("move it to 2-WORKING") is reversible and is surfaced in the Step 7 commit, so this does not block.
+  Observed input: the GH-1468 row above, if its issue is open and inside the window.
+  Affected scope: a 10days Step 4 INCLUDE whose only capture is in `PROJECT/3-COMPLETED`.
+  Falsifier: a 10days line that already routes a completed-folder capture in Step 4. Expected: none found (`rg -n "3-COMPLETED"` over 10days hits only :74 and :220).
+  Optional fix (next slice): widen 10days:318 to "(1-INBOX, 2-WORKING, or 3-COMPLETED after Step 3 reconciliation)", or hold it for the operator. Never author a second capture.
+
+**Q2 — unchanged-line sweep**
+- [Pass] No leftover exclusion, rubric, force or frontmatter-as-source routes. `rg -n -i "exclud|--force|rubric|deterministic|pickup|frontmatter|clarity"` over both files finds only revised lines or unrelated ones. Examples: 10days:206 is the age-window "excludes the last 10 days", 10days:92/197/356/572 are "deterministic" scripts and checks, and 10days:286 is the runtime-label `falsely EXCLUDEd` warning, which still holds. 10days:86-87 `the intake row/pointer line this skill itself registers in Step 4` matches the single Step 4 pickup.
+- [Nit] 10days:326 now says `research-grounded contract`, while the unchanged 10days:362-364 still has the doc body say `Contract auto-drafted by /10days from the issue text ... This is the one place this skill guesses`. The meaning is still correct (not operator-verified), but the provenance wording is stale. Wording only, with no behaviour change. Optional fix: "auto-drafted by /10days from the issue and research receipt".
+- [Nit] Pre-existing and not introduced here: PDDA.md:300-301 says the selection row is created `on the primary checkout`. 10days runs Step 4 inside the disposable full clone (10days:195) and lands `releases.db` through the Step 7 commit (10days:499). The old 10days:393 had the same placement. Out of scope for this slice; park it if wanted.
+
+**Q3 — writer match**
+- [Pass] Preserved-row branch: `releases_app.py:3841-3862` ignores `--rated`/`--ovr` and only repoints when `--doc-path` differs and `os.path.isfile` passes (`:3845`). This matches `Pickup preserves an existing row's rating/override` (10days:398) and `pickup reuses a row and preserves its existing scores/override` (conveyor:84).
+- [Pass] Invented-path branch: `:3877` `doc_rel = "PROJECT/2-WORKING/GH-%d.md"`. On the new-row branch the writer does not check that a supplied `--doc-path` exists (`:3879-3882` just reads it if present). So 10days:389 `Verify the real canonical document path` and 10days:398 `Never omit --doc-path` are the correct instruction-level guards.
+- [Pass] `rate` without `--force` on an unrated row, keeping `--ovr`: `:3787` and `:3797`, as covered under (g)/(h). A legacy `cx/risk/eff` row is refused at `:3791-3795`, which is handled by `hold a refusal instead of bypassing it` (10days:398). I did not execute this; it is confirmed by reading the code only.
+
+**Q4 — r4 Nits**
+- [Pass] Refresh after pickup: conveyor:84 `After pickup and any first rating, refresh the capture’s displayed ratings and override from the ledger`; 10days:320, 326 and 398.
+- [Pass] First rating without force, keeping the override: 10days:398; conveyor:84.
+- [Pass] Extension recorded: plan:108-111 `The operator authorized up to two additional rounds on 2026-11-17`.
+- [Pass] 40% baseline: plan:20 `40% after OL-14 landed`.
+
+**Q5 — evidence honesty**
+- [Pass] Source hashes match the current bytes: `shasum -a 256` → `35163dce…6262` conveyor and `1fd9dbb0…45bd` 10days, both equal to provenance.jsonl. The base hashes `272a7346…a65d` and `b3b80a00…51ee` match `git show 9331cec67:<path>`. All five docs-check log hashes match provenance.
+- [Pass] The docs checks ran at `7efc0263e`, and `git diff --stat 7efc0263e..65663a06d` touches only `TESTS-RESULTS/2026-11-17+GH-1476/*`, so the receipts cover the shipped source bytes. Every log reads `errors=0 warns=0`.
+- [Pass] I spot-checked all 19 SUMMARY anchors (e.g. conveyor:41 `exhausted budget forbids launch`, 10days:437 `invalid or wrong-polarity probe`, 10days:296 `Research children must not`); each lands on the claimed text. The red and policy-gap labels match the old text in the diff. For example, the old `bucket: "3-COMPLETED"` line read `Exclude immediately`.
+- [Pass] There is no claim that the final gate ran or that OL-09 is verified: SUMMARY `Classified gate and independent final QA remain pending`, `OL-09 remains unchecked until a real bounded run`; CHANGELOG `This instruction slice does not complete OL-09`. This wording is proportionate.
+- [Pass] Ledger: releases-check.log reports `check: clean (0 failures, 11 warning(s))`. All 11 are pre-existing `mig-ref-stale` / `release-target-passed` warnings unrelated to GH-1476, and generation 2757 equals the releases.sql dump. The GH-1476 row changed only through supported receipts (`roadmap-update`, `roadmap-repoint`, `roadmap-update`), with 75/60/50/60 and `rating_ovr` NULL preserved (row.json).
+- [Nit] releases-check.log has no hash in provenance.jsonl, unlike the five docs logs. This is a cosmetic gap in provenance.
+
+**Q6 — machinery and duplication**
+- [Pass] No new machinery. The diff touches only the two SKILL.md files, the plan, CHANGELOG, the ledger and evidence. There are no tests, runtime code, schema or validate.sh entries (`git diff --stat 9331cec67..HEAD`). 10days links the policy (10days:294 → `conveyor/SKILL.md#research-depth-and-raw-intake`, anchor at conveyor:21). Its restated child and pickup constraints are the consumer-side steps 10days itself executes, not a second policy.
+
+VERDICT: PASS
+Basis: Every DoD outcome is traceable in the whole-flow walks: RAW intake, medium-by-default, reuse, evidence-gated depth, explicit deferral, held-not-excluded, daily-goal links as candidates, no child writes, and one post-capture pickup with a real `--doc-path` before Step 5, with OL-10 kept separate. The instructions match the writer at `releases_app.py:3787/3797/3841-3862/3877`, and the four r4 Nits are implemented. The evidence hashes reproduce, and nothing claims the gate ran or that OL-09 has operational credit. The remaining findings are Nits: the 3-COMPLETED Step 4 routing gap, stale auto-drafted wording, the pre-existing primary-checkout placement, and the provenance hash. None blocks.
+
+Handing off: relay closed (Approved), no further turn needed. The classified final gate runs after this turn in a disposable clone.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
