@@ -1,0 +1,11 @@
+== test: gh617-relay-xyz-commensurate-review ==
+  PASS: size non-empty guard (54794 bytes)
+  PASS: positive in-tree control
+  PASS: unmodified fixture control
+  PASS: mut1 (no commensurate standard heading): properly rejected
+  PASS: mut2 (no commensurate machinery clause): properly rejected
+  PASS: mut3 (no operational envelope clause): properly rejected
+  PASS: mut4 (no challenge complexity clause): properly rejected
+  PASS: mut5 (no template operational envelope): properly rejected
+  PASS: mut6 (empty fixture): properly rejected
+  gh617-relay-xyz-commensurate-review: 9 pass, 0 fail
