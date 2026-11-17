@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -141,5 +141,37 @@ Operator authorizes the message-only repair while preserving timeout limits, liv
 Handoff: claude reviews round 2 / 3 using the existing subscription and shipped harness, exactly one --review-once dispatch. The prior token RELAY-gh1506-plan-claude is terminal done; use RELAY-gh1506-plan-claude-r2 for this authorized continuation, retaining prior receipts and attempt history. Required standalone VERDICT and Basis, honest sweep and gate declarations. If the amended plan is approved, the Reviewer must set STATUS: Approved itself, flip NEXT to Producer, commit only this relay and finish the tick token per protocol. Otherwise record the concrete unresolved finding and hand back to codex-controller. Do not stamp approval merely to obtain attestation.
 
 Handing off to Reviewer — assess the amended plan and compatibility disposition; parent resumes implementation only after approval.
+
+### Reviewer · Round 2
+
+swept file: no — targeted scoped probes only: key-string greps over all three source files and the full test suite; relay_drive.py whole-file grep for GH-370 and progress labels; did not re-read full agy-turn.py (680 lines) or turn_diagnostics.py (591 lines) beyond round-1 established coverage. Pre-existing defects outside scope: not re-swept.
+
+gate run: not applicable — Preflight Contract has `"gate":null,"ready":false`; per relay instructions this is [Unverified — needs clone run].
+
+**Round 2 scope:** Confirm round-1 [Should] is resolved; verify amended blast-radius covers all machine-facing string consumers introduced by the three label changes; check REASON_SLOW_PROGRESS value preservation.
+
+---
+
+**Round-1 [Should] disposition — gh648:63 named?**
+
+[Pass] `relay-system/2026-11-16/gh1506-plan-claude.md` Producer block confirmed commit `2b8edfab`. The amended blast-radius at `GH-1506-TIMEOUT-DIAGNOSTIC-OVERCLAIMS.md:178` now reads: "Update the known detail-key assertion in test/gh648-l1-turn-termination.sh:63 and existing GH114/GH370 output expectations." `test/gh648-l1-turn-termination.sh:63` is explicitly named. Resolved.
+
+**REASON_SLOW_PROGRESS value preserved?**
+
+[Pass] `turn_diagnostics.py:93` — `REASON_SLOW_PROGRESS = "timeout-slow-but-progressing"`. Plan step 2 says to preserve both symbol and existing value. `test/gh390-timeout-attribution.sh:148` and `test/gh492-idle-kill.sh:101` import and compare against the symbol; they are safe. `test/gh492-idle-kill.sh:6` has `worktree-progress=no` only in a comment, not an assertion.
+
+**relay_drive.py GH370 output consumer — blast-radius adequate?**
+
+[Pass] `test/gh370-progress-telemetry.sh:43` — `grep -Fq 'GH-370 progress (main tree fallback:'` — a literal match that will break when relay_drive.py:967 message changes. The plan's blast-radius (`GH-1506-TIMEOUT-DIAGNOSTIC-OVERCLAIMS.md:178`) names "existing GH114/GH370 output expectations" for update. The test at `test/gh370-progress-telemetry.sh:49-51` checks for `'GH-370'` in driver source (`relay_drive.py:889` comment); that survives a message-only change. Acknowledged at plan level; no unnamed consumer found. Probe: `rg -n 'GH-370' utils/py/relay_drive.py` → hits only lines 889 (comment) and 967 (output); rc=0.
+
+**No new consumers or pre-existing defects found in scoped probes.**
+
+---
+
+VERDICT: PASS
+
+Basis: The round-1 [Should] is resolved — `test/gh648-l1-turn-termination.sh:63` is explicitly named in the blast-radius. REASON_SLOW_PROGRESS symbol and value are preserved; symbol-importing tests are safe. The relay_drive.py label change's downstream literal-string consumer (`test/gh370-progress-telemetry.sh:43`) is covered by the plan's "existing GH114/GH370 output expectations" acknowledgment. No blocker found. Plan is feasible and approved.
+
+Relay closed (Approved) — no further reviewer turn needed. Parent resumes implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
