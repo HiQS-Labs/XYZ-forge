@@ -288,7 +288,8 @@ sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attes
 print(relay_attest.file_status(sys.argv[2]))
 PY
 )"
-sh_status="$(eval "$(sed -n '/^status_for_relay() {/,/^}/p' "$MAIN/relay-automation/marathon-recover.sh")"; status_for_relay "$A/relay.md")"
+sed -n '/^status_for_relay() {/,/^}/p' "$MAIN/relay-automation/marathon-recover.sh" > "$A/status_for_relay.sh"
+sh_status="$(. "$A/status_for_relay.sh"; status_for_relay "$A/relay.md")"
 [ "$py_status" = Approved ] && [ "$sh_status" = Approved ] && pass "D6: the Python reader and the Bash reader (marathon-recover) both read Approved from the bold line" || fail "D6: python='$py_status' bash='$sh_status'"
 
 # --- E2 / E3 / S1: refusals before any tick mutation --------------------------------------------
