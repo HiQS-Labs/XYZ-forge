@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -93,5 +93,65 @@ Answer, citing `file:line`:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+
+VERDICT: FAIL
+Basis: Block. Observed no-write violations and narrower delivery/evidence gaps prevent approval.
+swept file: yes
+
+Evidence boundary: read the whole seeded issue, approved plan/plan-QA history, pr_minder.py, SKILL.md, manual driver/results, smoke and gate receipts. Reviewed changed planner clock/collector/production wiring and merge-cleanup refresh/hold/import seams. The two large existing modules were not exhaustively audited; no additional pre-existing defect was established in those bounded seams. Verify-tier graph discovery returned no matching symbols and no project for this worktree. Primary-checkout XYZ-forge generation is 2026-09-01T15:54:30Z; coverage reports new paths missing and existing Python paths not tracked. Material evidence therefore uses direct worktree source.
+
+Probe ledger: two narrow commands invoked as "export PYTHONDONTWRITEBYTECODE=1 TMPDIR=.../.relay-scratch/tmp; python3 -" both exited 0. Inline Python imported pr_minder, replaced gh/refresh/owned_comment/receipts with in-memory functions and called plan_bundle/apply_row. No real writer was reachable. A TemporaryDirectory under that TMPDIR contained the bundle-layout probe. Decisive outputs appear below. No Git command, gate, executable fixture, network call or source/artifact edit was run.
+
+- [Blocker] **F1 — report-only plans remove labels.** pr_minder.py:214–220 returns label=None for unknown/inherited-held rows; :283–288 interprets it as removal. Refresh checks only the current PR and cannot rescue unknown history or an inherited hold. Probe outputs for both cases were "calls= [['pr', 'edit', '1', '--remove-label', 'pr-minder:stale']]". Honor the row-level no-write decision before constructing operations, separately from fresh cleanup. A3/A11 currently omit existing owned labels (manual_check.py.txt:239–244,463–466).
+  Observed input: open PR #1, head old, base development, label pr-minder:stale; separately unknown=True and inherited_hold="stacked on held #2", without a hold on #1 itself.
+  Affected scope: every write to unknown PRs or descendants of held PRs (issue :49,53,99).
+  Falsifier: both labelled inputs produce zero writes; a complete, unheld fresh PR with a proven owned label still clears it.
+
+- [Should] **F2 — label namespace replaces ownership.** pr_minder.py:280–288 removes matching names without evidence the tool added them. Empty receipt history plus a pre-existing pr-minder:stale label produced the same remove-label call. Issue :78 promises removal only of labels pr-minder added; SKILL.md:60 silently substitutes a namespace. Establish ownership from the existing successful add/remove receipts and preserve unproven ownership.
+  Observed input: fresh open PR #1 already carries pr-minder:stale; receipt history is empty.
+  Affected scope: removing the two named labels from PRs on which another actor added them.
+  Falsifier: that input retains the label; a successful owned-add receipt permits cleanup, while foreign stale remains untouched.
+
+- [Should] **F3 — failed sync drops the fallback comment and rung-2 label.** pr_minder.py:259–260 plans no comment, then :344–345 breaks on sync failure before later operations. For rung 2, no labels and update return code 1, probe result was "['update-branch:failed']"; only update-branch/head-read calls occurred. Issue :77 requires a failure comment. Render that diagnosis and complete the appropriate non-branch bundle when safe, without retrying the mutation. Also check the head-read return code before treating its stdout as successful evidence (:326–329).
+  Observed input: open clean-behind PR #1 at rung 2, no labels, no skip condition; update returns 1 with "forced failure".
+  Affected scope: failed/uncertain sync outcomes at rungs 1–2 and subsequent label/comment operations.
+  Falsifier: failed sync yields the failure comment and appropriate rung-2 label with accurate receipts, never a second branch mutation; successful sync remains idempotent.
+
+- [Should] **F4 — label creation is an unaccounted write.** pr_minder.py:321–342 wraps label create --force and pr edit in one add-label receipt pair and ignores creation failure. Probe output: "successful rung2 write verbs: [['label','create'], ['pr','edit'], ['api','-X']]"; receipts had only intent/result add-label and intent/result comment. Record creation and its outcome separately. A10 compares receipts only to themselves (manual_check.py.txt:433–443); compare actual shim write calls to receipts.
+  Observed input: rung-2 conflicting PR #1, no labels, differing owned comment #42, all fake calls successful.
+  Affected scope: every actual GitHub write, including repository-label creation/update (issue :58,105).
+  Falsifier: three writes have three attributable intent/result pairs; forced label-creation failure is recorded truthfully.
+
+- [Should] **F5 — author reset leaves the old comment.** pr_minder.py:226–228 returns before rendering a reset; :290 never looks up the existing comment without a planned body. Fresh input with owned comment #42 containing the marker and "old rung 3 diagnosis" produced "calls=[] comment=None". Update that existing diagnosis as issue :79 requires; avoid creating comments on never-managed fresh PRs.
+  Observed input: complete fresh open PR #1, no labels, existing owned comment #42 with an old rung-3 diagnosis.
+  Affected scope: reset of an already managed PR's owned comment.
+  Falsifier: PATCH the existing comment to fresh/reset once; immediate rerun writes nothing; never-managed fresh PR gets no comment.
+
+- [Should] **F6 — flat installed bundle resolution fails.** Both roots at pr_minder.py:29 are equal: HERE.parents[2] and HERE.parents[1].parent. For skills/pr-minder/scripts the fallback looks outside skills. Scratch probe created sibling skills/weekly-planner/scripts, but _bundle exited "cannot find weekly-planner/scripts"; "expected flat bundle exists: True". Correct the sibling root for both dependencies.
+  Observed input: the documented flat sibling layout (SKILL.md:23–27), directories present, no env override.
+  Affected scope: flat-install startup of weekly-planner and merge-cleanup dependencies.
+  Falsifier: both siblings resolve; repository layout and explicit absolute overrides still work.
+
+- [Should] **F7 — conflict diagnostics omit promised data.** pr_minder.py:233 lists files without measured base-commit drift; :238–239 always emits a generic re-cut suggestion without the actual cherry-pick list/diff sizing required by issue :67,69. This is separate from the accepted first-error-line deviation. Render measured drift and PR-specific re-cut information, or record an explicit scoped specification disposition.
+  Observed input: conflicting rung-3 PR #1, drift 803, conflict_files=['a.py']; the literal :238–239 template contains no drift count, concrete commits or diff size.
+  Affected scope: conflicting rung-1 diagnostics and rung-3 re-cut descriptions.
+  Falsifier: comments show the actual drift and concrete commit/diff information sufficient to size that PR's re-cut, with unavailable reads disclosed.
+
+- [Should] **F8 — two rejection claims miss their named scenario.** A8b good uses rename-head (manual_check.py.txt:402), but bad hardcodes fix/new and runs maint (:392–397), whose headline uses fix/x. It rejects a mismatch even without a rename. A5/A6 merely seed sync/marker history (:278–284) and read it; they never apply the label/comment/sync bundle then re-read its effects, as issue :101 requests. Correct both in the existing manual driver; retain accurate logs/provenance, without a new suite.
+  Observed input: bad A8b calls plans(a8_env("maint")); A5 calls only plans(a5_env()) at :292.
+  Affected scope: rename red control and shared-age-after-own-writes evidence.
+  Falsifier: the bad predicate handles the original name but fails the renamed same-OID case; a stateful shim apply followed by both production readers retains the original author date.
+
+- [Pass] **Shared clock and fail-open planner wiring.** Name-independent maintenance/receipt predicates are at planner_core.py:1283–1290; completeness/latest activity is at :1293–1329. Production catches fetch failures into coverage and passes an empty activity mapping for numbered updatedAt fallback (:1811–1818,1845–1846; collector/disclosure :1614–1619,1685–1690). A6 reaches the production entry (manual_check.py.txt:305–334). The accepted human-sync heuristic and check-name/link deviations remain disclosed (SKILL.md:34–39,64–65). Refresh includes body (merge_cleanup.py:505–506); pre-bundle state/head/base/full-own-hold checks exist (pr_minder.py:299–317). Plan :83 says before each write, whereas code/SKILL.md:69 refresh once per bundle: disposition this additional timing divergence explicitly.
+
+- [Pass] **Reuse, bounded actions and non-goals.** In the entire pr_minder.py, apply_row (:278–346) is the new remediation writer; existing owners are imported/reused (:36–37,100–121). No landing/close/rebase/force-push/retarget/ledger invocation appears in that file. Stack inheritance/cycle guard is at :191–205, cap at :251–254, kill switch at :415–417, plan-only return at :413–414. POST/PATCH selection and same-body suppression exist (:272–275,290–293,337–340), subject to F5. No duplicate landing subsystem or new test/registry entry was identified in the stated changed-file surface. The envelope warrants no daemon, lock or journal framework.
+
+- [Unverified — needs clone run] **Acceptance and gates.** The recorded 13/13 is narrower than all issue checkboxes: A2 measures plans (:204–220), A3/A11 lack already-managed labels, A8 omits reset comments, A10 omits actual write-count matching. A4/A7/A9/A12 have meaningful bounded recorded inputs (manual_check.py.txt:262–274,338–358,407–429,487–494). gate.log:4–7,12–20 summarizes publisher 4/4 and ci-local rc=0 at c8ca1ccd6; it is not a retained full validate transcript, and no gate was rerun here. Final changed code needs the disposable-clone harness gate and current provenance. Rating 55/40/50/45 remains a defensible planning judgment (plan :123–129), not a measured result; historical 9/12 and effort were not independently remeasured.
+
+Root cause: no-action representation is reused as cleanup, ownership is inferred from names, and manual scenarios omit managed/failure/installed inputs; Fix site: existing plan/apply boundary, receipts, resolver and manual driver; Why not upstream/downstream: readers supply these inputs correctly; extra orchestration would not fix interpretation.
+
+Handing off to Producer (claude-a) — disposition F1–F8, correct implementation/manual evidence, and open Round 2. Go to the Producer window and say 'take your turn'. The harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
