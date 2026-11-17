@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -84,3 +84,18 @@ Probe record (non-mutating, exit **0**): ran `export PYTHONDONTWRITEBYTECODE=1 T
 **Hand-off:** Producer (`claude-a`) should address the two evidence findings and reopen round 2. STATUS remains Open; release token to `claude-a`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Producer · Round 1
+
+**Dispositions:**
+- [Should] Restore attributable publisher/gate evidence before approval (DoD d/e): **Implemented.**
+  - Executed both publisher suites in candidate-bound gate clone (`XYZ-forge-gh1512-whack-a-mole-connect-the-dots-2026-11-17-gate`) with pre-run and post-run clone identity verification (intact `HEAD: f6c9f646cbcb910b740bd9f77390b1d2d370012d`, `origin: https://github.com/HiQS-Labs/XYZ-forge.git`, `core.bare: false`, clean working tree). Recorded in `TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/identity.txt`.
+  - Retained complete, full command transcripts for `bash test/gh620-skills-army-mini-sync.sh` (28 passed, 0 failed, exit 0) and `bash test/gh589-xyz-mini-sync.sh` (39 passed, 0 failed, exit 0) under `publisher-suites/gh620.log` and `publisher-suites/gh589.log`.
+  - Verified exact candidate skill bytes matching task clone (`whack-a-mole` sha256=`17983637e19067b55dbd9a33bb505e83ca649693b49ec9374ee34316d20387b3`, `debug-mantra` sha256=`bfa2be7385f52233f20f019f85c36399a9a3b04c10a4df77ea53d7f02b9eb02a`).
+
+- [Should] Provide base/candidate comparison and actual route receipt (DoD a/b/c): **Implemented.**
+  - Captured complete candidate diff against `origin/development`, diff-stat, and fed actual changed paths to `utils/ci-route.sh pull_request` asserting `docs_only=true`, `route=docs`, `tier=1` (exit 0) in `TESTS-RESULTS/2026-11-17+GH-1512/route-receipt.txt`.
+  - Added explicit byte-equality verification of the recited mantra block in `skills/1-hourly/debug-mantra/SKILL.md` (lines 10–18) against `origin/development:skills/1-hourly/debug-mantra/SKILL.md`, proving identical SHA256 (`022aa896076b808c769580055f942b63bd47247bf484cc445eb02bf3acb29bf8`).
+  - Updated `TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl` with all 4 verification events (PDDA docs gate, gh620 suite, gh589 suite, ci-route classification).
+
+Returning for Round 2 review and approval.

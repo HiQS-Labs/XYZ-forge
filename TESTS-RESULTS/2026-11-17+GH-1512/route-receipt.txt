@@ -1,0 +1,61 @@
+# Route and Diff Receipt (GH-1512)
+Date: 2026-11-17
+Base: origin/development (9331cec6718759da9d259b91074fb360e3dcb5a7)
+Candidate HEAD: 4c2f07457835a02d91bf6d05cd56f11e059a7e1c
+
+## Changed Paths
+CHANGELOG.md
+PROJECT/2-WORKING/GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md
+TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl
+TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/gh589.log
+TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/gh620.log
+TESTS-RESULTS/2026-11-17+GH-1512/smoke-receipt.txt
+relay-system/2026-11-17/gh1512-final-qa.md
+relay-system/2026-11-17/gh1512-plan-review.md
+releases.db
+releases.sql
+skills/1-hourly/debug-mantra/SKILL.md
+skills/3-weekly/whack-a-mole/SKILL.md
+
+## Diff Stat
+CHANGELOG.md                                       |   6 +
+ .../GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md       |  97 ++++++++++++++
+ TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl  |   3 +
+ .../2026-11-17+GH-1512/publisher-suites/gh589.log  |   4 +
+ .../2026-11-17+GH-1512/publisher-suites/gh620.log  |   4 +
+ TESTS-RESULTS/2026-11-17+GH-1512/smoke-receipt.txt |  14 ++
+ relay-system/2026-11-17/gh1512-final-qa.md         |  86 ++++++++++++
+ relay-system/2026-11-17/gh1512-plan-review.md      | 144 +++++++++++++++++++++
+ releases.db                                        | Bin 1900544 -> 1904640 bytes
+ releases.sql                                       |  10 +-
+ skills/1-hourly/debug-mantra/SKILL.md              |   2 +-
+ skills/3-weekly/whack-a-mole/SKILL.md              |   6 +-
+ 12 files changed, 371 insertions(+), 5 deletions(-)
+
+## Route Output (utils/ci-route.sh pull_request)
+docs_only=true
+pdda_needed=true
+full_required=false
+changed_tests=
+route=docs
+tier=1
+tier2_subsystems=
+tier2_tests=
+tier_reason=docs-only
+Exit code: 0
+
+## Recital Byte-Equality Check
+skills/1-hourly/debug-mantra/SKILL.md lines 10-18:
+Base SHA256: 022aa896076b808c769580055f942b63bd47247bf484cc445eb02bf3acb29bf8
+Candidate SHA256: 022aa896076b808c769580055f942b63bd47247bf484cc445eb02bf3acb29bf8
+Byte-identical: True
+Recital block verbatim text:
+> **Mantra:**
+> 1. **First is reproducibility.** Can the issue — or the artifact — be reproduced or observed reliably?
+> 2. **Know the fail path.** Debugger first; then source trace + knob enumeration; then in-code instrumentation.
+> 3. **Question your hypothesis.** What would disprove it?
+> 4. **Every run is a breadcrumb.** Cross-reference all of them.
+
+Then begin work.
+
+---

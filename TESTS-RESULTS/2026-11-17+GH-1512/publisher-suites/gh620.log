@@ -1,4 +1,41 @@
-gh620-skills-army-mini-sync: 28 passed, 0 failed
+Command: bash test/gh620-skills-army-mini-sync.sh
+Clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1512-whack-a-mole-connect-the-dots-2026-11-17-gate
+Pre-run HEAD: f6c9f646cbcb910b740bd9f77390b1d2d370012d
+Pre-run origin: https://github.com/HiQS-Labs/XYZ-forge.git
+Pre-run core.bare: false
+Skill bytes matching task clone: True (wam sha256=a06693190250058a80971ad6d18e671c7179b08d86faf2b8254f6aa45b079075, dm sha256=47284c5a86a9a9f6bc32469d1d38614d4a5476facc349654a0a4127a67a6b802)
 Exit code: 0
-Tested against candidate SHA: f6c9f646cbcb910b740bd9f77390b1d2d370012d
-In clone: XYZ-forge-gh1512-whack-a-mole-connect-the-dots-2026-11-17-gate
+
+--- STDOUT ---
+  PASS: first publication pushes and reads back
+  PASS: literal inclusion-only payload set
+  PASS: manifest names exactly the ten managed payloads
+  PASS: root README matches its canonical package source
+  PASS: revision records exact parent commit
+  PASS: republication is idempotent
+  PASS: default sibling path uses the public repository casing
+  PASS: matching metadata plus unrelated amended file is not an exact retry
+  PASS: exact retained publisher commit retries push
+  PASS: retry refuses a restored previously managed deletion
+  PASS: retry refuses takeover of an unmanifested operator-owned path
+  PASS: default-profile retry may restore an absent seed
+  PASS: retry refuses replacement of an existing child-owned seed
+  PASS: ordinary mismatched root without publisher proof is rejected
+  PASS: generated root missing a required manifest entry is rejected
+  PASS: init preview leaves absent collection untouched
+  PASS: init apply creates copied manager
+  PASS: init excludes repository-only metadata from the installed manager
+  PASS: installed manager is byte-for-byte the canonical package tree
+  PASS: generated repository root remains a valid manager update source
+  PASS: add preview is non-mutating
+  PASS: add apply catalogs fixture
+  PASS: target preview is non-mutating
+  PASS: target apply stays in temporary collection
+  PASS: sync preview is non-mutating
+  PASS: sync apply creates readable fixture link
+  PASS: catalog and link read-through identify fixture
+  PASS: stale destination refuses before writes
+gh620-skills-army-mini-sync: 28 passed, 0 failed
+
+--- STDERR ---
+
