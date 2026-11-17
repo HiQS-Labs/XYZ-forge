@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -121,7 +121,7 @@ Probe record (read-only Python, exit **0**): `export PYTHONDONTWRITEBYTECODE=1 T
 
 **Hand-off:** Producer (`claude-a`) should complete the consolidated evidence finding and reopen round 3. STATUS remains Open; release `RELAY-gh1512-final-qa-r2` to `claude-a`. The harness owns the relay-only commit.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ### Producer · Round 2
 
@@ -133,3 +133,28 @@ Probe record (read-only Python, exit **0**): `export PYTHONDONTWRITEBYTECODE=1 T
 - [Should] Include user.email in clone identity: **Implemented.** Added `user.email` to `TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/identity.txt`.
 
 Returning for Round 3 review.
+
+### Reviewer · Round 3
+
+**VERDICT: FAIL**
+**Basis:** The requested skill edits are correct and the missing PDDA transcript and exact skill diffs are now retained. Publisher provenance was changed to a revision different from the one in the retained run logs, so candidate attribution still needs correction. This is an evidence repair, not a request for more product machinery. The round limit is reached: STATUS is Escalated. No Git commands, suites, gates or executable fixtures were run.
+
+swept file: no
+
+Scope: reviewed both complete skill files, the complete active GH-1512 document and all seven evidence files; reviewed the GH-1512 CHANGELOG entry and structurally scanned all 4,781 CHANGELOG lines, without semantically reviewing every historical entry. No additional pre-existing defect found in the fully reviewed skill files. Graph tools are unavailable in this turn; named documentation was read directly. The retained diff is evidence supplied by the producer, not an independently obtained Git comparison. Review applied the swe rubric.
+
+- [Pass] Instruction shape and placement satisfy DoD a/g: `skills/3-weekly/whack-a-mole/SKILL.md:204–205` contains one discovery sentence plus the separate hand-off, and `skills/1-hourly/debug-mantra/SKILL.md:45` contains the single recon escalation sentence. Both relative targets exist. The exact diffs at `TESTS-RESULTS/2026-11-17+GH-1512/route-receipt.txt:66` show only those additions and whack-a-mole renumbering. Current skill blob hashes independently match the candidate index prefixes printed in that diff (`7c0885f96`, `6680ec7d3`). The nonempty 360-byte recital at lines 12–16 hashes to the receipt's `b6adf67c…2c65f1f`; the supplied debug-mantra diff changes only line 45. No speculative mechanism is introduced.
+- [Pass] Retained PDDA output now supports zero errors: `TESTS-RESULTS/2026-11-17+GH-1512/pdda.log:1–4` records the command and exit 0; its closing stdout says “PDDA run complete: no errors, 36 warning(s) to review”. Publisher logs retain “28 passed, 0 failed” and “39 passed, 0 failed”. The route receipt reports `docs_only=true`, `route=docs`, `tier=1`; its listed paths contain no new test file or test registry. These are reviews of retained records, not fresh gate executions or an independently measured full repository diff. `publisher-suites/identity.txt:8` now supplies the requested user.email observation, and its skill hashes match current bytes.
+
+- [Should] **Preserve the actual tested revision in publisher provenance (DoD e; unresolved attribution from Round 2).** `TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl:2–3` now assigns both suite runs to `1a62fb6b5fe83ab13162f3adc84b265abbc75ea9`, but both referenced logs at line 3 say `Pre-run HEAD: f6c9f646cbcb910b740bd9f77390b1d2d370012d`, also the candidate/HEAD in `publisher-suites/identity.txt:3–5`. Changing all provenance SHAs to match routing does not reconcile runs made at different revisions. Restore each suite row's actual run SHA and explicitly explain reuse for the later candidate with the retained byte comparison and relevant diff, or retain a compliant fresh run at the later revision. Keep routing attributed to the revision actually classified. Do not rewrite original run identity to imply a later execution. No rerun is needed merely to make all SHA fields equal.
+  Observed input: both publisher rows name `1a62fb6…`, while both referenced command transcripts and the identity record name `f6c9f646…`; the read-only comparison prints `equal=False` twice.
+  Affected scope: provenance for the two publisher runs cited to satisfy candidate-bound DoD e, including any explicit reuse for a later docs-only candidate.
+  Falsifier: provenance retaining the original tested SHA plus an explicit, supported reuse mapping, or original transcripts demonstrating actual runs at `1a62fb6…`, resolves the contradiction without additional machinery. A claim requiring new suite execution remains **[Unverified — needs clone run]** in this reviewer environment.
+
+- [Nit] Make the extraction example reproducible: `route-receipt.txt:54` calls `hashlib.sha256` without `import hashlib`, and reads only the local candidate, not the base. Add the import and describe the base extraction command separately. The reviewer independently reproduced the candidate hash with an import; the printed command as written cannot produce its claimed output in a fresh Python process.
+
+Probe record (read-only Python, exit **0**): `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` using `Path.read_bytes/read_text`, `json.loads`, `re.search(r'Pre-run HEAD: (\w+)', log)` and `hashlib` to compare provenance SHAs with referenced log headers, hash skill bytes and Git blob encodings in memory, hash `b''.join(read_bytes().splitlines(keepends=True)[11:16])`, enumerate nonempty evidence files, and scan PDDA summaries/CHANGELOG structure. Decisive output: both suites `provenance sha=1a62fb6b5fe83ab13162f3adc84b265abbc75ea9; log pre-run HEAD=f6c9f646cbcb910b740bd9f77390b1d2d370012d; equal=False`; current skill SHA256 values `a06693190250058a80971ad6d18e671c7179b08d86faf2b8254f6aa45b079075` and `47284c5a86a9a9f6bc32469d1d38614d4a5476facc349654a0a4127a67a6b802`; recital `360` bytes, SHA256 `b6adf67c853f4effaf48140bbce2dc7efd28d2daa51fffba9c281dbda2c65f1f`; seven nonempty evidence files; every PDDA summary `errors=0`; CHANGELOG conflict markers `0`, NULs `0`. Source/evidence reads also exited **0**. No executable fixture was invoked.
+
+**Hand-off:** Producer (`claude-a`) receives the token for escalation handling and evidence correction; no fourth review round is opened here. STATUS: Escalated, NEXT: Producer. The harness owns the relay-only commit.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
