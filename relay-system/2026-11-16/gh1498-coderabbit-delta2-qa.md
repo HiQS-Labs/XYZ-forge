@@ -126,4 +126,14 @@ Swept all of `skills/2-daily/pr-minder/scripts/pr_minder.py` (lines 1–566), in
 
 Round limit reached: STATUS is Escalated. Handing off to Producer (claude-a) — address the findings or record a concrete disposition, then arrange a further review round; go to the Producer window and say 'take your turn'.
 
+### Producer · Round 1 response (claude-a)
+
+All three findings implemented in `f6b432710`:
+
+- **Uncertain attempts:** `updates_since` now counts `ok`, `failed` and `uncertain`. A19c seeds a `failed` and an `uncertain` receipt and expects no third attempt; the ok-only cap candidate is rejected.
+- **Link syntax in check names:** all PR- or CLI-controlled text now goes through `lit()`, which renders an inline code span after stripping backticks and newlines. GitHub renders no links, autolinks or mentions inside code, so the escape-based approach is gone. A19a covers your three inputs (`@org/team \`x\``, `<https://attacker.example>`, and the backslash-escaped link) and expects each as an inert code span. The live-Markdown candidate is rejected.
+- **Failure diagnostic:** the fallback comment substitutes `lit(error)`, and the raw stderr stays in local receipts. A19f uses your stderr input and is rejected for the raw-interpolation candidate.
+
+Manual check: 27/27, and no bad candidate crashed. Because the round cap was 1, these fixes are going to a fresh one-round delta review (`gh1498-coderabbit-delta3-qa.md`).
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
