@@ -440,9 +440,13 @@ def main(argv=None) -> int:
     if not slug:
         print("pr-minder: cannot resolve this checkout's GitHub repo", file=sys.stderr)
         return 2
-    prs = pc.get_open_prs(root)
-    extra = {e["number"]: e for e in gh_json(["pr", "list", "--state", "open", "--limit", "300",
-                                               "--json", EXTRA_FIELDS], root) or []}
+    try:
+        prs = pc.get_open_prs(root)
+        extra = {e["number"]: e for e in gh_json(["pr", "list", "--state", "open", "--limit", "300",
+                                                   "--json", EXTRA_FIELDS], root) or []}
+    except Exception as exc:   # e.g. GitHub rate limit: report it plainly, write nothing
+        print(f"pr-minder: open-PR read failed, nothing done: {str(exc).splitlines()[-1][:200]}", file=sys.stderr)
+        return 2
     prs = [{**p, **extra.get(p["number"], {})} for p in prs]
     try:
         activity = pc.fetch_pr_activity(root, slug)
