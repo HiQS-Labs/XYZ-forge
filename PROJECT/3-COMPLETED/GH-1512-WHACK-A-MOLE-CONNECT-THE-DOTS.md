@@ -2,7 +2,7 @@
 gh_issue: 1512
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1512
 title: "whack-a-mole: chain connect-the-dots on invariant; debug-mantra: escalate unread paths to recon"
-status: "Active (2-WORKING — in progress)"
+status: Complete
 created: 2026-11-17
 updated: 2026-11-17
 doc_type: feedback

@@ -2,7 +2,7 @@
 gh_issue: 1511
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1511
 title: "connect-the-dots: search the code graph by capability verbs, not module names"
-status: "Active (2-WORKING — PR #1513 ready; awaiting merge)"
+status: Complete
 created: 2026-11-17
 updated: 2026-11-17
 doc_type: feedback
