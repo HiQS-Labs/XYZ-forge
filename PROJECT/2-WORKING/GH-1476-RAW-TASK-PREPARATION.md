@@ -118,3 +118,7 @@ both the historical review hold and upstream merge evidence.
 Implementation uses the existing writer for accepted-start and promotion of row
 `rmi-01M7KXFFGFMZ2KHFDXR4XK1CM8`, preserving 75/60/50/60 and null override.
 No OL-09 completion credit, runtime enforcement or deployment is claimed.
+
+## Final QA round 1 dispositions
+
+PASS / Approved with four Nits. Accept N1/N2: canonical completed-folder capture reuse and research-grounded auto-draft wording clarified. Accept N4: retained ledger-check log hashed. N3 is pre-existing primary-writer governance, outside this instruction slice; unchanged and not claimed solved. Small follow-up awaits round-2 review; required classified gate pending.

@@ -315,8 +315,7 @@ belongs to Conveyor; this skill retains its age-window entrypoint.
 
 For each selected item whose research supports preparation:
 
-- **Doc already exists** (1-INBOX or 2-WORKING): move it to `2-WORKING` if it isn't
-  there yet; add a `## Swarm Preflight Contract` block if `has_contract` was false.
+- **Doc already exists** (1-INBOX, 2-WORKING or 3-COMPLETED): after Step 3 confirms the current ask remains unfinished, reuse the canonical doc and move it to `2-WORKING` through the target repo’s supported lifecycle/repoint procedure if needed. Preserve historical delivery evidence and record the remaining or reopened scope; ambiguous identity or scope stays HELD rather than creating a duplicate. Then add a `## Swarm Preflight Contract` block if `has_contract` was false.
   Refresh displayed frontmatter ratings and override fields from the ledger after pickup below; never write proposed scores as authoritative.
   **If it has no `## Acceptance` section and the issue does, add one — copied verbatim.**
 - **No doc exists**: author `PROJECT/2-WORKING/GH-<N>-<slug>.md` using this repo's
@@ -331,7 +330,7 @@ For each selected item whose research supports preparation:
   {
     "target":      { "repo": ".", "ref": "development" },
     "gate":        "bash validate.sh",
-    "fix_probes":  [ /* inferred from the issue body — grep for the bug it describes */ ],
+    "fix_probes":  [ /* supported by the issue and research receipt; detect unfinished behavior */ ],
     "artifacts":   [ /* files the issue names, or the subagent identified as the touch surface */ ],
     "remediation": { "source": "issue#<N>", "criteria": "<one-line SUMMARY for ranking — NOT the definition of done; that is the verbatim ## Acceptance block>" },
     "lanes":       { "agy_safe": [], "orchestrator_only": [ /* kernel/.tick paths, if any */ ] }
@@ -359,9 +358,7 @@ For each selected item whose research supports preparation:
   lane verifies against the Bash path the bug actually lives on, not the Python default (again, a
   no-op outside `xyz-3-agents-swarm`, where the label is absent).
 
-  Mark it explicitly in the doc body: *"Contract auto-drafted by /10days from the issue
-  text — artifacts/lanes not yet operator-verified."* This is the one place this skill
-  guesses; the report in Step 8 must surface every auto-drafted contract by name.
+  Mark it explicitly in the doc body: *"Contract auto-drafted by /10days from the issue and research receipt — artifacts/lanes not yet operator-verified."* Link the receipt and retain its unknowns; the report in Step 8 must surface every auto-drafted contract by name. Research grounding does not replace preflight, overlap checks or independent review.
 
 - **When a criterion genuinely cannot be carried as written** — unreachable in this repo,
   superseded by later work, or deliberately split across lanes — do **not** quietly rewrite the
