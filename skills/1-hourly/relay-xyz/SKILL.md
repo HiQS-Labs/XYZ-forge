@@ -486,9 +486,9 @@ the same repo/worktree state (observed: a stray `git worktree` plus a `tick` tok
   | Exit | Meaning |
   |---|---|
   | `0` | reviewer Approved/Closed |
-  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall |
+  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall. The same code is a turn shim's "CLI failed"; `.relay-scratch/escalation-reason` in the harness root says which: `review-handback` or `turn-failed-rc5` |
   | `3` | genuine stall — the reviewer did nothing (token + STATUS unchanged) |
-  | `4` | escalated by design (`STATUS: Escalated`), round cap, or a close mismatch |
+  | `4` | escalated by design (`STATUS: Escalated`), round cap, a close mismatch, or a refused approval (the reason file names it, for example `approved-over-fail`: `STATUS: Approved` over the reviewer's own failing verdict line) |
 
   Without `--review-once` a non-approval handback advances the multi-round loop instead (the producer
   takes the next turn); use `--review-once` when you want exactly one review and a clean exit code.

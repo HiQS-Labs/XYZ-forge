@@ -1,0 +1,71 @@
+[
+  {
+    "id": "retry-missing",
+    "pass": true,
+    "rows": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ7QVGPC69GE0RHJJEXKF8",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7QVGPC69GE0RHJJEXKF8/gate-retry.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7QVGPC69GE0RHJJEXKF8/gate-retry.json'"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ7R27RNAGYSHZ48F7T159",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+      }
+    ],
+    "output": "jog: GH-901 held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7QVGPC69GE0RHJJEXKF8/gate-retry.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7QVGPC69GE0RHJJEXKF8/gate-retry.json'\njog: execution clone aligned at aa99a9ec647d2ec32ba6df63ffb6fc3c792820b1; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7R27RNAGYSHZ48F7T159/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: no pending tasks; held outcomes remain below.\njog: GH-901 parked: supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7QVGPC69GE0RHJJEXKF8/gate-retry.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-missing/primary/.tick/jog/jog-01M7FZ7QVGPC69GE0RHJJEXKF8/gate-retry.json'\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\nSwitched to a new branch 'fixture-902'\n"
+  },
+  {
+    "id": "retry-invalid",
+    "pass": true,
+    "rows": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ7TR7EXJHH4TX0Z236QD9",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "supervision held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-invalid/primary/.tick/jog/jog-01M7FZ7TR7EXJHH4TX0Z236QD9/gate-retry.json carries schema None; this Jog supports only 'marathon-drive/result@1' \u2014 refusing rather than guessing at an unknown contract"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ7TZCVFF4TV2W6N917M94",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+      }
+    ],
+    "output": "jog: GH-901 held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-invalid/primary/.tick/jog/jog-01M7FZ7TR7EXJHH4TX0Z236QD9/gate-retry.json carries schema None; this Jog supports only 'marathon-drive/result@1' \u2014 refusing rather than guessing at an unknown contract\njog: execution clone aligned at 219d1714ed36511679fbccd7d6843647aeb10a07; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-invalid/primary/.tick/jog/jog-01M7FZ7TZCVFF4TV2W6N917M94/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: no pending tasks; held outcomes remain below.\njog: GH-901 parked: supervision held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/retry-invalid/primary/.tick/jog/jog-01M7FZ7TR7EXJHH4TX0Z236QD9/gate-retry.json carries schema None; this Jog supports only 'marathon-drive/result@1' \u2014 refusing rather than guessing at an unknown contract\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\nSwitched to a new branch 'fixture-902'\n"
+  },
+  {
+    "id": "wrong-target",
+    "pass": true,
+    "rows": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ7XKD9RQTGJBTWXQWFXMP",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "supervision held: result receipt names a different execution target"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ7XT3A9TGD5EKJFSY9ZJ4",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+      }
+    ],
+    "output": "jog: GH-901 held: result receipt names a different execution target\njog: execution clone aligned at a8d9baf4297ed4d030a666a5b07113f9a75ede91; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/wrong-target/primary/.tick/jog/jog-01M7FZ7XT3A9TGD5EKJFSY9ZJ4/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: no pending tasks; held outcomes remain below.\njog: GH-901 parked: supervision held: result receipt names a different execution target\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\nSwitched to a new branch 'fixture-902'\n"
+  }
+]

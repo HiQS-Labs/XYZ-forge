@@ -5069,7 +5069,7 @@ def cmd_jog_to_marathon(args):
         conn.close()
 
 
-def jog_acquire_lease(root, gh_num, pid):
+def jog_acquire_lease(root, gh_num, pid, *, expected_global_id=None):
     """Acquire a lease on an enqueued item via perform_write (receipt-backed)."""
     _require_jog_primary(root)
     paths = artifact_paths(root)
@@ -5088,6 +5088,10 @@ def jog_acquire_lease(root, gh_num, pid):
                 refuse("jog-event-identity",
                        "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
             row = rows[0]
+            if expected_global_id is not None and (
+                    row["global_id"] != expected_global_id or row["status"] != "pending"):
+                refuse("jog-selection-stale",
+                       "GH-%d identity or pending status changed; refusing stale dispatch" % gh_num)
             ts = now_iso()
             att = row["attempt_count"] + 1
             conn.execute("""UPDATE jog_queue SET status = 'running', lease_pid = ?, attempt_count = ?, updated_at = ?
@@ -5198,11 +5202,15 @@ def jog_reconcile_orphan_leases(root):
 def cmd_jog_run(args):
     """Execute the serial jog queue supervisor."""
     try:
-        from jog_run import jog_run_main
+        from jog_run import ContractError, jog_run_main
     except ImportError:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from jog_run import jog_run_main
-    jog_run_main(args)
+        from jog_run import ContractError, jog_run_main
+    try:
+        jog_run_main(args)
+    except ContractError as exc:
+        print(f"jog: held: {exc}", file=sys.stderr)
+        sys.exit(2)
 
 
 def _jog_verb_dispatch(fn_name):
@@ -7144,6 +7152,8 @@ def build_parser():
                               "documented compatibility window")
     sp_jrun.add_argument("--checkpoint-root", help="dedicated disposable publication clone; requires positive --max-tasks")
     sp_jrun.add_argument("--max-tasks", type=int, default=None, help="maximum tasks to process in this run")
+    sp_jrun.add_argument("--supervise-until", type=int,
+                         help="opt-in composed wake; absolute UTC epoch dispatch deadline")
     sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
     sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
 

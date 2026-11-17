@@ -1,17 +1,36 @@
 # Changelog
 
-## 2026-11-16 — GH-1502: instructions given to relay turns agree with what the harness does
+## 2026-11-17
 
-Text only; no harness behavior changes. The turn prompt (`rtl_turn_prompt`) no longer says "The
-harness runs the gate after your turn": a gate command runs only when one is configured for the
-relay, and both roles are now told so. The thread scaffold (`new-relay.sh`) and `/relay` mark
-"commit only the relay file" and the "other window" wording as manual-relay instructions, because
-the turn prompt forbids git in a driven turn. `/relay` states that driven threads use
-`VERDICT: PASS|FAIL|PARKED`. `/start-task` no longer calls reviewer findings "advisory evaluations,
-NOT a mandate", and `/start-task` and `/relay-xyz` replace "not unrequested enterprise multi-tenant
-threat models" with "the target repository's own stated threat model governs". The `[Blocker]`
-rule is unchanged. Pinned assertions updated in `test/gh91`, `test/gh615`, `test/gh616`; no suite added;
-`relay-pkg.tar.gz` rebuilt. Evidence: `TESTS-RESULTS/2026-11-16+GH-1502/`.
+- **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search
+  the code graph by capability verbs and synonyms, not module names; call tracing stays optional.
+  In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
+  call tracing found no new module.
+
+## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
+
+- In `skills/3-weekly/whack-a-mole/SKILL.md`: added invariant-enforcer discovery in §5 to run `/connect-the-dots` on the violated rule (the invariant) before proposing a new mechanism, naming existing enforcers in the umbrella issue and handing off candidates and gaps to §6.
+- In `skills/1-hourly/debug-mantra/SKILL.md`: added an explicit escalation in §2 (trace the fail path) to run `/recon` when a fail path traverses unread modules before forming the hypothesis.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1512/`.
+
+## 2026-11-16
+
+- **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop
+  at any failed task, so independent ready work waited for a parent restart (dogfood wake 1).
+  It now continues only when the task's own receipt shows its gate ran and failed; the row stays
+  failed and is never retried. Shared conditions (lock owners, guard-killed gates, missing or
+  corrupt receipts, clone ledger changes) still stop all dispatch.
+  Evidence: `TESTS-RESULTS/2026-11-16+GH-1400/SUMMARY.md`.
+
+## 2026-11-15
+
+- **GH-1400: opt-in bounded Jog supervision.** `jog run --supervise-until` composes
+  approved-result recovery, safe execution-clone alignment and independent continuation.
+  Uncertain latest results hold, existing attempt history remains, and preserved local branches
+  and logs are retained. The bet is that composing existing owners removes the demonstrated
+  manual handoff without another queue. Costly rollback disables the opt-in path and retains state.
+  Controlled CLI checks cover recovery, continuation and preserved work; review and gate receipts are recorded with the implementation PR.
+  Evidence: `TESTS-RESULTS/2026-11-15+GH-1400/SUMMARY.md`.
 
 ## 2026-11-15 — GH-1479: typed swarm-preflight stages and a scoped mypy baseline
 
