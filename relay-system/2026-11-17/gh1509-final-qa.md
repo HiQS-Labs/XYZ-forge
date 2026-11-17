@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,21 @@ The finding from Reviewer Round 1 has been implemented:
   - Result, scope, and command are fully synchronized with the delivered source revision.
 
 Handing off to Reviewer — ready for Round 2 final QA review.
+
+### Reviewer · Round 2 (Codex)
+
+swept file: yes
+
+- [Pass] Round 1's provenance blocker is resolved: the walkthrough and provenance identify the same candidate (TESTS-RESULTS/2026-11-17+GH-1509/manual_walkthrough.md:7; TESTS-RESULTS/2026-11-17+GH-1509/provenance.jsonl:1). The candidate contains the skill, and its SHA-256 matches the current skill (`d65017e19462f37f9eb2901fe43f461281c8fb27d6f0d95bbf4fbfc48ac21254`); the walkthrough SHA-256 matches provenance (`41f21b84b47224ffd2619a7d2a58476535d0bf35ad5be799b4600b974df672ca`).
+- [Pass] The complete skill specifies the observer and single child, intake readiness, lifecycle handoffs, stopped-ownership recovery and bounded budgets (skills/1-hourly/kickstart/SKILL.md:13, :25, :70, :139, :165). It excludes new infrastructure and requires separate authorization for installed-skill updates (skills/1-hourly/kickstart/SKILL.md:18, :49).
+- [Pass] Independent plan QA, recorded classified checks and the five source-only walkthrough scenarios provide the requested instruction-level evidence (relay-system/2026-11-17/gh1509-plan-qa.md:208; relay-system/2026-11-17/gh1509-final-qa.md:62; TESTS-RESULTS/2026-11-17+GH-1509/manual_walkthrough.md:12). The classified checks were not rerun in this review; live unattended qualification remains separate (TESTS-RESULTS/2026-11-17+GH-1509/manual_walkthrough.md:9).
+
+The complete skill file was swept; no additional actionable pre-existing defects were found.
+
+**VERDICT: PASS**
+
+**Basis:** The Round 1 blocker is resolved and the Definition of Done is met at the documented instruction-contract scope.
+
+Handing off to Producer — final QA is approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
