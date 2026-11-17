@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17
+
+- **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search
+  the code graph by capability verbs and synonyms, not module names; call tracing stays optional.
+  In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
+  call tracing found no new module.
+
 ## 2026-11-17 — GH-1493: published retirement preserves one bad checkout instead of aborting the call
 
 `merge_cleanup.py --retire-published-pr N` used to refuse the whole call (exit 2) when any
@@ -8,6 +15,7 @@ the task clone and `-verify` helper on disk. Each path is now admitted or printe
 `PRESERVED <path>: <reason>`; the rest still run, and the call exits 1 if anything was preserved.
 The origin refusal names how to make a helper (keep the canonical origin), and start-task says so.
 Classification is unchanged: another repository or an unpublished local commit is still preserved.
+An admitted checkout that contains a refused one is preserved too, so it is never moved with it.
 Evidence: `TESTS-RESULTS/2026-11-17+GH-1493/SUMMARY.md`.
 
 ## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
