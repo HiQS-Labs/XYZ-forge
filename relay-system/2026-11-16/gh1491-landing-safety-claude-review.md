@@ -111,4 +111,13 @@ Basis: all four supervised alignment git paths refuse on an ignored-file collisi
 
 handing off — relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-17T05:44:41Z
+task: RELAY-gh1491-landing-safety-claude-review
+reviewer: claude
+status: Approved
+reviewed-head: c3309e4124f4d9c8d74317605499187a553082a5
+added-range: 9583+6735
+added-sha256: c3c382cb4a322dd0620c74b96e091b2d04dca15f72a61683ca537397c99c7653
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
