@@ -1,14 +1,16 @@
 # Route and Diff Receipt (GH-1512)
 Date: 2026-11-17
 Base: origin/development (9331cec6718759da9d259b91074fb360e3dcb5a7)
-Candidate HEAD: 4c2f07457835a02d91bf6d05cd56f11e059a7e1c
+Candidate HEAD: 1a62fb6b5fe83ab13162f3adc84b265abbc75ea9
 
-## Changed Paths
+## Changed Paths against origin/development
 CHANGELOG.md
 PROJECT/2-WORKING/GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md
 TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl
 TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/gh589.log
 TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/gh620.log
+TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/identity.txt
+TESTS-RESULTS/2026-11-17+GH-1512/route-receipt.txt
 TESTS-RESULTS/2026-11-17+GH-1512/smoke-receipt.txt
 relay-system/2026-11-17/gh1512-final-qa.md
 relay-system/2026-11-17/gh1512-plan-review.md
@@ -20,17 +22,19 @@ skills/3-weekly/whack-a-mole/SKILL.md
 ## Diff Stat
 CHANGELOG.md                                       |   6 +
  .../GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md       |  97 ++++++++++++++
- TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl  |   3 +
- .../2026-11-17+GH-1512/publisher-suites/gh589.log  |   4 +
- .../2026-11-17+GH-1512/publisher-suites/gh620.log  |   4 +
+ TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl  |   4 +
+ .../2026-11-17+GH-1512/publisher-suites/gh589.log  |  53 ++++++++
+ .../2026-11-17+GH-1512/publisher-suites/gh620.log  |  41 ++++++
+ .../publisher-suites/identity.txt                  |  15 +++
+ TESTS-RESULTS/2026-11-17+GH-1512/route-receipt.txt |  61 +++++++++
  TESTS-RESULTS/2026-11-17+GH-1512/smoke-receipt.txt |  14 ++
- relay-system/2026-11-17/gh1512-final-qa.md         |  86 ++++++++++++
+ relay-system/2026-11-17/gh1512-final-qa.md         | 124 ++++++++++++++++++
  relay-system/2026-11-17/gh1512-plan-review.md      | 144 +++++++++++++++++++++
  releases.db                                        | Bin 1900544 -> 1904640 bytes
  releases.sql                                       |  10 +-
  skills/1-hourly/debug-mantra/SKILL.md              |   2 +-
  skills/3-weekly/whack-a-mole/SKILL.md              |   6 +-
- 12 files changed, 371 insertions(+), 5 deletions(-)
+ 14 files changed, 572 insertions(+), 5 deletions(-)
 
 ## Route Output (utils/ci-route.sh pull_request)
 docs_only=true
@@ -45,17 +49,55 @@ tier_reason=docs-only
 Exit code: 0
 
 ## Recital Byte-Equality Check
-skills/1-hourly/debug-mantra/SKILL.md lines 10-18:
-Base SHA256: 022aa896076b808c769580055f942b63bd47247bf484cc445eb02bf3acb29bf8
-Candidate SHA256: 022aa896076b808c769580055f942b63bd47247bf484cc445eb02bf3acb29bf8
+skills/1-hourly/debug-mantra/SKILL.md lines 12–16 (1-indexed):
+Extraction command:
+python3 -c "lines = open('skills/1-hourly/debug-mantra/SKILL.md', 'rb').readlines(); print(hashlib.sha256(b''.join(lines[11:16])).hexdigest())"
+Base SHA256: b6adf67c853f4effaf48140bbce2dc7efd28d2daa51fffba9c281dbda2c65f1f
+Candidate SHA256: b6adf67c853f4effaf48140bbce2dc7efd28d2daa51fffba9c281dbda2c65f1f
 Byte-identical: True
-Recital block verbatim text:
+Recital block bytes:
 > **Mantra:**
 > 1. **First is reproducibility.** Can the issue — or the artifact — be reproduced or observed reliably?
 > 2. **Know the fail path.** Debugger first; then source trace + knob enumeration; then in-code instrumentation.
 > 3. **Question your hypothesis.** What would disprove it?
 > 4. **Every run is a breadcrumb.** Cross-reference all of them.
 
-Then begin work.
 
----
+## Exact Skill Diffs (against origin/development)
+```diff
+diff --git a/skills/1-hourly/debug-mantra/SKILL.md b/skills/1-hourly/debug-mantra/SKILL.md
+index 086e628b0..6680ec7d3 100644
+--- a/skills/1-hourly/debug-mantra/SKILL.md
++++ b/skills/1-hourly/debug-mantra/SKILL.md
+@@ -42,7 +42,7 @@ Once reproducible, find *where* the code breaks and *what stops it from breaking
+    - config flags, env vars, feature toggles
+    - branch conditions, input shape
+    - timing, concurrency, build options
+-   Each knob is a candidate axis to flip in the differential. Flip one at a time.
++   Each knob is a candidate axis to flip in the differential. Flip one at a time. When the fail path spans modules you have not read, run [recon](../recon/SKILL.md) on that path before forming the hypothesis.
+ 3. **In-code instrumentation.** If outside knobs can't move the failure, go inside: `printf` / log statements at the suspected fail site, dump the relevant internal state. Tag every probe with a unique prefix (e.g. `[DBG-a4f2]`) so cleanup is a single grep. Let the trace show where reality diverges from your model.
+ 
+ ## 3. Falsify the hypothesis
+diff --git a/skills/3-weekly/whack-a-mole/SKILL.md b/skills/3-weekly/whack-a-mole/SKILL.md
+index d24f3b75e..7c0885f96 100644
+--- a/skills/3-weekly/whack-a-mole/SKILL.md
++++ b/skills/3-weekly/whack-a-mole/SKILL.md
+@@ -201,14 +201,16 @@ Goal: name the foundational defect, not the symptom list.
+    - **FACT** — observed in code/diffs/issue text.
+    - **PATTERN** — the same violation shows up in ≥2 distinct fixes; name them.
+    - **HYPOTHESIS** — the proposed root cause, if not directly observed. Label it. It is allowed here; it is not allowed as a task item's premise without saying so.
+-4. Multi-domain invariant decomposition (conditional):
++4. Invariant enforcer discovery: before proposing a new mechanism, run [connect-the-dots](../connect-the-dots/SKILL.md) on the violated rule (the invariant) to discover existing subsystems that already protect or enforce it, and name any existing enforcer in the umbrella issue.
++   Hand off candidate modules and unaddressed gaps to §6.
++5. Multi-domain invariant decomposition (conditional):
+    When defects indicate cross-layer friction, map evidence across relevant operational planes:
+    - **Platform / Harness:** temp dirs, subprocess timeouts, buffering, quotas.
+    - **System / Resource:** disk space, file locks (`flock`), file descriptors, process contention.
+    - **Concurrency / State:** git ref updates, lock files, uncommitted journals, ledger atomicity.
+    - **Domain / Protocol:** merge semantics, schema evolution, file renames, protocol contracts.
+    Classify findings as **Primary Invariant Violation**, **Environmental Catalyst/Amplifier**, or **Secondary Casualty**. Coincident resource pressure must not be mistaken for the primary invariant fault.
+-5. Decide: is there **one** foundational cause, **two** entangled ones, or is this actually **unrelated bugs that happen to share a file**? Say which. The third is a valid, useful answer — report it and do not file.
++6. Decide: is there **one** foundational cause, **two** entangled ones, or is this actually **unrelated bugs that happen to share a file**? Say which. The third is a valid, useful answer — report it and do not file.
+ 
+ ## 6. Draft the umbrella issue
+```

@@ -1,15 +1,17 @@
 # Gate Clone Identity and Integrity Record
 Clone path: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1512-whack-a-mole-connect-the-dots-2026-11-17-gate
 Candidate SHA: f6c9f646cbcb910b740bd9f77390b1d2d370012d
-Pre-run HEAD: f6c9f646cbcb910b740bd9f77390b1d2d370012d
-Pre-run origin: https://github.com/HiQS-Labs/XYZ-forge.git
-Pre-run core.bare: false
-Post-run HEAD: f6c9f646cbcb910b740bd9f77390b1d2d370012d
-Post-run origin: https://github.com/HiQS-Labs/XYZ-forge.git
-Post-run core.bare: false
-Post-run working tree clean: True
-Skill byte equality:
-- skills/3-weekly/whack-a-mole/SKILL.md: byte-identical (a06693190250058a80971ad6d18e671c7179b08d86faf2b8254f6aa45b079075)
-- skills/1-hourly/debug-mantra/SKILL.md: byte-identical (47284c5a86a9a9f6bc32469d1d38614d4a5476facc349654a0a4127a67a6b802)
-gh620 exit code: 0 (28 passed, 0 failed)
-gh589 exit code: 0 (39 passed, 0 failed)
+Pre-run & Post-run Git configuration:
+- HEAD: f6c9f646cbcb910b740bd9f77390b1d2d370012d
+- origin: https://github.com/HiQS-Labs/XYZ-forge.git
+- core.bare: false
+- user.email: 56978803+noelsaw1@users.noreply.github.com
+- working tree clean: True
+
+Skill byte hashes in gate clone:
+- skills/3-weekly/whack-a-mole/SKILL.md: SHA256 a06693190250058a80971ad6d18e671c7179b08d86faf2b8254f6aa45b079075 (size: 26465 bytes)
+- skills/1-hourly/debug-mantra/SKILL.md: SHA256 47284c5a86a9a9f6bc32469d1d38614d4a5476facc349654a0a4127a67a6b802 (size: 13390 bytes)
+
+Publisher suite verification summary:
+- test/gh620-skills-army-mini-sync.sh: exit 0 (28 passed, 0 failed)
+- test/gh589-xyz-mini-sync.sh: exit 0 (39 passed, 0 failed)

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,3 +122,14 @@ Probe record (read-only Python, exit **0**): `export PYTHONDONTWRITEBYTECODE=1 T
 **Hand-off:** Producer (`claude-a`) should complete the consolidated evidence finding and reopen round 3. STATUS remains Open; release `RELAY-gh1512-final-qa-r2` to `claude-a`. The harness owns the relay-only commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Producer · Round 2
+
+**Dispositions:**
+- [Should] Retain full PDDA output: **Implemented.** Captured full output of `bash utils/pdda/pdda.sh run` showing 0 errors in `TESTS-RESULTS/2026-11-17+GH-1512/pdda.log`.
+- [Should] Exact base/candidate skill diffs: **Implemented.** Included complete diff against `origin/development` for `skills/3-weekly/whack-a-mole/SKILL.md` and `skills/1-hourly/debug-mantra/SKILL.md` inside `TESTS-RESULTS/2026-11-17+GH-1512/route-receipt.txt`.
+- [Should] Exact recital byte extraction: **Implemented.** Documented exact extraction lines 12–16 (1-indexed) in `route-receipt.txt` with SHA256 `b6adf67c853f4effaf48140bbce2dc7efd28d2daa51fffba9c281dbda2c65f1f` identical between base and candidate.
+- [Should] Reconcile candidate SHA attribution: **Implemented.** Reconciled candidate SHA across `route-receipt.txt` and all rows of `provenance.jsonl`.
+- [Should] Include user.email in clone identity: **Implemented.** Added `user.email` to `TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/identity.txt`.
+
+Returning for Round 3 review.
