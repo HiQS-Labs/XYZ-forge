@@ -150,4 +150,13 @@ Drift check: `git diff --stat f346d8908a42cd6e7e92f80657f9e7a21208e0ae HEAD -- s
 VERDICT: PASS
 Basis: R3-A is resolved. When walked through the revised plan:39, all three items produce no row pointing at a missing file. The INCLUDE gets its row before `marathon-plan.sh`, and the Step 3 and research-held items get zero writes. The writer's invented-path branch (`releases_app.py:3877`) is unreachable because both pickup directions that omitted `--doc-path` are collapsed into one post-capture pickup with the real path. N-F is resolved, plan:62 matches plan:39, no settled round 1-3 finding is reopened, and no OL-09 or OL-10 credit is claimed. The four remaining items are Nits: two sequencing clauses for the implementer (refresh frontmatter after pickup; give an existing unrated row its first rating without `--force`) and two stale status lines. Fold them in during implementation; they do not block approval of this instruction-only plan. Relay closed (Approved); no further turn is needed. The Producer may carry the Nits into the implementation PR.
 
+
+### Attestation · relay-drive — 2026-11-17T16:01:57Z
+task: RELAY-gh1476-plan-qa-r4
+reviewer: claude-review
+status: Approved
+reviewed-head: 43c3c44a56c689193c5172dbb19fe6877d2add0c
+added-range: 11745+11004
+added-sha256: 818c59dc14896306f5bd5a9d05aa68023acef11655ab81cb93d311cb7bd70c3a
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
