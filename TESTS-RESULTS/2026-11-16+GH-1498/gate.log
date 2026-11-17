@@ -72,3 +72,14 @@ pre: 1382711a7dec486ca4c20deab19ad97f70474ac7        0
 post: 1382711a7dec486ca4c20deab19ad97f70474ac7        0
 gate-record: recorded .gate-evidence/1382711a.txt
 Codex delta reviews: gh1498-coderabbit-delta2-qa.md (FAIL, 3 findings fixed) and gh1498-coderabbit-delta3-qa.md (Approved).
+
+## Gate after CodeRabbit third pass — 019328074 (code unchanged in later commits: evidence + relay only)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: 0193280745baf291bc8162dfeecb5922268f4735        0
+post: 0193280745baf291bc8162dfeecb5922268f4735        0
+gate-record: recorded .gate-evidence/01932807.txt
+Codex re-run review approved (relay-system/2026-11-16/gh1498-coderabbit-delta5-qa.md); delta4 PASS was reverted by the harness after producer edits during the turn.
