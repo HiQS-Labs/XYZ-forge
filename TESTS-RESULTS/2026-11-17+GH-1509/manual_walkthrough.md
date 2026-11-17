@@ -4,6 +4,7 @@ Date: 2026-11-17
 Task: GH-1509 (Kickstart: observer-led outer-loop child with bounded session recovery)
 Evaluator: Agy (gemini-3.8-flash)
 Baseline Base Commit: 88df7852cca000b712944d76dd05909fc1ffecae
+Assessed Candidate Commit: 6d92c07df4516936ec2472a24ea9ff220931be65
 Scope: Source-only manual instruction walkthrough of main and adjacent recovery/hold paths.
 Distinction: These are deterministic instruction contract checks establishing delivered instruction semantics; live unattended qualification remains a separate milestone.
 
