@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -92,5 +92,29 @@ Answer, citing `file:line`:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+
+VERDICT: PASS
+Basis: Ship within the stated manual, single-operator envelope. All seven accepted fixes are implemented coherently, and no observed failing input establishes that a declined change is required. This is implementation approval; final-head gate qualification remains the harness's work.
+swept file: yes
+
+Evidence boundary: read the whole current pr_minder.py, the exact source delta 1ab49bc05..72bfb6348, the relevant planner clock/query and merge-cleanup refresh seams, A17/A18 driver text and recorded results/provenance, and the prior final-QA relay. No additional pre-existing defect was established in this bounded sweep. Verify-tier discovery returned all 86 projects, none for this worktree; XYZ-forge generation 2026-09-01T15:54:30Z returned zero script symbols (has_more=false), with coverage missing/not-tracked for the three Python paths. Current source supplies the evidence; no freshness claim rests on that index. No Git executable, network call, full gate, suite, pytest, or executable fixture was run.
+
+- [Pass] **Validation and measured behind status are correct for the accepted ladder.** pr_minder.py:455–457 rejects stale outside 1–6, draft below stale, and negative drift before repository I/O. The drift-derived predicate (:203–205) reaches the existing precedence and rung guards (:253–262,267–273,277–318): a CLEAN-but-behind PR now receives the intended update at rungs 1–2; fresh and retire rows do not, and rung 3 asks for a decision. Draft/fork/cap skips and conflict/failing precedence remain. This is the intentional repair of the prior CLEAN omission, not an unrestricted update policy. A17 specifically exercises the CLEAN input and rejects the state-only candidate (manual_check.py.txt:666–685).
+
+- [Pass] **Quoting, ownership, draft refresh and removal reporting are coherent.** Both branch arguments use shlex.quote (pr_minder.py:282–285). The removal list is computed from current labels plus successful ownership receipts (:90–100,237–245), consumed directly by apply (:342), and rendered by describe (:434–441). Refreshed existing labels filter add-label operations before intent/result writes (:380–389), so this pass does not acquire ownership of the other actor's addition. Both draft-status transitions abort before writes (:369–379), using the existing refresh field (merge_cleanup.py:505–506). The accepted once-per-bundle refresh window remains unchanged.
+
+- [Pass] **Receipt OIDs no longer suppress an author push.** assess passes an empty sync-OID set into both author_activity and own-commit filtering (pr_minder.py:172–175,183,190–193). The structural maintenance predicate remains the existing two-parent/default-headline/GitHub-committer rule (planner_core.py:1283–1290). A captured head_after equal to a subsequent ordinary author commit therefore cannot erase that activity; the receipt continues to feed the separate update cap (:102–111).
+
+  Independent bounded probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` (inline imports the real script, disables subprocess.run, replaces holds/drift/refresh/GitHub operations with in-memory functions and receipts, constructs the cases above, and calls assess, plan_bundle, describe, apply_row and invalid-argument main paths). Exit **0**. Decisive output: `CLEAN age 1 rung 0 update False`; `CLEAN age 4 rung 1 update True`; `CLEAN age 8 rung 2 update True`; `CLEAN age 15 rung 3 update False`; `CLEAN age 31 rung 4 update False`; `draft/conflict/failure precedence preserved`; `refreshed existing label: add-label calls=0 ownership receipts=0`; `both draft flips: write calls=0; aborted=draft status changed`; `owned removal: plan and description contain pr-minder:stale`; `repair branch arguments are shell quoted`; `receipt head_after=author: rung=0 latest author commit retained`; `invalid threshold cases=4 all rc=2 before I/O`; `all bounded assertions passed; real subprocesses disabled`.
+
+- [Pass] **The three declines are acceptable within the declared envelope.** (a) Reviewer probes are retained as command/status/decisive-output quotations in the relay, as in gh1498-final-qa.md's Round 3 block and this block; they are distinct from the producer's evidence runs, which have provenance.jsonl entries. This turn follows the operator's explicit scratch-and-quote protocol. (b) With serial invocation by one operator, no concrete overlapping-run failure was supplied or observed that requires a lock. Existing comments are found and PATCHed (pr_minder.py:327–330,345–350,424–427), and cap receipts remain (:102–111,304–305). This acceptance depends on serial invocation; it does not prove concurrent apply safe. (c) The bounded clock already reports unknown when a truncated connection contains no qualifying item (planner_core.py:1313–1319); making every truncated commit connection unknown would disable writes for ordinary longer histories despite a visible qualifying commit. No observed out-of-order-date input in this task demonstrates a necessary change. The decline is a proportional acceptance of the history-order/date assumption, not proof that commit dates must be monotonic or that only deliberate forgery can violate it. No blanket completeness guarantee is asserted.
+
+- [Pass] **Exact delta and seed identity checked without Git execution.** Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` (read-only stdlib query of the parent's loose/packed Git objects, resolves both named commits' script blobs, asserts the candidate blob equals the seeded file, then prints difflib.unified_diff). Exit **0**; decisive output: `Seed equals 72bfb6348 blob. Exact source delta:` followed by the seven accepted changes and no other script change. An initial loose-only query exited **1** because the base object was packed; the successful packed-object query supersedes that incomplete extraction. Nothing was written to object storage, refs or index.
+
+- [Unverified — needs clone run] **Delivery qualification remains separate.** manual-check.log records 21 passed / 0 failed, A17's rejected candidate and A18's five true parts; provenance.jsonl:10–11 binds manual/smoke evidence to 2edec37f6. These are inspected recorded results, not a rerun here. A18 has no bad implementation candidate, as its driver explicitly records. The last retained gate receipt (:9) is f8ecd37d7, before this delta. The harness must run and retain its final-head gate before claiming delivery/merge readiness.
+
+Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent gate; the token is closed with done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
