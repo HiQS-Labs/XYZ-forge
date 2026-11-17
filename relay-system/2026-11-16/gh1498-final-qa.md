@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -213,5 +213,28 @@ Handing off to Producer (claude-a) — address the F5 pagination follow-up and e
 - **Gate — Acknowledged.** `.gate-evidence/` is per-clone and not committed, so the seeded worktree can't show it. The final-commit gate runs in the disposable clone after approval, and its summary goes into `gate.log` and `provenance.jsonl`.
 
 Handing off to Reviewer (codex) for Round 3, the final round under the cap.
+
+### Reviewer · Round 3 (codex)
+
+VERDICT: PASS
+Basis: Ship with conditions: the remaining F5 code defect is resolved, and no further implementation blocker was established. This approves the implementation review; final-commit gate qualification remains the harness's next step, not a result claimed by this turn.
+swept file: yes
+
+Evidence boundary: read the whole seeded issue, current plan and plan-QA history, entire pr_minder.py and SKILL.md, current manual-check driver/results, smoke, gate summary and provenance. Rechecked the shared clock, collector, production exception boundary and merge-cleanup refresh seams. No additional pre-existing defect was established in those bounded seams; the two large existing modules were not exhaustively audited. Verify-tier graph discovery returned all 86 projects (has_more=false), none for this worktree. XYZ-forge coverage generation is 2026-09-01T15:54:30Z; symbol search returned 0 (has_more=false), with the new script missing and the existing Python paths not tracked. Material evidence uses direct current-worktree source. No Git command, network writer, gate, test suite or executable fixture was run.
+
+- [Pass] **F5 pagination follow-up resolved.** pr_minder.py:185–188 distinguishes visible presence from possible presence beyond a truncated comments window. Rung-0 rendering supplies a reset-only body (:256–262), the existing paginated reader supplies actual presence (:314–317), and comment_op forbids creation when reset_only has no existing comment (:333–340). Report-only rows still return before comment lookup (:322–323). This uses the existing reader and writer; no parallel comment subsystem was added.
+  Probe command: 'export PYTHONDONTWRITECODE=1 PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -' (inline imports pr_minder, constructs a fresh author commit plus 20 human comments with hasPreviousPage=true, mocks drift/hold/refresh and GitHub I/O in memory, serves the owned marker on a second REST page, then calls assess/apply_row twice; receipts remain in memory). Exit **0**. Decisive output: 'case=older-marker, rung=0, unknown=false, writes=[[api,-X,PATCH,repos/acme/repo/issues/comments/42]], rerun_additional=0, results=[[comment,ok]]'; 'case=absent, writes=[], rerun_additional=0'; 'case=held, writes=[], lookup_count=0'; 'case=unknown, writes=[], lookup_count=0'. Red control changes only owned_comment_maybe back to has_owned_comment and rebuilds the plan: 'case=red-visible-only, writes=[], lookup_count=0'. Final output: '5 bounded cases passed; old visible-only behavior misses the reset'. No real writer or Git subprocess was reachable in this probe.
+
+- [Pass] **Existing manual evidence now targets the actual F5 input.** manual_check.py.txt:613–623 places the marker beyond the bounded window for #122 and omits it entirely for truncated #123. Assertions require PATCH ids 42/43, fresh bodies, no creation, no additional rerun writes and untouched unmanaged comments (:634–640). The bad candidate restores visible-only presence (:625–632). manual-check.log's A15 line explicitly reports that case and the rejected candidate, ending '19 passed, 0 failed'. This is inspected recorded evidence plus the independent bounded probe above, not a rerun of the driver. The evidence-index correction is present at TESTS-RESULTS/2026-11-16+GH-1498/README.md:7–11.
+
+- [Pass] **Whole implementation review remains consistent with the approved plan and dispositions.** Shared maintenance/completeness logic is at planner_core.py:1283–1329; numbered fallback and fail-open production wiring remain at :1614–1619,1685–1690,1811–1818,1845–1846. Refresh includes body (merge_cleanup.py:505–506). pr_minder's full hold union is at :114–130, stack inheritance/cycle guard at :212–229, ladder/precedence/cap at :237–309, ownership and idempotent comment selection at :320–345, and intent/result writes plus sync/failure handling in apply_row's run/operation loop. The whole new script contains no landing, closing, rebase, force-push, retarget or ledger writer. Plan-only return and paused check remain in main. No duplicate subsystem or new test/registry entry was identified in the stated changed surface. The maintenance heuristic, check-name/link substitution and once-per-bundle refresh remain explicit accepted dispositions in the plan/SKILL.md. No additional divergence was established.
+
+- [Pass] **Acceptance coverage and proportionality remain as bounded in Round 2.** A1–A4 cover plan writes, ladder bundles, holds and stateful rerun; A5/A6 apply tool writes before both readers re-read; A7–A11 exercise cap, reset, race, receipt and unknown decisions. A13–A16 address the concrete review inputs. The A8b current-name red control distinguishes the original and renamed input; A10 compares actual shim writes to receipt results; A15 now includes the older-marker case (manual_check.py.txt:435–446,493–530,610–644). A12/A12b are render checks without red candidates; A2 measures planned bundles rather than every matrix write. No further assertion targeting mismatch was established. Rating 55/40/50/45 remains a defensible planning judgment (PROJECT/1-INBOX/GH-1498-PR-MINDER.md, RELEASES rating), not a measured score; historical 9/12 and elapsed effort were not independently remeasured. The manually invoked 12–50 PR envelope warrants no daemon, locks, journal or new suite.
+
+- [Nit] **Bind the refreshed manual result to its revision during evidence closeout.** TESTS-RESULTS/2026-11-16+GH-1498/provenance.jsonl:6 still identifies the manual check as 07538331d, which predates the Round 3 fix identified by the Producer as 6e3ac20c5. Preserve that historical receipt and append the actual revision/command/result for the extended A15 run. The current log alone cannot bind that changed scenario to its executed revision. This is an evidence-closeout item; the code outcome above was independently measured in this turn.
+
+- [Unverified — needs clone run] **Final gate acceptance is outstanding.** gate.log's last recorded qualifying run is at 326b47088 and explicitly acknowledges later code; provenance.jsonl:5 agrees. The smoke receipt at :7 belongs to 07538331d. Neither is final-head qualification. Run the already-planned disposable-full-clone gate, retain its final revision and receipts, and complete the manual provenance item above before claiming delivery/merge readiness. This review does not authorize real-PR apply or claim the full gate passed on the current head.
+
+Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent gate; the token is closed with done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
