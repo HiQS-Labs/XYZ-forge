@@ -57,8 +57,9 @@ Rung floors use `S = --stale-days` (default 3). Drafts are shifted by `--draft-s
 - Drift beyond `--drift-bump` (default 30 base commits) moves a PR up one rung, but never from 0 and never into 4. On a busy base, raise `--drift-bump`.
 - At most one `update-branch` per PR per pass, and at most 2 per stale episode. After that the PR keeps aging.
 - No `update-branch` for drafts or for fork PRs without maintainer edits. Those get the comment instead.
-- One owned comment per PR (marker `<!-- pr-minder:v1 -->`), edited in place. Only `pr-minder:*` labels are ever removed.
-- New author activity resets the PR to rung 0 on the next pass and clears pr-minder's labels.
+- One owned comment per PR (marker `<!-- pr-minder:v1 -->`), edited in place. A `pr-minder:*` label is removed only when a receipt proves pr-minder added it. A label added by hand, or from another device, is kept.
+- A failed `update-branch` is never retried. The label and a comment with the failure are posted instead.
+- New author activity resets the PR to rung 0 on the next pass. pr-minder clears its owned labels and rewrites its existing comment to "rung 0 (fresh)". A PR it never commented on gets no comment.
 - **Held PRs are report-only.** Holds are the planner engine's holds, the `hold`/`parked` labels, an `owner decision: hold` body line, or merge-cleanup's `hold_label` veto. A PR stacked on a held PR is also report-only. Otherwise a stacked child is never on a lower rung than its parent.
 
 Failing-check comments give the check name and its link, not the first log line. Downloading job logs per
@@ -66,7 +67,9 @@ PR isn't worth it when the link is one click away (GH-1498 spec deviation).
 
 ## Safety
 
-- Before each PR's writes, the PR is refreshed. The bundle is aborted if the PR is now held (title, body or labels) or if its state, head SHA or base changed.
+- Report-only rows (held, stacked on held, unknown history, rung 4) get no calls at all, not even label cleanup.
+- Before each PR's bundle, the PR is refreshed once. The bundle is aborted if the PR is now held (title, body or labels) or if its state, head SHA or base changed. A bundle's writes run back to back within seconds.
+- Each write has its own receipt pair, and creating the label in the repo counts as a write.
 - Every write records an `intent` line and a `result` line in `~/.local/state/pr-minder/<owner>/<repo>/actions.jsonl` (override with `PR_MINDER_STATE`). The result is `ok`, `failed`, `uncertain` or `aborted`.
 - Kill switch: a `paused` file in that directory stops `--apply` before any write.
 - Conflict files come from `git merge-tree` on fetched refs. That touches no working tree, but it does fetch into the current checkout.

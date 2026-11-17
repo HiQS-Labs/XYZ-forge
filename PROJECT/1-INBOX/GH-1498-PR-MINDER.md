@@ -25,7 +25,7 @@ context_tags: [pr-minder, skills, merge-cleanup, weekly-planner, stale-prs]
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (Codex r3); implemented; manual check 13/13 with bad candidates rejected; smoke green | Full gate in a disposable clone, then final relay QA |
+| Final QA r1 (Codex FAIL F1–F8) fixed; manual check 19/19 | Re-gate, then final QA r2 (Codex), then agy seat |
 
 The issue body is the specification. This doc records only the decisions recon forced and the execution plan.
 
@@ -116,7 +116,9 @@ No `--apply` runs against real PRs in this task. That would be an outward write 
 
 ## Acceptance map (from the issue)
 
-Each issue checkbox maps to the assertions A1–A12 above; the gates checkbox maps to the Gates paragraph. **Spec deviation (kept visible):** the "first error line" in failing-check comments is replaced by the failing check name plus its details URL from `statusCheckRollup`. Disposition: Ponytail. Fetching job logs costs a large download per PR, and the link is one click away.
+Each issue checkbox maps to the assertions A1–A12 above; the gates checkbox maps to the Gates paragraph. **Timing disposition (final QA r1):** the plan said "before each write". The code refreshes once per PR bundle, then runs its 1–4 writes back to back. That is accepted for this envelope, because the race window is seconds and A9 covers a change between measure and bundle.
+
+**Spec deviation (kept visible):** the "first error line" in failing-check comments is replaced by the failing check name plus its details URL from `statusCheckRollup`. Disposition: Ponytail. Fetching job logs costs a large download per PR, and the link is one click away.
 
 ## RELEASES rating (2026-11-16)
 

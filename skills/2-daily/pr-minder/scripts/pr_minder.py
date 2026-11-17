@@ -26,7 +26,8 @@ def _bundle(env: str, rel_repo: str, rel_flat: str) -> Path:
     """Locate another skill's scripts dir: env override (a file path) -> repo layout -> flat install."""
     if os.environ.get(env):
         return Path(os.environ[env]).resolve().parent
-    for cand in (HERE.parents[2] / rel_repo, HERE.parents[1].parent / rel_flat):
+    # HERE is <skill>/scripts: parents[1] is the skills root in a flat install, parents[2] in the repo layout
+    for cand in (HERE.parents[2] / rel_repo, HERE.parents[1] / rel_flat):
         if cand.is_dir():
             return cand
     sys.exit(f"pr-minder: cannot find {rel_flat}; set {env} to its script path")
@@ -85,6 +86,17 @@ class Receipts:
         return frozenset(r.get("head_after") for r in self.rows
                          if r.get("phase") == "result" and r.get("action") == "update-branch"
                          and r.get("outcome") == "ok" and r.get("head_after"))
+
+    def owned_labels(self, pr: int) -> set:
+        """pr-minder labels a receipt proves this tool added (and has not since removed) on this PR."""
+        owned: set = set()
+        for r in self.rows:
+            if r.get("pr") == pr and r.get("phase") == "result" and r.get("outcome") == "ok":
+                if r.get("action") == "add-label":
+                    owned.add(r.get("arg"))
+                elif r.get("action") == "remove-label":
+                    owned.discard(r.get("arg"))
+        return owned
 
     def updates_since(self, pr: int, since: datetime | None) -> int:
         n = 0
@@ -168,7 +180,19 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
         n = pr["number"]
         row = {"pr": n, "title": pr.get("title", ""), "draft": bool(pr.get("isDraft")),
                "held": hold_reason(pr, held_by_engine), "pr_data": pr}
-        ts, complete = pc.author_activity((activity or {}).get(n), sync_oids)
+        node = (activity or {}).get(n) or {}
+        ts, complete = pc.author_activity(node or None, sync_oids)
+        row["has_owned_comment"] = any(pc.PR_MINDER_MARKER in (c.get("body") or "")
+                                       for c in (node.get("comments") or {}).get("nodes") or [])
+        commits = (node.get("commits") or {})
+        row["own_commits"] = [((c.get("commit") or {}).get("oid") or "")[:9] + " " +
+                              ((c.get("commit") or {}).get("messageHeadline") or "")[:60]
+                              for c in commits.get("nodes") or []
+                              if not pc.is_maintenance_commit(c.get("commit") or {}, sync_oids)]
+        row["own_commits_truncated"] = bool((commits.get("pageInfo") or {}).get("hasPreviousPage"))
+        files = pr.get("files") or []
+        row["diff_size"] = (f"{len(files)} files, +{sum(f.get('additions') or 0 for f in files)}"
+                            f"/-{sum(f.get('deletions') or 0 for f in files)}") if files else None
         row["unknown"] = not (complete and ts)
         row["since"] = ts
         row["age"] = None if row["unknown"] else pc._age_days(ts, now)
@@ -209,34 +233,47 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
 
 
 def plan_bundle(row: dict, receipts: Receipts) -> dict:
-    """Precedence: held > unknown > conflicting > failing > behind > none. One branch mutation max."""
+    """Precedence: held > unknown > conflicting > failing > behind > none. One branch mutation max.
+    `write` False means report only: apply_row makes no call of any kind for the row."""
     pr = row["pr_data"]
-    b = {"update_branch": False, "label": None, "comment": None, "why": ""}
+    b = {"write": True, "update_branch": False, "label": None, "comment": None, "fallback": None, "why": ""}
     if row["held"] or row["inherited_hold"]:
-        b["why"] = f"held: {row['held'] or row['inherited_hold']} (report only)"
+        b.update(write=False, why=f"held: {row['held'] or row['inherited_hold']} (report only)")
         return b
     if row["unknown"]:
-        b["why"] = "author history incomplete or unavailable (no writes)"
+        b.update(write=False, why="author history incomplete or unavailable (no writes)")
         return b
     rung = row["rung"]
-    b["label"] = LABELS.get(rung) if rung in LABELS else None
     if rung == 4:
-        b["why"], b["label"] = "retire candidate (report only; closing is a deferred decision)", "keep"
+        b.update(write=False, why="retire candidate (report only; closing is a deferred decision)")
         return b
+    b["label"] = LABELS.get(rung)
+    since = row["since"].date().isoformat()
+    head = [MARKER, f"**pr-minder:** rung {rung} ({RUNG_NAMES[rung]}); no author activity since {since}."]
+    tail = ["_Web-editor conflict fixes that kept GitHub's default merge message are not counted as activity._"]
     if rung == 0:
         b["why"] = "fresh"
+        if row.get("has_owned_comment"):   # a managed PR whose author came back: reset the old diagnosis
+            b["comment"] = "\n\n".join([MARKER, f"**pr-minder:** rung 0 (fresh); author activity on {since}. "
+                                          "No action needed."])
         return b
-    since = row["since"].date().isoformat()
-    lines = [MARKER, f"**pr-minder:** rung {rung} ({RUNG_NAMES[rung]}); no author activity since {since}."]
+    lines = list(head)
+    drift_txt = (f"Base has moved {row['drift']} commits since this branch's merge base."
+                 if row.get("drift") is not None else "Base drift unknown.")
     if row["conflicting"]:
         files = row.get("conflict_files")
-        lines.append("Conflicts with base in: " + (", ".join(f"`{f}`" for f in files) if files else "files unknown"))
+        lines.append("Conflicts with base in: " + (", ".join(f"`{f}`" for f in files) if files else "files unknown")
+                     + f". {drift_txt}")
         if rung == 2:
             lines.append(f"Repair in a disposable clone: `git fetch origin && git checkout {pr.get('headRefName')} "
                          f"&& git merge origin/{pr.get('baseRefName')}` then resolve, commit and push.")
         if rung == 3:
-            lines.append("Option: re-cut — a fresh branch off base, cherry-picking this PR's own commits, "
-                         "may be cheaper than resolving this much drift.")
+            own = row.get("own_commits") or []
+            size = row.get("diff_size")
+            lines.append("Option: re-cut — a fresh branch off base with this PR's own commits cherry-picked"
+                         + (f" ({size})" if size else "") + ", instead of resolving this drift. Commits: "
+                         + (", ".join(f"`{c}`" for c in own) if own else "unknown")
+                         + (" (newest 10 shown)" if row.get("own_commits_truncated") else "") + ".")
         b["why"] = "conflicting"
     elif row["failing"]:
         lines += [f"Failing check: {c['name']} — {c['url'] or 'link unavailable'}" for c in row["failing"]]
@@ -250,20 +287,22 @@ def plan_bundle(row: dict, receipts: Receipts) -> dict:
             skip = "fork without maintainer edits"
         elif receipts.updates_since(row["pr"], row["since"]) >= UPDATE_CAP:
             skip = f"update-branch cap ({UPDATE_CAP}) reached this stale episode"
-        if rung <= 2 and not skip:
-            b["update_branch"] = True
         if rung == 3:
-            lines.append("Branch is behind base; not updating a branch idle this long. Keep, hold, or retire?")
+            lines.append(f"Branch is behind base; not updating a branch idle this long. {drift_txt} "
+                         "Keep, hold, or retire?")
         elif skip:
-            lines.append(f"Branch is behind base; update-branch skipped: {skip}.")
+            lines.append(f"Branch is behind base; update-branch skipped: {skip}. {drift_txt}")
         else:
-            lines = None   # update-branch alone; no comment
+            b["update_branch"] = True
+            # used only if update-branch fails: the diagnosis still gets posted (no retry)
+            b["fallback"] = "\n\n".join(head + [f"Branch is behind base; update-branch failed: {{error}}. {drift_txt}"]
+                                          + tail)
+            lines = None
     else:
         b["why"] = "idle, nothing to repair"
         lines = None if rung < 3 else lines + ["Keep, hold, or retire?"]
     if lines:
-        lines.append("_Web-editor conflict fixes that kept GitHub's default merge message are not counted as activity._")
-        b["comment"] = "\n\n".join(lines)
+        b["comment"] = "\n\n".join(lines + tail)
     return b
 
 
@@ -277,20 +316,26 @@ def owned_comment(root: Path, slug: str, n: int):
 
 def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engine_fn) -> list[str]:
     n, plan, pr = row["pr"], row["plan"], row["pr_data"]
+    if not plan.get("write"):
+        return []                      # report only: held, stacked on held, unknown history, rung 4
     labels_now = {str(l.get("name", "")) for l in pr.get("labels") or [] if isinstance(l, dict)}
+    owned = receipts.owned_labels(n)
     want = plan["label"]
     ops = []
-    if want != "keep":
-        for lab in LABELS.values():
-            if lab == want and lab not in labels_now:
-                ops.append(("add-label", lab))
-            elif lab != want and lab in labels_now:
-                ops.append(("remove-label", lab))
-    existing = None
-    if plan["comment"]:
-        existing = owned_comment(root, slug, n)
-        if not existing or (existing.get("body") or "").strip() != plan["comment"].strip():
-            ops.append(("comment", existing.get("id") if existing else None))
+    for lab in LABELS.values():
+        if lab == want and lab not in labels_now:
+            ops.append(("add-label", lab))
+        elif lab != want and lab in labels_now and lab in owned:
+            ops.append(("remove-label", lab))   # only labels a receipt proves pr-minder added
+    existing = owned_comment(root, slug, n) if (plan["comment"] or plan["fallback"]) else None
+
+    def comment_op(body):
+        if existing and (existing.get("body") or "").strip() == body.strip():
+            return None
+        return ("comment", existing.get("id") if existing else None, body)
+
+    if plan["comment"] and comment_op(plan["comment"]):
+        ops.append(comment_op(plan["comment"]))
     if plan["update_branch"]:
         ops.insert(0, ("update-branch", None))
     if not ops:
@@ -317,32 +362,52 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
         return [f"aborted ({reason})"]
 
     done = []
-    for op, arg in ops:
+
+    def run(op, arg, call, **extra_intent):
         receipts.write(pr=n, phase="intent", action=op, arg=arg, rung=row["rung"],
-                       head_before=pr.get("headRefOid"), base=pr.get("baseRefName"))
-        extra = {}
-        if op == "update-branch":
-            r = gh(["pr", "update-branch", str(n)], root)
-            after = gh(["pr", "view", str(n), "--json", "headRefOid", "-q", ".headRefOid"], root).stdout.strip()
-            ok = r.returncode == 0 and after and after != pr.get("headRefOid")
-            extra["head_after"] = after
-            outcome = "ok" if ok else ("uncertain" if r.returncode == 0 else "failed")
-        elif op in ("add-label", "remove-label"):
-            if op == "add-label":
-                gh(["label", "create", arg, "--force", "--color", "BFD4F2",
-                    "--description", "owned by pr-minder (GH-1498)"], root)
-            r = gh(["pr", "edit", str(n), f"--{op}", arg], root)
-            outcome = "ok" if r.returncode == 0 else "failed"
-        else:
-            body = ["-f", f"body={plan['comment']}"]
-            r = (gh(["api", "-X", "PATCH", f"repos/{slug}/issues/comments/{arg}", *body], root) if arg
-                 else gh(["api", f"repos/{slug}/issues/{n}/comments", *body], root))
-            outcome = "ok" if r.returncode == 0 else "failed"
+                       head_before=pr.get("headRefOid"), base=pr.get("baseRefName"), **extra_intent)
+        outcome, extra = call()
         receipts.write(pr=n, phase="result", action=op, arg=arg, outcome=outcome, rung=row["rung"],
                        head_before=pr.get("headRefOid"), base=pr.get("baseRefName"), **extra)
         done.append(f"{op}{'=' + str(arg) if arg and op != 'comment' else ''}:{outcome}")
-        if op == "update-branch" and outcome != "ok" and plan["comment"] is None:
-            break
+        return outcome, extra
+
+    i = 0
+    while i < len(ops):
+        op = ops[i]
+        if op[0] == "update-branch":
+            def sync():
+                r = gh(["pr", "update-branch", str(n)], root)
+                v = gh(["pr", "view", str(n), "--json", "headRefOid", "-q", ".headRefOid"], root)
+                after = v.stdout.strip() if v.returncode == 0 else ""
+                if r.returncode != 0:
+                    return "failed", {"head_after": after, "error": (r.stderr.strip() or "no diagnostic")[-200:]}
+                if not after:
+                    return "uncertain", {"head_after": "", "error": "head re-read failed"}
+                return ("ok" if after != pr.get("headRefOid") else "uncertain"), {"head_after": after}
+            outcome, extra = run("update-branch", None, sync)
+            if outcome != "ok" and plan["fallback"]:   # post the diagnosis instead; never retry the mutation
+                c = comment_op(plan["fallback"].replace("{error}", extra.get("error") or outcome))
+                if c:
+                    ops.append(c)
+        elif op[0] == "add-label":
+            lab = op[1]
+            created, _ = run("label-create", lab, lambda: (
+                "ok" if gh(["label", "create", lab, "--force", "--color", "BFD4F2",
+                            "--description", "owned by pr-minder (GH-1498)"], root).returncode == 0 else "failed", {}))
+            if created == "ok":
+                run("add-label", lab, lambda: (
+                    "ok" if gh(["pr", "edit", str(n), "--add-label", lab], root).returncode == 0 else "failed", {}))
+        elif op[0] == "remove-label":
+            lab = op[1]
+            run("remove-label", lab, lambda: (
+                "ok" if gh(["pr", "edit", str(n), "--remove-label", lab], root).returncode == 0 else "failed", {}))
+        else:
+            _, cid, body = op
+            args = (["api", "-X", "PATCH", f"repos/{slug}/issues/comments/{cid}", "-f", f"body={body}"] if cid
+                    else ["api", f"repos/{slug}/issues/{n}/comments", "-f", f"body={body}"])
+            run("comment", cid, lambda: ("ok" if gh(args, root).returncode == 0 else "failed", {}))
+        i += 1
     return done
 
 
@@ -350,7 +415,7 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
 
 def describe(row: dict) -> str:
     p = row["plan"]
-    acts = [a for a, on in (("update-branch", p["update_branch"]), (f"label {p['label']}", p["label"] not in (None, "keep")),
+    acts = [a for a, on in (("update-branch", p["update_branch"]), (f"label {p['label']}", p["write"] and p["label"] is not None),
                             ("comment", bool(p["comment"]))) if on]
     age = "?" if row["age"] is None else f"{row['age']:.0f}d"
     return (f"#{row['pr']:<5} rung {row.get('rung', 0)} {RUNG_NAMES[row.get('rung', 0)]:<7} age {age:<5} "
