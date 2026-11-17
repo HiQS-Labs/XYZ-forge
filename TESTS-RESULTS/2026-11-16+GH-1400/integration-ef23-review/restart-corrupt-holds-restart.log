@@ -1,0 +1,18 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/publication --builder codex --reviewer agy --max-tasks 1 --supervise-until 1794890596
+rc=0
+jog: GH-901 held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary/.tick/jog/jog-01M7KWZ4Q94DMC4QNY2DV5QFG4/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)
+jog: published primary checkpoint 972ca5b7b64a329f3c164a730684e13a346ac8bc
+jog: execution clone aligned at 972ca5b7b64a329f3c164a730684e13a346ac8bc; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary/.tick/jog/jog-01M7KWZ4Y84D4A6E5G44SQB2W6/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: reached max-tasks limit (1); pausing queue.
+jog: GH-901 parked: supervision held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary/.tick/jog/jog-01M7KWZ4Q94DMC4QNY2DV5QFG4/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: published primary checkpoint e46ef2a5ae7b07c6167331cf192c61d30224a2d4
+jog: reclaiming stale relay-driver.lock (holder pid 26377 not running).
+Switched to a new branch 'fixture-902-gh902-exec1'

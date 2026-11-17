@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890612
+rc=0
+jog: execution clone aligned at 4fb6499e25d9558f08e828c025f7a05bd9c55352; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/primary/.tick/jog/jog-01M7KWZPYFEY7GEGKCNQ0KH6HB/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: marathon escalated: gate-killed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/primary/.tick/jog/jog-01M7KWZPYFEY7GEGKCNQ0KH6HB/gh901-exec1/preflight/result.json]
+jog: published primary checkpoint 57b373124255fbdee2279922487445ae042a5911
+Switched to a new branch 'fixture-901-gh901-exec1'

@@ -91,3 +91,7 @@ Pending implementation evidence; NO_ENTRY at planning time.
 ## Round 3 disposition — approval held
 
 Round 3 FAIL retained in gh1476-plan-qa-r3.md. R3-A and N-F accepted and corrected: note selection before research, pickup only after capture exists, explicitly refuse launch at exhausted budget. All three plan review rounds are consumed. No approval attestation, no production instruction changes, and no OL-09 completion credit. A further independent review requires an explicit budget extension; no fourth call is authorized or launched.
+
+## Merge evidence
+
+- PR #1491 merged 2026-11-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

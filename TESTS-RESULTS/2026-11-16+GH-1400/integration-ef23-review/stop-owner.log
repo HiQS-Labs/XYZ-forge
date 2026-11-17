@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890600
+rc=4
+jog: execution clone aligned at b73c601faeb80aee9459b4ff72078c69b01bf77e; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary/.tick/jog/jog-01M7KWZBPBNTE6X8N9PNNQBD1A/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-901 failed task-locally (pre-advance-failed, gate exit 1; result: gh901-exec1/preflight/result.json); retained without retry; continuing independent pending work.
+Switched to a new branch 'fixture-901-gh901-exec1'
+jog: another driver is active in this repo (pid 30713, lock: .git/relay-driver.lock).
+jog: Concurrent runs in the same clone are unsafe (GH-42 / GH-354).

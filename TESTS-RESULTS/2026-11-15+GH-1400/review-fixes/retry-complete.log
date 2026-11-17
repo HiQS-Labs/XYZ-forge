@@ -1,0 +1,2 @@
+jog: gate-only retry for GH-901 against head 76a2e3b0dc203cdc6b81d54f09f4aca7711f356b (no builder turn; satisfied-lane path)
+jog: gate retry result: approved → queue parked — awaiting-landing (PR #901: https://example.invalid/pr/901)
