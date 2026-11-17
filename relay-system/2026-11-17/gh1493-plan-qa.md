@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -109,5 +109,43 @@ Questions:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Input boundary for Step A: plan doc only (before source or issue).
+
+**What this proposes:** Move checkout validation into a per-path exception boundary so an invalid helper is reported as preserved while eligible siblings proceed. Keep origin and deletion safeguards, clarify canonical-origin helper creation, and verify the batch change with a base/candidate manual control plus closeout smoke.
+
+**How the existing system works, per this document:** A single validation exception currently prevents the entire batch from reaching inspection. Published-head classification requires a canonical GitHub origin; eligible checkouts then use the existing inspection, refresh, and teardown pipeline. The documented partial-retirement exit status is 1, while the current validation refusal returns 2.
+
+**What it's not:** No acceptance of local-origin helpers, classification redesign, teardown redesign, or new test suite. Inference: preservation is a partial-failure result and does not authorize deleting an otherwise unsafe checkout.
+
+swept file: yes
+
+**VERDICT: FAIL**
+
+**Basis:** The implementation approach is surgical and matches the retrieved scoping comment; tighten the planned evidence before implementation. These are verification-plan findings, not observed runtime failures or requests for a new suite. I swept the entire plan; no other pre-existing defect in that artifact was found. Reversibility: Easy for the code change (single-commit revert); actual retirement still requires the existing fresh safety checks.
+
+- [Should] **F1 — Put an eligible candidate after a refusal and observe the complete delegation.** The manual input at `PROJECT/2-WORKING/GH-1493-RETIRE-PUBLISHED-BATCH.md:82-87` lists eligible (a) first and asserts only that it reaches inspection. That can miss a candidate which handles earlier eligible paths, prints all validation refusals, but stops inspecting candidates after the first refusal. Reorder the same four paths to put (a) after at least one invalid path; assert that (a) alone reaches inspection, refresh and teardown with the expected PR/execute arguments, alongside the three preservation reasons and exit 1. Keep the base red control (no inspection/delegation, exit 2). Stubbing these downstream functions is appropriate for measuring this batch boundary; record their calls rather than equating an inspection call with retirement.
+  Observed input: plan lines 82-87: `(a) an eligible path, (b) ... local path, (c) ... different repository, (d) a non-Git directory`; expected green only says `(a) reaches inspection`.
+  Affected scope: the one proposed manual batch check and its claimed evidence of continuing after an ineligible path.
+  Falsifier: a candidate deliberately stopping candidate processing at the first invalid input must fail this manual check; the intended per-path implementation must pass with an eligible path after that input. This is a proposed sensitivity check, not a probe run during this review.
+
+- [Should] **F2 — Make the unpublished-commit smoke input explicit and distinguish its reason.** Lines 88-90 promise a local-commit control, but the enumerated smoke at lines 91-93 names only task + canonical-origin gate + local-origin helper. Add the promised canonical-origin helper with a clean, unpublished local commit explicitly to the smoke scope, or explicitly assign that state to a named helper. Require preservation for its unlanded ref, not an earlier origin/dirty/session refusal; retain its path/ref/SHA and live PR head in the receipt. No classifier change or extra test file is needed.
+  Observed input: plan lines 91-93 enumerate no helper explicitly holding an unpublished commit; a local-origin helper is rejected before classification at `merge_cleanup.py:2412-2414`.
+  Affected scope: evidence for requirement 3's unpublished-local-commit control.
+  Falsifier: a clean canonical-origin helper with one commit beyond the published PR head must reach ref classification and be preserved for the unpublished ref; preservation solely for an origin mismatch or active session does not witness that control.
+
+- [Pass] **Grounding and scope:** `merge_cleanup.py:2396-2418` has the single exception boundary and exit 2; `:2420-2429` owns the unchanged inspection/refresh/teardown delegation. `scan_clones.py:532-538,562-565` requires a canonical GitHub origin and fetches the exact PR head from origin. The retrieved #1493 scoping comment says “the exit code is 1 when anything was preserved.” Keeping that classifier and improving helper instructions is the smallest sound change. The small merge-cleanup contract clause is useful at its public CLI contract (`SKILL.md:646-666`), alongside start-task's helper naming instructions (`start-task/SKILL.md:117-119`).
+
+- [Pass] **Callers and exit-code compatibility:** bounded source search of `skills/`, `utils/` and `test/` found the CLI dispatch at `merge_cleanup.py:2505-2506`; it returns the retirement result directly, with no branch distinguishing 1 from 2. The documented workflow caller is `start-task/SKILL.md:359-375`; it reports preserved paths and has no numeric retry loop. The public exit table already defines 1 as “could not retire a checkout” (`merge-cleanup/SKILL.md:478`). Invalid PR/mode/primary arguments remain whole-call parser/startup failures (`merge_cleanup.py:2494-2504`); the plan should not be read as removing those.
+
+- [Pass] **Path-local versus call-level refusal:** executing-directory protection identifies that path and its ancestors (`merge_cleanup.py:2402-2404`); independent siblings can still run. Primary-origin failure has no per-path recovery (`:2390-2393`). The proposed overlap rule retains comparison against accepted candidates (`plan:65-66`, source `:2410-2411`); it is order-dependent admission, so a skipped overlapping path is not proof that its contents are outside an accepted ancestor's Trash move. Do not claim stronger subtree isolation from this unchanged comparison. Existing fresh refusal and recoverable removal stay material (`merge_cleanup.py:1596-1606,1653-1667`).
+
+- [Pass] **Unchanged classification safeguards and no suite proliferation:** origin mismatch is rejected at `merge_cleanup.py:2412-2414`; unpublished refs are checked against integration and published heads (`scan_clones.py:646-671`) and yield `PRESERVE_UNPUSHED` at `:1188-1191`. Plan lines 80-96 and 100-102 select retained manual evidence and existing suites, with no new registry or suite. These are source-backed expectations, not executed control results.
+
+**Evidence limits:** Verify-tier review with local source fallback. Graph project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, returned no retirement symbol; coverage reports both Python paths `freshness: not_tracked`, so no graph completeness claim is made. Direct reads and bounded source searches support the citations above. `gh issue view 1493 --comments` succeeded and supplied the scoping comment; subsequent issue-body requests failed with “error connecting to api.github.com”, and the web fallback also failed. The original issue body is therefore unverified beyond the plan's summary. No runtime probes, fixtures, gates or Git commands were run; base/candidate and real-PR controls remain [Unverified — needs clone run].
+
+Handing off to Producer (claude-a) — revise the evidence plan for F1/F2, disposition both findings, then open the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
