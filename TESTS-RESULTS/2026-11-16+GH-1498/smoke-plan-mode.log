@@ -1,19 +1,19 @@
-$ python3 skills/2-daily/pr-minder/scripts/pr_minder.py   # run 1 (main path, real repo, plan only) at 663da131a
+$ python3 skills/2-daily/pr-minder/scripts/pr_minder.py   # run 1 (main path, real repo, plan only) at 4080d4b80
 pr-minder · HiQS-Labs/XYZ-forge · plan only (no writes)
 #1024  rung 1 nudge   age 9d    drift -    held: Review authority limit / unresolved escalation (report only)
 #1391  rung 2 repair  age 8d    drift 855  conflicting  -> label pr-minder:stale, comment
 #1417  rung 2 repair  age 6d    drift 586  conflicting  -> label pr-minder:stale, comment
 #1460  rung 2 repair  age 3d    drift 303  conflicting  -> label pr-minder:stale, comment
-#1467  rung 0 fresh   age 2d    drift 296  fresh
-#1471  rung 0 fresh   age 2d    drift 296  fresh
+#1467  rung 0 fresh   age 3d    drift 296  fresh
+#1471  rung 0 fresh   age 3d    drift 296  fresh
 #1495  rung 0 fresh   age 1d    drift 109  fresh
 #1496  rung 0 fresh   age 1d    drift 109  fresh
 #1497  rung 0 fresh   age 1d    drift 109  fresh
-#1501  rung 0 fresh   age 0d    drift 130  fresh
-#1504  rung 0 fresh   age 0d    drift 54   fresh
-#1505  rung 0 fresh   age 0d    drift 54   fresh
+#1501  rung 0 fresh   age 1d    drift 130  fresh
+#1504  rung 0 fresh   age 1d    drift 54   fresh
+#1505  rung 0 fresh   age 1d    drift 54   fresh
 #1507  rung 0 fresh   age 0d    drift 52   fresh
-#1510  rung 0 fresh   age 0d    drift 1    fresh
+#1510  rung 0 fresh   age 0d    drift 0    fresh
 rc=0
 
 $ (same, run 2 immediately after — adjacent path: rerun)
@@ -22,14 +22,14 @@ pr-minder · HiQS-Labs/XYZ-forge · plan only (no writes)
 #1391  rung 2 repair  age 8d    drift 855  conflicting  -> label pr-minder:stale, comment
 #1417  rung 2 repair  age 6d    drift 586  conflicting  -> label pr-minder:stale, comment
 #1460  rung 2 repair  age 3d    drift 303  conflicting  -> label pr-minder:stale, comment
-#1467  rung 0 fresh   age 2d    drift 296  fresh
-#1471  rung 0 fresh   age 2d    drift 296  fresh
+#1467  rung 0 fresh   age 3d    drift 296  fresh
+#1471  rung 0 fresh   age 3d    drift 296  fresh
 #1495  rung 0 fresh   age 1d    drift 109  fresh
 #1496  rung 0 fresh   age 1d    drift 109  fresh
 #1497  rung 0 fresh   age 1d    drift 109  fresh
-#1501  rung 0 fresh   age 0d    drift 130  fresh
-#1504  rung 0 fresh   age 0d    drift 54   fresh
-#1505  rung 0 fresh   age 0d    drift 54   fresh
+#1501  rung 0 fresh   age 1d    drift 130  fresh
+#1504  rung 0 fresh   age 1d    drift 54   fresh
+#1505  rung 0 fresh   age 1d    drift 54   fresh
 #1507  rung 0 fresh   age 0d    drift 52   fresh
-#1510  rung 0 fresh   age 0d    drift 1    fresh
+#1510  rung 0 fresh   age 0d    drift 0    fresh
 rc=0
