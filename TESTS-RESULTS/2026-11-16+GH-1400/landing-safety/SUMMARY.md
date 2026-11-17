@@ -6,4 +6,4 @@ Independent Claude follow-up review approved and attested; see relay-system/2026
 
 Historical check.py/review-fixes.py controls remain original experiment records, not fresh acceptance proof. Current adoption receipt and checkpoint claims use followup.py/results. Gate-exit exclusions are source-reviewed; independent exit-0/108 mutations are not newly demonstrated. No new suite was registered.
 
-The earlier408/408 gate predates these two safety changes; final full gate pending. No merge readiness is inferred from the earlier gate alone.
+Final full gate on 0c13b793f745236eebe29b333666015da6513457: 408/408, exit0, clone identity unchanged. Live relay-self-sufficiency explicitly skipped; not promotion evidence. Publication skips the duplicate valued-clone push hook using XYZ_SKIP_PREPUSH=1, relying on this disposable-clone run. Publication adds only final evidence.
