@@ -123,4 +123,13 @@ swept file: yes — touched sections of `skills/3-weekly/10days/SKILL.md` and ne
 VERDICT: PASS
 Basis: all three accepted round-1 Nits are correctly implemented with cited lines, both new hashes reproduce against current bytes, N3 is untouched and unclaimed, evidence is labelled as instruction checks with the gate pending and no OL-09/OL-10 claim; the one new Nit is non-blocking. Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-17T16:38:51Z
+task: RELAY-gh1476-final-qa-r2
+reviewer: claude-review
+status: Approved
+reviewed-head: 8b803711d2a93e22d520bdd4e10b19feb50017f9
+added-range: 11519+5775
+added-sha256: 0497b4d4048aec057402e4c90682b98357c0509931a54618e17c5d4a1fa8476d
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
