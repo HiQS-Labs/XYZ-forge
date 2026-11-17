@@ -37,3 +37,5 @@
 {"path": "TESTS-RESULTS/2026-11-17+GH-1476/real-preparation-trial/raw-1517/research-receipt.md", "sha256": "f5f8a65678d9004b49848e728b89f000e40599c35cc2d4f527821164f4d3d328", "recorded_at": "2026-11-17T20:36Z", "kind": "retained-evidence"}
 {"path": "skills/1-hourly/conveyor/SKILL.md", "sha256": "35163dce306c30b517868f4405bd364d7ac989b9a8ed06810e008a28862c6262", "kind": "policy-under-test", "commit": "2e22cce06edaa1a4f0a58b85cff9e23ab62a18af"}
 {"path": "skills/3-weekly/10days/SKILL.md", "sha256": "f098d9405ffa57b5ed0b32b784fd3eba6852601adf3563308a9f8c0c103671d3", "kind": "policy-under-test", "commit": "2e22cce06edaa1a4f0a58b85cff9e23ab62a18af"}
+{"path": "TESTS-RESULTS/2026-11-17+GH-1476/ol09-followup/publication-99bba94d.log", "sha256": "78ed6e5ea047ea5a166c20c494c224f2aa062824b076f076a1050000b946d26b", "recorded_at": "2026-11-17T20:40Z", "kind": "publication-followup", "supersedes_hash_only": false}
+{"path": "TESTS-RESULTS/2026-11-17+GH-1476/ol09-followup/SUMMARY.md", "sha256": "a7e8eaa0164c02164854b7728505607a8b732a58724b5bb2b483dd2d07ecbee3", "recorded_at": "2026-11-17T20:40Z", "kind": "publication-followup", "supersedes_hash_only": true}

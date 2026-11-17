@@ -54,3 +54,9 @@ Review and publication results will be appended here; they cannot rewrite origin
 Claude Opus 5.5, supported subscription delegate route, round 1/2: APPROVE, no blocking defects, conditional on publication unchanged. Full verbatim receipt: [independent-qa-r1.md](independent-qa-r1.md). Parent verified #1328 R3/W2 directly; see policy-citation.md. Reviewer limitations remain visible.
 
 Arithmetic correction to the verbatim receipt's last paragraph: five points means one milestone, **8/20 → 9/20 = 45%**, not its mistaken “13/20”. No local alternate scale exists. This corrects arithmetic only; the independent substantive approval is unchanged. Old trial artifacts and this reviewed summary above remain unchanged.
+
+## Publication
+
+Evidence commit `99bba94d` published on PR #1514 through the normal pre-push hook from the disposable full clone, canonical origin unchanged. Actual classifier: route=docs, tier=1, full_required=false. Documentation gate passed in 94 seconds, zero errors; 39 PDDA and 33 local status warnings retained in publication-99bba94d.log. LLM doc-ready was skipped. No full-suite or promotion qualification claimed. All 39 pre-publication artifact/policy hashes matched. The diff whitespace check flags four single-space blank context lines inside the retained unified freshness.diff; those are patch context, preserved verbatim, not source whitespace edits.
+
+Independent QA conditions are satisfied by publication of the unchanged reviewed packet and full receipt. OL-09 earns one milestone / five points: 9/20 = 45%. Remaining limits above control. This appended record changes evidence/status only, not policy or the reviewed preparation packet.
