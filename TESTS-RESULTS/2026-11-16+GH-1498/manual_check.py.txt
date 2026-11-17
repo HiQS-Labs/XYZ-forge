@@ -55,7 +55,7 @@ if a[:2] == ["pr", "view"]:
     out(p); sys.exit(0)
 if a[:2] == ["pr", "update-branch"]:
     log(a)
-    if st.get("fail_update"): print("update failed", file=sys.stderr); sys.exit(1)
+    if st.get("fail_update"): print(st.get("fail_msg", "update failed"), file=sys.stderr); sys.exit(1)
     q = pr(a[2]); q["headRefOid"] += "-synced"; q["mergeStateStatus"] = "CLEAN"; q["updatedAt"] = NOWZ
     st["activity"].get(a[2], {}).get("commits", {}).get("nodes", []).append({"commit": {
         "oid": q["headRefOid"], "committedDate": NOWZ, "messageHeadline": f"Merge branch '{q['baseRefName']}' into {q['headRefName']}",
@@ -559,8 +559,8 @@ check("A11", "incomplete history or GraphQL error -> unknown, 0 writes (owned la
 # ---------------- A12 failing-check rendering ----------------
 def a12_ok():
     rows = plans(Env([mkpr(95, 4, "failing"), mkpr(96, 4, "failing", url="")]))
-    return ("build — https://ci/1" in rows[95]["plan"]["comment"]
-            and "build — link unavailable" in rows[96]["plan"]["comment"])
+    return ("`build` — https://ci/1" in rows[95]["plan"]["comment"]
+            and "`build` — link unavailable" in rows[96]["plan"]["comment"])
 
 
 def a12b_ok():
@@ -717,17 +717,23 @@ check("A18", "repair command shell-quotes branches; draft flip aborts; label add
 
 # ---------------- A19 CodeRabbit #1510 second-pass fixes ----------------
 def a19a():
-    p = mkpr(140, 4.1, "failing"); p["statusCheckRollup"][0]["name"] = "@org/team `x`"
-    c = plans(Env([p]))[140]["plan"]["comment"]
-    return "@\u200borg/team" in c and "`x`" not in c
+    names = {140: "@org/team `x`", 145: "<https://attacker.example>", 146: r"\[click\](https://attacker.example)"}
+    prs = []
+    for n, name in names.items():
+        p = mkpr(n, 4.1, "failing"); p["statusCheckRollup"][0]["name"] = name; prs.append(p)
+    rows = plans(Env(prs))
+    c = {n: rows[n]["plan"]["comment"] for n in names}
+    return ("Failing check: `@org/team 'x'`" in c[140]
+            and "Failing check: `<https://attacker.example>`" in c[145]
+            and "Failing check: `" + names[146] + "`" in c[146])
 
 
 def a19a_bad():
-    with patched(pm, "md_safe", lambda t: str(t)):
+    with patched(pm, "lit", lambda t: str(t)):   # untrusted text rendered as live Markdown
         return a19a()
 
 
-check("A19a", "PR-controlled text is neutralised in comments (no @-ping, no code-span breakout)", a19a,
+check("A19a", "check names (mention, backtick, autolink, escaped link) render only as inert code spans", a19a,
       "no sanitising", a19a_bad)
 
 
@@ -755,7 +761,7 @@ check("A19b", "a marker comment by someone else is not owned: never PATCHed, pr-
 def a19c(bad=False):
     e = Env([mkpr(142, 8.1, "behind")])
     rec = Path(os.environ["PR_MINDER_STATE"]) / "acme/repo"; rec.mkdir(parents=True, exist_ok=True)
-    rows = [{"ts": iso(7.5), "pr": 142, "phase": "result", "action": "update-branch", "outcome": o} for o in ("ok", "failed")]
+    rows = [{"ts": iso(7.5), "pr": 142, "phase": "result", "action": "update-branch", "outcome": o} for o in ("failed", "uncertain")]
     (rec / "actions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     if bad:
         def ok_only(self, pr, since):
@@ -766,7 +772,7 @@ def a19c(bad=False):
     return not plans(e)[142]["plan"]["update_branch"]
 
 
-check("A19c", "a failed update-branch counts toward the 2-per-episode cap (1 ok + 1 failed -> no 3rd attempt)", a19c,
+check("A19c", "failed and uncertain update-branch attempts count toward the 2-per-episode cap", a19c,
       "cap counts ok only", lambda: a19c(bad=True))
 
 
@@ -796,6 +802,20 @@ def a19e():
 
 
 check("A19e", "a marker comment NOT written by the viewer still counts as author activity", a19e, "—", None)
+
+def a19f(bad=False):
+    e = Env([mkpr(147, 8.1, "behind")], fail_update=True, fail_msg="update rejected: @org/team <https://attacker.example>")
+    if bad:
+        with patched(pm, "lit", lambda t: str(t)):
+            apply(e)
+    else:
+        apply(e)
+    body = next(c["body"] for c in e.load()["comments"]["147"])
+    return "update-branch failed: `update rejected: @org/team <https://attacker.example>`" in body
+
+
+check("A19f", "a failed update-branch's CLI error is rendered as an inert code span in the fallback comment", a19f,
+      "raw error interpolated", lambda: a19f(bad=True))
 
 print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
 (Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))

@@ -190,7 +190,7 @@
   },
   {
     "id": "A19a",
-    "assertion": "PR-controlled text is neutralised in comments (no @-ping, no code-span breakout)",
+    "assertion": "check names (mention, backtick, autolink, escaped link) render only as inert code spans",
     "candidate": "PASS",
     "bad_candidate": "no sanitising",
     "bad_rejected": true,
@@ -208,7 +208,7 @@
   },
   {
     "id": "A19c",
-    "assertion": "a failed update-branch counts toward the 2-per-episode cap (1 ok + 1 failed -> no 3rd attempt)",
+    "assertion": "failed and uncertain update-branch attempts count toward the 2-per-episode cap",
     "candidate": "PASS",
     "bad_candidate": "cap counts ok only",
     "bad_rejected": true,
@@ -230,6 +230,15 @@
     "candidate": "PASS",
     "bad_candidate": "\u2014",
     "bad_rejected": null,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19f",
+    "assertion": "a failed update-branch's CLI error is rendered as an inert code span in the fallback comment",
+    "candidate": "PASS",
+    "bad_candidate": "raw error interpolated",
+    "bad_rejected": true,
     "bad_crashed": null,
     "verdict": "PASS"
   }

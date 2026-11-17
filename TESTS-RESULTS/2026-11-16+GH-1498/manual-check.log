@@ -20,10 +20,11 @@ PASS A16: flat install (skills/<name>/scripts siblings, no env) resolves both bu
 PASS A17: behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1 | bad: behind from mergeStateStatus only -> rejected
    A18 parts: {'quoted': True, 'draft_abort': True, 'label_race': True, 'thresholds': True, 'plan_shows_removal': True}
 PASS A18: repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals | bad: — -> n/a
-PASS A19a: PR-controlled text is neutralised in comments (no @-ping, no code-span breakout) | bad: no sanitising -> rejected
+PASS A19a: check names (mention, backtick, autolink, escaped link) render only as inert code spans | bad: no sanitising -> rejected
 PASS A19b: a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own | bad: ownership by marker text only -> rejected
-PASS A19c: a failed update-branch counts toward the 2-per-episode cap (1 ok + 1 failed -> no 3rd attempt) | bad: cap counts ok only -> rejected
+PASS A19c: failed and uncertain update-branch attempts count toward the 2-per-episode cap | bad: cap counts ok only -> rejected
 PASS A19d: one PR raising does not end the pass: next PR still written, failed receipt, exit code 1 | bad: — -> n/a
 PASS A19e: a marker comment NOT written by the viewer still counts as author activity | bad: — -> n/a
-{"passed": 26, "failed": 0}
+PASS A19f: a failed update-branch's CLI error is rendered as an inert code span in the fallback comment | bad: raw error interpolated -> rejected
+{"passed": 27, "failed": 0}
 rc=0

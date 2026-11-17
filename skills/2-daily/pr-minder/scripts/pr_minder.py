@@ -50,10 +50,15 @@ SYNC_POLL = (5, 2.0)   # update-branch is async (202): re-read the head up to 5 
 
 
 def md_safe(text) -> str:
-    """PR-controlled text rendered into a comment posted with the operator's token: no code-span breakout,
-    no newlines, no @-mention pings, no link syntax."""
-    t = str(text or "").replace("`", "'").replace("\r", " ").replace("\n", " ")
-    return t.replace("@", "@\u200b").replace("[", "\\[").replace("]", "\\]")
+    """Text safe INSIDE a code span: no backtick breakout, no newlines. Callers render it via lit()."""
+    return str(text or "").replace("`", "'").replace("\r", " ").replace("\n", " ").strip()
+
+
+def lit(text) -> str:
+    """PR- or CLI-controlled text as an inert inline code span: GitHub renders no links, autolinks,
+    @-mentions or emphasis inside code, so this is the one rendering path for untrusted text."""
+    t = md_safe(text)
+    return f"`{t}`" if t else "`unknown`"
 
 
 def safe_url(url) -> str:
@@ -112,7 +117,7 @@ class Receipts:
         n = 0
         for r in self.rows:
             if (r.get("pr") == pr and r.get("phase") == "result" and r.get("action") == "update-branch"
-                    and r.get("outcome") in ("ok", "failed")):   # a failed attempt counts toward the cap
+                    and r.get("outcome") in ("ok", "failed", "uncertain")):   # every attempt counts toward the cap
                 ts = pc._parse_gh_time(r.get("ts"))
                 if since is None or (ts and ts >= since):
                     n += 1
@@ -291,7 +296,7 @@ def _plan_bundle(row: dict, receipts: Receipts) -> dict:
                  if row.get("drift") is not None else "Base drift unknown.")
     if row["conflicting"]:
         files = row.get("conflict_files")
-        lines.append("Conflicts with base in: " + (", ".join(f"`{md_safe(f)}`" for f in files) if files else "files unknown")
+        lines.append("Conflicts with base in: " + (", ".join(lit(f) for f in files) if files else "files unknown")
                      + f". {drift_txt}")
         if rung == 2:
             head, base = str(pr.get("headRefName") or ""), str(pr.get("baseRefName") or "")
@@ -306,11 +311,11 @@ def _plan_bundle(row: dict, receipts: Receipts) -> dict:
             size = row.get("diff_size")
             lines.append("Option: re-cut — a fresh branch off base with this PR's own commits cherry-picked"
                          + (f" ({size})" if size else "") + ", instead of resolving this drift. Commits: "
-                         + (", ".join(f"`{md_safe(c)}`" for c in own) if own else "unknown")
+                         + (", ".join(lit(c) for c in own) if own else "unknown")
                          + (" (newest 10 shown)" if row.get("own_commits_truncated") else "") + ".")
         b["why"] = "conflicting"
     elif row["failing"]:
-        lines += [f"Failing check: {md_safe(c['name'])} — {safe_url(c['url']) or 'link unavailable'}"
+        lines += [f"Failing check: {lit(c['name'])} — {safe_url(c['url']) or 'link unavailable'}"
                   for c in row["failing"]]
         b["why"] = "checks failing"
     elif row["behind"]:
@@ -444,7 +449,7 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
                 return ("ok" if after != pr.get("headRefOid") else "uncertain"), {"head_after": after}
             outcome, extra = run("update-branch", None, sync)
             if outcome != "ok" and plan["fallback"]:   # post the diagnosis instead; never retry the mutation
-                c = comment_op(plan["fallback"].replace("{error}", extra.get("error") or outcome))
+                c = comment_op(plan["fallback"].replace("{error}", lit(extra.get("error") or outcome)))
                 if c:
                     ops.append(c)
         elif op[0] == "add-label":
