@@ -132,4 +132,13 @@ Whole-file sweep found no additional pre-existing defects in the reviewed plan. 
 
 **Basis:** All Round 1 findings are addressed and the complete plan satisfies the Definition of Done. Proceed with the bounded documentation edits and retain candidate-bound verification evidence for final QA.
 
+
+### Attestation · relay-drive — 2026-11-17T16:52:55Z
+task: RELAY-gh1512-plan-review-r2
+reviewer: codex
+status: Approved
+reviewed-head: efc50684a28ad6919317d4ee554934fde2231b50
+added-range: 10455+3013
+added-sha256: 27a9fdc03fc5d4e6eb42a9f70d38cdd26be7ea8375b1aba7c513eb7e93b7ae55
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
