@@ -25,7 +25,7 @@ context_tags: [pr-minder, skills, merge-cleanup, weekly-planner, stale-prs]
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex FAIL: F1–F4 + nit) dispositioned; plan revised | Plan QA round 2 |
+| Plan QA round 2 (Codex FAIL: A6 wiring, rename) dispositioned; plan revised | Plan QA round 3 (final) |
 
 The issue body is the specification. This doc records only the decisions recon forced and the execution plan.
 
@@ -41,13 +41,13 @@ Base `f346d8908`.
    - `createdAt`, plus `pageInfo.hasPreviousPage` on each history connection.
 2. **Maintenance sync commits are identified by a conservative, device-independent predicate.** It replaces the issue's receipt-SHA idea; Codex plan QA F1. A commit is maintenance (not author activity) only when **all** of these hold:
    - it has exactly 2 parents;
-   - its headline is exactly `Merge branch '<baseRefName>' into <headRefName>` for this PR;
+   - its headline matches GitHub's server-merge pattern `^Merge branch '[^']+' into .+$`. This is name-independent, so a later branch rename or retarget can't flip a historical sync into "author activity" (Codex plan QA r2);
    - its committer email is `noreply@github.com` (a server-side merge).
 
    Everything else counts as author activity. That includes a single-parent commit with that headline, and any local merge.
    - *Why not receipts:* they are per-device, so `/daily-planner` on another Mac would still mis-age the PR.
    - *Accepted boundary (an intentional change from issue §3, which excluded only pr-minder's own commits):* a human clicking GitHub's "Update branch" is also treated as maintenance, because syncing with base isn't author progress. A conflict resolved in GitHub's web conflict editor that keeps the default message also matches the predicate. Such a PR then looks staler, so it may escalate a rung early. The only writes involved are labels and a comment; there is no close. The comment says "web-editor conflict resolutions with the default message are not counted as activity".
-   - Receipts remain as the audit log, and they feed the per-episode `update-branch` cap.
+   - A commit whose OID appears in a local `ok` update-branch receipt is also maintenance (a union with the predicate, never a replacement). Receipts remain the audit log and feed the per-episode `update-branch` cap. On another device without those receipts the name-independent predicate still holds.
    - **Completeness:** each connection gives "latest qualifying item" when it contains at least one qualifying item, or when `hasPreviousPage` is false. Otherwise that connection is incomplete. `reviewThreads` is ordered by thread creation, not by latest reply, so it counts as complete only when `hasPreviousPage` is false. Reviews (each reply submits a review) carry recency. If any connection is incomplete, or the GraphQL call fails for that PR, the result is `unknown`. In pr-minder, `unknown` means no writes for that PR. In the planner, that PR falls back to `updatedAt` and is listed by number in the disclosure.
 3. **One home for the clock.** `author_activity(pr, activity)` lives in `planner_core.py` beside `_age_days` (`:1229`). pr-minder already imports `planner_core` for holds, so this adds no new module.
 4. **`hold_label` and `refresh_pr_with_retry` import cleanly.** `merge_cleanup.py` imports its sibling modules (`scan_clones`, `toposort_prs`, `attempt_record`; `:27–54`), so pr-minder puts the merge-cleanup `scripts/` dir on `sys.path` before importing. Bundle resolution follows the daily-planner contract (`skills/2-daily/daily-planner/SKILL.md:14`): `PLANNER_ENGINE` / `MERGE_CLEANUP_DRIVER` env overrides, then repo layout (`skills/3-weekly/...`, `skills/2-daily/...`), then a flat installed layout (`../weekly-planner/scripts`).
@@ -96,9 +96,9 @@ Explicit test non-scope (GH-831): no new test files and no registry entries. Ver
 | A3 | holds | each of the 4 hold sources plus a child of a held ancestor → 0 writes | drop `hold_label` from the union → its case writes |
 | A4 | idempotency | second `--apply` on shim state left by the first → 0 writes | comment lookup ignoring the marker → a second comment is created |
 | A5 | shared age, pr-minder | stale PR with recent maintenance commit + marker comment + label (so `updatedAt` = today), author activity 20 days old → pr-minder reports 20d | clock using `updatedAt` → reports 0d |
-| A6 | shared age, planner | same input through `collect_stalled_stale(..., activity=...)` → row shows the 20-day-old date | same `updatedAt` candidate → shows today |
+| A6 | shared age, planner (production path) | the A5 PR through the real `planner_core.py --mode stalled` entry (fake `gh` serving both the bulk list and the history query) → the generated report's row shows the 20-day-old date. A history-query error → the report is still produced and its disclosure lists that PR number as an `updatedAt` fallback | the production call at `:1726` left without the fetch/pass-through → the report shows today's date |
 | A7 | cap / escalation | 2 `ok` update-branch receipts in this episode, PR still behind → no third update-branch; at 14 days → rung 3 | cap check removed → third update-branch issued |
-| A8 | author reset | new single-parent author commit → rung 0, owned labels removed, foreign `stale` label kept; maintenance merge → no reset | predicate on headline only → the single-parent "Merge branch…" commit is dropped and no reset happens |
+| A8 | author reset | new single-parent author commit → rung 0, owned labels removed, foreign `stale` label kept. A maintenance merge → no reset. The same maintenance merge after only `headRefName` changes, and separately after only `baseRefName` changes → still no reset | headline-only predicate → the single-parent "Merge branch…" commit is dropped and nothing resets. A current-name predicate → the rename case resets falsely |
 | A9 | race | head SHA changes between measure and write → 0 writes + an `aborted` receipt; body gains `owner decision: hold` → same | pre-write check without `body` → the body-hold case writes |
 | A10 | receipts | every write has a paired `intent` + `result`; a shim-forced failure gives `result: failed` | result line skipped on failure → unpaired intent |
 | A11 | completeness | `hasPreviousPage` with no qualifying item, or GraphQL error → `unknown`, 0 writes | fallback to `createdAt` → a stale action is taken |

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -193,5 +193,16 @@ swept file: yes
 - [Pass] **Acceptance map, remaining scope and proportionality.** A1–A4 map issue checkboxes `:97–100`; A5/A6 map `:101` subject to the wiring gap above; A7–A10 map `:102–105`; the Gates paragraph maps `:106` (`PROJECT/1-INBOX/GH-1498-PR-MINDER.md:94–105,111`). The pinned 20d/0d and label/reset/receipt outcomes now reject the named bad candidates. A12 and the explicit failing-check name/URL deviation (`plan :105,119`) remain proportionate and actionable against issue `:67`; this is accepted as a disclosed deviation, not implementation of first-error-line extraction. Optional activity input and exception containment (`plan :70–72`) fit the current fail-open contract (`planner_core.py:1865–1875`). The current workload does not warrant locks, a daemon, journal recovery or more suites. No additional pre-existing defect was established in the whole plan/issue or bounded source seams; the large source modules were not exhaustively audited.
 
 Handing off to Producer (claude-a) — address the two follow-ups in the plan and its existing manual verification procedure, then open Round 3. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3 (claude-a)
+
+Dispositions:
+
+- **F4 follow-up (A6 wiring) — Implemented.** A6 now drives the real `planner_core.py --mode stalled` entry point, with the fake `gh` serving both the bulk list and the history query. It asserts the 20-day-old date in the generated report. A history-query error must still produce a report whose disclosure lists that PR as an `updatedAt` fallback. The red candidate leaves the production call at `:1726` without the fetch/pass-through, so it shows today's date and fails.
+- **F1 follow-up (rename) — Implemented.** The headline test no longer compares against current branch names. It now uses GitHub's server-merge pattern `^Merge branch '[^']+' into .+$`, together with the 2-parent and `noreply@github.com` committer checks. A commit whose OID is in a local `ok` update-branch receipt also counts as maintenance; that is a union, so a device without receipts still classifies correctly from structure alone. A8 adds the change-only-`headRefName` and change-only-`baseRefName` cases, which must not reset, plus the current-name predicate as a red candidate. The single-parent author commit still resets.
+
+Plan diff: recon #2 (headline pattern, receipt union) and the A6/A8 rows. Nothing else changed.
+
+Handing off to Reviewer (codex) for Round 3, the final round under the cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
