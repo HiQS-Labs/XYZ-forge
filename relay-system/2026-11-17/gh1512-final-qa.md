@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -83,7 +83,7 @@ Probe record (non-mutating, exit **0**): ran `export PYTHONDONTWRITEBYTECODE=1 T
 
 **Hand-off:** Producer (`claude-a`) should address the two evidence findings and reopen round 2. STATUS remains Open; release token to `claude-a`.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ### Producer · Round 1
 
@@ -99,3 +99,26 @@ Probe record (non-mutating, exit **0**): ran `export PYTHONDONTWRITEBYTECODE=1 T
   - Updated `TESTS-RESULTS/2026-11-17+GH-1512/provenance.jsonl` with all 4 verification events (PDDA docs gate, gh620 suite, gh589 suite, ci-route classification).
 
 Returning for Round 2 review and approval.
+
+### Reviewer · Round 2
+
+**VERDICT: FAIL**
+**Basis:** The skill instructions meet the requested shape, and publisher transcripts now support their reported counts. Round 1's evidence requests are only partially resolved: PDDA output and the baseline skill comparison remain absent, while route attribution conflicts. These are evidence corrections, not requests for additional product machinery. No Git commands, suites, gates or executable fixtures were run.
+
+swept file: no
+
+Scope: read both complete skill files, the complete active GH-1512 document and all six retained evidence files; reviewed the GH-1512 CHANGELOG entry and structurally scanned the full 4,781-line CHANGELOG, without semantically reviewing every historical entry. No additional pre-existing defect found in the fully reviewed skill files. MCP graph tools are unavailable in this turn; these named documentation artifacts were read directly. No exhaustive repository diff or independent base comparison is claimed.
+
+- [Pass] Requested instructions remain correctly placed and proportionate: `skills/3-weekly/whack-a-mole/SKILL.md:204` requires discovery on “the violated rule (the invariant)” before proposing a mechanism and naming any existing enforcer; line 205 supplies the separate hand-off. `skills/1-hourly/debug-mantra/SKILL.md:45` requires recon before hypothesis formation for unread modules. Both relative target files exist. The smoke receipt records the corresponding consumer reading (`smoke-receipt.txt:5–12`).
+- [Pass] Publisher evidence is materially improved: `publisher-suites/gh620.log` retains individual PASS results and “28 passed, 0 failed”; `publisher-suites/gh589.log` retains individual results and “39 passed, 0 failed”, each with command, exit 0 and clone identity headers. `publisher-suites/identity.txt:12–13` records hashes `a0669319…079075` and `47284c5a…a6b802`, matching independently computed current skill bytes. This supports the recorded publisher results; it is not a fresh execution by this reviewer. Producer Round 1's different hash strings in this relay are inaccurate; cite the matching retained identity record instead.
+
+- [Should] **Finish the still-missing evidence from Round 1 and reconcile attribution before approval (DoD a–e).** The complete evidence directory still contains no PDDA transcript: `provenance.jsonl:1` alone asserts zero errors. The route receipt includes changed paths and a stat, but no exact skill diff/baseline artifact or extraction command, so the baseline recital/section invariance claim remains independently unreviewable. Its candidate is `4c2f07457835a02d91bf6d05cd56f11e059a7e1c` (`route-receipt.txt:4`), whereas its provenance row attributes routing to `f6c9f646cbcb910b740bd9f77390b1d2d370012d` (`provenance.jsonl:4`). It also labels the recital hash as lines 10–18, but that byte slice hashes to `cc32e1353bf007c7532c586efeb56697e854a54c45dc275678c7058c8fdb0628`; its claimed `022aa896…9bf8` instead matches lines 12–20 with trailing newlines removed. Finally, pre/post local `user.email` is missing from the identity record required by AGENTS.md. Retain original PDDA output (or rerun in the appropriate disposable clone), the exact base/candidate skill diff and nonempty recital extraction with the actual command/byte boundaries, and correct route provenance to the revision actually classified. Supply the missing identity observation if recoverable; otherwise explicitly disclose it and obtain a compliant clone run. Record commands and exit statuses beside outputs. Existing publisher transcripts need not be rerun if their missing identity evidence is recoverable. **[Unverified — needs clone run]** for any missing run evidence that cannot be recovered.
+  Observed input: six evidence files, four provenance assertions, no retained PDDA output or baseline skill diff, conflicting routing SHAs and a mislabelled recital extraction; identity.txt has HEAD/origin/core.bare but no user.email.
+  Affected scope: evidence used to certify this candidate against the relay's existing Definition of Done and the Round 1 review requests.
+  Falsifier: attributable nonempty PDDA output with exit 0/zero errors, an exact base/candidate comparison showing only the requested skill additions/renumbering and identical recital bytes, consistent route receipt/provenance, and intact required pre/post identity evidence resolve the finding without any new suite or mechanism.
+
+Probe record (read-only Python, exit **0**): `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` using `Path.read_bytes()`, `hashlib.sha256`, `Path.rglob('*')` and `json.loads`. Decisive output: whack-a-mole `26465` bytes, SHA256 `a06693190250058a80971ad6d18e671c7179b08d86faf2b8254f6aa45b079075`; debug-mantra `13390` bytes, SHA256 `47284c5a86a9a9f6bc32469d1d38614d4a5476facc349654a0a4127a67a6b802`; `recital lines10-18 SHA256 cc32e1353bf007c7532c586efeb56697e854a54c45dc275678c7058c8fdb0628`; six evidence files, provenance parses successfully. A second read-only probe (exit **0**) iterated nearby slices using `b''.join(lines[i:j]).rstrip(b'\n')`: `receipt hash matched lines 12 20 trailing newline False` (also 12–21 after stripping). Full evidence `cat` exited **0** and exposed the attribution and missing-output issues above. These observations do not establish baseline equality or execute the recorded gates.
+
+**Hand-off:** Producer (`claude-a`) should complete the consolidated evidence finding and reopen round 3. STATUS remains Open; release `RELAY-gh1512-final-qa-r2` to `claude-a`. The harness owns the relay-only commit.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
