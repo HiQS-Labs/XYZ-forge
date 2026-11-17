@@ -58,3 +58,7 @@ Alternative rejected: merely adding another umbrella paragraph leaves contradict
 ## Lessons Learned (For Future Agents)
 
 Pending implementation evidence; NO_ENTRY at planning time.
+
+## Merge evidence
+
+- PR #1491 merged 2026-11-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -386,3 +386,7 @@ The operator authorized finishing review/checks and landing PR #1491. Combined c
 OL-09 preparation may advance independently during an external OL-14 wait. It retains raw daily-goal intake, bounded medium research by default, justified deeper research, reused applicable evidence, explicit holds and opt-in risk deferral. OL-10 remains separate actual-admission evidence; no prose-only completion claim. Do not add a queue, readiness database or daemon. Issue #1399 attempt enforcement remains required before complete workflow qualification, not an expansion of this implementation slice.
 
 Later qualification shares evidence across at most two planned bounded real runs and includes operator/global stop, preserved holds, useful outputs, intervention counts and restart/handoff. Recheck observed harness obstacles rather than assuming them fixed. Report synthetic, assisted, integrated and landed evidence distinctly. Skill deployment and unrelated merges remain outside this authorization.
+
+## Merge evidence
+
+- PR #1491 merged 2026-11-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
