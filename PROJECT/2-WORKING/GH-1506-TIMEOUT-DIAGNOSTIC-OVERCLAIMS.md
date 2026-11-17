@@ -1,7 +1,8 @@
 ---
 title: Timeout diagnostics overclaim lock waits and useful progress
-status: Proposed (1-INBOX — not yet active)
+status: active
 created: 2026-11-16
+updated: 2026-11-16
 owner: noel
 gh_issue: 1506
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1506
@@ -10,7 +11,7 @@ complexity: 2
 risk: 2
 effort: 2
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 reported_from: XYZ-forge
 harness_commit: 0d1dc0fe8395b4f0fc58280fc32b86d4957d47d9
 non_goals:
@@ -20,6 +21,14 @@ goal: Report observed activity and timeout causes without inferring contention o
 ---
 
 # GH-1506 — Timeout diagnostic overclaims
+
+## Status
+
+| Phase | Status |
+| --- | --- |
+| Plan QA | Approved, Claude round 2 |
+| Implementation and verification | In progress |
+| Final QA and publication | Pending |
 
 Unstarted intake; no ledger row or execution admission. Runtime: Python.
 

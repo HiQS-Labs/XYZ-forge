@@ -297,7 +297,7 @@ tick_a done T-K2 --agent rev >/dev/null 2>&1 || true   # release the bare agent'
 # --- L: the reader refuses tampering ------------------------------------------------------------
 reset_repo; seed_to T-L rev
 run_driver "$DRIVER" T-L approve --reviewer rev --builder bld; rc=$?
-[ "$rc" -eq 0 ] && pass "L: fixture approval attested" || fail "L: fixture driver rc=$rc: $(grep -v 'GH-370 progress' "$WORK/out-T-L" | tail -6)"
+[ "$rc" -eq 0 ] && pass "L: fixture approval attested" || fail "L: fixture driver rc=$rc: $(grep -v 'GH-370 worktree state' "$WORK/out-T-L" | tail -6)"
 python3 - "$MAIN" "$A/relay.md" "$(record_path T-L)" <<'PY' && pass "L: reader refuses wrong reviewer / edited STATUS / edited review text / truncated record" || fail "L: reader accepted a tampered record"
 import sys, os, json, shutil
 sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
