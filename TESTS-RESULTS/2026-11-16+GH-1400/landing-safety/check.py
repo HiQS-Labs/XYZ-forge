@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix='gh1491-safety-') as tmp:
     (root / 'scratch.log').write_text('valuable ignored log\n')
     refused = False
     try: jog_run._jog_align_target(str(root))
-    except Exception: refused = True
+    except (Exception, SystemExit): refused = True
     preserved = (root / 'scratch.log').read_text() == 'valuable ignored log\n'
     assert (not preserved) if vulnerable else (preserved and refused)
     queue = base / 'queue'; init(queue); git(queue, 'remote', 'add', 'origin', str(remote)); git(queue, 'config', primary_config_key(str(queue)), str(queue))
@@ -36,13 +36,13 @@ with tempfile.TemporaryDirectory(prefix='gh1491-safety-') as tmp:
     try:
         if vulnerable: app.jog_acquire_lease(str(queue), 901, os.getpid())
         else: app.jog_acquire_lease(str(queue), 901, os.getpid(), expected_global_id=selected[0])
-    except Exception: refused_lease = True
+    except (Exception, SystemExit): refused_lease = True
     after = row()
     assert (after[1] == 'running') if vulnerable else (refused_lease and after[1:] == ('parked', 0))
     if not vulnerable:
         app.jog_set_status(str(queue), 901, 'pending')
         try: app.jog_acquire_lease(str(queue), 901, os.getpid(), expected_global_id='wrong-identity')
-        except Exception: pass
+        except (Exception, SystemExit): pass
         else: raise AssertionError('identity mismatch accepted')
         assert row()[1:] == ('pending', 0)
         app.jog_acquire_lease(str(queue), 901, os.getpid(), expected_global_id=selected[0])

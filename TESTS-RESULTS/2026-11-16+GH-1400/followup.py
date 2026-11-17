@@ -77,7 +77,7 @@ def starts(t):
 def byn(r):return {x['gh_number']:x for x in row(r)}
 def ex(r,n):
  x=byn(r)[n];p=state(r,x['global_id']);return json.loads(p.read_text())['executions'] if p.exists() else []
-def published(r):return git(r,'rev-parse','HEAD')==git(r,'ls-remote','origin','refs/heads/development').split()[0]
+def published(r):return not git(r,'status','--porcelain=v1','--','releases.db','releases.sql') and git(r,'rev-parse','HEAD')==git(r,'ls-remote','origin','refs/heads/development').split()[0]
 required=['local-failure-continues','local-failure-dirty-holds','stop-owner-next-wake-publishes','red-gate-killed','red-post-approve-failed','red-refused','red-interrupted','red-missing-receipt','red-clone-ledger-changed','budgets-held','dependent-not-dispatched','no-reentry-next-wake','restart-adopts-once','restart-missing-holds','restart-corrupt-holds','stop-owner-after-failure','stop-checkpoint-contradiction','red-lock-contention','red-crashed','red-gate-not-run','red-corrupt-receipt','red-mismatched-receipt','baseline-red']
 (out/'required.json').write_text(json.dumps(required))
 def ck(name,pred,detail):
