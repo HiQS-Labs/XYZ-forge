@@ -1,15 +1,20 @@
 # Changelog
 
-## 2026-11-17
+## 2026-11-17 — GH-1493: published retirement preserves one bad checkout instead of aborting the call
 
-- **GH-1493: published retirement preserves one bad checkout instead of aborting the call.**
-  `merge_cleanup.py --retire-published-pr N` used to refuse the whole call (exit 2) when any
-  `--checkout` path failed admission, so a `-gate` helper cloned from the task clone also kept
-  the task clone and `-verify` helper on disk. Each path is now admitted or printed as
-  `PRESERVED <path>: <reason>`; the rest still run, and the call exits 1 if anything was preserved.
-  The origin refusal names how to make a helper (keep the canonical origin), and start-task says so.
-  Classification is unchanged: another repository or an unpublished local commit is still preserved.
-  Evidence: `TESTS-RESULTS/2026-11-17+GH-1493/SUMMARY.md`.
+`merge_cleanup.py --retire-published-pr N` used to refuse the whole call (exit 2) when any
+`--checkout` path failed admission, so a `-gate` helper cloned from the task clone also kept
+the task clone and `-verify` helper on disk. Each path is now admitted or printed as
+`PRESERVED <path>: <reason>`; the rest still run, and the call exits 1 if anything was preserved.
+The origin refusal names how to make a helper (keep the canonical origin), and start-task says so.
+Classification is unchanged: another repository or an unpublished local commit is still preserved.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1493/SUMMARY.md`.
+
+## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
+
+- In `skills/3-weekly/whack-a-mole/SKILL.md`: added invariant-enforcer discovery in §5 to run `/connect-the-dots` on the violated rule (the invariant) before proposing a new mechanism, naming existing enforcers in the umbrella issue and handing off candidates and gaps to §6.
+- In `skills/1-hourly/debug-mantra/SKILL.md`: added an explicit escalation in §2 (trace the fail path) to run `/recon` when a fail path traverses unread modules before forming the hypothesis.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1512/`.
 
 ## 2026-11-16
 
