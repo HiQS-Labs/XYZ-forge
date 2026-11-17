@@ -1,0 +1,106 @@
+[
+  {
+    "id": "A1",
+    "assertion": "plan mode logs zero write verbs",
+    "candidate": "PASS",
+    "bad_candidate": "--apply against the same shim",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A2",
+    "assertion": "each rung x {behind,dirty,failing} + draft + drift-bump gives the ladder's exact bundle",
+    "candidate": "PASS",
+    "bad_candidate": "rung floors off by one day (8/15/31)",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A3",
+    "assertion": "engine/label/body/veto holds and a child of a held PR get zero writes",
+    "candidate": "PASS",
+    "bad_candidate": "hold_label dropped from the union",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A4",
+    "assertion": "second --apply on the first run's state makes zero writes",
+    "candidate": "PASS",
+    "bad_candidate": "owned-comment lookup ignoring the marker",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A5",
+    "assertion": "maintenance sync + marker comment + label today; author 20d ago -> pr-minder age 20d, rung 3",
+    "candidate": "PASS",
+    "bad_candidate": "clock reading updatedAt",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A6",
+    "assertion": "real `planner_core.py --mode stalled` report shows the 20d-old date; history error -> report names #40 as fallback",
+    "candidate": "PASS",
+    "bad_candidate": "production call without the activity pass-through",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A7",
+    "assertion": "2 ok syncs this episode -> no 3rd update-branch; idle 14d -> rung 3",
+    "candidate": "PASS",
+    "bad_candidate": "cap removed",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A8",
+    "assertion": "single-parent author commit resets (owned label removed, foreign kept); sync merge does not, even after head/base rename",
+    "candidate": "PASS",
+    "bad_candidate": "headline-only predicate",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A8b",
+    "assertion": "maintenance classification survives a head rename",
+    "candidate": "PASS",
+    "bad_candidate": "predicate bound to current branch names",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A9",
+    "assertion": "head SHA change or new body hold between measure and write -> 0 writes + aborted receipt",
+    "candidate": "PASS",
+    "bad_candidate": "pre-write check without body",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A10",
+    "assertion": "every write has intent+result; a forced update-branch failure records result: failed",
+    "candidate": "PASS",
+    "bad_candidate": "result line skipped on failure",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A11",
+    "assertion": "incomplete history or GraphQL error -> unknown, 0 writes",
+    "candidate": "PASS",
+    "bad_candidate": "fallback to createdAt",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A12",
+    "assertion": "failing check rendered as name + URL; missing URL -> 'link unavailable'",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "verdict": "PASS"
+  }
+]

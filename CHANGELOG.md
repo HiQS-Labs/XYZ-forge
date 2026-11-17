@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-16 — GH-1498: `/pr-minder` and an author-activity PR clock
+
+New skill `skills/2-daily/pr-minder/` runs one manual pass over the current repo's open PRs. Each PR gets a rung on an age ladder (fresh, nudge, repair, decide, retire), with a matching action. Plan mode writes nothing. `--apply` updates behind branches (at most 2 per stale episode), sets `pr-minder:stale`/`pr-minder:decide` and keeps one owned comment per PR, with conflict files, a repair command or a re-cut option. It never merges, closes, rebases or retargets. Held and stacked-under-held PRs are report-only. Each PR is re-checked before writes (head, base, title/body/label holds), and every write is receipted.
+
+The age now comes from a shared author-activity clock in `planner_core.py` (`fetch_pr_activity`, `author_activity`), replacing `updatedAt`. Labels, marker comments and GitHub server-side branch syncs no longer reset it. `/daily-planner`'s Stalled report uses the same clock and names any PR that fell back to `updatedAt`.
+
+`merge_cleanup.refresh_pr` now also fetches `body`. Failing-check comments give the check name and its link instead of the first log line (spec deviation). Evidence: `TESTS-RESULTS/2026-11-16+GH-1498/`.
+
 ## 2026-11-15 — GH-1479: typed swarm-preflight stages and a scoped mypy baseline
 
 `utils/py/swarm_preflight.py`'s 734-line `main()` is now an 11-line sequence over named stages (source resolution, contract loading, repository inspection, candidate evaluation, normalization, reporting, packet writing) that pass three frozen records instead of shared locals. Every function is annotated. `mypy.ini` checks this one module, `requirements-dev.txt` pins `mypy==1.14.1` beside the existing gate dependencies, and the three hosted install steps plus `README.md`/`ROUTER.md` point at it. The existing `test_swarm_preflight_module_load` now also runs the scoped mypy check, so the gate's Python needs mypy installed (`python3 -m pip install -r requirements-dev.txt`). No CLI, output, packet, exit-code or write-mechanism change: old and new executors produced byte-identical results across ten scenarios. No new tests. Revert the PR to undo. Evidence: `TESTS-RESULTS/2026-11-14+GH-1479/`.

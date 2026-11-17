@@ -1,0 +1,15 @@
+PASS A1: plan mode logs zero write verbs | bad: --apply against the same shim -> rejected
+PASS A2: each rung x {behind,dirty,failing} + draft + drift-bump gives the ladder's exact bundle | bad: rung floors off by one day (8/15/31) -> rejected
+PASS A3: engine/label/body/veto holds and a child of a held PR get zero writes | bad: hold_label dropped from the union -> rejected
+PASS A4: second --apply on the first run's state makes zero writes | bad: owned-comment lookup ignoring the marker -> rejected
+PASS A5: maintenance sync + marker comment + label today; author 20d ago -> pr-minder age 20d, rung 3 | bad: clock reading updatedAt -> rejected
+PASS A6: real `planner_core.py --mode stalled` report shows the 20d-old date; history error -> report names #40 as fallback | bad: production call without the activity pass-through -> rejected
+PASS A7: 2 ok syncs this episode -> no 3rd update-branch; idle 14d -> rung 3 | bad: cap removed -> rejected
+PASS A8: single-parent author commit resets (owned label removed, foreign kept); sync merge does not, even after head/base rename | bad: headline-only predicate -> rejected
+PASS A8b: maintenance classification survives a head rename | bad: predicate bound to current branch names -> rejected
+PASS A9: head SHA change or new body hold between measure and write -> 0 writes + aborted receipt | bad: pre-write check without body -> rejected
+PASS A10: every write has intent+result; a forced update-branch failure records result: failed | bad: result line skipped on failure -> rejected
+PASS A11: incomplete history or GraphQL error -> unknown, 0 writes | bad: fallback to createdAt -> rejected
+PASS A12: failing check rendered as name + URL; missing URL -> 'link unavailable' | bad: — -> n/a
+{"passed": 13, "failed": 0}
+rc=0

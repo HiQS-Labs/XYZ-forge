@@ -1,0 +1,497 @@
+# GH-1498 recorded manual check (NOT a test suite; GH-831). Run: python3 manual_check.py.txt <repo-root>
+# A stateful fake `gh` on PATH serves canned PRs/history and logs every write verb. Each assertion has a
+# pinned expected outcome and a controlled bad candidate (an in-process monkeypatch, discarded after the
+# run, never committed) that must make the same assertion fail.
+import contextlib, io, json, os, shutil, stat, subprocess, sys, tempfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+REPO = Path(sys.argv[1]).resolve()
+SCRIPT = REPO / "skills/2-daily/pr-minder/scripts/pr_minder.py"
+PLANNER = REPO / "skills/3-weekly/weekly-planner/scripts"
+NOW = datetime.now(timezone.utc)
+iso = lambda d: (NOW - timedelta(days=d)).isoformat().replace("+00:00", "Z")
+RESULTS = []
+ORIG_PATH = os.environ["PATH"]
+
+FAKE_GH = r'''#!/usr/bin/env python3
+import json, os, sys
+S = os.environ["FAKE_GH_STATE"]; st = json.load(open(S)); a = sys.argv[1:]
+def save(): json.dump(st, open(S, "w"))
+def log(v): open(os.environ["FAKE_GH_LOG"], "a").write(json.dumps(a) + "\n")
+def pr(n): return next(p for p in st["prs"] if p["number"] == int(n))
+def out(x): print(json.dumps(x) if not isinstance(x, str) else x)
+if a[:2] == ["repo", "view"]: out(st["slug"]); sys.exit(0)
+if a[:2] == ["pr", "list"]: out(st["prs"]); sys.exit(0)
+if a[:2] == ["issue", "list"]: out([]); sys.exit(0)
+if a[:2] == ["api", "user"]: out("op"); sys.exit(0)
+if a[:2] == ["api", "graphql"]:
+    if st.get("graphql_error"): print("GraphQL: boom", file=sys.stderr); sys.exit(1)
+    nodes = [dict(st["activity"][str(p["number"])], number=p["number"], createdAt=p["createdAt"])
+             for p in st["prs"] if str(p["number"]) in st["activity"]]
+    out({"data": {"repository": {"pullRequests": {"pageInfo": {"hasNextPage": False}, "nodes": nodes}}}}); sys.exit(0)
+if a[0] == "api" and "compare/" in " ".join(a):
+    head = a[-1].split("...")[-1]; p = next(p for p in st["prs"] if p["headRefOid"] == head)
+    out({"behind_by": st.get("behind", {}).get(str(p["number"]), 0)}); sys.exit(0)
+if a[:3] == ["api", "--paginate", "--slurp"]:
+    n = a[3].split("/")[-2]; out([st["comments"].get(n, [])]); sys.exit(0)
+if a[0] == "api" and a[1] == "-X" and a[2] == "PATCH":
+    log(a); cid = int(a[3].split("/")[-1]); body = a[5][5:]
+    for cs in st["comments"].values():
+        for c in cs:
+            if c["id"] == cid: c["body"] = body
+    save(); sys.exit(0)
+if a[0] == "api" and a[1].endswith("/comments") and "-f" in a:
+    log(a); n = a[1].split("/")[-2]; body = a[a.index("-f") + 1][5:]
+    st["comments"].setdefault(n, []).append({"id": 9000 + len(st["comments"][n]), "body": body}); save(); sys.exit(0)
+if a[:2] == ["pr", "view"]:
+    p = dict(pr(a[2])); p.update(st.get("refresh_override", {}).get(a[2], {}))
+    if "-q" in a: out(p["headRefOid"]); sys.exit(0)
+    out(p); sys.exit(0)
+if a[:2] == ["pr", "update-branch"]:
+    log(a)
+    if st.get("fail_update"): print("update failed", file=sys.stderr); sys.exit(1)
+    q = pr(a[2]); q["headRefOid"] += "-synced"; q["mergeStateStatus"] = "CLEAN"; save(); sys.exit(0)
+if a[:2] == ["pr", "edit"]:
+    log(a); p = pr(a[2]); lab = a[4]
+    if a[3] == "--add-label": p["labels"].append({"name": lab})
+    else: p["labels"] = [l for l in p["labels"] if l["name"] != lab]
+    save(); sys.exit(0)
+if a[:2] == ["label", "create"]: log(a); sys.exit(0)
+out([]); sys.exit(0)
+'''
+
+
+def commit(days, headline="work", parents=1, email="dev@example.com", oid=None):
+    return {"commit": {"oid": oid or f"c{days}{headline[:3]}{parents}", "committedDate": iso(days),
+                       "messageHeadline": headline, "committer": {"email": email},
+                       "parents": {"totalCount": parents}}}
+
+
+def conn(nodes, more=False):
+    return {"pageInfo": {"hasPreviousPage": more}, "nodes": nodes}
+
+
+def history(commits=(), comments=(), more_commits=False):
+    return {"commits": conn(list(commits), more_commits), "comments": conn(list(comments)),
+            "reviews": conn([]), "reviewThreads": conn([])}
+
+
+def mkpr(n, age, cond="clean", **kw):
+    p = {"number": n, "state": "OPEN", "title": kw.get("title", f"feat: pr {n}"), "body": kw.get("body", ""),
+         "labels": [{"name": l} for l in kw.get("labels", [])], "isDraft": kw.get("draft", False),
+         "headRefName": kw.get("head", f"feat/pr{n}"), "baseRefName": kw.get("base", "development"),
+         "mergeable": "CONFLICTING" if cond == "dirty" else "MERGEABLE",
+         "mergeStateStatus": {"dirty": "DIRTY", "behind": "BEHIND"}.get(cond, "CLEAN"),
+         "statusCheckRollup": ([{"name": "build", "conclusion": "FAILURE", "detailsUrl": kw.get("url", "https://ci/1")}]
+                               if cond == "failing" else []),
+         "headRefOid": f"h{n}", "isCrossRepository": False, "maintainerCanModify": True,
+         "createdAt": iso(60), "updatedAt": iso(kw.get("updated", age)), "url": f"u{n}",
+         "reviewDecision": "", "reviews": [], "files": [], "author": {"login": "x"}, "_age": age}
+    return p
+
+
+class Env:
+    def __init__(self, prs, activity=None, **extra):
+        self.dir = Path(tempfile.mkdtemp(prefix="gh1498-"))
+        (self.dir / "bin").mkdir(); (self.dir / "repo").mkdir(); (self.dir / "state").mkdir()
+        gh = self.dir / "bin/gh"; gh.write_text(FAKE_GH); gh.chmod(gh.stat().st_mode | stat.S_IEXEC)
+        acts = activity or {str(p["number"]): history([commit(p["_age"])]) for p in prs}
+        self.state = {"slug": "acme/repo", "prs": prs, "activity": acts, "comments": {}, **extra}
+        self.save()
+        os.environ.update(FAKE_GH_STATE=str(self.dir / "st.json"), FAKE_GH_LOG=str(self.dir / "writes.log"),
+                          PR_MINDER_STATE=str(self.dir / "state"),
+                          PATH=f"{self.dir / 'bin'}:{ORIG_PATH}")
+
+    def save(self):
+        (self.dir / "st.json").write_text(json.dumps(self.state))
+
+    def load(self):
+        return json.loads((self.dir / "st.json").read_text())
+
+    def writes(self):
+        f = self.dir / "writes.log"
+        return [json.loads(l) for l in f.read_text().splitlines()] if f.exists() else []
+
+    def receipts(self):
+        f = self.dir / "state/acme/repo/actions.jsonl"
+        return [json.loads(l) for l in f.read_text().splitlines()] if f.exists() else []
+
+
+sys.path.insert(0, str(SCRIPT.parent))
+import pr_minder as pm  # noqa: E402
+pc, mc = pm.pc, pm.mc
+
+
+def run(*argv):
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+        pm.main(["--repo-root", os.environ.get("REPO_UNDER", "."), *argv])
+    return buf.getvalue()
+
+
+def plans(env, *argv):
+    os.environ["REPO_UNDER"] = str(env.dir / "repo")
+    return {r["pr"]: r for r in json.loads(run("--json", *argv))}
+
+
+def apply(env):
+    os.environ["REPO_UNDER"] = str(env.dir / "repo")
+    run("--apply")
+    return env.writes()
+
+
+@contextlib.contextmanager
+def patched(obj, name, value):
+    old = getattr(obj, name); setattr(obj, name, value)
+    try:
+        yield
+    finally:
+        setattr(obj, name, old)
+
+
+def check(aid, desc, good, bad_desc, bad):
+    """good/bad are callables returning bool (assertion holds). The bad candidate must FAIL the assertion."""
+    try:
+        g = bool(good())
+    except Exception as exc:
+        g = False; desc += f" [good raised {exc!r}]"
+    try:
+        b = bool(bad()) if bad else None
+    except Exception:
+        b = False
+    ok = g and (b is None or b is False)
+    RESULTS.append({"id": aid, "assertion": desc, "candidate": "PASS" if g else "FAIL",
+                    "bad_candidate": bad_desc, "bad_rejected": None if b is None else (b is False),
+                    "verdict": "PASS" if ok else "FAIL"})
+    print(f"{'PASS' if ok else 'FAIL'} {aid}: {desc} | bad: {bad_desc} -> "
+          f"{'n/a' if b is None else ('rejected' if b is False else 'NOT rejected')}")
+
+
+def acts(row):
+    p = row["plan"]
+    return (bool(p["update_branch"]), p["label"] if p["label"] not in (None,) else None, bool(p["comment"]))
+
+
+# ---------------- A1 zero writes ----------------
+def a1():
+    prs = [mkpr(1, 8, "behind"), mkpr(2, 8, "dirty"), mkpr(3, 15, "failing")]
+    e = Env(prs); plans(e); good = len(e.writes()) == 0
+    return good, e
+
+
+def a1_bad():
+    e = Env([mkpr(1, 8, "behind"), mkpr(2, 8, "dirty")])
+    return len(apply(e)) == 0          # the write detector must see apply's writes
+
+
+check("A1", "plan mode logs zero write verbs", lambda: a1()[0], "--apply against the same shim", a1_bad)
+
+# ---------------- A2 rung matrix ----------------
+EXPECT = {  # (age, cond) -> (update_branch, label, comment)
+    (1.5, "behind"): (False, None, False), (3.1, "behind"): (True, None, False),
+    (7.1, "behind"): (True, "pr-minder:stale", False), (14.1, "behind"): (False, "pr-minder:decide", True),
+    (30.1, "behind"): (False, "keep", False),
+    (1.5, "dirty"): (False, None, False), (3.1, "dirty"): (False, None, True),
+    (7.1, "dirty"): (False, "pr-minder:stale", True), (14.1, "dirty"): (False, "pr-minder:decide", True),
+    (30.1, "dirty"): (False, "keep", False),
+    (1.5, "failing"): (False, None, False), (3.1, "failing"): (False, None, True),
+    (7.1, "failing"): (False, "pr-minder:stale", True), (14.1, "failing"): (False, "pr-minder:decide", True),
+    (30.1, "failing"): (False, "keep", False),
+}
+
+
+def a2_rows():
+    prs, key = [], {}
+    for i, (age, cond) in enumerate(EXPECT, start=10):
+        prs.append(mkpr(i, age, cond)); key[i] = (age, cond)
+    prs.append(mkpr(90, 8.1, "behind", draft=True))            # draft floors +4 -> rung 1, no update-branch
+    prs.append(mkpr(91, 4.1, "behind"))                        # drift 50 > 30 -> rung 2
+    e = Env(prs, behind={"91": 50})
+    return plans(e), key
+
+
+def a2_holds():
+    rows, key = a2_rows()
+    for n, k in key.items():
+        if acts(rows[n]) != EXPECT[k]:
+            return False
+    return (rows[90]["rung"] == 1 and not rows[90]["plan"]["update_branch"] and rows[90]["plan"]["comment"]
+            and rows[91]["rung"] == 2)
+
+
+def off_by_one(age, draft, stale, draft_stale):
+    shift = (draft_stale - stale) if draft else 0
+    return sum(1 for f in [stale + shift, 8 + shift, 15 + shift, 31 + shift] if age >= f)
+
+
+def a2_bad():
+    with patched(pm, "base_rung", off_by_one):
+        return a2_holds()
+
+
+check("A2", "each rung x {behind,dirty,failing} + draft + drift-bump gives the ladder's exact bundle",
+      a2_holds, "rung floors off by one day (8/15/31)", a2_bad)
+
+
+# ---------------- A3 holds ----------------
+def a3_env():
+    prs = [mkpr(20, 8, "dirty", title="HOLD: parked spike"),            # engine hold
+           mkpr(21, 8, "dirty", labels=["hold"]),                      # HOLD_LABELS
+           mkpr(22, 8, "dirty", body="owner decision: hold"),          # OWNER_HOLD_RE
+           mkpr(23, 8, "dirty", labels=["blocked"]),                   # merge_cleanup.hold_label veto only
+           mkpr(24, 8, "dirty", base="feat/pr20")]                     # stacked on held #20
+    return Env(prs)
+
+
+def a3_ok():
+    e = a3_env(); return len(apply(e)) == 0
+
+
+def a3_bad():
+    with patched(mc, "hold_label", lambda info: None):
+        e = a3_env(); w = apply(e)
+    return not any(x[2:3] == ["23"] or "issues/23/" in " ".join(x) for x in w) and len(w) == 0
+
+
+check("A3", "engine/label/body/veto holds and a child of a held PR get zero writes", a3_ok,
+      "hold_label dropped from the union", a3_bad)
+
+
+# ---------------- A4 idempotency ----------------
+def a4(bad=False):
+    e = Env([mkpr(30, 8, "dirty"), mkpr(31, 4, "behind")])
+    apply(e); first = len(e.writes())
+    if bad:
+        with patched(pm, "owned_comment", lambda *a: None):
+            apply(e)
+    else:
+        apply(e)
+    return first > 0 and len(e.writes()) == first
+
+
+check("A4", "second --apply on the first run's state makes zero writes", a4,
+      "owned-comment lookup ignoring the marker", lambda: a4(bad=True))
+
+
+# ---------------- A5/A6 shared age ----------------
+def a5_env(graphql_error=False):
+    p = mkpr(40, 0, "dirty", updated=0, head="fix/x")
+    act = {"40": history(
+        [commit(20, "real work"),
+         commit(0.1, "Merge branch 'development' into fix/x", parents=2, email="noreply@github.com", oid="sync1")],
+        [{"createdAt": iso(0.1), "body": "<!-- pr-minder:v1 -->\nrung 3"}])}
+    return Env([p], act, graphql_error=graphql_error)
+
+
+def updated_clock(node, receipt_oids=frozenset()):
+    return datetime.now(timezone.utc), True
+
+
+def a5_ok():
+    r = plans(a5_env())[40]; return 19.5 < r["age"] < 20.5 and r["rung"] == 3
+
+
+def a5_bad():
+    with patched(pc, "author_activity", updated_clock):
+        r = plans(a5_env())[40]
+    return 19.5 < r["age"] < 20.5
+
+
+check("A5", "maintenance sync + marker comment + label today; author 20d ago -> pr-minder age 20d, rung 3",
+      a5_ok, "clock reading updatedAt", a5_bad)
+
+
+def planner_report(env, patch=None):
+    code = ("import sys; sys.path.insert(0, %r); import planner_core as pc\n" % str(PLANNER)) + (patch or "") + \
+           "\nsys.argv=['planner_core.py','--mode','stalled','--repo-root',%r,'--gh-repo','acme/repo'," \
+           "'--local-roots',%r,'--operator','op','--device-id','dev']\npc.main()" % (str(env.dir / "repo"), str(env.dir / "repo"))
+    subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=os.environ.copy())
+    js = next((env.dir / "repo/temp/planner").glob("stalled-*.json"))
+    return json.loads(js.read_text())["stalled_stale"]
+
+
+DROP = ("_orig = pc.collect_stalled_stale\n"
+        "def _drop(*a, **k):\n    k.pop('activity', None); return _orig(*a, **k)\n"
+        "pc.collect_stalled_stale = _drop")
+
+
+def a6_ok():
+    sec = planner_report(a5_env())
+    row = next(r for r in sec["stalled"] if r["ref"] == "PR #40")
+    err = planner_report(a5_env(graphql_error=True))
+    return (row["last_activity"] == iso(20)[:10]
+            and any("#40" in d and "updatedAt was used" in d for d in err["disclosures"]))
+
+
+def a6_bad():
+    sec = planner_report(a5_env(), DROP)
+    row = next((r for r in sec["stalled"] if r["ref"] == "PR #40"), None)
+    return bool(row) and row["last_activity"] == iso(20)[:10]
+
+
+check("A6", "real `planner_core.py --mode stalled` report shows the 20d-old date; history error -> report names #40 as fallback",
+      a6_ok, "production call without the activity pass-through", a6_bad)
+
+
+# ---------------- A7 cap / escalation ----------------
+def a7_env(age):
+    e = Env([mkpr(50, age, "behind")])
+    rec = Path(os.environ["PR_MINDER_STATE"]) / "acme/repo"; rec.mkdir(parents=True, exist_ok=True)
+    rows = [{"ts": iso(age - 0.5 - i * 0.1), "pr": 50, "phase": "result", "action": "update-branch",
+             "outcome": "ok", "head_after": f"s{i}"} for i in range(2)]
+    (rec / "actions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    return e
+
+
+def a7_ok():
+    r8 = plans(a7_env(8.1))[50]; r15 = plans(a7_env(14.1))[50]
+    return (not r8["plan"]["update_branch"] and "cap" in (r8["plan"]["comment"] or "") and r15["rung"] == 3)
+
+
+def a7_bad():
+    with patched(pm, "UPDATE_CAP", 99):
+        r8 = plans(a7_env(8.1))[50]
+    return not r8["plan"]["update_branch"]
+
+
+check("A7", "2 ok syncs this episode -> no 3rd update-branch; idle 14d -> rung 3", a7_ok, "cap removed", a7_bad)
+
+
+# ---------------- A8 author reset ----------------
+def a8_env(kind):
+    if kind == "author":            # single-parent commit with a sync-looking headline = author work
+        p = mkpr(60, 0, "behind", labels=["pr-minder:stale", "stale"], head="fix/x")
+        act = {"60": history([commit(10, "x"), commit(0.1, "Merge branch 'development' into fix/x", parents=1)])}
+    else:                           # maintenance merge; optionally after a head/base rename
+        head = {"maint": "fix/x", "rename-head": "fix/new", "rename-base": "fix/x"}[kind]
+        base = "release" if kind == "rename-base" else "development"
+        p = mkpr(60, 0, "behind", labels=["pr-minder:stale", "stale"], head=head, base=base)
+        act = {"60": history([commit(10, "x"), commit(0.1, "Merge branch 'development' into fix/x", parents=2,
+                                                       email="noreply@github.com")])}
+    return Env([p], act)
+
+
+def a8_ok():
+    e = a8_env("author"); w = apply(e)
+    labels = {l["name"] for l in e.load()["prs"][0]["labels"]}
+    reset = labels == {"stale"} and ["pr", "edit", "60", "--remove-label", "pr-minder:stale"] in w
+    noreset = all(plans(a8_env(k))[60]["rung"] == 2 for k in ("maint", "rename-head", "rename-base"))
+    return reset and noreset
+
+
+def headline_only(commit, receipt_oids=frozenset()):
+    return bool(pc.SERVER_MERGE_RE.match(commit.get("messageHeadline") or ""))
+
+
+def a8_bad_headline():
+    with patched(pc, "is_maintenance_commit", headline_only):
+        return a8_ok()
+
+
+def a8_bad_names():
+    def current_names(commit, receipt_oids=frozenset()):
+        return ((commit.get("parents") or {}).get("totalCount") == 2
+                and commit.get("messageHeadline") == "Merge branch 'development' into fix/new")
+    with patched(pc, "is_maintenance_commit", current_names):
+        return plans(a8_env("maint"))[60]["rung"] == 2
+
+
+check("A8", "single-parent author commit resets (owned label removed, foreign kept); sync merge does not, even after head/base rename",
+      a8_ok, "headline-only predicate", a8_bad_headline)
+check("A8b", "maintenance classification survives a head rename", lambda: plans(a8_env("rename-head"))[60]["rung"] == 2,
+      "predicate bound to current branch names", a8_bad_names)
+
+
+# ---------------- A9 race ----------------
+def a9_env(override):
+    return Env([mkpr(70, 8, "dirty")], refresh_override={"70": override})
+
+
+def a9_ok():
+    out = []
+    for ov in ({"headRefOid": "moved"}, {"body": "owner decision: hold"}):
+        e = a9_env(ov); w = apply(e)
+        out.append(w == [] and any(r.get("outcome") == "aborted" for r in e.receipts()))
+    return all(out)
+
+
+def a9_bad():
+    orig = mc.refresh_pr_with_retry
+
+    def nobody(n, root):
+        d = dict(orig(n, root)); d.pop("body", None); return d
+    with patched(mc, "refresh_pr_with_retry", nobody):
+        e = a9_env({"body": "owner decision: hold"}); return apply(e) == []
+
+
+check("A9", "head SHA change or new body hold between measure and write -> 0 writes + aborted receipt", a9_ok,
+      "pre-write check without body", a9_bad)
+
+
+# ---------------- A10 receipts ----------------
+def paired(rows):
+    intents = [r for r in rows if r.get("phase") == "intent"]
+    results = [r for r in rows if r.get("phase") == "result" and r.get("action") != "bundle"]
+    return len(intents) == len(results) > 0 and all(
+        any(x["pr"] == i["pr"] and x["action"] == i["action"] for x in results) for i in intents)
+
+
+def a10_ok():
+    e = Env([mkpr(80, 4, "behind"), mkpr(81, 8, "dirty")]); apply(e)
+    f = Env([mkpr(82, 4, "behind")], fail_update=True); apply(f)
+    return paired(e.receipts()) and any(r.get("outcome") == "failed" for r in f.receipts())
+
+
+def a10_bad():
+    orig = pm.Receipts.write
+
+    def drop_failed(self, **row):
+        if row.get("outcome") == "failed":
+            return
+        return orig(self, **row)
+    with patched(pm.Receipts, "write", drop_failed):
+        f = Env([mkpr(82, 4, "behind")], fail_update=True); apply(f)
+    return paired(f.receipts())
+
+
+check("A10", "every write has intent+result; a forced update-branch failure records result: failed", a10_ok,
+      "result line skipped on failure", a10_bad)
+
+
+# ---------------- A11 completeness ----------------
+def a11_env(err=False):
+    act = {"85": history([commit(0.1, "Merge branch 'development' into feat/pr85", 2, "noreply@github.com")],
+                         more_commits=True)}
+    return Env([mkpr(85, 0, "dirty", updated=0)], act, graphql_error=err)
+
+
+def a11_ok():
+    r = plans(a11_env())[85]
+    return r["unknown"] and apply(a11_env()) == [] and apply(a11_env(err=True)) == []
+
+
+def a11_bad():
+    orig = pc.author_activity
+
+    def created_fallback(node, receipt_oids=frozenset()):
+        ts, ok = orig(node, receipt_oids)
+        return (ts, ok) if ok else (pc._parse_gh_time(iso(8)), True)   # createdAt-style fallback, rung 2
+    with patched(pc, "author_activity", created_fallback):
+        return apply(a11_env()) == []
+
+
+check("A11", "incomplete history or GraphQL error -> unknown, 0 writes", a11_ok, "fallback to createdAt", a11_bad)
+
+
+# ---------------- A12 failing-check rendering ----------------
+def a12_ok():
+    rows = plans(Env([mkpr(95, 4, "failing"), mkpr(96, 4, "failing", url="")]))
+    return ("build — https://ci/1" in rows[95]["plan"]["comment"]
+            and "build — link unavailable" in rows[96]["plan"]["comment"])
+
+
+check("A12", "failing check rendered as name + URL; missing URL -> 'link unavailable'", a12_ok, "—", None)
+
+print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
+(Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))

@@ -2,7 +2,7 @@
 gh_issue: 1498
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1498
 title: "pr-minder: manually invoked PR remediation pass with an age-based stale ladder"
-status: Active — Plan QA
+status: Active — Final QA
 created: 2026-11-16
 updated: 2026-11-16
 owner: start-task lane
@@ -25,7 +25,7 @@ context_tags: [pr-minder, skills, merge-cleanup, weekly-planner, stale-prs]
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 2 (Codex FAIL: A6 wiring, rename) dispositioned; plan revised | Plan QA round 3 (final) |
+| Plan QA approved (Codex r3); implemented; manual check 13/13 with bad candidates rejected; smoke green | Full gate in a disposable clone, then final relay QA |
 
 The issue body is the specification. This doc records only the decisions recon forced and the execution plan.
 

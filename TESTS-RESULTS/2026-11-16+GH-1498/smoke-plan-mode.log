@@ -1,0 +1,33 @@
+$ python3 skills/2-daily/pr-minder/scripts/pr_minder.py   # run 1 (main path, real repo, plan only) at 45effd0dc
+pr-minder · HiQS-Labs/XYZ-forge · plan only (no writes)
+#1024  rung 1 nudge   age 9d    drift -    held: Review authority limit / unresolved escalation (report only)
+#1391  rung 2 repair  age 8d    drift 803  conflicting  -> label pr-minder:stale, comment
+#1417  rung 2 repair  age 5d    drift 534  conflicting  -> label pr-minder:stale, comment
+#1460  rung 0 fresh   age 3d    drift 251  fresh
+#1467  rung 0 fresh   age 2d    drift 244  fresh
+#1471  rung 0 fresh   age 2d    drift 244  fresh
+#1491  rung 0 fresh   age 0d    drift 102  fresh
+#1495  rung 0 fresh   age 1d    drift 57   fresh
+#1496  rung 0 fresh   age 1d    drift 57   fresh
+#1497  rung 0 fresh   age 1d    drift 57   fresh
+#1501  rung 0 fresh   age 0d    drift 78   fresh
+#1504  rung 0 fresh   age 0d    drift 2    fresh
+#1505  rung 0 fresh   age 0d    drift 2    fresh
+rc=0
+
+$ (same, run 2 immediately after — adjacent path: rerun)
+pr-minder · HiQS-Labs/XYZ-forge · plan only (no writes)
+#1024  rung 1 nudge   age 9d    drift -    held: Review authority limit / unresolved escalation (report only)
+#1391  rung 2 repair  age 8d    drift 803  conflicting  -> label pr-minder:stale, comment
+#1417  rung 2 repair  age 5d    drift 534  conflicting  -> label pr-minder:stale, comment
+#1460  rung 0 fresh   age 3d    drift 251  fresh
+#1467  rung 0 fresh   age 2d    drift 244  fresh
+#1471  rung 0 fresh   age 2d    drift 244  fresh
+#1491  rung 0 fresh   age 0d    drift 102  fresh
+#1495  rung 0 fresh   age 1d    drift 57   fresh
+#1496  rung 0 fresh   age 1d    drift 57   fresh
+#1497  rung 0 fresh   age 1d    drift 57   fresh
+#1501  rung 0 fresh   age 0d    drift 78   fresh
+#1504  rung 0 fresh   age 0d    drift 2    fresh
+#1505  rung 0 fresh   age 0d    drift 2    fresh
+rc=0
