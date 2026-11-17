@@ -51,7 +51,7 @@ Exit code: 0
 ## Recital Byte-Equality Check
 skills/1-hourly/debug-mantra/SKILL.md lines 12–16 (1-indexed):
 Extraction command:
-python3 -c "lines = open('skills/1-hourly/debug-mantra/SKILL.md', 'rb').readlines(); print(hashlib.sha256(b''.join(lines[11:16])).hexdigest())"
+python3 -c "import hashlib; lines = open('skills/1-hourly/debug-mantra/SKILL.md', 'rb').readlines(); print(hashlib.sha256(b''.join(lines[11:16])).hexdigest())"
 Base SHA256: b6adf67c853f4effaf48140bbce2dc7efd28d2daa51fffba9c281dbda2c65f1f
 Candidate SHA256: b6adf67c853f4effaf48140bbce2dc7efd28d2daa51fffba9c281dbda2c65f1f
 Byte-identical: True
