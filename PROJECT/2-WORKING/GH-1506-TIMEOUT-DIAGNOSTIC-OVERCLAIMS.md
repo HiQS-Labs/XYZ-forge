@@ -24,13 +24,11 @@ goal: Report observed activity and timeout causes without inferring contention o
 
 ## Status
 
-| Phase | Status |
-| --- | --- |
-| Plan QA | Approved, Claude round 2 |
-| Implementation and verification | In progress |
-| Final QA and publication | Pending |
+| What was just completed | What's next |
+|---|---|
+| Claude plan QA approved round 2; diagnostic string repair implemented | Finish verification, final QA and dedicated PR |
 
-Unstarted intake; no ledger row or execution admission. Runtime: Python.
+Active work; registered row rmi-01M7KDRHJVQSSKNHBQBJ4TBEH6 and accepted-start recorded through the canonical writer. Runtime: Python. Historical intake/reproduction below is retained.
 
 ## Summary
 Timeout diagnostics overstate what their signals prove: an open filename is reported as lock contention, log-only writes are called useful agent progress, and a static dirty-file count is labelled progress. This is a separate diagnostic defect report, discovered during PR #1491 review; it is not a supervisor defect or review verdict.
