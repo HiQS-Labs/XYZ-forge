@@ -23,7 +23,7 @@ Canonical discussion: [Issue #1512](https://github.com/HiQS-Labs/XYZ-forge/issue
 
 | What was just completed | What's next |
 |---|---|
-| Step 6 Plan QA Round 1 adjudicated with Codex findings addressed. | Codex plan review Round 2 for approval. |
+| Step 7 implementation edits applied to whack-a-mole, debug-mantra, CHANGELOG, and admitted in releases.db. | Route verification, docs gate, and candidate-bound publisher suites. |
 
 ## Problem & Recon
 

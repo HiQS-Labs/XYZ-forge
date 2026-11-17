@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
+
+- In `skills/3-weekly/whack-a-mole/SKILL.md`: added invariant-enforcer discovery in §5 to run `/connect-the-dots` on the violated rule (the invariant) before proposing a new mechanism, naming existing enforcers in the umbrella issue and handing off candidates and gaps to §6.
+- In `skills/1-hourly/debug-mantra/SKILL.md`: added an explicit escalation in §2 (trace the fail path) to run `/recon` when a fail path traverses unread modules before forming the hypothesis.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1512/`.
+
 ## 2026-11-16
 
 - **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop
