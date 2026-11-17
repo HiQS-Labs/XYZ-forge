@@ -61,3 +61,10 @@ the canonical origin holds an ignored nested `git init` repo (`inner/`, origin n
 - Old code (`0e470b330`): `inner` is preserved, but the parent is admitted and goes on to inspection
   and teardown. It survived this run only because of unrelated local tags (`PRESERVE_UNPUSHED`).
 - New code: both are preserved, and the parent is never inspected. Exit 1 for both.
+
+## CodeRabbit follow-up 2: duplicate path (2026-11-17)
+
+The guard now also matches a refused path equal to the admitted one. Passing the same checkout twice
+used to refuse the second occurrence but leave the first eligible. Preview check, receipt
+`manual-duplicate-path.txt`: both occurrences are `PRESERVED`, exit 1. The GH-1493 roadmap row's
+stored text now carries 🚧, matching its status marker (`roadmap update --raw-text`).

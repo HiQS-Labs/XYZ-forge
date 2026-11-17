@@ -2432,8 +2432,8 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
         candidates.append(path)
     failed = preserved
     for path in candidates:
-        # A refused checkout nested inside an admitted one would be moved with it; keep both.
-        inner = next((r for r in refused if path in r.parents), None)
+        # A refused checkout equal to or nested inside an admitted one would be moved with it; keep both.
+        inner = next((r for r in refused if r == path or path in r.parents), None)
         if inner is not None:
             print(f"PRESERVED {path}: contains refused checkout {inner}")
             failed = True
