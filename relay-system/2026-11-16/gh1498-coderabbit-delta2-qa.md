@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -87,5 +87,43 @@ Answer, citing `file:line`:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Block approval pending the three bounded corrections below. The failed-attempt cap, ownership check and exit-status changes are directionally correct, but the cap still permits unlimited uncertain attempts and the comment-safety promise is incomplete.
+swept file: yes
+
+Swept all of `skills/2-daily/pr-minder/scripts/pr_minder.py` (lines 1–566), including pre-existing code. The uncertain-cap and raw-error findings include pre-existing defects in that file; no additional concrete defect found in its remaining paths. Also inspected the requested commit delta, shared activity-clock implementation, skill contract and manual-check driver. Graph tools were unavailable; source fallback used. No git command, gate, executable fixture or live GitHub call was run. The commit delta was reconstructed read-only from stored commit/tree/blob objects using Python under `.relay-scratch/tmp/`.
+
+- [Should] **Count uncertain update attempts toward the episode cap.** `skills/2-daily/pr-minder/scripts/pr_minder.py:114` counts only `ok` and `failed`, although lines 432–444 produce `uncertain` after an accepted update whose head remains unchanged or unreadable. Line 323 therefore schedules another mutation after two such attempts, contrary to `skills/2-daily/pr-minder/SKILL.md:58`. Cheapest correction: include `uncertain` in the counted terminal outcomes; retain the existing PR/time-window filtering.
+  Observed input: PR 1, rung 1, last author activity `2026-11-10T00:00:00+00:00`, head `old`, behind by 1; two `gh pr update-branch` calls return 0 and each of their five head reads returns `old`. In-memory receipts receive two `result/action=update-branch/outcome=uncertain` rows at `2026-11-17T07:00:00+00:00`.
+  Affected scope: update-branch result receipts with outcome `uncertain` for this PR within its current stale episode.
+  Falsifier: those two receipts must suppress a third update; uncertain receipts before the episode or belonging to another PR must not suppress it. If successful-but-unobserved mutations are intentionally exempt, explicitly narrow the documented two-attempt contract instead.
+  Probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/probe.py"` (exit 0). The probe compiled the source AST definitions `Receipts`, `plan_bundle`, `_plan_bundle`, `apply_row`, `md_safe`, `safe_url`; substituted only in-memory receipt storage, `gh`, refresh, ownership, hold and sleep functions; no subprocess or filesystem mutation occurred inside the measured functions. Decisive output: `async pass 1 result ['update-branch:uncertain', 'comment:ok']`; same for pass 2; `two uncertain results counted: 0`; `third update scheduled: True`.
+
+- [Should] **Neutralise link syntax in check names, including existing backslashes.** `skills/2-daily/pr-minder/scripts/pr_minder.py:55`–56 leaves angle brackets intact and adds bracket escapes without escaping existing backslashes. Line 313 renders that text outside a code span, so a check name can supply a Markdown autolink or restore ordinary link syntax. This fails the new “no links” contract at `skills/2-daily/pr-minder/SKILL.md:60`. Cheapest correction: render untrusted check names as literal text with a representation that also handles angle-bracket/bare-URL autolinks and backslashes; keep the separately validated check URL usable.
+  Observed input: rung-1 failing-check row with `failing=[{'name':'<https://attacker.example>','url':''}]`. Generated comment contains `Failing check: <https://attacker.example> — link unavailable`. Also, input Python raw string `r'\[click\](https://attacker.example)'` becomes `r'\\[click\\](https://attacker.example)'`: the backslash pairs leave the brackets active in Markdown.
+  Affected scope: PR-controlled check-name text rendered into comments; file/commit fields already live in code spans and need context-aware treatment.
+  Falsifier: the supplied names must appear as inert literal text, while an ordinary check name and the separately supplied allowed HTTPS check URL remain readable. A rendered GitHub comment demonstrating these exact strings are inert would falsify the rendering concern.
+  Probe command: the same `python3 "$PWD/.relay-scratch/tmp/probe.py"` with the environment above (exit 0). Decisive output: `md_safe: '<https://attacker.example>' -> '<https://attacker.example>'` and `Failing check: <https://attacker.example> — link unavailable`. This measures generated Markdown; no GitHub rendering request was made.
+
+- [Should] **Sanitise the update-failure diagnostic before inserting it into a comment.** `skills/2-daily/pr-minder/scripts/pr_minder.py:441` takes raw stderr and line 447 substitutes it into the fallback body without `md_safe` or equivalent literal rendering. The new safety handling therefore misses this pre-existing interpolation path. Cheapest correction: render the diagnostic as untrusted literal text before substitution; keep raw detail in local receipts if needed.
+  Observed input: failed update call returns 1 with stderr `update rejected: @org/team <https://attacker.example>`. The emitted comment body contains that exact unneutralised mention and autolink. This is a controlled CLI-response input, not a claim that this exact diagnostic was observed from live GitHub.
+  Affected scope: diagnostic text from failed update-branch calls that is copied into a public fallback comment, including any branch/PR-controlled substrings echoed by the CLI.
+  Falsifier: feeding this exact failed response must produce a readable failure comment with no active mention/link; ordinary `update failed` should still produce the fallback, label processing and failed receipt.
+  Probe command: the same scratch-only probe (exit 0). Decisive output: `failure result: ['update-branch:failed', 'comment:ok']`; `failure head reads: 1 sleeps: 0`; body includes `Branch is behind base; update-branch failed: update rejected: @org/team <https://attacker.example>. Base has moved 1 commits since this branch's merge base.`
+
+- [Pass] **Ownership and activity exclusion use identity on the live query path.** `skills/2-daily/pr-minder/scripts/pr_minder.py:360`–364 requires both marker and matching REST login before PATCH selection; `skills/3-weekly/weekly-planner/scripts/planner_core.py:1252` requests `viewerDidAuthor`, and line 1311 excludes marked comments only when that value is true. The matching presence hint is at `pr_minder.py:199`. The absent-field default `True` is permissive for synthetic/legacy nodes, rather than proof of ownership; it does not change the normal query path where the field is requested. Recommend populating that field explicitly in existing manual-check canned comments before relying on missing-field coverage; no demonstrated live-query regression from this default.
+
+- [Pass] **Failed polling and exit semantics match the stated change.** `skills/2-daily/pr-minder/scripts/pr_minder.py:434`–441 performs one head read and no sleep on a failed update, retains `failed`, and does not retry the mutation; the probe above observed exactly `failure head reads: 1 sleeps: 0`. Lines 410–413 return an `aborted` status; lines 547–562 catch per-PR exceptions, record a bundle failure and return 1 for failed/uncertain/aborted status strings, matching `skills/2-daily/pr-minder/SKILL.md:75`. No objection to treating an aborted safety stop as non-clean; successful prevention of a stale write still leaves the requested bundle unapplied. Polling on successful responses is bounded; the remaining cap defect is separately identified above.
+
+- [Pass] **The SQL business-data edit is limited to the introduced duplicate.** Read-only object comparison of `a4270d2fe0dd41b1b924cb9cb10f7a0992b0f749` and `1fee7604998f445f3ee266c702e467ba61348317` shows one deleted `roadmap-pickup` receipt with txn `0af5446b8dd74a0b8aa940c57176ea9f`; its surviving copy is `releases.sql:4129`, linked to GH-1476 by the work event at `releases.sql:5685`. Strictly, the delta also bumps generation 2756→2757 (`releases.sql:3`, line 16) and appends the normal `merge-rebuild/reanchor:314` receipt at `releases.sql:4134`; no other SQL rows change. Probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/read_delta.py"` (exit 0); decisive diff: one removed pickup line, one added rebuild line, and the two generation metadata replacements. This does not independently qualify binary DB consistency.
+
+- [Pass] **The harness no longer treats a crashed bad candidate as a rejection.** `TESTS-RESULTS/2026-11-16+GH-1498/manual_check.py.txt:185`–190 captures the exception and requires `crashed is None` for PASS; A12 now supplies its URL-dropping bad candidate at lines 579–580. This is source review of the existing manual driver, not an executed harness result.
+
+- [Unverified — needs clone run] The producer's committed 26/26 log was inspected but not rerun. Full runtime qualification, binary ledger consistency and any repaired manual assertions belong to the disposable-clone harness after this turn; this reviewer run establishes no gate pass.
+
+Round limit reached: STATUS is Escalated. Handing off to Producer (claude-a) — address the findings or record a concrete disposition, then arrange a further review round; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
