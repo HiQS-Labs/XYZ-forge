@@ -49,29 +49,41 @@ Currently, the operator's assisted factory pattern runs an outer-loop session wh
    - Records one child owner and durable handoff pointer.
    - Starts the outer-loop child through the host's supported delegation mechanism (`delegate_task` or platform native delegate). Never competing writers!
    - Observes native completion events, questions, or completion watches (no polling, no sleep loops).
-   - Handles session recovery on interruptions, pauses, or stops: verifies stopped ownership before any redispatch; unknown state holds; never retries an unknown outcome; preserves original deadlines, attempt counters, and authority.
+   - If the host environment does NOT support the required delegation mechanism or completion event/watch: reports the missing capability explicitly, leaves a resumable handoff with pending state and next owner, and halts. Does NOT pretend, start a daemon/cron, or fall back to direct unassisted execution.
+   - Handles session recovery on interruptions, pauses, or stops: verifies stopped ownership (including child-spawned builders and writers) before any redispatch; unknown state holds; never retries an unknown outcome; preserves original deadlines, attempt counters, and authority.
    - Performs explicit, bounded parent repair; reports assisted vs unattended truthfully.
    - Never merges, deploys, or updates installed skills without explicit separate operator authorization.
 
 2. **Child (Outer-Loop Executor):**
    - Composes existing skills: Conveyor (raw intake & preparation), Flywheel (adaptive loop), Jog (serial execution & recovery), start-task (task execution), relay-xyz (independent QA).
    - Performs normal dispatch and evidence collection.
-   - On task-local holds: records hold, advances independent eligible ready work through supported owner semantics.
-   - On shared unsafe conditions (lock contention, git safety violation, ledger drift, exhausted global budget): stops dispatch and reports to parent.
+   - Follows the selected execution owner's exact continuation and stop semantics: on task-local holds, advances independent eligible ready work only when authorized by that owner's semantics (e.g. Jog GH-1400 wake permits continuing after a newly approved published PR or a validated exit 5 pre-advance-failed receipt, but halts on readiness refusal, lock contention, guard-killed gate, crash, missing/mismatched receipt, or clone ledger change).
+   - On shared unsafe conditions (lock contention, git safety violation, ledger drift, exhausted global budget) or owner-mandated stops: halts dispatch immediately, leaves a resumable checkpoint, and reports to parent.
    - Never starts another competing child supervisor hierarchy.
 
 ## Daily-Goal Intake and Preparation Boundary
 
 - Raw intake is permitted: daily-goal intake accepts raw requests, issue URLs, or backlog items.
-- Routes to Conveyor (GH-1476) for preparation, scoping, recon, preflight contract, and PRS rating.
-- No execution readiness claim from raw intake alone: Conveyor preparation, publication, and Jog pickup/admission checks must occur before execution.
+- Routing to preparation owners:
+  - If the input is already an existing GitHub issue (or issue URL), it routes directly to Conveyor (GH-1476) for preparation.
+  - If the input is raw prose / uncaptured goal / new item with no issue, it first obtains an issue via the existing authorized issue-creation owner (e.g. `idea` / `gh issue create` / repository intake SOP) before entering Conveyor.
+  - Conveyor prepares the capture doc, Preflight Contract, and PRS rating.
+- No execution readiness claim from raw intake or issue creation alone: Conveyor preparation, documentation publication, and Jog pickup/admission checks must occur before execution admission.
 
 ## Lifecycle Handoffs and Recovery Protocol
 
-1. **Normal Completion:** Child finishes batch/tasks, commits receipts, opens ready PRs, returns completion event with summary. Parent inspects results, records completion, presents outcome to operator.
-2. **Task-Local Hold:** One task encounters a blocker/question/decision hold. Child marks item held with reason/evidence, continues to next independent ready item. Parent observes hold.
-3. **Shared Unsafe Stop:** Global condition (lock held by unknown owner, dirty/divergent state, exhausted budget). Child halts immediately, leaves resumable checkpoint. Parent assesses condition.
-4. **Interruption / Session Recovery:** Session drops or process pauses. Returning parent reads existing records, checks process/lock status, verifies whether child is live, paused, stopped, or unknown. If unknown or live, refuses replacement. If stopped cleanly, inspects last accepted result; only redispatches with remaining budget. Never retries an unknown outcome.
+1. **Normal Completion:** Child finishes batch/tasks, commits receipts, opens ready PRs, and returns completion event with summary. Parent inspects results, records completion, presents outcome to operator.
+2. **Task-Local Hold:** One task encounters a blocker/question/decision hold. Child follows the selected execution owner's exact semantics: if permitted, records hold with concrete evidence (task ID, blocker reason, next owner) and continues to next independent ready item; if the owner halts on that condition (e.g. readiness refusal in Jog), halts the wake. Parent observes hold and next owner.
+3. **Shared Unsafe Stop:** Global condition (lock held by unknown owner, dirty/divergent state, exhausted budget, missing capability). Child halts immediately, leaves resumable checkpoint with observed evidence. Parent assesses condition and coordinates resolution.
+4. **Interruption / Session Recovery:** Session drops or process pauses.
+   - **Concrete Evidence Fields:** Returning parent re-reads existing records to identify: child session/thread ID, PID/lock state, target execution root, last recorded milestone, last accepted receipt digest, remaining authorized budgets (deadline, max tasks, attempts), and uncertain action records.
+   - **Stopped-Ownership Proof:** Parent verifies that child processes and any child-spawned builders/writers are truly stopped (not paused, detached, or running in background). A live, paused, or unknown process holds; never replace while an owner or builder is active or unknown.
+   - **Supported Recovery Order:** Adhere strictly to the Jog/Flywheel recovery ladder:
+     1. `resume` first (reconcile durable state, adopt saved results without token spend).
+     2. `retry-gate` if build was approved but gate failed (same head SHA, no builder turn).
+     3. `retry-build` ONLY if build genuinely needs a fresh bounded attempt and remaining attempt budget permits.
+     4. Never retry an unknown outcome; unknown state holds for operator decision.
+   - Preserves original deadlines, attempt counters, and authority; redispatches only within remaining budget.
 
 ## Acceptance Criteria (from Issue #1509)
 
@@ -89,16 +101,17 @@ Currently, the operator's assisted factory pattern runs an outer-loop session wh
 3. Implement `skills/1-hourly/kickstart/SKILL.md` specifying:
    - Frontmatter (`name: kickstart`, description).
    - Parent vs Child disjoint responsibilities and non-overlapping ownership.
-   - Daily-goal intake routing to Conveyor without premature readiness claims.
-   - Host delegation and native completion/question observation without polling.
-   - Session recovery rules (verify stopped ownership, preserve remaining budget/deadline, unknown state holds, never retry-build unknown outcome).
-   - Concrete handoff states: normal completion, task-local hold, shared unsafe stop, interruption recovery.
+   - Daily-goal intake routing (issue-first via `idea`/repo SOP for raw prose, then Conveyor) without premature readiness claims.
+   - Host delegation and native completion/question observation without polling; explicit stop on missing host capability.
+   - Session recovery rules (stopped-ownership proof including builders/writers, preserve remaining budget/deadline, unknown state holds, supported recovery ladder `resume` → `retry-gate` → `retry-build`, never retry-build unknown outcome).
+   - Concrete handoff states: normal completion, task-local hold following owner semantics, shared unsafe stop, interruption recovery.
    - Preserving original budgets, receipts, and uncertain outcomes; reporting assisted vs unattended truthfully.
 4. Register the new skill in `ARCHITECTURE.md` under the Skills Index.
-5. Conduct a source-only manual instruction walkthrough of main (happy-path delegation & normal completion) and adjacent paths (task-local hold, shared unsafe stop, session interruption/recovery), recording results under `TESTS-RESULTS/2026-11-17+GH-1509/`.
-6. Run classified docs verification (`utils/pdda/pdda.sh run`).
-7. Conduct independent final Codex relay QA (`relay-system/2026-11-17/gh1509-final-qa.md`).
-8. Open ready pull request against `development` and close out issue #1509.
+5. Classify the final actual diff against integration base `development` via `utils/ci-route.sh` to determine applicable gates.
+6. Conduct a source-only manual instruction walkthrough of main (happy-path delegation & normal completion) and adjacent paths (task-local hold, shared unsafe stop, session interruption/recovery), recording results and `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1509/`. Distinguish instruction walkthrough from live unattended qualification.
+7. Run classified documentation checks (`utils/pdda/pdda.sh run`).
+8. Conduct independent final Codex relay QA (`relay-system/2026-11-17/gh1509-final-qa.md`).
+9. Open ready pull request against `development` and close out issue #1509.
 
 ## Task Rating Rationale
 

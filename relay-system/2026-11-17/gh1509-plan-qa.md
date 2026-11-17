@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -128,8 +128,40 @@ The whole plan was swept; the findings above include pre-existing defects in the
 
 **VERDICT: FAIL**
 
-**Basis:** The plan has the right bounded architecture, but its concrete intake, hold and interruption cases can violate existing owner contracts or leave replacement safety unresolved. The Producer should address the findings and return the revised plan for review.
+### Producer · Round 1
 
-Handoff to Producer — go to the Producer window and say “take your turn”.
+All findings from Reviewer Round 1 have been implemented in `PROJECT/1-INBOX/GH-1509-KICKSTART-OBSERVER-RECOVERY.md`:
+
+- **Disposition for Blocker 1 (Lifecycle and recovery evidence/ownership): Implemented.**
+  Updated Section "Lifecycle Handoffs and Recovery Protocol" item 4 to define:
+  - Concrete evidence fields: child session/thread ID, PID/lock state, target execution root, last recorded milestone, last accepted receipt digest, remaining authorized budgets (deadline, max tasks, attempts), and uncertain action records.
+  - Stopped-ownership proof: parent must verify child process and any child-spawned builders/writers are truly stopped (not paused, detached, or running in background); active, paused, or unknown state holds; never replace while an owner or builder is active or unknown.
+  - Supported recovery ladder: strictly follow `resume` first → `retry-gate` if approved build had failed gate → `retry-build` only if fresh attempt is needed and budget remains; never retry an unknown outcome.
+  - Preserves original deadlines, attempt counters, and authority; redispatches only within remaining budget.
+
+- **Disposition for Blocker 2 (Task-local hold vs Jog semantics): Implemented.**
+  Updated Section "Disjoint Parent vs Child Responsibilities" item 2 and "Lifecycle Handoffs and Recovery Protocol" item 2:
+  - Child strictly follows the selected execution owner's continuation/stop semantics.
+  - For Jog (GH-1400 wake), continuing independent work is permitted only after a newly approved published PR or a validated exit 5 pre-advance-failed receipt whose own gate ran and failed. All other failures (readiness refusal, lock contention, guard-killed gate, crash, missing/mismatched receipt, clone ledger drift) halt the wake.
+  - Concrete evidence (task ID, reason, next owner) is recorded for every hold.
+
+- **Disposition for Blocker 3 (Raw intake routing): Implemented.**
+  Updated Section "Daily-Goal Intake and Preparation Boundary":
+  - Existing issues or issue URLs route directly to Conveyor (GH-1476) for preparation.
+  - Raw prose / uncaptured requests first obtain an issue via the authorized issue-creation owner (`idea` / `gh issue create` / repo intake SOP) before routing to Conveyor.
+  - Conveyor publication and Jog pickup/admission checks remain required before execution admission; no readiness claim from raw intake or issue creation alone.
+
+- **Disposition for Should 1 (Unsupported-host stop & paused ownership): Implemented.**
+  Updated Section "Disjoint Parent vs Child Responsibilities" item 1:
+  - If the host environment lacks supported delegation or completion watch capabilities, the parent explicitly reports the missing capability, leaves a resumable handoff with pending state and next owner, and halts. It never pretends, starts a daemon/cron, or falls back to direct unassisted execution.
+  - Paused ownership is preserved; uncertain actions must be resolved before replacement.
+
+- **Disposition for Should 2 (Verification classification & walkthrough provenance): Implemented.**
+  Updated Section "Ordered Implementation and Verification" items 5 and 6:
+  - Classifies final actual diff against integration base `development` via `utils/ci-route.sh` to determine applicable gates.
+  - Requires retained nonempty walkthrough evidence and `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1509/`.
+  - Explicitly distinguishes instruction walkthrough evidence from live unattended qualification.
+
+Handing off to Reviewer — ready for Round 2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
