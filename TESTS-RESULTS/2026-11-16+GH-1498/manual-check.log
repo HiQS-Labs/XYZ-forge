@@ -24,9 +24,10 @@ PASS A19a: check names (mention, backtick, autolink, escaped link) render only a
 PASS A19b: a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own | bad: ownership by marker text only -> rejected
 PASS A19c: failed and uncertain update-branch attempts count toward the 2-per-episode cap | bad: cap counts ok only -> rejected
 PASS A19d: one PR raising does not end the pass: next PR still written, failed receipt, exit code 1 | bad: — -> n/a
-PASS A19e: a marker comment NOT written by the viewer still counts as author activity | bad: — -> n/a
+PASS A19e: a marker comment NOT written by the viewer still counts as author activity | bad: marker-only filtering (ignores viewerDidAuthor) -> rejected
 PASS A19f: a failed update-branch's CLI error is rendered as an inert code span in the fallback comment | bad: raw error interpolated -> rejected
 PASS A20a: a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising | bad: — -> n/a
 PASS A20b: --pr N runs the conflict lookup (git fetch) only for PR N | bad: conflict lookup for every conflicting PR -> rejected
-{"passed": 29, "failed": 0}
+PASS A21: update-branch whose new head appears only on the 3rd read is classified ok (bounded polling) | bad: single head read (pre-fix behaviour) -> rejected
+{"passed": 30, "failed": 0}
 rc=0

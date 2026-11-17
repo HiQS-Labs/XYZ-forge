@@ -228,8 +228,8 @@
     "id": "A19e",
     "assertion": "a marker comment NOT written by the viewer still counts as author activity",
     "candidate": "PASS",
-    "bad_candidate": "\u2014",
-    "bad_rejected": null,
+    "bad_candidate": "marker-only filtering (ignores viewerDidAuthor)",
+    "bad_rejected": true,
     "bad_crashed": null,
     "verdict": "PASS"
   },
@@ -256,6 +256,15 @@
     "assertion": "--pr N runs the conflict lookup (git fetch) only for PR N",
     "candidate": "PASS",
     "bad_candidate": "conflict lookup for every conflicting PR",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A21",
+    "assertion": "update-branch whose new head appears only on the 3rd read is classified ok (bounded polling)",
+    "candidate": "PASS",
+    "bad_candidate": "single head read (pre-fix behaviour)",
     "bad_rejected": true,
     "bad_crashed": null,
     "verdict": "PASS"

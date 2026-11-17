@@ -1,6 +1,7 @@
 # GH-1498 recorded manual check (NOT a test suite; GH-831). Run: python3 manual_check.py.txt <repo-root>
 # A stateful fake `gh` on PATH serves canned PRs/history and logs every write verb. Each assertion has a
-# pinned expected outcome and a controlled bad candidate (an in-process monkeypatch, discarded after the
+# pinned expected outcome; all but the render/behaviour checks (A12b, A18, A19d, A20a) also run a
+# controlled bad candidate (an in-process monkeypatch, discarded after the
 # run, never committed) that must make the same assertion fail.
 import contextlib, io, json, os, shutil, stat, subprocess, sys, tempfile
 from datetime import datetime, timedelta, timezone
@@ -51,12 +52,15 @@ if a[0] == "api" and a[1].endswith("/comments") and "-f" in a:
     pr(n)["updatedAt"] = NOWZ; save(); sys.exit(0)
 if a[:2] == ["pr", "view"]:
     p = dict(pr(a[2])); p.update(st.get("refresh_override", {}).get(a[2], {}))
-    if "-q" in a: out(p["headRefOid"]); sys.exit(0)
+    if "-q" in a:
+        if st.get("stale_reads", 0) > 0 and p.get("_old"):   # async update-branch: head not visible yet
+            st["stale_reads"] -= 1; save(); out(p["_old"]); sys.exit(0)
+        out(p["headRefOid"]); sys.exit(0)
     out(p); sys.exit(0)
 if a[:2] == ["pr", "update-branch"]:
     log(a)
     if st.get("fail_update"): print(st.get("fail_msg", "update failed"), file=sys.stderr); sys.exit(1)
-    q = pr(a[2]); q["headRefOid"] += "-synced"; q["mergeStateStatus"] = "CLEAN"; q["updatedAt"] = NOWZ
+    q = pr(a[2]); q["_old"] = q["headRefOid"]; q["headRefOid"] += "-synced"; q["mergeStateStatus"] = "CLEAN"; q["updatedAt"] = NOWZ
     st["activity"].get(a[2], {}).get("commits", {}).get("nodes", []).append({"commit": {
         "oid": q["headRefOid"], "committedDate": NOWZ, "messageHeadline": f"Merge branch '{q['baseRefName']}' into {q['headRefName']}",
         "committer": {"email": "noreply@github.com"}, "parents": {"totalCount": 2}}})
@@ -801,7 +805,20 @@ def a19e():
     return ok and pc._age_days(ts, NOW) < 1
 
 
-check("A19e", "a marker comment NOT written by the viewer still counts as author activity", a19e, "—", None)
+def a19e_bad():
+    orig = pc.author_activity
+    def marker_only(node, receipt_oids=frozenset()):   # pre-fix: any marker comment is dropped, whoever wrote it
+        n = dict(node)
+        cm = dict(n.get("comments") or {})
+        cm["nodes"] = [c for c in cm.get("nodes") or [] if pc.PR_MINDER_MARKER not in (c.get("body") or "")]
+        n["comments"] = cm
+        return orig(n, receipt_oids)
+    with patched(pc, "author_activity", marker_only):
+        return a19e()
+
+
+check("A19e", "a marker comment NOT written by the viewer still counts as author activity", a19e,
+      "marker-only filtering (ignores viewerDidAuthor)", a19e_bad)
 
 def a19f(bad=False):
     e = Env([mkpr(147, 8.1, "behind")], fail_update=True, fail_msg="update rejected: @org/team <https://attacker.example>")
@@ -851,6 +868,18 @@ def a20b(bad=False):
 
 check("A20b", "--pr N runs the conflict lookup (git fetch) only for PR N", a20b,
       "conflict lookup for every conflicting PR", lambda: a20b(bad=True))
+
+# ---------------- A21 async update-branch: poll the head ----------------
+def a21(poll):
+    e = Env([mkpr(160, 4.1, "behind")], stale_reads=2)   # the first two head reads still show the old SHA
+    with patched(pm, "SYNC_POLL", poll):
+        apply(e)
+    res = [r for r in e.receipts() if r.get("phase") == "result" and r.get("action") == "update-branch"]
+    return len(res) == 1 and res[0]["outcome"] == "ok" and res[0]["head_after"] == "h160-synced"
+
+
+check("A21", "update-branch whose new head appears only on the 3rd read is classified ok (bounded polling)",
+      lambda: a21((5, 0)), "single head read (pre-fix behaviour)", lambda: a21((1, 0)))
 
 print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
 (Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))
