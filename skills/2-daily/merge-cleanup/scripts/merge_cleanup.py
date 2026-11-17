@@ -500,9 +500,10 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
 
 def refresh_pr(pr_num: int, repo_path: Path) -> Dict[str, Any]:
     """Live PR state, re-fetched before every decision (E). Any failure -> {"error": ...}.
-    GH-1140/#444: `title` is fetched so the hold-marker scan can see title-carried vetoes."""
+    GH-1140/#444: `title` is fetched so the hold-marker scan can see title-carried vetoes; GH-1498: `body`
+    so pr-minder's pre-write check can re-evaluate body-carried holds."""
     res = _gh(["pr", "view", str(pr_num), "--json",
-               "number,state,isDraft,title,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
+               "number,state,isDraft,title,body,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
     if res.returncode != 0:
         return {"error": f"gh pr view #{pr_num} failed: {res.stderr.strip() or 'no diagnostic'}"}
     try:
