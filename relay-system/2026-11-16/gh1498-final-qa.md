@@ -237,4 +237,13 @@ Evidence boundary: read the whole seeded issue, current plan and plan-QA history
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent gate; the token is closed with done.
 
+
+### Attestation · relay-drive — 2026-11-17T03:53:22Z
+task: RELAY-gh1498-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: d03e81fcc9d7fb7aac1586372dbbf304000b7727
+added-range: 34339+6694
+added-sha256: 87dbde53f40df1fc84acf531ec429abf9c2e4b0c400b1a226ccc8fc1e01b6b51
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
