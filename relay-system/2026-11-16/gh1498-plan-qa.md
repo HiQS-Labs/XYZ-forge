@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -93,5 +93,62 @@ Cite `file:line` for every claim.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: the reuse direction is sound, but the clock and pre-write hold contracts are incomplete, and the acceptance map does not yet specify discriminating checks for every checkbox. These are plan corrections, not a request for more machinery.
+swept file: yes
+
+**Step A — plan-only paraphrase (recorded before opening issue/source).** Input boundary: only `PROJECT/1-INBOX/GH-1498-PR-MINDER.md`. This proposes a manually invoked, report-by-default PR remediation skill, with explicit apply managing branch sync, owned labels and an owned comment. A shared activity clock drives its stale ladder and the planner report. Per the document, planner_core already fetches PRs and reports stalled work; merge_cleanup supplies hold and refresh helpers. The document adds a separate history reader because enlarging the bulk query exceeded GitHub's node limit. Excluded: merging, closing, conflict resolution, daemons and queue dispatch. The plan explicitly names no additional deferred work beyond its exclusions; real-PR apply needs later authorization. The issue subsequently supplies the more detailed deferred and unauthorized lists at `.relay-artifacts/pr-minder-body.md:108–111`.
+
+**Evidence boundary.** Verify-tier review of the entire plan and issue plus the cited source seams. Graph project `XYZ-forge` is ready but rooted in the primary checkout, generation `2026-09-01T15:54:30Z`; both list_projects pages were read, and this relay worktree has no indexed project. Exact symbol search returned zero (has_more=false). Coverage for both Python paths and daily-planner SKILL.md was freshness `not_tracked`, and the plan was `missing`. Therefore all material claims below use direct worktree source, not stale graph evidence. No gates, fixtures, Git commands or remote writes were run. Existing-suite compatibility remains [Unverified — needs clone run].
+
+- [Should] **F1 — a headline is not sufficient evidence of a maintenance-only commit.** Plan `PROJECT/1-INBOX/GH-1498-PR-MINDER.md:37` discards every matching headline, regardless of author or structure. This can discard a normal single-parent author commit with that message, or a human conflict-resolution merge containing real repair work. It also misses maintenance merges whose message differs or whose branch was subsequently renamed/retargeted. Cross-device availability is a valid objection to receipt-only identification, but it does not prove this replacement sound. Fetch parent/tree evidence and define a conservative, portable maintenance predicate; ambiguous history should be unknown for writes. State explicitly whether ignoring human base-sync commits is an intentional spec change from issue `:45–49`, and record the accepted boundary.
+  Observed input: plan `:37` says “ignores every commit with that headline”; concrete counterexample input is `{baseRefName: "development", headRefName: "fix/x", messageHeadline: "Merge branch 'development' into fix/x", parents: [oldHead], committedDate: "2026-11-16T12:00:00Z"}`. The specified predicate drops this author commit. This is a design counterexample, not an executed implementation failure.
+  Affected scope: commits excluded from the shared activity clock in both consumers.
+  Falsifier: the recorded manual check must retain this single-parent commit as activity while excluding a proven maintenance-only two-parent sync; also cover a conflict-resolution merge. A predicate already doing that would resolve this finding.
+
+- [Should] **F2 — fetch the required activity kinds and define completeness per PR.** Plan `:36,54–55` requests commits, issue comments and review submissions, but never review comments, which issue `.relay-artifacts/pr-minder-body.md:46` explicitly counts. The two all-filtered-tail conditions are not a complete pagination/error contract. Add the review-comment read and either obtain enough history to establish the maximum qualifying activity or return unknown; keep PR-page pagination distinct from nested-history completeness. A small bounded fetch with a truthful unknown result is sufficient for this workload.
+  Observed input: the exact connection list at plan `:36` is `commits(last:10), comments(last:20), reviews(last:5)`; an inline review comment today on a review submitted 20 days ago has no corresponding current event in those specified inputs.
+  Affected scope: PR age, label reset and eligibility to write when activity is absent, truncated or partially failed.
+  Falsifier: a manual case containing an old review submission and a new inline comment must reset age; missing pages/API data must produce unknown and zero pr-minder writes, not a createdAt-based stale action.
+
+- [Should] **F3 — the reused refresh cannot recheck the complete hold contract.** Plan `:67` checks state, labels, head and base, but holds also depend on title/body (`planner_core.py:401–429,1205,1523`; `merge_cleanup.py:582–584`). `refresh_pr` fetches title but not body (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:504–505`). Extend the existing reader minimally to include body and re-evaluate the same full hold union before applying the bundle. Preserve the issue's requirement to abort on changed holds, not merely changed labels (`.relay-artifacts/pr-minder-body.md:57`).
+  Observed input: a measured non-held PR followed by body `owner decision: hold`, with state/labels/head/base unchanged, passes the planned comparisons; the reused query cannot observe that line.
+  Affected scope: pre-write authorization for held/evidence PRs, including title/body vetoes.
+  Falsifier: the manual race case must change only that body line and observe zero writes plus an abort receipt; unchanged non-held input must still permit its eligible bundle.
+  Probe (read-only, exit 0): `PYTHONDONTWRITEBYTECODE=1 python3 -` with `ast.parse(Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").read_text())`, selecting the `refresh_pr` field-list constant and printing membership. Decisive output: `refresh_pr fields: number,state,isDraft,title,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url`; `body fetched: False`. The same probe read the plan: `clock smoke accepts equality: True`; `review-comment connection specified: False`. No fixture or candidate code was executed.
+
+- [Should] **F4 — replace the blanket acceptance map with observable rejection checks.** Plan `:57` accepts dates “at or before updatedAt”; the unchanged clock at `skills/3-weekly/weekly-planner/scripts/planner_core.py:1514–1516` produces equality and passes. The matrix at plan `:75–78` is useful but does not specify assertions for the central shared-clock, episode-cap, reset and per-write receipt acceptance items. Add these to the existing recorded manual check, with pinned expected outcomes and controlled bad inputs; do not create a test suite.
+  Observed input: plan `:90` says every checkbox maps to steps 1–3, while `:57` accepts the existing updatedAt result and `:75–78` contains no post-maintenance dual-consumer age assertion, two-sync/14-day replay, author-reset replay or receipt-pair assertion.
+  Affected scope: issue acceptance checkboxes `:97–106` and the plan's claim that an unfixed candidate is rejected.
+  Falsifier: replay the cases below against a candidate deliberately using updatedAt, ignoring the cap, failing to reset labels, or omitting one result receipt; each respective assertion must fail.
+
+  Acceptance audit (issue `.relay-artifacts/pr-minder-body.md`):
+  | Checkbox | Plan mapping and rejection needed |
+  |---|---|
+  | :97 zero writes | Step 2 + manual shim; assert zero write verbs, then witness its write detector rejecting apply, not merely logging a positive write count. |
+  | :98 rung matrix | Step 2/3 + matrix exists; assert exact actions, lower-bound/draft/drift behavior and report-only rung 4. |
+  | :99 holds | Step 2 + held cases exist; enumerate all four hold sources and transitive held ancestor, assert zero writes. |
+  | :100 idempotency | Step 3 + second run explicitly expects zero writes; shim must reflect first-run state. |
+  | :101 shared age | Step 1; missing discriminating check. Make updatedAt recent through owned maintenance, keep qualifying activity old, assert exact original age/date in both consumers. |
+  | :102 cap/escalation | Step 3; missing explicit replay. Two successful sync receipts, subsequent behind pass must not sync; advance to day 14 and assert rung 3. |
+  | :103 author reset | Steps 1/3; missing explicit replay. New author commit resets rung/removes only owned labels; proven maintenance merge does neither. |
+  | :104 race | Step 3 + SHA race assertion exists; explicitly assert abort receipt as well as zero writes. |
+  | :105 receipts | Step 3 promises intent/result; missing log assertion for each actual write, including failed/uncertain outcomes. |
+  | :106 gates | Disposable full-clone ci-local plus named publisher suites covers the requested gate intention; execution remains unverified here. |
+
+- [Pass] **Recon #1/#3/#4/#5 and reuse direction, with limits.** `get_open_prs` really is the bulk metadata reader (`skills/3-weekly/weekly-planner/scripts/planner_core.py:326–343`); the reported GraphQL node-limit run itself is unverified because no retained receipt is cited in plan `:36`. A separate bounded history read, one clock beside `_age_days` (`:1229`) and one stalled-path adoption are coherent. Existing hold contracts are at `:401–429,1203–1205,1506–1524`; imports are at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:27–62`; read retry is at `:516–531`. Read-only import probe, exit 0: `sys.path.insert(0, "skills/2-daily/merge-cleanup/scripts"); from merge_cleanup import hold_label, refresh_pr_with_retry; print("imports:", hold_label.__name__, refresh_pr_with_retry.__name__)` → `imports: hold_label refresh_pr_with_retry`. Stack predicate reuse at `:558–559` avoids calling the retarget writer at `:564`. No duplicate landing writer is proposed: the new action path syncs PR heads, while merge-cleanup continues owning landing (issue `:109`).
+
+- [Pass] **Planner adoption is conceptually safe if fallback stays local to the stalled path.** Current fail-open handling is `skills/3-weekly/weekly-planner/scripts/planner_core.py:1865–1875`; both stalled and daily call `run_stalled_scan` (`:1892,1909`), which already accumulates coverage gaps (`:1690–1705`). Plan `:40` correctly preserves a report with disclosed updatedAt fallback and unchanged issue age (`:1555`). Do not let the new reader raise past that boundary or run it in unrelated modes. Preserve existing pure-collector callers with an optional activity input, and verify missing activity/fetch failure in the disposable clone. A shared-clock fallback disclosure must identify which PRs used updatedAt. Existing suite results are not claimed by this review.
+
+- [Pass] **The failing-check URL disposition is proportionate, but is an explicit spec deviation.** Plan `:90` replaces issue `.relay-artifacts/pr-minder-body.md:67`'s first-error-line text with a check name and details URL. That is acceptable for this manually invoked 12–50 PR pass: it supplies an actionable diagnostic link without downloading job logs. Keep this disposition visible and verify the rendered name/link (with an explicit unavailable-link fallback), rather than claiming the original first-error-line requirement was implemented. The narrow script, owned comment and JSONL receipts fit the envelope (`plan :45,68–70`); no daemon, distributed lock or recovery journal is needed.
+
+- [Nit] **Correct the claimed gate route.** Plan `:82` says the new skill script plus planner_core means full route. `utils/ci-route.sh:63–69` treats these unclaimed skill paths as docs, and `:382–383` excludes docs from tier escalation. Say that full ci-local is deliberately selected to meet issue acceptance, rather than claiming the router selects it. Its full registry intention is documented in `ci-local.sh:25–26,34–35`. Keep publisher suites explicit.
+
+Pre-existing scope: the source's missing refresh body field is reported in F3 because the proposed caller relies on it. The existing updatedAt behavior is the known target of this work, not a new regression. No other pre-existing defect was established in the reviewed plan/issue or bounded source seams; this is not an exhaustive audit of the two large Python modules.
+
+Handing off to Producer (claude-a) — address F1–F4, disposition the remaining notes, then return the revised plan for Round 2. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
