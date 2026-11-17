@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -85,5 +85,51 @@ Then read: issue https://github.com/HiQS-Labs/XYZ-forge/issues/1509, `skills/2-d
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**Step A — input boundary: plan doc only.**
+
+**What this proposes:** Add a source-only kickstart skill that creates an observer and recovery parent and delegates outer-loop execution to one child. It composes existing preparation and execution skills, specifies handoffs and bounded recovery, and adds instruction walkthroughs and independent QA. Inference: the skill is intended to codify an assisted operating pattern rather than automate a new runtime.
+
+**How the existing system works, per this document:** The operator currently uses an observer parent and an outer-loop child, but their boundaries and recovery procedures are ad hoc. Conveyor prepares intake for admission, while Flywheel and Jog supply existing execution and recovery functions. Inference: the current pattern depends on existing records and host delegation rather than a new durable coordinator.
+
+**What it is not:** A new queue, daemon, schema, deployed-skill update, or evidence of unattended qualification.
+
+**Step B — source-backed validation**
+
+swept file: yes
+
+- [Blocker] The lifecycle and recovery instructions omit the concrete evidence and ownership needed to safely resume. The plan says only to check process/lock status and inspect the last accepted result, and does not specify paused builders/writers, unresolved actions, saved-result reconciliation, or a handoff record with the next authorized owner (plan:69–74). Issue #1509 explicitly requires these checks; Jog distinguishes a dead owner from absence of unique work and prescribes `resume`, then `retry-gate`, then `retry-build` (skills/2-daily/jog/SKILL.md:409; skills/2-daily/flywheel/SKILL.md:230–234). Specify those evidence fields, stopped-ownership proof, supported recovery order, and parent-interruption handoff before replacement.
+  Observed input: a stopped child session with a still-live builder or a missing result receipt is covered only by the generic process/lock check in plan:74.
+  Affected scope: interruption and replacement whenever child, builder, writer or action state is unresolved.
+  Falsifier: a walkthrough where a stopped child has a live builder or missing receipt must hold replacement and retain the uncertain outcome; a fully stopped, reconciled run may resume within original limits.
+- [Blocker] The stated task-local hold transition is broader than Jog permits: plan:72 says a blocker/question/decision hold continues to the next item, but Jog's wake halts on readiness refusal and other non-receipted failures; only specified outcomes continue (skills/2-daily/jog/SKILL.md:26–34). Require the child to follow the selected owner's exact continuation/stop semantics and record the evidence and next owner.
+  Observed input: a readiness refusal during a Jog wake is a task-local blocker under plan:72, yet Jog parks and halts that wake.
+  Affected scope: task-local holds during a selected execution owner's wake.
+  Falsifier: a readiness-refusal walkthrough should stop the wake; a validated task-local failure receipt may continue only as Jog permits.
+- [Blocker] Raw requests are sent directly to Conveyor (plan:65–66), although Conveyor prepares existing issues and directs new issues to idea (skills/1-hourly/conveyor/SKILL.md:3–10). Route raw prose through the existing issue-creation owner where needed, then Conveyor, retaining publication and pickup checks.
+  Observed input: a raw request with no existing issue is expressly accepted at plan:65.
+  Affected scope: intake that has no existing issue identity.
+  Falsifier: an existing issue URL routes directly to Conveyor; a new request first obtains an issue through its authorized owner without claiming readiness.
+- [Should] The plan omits the issue's explicit unsupported-host stop and treats a stopped child as sufficient for redispatch (plan:50–52, 74). Specify that missing supported delegation/observation leaves a resumable handoff, without direct execution or a daemon; preserve paused ownership and resolve uncertain actions before replacement. Issue #1509, “Smallest delivery” items 3–4.
+  Observed input: a host lacking the required delegation or completion capability has no specified outcome in plan:50–51.
+  Affected scope: invocation and recovery on hosts lacking a supported capability.
+  Falsifier: a walkthrough with delegation unavailable ends held with the missing capability and next owner, while a supported host starts exactly one child.
+- [Should] The verification plan names only `pdda.sh run` as classified verification and does not require provenance for the recorded walkthrough (plan:98–100). Specify classification of the actual final diff, the applicable checks and retained nonempty walkthrough evidence with `provenance.jsonl`; distinguish instruction walkthroughs from live unattended qualification. Repository AGENTS.md, “Verified beats plausible”; skills/2-daily/jog/SKILL.md:123–124.
+  Observed input: the planned source skill and architecture edit have only a named docs check and a results directory, with no provenance requirement.
+  Affected scope: final verification and review evidence for this delivery.
+  Falsifier: a final walkthrough record with nonempty results, provenance, classification and applicable checks supports review without claiming a live unattended run.
+- [Pass] The proposed source-only scope excludes a new runtime, queue, schema and deployed-copy changes (plan:29–35), consistent with issue #1509's smallest delivery.
+- [Pass] The plan explicitly separates raw intake from preparation, publication and Jog admission (plan:63–67); the routing defect above concerns inputs that do not yet have an issue. Conveyor's publication and pickup boundaries are at skills/1-hourly/conveyor/SKILL.md:63–67.
+- [Pass] Independent plan and final QA and main/adjacent walkthroughs are scheduled (plan:87–100); live unattended qualification remains separate (plan:34). The evidence details above remain necessary.
+
+The whole plan was swept; the findings above include pre-existing defects in the reviewed file.
+
+**VERDICT: FAIL**
+
+**Basis:** The plan has the right bounded architecture, but its concrete intake, hold and interruption cases can violate existing owner contracts or leave replacement safety unresolved. The Producer should address the findings and return the revised plan for review.
+
+Handoff to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
