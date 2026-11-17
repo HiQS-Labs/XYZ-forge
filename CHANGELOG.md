@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17
+
+- **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search
+  the code graph by capability verbs and synonyms, not module names; call tracing stays optional.
+  In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
+  call tracing found no new module.
+
 ## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
 
 - In `skills/3-weekly/whack-a-mole/SKILL.md`: added invariant-enforcer discovery in §5 to run `/connect-the-dots` on the violated rule (the invariant) before proposing a new mechanism, naming existing enforcers in the umbrella issue and handing off candidates and gaps to §6.
