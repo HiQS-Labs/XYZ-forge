@@ -1,0 +1,33 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/publication --builder codex --reviewer agy --max-tasks 4 --supervise-until 1794890573
+rc=0
+jog: execution clone aligned at 935ff484bf593b1ef946b28e81ca09ceda72b9fa; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYGET8DDJ9V0QA1V1P8XT/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-901 failed task-locally (pre-advance-failed, gate exit 1; result: gh901-exec1/preflight/result.json); retained without retry; continuing independent pending work.
+jog: execution clone aligned at 935ff484bf593b1ef946b28e81ca09ceda72b9fa; other branches and untracked files retained
+
+============================================================
+jog: processing GH-903 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-903 (execution gh903-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYGWNXNKHS8G2YNW8X614/gh903-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-903 published awaiting approval; continuing independent pending work.
+jog: execution clone aligned at 935ff484bf593b1ef946b28e81ca09ceda72b9fa; other branches and untracked files retained
+
+============================================================
+jog: processing GH-904 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-904 (execution gh904-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYH3E2PJ51QTW54TXNBVW/gh904-exec1/preflight)
+jog: GH-904 preflight refused: not-ready (exit 3) — next: dependency GH-901 not delivered
+jog: advancing halted: GH-904 parked — preflight-refused (exit 3): not-ready (exit 3) — next: dependency GH-901 not delivered
+jog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYGET8DDJ9V0QA1V1P8XT/gh901-exec1/preflight/result.json]
+jog: GH-902 parked: fixture: held before the wake
+jog: GH-903 parked: awaiting-landing (PR #903: https://example.invalid/pr/903)
+jog: GH-904 parked: preflight-refused (exit 3): not-ready (exit 3) — next: dependency GH-901 not delivered
+jog: published primary checkpoint 8a20a00670fcef3ae5d549729070794d1e5bac65
+Switched to a new branch 'fixture-901-gh901-exec1'
+Switched to a new branch 'fixture-903-gh903-exec1'

@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890643
+rc=0
+jog: execution clone aligned at 647ab8e413773beca6c1ba6405db3837ff93410e; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/primary/.tick/jog/jog-01M7KX0N2S420HV4W6ACEQ78ZS/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: marathon-drive exited 0 without a valid result receipt: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/primary/.tick/jog/jog-01M7KX0N2S420HV4W6ACEQ78ZS/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)
+jog: published primary checkpoint 42a3c29608442b810f30ef61f39e9f583a5d9aa0
+Switched to a new branch 'fixture-901-gh901-exec1'
