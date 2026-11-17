@@ -24,6 +24,23 @@ Evidence: `TESTS-RESULTS/2026-11-17+GH-1493/SUMMARY.md`.
 - In `skills/1-hourly/debug-mantra/SKILL.md`: added an explicit escalation in §2 (trace the fail path) to run `/recon` when a fail path traverses unread modules before forming the hypothesis.
 Evidence: `TESTS-RESULTS/2026-11-17+GH-1512/`.
 
+## 2026-11-16 — GH-1503: relay-drive refuses an approval over the reviewer's own failing verdict; one rule reads `STATUS:`
+
+`relay_drive.py` attested `STATUS: Approved` whatever the reviewer's block said, so a block ending `VERDICT: FAIL` closed a relay as approved (BinoidCBD/LTVera-Pandas#981, gap 4). `judge_terminal` now refuses that turn with escalation reason `approved-over-fail` (exit 4, no attestation record). A failing word is `FAIL`, `Changes requested` or `Blocked` on the last verdict line the reviewer added this turn; a block with no verdict line is judged as before. Second change: the driver, the attestation, marathon and two Bash readers needed the bare `STATUS:` prefix while the turn wrapper, `poll.py` and `bin/validate-relay-block` accepted `**STATUS:** Approved`, so one file read as approved to the wrapper (which closed the token) and as no status to the driver (`token-state`, exit 4). All readers now use the wrapper's rule (`relay_attest.header_field`; the same pattern in `marathon-recover.sh`, `extract-relay-telemetry.sh` and `marathon.sh`). The frozen Bash twins and `utils/pdda/check_marathon_qa.py` are not changed. Third: exit 5 still means both a review-once "changes requested" handback and a failed turn; `.relay-scratch/escalation-reason` now says which (`review-handback` or `turn-failed-rc<N>`). No exit code number, record format, trailer or commit subject changes. No new suite: three cases (D4, D5, D6) added to `test/gh505-relay-attest.sh`. Revert the PR to undo. No issue number yet. Evidence: `TESTS-RESULTS/2026-11-16+GH-1503/`.
+
+## 2026-11-16 — GH-1502: instructions given to relay turns agree with what the harness does
+
+Text only; no harness behavior changes. The turn prompt (`rtl_turn_prompt`) no longer says "The
+harness runs the gate after your turn": a gate command runs only when one is configured for the
+relay, and both roles are now told so. The thread scaffold (`new-relay.sh`) and `/relay` mark
+"commit only the relay file" and the "other window" wording as manual-relay instructions, because
+the turn prompt forbids git in a driven turn. `/relay` states that driven threads use
+`VERDICT: PASS|FAIL|PARKED`. `/start-task` no longer calls reviewer findings "advisory evaluations,
+NOT a mandate", and `/start-task` and `/relay-xyz` replace "not unrequested enterprise multi-tenant
+threat models" with "the target repository's own stated threat model governs". The `[Blocker]`
+rule is unchanged. Pinned assertions updated in `test/gh91`, `test/gh615`, `test/gh616`; no suite added;
+`relay-pkg.tar.gz` rebuilt. Evidence: `TESTS-RESULTS/2026-11-16+GH-1502/`.
+
 ## 2026-11-16
 
 - **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop

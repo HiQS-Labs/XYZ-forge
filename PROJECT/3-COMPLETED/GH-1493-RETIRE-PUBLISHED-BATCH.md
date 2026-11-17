@@ -2,7 +2,7 @@
 gh_issue: 1493
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1493
 title: "merge-cleanup: --retire-published-pr aborts the whole call on a -gate helper cloned from the task clone"
-status: Active — Final QA
+status: Complete
 created: 2026-11-17
 updated: 2026-11-17
 owner: start-task lane
