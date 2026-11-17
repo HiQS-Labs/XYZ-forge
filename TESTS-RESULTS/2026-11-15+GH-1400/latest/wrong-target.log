@@ -1,0 +1,13 @@
+jog: GH-901 held: result receipt names a different execution target
+jog: execution clone aligned at a8d9baf4297ed4d030a666a5b07113f9a75ede91; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/latest/wrong-target/primary/.tick/jog/jog-01M7FZ7XT3A9TGD5EKJFSY9ZJ4/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: no pending tasks; held outcomes remain below.
+jog: GH-901 parked: supervision held: result receipt names a different execution target
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+Switched to a new branch 'fixture-902'
