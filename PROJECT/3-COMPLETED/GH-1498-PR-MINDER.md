@@ -2,9 +2,9 @@
 gh_issue: 1498
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1498
 title: "pr-minder: manually invoked PR remediation pass with an age-based stale ladder"
-status: Active — PR ready, awaiting merge
+status: Complete
 created: 2026-11-16
-updated: 2026-11-16
+updated: 2026-11-17
 owner: start-task lane
 goal: A manually invoked /pr-minder skill that moves each eligible open PR in the current repo one step toward landing or a clean exit, with remediation scaled to real author-activity age.
 doc_type: enhancement
