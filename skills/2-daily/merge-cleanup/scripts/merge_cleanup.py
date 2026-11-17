@@ -2394,6 +2394,7 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
     safe_roots = primary_safe_roots(primary)
     canonical = primary_origin.stdout.strip()
     candidates = []
+    refused: List[Path] = []
     # GH-1493: each path is admitted or preserved on its own; one ineligible path no longer
     # stops the others from being inspected and retired.
     preserved = False
@@ -2423,10 +2424,20 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
         except (OSError, RuntimeError, ValueError) as exc:
             print(f"PRESERVED {raw}: {exc}")
             preserved = True
+            try:
+                refused.append(Path(raw).expanduser().resolve())
+            except (OSError, RuntimeError):
+                pass
             continue
         candidates.append(path)
     failed = preserved
     for path in candidates:
+        # A refused checkout nested inside an admitted one would be moved with it; keep both.
+        inner = next((r for r in refused if path in r.parents), None)
+        if inner is not None:
+            print(f"PRESERVED {path}: contains refused checkout {inner}")
+            failed = True
+            continue
         scanned = inspect_checkout(path, primary_repo_path=primary,
                                    integration_branch=integration_branch, published_pr=number)
         fresh = refresh_for_teardown([scanned], primary, integration_branch=integration_branch,

@@ -24,8 +24,7 @@ clone, then `git remote set-url origin` to the canonical URL): **green**, 407 re
 1 skip (`acorn-extract.sh`, already run in the npm step). Includes `gh436-merge-cleanup.sh`,
 `gh589-xyz-mini-sync.sh` and `gh620-skills-army-mini-sync.sh` (publisher suites: changed files sit
 under published skill folders). Clone identity (HEAD, origin, `core.bare=false`) identical before
-and after. Receipt: `gate/ci-local-0d1ccf8fa.txt`. The push of `0d1ccf8fa` from the same clone ran
-the pre-push full gate: `pre-push: full gate GREEN in 799s`.
+and after. Receipt: `gate/ci-local-0d1ccf8fa.txt`.
 
 ## Smoke (GH-1088)
 
@@ -48,3 +47,17 @@ Exit 1 both runs. Verdict: **pass.** The batch continued past a refused path and
 classification; the local-origin refusal names the helper recipe; the unpublished-commit control
 reached classification and was preserved for its unpushed ref, not an origin, dirt or session reason.
 The `-gate` change between runs is live session evidence working as designed, not a defect.
+
+## CodeRabbit follow-up: refused checkout nested in an admitted one (2026-11-17)
+
+CodeRabbit found that a refused checkout nested inside an admitted one would be moved to Trash with
+its parent. `retire_published_checkouts` now records each refused path and preserves any admitted
+checkout that contains one (`PRESERVED <path>: contains refused checkout <inner>`), before it is
+inspected or torn down.
+
+Manual check, preview only (no `--execute`), receipt `manual-nested-refused.txt`. A parent clone with
+the canonical origin holds an ignored nested `git init` repo (`inner/`, origin none). The run passes
+`--checkout <parent>/inner --checkout <parent>`.
+- Old code (`0e470b330`): `inner` is preserved, but the parent is admitted and goes on to inspection
+  and teardown. It survived this run only because of unrelated local tags (`PRESERVE_UNPUSHED`).
+- New code: both are preserved, and the parent is never inspected. Exit 1 for both.
