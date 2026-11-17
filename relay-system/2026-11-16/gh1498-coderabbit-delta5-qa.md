@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -88,5 +88,27 @@ Answer, citing `file:line`:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: The seeded code fixes preserve the intended CLI behavior, and the added A21/A19e evidence exercises the claimed decisions with effective red controls. No additional concrete pre-existing defect found in the full driver sweep. Approval covers this code/evidence review; final-head gate qualification remains with the harness.
+swept file: yes
+
+Read all 571 lines of `skills/2-daily/pr-minder/scripts/pr_minder.py`, the shared activity query and clock, the relevant manual driver and retained results/provenance, and the preceding delta4 relay. Graph tools are unavailable in this session; direct source reads supplied the evidence. No Git executable, network operation, suite, pytest, gate or executable fixture was run. The only tracked edit is this relay file.
+
+- [Pass] **Both bounded code fixes are correct.** `skills/2-daily/pr-minder/scripts/pr_minder.py:523–533` retains assessment of every PR for stack inheritance, then filters before fetching conflict files and rebuilding the selected comment. Explanation follows enrichment at `:535–539`. `skills/3-weekly/weekly-planner/scripts/planner_core.py:1322–1329` returns unknown for null thread/inner-comment entries; valid entries still contribute timestamps. Unknown rows remain report-only at `pr_minder.py:276–278`. No requested correction.
+
+- [Pass] **Independent narrow probes support the code review.** Commands: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` and a second `python3 - <<'PY'`, each exit **0**. Inline Python AST-compiled only the seeded `author_activity`/parsing helpers, `apply_row`, and `main`; all readers, mutation calls, receipts and sleeps were in-memory substitutes, with no subprocess or external side effect reachable. Decisive asserted output: `null-thread/null-comment -> (None, False); valid empty thread preserves timestamp`; `['--pr', '150', '--json'] lookup=[150] assessed=[150, 151] rc=0`; `['--explain', '151'] lookup=[151] assessed=[150, 151] rc=0`; `['--pr', '999'] lookup=[] assessed=[150, 151] rc=2`; unfiltered JSON looked up both PRs. The explanation contained `own-conflict.txt` in both its conflict list and rebuilt comment. These measure the wiring at `pr_minder.py:523–539`, rather than live Git conflict discovery.
+
+- [Pass] **A21 exercises async polling and rejects the single-read control.** `TESTS-RESULTS/2026-11-16+GH-1498/manual_check.py.txt:873–882` seeds two stale reads, invokes apply with five reads, and requires exactly one successful result with `head_after == "h160-synced"`; its bad candidate permits only one read. The fake returns stale heads only on queried head reads (`:53–58`), after update-branch stores the old head (`:60–67`). Production uses bounded read polling without repeating the mutation at `pr_minder.py:437–449`. The first AST probe above asserted `A21 decision: width=5 reads=3 outcome=ok mutation_calls=1` and `A21 decision: width=1 reads=1 outcome=uncertain mutation_calls=1`. Recorded outcomes are at `manual-check.log:31–33`. No requested correction.
+
+- [Pass] **A19e's red control is effective; evidence claims are now accurate.** `manual_check.py.txt:802–821` supplies a recent marker comment with `viewerDidAuthor=False`, then removes marker comments in the bad candidate before rerunning the same assertion. This targets the ownership predicate at `planner_core.py:1310–1312`. The first AST probe asserted `A19e decision: foreign marker -> 2026-11-16; marker-only control -> 2026-09-01 (rejected)`. The second probe parsed nonempty retained results and asserted `retained JSON: 30 PASS; A19e/A21 bad_rejected=true, bad_crashed=null`. `manual_check.py.txt:180–196` treats crashed controls as failures. Its header (`:2–5`) and `TESTS-RESULTS/2026-11-16+GH-1498/README.md:7–8` explicitly exclude A12b/A18/A19d/A20a from red-control claims. No requested correction.
+
+- [Pass] **The reviewer-probe provenance decline is sound for this turn.** The current operator instruction requires scratch-only probes and quoting their command, status and decisive output in the finding; it expressly forbids editing evidence artifacts. Those probe details are recorded above. Producer evidence is separately retained: `TESTS-RESULTS/2026-11-16+GH-1498/provenance.jsonl` contains the `"id": "A1-A21"` record identifying product revision `4080d4b80`, the manual command, 30 passes and the two red controls. That revision identifies unchanged product code, not an assertion that the later evidence commit itself was gated. No new producer provenance entry is required for these reviewer-only probes.
+
+- [Unverified — needs clone run] The complete manual driver and final-head gate were not rerun here. The inspected 30/30 receipt is producer evidence; executable fixtures and qualification belong to the disposable-full-clone harness after this turn.
+
+Relay closed (Approved), no further turn needed. The token is closed with `done`; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
