@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -99,5 +99,28 @@ Begin your block with a 3–5 line paraphrase, in your own words, of what the fo
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 (claude-review)
+
+Paraphrase: the follow-up widens 10days Step 4's existing-doc branch to cover a capture in 1-INBOX, 2-WORKING or 3-COMPLETED, but only after Step 3 confirms the current ask is unfinished; it reuses that one canonical doc, moves it via the repo's existing lifecycle/repoint path, keeps historical delivery evidence, and holds ambiguous identity/scope instead of writing a duplicate. It re-grounds the auto-draft label and `fix_probes` comment in the issue plus research receipt while keeping "not yet operator-verified" and Step 8 surfacing. It hashes `releases-check.log`. It explicitly does not touch N3 (primary-writer governance), does not run the classified gate, and claims no OL-09 credit, OL-10 runtime or deployment.
+
+Reviewed head `cf6345e96` (worktree HEAD `8b803711` only adds scaffolding); scope `git diff 545f6d714..cf6345e96` (4 files, +11/−6).
+
+- [Pass] N1 implemented. `skills/3-weekly/10days/SKILL.md:318` "(1-INBOX, 2-WORKING or 3-COMPLETED): after Step 3 confirms the current ask remains unfinished, reuse the canonical doc … ambiguous identity or scope stays HELD rather than creating a duplicate." Consistent with `:220` "never exclude on folder location alone" and `:74-75` "a reconciliation clue, not proof", and with Conveyor `skills/1-hourly/conveyor/SKILL.md:65` "multiple plausible docs or conflicting active work mean hold, not a second plan." Move is routed to an existing owner, not a new one: `utils/py/releases_app.py:3976` `cmd_roadmap_repoint` ("The move itself stays a `git mv` by the operator: this verb only rewrites the row") and pickup's existing-row repoint branch `:3843-3860` (refuses `no-such-doc` on a non-real path). The single later pickup with a real `--doc-path` before Step 5 is unchanged at `:385-395`.
+- [Pass] Q2 walk (instruction check, not execution). (a) unfinished ask confirmed → `:318` reuse + move to 2-WORKING via `git mv` + `roadmap repoint`/pickup-with-`--doc-path` (`:390`), history preserved, one pickup (`:385`). (b) ambiguous scope/identity → `:318` HELD; `:305` "Step 3 HELD/EXCLUDE items receive no selection/rating write" and "do not create a dangling row or fake contract" (`:303-304`) → no ledger write. (c) second plausible capture → Conveyor `:65` hold, `:318` "rather than creating a duplicate" → HELD, no capture, no write.
+- [Pass] N2 implemented. `:361` "from the issue and research receipt — artifacts/lanes not yet operator-verified … the report in Step 8 must surface every auto-drafted contract by name. Research grounding does not replace preflight, overlap checks or independent review." `fix_probes` comment `:333` now "supported by the issue and research receipt; detect unfinished behavior", consistent with the Step 2 gotcha that probes detect the bug, not the fix. No overclaim.
+- [Pass] N4 reproduces. `shasum -a 256 TESTS-RESULTS/2026-11-17+GH-1476/releases-check.log` → `805018e3…9785`, `skills/3-weekly/10days/SKILL.md` → `f098d940…71d3`, and `git show cf6345e96:skills/3-weekly/10days/SKILL.md | shasum -a 256` → `f098d940…71d3`; both match `provenance.jsonl` final-qa-followup records exactly.
+- [Pass] N3 genuinely pre-existing and untouched: `git diff 545f6d714..cf6345e96 --stat -- PROJECT/PDDA.md CHANGELOG.md` is empty; the line is still at `PROJECT/PDDA.md:301` "on the primary checkout". Plan dispositions say "unchanged and not claimed solved"; SUMMARY says "no claim to solve it"; CHANGELOG GH-1476 entry (`CHANGELOG.md:3-5`) makes no N3 claim.
+- [Pass] Evidence honest. SUMMARY addition: "These are instruction checks, not runtime execution"; plan: "required classified gate pending"; CHANGELOG: "does not complete OL-09 … OL-10 runtime enforcement is unchanged". No new suite, `validate.sh` entry, runtime code or store added (diff is docs-only).
+- [Nit] N1 leaves the ledger *state* of a reused 3-COMPLETED row implicit. Pickup's existing-row branch (`releases_app.py:3860-3862`) rewrites only `doc_path`/`raw_text` and prints "already parked; preserved"; `roadmap repoint` likewise touches no state. If the historical row is in a closed state, the doc lands in 2-WORKING while its row stays closed, and `:318`'s "record the remaining or reopened scope" names no owner for that. Not a behaviour defect today because `:318` defers to "the target repo's supported lifecycle … procedure" and an operator hold is the fallback.
+  Observed input: none — no concrete GH-N with a closed-state row and a 3-COMPLETED capture was found; this is an instruction-gap note, not an observed failure.
+  Affected scope: an open issue whose only capture is in 3-COMPLETED and whose roadmap row is not open.
+  Falsifier: a dry-run `roadmap pickup --issue-num N --doc-path PROJECT/2-WORKING/…` on such a row followed by `releases_app.py check` exiting 0 with the row correctly listed would show no gap. Optional; do not block.
+- No contradiction found between the touched lines and unchanged neighbours in 10days Steps 2–4 (`:215-235`, `:290-400`), Conveyor `:65`/`:78`/`:107`, or the writer.
+
+swept file: yes — touched sections of `skills/3-weekly/10days/SKILL.md` and neighbours (:70-80, :200-235, :290-400), Conveyor :65/:78/:107, `releases_app.py` :3835-3865 and :3976-4020, the full follow-up diff to the plan/SUMMARY/provenance. Not read this round: 10days Step 8 body and the rest of the plan beyond its last section (unchanged since r1 Approved).
+
+VERDICT: PASS
+Basis: all three accepted round-1 Nits are correctly implemented with cited lines, both new hashes reproduce against current bytes, N3 is untouched and unclaimed, evidence is labelled as instruction checks with the gate pending and no OL-09/OL-10 claim; the one new Nit is non-blocking. Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
