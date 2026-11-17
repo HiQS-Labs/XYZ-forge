@@ -7,6 +7,17 @@
   In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
   call tracing found no new module.
 
+## 2026-11-17 — GH-1493: published retirement preserves one bad checkout instead of aborting the call
+
+`merge_cleanup.py --retire-published-pr N` used to refuse the whole call (exit 2) when any
+`--checkout` path failed admission, so a `-gate` helper cloned from the task clone also kept
+the task clone and `-verify` helper on disk. Each path is now admitted or printed as
+`PRESERVED <path>: <reason>`; the rest still run, and the call exits 1 if anything was preserved.
+The origin refusal names how to make a helper (keep the canonical origin), and start-task says so.
+Classification is unchanged: another repository or an unpublished local commit is still preserved.
+An admitted checkout that contains a refused one is preserved too, so it is never moved with it.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1493/SUMMARY.md`.
+
 ## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
 
 - In `skills/3-weekly/whack-a-mole/SKILL.md`: added invariant-enforcer discovery in §5 to run `/connect-the-dots` on the violated rule (the invariant) before proposing a new mechanism, naming existing enforcers in the umbrella issue and handing off candidates and gaps to §6.

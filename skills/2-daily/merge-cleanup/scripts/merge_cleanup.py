@@ -2392,32 +2392,52 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
         log_err("Cannot verify the protected primary's origin; preserving all checkouts")
         return 2
     safe_roots = primary_safe_roots(primary)
+    canonical = primary_origin.stdout.strip()
     candidates = []
-    try:
-        for raw in paths:
+    refused: List[Path] = []
+    # GH-1493: each path is admitted or preserved on its own; one ineligible path no longer
+    # stops the others from being inspected and retired.
+    preserved = False
+    for raw in paths:
+        try:
             supplied = Path(raw).expanduser()
             if not supplied.is_absolute() or supplied.is_symlink():
-                raise ValueError(f"checkout must be an absolute, non-symlink path: {raw}")
+                raise ValueError("checkout must be an absolute, non-symlink path")
             path = supplied.resolve(strict=True)
             if (path == primary or path in primary.parents or primary in path.parents
                     or path == Path.cwd().resolve() or path in Path.cwd().resolve().parents):
-                raise ValueError(f"protected primary/ancestor or executing directory: {path}")
+                raise ValueError("protected primary/ancestor or executing directory")
             if not (path / ".git").exists():
-                raise ValueError(f"not a Git checkout: {path}")
+                raise ValueError("not a Git checkout")
             safe, why = is_safe_deletable_path(path, safe_roots=safe_roots)
             if not safe:
                 raise ValueError(why)
             if any(path == other or path in other.parents or other in path.parents for other in candidates):
                 raise ValueError("checkout paths must be distinct and non-overlapping")
             origin = run_git(path, ["remote", "get-url", "origin"])
-            if origin.returncode or _normalize_remote(origin.stdout) != _normalize_remote(primary_origin.stdout):
-                raise ValueError(f"checkout origin differs from the protected primary: {path}")
-            candidates.append(path)
-    except (OSError, RuntimeError, ValueError) as exc:
-        log_err(f"Published retirement refused: {exc}")
-        return 2
-    failed = False
+            if origin.returncode or _normalize_remote(origin.stdout) != _normalize_remote(canonical):
+                found = origin.stdout.strip() if not origin.returncode else "none"
+                raise ValueError(
+                    f"checkout origin ({found}) differs from the protected primary ({canonical}); "
+                    "a -gate/-verify helper must keep the canonical origin — clone the task clone, "
+                    f"then: git -C <helper> remote set-url origin {canonical}")
+        except (OSError, RuntimeError, ValueError) as exc:
+            print(f"PRESERVED {raw}: {exc}")
+            preserved = True
+            try:
+                refused.append(Path(raw).expanduser().resolve())
+            except (OSError, RuntimeError):
+                pass
+            continue
+        candidates.append(path)
+    failed = preserved
     for path in candidates:
+        # A refused checkout equal to or nested inside an admitted one would be moved with it; keep both.
+        inner = next((r for r in refused if r == path or path in r.parents), None)
+        if inner is not None:
+            print(f"PRESERVED {path}: contains refused checkout {inner}")
+            failed = True
+            continue
         scanned = inspect_checkout(path, primary_repo_path=primary,
                                    integration_branch=integration_branch, published_pr=number)
         fresh = refresh_for_teardown([scanned], primary, integration_branch=integration_branch,

@@ -653,7 +653,10 @@ override or backup flags. The driver requires matching canonical origins, a live
 non-draft OPEN/MERGED same-repository PR targeting the integration branch, exact
 fetched origin branch/head equality, and remote recovery proof for every local ref
 and detached HEAD. Missing/deleted remote branches, stale heads, forks, failed API
-or Git queries and malformed metadata preserve the checkout. Publication is not a
+or Git queries and malformed metadata preserve the checkout. A path refused before
+inspection (not absolute, protected, not Git, outside the safe roots, overlapping, or
+a different origin) prints `PRESERVED <path>: <reason>` and the other paths still run;
+the call then exits 1 (GH-1493). Publication is not a
 claim of merge, release promotion or issue completion.
 
 Existing local-state/session/dependency checks run again immediately before the
