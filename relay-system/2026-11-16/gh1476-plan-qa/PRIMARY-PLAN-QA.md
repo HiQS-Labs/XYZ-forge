@@ -1,0 +1,45 @@
+# GH-1476 OL-09 plan QA — review sub-agent notes
+
+Reviewed plan: `PROJECT/1-INBOX/GH-1476-RAW-TASK-PREPARATION.md` at `b76b62b1e02ce6c398e30a1975e1262015f8e226` (source base cited by plan: `f346d8908a42cd6e7e92f80657f9e7a21208e0ae`; `git diff f346d8908 b76b62b1e` touches only this plan, `releases.db`, `releases.sql`, so skill source is identical at both).
+
+These are the review sub-agent's own notes (orchestrating session). They are NOT independent review; the independent verdict is the Claude reviewer block in `gh1476-plan-qa.md`.
+
+## Paraphrase (written from the plan alone, before supplementary sources)
+
+What this proposes: Make OL-09 real in instructions only. Conveyor gains one canonical "RAW preparation" policy: accept requests that have no row/contract, default each selected unprepared item to one bounded read-only medium-depth research child, deepen only on concrete state/authority/recovery uncertainty or credible high effort, reuse still-valid prepared evidence, keep unknowns as visible holds and treat risk deferral as an explicit per-batch opt-in. 10days Steps 2/3/8 are then edited to consume that policy: a completed-folder doc no longer auto-excludes, HELD is reported separately from EXCLUDE, exclusion needs affirmative evidence, ratings follow start-task policy (neutral appeal, no forced clearing), and only committed execution selection writes the ledger.
+
+How the existing system works (per document): Conveyor (71 lines) already prepares existing issues through recon, capture, contract, PRS pickup and a reviewed docs PR, with held/needs-spike outcomes, but has no research-depth default. 10days scans a GitHub window, buckets by capture-doc folder (3-COMPLETED = immediate exclude), fans out validity subagents that return binary INCLUDE/EXCLUDE and assign rubric ratings (appeal from clarity, forced `ovr` clearing), authors contracts, plans with `marathon-plan.sh --deep` (a preflight refresh, not research depth), preflights and auto-fires. Jog already owns the preparation/admission handoff; Flywheel coordinates without re-enqueueing 10days work.
+
+What it is not: Not OL-10 (runtime admission refusal of stale/held work), not a #1328 amendment, not numeric global research ceilings, not a new queue/state/schema/test suite/runtime, not installed-skill edits, not live backlog execution, and not dependent on PR #1491. The PR refs #1476 rather than closing it, and the manual scenario walk proves prose consistency only.
+
+## Findings (orchestrator, source-backed)
+
+1. [Should] "Daily-goal intake" has no source owner. `git grep -i "daily[- ]goal"` over skills and PROJECT finds only this plan and two marathon-plan mentions of #1474. 10days takes only a `gh issue list` window (`skills/3-weekly/10days/SKILL.md:197-210`); Conveyor takes only existing issue IDs or a selection scope (`skills/1-hourly/conveyor/SKILL.md:14-19`). The plan must either define RAW = an existing GitHub issue lacking row/capture/contract (then "daily-goal intake retained" means "unchanged", and acceptance bullet 6 needs no work), or name the real entry point. Falsifier: a source line where a non-issue daily-goal text enters 10days or Conveyor.
+2. [Should] Conveyor's own shortlist ledger write is left in conflict with "no ledger writes on shortlist". `conveyor/SKILL.md:33` says "Selecting an issue for preparation is pickup/selection under decision 6" and `:36-42` runs `roadmap pickup`/`roadmap rate` for every prepared issue; decision D-b (`decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md:8`) defines selection as commitment to an actual execution batch/marathon. #1476's own recon lists this exact contradiction. The plan's step 3 fixes only 10days. Minimal fix: state that 10days consumes only Conveyor's new policy section, never Conveyor Steps 3-6 (capture publication, pickup, label) from a research child; and either leave Conveyor:33 explicitly unchanged with reason (standalone Conveyor run, GH-1401 decision) or reconcile it. Falsifier: show that 10days research children cannot reach Conveyor Step 4.
+3. [Should] Live exclusion/drop lines outside the named Step 2/3/8 edits would still turn unknowns into exclusions:
+   - `10days/SKILL.md:73-75` Guardrail: "an existing capture doc parked in PROJECT/3-COMPLETED, is evidence" (of already done) — contradicts plan's "a completed folder alone cannot exclude".
+   - `10days/SKILL.md:244` sanity-check filter: "low-consequence noise with a clear deferral path, classify it as EXCLUDE" — an implicit risk-based deferral, contradicting "risk deferral requires an explicit batch-scoped request".
+   - `10days/SKILL.md:288` "EXCLUDE when ... unreproducible" — plan covers in spirit ("unknown reproduction/access is held") but should cite this line.
+   - `10days/SKILL.md:389-391` Step 4 sniff test: "drop that issue back to `needs_contract` and exclude it from this run" — should be HELD with resumption condition, not exclude.
+   Plan step 3 should list these lines (or widen scope to "Guardrails + Steps 2-4 + 8") so the implementer cannot leave a contradictory line.
+4. [Should] "Selected unprepared work" is undefined inside 10days. Step 3 already spawns one subagent per surviving issue (`:239-241`) for the whole window; ledger selection happens at Step 4/5 (`:338-343`, `:393`). The plan must say whether the Step 3 subagent IS the default medium research child (cheapest, no new fan-out) or a new pass after INCLUDE. Without it an implementer may research the entire window or select before research.
+5. [Should] OL-09 checkbox honesty. #1400 OL-09 reads "implemented and verified"; plan step 4 says "Record remaining real-follow-up requirement before ticking OL-09 as operationally verified" — readable as "record, then tick". State plainly: this PR credits instruction text only; #1400 OL-09 stays unchecked until a real bounded run witnesses the behaviours; the PR body and CHANGELOG say so.
+6. [Nit] `10days/SKILL.md:232` also invalidates/clears a malformed `ovr` at Step 2; plan names Step 3's forced clear (`:253`) but should say "preserve and hold a malformed operator value for operator decision" covers both lines.
+7. [Nit] Step 5 `--deep` (`:398-401`) naming collision: plan correctly notes it is freshness, not research depth; the new text should not reuse "deep" for research depth in 10days without a disambiguating sentence.
+8. [Pass] OL-10 separation, no runtime/schema/test-suite, #1328 non-amendment, no numeric global defaults, and Refs-not-Closes are all explicit (plan lines 25, 48-51). Manual walk explicitly says it proves instruction consistency, not behavioural compliance (plan line 40).
+9. [Pass] Rating policy target matches start-task and G5 (`decisions/...:7`).
+
+Orchestrator recommendation: FAIL for this round on findings 2-5 (all plan-text fixes, no new machinery); re-review after parent revises.
+
+## Independent review receipt
+
+- Reviewed plan head: `b76b62b1e02ce6c398e30a1975e1262015f8e226`; reviewer worktree HEAD `a16b1d38` (thread scaffold only; plan bytes unchanged).
+- Driver: `relay-automation/relay-drive.sh` → `utils/py/relay_drive.py` (XYZ_PYTHON default), `--reviewer claude-review --review-once --round-cap 1` (from thread `ROUND: 1 / 1`), worktree isolation ON, `ALLOW_PATHS=""`.
+- Shim/validator: `relay-automation/claude-turn.sh` → `utils/py/claude-turn.py`, `CLAUDE_AUTH_MODE=subscription` (first-party Claude.ai Max login; the shim refuses non-subscription auth before dispatch), `CLAUDE_MODEL=opus`, effort high. CLI result `success`, 18 turns, 195 s; models used claude-opus-5-5 (+ haiku-5-5 helper). Reported cost $1.57 is the CLI's estimate, not a bill.
+- Outcome: reviewer turn committed `2ed73826` (file-scoped, no push). Driver exit 4 = STATUS Escalated because round 1/1 ended without approval (by design of a one-round plan review), not a stall.
+- Attestation: `relay_attest` writes a record only for an Approved/Closed terminal; a FAIL verdict has none (`.git/relay-attest/` absent). The driver watched the reviewer-role turn it dispatched; no attestation is claimed.
+- Reviewer limits: its `gh issue view` was refused in its sandbox; the orchestrator read #1400 directly: OL-09 = "Raw intake and research policy are implemented and verified", which supports S5.
+
+## Reconciliation
+
+Independent reviewer VERDICT FAIL (B1, S1-S6, N1-N3). It independently found every orchestrator finding 1-5 and added: verdict enum lacks HELD (10days:264), preflight exit 4 dropped without delivering evidence (10days:430 vs conveyor:61), Step 3 rating write before selection (10days:254), budget recorded in a packet that does not yet exist (S4), and missing red-control scenarios (S6). Orchestrator concurs with all; none requires new machinery.
