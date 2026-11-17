@@ -150,5 +150,21 @@
     "bad_candidate": "pre-fix resolver (parents[1].parent)",
     "bad_rejected": true,
     "verdict": "PASS"
+  },
+  {
+    "id": "A17",
+    "assertion": "behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1",
+    "candidate": "PASS",
+    "bad_candidate": "behind from mergeStateStatus only",
+    "bad_rejected": true,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A18",
+    "assertion": "repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "verdict": "PASS"
   }
 ]

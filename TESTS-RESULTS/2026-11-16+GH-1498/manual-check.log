@@ -17,5 +17,8 @@ PASS A13: a pr-minder:* label without an owning receipt is kept; with one, a fre
 PASS A14: rung-2 update-branch failure: one sync attempt, label added, failure diagnosis commented | bad: no fallback comment on failure -> rejected
 PASS A15: author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched | bad: presence inferred only from the visible window -> rejected
 PASS A16: flat install (skills/<name>/scripts siblings, no env) resolves both bundles | bad: pre-fix resolver (parents[1].parent) -> rejected
-{"passed": 19, "failed": 0}
+PASS A17: behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1 | bad: behind from mergeStateStatus only -> rejected
+   A18 parts: {'quoted': True, 'draft_abort': True, 'label_race': True, 'thresholds': True, 'plan_shows_removal': True}
+PASS A18: repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals | bad: — -> n/a
+{"passed": 21, "failed": 0}
 rc=0

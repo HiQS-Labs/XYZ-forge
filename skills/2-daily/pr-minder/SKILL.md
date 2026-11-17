@@ -34,7 +34,7 @@ people's PRs.
 A PR's age is the time since its last commit, review, review-thread comment, or comment without the
 `<!-- pr-minder` marker. Label changes and metadata edits don't count. GitHub server-side branch syncs
 don't count either. A sync is a two-parent commit committed by `noreply@github.com` with headline
-`Merge branch '…' into …`, or an OID in pr-minder's own update-branch receipts. That predicate also
+`Merge branch '…' into …`. Receipts are not trusted for this: an author push landing between an update-branch and the head re-read would otherwise be hidden. That predicate also
 matches a human clicking "Update branch", and a web-editor conflict fix that kept the default message.
 Such a PR can look staler than it is. `/daily-planner`'s Stalled report uses the same clock.
 

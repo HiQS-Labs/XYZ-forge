@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shlex
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -81,11 +82,6 @@ class Receipts:
         with self.path.open("a") as fh:
             fh.write(json.dumps(row, sort_keys=True) + "\n")
         self.rows.append(row)
-
-    def sync_oids(self) -> frozenset:
-        return frozenset(r.get("head_after") for r in self.rows
-                         if r.get("phase") == "result" and r.get("action") == "update-branch"
-                         and r.get("outcome") == "ok" and r.get("head_after"))
 
     def owned_labels(self, pr: int) -> set:
         """pr-minder labels a receipt proves this tool added (and has not since removed) on this PR."""
@@ -173,7 +169,10 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
     now = datetime.now(timezone.utc)
     held_by_engine = engine_holds(prs)
     by_head = {p.get("headRefName"): p for p in prs if not p.get("isCrossRepository")}
-    sync_oids = receipts.sync_oids()
+    # Maintenance syncs are recognised by commit structure only (planner_core.is_maintenance_commit).
+    # A receipt's head_after is NOT trusted as a sync OID: an author push between update-branch and the
+    # head re-read would be misrecorded and then hidden from the clock (CodeRabbit #1510).
+    sync_oids: frozenset = frozenset()
     rows: dict[int, dict] = {}
 
     for pr in prs:
@@ -200,9 +199,10 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
         row["age"] = None if row["unknown"] else pc._age_days(ts, now)
         state = str(pr.get("mergeStateStatus") or "").upper()
         row["conflicting"] = state == "DIRTY" or pr.get("mergeable") == "CONFLICTING"
-        row["behind"] = state == "BEHIND"
         row["failing"] = failing_checks(pr)
         row["drift"] = drift(root, slug, pr) if not (row["held"] or row["unknown"]) else None
+        # GitHub reports CLEAN for a behind branch when no up-to-date rule applies: trust measured drift too
+        row["behind"] = state == "BEHIND" or (not row["conflicting"] and (row["drift"] or 0) > 0)
         rung = 0 if row["age"] is None else base_rung(row["age"], row["draft"], args.stale_days, args.draft_stale_days)
         if 1 <= rung <= 2 and row["drift"] is not None and row["drift"] > args.drift_bump:
             rung += 1   # never from 0, never into 4
@@ -235,6 +235,17 @@ def assess(root: Path, slug: str, prs: list[dict], activity: dict | None, receip
 
 
 def plan_bundle(row: dict, receipts: Receipts) -> dict:
+    """The bundle plus the owned-label removals apply_row will make, so plan output shows every write."""
+    b = _plan_bundle(row, receipts)
+    b["remove_labels"] = []
+    if b.get("write"):
+        on_pr = {str(lb.get("name", "")) for lb in row["pr_data"].get("labels") or [] if isinstance(lb, dict)}
+        owned = receipts.owned_labels(row["pr"])
+        b["remove_labels"] = [lab for lab in LABELS.values() if lab != b["label"] and lab in on_pr and lab in owned]
+    return b
+
+
+def _plan_bundle(row: dict, receipts: Receipts) -> dict:
     """Precedence: held > unknown > conflicting > failing > behind > none. One branch mutation max.
     `write` False means report only: apply_row makes no call of any kind for the row."""
     pr = row["pr_data"]
@@ -268,8 +279,10 @@ def plan_bundle(row: dict, receipts: Receipts) -> dict:
         lines.append("Conflicts with base in: " + (", ".join(f"`{f}`" for f in files) if files else "files unknown")
                      + f". {drift_txt}")
         if rung == 2:
-            lines.append(f"Repair in a disposable clone: `git fetch origin && git checkout {pr.get('headRefName')} "
-                         f"&& git merge origin/{pr.get('baseRefName')}` then resolve, commit and push.")
+            head_q = shlex.quote(str(pr.get("headRefName") or ""))
+            base_q = shlex.quote(f"origin/{pr.get('baseRefName') or ''}")
+            lines.append(f"Repair in a disposable clone: `git fetch origin && git checkout {head_q} "
+                         f"&& git merge {base_q}` then resolve, commit and push.")
         if rung == 3:
             own = row.get("own_commits") or []
             size = row.get("diff_size")
@@ -321,15 +334,12 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
     n, plan, pr = row["pr"], row["plan"], row["pr_data"]
     if not plan.get("write"):
         return []                      # report only: held, stacked on held, unknown history, rung 4
-    labels_now = {str(l.get("name", "")) for l in pr.get("labels") or [] if isinstance(l, dict)}
-    owned = receipts.owned_labels(n)
+    labels_now = {str(lb.get("name", "")) for lb in pr.get("labels") or [] if isinstance(lb, dict)}
     want = plan["label"]
     ops = []
-    for lab in LABELS.values():
-        if lab == want and lab not in labels_now:
-            ops.append(("add-label", lab))
-        elif lab != want and lab in labels_now and lab in owned:
-            ops.append(("remove-label", lab))   # only labels a receipt proves pr-minder added
+    if want and want not in labels_now:
+        ops.append(("add-label", want))
+    ops += [("remove-label", lab) for lab in plan.get("remove_labels", [])]   # receipt-proven ownership only
     existing = owned_comment(root, slug, n) if (plan["comment"] or plan["fallback"]) else None
 
     def comment_op(body):
@@ -356,6 +366,8 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
         reason = "head SHA changed"
     elif fresh.get("baseRefName") != pr.get("baseRefName"):
         reason = "base changed"
+    elif bool(fresh.get("isDraft")) != bool(pr.get("isDraft")):
+        reason = "draft status changed"
     else:
         fresh_full = {**pr, **fresh}
         h = hold_reason(fresh_full, held_by_engine_fn([fresh_full]))
@@ -365,7 +377,8 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
         receipts.write(pr=n, phase="result", action="bundle", outcome="aborted", reason=reason,
                        head_before=pr.get("headRefOid"), base=pr.get("baseRefName"), rung=row["rung"])
         return [f"aborted ({reason})"]
-
+    fresh_labels = {str(lb.get("name", "")) for lb in fresh.get("labels") or [] if isinstance(lb, dict)}
+    ops = [op for op in ops if op[0] != "add-label" or op[1] not in fresh_labels]   # someone else added it
     done = []
 
     def run(op, arg, call, **extra_intent):
@@ -421,7 +434,7 @@ def apply_row(root: Path, slug: str, row: dict, receipts: Receipts, held_by_engi
 def describe(row: dict) -> str:
     p = row["plan"]
     acts = [a for a, on in (("update-branch", p["update_branch"]), (f"label {p['label']}", p["write"] and p["label"] is not None),
-                            ("comment", bool(p["comment"]))) if on]
+                            ("comment", bool(p["comment"]))) if on] + [f"remove label {lab}" for lab in p.get("remove_labels", [])]
     age = "?" if row["age"] is None else f"{row['age']:.0f}d"
     return (f"#{row['pr']:<5} rung {row.get('rung', 0)} {RUNG_NAMES[row.get('rung', 0)]:<7} age {age:<5} "
             f"drift {row['drift'] if row['drift'] is not None else '-':<4} {p['why']}"
@@ -439,6 +452,9 @@ def main(argv=None) -> int:
     ap.add_argument("--drift-bump", type=int, default=30)
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
+    if not (1 <= args.stale_days < 7 and args.draft_stale_days >= args.stale_days and args.drift_bump >= 0):
+        ap.error("need 1 <= --stale-days < 7 (the repair rung starts at 7d), --draft-stale-days >= --stale-days, "
+                 "and --drift-bump >= 0")
     root = Path(args.repo_root).resolve()
 
     slug = pc.resolve_gh_slug(root, None)

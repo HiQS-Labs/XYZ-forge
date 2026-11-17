@@ -662,5 +662,50 @@ def a16(old_resolver=False):
 check("A16", "flat install (skills/<name>/scripts siblings, no env) resolves both bundles", a16,
       "pre-fix resolver (parents[1].parent)", lambda: a16(old_resolver=True))
 
+# ---------------- A17/A18 CodeRabbit #1510 fixes ----------------
+def a17(bad=False):
+    p = mkpr(130, 4.1, "clean")                    # GitHub says CLEAN, but base moved 5 commits
+    e = Env([p], behind={"130": 5})
+    if bad:
+        orig = pm.assess
+        def state_only(*a, **k):
+            rows = orig(*a, **k)
+            for r in rows:
+                r["behind"] = str(r["pr_data"].get("mergeStateStatus")).upper() == "BEHIND"
+                r["plan"] = pm.plan_bundle(r, a[4])
+            return rows
+        with patched(pm, "assess", state_only):
+            w = apply(e)
+    else:
+        w = apply(e)
+    return ["pr", "update-branch", "130"] in w
+
+
+check("A17", "behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1", a17,
+      "behind from mergeStateStatus only", lambda: a17(bad=True))
+
+
+def a18():
+    ok = {}
+    q = plans(Env([mkpr(131, 8.1, "dirty", head="fix/$(id)")]))[131]["plan"]["comment"]
+    ok["quoted"] = "git checkout 'fix/$(id)'" in q and "git merge origin/development" in q
+    e = Env([mkpr(132, 8.1, "behind")], refresh_override={"132": {"isDraft": True}}); w = apply(e)
+    ok["draft_abort"] = w == [] and any(r.get("reason") == "draft status changed" for r in e.receipts())
+    e = Env([mkpr(133, 8.1, "dirty")], refresh_override={"133": {"labels": [{"name": "pr-minder:stale"}]}})
+    w = apply(e)
+    ok["label_race"] = (not any("--add-label" in x for x in w)
+                        and not any(r.get("action") == "add-label" for r in e.receipts()))
+    r = subprocess.run([sys.executable, str(SCRIPT), "--stale-days", "10"], capture_output=True, text=True)
+    ok["thresholds"] = r.returncode == 2 and "stale-days" in r.stderr
+    e = own(Env([mkpr(134, 1, "clean", labels=["pr-minder:stale"])]), 134)
+    row = plans(e)[134]
+    ok["plan_shows_removal"] = row["plan"]["remove_labels"] == ["pr-minder:stale"]
+    print("   A18 parts:", ok)
+    return all(ok.values())
+
+
+check("A18", "repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals",
+      a18, "—", None)
+
 print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
 (Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))
