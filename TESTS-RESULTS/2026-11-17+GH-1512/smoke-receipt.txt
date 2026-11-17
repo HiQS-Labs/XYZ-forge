@@ -1,0 +1,14 @@
+# Smoke Check: Instruction Walk & Consumer Reading (GH-1088 / start-task step 7)
+Date: 2026-11-17
+Candidate SHA: f6c9f646cbcb910b740bd9f77390b1d2d370012d
+
+1. Main path: skills/3-weekly/whack-a-mole/SKILL.md §5
+- Verified step 4: Invariant enforcer discovery runs /connect-the-dots (../connect-the-dots/SKILL.md) on the invariant before proposing a new mechanism, and names existing enforcers in the umbrella issue.
+- Separate hand-off line hands off candidate modules and unaddressed gaps to §6.
+- Subsequent steps (Multi-domain invariant decomposition and Decision) correctly preserved and renumbered as 5 and 6.
+
+2. Adjacent path: skills/1-hourly/debug-mantra/SKILL.md §2
+- Verified step 2: Explanatory text contains the escalation: "When the fail path spans modules you have not read, run [recon](../recon/SKILL.md) on that path before forming the hypothesis."
+- Recited 4-mantra block is byte-for-byte unchanged.
+
+Verdict: PASS

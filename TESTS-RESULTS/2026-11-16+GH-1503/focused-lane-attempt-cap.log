@@ -1,0 +1,30 @@
+== test: lane-attempt-cap ==
+  PASS: relay-drive.sh parses
+  PASS: marathon-drive.sh parses
+  PASS: relay-drive.sh calls lane_attempt_gate (keyed on RELAY_TASK)
+  PASS: marathon-drive.sh calls lane_attempt_gate (keyed on PHASE_ID/LANE_STATE_KEY)
+  PASS: relay-drive.sh keys attempts off TICK_REPO_ROOT (hermetic in tests)
+  PASS: marathon-drive.sh guards the nested relay-drive against double-count
+  PASS: relay-drive.sh skips the cap for a single --review-once turn
+  PASS: lane_attempt_gate + reset present in relay-drive.sh
+  PASS: the GH-45 helper block is byte-identical in both drivers
+  PASS: marathon-drive resets the counter on phase Approved
+  PASS: relay-drive resets the counter on Approved close
+  PASS: marathon.sh forwards --force to each phase
+<scratch>/lane-attempt-cap.XXXXXX.nRELjNxlae/fn-relay.sh: line 26: syntax error near unexpected token `}'
+<scratch>/lane-attempt-cap.XXXXXX.nRELjNxlae/fn-relay.sh: line 26: `}'
+  PASS: first two fires proceed (exit 0)
+  PASS: third fire PARKED with exit 8 (cap reached)
+  PASS: park message printed
+  PASS: parked fire seeded NO extra attempt (still 2 recorded)
+  PASS: --force proceeds past the cap (exit 0)
+  PASS: --force logs the override
+  PASS: --force fire is recorded (now 3 attempts)
+  PASS: LANE_ATTEMPT_COUNTED short-circuits (no refuse, no double-count)
+  PASS: LANE_MAX_ATTEMPTS=1 caps after one fire
+  PASS: path-like lane id sanitized to a single flat key
+  PASS: reset removes the attempts file (lane un-wedged)
+  PASS: a previously-parked lane fires fresh after a reset (no permanent wedge)
+  PASS: empty lane id is a safe no-op (returns 0, no crash)
+  PASS: non-integer LANE_MAX_ATTEMPTS falls back to the default (no crash)
+  lane-attempt-cap: 26 pass, 0 fail

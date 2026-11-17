@@ -42,7 +42,7 @@ Once reproducible, find *where* the code breaks and *what stops it from breaking
    - config flags, env vars, feature toggles
    - branch conditions, input shape
    - timing, concurrency, build options
-   Each knob is a candidate axis to flip in the differential. Flip one at a time.
+   Each knob is a candidate axis to flip in the differential. Flip one at a time. When the fail path spans modules you have not read, run [recon](../recon/SKILL.md) on that path before forming the hypothesis.
 3. **In-code instrumentation.** If outside knobs can't move the failure, go inside: `printf` / log statements at the suspected fail site, dump the relevant internal state. Tag every probe with a unique prefix (e.g. `[DBG-a4f2]`) so cleanup is a single grep. Let the trace show where reality diverges from your model.
 
 ## 3. Falsify the hypothesis

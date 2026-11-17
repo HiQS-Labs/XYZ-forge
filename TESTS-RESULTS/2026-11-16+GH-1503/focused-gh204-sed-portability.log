@@ -1,0 +1,11 @@
+== test: GH-204 ==
+  workdir: <scratch>/tick-GH-204.XXXXXX.LNzaOuRF9H
+  sed flavour on this host: bsd
+  PASS: control: skipped — on BSD sed the old form works; the defect is GNU/Linux-only
+  PASS: portable `sed -i.bak` changed destination CONTENT (before != after) and cleaned its backup
+  PASS: re.sub() no-match is byte-identical; re.subn() reports n=0 so the write can be verified
+  PASS: relay_drive.py escalation write is content-asserted and fails loudly
+  PASS: build-launch-artifact.sh redacts portably, reports failure distinguishably, derives the username
+  PASS: meter-release.sh fixture scrub is portable
+  PASS: no executable `sed -i ''` call site outside the GH-308 frozen twin
+== GH-204 ALL PASSED ==
