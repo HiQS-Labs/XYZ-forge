@@ -23,7 +23,7 @@ Canonical discussion: [Issue #1512](https://github.com/HiQS-Labs/XYZ-forge/issue
 
 | What was just completed | What's next |
 |---|---|
-| Step 1-3 intake resolved, task branch provisioned, roadmap row rmi-01M7N68YYNSYDFWGRGM1VEQZRT picked up and rated 60/50/50/85. | Pre-implementation plan QA via Codex relay (Step 6). |
+| Step 6 Plan QA Round 1 adjudicated with Codex findings addressed. | Codex plan review Round 2 for approval. |
 
 ## Problem & Recon
 
@@ -41,7 +41,7 @@ Canonical discussion: [Issue #1512](https://github.com/HiQS-Labs/XYZ-forge/issue
 
 - **Outcome sought:** Guide agents and operators investigating recurring bugs to check for existing invariant enforcers with `connect-the-dots` before designing new mechanisms, and guide debugging sessions to map unfamiliar fail paths with `recon` before forming hypotheses.
 - **Smallest viable bet:**
-  1. Add one step (one sentence + hand-off line) to `skills/3-weekly/whack-a-mole/SKILL.md` §5 linking `../connect-the-dots/SKILL.md`.
+  1. Add one step (one sentence plus a separate hand-off line) to `skills/3-weekly/whack-a-mole/SKILL.md` §5 linking `../connect-the-dots/SKILL.md`.
   2. Add one sentence to `skills/1-hourly/debug-mantra/SKILL.md` §2 explanatory text linking `../recon/SKILL.md`.
 - **Alternatives rejected:**
   - Creating a separate skill or sub-workflow for invariant checking (rejected: unnecessary ceremony and abstraction; existing skills can be directly chained).
@@ -50,30 +50,39 @@ Canonical discussion: [Issue #1512](https://github.com/HiQS-Labs/XYZ-forge/issue
 
 ## Ordered Implementation & Verification
 
-1. **Pre-implementation Plan QA (Step 6):** Run Codex relay review on this plan.
+1. **Pre-implementation Plan QA (Step 6):** Run Codex relay review on this plan until Approved (max 3 rounds).
 2. **Execute edits (Step 7):**
    - In `skills/3-weekly/whack-a-mole/SKILL.md`, insert step 4 in §5:
-     "4. Invariant enforcer discovery: before proposing a new mechanism, run [connect-the-dots](../connect-the-dots/SKILL.md) on the violated rule (the invariant) to discover existing subsystems that already protect or enforce it, and name any existing enforcer in the umbrella issue. Hand off candidate modules and unaddressed gaps to §6."
+     ```markdown
+     4. Invariant enforcer discovery: before proposing a new mechanism, run [connect-the-dots](../connect-the-dots/SKILL.md) on the violated rule (the invariant) to discover existing subsystems that already protect or enforce it, and name any existing enforcer in the umbrella issue.
+        Hand off candidate modules and unaddressed gaps to §6.
+     ```
      (Renumber remaining steps in §5 accordingly).
    - In `skills/1-hourly/debug-mantra/SKILL.md`, add to item 2 in §2:
      "When the fail path spans modules you have not read, run [recon](../recon/SKILL.md) on that path before forming the hypothesis."
 3. **Verification & Gates:**
-   - Confirm docs route: `utils/ci-route.sh pull_request` confirms docs-only / tier 1.
-   - Run deterministic docs gate: `utils/pdda/pdda.sh run`.
-   - Run publisher suites (`gh620-skills-army-mini-sync.sh`, `gh589-xyz-mini-sync.sh`) in a disposable `-gate` clone created from origin.
+   - Confirm docs route by feeding changed paths to stdin:
+     `git diff --name-only origin/development...HEAD | bash utils/ci-route.sh pull_request`
+     and assert output contains `docs_only=true`, `route=docs`, and `tier=1`.
+   - Run deterministic docs gate: `bash utils/pdda/pdda.sh run` and verify zero errors.
+   - Run publisher suites bound to candidate commit:
+     Create disposable `-gate` clone from origin (`https://github.com/HiQS-Labs/XYZ-forge.git`), checkout/fetch the exact candidate commit SHA, verify pre/post clone identity and matching skill bytes, and run:
+     `bash test/gh620-skills-army-mini-sync.sh`
+     `bash test/gh589-xyz-mini-sync.sh`
+     Retain command output, exit codes, and `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/`.
    - Smoke check: read changed instructions from consumer entry points (read-only verification).
 4. **Final Codex Relay QA (Step 8):** Relay review of the diff and test evidence.
-5. **PR & Checkout Retirement (Step 9):** Push branch, open PR, post closeout comment on #1512, and retire task checkout.
+5. **PR & Checkout Retirement (Step 9):** Push branch, open PR, post closeout comment on #1512, and retire task checkout with `merge_cleanup.py --retire-published-pr`.
 
 ## Acceptance Mapping
 
-- [ ] `skills/3-weekly/whack-a-mole/SKILL.md` §5 updated with connect-the-dots step on invariant and umbrella issue naming, relatively linked.
+- [ ] `skills/3-weekly/whack-a-mole/SKILL.md` §5 updated with connect-the-dots step on invariant and umbrella issue naming, relatively linked (one sentence + separate hand-off line).
 - [ ] `skills/1-hourly/debug-mantra/SKILL.md` §2 updated with recon escalation when fail path spans unread modules, relatively linked in explanatory text.
 - [ ] No changes to the verbatim mantra recital block.
 - [ ] No new sections added.
 - [ ] No new tests or test registry entries (GH-831).
 - [ ] Deterministic docs gate `utils/pdda/pdda.sh run` passes with zero errors.
-- [ ] Publisher suites pass in disposable gate clone.
+- [ ] Publisher suites pass in disposable gate clone exercising the candidate commit SHA with attributable evidence under `TESTS-RESULTS/`.
 
 ## Rating Rationale
 

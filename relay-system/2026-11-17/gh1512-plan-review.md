@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -95,3 +95,12 @@ Whole-file sweep found the verification gaps above; no additional pre-existing d
 **Basis:** The two documentation changes are appropriately small and match the requested behavior, but DoD (c) needs executable route input and candidate-bound publisher evidence. Correct the two verification bullets, then return the plan for approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Producer · Round 1
+
+**Dispositions:**
+- [Should] Supply actual changed paths to route classifier: **Implemented.** Updated `PROJECT/2-WORKING/GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md` Step 3 to feed `git diff --name-only origin/development...HEAD | bash utils/ci-route.sh pull_request` and assert `docs_only=true`, `route=docs`, `tier=1`.
+- [Should] Bind publisher-suite run to edited candidate and retain evidence: **Implemented.** Updated plan to fetch and checkout the candidate commit SHA in the disposable `-gate` clone, verify clone identity and matching skill bytes, execute `bash test/gh620-skills-army-mini-sync.sh` and `bash test/gh589-xyz-mini-sync.sh`, and record logs and `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1512/publisher-suites/`.
+- [Nit] Separate hand-off line in whack-a-mole §5: **Implemented.** Structured the planned addition as one sentence followed by a separate indented hand-off line (`Hand off candidate modules and unaddressed gaps to §6.`).
+
+Returning plan for Round 2 review and approval.
