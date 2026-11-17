@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 1
 
@@ -83,4 +83,27 @@ Answer, citing `file:line`:
 
 ## Log
 
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Both bounded third-pass fixes are correct; no regression or additional concrete pre-existing defect found in the full pr_minder.py sweep. The reviewer-probe retention decline is sound under this turn's explicit scratch-and-quote protocol. This is code-review approval, not final gate qualification.
+swept file: yes
+
+Read all 571 lines of `skills/2-daily/pr-minder/scripts/pr_minder.py`, the shared activity query/clock in `skills/3-weekly/weekly-planner/scripts/planner_core.py:1237–1339`, A20 source/results/provenance and prior relay evidence. Verify-tier graph discovery returned 86 projects, none for this worktree; XYZ-forge generation `2026-09-01T15:54:30Z` returned zero relevant symbols (has_more=false), with coverage missing/not-tracked for the two Python paths. Direct seeded source supplies the evidence. No Git executable, network call, suite, pytest, gate or executable fixture was run; only this relay file was edited.
+
+- [Pass] **Candidate matches the seeded source.** Read-only Python traversal of loose and packed commit/tree/blob objects reconstructed `a37ecbf67..4080d4b80` and asserted both candidate blobs equal the seeded files. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` (inline pathlib/zlib pack/index decoding and difflib; exit **0**). Decisive output: `seed equals 4080d4b80: skills/2-daily/pr-minder/scripts/pr_minder.py` and the same for `skills/3-weekly/weekly-planner/scripts/planner_core.py`. The delta moves the focus block ahead of conflict lookup (`pr_minder.py:523–533`) and replaces the thread comprehension with validation (`planner_core.py:1325–1329`). An initial loose-object-only attempt exited 1 because the base object was packed; the successful packed-object traversal resolved that limitation.
+
+- [Pass] **Focus limits conflict lookup while preserving stack assessment and explanation.** `pr_minder.py:523` assesses all PRs; `:524–529` filters and rejects an absent focus before `:530–533` performs lookup/rebuild; `:535–539` then prints the enriched explanation. Stack resolution remains at `:232–253`. Narrow probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` (exit **0**). Inline Python AST-compiled the real `main` with in-memory readers, receipts, assess/lookup/render spies; no external call was reachable. Asserted outputs: `['--pr', '150', '--json'] lookup= [150] assessed= [150, 151] rc= 0`; `['--explain', '151'] lookup= [151] assessed= [150, 151] rc= 0`; `['--pr', '999'] lookup= [] assessed= [150, 151] rc= 2`; `['--json'] lookup= [150, 151] assessed= [150, 151] rc= 0`. The explanation JSON contained `conflict_files=['own-conflict.txt']` and the rebuilt comment contained that filename. The probe checks main's wiring; source inspection establishes the unchanged stack resolver.
+
+- [Pass] **Null thread/comment entries fail closed for the affected PR.** `planner_core.py:1323–1329` rejects an incomplete thread connection, non-dict thread, missing inner list or non-dict inner entry before reading timestamps. `pr_minder.py:202,217–223,276–278` maps the unknown result to a report-only plan and skips drift. The same bounded command AST-compiled only `_parse_gh_time`, `is_maintenance_commit` and `author_activity`, using empty complete connections and a valid createdAt. Decisive asserted output: `null-thread -> unknown`; `null-comment -> unknown`; `missing-comments -> unknown`; `bad-inner -> unknown`; `valid-thread -> latest 2026-11-15, complete=True`. Replaying the removed comprehension on `[None]` and `[{'comments': {'nodes': [None]}}]` yielded `pre-fix null control -> AttributeError` twice. This establishes the reported null-entry cases and valid GraphQL-shaped connections, not arbitrary corruption of every nested container.
+
+- [Pass] **Recorded producer checks cover the reported inputs; reviewer retention decline is appropriate.** `TESTS-RESULTS/2026-11-16+GH-1498/manual_check.py.txt:821–827` supplies both null inputs; `:830–853` spies on two conflicting PRs and rejects eager lookup before focus. `manual-check.log:29–32` records A20a/A20b PASS, 29 passed/0 failed and rc=0; the `provenance.jsonl` record with id `A1-A20b` binds that producer run to `4080d4b80`. These are inspected receipts, not rerun claims. Reviewer probes are separately quoted with command, status and decisive output here, as required by the operator and already accepted in `relay-system/2026-11-16/gh1498-coderabbit-delta-qa.md:112` and delta3's reviewer block. No retained scratch source or new producer provenance is required for this reviewer turn; producer evidence provenance remains required and present.
+
+- [Unverified — needs clone run] Full driver execution and final-head qualification remain with the disposable-full-clone harness after this turn. No gate-pass or delivery-readiness claim is made here.
+
+Relay closed (Approved), no further turn needed. Token handed off with `done`; the harness owns the file-scoped commit.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-11-17T09:43:25Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
