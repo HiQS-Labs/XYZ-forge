@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -95,5 +95,108 @@ Grade each finding `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`, cite `file:line` or 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Agent: claude-review. Read in full at worktree HEAD `a16b1d38` (plan unchanged since `b76b62b1`): the plan (60 lines), `skills/1-hourly/conveyor/SKILL.md` (71), `skills/3-weekly/10days/SKILL.md` (571), `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`, Jog `## Preparation handoff (GH-1439)` (jog:28-103), start-task `## Task rating policy` (start-task:380-433), flywheel 10days sections (flywheel:154-215), PDDA.md:255-295. Optional `gh issue view 1476/1400` was not run: the sandboxed call returned `rc=1` and the unsandboxed retry was denied, so the OL-09/OL-10 wording on #1400 was not checked against the issue.
+
+swept file: yes. I read the whole plan and every live consumer file, not only the sections the plan names. The Q4 sweep found pre-existing 10days lines outside the plan's named Step 2/3/8 that still route items to exclusion. They are listed in B1.
+
+**Grounding claims (plan:29)**
+- [Pass] "10days Step 2 immediately excludes completed-folder captures": 10days:220 `bucket: "3-COMPLETED"` → strong already-done signal. Exclude immediately`.
+- [Pass] "scores appeal from clarity and forcibly clears overrides": 10days:250 `appeal (motivation / clarity): 90 = clear reproduction steps`; 10days:253 `If ovr is invalid or absent, clear it by running roadmap rate ... --force`.
+- [Pass] "Step 8 mixes holds into exclusions": 10days:545-546 `Exclusion Ledger ... held-by-preflight / held-by-planner`.
+- [Pass] "Step 5 --deep refreshes preflight, not research depth": 10days:401 `--deep delegates to ... swarm-preflight.sh --dry-run per ready item for an authoritative freshness verdict`. Q3's split between freshness and depth is grounded.
+- [Pass] Jog already owns the preparation handoff (jog:28-31). 10days is not re-enqueued into Jog, which matches flywheel:164-168 `Do not send its issues through Jog`.
+- [Pass] The plan keeps OL-10 out of the claimed scope (Q8). plan:25 `do not claim runtime enforcement from prose`; plan:51 `OL-10 runtime admission ... not claimed implemented`; plan:40 `proves instruction consistency, not behavioral compliance by a model or actual admission interception`.
+- [Pass] The plan's rating (plan:56) follows start-task policy: appeal 50 with no operator value (start-task:391), and the recurrence trend is recorded as unknown rather than zero (start-task:402).
+
+**Findings**
+
+- [Blocker] B1 (Q4/Q5): the plan's 10days edit list, "Step 2/3/8" (plan:39), leaves live lines that still exclude or drop unknown, held or low-risk items. That contradicts the plan's own acceptance bullets plan:47 (`never silent exclusion`) and plan:48 (explicit risk deferral only).
+  Observed input: these lines survive the named edits.
+  - 10days:73-75 (Guardrails): `an existing capture doc parked in PROJECT/3-COMPLETED, is evidence`. This directly contradicts plan:39 `A completed folder alone cannot exclude an open request`.
+  - 10days:244 (Step 3 sanity-check filter): `low-consequence noise with a clear deferral path, classify it as EXCLUDE`. This is an implicit, unrequested risk deferral.
+  - 10days:264: the verdict enum is `"INCLUDE|EXCLUDE"` only, with no HELD.
+  - 10days:389-391 (Step 4 sniff test): `drop that issue back to needs_contract and exclude it from this run`.
+  - 10days:430: exit `4` is read as `stale/already landed (drop it, propose closing the GH issue — the fix shipped ...)`. But conveyor:61 says `An incorrect polarity and an already-fixed issue can both yield STALE`, so this is an exclusion without affirmative evidence.
+  Affected scope: every 10days candidate whose disposition comes from those lines (3-COMPLETED-only evidence, low-consequence sanity-check results, failed contract sniff test, preflight exit 4 without a delivering commit or PR).
+  Fix: widen plan:39 to name Guardrails (73-75), Step 3 (244, 264, 288), Step 4 (389-391), Step 6 (430) and Step 8 (545-546). Wording per line:
+  - 3-COMPLETED-only evidence → research or HELD.
+  - The sanity-check low-risk result → EXCLUDE only under an explicit batch-scoped deferral request, otherwise HELD/INCLUDE.
+  - Add HELD to the verdict enum.
+  - A sniff-test failure → HELD, reported under held.
+  - Exit 4 → EXCLUDE only with a delivering commit or PR, otherwise HELD (polarity suspect).
+  Falsifier: a paper walk of an open issue whose only evidence is a 3-COMPLETED capture through the post-edit text, with no delivering commit or PR, expected HELD. If every listed line already yields HELD under the plan's edits as written, B1 is wrong.
+
+- [Should] S1 (Q2): the plan never says where the default research child runs inside 10days, or what "selected" means there. Two incompatible implementations both fit the text.
+  Observed input:
+  - plan:39 names only Step 2/3/8.
+  - 10days:241 `For every issue that survives Step 2, spawn subagents`. Putting research here researches the whole window.
+  - 10days:393 does pickup only `for the survivors it plans into the marathon` (Step 4).
+  - 10days:410 intersects at Step 5. Selecting there comes after contracts are authored, so contracts would be written before any research.
+  Affected scope: 10days INCLUDE candidates without valid prior preparation.
+  Fix: state that Step 3 stays the cheap validity triage and that "selected" means the Step 3 INCLUDE set the run plans into the marathon (the same set as 10days:393). Put the one medium research child per selected, unprepared item in Step 4, before contract and acceptance authoring, and name Step 4 in plan:39.
+  Falsifier: a paper walk of a 20-issue window with 3 INCLUDEs. The expected result is exactly 3 research children, each finishing before its Step 4 contract is drafted.
+
+- [Should] S2 (Q7): the plan does not reconcile "persist only committed execution selection, not every shortlist" (plan:39) with live write points, and it does not fence Conveyor's write steps off from a 10days research child.
+  Observed input:
+  - 10days:254 (Step 3) `Persist newly evaluated ratings to releases.db via releases roadmap rate`. This writes before selection.
+  - 10days:253: `--force` writes for every unrated candidate.
+  - 10days:393: `This makes marathon-plan.sh discover it in Step 5`. Rows must exist before Step 5, so moving pickup later breaks the planner.
+  - Conveyor Steps 3-6 (conveyor:27-67) publish captures, run `roadmap pickup` (conveyor:36), open a preparation PR and add `status:ready-for-pickup`.
+  - plan:39 says only `consume that policy`.
+  Affected scope: ledger writes in 10days Steps 3-4, and any 10days research child that loads Conveyor.
+  Fix:
+  - Delete the Step 3 write at 10days:253-254.
+  - Declare the 10days:393 Step 4 pickup to be the D-b committed selection (decision:8), leaving its timing unchanged.
+  - Make 10days link the Conveyor policy section by anchor. The research child is read-only, returns provisional ratings and findings to the 10days primary, and runs no Conveyor Step 3-6 action (no capture publication, pickup, preparation PR, marker comment or label).
+  - Say that Conveyor's own pickup at conveyor:33 is unchanged by this slice.
+  Falsifier: a walk of an unrated candidate that is EXCLUDEd or HELD at Step 3. The expected result is zero `roadmap rate` or `pickup` writes, and still a row for every marathon-planned survivor before `marathon-plan.sh --write --deep`.
+
+- [Should] S3 (Q1): "RAW daily-goal requests" (plan:9, 23, 50) has no source owner, so an implementer could invent a new intake surface.
+  Observed input:
+  - `git grep -n -i "daily-goal\|daily goal" -- 'skills/**' 'PROJECT/*.md' 'decisions/**'` exited 0. The only skill or governance hits are in this plan; the other hits are marathon-plan issue titles (#1474).
+  - The real entry points take GitHub issues only: 10days:208 `one JSON object per OPEN issue`, and conveyor:8 `Turn existing issues`.
+  - conveyor:19 says a request with no IDs or scope `needs one clarification`, with `No synthetic backlog`.
+  - Flywheel's Daily is observation-only (flywheel:156-160).
+  Affected scope: the wording of the new Conveyor policy and of plan:50.
+  Fix: define RAW as an open GitHub issue that lacks a capture, row, contract or rating, entering through 10days Step 1 or Conveyor's issue-ID, `--prs-min` or batch modes. Free-text goals with no issue route to `/idea` (conveyor:23). Rewrite plan:50 to say this.
+  Falsifier: if some skill line already defines a daily-goal intake owner, cite it and S3 drops.
+
+- [Should] S4 (Q10): plan:38 `record numeric deadline and remaining authorized budget in the existing packet`. No packet exists when research runs. The swarm packet is written later by `swarm-preflight.sh` (10days:427 `let it write the real packet`), so recording the budget there implies a packet-schema or runtime change, which the envelope puts out of scope.
+  Observed input: plan:38 quoted above, read against 10days:427.
+  Affected scope: where research deadline and budget evidence is recorded.
+  Fix: record it in the batch's existing record (Conveyor handoff at conveyor:71, 10days Step 8 report), not in the preflight packet.
+  Falsifier: an existing pre-research packet field for deadline and budget, cited by `file:line`.
+
+- [Should] S5 (Q8): plan:40 `Record remaining real-follow-up requirement before ticking OL-09 as operationally verified` reads as permission to tick once the follow-up is recorded. It does not forbid ticking #1400's OL-09 box ("implemented AND verified") on this PR.
+  Observed input: plan:40 quoted.
+  Affected scope: #1400's OL-09 checkbox and the PR body.
+  Fix: replace with "Do not tick #1400 OL-09 on this PR. Tick only after a real 10days or Conveyor run shows the dispositions; this PR records instruction consistency only."
+  Falsifier: none needed. This is a wording tightening with no behavior change to a skill.
+
+- [Should] S6 (Q9): the plan:40 scenario walk has no rejecting check for several acceptance bullets and plan:39 claims:
+  - bullet plan:49, ratings: neutral appeal, `ovr` preserved, no forced clearing;
+  - bullet plan:50, intake and Jog;
+  - completed-folder-only evidence;
+  - held reported separately from excluded;
+  - no ledger write on the shortlist.
+  Observed input: plan:40 lists only five scenarios, mapped to plan:45-48.
+  Affected scope: plan step 4.
+  Fix: add paper scenarios, each with old text as the red control.
+  - (f) Open issue with only a 3-COMPLETED capture → HELD or research. Red controls: 10days:73-75 and 220.
+  - (g) Unrated issue with no operator values → appeal 50, no `--force`, no write before selection. Red controls: 10days:250, 253, 254.
+  - (h) Valid `ovr` is preserved and a re-rate passes the retained `--ovr`. Red control: start-task:420.
+  - (i) Sniff-test failure → reported under held, not the Exclusion Ledger. Red controls: 10days:391 and 546.
+  - (j) Raw goal with no issue → `/idea` or clarification, not synthetic intake. Red control: conveyor:19.
+  Falsifier: a scenario that the unchanged text already passes is not a valid red control and should be dropped.
+
+- [Nit] N1 (Q3): name the existing reuse path. The 10days:221 route (`2-WORKING with has_contract: true → route through Step 3 for freshness check`), plus the existing Step 5 and 6 preflight, should be the "freshness reuse" check. That adds no new staleness rule.
+- [Nit] N2 (Q6): 10days:316-320 keep `rating_ovr` and `is_manual_override` as editable frontmatter. start-task:410 says a displayed copy is `a read-back of the DB, never a competing editable ranking`. The plan's rating edit should mark that frontmatter as read-back only.
+- [Nit] N3 (Q10): the prior-art and graph-coverage boilerplate at plan:31 is ceremony for a plan review, though harmless. Beyond that, the plan adds no speculative runner, schema or suite, and the deepen triggers carry no numeric global caps (plan:38). [Pass] on over-engineering otherwise.
+
+VERDICT: FAIL
+Basis: the plan is grounded, keeps OL-10 out of scope and matches the envelope, but it is not yet implementable without contradicting live consumer lines. Its named 10days edit set (Step 2/3/8) leaves five live exclusion or silent-drop routes, cited in B1, that break its own "never silent exclusion" and "explicit risk deferral" acceptance. It also leaves the research child's placement and "selected" undefined against 10days:241/393/410 (S1). The ledger-write and Conveyor-write fencing (S2) and the term "daily-goal" (S3) need pinning before implementation. ROUND 1/1 ends without approval, so STATUS is Escalated. A Producer revision that addresses B1 and S1-S3 should get one more review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
