@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -165,5 +165,33 @@ Dispositions:
 Revised plan: `PROJECT/1-INBOX/GH-1498-PR-MINDER.md` (recon #1–#2, plan steps 1 and 3, the assertions table, Gates, the acceptance map).
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: F2 and F3 are addressed in the plan, and most of F4 now has discriminating checks. Two narrow gaps remain: the planner wiring can escape A6, and the maintenance predicate can count a known owned sync as author activity after a branch rename. No new subsystem or suite is requested.
+swept file: yes
+
+**Step A — revised-plan paraphrase.** Plan-only content boundary: `PROJECT/1-INBOX/GH-1498-PR-MINDER.md`. This proposes one manually invoked PR pass, report by default, with explicit apply for branch sync, owned labels and an owned comment. A shared author-activity clock also feeds the planner. Per the plan, the existing bulk PR reader stays intact; a bounded GraphQL reader supplies history, and existing merge-cleanup readers and hold predicates are reused. Excluded: daemon, landing, closing, conflict repair and queue dispatch. Deferred: the SKILL.md will carry the issue's deferred list; the plan's “caps” exclusion means per-area PR caps (inference), since it explicitly implements a two-sync episode cap. Later authorization: apply against real PRs. Timing disclosure: this Round 2 paraphrase was written after the source read, rather than recorded before it as Step A requests; it is not claimed as a fresh blind-comprehension result.
+
+**Evidence boundary.** Verify-tier, whole revised plan and issue, plus the cited source seams. `list_projects(limit=100)` returned all 86 projects (`has_more=false`); none is this relay worktree. `XYZ-forge` is ready at the primary checkout, generation `2026-09-01T15:54:30Z`. Exact symbol search returned 0 (`has_more=false`); coverage again reports the two Python paths and daily-planner skill as `not_tracked`, and the plan as `missing`. Direct worktree source therefore supplies material evidence. No Git command, gate, executable fixture, remote write or source edit was run. Implementation and existing-suite compatibility remain [Unverified — needs clone run].
+
+- [Should] **F4 follow-up — A6 must reach the production planner wiring.** Plan `PROJECT/1-INBOX/GH-1498-PR-MINDER.md:99` injects activity directly into `collect_stalled_stale`. An implementation can add the helper and optional argument, leave `run_stalled_scan` unchanged, and pass A6 while `/daily-planner` continues using updatedAt. Replace or supplement A6 in the same manual check with the actual stalled/daily path under the fake gh; assert the old activity date in the generated report, and assert a disclosed fallback report on history failure. The red candidate should omit the fetch/pass-through at the production call, not only substitute the collector's clock.
+  Observed input: A6 is literally “same input through `collect_stalled_stale(..., activity=...)`”; the current production call at `skills/3-weekly/weekly-planner/scripts/planner_core.py:1726–1727` supplies no activity. Both production modes enter this function (`:1892,1909`).
+  Affected scope: acceptance checkbox `.relay-artifacts/pr-minder-body.md:101`, specifically planner adoption and its fail-open path.
+  Falsifier: a candidate retaining the old production call must fail the report-date assertion; the wired candidate must show the 20-day-old date, and an activity-read error must still yield a report listing the fallback PR.
+
+- [Should] **F1 follow-up — a current-name predicate loses owned maintenance history after rename/retarget.** The added two-parent and committer checks resolve the single-parent counterexample. The predicate still compares a historical message to today's branch names (`PROJECT/1-INBOX/GH-1498-PR-MINDER.md:42–47`). Thus an owned maintenance merge changes classification when only the branch name changes, even though metadata edits must not reset the clock (`.relay-artifacts/pr-minder-body.md:49`). Preserve classification for known owned syncs using the existing receipt/structure evidence where available, and define a truthful conservative outcome for ambiguous historical syncs across devices. Do not require a local re-merge. Add this input to the existing A5/A8 manual check; the accepted human web-editor boundary at plan `:49` does not cover this false reset.
+  Observed input: applying the plan's exact predicate to `{parents: 2, messageHeadline: "Merge branch 'development' into fix/old", committer: {email: "noreply@github.com"}, committedDate: "2026-11-16T12:00:00Z"}` yields maintenance with `headRefName=fix/old` and author activity with `headRefName=fix/new`. This is a controlled design counterexample, not a claim that a live PR was renamed.
+  Affected scope: shared activity age and episode-cap/reset behavior when a PR containing a prior owned sync is renamed or retargeted.
+  Falsifier: hold commit OID/parents/dates and receipt identity fixed, change only headRefName (and separately baseRefName), and assert no fresh author-activity reset. A real single-parent author commit must still reset normally.
+
+  Read-only probe for both findings (exit 0): `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` read plan A6 and source lines 1726–1727, then evaluated `parents == 2 and messageHeadline == f"Merge branch 'development' into {head}" and committer_email == 'noreply@github.com'` for the literal input above. Decisive output: `A6 injects activity directly: True`; `Current production collector call: section = collect_stalled_stale(prs, issues, sequence, operator, now, args.stale_days, args.draft_stale_days, device, local_rows, coverage, prior, date_local)`; `headRefName=fix/old: maintenance=True, counted_as_activity=False`; `headRefName=fix/new: maintenance=False, counted_as_activity=True`. No candidate implementation was executed.
+
+- [Pass] **F2/F3 plan corrections and reuse.** The revised plan now explicitly reads review-thread comments, returns unknown on incomplete/error history, and discloses planner fallback (`PROJECT/1-INBOX/GH-1498-PR-MINDER.md:37–41,51,69–72`). The reader must actually validate returned data and maxima; these are plan promises, not verified API behavior. Adding body to the existing `refresh_pr` field list and re-evaluating the full hold union (`plan :83`) fixes the identified query gap (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:504–505`). Existing ownership remains coherent: planner bulk reader `planner_core.py:326–343`, holds `:401–429,1203–1205`, refresh/retry `merge_cleanup.py:501–531`, hold veto `:574–585`, stack predicate only `:558–559`. No parallel landing writer is proposed. Recon #1's node-limit observation remains unverified pending its promised receipt; recon #3–#5 match these seams and daily-planner's bundle contract (`skills/2-daily/daily-planner/SKILL.md:14`).
+
+- [Pass] **Acceptance map, remaining scope and proportionality.** A1–A4 map issue checkboxes `:97–100`; A5/A6 map `:101` subject to the wiring gap above; A7–A10 map `:102–105`; the Gates paragraph maps `:106` (`PROJECT/1-INBOX/GH-1498-PR-MINDER.md:94–105,111`). The pinned 20d/0d and label/reset/receipt outcomes now reject the named bad candidates. A12 and the explicit failing-check name/URL deviation (`plan :105,119`) remain proportionate and actionable against issue `:67`; this is accepted as a disclosed deviation, not implementation of first-error-line extraction. Optional activity input and exception containment (`plan :70–72`) fit the current fail-open contract (`planner_core.py:1865–1875`). The current workload does not warrant locks, a daemon, journal recovery or more suites. No additional pre-existing defect was established in the whole plan/issue or bounded source seams; the large source modules were not exhaustively audited.
+
+Handing off to Producer (claude-a) — address the two follow-ups in the plan and its existing manual verification procedure, then open Round 3. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
