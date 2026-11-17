@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -58,5 +58,40 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+The plan adds invariant-enforcer discovery to whack-a-mole before a new mechanism is proposed, then carries the candidates and gaps into the umbrella issue. It adds recon escalation to debug-mantra when the failure path crosses unread modules, before forming a hypothesis.
+
+**How the existing system works, per this document**
+
+Whack-a-mole already uses debug-mantra and recon to identify the recurring invariant violation, then drafts remediation. Debug-mantra already orders debugger use, source tracing with knob enumeration, and instrumentation; the plan inserts the recon pointer into that explanatory flow.
+
+**What it's not**
+
+This is not a runtime or tooling change, a new workflow section, or a change to the recited mantra block. The document explicitly rules out new tests and registry entries, and reuses existing skills and publisher suites.
+
+**Block — verification instructions need two small corrections before execution.**
+
+swept file: yes
+
+- [Pass] The intended behavior and scope meet DoD (a), (b), and (d): the plan at `PROJECT/2-WORKING/GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md:56` names the invariant, existing enforcers, the umbrella issue and hand-off; line 59 supplies exactly the unread-module escalation sentence. Lines 35–38 explicitly preserve sections, recital and the no-new-tests/runtime boundaries. No additional mechanism is proposed. Keep these constraints during implementation.
+- [Should] Supply actual changed paths to the route classifier. The command at plan line 61 has no stdin producer, so it cannot establish the claimed docs-only route. Narrow non-mutating probe: Python `subprocess.run(["bash", "utils/ci-route.sh", "pull_request"], input=data, text=True, capture_output=True)` with `data=""` returned exit 0 and decisive output `docs_only=false`, `route=full`, `tier=3`; with `data="skills/3-weekly/whack-a-mole/SKILL.md\nskills/1-hourly/debug-mantra/SKILL.md\n"` it returned exit 0, `docs_only=true`, `route=docs`, `tier=1`. The probe wrapper exited 0. Fix line 61 to feed the nonempty complete candidate/base changed-path list on stdin and assert route/tier, rather than relying on exit status alone.
+  Observed input: The plan's bare `utils/ci-route.sh pull_request` invocation supplies no changed-path list; the empty-stdin control classified as full/tier 3.
+  Affected scope: Route verification for this candidate, including its documentation and relay/evidence paths.
+  Falsifier: Feed the actual complete nonempty candidate path list; expect `route=docs` and `tier=1`. A full/tier-3 result on that list would falsify the docs-only assumption and must be resolved honestly.
+- [Should] Bind the publisher-suite run to the edited candidate and retain attributable evidence. Plan line 63 only specifies a gate clone "created from origin"; it never brings the candidate commit into that clone. Both publisher suites clone their own `REPO` into fixtures (`test/gh620-skills-army-mini-sync.sh:45`, `test/gh589-xyz-mini-sync.sh:30`), so an origin-default checkout would exercise the old payload. Fix the step to bring the exact committed candidate into the disposable full clone, verify its HEAD and changed skill bytes, run the named existing suites there, and retain commands, exit statuses and nonempty logs with `provenance.jsonl` under the existing `TESTS-RESULTS/<date>+GH-1512/` convention. Follow the pre/post clone-identity checks in `WORKTREE-SAFETY.md` §12; no new test or runner is needed.
+  Observed input: "Run publisher suites ... in a disposable `-gate` clone created from origin" without a candidate revision or transfer step (plan line 63).
+  Affected scope: Publisher evidence used to approve the two edited skill files and final diff.
+  Falsifier: A gate-clone receipt identifying the exact candidate SHA and matching skill bytes, with passing suite logs and intact pre/post clone identity, would establish that the intended candidate was tested and make this correction unnecessary.
+- [Nit] Plan line 56 puts the hand-off sentence in the same quoted paragraph. Make the hand-off a separate line when implementing, as DoD (a) explicitly requires "Exactly one sentence plus a hand-off line"; no added section is needed.
+
+Whole-file sweep found the verification gaps above; no additional pre-existing defects were found in the reviewed plan. This is plan approval only: publisher suites and the deterministic docs gate remain **[Unverified — needs clone run]**; no gate, fixture, Git command, or artifact edit was executed this turn. Graph freshness/coverage endpoints were unavailable; evidence came from direct Markdown and shell-source reads plus the route probe.
+
+**VERDICT: FAIL**
+
+**Basis:** The two documentation changes are appropriately small and match the requested behavior, but DoD (c) needs executable route input and candidate-bound publisher evidence. Correct the two verification bullets, then return the plan for approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
