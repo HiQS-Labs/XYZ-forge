@@ -1,0 +1,124 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-17T19:14:57Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1517-merge-cleanup-sweep-wording"
+  },
+  "provenance": {
+    "source_docs": [
+      "/private/tmp/gh1476-real-preparation-trial/isolated-root/PROJECT/1-INBOX/GH-1517-MERGE-CLEANUP-SWEEP-WORDING.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1476-preparation-trial-2026-11-17-gate",
+    "branch": "development",
+    "commit": "6000f3de1e24995806eb151bc1720b7cff77350a",
+    "suggested_branch": "marathon/gh-1517-merge-cleanup-sweep-wording-2026-11-17",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash validate.sh",
+    "round_cap": null,
+    "fix_probes": [
+      {
+        "type": "grep_present",
+        "path": "skills/2-daily/merge-cleanup/SKILL.md",
+        "pattern": "any test suite \\(GH-831\\): the caller still runs the sweep"
+      }
+    ],
+    "artifacts": [
+      "skills/2-daily/merge-cleanup/SKILL.md"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#1517",
+      "criteria": "Reword the batch-protocol sentence so it agrees with the GH-1383 auto-sweep and names when the caller records the verdict with --record-sweep; no code or suite changes."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "6000f3de1e24995806eb151bc1720b7cff77350a",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_present",
+        "path": "skills/2-daily/merge-cleanup/SKILL.md",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": false,
+    "next_action": "acceptance criteria diverge from issue #1517 \u2014 2 issue criterion(a) missing from the doc with no declared deviation; 3 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance \u2014 deviations from the issue' as `- [dropped|changed|added] <text> \u2014 reason: <why>'",
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1517 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "diverged",
+      "cause": null,
+      "detail": "2 issue criterion(a) missing from the doc with no declared deviation; 3 doc criterion(a) absent from the issue with no declared deviation",
+      "issue": "1517",
+      "dropped": [
+        "The batch protocol sentence and the GH-1383 bullet agree.",
+        "Docs-only change; no new tests (AGENTS.md *No new tests*). Note: this SKILL.md is a full-gate route surface."
+      ],
+      "added": [
+        "The batch protocol sentence and the GH-1383 bullet agree, including the cases where the caller records the verdict.",
+        "The stale phrase `any test suite (GH-831): the caller still runs the sweep` is gone from the SKILL.md.",
+        "The existing SKILL-vs-CLI parity check (`test/gh534_phase_c_tests.py`, `parity_failures`) stays green in the classified gate."
+      ],
+      "declared": 0,
+      "problems": []
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1517 (https://github.com/HiQS-Labs/XYZ-forge/issues/1517)",
+      "issue": "1517",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1517",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "skills/2-daily/merge-cleanup/SKILL.md"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "skills/2-daily/merge-cleanup/SKILL.md"
+    ],
+    "inferred_test_artifacts": [],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": false,
+    "single_lane_only": true
+  }
+}
