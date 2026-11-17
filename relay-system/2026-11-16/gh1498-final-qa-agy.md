@@ -171,4 +171,13 @@ Swept `skills/2-daily/pr-minder/scripts/pr_minder.py`, `skills/3-weekly/weekly-p
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent disposable clone gate; the token is closed with done.
 
+
+### Attestation · relay-drive — 2026-11-17T04:06:18Z
+task: RELAY-gh1498-final-qa-agy
+reviewer: agy
+status: Approved
+reviewed-head: f8ecd37d7fa58b5bfd6ec20069105aedf26e72d8
+added-range: 9184+20984
+added-sha256: 16b95b065147655e56cad963095a6822040b7357d482fb859c859c13c50eb2db
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
