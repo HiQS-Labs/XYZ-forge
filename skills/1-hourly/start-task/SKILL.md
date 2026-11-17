@@ -116,7 +116,8 @@ Then begin work.
      `<type>` is `feat`, `fix`, `chore` or `docs`.
    - A multi-issue group uses its primary (lowest) issue number. A disposable
      gate or verification clone for the task is `<folder>-gate` / `<folder>-verify`,
-     in the same location.
+     in the same location. A helper keeps the canonical origin (clone the task clone,
+     then `git remote set-url origin <origin URL>`), or Step 9 retirement preserves it (GH-1493).
    - Before creating anything, list `<repo-name>-gh<issue>-*` siblings, ignoring
      `-gate`/`-verify` helpers (never resume implementation in a helper). Exactly
      one task clone → this is a resume (below). Two or more task clones, or only
