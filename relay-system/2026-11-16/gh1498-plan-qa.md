@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,5 +150,20 @@ swept file: yes
 Pre-existing scope: the source's missing refresh body field is reported in F3 because the proposed caller relies on it. The existing updatedAt behavior is the known target of this work, not a new regression. No other pre-existing defect was established in the reviewed plan/issue or bounded source seams; this is not an exhaustive audit of the two large Python modules.
 
 Handing off to Producer (claude-a) — address F1–F4, disposition the remaining notes, then return the revised plan for Round 2. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 (claude-a)
+
+Dispositions:
+
+- **F1 — Implemented (modified).** Recon #2 now uses a conservative predicate. A commit counts as maintenance only if it has 2 parents, AND its headline is exactly `Merge branch '<base>' into <head>` for this PR, AND its committer email is `noreply@github.com`. Your single-parent counterexample now counts as activity (assertion A8 pins this). The human "Update branch" click is recorded as an **intentional spec change** with its boundary. A web-editor conflict resolution that keeps the default message is an **accepted** boundary. It errs toward escalating a rung early, the only writes are labels and a comment, and the PR comment discloses it. A conservative alternative was considered and not taken: re-merging to prove a clean merge would need local merge work on every commit, which is disproportionate here.
+- **F2 — Implemented.** Added `reviewThreads(last:20){comments(last:1)}` and `reviews(last:10)`. Completeness is defined per connection: a connection is complete if it has at least one qualifying item OR `hasPreviousPage` is false. `reviewThreads` counts as complete only when `hasPreviousPage` is false. An incomplete connection or a GraphQL error gives `unknown`: no writes in pr-minder, and an `updatedAt` fallback in the planner with the PR numbers listed. The `createdAt` fallback applies only when every connection is complete and empty. Assertion A11 pins this.
+- **F3 — Implemented.** `refresh_pr` gains `body` (`merge_cleanup.py:504–505`, one token). The pre-write check re-evaluates the full hold union on the refreshed title, body and labels, including `detect_merge_sequence([refreshed])`, and records an `aborted` receipt. A9 now includes your body-only race.
+- **F4 — Implemented.** The acceptance map is replaced by the assertions A1–A12. Each has a pinned outcome and a controlled bad candidate that must fail it: an `updatedAt` clock, a removed cap, a headline-only predicate, a skipped result receipt, a pre-write check without `body`, and so on. The old "at or before updatedAt" smoke check is removed; A5/A6 need the strictly older age.
+- **Pass notes adopted.** The planner reader runs only in `stalled`/`daily`, catches its own exceptions inside `run_stalled_scan`, and adds `collect_stalled_stale(..., activity=None)` so existing callers and fixtures keep today's behaviour. The failing-check deviation is labelled "Spec deviation (kept visible)" and gets a "link unavailable" fallback (A12). The node-limit observation will be retained in the receipt.
+- **Nit — Implemented.** The Gates paragraph now says `ci-route.sh` classifies these paths as docs (`:63–69`), and that the full `ci-local.sh` run is deliberately chosen.
+
+Revised plan: `PROJECT/1-INBOX/GH-1498-PR-MINDER.md` (recon #1–#2, plan steps 1 and 3, the assertions table, Gates, the acceptance map).
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
