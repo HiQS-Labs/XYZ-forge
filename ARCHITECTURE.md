@@ -110,6 +110,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 |---|---|
 | [10days](skills/3-weekly/10days/SKILL.md) | Sweep recent GitHub issues, verify still-valid, build a marathon plan from survivors. |
 | [baseline](skills/3-weekly/baseline/SKILL.md) | Turn a circular complaint thread about a process or policy into graded evidence, one concrete ask per item and a local HTML deck with one question to agree on per slide. |
+| [connect-the-dots](skills/3-weekly/connect-the-dots/SKILL.md) | Given a problem or new feature, restate it as capabilities and find the existing modules that already cover them (maps, then code index, then grep); returns a cited fit table and the remainder that is new. |
 | [converge](skills/3-weekly/converge/SKILL.md) | Cluster findings across several `/dry` Convergence Maps by shape to find what repeats. |
 | [dry](skills/3-weekly/dry/SKILL.md) | Trace a codebase resource-first and report the subsystems that should be one subsystem. |
 | [end-of-week](skills/3-weekly/end-of-week/SKILL.md) | Reconcile weekly governance evidence, file ranked gaps, correct metadata and verify the configured kanban projection. |
@@ -143,6 +144,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |
 | [install-improve-audit](skills/4-occasional/install-improve-audit/SKILL.md) | Get an unfamiliar repository building, fix blockers, and open a bounded PR. |
 | [open-router](skills/4-occasional/open-router/SKILL.md) | Resolve a colloquial model name to its canonical OpenRouter slug. |
+| [re-vendor-xyz](skills/4-occasional/re-vendor-xyz/SKILL.md) | Refresh one repo's vendored `.xyz/` copy safely: published source, no live run, backup, verified result. |
 | [read-only](skills/4-occasional/read-only/SKILL.md) | Add a narrow read-only command allowlist to Claude Code settings. |
 | [readme-audit](skills/4-occasional/readme-audit/SKILL.md) | Audit a README as both user-facing artifact and map of the repo's docs. |
 | [rpr](skills/4-occasional/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |

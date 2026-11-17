@@ -1,0 +1,1 @@
+swarm-preflight: --project-doc and --gh-issue are mutually exclusive; pick one input mode

@@ -608,7 +608,7 @@ class WorkflowTests(unittest.TestCase):
                        'cancel-in-progress: false', 'ref: development', 'fetch-depth: 0',
                        'github.event.pull_request.merged == true', "github.event.pull_request.base.ref == 'development'",
                        '--pr "$PR_NUMBER" --catch-up --gate --qualify', '--catch-up --gate --qualify',
-                       'timeout-minutes: 120', 'python3 -m pip install --quiet --break-system-packages pytest'):
+                       'timeout-minutes: 120', 'python3 -m pip install --quiet --break-system-packages -r requirements-dev.txt'):
             self.assertIn(marker, self.workflow)
         for trigger in ('push', 'pull_request', 'schedule'):
             self.assertIsNone(re.search(rf'^  {trigger}:', self.workflow, re.M), trigger)

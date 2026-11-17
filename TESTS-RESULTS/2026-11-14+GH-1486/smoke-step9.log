@@ -1,0 +1,19 @@
+== smoke: step 9 block as written, read-only, real collection on this machine (2026-11-15T07:10:57Z)
+FORGE="/absolute/path/printed/in/step/1"
+    ],
+    "vpn-mac-studio": [],
+    "watch": [],
+    "weekly-plan": [],
+    "weekly-planner": [],
+    "whack-a-mole": [],
+    "workhorse": [
+      "Requires relevant caller repo governance and the named workflow skills/tools; additional dependencies are not imported or installed automatically."
+    ],
+    "xyz": []
+  }
+}
+rc=0
+-- collection repo unchanged by the read:
+       0
+-- drift summary from the same read (sync.py --status --canonical <primary forge>): canonical origin --canonical, ok 40, drifted 0, unrecognized 26; apply False, actions 0, changes 0, errors 0, warnings 0; rc 0
+verdict: step 9 runs as written, reads only, reports no DRIFTED Forge skill on this machine, so no hand-off to /skills-army-hq was needed.

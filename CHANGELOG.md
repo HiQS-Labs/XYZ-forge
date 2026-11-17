@@ -19,6 +19,23 @@
   Controlled CLI checks cover recovery, continuation and preserved work; review and gate receipts are recorded with the implementation PR.
   Evidence: `TESTS-RESULTS/2026-11-15+GH-1400/SUMMARY.md`.
 
+## 2026-11-15 — GH-1479: typed swarm-preflight stages and a scoped mypy baseline
+
+`utils/py/swarm_preflight.py`'s 734-line `main()` is now an 11-line sequence over named stages (source resolution, contract loading, repository inspection, candidate evaluation, normalization, reporting, packet writing) that pass three frozen records instead of shared locals. Every function is annotated. `mypy.ini` checks this one module, `requirements-dev.txt` pins `mypy==1.14.1` beside the existing gate dependencies, and the three hosted install steps plus `README.md`/`ROUTER.md` point at it. The existing `test_swarm_preflight_module_load` now also runs the scoped mypy check, so the gate's Python needs mypy installed (`python3 -m pip install -r requirements-dev.txt`). No CLI, output, packet, exit-code or write-mechanism change: old and new executors produced byte-identical results across ten scenarios. No new tests. Revert the PR to undo. Evidence: `TESTS-RESULTS/2026-11-14+GH-1479/`.
+
+## 2026-11-14 — GH-1486: `/re-vendor-xyz` refreshes one vendored `.xyz/` copy safely
+
+New instruction-only skill `skills/4-occasional/re-vendor-xyz/` that sequences the existing
+`xyz-sync.sh` refresh for one repository. The bare commands can report success while the copy is
+stale or built from unpublished code, or replace it under a live run (#1011). The skill stops,
+by a closed list, when the Forge source is dirty, not canonical, unfetchable or ahead of origin;
+when the target is unregistered; when a driver lock or a process uses the copy; or when a tier-2
+copy would lose its RELEASES overlay. It backs the copy up, refreshes, and counts the copy current
+only when `check` prints `ok`, prints no `SAFETY GUARD MISSING` line, and `.xyz/VERSION` matches the
+Forge `HEAD`. It then reads Skills Army HQ status and hands deployed-skill drift to `/skills-army-hq`.
+No script, flag or test suite added; `xyz-sync.sh` and `xyz-vendor.sh` are unchanged. Pointers in
+`ARCHITECTURE.md`, `README.md` and `vendor-stack`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1486/`.
+
 ## 2026-11-14 — GH-1475: merge-cleanup Phase 2A (fewer cycles and waits)
 
 A hub PR that this run B1-repaired no longer needs a second dry run and execute. The run waits for the new head's checks on that exact commit, re-checks that nothing else moved it, re-pins it (selection file and batch allowlist), and lands it. Anything else off its pin still defers. `.merge-cleanup.json` gains the opt-in `qualification.wait_for_checks: [names]`, so the existing pending, poll and defer logic applies to named checks even when GitHub reports no required checks. Retained clones are bounded: per prefix, the newest 3 (`MERGE_CLEANUP_KEEP_WORKDIRS`) and anything touched in the last hour are kept, and older `merge-cleanup-*`/`merge-check-*` folders are removed only when `lsof` verifies them idle and no other `merge_cleanup.py` is running. On exit 3, landed PRs' clones are released. The shared open-handle probe now also counts a process whose cwd is the folder root (it missed that holder before, which affected teardown too). A dry run now previews B1-repairable PRs and continues instead of stopping at the first one. Existing tests that pinned the old second cycle were updated; no new tests. Code revert is easy; pruned scratch is not restored by a revert. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
@@ -194,6 +211,12 @@ its exact-head re-check approved 6e040869. All three skill validators now pass a
 pre-existing intake description syntax. The final push gate, full runtime gate and
 managed deployment remain outstanding at this checkpoint.
 Evidence: `TESTS-RESULTS/2026-11-10+GH-1414/`.
+
+## 2026-11-10 — GH-1409 vendored-smoke pins its judge files to the PR base
+
+- On pull requests, `vendored-smoke` now restores the inventory ratchet, gh421, gh308 and the four vendored suites from the merge ref's first parent before running them. It refuses a grown inventory baseline (including effective bypass cardinality) or newly added `SQLITE-*-OK` markers; a `judge-change` label skips the pin. One inline step, no new suite, script or gate.
+- `main` now requires the `vendored smoke gate` check (repository setting, 2026-11-10). `development` stays unprotected until a reviewed bot-bypass policy exists for `wave-reconcile.yml`.
+- Accepted residuals: a PR can still edit `ci.yml`; helpers the suites source are not pinned. Easy to revert (one workflow commit; one protection setting).
 
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 

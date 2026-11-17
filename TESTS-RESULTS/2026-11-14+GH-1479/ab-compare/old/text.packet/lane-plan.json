@@ -1,0 +1,71 @@
+{
+  "orchestrator_owned": [],
+  "codex_lane": [
+    "utils/py/swarm_preflight.py",
+    "test/gh280-jog-marathon-adapter.sh",
+    "test/gh343-gate-program-target-root.sh",
+    "test/gh386-turn-budget-honesty.sh",
+    "test/gh399-packet-acceptance-continuation.sh",
+    "test/gh400-acceptance-fidelity.sh",
+    "test/gh400-source-url.sh",
+    "test/gh418-issue-state-frozen.sh",
+    "test/gh422-backfill-source-url.sh",
+    "test/gh425-source-url-slug.sh",
+    "test/gh557-unknown-blocks-manifest.sh",
+    "test/gh642-consumer-fruit.sh",
+    "test/test_python_layer.py",
+    "test/_setup.sh"
+  ],
+  "agy_lane": [],
+  "effective_artifacts": [
+    "utils/py/swarm_preflight.py",
+    "test/gh280-jog-marathon-adapter.sh",
+    "test/gh343-gate-program-target-root.sh",
+    "test/gh386-turn-budget-honesty.sh",
+    "test/gh399-packet-acceptance-continuation.sh",
+    "test/gh400-acceptance-fidelity.sh",
+    "test/gh400-source-url.sh",
+    "test/gh418-issue-state-frozen.sh",
+    "test/gh422-backfill-source-url.sh",
+    "test/gh425-source-url-slug.sh",
+    "test/gh557-unknown-blocks-manifest.sh",
+    "test/gh642-consumer-fruit.sh",
+    "test/test_python_layer.py",
+    "test/_setup.sh"
+  ],
+  "inferred_test_artifacts": [
+    "test/gh280-jog-marathon-adapter.sh",
+    "test/gh343-gate-program-target-root.sh",
+    "test/gh386-turn-budget-honesty.sh",
+    "test/gh399-packet-acceptance-continuation.sh",
+    "test/gh400-acceptance-fidelity.sh",
+    "test/gh400-source-url.sh",
+    "test/gh418-issue-state-frozen.sh",
+    "test/gh422-backfill-source-url.sh",
+    "test/gh425-source-url-slug.sh",
+    "test/gh557-unknown-blocks-manifest.sh",
+    "test/gh642-consumer-fruit.sh",
+    "test/test_python_layer.py"
+  ],
+  "inferred_test_helpers": [
+    "test/_setup.sh"
+  ],
+  "fs_touching_tests": [
+    "test/gh280-jog-marathon-adapter.sh",
+    "test/gh343-gate-program-target-root.sh",
+    "test/gh386-turn-budget-honesty.sh",
+    "test/gh399-packet-acceptance-continuation.sh",
+    "test/gh400-acceptance-fidelity.sh",
+    "test/gh400-source-url.sh",
+    "test/gh418-issue-state-frozen.sh",
+    "test/gh422-backfill-source-url.sh",
+    "test/gh425-source-url-slug.sh",
+    "test/gh557-unknown-blocks-manifest.sh",
+    "test/gh642-consumer-fruit.sh",
+    "test/_setup.sh"
+  ],
+  "agy_review_default": true,
+  "coupling_warning": null,
+  "parallelizable": true,
+  "single_lane_only": false
+}
