@@ -375,3 +375,14 @@ one continuation branch in the supervised loop; jog skill and CHANGELOG updated.
 23/23 (smoke and repeat) at `7f946cd1d`, two failed fixture attempts retained, existing Jog–Marathon
 integration 227/227; see `TESTS-RESULTS/2026-11-16+GH-1400/SUMMARY.md`. Final QA and the classified
 gate follow on the final commit. #1400 stays open.
+
+
+## Current outer-loop delivery alignment — 2026-11-16
+
+Canonical Issue #1400 now records 35% milestone completion. The next 20 points are OL-14 (this integrated supervisor verified, reviewed, checked and landed), OL-09 (raw daily-goal preparation through Issue #1476), OL-10 (actual readiness admission through Issue #1476), and OL-12 (integrated task-local parking/independent continuation). Each earns five points only on its own evidence; this PR does not close the umbrella or all four milestones.
+
+The operator authorized finishing review/checks and landing PR #1491. Combined candidate `dc3035c18` includes development `f346d8908`; existing runtime files were unchanged by that merge, but combined-head qualification remains required. Preserve prior review/attempt records. This documentation update changes no runtime acceptance. Verification, current-head independent review, publication and the normal merge-cleanup owner precede a landed claim.
+
+OL-09 preparation may advance independently during an external OL-14 wait. It retains raw daily-goal intake, bounded medium research by default, justified deeper research, reused applicable evidence, explicit holds and opt-in risk deferral. OL-10 remains separate actual-admission evidence; no prose-only completion claim. Do not add a queue, readiness database or daemon. Issue #1399 attempt enforcement remains required before complete workflow qualification, not an expansion of this implementation slice.
+
+Later qualification shares evidence across at most two planned bounded real runs and includes operator/global stop, preserved holds, useful outputs, intervention counts and restart/handoff. Recheck observed harness obstacles rather than assuming them fixed. Report synthetic, assisted, integrated and landed evidence distinctly. Skill deployment and unrelated merges remain outside this authorization.
