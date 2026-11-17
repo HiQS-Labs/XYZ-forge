@@ -241,5 +241,23 @@
     "bad_rejected": true,
     "bad_crashed": null,
     "verdict": "PASS"
+  },
+  {
+    "id": "A20a",
+    "assertion": "a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A20b",
+    "assertion": "--pr N runs the conflict lookup (git fetch) only for PR N",
+    "candidate": "PASS",
+    "bad_candidate": "conflict lookup for every conflicting PR",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
   }
 ]

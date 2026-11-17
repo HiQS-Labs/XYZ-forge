@@ -520,17 +520,17 @@ def main(argv=None) -> int:
               file=sys.stderr)
         activity = None
     receipts = Receipts(slug)
-    rows = assess(root, slug, prs, activity, receipts, args)
-    for row in rows:
-        if row["conflicting"] and row["plan"]["comment"] is not None:
-            row["conflict_files"] = conflict_files(root, row["pr_data"])
-            row["plan"] = plan_bundle(row, receipts)
+    rows = assess(root, slug, prs, activity, receipts, args)   # all PRs: stack inheritance needs them
     focus = args.explain or args.pr
-    if focus:
+    if focus:   # narrow BEFORE the conflict lookup, which fetches into this checkout
         rows = [r for r in rows if r["pr"] == focus]
         if not rows:
             print(f"pr-minder: #{focus} is not an open PR here", file=sys.stderr)
             return 2
+    for row in rows:
+        if row["conflicting"] and row["plan"]["comment"] is not None:
+            row["conflict_files"] = conflict_files(root, row["pr_data"])
+            row["plan"] = plan_bundle(row, receipts)
 
     if args.explain:
         r = rows[0]

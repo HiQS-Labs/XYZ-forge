@@ -1323,7 +1323,10 @@ def author_activity(node: dict | None, receipt_oids=frozenset()) -> tuple[dateti
     if nodes is None or more:
         return None, False
     for t in nodes:
-        stamps.extend(c.get("createdAt") for c in ((t.get("comments") or {}).get("nodes") or []) if c.get("createdAt"))
+        inner = (t.get("comments") or {}).get("nodes") if isinstance(t, dict) else None
+        if not isinstance(inner, list) or not all(isinstance(c, dict) for c in inner):
+            return None, False   # a null/malformed thread makes only this PR unknown
+        stamps.extend(c.get("createdAt") for c in inner if c.get("createdAt"))
     times = [ts for ts in (_parse_gh_time(s) for s in stamps) if ts]
     if times:
         return max(times), True

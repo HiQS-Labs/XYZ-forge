@@ -26,5 +26,7 @@ PASS A19c: failed and uncertain update-branch attempts count toward the 2-per-ep
 PASS A19d: one PR raising does not end the pass: next PR still written, failed receipt, exit code 1 | bad: — -> n/a
 PASS A19e: a marker comment NOT written by the viewer still counts as author activity | bad: — -> n/a
 PASS A19f: a failed update-branch's CLI error is rendered as an inert code span in the fallback comment | bad: raw error interpolated -> rejected
-{"passed": 27, "failed": 0}
+PASS A20a: a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising | bad: — -> n/a
+PASS A20b: --pr N runs the conflict lookup (git fetch) only for PR N | bad: conflict lookup for every conflicting PR -> rejected
+{"passed": 29, "failed": 0}
 rc=0

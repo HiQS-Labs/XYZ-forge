@@ -817,5 +817,40 @@ def a19f(bad=False):
 check("A19f", "a failed update-branch's CLI error is rendered as an inert code span in the fallback comment", a19f,
       "raw error interpolated", lambda: a19f(bad=True))
 
+# ---------------- A20 CodeRabbit #1510 third pass ----------------
+def a20a():
+    base = history([commit(5)])
+    nulls = [dict(base, reviewThreads=conn([None])), dict(base, reviewThreads=conn([{"comments": {"nodes": [None]}}]))]
+    return all(pc.author_activity(dict(n, createdAt=iso(60))) == (None, False) for n in nulls)
+
+
+check("A20a", "a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising", a20a, "—", None)
+
+
+def a20b(bad=False):
+    e = Env([mkpr(150, 8.1, "dirty"), mkpr(151, 8.1, "dirty")]); e.activate()
+    seen = []
+    orig = pm.conflict_files
+    def spy(root, pr):
+        seen.append(pr["number"]); return orig(root, pr)
+    with patched(pm, "conflict_files", spy):
+        if bad:   # pre-fix order: look up conflicts for every PR, then narrow
+            orig_assess = pm.assess
+            def eager(*a, **k):
+                rows = orig_assess(*a, **k)
+                for r in rows:
+                    if r["conflicting"] and r["plan"]["comment"] is not None:
+                        spy(a[0], r["pr_data"])
+                return rows
+            with patched(pm, "assess", eager):
+                plans(e, "--pr", "150")
+        else:
+            plans(e, "--pr", "150")
+    return 151 not in seen and 150 in seen
+
+
+check("A20b", "--pr N runs the conflict lookup (git fetch) only for PR N", a20b,
+      "conflict lookup for every conflicting PR", lambda: a20b(bad=True))
+
 print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
 (Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))
