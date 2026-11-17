@@ -34,7 +34,7 @@ ROUND: 1 / 3
 7. **Hand off explicitly — EVERY turn, not just the first** (GH-268).
 
 ## Setup
-- Artifact under review: diff against `origin/development` (`git diff origin/development...HEAD`), plan `PROJECT/2-WORKING/GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md`, and test evidence in `TESTS-RESULTS/2026-11-17+GH-1512/`.
+- Artifact under review: **skills/3-weekly/whack-a-mole/SKILL.md**, **skills/1-hourly/debug-mantra/SKILL.md**, **PROJECT/2-WORKING/GH-1512-WHACK-A-MOLE-CONNECT-THE-DOTS.md**, **CHANGELOG.md**, and test evidence in **TESTS-RESULTS/2026-11-17+GH-1512/**.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-11-17
 - Definition of Done:
