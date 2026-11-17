@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -153,5 +153,29 @@ Probe ledger: two narrow commands invoked as "export PYTHONDONTWRITEBYTECODE=1 T
 Root cause: no-action representation is reused as cleanup, ownership is inferred from names, and manual scenarios omit managed/failure/installed inputs; Fix site: existing plan/apply boundary, receipts, resolver and manual driver; Why not upstream/downstream: readers supply these inputs correctly; extra orchestration would not fix interpretation.
 
 Handing off to Producer (claude-a) — disposition F1–F8, correct implementation/manual evidence, and open Round 2. Go to the Producer window and say 'take your turn'. The harness owns the relay-file commit.
+
+### Producer · Round 2 (claude-a)
+
+All eight findings are implemented. Code commit: `326b47088`.
+
+- **F1 — Implemented.** `plan_bundle` now returns `write: False` for held, stacked-on-held, unknown and rung-4 rows. `apply_row` returns before building any operation, so there is no label cleanup either (`pr_minder.py` `apply_row` first lines). A3 now gives every held or stacked PR an **owned** `pr-minder:stale` label at a fresh age, so the label would be cleared if the guard were missing. A11 does the same for the unknown PR.
+- **F2 — Implemented.** The new `Receipts.owned_labels(pr)` replays `ok` add-label/remove-label receipts, and a label is removed only if it is in that set. New A13: an unowned label is kept, and an owned one on a fresh PR is cleared. Its bad candidate infers ownership from the label name and fails. SKILL.md now states the rule: a label added by hand, or from another device, is kept.
+- **F3 — Implemented.** At rungs 1–2, a behind PR's bundle carries a `fallback` diagnosis. If `update-branch` fails or comes back uncertain, label and comment operations still run, and the failure comment is posted. The mutation is never retried. The head re-read return code is checked: a failed re-read is `uncertain`, never `ok`. New A14: one sync attempt, label added, failure diagnosis commented. Its bad candidate removes the fallback and fails.
+- **F4 — Implemented.** Label creation is its own operation with its own intent/result pair. If creation fails, the add is skipped and the failure is recorded. A10 now checks that the shim's write count equals the non-bundle result receipts, and adds a forced `label create` failure. New A10b: folding creation into add-label (the old shape) fails.
+- **F5 — Implemented.** `assess` sets `has_owned_comment` from the marker comments in the activity history. At rung 0 a managed PR gets its owned comment PATCHed to "rung 0 (fresh)… No action needed". An unmanaged fresh PR gets no comment. New A15: one PATCH, the rerun makes no writes, and the unmanaged PR stays untouched. Its bad candidate ignores the existing comment and fails.
+- **F6 — Implemented.** The flat candidate is now `HERE.parents[1] / rel_flat` (with a comment). New A16 copies the three skills into a temp flat `skills/<name>/scripts` layout and runs `--help` with no env override: rc 0. The pre-fix resolver fails.
+- **F7 — Implemented.** Conflict comments now state the measured drift ("Base has moved N commits since this branch's merge base", or "Base drift unknown"). The rung-3 re-cut names the PR's own non-maintenance commits (oid + headline, newest 10, marked if truncated) and the diff size from `files`. New render check A12b.
+- **F8 — Implemented.** A8b's bad predicate is now bound to the current head name. It handles the original name (`maint`, `fix/x`) and fails on the same-OID renamed case (`rename-head`, `fix/new`). A5/A6 now **apply** first: label and comment on #40, update-branch on #41. The fake `gh` appends the server sync commit and the marker comment to the history and bumps `updatedAt`. Then both readers re-read: pr-minder ages 20d/5d, and the real `planner_core.py --mode stalled` report shows the 20d/5d dates, with the fallback disclosure naming #40 and #41 on a history error.
+- **Refresh timing — Disposition.** The plan said "before each write", but the code refreshes once per PR bundle and then runs its 1–4 writes back to back. That is accepted and recorded in the plan as "Timing disposition (final QA r1)". The window is seconds, and A9 covers a change between measure and bundle. SKILL.md says the same.
+
+Evidence: `manual-check.log` is 19/19 PASS, with every bad candidate rejected. The A10 fixture also surfaced a driver bug: each fake env overwrote process-wide environment variables, so a second env redirected the first env's receipts. `Env.activate()` now re-points them per call. That was a manual-driver fix, not product code. The smoke and gate at `326b47088` are in progress. GitHub's GraphQL limit was briefly exhausted by other sessions, so the real-repo smoke re-runs after the reset. The gate is re-running in the disposable clone. Both are appended before handoff.
+
+**Evidence update (before handoff):**
+- Gate re-run at `326b47088`: publisher suites 4/4, `ci-local` rc=0 (`gate.log`, `.gate-evidence/326b4708.txt`).
+- `07538331d`: on an open-PR read failure (for example a GitHub rate limit), pr-minder now exits rc 2 with a one-line message and no writes, instead of a traceback. This was observed live while GraphQL was refusing calls. Manual check still 19/19.
+- Smoke re-recorded at `07538331d` (`smoke-plan-mode.log`): rc 0 twice, 14 open PRs.
+- A final gate will run on the approved head.
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

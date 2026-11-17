@@ -18,3 +18,15 @@ post: c8ca1ccd664df2b0eb106fbb177b64967b7710f4        0
   PASS: D1 CONTROL: gate-record records from a clean tree (this clone)
 Green on the shipping platform, with the full suite — including the one hosted ubuntu skips.
 gate-record: recorded .gate-evidence/c8ca1ccd.txt
+
+## Re-gate after final QA r1 fixes — 326b47088 (same disposable clone, reset to the branch head)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+python3 -> $TMPDIR/gh1498-venv/bin/python3
+pre: 326b47088184fb9369c0cc792ad84a22a3126dcd        0
+post: 326b47088184fb9369c0cc792ad84a22a3126dcd        0
+gate-record: recorded .gate-evidence/326b4708.txt
+Later commits 07538331d (pr-minder clean exit on read failure, manual check 19/19) and a260bad2c (smoke log) post-date this run; a final gate runs on the approved head.
