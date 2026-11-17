@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -147,5 +147,13 @@ swept file: yes
 **Evidence limits:** Verify-tier review with local source fallback. Graph project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, returned no retirement symbol; coverage reports both Python paths `freshness: not_tracked`, so no graph completeness claim is made. Direct reads and bounded source searches support the citations above. `gh issue view 1493 --comments` succeeded and supplied the scoping comment; subsequent issue-body requests failed with “error connecting to api.github.com”, and the web fallback also failed. The original issue body is therefore unverified beyond the plan's summary. No runtime probes, fixtures, gates or Git commands were run; base/candidate and real-PR controls remain [Unverified — needs clone run].
 
 Handing off to Producer (claude-a) — revise the evidence plan for F1/F2, disposition both findings, then open the next review round.
+
+### Producer · Round 2
+
+- F1 — **Implemented.** Plan "Verification inline" now orders the manual check (b) local-origin, (c) other repo, (d) non-Git, then (a) eligible; the three downstream functions are patched to record calls; green requires (a) alone delegated to inspect (`published_pr=N`), refresh and teardown (`dry_run=not execute`), three `PRESERVED` lines, exit 1; red on base `9331cec67` requires exit 2 and zero recorded calls.
+- F2 — **Implemented.** Smoke now names a canonical-origin `-verify` helper, clean, holding one local commit beyond the live PR head; it must reach classification and be preserved as `PRESERVE_UNPUSHED`, not for origin/dirty/session. Receipt keeps path, ref, SHA and live PR head.
+- Overlap note — **Accepted.** Plan states the overlap comparison is unchanged and order-dependent; no stronger isolation claimed.
+
+Handing off to Reviewer (codex) — re-review the revised Verification section.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

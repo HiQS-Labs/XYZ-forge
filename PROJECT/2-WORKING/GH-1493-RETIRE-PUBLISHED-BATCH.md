@@ -79,18 +79,26 @@ Verification inline:
 
 - No existing suite exercises `retire_published_checkouts` (`git grep retire_published -- test`
   is empty). Manual check under `TESTS-RESULTS/2026-11-17+GH-1493/` with `provenance.jsonl`:
-  a temp primary (canonical-style origin) plus, in one call, (a) an eligible path,
+  a temp primary (canonical-style origin) plus, in one call and in this order,
   (b) a clone whose origin is a local path, (c) a clone of a different repository,
-  (d) a non-Git directory. Before (base `9331cec67`): exit 2, single `refused` line, (a) never
-  inspected. After: (b)(c)(d) each print `PRESERVED`, (a) reaches inspection, exit 1.
-  Classification/PR lookup is stubbed (`inspect_checkout`/`refresh_for_teardown`/
-  `teardown_checkout` patched) so the check observes the batch decision, not GitHub.
-- Control (unpublished local commit): unchanged code path — `published_pr_head` /
-  classification still refuses; witnessed by a real-PR smoke (below) on a helper with a
-  local commit, which must be preserved.
-- Smoke (GH-1088) on this task's own closeout: main path = real `--retire-published-pr` preview
-  with task clone + `-gate` helper (canonical origin) + one deliberately local-origin helper;
-  adjacent path = rerun of the same command (second invocation). Recorded in the same folder.
+  (d) a non-Git directory, then (a) an eligible path — so the eligible path comes after refusals.
+  `inspect_checkout`/`refresh_for_teardown`/`teardown_checkout` are patched to record their calls
+  (so the check observes the batch decision, not GitHub; a recorded call is delegation, not
+  retirement). Before (base `9331cec67`): exit 2, one `refused` line, zero recorded calls.
+  After: (b)(c)(d) each print `PRESERVED <path>: <reason>`; (a) alone is passed to inspection
+  (`published_pr=N`), refresh and teardown (`dry_run=not execute`); exit 1. A candidate that stops
+  processing at the first refusal fails this check (plan QA F1).
+- Smoke (GH-1088) on this task's own closeout, real PR, preview (no `--execute`) for the controls:
+  main path = one call naming the task clone, a `-gate` helper with the canonical origin, a
+  helper with a local-path origin, and a `-verify` helper with the canonical origin that is clean
+  but holds one local commit beyond the published PR head. Expected: local-origin helper
+  `PRESERVED` with the helper-creation hint; the unpublished-commit helper reaches classification
+  and is preserved for its unpushed ref (`PRESERVE_UNPUSHED`, not an origin/dirty/session reason);
+  task clone and `-gate` classify as retirable. Receipt keeps each path, ref, SHA and the live PR
+  head (plan QA F2). Adjacent path = rerun of the same call (second invocation), same verdicts.
+  Recorded in the same folder; then the real closeout retires only the eligible paths.
+- Overlap: the overlap test still compares against already-accepted candidates only (order
+  dependent, unchanged); no stronger subtree isolation is claimed.
 - Gate: `utils/ci-route.sh` routes merge-cleanup code as full gate → `ci-local.sh` once on the
   final commit, in a disposable `-gate` clone. Express rule: also run `test/gh620-skills-army-mini-sync.sh`
   and `test/gh589-xyz-mini-sync.sh` (published skill folder). Focused: `test/gh436-merge-cleanup.sh`.
