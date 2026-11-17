@@ -177,4 +177,13 @@ Basis: Every DoD outcome is traceable in the whole-flow walks: RAW intake, mediu
 
 Handing off: relay closed (Approved), no further turn needed. The classified final gate runs after this turn in a disposable clone.
 
+
+### Attestation · relay-drive — 2026-11-17T16:34:11Z
+task: RELAY-gh1476-final-qa-r1
+reviewer: claude-review
+status: Approved
+reviewed-head: e91e28ea64923af975caf3d3b8a5a6c4b9d0c953
+added-range: 12612+11578
+added-sha256: 869a7fe0345602fcea00c99611459fc10a6b60c73faf42ab4a679fbea6cbf059
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
