@@ -1,0 +1,28 @@
+== test: gh384-crash-recovery ==
+  workdir: <scratch>/tick-gh384-crash-recovery.XXXXXX.opPPeRTarA
+-- read-only
+  PASS: HEAD is unchanged (no commit was made)
+  PASS: git status is byte-identical before and after
+  PASS: no file was created or removed anywhere in the tree
+-- detection: gated vs ungated
+  PASS: the report contains a block for the gated phase
+  PASS: the report contains a block for the ungated phase
+  PASS: the two phases produce DIFFERENT output (the issue's core litmus test)
+  PASS: the ungated phase is labelled with its ungated commit
+  PASS: the label names the actual landed commit's task
+  PASS: the finding is stated as UNVERIFIED, not merely reported
+  PASS: the gated phase is NOT flagged (no false positive)
+  PASS: the gated phase's approval event is recognised
+-- inverse control: remove the approval event, the verdict must flip
+  PASS: with the event removed, the same phase now reports its approval missing
+-- driver lock state
+  PASS: no lock present reports IDLE
+  PASS: a lock held by a dead pid reports STALE
+  PASS: a lock held by a live pid reports LIVE
+-- documented recovery procedure
+  PASS: README names the tool to run after an interruption
+  PASS: README explains the ungated-commit finding
+  PASS: README says what to DO about one (re-run the gate, or revert)
+  PASS: README notes that a stale driver lock self-heals
+
+  gh384-crash-recovery: 19 passed, 0 failed
