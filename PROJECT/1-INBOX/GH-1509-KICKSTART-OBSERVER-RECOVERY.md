@@ -90,7 +90,7 @@ Currently, the operator's assisted factory pattern runs an outer-loop session wh
 - [ ] Invocation plainly creates parent observer/recovery + one outer-loop child with disjoint responsibilities and no competing writer.
 - [ ] Daily-goal intake routes to existing preparation owners; no readiness claim from raw intake alone.
 - [ ] Normal completion, task-local hold, shared unsafe stop, and parent/child interruption handoffs are specified with concrete evidence and next owner.
-- [ ] Unknown/live/stopped ownership refuses replacement; recovery preserves original limits and uncertain results.
+- [ ] Unknown, live, or paused ownership refuses replacement; replacement permitted only after proven stopped ownership and reconciliation within original limits, preserving uncertain results.
 - [ ] No extra queue/schema/runtime service, new test suite or silent installed-skill update.
 - [ ] Independent plan/final QA, classified checks and recorded main/adjacent instruction walkthrough establish the delivered instruction contract; live unattended qualification remains separate.
 
@@ -107,9 +107,9 @@ Currently, the operator's assisted factory pattern runs an outer-loop session wh
    - Concrete handoff states: normal completion, task-local hold following owner semantics, shared unsafe stop, interruption recovery.
    - Preserving original budgets, receipts, and uncertain outcomes; reporting assisted vs unattended truthfully.
 4. Register the new skill in `ARCHITECTURE.md` under the Skills Index.
-5. Classify the final actual diff against integration base `development` via `utils/ci-route.sh` to determine applicable gates.
-6. Conduct a source-only manual instruction walkthrough of main (happy-path delegation & normal completion) and adjacent paths (task-local hold, shared unsafe stop, session interruption/recovery), recording results and `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1509/`. Distinguish instruction walkthrough from live unattended qualification.
-7. Run classified documentation checks (`utils/pdda/pdda.sh run`).
+5. Classify the final actual diff against integration base `development` via `utils/ci-route.sh` to determine applicable route (docs, fast, or full) and test tier.
+6. Conduct a source-only manual instruction walkthrough of main (happy-path delegation & normal completion) and adjacent paths (task-local hold, shared unsafe stop, session interruption/recovery), recording nonempty results and nonempty `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1509/`. Distinguish instruction walkthrough from live unattended qualification.
+7. Run all applicable classified checks (e.g. `utils/pdda/pdda.sh run` for docs route; required tier suites if classified otherwise), reporting any failure or unavailable check honestly.
 8. Conduct independent final Codex relay QA (`relay-system/2026-11-17/gh1509-final-qa.md`).
 9. Open ready pull request against `development` and close out issue #1509.
 

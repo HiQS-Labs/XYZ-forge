@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -163,5 +163,46 @@ All findings from Reviewer Round 1 have been implemented in `PROJECT/1-INBOX/GH-
   - Explicitly distinguishes instruction walkthrough evidence from live unattended qualification.
 
 Handing off to Reviewer — ready for Round 2 review.
+
+### Reviewer · Round 2 (Codex)
+
+swept file: yes
+
+- [Blocker] The acceptance criterion still requires refusing replacement for **stopped** ownership (plan:93), contradicting the recovery protocol's permission to redispatch after stopped-ownership proof and reconciliation (plan:79–86). This leaves the central recovery acceptance unsatisfiable or forbids the intended recovery. Change the criterion to refuse unknown, live, or paused ownership; allow replacement only after proven stopped ownership and reconciliation within the original limits.
+  Observed input: the child and all builders are proven stopped, all outcomes reconciled, and budget remains; plan:93 still says stopped ownership refuses replacement.
+  Affected scope: recovery after a fully stopped prior owner.
+  Falsifier: the criterion and protocol both permit this reconciled case, while a live, paused, or unknown owner holds.
+- [Should] The promised final verification is not fully specified: plan:110 classifies the actual diff, but plan:112 only requires classified *documentation* checks; it does not require any non-documentation checks if the final diff routes otherwise. Plan:111 also does not require the retained walkthrough and provenance to be nonempty, despite the Round 1 disposition. Require every applicable classified check and nonempty walkthrough and provenance evidence, reporting failures or unavailable checks honestly. The router explicitly supports docs, fast, and full routes (utils/ci-route.sh:2–12).
+  Observed input: a final diff classified fast or full, or an empty walkthrough/provenance file, satisfies the literal plan:110–112 without the corresponding checks or usable evidence.
+  Affected scope: final verification and retained walkthrough artifacts.
+  Falsifier: a fast/full classification requires its applicable checks, and empty evidence fails the documented review procedure.
+- [Pass] Recovery now identifies the child, processes, lock, milestone, receipt, budgets and uncertain actions; it checks spawned writers and preserves limits (plan:79–86). The contradictory acceptance criterion above remains open.
+- [Pass] The selected owner's continuation semantics govern holds, including Jog's readiness-refusal stop and limited continuing outcomes (plan:60–61, 76; skills/2-daily/jog/SKILL.md:26–35).
+- [Pass] New prose obtains an issue before Conveyor; existing issues route directly, and publication and admission remain prerequisites (plan:66–71; skills/1-hourly/conveyor/SKILL.md:3–10).
+- [Pass] Missing delegation or completion observation explicitly stops with a resumable handoff and no daemon or direct fallback (plan:50–53).
+- [Pass] Source-only scope, independent QA and distinction between instruction walkthroughs and unattended qualification are planned (plan:29–35, 95, 99–113).
+
+The whole plan was swept; the stopped-ownership contradiction is a pre-existing acceptance defect in scope. These are plan-review findings, not a claim that implementation or its final checks have run.
+
+**VERDICT: FAIL**
+
+**Basis:** The recovery acceptance conflicts with the proposed safe recovery, and final verification does not unambiguously require all classified checks and nonempty evidence. The remaining Round 1 changes are addressed as cited above.
+
+### Producer · Round 2
+
+All findings from Reviewer Round 2 have been implemented in `PROJECT/1-INBOX/GH-1509-KICKSTART-OBSERVER-RECOVERY.md`:
+
+- **Disposition for Blocker 1 (Contradictory stopped-ownership acceptance criterion): Implemented.**
+  Updated the fourth acceptance criterion in Section "Acceptance Criteria" (line 93) to:
+  `- [ ] Unknown, live, or paused ownership refuses replacement; replacement permitted only after proven stopped ownership and reconciliation within original limits, preserving uncertain results.`
+  This fully aligns the acceptance criteria with the recovery protocol: unknown, live, or paused ownership strictly blocks replacement, whereas replacement/redispatch is permitted only when stopped ownership is definitively proven and prior outcomes are reconciled within remaining limits.
+
+- **Disposition for Should 1 (Comprehensive classified checks & nonempty walkthrough/provenance): Implemented.**
+  Updated Section "Ordered Implementation and Verification" items 5, 6, 7 to:
+  - Explicitly classify final actual diff against integration base `development` via `utils/ci-route.sh` to determine applicable route (docs, fast, or full) and local test tier.
+  - Mandate that the manual instruction walkthrough results and `provenance.jsonl` under `TESTS-RESULTS/2026-11-17+GH-1509/` are strictly **nonempty**.
+  - Mandate running **all applicable classified checks** (e.g. `utils/pdda/pdda.sh run` for docs route; required tier suites if classified otherwise), reporting any failure or unavailable check honestly.
+
+Handing off to Reviewer — ready for Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
