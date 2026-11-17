@@ -8,6 +8,25 @@ The age now comes from a shared author-activity clock in `planner_core.py` (`fet
 
 `merge_cleanup.refresh_pr` now also fetches `body`. Failing-check comments give the check name and its link instead of the first log line (spec deviation). Evidence: `TESTS-RESULTS/2026-11-16+GH-1498/`.
 
+## 2026-11-16
+
+- **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop
+  at any failed task, so independent ready work waited for a parent restart (dogfood wake 1).
+  It now continues only when the task's own receipt shows its gate ran and failed; the row stays
+  failed and is never retried. Shared conditions (lock owners, guard-killed gates, missing or
+  corrupt receipts, clone ledger changes) still stop all dispatch.
+  Evidence: `TESTS-RESULTS/2026-11-16+GH-1400/SUMMARY.md`.
+
+## 2026-11-15
+
+- **GH-1400: opt-in bounded Jog supervision.** `jog run --supervise-until` composes
+  approved-result recovery, safe execution-clone alignment and independent continuation.
+  Uncertain latest results hold, existing attempt history remains, and preserved local branches
+  and logs are retained. The bet is that composing existing owners removes the demonstrated
+  manual handoff without another queue. Costly rollback disables the opt-in path and retains state.
+  Controlled CLI checks cover recovery, continuation and preserved work; review and gate receipts are recorded with the implementation PR.
+  Evidence: `TESTS-RESULTS/2026-11-15+GH-1400/SUMMARY.md`.
+
 ## 2026-11-15 — GH-1479: typed swarm-preflight stages and a scoped mypy baseline
 
 `utils/py/swarm_preflight.py`'s 734-line `main()` is now an 11-line sequence over named stages (source resolution, contract loading, repository inspection, candidate evaluation, normalization, reporting, packet writing) that pass three frozen records instead of shared locals. Every function is annotated. `mypy.ini` checks this one module, `requirements-dev.txt` pins `mypy==1.14.1` beside the existing gate dependencies, and the three hosted install steps plus `README.md`/`ROUTER.md` point at it. The existing `test_swarm_preflight_module_load` now also runs the scoped mypy check, so the gate's Python needs mypy installed (`python3 -m pip install -r requirements-dev.txt`). No CLI, output, packet, exit-code or write-mechanism change: old and new executors produced byte-identical results across ten scenarios. No new tests. Revert the PR to undo. Evidence: `TESTS-RESULTS/2026-11-14+GH-1479/`.
