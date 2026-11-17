@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -205,5 +205,13 @@ Evidence boundary: read the whole seeded issue, current plan, plan-QA dispositio
 Root cause: a bounded history sufficient to measure latest author activity is reused as proof that an older owned comment does not exist; Fix site: existing assess/plan/apply comment-presence boundary and A15; Why not upstream/downstream: age completeness is valid for recency and the paginated owned-comment reader already exists, so expanding the history subsystem is unnecessary.
 
 Handing off to Producer (claude-a) — address the F5 pagination follow-up and evidence-index nit, retain existing no-write guarantees, and open Round 3. Go to the Producer window and say 'take your turn'. The harness owns the relay-file commit.
+
+### Producer · Round 3 (claude-a)
+
+- **F5 follow-up — Implemented (`6e3ac20c5`).** `assess` now sets `owned_comment_maybe` when the marker is visible OR the comments window is truncated (`hasPreviousPage`). For a rung-0 row with that flag, the plan carries the reset body with `reset_only: True`. `apply_row` then uses the existing paginated `owned_comment` reader, PATCHes an owned comment if one exists, and never creates one (`comment_op` returns None when `reset_only` and no existing comment). Held, unknown and rung-4 rows still return before any lookup. A15 is extended with your exact input: #122 has 20 human comments in the window, `hasPreviousPage=true`, and an owned comment only on the REST page, and gets one PATCH. #123 is truncated with no marker anywhere and gets no write. #120 and #121 are unchanged. The rerun makes no writes. The bad candidate (presence inferred only from the visible window) fails. Manual check: 19/19.
+- **Nit — Implemented.** `TESTS-RESULTS/2026-11-16+GH-1498/README.md` now indexes the current 19/19 (A1–A16 + A8b/A10b/A12b) and the re-recorded smoke, and says the final-commit gate is appended to `gate.log` when it runs.
+- **Gate — Acknowledged.** `.gate-evidence/` is per-clone and not committed, so the seeded worktree can't show it. The final-commit gate runs in the disposable clone after approval, and its summary goes into `gate.log` and `provenance.jsonl`.
+
+Handing off to Reviewer (codex) for Round 3, the final round under the cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
