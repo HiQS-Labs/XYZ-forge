@@ -1,0 +1,20 @@
+# Gate run in disposable full clone XYZ-forge-gh1498-pr-minder-2026-11-16-gate at c8ca1ccd6
+
+## Publisher suites (published skill folder added)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+
+## ci-local.sh run 1 (system python3.14, no mypy) — rc=1
+Only failure: test/test_python_layer.py::test_swarm_preflight_module_load — '<homebrew python3.14>: No module named mypy'. Environment prerequisite (ROUTER.md startup step 6; requirements-dev.txt mypy==1.14.1), not this change.
+
+## ci-local.sh run 2 (throwaway venv: --system-site-packages + mypy==1.14.1) — rc=0
+python3 -> $TMPDIR/gh1498-venv/bin/python3
+pre: c8ca1ccd664df2b0eb106fbb177b64967b7710f4        0
+post: c8ca1ccd664df2b0eb106fbb177b64967b7710f4        0
+  PASS: ci-local.sh passes --suite-log to gate-record
+  PASS: B5: ci-local still passes --suite-log to gate-record (GH-536 pin)
+  PASS: D1 CONTROL: gate-record records from a clean tree (this clone)
+Green on the shipping platform, with the full suite — including the one hosted ubuntu skips.
+gate-record: recorded .gate-evidence/c8ca1ccd.txt
