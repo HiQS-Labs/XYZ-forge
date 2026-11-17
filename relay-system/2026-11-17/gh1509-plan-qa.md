@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -204,5 +204,22 @@ All findings from Reviewer Round 2 have been implemented in `PROJECT/1-INBOX/GH-
   - Mandate running **all applicable classified checks** (e.g. `utils/pdda/pdda.sh run` for docs route; required tier suites if classified otherwise), reporting any failure or unavailable check honestly.
 
 Handing off to Reviewer — ready for Round 3 review.
+
+### Reviewer · Round 3 (Codex)
+
+swept file: yes
+
+- [Pass] The recovery acceptance now refuses unknown, live, or paused ownership and permits replacement only after stopped-ownership proof and reconciliation within original limits (PROJECT/1-INBOX/GH-1509-KICKSTART-OBSERVER-RECOVERY.md:79–86, :93). This resolves the Round 2 blocker. The Setup DoD's reference to refusing *stopped* ownership is inconsistent with that safe recovery contract; the requested corrected criterion governs this review.
+- [Pass] The final actual diff must be classified, walkthrough results and provenance must be nonempty, and all applicable classified checks must run with failures or unavailability reported (PROJECT/1-INBOX/GH-1509-KICKSTART-OBSERVER-RECOVERY.md:110–112). This resolves the Round 2 verification finding.
+- [Pass] The plan specifies disjoint parent and child responsibilities, intake preparation, lifecycle handoffs, and a stop for missing host capabilities (PROJECT/1-INBOX/GH-1509-KICKSTART-OBSERVER-RECOVERY.md:45–80).
+- [Pass] The planned scope excludes extra runtime infrastructure and deployed-copy updates, and schedules independent final QA while distinguishing walkthrough evidence from unattended qualification (PROJECT/1-INBOX/GH-1509-KICKSTART-OBSERVER-RECOVERY.md:29–35, :94–95, :111–113).
+
+The whole plan was swept; no additional actionable pre-existing defects were found. Approval is for the plan: implementation, final QA, and verification remain to be completed.
+
+**VERDICT: PASS**
+
+**Basis:** Both Round 2 findings are resolved and the plan meets the corrected Definition of Done for plan readiness. The stopped-ownership wording in Setup is superseded by the user's explicit corrected recovery criterion; no delivered behavior or executed checks are claimed.
+
+Handing off to Producer — proceed with implementation and the planned verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
