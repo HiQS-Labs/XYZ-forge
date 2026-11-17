@@ -75,3 +75,29 @@ Independent reviewer VERDICT FAIL (B1, S1-S6, N1-N3). It independently found eve
   - Nits: N-A to N-E.
 - Orchestrator spot-check: confirmed 10days:338-339 `Persist ratings ... at survivor pickup/planning (Step 5)`, conveyor:33-36 pickup with `--doc-path CAPTURE_PATH`, and `--doc-path` optional at `utils/py/releases_app.py:7029`. I concur with S-A to S-D, and all of them are plan-text fixes.
 - Budget: 2 of 3 plan-review rounds used. One final round remains, after a Producer revision.
+
+## Round 3 receipt (plan review 3 of 3, final)
+
+- Reviewed plan: `d2ea31935` (`git diff c9168dc77 d2ea31935 -- PROJECT/` touches only the plan). Before the fast-forward from `84bae47d` to `d2ea31935`, the verify clone was clean, with no driver lock, extra worktree or active writer.
+- Thread: a new `gh1476-plan-qa-r3.md`, scaffolded by `relay-automation/new-relay.sh` and committed at `06e777cb` with the round-3 questions. The r1 and r2 threads are unedited.
+- Token: a fresh `RELAY-gh1476-plan-qa-r3` was seeded before the driver ran (`tick log task.created`, `claim`, `release --to claude-review`). `tick info` showed it as not found before seeding.
+- Driver: one invocation of `relay-automation/relay-drive.sh --reviewer claude-review --review-once --relay-task RELAY-gh1476-plan-qa-r3 --agent-cmd relay-automation/claude-turn.sh`, with `RELAY_WORKTREE_ISOLATION=1` and `ALLOW_PATHS=""`.
+- Claude call:
+  - Auth: `CLAUDE_AUTH_MODE=subscription`. `claude auth status` showed `authMethod: claude.ai` and `apiProvider: firstParty`. There was no API fallback.
+  - Settings: `CLAUDE_MODEL=opus`, effort high, max turns 40, max budget 5.
+  - Result: CLI `subtype: success`, 19 turns, 186 s. The $1.39 figure is the CLI's estimate, not a bill.
+- Outcome:
+  - The reviewer turn committed `d62f34bb` (file-scoped, no push).
+  - The driver exited 4 with "escalated to human by design (STATUS: Escalated, token open:claude-a)". That is expected when a one-round review ends without approval.
+- Attestation: none. `relay_attest` writes a record only for an Approved/Closed terminal, and `.git/relay-attest/` is absent. Because the verdict was not PASS, there is no approval attestation.
+- Verdict: FAIL, with one `[Should]` R3-A and one `[Nit]` N-F.
+  - Resolved: S-A, S-C, S-D and N-A to N-E. The regression sweep reopens no round-1 item.
+- R3-A:
+  - What the plan says: plan:39 says "omit optional --doc-path and repoint ... never point to a nonexistent document".
+  - What the writer does: when no doc path is given and no `GH-N-*.md` exists, it creates the row with the made-up path `PROJECT/2-WORKING/GH-N.md` (`utils/py/releases_app.py:3864-3877`, inserted at 3960-3963).
+  - Consequence: a 10days INCLUDE with `bucket: null` gets a row pointing at a missing file. If the research child then holds the item, nothing ever repoints the row.
+  - Fix: one sentence. 10days records the committed selection in the parent note before research and runs the single `pickup` after capture, with the real `--doc-path`, before Step 5.
+  - Check: the orchestrator re-read 3843-3848, 3864-3877 and 3960-3963 and confirms the finding. The reviewer's `--dry-run` probe ran on a scratch DB copy.
+- N-F: plan:64 expects "exhausted budget prevents launch", but plan:38 does not say so.
+- OL-09: no operational credit. #1400 OL-09 stays unchecked.
+- Budget: 3 of 3 plan-review rounds are used, with no reset. Any further round needs explicit operator authorization.
