@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-17
+
+- **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search
+  the code graph by capability verbs and synonyms, not module names; call tracing stays optional.
+  In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
+  call tracing found no new module.
+
 ## 2026-11-16
 
 - **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop
