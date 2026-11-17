@@ -52,7 +52,7 @@ ROUND: 1 / 1
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the diff `1ab49bc05..72bfb6348` on this branch.
+- Artifact under review: **skills/2-daily/pr-minder/scripts/pr_minder.py** (review the diff `git diff 1ab49bc05..72bfb6348`).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-11-16
 - Definition of Done: the post-approval delta `1ab49bc05..72bfb6348` correctly implements the accepted CodeRabbit findings on PR #1510, adds no regression to the approved behaviour, and the three declines are sound for the envelope.
