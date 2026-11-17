@@ -174,4 +174,13 @@ Basis: The round-1 [Should] is resolved — `test/gh648-l1-turn-termination.sh:6
 
 Relay closed (Approved) — no further reviewer turn needed. Parent resumes implementation.
 
+
+### Attestation · relay-drive — 2026-11-17T00:25:46Z
+task: RELAY-gh1506-plan-claude-r2
+reviewer: claude
+status: Approved
+reviewed-head: 65a26cc3bb4d7d4e9ccc9418547ecdd0c6aae9dc
+added-range: 15767+2933
+added-sha256: da0cbd1409c09b354ac39b812e786ac61e91a2d915700beb1fb6107501810713
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
