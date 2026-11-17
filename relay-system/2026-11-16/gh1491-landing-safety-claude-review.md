@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -85,5 +85,30 @@ Do not run suites or tests and do not modify source. Only this relay file is wri
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: no — `landing-safety/check.py` and `baseline-red.json` read in full; `jog_run.py` and `releases_app.py` swept only at the touched functions, every `jog_acquire_lease` caller, `refuse`/`perform_write`/`_git`, and the `jog_run_main` cleanup path, per Setup's bounded scope. The one pre-existing issue found in that window is listed as a Nit below.
+
+- **[Pass] Q1: alignment refuses rather than overwriting, on all four supervised git paths.** `utils/py/jog_run.py:2569`, `:2571`, `:2572`, `:2574` each carry `--no-overwrite-ignore`. No other switch/merge/checkout/reset runs in `_jog_align_target` (2546-2579). Probe with git 2.50.1 in an isolated scratch repo (separate `GIT_DIR`, ignored `scratch.log` = `valuable`, target commit tracks `scratch.log` = `dest`):
+  - `git merge --no-overwrite-ignore --ff-only $D` → `rc=1`, "untracked working tree files would be overwritten by merge: scratch.log … Aborting", file still `valuable`, HEAD still base.
+  - `git switch --no-overwrite-ignore -c development --no-track $D` → `rc=1`, same abort, file `valuable`, no `development` branch created.
+  - `git switch --no-overwrite-ignore development` → `rc=1`, file `valuable`.
+  - Control `git switch development` with no flag → `rc=0`, file becomes `dest`.
+  A non-zero git exit raises `ContractError` (`jog_run.py:1140-1144`). The alignment lock is released in `finally` (2578-2579), and the wake ends via the outer `finally: _cleanup()` (3006-3007) and `__main__` "jog: held:" exit 2 (3010-3014). Partial state cannot pass as aligned. In the ahead path the branch is renamed (2567) before a failed `switch -c`, which leaves no local `development`, so the next wake takes the `else` branch (2574) and refuses again. A failed ff-merge leaves HEAD at the old tip, and the `HEAD != base` guard (2575-2576) catches anything else.
+- **[Pass] Q2: the identity and pending check runs in the same transaction as the UPDATE.** The check is inside `mutate` (`releases_app.py:5088-5091`). `perform_write` calls `mutate` only after `BEGIN IMMEDIATE` (1700-1706), and the SELECT at 5080-5082 is inside that same `mutate`. `refuse` is `sys.exit(EXIT_REFUSED)` (209-211). The `except BaseException` handler rolls back and unlinks the journal (1739-1752). The `op_receipts` INSERT (1723-1728) comes after `mutate`, so it is never reached: no lease-looking receipt, and status and `attempt_count` stay unchanged. The writer lock is released by `finally` (1777-1778).
+- **[Pass] Q3: after a stale refusal the wake stops cleanly.** `SystemExit` from `jog_run.py:2857` goes through the outer `finally: _cleanup()` (3006-3007), which releases the supervisor lock. The row was never leased, so there is no orphan lease, and nothing is dispatched after it. It skips the held summary and `checkpoint.finish()` (2989-3004). The journal stays `running`, and the next wake resumes it via `checkpoint.begin(recover=...)` (2785-2789). That is the same path already pinned by `stop-owner-next-wake-publishes` (`followup.py:117-119`).
+- **[Pass] Q4: the other callers are unchanged.** The only `jog_run.py` call-site hunk is 2857-2858, and it passes `None` when `supervised` is false. The retry caller at `jog_run.py:1111` and the checkpoint-recovery caller at `jog_run.py:2435` are untouched. With `expected_global_id=None` the new predicate short-circuits at `releases_app.py:5088`, so non-supervised behaviour is the same as before (DoD c).
+- **[Pass] Q5: `check.py` counts refusals as refusals.** `except (Exception, SystemExit)` appears at `check.py:25-26`, `:38-39` and `:43-44`. The claimed green values match what non-vulnerable mode computes: `held_status` = `after[1]` = `'parked'` is asserted at 40. The positive lease at 48-49 (`('running', 1)`) proves the guarded function still leases. `baseline-red.json` matches what vulnerable mode computes (`ignored_preserved:false`, `held_status:"running"`), and at `a19799e20` it shows that the lock, worktree, fetch and status preconditions pass in this fixture. So the green `alignment_refused` comes from the switch, not from an unrelated early exception. DoD (d) is met.
+- **[Pass] Q5 `published()`: it can only get stricter.** `releases.db` and `releases.sql` are tracked (`git ls-files` lists both), and `followup.py:117` already uses the same dirty predicate to define `unpub`. Adding it to `published()` can only flip true→false, never mask a real publish gap. Whether every `published(r)` check still passes at `c03bdfb8f` is [Unverified — needs clone run].
+- **[Pass] Q6: no scope creep.** The delta has no new suite, registry, gate or second writer. `check.py` is a single evidence script under `TESTS-RESULTS/`, and the lease change is a keyword-only parameter on the existing writer.
+- **[Nit] The fixture exercises only the "local development exists, not ahead" path (`check.py:21-24` → `jog_run.py:2571`).** The ff-merge and `switch -c` paths are covered only by the scratch probe above. Optional fix: a second fixture variant with local `development` behind the remote. Not required for DoD (a).
+- **[Nit] Pre-existing and out of this delta: the non-supervised checkpoint path `jog_run.py:2849` (`_git(target, "switch", "development")`) has no `--no-overwrite-ignore`.** Its guard at 2847 (`--untracked-files=all`) does not list ignored files. DoD (a) covers supervised alignment only, and DoD (c) requires non-supervised behaviour to stay the same, so I request no change here. No observed failure; this is a follow-up candidate only.
+- **Process note (the reviewer must report this):** my first probe attempt hit a sandbox block on `git init` (hook template copy) and fell through into the shared repo. It renamed local `development` (be0a37520) to `keep`, created `development` at c3309e412, and attached this worktree to it. I reversed it within the turn with `git switch --detach c3309e412`, `git branch -D development` and `git branch -m keep development`. Verified after: `refs/heads/development be0a37520`, no `keep`, worktree `c3309e412 (detached HEAD)`, `git status` clean. The `.git/config` writes were refused both times, so the `branch.development.*` tracking config was never changed. The only leftovers are reflog entries. No commits, pushes or file changes were made.
+
+VERDICT: PASS
+Basis: all four supervised alignment git paths refuse on an ignored-file collision (probe output above); the stale/held lease check runs inside the same `BEGIN IMMEDIATE` transaction and exits before any UPDATE or receipt; non-supervised callers pass `None` and are unchanged; and the evidence claims match what `check.py` and `baseline-red.json` compute. The two Nits do not block.
+
+handing off — relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
