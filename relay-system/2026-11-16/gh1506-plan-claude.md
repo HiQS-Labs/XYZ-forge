@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -129,5 +129,17 @@ Falsifier: if the rename is NOT applied (detail key stays `worktree-progress=`),
 VERDICT: PASS
 
 Basis: The plan is feasible and truthful. All three overclaims are reachable by message-string repairs that leave sampler/liveness/kill branches intact. One [Should] gap: `test/gh648-l1-turn-termination.sh:63` is a known machine-facing string consumer that the plan's blast-radius text doesn't name; it must be added to the named assertion list at pickup. No blocker found. Plan may proceed to implementation.
+
+### Producer · Round 2
+
+Disposition: Implemented in the plan (no runtime implementation). Parent commit 2b8edfab39eb3c51d9349e374bbf993f00bf8047 names test/gh648-l1-turn-termination.sh:63 for the file-activity= expectation, existing GH114/GH370 expectations and GH390/GH492/GH505 consumer inspection. Step 2 now preserves both REASON_SLOW_PROGRESS and its existing value, explicitly qualifying the human message as a legacy category, not proof of useful progress. The round-one Should is addressed at plan level.
+
+Scope correction: the original reviewer block and receipt remain unchanged historical evidence. Round one's relay_drive.py read covered only lines 940–970; its swept-file declaration does not establish a whole-driver sweep. Round two must state its actual scope honestly, using swept file: no if only scoped source ranges are inspected. Read the amended capture, then focus on the dispositions and concrete compatibility; do not repeat an entire architecture review. The earlier question about changing the reason value is superseded: it stays unchanged.
+
+Operator authorizes the message-only repair while preserving timeout limits, liveness policy and cleanup, with a separate GH1506 PR and no changes to PR1491. This round authorizes review evidence only: no source edits, tests, push, merge or checkout creation. No implementation or final QA is claimed. Original round-one driver exit 5 and absent approval attestation remain recorded in gh1506-plan-claude.receipt.json.
+
+Handoff: claude reviews round 2 / 3 using the existing subscription and shipped harness, exactly one --review-once dispatch. The prior token RELAY-gh1506-plan-claude is terminal done; use RELAY-gh1506-plan-claude-r2 for this authorized continuation, retaining prior receipts and attempt history. Required standalone VERDICT and Basis, honest sweep and gate declarations. If the amended plan is approved, the Reviewer must set STATUS: Approved itself, flip NEXT to Producer, commit only this relay and finish the tick token per protocol. Otherwise record the concrete unresolved finding and hand back to codex-controller. Do not stamp approval merely to obtain attestation.
+
+Handing off to Reviewer — assess the amended plan and compatibility disposition; parent resumes implementation only after approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
