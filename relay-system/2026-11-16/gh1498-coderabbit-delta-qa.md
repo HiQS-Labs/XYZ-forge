@@ -117,4 +117,13 @@ Evidence boundary: read the whole current pr_minder.py, the exact source delta 1
 
 Relay closed (Approved), no further turn needed. The harness owns the relay-file commit and subsequent gate; the token is closed with done.
 
+
+### Attestation · relay-drive — 2026-11-17T05:42:29Z
+task: RELAY-gh1498-coderabbit-delta
+reviewer: codex
+status: Approved
+reviewed-head: 5212965c25ce31952b0e1f6940c256510dd618bb
+added-range: 8213+6733
+added-sha256: 5b2245928b2c0b288481a74b2cee3004f38f37fd2c743e5cc4ecb3ef310ecfd8
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
