@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -57,5 +57,30 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**VERDICT: FAIL**
+**Basis:** Block final sign-off on missing verification evidence, not on the two requested skill additions. The current receipts assert results but do not demonstrate all Definition of Done requirements. No artifact changes made; no Git commands or suites executed.
+
+swept file: no
+
+Scope disclosure: read both complete skill documents, the complete active GH-1512 document, all four evidence files, both linked target skills, and the GH-1512 CHANGELOG entry. Scanned all 4,781 CHANGELOG lines for conflict markers/NULs, but did not semantically review every historical entry. No additional pre-existing defect found in the fully read skill files. Repository-wide diff, baseline recital equality and no-new-tests claims remain unverified because Git is prohibited in this reviewer turn. Graph context: canonical Forge index generation `2026-11-17T06:11:19Z` is a different checkout; direct local source reads were used for the named documentation and missing indexed evidence rather than treating graph freshness as candidate proof.
+
+- [Pass] The requested instruction placement and content are present: `skills/3-weekly/whack-a-mole/SKILL.md:204` adds one sentence requiring discovery on “the violated rule (the invariant)” before a new mechanism and naming existing enforcers; line 205 is the separate hand-off. `skills/1-hourly/debug-mantra/SKILL.md:45` adds the single explanatory sentence ending “before forming the hypothesis.” Both relative link targets exist. The current recital is at `skills/1-hourly/debug-mantra/SKILL.md:12`; byte equality to the base is **not** established here. No additional mechanism is needed for these edits.
+
+- [Should] **Restore attributable publisher/gate evidence before approval (DoD d/e).** `publisher-suites/gh620.log:1` says only `gh620-skills-army-mini-sync: 28 passed, 0 failed`, followed by exit/SHA/clone assertions; gh589 has the same four-line shape for 39/39. There is no retained suite transcript or pre/post clone identity and candidate skill-byte comparison. `provenance.jsonl:1` records PDDA success without its output. The active plan at lines 69–72 explicitly requires identity, byte matching and retained command output. Recover the original output and identity/byte checks if available; otherwise run the required checks in a disposable full clone and retain exact commands, outputs, exit statuses, candidate binding, pre/post HEAD/core.bare/origin/user.email and skill-byte comparison. Keep provenance beside the cited evidence; no new suite is requested. **[Unverified — needs clone run]** unless original attributable records can be recovered.
+  Observed input: all retained publisher logs are four-line summaries, and the complete evidence directory has only those two logs, the three-row provenance file and smoke receipt.
+  Affected scope: the candidate-bound publisher and PDDA success claims used to satisfy this relay's DoD.
+  Falsifier: original retained nonempty command output plus matching candidate bytes and intact pre/post clone identity would resolve this finding without rerunning suites.
+
+- [Should] **Provide the base/candidate comparison and actual route receipt (DoD a/b/c).** The evidence contains no `docs_only=true`, `route=docs`, `tier=1` output or changed-file list. The smoke receipt at lines 11–12 asserts the recital is unchanged but supplies no baseline comparison. Have the producer retain the base and candidate SHAs, complete changed paths/statuses, exact skill diff or a baseline comparison showing unchanged recital/section structure, and classifier command/output/exit status for that actual diff. This also permits review of the no-new-tests claim. Do not substitute a hand-written path list for the actual comparison.
+  Observed input: scanning every evidence file reports `routing receipt present: False`; the three provenance rows name only PDDA and the two publisher suites.
+  Affected scope: classification and invariance assertions for the candidate relative to origin/development, not arbitrary markdown paths.
+  Falsifier: a candidate-bound actual comparison with no test/registry additions and route output `docs_only=true`, `route=docs`, `tier=1`, plus identical nonempty baseline/candidate recital bytes, resolves the gap.
+
+Probe record (non-mutating, exit **0**): ran `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with `Path('TESTS-RESULTS/2026-11-17+GH-1512').rglob('*')`, counting every file's lines/bytes, parsing all provenance rows with `json.loads`, searching every evidence file for the three route fields, checking both relative targets with `is_file()`, and scanning all CHANGELOG lines. Decisive output: `provenance.jsonl: 3 lines, 708 bytes`; `gh589.log: 4 lines, 198 bytes`; `gh620.log: 4 lines, 206 bytes`; `smoke-receipt.txt: 14 lines, 935 bytes`; `routing receipt present: False`; both relative links `True`; `CHANGELOG full-file structural scan: 4781 lines; conflict markers: 0 ; NULs: 0`. `cat` of both complete publisher logs also exited **0** and showed only the four summary lines described above.
+
+**Hand-off:** Producer (`claude-a`) should address the two evidence findings and reopen round 2. STATUS remains Open; release token to `claude-a`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
