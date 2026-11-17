@@ -1,5 +1,8 @@
 import ast, importlib.util, json, os, pathlib, subprocess, sys, tempfile, time
 root=pathlib.Path(sys.argv[1]).resolve()
+status=subprocess.check_output(["git","-C",str(root),"status","--porcelain"],text=True)
+if status:
+ raise SystemExit("source tree must be clean before recording commit-keyed results:\n"+status)
 sys.dont_write_bytecode=True
 sys.path.insert(0,str(root/'utils/py'))
 import turn_diagnostics as td

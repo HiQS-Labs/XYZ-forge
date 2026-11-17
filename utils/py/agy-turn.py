@@ -104,10 +104,10 @@ def _probe_idle_blocker(proc, log_path):
                 "contention, waiting, or inactivity.")
     if "tcp" in open_files or "udp" in open_files:
         return ("network",
-                "the process tree had open network sockets; this does not establish a stalled "
+                "the open-file listing contains tcp or udp; this does not establish sockets, a stalled "
                 "request, waiting, or inactivity.")
     return ("unknown",
-            "no matching TTY error, lock-named file or socket was observed, or probing failed; "
+            "no matching TTY error or .lock/tcp/udp listing text was observed, or probing failed; "
             "the timeout cause remains unknown.")
 
 def agy_auth_preflight(agy_bin):
@@ -608,12 +608,11 @@ def main():
             except OSError:
                 pass
         if idle_killed:
-            print(f"agy-turn: agy -p was IDLE for >={idle_cap}s (no CPU, no worktree progress) — "
+            print(f"agy-turn: agy -p reached the {idle_cap}s idle threshold without sampled activity resetting it — "
                   f"killed early at ~{int(time.monotonic() - started)}s of a {turn_timeout}s wall cap "
                   f"[{_reason}]", file=sys.stderr)
-            print("agy-turn: this is an EXTERNAL condition the harness detected and contained, not one "
-                  "it prevented — agy stopped making progress and the harness stopped waiting. "
-                  "Nothing here fixes agy; the observed 2026-08-10 hang recovered on its own.",
+            print("agy-turn: the idle threshold uses sampled CPU growth and file activity; "
+                  "it does not establish zero CPU use, lack of useful progress, or an external cause.",
                   file=sys.stderr)
         else:
             print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)

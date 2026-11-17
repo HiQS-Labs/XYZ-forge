@@ -484,7 +484,7 @@ class TurnDiagnostics:
 
         GH-492: this exists so a hang can be contained on a short idle threshold
         instead of only at the full wall cap. The observed incident produced 90
-        consecutive samples reading ``cpu=0.02s/s, worktree-progress=no`` and they
+        consecutive samples reading ``cpu=0.02s/s, file-activity=no`` and they
         were unanimous from the start — the run learned nothing between sample 3
         and sample 90, it just spent ~900s to reach the same conclusion.
 

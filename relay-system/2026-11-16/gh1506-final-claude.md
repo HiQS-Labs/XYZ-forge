@@ -135,4 +135,8 @@ reviewed-head: 055773de8a4a035cd6ccd2dcd575d2163b060222
 added-range: 9126+6872
 added-sha256: 6a8789e9b997dc06e603c4a5f9037aa060a02cc53a3eba29a819f3a86a4f9e80
 gate-run: undeclared
+### Scope clarification · parent disposition · 2026-11-16
+
+The original reviewer block and attestation above remain unchanged. Its listed coverage of `agy-turn.py` and `relay_drive.py` consists of named slices and diff hunks, so the supported declaration for those files is **swept file: no**. This parent clarification does not represent a new reviewer turn, change the verdict or findings, or extend the reviewed head or gate status.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
