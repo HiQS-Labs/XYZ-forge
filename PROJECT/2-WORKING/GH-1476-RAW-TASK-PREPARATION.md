@@ -23,7 +23,7 @@ Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 40%
 
 | What was just completed | What's next |
 |---|---|
-| Round 4 plan QA approved; preparation instructions implemented. | Manual scenario verification and independent final QA; real OL-09 witness remains separate. |
+| Plan QA round 4 and final QA round 2 approved; manual scenarios, docs checks and Small gate passed. | Publish reviewed PR; real OL-09 witness and OL-10 remain separate. |
 
 ## Requested outcome and boundaries
 
@@ -122,3 +122,5 @@ No OL-09 completion credit, runtime enforcement or deployment is claimed.
 ## Final QA round 1 dispositions
 
 PASS / Approved with four Nits. Accept N1/N2: canonical completed-folder capture reuse and research-grounded auto-draft wording clarified. Accept N4: retained ledger-check log hashed. N3 is pre-existing primary-writer governance, outside this instruction slice; unchanged and not claimed solved. Small follow-up awaits round-2 review; required classified gate pending.
+
+Final QA round 2 approved (`3bbb710ab`); Small gate passed on that head with identity unchanged. Evidence: `TESTS-RESULTS/2026-11-17+GH-1476/`. Lessons: NO_ENTRY; paper instruction checks do not establish autonomous behavior.
