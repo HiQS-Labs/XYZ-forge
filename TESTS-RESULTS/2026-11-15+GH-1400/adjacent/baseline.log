@@ -1,0 +1,10 @@
+jog: reconciled orphan lease(s) for: GH-901
+jog: cold start GH-901: re-projected terminal Marathon result (parked) — no new execution fired
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/adjacent/baseline/primary/.tick/jog/jog-01M7FZ51EYKXYR5ZKQP3JEH72A/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: advancing halted: GH-902 parked — awaiting-landing (PR #902: https://example.invalid/pr/902)
+Switched to a new branch 'fixture-902'

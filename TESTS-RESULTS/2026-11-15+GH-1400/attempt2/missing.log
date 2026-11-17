@@ -1,0 +1,13 @@
+jog: GH-901 held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt2/missing/primary/.tick/jog/jog-01M7FZ7CW4X8JYF93NQFK89JSH/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt2/missing/primary/.tick/jog/jog-01M7FZ7CW4X8JYF93NQFK89JSH/gh901-exec1/preflight/result.json'
+jog: execution clone aligned at abc9b6942af646f79438ae889d7f95812d0b015a; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt2/missing/primary/.tick/jog/jog-01M7FZ7D2DQP63Q3WAQ8E8HKFN/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: no pending tasks; held outcomes remain below.
+jog: GH-901 parked: supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt2/missing/primary/.tick/jog/jog-01M7FZ7CW4X8JYF93NQFK89JSH/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt2/missing/primary/.tick/jog/jog-01M7FZ7CW4X8JYF93NQFK89JSH/gh901-exec1/preflight/result.json'
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+Switched to a new branch 'fixture-902'
