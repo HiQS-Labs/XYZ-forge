@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -94,7 +94,7 @@ Whole-file sweep found the verification gaps above; no additional pre-existing d
 
 **Basis:** The two documentation changes are appropriately small and match the requested behavior, but DoD (c) needs executable route input and candidate-bound publisher evidence. Correct the two verification bullets, then return the plan for approval.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ### Producer · Round 1
 
@@ -104,3 +104,32 @@ Whole-file sweep found the verification gaps above; no additional pre-existing d
 - [Nit] Separate hand-off line in whack-a-mole §5: **Implemented.** Structured the planned addition as one sentence followed by a separate indented hand-off line (`Hand off candidate modules and unaddressed gaps to §6.`).
 
 Returning plan for Round 2 review and approval.
+
+### Reviewer · Round 2
+
+**What this proposes**
+
+The plan adds one invariant-enforcer discovery sentence and a separate hand-off line to whack-a-mole §5. It adds one recon escalation sentence to debug-mantra §2 when the fail path crosses unread modules, before forming the hypothesis.
+
+**How the existing system works, per this document**
+
+Whack-a-mole already chains debug-mantra and recon to uncover the root cause and invariant, then drafts remediation. Debug-mantra already orders debugger use, source tracing with knob enumeration, and instrumentation; the proposed sentence fits that explanatory flow.
+
+**What it's not**
+
+The plan excludes new sections, changes to the recited mantra block, runtime changes, and new tests or registry entries. It reuses the existing discovery and recon skills and existing publisher suites.
+
+swept file: yes
+
+- [Pass] DoD (a): plan lines 55–62 specify the invariant discovery before a new mechanism, naming existing enforcers in the umbrella issue, a separate hand-off line, and the unread-module recon escalation before hypothesis formation. The relative links are `../connect-the-dots/SKILL.md` and `../recon/SKILL.md`; the proposed text meets the requested sentence limits. Round 1's hand-off nit is addressed.
+- [Pass] DoD (b) and (d): plan lines 35–38 explicitly exclude new sections, recital edits, new test files/registry entries and runtime changes. Lines 43–49 limit the work to the two existing skill documents and describe an Easy rollback. The implementation remains proportionate; no new mechanism is proposed.
+- [Pass] Round 1 route finding is addressed at plan lines 64–66: `git diff --name-only origin/development...HEAD | bash utils/ci-route.sh pull_request` supplies candidate changed paths, and the plan requires `docs_only=true`, `route=docs`, and `tier=1`. These asserted outputs also prevent empty input's full-route result from being mistaken for success.
+- [Pass] Round 1 publisher finding and DoD (c) are addressed at plan lines 67–72: the plan requires zero docs-gate errors, the exact candidate SHA and matching skill bytes in a disposable full clone, pre/post identity checks, both gh620/gh589 suites, and command output, exit codes and `provenance.jsonl` in the existing evidence location. Final review includes the diff and test evidence (line 74).
+
+Whole-file sweep found no additional pre-existing defects in the reviewed plan. This approves the plan only. The deterministic docs gate and publisher suites remain **[Unverified — needs clone run]**; no gate, executable fixture, Git command, or artifact edit was executed this turn. No graph endpoints were available in the tool inventory, so this documentation review used direct source reads; graph generation and coverage could not be checked.
+
+**VERDICT: PASS**
+
+**Basis:** All Round 1 findings are addressed and the complete plan satisfies the Definition of Done. Proceed with the bounded documentation edits and retain candidate-bound verification evidence for final QA.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
