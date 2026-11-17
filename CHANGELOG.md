@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-17 — GH-1476: bounded research before preparation
+
+Conveyor now owns medium-depth research for selected raw tasks, freshness reuse, evidence-based deeper research and explicit risk deferral. Daily-goals links remain bounded candidates rather than execution authority. 10days consumes that policy after cheap validity triage, preserves held work and operator ratings, and performs one parent-owned pickup only after a real capture exists. Preparation and live execution admission remain separate. This instruction slice does not complete OL-09: a real bounded preparation run is still required; OL-10 runtime enforcement is unchanged. Verification and limitations: `TESTS-RESULTS/2026-11-17+GH-1476/`. Revert the instruction change to undo; no deployed copies changed.
+
 ## 2026-11-16
 
 - **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop

@@ -2,8 +2,9 @@
 gh_issue: 1476
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1476
 title: "GH-1476: Raw task preparation"
-status: "Proposed (1-INBOX — plan QA pending)"
+status: "In progress (plan approved; implementation verification pending)"
 created: 2026-11-16
+updated: 2026-11-17
 doc_type: feedback
 owner: Codex
 goal: Accept raw daily-goal tasks and research selected work consistently before execution admission.
@@ -16,7 +17,13 @@ phases: 1
 # Raw task preparation — OL-09 implementation slice
 
 Canonical discussion: [Issue #1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476).
-Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 35% baseline; next four milestones OL-14, OL-09, OL-10, OL-12 target 55%.
+Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 40% after OL-14 landed; OL-09, OL-10 and OL-12 remain toward 55%.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Round 4 plan QA approved; preparation instructions implemented. | Manual scenario verification and independent final QA; real OL-09 witness remains separate. |
 
 ## Requested outcome and boundaries
 
@@ -88,10 +95,26 @@ Round 2 FAIL retained at helper commit `84bae47dd09712f50a247e09491ecde2c61484e6
 
 Pending implementation evidence; NO_ENTRY at planning time.
 
-## Round 3 disposition — approval held
+## Round 3 disposition — historical approval hold
 
 Round 3 FAIL retained in gh1476-plan-qa-r3.md. R3-A and N-F accepted and corrected: note selection before research, pickup only after capture exists, explicitly refuse launch at exhausted budget. All three plan review rounds are consumed. No approval attestation, no production instruction changes, and no OL-09 completion credit. A further independent review requires an explicit budget extension; no fourth call is authorized or launched.
 
 ## Merge evidence
 
 - PR #1491 merged 2026-11-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Round 4 approval and implementation dispositions
+
+The operator authorized up to two additional rounds on 2026-11-17; this supersedes
+the historical no-fourth-call restriction above without resetting attempts. Round 4
+PASS / Approved, driver exit 0, reviewed plan `bdb583abb` at thread head `43c3c44a`;
+review and attestation retained in `relay-system/2026-11-16/gh1476-plan-qa/gh1476-plan-qa-r4.md`.
+Round 5 was not needed. Accepted Nits: refresh displayed ratings after pickup; give
+an existing unrated row its first rating without force and preserve override;
+record the extension; update umbrella progress to 40%. Source instructions were
+unchanged by integration with `9331cec67`; the one plan merge conflict preserved
+both the historical review hold and upstream merge evidence.
+
+Implementation uses the existing writer for accepted-start and promotion of row
+`rmi-01M7KXFFGFMZ2KHFDXR4XK1CM8`, preserving 75/60/50/60 and null override.
+No OL-09 completion credit, runtime enforcement or deployment is claimed.
