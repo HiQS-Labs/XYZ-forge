@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -155,5 +155,30 @@ Handing off to Producer (claude-a) — revise the evidence plan for F1/F2, dispo
 - Overlap note — **Accepted.** Plan states the overlap comparison is unchanged and order-dependent; no stronger isolation claimed.
 
 Handing off to Reviewer (codex) — re-review the revised Verification section.
+
+### Reviewer · Round 2
+
+Input boundary for Step A: plan doc only (before reading source or the issue this turn).
+
+**What this proposes:** Preserve each invalid checkout with its reason and continue inspecting eligible siblings. Keep the existing origin and teardown safeguards, document canonical-origin helpers, and prove the batch boundary with a base/candidate manual check followed by real-PR preview controls.
+
+**How the existing system works, per this document:** One exception boundary currently turns any invalid checkout into whole-call exit 2 before inspection. Published-head classification depends on a canonical GitHub origin. Eligible paths already delegate to inspection, refresh and teardown; the proposal retains that pipeline.
+
+**What it's not:** No local-origin classification support, teardown redesign, new test suite or stronger overlap isolation. Inference: the stubbed check measures delegation, while the preview smoke supplies classification evidence.
+
+swept file: yes
+
+**VERDICT: PASS**
+
+**Basis:** Approve the plan for implementation. I reread the entire plan, including its existing requirements, risks and non-goals; no remaining or pre-existing plan defect was found. F1 and F2 are resolved in the proposed evidence procedure, not yet demonstrated by executed checks. Reversibility: Easy for this bounded code/document change, by the single-commit rollback in plan line 119; retirement continues to rely on existing safety checks.
+
+- [Pass] **F1 resolved:** `PROJECT/2-WORKING/GH-1493-RETIRE-PUBLISHED-BATCH.md:82-90` puts three refusals before the eligible path and requires only that path to reach all three downstream functions with the specified arguments, exit 1 and all preservation messages. Base `9331cec67` must return 2 with zero calls. This distinguishes an unchanged candidate and a candidate stopping at the first refusal from the intended batch behavior. Stubs are appropriate for this delegation boundary; line 86 explicitly avoids claiming actual retirement from recorded calls.
+- [Pass] **F2 resolved:** plan lines 91-99 explicitly name a clean canonical-origin helper one commit beyond the published head, require `PRESERVE_UNPUSHED` rather than origin/dirty/session preservation, and retain path/ref/SHA/live-head evidence. That is an adequate planned real-PR control for the unchanged ancestry classifier (`scan_clones.py:646-671`) and disposition (`:1188-1191`).
+- [Pass] **Grounding, scope and callers:** the source still has one validation `try` and exit 2 (`merge_cleanup.py:2396-2418`), followed by the delegation retained by the plan (`:2420-2429`). Canonical origin and exact published-head fetch remain required (`scan_clones.py:532-538,562-565`). Per-path primary/executing-directory and overlap checks identify the refused candidate (`merge_cleanup.py:2402-2411`); primary-origin failure remains call-level (`:2390-2393`), as do CLI argument/startup refusals (`:2494-2504`). The direct dispatch returns the result (`:2505-2506`); bounded search of `skills/`, `utils/`, `test/` found the workflow caller at `start-task/SKILL.md:359-375`, with no numeric distinction between exits 1 and 2. Exit 1 already matches the documented partial-retirement contract (`merge-cleanup/SKILL.md:478`).
+- [Pass] **Surgical and DRY:** plan lines 61-75 extend the existing function and clarify its two public workflow contracts, without changing classification or teardown. The merge-cleanup clause belongs beside its scoped contract (`merge-cleanup/SKILL.md:646-666`); it is useful caller documentation. Plan lines 100-110 preserve order-dependent overlap semantics and select existing suites, with no new suite or registry. The retrieved issue scoping comment explicitly calls for per-path `PRESERVED`, exit 1, canonical-origin guidance and unchanged controls.
+
+**Evidence limits:** Source-backed plan review only. No graph tools are available in this runtime (tool discovery returned no `list_projects`/`index_status`); exact source reads and bounded `rg` fallback were used, with no graph freshness or completeness claim. `gh issue view 1493 --repo HiQS-Labs/XYZ-forge --comments` exited 0 and retrieved the scoping comment. The separate `--json body` request exited 1 with `error connecting to api.github.com`; web fallback failed with `Cache miss`, so the original issue body remains unverified beyond the plan summary. No runtime probes, fixtures, gates or Git commands ran. Base/candidate controls, final gate and real-PR smoke remain [Unverified — needs clone run]; this approval certifies the plan, not delivery.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the planned clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
