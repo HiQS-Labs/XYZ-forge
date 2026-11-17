@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -77,5 +77,27 @@ Answer, citing `file:line`:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Approve the three bounded delta2 corrections. The seeded source matches the candidate blob, the episode filters remain intact, and the comment interpolations are contained. No additional concrete defect found in the full-file sweep, including pre-existing code.
+swept file: yes
+
+Reviewed all of `skills/2-daily/pr-minder/scripts/pr_minder.py` (1–571), the delta2 findings/response, and the existing manual-check assertions and receipts. Graph tools were unavailable; direct source fallback used. No git command, executable fixture, gate, or live GitHub mutation was run.
+
+- [Pass] **Candidate and delta:** reconstructed `0522ef4b0..f6b432710` directly from loose commit/tree/blob objects using Python `pathlib`, `zlib` and `difflib`; asserted the candidate blob equals the seeded file. Command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'` (inline read-only object traversal; exit 0). Decisive output: `seed equals f6b432710 blob`. The delta adds `lit()`, extends the outcome tuple, and changes the four requested rendering sites; see `pr_minder.py:52`, `:116`, `:299`, `:314`, `:318`, `:452` (all source citations in this block refer to the full artifact path above).
+
+- [Pass] **Uncertain attempts count inside the same PR/episode window.** `pr_minder.py:119`–123 retains PR, phase, action and timestamp filtering and now includes `uncertain`; `:328` consumes that count. Narrow probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY'` (exit 0). Parsed the artifact AST and compiled only `Receipts`, `md_safe`, and `lit`; constructed Receipts with `object.__new__`, assigned in-memory rows, and supplied an ISO timestamp parser. Two PR-1 uncertain results after `2026-11-10T00:00:00+00:00` produced `two uncertain: 2`. A mixed set of ok/failed/uncertain plus other-PR, pre-episode, intent and comment rows produced `PR/time/phase/action filters: 3`; both values were asserted.
+
+- [Pass] **The four requested text paths use literal rendering.** Conflict files (`pr_minder.py:299`), own commits (`:314`), check names (`:318`) and fallback error (`:452`) call `lit()`. `:54` removes backticks/CR/LF before `:61` wraps the text. The same AST probe (exit 0) asserted exactly two delimiting backticks and no CR/LF for the three original check-name inputs, the original failure diagnostic, and a backtick/newline breakout input. Decisive outputs included `'<https://attacker.example>' -> '\`<https://attacker.example>\`'` and `'update rejected: @org/team <https://attacker.example>' -> '\`update rejected: @org/team <https://attacker.example>\`'` (backslashes here only escape Markdown delimiters). These are inert code contents under [GFM code-span rules](https://github.github.com/gfm/#code-spans), including literal backslashes and angle brackets. No live GitHub rendering/notification check was performed.
+
+- [Pass] **No additional untrusted comment-text path found.** Strictly, not every external string calls `lit()`: the repair command already uses a code span, rejects backticks/CR/LF, and shell-quotes branch names (`pr_minder.py:302`–308); check URLs intentionally remain usable HTTPS links through `safe_url()` (`:64`–66, `:318`). Other interpolations are computed dates, rung constants and numeric counts (`:215`–216, `:284`–295). Neither exception exposes the raw-text failure found in delta2; no extra behavior change requested.
+
+- [Pass] **A19a/A19c/A19f contain discriminating inputs and controls.** `TESTS-RESULTS/2026-11-16+GH-1498/manual_check.py.txt:719`–737 supplies all three original check names and a raw-text candidate; `:761`–776 supplies failed+uncertain results within the episode and an ok-only candidate (the immediate predecessor's ok+failed implementation also counts only one, so fails this assertion); `:806`–818 supplies the original stderr and raw-interpolation candidate. The recorder rejects crashes (`:182`–190). Committed `manual-check.log:23`, `:25`, `:28` report PASS and each bad candidate rejected; `provenance.jsonl:15` identifies `f6b432710`. This is source/receipt review, not an independent rerun of that executable driver.
+
+- [Unverified — needs clone run] The full manual driver and harness gate were not executed in this worktree. Disposable-clone execution remains with the harness after this review; this approval is the scoped code-review verdict, not a gate-pass claim.
+
+Relay closed (Approved), no further turn needed. Token handed off with `done`; the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
