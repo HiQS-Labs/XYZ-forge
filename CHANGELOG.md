@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-16 — GH-1498: `/pr-minder` and an author-activity PR clock
+
+New skill `skills/2-daily/pr-minder/` runs one manual pass over the current repo's open PRs. Each PR gets a rung on an age ladder (fresh, nudge, repair, decide, retire), with a matching action. Plan mode writes nothing. `--apply` updates behind branches (at most 2 per stale episode), sets `pr-minder:stale`/`pr-minder:decide` and keeps one owned comment per PR, with conflict files, a repair command or a re-cut option. It never merges, closes, rebases or retargets. Held and stacked-under-held PRs are report-only. Each PR is re-checked before writes (head, base, title/body/label holds), and every write is receipted.
+
+The age now comes from a shared author-activity clock in `planner_core.py` (`fetch_pr_activity`, `author_activity`), replacing `updatedAt`. Labels, marker comments and GitHub server-side branch syncs no longer reset it. `/daily-planner`'s Stalled report uses the same clock and names any PR that fell back to `updatedAt`.
+
+`merge_cleanup.refresh_pr` now also fetches `body`. Failing-check comments give the check name and its link instead of the first log line (spec deviation). Evidence: `TESTS-RESULTS/2026-11-16+GH-1498/`.
+
 ## 2026-11-17
 
 - **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search

@@ -1,0 +1,33 @@
+PASS A1: plan mode logs zero write verbs | bad: --apply against the same shim -> rejected
+PASS A2: each rung x {behind,dirty,failing} + draft + drift-bump gives the ladder's exact bundle | bad: rung floors off by one day (8/15/31) -> rejected
+PASS A3: engine/label/body/veto holds and a child of a held PR (each with an owned label, fresh enough to clear it) get zero writes | bad: hold_label dropped from the union -> rejected
+PASS A4: second --apply on the first run's state makes zero writes | bad: owned-comment lookup ignoring the marker -> rejected
+PASS A5: after pr-minder labels/comments #40 and update-branches #41 (updatedAt = today), pr-minder still ages them 20d and 5d | bad: clock reading updatedAt -> rejected
+PASS A6: after the same writes, the real `planner_core.py --mode stalled` report shows the 20d/5d dates; history error -> report names #40, #41 as fallback | bad: production call without the activity pass-through -> rejected
+PASS A7: 2 ok syncs this episode -> no 3rd update-branch; idle 14d -> rung 3 | bad: cap removed -> rejected
+PASS A8: single-parent author commit resets (owned label removed, foreign kept); sync merge does not, even after head/base rename | bad: headline-only predicate -> rejected
+PASS A8b: maintenance classification survives a head rename | bad: predicate bound to current branch names -> rejected
+PASS A9: head SHA change or new body hold between measure and write -> 0 writes + aborted receipt | bad: pre-write check without body -> rejected
+PASS A10: every write has intent+result; failed update-branch / label-create recorded as failed | bad: result line skipped on failure -> rejected
+PASS A10b: shim write count equals result receipts (label creation receipted on its own) | bad: label creation folded into add-label -> rejected
+PASS A11: incomplete history or GraphQL error -> unknown, 0 writes (owned label kept) | bad: fallback to createdAt -> rejected
+PASS A12: failing check rendered as name + URL; missing URL -> 'link unavailable' | bad: check URL dropped -> rejected
+PASS A12b: conflict comment states measured drift; rung-3 re-cut names the PR's own commits and diff size | bad: — -> n/a
+PASS A13: a pr-minder:* label without an owning receipt is kept; with one, a fresh PR's label is cleared | bad: ownership inferred from the label name -> rejected
+PASS A14: rung-2 update-branch failure: one sync attempt, label added, failure diagnosis commented | bad: no fallback comment on failure -> rejected
+PASS A15: author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched | bad: presence inferred only from the visible window -> rejected
+PASS A16: flat install (skills/<name>/scripts siblings, no env) resolves both bundles | bad: pre-fix resolver (parents[1].parent) -> rejected
+PASS A17: behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1 | bad: behind from mergeStateStatus only -> rejected
+   A18 parts: {'quoted': True, 'draft_abort': True, 'label_race': True, 'thresholds': True, 'plan_shows_removal': True}
+PASS A18: repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals | bad: — -> n/a
+PASS A19a: check names (mention, backtick, autolink, escaped link) render only as inert code spans | bad: no sanitising -> rejected
+PASS A19b: a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own | bad: ownership by marker text only -> rejected
+PASS A19c: failed and uncertain update-branch attempts count toward the 2-per-episode cap | bad: cap counts ok only -> rejected
+PASS A19d: one PR raising does not end the pass: next PR still written, failed receipt, exit code 1 | bad: — -> n/a
+PASS A19e: a marker comment NOT written by the viewer still counts as author activity | bad: marker-only filtering (ignores viewerDidAuthor) -> rejected
+PASS A19f: a failed update-branch's CLI error is rendered as an inert code span in the fallback comment | bad: raw error interpolated -> rejected
+PASS A20a: a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising | bad: — -> n/a
+PASS A20b: --pr N runs the conflict lookup (git fetch) only for PR N | bad: conflict lookup for every conflicting PR -> rejected
+PASS A21: update-branch whose new head appears only on the 3rd read is classified ok (bounded polling) | bad: single head read (pre-fix behaviour) -> rejected
+{"passed": 30, "failed": 0}
+rc=0
