@@ -5069,7 +5069,7 @@ def cmd_jog_to_marathon(args):
         conn.close()
 
 
-def jog_acquire_lease(root, gh_num, pid):
+def jog_acquire_lease(root, gh_num, pid, *, expected_global_id=None):
     """Acquire a lease on an enqueued item via perform_write (receipt-backed)."""
     _require_jog_primary(root)
     paths = artifact_paths(root)
@@ -5088,6 +5088,10 @@ def jog_acquire_lease(root, gh_num, pid):
                 refuse("jog-event-identity",
                        "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
             row = rows[0]
+            if expected_global_id is not None and (
+                    row["global_id"] != expected_global_id or row["status"] != "pending"):
+                refuse("jog-selection-stale",
+                       "GH-%d identity or pending status changed; refusing stale dispatch" % gh_num)
             ts = now_iso()
             att = row["attempt_count"] + 1
             conn.execute("""UPDATE jog_queue SET status = 'running', lease_pid = ?, attempt_count = ?, updated_at = ?

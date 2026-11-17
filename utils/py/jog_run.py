@@ -2566,12 +2566,12 @@ def _jog_align_target(target):
                 preserved = f"jog-preserved-development-{head}"
                 _git(target, "branch", "-m", "development", preserved)
                 print(f"jog: preserved local development at {preserved}")
-                _git(target, "switch", "-c", "development", "--no-track", base)
+                _git(target, "switch", "--no-overwrite-ignore", "-c", "development", "--no-track", base)
             else:
-                _git(target, "switch", "development")
-                _git(target, "merge", "--ff-only", base)
+                _git(target, "switch", "--no-overwrite-ignore", "development")
+                _git(target, "merge", "--no-overwrite-ignore", "--ff-only", base)
         else:
-            _git(target, "switch", "-c", "development", "--no-track", base)
+            _git(target, "switch", "--no-overwrite-ignore", "-c", "development", "--no-track", base)
         if _git(target, "rev-parse", "HEAD").decode().strip() != base:
             raise ContractError("execution clone alignment did not reach fetched development")
         print(f"jog: execution clone aligned at {base}; other branches and untracked files retained")
@@ -2854,7 +2854,8 @@ def jog_run_main(args=None):
             att = row["attempt_count"] + 1
 
             # Acquire lease via perform_write
-            jog_acquire_lease(root, gh_num, os.getpid())
+            jog_acquire_lease(root, gh_num, os.getpid(),
+                              expected_global_id=row["global_id"] if supervised else None)
             if checkpoint or supervised:
                 tasks_processed += 1
 
