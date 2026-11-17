@@ -122,4 +122,13 @@ Limits: the graph project is the maintained primary, generation `2026-11-17T06:1
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-17T17:48:24Z
+task: RELAY-gh1493-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 824dc6e48f33a28c66be6512f4efc011177bc22e
+added-range: 8479+5837
+added-sha256: c7a9ab0239fe0d798fff5a82d8581a63707da9a7b1322d1caf7c8d25c9e98ec6
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
