@@ -146,4 +146,13 @@ Basis: Approve the bounded docs-only plan against the supplied GH-1524 requireme
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-19T18:56:51Z
+task: RELAY-GH1524-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: f54231c2c15dae6bfdaf2551a4f14fe9d82f2591
+added-range: 13716+4367
+added-sha256: 9546e86c7480a334c7c4eaaf4833d10183bf0cfff02e48d6ddbc24f6f33238f1
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
