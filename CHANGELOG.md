@@ -10,6 +10,9 @@
   replay byte-identically. Read-only; writes only `--out`.
 - `skills/1-hourly/kickstart/SKILL.md`: new parent step 2 (build the queue, record the grant in the
   run record, then dispatch) with the closed ordering list; later parent steps renumbered.
+- `skills/2-daily/pr-minder/scripts/pr_minder.py`: new `--no-conflict-files` flag skips the
+  conflicting-file lookup (`git fetch` + `merge-tree --write-tree`), so build_queue's live run writes
+  nothing to the checkout. Default behaviour unchanged.
 - No new test suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1527/`.
 
 ## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes

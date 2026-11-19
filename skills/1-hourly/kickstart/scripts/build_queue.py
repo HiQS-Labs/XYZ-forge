@@ -3,7 +3,8 @@
 sections from live state, so a long run starts from one command instead of a hand-built list.
 
 Inputs (reused, never re-classified):
-  * `pr_minder.py --json` owns PR state: draft, held, conflicting, behind, failing.
+  * `pr_minder.py --json --no-conflict-files` owns PR state: draft, held, conflicting, behind,
+    failing. The flag skips pr_minder's conflicting-file lookup, which fetches into the checkout.
   * one `gh pr list` call adds what pr_minder's JSON omits: author, title/body links, raw mergeable.
   * `gh issue list` supplies open issues created inside the window.
 
@@ -201,7 +202,7 @@ def main() -> int:
         args.owner = run_json(["gh", "api", "user"], root)["login"]
 
     minder = root / "skills/2-daily/pr-minder/scripts/pr_minder.py"
-    rows = load(args.prs_json, lambda: run_json([sys.executable, str(minder), "--json", "--repo-root", str(root)], root))
+    rows = load(args.prs_json, lambda: run_json([sys.executable, str(minder), "--json", "--no-conflict-files", "--repo-root", str(root)], root))
     meta_rows = load(args.pr_meta_json, lambda: run_json(
         ["gh", "pr", "list", "--state", "open", "--limit", "300", "--json", "number,author,title,body,mergeable"], root))
     issues = load(args.issues_json, lambda: run_json(

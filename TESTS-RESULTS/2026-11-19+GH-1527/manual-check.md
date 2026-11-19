@@ -81,4 +81,16 @@ rule. Defects found by this diff during the build were fixed before this receipt
 2. #1526's line said "(closes #1518)" although #1518 is an operator decision. Folded mentions now
    exclude issues routed to Needs-operator (issue rules 1–2 win).
 
+## Read-only live path (final QA round 1, S1)
+
+pr_minder's `--json` run looked up conflicting files with `git fetch` and `git merge-tree
+--write-tree` before printing. build_queue now calls `pr_minder.py --json --no-conflict-files`
+(new flag; it skips only that lookup). `readonly-live-check.log`: a logging `git` shim on PATH,
+refs hash, `FETCH_HEAD` mtime and object counts taken before and after a live run.
+
+| Check | Observed | Verdict |
+|---|---|---|
+| Live build_queue run | refs, `FETCH_HEAD` and object counts unchanged; git verbs seen: `config`, `remote` only; fetch/merge-tree calls: 0; queue body identical to the replay | pass |
+| Red control: pre-fix argv (`pr_minder.py --json`, no flag) under the same shim | fetch/merge-tree calls: 21 (e.g. `fetch -q origin pull/1391/head`) | check detects the write path |
+
 Verdict: pass. No unexplained difference remains.
