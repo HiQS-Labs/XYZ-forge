@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -163,5 +163,36 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1527-KICKSTART-BUILD-QUEUE.m
   output, recorded failing.
 
 Handing to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+**What this proposes**
+
+A local stdlib CLI prints a kickstart queue and authority template from existing PR classifications and one PR metadata enrichment, plus recent issues. First-match rules order work, hold explicit exclusions for the operator, and make saved-input replay possible.
+
+**How the existing system works, per this document**
+
+The parent currently assembles the queue manually and records the operator grant in a run record. pr_minder owns conflict, drift, checks, draft and hold assessment; its JSON omits raw PR metadata. Its `unknown` means unavailable author history, so the proposed enrichment separately supplies GitHub mergeability.
+
+**What it's not**
+
+It is not an executor, new PR classifier, daemon or ledger writer. Inference: printing the authority template does not itself grant authority; the parent must record the operator grant before dispatch.
+
+**Call: Ship the plan.** Citations below use `plan` for `PROJECT/2-WORKING/GH-1527-KICKSTART-BUILD-QUEUE.md`.
+
+- [Pass] **S1 resolved:** explicit session/decision overrides now precede every PR route (plan:66–74), and issue overrides precede folding (plan:88–90). The manual acceptance specifies both override cases and the clean control (plan:135–137).
+- [Pass] **S2 resolved; classification stays with its owner:** plan:43–53 correctly separates author-history unknown from raw mergeability, consistent with `skills/2-daily/pr-minder/scripts/pr_minder.py:217–225`. The serializer omits `pr_data` at that file's lines 540–542, justifying the single metadata call. The two contrasting worked cases at plan:82–84 make the intended C/A distinction explicit without duplicating the classifier.
+- [Pass] **Closed ordering and conservative default:** first-match PR/issue lists at plan:71–100 resolve overlaps by precedence; their explicit fallbacks cover the specified valid input contract. The required A through H and final QA sequence is at plan:102. Sparse-label issues reach Needs-operator at plan:99–100 rather than inferred execution scope. No additional bucket defect found in the whole-plan sweep.
+- [Pass] **Replay contract:** plan:113–118 pins saved inputs, owner, exclusions, date and window and orders secondary lists. Read queue sorting there as ascending number within each bucket, as explicitly required by plan:102; bucket priority remains primary. No remaining wall-clock dependence is specified for saved-input replay.
+- [Pass] **Acceptance can reject delivery:** plan:127–139 ties retained provenance and commands to the implemented candidate, rejects unexplained or rule-contradicting differences, requires byte comparison, and witnesses a failing routing assertion against deliberately wrong output. This is an acceptance design, not evidence that an unchanged/unbuilt candidate has been delivered.
+- [Pass] **Proportionate integration:** plan:122–145 limits work to the CLI, parent instructions and retained manual evidence, consistent with AGENTS.md's “No new tests” rule. Parent intake/dispatch at `skills/1-hourly/kickstart/SKILL.md:30–35` is the appropriate insertion point; its explicit authorization boundary at lines 49–50 remains applicable. No further machinery is needed for the stated envelope.
+
+**Review limits:** Swept the entire plan, including requirements, recon, output, implementation steps, non-goals, rollback, risks and rating; no additional pre-existing plan defect found. This approves design only: no implementation, runtime correctness, latency or executed acceptance result is claimed. No gate, fixture, live pr_minder invocation or git command was run. Verify-tier source checks used the explicitly named local files; the reference graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` is ready at generation `2026-11-18T19:39:07Z` but belongs to another checkout. Coverage reports missing freshness for the plan and kickstart skill; direct local reads govern those claims. No recorded graph gap is not proof of completeness.
+
+swept file: yes
+VERDICT: PASS
+Basis: The bounded corrections address the prior findings. The plan now defines source-backed routing, deterministic replay and candidate-bound rejection evidence at a scale appropriate to a local Markdown-producing CLI.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
