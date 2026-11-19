@@ -12,3 +12,9 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
   gh251-validate-pytest-skip: 4 pass, 0 fail
 ## same suite, system python3 (no mypy)
 ENVIRONMENT FAULT: python3 (/opt/homebrew/bin/python3) version 3.14.7; missing modules: mypy; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt) — rerun with PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)
+
+## red control: pre-fix validate.sh (ad22311e), same python3 without mypy
+rc=0 (pre-fix proceeds; the missing mypy surfaces only ~13 min into a full run)
+missing-mypy refusals: 0
+
+candidate: b93e8a7a3824bf025eeb204a91f567257e5341b8
