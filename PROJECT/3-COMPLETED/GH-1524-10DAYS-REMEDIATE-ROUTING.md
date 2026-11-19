@@ -2,7 +2,7 @@
 gh_issue: 1524
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1524
 title: "GH-1524: 10days HAS-PR routing and remediate / serial-JIT / marathon modes"
-status: Active
+status: Complete
 created: 2026-11-19
 updated: 2026-11-19
 owner: noelsaw
