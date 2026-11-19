@@ -23,8 +23,7 @@ check_start_task_reinforce_contract() {
   grep -q "bounded test scope" "$t" || return 1
   grep -q "test non-scope: no speculative test frameworks" "$t" || return 1
   grep -q "test footprint must scale to implementation" "$t" || return 1
-  grep -q "repo principles via \`/ponytail\`: reviewer findings are advisory evaluations" "$t" || return 1
-  grep -q "NOT a mandate to accept scope expansion" "$t" || return 1
+  grep -q "repo principles via \`/ponytail\`. Reject unneeded machinery" "$t" || return 1
   grep -q "Disposition: Rejected (Out of Scope / Ponytail)" "$t" || return 1
   grep -q "Apply tiered verification discipline" "$t" || return 1
   grep -q "run ONLY the focused target test suite" "$t" || return 1
@@ -51,7 +50,7 @@ run_mutation() {
 }
 
 run_mutation "mut1 (test non-scope)" "$TARGET" "$WORK/m1.md" "sed -i.bak '/test non-scope/d' '$WORK/m1.md'"
-run_mutation "mut2 (ponytail rail)" "$TARGET" "$WORK/m2.md" "sed -i.bak '/NOT a mandate to accept scope expansion/d' '$WORK/m2.md'"
+run_mutation "mut2 (ponytail rail)" "$TARGET" "$WORK/m2.md" "sed -i.bak '/repo principles via .\/ponytail.\. Reject unneeded machinery/d' '$WORK/m2.md'"
 run_mutation "mut3 (tiered verification)" "$TARGET" "$WORK/m3.md" "sed -i.bak '/Do NOT re-run full qualifying test gates/d' '$WORK/m3.md'"
 run_mutation "mut4 (anti-thrashing)" "$TARGET" "$WORK/m4.md" "sed -i.bak '/the 3-round cap is a binding budget/d' '$WORK/m4.md'"
 

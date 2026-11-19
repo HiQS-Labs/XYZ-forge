@@ -1,0 +1,24 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890565
+rc=0
+jog: execution clone aligned at fbab544f1a661f0ccf625deee210f9cb85fc1b12; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-901 failed task-locally (pre-advance-failed, gate exit 1; result: gh901-exec1/preflight/result.json); retained without retry; continuing independent pending work.
+jog: execution clone aligned at fbab544f1a661f0ccf625deee210f9cb85fc1b12; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY9BWA35PFJ8DQZDYPX8F/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: reached max-tasks limit (2); pausing queue.
+jog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: published primary checkpoint 398424792ba15831d50836f1cc2ee4ac82750dc2
+Switched to a new branch 'fixture-901-gh901-exec1'
+Switched to a new branch 'fixture-902-gh902-exec1'

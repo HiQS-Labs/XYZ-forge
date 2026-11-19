@@ -1,0 +1,156 @@
+--- skills/2-daily/merge-cleanup/SKILL.md@branch
++++ skills/2-daily/merge-cleanup/SKILL.md@development
+@@ -653,7 +653,10 @@
+ non-draft OPEN/MERGED same-repository PR targeting the integration branch, exact
+ fetched origin branch/head equality, and remote recovery proof for every local ref
+ and detached HEAD. Missing/deleted remote branches, stale heads, forks, failed API
+-or Git queries and malformed metadata preserve the checkout. Publication is not a
++or Git queries and malformed metadata preserve the checkout. A path refused before
++inspection (not absolute, protected, not Git, outside the safe roots, overlapping, or
++a different origin) prints `PRESERVED <path>: <reason>` and the other paths still run;
++the call then exits 1 (GH-1493). Publication is not a
+ claim of merge, release promotion or issue completion.
+ 
+ Existing local-state/session/dependency checks run again immediately before the
+--- skills/2-daily/merge-cleanup/scripts/merge_cleanup.py@branch
++++ skills/2-daily/merge-cleanup/scripts/merge_cleanup.py@development
+@@ -2392,32 +2392,52 @@
+         log_err("Cannot verify the protected primary's origin; preserving all checkouts")
+         return 2
+     safe_roots = primary_safe_roots(primary)
++    canonical = primary_origin.stdout.strip()
+     candidates = []
+-    try:
+-        for raw in paths:
++    refused: List[Path] = []
++    # GH-1493: each path is admitted or preserved on its own; one ineligible path no longer
++    # stops the others from being inspected and retired.
++    preserved = False
++    for raw in paths:
++        try:
+             supplied = Path(raw).expanduser()
+             if not supplied.is_absolute() or supplied.is_symlink():
+-                raise ValueError(f"checkout must be an absolute, non-symlink path: {raw}")
++                raise ValueError("checkout must be an absolute, non-symlink path")
+             path = supplied.resolve(strict=True)
+             if (path == primary or path in primary.parents or primary in path.parents
+                     or path == Path.cwd().resolve() or path in Path.cwd().resolve().parents):
+-                raise ValueError(f"protected primary/ancestor or executing directory: {path}")
++                raise ValueError("protected primary/ancestor or executing directory")
+             if not (path / ".git").exists():
+-                raise ValueError(f"not a Git checkout: {path}")
++                raise ValueError("not a Git checkout")
+             safe, why = is_safe_deletable_path(path, safe_roots=safe_roots)
+             if not safe:
+                 raise ValueError(why)
+             if any(path == other or path in other.parents or other in path.parents for other in candidates):
+                 raise ValueError("checkout paths must be distinct and non-overlapping")
+             origin = run_git(path, ["remote", "get-url", "origin"])
+-            if origin.returncode or _normalize_remote(origin.stdout) != _normalize_remote(primary_origin.stdout):
+-                raise ValueError(f"checkout origin differs from the protected primary: {path}")
+-            candidates.append(path)
+-    except (OSError, RuntimeError, ValueError) as exc:
+-        log_err(f"Published retirement refused: {exc}")
+-        return 2
+-    failed = False
++            if origin.returncode or _normalize_remote(origin.stdout) != _normalize_remote(canonical):
++                found = origin.stdout.strip() if not origin.returncode else "none"
++                raise ValueError(
++                    f"checkout origin ({found}) differs from the protected primary ({canonical}); "
++                    "a -gate/-verify helper must keep the canonical origin — clone the task clone, "
++                    f"then: git -C <helper> remote set-url origin {canonical}")
++        except (OSError, RuntimeError, ValueError) as exc:
++            print(f"PRESERVED {raw}: {exc}")
++            preserved = True
++            try:
++                refused.append(Path(raw).expanduser().resolve())
++            except (OSError, RuntimeError):
++                pass
++            continue
++        candidates.append(path)
++    failed = preserved
+     for path in candidates:
++        # A refused checkout equal to or nested inside an admitted one would be moved with it; keep both.
++        inner = next((r for r in refused if r == path or path in r.parents), None)
++        if inner is not None:
++            print(f"PRESERVED {path}: contains refused checkout {inner}")
++            failed = True
++            continue
+         scanned = inspect_checkout(path, primary_repo_path=primary,
+                                    integration_branch=integration_branch, published_pr=number)
+         fresh = refresh_for_teardown([scanned], primary, integration_branch=integration_branch,
+--- utils/py/relay_drive.py@branch
++++ utils/py/relay_drive.py@development
+@@ -372,9 +372,7 @@
+     def file_status():
+         try:
+             with open(relay_file, 'r') as f:
+-                for line in f:
+-                    if line.startswith("STATUS:"):
+-                        return line.split(":", 1)[1].strip()
++                return relay_attest.header_field(f.read(), "STATUS")
+         except: pass
+         return ""
+ 
+@@ -687,13 +685,10 @@
+ 
+     def restore_status_line(prev_status):
+         with open(relay_file, "r", encoding="utf-8", errors="surrogateescape") as f:
+-            lines = f.readlines()
+-        for i, line in enumerate(lines):
+-            if line.startswith("STATUS:"):
+-                lines[i] = f"STATUS: {prev_status}\n"
+-                break
++            text = f.read()
++        text, _n = relay_attest.set_header_field(text, "STATUS", prev_status)
+         with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
+-            f.writelines(lines)
++            f.write(text)
+ 
+     def judge_terminal(ns, role, pre, shim_ok=True):
+         """Judge the turn the driver just watched. Returns a verdict tuple; the CALLER picks the exit
+@@ -738,6 +733,14 @@
+             eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
+             return ("refused", "review-body-rewritten")
+         added = post_canon[added_start:]
++        # A reviewer block whose own last verdict line says the review failed cannot close the relay
++        # as Approved. Only an explicit failing word refuses; a block with no verdict line is judged
++        # by the other checks, as before.
++        own_verdict = relay_attest.last_verdict(added)
++        if ns == "Approved" and relay_attest.verdict_contradicts_approval(own_verdict):
++            eprint(f"relay-drive: STATUS {ns} but the reviewer's own last verdict line in this turn reads "
++                   f"'{own_verdict}' — an approval over a failing verdict is refused")
++            return ("refused", "approved-over-fail")
+         if not added.strip():
+             return ("refused", "empty-approval")
+         # GH-1428: marathon arms this only when the phase gate is one the reviewer may run. An
+@@ -990,6 +993,11 @@
+             verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
+             if verdict[0] == "forged":
+                 write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
++            else:
++                # Exit 5 is also the review-once "changes requested" handback below; the reason file
++                # says which of the two this run was. The exit code itself is unchanged.
++                write_escalation_reason(f"turn-failed-rc{res_code}")
++            eprint(f"relay-drive: the {actor} turn itself failed (shim exit {res_code}) — this is a failed turn, not a review handback")
+             if res_code == 7:
+                 restore_checkout_after_timeout(progress_main_tree, checkout_before)
+             sys.exit(res_code)
+@@ -1074,7 +1082,8 @@
+                 # exit code alone lets a genuinely failed review read as still open.
+                 with open(relay_file, 'r') as f:
+                     content = f.read()
+-                content, n_subs = re.subn(r'^STATUS:\s*.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
++                # Bold/backtick tolerant, like relay_attest.header_field (the reader of this line).
++                content, n_subs = re.subn(r'^[`*]*STATUS[`*]*:.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
+                 if n_subs == 0:
+                     eprint(f"relay-drive: no STATUS: line in {relay_file} -- the escalation write did not land.")
+                     eprint("relay-drive: refusing to report an escalation that was never written (GH-204).")
+@@ -1144,6 +1153,7 @@
+                 if review_blocks_added(rf_text_before, rf_text_after) > 0:
+                     print(f"relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: {ns}); non-approval handback, not a stall")
+                     xyz_relay_emit("orange")
++                    write_escalation_reason("review-handback")  # exit 5 is also a failed turn's code
+                     sys.exit(5)
+                 eprint("relay-drive: review-once — the relay file moved but the reviewer appended NO review block: a zero-output turn is not review coverage (GH-397) — genuine stall")
+                 xyz_relay_emit("red")

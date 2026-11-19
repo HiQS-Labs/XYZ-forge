@@ -1,0 +1,15 @@
+{
+  "command": [
+    "bash",
+    "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1476-raw-task-preparation-2026-11-16-verify/utils/swarm-preflight.sh",
+    "--project-doc",
+    "/private/tmp/gh1476-real-preparation-trial/isolated-root/PROJECT/1-INBOX/GH-1517-MERGE-CLEANUP-SWEEP-WORDING.md",
+    "--target-root",
+    "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1476-preparation-trial-2026-11-17-gate",
+    "--dry-run",
+    "--format",
+    "json"
+  ],
+  "exit": 0,
+  "status": ""
+}

@@ -1,0 +1,11 @@
+{
+  "head": "7efc0263ebfb7ddad4243bdb969a8f0afe23dabc",
+  "identity_unchanged": true,
+  "checks": {
+    "frontmatter": 0,
+    "status-table": 0,
+    "hardcoded-paths": 0,
+    "roadmap-coverage": 0,
+    "changelog": 0
+  }
+}

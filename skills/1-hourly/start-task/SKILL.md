@@ -116,7 +116,8 @@ Then begin work.
      `<type>` is `feat`, `fix`, `chore` or `docs`.
    - A multi-issue group uses its primary (lowest) issue number. A disposable
      gate or verification clone for the task is `<folder>-gate` / `<folder>-verify`,
-     in the same location.
+     in the same location. A helper keeps the canonical origin (clone the task clone,
+     then `git remote set-url origin <origin URL>`), or Step 9 retirement preserves it (GH-1493).
    - Before creating anything, list `<repo-name>-gh<issue>-*` siblings, ignoring
      `-gate`/`-verify` helpers (never resume implementation in a helper). Exactly
      one task clone → this is a resume (below). Two or more task clones, or only
@@ -224,12 +225,10 @@ Then begin work.
    set it, and user overrides preserved? Give the reviewer the requirements and
    source paths, not just a summary of your design. Explicitly state the
    operational envelope in the review packet: instruct the reviewer to grade
-   against the stated requirements and commensurate complexity, not unrequested
-   enterprise multi-tenant threat models. Keep reviewer writes limited to the
+   against the stated requirements, commensurate complexity, and the target
+   repository's own stated threat model. Keep reviewer writes limited to the
    relay thread. Adjudicate findings against evidence, stated requirements, and
-   repo principles via `/ponytail`: reviewer findings are advisory evaluations,
-   NOT a mandate to accept scope expansion, speculative abstractions, or enterprise
-   machinery for lightweight tasks. Reject unneeded machinery with a documented
+   repo principles via `/ponytail`. Reject unneeded machinery with a documented
    disposition (`Disposition: Rejected (Out of Scope / Ponytail)`). Record every
    disposition, revise, and re-review until Approved within the relay's configured
    cap (default three review rounds for this workflow). Unresolved blockers,

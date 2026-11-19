@@ -99,7 +99,7 @@ for date_dir in "${date_dirs[@]}"; do
     [[ -z "$title" ]] && title="$(basename "$relay_file" .md)"
 
     # STATUS from header block (lines before first "## " section heading)
-    status="$(sed -n '/^##[[:space:]]/q; s/^STATUS:[[:space:]]*//p' "$relay_file" | head -1 | sed 's/[[:space:]]*$//')"
+    status="$(sed -n '/^##[[:space:]]/q; s/^[`*]*STATUS[`*]*:[`*]*[[:space:]]*//p' "$relay_file" | head -1 | sed -E 's/[`*]+[[:space:]]*$//; s/[[:space:]]*$//')"
 
     # ROUND from header block
     round_field="$(sed -n '/^##[[:space:]]/q; s/^ROUND:[[:space:]]*//p' "$relay_file" | head -1 | sed 's/[[:space:]]*$//')"

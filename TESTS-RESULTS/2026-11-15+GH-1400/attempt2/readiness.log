@@ -1,0 +1,12 @@
+jog: resume GH-901: terminal Marathon result re-projected (parked) — awaiting-landing (PR #901: https://example.invalid/pr/901)
+jog: recovered GH-901 without a new builder or attempt
+jog: execution clone aligned at 7dcecfd44f7f81b35d95b3be5c6e3c5660e20578; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt2/readiness/primary/.tick/jog/jog-01M7FZ77TYYVZ46V9CNS7REY7Q/gh902-exec1/preflight)
+jog: GH-902 preflight refused: not-ready (exit 3)
+jog: advancing halted: GH-902 parked — preflight-refused (exit 3): not-ready (exit 3)
+jog: GH-901 parked: awaiting-landing (PR #901: https://example.invalid/pr/901)
+jog: GH-902 parked: preflight-refused (exit 3): not-ready (exit 3)
