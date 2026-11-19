@@ -30,23 +30,33 @@ session and the single delegated outer-loop child session. There are never compe
 ### Parent (Observer & Session Recovery)
 1. **Intake Resolution:** Resolves target repository, raw daily-goals requests, selected
    scope/holds, exact execution mode, provider/subscription preferences, and existing budgets.
-2. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts
+2. **Queue and Authority:** Builds the queue with
+   `python3 skills/1-hourly/kickstart/scripts/build_queue.py --repo-root . --out <run record>`
+   (pass `--other-session` and `--needs-operator` for the holds resolved in step 1), records the
+   operator's authority grant in the printed Authority block of that run record, then dispatches.
+   A resumed session re-reads the grant there instead of asking again. The script's ordering is a
+   closed list, first match wins: own clean PRs, own conflicting or failing PRs, own behind or
+   mergeability-UNKNOWN PRs as one merge-cleanup batch, drafts (finish or close), small bug
+   issues, docs issues, stale merge-batch and inventory issues (verify, then close), refactors
+   gated on a named predecessor, final QA. Held PRs, other authors' PRs, decision-needed,
+   other-session-owned and unclassified items go to Needs-operator.
+3. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts
    the outer-loop child through the host's supported delegation mechanism (`delegate_task`
    or platform native delegate). Never starts multiple competing child sessions.
-3. **Passive Observation:** Observes native completion events, questions, or completion
+4. **Passive Observation:** Observes native completion events, questions, or completion
    watches. Does not poll a running delegate or PR (`task_status`, `sleep` loops, `Monitor`,
    `ScheduleWakeup`).
-4. **Unsupported Host Guard:** If host capabilities do not support the required delegation
+5. **Unsupported Host Guard:** If host capabilities do not support the required delegation
    mechanism or completion event/watch, the parent reports the missing capability explicitly,
    leaves a resumable handoff with pending state and next owner, and halts. It never pretends,
    starts a background daemon/cron, or falls back to direct unassisted execution.
-5. **Session Recovery:** On session drops, interruptions, pauses, or stops, verifies stopped
+6. **Session Recovery:** On session drops, interruptions, pauses, or stops, verifies stopped
    ownership across the child session and any child-spawned builders/writers before any
    redispatch. Unknown or live ownership holds; never retries an unknown outcome. Preserves
    original deadlines, attempt counters, and authority.
-6. **Bounded Assisted Repair:** Performs explicit, bounded parent repair when needed, and
+7. **Bounded Assisted Repair:** Performs explicit, bounded parent repair when needed, and
    reports assisted versus unattended operation truthfully.
-7. **Authority Boundary:** Never merges PRs, deploys code, or updates installed skills
+8. **Authority Boundary:** Never merges PRs, deploys code, or updates installed skills
    without explicit separate operator authorization.
 
 ### Child (Outer-Loop Executor)

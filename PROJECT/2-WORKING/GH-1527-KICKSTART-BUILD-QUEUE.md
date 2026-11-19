@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Recon on base `ad22311e8`; plan written. | Codex plan QA, then build. |
+| Plan approved by Codex (round 2). Built `build_queue.py` and the kickstart parent step; manual check in `TESTS-RESULTS/2026-11-19+GH-1527/` passes (determinism, routing, red control, hand-queue diff fully explained). | Codex final QA, then PR. |
 
 ## Problem
 
@@ -88,7 +88,8 @@ Issues (open, created on or after `--as-of` minus `--since-days`):
 1. in `--other-session` → Needs-operator (owned by another session; remind only).
 2. in `--needs-operator`, or title matches `\bdecid(e|ing)\b|\bdecision\b` → Needs-operator (decision).
 3. closed by an open own PR (closing keyword or title `GH-N`) → folded into that PR's line.
-4. label `merge-batch`, or title matches `^Merge batch|merge inventory|\bsweep\b` → bucket G,
+4. label `merge-batch`, or title matches `^Merge batch|merge inventory|^\S+ sweep <YYYY-MM-DD>` → bucket G
+   (narrowed during the build: a bare `\bsweep\b` misfiled #1517, whose title mentions "auto-sweep"),
    stale batch/inventory: verify, then close.
 5. title starts `refactor` → bucket H, gated on the first `after #N` in title, else body.
 6. label `documentation`, or title names a `*.md` file → bucket F, docs.

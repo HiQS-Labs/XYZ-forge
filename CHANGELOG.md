@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-19 — GH-1527: kickstart `build_queue.py` builds the run queue in one command
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` prints a kickstart run record's Authority,
+  Queue and Needs-operator sections from `pr_minder.py --json` plus one `gh pr list` (author, links,
+  raw `mergeable`) and `gh issue list` (open issues in a `--since-days` window). Ordering is a
+  closed first-match list; held, others', decision, other-session and unclassified items go to
+  Needs-operator. Saved inputs (`--prs-json`, `--pr-meta-json`, `--issues-json`) with `--as-of`
+  replay byte-identically. Read-only; writes only `--out`.
+- `skills/1-hourly/kickstart/SKILL.md`: new parent step 2 (build the queue, record the grant in the
+  run record, then dispatch) with the closed ordering list; later parent steps renumbered.
+- No new test suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1527/`.
+
 ## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
 
 - `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.
