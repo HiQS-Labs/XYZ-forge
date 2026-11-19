@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-19 — GH-1519: the gate refuses in seconds when mypy is missing
+
+- `validate.sh`'s existing GH-732 environment check now also requires `mypy` (`test/test_python_layer.py`
+  runs `python3 -m mypy`). Without it the gate exits 3 at once with `missing modules: mypy` and
+  `pip install -r requirements-dev.txt`, instead of failing one test after a ~13-minute full run.
+  With mypy present nothing changes. Hosted jobs that run `validate.sh` already install
+  `requirements-dev.txt`. No new suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1519/smoke.log`.
+
 ## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
 
 - `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.
