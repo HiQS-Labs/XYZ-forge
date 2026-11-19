@@ -18,6 +18,9 @@ python3 skills/1-hourly/kickstart/scripts/build_queue.py --as-of 2026-11-19 --ow
   --out queue-replay-N.md
 ```
 
+Machine paths: absolute home-directory paths inside saved issue/PR bodies were replaced with `~`
+after capture; the replay output was re-run and is byte-identical (`cmp` exit 0).
+
 ## Results
 
 | Check | Observed | Verdict |
