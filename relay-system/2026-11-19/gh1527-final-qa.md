@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -94,5 +94,28 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, and set STATUS to 
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+- [Should] **S1 — make the live collection path honor the read-only envelope.** `build_queue.py:203–204` invokes pr_minder's full CLI. That CLI calls `conflict_files` before its JSON return (`skills/2-daily/pr-minder/scripts/pr_minder.py:530–542`); `conflict_files` performs two `git fetch` operations and `git merge-tree --write-tree` (`:164–172`). These write refs/FETCH_HEAD/objects in the target checkout even without `--out`. The queue does not consume conflict-file details. Reuse pr_minder's classification through a narrowly read-only collection option/path that skips these details, rather than duplicating its classifier; retain manual evidence that this branch does not invoke Git mutations. Merely revising the “Read-only: writes nothing but --out” promise (`build_queue.py:28`) would not satisfy this relay's operational envelope.
+  Observed input: committed `inputs/pr_minder.json` row #1417 has `conflicting: true`, `rung: 3`, `held: null`, `unknown: false`, and non-null `plan.comment`; the same fetch predicate is true for #1391, #1460, #1467, #1471, #1497 and #1501. Read-only probe (exit 0): `python3 -c 'import json; from pathlib import Path; rows=json.loads(Path("TESTS-RESULTS/2026-11-19+GH-1527/inputs/pr_minder.json").read_text()); print([r["pr"] for r in rows if r["conflicting"] and r["plan"].get("comment") is not None])'` yields `[1391, 1417, 1460, 1467, 1471, 1497, 1501]`. This establishes concrete inputs to the source-backed write path; I did not execute those writes.
+  Affected scope: live runs containing conflicting PRs with a planned comment; saved-input replay does not invoke this path.
+  Falsifier: feed the saved #1417 classification/metadata through the live collector with subprocess calls recorded safely; expect unchanged queue routing and zero `fetch` / `merge-tree --write-tree` calls. A pre-existing option that already suppresses the calls on this invocation would invalidate the finding; the current argv contains only `--json --repo-root`.
+
+- [Pass] **Ordered routing and reuse:** `build_queue.py:81–132` implements the PR/issue precedence and conservative fallback; `:149–174` emits A, B, C, D, E, F, G, H, final QA. PR state flags come from pr_minder, with author/link/raw mergeability enrichment at `:203–210`. Explicit overrides precede folding (`:112–117`); `:216–218` excludes operator-held issues from folded mentions. No additional classifier defect found during the whole-file sweep.
+
+- [Pass] **Deterministic replay reproduced:** command `python3 skills/1-hourly/kickstart/scripts/build_queue.py --as-of 2026-11-19 --owner noelsaw1 --other-session 1400,1418 --needs-operator 1435,1427 --prs-json TESTS-RESULTS/2026-11-19+GH-1527/inputs/pr_minder.json --pr-meta-json TESTS-RESULTS/2026-11-19+GH-1527/inputs/pr_meta.json --issues-json TESTS-RESULTS/2026-11-19+GH-1527/inputs/issues.json --out .relay-scratch/q.md`, then `cmp .relay-scratch/q.md TESTS-RESULTS/2026-11-19+GH-1527/queue-replay-1.md`: exit 0, no output. Sorting and the pinned cutoff (`build_queue.py:79,111,176,197`) are consistent with this result; the supplied date prevents wall-clock dependence.
+
+- [Pass] **Acceptance evidence rejects wrong routing:** `TESTS-RESULTS/2026-11-19+GH-1527/manual-check.md`, quoted receipt: `#1417 want=needs in_queue=True in_needs=True -> FAIL`, exit 1. Independently evaluated its section-membership predicate against the retained outputs: held #1417, non-owner #1460, both #1526 overrides and the clean #1526 control each produced assertion result 0; `routing/out-red-control.md` produced assertion result 1 (`in_queue=True in_needs=True`). The read-only Python inspection itself exited 0. All retained provenance artifact byte counts and SHA-256 values matched a direct file scan (exit 0, “receipt scan complete”). The hand-queue comparison table explains its listed differences by snapshot drift or explicit rules, including held #1024, #1517's narrowed sweep rule and operator-decision #1518. The original hand queue is local-only, so its completeness cannot be independently re-diffed here. This evidence supports routing/replay, not an unexecuted full gate.
+
+- [Pass] **Parent integration and authority:** `skills/1-hourly/kickstart/SKILL.md:33–42` states the queue order and records the grant before dispatch; `:59–60` retains separate authorization for merges, deploys and installed-skill updates. The generated template explicitly says “Status: NOT YET GRANTED” (`build_queue.py:48`), so printing it does not grant authority. The implementation is a bounded stdlib CLI, with no scheduler or ledger writer (`build_queue.py:30–38,182–229`).
+
+**Review limits:** Read the entire three seeded artifacts, approved plan and prior plan QA, plus pr_minder's collection/classification/JSON path. No additional pre-existing defect found in the seeded files beyond S1's inherited callee effect. No git command, gate, test suite, fixture, or live collector was executed. Consequently the actual base-to-head changed-file list and full-gate status are unverified here; no claim that a later gate will run or that the diff contains no new suite is made. Verify-tier graph discovery found pr_minder main/conflict_files with no pagination remaining, but the reference graph belongs to another checkout (generation 2026-11-18T19:39:07Z); coverage reports missing freshness for all three seeded artifacts. Exact local source reads govern this review. A clean graph coverage signal is not completeness proof.
+
+swept file: yes
+VERDICT: FAIL
+Basis: Saved-input routing and replay meet the bounded plan, but the default live path violates the explicitly read-only operational envelope through pr_minder's conflict-detail Git writes. Resolve S1 before approval.
+
+Handing off to Producer (claude-a) — disposition S1 and supply focused read-only collection evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
