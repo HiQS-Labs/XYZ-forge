@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (round 2). Built `build_queue.py` and the kickstart parent step; manual check in `TESTS-RESULTS/2026-11-19+GH-1527/` passes (determinism, routing, red control, hand-queue diff fully explained). | Codex final QA, then PR. |
+| Plan approved (Codex, round 2); final QA approved (Codex, round 2) after S1 fix: live run is read-only via `pr_minder.py --no-conflict-files`. Manual check passes. | PR ready; awaiting merge. |
 
 ## Problem
 
@@ -168,4 +168,4 @@ capability).
 
 ## Lessons Learned
 
-(filled at handoff)
+A plan-only `--json` callee can still write to the checkout; trace its JSON path and prove read-only with a logging `git` shim. Entry added to `LESSONS-LEARNED.md`.
