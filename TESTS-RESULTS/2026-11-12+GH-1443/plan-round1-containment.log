@@ -1,0 +1,21 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12) changed-files=1
+codex-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.ozvbRQ)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.ozvbRQ) changed-files=1
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12/relay-system/2026-11-12/gh1443-plan.codex.md
+codex-turn: OFF-ALLOWLIST change: PROJECT/1-INBOX/GH-1443-JOG-READINESS.md — reverting
+codex-turn: pre-revert copy of PROJECT/1-INBOX/GH-1443-JOG-READINESS.md saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12/.tick/orphan-backups/20261112T173325Z-66947
+codex-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-11-12+GH-1443/CONSULT.md — reverting
+codex-turn: pre-revert copy of TESTS-RESULTS/2026-11-12+GH-1443/CONSULT.md saved under /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1443-jog-readiness-2026-11-12/.tick/orphan-backups/20261112T173325Z-66947
+codex-turn: off-lane edits reverted; failing the turn
+relay-drive: terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverting to Open
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1m 7s
+per done-task: ≥0 tokens, 1m 7s wall-clock
+  turn peak RSS: codex: 306MB peak RSS
+

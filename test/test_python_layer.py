@@ -44,6 +44,11 @@ def test_marathon_drive_module_load():
 def test_swarm_preflight_module_load():
     import swarm_preflight
     assert swarm_preflight is not None
+    result = subprocess.run(
+        [sys.executable, "-m", "mypy", "--config-file", os.path.join(REPO_ROOT, "mypy.ini")],
+        cwd=REPO_ROOT, text=True, capture_output=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
     
 def test_marathon_plan_module_load():
     import marathon_plan

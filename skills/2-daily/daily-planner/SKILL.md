@@ -172,7 +172,7 @@ Before publishing your daily claim comment or starting implementation:
 
 #### Step 4: Publish / Update Your Idempotent Comment on Today's Ledger Issue (`--publish-ledger`)
 
-When ready to publish (or update) today's claim block on GitHub:
+Publishing creates a GitHub issue or comment, so **ask the operator and wait for an explicit yes before running it**; a request to start the day is not that confirmation. Once confirmed, publish (or update) today's claim block:
 
 ```bash
 python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode ledger --repo-mode auto --publish-ledger

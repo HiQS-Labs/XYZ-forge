@@ -1,0 +1,19 @@
+test_h3c_small_queue_rejects_bad_clean_fold_and_majority (__main__.Manual.test_h3c_small_queue_rejects_bad_clean_fold_and_majority) ... FAIL
+
+======================================================================
+FAIL: test_h3c_small_queue_rejects_bad_clean_fold_and_majority (__main__.Manual.test_h3c_small_queue_rejects_bad_clean_fold_and_majority)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/gh1470-manual-check.py", line 225, in test_h3c_small_queue_rejects_bad_clean_fold_and_majority
+    self.assertEqual(fc["recommendation"], "group")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'direct' != 'group'
+- direct
++ group
+
+
+----------------------------------------------------------------------
+Ran 1 test in 2.661s
+
+FAILED (failures=1)
+EVIDENCE H3c small clean-fold conflict: {"passes": null, "recommendation": "direct"}

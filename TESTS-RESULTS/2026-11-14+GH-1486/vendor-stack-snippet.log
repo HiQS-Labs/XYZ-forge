@@ -1,0 +1,8 @@
+== vendor-stack step 1 snippet as written, run from <repos>/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14-verify/skills at 7366dd52
+HARNESS="$(git rev-parse --show-toplevel)"              # run from inside the Forge checkout
+[ -x "$HARNESS/relay-automation/xyz-vendor.sh" ] || echo "not a Forge checkout: $HARNESS"
+PDDA="$("$HARNESS/skills/4-occasional/vendor-stack/find-pdda.sh" --root)"     # exits non-zero if unresolved
+--
+rc=0
+HARNESS=<repos>/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14-verify
+PDDA=<repos>/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14-verify

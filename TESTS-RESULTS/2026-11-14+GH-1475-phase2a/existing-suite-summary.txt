@@ -1,0 +1,17 @@
+# Existing suite runs (TMPDIR=<isolated scratch>; no new tests, GH-831)
+## run 1: bash test/gh436-merge-cleanup.sh
+Ran 227 tests in 177.604s
+FAILED (failures=5)
+rc=1
+## run 2: bash test/gh436-merge-cleanup.sh
+Ran 227 tests in 179.786s
+OK
+rc=0
+## run 3: bash test/gh436-merge-cleanup.sh
+Ran 227 tests in 185.782s
+OK
+rc=0
+
+run 1 (commit 401be6d42, before the helper fix): 5 failures, all in the updated assert_repinned helper, which read the re-pin line from stderr while log() writes stdout; helper changed to assert MERGED + no deferral + published selection pins the merged head.
+run 2 (working tree: 401be6d42 plus the helper fix, which was then committed in 323b3d0e3): OK
+run 3 (323b3d0e3, after the inspect_open_handles fix): OK

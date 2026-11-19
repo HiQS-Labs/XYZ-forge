@@ -1,0 +1,258 @@
+test_h1_two_hubs_and_clean_members_recommend_passes (__main__.Manual.test_h1_two_hubs_and_clean_members_recommend_passes) ... ok
+test_h2_hub_found_by_degree_is_labelled_heuristic (__main__.Manual.test_h2_hub_found_by_degree_is_labelled_heuristic) ... ok
+test_h3_conflicts_spread_across_the_queue_stay_group (__main__.Manual.test_h3_conflicts_spread_across_the_queue_stay_group) ... ok
+test_h3b_clean_set_that_conflicts_in_sequence_stays_group (__main__.Manual.test_h3b_clean_set_that_conflicts_in_sequence_stays_group)
+Pairwise-clean members that conflict only cumulatively are hard to build with text files, so the ... ok
+test_h3c_small_queue_rejects_bad_clean_fold_and_majority (__main__.Manual.test_h3c_small_queue_rejects_bad_clean_fold_and_majority) ... ok
+test_h4_failed_step_withholds_the_recommendation (__main__.Manual.test_h4_failed_step_withholds_the_recommendation) ... ok
+test_h4b_failure_inside_the_clean_set_fold_withholds_too (__main__.Manual.test_h4b_failure_inside_the_clean_set_fold_withholds_too) ... ok
+test_h5_a_pr_that_hard_depends_on_a_hub_waits_for_it (__main__.Manual.test_h5_a_pr_that_hard_depends_on_a_hub_waits_for_it) ... ok
+test_h6_unchanged_shapes (__main__.Manual.test_h6_unchanged_shapes) ... ok
+test_h7_cli_dry_run_then_pass_one_execute (__main__.Manual.test_h7_cli_dry_run_then_pass_one_execute) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 53.668s
+
+OK
+Landing forecast (GH-1452, advisory; origin/development @ d5ad0af8cf):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 2
+Conflict hubs (GH-1470): 2 — conflict with the base: #1, #6; picked by conflict degree (greedy heuristic, not a proven minimum): none
+Clean once hubs are set aside: 6 of 8 — #2, #3, #4, #5, #7, #8
+Clean-set fold (hubs set aside, sequence order): clean through all 6
+Recommendation: direct in passes — 2 conflict hub(s) (#1, #6); 6 of 8 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+  pass 1: --prs 2,3,4,5,7,8   (the clean set; `direct`, using the pins from this dry run)
+  pass 2: --prs 1,6   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+EVIDENCE H1 passes: {"hubs": {"base": [1, 6], "clean_set": [2, 3, 4, 5, 7, 8], "dependents": [], "fold": {"state": "clean"}, "greedy": [], "later": [1, 6], "members": [1, 6]}, "order": [1, 2, 3, 4, 5, 6, 7, 8], "pairs": [[1, 3], [4, 6]], "passes": [[2, 3, 4, 5, 7, 8], [1, 6]], "reason": "2 conflict hub(s) (#1, #6); 6 of 8 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)", "recommendation": "direct", "seq": {"1": "conflict", "2": "conditional", "3": "conditional", "4": "conditional", "5": "conditional", "6": "conditional", "7": "conditional", "8": "conditional"}}
+EVIDENCE H1 pass 1 forecast on its own: {"hubs": null, "reason": "no conflicts found", "recommendation": "direct"}
+Landing forecast (GH-1452, advisory; origin/development @ fb8f05b963):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | clean | clean | — | — | 0 | medium |
+| #2 | clean | conflict | CHANGELOG.md | — | 0 | medium |
+| #3 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | low |
+| #6 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | low |
+| #7 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | low |
+Members #1 and #2 conflict with each other on: CHANGELOG.md
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #1 and #4 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 0
+Conflict hubs (GH-1470): 1 — conflict with the base: none; picked by conflict degree (greedy heuristic, not a proven minimum): #1
+Clean once hubs are set aside: 6 of 7 — #2, #3, #4, #5, #6, #7
+Clean-set fold (hubs set aside, sequence order): clean through all 6
+Recommendation: direct in passes — 1 conflict hub(s) (#1); 6 of 7 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+  pass 1: --prs 2,3,4,5,6,7   (the clean set; `direct`, using the pins from this dry run)
+  pass 2: --prs 1   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+EVIDENCE H2 greedy hub: {"alone_conflicts": [], "hubs": {"base": [], "clean_set": [2, 3, 4, 5, 6, 7], "dependents": [], "fold": {"state": "clean"}, "greedy": [1], "later": [1], "members": [1]}, "passes": [[2, 3, 4, 5, 6, 7], [1]], "reason": "1 conflict hub(s) (#1); 6 of 7 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)", "recommendation": "direct"}
+Landing forecast (GH-1452, advisory; origin/development @ d604ef8c9f):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | clean | clean | — | — | 0 | medium |
+| #2 | clean | conflict | CHANGELOG.md | — | 0 | medium |
+| #3 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | medium |
+| #6 | clean | conditional (not simulated after #2: conflict) | — | — | 0 | low |
+Members #1 and #2 conflict with each other on: CHANGELOG.md
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #1 and #4 conflict with each other on: CHANGELOG.md
+Members #1 and #5 conflict with each other on: CHANGELOG.md
+Members #2 and #3 conflict with each other on: CHANGELOG.md
+Members #2 and #4 conflict with each other on: CHANGELOG.md
+Members #2 and #5 conflict with each other on: CHANGELOG.md
+Members #3 and #4 conflict with each other on: CHANGELOG.md
+Members #3 and #5 conflict with each other on: CHANGELOG.md
+Members #4 and #5 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 0
+Conflict hubs (GH-1470): 4 — conflict with the base: none; picked by conflict degree (greedy heuristic, not a proven minimum): #2, #3, #4, #5
+Clean once hubs are set aside: 2 of 6 — #1, #6
+Clean-set fold (hubs set aside, sequence order): clean through all 2
+Recommendation: group — 4 of 6 PRs would have to wait for a second pass (4 conflict hub(s); 2 clean); the conflicts are spread across the queue, not held by a few hubs
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H3 spread conflicts: {"hubs": {"base": [], "clean_set": [1, 6], "dependents": [], "fold": {"state": "clean"}, "greedy": [2, 3, 4, 5], "later": [2, 3, 4, 5], "members": [2, 3, 4, 5]}, "passes": null, "reason": "4 of 6 PRs would have to wait for a second pass (4 conflict hub(s); 2 clean); the conflicts are spread across the queue, not held by a few hubs", "recommendation": "group"}
+Landing forecast (GH-1452, advisory; origin/development @ bbd5ca474e):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 2
+Conflict hubs (GH-1470): 2 — conflict with the base: #1, #6; picked by conflict degree (greedy heuristic, not a proven minimum): none
+Clean once hubs are set aside: 6 of 8 — #2, #3, #4, #5, #7, #8
+Clean-set fold (hubs set aside, sequence order): conflict at #4 (CHANGELOG.md); later members not simulated
+Recommendation: group — 2 conflict hub(s) (#1, #6); 6 of 8 PRs are clean once they are set aside, but that set still conflicts in sequence at #4; one combined resolution beats repeated repairs
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H3b clean-set fold conflict (simulated): {"fold": {"at": 4, "b1_eligible": ["CHANGELOG.md"], "needs_review": [], "state": "conflict"}, "fold_calls": [[1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 7, 8]], "passes": null, "reason": "2 conflict hub(s) (#1, #6); 6 of 8 PRs are clean once they are set aside, but that set still conflicts in sequence at #4; one combined resolution beats repeated repairs", "recommendation": "group"}
+EVIDENCE H3c small clean-fold conflict: {"passes": null, "recommendation": "group"}
+EVIDENCE H3c dependent majority: {"hubs": {"base": [4], "clean_set": [3], "dependents": [1, 2], "fold": {"state": "clean"}, "greedy": [], "later": [1, 2, 4], "members": [4]}, "recommendation": "group"}
+Landing forecast (GH-1452, advisory; origin/development @ 4a5526caf8):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | unknown | conditional (not simulated after #1: conflict) | — | — | 0 | unknown |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+#5: unknown — fetch of pull/5/head failed: fatal: couldn't find remote ref pull/5/head
+PRs a B1 repair would defer in the run that repairs them: 2
+Recommendation: none — forecast incomplete, no recommendation: #5 (fetch of pull/5/head failed: fatal: couldn't find remote ref pull/5/head)
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H4 failed fetch: {"hubs": null, "passes": null, "reason": "forecast incomplete, no recommendation: #5 (fetch of pull/5/head failed: fatal: couldn't find remote ref pull/5/head)", "recommendation": null, "status5": "unknown"}
+Landing forecast (GH-1452, advisory; origin/development @ 3d6fe72fda):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 2
+Conflict hubs (GH-1470): 2 — conflict with the base: #1, #6; picked by conflict degree (greedy heuristic, not a proven minimum): none
+Clean once hubs are set aside: 6 of 8 — #2, #3, #4, #5, #7, #8
+Clean-set fold (hubs set aside, sequence order): unknown at #3 (usage: git merge-tree (simulated old git)); later members not simulated
+Recommendation: none — forecast incomplete, no recommendation: clean-set fold did not run at #3 (usage: git merge-tree (simulated old git))
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H4b clean-set fold unknown (simulated): {"passes": null, "reason": "forecast incomplete, no recommendation: clean-set fold did not run at #3 (usage: git merge-tree (simulated old git))", "recommendation": null}
+EVIDENCE H4b merge-tree fails everywhere: {"hubs": null, "passes": null, "recommendation": null}
+Landing forecast (GH-1452, advisory; origin/development @ d650040f7a):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 2
+Conflict hubs (GH-1470): 2 — conflict with the base: #1, #6; picked by conflict degree (greedy heuristic, not a proven minimum): none
+Hard-depend on a hub, so they wait for it: #7
+Clean once hubs are set aside: 5 of 8 — #2, #3, #4, #5, #8
+Clean-set fold (hubs set aside, sequence order): clean through all 5
+Recommendation: direct in passes — 2 conflict hub(s) (#1, #6); 5 of 8 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+  pass 1: --prs 2,3,4,5,8   (the clean set; `direct`, using the pins from this dry run)
+  pass 2: --prs 1,6,7   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+EVIDENCE H5 dependent of a hub: {"hubs": {"base": [1, 6], "clean_set": [2, 3, 4, 5, 8], "dependents": [7], "fold": {"state": "clean"}, "greedy": [], "later": [1, 6, 7], "members": [1, 6]}, "passes": [[2, 3, 4, 5, 8], [1, 6, 7]]}
+Landing forecast (GH-1452, advisory; origin/development @ 4fab54eb02):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | clean | clean | — | — | 0 | low |
+| #2 | clean | clean | — | — | 0 | low |
+| #3 | clean | clean | — | — | 0 | low |
+PRs a B1 repair would defer in the run that repairs them: 0
+Recommendation: direct — no conflicts found
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H6 disjoint: {"hubs": null, "passes": null, "reason": "no conflicts found", "recommendation": "direct"}
+Landing forecast (GH-1452, advisory; origin/development @ 2b8c1a149a):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | clean | clean | — | — | 0 | low |
+| #2 | clean | clean | — | — | 0 | low |
+| #3 | clean | clean | — | — | 0 | low |
+| #4 | conflict | conflict | CHANGELOG.md | — | 0 | medium |
+PRs a B1 repair would defer in the run that repairs them: 1
+Conflict hubs (GH-1470): 1 — conflict with the base: #4; picked by conflict degree (greedy heuristic, not a proven minimum): none
+Clean once hubs are set aside: 3 of 4 — #1, #2, #3
+Clean-set fold (hubs set aside, sequence order): clean through all 3
+Recommendation: direct — 1 conflict(s) (#4), all on potentially B1-eligible paths
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H6 one conflict: {"hubs": {"base": [4], "clean_set": [1, 2, 3], "dependents": [], "fold": {"state": "clean"}, "greedy": [], "later": [4], "members": [4]}, "passes": null, "reason": "1 conflict(s) (#4), all on potentially B1-eligible paths", "recommendation": "direct"}
+Landing forecast (GH-1452, advisory; origin/development @ a56095894d):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 2
+Conflict hubs (GH-1470): 2 — conflict with the base: #1, #6; picked by conflict degree (greedy heuristic, not a proven minimum): none
+Clean once hubs are set aside: 6 of 8 — #2, #3, #4, #5, #7, #8
+Clean-set fold (hubs set aside, sequence order): clean through all 6
+Recommendation: direct in passes — 2 conflict hub(s) (#1, #6); 6 of 8 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)
+  pass 1: --prs 2,3,4,5,7,8   (the clean set; `direct`, using the pins from this dry run)
+  pass 2: --prs 1,6   (after pass 1 has landed: dry run again to re-pin and re-forecast; each hub expects one B1 repair, a new head, fresh checks and a re-pin)
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+Blind spot: passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair
+
+Forecast advice, not a decision. To act on it, run --execute once per pass with that pass's
+--prs list. A pass of 3 or more PRs needs your own reason:
+  --landing-plan direct --landing-reason "<your reason>"
+
+Queue holds 8 PRs. GH-1066 requires an explicit decision under --execute:
+  --landing-plan direct|group --landing-reason "<justification>"
+  • direct: Sequential landing on development (best for small/independent PRs).
+  • group:  Combine candidates into a single integration branch to minimize gate churn.
+See skills/2-daily/merge-cleanup/SKILL.md for guidance.
+
+================================================================================
+
+EVIDENCE H7 dry run: {"passes": [[2, 3, 4, 5, 7, 8], [1, 6]], "rc": 0, "recommendation": "direct"}
+EVIDENCE H7 comparison: {"pass_one": {"forecast_base": "a56095894d6e8d4750a245b4fc4415b96670ba95", "forecast_pinned_at": "2026-11-14T19:28:58Z", "pass": 1, "recommendation": "direct in passes", "stale": false, "stale_reasons": [], "state": "match"}, "pass_one_moved_heads": {"forecast_base": "a56095894d6e8d4750a245b4fc4415b96670ba95", "forecast_pinned_at": "2026-11-14T19:28:58Z", "pass": 1, "recommendation": "direct in passes", "stale": true, "stale_reasons": ["pinned heads differ from the forecast's"], "state": "match"}, "whole_queue_direct": {"forecast_base": "a56095894d6e8d4750a245b4fc4415b96670ba95", "forecast_pinned_at": "2026-11-14T19:28:58Z", "recommendation": "direct in passes", "stale": false, "stale_reasons": [], "state": "override"}, "whole_queue_group": {"forecast_base": "a56095894d6e8d4750a245b4fc4415b96670ba95", "forecast_pinned_at": "2026-11-14T19:28:58Z", "recommendation": "direct in passes", "stale": false, "stale_reasons": [], "state": "override"}}
+EVIDENCE H7 exit-5 refusal: {"lines": ["The dry run's landing forecast recommends: direct in passes \u2014 2 conflict hub(s) (#1, #6); 6 of 8 PRs are clean once they are set aside and fold clean in sequence; land those first, then the hub(s)", "  pass 1: --prs 2,3,4,5,7,8", "  pass 2: --prs 1,6"], "rc": 5}
+EVIDENCE H7 pass 1 execute: {"comparison": ["merge-cleanup: Landing forecast (GH-1452): your decision 'direct' is match against the dry run's recommendation (direct in passes)"], "err_tail": [], "rc": 4, "states": {"1": "OPEN", "2": "MERGED", "3": "MERGED", "4": "MERGED", "5": "MERGED", "6": "OPEN", "7": "MERGED", "8": "MERGED"}}
+EVIDENCE H7 pass 2 dry run: {"b1": [], "forecast_key": false, "pinned": ["1", "6"], "rc": 3}

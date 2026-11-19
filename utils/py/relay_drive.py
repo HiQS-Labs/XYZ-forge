@@ -372,9 +372,7 @@ def main():
     def file_status():
         try:
             with open(relay_file, 'r') as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        return line.split(":", 1)[1].strip()
+                return relay_attest.header_field(f.read(), "STATUS")
         except: pass
         return ""
 
@@ -687,13 +685,10 @@ def main():
 
     def restore_status_line(prev_status):
         with open(relay_file, "r", encoding="utf-8", errors="surrogateescape") as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            if line.startswith("STATUS:"):
-                lines[i] = f"STATUS: {prev_status}\n"
-                break
+            text = f.read()
+        text, _n = relay_attest.set_header_field(text, "STATUS", prev_status)
         with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
-            f.writelines(lines)
+            f.write(text)
 
     def judge_terminal(ns, role, pre, shim_ok=True):
         """Judge the turn the driver just watched. Returns a verdict tuple; the CALLER picks the exit
@@ -738,6 +733,14 @@ def main():
             eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
             return ("refused", "review-body-rewritten")
         added = post_canon[added_start:]
+        # A reviewer block whose own last verdict line says the review failed cannot close the relay
+        # as Approved. Only an explicit failing word refuses; a block with no verdict line is judged
+        # by the other checks, as before.
+        own_verdict = relay_attest.last_verdict(added)
+        if ns == "Approved" and relay_attest.verdict_contradicts_approval(own_verdict):
+            eprint(f"relay-drive: STATUS {ns} but the reviewer's own last verdict line in this turn reads "
+                   f"'{own_verdict}' — an approval over a failing verdict is refused")
+            return ("refused", "approved-over-fail")
         if not added.strip():
             return ("refused", "empty-approval")
         # GH-1428: marathon arms this only when the phase gate is one the reviewer may run. An
@@ -990,6 +993,11 @@ def main():
             verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
             if verdict[0] == "forged":
                 write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
+            else:
+                # Exit 5 is also the review-once "changes requested" handback below; the reason file
+                # says which of the two this run was. The exit code itself is unchanged.
+                write_escalation_reason(f"turn-failed-rc{res_code}")
+            eprint(f"relay-drive: the {actor} turn itself failed (shim exit {res_code}) — this is a failed turn, not a review handback")
             if res_code == 7:
                 restore_checkout_after_timeout(progress_main_tree, checkout_before)
             sys.exit(res_code)
@@ -1074,7 +1082,8 @@ def main():
                 # exit code alone lets a genuinely failed review read as still open.
                 with open(relay_file, 'r') as f:
                     content = f.read()
-                content, n_subs = re.subn(r'^STATUS:\s*.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
+                # Bold/backtick tolerant, like relay_attest.header_field (the reader of this line).
+                content, n_subs = re.subn(r'^[`*]*STATUS[`*]*:.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
                 if n_subs == 0:
                     eprint(f"relay-drive: no STATUS: line in {relay_file} -- the escalation write did not land.")
                     eprint("relay-drive: refusing to report an escalation that was never written (GH-204).")
@@ -1144,6 +1153,7 @@ def main():
                 if review_blocks_added(rf_text_before, rf_text_after) > 0:
                     print(f"relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: {ns}); non-approval handback, not a stall")
                     xyz_relay_emit("orange")
+                    write_escalation_reason("review-handback")  # exit 5 is also a failed turn's code
                     sys.exit(5)
                 eprint("relay-drive: review-once — the relay file moved but the reviewer appended NO review block: a zero-output turn is not review coverage (GH-397) — genuine stall")
                 xyz_relay_emit("red")
