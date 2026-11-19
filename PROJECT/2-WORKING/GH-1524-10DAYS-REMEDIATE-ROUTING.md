@@ -21,7 +21,7 @@ Tracking issue: [#1524](https://github.com/HiQS-Labs/XYZ-forge/issues/1524)
 
 | What was just completed | What's next |
 |---|---|
-| Provisioned isolated task clone at `5b861e85d5f4`, registered GH-1524 pickup in `releases.db`, and authored surgical plan | Run Codex Plan QA relay (`relay-xyz`), admit task, implement docs edits, verify with PDDA + smoke walkthrough, and run Final Codex QA |
+| Codex Plan QA Approved in round 2 (`f54231c2c15d`), admitted GH-1524 (`--accepted-start`), implemented docs edits in `10days/SKILL.md`, `flywheel/SKILL.md`, `ARCHITECTURE.md`, and `CHANGELOG.md`, and ran PDDA + smoke/red-control checks (`TESTS-RESULTS/2026-11-19+GH-1524/`) | Run Codex Final QA relay (`relay-xyz`), push through pre-push gate, open ready PR against `development`, post closeout comment on `#1524`, and retire task checkout |
 
 ## Preflight Bet Check (Solution-Fit)
 
@@ -85,13 +85,13 @@ Tracking issue: [#1524](https://github.com/HiQS-Labs/XYZ-forge/issues/1524)
 
 ## Acceptance
 
-- [ ] `skills/3-weekly/10days/SKILL.md` Step 3 defines `HAS-PR` (recording open PR numbers/state) and hands `HAS-PR` items to `pr-minder` (behind/conflicting/failing/stale) or `merge-cleanup` (green/mergeable) without entering Step 4–7 build paths.
-- [ ] `skills/3-weekly/10days/SKILL.md` defines three explicit post-Step-3 modes (`remediate`, `serial`, `marathon` default) reusing existing `conveyor`, `jog`, `start-task`, `kickstart`, and Steps 5–7 with zero new queues or runners.
-- [ ] `serial` mode documents both multi-harness (`conveyor → jog`) and single-harness (e.g. Claude-Code-only via `start-task` with explicit `Independent review did not run.` disclosure per `start-task`, deferring cross-model review to PR review) without weakening multi-harness defaults or auto-merging PRs.
-- [ ] `skills/3-weekly/10days/SKILL.md` and `skills/2-daily/flywheel/SKILL.md` agree on `10days` ownership and operator-selected `serial` handoff with no contradiction.
-- [ ] `skills/3-weekly/10days/SKILL.md` Step 8 Report includes `HAS-PR` items and the selected execution mode.
-- [ ] `ARCHITECTURE.md` Skills Index includes `pr-minder` pointing to `skills/2-daily/pr-minder/SKILL.md`.
-- [ ] `ci-route.sh pull_request` classifies the diff as `docs_only=true / tier=1`, `utils/pdda/pdda.sh run` exits 0 with 0 errors, `releases_app.py check` exits 0 with 0 failures, and manual smoke walkthroughs (main path + adjacent path) are retained under `TESTS-RESULTS/` with `provenance.jsonl`.
+- [x] `skills/3-weekly/10days/SKILL.md` Step 3 defines `HAS-PR` (recording open PR numbers/state) and hands `HAS-PR` items to `pr-minder` (behind/conflicting/failing/stale) or `merge-cleanup` (green/mergeable) without entering Step 4–7 build paths.
+- [x] `skills/3-weekly/10days/SKILL.md` defines three explicit post-Step-3 modes (`remediate`, `serial`, `marathon` default) reusing existing `conveyor`, `jog`, `start-task`, `kickstart`, and Steps 5–7 with zero new queues or runners.
+- [x] `serial` mode documents both multi-harness (`conveyor → jog`) and single-harness (e.g. Claude-Code-only via `start-task` with explicit `Independent review did not run.` disclosure per `start-task`, deferring cross-model review to PR review) without weakening multi-harness defaults or auto-merging PRs.
+- [x] `skills/3-weekly/10days/SKILL.md` and `skills/2-daily/flywheel/SKILL.md` agree on `10days` ownership and operator-selected `serial` handoff with no contradiction.
+- [x] `skills/3-weekly/10days/SKILL.md` Step 8 Report includes `HAS-PR` items and the selected execution mode.
+- [x] `ARCHITECTURE.md` Skills Index includes `pr-minder` pointing to `skills/2-daily/pr-minder/SKILL.md`.
+- [x] `ci-route.sh pull_request` classifies the diff as `docs_only=true / tier=1`, `utils/pdda/pdda.sh run` exits 0 with 0 errors, `releases_app.py check` exits 0 with 0 failures, and manual smoke walkthroughs (main path + adjacent path) are retained under `TESTS-RESULTS/` with `provenance.jsonl`.
 
 ## Rating Rationale
 
@@ -104,4 +104,4 @@ Tracking issue: [#1524](https://github.com/HiQS-Labs/XYZ-forge/issues/1524)
 
 ## Lessons Learned (For Future Agents)
 
-Pending implementation evidence; `NO_ENTRY` at planning time.
+`NO_ENTRY` — docs-only instruction composition with paper walkthroughs only; no live runtime run yet (single unexecuted instruction edit would be confounded under `LESSONS-LEARNED.md` admission rules).
