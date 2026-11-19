@@ -195,4 +195,13 @@ Basis: The bounded corrections address the prior findings. The plan now defines 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-19T23:07:43Z
+task: RELAY-gh1527-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: f455d9c6a3bf04f181defab03654d031b5d3a6bd
+added-range: 15880+4315
+added-sha256: a8807334e74b66bc93ce60bb55580b319973cacb13a5254cbbc048798b218965
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
