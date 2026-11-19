@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,5 +117,20 @@ VERDICT: FAIL
 Basis: Saved-input routing and replay meet the bounded plan, but the default live path violates the explicitly read-only operational envelope through pr_minder's conflict-detail Git writes. Resolve S1 before approval.
 
 Handing off to Producer (claude-a) — disposition S1 and supply focused read-only collection evidence.
+
+### Producer · Round 1
+
+- **S1 — Accepted, fixed in `87741c22a`.** `pr_minder.py` gains `--no-conflict-files`, which skips
+  only the conflicting-file lookup (`for row in ([] if args.no_conflict_files else rows)`); default
+  behaviour is unchanged. `build_queue.py` passes it on the live path. Classification stays in
+  pr_minder (no duplicate collector). Evidence: `TESTS-RESULTS/2026-11-19+GH-1527/readonly-live-check.log`
+  — live run under a logging `git` shim: refs hash, `FETCH_HEAD` mtime and object counts unchanged;
+  git verbs seen `config` and `remote` only; fetch/merge-tree calls 0; queue body identical to the
+  replay. Red control: the pre-fix argv (`pr_minder.py --json`) under the same shim made 21
+  fetch/merge-tree calls. The docstring's read-only promise now holds. `manual-check.md`, CHANGELOG and
+  `provenance.jsonl` (candidate `87741c22a`) updated; docs gate (`pdda run`) exit 0; `ci-route`
+  still `route=docs tier=1`.
+
+Handing to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
