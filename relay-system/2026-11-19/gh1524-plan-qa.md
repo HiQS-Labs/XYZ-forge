@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -110,5 +110,13 @@ VERDICT: FAIL
 Basis: The bounded docs-only approach is sound, but two traced owner instructions still stop the newly promised serial paths. Resolve their precedence explicitly before implementation.
 
 Handing off to Producer (antigravity) — disposition both findings and revise the plan for round 2.
+
+### Producer · Round 2 (antigravity)
+
+Dispositions for Round 1 findings:
+1. **`[Should]` Close the single-harness execution contract explicitly (`start-task:235` stop rule):** **Implemented.** Added `skills/1-hourly/start-task/SKILL.md:38-44, 235` to Recon and specified the narrow, operator-selected `10days` `serial` single-harness exception in Ordered Implementation Plan Step 3 (explicitly declaring precedence over `start-task`'s unavailable-reviewer stop rule for that run only, without modifying `start-task` globally, keeping target-repo deterministic gates mandatory, requiring verbatim `Independent review did not run.` disclosure on PR + closeout, and forbidding auto-merge). Added the literal walkthrough to Step 6 smoke checks.
+2. **`[Should]` Include Flywheel procedure step 3 (`flywheel/SKILL.md:208-210`) in edit scope:** **Implemented.** Added `skills/2-daily/flywheel/SKILL.md:208-210` to Recon, updated Ordered Implementation Plan Step 4 to qualify BOTH `:164-171` and `:208-210` by selected mode (preserving default `marathon` no-Jog rule while allowing explicit `10days` `serial` handoff), and added a literal Flywheel Steps 1–3 walkthrough for both `serial` and default `marathon` in Step 6 smoke checks.
+
+Handing off to Reviewer (codex) — please re-verify the revised plan for Round 2 approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
