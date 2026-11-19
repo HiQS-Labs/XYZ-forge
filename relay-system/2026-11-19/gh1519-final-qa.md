@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -85,5 +85,22 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis; set STATUS Approve
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+Block — the code change is sound by inspection, but the cited evidence needs provenance before approval.
+
+- [Pass] The added prerequisite uses the existing refusal path, before suites and before `--print-mode` exits: `validate.sh:1035` includes `mypy`, and `validate.sh:1041` names both the missing modules and `pip install -r requirements-dev.txt`, then exits 3 at `validate.sh:1042`. Narrow probe (not the gate): `python3` read `validate.sh` lines 1033–1043, asserted the extracted loop was nonempty and contained `mypy`, then ran only that block with `/bin/bash -c` and `PATH=/opt/homebrew/bin:$PATH`. Probe driver exit 0; block exit 3 in 0.392s; decisive output: `python3 (/opt/homebrew/bin/python3) version 3.14.7; missing modules: mypy; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt)`. This independently witnesses the missing-mypy decision, not a full gate run.
+- [Pass] Ordinary installation compatibility is appropriate: `test/test_python_layer.py:48` invokes `sys.executable -m mypy`; the gate and pytest use `python3` (`validate.sh:1036`, `validate.sh:1451`). Importing the installed package is a proportionate availability probe, though it does not prove mypy's execution or type-check result. Hosted callers install the full requirements at `.github/workflows/ci.yml:184`, `.github/workflows/ci.yml:402`, and `.github/workflows/wave-reconcile.yml:52`. `requirements-dev.txt:1` includes `mypy==1.14.1`.
+- [Pass] The GH-251 literal pins remain compatible: `test/gh251-validate-pytest-skip.sh:60` matches `missing modules: pytest`, and line 78 matches `missing modules: yaml`; adding mypy does not change either substring when the other dependencies are installed. Nested validators and pre-push introspection use the same ambient interpreter, so a healthy outer run also satisfies this new prerequisite (`test/gh544-parallel-default.sh:63`, `githooks/pre-push:235`). Missing mypy intentionally refuses introspection too, consistent with its existing toolchain-diagnostic contract (`validate.sh:1047`–1050).
+- [Should] Retain provenance for the smoke runs cited by `CHANGELOG.md:9`. The evidence directory contains only `smoke.log`; the required `provenance.jsonl` is absent. Read-only probe: `python3` evaluated `[p.name for p in Path('TESTS-RESULTS/2026-11-19+GH-1519').iterdir()]` and `Path('TESTS-RESULTS/2026-11-19+GH-1519/provenance.jsonl').exists()`; exit 0, decisive output `['smoke.log']` and `False`. AGENTS.md requires retained, committed provenance for every run cited in a decision/changelog. Fix: add the existing-format provenance identifying candidate revision, exact commands/arguments, interpreter/environment, exit statuses and retained output; distinguish the print-mode smoke from suite execution. No runtime behavior change requested.
+- [Unverified — needs clone run] `smoke.log:2`–3 records the dependency refusal and lines 6–9 record mode introspection; lines 11–12 report GH-251's four passing checks. It supplies neither an exact candidate revision nor a full healthy gate result. I did not run validate.sh, suites, pytest, or fixtures here, and do not infer a later configured gate will qualify this candidate. Preserve or link existing disposable-clone evidence if claiming the full gate passed.
+- [Unverified — no delivery-refusal evidence] Setup question 4: treating a successful process/relay status or print-mode exit 0 as proof of an artifact change could report an unchanged candidate delivered. `smoke.log:1`–14 demonstrates missing-dependency refusal, not unchanged-candidate delivery refusal. If that additional claim is intended, supply the actual delivery-check command and its refusal output; otherwise explicitly limit the evidence to GH-1519's dependency preflight. No delivery mechanism change requested.
+
+swept file: yes
+VERDICT: FAIL
+Basis: Swept validate.sh's prologue, registry, selection, execution, retry, summary and receipt paths and all of smoke.log. No additional proven pre-existing runtime defect found in the reviewed artifacts. The two-line preflight extension meets the narrow missing-mypy behavior; approval is held for the explicit provenance requirement, not an invented requirement for a new suite. Graph project inventory had no matching task worktree; the nearest Forge index generation was 2026-11-18T19:39:07Z and cannot establish this candidate's freshness, so conclusions use direct source reads. Healthy full execution and unchanged-delivery refusal remain unverified as stated above.
+
+Handing off to Producer (claude-a) — retain provenance and disposition the evidence limitations, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
