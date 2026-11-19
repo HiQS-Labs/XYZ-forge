@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-17 — GH-1509: Kickstart skill for observer-led outer-loop child with session recovery
+
+- Added `skills/1-hourly/kickstart/SKILL.md` codifying the operator's assisted factory pattern:
+  an observer and session-recovery parent delegates outer-loop execution to exactly one child session,
+  composing Flywheel, Conveyor, and Jog with non-overlapping responsibilities and no competing writers.
+- Daily-goal intake routes existing issues directly to Conveyor and uncaptured prose through issue-creation
+  owners (`idea`/repo SOP) without premature execution readiness claims.
+- Concrete handoff states define normal completion, task-local holds obeying owner-specific continuation
+  semantics (e.g. Jog GH-1400 wake), shared unsafe stops, and session recovery.
+- Recovery protocol enforces stopped-ownership proof (including child-spawned builders/writers), refuses
+  replacement for live/paused/unknown owners, resolves saved results, and adheres to the recovery ladder
+  (`resume` -> `retry-gate` -> `retry-build`) within remaining unexpired budgets.
+- Indexed in `ARCHITECTURE.md` (Skills Index).
+- Evidence: `TESTS-RESULTS/2026-11-17+GH-1509/manual_walkthrough.md` and `provenance.jsonl`.
+
 ## 2026-11-16 — GH-1498: `/pr-minder` and an author-activity PR clock
 
 New skill `skills/2-daily/pr-minder/` runs one manual pass over the current repo's open PRs. Each PR gets a rung on an age ladder (fresh, nudge, repair, decide, retire), with a matching action. Plan mode writes nothing. `--apply` updates behind branches (at most 2 per stale episode), sets `pr-minder:stale`/`pr-minder:decide` and keeps one owned comment per PR, with conflict files, a repair command or a re-cut option. It never merges, closes, rebases or retargets. Held and stacked-under-held PRs are report-only. Each PR is re-checked before writes (head, base, title/body/label holds), and every write is receipted.

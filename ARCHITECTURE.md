@@ -59,6 +59,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
 | [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |
 | [idea](skills/1-hourly/idea/SKILL.md) | File a GitHub issue directly with operator alignment, targeted recon, architectural sketch, and EGM paraphrase-first consult review; zero disk footprint, no HQ or ledger. |
+| [kickstart](skills/1-hourly/kickstart/SKILL.md) | Codify the operator's assisted factory pattern with an observer parent delegating an outer-loop child. |
 | [ponytail](skills/1-hourly/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [recon](skills/1-hourly/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |

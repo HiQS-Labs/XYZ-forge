@@ -1,0 +1,207 @@
+---
+name: kickstart
+description: >-
+  Codify the operator's assisted factory pattern: an observer/session-recovery parent
+  session delegates the actual outer loop to one child session, composing Flywheel,
+  Conveyor, and Jog with bounded evidence-backed adaptation and session recovery. Use
+  for "kickstart", "start the factory outer loop", "kickstart daily goals", or when
+  coordinating an observer-led outer loop.
+---
+
+# Kickstart — observer-led outer-loop child with bounded session recovery
+
+Codify the operator's assisted factory pattern: invoking `kickstart` creates an
+observer/session-recovery parent session that delegates the actual outer loop to
+exactly one child session. The parent maintains supervision until the operator
+explicitly approves a less-supervised mode based on evidence.
+
+This skill composes existing Forge primitives — [Flywheel](../../2-daily/flywheel/SKILL.md),
+[Conveyor](../conveyor/SKILL.md), and [Jog](../../2-daily/jog/SKILL.md) — alongside
+native host delegation and completion events. It introduces no new queue, runtime
+scheduler, database schema, daemon, or test suite.
+
+---
+
+## 1. Disjoint Parent vs Child Responsibilities
+
+Kickstart enforces a strict, non-overlapping separation of duties between the parent
+session and the single delegated outer-loop child session. There are never competing writers.
+
+### Parent (Observer & Session Recovery)
+1. **Intake Resolution:** Resolves target repository, raw daily-goals requests, selected
+   scope/holds, exact execution mode, provider/subscription preferences, and existing budgets.
+2. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts
+   the outer-loop child through the host's supported delegation mechanism (`delegate_task`
+   or platform native delegate). Never starts multiple competing child sessions.
+3. **Passive Observation:** Observes native completion events, questions, or completion
+   watches. Does not poll a running delegate or PR (`task_status`, `sleep` loops, `Monitor`,
+   `ScheduleWakeup`).
+4. **Unsupported Host Guard:** If host capabilities do not support the required delegation
+   mechanism or completion event/watch, the parent reports the missing capability explicitly,
+   leaves a resumable handoff with pending state and next owner, and halts. It never pretends,
+   starts a background daemon/cron, or falls back to direct unassisted execution.
+5. **Session Recovery:** On session drops, interruptions, pauses, or stops, verifies stopped
+   ownership across the child session and any child-spawned builders/writers before any
+   redispatch. Unknown or live ownership holds; never retries an unknown outcome. Preserves
+   original deadlines, attempt counters, and authority.
+6. **Bounded Assisted Repair:** Performs explicit, bounded parent repair when needed, and
+   reports assisted versus unattended operation truthfully.
+7. **Authority Boundary:** Never merges PRs, deploys code, or updates installed skills
+   without explicit separate operator authorization.
+
+### Child (Outer-Loop Executor)
+1. **Skill Composition:** Composes existing skills — Conveyor for raw intake and preparation,
+   Flywheel for adaptive loop execution, Jog for serial execution and recovery, start-task
+   for task execution, and relay-xyz for independent QA. Does not start another supervisor hierarchy.
+2. **Execution & Evidence:** Drives normal task dispatch, build, test, review, and evidence
+   collection within the assigned budgets.
+3. **Execution Owner Semantics:** Follows the selected execution owner's exact continuation
+   and stop semantics. On task-local holds, advances independent eligible ready work only
+   when authorized by that owner's rules (e.g. Jog GH-1400 wake permits continuing after a
+   newly approved published PR or a validated exit 5 pre-advance-failed receipt, but halts on
+   readiness refusal, lock contention, guard-killed gate, crash, missing/mismatched receipt,
+   or clone ledger change).
+4. **Shared Unsafe Stops:** On shared unsafe conditions (lock contention, git safety
+   violations, ledger drift, exhausted global budget) or owner-mandated stops, halts dispatch
+   immediately, leaves a resumable checkpoint with observed evidence, and reports to parent.
+
+---
+
+## 2. Daily-Goal Intake and Preparation Boundary
+
+Raw intake is permitted at invocation, but raw intake alone never confers execution readiness.
+
+1. **Intake Routing:**
+   - **Existing Issue / URL:** If input is already an existing GitHub issue or URL, it routes
+     directly to [Conveyor](../conveyor/SKILL.md) for preparation.
+   - **Raw Prose / Uncaptured Goal:** If input is raw prose, an uncaptured daily goal, or a
+     new item without an issue, it must first obtain an issue through the authorized issue-creation
+     owner ([idea](../idea/SKILL.md), `gh issue create`, or repo intake SOP) before routing to Conveyor.
+2. **Preparation Phase:** Conveyor prepares the capture doc in `PROJECT/1-INBOX/`, scopes the
+   change, establishes the Preflight Contract, and applies the Product Release System (PRS)
+   rating (`pri/sev/appeal/effort`).
+3. **Readiness Gate:** Documentation publication and Jog pickup/admission checks remain
+   mandatory prerequisites. Neither raw intake nor issue creation allows skipping straight
+   to builder dispatch.
+
+---
+
+## 3. Host Delegation and Event-Driven Observation
+
+The parent starts exactly one outer-loop child session:
+
+1. **Delegation Protocol:**
+   - Use the host's native supported delegation mechanism (e.g., T3 Code `delegate_task`,
+     Claude Agent delegation, or Codex child thread).
+   - Pass the explicit task brief, target repository, selected scope, and remaining budget limits.
+   - Isolation uses the repository's standard worktree/clone policy; never create unmanaged
+     checkout directories.
+2. **Reactive Wakeup (Zero Polling):**
+   - Wait on supported completion events or watches.
+   - Do not loop on `task_status`, do not invoke shell `sleep` commands, and do not arm redundant
+     heartbeat timers while a native delegate is executing.
+   - Questions or requests from the child wake the parent for bounded assistance.
+3. **Missing Capability Fallback:**
+   - When running in an environment without supported child delegation or completion watches,
+     record: `status: held`, `reason: missing_host_delegation_capability`, `next_owner: operator`.
+   - Leave a resumable handoff record and halt. Do not manufacture an ad-hoc cron or background
+     daemon.
+
+---
+
+## 4. Lifecycle Handoffs and Session Recovery Protocol
+
+Every state transition leaves durable, verifiable evidence.
+
+```
++-------------------------------------------------------------------------------+
+|                                    PARENT                                     |
+|  +--------------------+       delegate       +-----------------------------+  |
+|  |  Resolve Intake &  | -------------------> |       Passive Observer      |  |
+|  |  Record Pointer    |                      | (awaits native completion)  |  |
+|  +--------------------+                      +-----------------------------+  |
++-------------------------------------------------------------|-----------------+
+                                                              | event / halt
++-------------------------------------------------------------v-----------------+
+|                                    CHILD                                      |
+|  +-------------------------------------------------------------------------+  |
+|  | Outer-Loop Execution: Conveyor -> Flywheel -> Jog -> start-task         |  |
+|  +-------------------------------------------------------------------------+  |
+|         |                           |                            |            |
+|         v (PR ready)                v (task hold)                v (unsafe)   |
+|   Normal Completion          Task-Local Hold              Shared Unsafe Stop  |
+|   - PR & receipts            - Record evidence/reason     - Halt immediately  |
+|   - Hand off to parent       - Follow owner semantics     - Checkpoint state  |
+|                                (e.g. Jog GH-1400 wake)    - Report to parent  |
++-------------------------------------------------------------------------------+
+```
+
+### Transition 1: Normal Completion
+- **Condition:** Child completes the requested batch or daily-goal tasks, runs classified gates,
+  commits review receipts, opens ready PRs, and completes the execution owner's closeout.
+- **Evidence:** PR URLs, commit SHAs, passing gate logs, and independent review verdicts.
+- **Action:** Child returns completion event with summary. Parent inspects results, records
+  completion, and presents the deliverable to the operator.
+
+### Transition 2: Task-Local Hold
+- **Condition:** An individual task hits a blocker, missing product decision, or local failure.
+- **Owner Semantics:** Child strictly obeys the active execution owner's rules:
+  - *Jog GH-1400 wake:* continuing independent work is permitted only after a newly approved
+    published PR or a validated exit 5 pre-advance-failed receipt whose own gate ran and failed.
+    A readiness refusal, lock contention, guard-killed gate, crash, missing/mismatched receipt,
+    or clone ledger drift halts the wake immediately.
+- **Evidence:** Held task ID, concrete blocker explanation, observed exit code, and designated next owner.
+- **Action:** Child records hold evidence in the task record. If owner permits continuation,
+  proceeds to next ready task; otherwise halts and hands off to parent.
+
+### Transition 3: Shared Unsafe Stop
+- **Condition:** A repository-wide or environment-level safety boundary is triggered: lock contention,
+  unregistered writer, git-safety violation, primary ledger drift, exhausted global budget, or
+  missing host capability.
+- **Evidence:** Concrete violation log, lock file path, divergent ref SHAs, or resource accounting.
+- **Action:** Child halts immediately, leaves a resumable checkpoint, and alerts parent. Parent
+  assesses the boundary and engages the operator if required.
+
+### Transition 4: Interruption & Session Recovery
+When a parent session drops, disconnects, or is reinvoked to recover an in-flight run:
+
+1. **Concrete Evidence Identification:** Returning parent re-reads existing records to identify:
+   - Child session / thread ID.
+   - PID / lock state.
+   - Target execution clone / worktree path.
+   - Last recorded milestone and task ID.
+   - Last accepted receipt digest.
+   - Remaining authorized budgets (wall deadline, max tasks, attempts).
+   - Uncertain action records.
+2. **Stopped-Ownership Proof:** Parent must verify that the prior child session and any
+   child-spawned builders/writers are truly stopped (not paused, detached, or running in background).
+   - Live, paused, or unknown ownership strictly refuses replacement.
+   - If an owner, builder, or lock state cannot be verified dead, the run holds for operator intervention.
+3. **Saved-Result Reconciliation:** Reconcile saved outcomes before dispatch. If a completed result
+   exists on disk but was not acknowledged, adopt that result rather than repeating execution.
+4. **Supported Recovery Ladder:**
+   - `resume` first: reconcile durable state, adopt saved results without spending fresh attempt tokens.
+   - `retry-gate`: if the build was approved but the gate failed, re-run only the gate on the same head SHA.
+   - `retry-build`: execute a fresh attempt only if the build genuinely needs a fresh bounded attempt
+     and attempt budget remains.
+   - *Never retry an unknown outcome:* an uncertain build or external mutation holds for operator inspection.
+5. **Budget Preservation:** Recovery preserves original deadlines, attempt counters, and authority;
+   redispatches only within remaining unexpired budgets.
+
+---
+
+## 5. Verification and Acceptance
+
+1. **Actual Diff Classification:** Run `utils/ci-route.sh` against the final actual diff from
+   `development` to determine the applicable route (`docs`, `fast`, or `full`) and test tier.
+2. **Applicable Checks:** Execute all applicable classified checks (e.g. `utils/pdda/pdda.sh run`
+   for docs route; required tier suites if classified otherwise), reporting any failure or unavailable
+   check honestly.
+3. **Manual Instruction Walkthrough:** Perform a source-only manual instruction walkthrough of
+   the main path (intake -> delegation -> normal completion) and adjacent recovery/hold paths
+   (unsupported host stop, task-local hold following owner semantics, session interruption and
+   stopped-ownership proof).
+4. **Evidence Retention:** Save nonempty walkthrough results and nonempty `provenance.jsonl` under
+   `TESTS-RESULTS/<date>+GH-<issue>/`.
+5. **Truthful Qualification:** Distinguish instruction-level walkthrough evidence from live
+   unattended factory qualification. Live unattended qualification remains a separate milestone.
