@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
+
+- `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.
+- `skills/2-daily/flywheel/SKILL.md`: mode-qualified `Daily observation and 10days batches` and Operating Flow Step 3 so default `marathon` retains no Jog substitution while explicit `10days` `serial` mode may hand committed survivors to `jog` or `start-task` under one batch owner.
+- `ARCHITECTURE.md`: indexed `pr-minder` (`skills/2-daily/pr-minder/SKILL.md`) under `2-daily`.
+- Docs-only (`tier=1`); zero runtime code, queue, schema, or test-suite additions. Revert PR to undo. Evidence: `TESTS-RESULTS/2026-11-19+GH-1524/`.
+
 ## 2026-11-17 — GH-1509: Kickstart skill for observer-led outer-loop child with session recovery
 
 - Added `skills/1-hourly/kickstart/SKILL.md` codifying the operator's assisted factory pattern:

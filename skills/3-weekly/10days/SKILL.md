@@ -96,10 +96,15 @@ origin sync verification, and robust multi-lane execution containment.
 
 When the operator explicitly requests this sweep with
 [flywheel](../../2-daily/flywheel/SKILL.md), use its work modes, bounded repair and
-handoff contract around this workflow. 10days remains the batch owner; Flywheel does
-not re-enqueue these issues into Jog, rescan to reset attempts or add a second firing
-approval. This skill's named auto-fire exception, preflight, collision checks, locks,
-limits and gates still apply. Standalone 10days does not require Flywheel or Daily.
+handoff contract around this workflow. 10days remains the batch owner: in default
+`marathon` mode Flywheel does not substitute Jog dispatch, and in any mode Flywheel does
+not silently re-enqueue issues, rescan to reset attempts, or add a second firing
+approval. When the operator explicitly selects `10days` `serial` mode (Step 3.5), handing
+committed survivors to [jog](../../2-daily/jog/SKILL.md) (after Step 4 / `conveyor`
+preparation) or [start-task](../../1-hourly/start-task/SKILL.md) under that one batch
+owner is permitted with no duplicate enqueueing and no auto-merge. This skill's named
+auto-fire exception, preflight, collision checks, locks, limits and gates still apply.
+Standalone 10days does not require Flywheel or Daily.
 
 A red gate still halts wave advancement. In a Flywheel-coordinated run, preserve that
 failure in the existing plan/results, make the smallest authorized affected-work repair
@@ -246,6 +251,7 @@ For every issue that survives Step 2, spawn subagents (batch in groups of ~5-6 c
 - **Provisional assessment only:** for missing or incomplete ratings return a justified proposal, uncertainty and recurrence evidence/coverage limits. Do not write the ledger, force a rescore or clear an override. Malformed overrides stay HELD for the operator. These Step 3 children do cheap validity triage, not the full medium research checklist for every scanned issue. Only the parent writes a selected item's rating after its real capture exists in Step 4.
 - `git log --all --oneline -i --grep="#<N>\b" --grep="GH-<N>\b"` — commit evidence.
 - `gh pr list --state merged --search "<N> in:body"` (and `--search "#<N>"`) — merged PR evidence.
+- `gh pr list --state open --search "<N>" --json number,title,state,isDraft,mergeable,reviewDecision,url` — open PR evidence. If an open PR already addresses `#<N>`, classify the issue as `HAS-PR` (do not build a duplicate PR). Route behind/conflicting/failing/stale open PRs to [`pr-minder`](../../2-daily/pr-minder/SKILL.md) and green, review-ready mergeable PRs to [`merge-cleanup`](../../2-daily/merge-cleanup/SKILL.md) (operator-approved landing only; never auto-merge).
 - If a capture doc exists (from Step 2), read its own "Status" table and frontmatter.
 
 Return one structured verdict per issue:
@@ -253,10 +259,11 @@ Return one structured verdict per issue:
 ```json
 {
   "issue": N,
-  "decision": "INCLUDE|HELD|EXCLUDE",
-  "next_owner": "parent preparation owner or named decision owner",
+  "decision": "INCLUDE|HAS-PR|HELD|EXCLUDE",
+  "next_owner": "parent preparation owner, pr-minder, merge-cleanup, or named decision owner",
   "reason": "...",
   "evidence": ["commit abc123 fixes this", "..."],
+  "open_prs": [],
   "already_done": false,
   "duplicate_of": null,
   "needs_contract": true,
@@ -278,7 +285,7 @@ Return one structured verdict per issue:
 - `effective_score` = `ovr` if present and valid (`[4, 400]`), else recomputed `calc` (`pri + sev + appeal + effort`).
 - **Manual override items (`is_manual_override: true`) are operator pins**: rank them at the very front of the candidate queue regardless of arithmetic.
 - **High calculated scores (`calc >= 250`, or `sev >= 75` / `pri >= 75`)**: serve as a strong signal to prioritize the candidate into earlier waves.
-- `INCLUDE` is provisional eligibility, not preparation completion or admission. `HELD` keeps the task and reason visible but removes it from the fire list; it is a report disposition, not a new queue state. `EXCLUDE` needs the affirmative evidence above; a failed reproduction alone is HELD.
+- `INCLUDE` is provisional eligibility, not preparation completion or admission. `HAS-PR` keeps open-PR survivors out of Step 4–7 build paths and hands them to `pr-minder` or `merge-cleanup` in the Step 8 HAS-PR Ledger. `HELD` keeps the task and reason visible but removes it from the fire list; it is a report disposition, not a new queue state. `EXCLUDE` needs the affirmative evidence above; a failed reproduction alone is HELD.
 
 > **Runtime-aware reproducibility (`runtime:*`-labeled issues only).** If an issue carries a
 > `runtime:bash` label, reproduce it under `XYZ_PYTHON=0` before ruling it not-reproducible or
@@ -286,6 +293,17 @@ Return one structured verdict per issue:
 > won't surface and would be falsely `EXCLUDE`d as "already done." `runtime:python`/`runtime:parity`
 > reproduce under the default path. These labels exist only in `xyz-3-agents-swarm`, so this is a
 > silent no-op for any other repo the sweep runs against.
+
+### 3.5. Execution mode routing (choose after Step 3 triage)
+
+Step 3 `HAS-PR`, `HELD`, and `EXCLUDE` items do **not** enter execution. For the committed `INCLUDE` survivors (ordered by `ovr` → `calc` → `sev` → `pri`), select one downstream mode — reusing existing owners with zero new queues, runners, or schemas:
+
+1. **`remediate` (prepare-only):** run Step 4 ([`conveyor`](../../1-hourly/conveyor/SKILL.md) RAW research-depth policy, capture synthesis, `Swarm Preflight Contract`, parent-owned `roadmap pickup`, and `swarm-preflight.sh --dry-run` per item) and **stop before execution**. Report ready (exit 0) versus `HELD` items and hand off to `jog`, `start-task`, or `marathon` in Step 8.
+2. **`serial` (JIT prepare → execute one item at a time):** walk selected `INCLUDE` survivors serially in priority order so an unready or blocked item stays `HELD` while independent survivors continue. Two existing execution owners are supported:
+   - **Multi-harness (`conveyor` → `jog` / `kickstart`):** prepare each selected item through Step 4 / `conveyor` to `swarm-preflight` exit 0, then enqueue and execute it serially through [`jog`](../../2-daily/jog/SKILL.md) (`--builder codex|agy --reviewer <distinct>`, optionally supervised under [`kickstart`](../../1-hourly/kickstart/SKILL.md)). Preserve `jog`'s strict deterministic admission — never pass raw prose or uncontracted items to `jog_run.py`.
+   - **Direct raw-to-PR (`start-task`, including single-harness setups):** execute each selected survivor serially through [`start-task`](../../1-hourly/start-task/SKILL.md) (fresh sibling full clone off `origin/<base>`, capture + PRS rating, grounded recon, surgical implementation, target-repo checks, ready PR against `<base>`, safe clone retirement).
+     - **Narrow single-harness exception:** when and only when the operator explicitly selects `10days` `serial` single-harness mode (for example, a Claude-Code-only machine where cross-model review is explicitly deferred to PR review), that operator selection takes precedence over `start-task` Step 6/8's unavailable-reviewer stop rule (`skills/1-hourly/start-task/SKILL.md:235`) **for that run only**, without modifying `start-task` globally. Target-repository mandatory deterministic tests/gates remain non-negotiable. Every PR and issue closeout comment **must** carry `start-task`'s verbatim disclosure (**Independent review did not run.** plus one factual line stating cross-model review is deferred to PR review), must never claim cross-model approval, must never silently substitute headless Claude as a multi-harness builder, and must never auto-merge.
+3. **`marathon` (default — parallel waves):** run Steps 4 → 5 → 6 → 6.5 → 7 as below, strictly over exit-0 preflighted items.
 
 ### 4. Research selected work, then prepare its capture and contract
 
@@ -542,7 +560,8 @@ Then:
 
 One final summary, always — even (especially) on a partial or stopped run:
 
-- **Scan Window & Intake Counts**: N days scanned, total open issues reviewed.
+- **Scan Window & Intake Counts**: N days scanned, total open issues reviewed, and **Mode selected** (`remediate` | `serial` (`conveyor→jog` or `start-task` [single-harness?]) | `marathon`).
+- **HAS-PR Ledger**: every `HAS-PR` issue with open PR number(s), current PR state (green/mergeable vs. behind/conflicting/failing/draft), and handoff owner (`pr-minder` or `merge-cleanup`; never auto-merged here).
 - **PRS Ratings & Prioritization Table**:
   - Issue number, title, 4-axis ratings (`pri/sev/appeal/effort`), `calc` sum, `ovr` override, effective score, and ranking verdict.
   - Explicitly highlight any **manual overrides (`ovr`)** and high-scoring quick wins.
