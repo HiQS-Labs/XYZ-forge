@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -132,5 +132,21 @@ Handing off to Producer (claude-a) — disposition S1 and supply focused read-on
   still `route=docs tier=1`.
 
 Handing to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+- [Pass] **S1 resolved without duplicating classification.** The live argv now contains `--no-conflict-files` (`skills/1-hourly/kickstart/scripts/build_queue.py:205`). The new option at `skills/2-daily/pr-minder/scripts/pr_minder.py:498–499` controls only the conflict-detail loop at `:532–535`; assessment still happens at `:525`, and the default remains the original loop. Without `--apply`, execution returns before mutation at `:549–550`. The retained `TESTS-RESULTS/2026-11-19+GH-1527/readonly-live-check.log` reports “fetch/merge-tree calls: 0” and identical before/after refs, FETCH_HEAD and object counts; its pre-fix red control reports “fetch/merge-tree calls: 21”. These are retained producer observations, consistent with the inspected call path; I did not rerun the live collector or any Git operation.
+
+- [Pass] **Replay remains byte-identical.** Ran `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`, then `python3 skills/1-hourly/kickstart/scripts/build_queue.py --as-of 2026-11-19 --owner noelsaw1 --other-session 1400,1418 --needs-operator 1435,1427 --prs-json TESTS-RESULTS/2026-11-19+GH-1527/inputs/pr_minder.json --pr-meta-json TESTS-RESULTS/2026-11-19+GH-1527/inputs/pr_meta.json --issues-json TESTS-RESULTS/2026-11-19+GH-1527/inputs/issues.json --out .relay-scratch/q.md`, followed by `cmp .relay-scratch/q.md TESTS-RESULTS/2026-11-19+GH-1527/queue-replay-1.md`: exit 0, no output. Ordered classification/rendering remains at `build_queue.py:79–176`; no new routing defect found in the full sweep.
+
+- [Pass] **Evidence and parent boundary remain intact.** A read-only Python scan using `json.loads`, `Path.read_bytes` and `hashlib.sha256` over every row of `TESTS-RESULTS/2026-11-19+GH-1527/provenance.jsonl` asserted nonempty bytes, byte count and digest equality: exit 0, “14 nonempty artifact hashes match”. The manual check retains the hand-queue explanations and routing red control (“#1417 want=needs in_queue=True in_needs=True -> FAIL”). Parent ordering at `skills/1-hourly/kickstart/SKILL.md:33–42` remains consistent with the script; the separate authority requirement at `:59–60` and ungranted template at `build_queue.py:48` remain explicit.
+
+**Review limits:** Re-read the entire three seeded artifacts, the approved plan, and the entire now-touched pr_minder source. No additional pre-existing defect found in those files. No gate, test suite, executable fixture, live collection, or Git command run. The exact base-to-head file list and clone/full-gate results remain unverified; approval is the bounded source/manual-evidence QA verdict, not full-gate qualification or unattended-factory qualification. No new machinery is present in the inspected implementation; I cannot independently certify the entire diff contains no new suite without the prohibited Git comparison. Graph lookup in the nearest reference project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` returned no matching main/conflict_files symbols with no pagination remaining; its generation is 2026-11-18T19:39:07Z in another checkout. Coverage marks the seeded paths freshness missing. Local full-source reads, rather than that stale reference index, govern this review.
+
+swept file: yes
+VERDICT: PASS
+Basis: The sole open finding S1 is resolved by a narrowly scoped opt-out of the inherited Git write path. The retained live/red-control evidence matches the source, all 14 evidence hashes match, and the permitted replay reproduces the accepted output. No outstanding finding remains.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
