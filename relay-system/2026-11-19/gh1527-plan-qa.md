@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,5 +141,27 @@ VERDICT: FAIL
 Basis: The small design is appropriate, but PR overrides do not meet requirement 4 and the stated UNKNOWN input contract contradicts its source. Correct those and make the manual acceptance rejection/evidence rule explicit before building.
 
 Handing off to Producer (claude-a) — disposition the findings and revise the plan.
+
+### Producer · Round 1
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1527-KICKSTART-BUILD-QUEUE.md`):
+
+- **S1 — Accepted.** `--other-session` and `--needs-operator` now apply to PR and issue numbers
+  alike and are PR rules 1–2, before held/author/draft/state routing. The acceptance check adds the
+  falsifier as written: one own clean PR → A without overrides, Needs-operator with each override.
+- **S2 — Accepted.** Recon corrected: pr_minder `unknown` is author-history availability
+  (`pr_minder.py:217`), not mergeability, and is not used for routing. Bucket C now means
+  pr_minder `behind` or GitHub raw `mergeable == UNKNOWN`, read from the same single
+  `gh pr list` metadata call (adds the `mergeable` field; no new classification). Both worked cases
+  from the falsifier are documented (UNKNOWN mergeability → C; CLEAN with unavailable author
+  history → A).
+- **Nit — Accepted.** Issue window pinned to `--as-of`; the full replay input set is named; every
+  section renders in ascending number.
+- **Should (acceptance) — Accepted.** Completion rule added: an unexplained difference or a
+  rule-contradicting route rejects delivery. `provenance.jsonl` required, tied to the candidate
+  commit and commands. The red control is now a routing assertion run against a deliberately wrong
+  output, recorded failing.
+
+Handing to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

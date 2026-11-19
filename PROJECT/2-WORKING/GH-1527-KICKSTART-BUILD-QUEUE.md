@@ -41,11 +41,15 @@ chat. Neither step repeats: the next run rebuilds the list and asks again.
 ## Recon (base `ad22311e8`)
 
 - `skills/2-daily/pr-minder/scripts/pr_minder.py --json` prints a list of rows per open PR with
-  `pr`, `title`, `draft`, `held` (hold label reason or null), `inherited_hold`, `unknown`
-  (mergeability not yet computed), `conflicting`, `behind`, `failing` (list of failed checks).
-  It carries **no author, body or head branch**. It is plan-only by default (no writes).
-- `own vs others` therefore needs `gh pr list --json number,author,title,body` (one call). That
-  call adds identity and issue links only; PR state still comes from pr_minder.
+  `pr`, `title`, `draft`, `held` (hold label reason or null), `inherited_hold`, `conflicting`
+  (`mergeStateStatus == DIRTY` or `mergeable == CONFLICTING`, `pr_minder.py:220-221`), `behind`
+  (`BEHIND` or measured drift, `:225`), `failing` (failed checks, `:222`). Its `unknown` key means
+  **author history unavailable** (`:217`), not GitHub mergeability; the raw `mergeable` value lives in
+  `pr_data`, which `--json` omits. It carries **no author, body or head branch**. Plan-only by default.
+- `own vs others` and GitHub's raw mergeability therefore need one
+  `gh pr list --json number,author,title,body,mergeable` call. It adds identity, issue links and the
+  raw `mergeable` string only; conflict, behind, failing, draft and held still come from pr_minder.
+  pr_minder's `unknown` (author history) does not affect landing order and is not used.
 - Issue labels are sparse: 2026-11-19's hand-queue issues are mostly unlabeled (`#1519`, `#1517`,
   `#1500`, `#1499`, `#1508`, refactors `#1480`–`#1483`). Classification must lean on titles.
 - Open issues total >300, so the builder needs a window: issues created in the last
@@ -59,16 +63,27 @@ chat. Neither step repeats: the next run rebuilds the list and asks again.
 
 ### Ordering rules (closed list; first match wins)
 
-PRs (state from pr_minder; author from gh):
+The operator overrides `--other-session N,...` and `--needs-operator N,...` apply to PR and issue
+numbers alike and are checked first.
 
-1. held or inherited hold → Needs-operator (held).
-2. author ≠ `--owner` → Needs-operator (someone else's PR).
-3. draft → bucket D, drafts: finish or close.
-4. conflicting, or failing checks → bucket B, repair: merge development in, gate, merge.
-5. unknown or behind → bucket C, one merge-cleanup batch (refresh, then land; reconcile once).
-6. otherwise → bucket A, clean: wait for review, merge.
+PRs (state from pr_minder; author and raw `mergeable` from the one gh call):
 
-Issues (open, created within `--since-days`):
+1. in `--other-session` → Needs-operator (owned by another session; remind only).
+2. in `--needs-operator` → Needs-operator (decision).
+3. held or inherited hold → Needs-operator (held).
+4. author ≠ `--owner` → Needs-operator (someone else's PR).
+5. draft → bucket D, drafts: finish or close.
+6. pr_minder `conflicting`, or non-empty `failing` → bucket B, repair: merge development in, gate, merge.
+7. pr_minder `behind`, or raw `mergeable == UNKNOWN` → bucket C, one merge-cleanup batch (refresh,
+   then land; reconcile once).
+8. otherwise (raw `mergeable == MERGEABLE`, not behind/conflicting/failing) → bucket A, clean:
+   wait for review, merge.
+
+Worked cases: an own unheld non-draft PR with complete author history, `mergeable == UNKNOWN`, no
+failing checks and no drift → C (rule 7). A CLEAN, `MERGEABLE` PR whose author history is
+unavailable (pr_minder `unknown: true`) → A (rule 8); author history does not gate landing.
+
+Issues (open, created on or after `--as-of` minus `--since-days`):
 
 1. in `--other-session` → Needs-operator (owned by another session; remind only).
 2. in `--needs-operator`, or title matches `\bdecid(e|ing)\b|\bdecision\b` → Needs-operator (decision).
@@ -96,7 +111,11 @@ output.
 ### Determinism and replay
 
 `--prs-json FILE`, `--pr-meta-json FILE`, `--issues-json FILE` read saved inputs instead of calling
-pr_minder and gh. Default: live calls. With saved inputs and `--as-of`, two runs are identical.
+pr_minder and gh. Default: live calls. The full replay input set is those three files plus
+`--as-of`, `--owner`, `--other-session`, `--needs-operator` and `--since-days`; the issue window is
+computed from `--as-of`, never the wall clock. Every list in every section (queue lines, folded
+issue numbers, Needs-operator, Not queued) renders in ascending number. With the same replay inputs,
+two runs are byte-identical.
 
 ### Steps
 
@@ -105,10 +124,19 @@ pr_minder and gh. Default: live calls. With saved inputs and `--as-of`, two runs
 2. kickstart SKILL.md: one parent step under section 1 (build the queue with build_queue.py,
    record the authority grant in the run record, then dispatch) plus the closed ordering list.
 3. CHANGELOG entry; ARCHITECTURE.md index line if scripts are indexed there.
-4. Manual check `TESTS-RESULTS/2026-11-19+GH-1527/`: saved inputs, output, diff against the hand
-   queue with each difference explained (state drift since the hand queue vs rule), determinism
-   rerun (`cmp` of two outputs), and a red control: an input with a held PR and a non-owner PR
-   must route both to Needs-operator, never the queue.
+4. Manual check `TESTS-RESULTS/2026-11-19+GH-1527/` with `provenance.jsonl` (AGENTS.md), tied
+   to the implemented candidate commit and the exact commands run:
+   - saved live inputs and the output they produced;
+   - diff against the 2026-11-19 hand queue. **Completion rule:** every difference must be
+     explained as either live-state drift since the hand queue was written (cited from the saved
+     input) or a stated rule above. An unexplained difference, or an item routed against a stated
+     rule, rejects delivery until fixed;
+   - determinism: two runs on the same replay inputs, `cmp` exit 0;
+   - routing checks on edited copies of the saved inputs: a held PR, a non-owner PR, and an own
+     clean PR listed in `--other-session` and then in `--needs-operator` each land in
+     Needs-operator, never the queue; the same own clean PR without overrides lands in A;
+   - red control: run the routing assertion against a deliberately wrong output (the held PR
+     moved into the queue by hand) and record that the assertion fails.
 
 ## Non-goals
 
