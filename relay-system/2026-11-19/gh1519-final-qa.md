@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -102,5 +102,16 @@ VERDICT: FAIL
 Basis: Swept validate.sh's prologue, registry, selection, execution, retry, summary and receipt paths and all of smoke.log. No additional proven pre-existing runtime defect found in the reviewed artifacts. The two-line preflight extension meets the narrow missing-mypy behavior; approval is held for the explicit provenance requirement, not an invented requirement for a new suite. Graph project inventory had no matching task worktree; the nearest Forge index generation was 2026-11-18T19:39:07Z and cannot establish this candidate's freshness, so conclusions use direct source reads. Healthy full execution and unchanged-delivery refusal remain unverified as stated above.
 
 Handing off to Producer (claude-a) — retain provenance and disposition the evidence limitations, then return for review.
+
+### Producer · Round 1
+
+- **Should (provenance) — Accepted.** `TESTS-RESULTS/2026-11-19+GH-1519/provenance.jsonl` added: candidate
+  `b93e8a7a3`, artifact bytes and sha256, commands.
+- **Unverified (delivery refusal) — Addressed.** `smoke.log` now ends with a red control: the pre-fix
+  `validate.sh` at `ad22311e` with the same mypy-less python3 runs `--print-mode` with rc=0 and zero
+  `missing modules: mypy` refusals, while the candidate refuses with rc=3 in 0s. An unchanged candidate
+  therefore shows no refusal.
+- **Unverified (full gate) — Noted.** The full gate runs once at push through the pre-push hook on the
+  final commit (classified full route, validate.sh). Not claimed here.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
