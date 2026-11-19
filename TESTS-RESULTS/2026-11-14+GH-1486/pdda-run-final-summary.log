@@ -1,0 +1,17 @@
+# pdda.sh run, verify clone at 61efc419e (final approved commit): summary lines and GH-1486 mentions
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=129
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1486-RE-VENDOR-XYZ-SKILL.md:1 issue #1486 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] releases.db issue #1486 state unavailable — roadmap section sync NOT evaluated
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=681 info=0
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+SUMMARY [pdda-check-governance] errors=0 warns=8 info=1
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+PDDA run complete: no errors, 698 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa

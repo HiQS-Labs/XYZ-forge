@@ -2149,7 +2149,9 @@ def changelog_catchup_candidates(repo_root, repo_slug, cutover_dt, offline_manif
 
     candidates = []
     for pr in prs_list:
-        merged = pr.get("merged_at")
+        # Offline manifests use the gh CLI's camelCase shape (mergedAt, baseRefName, mergeCommit);
+        # the REST query returns merged_at / base.ref / merge_commit_sha. Accept both.
+        merged = pr.get("merged_at") or pr.get("mergedAt")
         if not merged:
             continue
         try:
@@ -2160,7 +2162,7 @@ def changelog_catchup_candidates(repo_root, repo_slug, cutover_dt, offline_manif
             merged_dt = merged_dt.replace(tzinfo=timezone.utc)
         if merged_dt < cutover_dt:
             continue
-        if (pr.get("base") or {}).get("ref") != "development":
+        if ((pr.get("base") or {}).get("ref") or pr.get("baseRefName")) != "development":
             continue
         num = pr.get("number")
         sha = pr.get("merge_commit_sha") or ((pr.get("mergeCommit") or {}).get("oid"))
@@ -2881,6 +2883,9 @@ def main():
                     pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest, base=args.base)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
+                # GH-1487: keep what this loop fetched so reconcile_changelog (after the loop) sees a plain
+                # `--pr N` landing; owner ranks above were computed before the loop and are unaffected.
+                metadata.setdefault((landing_kind, landing_id), pr_meta)
                 landing = landing_label(pr_meta)
                 log(f"Processing {landing}...")
                 state = pr_meta.get("state", "").upper()

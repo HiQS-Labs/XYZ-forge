@@ -260,7 +260,7 @@ bash relay-automation/xyz-vendor.sh /path/to/target
 Vendors the harness under `.xyz/` in the target repo. **Note:** the harness alone leaves that repo at
 HQ Tier C, which cannot be dispatched to. For the unattended path you also need PDDA installed at the
 target's root — see [`skills/4-occasional/vendor-stack/SKILL.md`](skills/4-occasional/vendor-stack/SKILL.md) for the two-step
-flow.
+flow. To refresh that `.xyz/` copy later, use [`/re-vendor-xyz`](skills/4-occasional/re-vendor-xyz/SKILL.md).
 
 ### Skills
 
@@ -282,7 +282,9 @@ replace a live link it does not own (GH-678), so running one there is a no-op wi
 
 ---
 
-The gate toolchain requires **Python >=3.10** with `PyYAML`, `pytest`, and `requests`.
+The gate toolchain requires **Python >=3.10**. Install `PyYAML`, `pytest`, `requests`, and the
+pinned `mypy` toolchain with `python3 -m pip install -r requirements-dev.txt`. The existing Python
+layer runs mypy against the scoped `mypy.ini` configuration.
 If the gate reports an environment fault, use the prepared gate-toolchain venv:
 `PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh` (retain your gate arguments).
 The gate does not install Python or create this venv automatically.

@@ -1235,6 +1235,105 @@ def _age_days(value, now: datetime) -> float | None:
     return (now - ts).total_seconds() / 86400.0
 
 
+# GH-1498: the author-activity clock, shared with pr-minder. updatedAt moves on every label, comment and
+# branch sync, so once a tool writes to a PR it hides real staleness. This clock reads only author work.
+PR_MINDER_MARKER = "<!-- pr-minder"
+SERVER_MERGE_RE = re.compile(r"^Merge branch '[^']+' into .+$")   # name-independent: survives rename/retarget
+SERVER_COMMITTER = "noreply@github.com"
+AUTHOR_AGE_DISCLOSURE = ("PR ages are author activity: commits (excluding GitHub server-side 'Merge branch ... "
+                         "into ...' syncs, which also matches a web-editor conflict fix that kept the default "
+                         "message), reviews, review-thread comments and comments without a pr-minder marker; "
+                         "labels and metadata edits do not count")
+_ACTIVITY_QUERY = (
+    "query($owner:String!,$name:String!,$cursor:String){repository(owner:$owner,name:$name){"
+    "pullRequests(states:OPEN,first:50,after:$cursor){pageInfo{hasNextPage endCursor} nodes{number createdAt "
+    "commits(last:10){pageInfo{hasPreviousPage} nodes{commit{oid committedDate messageHeadline "
+    "committer{email} parents(first:1){totalCount}}}} "
+    "comments(last:20){pageInfo{hasPreviousPage} nodes{createdAt body viewerDidAuthor}} "
+    "reviews(last:10){pageInfo{hasPreviousPage} nodes{submittedAt}} "
+    "reviewThreads(last:20){pageInfo{hasPreviousPage} nodes{comments(last:1){nodes{createdAt}}}}}}}}"
+)
+
+
+def fetch_pr_activity(repo_root: Path, slug: str) -> dict[int, dict]:
+    """Open-PR history for the author clock, {number: node}. Separate from get_open_prs because the bulk
+    list cannot carry commit history (GraphQL node limit). Raises on any failure; callers decide."""
+    owner, name = slug.split("/", 1)
+    out: dict[int, dict] = {}
+    cursor = None
+    while True:
+        cmd = ["gh", "api", "graphql", "-f", f"query={_ACTIVITY_QUERY}", "-F", f"owner={owner}", "-F", f"name={name}"]
+        if cursor:
+            cmd += ["-f", f"cursor={cursor}"]
+        data = json.loads(run_cmd(cmd, cwd=repo_root) or "{}")
+        if data.get("errors"):
+            raise RuntimeError(f"activity query errors: {data['errors']}")
+        prs = (((data.get("data") or {}).get("repository") or {}).get("pullRequests") or {})
+        if "nodes" not in prs:
+            raise RuntimeError("activity query returned no pullRequests")
+        for node in prs["nodes"] or []:
+            if isinstance(node, dict) and isinstance(node.get("number"), int):
+                out[node["number"]] = node
+        page = prs.get("pageInfo") or {}
+        if not page.get("hasNextPage"):
+            return out
+        cursor = page.get("endCursor")
+
+
+def is_maintenance_commit(commit: dict, receipt_oids=frozenset()) -> bool:
+    """A server-side branch sync, not author work: a known pr-minder update-branch OID, or a two-parent
+    commit with GitHub's default sync headline committed by GitHub itself."""
+    if commit.get("oid") in receipt_oids:
+        return True
+    return ((commit.get("parents") or {}).get("totalCount") == 2
+            and bool(SERVER_MERGE_RE.match(commit.get("messageHeadline") or ""))
+            and str((commit.get("committer") or {}).get("email") or "").lower() == SERVER_COMMITTER)
+
+
+def author_activity(node: dict | None, receipt_oids=frozenset()) -> tuple[datetime | None, bool]:
+    """(latest author activity, complete). A connection is trustworthy when it holds a qualifying item or
+    has no earlier page; reviewThreads is ordered by thread creation, so only a full read counts. Any
+    incomplete connection -> (None, False): callers must not act on, or silently age, an unknown PR."""
+    if not isinstance(node, dict):
+        return None, False
+
+    def conn(key):
+        c = node.get(key)
+        if not isinstance(c, dict) or not isinstance(c.get("nodes"), list):
+            return None, None
+        return c["nodes"], bool((c.get("pageInfo") or {}).get("hasPreviousPage"))
+
+    stamps: list[str] = []
+    for key, pick in (
+        ("commits", lambda n: None if is_maintenance_commit(n.get("commit") or {}, receipt_oids)
+         else (n.get("commit") or {}).get("committedDate")),
+        # a marker comment is excluded only when this viewer wrote it: the marker text is public
+        ("comments", lambda n: None if (PR_MINDER_MARKER in (n.get("body") or "") and n.get("viewerDidAuthor", True))
+         else n.get("createdAt")),
+        ("reviews", lambda n: n.get("submittedAt")),
+    ):
+        nodes, more = conn(key)
+        if nodes is None:
+            return None, False
+        found = [t for t in (pick(n) for n in nodes if isinstance(n, dict)) if t]
+        if not found and more:
+            return None, False
+        stamps.extend(found)
+    nodes, more = conn("reviewThreads")
+    if nodes is None or more:
+        return None, False
+    for t in nodes:
+        inner = (t.get("comments") or {}).get("nodes") if isinstance(t, dict) else None
+        if not isinstance(inner, list) or not all(isinstance(c, dict) for c in inner):
+            return None, False   # a null/malformed thread makes only this PR unknown
+        stamps.extend(c.get("createdAt") for c in inner if c.get("createdAt"))
+    times = [ts for ts in (_parse_gh_time(s) for s in stamps) if ts]
+    if times:
+        return max(times), True
+    created = _parse_gh_time(node.get("createdAt"))
+    return created, created is not None
+
+
 def normalize_device_id(raw: str | None) -> str:
     """device_config, git-pulse and `hostname -s` disagree on case and `.local`; the comment marker
     must not (noels-Mac-Studio.local / noels-mac-studio / noels-Mac-Studio -> noels-mac-studio)."""
@@ -1500,20 +1599,29 @@ def _labels(item: dict) -> set[str]:
 def collect_stalled_stale(prs: list[dict], issues: dict[int, dict] | None, sequence: dict, operator: str | None,
                           now: datetime, stale_days: int, draft_stale_days: int, device: str,
                           local_rows: list[dict], coverage: list, prior_reports: dict[str, str],
-                          date_local: str | None = None) -> dict:
+                          date_local: str | None = None, activity: dict[int, dict] | None = None) -> dict:
     """Pure over its inputs. Held is decided before Stalled and wins. `date_local` is the device's
-    calendar date the comment markers use; device freshness is judged against it, not against UTC."""
+    calendar date the comment markers use; device freshness is judged against it, not against UTC.
+    `activity` (GH-1498, from fetch_pr_activity) switches PR ages to the author clock; a PR whose history
+    is missing or incomplete falls back to updatedAt and is named in the disclosure. None keeps updatedAt."""
     held_numbers = {p.get("number") for p in sequence.get("evidence_carriers_or_held", [])}
     hold_reasons = {p.get("number"): p.get("hold_reason") or ("evidence carrier" if p.get("is_evidence_carrier") else "held")
                     for p in sequence.get("evidence_carriers_or_held", [])}
     stalled: list[dict] = []
     held: list[dict] = []
+    fallback: list[int] = []
 
     for pr in prs:
         n = pr.get("number")
         age = _age_days(pr.get("updatedAt"), now)
         ref, url = f"PR #{n}", pr.get("url") or ""
         last = (pr.get("updatedAt") or "")[:10]
+        if activity is not None:
+            ts, complete = author_activity(activity.get(n))
+            if complete and ts is not None:
+                age, last = _age_days(ts, now), ts.date().isoformat()
+            else:
+                fallback.append(n)
         labels = _labels(pr)
         reason = None
         if n in held_numbers:
@@ -1574,9 +1682,17 @@ def collect_stalled_stale(prs: list[dict], issues: dict[int, dict] | None, seque
         "thresholds": {"stale_days": stale_days, "draft_stale_days": draft_stale_days},
         "stalled": stalled, "held": held, "local": local_rows,
         "coverage": coverage,
-        "disclosures": [HOLD_DISCLOSURE, AGE_DISCLOSURE, LOCAL_DISCLOSURE],
+        "disclosures": [HOLD_DISCLOSURE, _age_disclosure(activity, fallback), LOCAL_DISCLOSURE],
         "devices": devices,
     }
+
+
+def _age_disclosure(activity, fallback: list[int]) -> str:
+    if activity is None:
+        return AGE_DISCLOSURE
+    tail = (f"; author history unavailable, so updatedAt was used for PR "
+            f"{', '.join('#' + str(n) for n in sorted(fallback))}") if fallback else ""
+    return AUTHOR_AGE_DISCLOSURE + "; issue ages remain updatedAt" + tail
 
 
 def format_stalled_markdown(section: dict, title: str, date_local: str) -> str:
@@ -1697,6 +1813,14 @@ def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequ
         coverage.append(_coverage("open PRs", "failed", prs_error))
     else:
         coverage.append(_coverage("open PRs", "truncated" if len(prs) >= 300 else "ok", count=len(prs)))
+    activity: dict[int, dict] = {}   # GH-1498: {} on failure -> every PR falls back to updatedAt, named
+    if slug and prs:
+        try:
+            activity = fetch_pr_activity(repo_root, slug)
+            coverage.append(_coverage("PR author activity", "ok", count=len(activity)))
+        except Exception as exc:
+            coverage.append(_coverage("PR author activity", "failed",
+                                      str(exc).splitlines()[-1] if str(exc) else repr(exc)))
     issues = None
     try:
         issues = get_open_issues(repo_root, gh_repo)
@@ -1724,7 +1848,7 @@ def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequ
     if args.team_issue and slug:
         comments, prior = read_stalled_comments(repo_root, slug, args.team_issue, coverage)
     section = collect_stalled_stale(prs, issues, sequence, operator, now, args.stale_days, args.draft_stale_days,
-                                    device, local_rows, coverage, prior, date_local)
+                                    device, local_rows, coverage, prior, date_local, activity=activity)
     return section, {"slug": slug, "comments": comments, "date_local": date_local, "device": device}
 
 

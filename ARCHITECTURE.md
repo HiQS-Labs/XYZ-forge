@@ -59,6 +59,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
 | [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |
 | [idea](skills/1-hourly/idea/SKILL.md) | File a GitHub issue directly with operator alignment, targeted recon, architectural sketch, and EGM paraphrase-first consult review; zero disk footprint, no HQ or ledger. |
+| [kickstart](skills/1-hourly/kickstart/SKILL.md) | Codify the operator's assisted factory pattern with an observer parent delegating an outer-loop child. |
 | [ponytail](skills/1-hourly/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [recon](skills/1-hourly/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |
@@ -88,6 +89,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
 | [merge-cleanup](skills/2-daily/merge-cleanup/SKILL.md) | Land open PRs in dependency order, reconcile, and tear down clones/worktrees that are proven landed. |
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
+| [pr-minder](skills/2-daily/pr-minder/SKILL.md) | One manual remediation pass over open PRs on an author-activity age ladder (nudge, repair, decide, retire); never merges or closes. |
 | [prs-backfill](skills/2-daily/prs-backfill/SKILL.md) | Backfill and keep current PRS four-axis ratings on registered unrated rows — scripted packets, agent rating, independent review, hash-approved writes via `roadmap rate`. |
 | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
@@ -144,6 +146,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |
 | [install-improve-audit](skills/4-occasional/install-improve-audit/SKILL.md) | Get an unfamiliar repository building, fix blockers, and open a bounded PR. |
 | [open-router](skills/4-occasional/open-router/SKILL.md) | Resolve a colloquial model name to its canonical OpenRouter slug. |
+| [re-vendor-xyz](skills/4-occasional/re-vendor-xyz/SKILL.md) | Refresh one repo's vendored `.xyz/` copy safely: published source, no live run, backup, verified result. |
 | [read-only](skills/4-occasional/read-only/SKILL.md) | Add a narrow read-only command allowlist to Claude Code settings. |
 | [readme-audit](skills/4-occasional/readme-audit/SKILL.md) | Audit a README as both user-facing artifact and map of the repo's docs. |
 | [rpr](skills/4-occasional/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |

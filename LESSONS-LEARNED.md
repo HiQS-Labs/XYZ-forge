@@ -158,6 +158,23 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 - **date**: 2026-11-04
 
+## A hand-written relay thread must state the validator's VERDICT and Basis contract
+
+- **cue**: Scaffolding a relay review thread by hand (not with `new-relay.sh`) and driving it with `relay-drive.sh --review-once` and a Codex or agy shim.
+- **lesson**: Tell the reviewer to end with one `### `-headed block whose last lines are exactly `VERDICT: PASS|FAIL|PARKED` and a non-empty `Basis:` line (`bin/validate-relay-block`). Without them the shim exits 8 and the driver reverts an approving `STATUS:`, so a substantive approval counts as a failed review and burns a round. `VERDICT: Approved` is also refused.
+- **evidence**: relay-system/2026-11-10/gh1409-plan-qa.md (rounds 1-3 exit 8: missing VERDICT, `Approved` refused, missing Basis; round 4 with the contract stated attested Approved), relay-system/2026-11-10/gh1409-final-qa.md (contract stated up front, attested on the first turn), https://github.com/HiQS-Labs/XYZ-forge/issues/1409
+- **confidence**: high. Deterministic validator messages, and the same reviewer passed as soon as the thread stated the contract.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1409
+- **date**: 2026-11-10
+
+### Edit verdicts
+
+| Component | Verdict |
+|---|---|
+| Thread without the VERDICT/Basis contract (rounds 1-3) | hurt (three structurally failed approvals) |
+| Thread stating the contract (plan round 4, final round 1) | helped (attested on the first try) |
+
 ## Before blaming a turn for skipping verification, read every instruction it was given
 
 - **cue**: A relay or marathon reviewer (or builder) "should have run" a test or gate and did not, and the fix being planned is a stronger obligation on that agent.
@@ -186,6 +203,16 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1453
 - **date**: 2026-11-13
 
+## Every backticked path on a relay's "Artifact under review" line must exist from the repo root
+
+- **cue**: writing the `## Setup` "Artifact under review:" line of a relay thread that `relay-drive.sh` will drive, especially when it names evidence files by bare filename
+- **lesson**: the driver checks every path-like backticked token on that line against the worktree root and exits 2 (`relay-drive: artifact path not found in worktree: <token>`) before the reviewer runs; write repo-relative paths in full (`TESTS-RESULTS/<date>+GH-<n>/SUMMARY.md`, not `SUMMARY.md`), or move bare filenames to another Setup line.
+- **evidence**: `utils/py/relay_drive.py:479-492` (the check); `relay-system/2026-11-14/gh1486-final-qa.md` history: the first drive exited 2 on `SUMMARY.md`, the second, after the Setup line was rewritten with full paths, ran the review.
+- **confidence**: high for the mechanism (read from source and reproduced once); one incident.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1486
+- **date**: 2026-11-14
+
 ## A deletion guard is only as good as the probe it trusts: drive the held case end to end
 
 - **cue**: adding or reviewing code that deletes a folder only when an existing "is it in use" probe (lsof, session or claim checks) says it is idle
@@ -195,3 +222,12 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: gate
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1475
 - **date**: 2026-11-14
+
+## Source-text pins sit outside a refactor's focused suites
+- **cue**: a behavior-preserving refactor of a module, or a reworded workflow line, verified only by the suites that exercise its behavior
+- **lesson**: before the refactor, run `grep -rn '<module>\|<literal line>' test/` and add every suite that greps the source text to the focused set; in GH-1479 five behavior suites passed while `test/gh642-consumer-fruit.sh` and `test/gh421-auto-wave-reconcile.sh` failed in the full gate on literal-string pins
+- **evidence**: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
+- **confidence**: high, observed once in the full gate at `6ffa3f359` and resolved by re-pointing both pins
+- **area**: gate
+- **source**: #1479
+- **date**: 2026-11-15
