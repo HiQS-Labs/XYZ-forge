@@ -2,7 +2,7 @@
 gh_issue: 1509
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1509
 title: "GH-1509: Kickstart: observer-led outer-loop child with bounded session recovery"
-status: "Proposed (1-INBOX — plan QA pending)"
+status: Complete
 created: 2026-11-17
 doc_type: feedback
 owner: Agy
