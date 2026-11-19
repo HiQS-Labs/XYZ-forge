@@ -124,3 +124,7 @@ No OL-09 completion credit, runtime enforcement or deployment is claimed.
 PASS / Approved with four Nits. Accept N1/N2: canonical completed-folder capture reuse and research-grounded auto-draft wording clarified. Accept N4: retained ledger-check log hashed. N3 is pre-existing primary-writer governance, outside this instruction slice; unchanged and not claimed solved. Small follow-up awaits round-2 review; required classified gate pending.
 
 Final QA round 2 approved (`3bbb710ab`); Small gate passed on that head with identity unchanged. Evidence: `TESTS-RESULTS/2026-11-17+GH-1476/`. Lessons: NO_ENTRY; paper instruction checks do not establish autonomous behavior.
+
+## Merge evidence
+
+- PR #1514 merged 2026-11-19 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
