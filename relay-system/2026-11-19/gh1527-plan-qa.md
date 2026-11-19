@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -99,5 +99,47 @@ and set STATUS to Approved only on PASS.
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+A local stdlib Python command builds a Markdown kickstart queue from pr_minder classifications and GitHub metadata. It orders PRs and recent issues by explicit first-match rules, diverts uncertain ownership or scope to the operator, and supports saved-input replay. Verification compares a live snapshot with the hand queue and checks deterministic output and held/non-owner routing.
+
+**How the existing system works, per this document**
+
+The parent currently assembles the queue by hand and records authority in a local run record. pr_minder already supplies PR state classifications but lacks author and body fields, so the plan adds one metadata query. Issue labels are sparse; the proposed issue categories therefore use title heuristics and explicit operator overrides.
+
+**What it's not**
+
+It is not a dispatcher, daemon, ledger writer or replacement PR classifier. Inference: a generated authority template still requires the parent to record an actual operator grant before dispatch.
+
+**Call: Block pending two bounded plan corrections.**
+
+- [Should] **S1 — apply explicit ownership/decision exclusions to PRs too.** Requirement 4 covers other-session-owned and decision-needed items (plan:35), but the PR decision list (plan:64–69) never consults the overrides; they appear only under Issues (plan:73–74). Define the existing override flags for both item kinds and place them before PR draft/state routing. No session discovery subsystem is needed.
+  Observed input: the plan's PR rule 6, “otherwise → bucket A,” includes an own, non-held, non-draft clean PR even when its number is supplied in `--other-session`; only issue rule 1 consumes that flag.
+  Affected scope: PR numbers explicitly supplied in `--other-session` or `--needs-operator`.
+  Falsifier: replay one eligible own clean PR with and without its number in each override; without the override expect A, with either override expect Needs-operator and no queue entry. If another documented PR rule already enforces this, cite it and decline.
+
+- [Should] **S2 — correct the PR input contract before implementation.** The plan calls `unknown` “mergeability not yet computed” (plan:43–48), but `pr_minder.py:201–219` computes it from author-history completeness and timestamp. Merge state is examined separately at `pr_minder.py:220–225`, and the JSON serializer excludes `pr_data` (`pr_minder.py:540–542`). Thus the present row cannot distinguish a mergeability-UNKNOWN PR from CLEAN solely through the listed flags. Correct the recon and explicitly decide whether C means author-history unknown or GitHub mergeability UNKNOWN; if the latter is required, describe the smallest source-backed way to obtain that state while retaining pr_minder as the classifier. Do not silently implement a second classifier.
+  Observed input: `pr_minder.py:217` assigns `row["unknown"] = not (complete and ts)`; the plan's literal interpretation at line 45 disagrees with that assignment.
+  Affected scope: PR routing to C versus the clean fallback A when history availability and mergeability differ.
+  Falsifier: an own, non-draft, unheld PR with complete author history, mergeability UNKNOWN, no failing checks and no measured drift. Document its intended bucket and show the chosen input actually distinguishes it from CLEAN; also document a CLEAN PR with unavailable author history.
+
+- [Pass] **Reuse and envelope:** author/body enrichment is justified: row construction keeps those inside `pr_data` (`pr_minder.py:199–200`), which JSON omits (`pr_minder.py:540–542`). A subprocess wrapper, fixed Markdown, and saved-input replay are proportionate (plan:96–106,115–125). Parent integration belongs between intake and dispatch (`skills/1-hourly/kickstart/SKILL.md:30–35`), preserving its explicit authority boundary at lines 49–50.
+
+- [Pass] **Ordering/default:** first-match rules plus explicit fallbacks make the lists mutually exclusive and exhaustive within the selected issue window; the final sequence is literally “A → B → C → D → E → F → G → H → final QA” (plan:60–87). Sparse-label issues conservatively reach “Needs-operator (unclassified: operator picks scope)” (plan:84–85). These are sensible defaults, subject to S1/S2.
+
+- [Nit] **Replay detail:** `--as-of` plus saved inputs and ascending item numbers supplies the main deterministic contract (plan:87,93–99). Pin the issue-window cutoff to that date, and render secondary sections/folded issue numbers in numeric order too. State that owner, exclusions and since-days are also replay inputs. This is a specification clarification, not a request for more machinery.
+
+- [Should] **Acceptance evidence needs a short completion rule.** Plan:103–111 lists real output comparisons, not merely a successful invocation, but does not say unexplained/misclassified differences reject delivery; nor does it explicitly require the retained `provenance.jsonl` required by `AGENTS.md:162–168`. Add those two requirements and tie the receipt to the implemented candidate revision/command. Do not report the plan itself as delivered code. The held/non-owner cases are useful negative routing checks; record an assertion failure against a controlled wrong output to witness that the check can reject, rather than calling a passing routing example a witnessed red control.
+
+**Review limits:** swept the entire plan, including recon, risks, rating and non-goals; the omissions above are in scope regardless of when introduced. This is plan QA, with no implementation or executed acceptance evidence to approve. No prohibited gate or executable fixture was run. Graph reference project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` was ready at generation `2026-11-18T19:39:07Z`, but belongs to a different checkout; local source reads govern the citations here. Coverage reported no recorded gap for pr_minder, not proof of completeness.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The small design is appropriate, but PR overrides do not meet requirement 4 and the stated UNKNOWN input contract contradicts its source. Correct those and make the manual acceptance rejection/evidence rule explicit before building.
+
+Handing off to Producer (claude-a) — disposition the findings and revise the plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
