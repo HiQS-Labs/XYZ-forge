@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -76,5 +76,39 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+Add open-PR disposition and three execution modes to the existing 10days sweep, with marathon remaining the default. Reuse existing preparation and execution owners through three Markdown skill/index edits, plus delivery evidence.
+
+**How the existing system works, per this document**
+10days currently validates issues and prepares survivors through conveyor, then plans and executes marathon waves. Its Step 3 lacks open-PR routing, and both its Flywheel coordination text and Flywheel itself prohibit Jog handoff.
+
+**What it's not**
+The input boundary is the committed Step 3 survivor set, after open-PR items are separated. The plan excludes runtime changes, new queues/runners/schemas/tests, automatic merging and issue closure; it does not promise single-harness independent review.
+
+Comprehension sequencing disclosure: I read ROUTER.md together with the relay instructions before reading the artifact, contrary to this relay's artifact-first requirement. The paraphrase above was recorded before inspecting the technical source files below.
+
+**Source-backed technical validation**
+
+- [Should] Close the single-harness execution contract explicitly. Plan step 3 treats start-task's disclosure paragraph as a supported route past missing QA, but `skills/1-hourly/start-task/SKILL.md:235` says unavailable reviewers stop implementation. The disclosure at lines 38–44 specifies reporting, not an execution exception. Concrete fix: state the narrowly authorized 10days single-harness exception and its precedence over start-task's stop rule, preserving target-repository mandatory gates; otherwise this advertised path still stops. Do not silently change start-task globally.
+  Observed input: plan step 3's “Claude-Code-only” survivor delegated to start-task, with no independent reviewer available; the delegated owner's Step 6 explicitly stops that group.
+  Affected scope: only explicitly selected serial single-harness execution with deferred cross-model review.
+  Falsifier: walkthrough that follows start-task Step 6 literally with an unavailable reviewer and reaches implementation under an existing explicit exception; identify that exception and retain truthful disclosure. Without one, expect stop.
+- [Should] Include Flywheel procedure step 3 in the edit scope. Plan step 4 narrows only the Daily observation paragraph, while `skills/2-daily/flywheel/SKILL.md:208–210` independently commands “For 10days ... do not substitute Jog dispatch”. Concrete fix: qualify this procedural instruction by selected mode as well, and smoke-read the entire Flywheel path for serial and default marathon.
+  Observed input: explicit 10days serial conveyor → Jog choice reaches Flywheel procedure step 3's unconditional Jog prohibition.
+  Affected scope: Flywheel-coordinated 10days serial handoff; default marathon ownership must remain intact.
+  Falsifier: literal post-edit walkthrough of Flywheel steps 1–3 for serial allows the named Jog handoff, while default marathon still uses 10days waves without Jog substitution.
+- [Pass] The scope is proportionate and reversible: plan's “Zero runtime code edits” and “no new queue, runner, daemon, schema, or test suite” extend existing owners. Conveyor defines preparation-only authority (`skills/1-hourly/conveyor/SKILL.md:8–10`); Jog reserves RAW prose for preparation (`skills/2-daily/jog/SKILL.md:42`).
+- [Unverified — no citation] The plan includes HAS-PR exclusion from new builds, selected-mode/HAS-PR reporting, the missing index row, neutral appeal 50, dated recurrence with unknown prior-window trend, rollback, and retained red-control/provenance requirements (artifact sections Ordered Implementation Plan, Acceptance, Rating Rationale). These are plan commitments, not executed verification. No gates were run in this worktree; implementation results remain outstanding.
+
+Whole artifact swept, including pre-existing sections; the two instruction conflicts above are the material findings. No additional plan defects established. Read-only source commands exited 0; decisive source spans are quoted above. Review basis is the supplied GH-1524 acceptance requirements in this relay and artifact; no live issue-state validation was performed.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The bounded docs-only approach is sound, but two traced owner instructions still stop the newly promised serial paths. Resolve their precedence explicitly before implementation.
+
+Handing off to Producer (antigravity) — disposition both findings and revise the plan for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
