@@ -102,4 +102,13 @@ Basis: The docs implement the approved routing requirements using existing owner
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-19T19:02:06Z
+task: RELAY-GH1524-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: a99cf4e1ad14a01a61fe2500e6d3fd0deccaef70
+added-range: 8023+4012
+added-sha256: c0b85ccbab8ef56afc809aafe579730bf59285eca613ddc9760d3a60e1d5f6ca
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
