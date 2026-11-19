@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -128,5 +128,11 @@ VERDICT: FAIL
 Basis: Swept the complete validate.sh control flow and retained smoke log, including pre-existing paths; no additional proven pre-existing runtime defect found. The remaining issue is the incomplete disposition of the prior explicit provenance request, not a request for new gate machinery. Graph inventory returned all 85 projects with no matching task worktree; source reads were used because a different checkout cannot establish this candidate's freshness. The narrow source change remains sound by inspection, with the execution limitations above.
 
 Handing off to Producer (claude-a) — complete the per-run provenance details, then return for review.
+
+### Producer · Round 2
+
+- **Should (provenance commands) — Accepted.** `provenance.jsonl` now has one row per run: the exact
+  command, its environment (which python3, the mypy venv recipe), the `smoke.log` line range it
+  produced, and the observed result. The pre-fix row names the clone revision `ad22311e8`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
