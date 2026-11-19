@@ -268,7 +268,7 @@ Then begin work.
    `skills/*/merge-cleanup/SKILL.md`) and follows the full route.
    Include both sides of renames and deletions; a changed script, test, DB, or other
    non-doc path must follow its classified tier rather than being called docs-only.
-   Run the full qualifying gate (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved commit only when the route requires it.
+   When the route requires the full gate, run `ci-local.sh --fast` on the final approved commit and then push: the pre-push hook runs the full `./validate.sh` suite, and that is the one full-gate run (GH-1518). Do not also run full `ci-local.sh` or `./validate.sh` before the push; that runs the same suite twice on the same commit.
    In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
    never a valued task clone or linked worktree. Verify its repository identity
    before and after the run; drift invalidates its evidence. Retain required

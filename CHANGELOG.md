@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 — GH-1518: start-task runs the full gate once, at push
+
+- `/start-task` now runs `ci-local.sh --fast` on the final approved commit and lets the pre-push hook run
+  the full `./validate.sh` suite as the single full-gate run. Before, a full `ci-local.sh` run was followed
+  by the same suite again at push (about 13 minutes extra per code PR). `utils/py/gate_receipt.py` is
+  unchanged; the operator chose the instruction change over receipt reuse.
+
 ## 2026-11-17 — GH-1509: Kickstart skill for observer-led outer-loop child with session recovery
 
 - Added `skills/1-hourly/kickstart/SKILL.md` codifying the operator's assisted factory pattern:
