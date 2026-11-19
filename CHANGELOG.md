@@ -10,10 +10,15 @@ The age now comes from a shared author-activity clock in `planner_core.py` (`fet
 
 ## 2026-11-17
 
+- GH-1476 / OL-09: retained the real raw/reuse/hold preparation trial, original acceptance-fidelity failure and repair, daily-goal #1520 interpretation and explicit instruction walkthroughs. Independent preparation QA approved in round 1; no implementation, OL-10 admission or unattended credit. Evidence: `TESTS-RESULTS/2026-11-17+GH-1476/ol09-followup/`. Hosted-check correction: prior head had one success, two skipped and CodeRabbit neutral, not four passes.
 - **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search
   the code graph by capability verbs and synonyms, not module names; call tracing stays optional.
   In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
   call tracing found no new module.
+
+## 2026-11-17 — GH-1476: bounded research before preparation
+
+Conveyor now owns medium-depth research for selected raw tasks, freshness reuse, evidence-based deeper research and explicit risk deferral. Daily-goals links remain bounded candidates rather than execution authority. 10days consumes that policy after cheap validity triage, preserves held work and operator ratings, and performs one parent-owned pickup only after a real capture exists. Preparation and live execution admission remain separate. This instruction slice does not complete OL-09: a real bounded preparation run is still required; OL-10 runtime enforcement is unchanged. Verification and limitations: `TESTS-RESULTS/2026-11-17+GH-1476/`. Revert the instruction change to undo; no deployed copies changed.
 
 ## 2026-11-17 — GH-1493: published retirement preserves one bad checkout instead of aborting the call
 

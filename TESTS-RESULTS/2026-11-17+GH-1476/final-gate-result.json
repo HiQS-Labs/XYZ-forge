@@ -1,0 +1,7 @@
+{
+  "exit": 0,
+  "head": "3bbb710ab1ccc411486350bc5db5db4f10523c03",
+  "identity_unchanged": true,
+  "command": "bash validate.sh --sequential --subsystem small",
+  "finished": "2026-11-17T16:54:59.164095+00:00"
+}

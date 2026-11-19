@@ -1,0 +1,23 @@
+[
+  {
+    "global_id": "rmi-01M7KXFFGFMZ2KHFDXR4XK1CM8",
+    "gh_number": 1476,
+    "repo_slug": "XYZ-forge",
+    "is_selected_repo": true,
+    "title": "GH-1476: Raw task preparation",
+    "section": "In progress",
+    "position": 153,
+    "status_marker": "\ud83d\udea7",
+    "doc_path": "PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1476",
+    "raw_text": "- **GH-1476 \u00b7 Raw task preparation** \ud83d\udea7 (rated 75/60/50/60) \u2014 [GH-1476-RAW-TASK-PREPARATION.md](PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md) \u00b7 [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476)",
+    "status_label_supported": true,
+    "status_label": "in-progress",
+    "rating_pri": 75,
+    "rating_sev": 60,
+    "rating_appeal": 50,
+    "rating_effort": 60,
+    "rating_ovr": null,
+    "risk": null
+  }
+]

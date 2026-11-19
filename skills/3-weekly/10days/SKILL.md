@@ -71,8 +71,8 @@ origin sync verification, and robust multi-lane execution containment.
   - Within the marathon, parallel runner subagents may use isolated worktrees (`isolation: "worktree"`)
     or disposable sub-clones for independent edits, but the parent repo must remain protected.
 - **Never mark an issue "already done" without evidence.** A hunch is not evidence. A
-  merged commit/PR that references the issue number, or an existing capture doc parked
-  in `PROJECT/3-COMPLETED`, is evidence.
+  merged commit/PR must address the current ask. A capture in `PROJECT/3-COMPLETED`
+  is a reconciliation clue, not proof that an open issue is delivered.
 - **Check for a concurrently-running marathon before touching the branch, not just the
   current branch name.** A dirty tree, a non-empty `.tick/locks/`, or a fresh untracked
   `PROJECT/2-WORKING/MARATHON-*` directory all mean something else is mid-flight —
@@ -217,19 +217,19 @@ For every issue number from Step 1:
    ```bash
    bash "$SKILL_DIR/find-doc.sh" <N>
    ```
-   - `bucket: "3-COMPLETED"` → strong already-done signal. Exclude immediately; note on the "propose closing #<N>" list.
+   - `bucket: "3-COMPLETED"` → reconcile the current open issue against delivery evidence in Step 3; never exclude on folder location alone.
    - `bucket: "2-WORKING"` with `has_contract: true` → preflight contract exists; route through Step 3 for freshness check.
    - `bucket: null` or `has_contract: false` → needs full Step 3 check and contract authoring in Step 4.
 
 2. **PRS Ratings Extraction & Validation (GH-108):**
-   Query `releases.db` (or capture doc frontmatter) for existing ratings:
+   Query the canonical ledger for existing ratings; capture frontmatter is a read-back display, not a competing rating source:
    ```bash
    python3 "$HARNESS/utils/py/releases_app.py" roadmap show <N> 2>/dev/null || true
    ```
    - **Validate & Recompute Stored Ratings**:
      - Verify each axis (`rating_pri`, `rating_sev`, `rating_appeal`, `rating_effort`) is an integer in range `[1, 100]`.
      - Always recompute `calc = rating_pri + rating_sev + rating_appeal + rating_effort` (range `[4, 400]`) rather than trusting stored sums.
-     - If `rating_ovr` (`ovr`) is present: verify it is an integer in range `[4, 400]`. If malformed or out of range, invalidate and mark it for clearing (`ovr: null`, `is_manual_override: false`).
+     - If `rating_ovr` (`ovr`) is present: verify it is an integer in range `[4, 400]`. If malformed or out of range, preserve its value and mark the item HELD for the operator; never clear it automatically.
 
 **Gotcha to carry into Step 3:** `swarm-preflight.sh` fix-probes detect the *bug*, not
 the *fix* (`grep_present` = bug still there, `grep_absent` = fix landed). Read a stale
@@ -241,17 +241,9 @@ means "verdict is current."
 For every issue that survives Step 2, spawn subagents (batch in groups of ~5-6 concurrent) to answer, with receipts:
 
 - `gh issue view <N> --json title,body,comments,state,labels,url` — read the actual ask, comments, and any operator-posted scores.
-- **Requirement & Blocker Validity Filter**: Apply [`sanity-check`](../../1-hourly/sanity-check/SKILL.md) criteria. An open issue reporting a failure is not automatically an INCLUDE: if the failure protects an obsolete requirement, was an unsupported-platform experiment, or is low-consequence noise with a clear deferral path, classify it as EXCLUDE (`reason: "sanity-check: obsolete or low-risk noise"`).
-- **Ledger & PRS cross-check**: query `releases.db` for roadmap items by GH number to extract existing PRS ratings and manual overrides.
-- **Deterministic PRS Scoring Rubric for Unscored or Incomplete Issues (GH-108)**:
-  If a candidate has no stored rating, or if stored axis values are partial, non-integer, or out of range `[1, 100]` (or `ovr` is malformed/out of range `[4, 400]`), assign deterministic integer point values based on observable properties:
-  - **pri** (queue priority): `90` = critical path blocker / front-of-line ask; `60` = standard backlog task; `30` = minor/niche improvement.
-  - **sev** (severity / pain): `90` = crash, data corruption, or severe gate blocker; `60` = functional bug / incorrect output; `30` = cosmetic / documentation / typo.
-  - **appeal** (motivation / clarity): `90` = clear reproduction steps and unambiguous fix locus; `60` = clear ask needing modest investigation; `30` = open-ended or underspecified report.
-  - **effort** (cheapness / ease — inverted): `90` = surgical single-file change ≤ 20 lines; `60` = moderate multi-file change ≤ 200 lines; `30` = massive architectural rework > 200 lines.
-  - Compute `calc = pri + sev + appeal + effort` (range `[4, 400]`). Mark `provisional: true`.
-  - **Override Handling & Explicit Clear**: If `ovr` is invalid or absent, clear it by running `roadmap rate --issue-num <N> --rated <P>/<S>/<A>/<E> --force` (omitting `--ovr`), and assert read-back via `roadmap show <N>` returns `ovr: null` and `is_manual_override: false`. Set `is_manual_override: true` if and only if a valid, verified `ovr` in range `[4, 400]` is present.
-  - Persist newly evaluated ratings to `releases.db` via `releases roadmap rate` (see Step 4).
+- **Requirement & Blocker Validity Filter:** Apply [`sanity-check`](../../1-hourly/sanity-check/SKILL.md). EXCLUDE requires affirmative evidence of delivery, duplication, supersession or not being a work item. Low risk alone is not exclusion. Unknown reproduction, access, requirements or ownership means HELD with reason and next owner. Apply risk deferral only when explicitly requested for this batch; retain deferred items in Held.
+- **Ledger & PRS cross-check:** read existing ratings and operator overrides by full issue identity. Follow [start-task's rating policy](../../1-hourly/start-task/SKILL.md#task-rating-policy): four 1–100 axes, appeal 50 unless explicitly set by the operator, higher effort score means cheaper. Preserve existing operator values; do not infer appeal from clarity or change scores to improve rank.
+- **Provisional assessment only:** for missing or incomplete ratings return a justified proposal, uncertainty and recurrence evidence/coverage limits. Do not write the ledger, force a rescore or clear an override. Malformed overrides stay HELD for the operator. These Step 3 children do cheap validity triage, not the full medium research checklist for every scanned issue. Only the parent writes a selected item's rating after its real capture exists in Step 4.
 - `git log --all --oneline -i --grep="#<N>\b" --grep="GH-<N>\b"` — commit evidence.
 - `gh pr list --state merged --search "<N> in:body"` (and `--search "#<N>"`) — merged PR evidence.
 - If a capture doc exists (from Step 2), read its own "Status" table and frontmatter.
@@ -261,7 +253,8 @@ Return one structured verdict per issue:
 ```json
 {
   "issue": N,
-  "decision": "INCLUDE|EXCLUDE",
+  "decision": "INCLUDE|HELD|EXCLUDE",
+  "next_owner": "parent preparation owner or named decision owner",
   "reason": "...",
   "evidence": ["commit abc123 fixes this", "..."],
   "already_done": false,
@@ -270,11 +263,11 @@ Return one structured verdict per issue:
   "prs": {
     "pri": 70,
     "sev": 80,
-    "appeal": 60,
+    "appeal": 50,
     "effort": 75,
-    "calc": 285,
+    "calc": 275,
     "ovr": null,
-    "effective_score": 285,
+    "effective_score": 275,
     "is_manual_override": false,
     "provisional": true
   }
@@ -285,7 +278,7 @@ Return one structured verdict per issue:
 - `effective_score` = `ovr` if present and valid (`[4, 400]`), else recomputed `calc` (`pri + sev + appeal + effort`).
 - **Manual override items (`is_manual_override: true`) are operator pins**: rank them at the very front of the candidate queue regardless of arithmetic.
 - **High calculated scores (`calc >= 250`, or `sev >= 75` / `pri >= 75`)**: serve as a strong signal to prioritize the candidate into earlier waves.
-- `EXCLUDE` when: already fixed by commit/PR, duplicate, unreproducible, or not a work item.
+- `INCLUDE` is provisional eligibility, not preparation completion or admission. `HELD` keeps the task and reason visible but removes it from the fire list; it is a report disposition, not a new queue state. `EXCLUDE` needs the affirmative evidence above; a failed reproduction alone is HELD.
 
 > **Runtime-aware reproducibility (`runtime:*`-labeled issues only).** If an issue carries a
 > `runtime:bash` label, reproduce it under `XYZ_PYTHON=0` before ruling it not-reproducible or
@@ -294,7 +287,18 @@ Return one structured verdict per issue:
 > reproduce under the default path. These labels exist only in `xyz-3-agents-swarm`, so this is a
 > silent no-op for any other repo the sweep runs against.
 
-### 4. Ensure every INCLUDE has a contract-carrying capture doc in `2-WORKING`
+### 4. Research selected work, then prepare its capture and contract
+
+The parent commits a bounded candidate set from Step 3 in its selection/recon note
+before research. Shortlisting is not committed selection; selection is not admission.
+For each selected unprepared item, consume [Conveyor's research-depth policy](../../1-hourly/conveyor/SKILL.md#research-depth-and-raw-intake): one read-only medium research child by default, deeper investigation on concrete risk/effort evidence, explicit deferral only on request. Record the numeric deadline and remaining authorized budget before dispatch; exhausted budgets forbid launch. Reuse applicable full preparation through the existing `2-WORKING` / `has_contract` freshness route and Steps 5–6. Do not repeat adequate research merely because this is a new sweep.
+
+Research children must not run Conveyor Steps 3–6, write captures or ledger rows,
+publish, or execute. The parent alone synthesizes the capture after research and
+performs pickup below. An item held during research remains in the note; do not
+create a dangling row or fake contract. Step 3 HELD/EXCLUDE items receive no
+selection/rating write. Continue independent selected items. Daily-goals intake
+belongs to Conveyor; this skill retains its age-window entrypoint.
 
 > **The acceptance criteria are COPIED, never restated (GH-400).** Everything downstream —
 > preflight, the packet, the relay file, the builder, the reviewer — reads this doc; the issue
@@ -309,17 +313,16 @@ Return one structured verdict per issue:
 > emit a packet on unexplained divergence, so a restatement here does not merely risk a wrong
 > build, it hard-fails the lane at Step 6.
 
-For each `INCLUDE` verdict:
+For each selected item whose research supports preparation:
 
-- **Doc already exists** (1-INBOX or 2-WORKING): move it to `2-WORKING` if it isn't
-  there yet; add a `## Swarm Preflight Contract` block if `has_contract` was false.
-  Update frontmatter with PRS ratings and override fields if newly evaluated.
+- **Doc already exists** (1-INBOX, 2-WORKING or 3-COMPLETED): after Step 3 confirms the current ask remains unfinished, reuse the canonical doc and move it to `2-WORKING` through the target repo’s supported lifecycle/repoint procedure if needed. Preserve historical delivery evidence and record the remaining or reopened scope; ambiguous identity or scope stays HELD rather than creating a duplicate. Then add a `## Swarm Preflight Contract` block if `has_contract` was false.
+  Refresh displayed frontmatter ratings and override fields from the ledger after pickup below; never write proposed scores as authoritative.
   **If it has no `## Acceptance` section and the issue does, add one — copied verbatim.**
 - **No doc exists**: author `PROJECT/2-WORKING/GH-<N>-<slug>.md` using this repo's
   standard capture-doc frontmatter (`gh_issue`, `source`, `title`, `status`, `created`,
   `updated`, `owner`, `doc_type`, `rating` (GH-108: `"pri/sev/appeal/effort <pri>/<sev>/<appeal>/<effort> · calc <calc>"`), `rating_ovr` (nullable integer `4–400`), `is_manual_override` (`true|false`), `ratings_provisional: true`, `goal`), where **`source` is the full tracking-issue URL** so a
   reader can diff the doc against the issue it claims to implement in one step. Give it an `## Acceptance` section copied
-  verbatim from the issue's, plus a best-effort contract:
+  verbatim from the issue's, plus a research-grounded contract. Populate rating display fields only from the post-pickup ledger read-back:
 
   ```markdown
   ## Swarm Preflight Contract
@@ -327,19 +330,12 @@ For each `INCLUDE` verdict:
   {
     "target":      { "repo": ".", "ref": "development" },
     "gate":        "bash validate.sh",
-    "fix_probes":  [ /* inferred from the issue body — grep for the bug it describes */ ],
+    "fix_probes":  [ /* supported by the issue and research receipt; detect unfinished behavior */ ],
     "artifacts":   [ /* files the issue names, or the subagent identified as the touch surface */ ],
     "remediation": { "source": "issue#<N>", "criteria": "<one-line SUMMARY for ranking — NOT the definition of done; that is the verbatim ## Acceptance block>" },
     "lanes":       { "agy_safe": [], "orchestrator_only": [ /* kernel/.tick paths, if any */ ] }
   }
   ```
-  ```
-
-  **Persist ratings to releases.db at survivor pickup/planning (Step 5)**:
-  When selecting survivor lanes for the marathon plan, admit each into the ledger with:
-  ```bash
-  python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N> \
-    --rated <P>/<S>/<A>/<E> [--ovr <O>]
   ```
 
   **`source:` is always the tracking issue (GH-425).** It must name this repository and the
@@ -362,9 +358,7 @@ For each `INCLUDE` verdict:
   lane verifies against the Bash path the bug actually lives on, not the Python default (again, a
   no-op outside `xyz-3-agents-swarm`, where the label is absent).
 
-  Mark it explicitly in the doc body: *"Contract auto-drafted by /10days from the issue
-  text — artifacts/lanes not yet operator-verified."* This is the one place this skill
-  guesses; the report in Step 8 must surface every auto-drafted contract by name.
+  Mark it explicitly in the doc body: *"Contract auto-drafted by /10days from the issue and research receipt — artifacts/lanes not yet operator-verified."* Link the receipt and retain its unknowns; the report in Step 8 must surface every auto-drafted contract by name. Research grounding does not replace preflight, overlap checks or independent review.
 
 - **When a criterion genuinely cannot be carried as written** — unreachable in this repo,
   superseded by later work, or deliberately split across lanes — do **not** quietly rewrite the
@@ -387,10 +381,18 @@ For each `INCLUDE` verdict:
   actually exist (or, for a new file, does the issue actually call for creating one at
   that path)? Does the set plausibly match the issue's real subject, not a generic or
   copy-pasted guess? A contract that fails this sniff test is a placeholder — its
-  collision map can't be trusted at all; drop that issue back to `needs_contract` and
-  exclude it from this run rather than firing on an untrustworthy guess.
+  collision map cannot be trusted. Mark it HELD with `needs_contract`, reason and next owner in the Held section; remove it from this run’s Step 5 intersection and fire list.
 
-- Under decision D-b, create or reuse the row via `python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N>` (with its real rating) for the survivors it plans into the marathon, not for every swept issue. For legacy repos using ROADMAP.md, append a pointer line. This makes `$HARNESS/utils/marathon-plan.sh` discover it in Step 5.
+- **One parent-owned pickup, after the capture exists and before Step 5 or execution dispatch.** Verify the real canonical document path and full issue URL, then preview and apply:
+
+  ```bash
+  python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N> \
+    --issue-url <ISSUE_URL> --doc-path <EXISTING_CAPTURE_PATH> --rated <P>/<S>/<A>/<E> --dry-run
+  # Inspect the preview, then repeat without --dry-run.
+  python3 "$HARNESS/utils/py/releases_app.py" roadmap list --json
+  ```
+
+  Never omit `--doc-path` for an item without a capture: the writer can invent a nonexistent path. Pickup preserves an existing row's rating/override. If the existing row is unrated, use `roadmap rate --issue-num <N> --rated <P>/<S>/<A>/<E>` with its retained `--ovr` when present, preview first, without `--force`; hold a refusal instead of bypassing it. A justified re-rate must preserve the operator override explicitly and record why; no automatic forced rescore. Read back the exact issue/row/path and all four scores, then refresh capture frontmatter from that read-back, including preserved overrides. Run `releases_app.py check`. Follow the repo's supported promotion/repoint procedure for `2-WORKING`; legacy repos keep their existing pointer writer. No child or earlier shortlist write substitutes for this step.
 
 ### 5. Build and rank the marathon file
 
@@ -399,7 +401,7 @@ For each `INCLUDE` verdict:
 ```
 
 `--deep` delegates to `$HARNESS/utils/swarm-preflight.sh --dry-run` per ready item for an
-authoritative freshness verdict while ranking (slower, needs network — that's fine,
+authoritative freshness verdict while ranking; it does not choose research depth (slower, needs network — that's fine,
 `gh`/network access is already required by this point). Writes
 `PROJECT/2-WORKING/MARATHON-PLAN-<today>.md` — this is "the marathon file" the
 operator's snippet refers to. Read its Held/Flagged section: anything held here drops
@@ -407,7 +409,7 @@ out of the fire list in Step 6, with the reason already stated by the planner.
 
 **`marathon-plan.sh` ranks the ENTIRE ROADMAP ledger, not just this sweep's issues —
 filter its waves down to this run's candidate set and order by effective PRS score before treating anything as fireable:**
-1. Intersect the plan's assigned items with this sweep's `INCLUDE` set. Drop unrelated or unselected issues.
+1. Intersect the plan’s assigned items with this sweep’s committed selected set that completed Step 4 and is not HELD. Drop unrelated, unselected or held issues.
 2. Order surviving issues by **effective PRS score**:
    - **Manual overrides (`ovr`)** first — operator front-of-line pins supersede calculated arithmetic.
    - **Highest `calc` sums (`pri + sev + appeal + effort`)** next.
@@ -427,11 +429,13 @@ different feature — `merge-contracts.mjs` folds every listed issue into *one* 
 a single invalid contract fails the *entire* bundle and stops filtering per-issue; that
 is not what this step needs). No `--dry-run` — this run is going to fire, so let it
 write the real packet, one per issue. Read the verdict per exit code: `0` ready · `3`
-contract missing/invalid · `4` stale/already landed (drop it, propose closing the GH
-issue — the fix shipped without this run knowing) · `5` not marathon-ready · `6`
-blocked/missing-target · `7` ambiguous. Only exit-0 issues carry into Step 6.5. Every
-non-zero drop gets one line in the Step 8 report with its exit code and reason — never
-silently disappear an issue from the count.
+contract missing/invalid · `4` stale/already landed · `5` not marathon-ready · `6`
+blocked/missing-target · `7` ambiguous. Exit 4 alone is not delivery evidence: an
+invalid or wrong-polarity probe can also produce it. Hold and investigate the actual
+reason; only affirmative delivery evidence permits exclusion/proposed closure.
+Only exit-0 issues carry into Step 6.5. Every nonzero outcome remains HELD unless
+supported exclusion evidence exists, with exit code, reason and next owner in the
+Step 8 report. Never silently disappear an issue from the count.
 
 **An `exit 5` reading `acceptance criteria diverge from issue #N` is your own Step 4 output being
 rejected (GH-400), not a defect in the issue.** Preflight re-fetched the issue and found the doc's
@@ -542,8 +546,9 @@ One final summary, always — even (especially) on a partial or stopped run:
 - **PRS Ratings & Prioritization Table**:
   - Issue number, title, 4-axis ratings (`pri/sev/appeal/effort`), `calc` sum, `ovr` override, effective score, and ranking verdict.
   - Explicitly highlight any **manual overrides (`ovr`)** and high-scoring quick wins.
-- **Exclusion Ledger**: items excluded with reasons (already-done / duplicate / not
-  reproducible / not-a-work-item / held-by-preflight / held-by-planner).
+- **Exclusion Ledger**: affirmative delivery / duplicate / superseded / not-a-work-item evidence.
+- **Held**: unresolved reproduction/access/product decisions, requested risk deferral, research/contract/preflight/planner holds, exhausted budgets and unprocessed selected IDs. Keep reason, evidence, remaining budget and next owner/action. Held is not excluded or dispatched.
+- **Preparation**: selected set, medium/deep/reuse/explicit-deferral decision and source receipt for each item, rating read-back and preserved overrides. Paper checks prove instruction consistency only; real behavior and runtime admission require their own evidence.
 - **Execution Ledger**:
   - Included and fired issues, with their issue numbers, branch, and final commit(s).
   - Full clone folder path used for execution.
