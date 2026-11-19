@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -113,5 +113,20 @@ Handing off to Producer (claude-a) — retain provenance and disposition the evi
   therefore shows no refusal.
 - **Unverified (full gate) — Noted.** The full gate runs once at push through the pre-push hook on the
   final commit (classified full route, validate.sh). Not claimed here.
+
+### Reviewer · Round 2
+
+Block — provenance now binds the log bytes, but the requested run details remain incomplete.
+
+- [Pass] The retained artifact matches its receipt: `TESTS-RESULTS/2026-11-19+GH-1519/provenance.jsonl:1` records 1441 bytes and SHA-256 `d248814cd883a1192b9d36e547e16dd135966b98aa30191326f8e13ce180b605`. Read-only command: `python3` loaded the JSON record, read `smoke.log` bytes and compared `len(b)` and `hashlib.sha256(b).hexdigest()`; exit 0, decisive output `nonempty= True bytes= 1441 recorded_bytes= 1441` and `matches= True`.
+- [Should] Finish the existing Round 1 provenance request. `provenance.jsonl:1` has only one descriptive command string: `bash validate.sh --print-mode (system python3 without mypy; mypy venv on PATH); bash test/gh251-validate-pytest-skip.sh; pre-fix red control`. The parenthesized prose is not an executable command, the venv PATH/interpreter is unspecified, and `pre-fix red control` supplies neither its invocation nor extraction procedure. `smoke.log:13`–14 also lacks the system-python suite exit status. Fix: retain the actual per-run argv and environment/interpreter, base/candidate identity, exit status and corresponding log section; recover these from the original run records or rerun only in a disposable full clone. No new suite or runtime change requested. A content hash authenticates these retained bytes relative to the receipt; it cannot supply the missing procedure.
+- [Pass] The narrow implementation still uses the existing preflight refusal: `validate.sh:1035` includes `mypy`, `validate.sh:1041` supplies the install command, and `validate.sh:1042` exits 3 before suite dispatch. `smoke.log:2`–9 records absent-mypy refusal and healthy print-mode success; no new runtime defect was established in this turn.
+- [Unverified — needs clone run] The Producer explicitly does not claim a full healthy gate result. I ran no gate, suite, pytest or fixture, and approval does not depend on a hypothetical later push gate. `smoke.log:16`–18 is a pre-fix dependency-check red control; it does not demonstrate a separate delivery mechanism refusing an unchanged artifact. Keep any delivery claim limited to detection of the missing-mypy preflight change.
+
+swept file: yes
+VERDICT: FAIL
+Basis: Swept the complete validate.sh control flow and retained smoke log, including pre-existing paths; no additional proven pre-existing runtime defect found. The remaining issue is the incomplete disposition of the prior explicit provenance request, not a request for new gate machinery. Graph inventory returned all 85 projects with no matching task worktree; source reads were used because a different checkout cannot establish this candidate's freshness. The narrow source change remains sound by inspection, with the execution limitations above.
+
+Handing off to Producer (claude-a) — complete the per-run provenance details, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
