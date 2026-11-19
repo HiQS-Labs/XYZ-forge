@@ -201,14 +201,16 @@ Goal: name the foundational defect, not the symptom list.
    - **FACT** — observed in code/diffs/issue text.
    - **PATTERN** — the same violation shows up in ≥2 distinct fixes; name them.
    - **HYPOTHESIS** — the proposed root cause, if not directly observed. Label it. It is allowed here; it is not allowed as a task item's premise without saying so.
-4. Multi-domain invariant decomposition (conditional):
+4. Invariant enforcer discovery: before proposing a new mechanism, run [connect-the-dots](../connect-the-dots/SKILL.md) on the violated rule (the invariant) to discover existing subsystems that already protect or enforce it, and name any existing enforcer in the umbrella issue.
+   Hand off candidate modules and unaddressed gaps to §6.
+5. Multi-domain invariant decomposition (conditional):
    When defects indicate cross-layer friction, map evidence across relevant operational planes:
    - **Platform / Harness:** temp dirs, subprocess timeouts, buffering, quotas.
    - **System / Resource:** disk space, file locks (`flock`), file descriptors, process contention.
    - **Concurrency / State:** git ref updates, lock files, uncommitted journals, ledger atomicity.
    - **Domain / Protocol:** merge semantics, schema evolution, file renames, protocol contracts.
    Classify findings as **Primary Invariant Violation**, **Environmental Catalyst/Amplifier**, or **Secondary Casualty**. Coincident resource pressure must not be mistaken for the primary invariant fault.
-5. Decide: is there **one** foundational cause, **two** entangled ones, or is this actually **unrelated bugs that happen to share a file**? Say which. The third is a valid, useful answer — report it and do not file.
+6. Decide: is there **one** foundational cause, **two** entangled ones, or is this actually **unrelated bugs that happen to share a file**? Say which. The third is a valid, useful answer — report it and do not file.
 
 ## 6. Draft the umbrella issue
 

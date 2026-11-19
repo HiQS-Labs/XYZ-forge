@@ -24,7 +24,7 @@ check_start_task_commensurate_contract() {
   grep -q "Machinery, defensive handling, and test" "$t" || return 1
   grep -q "An 80-line sync script or local utility must not become entangled" "$t" || return 1
   grep -q "operational envelope in the review packet" "$t" || return 1
-  grep -q "enterprise multi-tenant threat models" "$t" || return 1
+  grep -q "repository's own stated threat model" "$t" || return 1
   grep -q "Frame the final review packet with the same commensurate operational envelope" "$t" || return 1
   return 0
 }

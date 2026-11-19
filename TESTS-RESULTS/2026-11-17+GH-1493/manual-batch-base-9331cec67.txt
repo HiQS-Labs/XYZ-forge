@@ -1,0 +1,3 @@
+merge-cleanup: ERROR — Published retirement refused: checkout origin differs from the protected primary: <work>/XYZ-forge-gh9-x-2026-11-17-gate
+EXIT 2
+CALLS 0

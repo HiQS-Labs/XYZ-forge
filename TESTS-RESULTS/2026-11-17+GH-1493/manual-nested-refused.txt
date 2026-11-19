@@ -1,0 +1,12 @@
+# GH-1493 CodeRabbit follow-up: refused checkout nested in an admitted one (preview only)
+# setup: <parent> = clone with canonical origin; <parent>/inner = git init (origin none), ignored via .git/info/exclude
+# call: merge_cleanup.py --primary <primary> --retire-published-pr 1516 --checkout <parent>/inner --checkout <parent>
+## OLD (0e470b330)
+PRESERVED XYZ-forge-gh1493-nestcheck-2026-11-17/inner: checkout origin (none) differs from the protected primary (https://github.com/HiQS-Labs/XYZ-forge.git); a -gate/-verify helper must keep the canonical origin — clone the task clone, then: git -C <helper> remote set-url origin https://github.com/HiQS-Labs/XYZ-forge.git
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1493-nestcheck-2026-11-17` | standalone_clone | `development` | ✅ | 🔥 Active (8873 in 10m) | 0 | ⚠️ 4 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/tags/archive/gh353-356-local-merge @ bb0d5d6a47: tag absent from origin or object differs; refs/tags/archive/gh360-364-local-merge @ 2a41968d33: tag absent from origin or object differs; refs/tags/bash-final-2026-07-28 @ 3bf4e487ea
+merge-cleanup: Skipping XYZ-forge-gh1493-nestcheck-2026-11-17: disposition is PRESERVE_UNPUSHED (Unlanded local refs: refs/tags/archive/gh353-356-local-merge @ bb0d5d6a47: tag absent from origin or object differs; refs/tags/archive/gh360-364-local-merge @ 2a41968d33: tag absent from origin or object differs; refs/tags/bash-final-2026-07-28 @ 3bf4e487ea: tag absent from origin or object differs; re
+## NEW (working tree, this commit)
+PRESERVED XYZ-forge-gh1493-nestcheck-2026-11-17/inner: checkout origin (none) differs from the protected primary (https://github.com/HiQS-Labs/XYZ-forge.git); a -gate/-verify helper must keep the canonical origin — clone the task clone, then: git -C <helper> remote set-url origin https://github.com/HiQS-Labs/XYZ-forge.git
+PRESERVED XYZ-forge-gh1493-nestcheck-2026-11-17: contains refused checkout XYZ-forge-gh1493-nestcheck-2026-11-17/inner

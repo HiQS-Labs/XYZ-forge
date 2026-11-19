@@ -1,0 +1,7 @@
+== test: path-integrity ==
+  workdir: <scratch>
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  PASS: all referenced relay/script/doc paths resolve (scanned 647 scripts + curated docs)
+  checked 272 cross-folder skill links
+  PASS: cross-folder skill Markdown links resolve
+  path-integrity: 3 pass, 0 fail
