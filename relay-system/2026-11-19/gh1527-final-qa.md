@@ -149,4 +149,13 @@ Basis: The sole open finding S1 is resolved by a narrowly scoped opt-out of the 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-19T23:24:15Z
+task: RELAY-gh1527-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: be393f875595744046b8f3e830762b7b84fab660
+added-range: 14624+3614
+added-sha256: cd38edf15c0a4f50f5216b058450ccf7f448272e3023202fefccfe7468a8cadc
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
