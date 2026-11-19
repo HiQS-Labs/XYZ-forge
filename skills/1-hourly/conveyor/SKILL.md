@@ -18,11 +18,53 @@ Invoking conveyor to prepare issues authorizes the necessary capture/PRS edits, 
 
 A request with no issue IDs or selection scope needs one clarification. Resolve dependencies before publication; hold an item whose scope or prerequisite is unresolved and continue independent selected items. No synthetic backlog or fabricated contracts to fill the batch.
 
+## Research depth and RAW intake
+
+RAW is an existing open GitHub issue without a required capture, roadmap row or
+contract. Conveyor owns intake of explicitly named issues and daily-goals issues.
+A daily-goals issue is an operator-named open issue whose body lists goals. Preserve
+its text and holds; report explicit links to open issues as candidates. Prepare a
+linked issue only when individually selected or covered by the authorized batch
+scope, within its item/time limit (default five items). A link is not admission.
+Unlinked or ambiguous goals stay held for decomposition; do not invent issues or
+contracts. Without a selected issue or batch scope, report candidates and await selection.
+
+After validity triage, the parent records its committed candidate set in a
+selection/recon note. Selection is preparation intent, not execution admission.
+For each selected item, choose the following before authoring its contract:
+
+- **Reuse:** applicable preparation already covers the medium checklist below.
+  Recheck it against the current issue, source and dependencies, then use the
+  existing parser/preflight freshness checks. A contract alone is not that evidence.
+- **Medium by default:** dispatch one read-only research child for selected,
+  unprepared work. Record a numeric deadline and remaining authorized attempt/time
+  budget in the parent note before launch; exhausted budget forbids launch. Carry
+  the note into the eventual capture, without changing the preflight packet schema.
+  Choose proportionate bounds for this run; never reset or extend them automatically.
+  If the supported child route is unavailable, retain a hold and next owner.
+- **Deeper when justified:** concrete uncertainty about state, authority, recovery
+  or credible high actual effort calls for deeper bounded research, a decision or a
+  spike before a build contract. High effort means expensive work, not a high PRS
+  cheapness score. Preserve the evidence and remaining budget when changing depth.
+- **Risk deferral only on request:** apply an explicit risk-deferral mode to its
+  requested batch; otherwise research uncertainty rather than silently dropping it.
+  A product/human decision stays held for its owner in either mode.
+
+The medium research receipt names the baseline/source SHA, existing owner and state
+writer, dependencies and retry boundaries, discriminating checks, bounded artifacts,
+acceptance, foreseeable approvals and runtime needs, unknowns and the next owner.
+Research children return evidence only: no capture/ledger writes, Conveyor Steps
+3–6, publication or execution. The parent synthesizes the capture and performs the
+single canonical pickup after the real capture exists. Research-held items remain
+in the note; never create a row pointing to a nonexistent capture. Continue independent
+selected work while holds wait. Research is not independent preparation QA, readiness
+or execution authority; the later review and live consumer checks still apply.
+
 ## Preparation flow
 
 1. **Resolve and deduplicate.** Read the target's startup docs and current CLI help. Pin canonical origin, integration ref and fetched SHA; in XYZ Forge the integration branch is `development`. Read the live issue including comments, existing capture/working doc (search by issue number), PRS row and active PRs. Use `python3 utils/py/prior_art_recon.py --query '<specific seam>' --json` where available; reject empty output and disclose discovery errors. Read matching helpers before inventing anything. An already-delivered/duplicate/closed issue is reported with its evidence, never reopened or relabelled as ready. An existing-fix candidate that may solve the ask needs the operator's decision before further planning. Reuse the canonical doc; multiple plausible docs or conflicting active work mean hold, not a second plan. Use `/idea` only for a separately requested new issue: it intentionally excludes retrofit of existing issues.
 
-2. **Ground the task.** Apply [recon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/recon/SKILL.md), sized to the radius. Record observed behavior, source `file:line`, entry/call paths, state writer, downstream consumer/retry boundary, current SHA, dependencies and unknowns. Draft the smallest plan extending the existing subsystem and writer, with bounded artifacts, non-goals, rollback and falsifiable acceptance. A spike or unresolved product decision stays `needs-spike`/held, without a pretend build contract. No production edits, builder/reviewer dispatch for implementation, full suite or attempt lease.
+2. **Ground the task.** Follow the research-depth policy above, then apply [recon](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/recon/SKILL.md), sized to the radius. Record observed behavior, source `file:line`, entry/call paths, state writer, downstream consumer/retry boundary, current SHA, dependencies and unknowns. Draft the smallest plan extending the existing subsystem and writer, with bounded artifacts, non-goals, rollback and falsifiable acceptance. A spike or unresolved product decision stays `needs-spike`/held, without a pretend build contract. No production edits, builder/reviewer dispatch for implementation, full suite or attempt lease.
 
 3. **Synthesize the capture.** Preserve the issue body; put the refined plan in its existing canonical doc or a repo-governed `PROJECT/1-INBOX/GH-<N>-<SLUG>.md`. For cross-repository capture, use [HQ](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/hq/SKILL.md)'s locator and `park --gh-issue` path, verifying the resolved target before writes. In the current task checkout use the repository's documented capture procedure; never let HQ redirect writes into an unrelated primary. Include `gh_issue`, full `source` issue URL, title/status/date/owner/goal, exact PDDA Status table, per-requirement acceptance, rating rationale and a `## Swarm Preflight Contract` fenced JSON block. Keep unrelated content and prior decisions. Preserve `ratings_provisional` and human holds; never stamp implementation `approved`/`reviewed`, clear a provisional hold or set `--accepted-start`.
 
@@ -39,7 +81,7 @@ A request with no issue IDs or selection scope needs one clarification. Resolve 
    python3 utils/py/releases_app.py check
    ```
 
-   Substitute actual values; size-check/parse the read-back and verify the exact issue URL, row, doc and rating. `pickup` reuses a row and preserves its existing scores/override. If that existing row is unrated, apply its first rating with `roadmap rate --issue-num N --rated P/S/A/E --dry-run`, retaining any operator `--ovr` explicitly; inspect and repeat without `--dry-run`, then read back all four axes. This needs no `--force`; hold any writer refusal for the supported resolution rather than bypass it. Repoint only to the verified canonical doc via supported verbs. A justified rescore uses `roadmap rate` with retained `--ovr` explicitly; no automatic `--force`, raw SQL or competing rank store. Repositories without PRS retain their local equivalent; do not install PRS or bypass its refusal.
+   After pickup and any first rating, refresh the capture’s displayed ratings and override from the ledger; proposed scores must not overwrite an existing row’s preserved values. Substitute actual values; size-check/parse the read-back and verify the exact issue URL, row, doc and rating. `pickup` reuses a row and preserves its existing scores/override. If that existing row is unrated, apply its first rating with `roadmap rate --issue-num N --rated P/S/A/E --dry-run`, retaining any operator `--ovr` explicitly; inspect and repeat without `--dry-run`, then read back all four axes. This needs no `--force`; hold any writer refusal for the supported resolution rather than bypass it. Repoint only to the verified canonical doc via supported verbs. A justified rescore uses `roadmap rate` with retained `--ovr` explicitly; no automatic `--force`, raw SQL or competing rank store. Repositories without PRS retain their local equivalent; do not install PRS or bypass its refusal.
 
 5. **Validate the actual consumer input.** In a separate disposable full clone, inspect all probe commands before evaluation. Import the existing parser and Jog shape/linter; assert a nonempty result and no reason:
 
