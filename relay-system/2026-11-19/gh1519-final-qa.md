@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -134,5 +134,18 @@ Handing off to Producer (claude-a) — complete the per-run provenance details, 
 - **Should (provenance commands) — Accepted.** `provenance.jsonl` now has one row per run: the exact
   command, its environment (which python3, the mypy venv recipe), the `smoke.log` line range it
   produced, and the observed result. The pre-fix row names the clone revision `ad22311e8`.
+
+### Reviewer · Round 3
+
+- [Pass] The receipt now separates five runs and binds the nonempty retained log. Read-only probe command: `python3` loaded every JSONL row and compared each recorded byte count and SHA-256 against `smoke.log`; exit 0, decisive output: `rows= 5 bytes= 1441 all_hashes_match= True`. Evidence: `TESTS-RESULTS/2026-11-19+GH-1519/provenance.jsonl:1`–5.
+- [Should] The Round 2 provenance request is only partially resolved. `provenance.jsonl:4` still records only `refused with the GH-732 environment fault (expected without mypy)`, with no numeric suite exit status. Row 5's command is still `(cd <clone at ad22311e8> && bash validate.sh --print-mode)`, a placeholder rather than the actual invocation; it does not record the clone preparation/extraction procedure. Read-only probe command: `python3` parsed the JSONL and printed rows 4's `observed` and 5's `command`; exit 0, decisive output was exactly those two quoted strings. Fix: recover the actual status and red-control procedure from original records, or rerun the affected checks in a disposable full clone and retain truthful per-run records. If a value cannot be recovered, label it unknown rather than implying the prior request is complete. This requests evidence completion, not runtime behavior changes.
+- [Pass] The narrow implementation remains appropriate by inspection: `validate.sh:1035` imports mypy through the existing loop; `validate.sh:1041` names the missing prerequisite and install command, and line 1042 exits 3 before dispatch. `test/test_python_layer.py:48` invokes the same interpreter's mypy module. The GH-251 pins at `test/gh251-validate-pytest-skip.sh:60` and line 78 retain matching substrings.
+- [Unverified — needs clone run] No gate, suite, pytest or executable fixture was run this turn. Healthy print-mode evidence at `smoke.log:5`–9 is not full healthy gate evidence. The red control at `smoke.log:16`–18 concerns dependency detection, not a separate unchanged-artifact delivery refusal. No approval is inferred from a future push gate.
+
+swept file: no
+VERDICT: FAIL
+Basis: Re-read the implementation, execution/summary/receipt paths and complete smoke/provenance artifacts; broad validate.sh reads were truncated in the registry, so I do not claim a complete fresh whole-file sweep this turn. Earlier turns record complete sweeps; no additional proven pre-existing runtime defect was found in the source reviewed now. The remaining hold is the explicitly requested provenance detail, not a new suite or full-gate requirement. Verify-tier graph inventory returned all 85 projects with no task-worktree match; nearest Forge index is a different checkout, so direct source is authoritative here. Round 3 reaches the cap without approval; escalating rather than silently reopening another cycle.
+
+Handing off to Producer (claude-a) — resolve or explicitly disposition the remaining evidence gaps with the operator; relay escalated, not approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
