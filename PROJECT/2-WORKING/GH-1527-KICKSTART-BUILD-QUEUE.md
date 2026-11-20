@@ -79,6 +79,11 @@ PRs (state from pr_minder; author and raw `mergeable` from the one gh call):
 8. otherwise (raw `mergeable == MERGEABLE`, not behind/conflicting/failing) → bucket A, clean:
    wait for review, merge.
 
+Amended after CodeRabbit review of `1e907aa82`: a new PR rule 3 routes a PR whose closing keywords
+(bare, or naming this repository) name an issue parked by issue rules 1–2 to Needs-operator, since
+merging it would close that issue; bucket A needs raw `mergeable == MERGEABLE` and raw `CONFLICTING`
+goes to B; a draft stays D even when it conflicts. The script docstring holds the renumbered list.
+
 Worked cases: an own unheld non-draft PR with complete author history, `mergeable == UNKNOWN`, no
 failing checks and no drift → C (rule 7). A CLEAN, `MERGEABLE` PR whose author history is
 unavailable (pr_minder `unknown: true`) → A (rule 8); author history does not gate landing.

@@ -11,9 +11,11 @@ Inputs (reused, never re-classified):
 Ordering is a CLOSED list, first match wins (mirrored in skills/1-hourly/kickstart/SKILL.md):
 
   PRs:    1 --other-session -> Needs-operator   2 --needs-operator -> Needs-operator
-          3 held / inherited hold -> Needs-operator   4 not --owner's -> Needs-operator
-          5 draft -> D   6 conflicting or failing -> B   7 behind or mergeable UNKNOWN -> C
-          8 otherwise -> A
+          3 its closing keywords name a parked issue (issue rules 1-2) -> Needs-operator
+          4 held / inherited hold -> Needs-operator   5 not --owner's -> Needs-operator
+          6 draft -> D (a draft stays D even when it also conflicts)   7 conflicting or failing,
+          or raw mergeable CONFLICTING -> B   8 behind, or raw mergeable not MERGEABLE -> C
+          9 otherwise (confirmed MERGEABLE) -> A
   Issues: 1 --other-session -> Needs-operator   2 --needs-operator or "decide/decision" title
           -> Needs-operator   3 closed by an open own queued PR -> folded into that PR's line
           4 merge-batch label or "Merge batch / merge inventory / <skill> sweep <date>" title -> G
@@ -55,7 +57,7 @@ AFTER = re.compile(r"\bafter\s+(?:PR\s+)?#(\d+)", re.I)
 MD_FILE = re.compile(r"[\w./-]+\.md\b")
 CODE_FILE = re.compile(r"[\w./-]+\.(?:py|sh|txt|json|ya?ml)\b")
 OUT_OF_SCOPE = re.compile(r"^(?:arc:|plan:|architectural plan|research:|spike:|umbrella:|radar|daily goals)", re.I)
-CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:[\w.-]+/[\w.-]+)?#(\d+)", re.I)
+CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/[\w.-]+))?#(\d+)", re.I)
 TITLE_GH = re.compile(r"\bGH-(\d+)\b")
 
 
@@ -64,6 +66,15 @@ def run_json(argv: list[str], cwd: Path):
     if out.returncode:
         sys.exit(f"build_queue: {' '.join(argv[:3])} failed: {out.stderr.strip()[-300:]}")
     return json.loads(out.stdout or "null")
+
+
+def origin_slug(root: Path) -> str:
+    url = subprocess.run(["git", "-C", str(root), "remote", "get-url", "origin"],
+                         capture_output=True, text=True).stdout.strip()
+    m = re.search(r"[:/]([\w.-]+/[\w.-]+?)(?:\.git)?$", url)
+    if not m:
+        sys.exit(f"build_queue: cannot read OWNER/NAME from origin {url!r}; pass --repo-slug")
+    return m.group(1)
 
 
 def load(path: str | None, live):
@@ -78,8 +89,18 @@ def fmt(nums) -> str:
     return ", ".join(f"#{n}" for n in sorted(nums))
 
 
-def classify_prs(rows, meta, owner, other, decide):
-    """PR rules 1-8. Returns (buckets {A..D: [(n, title, closes)]}, needs [(n, reason)])."""
+def closing_refs(body: str, slug: str) -> set[int]:
+    """Issues GitHub will close on merge: closing keywords, bare or naming this repository only."""
+    return {int(num) for repo, num in CLOSES.findall(body or "") if not repo or repo.lower() == slug.lower()}
+
+
+def parked_issues(issues, other, decide) -> set[int]:
+    """Issues the run parks by issue rules 1-2 (any creation date): a queued PR must not close them."""
+    return set(other) | set(decide) | {i["number"] for i in issues if DECISION.search(i["title"])}
+
+
+def classify_prs(rows, meta, owner, other, decide, parked, slug):
+    """PR rules 1-9. Returns (buckets {A..D: [(n, title, folds)]}, needs [(n, reason)])."""
     buckets: dict[str, list] = {k: [] for k in "ABCD"}
     needs = []
     for row in sorted(rows, key=lambda r: r["pr"]):
@@ -88,22 +109,24 @@ def classify_prs(rows, meta, owner, other, decide):
         if m is None:
             sys.exit(f"build_queue: PR #{n} is in pr_minder output but not in the PR metadata")
         title = row["title"]
-        closes = sorted({int(x) for x in CLOSES.findall(m.get("body") or "")} |
-                        {int(x) for x in TITLE_GH.findall(m.get("title") or title)})
+        closing = closing_refs(m.get("body") or "", slug)
+        closes = sorted(closing | {int(x) for x in TITLE_GH.findall(m.get("title") or title)})
         if n in other:
             needs.append((n, f"PR #{n} {title}: owned by another session; remind only"))
         elif n in decide:
             needs.append((n, f"PR #{n} {title}: operator decision"))
+        elif closing & parked:
+            needs.append((n, f"PR #{n} {title}: merging it would close parked {fmt(closing & parked)}"))
         elif row["held"] or row.get("inherited_hold"):
             needs.append((n, f"PR #{n} {title}: held ({row['held'] or row['inherited_hold']})"))
         elif ((m.get("author") or {}).get("login")) != owner:
             needs.append((n, f"PR #{n} {title}: authored by {(m.get('author') or {}).get('login')}, not {owner}"))
         elif row["draft"]:
             buckets["D"].append((n, title, closes))
-        elif row["conflicting"] or row["failing"]:
+        elif row["conflicting"] or row["failing"] or m.get("mergeable") == "CONFLICTING":
             buckets["B"].append((n, title, closes))
-        elif row["behind"] or m.get("mergeable") == "UNKNOWN":
-            buckets["C"].append((n, title, closes))
+        elif row["behind"] or m.get("mergeable") != "MERGEABLE":
+            buckets["C"].append((n, title, closes))   # UNKNOWN, or anything not confirmed MERGEABLE
         else:
             buckets["A"].append((n, title, closes))
     return buckets, needs
@@ -187,6 +210,7 @@ def main() -> int:
     ap.add_argument("--owner", help="GitHub login whose PRs the run may merge (default: gh's current user)")
     ap.add_argument("--other-session", default="", help="PR/issue numbers owned by another session (comma list)")
     ap.add_argument("--needs-operator", default="", help="PR/issue numbers that need an operator decision")
+    ap.add_argument("--repo-slug", help="OWNER/NAME for qualified closing references (default: from origin URL)")
     ap.add_argument("--since-days", type=int, default=14, help="issue window, counted back from --as-of")
     ap.add_argument("--as-of", default=dt.datetime.now(dt.timezone.utc).date().isoformat(), help="YYYY-MM-DD")
     ap.add_argument("--prs-json", help="saved pr_minder.py --json output")
@@ -209,8 +233,10 @@ def main() -> int:
         ["gh", "issue", "list", "--state", "open", "--limit", "1000", "--search", f"created:>={cutoff}",
          "--json", "number,title,labels,body,createdAt"], root))
     meta = {m["number"]: m for m in meta_rows}
+    slug = args.repo_slug or origin_slug(root)
 
-    prb, pr_needs = classify_prs(rows, meta, args.owner, args.other, args.decide)
+    prb, pr_needs = classify_prs(rows, meta, args.owner, args.other, args.decide,
+                                 parked_issues(issues, args.other, args.decide), slug)
     folded_map = {n: set(closes) for k in "ABCD" for n, _, closes in prb[k]}
     folded = set().union(*folded_map.values()) if folded_map else set()
     issb, issue_needs, skipped = classify_issues(issues, cutoff, args.other, args.decide, folded)

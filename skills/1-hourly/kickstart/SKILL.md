@@ -35,11 +35,13 @@ session and the single delegated outer-loop child session. There are never compe
    (pass `--other-session` and `--needs-operator` for the holds resolved in step 1), records the
    operator's authority grant in the printed Authority block of that run record, then dispatches.
    A resumed session re-reads the grant there instead of asking again. The script's ordering is a
-   closed list, first match wins: own clean PRs, own conflicting or failing PRs, own behind or
-   mergeability-UNKNOWN PRs as one merge-cleanup batch, drafts (finish or close), small bug
-   issues, docs issues, stale merge-batch and inventory issues (verify, then close), refactors
-   gated on a named predecessor, final QA. Held PRs, other authors' PRs, decision-needed,
-   other-session-owned and unclassified items go to Needs-operator.
+   closed list, first match wins: own clean (confirmed `MERGEABLE`) PRs, own conflicting or
+   failing PRs, own behind or not-yet-`MERGEABLE` PRs as one merge-cleanup batch, drafts (finish
+   or close; a draft stays a draft even when it also conflicts), small bug issues, docs issues,
+   stale merge-batch and inventory issues (verify, then close), refactors gated on a named
+   predecessor, final QA. Held PRs, other authors' PRs, decision-needed, other-session-owned and
+   unclassified items go to Needs-operator, and so does any PR whose closing keywords name a
+   parked issue: merging it would close an issue the run may not close.
 3. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts
    the outer-loop child through the host's supported delegation mechanism (`delegate_task`
    or platform native delegate). Never starts multiple competing child sessions.

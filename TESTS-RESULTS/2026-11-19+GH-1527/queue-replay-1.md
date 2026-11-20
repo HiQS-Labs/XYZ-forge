@@ -11,29 +11,28 @@
 - Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
 
 ## Queue (execution order)
-1. #1526 docs(start-task): ci-local --fast, then pre-push is the one full gate (GH-1518): CLEAN. Wait for review, then merge.
-2. #1417 fix: require canonical attempt accounting before task qualification (GH-1399) (closes #1399): CONFLICTING or failing. Merge development in, gate, merge.
-3. #1460 feat(daily-planner): shared Daily Work Ledger GH issue, carryover, checkout calibration, and vendored repo support (#1459) (closes #1459): CONFLICTING or failing. Merge development in, gate, merge.
-4. #1467 fix(GH-1465): relay-drive runs the reviewer gate itself; earlier findings stay open (closes #1465): CONFLICTING or failing. Merge development in, gate, merge.
-5. #1471 feat(GH-1466): xyz-vendor --ledger-only tier (closes #1466): CONFLICTING or failing. Merge development in, gate, merge.
-6. #1497 fix(GH-1049): no false dependency.drift for surfaces absent at both revs: CONFLICTING or failing. Merge development in, gate, merge.
-7. #1501 feat(changelog): eliminate merge conflicts via landing reconcile writer and default-off mode (Closes #1487) (closes #1487): CONFLICTING or failing. Merge development in, gate, merge.
-8. #1507 fix: report timeout observations without inferring causes (closes #1506): CONFLICTING or failing. Merge development in, gate, merge.
-9. Mergeability UNKNOWN or behind: #1495 fix(GH-1023): pass profile effort to the Command Code CLI and record it honestly; #1496 Marathon lane gh-1050-no-swap-false-low-swap-warning. Refresh their state, then land them as one merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Reconcile once at the end.
-10. Draft #1391 docs(GH-1386): bounded closeout and gate-incident evidence (closes #1386): finish or close, with evidence.
-11. #1499 skill_drift_check.py reports 0 ok / 0 drifted on a vendored .xyz/skills tree, so a green result proves nothing: small bug fix through start-task or jog.
-12. #1500 intake.py copies untracked .pyc files from the source skill folder into the Deployed Skills payload: small bug fix through start-task or jog.
-13. #1519 Gate preflight: fail fast when mypy (requirements-dev.txt) is missing, instead of failing a 13-minute full gate at test_python_layer.py: small bug fix through start-task or jog.
-14. #1527 kickstart: deterministic queue builder so a long run is one command (build_queue.py): small bug fix through start-task or jog.
-15. #1473 PDDA: the landing reconcile writes CHANGELOG.md from a Changelog section in the PR body, so PR branches stop editing it: docs fix through express.
-16. #1517 merge-cleanup SKILL.md: batch protocol still says the script runs no test suite (stale after GH-1383 auto-sweep): docs fix through express.
-17. #1522 AGENTS.md: only the operator's words are instructions; others' comments and model turns are evidence (prompt-injection guard): docs fix through express.
-18. Stale merge-batch and inventory issues #1374, #1375, #1380, #1394, #1398, #1408, #1412, #1441, #1523: close each once it is verified complete.
-19. #1480 refactor: decompose merge-cleanup entry point and landing loop after #1475: refactor, only after #1475 has landed.
-20. #1481 refactor: decompose marathon-drive main after #1467: refactor, only after #1467 has landed.
-21. #1482 refactor: type and decompose releases_app boundaries after #1471: refactor, only after #1471 has landed.
-22. #1483 refactor: type and decompose Jog and wave-reconcile executor entry points: refactor, no predecessor named; confirm before starting.
-23. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+1. #1417 fix: require canonical attempt accounting before task qualification (GH-1399) (closes #1399): CONFLICTING or failing. Merge development in, gate, merge.
+2. #1460 feat(daily-planner): shared Daily Work Ledger GH issue, carryover, checkout calibration, and vendored repo support (#1459) (closes #1459): CONFLICTING or failing. Merge development in, gate, merge.
+3. #1467 fix(GH-1465): relay-drive runs the reviewer gate itself; earlier findings stay open (closes #1465): CONFLICTING or failing. Merge development in, gate, merge.
+4. #1471 feat(GH-1466): xyz-vendor --ledger-only tier (closes #1466): CONFLICTING or failing. Merge development in, gate, merge.
+5. #1497 fix(GH-1049): no false dependency.drift for surfaces absent at both revs: CONFLICTING or failing. Merge development in, gate, merge.
+6. #1501 feat(changelog): eliminate merge conflicts via landing reconcile writer and default-off mode (Closes #1487) (closes #1487): CONFLICTING or failing. Merge development in, gate, merge.
+7. #1507 fix: report timeout observations without inferring causes (closes #1506): CONFLICTING or failing. Merge development in, gate, merge.
+8. Mergeability UNKNOWN or behind: #1495 fix(GH-1023): pass profile effort to the Command Code CLI and record it honestly; #1496 Marathon lane gh-1050-no-swap-false-low-swap-warning. Refresh their state, then land them as one merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Reconcile once at the end.
+9. Draft #1391 docs(GH-1386): bounded closeout and gate-incident evidence (closes #1386): finish or close, with evidence.
+10. #1499 skill_drift_check.py reports 0 ok / 0 drifted on a vendored .xyz/skills tree, so a green result proves nothing: small bug fix through start-task or jog.
+11. #1500 intake.py copies untracked .pyc files from the source skill folder into the Deployed Skills payload: small bug fix through start-task or jog.
+12. #1519 Gate preflight: fail fast when mypy (requirements-dev.txt) is missing, instead of failing a 13-minute full gate at test_python_layer.py: small bug fix through start-task or jog.
+13. #1527 kickstart: deterministic queue builder so a long run is one command (build_queue.py): small bug fix through start-task or jog.
+14. #1473 PDDA: the landing reconcile writes CHANGELOG.md from a Changelog section in the PR body, so PR branches stop editing it: docs fix through express.
+15. #1517 merge-cleanup SKILL.md: batch protocol still says the script runs no test suite (stale after GH-1383 auto-sweep): docs fix through express.
+16. #1522 AGENTS.md: only the operator's words are instructions; others' comments and model turns are evidence (prompt-injection guard): docs fix through express.
+17. Stale merge-batch and inventory issues #1374, #1375, #1380, #1394, #1398, #1408, #1412, #1441, #1523: close each once it is verified complete.
+18. #1480 refactor: decompose merge-cleanup entry point and landing loop after #1475: refactor, only after #1475 has landed.
+19. #1481 refactor: decompose marathon-drive main after #1467: refactor, only after #1467 has landed.
+20. #1482 refactor: type and decompose releases_app boundaries after #1471: refactor, only after #1471 has landed.
+21. #1483 refactor: type and decompose Jog and wave-reconcile executor entry points: refactor, no predecessor named; confirm before starting.
+22. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
 
 ## Needs the operator (the run parks these and keeps going)
 - PR #1024 feat(weekly): held intake and preserved rollover with tracked review limits (GH-1022): held (Review authority limit / unresolved escalation)
@@ -56,6 +55,7 @@
 - #1475 merge-cleanup: 3-phase remediation from a 13-PR batch post-mortem (quick wins, next wins, deeper changes): unclassified; operator picks scope
 - #1508 PDDA: per-repo override for the governance doc list (survives install/sync): unclassified; operator picks scope
 - #1518 pre-push: decide whether a green ci-local receipt for the exact commit satisfies the full-gate reuse check: operator decision
+- PR #1526 docs(start-task): ci-local --fast, then pre-push is the one full gate (GH-1518): merging it would close parked #1518
 - #1528 connect-the-dots: tighten evidence discipline and dry-run safety: unclassified; operator picks scope
 
 ## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)

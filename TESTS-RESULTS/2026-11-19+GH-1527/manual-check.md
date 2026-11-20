@@ -9,13 +9,14 @@ are in `provenance.jsonl`.
 - `inputs/pr_meta.json` — `gh pr list --state open --limit 300 --json number,author,title,body,mergeable`
 - `inputs/issues.json` — `gh issue list --state open --limit 1000 --search "created:>=2026-11-05" --json number,title,labels,body,createdAt`
 
-Command (both replay runs):
+Command (both replay runs), from the repository root:
 
 ```
+E=TESTS-RESULTS/2026-11-19+GH-1527
 python3 skills/1-hourly/kickstart/scripts/build_queue.py --as-of 2026-11-19 --owner noelsaw1 \
-  --other-session 1400,1418 --needs-operator 1435,1427 \
-  --prs-json inputs/pr_minder.json --pr-meta-json inputs/pr_meta.json --issues-json inputs/issues.json \
-  --out queue-replay-N.md
+  --repo-slug HiQS-Labs/XYZ-forge --other-session 1400,1418 --needs-operator 1435,1427 \
+  --prs-json $E/inputs/pr_minder.json --pr-meta-json $E/inputs/pr_meta.json --issues-json $E/inputs/issues.json \
+  --out $E/queue-replay-N.md
 ```
 
 Machine paths: absolute home-directory paths inside saved issue/PR bodies were replaced with `~`
@@ -56,7 +57,7 @@ rule. Defects found by this diff during the build were fixed before this receipt
 
 | Hand queue | Generated | Explanation |
 |---|---|---|
-| 0a #1526 merge when CodeRabbit clean | 1. #1526 CLEAN | match |
+| 0a #1526 merge when CodeRabbit clean | Needs-operator: "merging it would close parked #1518" | rule PR3 (added after CodeRabbit review): the saved #1526 body said `Closes #1518`, and #1518 is a parked operator decision. The run changed #1526's body to `Refs #1518` before merging it |
 | 1 #1525 CLEAN | absent | drift: merged 476326496 at 22:53Z, before inputs were saved |
 | 0b #1527 codify | 14. #1527 small bug | rule E7 (title names `build_queue.py`); the in-flight task itself. Once its PR (title `GH-1527`) is open, rule 3 folds it into that PR's line |
 | 2 #1501 CONFLICTING | 7. #1501 B (closes #1487) | match; fold via `Closes #1487` |
@@ -97,3 +98,22 @@ refs hash, `FETCH_HEAD` mtime and object counts taken before and after a live ru
 | Red control: pre-fix argv (`pr_minder.py --json`, no flag) under the same shim | fetch/merge-tree calls: 21 (e.g. `fetch -q origin pull/1391/head`) | check detects the write path |
 
 Verdict: pass. No unexplained difference remains.
+
+## CodeRabbit round (2026-11-19, review of `1e907aa82`)
+
+Fixes: PR rule 3 (a PR whose closing keywords name a parked issue goes to Needs-operator); closing
+references keep their repository qualifier (`--repo-slug`, default from origin); bucket A requires raw
+`mergeable == MERGEABLE` (a contradictory `CONFLICTING` goes to B); draft precedence stated in SKILL.md;
+replay command paths made repository-root-relative. Routing outputs in `routing/` regenerated. The
+clean control uses a copy of the inputs with #1526's `Closes #1518` changed to `Refs #1518`.
+
+| Check | Observed | Verdict |
+|---|---|---|
+| Queued PR closing a parked issue | `routing/out-closes-parked.md`: #1526 in_needs=True, reason "merging it would close parked #1518" | pass |
+| Red control for that rule | the previous candidate's replay (`git show 1e907aa82:TESTS-RESULTS/2026-11-19+GH-1527/queue-replay-1.md`) listed `1. #1526 ... CLEAN` on the same inputs | the old rule let it through |
+| Clean control / overrides / held / non-owner | `out-base.md` #1526 in queue; `out-other1526.md`, `out-decide1526.md` #1526 in Needs; `out-held-other.md` #1417, #1460 in Needs | pass |
+| Contradictory mergeability | `out-contradictory.md` (raw `CONFLICTING`, pr_minder flags clean): #1526 in "CONFLICTING or failing" | pass |
+| Qualified closing reference | `out-qualified.md` (`Closes other/repo#1519` on #1526): #1519 stays its own queue item, no "closes #1519" | pass |
+| Determinism | `cmp queue-replay-1.md queue-replay-2.md` exit 0 | pass |
+
+`queue-live.md` is from the earlier candidate and live state before #1501 merged; it is kept as that run's record.
