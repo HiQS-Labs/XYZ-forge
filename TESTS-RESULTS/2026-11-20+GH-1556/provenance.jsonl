@@ -1,0 +1,9 @@
+{"path": "manual-check.md", "bytes": 6618, "sha256": "fce6ade26178fc56e6c005bcc07c7e0502d3f64dcd24b6dc133879cfa6def862"}
+{"path": "outputs/ablation-githooks-pre-push.txt", "bytes": 3508, "sha256": "fe28315886e036065003ebd7207fc4dc569570336c3bf74c75e9a63934c68b79"}
+{"path": "outputs/ci-route-probes.txt", "bytes": 906, "sha256": "e277d54b39bbb64b4c8743dfa74732f1fdb0fd229a4c5de506df497574e15822"}
+{"path": "outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
+{"path": "outputs/code-and-docs.patch", "bytes": 4281, "sha256": "858264889ba66565da40462cde451d970d188881c140705cbaaa04cb6147fee5"}
+{"path": "outputs/gh1519-pr1532-input.json", "bytes": 4657, "sha256": "0872ecf20d519231c55aecdec8617cbb03dffdf7bc7da1448646e3ddf1bf137c"}
+{"path": "outputs/historical-baseline-0edbab45d6.txt", "bytes": 2121, "sha256": "3a6a859647376d798566faa61cc80d547c8b45bf53144bda3513cb81cdb22c0a"}
+{"path": "outputs/mypy.txt", "bytes": 154, "sha256": "3020eea746c0af1da786fbc22df71d8c8c0c583700c9a482eb002952a621eb31"}
+{"path": "outputs/pdda-run.log", "bytes": 28982, "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a"}

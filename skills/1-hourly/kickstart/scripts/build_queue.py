@@ -60,11 +60,15 @@ AUTHORITY = """## Authority granted (one grant, covers the whole run)
 - Post status comments on PRs and issues.
 - Decision defaults (KS-11, fail-closed):
   - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
-    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
-    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
-    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
-    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
-    what the reviewer stated.
+    head. Minor/nit findings may be deferred ONLY when ALL hold: (1) the reviewer explicitly tagged
+    them Minor/nit and accepted the deferral on the current head, AND (2) direct inspection of the
+    actual changed files and reversibility confirms NO gate, hook (such as githooks/*), containment,
+    schema, kernel, or Costly/irreversible surface is touched, AND (3) utils/ci-route.sh does NOT
+    report full_required=true (full_required=false never waives a named protected surface; unknown
+    classification -> park). Never defer on any protected/Costly/irreversible surface or when
+    full_required=true; otherwise park and continue independent work. A PR landed with accepted
+    Minor/nit deferrals states so explicitly and never claims Approved beyond what the reviewer
+    stated.
   - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
     recorded batch.
   - Operator decisions (KS-11c / KS-02): release holds only when authored by {owner}, applicable,
@@ -310,7 +314,7 @@ def render(args, prb, issb, needs, skipped, folded_map) -> str:
     if prb["C"]:
         items = "; ".join(f"#{n} {t}{with_issues(n, c)}" for n, t, c in prb["C"])
         lines.append(f"Mergeability UNKNOWN or behind: {items}. Refresh their state, then land them as one "
-                     "merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Reconcile once at the end.")
+                     "merge-cleanup batch from the pinned LANDING_CLONE (--primary \"$LANDING_CLONE\"; the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.")
     for n, title, closes in prb["D"]:
         lines.append(f"Draft #{n} {title}{with_issues(n, closes)}: finish or close, with evidence.")
     for n, title, _ in issb["E"]:

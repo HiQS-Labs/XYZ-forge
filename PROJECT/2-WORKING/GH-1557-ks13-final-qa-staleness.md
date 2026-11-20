@@ -1,8 +1,8 @@
 ---
-issue: 1557
+gh_issue: 1557
 title: "kickstart(KS-13): final-QA staleness detection in kickstart_status.py and automatic child re-run"
 status: active
-roadmap_id: rmi-01M7W9AQ0HTSQA0ACDS41XVPW8
+roadmap_id: rmi-01M7WRH40C6NCQQC51YP2M6234
 parent_arc: 1541
 milestone: KS-13
 owner: antigravity
