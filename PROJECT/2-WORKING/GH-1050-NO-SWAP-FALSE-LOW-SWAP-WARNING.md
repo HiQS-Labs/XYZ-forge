@@ -68,3 +68,7 @@ roadmap_exempt: true
   }
 }
 ```
+
+## Merge evidence
+
+- PR #1496 merged 2026-11-20 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

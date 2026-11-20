@@ -205,6 +205,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1360 Task-agnostic supervisor with LTVera monitor pilot — `needs-contract`
 - #1414 Pilot paraphrase-first plan review and explicit reviewer context from EGM — `unrated`
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
+- #1050 marathon memory telemetry: no false low-swap warning on hosts with no swap — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
 - #1538 Merge batch 2026-11-19 — HiQS-Labs-XYZ-forge — #1495, #1496 — `needs-doc`
 - #1537 pre-push: a branch that only merged development in is routed by its own diff, not sent to the full gate — `needs-doc`
@@ -297,7 +298,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1071 Low: deferred documentation and historical-provenance follow-ups from GH1063 — `needs-doc`
 - #1070 cleanup QA: trace unexplained ignored-query replay and preserve receipt attribution — `needs-doc`
 - #1063 Merge batch 2026-10-15 — XYZ Forge 1054 → 1065 → 1058 → 1061 → 1067 — `needs-doc`
-- #1050 GH-382 low-swap warning is a standing false alarm on hosts with no swap configured: "free swap critically low (0MB < 1024MB)" at every phase boundary — `needs-doc`
 - #1049 dependency.drift fires "(0 lines)" on every turn when RTL_ROOT is a target repo without the harness surfaces: failed rev-parse echoes its argument and the echoed strings compare as SHAs — `needs-doc`
 - #1048 Weekly Plan Outline — 2026-10-13 — `needs-doc`
 - #1041 Rename review-code to review-xyz and existing review-xyz to review-models — `needs-doc`
