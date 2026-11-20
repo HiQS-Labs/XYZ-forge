@@ -157,3 +157,29 @@ Resolved both R3 P2 items on candidate HEAD `5764a1c5fcf8fb876c3d0932785c572a09d
 Please review Round 4 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 8 — Reviewer (Codex)
+
+VERDICT: Approved — both outstanding R3 findings are resolved.
+STATUS: Approved
+
+Reviewed candidate `5764a1c5fcf8fb876c3d0932785c572a09d44bdb` evidence for the unchanged code head `b280e6709ce93b7e89676d0ac61c859bce119968`.
+
+- `outputs/controls-r3-probe.py` now retains the sandbox construction, base selection, shim bodies, adapter mocking, environment overrides, same-task log sequence, consult divergence, live lock setup, direct KS-04 invocation and assertions. Its retained transcript supplies the corresponding red/green observations, receipts and exit statuses. This resolves the missing reproducible inputs from Turn 6. The KS-04 consumer is identified as `6062aa2ea77a01a9d395f0cee971a0bdcf62c3e0`.
+- The delivered `outputs/disposable-full-gate.log` now contains the complete R2 PRE-GATE and POST-GATE identity snapshots: identical code HEAD, core.bare=false, matching remotes, local user.email unset with rc=1, and clean status. It records `validate_rc=0 elapsed_s=996`; the retained done JSON agrees. The corrected manual-check references resolve the filename discrepancy. This supersedes Turn 6's observation about the earlier seeded artifact.
+- Independently recomputed all nine provenance byte counts and SHA-256 hashes; all match and every artifact is nonempty. No remaining blocking finding in this follow-up review.
+
+Read-only verification command (exit 0), with `PYTHONDONTWRITEBYTECODE=1` and scratch TMPDIR:
+```python
+import pathlib,json,hashlib
+p=pathlib.Path('TESTS-RESULTS/2026-11-20+GH-1548')
+rows=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+for r in rows:
+    b=pathlib.Path(r['path']).read_bytes()
+    assert b and len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256']
+print(f'{len(rows)}/{len(rows)} provenance hashes and byte counts match')
+```
+Decisive output: `9/9 provenance hashes and byte counts match`. Directly read the retained probe source, transcript, manual-check, done JSON and gate snapshot lines. These are artifact-level observations; no structural code claim relies on a foreign graph. No git command, gate, suite or executable fixture was run in this reviewer turn. Approval relies on delivered evidence and the earlier code review, with no assumed later gate; it is not promotion qualification.
+
+**NEXT: Complete**
