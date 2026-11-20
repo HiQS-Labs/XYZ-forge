@@ -1,175 +1,105 @@
-=== Baseline absence (6270a2b5d) ===
-$ git cat-file -e 6270a2b5d:skills/1-hourly/kickstart/scripts/run_record.py
-OBSERVED: git cat-file -e rc=128 (absent before GH-1543)
-VERDICT: pass
+=== 0. Baseline absence on origin/development (6270a2b5d) ===
+fatal: path 'skills/1-hourly/kickstart/scripts/run_record.py' exists on disk, but not in '6270a2b5d'
+baseline_rc=128
+=== 1. Validate retained run-1 and run-2 fixtures ===
+run1_rc=0 matches_retained=true
+run2_rc=0 matches_retained=true
+=== 2. Bad-input validate & append (including F3 older/self supersession) ===
+validate:missing_version rc=1 stderr=run_record: missing mandatory RUN-RECORD-VERSION: 1 header
+validate:wrong_version rc=1 stderr=run_record: line 1: unsupported RUN-RECORD-VERSION '2' (expected 1)
+validate:dup_landing_clone rc=1 stderr=run_record: duplicate LANDING_CLONE headers at lines [2, 3]
+validate:oa_no_cite rc=1 stderr=run_record: line 2: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision
+validate:dup_id rc=1 stderr=run_record: line 3: duplicate amendment ID 'PN-1'
+validate:applied_unknown rc=1 stderr=run_record: line 2: APPLIED references undeclared amendment ID 'NOPE'
+validate:applied_empty_escalated rc=1 stderr=run_record: line 3: APPLIED PN-1 missing action/reason after disposition 'escalated'
+validate:applied_dup_terminal rc=1 stderr=run_record: line 4: duplicate terminal disposition for 'PN-1' (already 'applied')
+validate:superseded_older_F3 rc=1 stderr=run_record: line 4: APPLIED OA-2 disposition 'superseded' must name a declared newer amendment ID (declared after OA-2)
+validate:superseded_self_F3 rc=1 stderr=run_record: line 3: APPLIED OA-1 disposition 'superseded' must name a declared newer amendment ID (declared after OA-1)
+append_pre_sha256=8f95af7a619e0ba6ad78b8dc3a4c32a3e5fc3bdd8b8fb083dd7ef5f07eebea18
+append:dup_id rc=1 sha256_unchanged=True stderr=run_record: line 3: duplicate amendment ID 'PN-1'
+append:oa_no_cite rc=1 sha256_unchanged=True stderr=run_record: line 3: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision
+append:unknown_id rc=1 sha256_unchanged=True stderr=run_record: line 3: APPLIED references undeclared amendment ID 'NOPE'
+append:reserved_empty rc=1 sha256_unchanged=True stderr=run_record: --kind applied requires --id and --action
+append:superseded_self_F3 rc=1 sha256_unchanged=True stderr=run_record: line 3: APPLIED PN-1 disposition 'superseded' must name a declared newer amendment ID (declared after PN-1)
+snapshot:empty rc=1 stderr=run_record: cannot create snapshot from empty input
+=== 3. Redaction sentinel (F1: Bearer + Basic + Token + tokens + /Users + XML tags) ===
+snapshot_rc=0 validate_rc=0 validate_out=OK v1 landing_clone=~/kickstart-clones/landing amendments=0 unresolved=0 interventions=0 gates=0 leak_indices=[]
+--- redacted-snapshot.md ---
+# Kickstart run redaction check
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: ~/kickstart-clones/landing
 
-=== Validate run-1 baseline shape ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate --json <run1-fixture>
-OBSERVED: rc=0, valid=True, amendments=4, unresolved=['OA-3:pending'], gates=2
-VERDICT: pass
+## Progress log
+- note-ghp: [REDACTED]
+- note-pat: [REDACTED]
+- note-sk: [REDACTED]
+- note-bearer: Authorization: Bearer [REDACTED]
+- note-basic: Authorization: [REDACTED]
+- note-token: Authorization: [REDACTED]
+- note-path: ~/Documents/GH Repos/XYZ-forge
+- note-tags: kept bar
+=== 4. Concurrency (8 distinct parallel appends + 4-way same-ID race) ===
+conc8 worker=0 rc=0 stdout='PARENT_NOTE: PN-0 2026-11-20T06:53:37Z worker-0' stderr=''
+conc8 worker=1 rc=0 stdout='PARENT_NOTE: PN-1 2026-11-20T06:53:37Z worker-1' stderr=''
+conc8 worker=2 rc=0 stdout='PARENT_NOTE: PN-2 2026-11-20T06:53:37Z worker-2' stderr=''
+conc8 worker=3 rc=0 stdout='PARENT_NOTE: PN-3 2026-11-20T06:53:37Z worker-3' stderr=''
+conc8 worker=4 rc=0 stdout='PARENT_NOTE: PN-4 2026-11-20T06:53:37Z worker-4' stderr=''
+conc8 worker=5 rc=0 stdout='PARENT_NOTE: PN-5 2026-11-20T06:53:37Z worker-5' stderr=''
+conc8 worker=6 rc=0 stdout='PARENT_NOTE: PN-6 2026-11-20T06:53:37Z worker-6' stderr=''
+conc8 worker=7 rc=0 stdout='PARENT_NOTE: PN-7 2026-11-20T06:53:37Z worker-7' stderr=''
+conc8 validate_rc=0 valid=True amendments=8 ids=['PN-3', 'PN-4', 'PN-2', 'PN-6', 'PN-1', 'PN-5', 'PN-7', 'PN-0']
+conc4 worker=0 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=1 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=2 rc=0 stdout='PARENT_NOTE: PN-RACE 2026-11-20T06:53:37Z racer-2' stderr=''
+conc4 worker=3 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 sorted_rcs=[0, 1, 1, 1] validate_rc=0 valid=True amendments=1
+=== 5. Disposable full-clone checkpoint refusals, unchanged-state brackets, failed-push retry, bare-remote blob proof, and idempotent rerun ===
+bracket[pre-refusals]: {"branch": "development", "config_sha": "31c769ce5c0c6161", "head": "7aa23949e2abef1396212e1c27df954738a9f804", "refs_sha": "d78697effbfd6ae9", "status": ""}
+refusal:omitted_primary rc=2 stderr=usage: run_record.py checkpoint [-h] --record RECORD --clone CLONE
+                                --primary PRIMARY --branch BRANCH --dest DEST
+                                [--message MESSAGE] [--push]
+run_record.py checkpoint: error: the following arguments are required: --primary
+refusal:clone_eq_primary rc=1 stderr=run_record: refusing checkpoint: --clone resolves to --primary checkout
+refusal:clone_eq_landing rc=1 stderr=run_record: refusing checkpoint: --clone resolves to the record's LANDING_CLONE
+refusal:protected_development rc=1 stderr=run_record: refusing checkpoint on protected integration branch 'development'
+refusal:protected_main rc=1 stderr=run_record: refusing checkpoint on protected integration branch 'main'
+refusal:traversal_dotdot rc=1 stderr=run_record: --dest must not contain '..' traversal: '../outside.md'
+refusal:git_dir_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): '.git'
+refusal:git_config_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): '.git/config'
+refusal:nested_git_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): 'docs/.git/hooks/pre-commit'
+refusal:target_branch_symlink rc=1 stderr=run_record: target branch 'docs/sym-escape' has symlink entry at 'escape_link'; refusing before branch switch
+bracket[post-refusals]: {"branch": "development", "config_sha": "31c769ce5c0c6161", "head": "7aa23949e2abef1396212e1c27df954738a9f804", "refs_sha": "d78697effbfd6ae9", "status": ""}
+refusals_state_identical=True outside_files=0
+refusal:dirty_staged rc=1 stderr=run_record: refusing checkpoint: --clone has staged, unstaged, or untracked changes
+bare_remote_pre_blob='PRE-PUBLICATION-SENTINEL'
+expected_redacted_bytes=232 expected_sha256=56fc119de16029017dd4d1c64e0c92f11c8c1d9fec22e5e8a77f918eb7c292c8
+push_fail rc=1 stderr=run_record: git ls-remote --heads origin refs/heads/docs/run-rec failed (rc=128): fatal: '~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/nonexistent.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
 
-=== Validate run-2 active shape (--require-landing-clone) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate --require-landing-clone --json <run2-fixture>
-OBSERVED: rc=0, landing_clone=~/kickstart-clones-ks1541/landing, unresolved=['OA-2'], escalated=['OA-2']
-VERDICT: pass
-
-=== Bad-input validate: missing version ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-0>
-OBSERVED: rc=1, stderr=run_record: missing mandatory RUN-RECORD-VERSION: 1 header
-VERDICT: pass
-
-=== Bad-input validate: wrong version ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-1>
-OBSERVED: rc=1, stderr=run_record: line 1: unsupported RUN-RECORD-VERSION '2' (expected 1)
-VERDICT: pass
-
-=== Bad-input validate: duplicate LANDING_CLONE ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-2>
-OBSERVED: rc=1, stderr=run_record: duplicate LANDING_CLONE headers at lines [2, 3]
-VERDICT: pass
-
-=== Bad-input validate: OPERATOR_AMENDMENT missing cite ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-3>
-OBSERVED: rc=1, stderr=run_record: line 2: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision
-VERDICT: pass
-
-=== Bad-input validate: duplicate amendment ID ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-4>
-OBSERVED: rc=1, stderr=run_record: line 3: duplicate amendment ID 'PN-1'
-VERDICT: pass
-
-=== Bad-input validate: APPLIED unknown ID ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-5>
-OBSERVED: rc=1, stderr=run_record: line 2: APPLIED references undeclared amendment ID 'NOPE'
-VERDICT: pass
-
-=== Bad-input validate: APPLIED reserved word empty action ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-6>
-OBSERVED: rc=1, stderr=run_record: line 3: APPLIED PN-1 missing action/reason after disposition 'escalated'
-VERDICT: pass
-
-=== Bad-input validate: APPLIED repeated after terminal applied ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-7>
-OBSERVED: rc=1, stderr=run_record: line 4: duplicate terminal disposition for 'PN-1' (already 'applied')
-VERDICT: pass
-
-=== Bad-input validate: superseded by older amendment (F3) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-8>
-OBSERVED: rc=1, stderr=run_record: line 4: APPLIED OA-2 disposition 'superseded' must name a declared newer amendment ID (declared after OA-2)
-VERDICT: pass
-
-=== Bad-input validate: superseded by self (F3) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py validate <bad-fixture-9>
-OBSERVED: rc=1, stderr=run_record: line 3: APPLIED OA-1 disposition 'superseded' must name a declared newer amendment ID (declared after OA-1)
-VERDICT: pass
-
-=== Bad-input append duplicate ID ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py append <app-fixture> --kind parent-note --id PN-1 --text dup
-OBSERVED: rc=1, sha256 unchanged (8f95af7a619e), stderr=run_record: line 3: duplicate amendment ID 'PN-1'
-VERDICT: pass
-
-=== Bad-input append OPERATOR_AMENDMENT no cite ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py append <app-fixture> --kind operator-amendment --id OA-1 --text missing cite
-OBSERVED: rc=1, sha256 unchanged (8f95af7a619e), stderr=run_record: line 3: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision
-VERDICT: pass
-
-=== Bad-input append APPLIED unknown ID ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py append <app-fixture> --kind applied --id NOPE --action done
-OBSERVED: rc=1, sha256 unchanged (8f95af7a619e), stderr=run_record: line 3: APPLIED references undeclared amendment ID 'NOPE'
-VERDICT: pass
-
-=== Bad-input append APPLIED reserved empty ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py append <app-fixture> --kind applied --id PN-1 --disposition escalated --action 
-OBSERVED: rc=1, sha256 unchanged (8f95af7a619e), stderr=run_record: --kind applied requires --id and --action
-VERDICT: pass
-
-=== Bad-input append superseded by self (F3) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py append <app-fixture> --line APPLIED: PN-1 -> superseded by PN-1
-OBSERVED: rc=1, sha256 unchanged (8f95af7a619e), stderr=run_record: line 3: APPLIED PN-1 disposition 'superseded' must name a declared newer amendment ID (declared after PN-1)
-VERDICT: pass
-
-=== Bad-input snapshot empty file ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py snapshot <empty-fixture>
-OBSERVED: rc=1, stderr=run_record: cannot create snapshot from empty input
-VERDICT: pass
-
-=== Redaction sentinel (Bearer + Basic + Token + tokens + home path + tags, F1) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py snapshot <redaction-fixture> --out outputs/redacted-snapshot.md && python3 skills/1-hourly/kickstart/scripts/run_record.py validate outputs/redacted-snapshot.md
-OBSERVED: snapshot rc=0, validate rc=0, leaks=0, Bearer+Basic+Token redacted, ~ preserved
-VERDICT: pass
-
-=== Concurrency: 8 distinct-ID parallel appends ===
-$ 8x parallel: python3 skills/1-hourly/kickstart/scripts/run_record.py append <conc8> --kind parent-note --id PN-<i> --text ...
-OBSERVED: rcs=[0, 0, 0, 0, 0, 0, 0, 0], amendments=8, validate rc=0
-VERDICT: pass
-
-=== Concurrency: 4-way same-ID race ===
-$ 4x parallel: python3 skills/1-hourly/kickstart/scripts/run_record.py append <conc4> --kind parent-note --id PN-RACE --text racer
-OBSERVED: sorted rcs=[0, 1, 1, 1], amendments=1, validate rc=0
-VERDICT: pass
-
-=== Checkpoint refusal: omitted --primary ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --record <rec> --clone <clone> --branch docs/run-rec --dest docs/run-records/demo.md
-OBSERVED: rc=2
-VERDICT: pass
-
-=== Checkpoint refusal: --clone == --primary ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --clone <clone> --primary <clone> ...
-OBSERVED: rc=1, stderr=run_record: refusing checkpoint: --clone resolves to --primary checkout
-VERDICT: pass
-
-=== Checkpoint refusal: --clone == LANDING_CLONE ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --clone <landing_clone> --primary <primary> ...
-OBSERVED: rc=1, stderr=run_record: refusing checkpoint: --clone resolves to the record's LANDING_CLONE
-VERDICT: pass
-
-=== Checkpoint refusal: protected branch development ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --branch development ...
-OBSERVED: rc=1, stderr=run_record: refusing checkpoint on protected integration branch 'development'
-VERDICT: pass
-
-=== Checkpoint refusal: protected branch main ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --branch main ...
-OBSERVED: rc=1, stderr=run_record: refusing checkpoint on protected integration branch 'main'
-VERDICT: pass
-
-=== Checkpoint refusal: ../outside.md traversal ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --dest ../outside.md ...
-OBSERVED: rc=1, stderr=run_record: --dest must not contain '..' traversal: '../outside.md'
-VERDICT: pass
-
-=== Checkpoint refusal: .git metadata target (F2) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --dest .git ...
-OBSERVED: rc=1, stderr=run_record: --dest must not target Git metadata (.git): '.git'
-VERDICT: pass
-
-=== Checkpoint refusal: .git/config metadata target (F2) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --dest .git/config ...
-OBSERVED: rc=1, stderr=run_record: --dest must not target Git metadata (.git): '.git/config'
-VERDICT: pass
-
-=== Checkpoint refusal: nested .git metadata target (F2) ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --dest docs/.git/hooks/pre-commit ...
-OBSERVED: rc=1, stderr=run_record: --dest must not target Git metadata (.git): 'docs/.git/hooks/pre-commit'
-VERDICT: pass
-
-=== Checkpoint refusal: target branch escaping symlink ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --branch docs/sym-escape --dest escape_link/leak.md
-OBSERVED: rc=1, starting branch preserved (development), files outside=0, stderr=run_record: target branch 'docs/sym-escape' has symlink entry at 'escape_link'; refusing before branch switch
-VERDICT: pass
-
-=== Checkpoint refusal: dirty staged unrelated file ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint (on dirty clone)
-OBSERVED: rc=1, stderr=run_record: refusing checkpoint: --clone has staged, unstaged, or untracked changes
-VERDICT: pass
-
-=== Checkpoint failed-push retry + bare-remote blob ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --push (bad remote -> fail) then restore remote & rerun
-OBSERVED: fail rc=1, retry rc=0 committed=False pushed=True remote_bytes=190
-VERDICT: pass
-
-=== Checkpoint idempotent no-op rerun ===
-$ python3 skills/1-hourly/kickstart/scripts/run_record.py checkpoint --push (already up to date)
-OBSERVED: rc=0, committed=False, pushed=False, push_status=up-to-date
-VERDICT: pass
-
+Please make sure you have the correct access rights
+and the repository exists.
+push_retry rc=0 stdout={
+  "branch": "docs/run-rec",
+  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/cp_clone",
+  "committed": false,
+  "dest": "docs/run-records/demo.md",
+  "head_sha": "1e017c4dfd6e4156db34ceca844757a591998c32",
+  "push_status": "pushed",
+  "pushed": true
+}
+bare_remote_post_bytes=232 post_sha256=56fc119de16029017dd4d1c64e0c92f11c8c1d9fec22e5e8a77f918eb7c292c8 matches_expected_snapshot=True
+--- bare remote published blob ---
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: ~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/landing_fake
+- OPERATOR_AMENDMENT: OA-1 2026-11-20T01:00Z proceed (operator turn)
+- note-auth: Authorization: [REDACTED]
+idempotent_noop rc=0 stdout={
+  "branch": "docs/run-rec",
+  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/cp_clone",
+  "committed": false,
+  "dest": "docs/run-records/demo.md",
+  "head_sha": "1e017c4dfd6e4156db34ceca844757a591998c32",
+  "push_status": "up-to-date",
+  "pushed": false
+}
+=== ALL MANUAL CHECKS PASSED ===
