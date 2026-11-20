@@ -1,12 +1,11 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index 874e93cf..568463fa 100644
+index b6c42ab0..7d609172 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
-@@ -144,6 +144,15 @@ contract rather than ad-hoc regexes or unlocked appends.
+@@ -284,6 +284,14 @@ When an item hits a decision point during an authorized run, the child applies t
+ - **(b) Conflict Hubs (`KS-11b`):** PRs identified as conflict hubs by the `merge-cleanup` landing forecast route to a separate recorded batch rather than stalling clean PRs or asking the operator.
+ - **(c) Operator Decisions (`KS-11c` / KS-02):** Honor an operator hold release ONLY when authored by `--owner`, applicable to the current issue/head state, and not superseded by a later owner decision or run-record amendment; otherwise keep the item **HELD**.
  
- ---
- 
-+
 +### Daily-Goals Queue Scoping (`build_queue.py --daily-goals <issue>`, KS-14)
 +
 +When launching a run scoped to a daily-goals issue, pass `--daily-goals <issue>` (and optionally `--daily-goals-json <file>` for deterministic offline replay) to `skills/1-hourly/kickstart/scripts/build_queue.py`:
@@ -19,10 +18,10 @@ index 874e93cf..568463fa 100644
  
  Raw intake is permitted at invocation, but raw intake alone never confers execution readiness.
 diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
-index 0b702021..7d6bba1d 100755
+index f562a9f8..46091828 100755
 --- a/skills/1-hourly/kickstart/scripts/build_queue.py
 +++ b/skills/1-hourly/kickstart/scripts/build_queue.py
-@@ -90,6 +90,8 @@ CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/
+@@ -94,6 +94,8 @@ CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/
  TITLE_GH = re.compile(r"\bGH-(\d+)\b")
  FENCED_CODE = re.compile(r"```.*?```", re.S)
  REF_BACKTICK = re.compile(r"`((?:PR\s+)?#\d+)`", re.I)
@@ -31,7 +30,7 @@ index 0b702021..7d6bba1d 100755
  INLINE_BACKTICK = re.compile(r"`[^`\n]*`")
  HELD_LINE = re.compile(r"^\s*(?:[-*]\s*)?(?:\*\*)?HELD:(?:\*\*)?", re.I | re.M)
  BLOCKED_BY = re.compile(r"\bblocked\s+by\s+(?:PR\s+)?#(\d+)\b", re.I)
-@@ -250,14 +252,47 @@ def classify_prs(rows, meta, owner, other, decide, parked, slug):
+@@ -254,14 +256,47 @@ def classify_prs(rows, meta, owner, other, decide, parked, slug):
      return buckets, needs
  
  
@@ -81,7 +80,7 @@ index 0b702021..7d6bba1d 100755
              continue
          labels = {lab["name"] for lab in it.get("labels") or []}
          dec = operator_decision(it, owner) if owner else None
-@@ -293,7 +328,8 @@ def classify_issues(issues, cutoff, other, decide, folded, owner: str = "", open
+@@ -297,7 +332,8 @@ def classify_issues(issues, cutoff, other, decide, folded, owner: str = "", open
  
  
  def render(args, prb, issb, needs, skipped, folded_map) -> str:
@@ -91,7 +90,7 @@ index 0b702021..7d6bba1d 100755
             f"inputs: pr_minder.py --json, gh pr list, gh issue list -->", ""]
      other = f" ({fmt(args.other)})" if args.other else ""
      out += [AUTHORITY.format(owner=args.owner, other=other), "", "## Queue (execution order)"]
-@@ -349,13 +385,30 @@ def main() -> int:
+@@ -353,13 +389,30 @@ def main() -> int:
      ap.add_argument("--prs-json", help="saved pr_minder.py --json output")
      ap.add_argument("--pr-meta-json", help="saved gh pr list --json number,author,title,body,mergeable output")
      ap.add_argument("--issues-json", help="saved gh issue list --json number,title,labels,body,createdAt,comments output")
@@ -125,7 +124,7 @@ index 0b702021..7d6bba1d 100755
          args.owner = run_json(["gh", "api", "user"], root)["login"]
  
      minder = root / "skills/2-daily/pr-minder/scripts/pr_minder.py"
-@@ -367,14 +420,111 @@ def main() -> int:
+@@ -371,14 +424,111 @@ def main() -> int:
           "--json", "number,title,labels,body,createdAt,comments"], root))
      meta = {m["number"]: m for m in meta_rows}
      slug = args.repo_slug or origin_slug(root)
