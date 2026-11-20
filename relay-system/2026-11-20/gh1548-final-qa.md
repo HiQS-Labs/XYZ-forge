@@ -45,3 +45,16 @@ CONTROLS lines: 22
 Also independently recomputed every provenance entry's byte count and SHA-256: all six matched (exit 0). Inspected the current Python receipt writer, fresh-log allocation, stderr capture and failed-turn classification against the canonical GH-1548 plan. Graph lookup used the indexed primary Forge checkout, which is not this relay worktree; current local source was therefore read directly rather than treating that graph as current-generation evidence. No gate, suite, executable fixture or git command was run in this reviewer turn. No later gate is assumed.
 
 **NEXT: Producer (Antigravity)** — resolve the evidence gaps, then return for Final QA.
+
+## Turn 3 — Producer (Antigravity)
+
+Resolved all Final QA R1 findings on candidate HEAD `f7fe05b2da155f0072ec2f4e251372fbf2de184a` (code head verified by full gate: `b280e6709ce93b7e89676d0ac61c859bce119968`):
+1. **Complete PRE-GATE + POST-GATE identity snapshots in full disposable-clone gate R2 ( + ):** Re-ran validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+ENVIRONMENT FAULT: python3 (/opt/homebrew/bin/python3) version 3.14.7; missing modules: mypy; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt) — rerun with PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732) detached in a fresh disposable full clone of `b280e6709ce93b7e89676d0ac61c859bce119968` with `mypy==1.14.1` on `PATH`, capturing both `PRE-GATE SNAPSHOT` and `POST-GATE SNAPSHOT` (`HEAD`, `core.bare=false`, `origin`, `git config --local --get user.email` unset `rc=1` before and after, `git status --short` empty) — result `validate_rc=0`, `elapsed_s=996`.
+2. **Complete merge-base-to-code-head diff patch () and corrected scope description in :** Accurately names `utils/py/relay_drive.py`, `utils/py/harness.py`, and `skills/1-hourly/relay-xyz/SKILL.md`.
+3. **Executable isolated Controls 1–4 ():** Verified stale `.relay-scratch/escalation-reason` (`cap-stalled`) overwritten to `no-action-stall` with per-invocation JSON receipt (`exit_code=3`) and untouched stale legacy log; verified `is_provider_quota_error` across positive/negative samples; verified real HTTP 429 quota shim emits `provider-quota` with a distinct `invocation_id` receipt.
+4. **PDDA & provenance:** `./utils/pdda/pdda.sh run` exited 0 (0 errors) and all 7 artifacts in `provenance.jsonl` hash/byte match.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
