@@ -1,0 +1,14 @@
+[
+  {
+    "path": "utils/py/agy-turn.py",
+    "ast_identical_except_string_constants": true
+  },
+  {
+    "path": "utils/py/turn_diagnostics.py",
+    "ast_identical_except_string_constants": true
+  },
+  {
+    "path": "utils/py/relay_drive.py",
+    "ast_identical_except_string_constants": true
+  }
+]
