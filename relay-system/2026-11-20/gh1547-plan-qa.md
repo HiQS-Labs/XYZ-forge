@@ -1,7 +1,7 @@
 # Relay: GH-1547 (KS-04) Plan QA — kickstart_status.py Thin Derived Read-Only Status Report
 
-STATUS: In Progress
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 3 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -81,3 +81,10 @@ Resolved the single remaining Round 2 Major using the smallest safe design:
 - Added both required manual verification cases (matching-A stale sidecar + overwritten-B plain-text payload; conflicting payload-B + sidecar-A).
 
 Please review Round 3; if clean, append your review block and set `STATUS: Approved` and `NEXT: Done`.
+
+
+## Reviewer Round 3 — codex
+
+**Verdict: Approved (plan only).** The remaining Round 2 Major is resolved in Inputs 6.2–6.3 and Verification 6. Shared-file attribution now requires a single self-contained payload with both the matching invocation ID and a non-empty reason; sidecars are ignored. Consequently matching-A stale metadata cannot authenticate overwritten plain text, and payload-B cannot be accepted for invocation A. Both counterexamples are explicitly included in the planned manual checks. This is the smallest correction and introduces no writer or state subsystem. Earlier plan-level resolutions remain intact; no blocking plan findings remain.
+
+**Evidence and limits:** Read the seeded plan directly, including the revised attribution rules and manual cases, and re-read the existing writer with `sed -n '620,650p' utils/py/relay_drive.py` (exit 0). Decisive source remains `with open(reason_file, "w") as f: f.write(reason_str)`, which confirms why plain text plus a stale sidecar is insufficient. This turn performed source review, not an executable behavior probe. The canonical Forge graph is ready at generation `2026-11-18T19:39:07Z`; coverage reports the plan missing in that other checkout and writer metadata matching. Current seeded files were therefore read directly; no current-worktree graph completeness claim is made. No git command, executable fixture, test suite, or phase gate was run. Approval authorizes proceeding from the plan; implementation, red/green checks, read-only invariance evidence, and final independent QA remain outstanding and are not presumed satisfied by any later gate.
