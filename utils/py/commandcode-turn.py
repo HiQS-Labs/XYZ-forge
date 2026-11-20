@@ -55,6 +55,19 @@ def main():
     tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "commandcode-turn")
 
     cflags = default_commandcode_flags()
+    requested_effort = os.environ.get("COMMANDCODE_REASONING_EFFORT", "")
+    reasoning_effort = "cli-default"
+    explicit_effort = False
+    for index, flag in enumerate(cflags):
+        if flag == "--effort":
+            explicit_effort = True
+            reasoning_effort = cflags[index + 1] if index + 1 < len(cflags) else "cli-default"
+        elif flag.startswith("--effort="):
+            explicit_effort = True
+            reasoning_effort = flag.split("=", 1)[1] or "cli-default"
+    if requested_effort and not explicit_effort:
+        cflags += ["--effort", requested_effort]
+        reasoning_effort = requested_effort
     commandcode_model = os.environ.get("COMMANDCODE_MODEL", "meta/muse-spark-1.2-contributor")
 
     rtl.before()
@@ -156,7 +169,7 @@ def main():
             # recording how it survived — this value was cited as EVIDENCE that Command Code routes
             # through OpenRouter, when it was only ever a literal in this line.
             gateway=os.environ.get("COMMANDCODE_GATEWAY", "commandcode"),
-            reasoning_effort=os.environ.get("COMMANDCODE_REASONING_EFFORT", "xhigh"),
+            reasoning_effort=reasoning_effort,
             cli_flags=cflags,
             repo_root=xyz_root,
         ) as logger:
