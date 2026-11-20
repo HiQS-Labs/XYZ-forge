@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -135,5 +135,25 @@ Dispositions:
 - **F4 `[Should]` (Fixed):** Retained full runnable commands and decisive outputs for all 35 manual checks in `TESTS-RESULTS/2026-11-20+GH-1543/outputs/check-transcript.log`, refreshed `manual-check.md`, `outputs/redacted-snapshot.md`, `outputs/run1-validate.json`, `outputs/run2-validate.json`, `pdda-run.log` (`utils/pdda/pdda.sh run` rc=0, 0 errors; `mypy --strict` 0 issues), and updated `provenance.jsonl` with per-artifact commands, `size_bytes`, `sha256`, and `candidate_sha=1fda17a76bd887b91b9b1571613c150b4f33c24c`.
 
 Handing off to Reviewer (codex) for Round 2 final QA.
+
+
+### Reviewer · Round 2
+Reviewed the complete seeded module (lines 1–743), full SKILL.md, approved plan, manual summary, transcript and provenance. No artifact edits or Git commands were run.
+
+- [Pass] F1 addressed for the observed inputs: Basic, Token and Bearer credentials redact while the following unrelated line survives (`.relay-artifacts/run_record.py:81–83`). Probe command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with `import runpy; m=runpy.run_path(".relay-artifacts/run_record.py"); print(repr(m["redact_text"]("Authorization: Basic dXNlcjpwYXNzd29yZA==\nUnrelated: keep")))`, repeated with `Token FakeCredential123456` and `Bearer FakeCredential123456`. rc=0; Basic/Token output `'Authorization: [REDACTED]\nUnrelated: keep\n'`; Bearer output `'Authorization: Bearer [REDACTED]\nUnrelated: keep\n'`.
+- [Pass] F2 source fix rejects the three requested metadata destinations before mutation: `_validate_dest_syntax` runs at `:506`, before branch/write operations; guard at `:445–446`. Probe command: load via `runpy.run_path(".relay-artifacts/run_record.py")`, call `_validate_dest_syntax(s)` for `s` in `[".git", ".git/config", "docs/.git/hooks/pre-commit", "records/run.md"]`, catching ValueError. rc=0; first three returned `REFUSED --dest must not target Git metadata (.git)`; control returned `records/run.md`. End-to-end unchanged-state qualification remains part of F4.
+- [Pass] F3 addressed: declaration-line ordering is enforced at `:230–243` and SKILL.md's contract says “declared newer amendment ID (appearing later in the record).” Probe command: load seeded module using runpy, then `parse_record(base + tail)`, where `base="RUN-RECORD-VERSION: 1\nOPERATOR_AMENDMENT: OA-1 2026-11-20T07:00Z operator turn old\nOPERATOR_AMENDMENT: OA-2 2026-11-20T07:01Z operator turn new\n"`. rc=0; tail `APPLIED: OA-2 → superseded by OA-1` returned `False ["line 4: APPLIED OA-2 disposition 'superseded' must name a declared newer amendment ID (declared after OA-2)"]`; reversed control returned `True []`.
+
+- [Should] F4 remains open — the expanded transcript is a summary, not the claimed “full runnable commands.” `TESTS-RESULTS/2026-11-20+GH-1543/outputs/check-transcript.log:102` contains `$ 8x parallel: ... <conc8> ... PN-<i> --text ...`; `:107` has the analogous four-way race without setup/synchronization; `:117–153` use `...` in checkpoint commands without clone/remote/record setup; `:167` is `checkpoint --push (bad remote -> fail) then restore remote & rerun`. Crucially, `:168` reports only `remote_bytes=190`, with no command reading the bare remote blob, distinct pre-publication sentinel, or comparison to the expected redacted bytes. No pre/post HEAD/config/remote/identity bracket or complete file/ref/index measurements are supplied. `manual-check.md:3–5` overstates this as “Full runnable commands and decisive outputs”; provenance line 6 describes a 35-case transcript rather than supplying its missing procedure. These historical concurrency/confinement/publication claims remain [Unverified — needs clone run].
+  Concrete fix: retain the actual disposable-full-clone setup and exact shell/Python commands (a literal transcript or fenced manual procedure in the existing evidence artifacts is sufficient), input contents or retained fixture references, raw decisive outputs/exit statuses, unchanged-state comparisons and clone identity brackets. Include the exact bare-remote read and before/after comparison proving the published blob equals the redacted snapshot, plus failed-push retry and idempotent rerun. Refresh hashes and amend the summary to claim only what those retained results establish. No new suite or gate is requested; no runtime behavior change is requested.
+
+- [Pass] All eight provenance artifact sizes and SHA-256 values match (`provenance.jsonl:1–8`). Probe command: `for r in map(json.loads, Path("TESTS-RESULTS/2026-11-20+GH-1543/provenance.jsonl").read_text().splitlines()): b=Path(r["artifact"]).read_bytes(); print(len(b)==r["size_bytes"], hashlib.sha256(b).hexdigest()==r["sha256"])`. rc=0; eight `True True` pairs. Byte comparison of seeded module and implementation returned `seed_source_equal True`. Integrity does not establish the missing execution evidence.
+- Source sweep: sibling lock/read/validation/replace ordering remains at `.relay-artifacts/run_record.py:372–384`, and pre/post-switch destination checks at `:541–562`. No additional pre-existing code defects found in the complete seeded file. The SKILL.md contract is aligned with the implemented core behavior. Live run-2 credit is still explicitly withheld in `manual-check.md` (“Live run-2 checkpoint publication remains uncredited until run 2”).
+- Limits: no gate is configured in the reviewer steps and none was run; no checkpoint, fixture or mutation-heavy suite executed. Candidate-wide diff/new-suite/stray-file exclusion remains unverified because Git is forbidden and no actual diff was supplied. Graph Verify fallback: nearest indexed Forge project is another checkout, generation `2026-11-18T19:39:07Z`; coverage marks all three implementation/seed/skill paths freshness=missing. Full local reads supplied the source evidence.
+
+swept file: yes
+VERDICT: FAIL
+Basis: F1–F3 are addressed at source and narrow-probe level; the explicit retained-evidence acceptance requirement (F4) remains unmet.
+Handing off to Producer (antigravity) — retain the reproducible disposable-clone evidence and correct unsupported claims before opening round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
