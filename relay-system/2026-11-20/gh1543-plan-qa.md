@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,57 @@ Cite `file:line` for disagreements. End with `swept file: yes|no`, `VERDICT: PAS
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+Add one stdlib Python parser/writer for versioned Markdown run records, with validation, atomic append, redacted snapshots and optional branch checkpoint publication. A short skill contract and retained manual red/green evidence support downstream kickstart work.
+
+**How the existing system works, per this document**
+
+Run records currently use free-form Markdown, including amendments, interventions and gate results, without a shared parser or atomic writer. The document says the live record already has version and landing-clone headers, while the published run-1 baseline includes compact application and gate forms. Its recon says the kickstart scripts directory currently contains only `build_queue.py` and the CI router treats the skill subtree as docs.
+
+**What it's not**
+
+This is not a database, daemon, downstream status/recovery implementation, template change or live run-2 publication. Inference: delivery-state decisions remain downstream responsibilities unless this contract explicitly supplies their inputs.
+
+**Source-backed findings (whole seeded artifact)**
+
+- [Should] F1 — Specify a stable lock and validate inside it. `.relay-artifacts/GH-1543-KS15-RECORD-CONTRACT.md:39` orders validation BEFORE the locked read and leaves the lock object unspecified. Locking the replaced record inode cannot serialize later openers; validating duplicate IDs outside the lock also permits two individually valid appends to create an invalid record. Fix the plan to use a persistent sibling lock, acquire it before reading/validating the complete candidate, hold through replacement, and fsync the parent directory if crash durability is promised. Extend the existing manual concurrency check to cover the same-ID race, without a new suite.
+  Observed input: line 39 says “validates ... against the existing record ... BEFORE writing, then performs an `fcntl.flock`-locked atomic read”; line 74 only checks lost/torn lines.
+  Affected scope: concurrent appends to the same record, including duplicate event IDs.
+  Falsifier: two synchronized writers append the same ID; exactly one succeeds, the other rejects, and the final record validates. Distinct IDs must both survive even when one writer opens after replacement while another waits.
+
+- [Should] F2 — Make checkpoint confinement and commit scope explicit. `.relay-artifacts/GH-1543-KS15-RECORD-CONTRACT.md:41` promises “never mutates ... the primary checkout” but supplies no primary-checkout identity rule, destination containment rule, or staged-index policy. A relative `--dest ../outside.md` meets the displayed argument shape while escaping the clone; merely rejecting branch names does not establish checkout identity. Fix the plan to define the allowed dedicated run-record checkout/branch, resolve and confine destination paths (including symlink parents), reject unrelated staged/unstaged/untracked state before mutation, stage/commit only the destination, and push an explicit intended ref without force. State failure and retry behavior, including retrying an unpushed commit when the snapshot is unchanged.
+  Observed input: line 41 accepts `--clone <dir> --branch <branch> --dest <relpath>` and lists only integration-branch and dirty-unrelated-tree refusals.
+  Affected scope: checkpoint filesystem writes, branch switching, commits and optional pushes.
+  Falsifier: manual disposable-clone cases with `../outside.md`, a symlink escaping the clone, unrelated staged changes, and the primary checkout must reject before any file/ref/index mutation; a valid dedicated branch must publish only the redacted destination, and retry after a failed push must publish the existing commit.
+
+- [Should] F3 — Correct the evidence contract before implementation. `.relay-artifacts/GH-1543-KS15-RECORD-CONTRACT.md:73` control (c), “pre-redaction fixture contains ... (grep matches),” is a useful positive contamination control, not a CLI rejection; line 80 nevertheless says “All 4 red controls fail pre-change / reject bad inputs.” Since the module is new, a missing-command failure also cannot prove its decision gates. Fix the wording to distinguish baseline absence, candidate bad-input rejections, and the redaction sentinel; retain exact exit codes and unchanged-byte assertions for rejected writes. For line 74's push check, inspect the destination blob from the local bare remote's branch ref, not just the producer clone; include a different pre-publication observer value. This follows `LESSONS-LEARNED.md:196`.
+  Observed input: lines 73–74 and 80 specify those conflicting outcomes and a push smoke check without a remote-artifact assertion.
+  Affected scope: manual acceptance evidence for validation, append, snapshot and checkpoint; no new test machinery.
+  Falsifier: evidence showing the contaminated fixture is detected, the candidate removes all sentinels, each invalid candidate input rejects without mutation, and the bare remote itself contains the intended snapshot would satisfy the corrected claim.
+
+- [Should] F4 — Remove ambiguity in the shared parser contract. `.relay-artifacts/GH-1543-KS15-RECORD-CONTRACT.md:33` allows both explicit dispositions and arbitrary compact action text, but does not define reserved-word precedence or repeated `APPLIED` semantics. For example, `APPLIED: OA-1 → escalated` can mean a malformed explicit disposition with missing action, or compact action “escalated” defaulting to applied; downstream unresolved-state results would differ. Define this precedence, required nonempty action, repeated-disposition policy, and whether escalated remains unresolved; state validation rules for mandatory/nonempty `LANDING_CLONE` and duplicate headers. Keep compatibility examples alongside these rules.
+  Observed input: line 33's two overlapping forms and line 38's “lacking a valid APPLIED disposition” definition.
+  Affected scope: v1 parsing and unresolved-amendment computation shared by downstream consumers.
+  Falsifier: one documented expected parse/diagnostic for that exact line, plus explicit applied/superseded/escalated and compact legacy examples, removes the ambiguity without expanding scope.
+
+- [Pass] The capability inventory includes all eight requested header/event names (artifact lines 29–35), tolerates bulleted events (line 36), and explicitly preserves the compact APPLIED and final-QA forms (lines 33–34). This establishes planned shape coverage, not actual compatibility with both historical records.
+- [Unverified — needs source evidence] The active run-2 file is absent from this isolated checkout; no published run-1 artifact was supplied here. Read-only probe: `python3` with `Path('temp/kickstart-2026-11-20-ks1541.md').exists()` and `Path('skills/1-hourly/kickstart/scripts/run_record.py').exists()` exited 0 and printed `False` for both. Historical examples at artifact line 49 are assertions in the plan. Retain exact source excerpts/revisions in implementation evidence; do not describe this review as having validated either live record.
+- [Pass] One module and manual evidence fit the stated envelope: artifact lines 37–43 and 55 exclude a DB, daemon and new suite, consistent with `AGENTS.md:165` (“No new tests”). The current writer is `build_queue.py:166–203,247–249`; it emits Authority/Queue sections and writes `--out` directly. Deferring its template changes is explicit at artifact line 55; existing records therefore need explicit v1 initialization/migration instructions in the concise contract.
+- [Pass] No delivered-candidate decision is implemented by this proposal: artifact line 55 expressly defers live run-2 credit. Existing `kickstart/SKILL.md:151–156` requires PR URLs, commit SHAs, gates and independent review before completion. Preserve that boundary: parser validity or checkpoint success alone proves neither a build nor delivery. No new delivery gate is requested here.
+- [Pass] The router's `is_docs_surface` (`utils/ci-route.sh:62–69`) classifies ordinary skill paths as docs unless a subsystem claims them. This classification is not runtime verification of the new Python module; the retained manual checks remain necessary.
+- [Nit] Artifact line 75 unconditionally says update CHANGELOG; make it conditional on `CHANGELOG_WRITES`, per `ROUTER.md` Canonical rules and `PROJECT/PDDA.md:1064–1067` (off/unset disables PR-branch writes).
+- [Unverified — no citation] The proposed appeal 50 is explicitly neutral (artifact line 64); the priority and effort rationale are stated at lines 62 and 65. The numerical priority/severity and run-1 recurrence remain source-attributed estimates, not independently measured facts. Treat ~220 lines as an estimate rather than a cap that squeezes out safety checks. No DB/daemon/framework overbuild was found in the whole artifact; the unresolved concerns are contract precision and evidence.
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The whole plan was reviewed, including its pre-existing sections. F1–F4 are concrete specification/evidence gaps that should be resolved before building the shared writer and checkpoint helper; no runtime failure is claimed for an implementation that does not yet exist. Source-backed review used the local files; the graph's nearest project was the separate canonical XYZ-forge checkout, generation `2026-11-18T19:39:07Z`, with missing freshness for the two kickstart paths, so it was not used as proof of this worktree's contents. No gate, executable fixture, pytest, or git command was run. Runtime checks remain [Unverified — needs clone run]; no later gate is assumed.
+
+Handing off to Producer (antigravity) — disposition F1–F4 and revise the plan; then return for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
