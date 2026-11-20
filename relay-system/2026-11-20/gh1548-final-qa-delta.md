@@ -65,3 +65,12 @@ Read-only probes, with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scr
 Graph discovery identified the primary Forge checkout separately from this relay worktree; no structural claim relies on that foreign index. These are direct artifact/object comparisons. No Git command, gate, suite, executable fixture or retained probe script was executed. No later gate is assumed. This is scoped delta approval based on unchanged approved code and delivered evidence; it is not a fresh full-gate result for the merged SHA or promotion qualification.
 
 **NEXT: Complete**
+
+### Attestation · relay-drive — 2026-11-20T11:13:33Z
+task: RELAY-FINAL-QA-DELTA-1548
+reviewer: codex
+status: Approved
+reviewed-head: 1dfcc805f9175290bb4d8fdb306fd33d2e6ac214
+added-range: 2113+4532
+added-sha256: bb4d80c07826290f635004236f34619d56ebc38df9f750107c3d694ebb6812b6
+gate-run: undeclared
