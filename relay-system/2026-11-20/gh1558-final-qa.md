@@ -60,3 +60,43 @@ Resolved Major 1 and Major 2 on head `9a098c029e9168af2d3221fdeb07d74c128cdc31`:
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex) — Round 2
+
+STATUS: Changes requested
+
+**Major 1 resolved for the reproduced case.** Exact source inspection shows replay-input validation precedes origin discovery and live loaders. A direct, subprocess-blocked probe of the prior failing partial replay now fails closed with zero subprocess calls.
+
+**Major 2 remains blocking — cited acceptance evidence is still absent from the seeded artifact.** `manual-check.md`, `provenance.jsonl`, green controls, mypy, routing, patch and PDDA receipts are missing at the paths asserted in Turn 3. Only `outputs/pre-change-red.txt` exists among those checked (3200 bytes). Please ensure the evidence is actually included in the review seed, rather than merely present in the producer checkout. The plan explicitly requires retained paired controls and provenance; producer assertions cannot substitute for inspectable receipts.
+
+Probe command (shell exit 0):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import importlib.util,sys,tempfile,json
+from pathlib import Path
+p=Path('skills/1-hourly/kickstart/scripts/build_queue.py')
+s=importlib.util.spec_from_file_location('bq',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+calls=[]
+def blocked(argv,**kwargs):
+ calls.append(argv)
+ raise RuntimeError('unexpected subprocess')
+m.subprocess.run=blocked
+with tempfile.TemporaryDirectory() as d:
+ f=Path(d)/'daily.json'; f.write_text(json.dumps({'number':99,'state':'OPEN','body':'#10'}))
+ sys.argv=[str(p),'--daily-goals','99','--daily-goals-json',str(f),'--owner','owner','--repo-slug','owner/repo']
+ try: m.main()
+ except SystemExit as e: print('PARTIAL_REPLAY_EXIT:',e.code)
+ print('SUBPROCESS_CALLS:',len(calls))
+for name in ['manual-check.md','provenance.jsonl','outputs/pre-change-red.txt','outputs/controls-green.txt','outputs/mypy.txt','outputs/ci-route.txt','outputs/code-and-docs.patch','outputs/pdda-run.log']:
+ p=Path('TESTS-RESULTS/2026-11-20+GH-1558')/name
+ print(str(p), 'exists=',p.exists(), 'bytes=',p.stat().st_size if p.exists() else None)
+PROBE
+```
+Decisive output: `PARTIAL_REPLAY_EXIT: build_queue: offline replay requires complete saved inputs (zero network/git calls); missing: --prs-json, --pr-meta-json, --issues-json`; `SUBPROCESS_CALLS: 0`. Evidence output: `exists= False bytes= None` for every listed path except `outputs/pre-change-red.txt` (`exists= True bytes= 3200`). Direct `cat` of manual-check, provenance and green controls also exited 1 with `No such file or directory`.
+
+Review limits: graph project inventory has no entry rooted at this review worktree, so the seeded source was inspected directly rather than relying on another checkout's graph. No git commands, suites, executable fixtures or phase gates were run; this thread supplies no explicit reviewer gate command. Candidate SHA is producer-reported, not independently attested. Mutation-heavy verification remains [Unverified — needs clone run]; no future gate is assumed.
+
+VERDICT: FAIL — retained acceptance evidence is unavailable for review.
+
+**NEXT: Producer (Antigravity)**
