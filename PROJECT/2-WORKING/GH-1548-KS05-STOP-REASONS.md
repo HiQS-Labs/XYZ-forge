@@ -15,7 +15,7 @@ roadmap_id: rmi-01M7W0ZV5PABDCY8K0SWKV6QKS
 
 | What was just completed | What's next |
 |---|---|
-| Addressed Codex Plan QA Round 1 findings (pre-dispatch byte-offset/inode fencing for `turn_log`, complete exit-code attribution table covering exits 1/2/3/4/5/8 including post-start `1090,1097`, disposable-clone full-gate isolation & KS-04 receipt schema alignment) | Complete Codex Plan QA Round 2 (`relay-system/2026-11-20/gh1548-plan-qa.md`), mark accepted-start, implement changes, run paired red/green checks + background full classified gate in isolated clone, Final QA, PR, and land |
+| Addressed Codex Plan QA Round 1 & Round 2 findings (prefix-SHA-256 append-vs-rewrite detection + full disposable-clone Git identity checks) (pre-dispatch byte-offset/inode fencing for `turn_log`, complete exit-code attribution table covering exits 1/2/3/4/5/8 including post-start `1090,1097`, disposable-clone full-gate isolation & KS-04 receipt schema alignment) | Complete Codex Plan QA Round 3 (`relay-system/2026-11-20/gh1548-plan-qa.md`), mark accepted-start, implement changes, run paired red/green checks + background full classified gate in isolated clone, Final QA, PR, and land |
 
 ## Goal & Scope (refs #1548, #1541 v5 KS-05 + U13, #1536)
 
@@ -28,12 +28,15 @@ Resolve two failure-attribution gaps exposed by run 1 (interventions #2 and #3, 
 - **`utils/py/relay_drive.py`:**
   - Reuse the exact same quota detector (importing `is_provider_quota_error` from `harness` with stdlib regex fallback if invoked standalone).
   - During a turn shim execution (`proc = subprocess.Popen(...)`), capture a bounded tail (last 16 KiB) of the shim's stderr via a streaming pipe/tee thread that still forwards every line transparently to `relay_drive`'s own `sys.stderr` (preserving real-time operator output and process group semantics).
-  - **Fenced `turn_log` delta reading (Plan QA Round 1 Finding #1):**
-    - Immediately before dispatching the turn shim (`prepare_turn_log` already resolved `turn_log`), snapshot `pre_log_stat = (st.st_dev, st.st_ino, st.st_size)` if `turn_log` exists (else `None`) and record `dispatch_ns = time.time_ns()`.
-    - After the turn shim exits with `res_code != 0`, inspect ONLY bytes produced by THIS turn:
-      - If `pre_log_stat is None` and `turn_log` now exists → read up to the last 16 KiB of `turn_log`.
-      - If `(st.st_dev, st.st_ino) == (pre_dev, pre_ino)` and `st.st_size >= pre_size` → seek to `pre_size` and read only the newly appended slice (`st.st_size - pre_size`, bounded to its last 16 KiB). If `st.st_size == pre_size`, read `""` (zero new bytes — earlier bytes in a reused log are NEVER scanned).
-      - If the file was replaced (`(st_dev, st_ino)` changed) or truncated (`st.st_size < pre_size`) → read up to its last 16 KiB ONLY if `st.st_mtime_ns >= dispatch_ns`; otherwise read `""` conservatively.
+  - **Fenced `turn_log` delta reading (Plan QA Round 1 Finding #1 + Round 2 Finding #1):**
+    - Immediately before dispatching the turn shim (`prepare_turn_log` already resolved `turn_log`), snapshot `pre_log_stat = (st.st_dev, st.st_ino, st.st_size, pre_sha256)` — computing the streaming SHA-256 digest of the existing `pre_size` bytes — if `turn_log` exists (else `None`), and record `dispatch_ns = time.time_ns()`.
+    - After the turn shim exits with `res_code != 0`, inspect ONLY bytes proven to be produced by THIS turn (sampling head 16 KiB + tail 16 KiB of any selected region > 32 KiB so a quota error at either the start or end is caught):
+      - If `pre_log_stat is None` and `turn_log` now exists → entire file is newly created by this turn.
+      - If `(st.st_dev, st.st_ino) == (pre_dev, pre_ino)` and `st.st_size >= pre_size`:
+        - Hash the current file's first `pre_size` bytes (`post_prefix_sha256`).
+        - If `post_prefix_sha256 == pre_sha256` → **proven append-only**: seek to `pre_size` and scan ONLY `[pre_size : st.st_size]` (empty if `st.st_size == pre_size`; earlier bytes in a reused log are NEVER scanned).
+        - If `post_prefix_sha256 != pre_sha256` → **proven same-inode truncate-and-rewrite / overwrite**: scan the rewritten file's head + tail (even when `post_size == pre_size` or `post_size > pre_size`), so a quota error written at byte 0 of a rewritten log is NEVER skipped!
+      - If the file was replaced (`(st_dev, st_ino)` changed) or truncated smaller (`st.st_size < pre_size`) → scan head + tail ONLY if `st.st_mtime_ns >= dispatch_ns`; otherwise read `""` conservatively.
   - When `res_code != 0` and the terminal verdict is NOT `"forged"`:
     - If `is_provider_quota_error(stderr_tail + "\n" + turn_log_delta)` is true → classify stop reason as **`provider-quota`** (distinct from `cap-stalled` and `turn-error`).
     - Otherwise → classify stop reason as **`turn-error`** (recording `exit_code = res_code` in the structured stop receipt and diagnostic line; preserving `sys.exit(res_code)` unchanged).
@@ -91,11 +94,12 @@ Recorded under `TESTS-RESULTS/2026-11-20+GH-1548/`:
    - `CodexAdapter.evaluate` non-zero exit with HTTP 429 returns `"provider-quota"` (vs pre-change `"rate-limited"`), non-quota returns `"adapter-error"`.
    - `relay_drive.py` shim exiting non-zero with `HTTP 429 Too Many Requests` / `insufficient_quota` on stderr → `provider-quota`.
    - `relay_drive.py` shim exiting non-zero with generic error → `turn-error` (distinct from `provider-quota` and `cap-stalled`).
-3. **Red Control 3 (Plan QA Round 1 Finding #1 — reused `turn_log` append fencing):**
-   - Pre-populate reused `turn_log` with `HTTP 429 Too Many Requests`; run a failing turn that appends ONLY `syntax error` and exits 5 → classified as `turn-error` (NOT `provider-quota`).
-   - Run a failing turn that newly appends `HTTP 429 Too Many Requests` to the same reused `turn_log` and exits 5 → classified as `provider-quota`.
+3. **Red Control 3 (Plan QA Round 1 & Round 2 Finding #1 — reused `turn_log` append & same-inode truncate/rewrite fencing):**
+   - Append-only negative: pre-populate reused `turn_log` with `HTTP 429 Too Many Requests`; run a failing turn that appends ONLY `syntax error` and exits 5 → classified as `turn-error` (NOT `provider-quota`).
+   - Append-only positive: run a failing turn that newly appends `HTTP 429 Too Many Requests` to the same reused `turn_log` and exits 5 → classified as `provider-quota`.
+   - Same-inode truncate-and-regrow (equal size & larger size): pre-populate reused `turn_log` with 100 bytes of filler, then run failing turns that open the same file with `"w"` (same inode) and write `HTTP 429 Too Many Requests\n` at byte 0 padded to equal size (`post_size == pre_size`) and larger size (`post_size > pre_size`) → BOTH classified as `provider-quota` (prefix hash detects the rewrite and never skips byte 0).
 4. **Red Control 4 (Plan QA Round 1 Finding #2 — post-start exit-1 attribution):**
    - Pre-seed stale `.relay-scratch/escalation-reason` with `cap-stalled`; trigger post-start consult-verify escalation write failure (no `STATUS:` line, exit 1 at line 1090) → emits verbatim `consult-escalation-write-failed` + invocation receipt + updates legacy file (never inherits stale `cap-stalled`), preserving exit code `1`.
    - Verify preflight lock-contention exit 1 emits `driver-lock-active` receipt without clobbering the active driver's `.relay-scratch/escalation-reason`.
 5. **Existing Regression Checks:** Run `bash test/gh115-round-cap.sh` and `bash test/gh505-relay-attest.sh` unchanged.
-6. **Full Classified Gate in Disposable Full Clone:** Because `utils/py/harness.py` and `utils/py/relay_drive.py` trigger `route=full`, run the full classified gate (`./utils/ci-route.sh` + repo gate) inside a fresh disposable full clone (isolated from this task clone, with `mypy==1.14.1` venv on `PATH`, executed in the background) and retain pre/post Git identity (`git rev-parse HEAD`, `git status --short`) + full gate log + `./utils/pdda/pdda.sh run` (0 errors) + `provenance.jsonl`.
+6. **Full Classified Gate in Disposable Full Clone:** Because `utils/py/harness.py` and `utils/py/relay_drive.py` trigger `route=full`, run the full classified gate (`./utils/ci-route.sh` + repo gate) inside a fresh disposable full clone (isolated from this task clone, with `mypy==1.14.1` venv on `PATH`, executed in the background) and retain complete pre/post Git identity checks (`git rev-parse HEAD`, `git config --get core.bare`, `git remote -v`, `git config --local --get user.email`, `git status --short`) + full gate log + `./utils/pdda/pdda.sh run` (0 errors) + `provenance.jsonl`. During Final QA, verify receipt JSON compatibility directly against KS-04's authoritative `kickstart_status.py` revision.

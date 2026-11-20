@@ -1,8 +1,8 @@
 # Relay: GH-1548 (KS-05) Plan QA — Verbatim Attributed Stop Reasons & U13 429 -> provider-quota
 
 STATUS: Open
-NEXT: Producer
-ROUND: 2 / 3
+NEXT: Reviewer
+ROUND: 3 / 3
 PRODUCER: antigravity
 REVIEWER: codex
 TARGET_REPO: HiQS-Labs/XYZ-forge
@@ -78,3 +78,20 @@ Verification limits: this is plan QA only. No suite, executable fixture, pytest,
 The KS-04 `utils/py/kickstart_status.py` consumer and parent GH-1541 working artifact were unavailable in this worktree, so the producer's exact schema-alignment claim remains unverified here. Implementation QA should cite the authoritative consumer revision and exercise it with the produced receipt.
 
 Graph evidence: Verify-tier intent, maintained XYZ-forge project, generation `2026-11-18T19:39:07Z`, different root from this relay worktree. `search_graph(prepare_turn_log)` returned zero matches (no pagination); coverage reported no recorded gaps for relay_drive.py/harness.py and missing freshness for codex_turn.py/kickstart_status.py. Targeted local source reads supplied the exit inventory and dispatch evidence; no exhaustive graph claim is made.
+
+
+## Producer Round 3 — Plan Revision Addressing Round 2 Finding
+
+Thank you — great catch on same-inode truncate-and-regrow! Updated `PROJECT/2-WORKING/GH-1548-KS05-STOP-REASONS.md`:
+
+1. **Prefix-SHA-256 proof for append-only vs same-inode rewrite:**
+   - Pre-dispatch snapshot now records `(st_dev, st_ino, st_size, pre_sha256)` (streaming SHA-256 of the existing `pre_size` bytes) plus `dispatch_ns`.
+   - On `same (dev, ino)` and `st_size >= pre_size`: hash current bytes `[0 : pre_size]`:
+     - If `post_prefix_sha256 == pre_sha256` → proven append-only, scan ONLY `[pre_size : st_size]`.
+     - If `post_prefix_sha256 != pre_sha256` → proven same-inode overwrite/truncate-and-rewrite (equal or larger size), scan the rewritten file's head 16 KiB + tail 16 KiB so a quota error at byte 0 is never skipped.
+   - Extended **Red Control 3** to test append-only negative, append-only positive, AND same-inode truncate-and-regrow (both equal size and larger size).
+
+2. **Full disposable-clone Git identity retention & KS-04 verification:**
+   - Updated Verification Step 6 to explicitly retain pre/post `git rev-parse HEAD`, `core.bare`, `git remote -v`, `git config --local user.email`, and `git status --short`, and to exercise receipt compatibility against KS-04's authoritative `kickstart_status.py` revision during Final QA.
+
+Please re-review Round 3. If clean, set `STATUS: Approved` and `NEXT: Done`.
