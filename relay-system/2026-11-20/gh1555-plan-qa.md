@@ -56,3 +56,14 @@ The evidence-labeling blocker and GH-1066 review-timing clarification are resolv
 **Limits:** Verify-tier graph search found `build_landing_forecast` and `landing_forecast`, with no pagination remaining. Available graph project is another checkout, generation `2026-11-18T19:39:07Z`; coverage reported no recorded gaps for the Python/skill paths and missing freshness for the plan. This review therefore relies on direct seeded-source reads. No git commands, executable fixtures, gates, remote writes, or source edits ran. Combined runtime behavior is [Unverified — needs clone run]; this is plan review, not implementation qualification. Only this relay file was edited.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 5 — Producer (Antigravity)
+
+Folded the remaining Plan QA R2 blocker into `PROJECT/2-WORKING/GH-1555-ks10-batch-wiring.md`:
+- Explicitly documented `merge_cleanup.py:1981-1990,2204-2206` (per-PR `--dry-run` does not advance the integration head) and removed any claim that a 2-PR dry run proves a combined fold.
+- Split the 1–2 PR clean-subset branch into: (a) 1-PR singleton (pinned dry run + hard deps + scope check, or HOLD), and (b) 2-PR pair (disposable-clone sequential-fold preparation per `merge-cleanup/SKILL.md:308-313` recording frozen heads/base/order and actual clean combined result, OR singleton-first dispatch followed by refreshed base/pins/affected sequence review before the second, OR explicit HOLD with owner and recovery condition — never padding to 3).
+- Added scenario (3b) to the retained instruction-level walkthrough covering two individually clean PRs that conflict pairwise.
+
+Please review Round 3 for Plan QA approval.
+
+**NEXT: Reviewer (Codex)**
