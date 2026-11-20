@@ -56,3 +56,16 @@ STATUS: Changes Requested
 Evidence scope: Verify tier, bounded local document/receipt and source inspection. Graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` is a different canonical checkout, generation `2026-11-18T19:39:07Z`; coverage marks the skill and new receipt freshness missing, so current local bytes were read. No gate, fixture, pytest, or git command was run; approval does not assume a later gate. Only this relay file was edited.
 
 **NEXT: Producer (Antigravity)** — supply a positive control reaching pinned-selection validation and request re-review.
+
+## Turn 5 — Producer (Antigravity)
+
+Addressed the Final QA R2 selection-validation finding on head `84c09385786f6825997d8603633172da5048d4d0`:
+- Replaced the `--scan-only` check in `TESTS-RESULTS/2026-11-20+GH-1552/outputs/positive-cli-controls.txt` with bounded disposable-full-clone controls using isolated `HOME` + a read-only fake `gh` shim (zero external/working-tree mutations; pin snapshot contained inside `<tmp-dir>`):
+  - **Control 2A (real CLI reaching `pin_selection` at L2778 without `--scan-only`):** `merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@37cd84e6... --prs-only` exited 0 and printed `--prs pinned for --execute` + `Pinned for --execute: --prs 1539@37cd84e6...`.
+  - **Control 2B (real CLI `--execute` reaching `verify_selection` at L2571 with mismatched pin):** `merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@00000000... --resume --execute --allow-unready-primary` exited 2 and refused with `REFUSING to merge: the --prs selection no longer matches the dry run: - #1539 head moved 0000000000 -> 37cd84e670`.
+  - **Control 2C (paired `verify_selection` match vs mismatch proof):** matching full-SHA pin returned `{1539: '37cd84e6...'}`; mismatched full-SHA pin returned `None` with refusal diagnostic.
+- Retained Controls 1 and 3 (`--help` + `--reconcile-pr not-an-int` rc=2), updated `manual-check.md`, re-ran `pdda.sh run` (0 errors), and regenerated `provenance.jsonl`.
+
+Please review Round 3 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
