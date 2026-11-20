@@ -1,115 +1,310 @@
-=== CONTROL 1: Walkthrough A — #1495/#1496 03:12Z Amendment Replay ===
+=== CONTROL 1: 03:12Z #1495/#1496 Replay (OA-0312) + Read-Only Lock Observation ===
+Note: '<tmp-dir>' and '<home-dir>' are documented path substitutions; every command below is shell-quoted with shlex.quote.
 --- Initial v1 record ---
-# Kickstart run: walkthrough A (#1495/#1496 amendment replay)
+# Kickstart run: Control 1 (#1495/#1496 03:12Z amendment replay)
 
 RUN-RECORD-VERSION: 1
 LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
 
 ## Progress log
 
-[Step 1.1] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-a.md --kind operator-amendment --id OA-0312 --ts 2026-11-20T03:12Z --text operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496
+[Step 1.1 — append OA-0312]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-1.md' --kind operator-amendment --id OA-0312 --ts 2026-11-20T03:12Z --text 'operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496'
 EXIT: 0
 STDOUT: OPERATOR_AMENDMENT: OA-0312 2026-11-20T03:12Z operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496
 STDERR: (empty)
 
-[Step 1.2] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-a.md
+[Step 1.2 — block unresolved OA-0312]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments '<tmp-dir>/run-record-control-1.md'
 EXIT: 2
 STDOUT: (empty)
 STDERR: run_record: unresolved OPERATOR_AMENDMENT OA-0312 (state=pending)
+LOCK_OBSERVATION: <tmp-dir>/run-record-control-1.md.lock exists=False (strictly read-only)
 
-[Step 1.3] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-a.md --kind applied --id OA-0312 --disposition applied --action applied 30m CodeRabbit waiver to #1495/#1496 before landing
+[Step 1.3 — json unresolved OA-0312]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments --json '<tmp-dir>/run-record-control-1.md'
+EXIT: 2
+STDOUT: {
+  "errors": [],
+  "escalated_amendments": [],
+  "ok": false,
+  "unresolved_amendments": [
+    {
+      "id": "OA-0312",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 7,
+      "state": "pending",
+      "text": "operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496",
+      "ts": "2026-11-20T03:12Z"
+    }
+  ],
+  "valid": true
+}
+STDERR: (empty)
+LOCK_OBSERVATION: <tmp-dir>/run-record-control-1.md.lock exists=False (strictly read-only)
+
+[Step 1.4 — apply OA-0312]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-1.md' --kind applied --id OA-0312 --disposition applied --action 'applied 30m CodeRabbit waiver to #1495/#1496 before landing'
 EXIT: 0
-STDOUT: APPLIED: OA-0312 → applied applied 30m CodeRabbit waiver to #1495/#1496 before landing 2026-11-20T09:52:53Z
+STDOUT: APPLIED: OA-0312 → applied applied 30m CodeRabbit waiver to #1495/#1496 before landing 2026-11-20T09:58:28Z
 STDERR: (empty)
 
-[Step 1.4] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-a.md
+[Step 1.5 — pass after OA-0312 applied]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments '<tmp-dir>/run-record-control-1.md'
 EXIT: 0
 STDOUT: OK amendments=1 unresolved=0
 STDERR: (empty)
+LOCK_OBSERVATION: <tmp-dir>/run-record-control-1.md.lock exists=False (strictly read-only)
 
-[Step 1.5] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py validate <tmp-dir>/run-record-walkthrough-a.md
+[Step 1.6 — validate record 1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py validate '<tmp-dir>/run-record-control-1.md'
 EXIT: 0
 STDOUT: OK v1 landing_clone=<home-dir>/kickstart-clones-ks1541/landing amendments=1 unresolved=0 interventions=0 gates=0
 STDERR: (empty)
 
-=== CONTROL 2: Walkthrough B — Pending Barrier + Applied, Superseded & Escalated Dispositions ===
---- Initial v1 record ---
-# Kickstart run: walkthrough B (Window B reconciliation & applied/superseded/escalated)
-
-RUN-RECORD-VERSION: 1
-LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
-
-## Progress log
-
-[Step 2.1] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind operator-amendment --id OA-1 --ts 2026-11-20T06:48Z --text operator turn 12 approved run 2 after build phase
-EXIT: 0
-STDOUT: OPERATOR_AMENDMENT: OA-1 2026-11-20T06:48Z operator turn 12 approved run 2 after build phase
-STDERR: (empty)
-
-[Step 2.2] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind parent-note --id PN-1 --ts 2026-11-20T06:55Z --text pause PR #1550 until KS-02 lands
-EXIT: 0
-STDOUT: PARENT_NOTE: PN-1 2026-11-20T06:55Z pause PR #1550 until KS-02 lands
-STDERR: (empty)
-
-[Step 2.3] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind operator-amendment --id OA-2 --ts 2026-11-20T07:05Z --text operator decision comment #7029124001 supersedes PN-1 because KS-02 landed
-EXIT: 0
-STDOUT: OPERATOR_AMENDMENT: OA-2 2026-11-20T07:05Z operator decision comment #7029124001 supersedes PN-1 because KS-02 landed
-STDERR: (empty)
-
-[Step 2.4] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-b.md
-EXIT: 2
-STDOUT: (empty)
-STDERR: run_record: unresolved OPERATOR_AMENDMENT OA-1 (state=pending)
-run_record: unresolved PARENT_NOTE PN-1 (state=pending)
-run_record: unresolved OPERATOR_AMENDMENT OA-2 (state=pending)
-
-[Step 2.5] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id OA-1 --disposition applied --action no scope change for phase 1; stop after KS-14
-EXIT: 0
-STDOUT: APPLIED: OA-1 → applied no scope change for phase 1; stop after KS-14 2026-11-20T09:52:53Z
-STDERR: (empty)
-
-[Step 2.6] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id PN-1 --disposition superseded --action superseded by OA-2 after KS-02 landed
-EXIT: 0
-STDOUT: APPLIED: PN-1 → superseded superseded by OA-2 after KS-02 landed 2026-11-20T09:52:53Z
-STDERR: (empty)
-
-[Step 2.7] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id OA-2 --disposition escalated --action escalated to parent/operator for explicit confirmation
-EXIT: 0
-STDOUT: APPLIED: OA-2 → escalated escalated to parent/operator for explicit confirmation 2026-11-20T09:52:53Z
-STDERR: (empty)
-
-[Step 2.8] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-b.md
-EXIT: 2
-STDOUT: (empty)
-STDERR: run_record: unresolved OPERATOR_AMENDMENT OA-2 (state=escalated)
-
-[Step 2.9] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id OA-2 --disposition applied --action operator confirmed PN-1 lifted; resumed PR #1550
-EXIT: 0
-STDOUT: APPLIED: OA-2 → applied operator confirmed PN-1 lifted; resumed PR #1550 2026-11-20T09:52:54Z
-STDERR: (empty)
-
-[Step 2.10] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-b.md
-EXIT: 0
-STDOUT: OK amendments=3 unresolved=0
-STDERR: (empty)
-
-[Step 2.11] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py validate <tmp-dir>/run-record-walkthrough-b.md
-EXIT: 0
-STDOUT: OK v1 landing_clone=<home-dir>/kickstart-clones-ks1541/landing amendments=3 unresolved=0 interventions=0 gates=0
-STDERR: (empty)
-
 --- Final record 1 (sanitized) ---
-# Kickstart run: walkthrough A (#1495/#1496 amendment replay)
+# Kickstart run: Control 1 (#1495/#1496 03:12Z amendment replay)
 
 RUN-RECORD-VERSION: 1
 LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
 
 ## Progress log
 OPERATOR_AMENDMENT: OA-0312 2026-11-20T03:12Z operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496
-APPLIED: OA-0312 → applied applied 30m CodeRabbit waiver to #1495/#1496 before landing 2026-11-20T09:52:53Z
+APPLIED: OA-0312 → applied applied 30m CodeRabbit waiver to #1495/#1496 before landing 2026-11-20T09:58:28Z
+
+=== CONTROL 2: All 3 Prefixes (OA-1, PN-1, PN-2, I-1) + Escalated + Superseded Chain + Cross-Prefix Duplicate ===
+--- Initial v1 record ---
+# Kickstart run: Control 2 (All 3 Prefixes + Escalated + Superseded Chain + Duplicate Rejection)
+
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
+
+## Progress log
+
+[Step 2.1 — append OA-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind operator-amendment --id OA-1 --ts 2026-11-20T06:48Z --text 'operator turn 12 approved run 2 after build phase'
+EXIT: 0
+STDOUT: OPERATOR_AMENDMENT: OA-1 2026-11-20T06:48Z operator turn 12 approved run 2 after build phase
+STDERR: (empty)
+
+[Step 2.2 — append PN-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind parent-note --id PN-1 --ts 2026-11-20T06:55Z --text 'pause PR #1550 until KS-02 lands'
+EXIT: 0
+STDOUT: PARENT_NOTE: PN-1 2026-11-20T06:55Z pause PR #1550 until KS-02 lands
+STDERR: (empty)
+
+[Step 2.3 — append PN-2]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind parent-note --id PN-2 --ts 2026-11-20T07:05Z --text 'resume PR #1550 after KS-02 landed; supersedes PN-1'
+EXIT: 0
+STDOUT: PARENT_NOTE: PN-2 2026-11-20T07:05Z resume PR #1550 after KS-02 landed; supersedes PN-1
+STDERR: (empty)
+
+[Step 2.4 — append INTERVENTION I-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind intervention --id I-1 --ts 2026-11-20T07:10Z --text 'parent cleared stale lock on landing clone before resume'
+EXIT: 0
+STDOUT: INTERVENTION: I-1 2026-11-20T07:10Z parent cleared stale lock on landing clone before resume
+STDERR: (empty)
+
+[Step 2.5 — Window A: 4 unresolved + INTERVENTION I-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments --json '<tmp-dir>/run-record-control-2.md'
+EXIT: 2
+STDOUT: {
+  "errors": [],
+  "escalated_amendments": [],
+  "ok": false,
+  "unresolved_amendments": [
+    {
+      "id": "OA-1",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 7,
+      "state": "pending",
+      "text": "operator turn 12 approved run 2 after build phase",
+      "ts": "2026-11-20T06:48Z"
+    },
+    {
+      "id": "PN-1",
+      "kind": "PARENT_NOTE",
+      "line_no": 8,
+      "state": "pending",
+      "text": "pause PR #1550 until KS-02 lands",
+      "ts": "2026-11-20T06:55Z"
+    },
+    {
+      "id": "PN-2",
+      "kind": "PARENT_NOTE",
+      "line_no": 9,
+      "state": "pending",
+      "text": "resume PR #1550 after KS-02 landed; supersedes PN-1",
+      "ts": "2026-11-20T07:05Z"
+    },
+    {
+      "id": "I-1",
+      "kind": "INTERVENTION",
+      "line_no": 10,
+      "state": "pending",
+      "text": "parent cleared stale lock on landing clone before resume",
+      "ts": "2026-11-20T07:10Z"
+    }
+  ],
+  "valid": true
+}
+STDERR: (empty)
+
+[Step 2.6 — apply OA-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind applied --id OA-1 --disposition applied --action 'no scope change for phase 1; stop after KS-14'
+EXIT: 0
+STDOUT: APPLIED: OA-1 → applied no scope change for phase 1; stop after KS-14 2026-11-20T09:58:28Z
+STDERR: (empty)
+
+[Step 2.7 — escalate I-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind applied --id I-1 --disposition escalated --action 'escalated stale-lock verification to parent'
+EXIT: 0
+STDOUT: APPLIED: I-1 → escalated escalated stale-lock verification to parent 2026-11-20T09:58:28Z
+STDERR: (empty)
+
+[Step 2.8 — escalated I-1 stays blocking]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments '<tmp-dir>/run-record-control-2.md'
+EXIT: 2
+STDOUT: (empty)
+STDERR: run_record: unresolved PARENT_NOTE PN-1 (state=pending)
+run_record: unresolved PARENT_NOTE PN-2 (state=pending)
+run_record: unresolved INTERVENTION I-1 (state=escalated)
+
+[Step 2.9 — supersede PN-1 -> PN-2]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind applied --id PN-1 --disposition superseded --action 'PN-2 resume after KS-02 landed'
+EXIT: 0
+STDOUT: APPLIED: PN-1 → superseded PN-2 resume after KS-02 landed 2026-11-20T09:58:29Z
+STDERR: (empty)
+
+[Step 2.10 — superseded PN-1 stays blocking while PN-2 unresolved]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments '<tmp-dir>/run-record-control-2.md'
+EXIT: 2
+STDOUT: (empty)
+STDERR: run_record: unresolved PARENT_NOTE PN-2 (state=pending)
+run_record: unresolved INTERVENTION I-1 (state=escalated)
+
+[Step 2.11 — resolve I-1]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind applied --id I-1 --disposition applied --action 'verified lock cleared and ownership stopped'
+EXIT: 0
+STDOUT: APPLIED: I-1 → applied verified lock cleared and ownership stopped 2026-11-20T09:58:29Z
+STDERR: (empty)
+
+[Step 2.12 — apply PN-2]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind applied --id PN-2 --disposition applied --action 'resumed PR #1550 after KS-02 landed'
+EXIT: 0
+STDOUT: APPLIED: PN-2 → applied resumed PR #1550 after KS-02 landed 2026-11-20T09:58:29Z
+STDERR: (empty)
+
+[Step 2.13 — all 4 resolved -> OK amendments=4 unresolved=0]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments '<tmp-dir>/run-record-control-2.md'
+EXIT: 0
+STDOUT: OK amendments=4 unresolved=0
+STDERR: (empty)
+
+[Step 2.14 — validate record 2 --json]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py validate --json '<tmp-dir>/run-record-control-2.md'
+EXIT: 0
+STDOUT: {
+  "amendments": [
+    {
+      "id": "OA-1",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 7,
+      "text": "operator turn 12 approved run 2 after build phase",
+      "ts": "2026-11-20T06:48Z"
+    },
+    {
+      "id": "PN-1",
+      "kind": "PARENT_NOTE",
+      "line_no": 8,
+      "text": "pause PR #1550 until KS-02 lands",
+      "ts": "2026-11-20T06:55Z"
+    },
+    {
+      "id": "PN-2",
+      "kind": "PARENT_NOTE",
+      "line_no": 9,
+      "text": "resume PR #1550 after KS-02 landed; supersedes PN-1",
+      "ts": "2026-11-20T07:05Z"
+    },
+    {
+      "id": "I-1",
+      "kind": "INTERVENTION",
+      "line_no": 10,
+      "text": "parent cleared stale lock on landing clone before resume",
+      "ts": "2026-11-20T07:10Z"
+    }
+  ],
+  "applied": [
+    {
+      "action": "no scope change for phase 1; stop after KS-14",
+      "disposition": "applied",
+      "id": "OA-1",
+      "line_no": 11,
+      "superseded_by": null,
+      "ts": "2026-11-20T09:58:28Z"
+    },
+    {
+      "action": "escalated stale-lock verification to parent",
+      "disposition": "escalated",
+      "id": "I-1",
+      "line_no": 12,
+      "superseded_by": null,
+      "ts": "2026-11-20T09:58:28Z"
+    },
+    {
+      "action": "PN-2 resume after KS-02 landed",
+      "disposition": "superseded",
+      "id": "PN-1",
+      "line_no": 13,
+      "superseded_by": "PN-2",
+      "ts": "2026-11-20T09:58:29Z"
+    },
+    {
+      "action": "verified lock cleared and ownership stopped",
+      "disposition": "applied",
+      "id": "I-1",
+      "line_no": 14,
+      "superseded_by": null,
+      "ts": "2026-11-20T09:58:29Z"
+    },
+    {
+      "action": "resumed PR #1550 after KS-02 landed",
+      "disposition": "applied",
+      "id": "PN-2",
+      "line_no": 15,
+      "superseded_by": null,
+      "ts": "2026-11-20T09:58:29Z"
+    }
+  ],
+  "baselines": [],
+  "errors": [],
+  "escalated_amendments": [],
+  "gates": [],
+  "interventions": [
+    {
+      "id": "I-1",
+      "kind": "INTERVENTION",
+      "line_no": 10,
+      "text": "parent cleared stale lock on landing clone before resume",
+      "ts": "2026-11-20T07:10Z"
+    }
+  ],
+  "landing_clone": "<home-dir>/kickstart-clones-ks1541/landing",
+  "unresolved_amendments": [],
+  "valid": true,
+  "version": 1
+}
+STDERR: (empty)
+
+[Step 2.15 — cross-prefix duplicate INTERVENTION OA-1 rejected]
+CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append '<tmp-dir>/run-record-control-2.md' --kind intervention --id OA-1 --ts 2026-11-20T07:20Z --text 'duplicate cross-prefix id test'
+EXIT: 1
+STDOUT: (empty)
+STDERR: run_record: line 16: duplicate INTERVENTION ID 'OA-1' (already declared)
 
 --- Final record 2 (sanitized) ---
-# Kickstart run: walkthrough B (Window B reconciliation & applied/superseded/escalated)
+# Kickstart run: Control 2 (All 3 Prefixes + Escalated + Superseded Chain + Duplicate Rejection)
 
 RUN-RECORD-VERSION: 1
 LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
@@ -117,8 +312,10 @@ LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
 ## Progress log
 OPERATOR_AMENDMENT: OA-1 2026-11-20T06:48Z operator turn 12 approved run 2 after build phase
 PARENT_NOTE: PN-1 2026-11-20T06:55Z pause PR #1550 until KS-02 lands
-OPERATOR_AMENDMENT: OA-2 2026-11-20T07:05Z operator decision comment #7029124001 supersedes PN-1 because KS-02 landed
-APPLIED: OA-1 → applied no scope change for phase 1; stop after KS-14 2026-11-20T09:52:53Z
-APPLIED: PN-1 → superseded superseded by OA-2 after KS-02 landed 2026-11-20T09:52:53Z
-APPLIED: OA-2 → escalated escalated to parent/operator for explicit confirmation 2026-11-20T09:52:53Z
-APPLIED: OA-2 → applied operator confirmed PN-1 lifted; resumed PR #1550 2026-11-20T09:52:54Z
+PARENT_NOTE: PN-2 2026-11-20T07:05Z resume PR #1550 after KS-02 landed; supersedes PN-1
+INTERVENTION: I-1 2026-11-20T07:10Z parent cleared stale lock on landing clone before resume
+APPLIED: OA-1 → applied no scope change for phase 1; stop after KS-14 2026-11-20T09:58:28Z
+APPLIED: I-1 → escalated escalated stale-lock verification to parent 2026-11-20T09:58:28Z
+APPLIED: PN-1 → superseded PN-2 resume after KS-02 landed 2026-11-20T09:58:29Z
+APPLIED: I-1 → applied verified lock cleared and ownership stopped 2026-11-20T09:58:29Z
+APPLIED: PN-2 → applied resumed PR #1550 after KS-02 landed 2026-11-20T09:58:29Z
