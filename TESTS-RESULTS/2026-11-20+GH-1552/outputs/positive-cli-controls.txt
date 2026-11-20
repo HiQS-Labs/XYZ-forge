@@ -1,0 +1,37 @@
+=== POSITIVE CONTROL 1: --reconcile-pr, --resume, --prs CLI Help/Argument Contract ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --help
+EXIT: 0
+DECISIVE OUTPUT:
+  [--exclude EXCLUDE] [--prs N[@SHA][,...]]
+  [--show-merge-policy] [--scan-only] [--prs-only]
+  [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+  [--allow-unready-primary] [--execute] [--resume]
+  teardown (never a PR filter; use --prs)
+  --prs N[@SHA][,...]   Allowlist of PRs to land (required for a merging
+  --prs-only            Only list and sequence open PRs
+  --reconcile-pr RECONCILE_PR
+  --resume              Continue a previous run: consult each PR's attempt
+
+=== POSITIVE CONTROL 2: Real CLI Acceptance of Pinned --prs N@<full-sha> + --resume (Non-Mutating --scan-only) ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@37cd84e670595e7bece28c378d16bed6acf2405d --resume --scan-only
+EXIT: 0
+DECISIVE OUTPUT (first 12 non-empty lines):
+  merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/private<tmp-dir>/disp-repo/.merge-cleanup.json
+  merge-cleanup: Operating on primary repo: /private<tmp-dir>/disp-repo
+  merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+  ================================================================================
+  PHASE 0: PRIMARY ON-DISK CHECKOUT
+  ================================================================================
+  Primary checkout: /private<tmp-dir>/disp-repo
+    branch: feat/XYZ-forge-gh1552-ks08-killed-landing-recovery-2026-11-20  (integration: development)
+    clean: yes
+    landing: NOT READY
+      - on 'feat/XYZ-forge-gh1552-ks08-killed-landing-recovery-2026-11-20', not the integration branch 'development' — `git merge --ff-only origin/development` will not land here
+      - cannot compare 'development' against 'origin/development' — the landing target could not be resolved, so readiness is unknown (fetch the remote, or check that the branch and remote exist)
+
+=== POSITIVE CONTROL 3: --reconcile-pr Argument Type Enforcement ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp-clone> --reconcile-pr not-an-int
+EXIT: 2
+DECISIVE OUTPUT: merge_cleanup.py: error: argument --reconcile-pr: invalid int value: 'not-an-int'
+
+BOUNDARY PROOF: Disposable full clone git status after all controls = (clean, zero local/remote mutations)

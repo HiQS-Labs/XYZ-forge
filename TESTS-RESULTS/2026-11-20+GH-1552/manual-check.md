@@ -20,3 +20,9 @@ Output log: `outputs/disposable-controls.txt`
 ## PDDA & Route Verification
 - `utils/ci-route.sh --base origin/development --head HEAD`: `route=docs`
 - `./utils/pdda/pdda.sh run`: 0 errors (see `outputs/pdda-run.log`)
+
+## Positive CLI Controls Added (Final QA R1 Follow-Up — `outputs/positive-cli-controls.txt`)
+All three bounded controls executed inside a disposable full clone with zero remote or working-tree mutations (`git status` clean):
+1. **`merge_cleanup.py --help` (`exit 0`):** verified `--reconcile-pr RECONCILE_PR`, `--resume`, and `--prs N[@SHA][,...]` CLI flags.
+2. **Real CLI positive pinned `--prs 1539@<40-hex-sha> --resume --scan-only` (`exit 0`):** proved the real CLI accepts pinned full-SHA selection with `--resume` in non-mutating scan mode (paired against the negative missing-`--prs` refusal in Control C).
+3. **`--reconcile-pr` argument validation (`exit 2` on invalid non-int `not-an-int`):** proved parser enforcement of integer PR numbers.
