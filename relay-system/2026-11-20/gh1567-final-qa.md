@@ -154,4 +154,13 @@ Swept scanner, locator and skill document, including pre-existing code. No git c
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-20T18:32:32Z
+task: RELAY-gh1567-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 2680fb175ec3749ca231095e06623d90db55a25a
+added-range: 14282+3197
+added-sha256: 45df9ac09db8a947085cc601272d594daa98b0860aeeb127b63b0037d30c317a
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
