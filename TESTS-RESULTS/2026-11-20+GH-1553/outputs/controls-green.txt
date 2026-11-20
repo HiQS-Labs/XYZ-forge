@@ -1,2 +1,124 @@
-PASS Control 1 (03:12Z #1495/#1496 replay): unapplied OA-0312 blocked rc=2 (read-only, no .lock created); after APPLIED disposition -> rc=0 (OK amendments=1 unresolved=0)
-PASS Control 2 (3 prefixes + Window A + escalated + superseded chain + cross-prefix ID uniqueness): Window A blocked all 4 IDs (rc=2); interventions list preserved (['I-1']); escalated I-1 stayed blocking (rc=2); PN-1 superseded by PN-2 stayed blocking until PN-2 resolved (rc=2 -> rc=0: OK amendments=4 unresolved=0); cross-prefix duplicate INTERVENTION ID OA-1 rejected (rc=1)
+=== CONTROL 1: Walkthrough A — #1495/#1496 03:12Z Amendment Replay ===
+--- Initial v1 record ---
+# Kickstart run: walkthrough A (#1495/#1496 amendment replay)
+
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
+
+## Progress log
+
+[Step 1.1] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-a.md --kind operator-amendment --id OA-0312 --ts 2026-11-20T03:12Z --text operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496
+EXIT: 0
+STDOUT: OPERATOR_AMENDMENT: OA-0312 2026-11-20T03:12Z operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496
+STDERR: (empty)
+
+[Step 1.2] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-a.md
+EXIT: 2
+STDOUT: (empty)
+STDERR: run_record: unresolved OPERATOR_AMENDMENT OA-0312 (state=pending)
+
+[Step 1.3] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-a.md --kind applied --id OA-0312 --disposition applied --action applied 30m CodeRabbit waiver to #1495/#1496 before landing
+EXIT: 0
+STDOUT: APPLIED: OA-0312 → applied applied 30m CodeRabbit waiver to #1495/#1496 before landing 2026-11-20T09:52:53Z
+STDERR: (empty)
+
+[Step 1.4] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-a.md
+EXIT: 0
+STDOUT: OK amendments=1 unresolved=0
+STDERR: (empty)
+
+[Step 1.5] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py validate <tmp-dir>/run-record-walkthrough-a.md
+EXIT: 0
+STDOUT: OK v1 landing_clone=<home-dir>/kickstart-clones-ks1541/landing amendments=1 unresolved=0 interventions=0 gates=0
+STDERR: (empty)
+
+=== CONTROL 2: Walkthrough B — Pending Barrier + Applied, Superseded & Escalated Dispositions ===
+--- Initial v1 record ---
+# Kickstart run: walkthrough B (Window B reconciliation & applied/superseded/escalated)
+
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
+
+## Progress log
+
+[Step 2.1] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind operator-amendment --id OA-1 --ts 2026-11-20T06:48Z --text operator turn 12 approved run 2 after build phase
+EXIT: 0
+STDOUT: OPERATOR_AMENDMENT: OA-1 2026-11-20T06:48Z operator turn 12 approved run 2 after build phase
+STDERR: (empty)
+
+[Step 2.2] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind parent-note --id PN-1 --ts 2026-11-20T06:55Z --text pause PR #1550 until KS-02 lands
+EXIT: 0
+STDOUT: PARENT_NOTE: PN-1 2026-11-20T06:55Z pause PR #1550 until KS-02 lands
+STDERR: (empty)
+
+[Step 2.3] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind operator-amendment --id OA-2 --ts 2026-11-20T07:05Z --text operator decision comment #7029124001 supersedes PN-1 because KS-02 landed
+EXIT: 0
+STDOUT: OPERATOR_AMENDMENT: OA-2 2026-11-20T07:05Z operator decision comment #7029124001 supersedes PN-1 because KS-02 landed
+STDERR: (empty)
+
+[Step 2.4] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-b.md
+EXIT: 2
+STDOUT: (empty)
+STDERR: run_record: unresolved OPERATOR_AMENDMENT OA-1 (state=pending)
+run_record: unresolved PARENT_NOTE PN-1 (state=pending)
+run_record: unresolved OPERATOR_AMENDMENT OA-2 (state=pending)
+
+[Step 2.5] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id OA-1 --disposition applied --action no scope change for phase 1; stop after KS-14
+EXIT: 0
+STDOUT: APPLIED: OA-1 → applied no scope change for phase 1; stop after KS-14 2026-11-20T09:52:53Z
+STDERR: (empty)
+
+[Step 2.6] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id PN-1 --disposition superseded --action superseded by OA-2 after KS-02 landed
+EXIT: 0
+STDOUT: APPLIED: PN-1 → superseded superseded by OA-2 after KS-02 landed 2026-11-20T09:52:53Z
+STDERR: (empty)
+
+[Step 2.7] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id OA-2 --disposition escalated --action escalated to parent/operator for explicit confirmation
+EXIT: 0
+STDOUT: APPLIED: OA-2 → escalated escalated to parent/operator for explicit confirmation 2026-11-20T09:52:53Z
+STDERR: (empty)
+
+[Step 2.8] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-b.md
+EXIT: 2
+STDOUT: (empty)
+STDERR: run_record: unresolved OPERATOR_AMENDMENT OA-2 (state=escalated)
+
+[Step 2.9] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py append <tmp-dir>/run-record-walkthrough-b.md --kind applied --id OA-2 --disposition applied --action operator confirmed PN-1 lifted; resumed PR #1550
+EXIT: 0
+STDOUT: APPLIED: OA-2 → applied operator confirmed PN-1 lifted; resumed PR #1550 2026-11-20T09:52:54Z
+STDERR: (empty)
+
+[Step 2.10] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py check-amendments <tmp-dir>/run-record-walkthrough-b.md
+EXIT: 0
+STDOUT: OK amendments=3 unresolved=0
+STDERR: (empty)
+
+[Step 2.11] CMD: python3 skills/1-hourly/kickstart/scripts/run_record.py validate <tmp-dir>/run-record-walkthrough-b.md
+EXIT: 0
+STDOUT: OK v1 landing_clone=<home-dir>/kickstart-clones-ks1541/landing amendments=3 unresolved=0 interventions=0 gates=0
+STDERR: (empty)
+
+--- Final record 1 (sanitized) ---
+# Kickstart run: walkthrough A (#1495/#1496 amendment replay)
+
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
+
+## Progress log
+OPERATOR_AMENDMENT: OA-0312 2026-11-20T03:12Z operator decision comment #7029123199 waived CodeRabbit after 30m for #1495/#1496
+APPLIED: OA-0312 → applied applied 30m CodeRabbit waiver to #1495/#1496 before landing 2026-11-20T09:52:53Z
+
+--- Final record 2 (sanitized) ---
+# Kickstart run: walkthrough B (Window B reconciliation & applied/superseded/escalated)
+
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: <home-dir>/kickstart-clones-ks1541/landing
+
+## Progress log
+OPERATOR_AMENDMENT: OA-1 2026-11-20T06:48Z operator turn 12 approved run 2 after build phase
+PARENT_NOTE: PN-1 2026-11-20T06:55Z pause PR #1550 until KS-02 lands
+OPERATOR_AMENDMENT: OA-2 2026-11-20T07:05Z operator decision comment #7029124001 supersedes PN-1 because KS-02 landed
+APPLIED: OA-1 → applied no scope change for phase 1; stop after KS-14 2026-11-20T09:52:53Z
+APPLIED: PN-1 → superseded superseded by OA-2 after KS-02 landed 2026-11-20T09:52:53Z
+APPLIED: OA-2 → escalated escalated to parent/operator for explicit confirmation 2026-11-20T09:52:53Z
+APPLIED: OA-2 → applied operator confirmed PN-1 lifted; resumed PR #1550 2026-11-20T09:52:54Z
