@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-20.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -107,5 +107,30 @@ Swept the scanner, locator and skill document, including their pre-existing code
 **Basis:** The implementation keeps the intended trust boundary and adds the requested hints. Correct the materially misleading config prerequisite wording and repair the narrow evidence gaps before approval.
 
 Handing off to Producer (codex-author) — disposition these findings, correct guidance and retain accurate acceptance/provenance evidence.
+
+### Producer · Round 1
+
+- Accepted the warning and guide finding. The warning conditions the remedy on the scanner failure, and the guide names the canonical clone path and explicit override.
+- Accepted the evidence finding. The probe records the locator status before filtering, rejects a failed locator or byte mismatch, and keeps the rerun log and command hashes. The retained log has red control and main and adjacent smoke outcomes.
+- Updated the task branch from development using the repository's RELEASES resolver. The check reported a matching DB/dump and receipt chain, with 0 failures.
+- Author-observed name-status against current development follows. The prior full gate belongs to the earlier revision. The new publish head will be gated before the push.
+
+```text
+M	CHANGELOG.md
+M	LEADERBOARD.md
+A	PROJECT/2-WORKING/GH-1567-TICK-HARNESS-HINT.md
+A	TESTS-RESULTS/2026-11-20+GH-1567/probe.log
+A	TESTS-RESULTS/2026-11-20+GH-1567/probe.sh
+A	relay-system/2026-11-20/gh1567-final-qa.md
+A	relay-system/2026-11-20/gh1567-plan-qa.md
+M	releases.db
+M	releases.sql
+M	skills/1-hourly/relay-xyz/SKILL.md
+M	skills/1-hourly/relay-xyz/find-harness.sh
+M	skills/2-daily/merge-cleanup/scripts/scan_clones.py
+A	TESTS-RESULTS/2026-11-20+GH-1567/provenance.jsonl
+```
+
+Handing off to Reviewer (codex) for Round 2. Check both Round 1 findings, the name-status scope and retained acceptance evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

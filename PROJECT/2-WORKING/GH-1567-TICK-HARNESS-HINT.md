@@ -89,7 +89,7 @@ dir and no `.tick/locks` entries, so `inspect_tick_claims` reaches `_tick_binary
 
 | What was just completed | What's next |
 |---|---|
-| Recon complete; plan drafted; rated 50/40/50/85 (see below). | Codex plan QA, implement, gate, smoke, final QA, PR. |
+| Plan QA approved. Both diagnostics implemented, red control and smoke recorded, and Round 1 final QA findings addressed. | Obtain final Codex approval and run the publication gate. |
 
 ## PRS rating rationale (2026-11-20)
 
