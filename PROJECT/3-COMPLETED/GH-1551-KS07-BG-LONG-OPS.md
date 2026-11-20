@@ -1,7 +1,7 @@
 ---
 issue: 1551
 title: "kickstart(KS-07): enforce host-native background execution for long operations (>10 min)"
-status: active
+status: Complete
 roadmap_id: rmi-01M7XEJR8KTN1FWEFYCJB2HFRE
 parent_arc: 1541
 milestone: KS-07
