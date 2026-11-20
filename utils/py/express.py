@@ -914,8 +914,8 @@ goal: >
 
 ## Lessons Learned (For Future Agents)
 
-- Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
-  CHANGELOG entry moved as one motion; consult the .tick express-fired event for the
+- Landed via the /express fast lane (GH-267): the fix, its suite and this doc moved as
+  one motion (plus the CHANGELOG entry when CHANGELOG_WRITES=branch); consult the .tick express-fired event for the
   run's receipts. Operator-supplied summary: {sm}
 """.format(n=args.issue, t=meta["title"], d=today, src=meta["url"], suite=args.suite, sm=args.summary or "(none)",
            kind="documentation update" if docs_only else "hotfix", doc_type="documentation" if docs_only else "bugfix",
@@ -1133,8 +1133,8 @@ def cmd_land(args):
 
     # Step 8 — commit the one-motion change set (explicit pathspecs, never -A).
     git(root, "add", "--", *sorted(after))
-    msg = ("%s(GH-%d): %s [express]\n\nExpress lane (GH-267): update + suite + born-complete doc + "
-           "CHANGELOG in one motion.\n\nCloses #%d\n" %
+    msg = ("%s(GH-%d): %s [express]\n\nExpress lane (GH-267): update + suite + born-complete doc "
+           "(+ CHANGELOG when CHANGELOG_WRITES=branch) in one motion.\n\nCloses #%d\n" %
            ("docs" if getattr(args, "docs_only", False) else "fix", args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
     sha = git(root, "rev-parse", "HEAD").stdout.strip()
@@ -1558,7 +1558,7 @@ def main():
     common(p)
     p.set_defaults(fn=cmd_check)
 
-    p = sub.add_parser("docs", help="step 5: born-complete capture doc + CHANGELOG entry")
+    p = sub.add_parser("docs", help="step 5: born-complete capture doc (+ CHANGELOG entry only when CHANGELOG_WRITES=branch)")
     common(p)
     p.add_argument("--slug")
     p.add_argument("--summary")

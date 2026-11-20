@@ -194,8 +194,10 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    rather than refuses promotion when it is missing; fill it in anyway),
    plus the CHANGELOG entry appended in the same motion only when `CHANGELOG_WRITES=branch`
    (resolved by `wave_reconcile.read_changelog_writes_mode`: env, then `.pdda-mode`, default
-   `off`; GH-1487/GH-1530). Under `off`/`landing` express leaves `CHANGELOG.md` untouched and the
-   landing reconcile owns the entry.
+   `off`; GH-1487/GH-1530). Under `off`/`landing` express leaves `CHANGELOG.md` untouched. The
+   post-landing changelog synthesis (`wave_reconcile`) runs only under `landing` and skips direct
+   commit landings, which is how express lands, so an express landing is not guaranteed a
+   synthesized entry; add one by hand if the change needs it.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
    adopted release/leaderboard projections refresh
