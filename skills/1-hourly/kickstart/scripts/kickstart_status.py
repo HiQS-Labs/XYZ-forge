@@ -1,0 +1,945 @@
+#!/usr/bin/env python3
+"""KS-04 (GH-1547): thin, strictly read-only derived status report for kickstart runs.
+
+Reads existing records only — never writes refs, locks, or state, and is NOT a
+merge-readiness approval engine:
+- Run record via run_record.py (items done, current item, unapplied amendments,
+  interventions, pinned LANDING_CLONE, canonical GATE: final-QA events).
+- Open PRs via pr_minder.py --json --no-conflict-files --repo-root <target-root>
+  (or --prs-json offline replay).
+- Attempt records ONLY from the pinned LANDING_CLONE's .tick/merge-cleanup/,
+  paired with remote PR state (gh pr view or --remote-prs-json).
+- Log age and U3 liveness states (waiting / quiet / stale-candidate /
+  confirmed-stopped / unknown), requiring complete 4-part stopped-ownership
+  proof for confirmed-stopped; log age alone NEVER authorizes finish/redispatch.
+- Canonical final-QA staleness separated from non-landing task gates.
+- Current run's stop reason quoted verbatim from an exclusive receipt/log or a
+  single self-contained invocation-attributed escalation payload (mtime-only and
+  sidecar-only attribution are rejected).
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT_DEFAULT = SCRIPT_DIR.parents[3]
+PR_MINDER_REL = Path("skills/2-daily/pr-minder/scripts/pr_minder.py")
+
+HEX_SHA_RE = re.compile(r"\b([0-9a-fA-F]{7,40})\b")
+PROGRESS_HEADING_RE = re.compile(r"^##\s+Progress log\b", re.I)
+ANY_HEADING_RE = re.compile(r"^##\s+")
+DONE_MARKER_RE = re.compile(r"\b(MERGED|DONE|PARKED|CLOSED)\b")
+MERGED_LINE_RE = re.compile(r"\bMERGED\b")
+CURRENT_LINE_RE = re.compile(r"^(?:-\s*)?(?:CURRENT|IN_PROGRESS):\s*(.+)$")
+LEGACY_AMEND_RE = re.compile(r"^(OPERATOR_AMENDMENT|PARENT_NOTE):\s*([A-Za-z0-9._-]+)\b(.*)$")
+LEGACY_APPLIED_RE = re.compile(r"^APPLIED:\s*([A-Za-z0-9._-]+)\b")
+STOP_LOG_PATTERNS = (
+    re.compile(r"stop-reason\s*=\s*([^\s,;]+)"),
+    re.compile(r"relay-drive:.*\bescalating\s*\(([^)]+)\)"),
+    re.compile(r"relay-drive:\s*([^\n]+failed[^\n]*)"),
+)
+
+
+def _load_run_record_module() -> Any:
+    mod_path = SCRIPT_DIR / "run_record.py"
+    spec = importlib.util.spec_from_file_location("kickstart_run_record", str(mod_path))
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load run_record.py from {mod_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _parse_iso_utc(raw: str) -> datetime:
+    s = raw.strip()
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _sha_matches(a: str | None, b: str | None) -> bool | None:
+    if not a or not b:
+        return None
+    sa = a.strip().lower()
+    sb = b.strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{7,40}", sa) or not re.fullmatch(r"[0-9a-f]{7,40}", sb):
+        return None
+    return sa.startswith(sb) or sb.startswith(sa)
+
+
+def _strip_event_bullet(line: str) -> str:
+    """Normalize optional leading '- ' bullet consistently with KS-15 run_record.py."""
+    s = line.strip()
+    return s[2:].lstrip() if s.startswith("- ") else s
+
+
+def _attempt_dir_slug(origin_or_slug: str) -> str:
+    """Match attempt_record.py:40-46 `<owner>-<repo>` directory slug convention."""
+    s = origin_or_slug.strip().rstrip("/")
+    s = re.sub(r"\.git$", "", s)
+    m = re.search(r"[:/]([^/:]+)/([^/]+)$", s)
+    parts = (m.group(1), m.group(2)) if m else (Path(s).parent.name or "local", Path(s).name or "repo")
+    return "-".join(re.sub(r"[^A-Za-z0-9_.-]", "_", p) for p in parts)
+
+
+def _progress_lines(text: str) -> list[tuple[int, str]]:
+    out: list[tuple[int, str]] = []
+    in_progress = False
+    for lineno, raw in enumerate(text.splitlines(), 1):
+        line = raw.strip()
+        if PROGRESS_HEADING_RE.match(line):
+            in_progress = True
+            continue
+        if in_progress and ANY_HEADING_RE.match(line):
+            break
+        if in_progress and line:
+            out.append((lineno, line))
+    return out
+
+
+def _extract_progress_summary(text: str, parsed: dict[str, Any]) -> dict[str, Any]:
+    plines = _progress_lines(text)
+    items_done: list[dict[str, Any]] = []
+    merged_landings: list[dict[str, Any]] = []
+    current_item: str | None = None
+
+    for lineno, line in plines:
+        norm_line = _strip_event_bullet(line)
+        if norm_line.startswith(("OPERATOR_AMENDMENT:", "PARENT_NOTE:", "INTERVENTION:", "APPLIED:", "GATE:")):
+            continue
+        m_cur = CURRENT_LINE_RE.match(line)
+        if m_cur:
+            current_item = m_cur.group(1).strip()
+            continue
+        if DONE_MARKER_RE.search(line):
+            items_done.append({"line": lineno, "text": line})
+        if MERGED_LINE_RE.search(line):
+            shas = HEX_SHA_RE.findall(line)
+            merged_landings.append({
+                "line": lineno,
+                "sha": shas[-1].lower() if shas else None,
+                "shas": [s.lower() for s in shas],
+                "text": line,
+            })
+
+    # Combine canonical unresolved amendments with fallback scan so a legacy parse error
+    # never hides an unapplied OPERATOR_AMENDMENT / PARENT_NOTE line.
+    unresolved: list[dict[str, Any]] = list(parsed.get("unresolved_amendments") or [])
+    known_ids = {str(a.get("id", "")) for a in (parsed.get("amendments") or [])}
+    applied_ids = {str(a.get("id", "")) for a in (parsed.get("applied") or [])}
+    for lineno, line in plines:
+        ma = LEGACY_APPLIED_RE.match(_strip_event_bullet(line))
+        if ma:
+            applied_ids.add(ma.group(1))
+    for lineno, line in plines:
+        mm = LEGACY_AMEND_RE.match(_strip_event_bullet(line))
+        if not mm:
+            continue
+        kind, aid, rest = mm.group(1), mm.group(2), mm.group(3).strip()
+        if aid not in known_ids and aid not in applied_ids:
+            unresolved.append({
+                "id": aid,
+                "kind": kind,
+                "line": lineno,
+                "state": "unapplied",
+                "text": rest,
+                "legacy_unparsed": True,
+            })
+
+    return {
+        "items_done": items_done,
+        "current_item": current_item,
+        "merged_landings": merged_landings,
+        "unapplied_amendments": unresolved,
+    }
+
+
+def _load_prs(
+    target_root: Path,
+    prs_json: Path | None,
+    skip_prs: bool,
+) -> tuple[list[dict[str, Any]], str | None]:
+    if skip_prs:
+        return [], "skipped (--skip-prs)"
+    if prs_json is not None:
+        raw_rows = json.loads(prs_json.read_text(encoding="utf-8"))
+    else:
+        pm_script = target_root / PR_MINDER_REL
+        if not pm_script.is_file():
+            pm_script = REPO_ROOT_DEFAULT / PR_MINDER_REL
+        if not pm_script.is_file():
+            return [], f"pr_minder.py not found under {target_root}"
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(pm_script),
+                "--json",
+                "--no-conflict-files",
+                "--repo-root",
+                str(target_root),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode != 0:
+            err = (proc.stderr or proc.stdout or "").strip()[:300]
+            return [], f"pr_minder failed (rc={proc.returncode}): {err}"
+        try:
+            raw_rows = json.loads(proc.stdout or "[]")
+        except ValueError as exc:
+            return [], f"pr_minder JSON parse failed: {exc}"
+
+    if not isinstance(raw_rows, list):
+        return [], "pr_minder payload is not a JSON list"
+
+    summary: list[dict[str, Any]] = []
+    for row in sorted(raw_rows, key=lambda r: int(r.get("pr", 0))):
+        blockers: list[str] = []
+        if row.get("draft"):
+            blockers.append("draft")
+        if row.get("held"):
+            blockers.append(f"held: {row['held']}")
+        if row.get("inherited_hold"):
+            blockers.append(f"inherited_hold: {row['inherited_hold']}")
+        if row.get("unknown"):
+            blockers.append("unknown")
+        if row.get("conflicting"):
+            blockers.append("conflicting")
+        if row.get("failing"):
+            failing = row["failing"]
+            if isinstance(failing, list):
+                blockers.append(f"failing: {', '.join(str(x) for x in failing)}")
+            else:
+                blockers.append(f"failing: {failing}")
+        if row.get("behind"):
+            drift = row.get("drift")
+            blockers.append(f"behind (drift={drift})" if drift is not None else "behind")
+        summary.append({
+            "pr": row.get("pr"),
+            "title": row.get("title", ""),
+            "merge_ready": len(blockers) == 0,
+            "blockers": blockers,
+            "rung": row.get("rung"),
+        })
+    return summary, None
+
+
+def _detect_repo_slug(target_root: Path) -> str | None:
+    proc = subprocess.run(
+        ["git", "-C", str(target_root), "remote", "get-url", "origin"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return None
+    url = (proc.stdout or "").strip().rstrip("/")
+    url = re.sub(r"\.git$", "", url)
+    m = re.search(r"[:/]([^/:]+/[^/]+)$", url)
+    return m.group(1) if m else None
+
+
+def _fetch_remote_pr_state(
+    pr_num: int,
+    repo_slug: str | None,
+    remote_map: dict[int, dict[str, Any]] | None,
+) -> dict[str, Any]:
+    if remote_map is not None:
+        info = remote_map.get(pr_num)
+        if not info:
+            return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+        mc = info.get("mergeCommit")
+        mc_oid = mc.get("oid") if isinstance(mc, dict) else (mc if isinstance(mc, str) else None)
+        return {
+            "state": str(info.get("state") or "unknown").upper(),
+            "head_sha": info.get("headRefOid") or info.get("head_sha"),
+            "merge_commit": mc_oid,
+            "merged_at": info.get("mergedAt") or info.get("merged_at"),
+        }
+
+    if not repo_slug:
+        return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+    cmd = ["gh", "pr", "view", str(pr_num), "--repo", repo_slug, "--json", "state,headRefOid,mergeCommit,mergedAt"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if proc.returncode != 0:
+        return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+    try:
+        loaded = json.loads(proc.stdout or "{}")
+    except ValueError:
+        return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+    if not isinstance(loaded, dict):
+        return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+    info_dict: dict[str, Any] = loaded
+    mc = info_dict.get("mergeCommit")
+    mc_oid = mc.get("oid") if isinstance(mc, dict) else (mc if isinstance(mc, str) else None)
+    return {
+        "state": str(info_dict.get("state") or "unknown").upper(),
+        "head_sha": info_dict.get("headRefOid"),
+        "merge_commit": mc_oid,
+        "merged_at": info_dict.get("mergedAt"),
+    }
+
+
+def _load_remote_pr_map(remote_prs_json: Path | None) -> dict[int, dict[str, Any]] | None:
+    if remote_prs_json is None:
+        return None
+    raw = json.loads(remote_prs_json.read_text(encoding="utf-8"))
+    out: dict[int, dict[str, Any]] = {}
+    if isinstance(raw, dict):
+        for k, v in raw.items():
+            if isinstance(v, dict):
+                out[int(k)] = v
+    elif isinstance(raw, list):
+        for item in raw:
+            if isinstance(item, dict) and ("number" in item or "pr" in item):
+                out[int(item.get("number", item.get("pr")))] = item
+    return out
+
+
+def _scan_stale_attempts(
+    landing_clone: Path | None,
+    repo_slug: str | None,
+    remote_map: dict[int, dict[str, Any]] | None,
+) -> dict[str, Any]:
+    if landing_clone is None:
+        return {"landing_clone": None, "scanned_records": 0, "stale_attempts": [], "note": "no LANDING_CLONE pinned"}
+    mc_dir = landing_clone / ".tick" / "merge-cleanup"
+    if not mc_dir.is_dir():
+        return {"landing_clone": str(landing_clone), "scanned_records": 0, "stale_attempts": [], "note": None}
+
+    if not repo_slug:
+        return {
+            "landing_clone": str(landing_clone),
+            "target_repo_dir": None,
+            "scanned_records": 0,
+            "stale_attempts": [],
+            "note": "unresolved target repository identity; remote PR lookup and cross-repo attempt scan withheld",
+        }
+
+    expected_dir = _attempt_dir_slug(repo_slug)
+    repo_dir = mc_dir / expected_dir
+    foreign_dirs = sorted(
+        d.name for d in mc_dir.iterdir() if d.is_dir() and d.name != expected_dir
+    )
+    rec_files = sorted(repo_dir.glob("pr-*.json")) if repo_dir.is_dir() else []
+    stale: list[dict[str, Any]] = []
+    for rf in rec_files:
+        try:
+            rec = json.loads(rf.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            stale.append({
+                "pr": None,
+                "repo": expected_dir,
+                "record_path": rf.relative_to(landing_clone).as_posix(),
+                "error": "malformed attempt record",
+                "remote_state": "unknown",
+            })
+            continue
+        attempts = rec.get("attempts")
+        if not isinstance(attempts, list):
+            continue
+        pr_num = rec.get("pr")
+        rec_repo = rec.get("repo")
+        repo_matches = True
+        if isinstance(rec_repo, str) and rec_repo.strip():
+            norm_rec_repo = _attempt_dir_slug(rec_repo) if ("/" in rec_repo or ":" in rec_repo) else rec_repo.strip()
+            repo_matches = (norm_rec_repo == expected_dir)
+        for idx, att in enumerate(attempts):
+            if not isinstance(att, dict) or att.get("outcome") != "in_progress":
+                continue
+            if isinstance(pr_num, int) and repo_matches:
+                remote = _fetch_remote_pr_state(int(pr_num), repo_slug, remote_map)
+            else:
+                remote = {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+            head_sha = att.get("head_sha")
+            entry: dict[str, Any] = {
+                "pr": pr_num,
+                "repo": rec_repo if isinstance(rec_repo, str) and rec_repo.strip() else expected_dir,
+                "record_path": rf.relative_to(landing_clone).as_posix(),
+                "attempt_index": idx,
+                "repair_count": len(attempts),
+                "rung": att.get("rung"),
+                "head_sha": head_sha,
+                "started": att.get("started"),
+                "remote_state": remote["state"],
+                "remote_head_sha": remote["head_sha"],
+                "remote_merge_commit": remote["merge_commit"],
+                "head_matches_attempt": _sha_matches(head_sha, remote["head_sha"]) if repo_matches else None,
+            }
+            if not repo_matches:
+                entry["repo_mismatch"] = True
+            stale.append(entry)
+
+    note = (
+        f"scoped to {expected_dir}; excluded foreign repo dir(s): {', '.join(foreign_dirs)}"
+        if foreign_dirs
+        else None
+    )
+    return {
+        "landing_clone": str(landing_clone),
+        "target_repo_dir": expected_dir,
+        "scanned_records": len(rec_files),
+        "excluded_foreign_dirs": foreign_dirs,
+        "stale_attempts": stale,
+        "note": note,
+    }
+
+
+def _pid_is_live(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+
+
+def _find_newest_log(log_file: Path | None, log_dir: Path | None, landing_clone: Path | None) -> tuple[Path | None, float | None]:
+    candidates: list[Path] = []
+    if log_file is not None and log_file.is_file():
+        candidates.append(log_file)
+    if log_dir is not None and log_dir.is_dir():
+        candidates.extend(p for p in log_dir.rglob("*") if p.is_file() and p.suffix in (".log", ".txt", ".jsonl"))
+    elif log_file is None and landing_clone is not None:
+        mc_dir = landing_clone / ".tick" / "merge-cleanup"
+        if mc_dir.is_dir():
+            candidates.extend(p for p in mc_dir.rglob("*") if p.is_file() and p.suffix in (".log", ".txt"))
+    if not candidates:
+        return None, None
+    newest = max(candidates, key=lambda p: (p.stat().st_mtime, p.as_posix()))
+    return newest, newest.stat().st_mtime
+
+
+def _assess_liveness(
+    *,
+    now_dt: datetime,
+    log_file: Path | None,
+    log_dir: Path | None,
+    landing_clone: Path | None,
+    owner_state: str,
+    owner_pid: int | None,
+    lock_state: str,
+    lock_path: Path | None,
+    children_state: str,
+    sessions_state: str,
+    quiet_seconds: int,
+    stale_seconds: int,
+) -> dict[str, Any]:
+    eff_owner = owner_state
+    pid_live: bool | None = None
+    if owner_pid is not None:
+        pid_live = _pid_is_live(owner_pid)
+        if pid_live:
+            eff_owner = "live"
+
+    eff_lock = lock_state
+    if lock_path is not None:
+        if lock_path.exists():
+            eff_lock = "held"
+        elif eff_lock == "unknown":
+            eff_lock = "clear"
+
+    newest_log, newest_mtime = _find_newest_log(log_file, log_dir, landing_clone)
+    age_s: float | None = None
+    if newest_mtime is not None:
+        age_s = max(0.0, round(now_dt.timestamp() - newest_mtime, 1))
+
+    ownership = {
+        "owner": eff_owner,
+        "owner_pid": owner_pid,
+        "owner_pid_live": pid_live,
+        "lock": eff_lock,
+        "children": children_state,
+        "sessions": sessions_state,
+    }
+    all_stopped = (
+        eff_owner == "stopped"
+        and eff_lock == "clear"
+        and children_state == "stopped"
+        and sessions_state == "stopped"
+    )
+    any_live = (
+        eff_owner == "live"
+        or eff_lock == "held"
+        or children_state == "live"
+        or sessions_state == "live"
+    )
+
+    advisory: str | None = None
+    if all_stopped:
+        state = "confirmed-stopped"
+    elif age_s is not None and age_s >= stale_seconds:
+        state = "stale-candidate"
+        advisory = "log age alone never authorizes finish or redispatch; prove complete stopped ownership first"
+    elif any_live and age_s is not None and age_s >= quiet_seconds:
+        state = "quiet"
+    elif any_live or (age_s is not None and age_s < quiet_seconds):
+        state = "waiting"
+    else:
+        state = "unknown"
+        if eff_owner == "stopped":
+            advisory = "owner reported stopped, but full 4-part ownership proof (lock/children/sessions) is incomplete; holding as unknown"
+
+    return {
+        "state": state,
+        "newest_log": newest_log.name if newest_log is not None else None,
+        "newest_log_age_seconds": age_s,
+        "quiet_seconds": quiet_seconds,
+        "stale_seconds": stale_seconds,
+        "ownership": ownership,
+        "advisory": advisory,
+    }
+
+
+def _assess_final_qa(
+    parsed: dict[str, Any],
+    merged_landings: list[dict[str, Any]],
+    final_qa_sha_override: str | None,
+    development_head: str | None,
+) -> dict[str, Any]:
+    qa_gates = [
+        g for g in (parsed.get("gates") or [])
+        if str(g.get("target", "")).lower() in ("final-qa", "final_qa")
+    ]
+    qa_gates.sort(key=lambda g: int(g.get("line", 0)))
+
+    latest_qa: dict[str, Any] | None = qa_gates[-1] if qa_gates else None
+    if latest_qa is None and final_qa_sha_override:
+        latest_qa = {
+            "line": 0,
+            "target": "final-QA",
+            "sha": final_qa_sha_override.strip(),
+            "verdict": "green",
+            "override": True,
+        }
+
+    if latest_qa is None:
+        return {
+            "status": "missing",
+            "final_qa_sha": None,
+            "final_qa_verdict": None,
+            "development_head": development_head,
+            "later_landings": [],
+            "reason": "no canonical GATE: final-QA recorded",
+        }
+
+    qa_sha = str(latest_qa.get("sha") or "")
+    qa_verdict = str(latest_qa.get("verdict") or "")
+    qa_line = int(latest_qa.get("line", 0))
+
+    if qa_verdict != "green":
+        return {
+            "status": "stale",
+            "final_qa_sha": qa_sha,
+            "final_qa_verdict": qa_verdict,
+            "development_head": development_head,
+            "later_landings": [],
+            "reason": f"latest canonical GATE: final-QA verdict is {qa_verdict}",
+        }
+
+    later_landings = [
+        m for m in merged_landings
+        if int(m.get("line", 0)) > qa_line
+        and not any(_sha_matches(s, qa_sha) for s in (m.get("shas") or []))
+    ]
+    if later_landings:
+        return {
+            "status": "stale",
+            "final_qa_sha": qa_sha,
+            "final_qa_verdict": qa_verdict,
+            "development_head": development_head,
+            "later_landings": later_landings,
+            "reason": f"{len(later_landings)} landing(s) recorded after final-QA",
+        }
+
+    if development_head:
+        matched = _sha_matches(qa_sha, development_head)
+        if matched is True:
+            return {
+                "status": "fresh",
+                "final_qa_sha": qa_sha,
+                "final_qa_verdict": qa_verdict,
+                "development_head": development_head,
+                "later_landings": [],
+                "reason": "canonical green final-QA matches caller-verified development head with no later landings",
+            }
+        return {
+            "status": "stale",
+            "final_qa_sha": qa_sha,
+            "final_qa_verdict": qa_verdict,
+            "development_head": development_head,
+            "later_landings": [],
+            "reason": f"development head ({development_head}) differs from final-QA head ({qa_sha})",
+        }
+
+    return {
+        "status": "unknown",
+        "final_qa_sha": qa_sha,
+        "final_qa_verdict": qa_verdict,
+        "development_head": None,
+        "later_landings": [],
+        "reason": "development head freshness unverified; pass --development-head",
+    }
+
+
+def _parse_structured_escalation_payload(raw_text: str) -> tuple[str | None, str | None]:
+    """Parse ONLY a single self-contained payload carrying both invocation_id and reason."""
+    text = raw_text.strip()
+    if not text:
+        return None, None
+    # Form 1: JSON object
+    if text.startswith("{"):
+        try:
+            obj = json.loads(text)
+        except ValueError:
+            return None, None
+        if isinstance(obj, dict):
+            inv = obj.get("invocation_id")
+            rsn = obj.get("reason") if obj.get("reason") is not None else obj.get("stop_reason")
+            if isinstance(inv, str) and inv.strip() and isinstance(rsn, str) and rsn.strip():
+                return inv.strip(), rsn.strip()
+        return None, None
+    # Form 2: keyed lines (invocation_id=... and reason=... or stop_reason=...)
+    kv: dict[str, str] = {}
+    for line in text.splitlines():
+        s = line.strip()
+        if not s or "=" not in s:
+            continue
+        k, v = s.split("=", 1)
+        kv[k.strip()] = v.strip()
+    inv = kv.get("invocation_id")
+    rsn = kv.get("reason") or kv.get("stop_reason")
+    if inv and rsn:
+        return inv, rsn
+    return None, None
+
+
+def _extract_stop_reason(
+    *,
+    receipt: Path | None,
+    run_log: Path | None,
+    harness_root: Path | None,
+    escalation_file: Path | None,
+    invocation_id: str | None,
+    liveness_state: str,
+) -> dict[str, Any]:
+    # 1. Exclusive per-run receipt
+    if receipt is not None and receipt.is_file():
+        text = receipt.read_text(encoding="utf-8", errors="replace").strip()
+        if text.startswith("{"):
+            try:
+                obj = json.loads(text)
+            except ValueError:
+                obj = None
+            if isinstance(obj, dict):
+                rsn = obj.get("stop_reason") or obj.get("reason")
+                if isinstance(rsn, str) and rsn.strip():
+                    return {
+                        "stop_reason": rsn.strip(),
+                        "attribution": "run-receipt",
+                        "source": receipt.name,
+                        "unattributed_shared_file_present": False,
+                    }
+        for line in reversed(text.splitlines()):
+            s = line.strip()
+            for pat in STOP_LOG_PATTERNS:
+                m = pat.search(s)
+                if m:
+                    return {
+                        "stop_reason": m.group(1).strip(),
+                        "attribution": "run-receipt",
+                        "source": receipt.name,
+                        "unattributed_shared_file_present": False,
+                    }
+            if "=" in s:
+                k, v = s.split("=", 1)
+                if k.strip() in ("stop_reason", "reason") and v.strip():
+                    return {
+                        "stop_reason": v.strip(),
+                        "attribution": "run-receipt",
+                        "source": receipt.name,
+                        "unattributed_shared_file_present": False,
+                    }
+
+    # 2. Exclusive per-run log
+    if run_log is not None and run_log.is_file():
+        text = run_log.read_text(encoding="utf-8", errors="replace")
+        for line in reversed(text.splitlines()):
+            s = line.strip()
+            for pat in STOP_LOG_PATTERNS:
+                m = pat.search(s)
+                if m:
+                    return {
+                        "stop_reason": m.group(1).strip(),
+                        "attribution": "run-log",
+                        "source": run_log.name,
+                        "unattributed_shared_file_present": False,
+                    }
+
+    # 3. Shared harness-root escalation file — ONLY self-contained matching invocation_id + reason.
+    # Sidecar files (e.g. .meta.json) and file mtime are strictly ignored.
+    esc_path = escalation_file
+    if esc_path is None and harness_root is not None:
+        esc_path = harness_root / ".relay-scratch" / "escalation-reason"
+
+    if esc_path is not None and esc_path.is_file():
+        raw = esc_path.read_text(encoding="utf-8", errors="replace")
+        payload_inv, payload_reason = _parse_structured_escalation_payload(raw)
+        if invocation_id and payload_inv == invocation_id and payload_reason:
+            return {
+                "stop_reason": payload_reason,
+                "attribution": "shared-file-invocation-id",
+                "source": esc_path.name,
+                "unattributed_shared_file_present": False,
+            }
+        return {
+            "stop_reason": "unknown",
+            "attribution": "unattributable",
+            "source": esc_path.name,
+            "unattributed_shared_file_present": True,
+        }
+
+    # 4. No stop evidence
+    return {
+        "stop_reason": "unknown" if liveness_state == "confirmed-stopped" else "none",
+        "attribution": "none",
+        "source": None,
+        "unattributed_shared_file_present": False,
+    }
+
+
+def _render_markdown(report: dict[str, Any]) -> str:
+    lines: list[str] = ["# Kickstart Status Report (read-only derived)", ""]
+    liv = report["liveness"]
+    lines.append("## Summary & Liveness")
+    lines.append(f"- Liveness: **{liv['state']}**")
+    age = liv["newest_log_age_seconds"]
+    lines.append(f"- Newest log: `{liv['newest_log'] or 'none'}` (age: {f'{age}s' if age is not None else 'n/a'})")
+    own = liv["ownership"]
+    lines.append(
+        f"- Ownership proof: owner={own['owner']}, lock={own['lock']}, "
+        f"children={own['children']}, sessions={own['sessions']}"
+    )
+    if liv.get("advisory"):
+        lines.append(f"- Advisory: {liv['advisory']}")
+    lines.append(f"- Run record valid: `{report['record_valid']}` (errors: {len(report['record_errors'])})")
+    if report["landing_clone_mismatch_warning"]:
+        lines.append(f"- Warning: {report['landing_clone_mismatch_warning']}")
+    lines.append(f"- Interventions recorded: {len(report['interventions'])}")
+    lines.append("")
+
+    lines.append("## Items Done & Current")
+    lines.append(f"- Current item: {report['current_item'] or 'none'}")
+    lines.append(f"- Items done ({len(report['items_done'])}):")
+    for it in report["items_done"]:
+        lines.append(f"  - L{it['line']}: {it['text']}")
+    lines.append("")
+
+    unapp = report["unapplied_amendments"]
+    lines.append(f"## Unapplied Amendments ({len(unapp)})")
+    if not unapp:
+        lines.append("- None")
+    else:
+        for am in unapp:
+            lines.append(f"- `{am.get('id')}` ({am.get('kind', am.get('state', 'unapplied'))}): {am.get('text', '')}")
+    lines.append("")
+
+    prs = report["prs"]
+    lines.append(f"## Open PRs — Merge-Ready Hygiene ({len(prs['items'])})")
+    lines.append(f"- Note: {prs['note']}")
+    if prs["error"]:
+        lines.append(f"- PR fetch note: {prs['error']}")
+    for p in prs["items"]:
+        status = "merge-ready" if p["merge_ready"] else f"blocked ({'; '.join(p['blockers'])})"
+        lines.append(f"- PR #{p['pr']}: **{status}** — {p['title']}")
+    lines.append("")
+
+    att = report["attempts"]
+    lines.append(f"## Stale / In-Progress Attempt Records ({len(att['stale_attempts'])})")
+    lines.append(f"- Pinned LANDING_CLONE: `{att['landing_clone'] or 'none'}` (scanned: {att['scanned_records']})")
+    if not att["stale_attempts"]:
+        lines.append("- None")
+    else:
+        for sa in att["stale_attempts"]:
+            if sa.get("error"):
+                lines.append(f"- `{sa['record_path']}`: {sa['error']} (remote: {sa['remote_state']})")
+            else:
+                lines.append(
+                    f"- PR #{sa['pr']} (attempt #{sa['attempt_index']}, repairs={sa['repair_count']}, "
+                    f"rung={sa['rung']}, head={str(sa['head_sha'])[:10]}): "
+                    f"remote=**{sa['remote_state']}**, head_matches_attempt={sa['head_matches_attempt']}"
+                )
+    lines.append("")
+
+    fqa = report["final_qa"]
+    lines.append("## Final-QA Staleness")
+    lines.append(
+        f"- Status: **{fqa['status']}** (final_qa_sha=`{fqa['final_qa_sha'] or 'none'}`, "
+        f"verdict=`{fqa['final_qa_verdict'] or 'none'}`, dev_head=`{fqa['development_head'] or 'unverified'}`)"
+    )
+    lines.append(f"- Detail: {fqa['reason']}")
+    lines.append("")
+
+    sr = report["stop_reason"]
+    lines.append("## Stop Reason (Verbatim)")
+    lines.append(f"- Reason: `{sr['stop_reason']}` (attribution: `{sr['attribution']}`, source: `{sr['source'] or 'none'}`)")
+    if sr["unattributed_shared_file_present"]:
+        lines.append("- Note: shared escalation file exists without matching invocation provenance; not adopted")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_report(args: argparse.Namespace) -> dict[str, Any]:
+    record_path = Path(args.record).expanduser()
+    if not record_path.is_file():
+        raise FileNotFoundError(f"run record not found: {record_path}")
+    text = record_path.read_text(encoding="utf-8")
+
+    rr = _load_run_record_module()
+    parsed = rr.parse_record(text)
+    progress = _extract_progress_summary(text, parsed)
+
+    target_root = Path(args.target_root).expanduser().resolve()
+    record_landing_raw = parsed.get("landing_clone")
+    record_landing = Path(record_landing_raw).expanduser().resolve() if record_landing_raw else None
+    override_landing = Path(args.landing_clone).expanduser().resolve() if args.landing_clone else None
+
+    mismatch_warning: str | None = None
+    if record_landing is not None and override_landing is not None and record_landing != override_landing:
+        mismatch_warning = (
+            f"--landing-clone override differs from run record LANDING_CLONE "
+            f"(using explicit override; verify pinned coordinator per U10)"
+        )
+    effective_landing = override_landing if override_landing is not None else record_landing
+
+    pr_items, pr_error = _load_prs(
+        target_root=target_root,
+        prs_json=Path(args.prs_json).expanduser() if args.prs_json else None,
+        skip_prs=bool(args.skip_prs),
+    )
+
+    repo_slug = args.repo_slug or _detect_repo_slug(target_root)
+    remote_map = _load_remote_pr_map(Path(args.remote_prs_json).expanduser() if args.remote_prs_json else None)
+    attempts = _scan_stale_attempts(effective_landing, repo_slug, remote_map)
+
+    now_dt = _parse_iso_utc(args.now) if args.now else datetime.now(timezone.utc)
+    liveness = _assess_liveness(
+        now_dt=now_dt,
+        log_file=Path(args.log_file).expanduser() if args.log_file else None,
+        log_dir=Path(args.log_dir).expanduser() if args.log_dir else None,
+        landing_clone=effective_landing,
+        owner_state=args.owner_state,
+        owner_pid=args.owner_pid,
+        lock_state=args.lock_state,
+        lock_path=Path(args.lock_path).expanduser() if args.lock_path else None,
+        children_state=args.children_state,
+        sessions_state=args.sessions_state,
+        quiet_seconds=args.quiet_seconds,
+        stale_seconds=args.stale_seconds,
+    )
+
+    final_qa = _assess_final_qa(
+        parsed=parsed,
+        merged_landings=progress["merged_landings"],
+        final_qa_sha_override=args.final_qa_sha,
+        development_head=args.development_head,
+    )
+
+    stop_reason = _extract_stop_reason(
+        receipt=Path(args.receipt).expanduser() if args.receipt else None,
+        run_log=Path(args.run_log).expanduser() if args.run_log else None,
+        harness_root=Path(args.harness_root).expanduser() if args.harness_root else None,
+        escalation_file=Path(args.escalation_file).expanduser() if args.escalation_file else None,
+        invocation_id=args.invocation_id,
+        liveness_state=liveness["state"],
+    )
+
+    return {
+        "schema": 1,
+        "record_version": parsed.get("version"),
+        "record_valid": bool(parsed.get("valid")),
+        "record_errors": list(parsed.get("errors") or []),
+        "landing_clone_pinned": str(record_landing) if record_landing else None,
+        "landing_clone_mismatch_warning": mismatch_warning,
+        "items_done": progress["items_done"],
+        "current_item": progress["current_item"],
+        "unapplied_amendments": progress["unapplied_amendments"],
+        "interventions": list(parsed.get("interventions") or []),
+        "prs": {
+            "items": pr_items,
+            "error": pr_error,
+            "note": "derived PR hygiene summary only; not a merge-readiness approval engine",
+        },
+        "attempts": attempts,
+        "liveness": liveness,
+        "final_qa": final_qa,
+        "stop_reason": stop_reason,
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    ap = argparse.ArgumentParser(
+        description="Thin, strictly read-only derived status report for kickstart runs (KS-04 / GH-1547)."
+    )
+    ap.add_argument("--record", required=True, help="Path to the kickstart run record Markdown file")
+    ap.add_argument("--target-root", default=".", help="Target repository root for read-only pr_minder lookup")
+    ap.add_argument("--landing-clone", default=None, help="Explicit LANDING_CLONE override (isolated replay only)")
+    ap.add_argument("--repo-slug", default=None, help="GitHub owner/repo slug for remote PR state lookup")
+    ap.add_argument("--prs-json", default=None, help="Saved pr_minder --json --no-conflict-files fixture")
+    ap.add_argument("--skip-prs", action="store_true", help="Skip PR hygiene lookup")
+    ap.add_argument("--remote-prs-json", default=None, help="Saved remote PR state fixture for stale attempts")
+    ap.add_argument("--log-dir", default=None, help="Directory of run logs for newest-log age")
+    ap.add_argument("--log-file", default=None, help="Specific log file for newest-log age")
+    ap.add_argument("--now", default=None, help="ISO-8601 UTC timestamp for deterministic replay")
+    ap.add_argument("--quiet-seconds", type=int, default=120, help="Quiet threshold in seconds (default: 120)")
+    ap.add_argument("--stale-seconds", type=int, default=600, help="Stale-candidate threshold in seconds (default: 600)")
+    ap.add_argument("--owner-state", choices=("live", "stopped", "unknown"), default="unknown")
+    ap.add_argument("--owner-pid", type=int, default=None, help="Optional owner PID checked read-only via kill(pid, 0)")
+    ap.add_argument("--lock-state", choices=("clear", "held", "unknown"), default="unknown")
+    ap.add_argument("--lock-path", default=None, help="Optional lock path checked read-only via exists()")
+    ap.add_argument("--children-state", choices=("live", "stopped", "unknown"), default="unknown")
+    ap.add_argument("--sessions-state", choices=("live", "stopped", "unknown"), default="unknown")
+    ap.add_argument("--final-qa-sha", default=None, help="Optional explicit final-QA SHA override")
+    ap.add_argument("--development-head", default=None, help="Caller-verified fresh integration branch head SHA")
+    ap.add_argument("--receipt", default=None, help="Exclusive per-run stop receipt path")
+    ap.add_argument("--run-log", default=None, help="Exclusive per-run log path for verbatim stop diagnostic")
+    ap.add_argument("--harness-root", default=None, help="Explicit harness root holding .relay-scratch/escalation-reason")
+    ap.add_argument("--escalation-file", default=None, help="Direct path to shared escalation-reason file")
+    ap.add_argument("--invocation-id", default=None, help="Current invocation ID required to attribute a shared escalation file")
+    ap.add_argument("--json", action="store_true", help="Emit deterministic JSON report")
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = build_parser()
+    args = ap.parse_args(argv)
+    try:
+        report = build_report(args)
+    except (OSError, ValueError, RuntimeError) as exc:
+        print(f"kickstart_status: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        print(_render_markdown(report))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

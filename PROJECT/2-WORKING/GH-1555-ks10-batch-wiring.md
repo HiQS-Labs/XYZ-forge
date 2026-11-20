@@ -1,8 +1,8 @@
 ---
-issue: 1555
+gh_issue: 1555
 title: "kickstart(KS-10): wire merge-cleanup landing forecast, --landing-plan, canary_command, and 3+ PR batch defaults"
 status: active
-roadmap_id: rmi-01M7W49MGDR0ZHKB87S577AFWJ
+roadmap_id: rmi-01M7WMDSWDBYVV0RNRFMSX3N8P
 parent_arc: 1541
 milestone: KS-10
 owner: antigravity

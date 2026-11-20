@@ -1,4 +1,20 @@
+- **GH-1548 (KS-05):** Attributed per-invocation stop-reason receipts (`relay-drive.py` `--invocation-id` / `--stop-receipt` + verbatim stderr trailer), fresh per-turn driver-owned shim logs via child-only `turn_env`, and U13 `429`/quota classification as `provider-quota` (distinct from `turn-error` and `cap-stalled`) across `utils/py/harness.py` and `utils/py/relay_drive.py`.
+
 # Changelog
+
+## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing
+  `gh issue list` call, releases `decide` holds when the latest `--owner` comment's first non-empty
+  line starts with `Operator decision` (proceed, routed so it never falls into rule 9 unclassified)
+  or `Operator decision: close` (dedicated close bucket where the child verifies acceptance on
+  `origin/development` and closes citing the commit), honours superseding `Operator decision: hold`
+  comments, and keeps closing PRs (`Closes #N`) unparked once the issue is released.
+- Also enforces fail-closed U15 holds (`status:held` label, body `HELD:` marker, `Blocked by #N`,
+  and open/active-gating `after #N`) across all issue types while preserving code-formatted `#N`
+  references inside prose holds and ignoring fenced blocks / wholly quoted inline examples. Mirrored
+  in `skills/1-hourly/kickstart/SKILL.md`. No new suite (GH-831). Evidence:
+  `TESTS-RESULTS/2026-11-20+GH-1535/manual-check.md`.
 
 ## 2026-11-20 — GH-1545 (KS-03): bake launch authority defaults into build_queue.py and kickstart/SKILL.md
 

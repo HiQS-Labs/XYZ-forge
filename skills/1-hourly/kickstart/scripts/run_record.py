@@ -177,18 +177,14 @@ def parse_record(text: str, *, require_landing_clone: bool = False) -> dict[str,
                 continue
 
             entry = {"kind": kind, "id": ev_id, "ts": ts, "text": body, "line_no": line_no}
+            if ev_id in amendment_by_id:
+                errors.append(f"line {line_no}: duplicate {kind} ID {ev_id!r} (already declared)")
+                continue
+            amendment_by_id[ev_id] = entry
+            amendments.append(entry)
             if kind == "INTERVENTION":
-                if ev_id in intervention_ids:
-                    errors.append(f"line {line_no}: duplicate INTERVENTION ID {ev_id!r}")
-                    continue
                 intervention_ids.add(ev_id)
                 interventions.append(entry)
-            else:
-                if ev_id in amendment_by_id:
-                    errors.append(f"line {line_no}: duplicate amendment ID {ev_id!r}")
-                    continue
-                amendment_by_id[ev_id] = entry
-                amendments.append(entry)
 
         elif kind == "APPLIED":
             m_ap = APPLIED_SPLIT_RE.match(payload)
@@ -660,6 +656,14 @@ def main(argv: list[str] | None = None) -> int:
     p_val.add_argument("--require-landing-clone", action="store_true")
     p_val.add_argument("--json", action="store_true", dest="as_json")
 
+    p_chk = sub.add_parser(
+        "check-amendments",
+        help="strictly read-only check: exit 0 iff record is valid and zero unresolved amendments/interventions remain (exit 2 otherwise)",
+    )
+    p_chk.add_argument("record", help="path to run record file")
+    p_chk.add_argument("--require-landing-clone", action="store_true")
+    p_chk.add_argument("--json", action="store_true", dest="as_json")
+
     p_app = sub.add_parser("append", help="atomically validate and append one v1 event line")
     p_app.add_argument("record", help="path to run record file")
     p_app.add_argument("--kind", choices=["operator-amendment", "parent-note", "intervention", "applied", "gate"])
@@ -710,6 +714,35 @@ def main(argv: list[str] | None = None) -> int:
                     for err in parsed["errors"]:
                         sys.stderr.write(f"run_record: {err}\n")
             return 0 if parsed["valid"] else 1
+
+        if args.cmd == "check-amendments":
+            rec = Path(args.record)
+            if not rec.is_file():
+                sys.stderr.write(f"run_record: file not found: {rec}\n")
+                return 2
+            parsed = parse_record(rec.read_text(encoding="utf-8"), require_landing_clone=args.require_landing_clone)
+            unresolved = parsed["unresolved_amendments"]
+            ok = parsed["valid"] and len(unresolved) == 0
+            if args.as_json:
+                payload = {
+                    "ok": ok,
+                    "valid": parsed["valid"],
+                    "errors": parsed["errors"],
+                    "unresolved_amendments": unresolved,
+                    "escalated_amendments": parsed["escalated_amendments"],
+                }
+                print(json.dumps(payload, indent=2, sort_keys=True))
+            else:
+                if ok:
+                    print(f"OK amendments={len(parsed['amendments'])} unresolved=0")
+                else:
+                    for err in parsed["errors"]:
+                        sys.stderr.write(f"run_record: parse error: {err}\n")
+                    for item in unresolved:
+                        sys.stderr.write(
+                            f"run_record: unresolved {item['kind']} {item['id']} (state={item['state']})\n"
+                        )
+            return 0 if ok else 2
 
         if args.cmd == "append":
             if bool(args.line) == bool(args.kind):
