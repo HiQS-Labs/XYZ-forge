@@ -15,7 +15,7 @@ description: >-
 # /express — bounded hotfix and documentation fast lane
 
 One motion: the update, its existing verifier, the ledger writes, the
-born-complete capture doc, the CHANGELOG entry, the landing, and the
+born-complete capture doc, the CHANGELOG entry (only under `CHANGELOG_WRITES=branch`), the landing, and the
 reconciliation — all before the operator's coffee cools. The guardrails are the
 skill; the speed is a side effect.
 
@@ -26,7 +26,7 @@ skill; the speed is a side effect.
 > **Express Discipline:**
 > 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/<base>` (the resolved integration branch; `development` in XYZ Forge) ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
 > 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite in this lane; an uncovered fix goes through `/start-task` under the host repo's own test policy (XYZ-forge: GH-831).
-> 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
+> 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion only when `CHANGELOG_WRITES=branch` (default `off` leaves `CHANGELOG.md` untouched).
 > 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute the selected existing suite green, prove tree identity, and re-snapshot tree to prevent drift.
 > 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/<base>` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
 >
@@ -173,7 +173,7 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
-   paperwork (`CHANGELOG.md`, the current issue's capture doc resolved by
+   paperwork (`CHANGELOG.md` only under `CHANGELOG_WRITES=branch`, the current issue's capture doc resolved by
    `capture_doc_path(root, issue)`, and review transcripts under `relay-system/*.md`)
    is exempt. Every other `PROJECT/**` path and operator .md edit (README, governance, skills)
    COUNTS (a gateless merge never rewrites policy unbounded).
@@ -192,7 +192,10 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
    present from birth (highly recommended — since GH-693 the reconciler warns
    rather than refuses promotion when it is missing; fill it in anyway),
-   plus the CHANGELOG entry appended in the same motion.
+   plus the CHANGELOG entry appended in the same motion only when `CHANGELOG_WRITES=branch`
+   (resolved by `wave_reconcile.read_changelog_writes_mode`: env, then `.pdda-mode`, default
+   `off`; GH-1487/GH-1530). Under `off`/`landing` express leaves `CHANGELOG.md` untouched and the
+   landing reconcile owns the entry.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
    adopted release/leaderboard projections refresh

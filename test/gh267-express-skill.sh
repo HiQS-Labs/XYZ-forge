@@ -35,6 +35,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 DRIVER="$HERE/../utils/py/express.py"
 export EXPRESS_CANONICAL_PY="$(cd "$HERE/../utils/py" && pwd)"
 export EXPRESS_REPO="H/H" XYZ_WORK_CONNECTORS=0
+export CHANGELOG_WRITES=branch  # GH-1530: CHANGELOG exemption/append is branch-mode behaviour; off is asserted below
 WORK="$(mktemp -d /tmp/gh267-express.XXXXXX)" || { echo "FAIL: mktemp"; exit 1; }
 BIN="$WORK/bin"; GH_STATE="$WORK/gh-state"; export HOME="$WORK/home"
 mkdir -p "$BIN" "$GH_STATE" "$HOME"
@@ -526,6 +527,12 @@ TODAY="$(date +%F)"
 grep -q "## \[Unreleased\] - $TODAY" "$FX/CHANGELOG.md" && ok "CHANGELOG dated section inserted" || bad "CHANGELOG section missing"
 CH_TODAY="$(awk "/## \[Unreleased\] - $TODAY/,0" "$FX/CHANGELOG.md")"
 grep -q "GH-999" <<<"$CH_TODAY" && ok "CHANGELOG entry present" || bad "CHANGELOG entry missing"
+
+# GH-1530: under the default (off) docs leaves CHANGELOG.md untouched
+new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+CL_OFF="$(shasum -a 256 "$FX/CHANGELOG.md")"
+CHANGELOG_WRITES=off python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary "demo" >/dev/null 2>"$ERR" || bad "docs (CHANGELOG_WRITES=off) failed: $(cat "$ERR")"
+[ -f "$DOC" ] && [ "$(shasum -a 256 "$FX/CHANGELOG.md")" = "$CL_OFF" ] && ok "CHANGELOG_WRITES=off: docs leaves CHANGELOG.md untouched (GH-1530)" || bad "CHANGELOG_WRITES=off still wrote CHANGELOG.md"
 
 # QA F3: a today-section WITHOUT a ### Fixed heading must not silently drop the entry
 new_task_branch
