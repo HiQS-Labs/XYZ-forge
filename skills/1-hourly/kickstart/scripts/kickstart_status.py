@@ -79,6 +79,21 @@ def _sha_matches(a: str | None, b: str | None) -> bool | None:
     return sa.startswith(sb) or sb.startswith(sa)
 
 
+def _strip_event_bullet(line: str) -> str:
+    """Normalize optional leading '- ' bullet consistently with KS-15 run_record.py."""
+    s = line.strip()
+    return s[2:].lstrip() if s.startswith("- ") else s
+
+
+def _attempt_dir_slug(origin_or_slug: str) -> str:
+    """Match attempt_record.py:40-46 `<owner>-<repo>` directory slug convention."""
+    s = origin_or_slug.strip().rstrip("/")
+    s = re.sub(r"\.git$", "", s)
+    m = re.search(r"[:/]([^/:]+)/([^/]+)$", s)
+    parts = (m.group(1), m.group(2)) if m else (Path(s).parent.name or "local", Path(s).name or "repo")
+    return "-".join(re.sub(r"[^A-Za-z0-9_.-]", "_", p) for p in parts)
+
+
 def _progress_lines(text: str) -> list[tuple[int, str]]:
     out: list[tuple[int, str]] = []
     in_progress = False
@@ -101,7 +116,8 @@ def _extract_progress_summary(text: str, parsed: dict[str, Any]) -> dict[str, An
     current_item: str | None = None
 
     for lineno, line in plines:
-        if line.startswith(("OPERATOR_AMENDMENT:", "PARENT_NOTE:", "INTERVENTION:", "APPLIED:", "GATE:")):
+        norm_line = _strip_event_bullet(line)
+        if norm_line.startswith(("OPERATOR_AMENDMENT:", "PARENT_NOTE:", "INTERVENTION:", "APPLIED:", "GATE:")):
             continue
         m_cur = CURRENT_LINE_RE.match(line)
         if m_cur:
@@ -124,11 +140,11 @@ def _extract_progress_summary(text: str, parsed: dict[str, Any]) -> dict[str, An
     known_ids = {str(a.get("id", "")) for a in (parsed.get("amendments") or [])}
     applied_ids = {str(a.get("id", "")) for a in (parsed.get("applied") or [])}
     for lineno, line in plines:
-        ma = LEGACY_APPLIED_RE.match(line)
+        ma = LEGACY_APPLIED_RE.match(_strip_event_bullet(line))
         if ma:
             applied_ids.add(ma.group(1))
     for lineno, line in plines:
-        mm = LEGACY_AMEND_RE.match(line)
+        mm = LEGACY_AMEND_RE.match(_strip_event_bullet(line))
         if not mm:
             continue
         kind, aid, rest = mm.group(1), mm.group(2), mm.group(3).strip()
@@ -254,9 +270,9 @@ def _fetch_remote_pr_state(
             "merged_at": info.get("mergedAt") or info.get("merged_at"),
         }
 
-    cmd = ["gh", "pr", "view", str(pr_num), "--json", "state,headRefOid,mergeCommit,mergedAt"]
-    if repo_slug:
-        cmd.extend(["--repo", repo_slug])
+    if not repo_slug:
+        return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
+    cmd = ["gh", "pr", "view", str(pr_num), "--repo", repo_slug, "--json", "state,headRefOid,mergeCommit,mergedAt"]
     proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if proc.returncode != 0:
         return {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
@@ -304,7 +320,21 @@ def _scan_stale_attempts(
     if not mc_dir.is_dir():
         return {"landing_clone": str(landing_clone), "scanned_records": 0, "stale_attempts": [], "note": None}
 
-    rec_files = sorted(mc_dir.glob("*/pr-*.json"))
+    if not repo_slug:
+        return {
+            "landing_clone": str(landing_clone),
+            "target_repo_dir": None,
+            "scanned_records": 0,
+            "stale_attempts": [],
+            "note": "unresolved target repository identity; remote PR lookup and cross-repo attempt scan withheld",
+        }
+
+    expected_dir = _attempt_dir_slug(repo_slug)
+    repo_dir = mc_dir / expected_dir
+    foreign_dirs = sorted(
+        d.name for d in mc_dir.iterdir() if d.is_dir() and d.name != expected_dir
+    )
+    rec_files = sorted(repo_dir.glob("pr-*.json")) if repo_dir.is_dir() else []
     stale: list[dict[str, Any]] = []
     for rf in rec_files:
         try:
@@ -312,6 +342,7 @@ def _scan_stale_attempts(
         except (OSError, ValueError):
             stale.append({
                 "pr": None,
+                "repo": expected_dir,
                 "record_path": rf.relative_to(landing_clone).as_posix(),
                 "error": "malformed attempt record",
                 "remote_state": "unknown",
@@ -321,15 +352,22 @@ def _scan_stale_attempts(
         if not isinstance(attempts, list):
             continue
         pr_num = rec.get("pr")
+        rec_repo = rec.get("repo")
+        repo_matches = True
+        if isinstance(rec_repo, str) and rec_repo.strip():
+            norm_rec_repo = _attempt_dir_slug(rec_repo) if ("/" in rec_repo or ":" in rec_repo) else rec_repo.strip()
+            repo_matches = (norm_rec_repo == expected_dir)
         for idx, att in enumerate(attempts):
             if not isinstance(att, dict) or att.get("outcome") != "in_progress":
                 continue
-            remote = _fetch_remote_pr_state(int(pr_num), repo_slug, remote_map) if isinstance(pr_num, int) else {
-                "state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None
-            }
+            if isinstance(pr_num, int) and repo_matches:
+                remote = _fetch_remote_pr_state(int(pr_num), repo_slug, remote_map)
+            else:
+                remote = {"state": "unknown", "head_sha": None, "merge_commit": None, "merged_at": None}
             head_sha = att.get("head_sha")
-            stale.append({
+            entry: dict[str, Any] = {
                 "pr": pr_num,
+                "repo": rec_repo if isinstance(rec_repo, str) and rec_repo.strip() else expected_dir,
                 "record_path": rf.relative_to(landing_clone).as_posix(),
                 "attempt_index": idx,
                 "repair_count": len(attempts),
@@ -339,14 +377,24 @@ def _scan_stale_attempts(
                 "remote_state": remote["state"],
                 "remote_head_sha": remote["head_sha"],
                 "remote_merge_commit": remote["merge_commit"],
-                "head_matches_attempt": _sha_matches(head_sha, remote["head_sha"]),
-            })
+                "head_matches_attempt": _sha_matches(head_sha, remote["head_sha"]) if repo_matches else None,
+            }
+            if not repo_matches:
+                entry["repo_mismatch"] = True
+            stale.append(entry)
 
+    note = (
+        f"scoped to {expected_dir}; excluded foreign repo dir(s): {', '.join(foreign_dirs)}"
+        if foreign_dirs
+        else None
+    )
     return {
         "landing_clone": str(landing_clone),
+        "target_repo_dir": expected_dir,
         "scanned_records": len(rec_files),
+        "excluded_foreign_dirs": foreign_dirs,
         "stale_attempts": stale,
-        "note": None,
+        "note": note,
     }
 
 
