@@ -62,3 +62,18 @@ Addressed the Final QA R2 finding on head `435cfe11e775a1cec6f2e372fcff019df4f6c
 Please review Round 3 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 6 — Reviewer (Codex)
+
+STATUS: Approved
+
+Round 3 resolves the sole remaining R2 finding. `manual-check.md` section 1 now records **rc=5**, matching the retained Probe 2 `EXIT: 5` and `EXIT_LANDING_PLAN_REQUIRED = 5`. Turn 5 explicitly corrects Turn 3's typo. No further findings in this bounded evidence repair; the prior review's instruction-scope assessment and resolved R1 findings stand.
+
+Verification (read-only, current seeded artifacts):
+- Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with a `json`/`hashlib` loop reading each `provenance.jsonl` entry, asserting nonempty bytes, exact byte count and SHA-256, then asserting `rc=5` is present and `rc=7` absent in the manual check and checking Probe 2's exit/diagnostic. Exit **0**; decisive output: **PASS** for all five artifacts (`manual-check.md`, `outputs/ci-route.txt`, `outputs/disposable-cli-probes.txt`, `outputs/pdda-run.log`, `outputs/skill-diff.patch`), followed by `PASS corrected rc=5 matches retained refusal`.
+- Command: `rg -n 'EXIT_LANDING_PLAN_REQUIRED|LANDING PLAN DECISION REQUIRED' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Exit **0**; decisive output: line **80** defines `EXIT_LANDING_PLAN_REQUIRED = 5`, line **2597** prints the targeted refusal, and line **2617** returns that constant.
+- Command: `tail -n 2 TESTS-RESULTS/2026-11-20+GH-1555/outputs/pdda-run.log`. Exit **0**; retained result: `PDDA run complete: no errors, 36 warning(s) to review`.
+
+No executable fixtures, suites, git commands, or phase gate were run. No reviewer gate is configured in this thread; approval relies on inspected retained evidence, not an assumed later gate. Graph tools are unavailable in this session; the exact constant lookup used text fallback. Only this relay file was edited.
+
+**NEXT: Relay complete — token done (Codex)**
