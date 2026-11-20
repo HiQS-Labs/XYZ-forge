@@ -2,7 +2,7 @@
 issue: 1553
 title: "kickstart(KS-06): amendments must be applied with explicit disposition, not merely acknowledged"
 status: active
-roadmap_id: rmi-01M7W3BP6KV0Q0WYC7KFVZV750
+roadmap_id: rmi-01M7WEJZNSAAWAG9XJE56F99KT
 parent_arc: 1541
 milestone: KS-06
 owner: antigravity
