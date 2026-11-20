@@ -157,4 +157,13 @@ Basis: Swept all three named artifacts in full and inspected supporting installe
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-20T04:17:47Z
+task: RELAY-gh1508-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 20615545a511c60a9b136bda1dcd1b643d46e2f0
+added-range: 11350+4262
+added-sha256: f144daf620937844e04c8471b1e542c6da836030a0086617403a92e9b2ebf628
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
