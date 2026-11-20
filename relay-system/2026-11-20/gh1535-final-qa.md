@@ -1,7 +1,7 @@
 # Relay: GH-1535 (KS-02) Final QA — Operator Decision Release & U15 Body/Label Holds
 
-STATUS: In Progress
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 1 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -43,3 +43,51 @@ Please review the completed implementation, docs mirror, and recorded paired man
 2. Are all edge cases (non-owner, line-2, supersession, `other-session` non-override, `DECIDED`/`CLOSE` buckets, U15 body/label holds, fenced/backtick false positives, closed refs, backward-compatible replay) sound?
 3. Are the paired red/green evidence, read-only invariance, `mypy`, PDDA gate, and `provenance.jsonl` complete and consistent?
 4. If clean, append your review block and set `STATUS: Approved` and `NEXT: Done`. If changes are needed, list numbered findings and set `NEXT: Producer`.
+
+
+## Reviewer Round 1 — codex — Approved
+
+No blocking findings. Reviewed the seeded source, retained patch, plan, skill mirror, paired replay outputs, transcript, and provenance. The implementation follows the approved closed ordering: owner-only chronological decision supersession, independent holds before folding, dedicated CLOSE and DECIDED routes, and propagation of parked issues to closing PRs. No new test suite appears in the retained change inventory.
+
+Independent narrow probes (exit 0) verified chronological supersession with reverse-ordered comments, explicit decide release, other-session preservation, and body-hold nonoverride. All 14 provenance artifact entries were nonempty and matched their recorded byte counts and SHA-256 hashes. Decisive output:  [Unverified — no citation]
+
+```text
+artifact hashes and nonempty sizes PASS 14
+'Blocked by `#1499`' => blocked by #1499
+'Only after `#1499` lands' => after #1499
+'`Blocked by #1499`' => None
+'after #1403 passed' => None
+'HELD: awaiting decision' => body HELD: marker
+chronological supersession, release, other-session and body-hold nonoverride PASS
+```
+
+Reproducible narrow probe command (no git, fixture executables, or gates):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PYPROBE'
+import hashlib,json,pathlib,runpy
+p=pathlib.Path('TESTS-RESULTS/2026-11-20+GH-1535/provenance.jsonl')
+n=0
+for line in p.read_text().splitlines():
+ r=json.loads(line)
+ if r.get('kind')=='artifact':
+  b=pathlib.Path(r['path']).read_bytes(); assert b and len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256'],r['path']; n+=1
+print('artifact hashes and nonempty sizes PASS',n)
+m=runpy.run_path('skills/1-hourly/kickstart/scripts/build_queue.py')
+for body in ['Blocked by `#1499`','Only after `#1499` lands','`Blocked by #1499`','after #1403 passed','HELD: awaiting decision']:
+ print(repr(body),'=>',m['issue_hold_reason']({'body':body},set()))
+i={'number':1,'title':'Decide scope','body':'','labels':[],'createdAt':'2026-11-19','comments':[{'author':{'login':'owner'},'body':'Operator decision: hold','createdAt':'2026-11-20T02:00:00Z'},{'author':{'login':'owner'},'body':'Operator decision: proceed','createdAt':'2026-11-20T01:00:00Z'}]}
+assert m['operator_decision'](i,'owner')=='hold'
+i['comments']=i['comments'][1:]
+assert m['parked_issues']([i],set(),{1},'owner',set())==set()
+assert m['parked_issues']([i],{1},{1},'owner',set())=={1}
+i['body']='HELD: wait'
+assert m['parked_issues']([i],set(),{1},'owner',set())=={1}
+print('chronological supersession, release, other-session and body-hold nonoverride PASS')
+PYPROBE
+```
+
+Verification limits: paired red/green replays, read-only Git invariance, mypy, and PDDA are producer-recorded evidence, inspected rather than rerun. The transcript records all paired controls passing, byte-identical determinism, unchanged refs/FETCH_HEAD/object counts, docs tier 1 routing, and mypy success. PDDA records zero errors and 36 warnings, not a warning-free run. No full runtime gate or hosted verification is claimed; approval does not presume a later gate. No git command was run by this reviewer.
+
+Graph context: nearest indexed project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-18T19:39:07Z`, is a different checkout and predates the candidate. Target-symbol search returned zero; coverage reported target freshness missing. Review therefore relied on the exact seeded source and retained diff, not graph completeness.
