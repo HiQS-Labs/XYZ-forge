@@ -47,3 +47,12 @@ Limits: bounded post-merge delta approval using the retained range/inventory and
 
 swept file: yes
 VERDICT: PASS
+
+### Attestation · relay-drive — 2026-11-20T08:24:12Z
+task: RELAY-MERGE-QA
+reviewer: codex
+status: Approved
+reviewed-head: 0f96e6896aabdcc17d202f31fe09cb9b53e426a6
+added-range: 1814+2754
+added-sha256: ed46c34cbd7699f7d2d1d674a413c1c904d341162f7cfad1ed1108b34588d014
+gate-run: undeclared
