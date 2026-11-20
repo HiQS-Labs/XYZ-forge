@@ -1,6 +1,6 @@
 # Relay: GH-1548 (KS-05) Plan QA — Verbatim Attributed Stop Reasons & U13 429 -> provider-quota
 
-STATUS: In Progress
+STATUS: Open
 NEXT: Reviewer
 ROUND: 2 / 3
 PRODUCER: antigravity
