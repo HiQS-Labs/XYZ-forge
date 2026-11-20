@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -146,5 +146,38 @@ Dispositions for Round 1 findings:
 - **Nit (`CHANGELOG_WRITES`):** **Implemented.** Made step 4 conditional on `PROJECT/PDDA.md` / `CHANGELOG_WRITES` policy, and added explicit v1 initialization-header documentation to `SKILL.md` scope and anonymized fixture sourcing in Recon.
 
 Updated `PROJECT/2-WORKING/GH-1543-KS15-RECORD-CONTRACT.md`. Handing off to Reviewer (codex) for Round 2 plan QA.
+
+### Reviewer · Round 2
+
+**What this proposes**
+
+Provide one stdlib v1 Markdown parser, locked appender, redacted snapshot writer and branch checkpoint helper. Retained manual evidence and a concise skill contract support downstream kickstart consumers.
+
+**How the existing system works, per this document**
+
+The current records are free-form; downstream consumers need a shared contract. The existing queue builder writes its output directly, while completion still requires PRs, SHAs, gates and independent review. Historical record fixtures remain to be supplied during implementation.
+
+**What it's not**
+
+This is plan QA, not runtime qualification, live run-2 publication or implementation of delivery decisions.
+
+- [Pass] F1 is addressed at artifact lines 53–56: “persistent sibling lock file”, lock before read, complete candidate validation inside the lock, then fsync/replace. The distinct-ID and same-ID controls at line 104 discriminate serialization from merely producing a valid single-writer result.
+- [Pass] F3 and F4 are addressed in the specification: artifact lines 97–105 distinguish actual rejection, contamination detection, concurrency and remote-blob evidence; lines 35–49 define reserved-word precedence, empty-action rejection, escalation recovery and terminal dispositions. These are planned checks, not executed results.
+- [Should] F2 remains incomplete: primary-checkout identity is optional. Artifact lines 58–59 accept `[--primary <dir>]` and compare it only “when supplied”; LANDING_CLONE identifies the landing checkout, not necessarily the primary checkout. A clean primary checkout whose path differs from LANDING_CLONE therefore passes every stated identity check when `--primary` is omitted, and line 62 then switches its branch and writes/commits there. Require an authoritative primary identity (mandatory argument or an existing reliable identity source), or refuse checkpoint when that identity cannot be established. Also state explicitly that destination confinement is checked against the selected branch's filesystem after any switch, before snapshot writing: a target branch can introduce symlink parents absent in the starting branch. Keep this within the existing manual checkpoint checks.
+  Observed input: `checkpoint --record <active-record> --clone <primary-checkout> --branch run-record/example --dest record.md` with no `--primary`, clean status, and `LANDING_CLONE` naming a different checkout; accepted by the rules at artifact lines 58–62.
+  Affected scope: checkpoint checkout-identity admission and destination validation at the write boundary.
+  Falsifier: in a disposable full clone, that exact missing-identity case rejects before branch/index/file mutation; a separately identified dedicated checkpoint clone succeeds. An existing target branch containing `records -> <outside-dir>` with `--dest records/run.md` must never write outside the clone (specify whether preflight refusal preserves the original branch or a post-switch refusal leaves the selected branch).
+- [Pass] All eight requested header/event names remain in artifact lines 29–41; initialization documentation is explicit at line 64. Historical compatibility is appropriately left to sourced fixtures at lines 72 and 103, rather than claimed verified here.
+- [Pass] The delivery boundary remains explicit: artifact line 78 says “KS-15 acceptance stays uncredited until run 2”; kickstart/SKILL.md:151–156 requires PR URLs, commit SHAs, gates and independent review. Record validity and a published snapshot do not prove a built or delivered candidate.
+- [Pass] The envelope remains proportionate: artifact lines 77–79 specify one module and reject a database, daemon and sidecar; AGENTS.md:165–173 permits retained manual evidence instead of new suites. utils/ci-route.sh:62–69 classifies ordinary skill paths as docs; that classification does not qualify Python runtime behavior. Artifact line 106 now makes CHANGELOG conditional.
+- [Unverified — no citation] Appeal is explicitly neutral at artifact line 87. The other PRS numbers are reasoned estimates at lines 84–89, with recurrence limited to one source-attributed run; they are not independent measurements. No additional overbuild or unrelated pre-existing defect was found in the whole plan beyond the checkpoint contract above.
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: F1, F3, F4 and the CHANGELOG nit are resolved at plan level. F2 still permits the primary-checkout input above and needs a precise write-boundary contract. Source-only review; no runtime failure is asserted for an implementation that does not yet exist. Read the whole artifact and the specified local source files. Graph coverage was checked against the canonical XYZ-forge project, generation 2026-11-18T19:39:07Z; kickstart freshness was missing, so local source was used instead. No git, gate, executable fixture, pytest or test suite was run. Runtime behavior remains [Unverified — needs clone run]; no later gate is assumed.
+
+Handing off to Producer (antigravity) — resolve the remaining F2 identity and write-boundary specification, then return for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
