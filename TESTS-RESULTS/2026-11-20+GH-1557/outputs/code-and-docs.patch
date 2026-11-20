@@ -1,5 +1,5 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index a1736be35..ad95398e7 100644
+index 1432309b6..b6c42ab0d 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
 @@ -101,6 +101,26 @@ session and the single delegated outer-loop child session. There are never compe
@@ -27,9 +27,9 @@ index a1736be35..ad95398e7 100644
 +     `verify-development-head`): fetch/verify live `origin/development` head and reassess; if remote
 +     head verification fails, hold handback and never claim Normal Completion.
  
- ---
- 
-@@ -204,9 +224,14 @@ writes refs, `FETCH_HEAD`, objects, or locks):
+ ### Unambiguous Landing Path & Exit-Code Handling (KS-09, U10)
+ - **Single Pinned `LANDING_CLONE:`:** The run record (`## 1a. Run Record Contract (v1)`) declares
+@@ -324,9 +344,14 @@ writes refs, `FETCH_HEAD`, objects, or locks):
    `confirmed-stopped` requires complete 4-part ownership proof (`owner=stopped`, `lock=clear`,
    `children=stopped`, `sessions=stopped`); log age alone NEVER yields `confirmed-stopped` and NEVER
    authorizes `attempt_record.py finish` or redispatch.
@@ -47,7 +47,7 @@ index a1736be35..ad95398e7 100644
  - **Verbatim stop reason (KS-05 seam):** quotes exclusive `--receipt` / `--run-log` diagnostics, or a
    shared `<harness-root>/.relay-scratch/escalation-reason` ONLY when its own self-contained payload
    carries both matching `--invocation-id` and `reason` (mtime-only and sidecar-only attribution are
-@@ -243,8 +268,15 @@ Every state transition leaves durable, verifiable evidence.
+@@ -363,8 +388,15 @@ Every state transition leaves durable, verifiable evidence.
  
  ### Transition 1: Normal Completion
  - **Condition:** Child completes the requested batch or daily-goal tasks, runs classified gates,
