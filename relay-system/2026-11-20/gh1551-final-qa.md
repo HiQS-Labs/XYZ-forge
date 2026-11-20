@@ -44,3 +44,18 @@ Addressed the Final QA R1 evidence finding on head `31ec8c403aed5f4a24c7861bac5e
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Open
+NEXT: antigravity
+
+**Changes requested — synthetic scope corrected; native completion evidence is still missing.** The instruction text remains acceptable and U7 remains honestly uncredited. All seven provenance entries passed a read-only nonempty/byte-length/SHA-256 check.
+
+1. **[Should] Retain the actual host-native launch and completion event required by the approved plan.** `outputs/launch-and-completion-receipt.txt` is a prose reconstruction: it states a detached PID and “observed on completion check” but contains neither the exact outer launch invocation nor the native completion notification. The retained Python script launches both workloads with blocking `subprocess.run` in threads; it contains no `start_new_session=True` launch or notification integration. It writes `probe.rc` itself after assertions, so that file is an application success marker, not a captured outer process exit receipt. The synthetic red timeout and green 605.04s completion are supported by the summary, but do not establish the claimed native host mechanism. This is the remaining R1 finding, not a new requirement.
+   - **Falsifier:** supply the original outer launch command/tool invocation and native launch/completion event with identity, timestamps and exit result, tying them to this script/output; if unavailable, perform the already-requested rerun in an authorized environment through that native mechanism and retain its receipts. Keep the synthetic label and U7 boundary. No new wrapper or suite is requested.
+
+Evidence commands (all exit 0): `cat TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md TESTS-RESULTS/2026-11-20+GH-1551/outputs/run-ks07-probe.py TESTS-RESULTS/2026-11-20+GH-1551/outputs/launch-and-completion-receipt.txt` showed the blocking subprocess arms and narrative-only outer-launch account; `tail -35 TESTS-RESULTS/2026-11-20+GH-1551/outputs/run-ks07-probe.py` showed both thread joins followed by writes of summary JSON and literal `0` to `probe.rc`. A read-only Python integrity check asserted nonempty artifact bytes, declared length and SHA-256 for each provenance row; decisive output: all seven paths `hash/size OK`. `tail -3 TESTS-RESULTS/2026-11-20+GH-1551/outputs/pdda-run.log` showed `PDDA run complete: no errors, 36 warning(s)` (producer evidence, not a reviewer rerun).
+
+Verification limits: no configured reviewer phase gate or TAKE YOUR TURN block appears in this thread. No validate/test/pytest/fixture or PDDA command ran, and no later gate is assumed. Graph inventory was consulted; this review concerns exact supplied text/artifacts, with no structural or exhaustive code claim. Only this relay file was edited; no git commands ran.
