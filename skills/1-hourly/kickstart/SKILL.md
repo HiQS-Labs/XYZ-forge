@@ -133,6 +133,10 @@ contract rather than ad-hoc regexes or unlocked appends.
 - **Subcommands (`run_record.py`):**
   - `validate <record> [--require-landing-clone] [--json]` — validates v1 grammar and reports
     `unresolved_amendments` and `escalated_amendments`.
+  - `check-amendments <record> [--require-landing-clone] [--json]` — strictly read-only pre-landing
+    and on-resume gate; exits `0` ONLY when the record parses cleanly and zero unresolved entries
+    remain across `OPERATOR_AMENDMENT:`, `PARENT_NOTE:`, and `INTERVENTION:` (exits `2` on any
+    pending/escalated entry or parse error).
   - `append <record> --kind <...> ...` — acquires a persistent sibling lock (`<record>.lock`),
     reads and validates the complete candidate record inside the lock, then writes atomically
     via temp file + `fsync` + `os.replace`.
@@ -141,6 +145,32 @@ contract rather than ad-hoc regexes or unlocked appends.
   - `checkpoint --record <path> --clone <dir> --primary <dir> --branch <branch> --dest <relpath> [--push]` —
     commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
     non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
+
+### Authoritative Amendment Enforcement (KS-06, U2/U11/U12)
+- **Single Authoritative Channel:** The run record is the sole authoritative channel for
+  mid-run amendments (`OPERATOR_AMENDMENT:` citing the operator turn/comment/decision,
+  `PARENT_NOTE:`, and `INTERVENTION:`). Thread or chat messages are at most wake-up signals
+  and NEVER satisfy, clear, or supersede a run-record amendment.
+- **Explicit Disposition Required:** Every declared entry across all three prefixes carries a
+  stable ID and MUST reach an explicit disposition in the run record:
+  - `applied` — names the concrete action/artifact taken,
+  - `superseded` — names a later declared amendment ID (which itself must reach a terminal
+    disposition before the global amendment check clears), or
+  - `escalated` — explicitly holds the run (remains blocking until resolved).
+- **Mandatory Pre-Landing & On-Resume Gate:** Before every landing and at every session resume,
+  run `skills/1-hourly/kickstart/scripts/run_record.py check-amendments <record>`. Any non-zero exit
+  (exit `2`) blocks all landings and unrelated work until every unresolved entry is dispositioned.
+  Append `APPLIED: <ID> → <disposition> <action/artifact>` BEFORE executing the affected action.
+- **Two Crash-Window Recovery Rules on Resume:**
+  1. *Window A (crash after chat/wake acknowledgement, before `APPLIED:` is persisted):*
+     `run_record.py check-amendments` exits `2` on resume and blocks landings and unrelated work
+     until a valid disposition is persisted to the run record.
+  2. *Window B (crash after `APPLIED: <ID> → applied <action/artifact>` is persisted, before the
+     affected action's external effect completes):* on resume, before advancing unrelated work,
+     reconcile the recorded action/artifact against actual observable state (remote PR/issue state,
+     git ref, or saved receipt) per Transition 4 step 3: adopt if verified complete; execute before
+     unrelated work if provably unstarted and safe; HOLD without repeating external effects if the
+     outcome is uncertain.
 
 ---
 
