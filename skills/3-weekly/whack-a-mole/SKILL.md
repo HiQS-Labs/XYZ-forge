@@ -42,7 +42,8 @@ Then begin work.
 |---|---|---|
 | Window | 14 days | "last 30 days", "since v2.4", "since the outage" |
 | Repo | current `gh repo view` | "in the api repo", explicit `owner/name` |
-| Sources | issues + fix/revert/hotfix commits + PR review threads | "issues only" |
+| Cross-repo | single-repo (default) | "--cross-repo", "--include-upstream <owner/repo>", or 1-hop tool dependency link |
+| Sources | issues + fix/revert/hotfix commits + PR review threads + telemetry | "issues only", "include telemetry" |
 | Clusters reported | top 3, umbrella for #1 | "top 5", "umbrella the second one" |
 
 Freeze window end at run start. Run ID: `YYYYMMDDTHHMMSSZ` (UTC).
@@ -67,6 +68,14 @@ Reopen detection: `gh api repos/<owner>/<repo>/issues/<n>/events --jq '.[] | sel
 Collect per item: id, title, timestamps, labels, files touched (commits/PRs), error strings or stack fragments quoted in the body, components/paths named, linked issues (`#123`, "fixes", "related").
 
 Read bodies and review threads for the candidates, not everything. Note what was not read.
+
+### Cross-repo & shared engine discovery (bounded 1-hop)
+
+When candidate defects involve shared tooling or framework automation:
+1. **Tool dependency detection:** Inspect tool configs (`.merge-cleanup.json`, `.tick`, `PROJECT/`, submodules, or Skills Army deployment receipts). If a tool originates from an upstream repo, resolve its 1-hop repository path or canonical remote.
+2. **Producer ↔ consumer correlation:** Query upstream producer for code churn (`fix:` commits, PR review threads) and downstream consumer for operational symptom evidence (batch tracking issues, run failures).
+3. **Runtime telemetry & comment addendums:** Inspect local execution logs (`TESTS-RESULTS/`, runner stderr) and issue comment addendums where crash, timeout, or resource exhaustion details (`TMPDIR`, `No space left on device`, `cannot lock ref`, 600s limits) reside outside git commit messages.
+4. **Repo-local signature boundary:** External issue references (`owner/repo#N`) serve as diagnostic context and symptom mapping. The filed umbrella and its scored Cluster signature remain strictly **repo-local** to the repository where the issue is filed.
 
 ### Seed from radar (when a recent report exists)
 
@@ -121,8 +130,9 @@ Group items that share **two or more** of:
 4. Same label + same component keyword.
 5. Same reporter-described symptom in different words (judgment; grade PATTERN only if ≥2 other signals agree).
 6. Same failing CI suite or job name in ≥ 2 distinct failed runs (`gh run view --log-failed`).
+7. Cross-repo issue references (`owner/repo#N`) sharing error substrings or shared tool seams (diagnostic context; 2-signal rule applies).
 
-Items sharing only one signal are "adjacent" — list them under the cluster but do not count them in the score.
+Items sharing only one signal are "adjacent" — list them under the cluster but do not count them in the score. A cross-repo mention without matching error signature or file seam remains adjacent and is not counted.
 
 Name each cluster by mechanism if visible ("cache invalidation on config reload"), otherwise by symptom ("intermittent 500s on checkout").
 
@@ -191,7 +201,16 @@ Goal: name the foundational defect, not the symptom list.
    - **FACT** — observed in code/diffs/issue text.
    - **PATTERN** — the same violation shows up in ≥2 distinct fixes; name them.
    - **HYPOTHESIS** — the proposed root cause, if not directly observed. Label it. It is allowed here; it is not allowed as a task item's premise without saying so.
-4. Decide: is there **one** foundational cause, **two** entangled ones, or is this actually **unrelated bugs that happen to share a file**? Say which. The third is a valid, useful answer — report it and do not file.
+4. Invariant enforcer discovery: before proposing a new mechanism, run [connect-the-dots](../connect-the-dots/SKILL.md) on the violated rule (the invariant) to discover existing subsystems that already protect or enforce it, and name any existing enforcer in the umbrella issue.
+   Hand off candidate modules and unaddressed gaps to §6.
+5. Multi-domain invariant decomposition (conditional):
+   When defects indicate cross-layer friction, map evidence across relevant operational planes:
+   - **Platform / Harness:** temp dirs, subprocess timeouts, buffering, quotas.
+   - **System / Resource:** disk space, file locks (`flock`), file descriptors, process contention.
+   - **Concurrency / State:** git ref updates, lock files, uncommitted journals, ledger atomicity.
+   - **Domain / Protocol:** merge semantics, schema evolution, file renames, protocol contracts.
+   Classify findings as **Primary Invariant Violation**, **Environmental Catalyst/Amplifier**, or **Secondary Casualty**. Coincident resource pressure must not be mistaken for the primary invariant fault.
+6. Decide: is there **one** foundational cause, **two** entangled ones, or is this actually **unrelated bugs that happen to share a file**? Say which. The third is a valid, useful answer — report it and do not file.
 
 ## 6. Draft the umbrella issue
 
@@ -211,12 +230,28 @@ Show the full body in a fenced block before filing. Task list lives in the body 
 - <sha> <commit subject> — <mapping>
 
 ## Remediation — fix the invariant, not the call sites
+*(Choose either the Default Linear Flow for single-defect clusters, or Phased Remediation Lanes when dependencies and risk warrant staged delivery.)*
+
+### Default Linear Flow (single-domain)
 - [ ] **Reproduce:** <deterministic repro or test that fails today>
 - [ ] **Guard:** <assertion/type, or an existing suite's check, that makes the violation impossible or loud; no new test suites where the repo forbids them (XYZ-forge: `AGENTS.md` *No new tests*, GH-831)>
 - [ ] **Fix:** <the structural change> — touches <files>
 - [ ] **Sweep:** <retire the symptom patches that are now redundant, one per line with sha/PR>
 - [ ] **Verify:** <the signal that proves it: reopens stop, test green, metric>
 - [ ] **Document:** <SOP/runbook line, if one exists>
+
+### Optional Phased Remediation Lanes (multi-domain / compound clusters)
+#### Phase 1 — Containment & Defensive Pre-flights (zero-risk guardrails)
+- [ ] **P1.1 Guard:** <resource check, unbuffered I/O, exit cleanup, pre-flight disk/TMPDIR probe>
+- [ ] **P1.2 Repro & Control:** <negative control proving guard catches the failure>
+
+#### Phase 2 — Core Invariant Repairs (atomic behavior)
+- [ ] **P2.1 Fix:** <atomic operation, ref-lock retry, re-pinning logic>
+- [ ] **P2.2 Verification:** <suite or smoke test proving invariant holds>
+
+#### Phase 3 — Architectural Decoupling (long-term isolation, only if evidence justifies)
+- [ ] **P3.1 Decouple:** <eliminate cross-domain doc appends or separate ledgers from merge heads>
+- [ ] **P3.2 Verification:** <end-to-end multi-lane test>
 
 ## Priority — per <ranking system name>
 <field>: <top value on the repo's own scale>  — because: <n> reopens / <n> reverts / <n> issues share this cause; each symptom fix has cost a cycle and not held

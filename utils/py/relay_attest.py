@@ -99,12 +99,53 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
+# One rule for reading a relay header line (`STATUS:`, `NEXT:`, `ROUND:`, and a review block's
+# `VERDICT:`): the key may be wrapped in markdown bold or backticks, as a model often writes it
+# (`**STATUS:** Approved`). This is the rule rtl_relay_field (relay-turn-lib.sh), poll.py and
+# bin/validate-relay-block already apply; the driver, the attestation and marathon used to need the
+# bare `STATUS:` prefix, so the same file read as Approved to one and as no status to the other.
+_HEADER_LINE_RES = {key: re.compile(rb"^[`*]*" + re.escape(key[:-1]) + rb"[`*]*:")
+                    for key in (b"STATUS:", b"NEXT:", b"ROUND:")}
+
+
+def header_field(text, key):
+    """Value of the FIRST `key:` header line in `text` (str), bold/backtick tolerant; "" if none."""
+    pat = re.compile(r"^[`*]*" + re.escape(key) + r"[`*]*:[`*]*[ \t]*(.*)$", re.M)
+    m = pat.search(text)
+    return m.group(1).strip("`* \t\r\n") if m else ""
+
+
+def set_header_field(text, key, value):
+    """`text` with the FIRST `key:` header line rewritten to the bare `key: value` form.
+    Returns (new_text, n) where n is 0 when no such line exists."""
+    pat = re.compile(r"^[`*]*" + re.escape(key) + r"[`*]*:.*$", re.M)
+    return pat.subn(lambda _m: f"{key}: {value}", text, count=1)
+
+
+_VERDICT_RE = re.compile(r"^[ \t]*[`*]*VERDICT[`*]*:[`*]*[ \t]*(.*)$", re.I | re.M)
+
+
+def last_verdict(added):
+    """The value of the LAST `VERDICT:` line in the text a reviewer added this turn (the line
+    bin/validate-relay-block requires: PASS, FAIL or PARKED; marathon's brief writes
+    `**Verdict:** Approved`). "" when the block carries no verdict line."""
+    found = _VERDICT_RE.findall(_text(added))
+    return found[-1].strip("`* \t\r\n") if found else ""
+
+
+def verdict_contradicts_approval(verdict):
+    """True when a verdict word says the review did NOT pass. Only explicit failing words count;
+    an absent or unrecognised verdict is left to the other checks."""
+    v = verdict.strip().lower()
+    return v.startswith(("fail", "changes requested", "changes-requested", "blocked"))
+
+
 def _normalise_headers(lines):
     seen = set()
     out = []
     for line in lines:
         for key in _HEADER_KEYS:
-            if key not in seen and line.startswith(key):
+            if key not in seen and _HEADER_LINE_RES[key].match(line):
                 seen.add(key)
                 line = key + b"\n"
                 break
@@ -242,9 +283,7 @@ def append_before_marker(path, text):
 def file_status(path):
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
-            for line in f:
-                if line.startswith("STATUS:"):
-                    return line.split(":", 1)[1].strip()
+            return header_field(f.read(), "STATUS")
     except OSError:
         pass
     return ""

@@ -1,0 +1,78 @@
+{
+  "utc": "2026-11-12T22:42:20.930106+00:00",
+  "elapsed_seconds": 0.033807583,
+  "results": [
+    {
+      "name": "constant-printf",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": true,
+      "desired_warning": true
+    },
+    {
+      "name": "wrapped-constant",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": false,
+      "desired_warning": true
+    },
+    {
+      "name": "input-dependent-printf",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": true,
+      "desired_warning": false
+    },
+    {
+      "name": "specialized-pipeline",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": true,
+      "desired_warning": false
+    },
+    {
+      "name": "unrelated-regression",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": false,
+      "desired_warning": false
+    },
+    {
+      "name": "option-refusal",
+      "admitted": false,
+      "reason": "probe target path does not resolve: -q",
+      "expected_admitted": false,
+      "warning": false,
+      "desired_warning": false
+    },
+    {
+      "name": "retained-consult",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": false,
+      "desired_warning": false
+    },
+    {
+      "name": "retained-clock",
+      "admitted": true,
+      "reason": "ok",
+      "expected_admitted": true,
+      "warning": false,
+      "desired_warning": false
+    }
+  ],
+  "hypothesis_counts": {
+    "true_positive": 1,
+    "false_positive": 2,
+    "false_negative": 1,
+    "true_negative": 4
+  },
+  "admission_matches": 8,
+  "limits": "Only lint_probe and research regex evaluated. No command string executed; no preflight, promotion or live delivery run. Selected sample, not population accuracy."
+}

@@ -1,0 +1,221 @@
+# RELAY · GH-1475 Phase 2A plan QA (Codex)
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-11-14.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 2 / 3
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh1475-p2a-plan-codex): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md`, section **## Phase 2A** only (read it in full; the Phase 1 sections are background, already merged as PR #1478).
+- Reviewer: codex   ·   Producer: claude-a
+- Started: 2026-11-14
+- Definition of Done: the plan is approvable when its claims are grounded in the cited paths, every
+  Phase 2A requirement (P2.1, P2.2, P2.3, P2.8 of https://github.com/HiQS-Labs/XYZ-forge/issues/1475) is
+  covered with the smallest surface, it extends the existing writers and helpers (no duplicate subsystem
+  or write path), each acceptance check observes the actual failure with a red control, and blast radius,
+  rollback and the PRS rating are sound.
+
+## Review packet (Producer: claude-a, 2026-11-14)
+
+**Operational envelope.** `/merge-cleanup` is a local operator CLI run by one person or agent on one
+laptop. Grade against commensurate complexity; do not ask for distributed locks, daemons or enterprise
+fail-safes. XYZ-forge forbids new tests (AGENTS.md *No new tests*, GH-831): a new suite, a `validate.sh`
+entry or gate machinery would itself be a finding; updating existing tests that pin changed behaviour is
+allowed; other verification is manual checks under `TESTS-RESULTS/`. Review-only turn: write only this relay file.
+
+### Step 1 — paraphrase first
+Read ONLY the `## Phase 2A` section of the plan doc (no issue, no source yet). Write under your review
+heading: **What this proposes** (2–5 sentences), **How the existing system works, per this document**
+(2–5 sentences), and a short **What it's not** (excluded vs deferred vs unresolved; label inference).
+State the input boundary ("Phase 2A section only").
+
+### Step 2 — source-backed assessment
+Then read issue #1475's Phase 2A items (`gh issue view 1475 -R HiQS-Labs/XYZ-forge` if reachable; else
+the items are quoted in the plan) and the sources the plan cites:
+`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` (`_land_prs_loop`, `resolve_merge_policy`,
+`required_checks_state`, `pin_selection`, `_remove_own_scratch`, `_probe_text`),
+`skills/2-daily/merge-cleanup/scripts/ledger_merge.py` (`resolve_ledger_conflict`, forecast assumptions),
+`skills/2-daily/merge-cleanup/scripts/scan_clones.py` (`inspect_open_handles`),
+`skills/2-daily/merge-cleanup/scripts/batch_record.py` (`set_allowlist`),
+`skills/2-daily/merge-cleanup/SKILL.md`, `test/gh534_phase_b_tests.py`, `test/gh534_phase_c_tests.py`,
+`test/gh436-merge-cleanup.py`. Label this part **Source-backed assessment**.
+Recorded decisions: reuse Phase 1's `_remove_own_scratch`, `keep_workdir`, `preflight_warnings`/`_probe_text`,
+`batch_record.row_done`/`set_outcome`; P2A.measure is out of this PR; no new tests.
+
+### Questions
+1. Are the plan's line/symbol claims accurate at this revision? Cite any that are wrong.
+2. For each of P2.1, P2.2, P2.3, P2.8: what prevents an unchanged tree from being reported as delivered,
+   and where is the intended observed rejection (red control)? Is any check only an admission probe?
+3. P2.1: is re-pinning safe? Specifically: (a) is "GitHub reports exactly `b1["commit"]`, checks ok on it,
+   head unchanged on one more refresh" enough to prove nothing else moved the head; (b) is the
+   `had_required` + registration-grace design right for gh's "no required checks reported" right after a
+   push, and does it avoid sleeping in the existing fixture tests (which have no checks); (c) is calling
+   `pin_selection` with the stored forecast the right way to keep GH-1452's single writer; (d) are the
+   test edits truthful (keep-pinned-behaviour edits, not new tests)?
+4. P2.2: is `checks_state` (required part unchanged + one extra read only when names are declared) the
+   minimal shape? Is the combine rule and the "absent = pending" rule right? Should `wait_for_checks`
+   be allowed without `full_suite`, or is requiring it (as today for any `qualification`) acceptable?
+5. P2.3: are the prune guards enough and not excessive (prefix, direct temp-root child, uid, newest N,
+   one-hour age floor, `inspect_open_handles` verified-idle, skip if another `merge_cleanup.py` runs)?
+   Note suites run under the real `$TMPDIR`. Is the exit-3 landed-clone release correct (which clones
+   belong to a landed PR; `_remove_own_scratch` gaining `root`)?
+6. P2.8: is "dry run and not handoff ⇒ preview" exactly true for `resolve_ledger_conflict(execute=False)`?
+   Should the previewed PR affect hard dependents in the dry run?
+7. Is anything missing, duplicated, or over-built? Is the retained rating 60/65/50/75 grounded?
+
+Grade each finding `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`, then VERDICT.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+
+### Reviewer · Round 1
+
+Input boundary for paraphrase: Phase 2A section only, read before sources.
+
+**What this proposes:** Make B1 repairs land in the same execution after new-head checks pass, allow explicitly named CI checks, prune retained scratch, and continue B1 dry-run previews through the batch. It extends existing policy, pin and cleanup writers, with existing-suite updates and manual red controls.
+
+**How the existing system works, per this document:** The loop repairs and pushes ledger conflicts, but rejects the new head because it differs from the dry-run pin. Required-check discovery permits repositories without required checks. Clean runs remove their landing workdir; deferred runs and check clones retain scratch. B1 previews currently return early.
+
+**What it's not:** Excluded: new modules, flags, suites or daemons. Deferred: P2A.measure/decision and Phase 2B. Unresolved (inference): how re-pin publication failures and second validation-clone ownership are handled.
+
+**Source-backed assessment**
+
+swept file: yes
+
+Swept the full Phase 2A section, the artifact boundary specified in Setup. Source review covered the cited implementation paths and pinned test cases; this is plan QA, not an assertion that every source module was audited. No additional pre-existing defect established beyond the behavior the plan already identifies.
+
+- [Should] Keep the registration guard effective throughout repaired-head polling, not only at entry. Step 3 says to run a registration grace before applying the existing pending loop. That loop accepts a later `ok, "no required checks"` immediately (`merge_cleanup.py:1962-1970`), so the plan still permits delivery without any green result on a required check.
+  Observed input: the existing helper maps stderr `no required checks reported` to `("ok", "no required checks")` at `merge_cleanup.py:763-765`; the existing pending loop exits on any non-pending result. A repaired-head sequence `pending(ci)` followed by that helper result takes the green path under the proposed one-time grace arrangement.
+  Affected scope: own B1 repairs for which `had_required` is true, on every poll before re-pinning.
+  Falsifier: manual controlled responses `old: pass(ci); repaired: pending(ci), no-required-checks` must defer or continue bounded registration waiting, never re-pin/merge; `pending(ci), pass(ci)` must land. Apply the same guard on every read rather than adding another subsystem. Retain this red control in the planned manual receipts.
+
+- [Should] Account for the second validation clone in exit-3 cleanup. Step 4 deletes only `pr-<n>-*`, but `validate_head_in_second_clone` allocates `workdir / f"verify-{sha[:8]}"` (`merge_cleanup.py:834-840`). A successfully repaired and merged PR leaves this full clone behind whenever another PR defers; the promised check that “only the deferred PR's clone” remains cannot pass for that input.
+  Observed input: one B1-repaired PR lands, another PR defers; the first creates both `pr-<n>-*` and `verify-<repair-sha8>`, while Step 4 only selects the former.
+  Affected scope: validation scratch belonging to PRs merged in this run on exit 3, with no kept result or unfinished sync.
+  Falsifier: the manual mixed landed/deferred scenario must include a B1 repair, assert its second clone is removed, and retain the deferred PR's evidence. Track the already-created validation path alongside the landed PR, or explicitly narrow the requirement and acceptance claim if retaining it is intentional.
+
+- [Should] Add negative controls for the irreversible prune predicates. Step 4's control only shows base retaining everything; its held-open/young cases do not cover foreign uid, failed process discovery, or incomplete lsof. `_probe_text` specifically collapses error/timeout and a negative process search into the same empty string (`merge_cleanup.py:1112-1119`), so it cannot establish the advertised “skip if another process runs” when discovery fails.
+  Observed input: `_probe_text` returns `""` for `OSError`, timeout and nonzero exit, and Step 4 proposes treating that output as the concurrency guard for deletion.
+  Affected scope: old retained scratch considered for pruning when process enumeration is unavailable or incomplete.
+  Falsifier: controlled process-probe failure must preserve candidates; a successful no-match probe plus verified-idle lsof must prune eligible candidates. Keep separate status for pgrep's normal no-match versus failure; no new gate or suite needed. Also record incomplete-lsof and foreign-owner preservation controls, with all other predicates eligible.
+
+- [Pass] P2.8's preview predicate matches the resolver: `ledger_merge.py:536-583` starts unresolved/non-handoff, marks each rejection as handoff, and returns the preview only after classification. Continuing without `failed` is consistent with the existing clean-preview `continue` (`merge_cleanup.py:1983-1985`); hard dependents may be previewed, not represented as landed. The two-hub base/candidate control measures delivery rather than admission.
+- [Pass] P2.2 extends the existing policy owner (`merge_cleanup.py:270-311`); required-plus-declared worst-state combination and absent-name pending are conservative. Requiring `full_suite` preserves the existing contract. Its pending-to-pass, timeout and absent-name checks exercise runtime behavior; policy acceptance alone would be insufficient. Existing required-check behavior remains at `:750-772`.
+- [Pass] Re-pin through `pin_selection` preserves GH-1452's atomic writer and stored-forecast argument (`merge_cleanup.py:509-547`); `batch_record.py:329-337` supports latest-pin replacement. Implementation must check the writer's boolean result before proceeding and construct the supplied rows from the authorized pins, not fresh unreviewed heads. The proposed exact repair SHA plus final refresh is proportionate for the local CLI; it proves the head observed at those points, not absence of every intervening move. Registration controls above remain necessary.
+- [Pass] The test edits revise existing contracts: `gh534_phase_b_tests.py:241-245,423-424` explicitly require a second run today; Phase C's cited cases use that helper. Preserve their downstream merge, row, dependent and durability assertions while removing the obsolete second execution. Fixtures with no required checks need no grace sleep when `had_required` is false.
+- [Nit] Name the reversibility class explicitly. Code rollback is Easy, while scratch deletion is irreversible and needs the stated bounded retention policy and negative controls. Retained 60/65/50/75 is plausible from the stated incidents, but not independently read back from PRS here; the future-ending incident window “2026-11-14..15” should be explained or corrected.
+- [Unverified — needs clone run] No suites, fixtures or runtime red controls executed in this worktree. Commands and decisive failure: `gh issue view 1475 -R HiQS-Labs/XYZ-forge --json body` exited 1, `error connecting to api.github.com`; assessment uses the four locally identified Phase 2A requirements, so exact remote issue completeness remains unverified. Graph search was denied with `MCP tool call requires approval, but approval policy is never`; direct cited-source reads supplied the fallback. Full gate and manual receipts remain implementation requirements, not delivered evidence.
+
+VERDICT: FAIL
+Basis: The small-surface direction is sound, but the required-check polling transition and cleanup ownership/negative controls need explicit plan corrections before approval.
+
+Handing off to Producer (claude-a) — address the findings, then return for Round 2.
+
+### Producer · Round 1 (claude-a)
+
+Dispositions (plan doc `## Phase 2A` revised in the same commit):
+- **[Should] registration guard on every read** — Implemented. Step 3: with `had_required`, every read on the repaired head that says "no required checks" is `pending` ("not yet registered"), so the existing bounded wait covers registration and its timeout defers. The separate grace knob is dropped. Red control (d) is now your controlled sequence: `pending(ci)` then "no required checks" defers and never re-pins; `pending(ci)` then `pass(ci)` lands.
+- **[Should] second validation clone on exit 3** — Implemented. Step 4 also removes `workdir/verify-<repair sha8>` for a PR this run repaired and landed. Paths are recorded at merge time. The mixed check now includes a B1-repaired landed PR and asserts both its `pr-<n>-*` and `verify-*` are gone, while the deferred PR's clone stays.
+- **[Should] negative controls / pgrep tri-state** — Implemented. The concurrency probe no longer uses `_probe_text`: exit 0 → PIDs minus `scan_clones._ancestor_pids()`, exit 1 → none, anything else → skip pruning. Recorded controls: failing pgrep, a foreign `merge_cleanup.py` PID, incomplete `inspect_open_handles`, and a foreign owner each preserve a candidate; a clean probe plus verified-idle handles prunes it.
+- **[Pass] re-pin writer note** — Adopted. Step 3: rows come from the authorized `args._pins`, and a False from `pin_selection` defers (`re-pin not published`) without changing the in-memory pin. Red control (e) added.
+- **[Nit] reversibility / window** — Implemented. Bet check: code rollback is Easy, while scratch deletion is irreversible and bounded. Rating: the window is explained (PR #1478 merged 2026-11-15 UTC = the evening of 2026-11-14 local), and the ledger read-back values are quoted.
+- **[Unverified] issue fetch** — Noted. The four Phase 2A items are quoted verbatim from the issue in the plan's recon/plan rows; the issue body read on 2026-11-14 is the source.
+
+ROUND → 2. Handing off to Reviewer (codex) — re-review the revised `## Phase 2A` section.
+
+### Reviewer · Round 2
+
+Input boundary for paraphrase: Phase 2A section only, read before source assessment.
+
+**What this proposes:** Land this run's B1 repairs after bounded new-head check polling and an authorized re-pin; support explicitly named CI checks; bound retained scratch; and preview every B1-eligible PR in a dry run. Extend existing owners and update existing pinned expectations, with manual red controls rather than new suites.
+
+**How the existing system works, per this document:** The repair already pushes and validates its exact commit, but the original dry-run pin prevents that commit from landing in the same run. Required-check discovery allows repositories without required checks. Clean runs delete their landing workdir; partially deferred runs and isolated check clones retain it. A B1 preview currently exits the batch early.
+
+**What it's not:** Excluded: new modules, flags, tests, daemons or distributed coordination. Deferred: measurement/decision and Phase 2B. Unresolved (inference): runtime results remain implementation work, not evidence delivered by this plan.
+
+**Source-backed assessment**
+
+swept file: yes
+
+Swept the entire Phase 2A section, the Setup artifact boundary, including recon, implementation order, verification, rating and rollback. Re-read the cited source seams and existing test expectations. No additional pre-existing defect established in this scoped sweep.
+
+- [Pass] Round 1's registration finding is addressed by the explicit **every read** rule and existing bounded timeout (plan:212-215); its pending → no-required and pending → green controls are retained (plan:231-233). The old helper's special response is exactly `("ok", "no required checks")` (`merge_cleanup.py:763-765`). Requiring no grace for a repo that previously reported no required checks preserves existing no-check fixtures. Exact repair SHA observation plus unchanged post-check head is proportionate here; it proves those observations, not the absence of every intervening head movement.
+- [Pass] Re-pin publication remains with the existing atomic writer and passes back the stored forecast; authorized rows and failed-publication deferral are explicit (plan:217-220; `merge_cleanup.py:509-547`). Batch latest-pin replacement already exists (`batch_record.py:329-337`). Existing tests genuinely pin the obsolete second execution (`gh534_phase_b_tests.py:241-245,423-425` and the Phase C locations in the plan); preserving their downstream assertions while revising that contract is appropriate.
+- [Nit] Implement the already-required semantics carefully at the helper boundary: apply `had_required` to the **required component before combining** declared checks, or preserve that component's registration state. With `had_required=True`, required response `no required checks` and declared `lint=pass`, the combined declared detail alone (plan:199-200) must not hide the pending rule at :212-215. This clarifies the existing every-read requirement, not a request for another check subsystem. Likewise :217's illustrative in-memory assignment must be staged in a copied pins mapping until `pin_selection` succeeds, to satisfy :219's explicit unchanged-on-failure contract.
+- [Pass] P2.2 extends the current policy validator and keeps its `full_suite` requirement (`merge_cleanup.py:294-300`). Required checks remain mandatory alongside declared names; absent-name pending and worst-state combination are appropriate (plan:193-206). The policy-admission check alone is insufficient, and the plan also measures pending-to-pass landing, timeout, and missing-name rejection against base behavior.
+- [Pass] P2.3 now includes both landing clone families and the repaired PR's second validation clone, with recorded ownership and deferred-sync/keep vetoes (plan:243-256). The second clone actually lives at `workdir / f"verify-{sha[:8]}"` (`merge_cleanup.py:834-840`). The tri-state pgrep and failure/foreign-process controls address the previous ambiguity (plan:235-238,252-254). Prefix/direct-root/uid/retention/age plus verified-idle handles are proportionate guards for irreversible deletion, reusing `inspect_open_handles`' fail-closed contract (`scan_clones.py:364-428`) and the existing path-removal owner (`merge_cleanup.py:218-233`). Tests' newly retained scratch remains protected by age and retention (`test/gh436-merge-cleanup.py:1097-1108`).
+- [Pass] P2.8's predicate remains exact for the existing resolver: dry-run rejections set handoff, and its successful classification returns a non-handoff preview without resolving (`ledger_merge.py:536-583`). Continuing without a failed entry lets hard dependents also be previewed; it does not record them as landed. The two-hub base/candidate check observes the lost-batch failure (plan:188-192).
+- [Pass] All four requirements have delivery observations and base/controlled rejection cases (plan:188-258), so an unchanged tree cannot satisfy them merely by admitting configuration. The Easy code rollback and irreversible scratch boundary are now explicit (plan:178-182); no duplicate durable writer, new suite or daemon is proposed. The retained rating is reasonable against the same cited incidents and now has a dated ledger quotation and UTC/local explanation (plan:273-278); this is an assessment of its rationale, not independent live PRS verification.
+- [Unverified — needs clone run] No suites, fixtures or runtime red controls executed. `gh issue view 1475 -R HiQS-Labs/XYZ-forge --json body` exited 1 with `error connecting to api.github.com`; issue completeness therefore relies on the locally quoted requirements and prior review packet. Graph `search_graph` returned `MCP tool call requires approval, but approval policy is never`; cited-source reads were the fallback (exit 0). Implementation acceptance still requires the planned disposable-clone runs and committed provenance; plan approval certifies neither runtime behavior nor final QA.
+
+Citations abbreviated as `plan:<line>` refer to `PROJECT/2-WORKING/GH-1475-MERGE-CLEANUP-REMEDIATION.md`; script basenames refer to `skills/2-daily/merge-cleanup/scripts/`.
+
+VERDICT: PASS
+Basis: The revised plan closes the prior findings with existing mechanisms and discriminating controls. The two implementation clarifications above follow its explicit invariants and do not require a further design round.
+
+Relay closed (Approved), no further turn needed.
+
+
+### Attestation · relay-drive — 2026-11-15T07:24:08Z
+task: RELAY-gh1475-p2a-plan-codex
+reviewer: codex
+status: Approved
+reviewed-head: dfe2cc604d8f0cf420bb7442f833f116b56645f0
+added-range: 19806+6407
+added-sha256: 3d38bc4271d8ccb76dc71972b50a32ca148f5ee10f2aa992a07f28f94f44cd20
+gate-run: undeclared
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

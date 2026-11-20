@@ -1,0 +1,2 @@
+RED PRE-CHANGE validate rc=0: unresolved_ids=['OA-0312'] (I-1 INTERVENTION silently missed from unresolved_amendments!)
+RED PRE-CHANGE check-amendments rc=2: subcommand missing (run_record.py: error: argument cmd: invalid choice: 'check-amendments' (choose from 'validate', 'append', 'snapshot', 'checkpoint'))

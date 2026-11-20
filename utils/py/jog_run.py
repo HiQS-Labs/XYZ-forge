@@ -31,6 +31,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 # Ensure utils/py is in sys.path
@@ -323,9 +324,15 @@ def jog_load_state(root, gid):
                 state = json.load(f)
             if isinstance(state, dict) and state.get("schema") == JOG_EXECUTION_STATE_SCHEMA \
                     and isinstance(state.get("executions"), list):
-                return state
-        except (OSError, ValueError):
-            pass
+                executions = state["executions"]
+                if all(isinstance(entry, dict) and isinstance(entry.get("execution_id"), str)
+                       and entry["execution_id"] for entry in executions):
+                    identities = [entry["execution_id"] for entry in executions]
+                    if len(identities) == len(set(identities)):
+                        return state
+        except (OSError, ValueError) as exc:
+            raise ContractError(f"execution state unreadable at {path}: {exc}") from exc
+        raise ContractError(f"invalid execution state at {path}; preserve it before recovery")
     return {"schema": JOG_EXECUTION_STATE_SCHEMA, "gid": gid, "executions": []}
 
 
@@ -594,7 +601,7 @@ def _ledger_bytes(root):
 
 
 def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, mode="run",
-                       target_root=None):
+                       target_root=None, deadline=None):
     """Execute one leased queue item through Preflight → Marathon's one-phase driver.
 
     Returns (queue_status, failure_reason): one of ("completed", reason) / ("parked", reason) /
@@ -634,9 +641,9 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # GH-1426: no Marathon execution has happened yet; say that preflight is starting.
     print(f"jog: running preflight for GH-{gh_num} (execution {exec_id}, packet: {packet_dir})")
 
-    pf = subprocess.run(
+    pf = _jog_process(
         [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
-        cwd=target, capture_output=True, text=True,
+        cwd=target, capture_output=True, text=True, deadline=deadline,
         env={**os.environ, "SWARM_PREFLIGHT_ROOT": target})
     if pf.returncode == 4:
         record["status"] = "completed-preflight-stale"
@@ -691,11 +698,12 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # Immediate transition publication is the separately reviewed second delivery.
 
     print(f"jog: dispatching marathon-drive ({invocation['drive_command']})")
-    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
+    proc = _jog_process(argv, cwd=invocation["target_root"], env=env, deadline=deadline)
     record["drive_exit"] = proc.returncode
 
     try:
         receipt = load_marathon_result(invocation["result_path"])
+        _jog_result_identity(receipt, gh_num, exec_id)
     except ContractError as exc:
         record["status"] = "no-valid-result"
         jog_save_state(root, gid, state)
@@ -782,8 +790,22 @@ def jog_resume(root, gh_num, args=None):
         return 0
 
     latest = executions[-1]
-    record, receipt = _jog_latest_receipt(root, gid)
+    if latest.get("gate_retries"):
+        try:
+            publication = latest["gate_retries"][-1]
+            receipt = load_marathon_result(_ledger_abs_path(root, gid, publication.get("result_path")) or "")
+            _jog_result_identity(receipt, gh_num, publication.get("execution_id"))
+            record = latest
+        except (ContractError, AttributeError, TypeError) as exc:
+            reason = f"resume held: latest gate retry has no valid matching result: {exc}"
+            jog_set_status(root, gh_num, "parked", failure_reason=reason)
+            print(f"jog: GH-{gh_num} {reason}")
+            return 1
+    else:
+        record, receipt = _jog_latest_receipt(root, gid)
     if record is not None and record.get("execution_id") == latest.get("execution_id"):
+        _jog_result_identity(receipt, gh_num, latest["gate_retries"][-1]["execution_id"]
+                             if latest.get("gate_retries") else latest.get("execution_id"))
         publication = next((entry for entry in reversed(latest.get("gate_retries") or [])
                             if entry.get("execution_id") == receipt.get("execution_id")), latest)
         invocation_path = os.path.join(_ledger_abs_path(root, gid, latest.get("packet_dir")) or "", "marathon-invocation.json")
@@ -1014,20 +1036,22 @@ def _jog_retry_gate_locked(root, gh_num, args):
     env.pop("RELAY_DRIVER_LOCKED", None)
     print(f"jog: gate-only retry for GH-{gh_num} against head {prior_head} "
           f"(no builder turn; satisfied-lane path)")
-    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
     result_path = os.path.join(retry_dir, "marathon-result.json")
+    retry = {"execution_id": f"{record['execution_id']}-gateretry{attempt_no}",
+             "attempt": attempt_no, "status": "dispatched", "result_path": result_path}
+    gate_retries.append(retry)
+    jog_save_state(root, gid, state)
+    proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
     try:
         new_receipt = load_marathon_result(result_path)
     except ContractError as exc:
-        gate_retries.append({"execution_id": record["execution_id"], "attempt": attempt_no,
-                             "status": "no-valid-result", "drive_exit": proc.returncode})
+        retry.update(status="no-valid-result", drive_exit=proc.returncode)
         jog_save_state(root, gid, state)
         print(f"jog: gate retry exited {proc.returncode} without a valid receipt: {exc}",
               file=sys.stderr)
         sys.exit(2)
-    gate_retries.append({"execution_id": new_receipt["execution_id"], "attempt": attempt_no,
-                         "status": new_receipt.get("outcome"),
-                         "result_path": result_path})
+    _jog_result_identity(new_receipt, gh_num, retry["execution_id"])
+    retry["status"] = new_receipt.get("outcome")
     jog_save_state(root, gid, state)
 
     if _ledger_bytes(invocation["target_root"]) != ledger_before:
@@ -1500,10 +1524,11 @@ def jog_land(root, gh_num, pr_arg=None):
 class JogSupervisorLock:
     """Outer driver lock supervisor ensuring exclusive execution on the clone."""
 
-    def __init__(self, root):
+    def __init__(self, root, conservative=False):
         self.root = root
         self.lock_dir, self.lock_label = driver_lock_path(root)
         self.acquired = False
+        self.conservative = conservative
 
     def acquire(self):
         try:
@@ -1519,6 +1544,8 @@ class JogSupervisorLock:
                 except Exception:
                     pass
 
+            if self.conservative and (not holder.isdigit() or int(holder) <= 0):
+                raise ContractError(f"driver lock owner is unknown or initializing: {self.lock_label}")
             is_running = False
             if holder and holder.isdigit():
                 try:
@@ -1674,6 +1701,12 @@ def contract_probes_from_doc(root, doc_path):
     return labels, None
 
 
+def promotion_probes(root, doc_path):
+    """Shared read-only promotion admission: valid legacy probes precede contract fallback."""
+    valid = [probe for probe in extract_probes_from_doc(doc_path) if lint_probe(root, probe)[0]]
+    return (valid, None) if valid else contract_probes_from_doc(root, doc_path)
+
+
 def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
     """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
     _require_jog_primary(primary or root)
@@ -1716,16 +1749,7 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primar
     elif status_table:
         content = status_table + content
 
-    probes = extract_probes_from_doc(doc_path)
-    valid_probes = []
-    for p in probes:
-        ok, reason = lint_probe(root, p)
-        if ok:
-            valid_probes.append(p)
-
-    contract_reason = None
-    if not valid_probes:
-        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+    valid_probes, contract_reason = promotion_probes(root, doc_path)
 
     if not valid_probes:
         if not interactive:
@@ -2177,7 +2201,14 @@ class JogCheckpoint:
         finally:
             conn.close()
 
-    def begin(self):
+    def check_publication(self):
+        """Static clone checks only; no freshness, recovery or fast-forward guarantee."""
+        if any(self.dirty(self.publication)):
+            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
+        if _git(self.publication, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
+            raise ContractError("checkpoint publication clone must be on development")
+
+    def begin(self, recover=None):
         _require_jog_primary(self.root)
         if self.journal.exists():
             self.state = json.loads(self.journal.read_text())
@@ -2190,8 +2221,11 @@ class JogCheckpoint:
             self.check_owned()
             if self.state.get("phase") != "published":
                 # Never dispatch a new task to recover an interrupted wake.
-                reconciled = jog_reconcile_orphan_leases(self.root)
-                jog_reconcile_cold_start(self.root, reconciled)
+                if recover:
+                    recover()
+                else:
+                    reconciled = jog_reconcile_orphan_leases(self.root)
+                    jog_reconcile_cold_start(self.root, reconciled)
                 self.finish()
                 return False
         self.check_owned()
@@ -2272,10 +2306,7 @@ class JogCheckpoint:
 
     def _push(self, commit):
         pub = self.publication
-        if any(self.dirty(pub)):
-            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
-        if _git(pub, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
-            raise ContractError("checkpoint publication clone must be on development")
+        self.check_publication()
         _git(pub, "fetch", self.root, commit)
         _git(pub, "merge", "--ff-only", commit)
         if _git(pub, "rev-parse", "HEAD").decode().strip() != commit:
@@ -2419,6 +2450,18 @@ class JogCheckpoint:
         return "jog: publish wake checkpoint " + self.state["base"]
 
 
+def validate_checkpoint_options(args, target):
+    """Share existing live option checks with explicit-target readiness."""
+    checkpoint = getattr(args, "checkpoint_root", None)
+    if not checkpoint:
+        return
+    if (not args.max_tasks or args.max_tasks < 1 or getattr(args, "simulate", False)
+            or (getattr(args, "executor", "marathon") or "marathon") != "marathon"):
+        raise ContractError("--checkpoint-root requires positive --max-tasks and the real Marathon executor")
+    if os.path.realpath(checkpoint) == os.path.realpath(target):
+        raise ContractError("publication and execution clones must be distinct")
+
+
 def _dry_run_preflight(target, gh_num):
     """GH-1426: preflight's own --dry-run for one queued item against the execution clone, as the
     live call runs it (cwd + SWARM_PREFLIGHT_ROOT pinned, explicit never-created --out). It writes
@@ -2426,7 +2469,7 @@ def _dry_run_preflight(target, gh_num):
     probes) are the same as an operator's manual `swarm-preflight.sh --dry-run`."""
     preflight_py = _resolve_preflight_py(target)
     if not os.path.isfile(preflight_py):
-        return f"not evaluated — swarm_preflight not found at {preflight_py}"
+        return 2, f"not evaluated — swarm_preflight not found at {preflight_py}"
     argv = [sys.executable, preflight_py, "--gh-issue", str(gh_num)]
     label = ""
     doc_path = find_issue_doc(target, gh_num)
@@ -2435,15 +2478,160 @@ def _dry_run_preflight(target, gh_num):
         # place only when preflight's own frontmatter reader yields the same issue (plan QA r2).
         from swarm_preflight import doc_frontmatter_issue
         if str(doc_frontmatter_issue(doc_path) or "") != str(gh_num):
-            return (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
+            return 2, (f"not evaluated — 1-INBOX doc {os.path.relpath(doc_path, target)} has no numeric "
                     f"gh_issue: {gh_num}, so readiness cannot be evaluated before promotion")
+        probes, reason = promotion_probes(target, doc_path)
+        if not probes:
+            return 2, "unreviewed-probe-contract: " + (reason or "no valid probes in unattended mode")
         argv = [sys.executable, preflight_py, "--project-doc", doc_path]
         label = " (1-INBOX doc; live run promotes it first)"
     out_dir = os.path.join(tempfile.gettempdir(), f"jog-dry-run-preflight-gh{gh_num}-{os.getpid()}")
     proc = subprocess.run(argv + ["--dry-run", "--out", out_dir], cwd=target, capture_output=True,
                           text=True, env={**os.environ, "SWARM_PREFLIGHT_ROOT": target,
                                           "PYTHONDONTWRITEBYTECODE": "1"})
-    return _preflight_summary(proc) + label
+    return proc.returncode, _preflight_summary(proc) + label
+
+
+def _jog_result_identity(receipt, gh_num, execution_id):
+    if str(receipt.get("issue")) != str(gh_num) or receipt.get("execution_id") != execution_id:
+        raise ContractError("result receipt does not match the selected issue/execution")
+
+
+def _jog_task_local_failure(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected failed only because its own gate ran red, else None.
+
+    Fail closed: anything but a valid, identity-matched `pre-advance-failed` receipt whose gate
+    ran and exited nonzero (never the resource guard's 108) is treated as a shared stop."""
+    try:
+        executions = jog_load_state(root, gid).get("executions") or []
+        latest = executions[-1] if executions else {}
+        if (len(executions) != prior_executions + 1 or latest.get("status") != "projected-failed"
+                or latest.get("outcome") != "escalated"):
+            return None
+        receipt = load_marathon_result(_ledger_abs_path(root, gid, latest.get("result_path")))
+        _jog_result_identity(receipt, gh_num, latest.get("execution_id"))
+    except (ContractError, OSError, TypeError, ValueError, AttributeError):
+        return None
+    from marathon_drive import GATE_GUARD_KILL_EXIT
+    gate = receipt.get("gate") or {}
+    gate_exit = gate.get("exit")
+    if (receipt.get("outcome") != "escalated" or receipt.get("reason") != "pre-advance-failed"
+            or receipt.get("exit_code") != 5 or gate.get("result") != "red"
+            or not isinstance(gate_exit, int) or isinstance(gate_exit, bool)
+            or gate_exit in (0, GATE_GUARD_KILL_EXIT) or receipt.get("approval_preserved")
+            or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
+            != os.path.realpath(target)):
+        return None
+    return f"{receipt['reason']}, gate exit {gate_exit}; result: {latest.get('result_path')}"
+
+
+def _jog_process(argv, *, deadline=None, **kwargs):
+    if deadline is None:
+        return subprocess.run(argv, **kwargs)
+    from proc_group import run_bounded
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise ContractError("supervision dispatch deadline reached; no further process started")
+    captured = kwargs.pop("capture_output", False)
+    kwargs.pop("text", None)
+    result = run_bounded(argv, timeout=remaining, **kwargs)
+    if not captured:
+        print(result.stdout, end="")
+        print(result.stderr, end="", file=sys.stderr)
+    if result.timed_out:
+        raise ContractError("supervision deadline reached; owned process group stopped; result requires recovery")
+    return subprocess.CompletedProcess(argv, result.rc, result.stdout, result.stderr)
+
+
+def _jog_align_target(target):
+    lock = JogSupervisorLock(target, conservative=True)
+    lock.acquire()
+    try:
+        if len(_git(target, "worktree", "list", "--porcelain").decode().split("worktree ")) != 2:
+            raise ContractError("execution clone has dependent worktrees; alignment held")
+        if _git(target, "status", "--porcelain=v1", "--untracked-files=no").strip():
+            raise ContractError("execution clone has tracked changes; preserve them before alignment")
+        attached = subprocess.run(["git", "-C", target, "symbolic-ref", "-q", "HEAD"],
+                                  capture_output=True, text=True)
+        if attached.returncode != 0:
+            raise ContractError("execution clone has detached HEAD; preserve it on a branch before alignment")
+        _git(target, "fetch", "origin", "development")
+        base = _git(target, "rev-parse", "refs/remotes/origin/development").decode().strip()
+        local = subprocess.run(["git", "-C", target, "rev-parse", "--verify", "refs/heads/development"],
+                               capture_output=True, text=True)
+        if local.returncode == 0:
+            head = local.stdout.strip()
+            ahead = _git(target, "rev-list", "--count", f"{base}..{head}").strip() != b"0"
+            if ahead:
+                preserved = f"jog-preserved-development-{head}"
+                _git(target, "branch", "-m", "development", preserved)
+                print(f"jog: preserved local development at {preserved}")
+                _git(target, "switch", "--no-overwrite-ignore", "-c", "development", "--no-track", base)
+            else:
+                _git(target, "switch", "--no-overwrite-ignore", "development")
+                _git(target, "merge", "--no-overwrite-ignore", "--ff-only", base)
+        else:
+            _git(target, "switch", "--no-overwrite-ignore", "-c", "development", "--no-track", base)
+        if _git(target, "rev-parse", "HEAD").decode().strip() != base:
+            raise ContractError("execution clone alignment did not reach fetched development")
+        print(f"jog: execution clone aligned at {base}; other branches and untracked files retained")
+    finally:
+        lock.release()
+
+
+def _jog_supervise_recover(root, target):
+    lock = JogSupervisorLock(target, conservative=True)
+    lock.acquire()
+    try:
+        conn = connect(os.path.join(root, "releases.db"), readonly=True)
+        try:
+            rows = conn.execute("SELECT gh_number, global_id, status, lease_pid FROM jog_queue "
+                                "WHERE status IN ('running', 'pending') ORDER BY position, id").fetchall()
+        finally:
+            conn.close()
+        for gh_num, gid, status, pid in rows:
+            if status == "running" and pid:
+                try:
+                    os.kill(pid, 0)
+                except ProcessLookupError:
+                    pass
+                else:
+                    raise ContractError(f"GH-{gh_num} still has a live or stopped lease owner {pid}")
+            resolved = jog_resolve_ledger_gid(root, gh_num) or gid
+            state = jog_load_state(root, resolved)
+            executions = state["executions"]
+            if not executions:
+                if status == "running":
+                    jog_set_status(root, gh_num, "parked", failure_reason="supervision held: orphan lease without execution evidence")
+                continue
+            latest = executions[-1]
+            if not isinstance(latest, dict) or state.get("gh_number") != gh_num:
+                raise ContractError(f"GH-{gh_num} execution history identity is invalid")
+            try:
+                retries = latest.get("gate_retries") or []
+                if not isinstance(retries, list) or any(not isinstance(entry, dict) for entry in retries):
+                    raise ContractError("invalid gate retry history")
+                publication = retries[-1] if retries else latest
+                result_path = _ledger_abs_path(root, resolved, publication.get("result_path"))
+                if not result_path:
+                    raise ContractError("latest execution has no result path; explicit retry decision required")
+                receipt = load_marathon_result(result_path)
+                _jog_result_identity(receipt, gh_num, publication.get("execution_id"))
+                if os.path.realpath(receipt.get("target_repo", {}).get("path") or "") != os.path.realpath(target):
+                    raise ContractError("result receipt names a different execution target")
+                if receipt.get("outcome") != "approved":
+                    raise ContractError("latest execution is not approved; explicit retry decision required")
+                invocation = load_marathon_invocation(os.path.join(
+                    _ledger_abs_path(root, resolved, latest.get("packet_dir")) or "", "marathon-invocation.json"))
+                if os.path.realpath(invocation["target_root"]) != os.path.realpath(target):
+                    raise ContractError("recovery target differs from recorded invocation")
+                jog_resume(root, gh_num)
+                print(f"jog: recovered GH-{gh_num} without a new builder or attempt")
+            except ContractError as exc:
+                jog_set_status(root, gh_num, "parked", failure_reason=f"supervision held: {exc}")
+                print(f"jog: GH-{gh_num} held: {exc}")
+    finally:
+        lock.release()
 
 
 def jog_run_main(args=None):
@@ -2465,6 +2653,7 @@ def jog_run_main(args=None):
                                  "for a documented compatibility window")
         parser.add_argument("--checkpoint-root", help="dedicated disposable publication clone; bounded serial run")
         parser.add_argument("--max-tasks", type=int, default=None, help="max tasks to process")
+        parser.add_argument("--supervise-until", type=int, help="opt-in composed wake; absolute UTC epoch dispatch deadline")
         parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
         parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
         args = parser.parse_args()
@@ -2474,18 +2663,27 @@ def jog_run_main(args=None):
     executor = getattr(args, "executor", "marathon") or "marathon"
     simulate = getattr(args, "simulate", False)
     dry_run = getattr(args, "dry_run", False)
+    until = getattr(args, "supervise_until", None)
+    supervised = until is not None
+    deadline = None
+    if supervised:
+        if not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon":
+            raise ContractError("--supervise-until requires positive --max-tasks and the real Marathon executor")
+        if until <= time.time():
+            raise ContractError("supervision deadline already expired; no work started")
+        deadline = time.monotonic() + until - time.time()
 
     # Delivery 1 needs an explicit primary publication checkpoint before landing,
     # regardless of executor. Refuse before any supervisor state mutation.
-    if not simulate and not dry_run and getattr(args, "auto_merge", False):
+    target_readiness = dry_run and bool(getattr(args, "target_root", None))
+    if not simulate and (not dry_run or target_readiness) and getattr(args, "auto_merge", False):
         print(f"jog: {JOG_AUTO_MERGE_CHECKPOINT}", file=sys.stderr)
         sys.exit(2)
 
     # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
-    # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
-    # excluded: both stay on the hermetic/relay machinery and dispatch no Marathon execution,
-    # so the reviewer policy (which governs real dispatches) does not apply to them.
-    if executor == "marathon" and not simulate and not dry_run:
+    # invalid configuration must not mutate queue state at all. Bare preview and simulation
+    # stay exempt; explicit-target readiness uses the same static route/binary checks.
+    if executor == "marathon" and not simulate and (not dry_run or target_readiness):
         executor_error = validate_marathon_executor(args)
         if executor_error:
             print(f"jog: {executor_error}", file=sys.stderr)
@@ -2513,9 +2711,16 @@ def jog_run_main(args=None):
         if dry_target:
             try:
                 dry_target = _validate_execution_target(root, dry_target)
+                validate_checkpoint_options(args, dry_target)
+                if getattr(args, "checkpoint_root", None):
+                    JogCheckpoint(root, args.checkpoint_root).check_publication()
             except (ContractError, OSError, subprocess.CalledProcessError) as exc:
-                print(f"jog: [dry-run] live run would refuse --target-root: {exc}", file=sys.stderr)
+                print(f"jog: [dry-run] live run would refuse preparation: {exc}", file=sys.stderr)
                 sys.exit(2)
+        if dry_target:
+            print("jog: [dry-run] not verified: live provider capacity, gate environment/services, "
+                  "remote freshness or checkpoint recovery eligibility")
+        failed = False
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         try:
@@ -2536,9 +2741,13 @@ def jog_run_main(args=None):
                     break
                 print(f"  {r['position']}. GH-{r['gh_number']} (builder={args.builder}, auto_merge={args.auto_merge})")
                 if dry_target:
-                    print(f"     preflight: {_dry_run_preflight(dry_target, r['gh_number'])}")
+                    status, summary = _dry_run_preflight(dry_target, r['gh_number'])
+                    print(f"     preflight: {summary}")
+                    failed = failed or status != 0
         finally:
             conn.close()
+        if failed:
+            sys.exit(2)
         return
 
     _require_jog_primary(root)
@@ -2548,13 +2757,12 @@ def jog_run_main(args=None):
         print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
     checkpoint_root = getattr(args, "checkpoint_root", None)
-    if checkpoint_root and (not args.max_tasks or args.max_tasks < 1 or simulate or executor != "marathon"):
-        print("jog: --checkpoint-root requires positive --max-tasks and the real Marathon executor", file=sys.stderr)
+    try:
+        validate_checkpoint_options(args, target)
+    except ContractError as exc:
+        print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
-    if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
-        print("jog: publication and execution clones must be distinct", file=sys.stderr)
-        sys.exit(2)
-    supervisor_lock = JogSupervisorLock(root)
+    supervisor_lock = JogSupervisorLock(root, conservative=supervised)
     supervisor_lock.acquire()
 
     def _cleanup():
@@ -2574,7 +2782,10 @@ def jog_run_main(args=None):
         if checkpoint_root:
             try:
                 checkpoint = JogCheckpoint(root, checkpoint_root)
-                started = checkpoint.begin()
+                recover = (lambda: _jog_supervise_recover(root, target)) if supervised else None
+                started = checkpoint.begin(recover=recover)
+                if supervised and not started:
+                    started = checkpoint.begin(recover=recover)
             except ContractError as exc:
                 # GH-1453: a checkpoint stop is a message and exit 2, never a traceback.
                 print(f"jog: checkpoint held: {exc}", file=sys.stderr)
@@ -2582,6 +2793,8 @@ def jog_run_main(args=None):
             if not started:
                 checkpoint = None
                 return
+        if supervised:
+            _jog_supervise_recover(root, target)
         # Reconcile orphan leases via perform_write on startup
         reconciled = jog_reconcile_orphan_leases(root)
         if reconciled:
@@ -2593,6 +2806,9 @@ def jog_run_main(args=None):
 
         tasks_processed = 0
         while True:
+            if deadline is not None and time.monotonic() >= deadline:
+                print("jog: stopped at supervision dispatch deadline; publication/cleanup retain their own clocks")
+                break
             if args.max_tasks is not None and tasks_processed >= args.max_tasks:
                 print(f"jog: reached max-tasks limit ({args.max_tasks}); pausing queue.")
                 break
@@ -2613,10 +2829,14 @@ def jog_run_main(args=None):
                 conn.close()
 
             if not row:
-                print("jog: queue complete (0 pending tasks).")
+                print("jog: no pending tasks; held outcomes remain below." if supervised
+                      else "jog: queue complete (0 pending tasks).")
                 break
 
-            if checkpoint:
+            if supervised:
+                _jog_align_target(target)
+                _validate_execution_target(root, target)
+            elif checkpoint:
                 # A previous lane stays on its branch. Start the next scheduled task
                 # from the prepared base so Marathon owns branch selection and PR creation.
                 runner_lock = JogSupervisorLock(target)
@@ -2634,8 +2854,9 @@ def jog_run_main(args=None):
             att = row["attempt_count"] + 1
 
             # Acquire lease via perform_write
-            jog_acquire_lease(root, gh_num, os.getpid())
-            if checkpoint:
+            jog_acquire_lease(root, gh_num, os.getpid(),
+                              expected_global_id=row["global_id"] if supervised else None)
+            if checkpoint or supervised:
                 tasks_processed += 1
 
             print(f"\n{'=' * 60}")
@@ -2668,13 +2889,14 @@ def jog_run_main(args=None):
                     root, gh_num, ledger_gid,
                     builder=args.builder, reviewer=args.reviewer,
                     mode="retry-build" if row["attempt_count"] else "run",
-                    auto_merge=getattr(args, "auto_merge", False), target_root=target)
+                    auto_merge=getattr(args, "auto_merge", False), target_root=target,
+                    **({"deadline": deadline} if supervised else {}))
                 jog_set_status(root, gh_num, action, failure_reason=reason)
                 if action == "completed":
-                    if not checkpoint:
+                    if not checkpoint and not supervised:
                         tasks_processed += 1
                     continue
-                if checkpoint and action == "parked":
+                if (checkpoint or supervised) and action == "parked":
                     # Only the execution just projected may authorize independent work.
                     # Earlier approved results must not mask a failed latest attempt.
                     executions = jog_load_state(root, ledger_gid).get("executions") or []
@@ -2692,6 +2914,12 @@ def jog_run_main(args=None):
                             print(f"jog: GH-{gh_num} published awaiting approval; continuing independent pending work.")
                             continue
                 if action == "failed":
+                    local = supervised and _jog_task_local_failure(
+                        root, target, gh_num, ledger_gid, prior_executions)
+                    if local:
+                        print(f"jog: GH-{gh_num} failed task-locally ({local}); retained without "
+                              "retry; continuing independent pending work.")
+                        continue
                     print("jog: stopping queue execution on task failure.")
                 else:
                     # GH-1426: a park is not always a landing boundary (preflight refusal, invalid
@@ -2760,6 +2988,15 @@ def jog_run_main(args=None):
                 print("jog: advancing halted at landing boundary.")
                 break
 
+        if supervised:
+            conn = connect(db_path, readonly=True)
+            try:
+                for gh_num, status, reason in conn.execute(
+                        "SELECT gh_number, status, failure_reason FROM jog_queue "
+                        "WHERE status IN ('parked', 'failed', 'running') ORDER BY gh_number"):
+                    print(f"jog: GH-{gh_num} {status}: {reason or 'execution owner/result unresolved'}")
+            finally:
+                conn.close()
         if checkpoint:
             try:
                 checkpoint.finish()
@@ -2771,4 +3008,8 @@ def jog_run_main(args=None):
 
 
 if __name__ == "__main__":
-    jog_run_main()
+    try:
+        jog_run_main()
+    except ContractError as exc:
+        print(f"jog: held: {exc}", file=sys.stderr)
+        sys.exit(2)

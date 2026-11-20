@@ -1,0 +1,129 @@
+{
+  "attempts": {
+    "landing_clone": "~/nonexistent-readonly-probe",
+    "note": null,
+    "scanned_records": 0,
+    "stale_attempts": []
+  },
+  "current_item": null,
+  "final_qa": {
+    "development_head": null,
+    "final_qa_sha": null,
+    "final_qa_verdict": null,
+    "later_landings": [],
+    "reason": "no canonical GATE: final-QA recorded",
+    "status": "missing"
+  },
+  "interventions": [],
+  "items_done": [
+    {
+      "line": 6,
+      "text": "- KS-15 (#1543): MERGED PR #1544 (merge 8c44d86bbd) 2026-11-20T08:18Z"
+    }
+  ],
+  "landing_clone_mismatch_warning": null,
+  "landing_clone_pinned": "~/nonexistent-readonly-probe",
+  "liveness": {
+    "advisory": null,
+    "newest_log": null,
+    "newest_log_age_seconds": null,
+    "ownership": {
+      "children": "unknown",
+      "lock": "unknown",
+      "owner": "unknown",
+      "owner_pid": null,
+      "owner_pid_live": null,
+      "sessions": "unknown"
+    },
+    "quiet_seconds": 120,
+    "stale_seconds": 600,
+    "state": "unknown"
+  },
+  "prs": {
+    "error": null,
+    "items": [
+      {
+        "blockers": [
+          "draft",
+          "held: Review authority limit / unresolved escalation",
+          "conflicting"
+        ],
+        "merge_ready": false,
+        "pr": 1024,
+        "rung": 2,
+        "title": "feat(weekly): held intake and preserved rollover with tracked review limits (GH-1022)"
+      },
+      {
+        "blockers": [
+          "conflicting"
+        ],
+        "merge_ready": false,
+        "pr": 1417,
+        "rung": 3,
+        "title": "fix: require canonical attempt accounting before task qualification (GH-1399)"
+      },
+      {
+        "blockers": [
+          "conflicting"
+        ],
+        "merge_ready": false,
+        "pr": 1467,
+        "rung": 2,
+        "title": "fix(GH-1465): relay-drive runs the reviewer gate itself; earlier findings stay open"
+      },
+      {
+        "blockers": [
+          "conflicting"
+        ],
+        "merge_ready": false,
+        "pr": 1471,
+        "rung": 2,
+        "title": "feat(GH-1466): xyz-vendor --ledger-only tier"
+      },
+      {
+        "blockers": [
+          "conflicting"
+        ],
+        "merge_ready": false,
+        "pr": 1497,
+        "rung": 2,
+        "title": "fix(GH-1049): no false dependency.drift for surfaces absent at both revs"
+      },
+      {
+        "blockers": [
+          "behind (drift=27)"
+        ],
+        "merge_ready": false,
+        "pr": 1542,
+        "rung": 0,
+        "title": "docs(TESTS-RESULTS): publish kickstart run-1 record as the #1541 baseline (KS-15)"
+      },
+      {
+        "blockers": [],
+        "merge_ready": true,
+        "pr": 1546,
+        "rung": 0,
+        "title": "feat(kickstart): bake KS-03 launch authority defaults into build_queue.py and SKILL.md (GH-1545)"
+      },
+      {
+        "blockers": [],
+        "merge_ready": true,
+        "pr": 1549,
+        "rung": 0,
+        "title": "feat(kickstart): release decide holds via --owner Operator decision & enforce U15 body/label holds (GH-1535)"
+      }
+    ],
+    "note": "derived PR hygiene summary only; not a merge-readiness approval engine"
+  },
+  "record_errors": [],
+  "record_valid": true,
+  "record_version": 1,
+  "schema": 1,
+  "stop_reason": {
+    "attribution": "none",
+    "source": null,
+    "stop_reason": "none",
+    "unattributed_shared_file_present": false
+  },
+  "unapplied_amendments": []
+}

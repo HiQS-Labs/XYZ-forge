@@ -17,6 +17,8 @@ record, GitHub as the live signal stream, and deterministic preflight output as 
 
 ## Routing
 
+Immediate serial queues use [Jog’s preparation handoff](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/jog/SKILL.md#preparation-handoff-gh-1439), including environment, capacity and aligned-clone evidence. Do not build marathon YAML or duplicate that checklist for a simple serial Jog request. Multi-lane arcs retain the workflow below.
+
 - **Primary — start or substantially revise an arc:** follow Steps 0–6, including intake review,
   contract review, implementation plan drafting and independent plan QA, lane computation, plan and
   YAML preparation, preflight, and dry-run. Choose real work with a per-item machine-checkable pass

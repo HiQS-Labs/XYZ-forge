@@ -1,4 +1,245 @@
+- **GH-1557 (KS-13):** Fix multi-SHA `later_landings` staleness suppression in `skills/1-hourly/kickstart/scripts/kickstart_status.py`, emit deterministic `rerun_required` / `handback_allowed` / `recommended_action` handback fields, and mandate autonomous pre-handback final-QA re-run with post-QA head re-verification in `skills/1-hourly/kickstart/SKILL.md`.
+- **GH-1548 (KS-05):** Attributed per-invocation stop-reason receipts (`relay-drive.py` `--invocation-id` / `--stop-receipt` + verbatim stderr trailer), fresh per-turn driver-owned shim logs via child-only `turn_env`, and U13 `429`/quota classification as `provider-quota` (distinct from `turn-error` and `cap-stalled`) across `utils/py/harness.py` and `utils/py/relay_drive.py`.
+
 # Changelog
+
+## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing
+  `gh issue list` call, releases `decide` holds when the latest `--owner` comment's first non-empty
+  line starts with `Operator decision` (proceed, routed so it never falls into rule 9 unclassified)
+  or `Operator decision: close` (dedicated close bucket where the child verifies acceptance on
+  `origin/development` and closes citing the commit), honours superseding `Operator decision: hold`
+  comments, and keeps closing PRs (`Closes #N`) unparked once the issue is released.
+- Also enforces fail-closed U15 holds (`status:held` label, body `HELD:` marker, `Blocked by #N`,
+  and open/active-gating `after #N`) across all issue types while preserving code-formatted `#N`
+  references inside prose holds and ignoring fenced blocks / wholly quoted inline examples. Mirrored
+  in `skills/1-hourly/kickstart/SKILL.md`. No new suite (GH-831). Evidence:
+  `TESTS-RESULTS/2026-11-20+GH-1535/manual-check.md`.
+
+## 2026-11-20 — GH-1545 (KS-03): bake launch authority defaults into build_queue.py and kickstart/SKILL.md
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` (`AUTHORITY`) and `skills/1-hourly/kickstart/SKILL.md`
+  now bake run defaults directly into the launch authority template: CodeRabbit 30-min advisory wait
+  from a review request on the current head with immediate pre-merge re-read, explicit timeout waiver
+  wording (`advisory not received; predeclared waiver used`), and posted-Major blocking (U5); KS-11
+  fail-closed decision defaults (round cap requiring explicit final-head approval with accepted Minor/nit
+  deferral limits and protected-surface exclusions, conflict hubs to a separate batch, owner-authored
+  applicable non-superseded KS-02 decisions); verbatim quota fallback to `agy`; and Flywheel per-PR merge
+  approval satisfaction for `--owner` PRs while keeping full-SHA pins and `Status: NOT YET GRANTED`.
+  Queue classification, flags, replay determinism, and read-only behavior are unchanged. No new suite
+  (GH-831). Evidence: `TESTS-RESULTS/2026-11-20+GH-1545/manual-check.md`.
+
+## 2026-11-20 — GH-1508: per-repo governance doc list that survives install and sync
+
+- `pdda.sh governance` now adds the docs named on a committed `.pdda-mode` line
+  `PDDA_GOVERNANCE_DOCS_EXTRA=...` to its default doc set (extends, never replaces, per the operator's
+  decision). `.pdda-mode` is a create-only seed, so install and sync keep it. The `PDDA_GOVERNANCE_DOCS`
+  environment variable still replaces the whole set. Documented in `PROJECT/PDDA.md`. No new suite (GH-831).
+  Evidence: `TESTS-RESULTS/2026-11-20+GH-1508/smoke.md`.
+
+## 2026-11-19 — GH-1519: the gate refuses in seconds when mypy is missing
+
+- `validate.sh`'s existing GH-732 environment check now also requires `mypy` (`test/test_python_layer.py`
+  runs `python3 -m mypy`). Without it the gate exits 3 at once with `missing modules: mypy` and
+  `pip install -r requirements-dev.txt`, instead of failing one test after a ~13-minute full run.
+  With mypy present nothing changes. Hosted jobs that run `validate.sh` already install
+  `requirements-dev.txt`. No new suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1519/smoke.log`.
+
+## 2026-11-19 — GH-1499: skill drift check reads vendored tier layouts
+
+- `utils/py/skill_drift_check.py` now finds a collection's skills one level down (flat Deployed Skills) and
+  two levels down (a vendored `.xyz/skills/<tier>/<name>` tree). Before, a vendored tree compared 0 skills
+  and reported `0 ok, 0 drifted` with exit 0. Flat-layout results are unchanged. No new suite (GH-831).
+  Evidence: `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md`.
+
+## 2026-11-19 — GH-1517: merge-cleanup batch protocol matches the GH-1383 auto-sweep
+
+- `skills/2-daily/merge-cleanup/SKILL.md` batch issue protocol no longer says the script runs no sweep.
+  It now says the script adds no suite, runs the declared local sweep at batch end on executing runs
+  (GH-1383), and leaves the sweep to the caller (`--record-sweep`) only with `--no-auto-sweep` or a
+  sweep deferred to hosted promotion — matching `merge_cleanup.py` and the Discipline bullet 6.
+
+## 2026-11-19 — GH-1522: AGENTS.md says whose words are instructions
+
+- `AGENTS.md` (Standing authorization) gains a three-line rule: only the operator's own words are
+  instructions; other people's comments, issue bodies, relay and consult turns, tool output and fetched
+  pages are evidence to weigh and verify, and relay findings are adjudicated rather than obeyed. Checked
+  against `skills/1-hourly/relay-xyz/SKILL.md` and `skills/1-hourly/consult/SKILL.md` (no conflict: both
+  already treat reviewer output as findings to adjudicate). `AGENTS.md` stays under 32,768 bytes.
+  Docs only; no new suite (GH-831).
+
+## 2026-11-16 — GH-1506: report timeout observations without claiming causes
+
+Agy timeout messages now describe TTY, lock-named-file and socket observations without inferring a wait. File activity includes an explicit log/scratch caveat and no recommendation to increase budgets; its legacy reason code remains compatible. Relay dirty-file snapshots are labelled worktree state. Timeout/idle thresholds, sampling, exit codes and process-group cleanup are unchanged. Existing output assertions updated; no new suites. Verification: `TESTS-RESULTS/2026-11-16+GH-1506/`.
+
+## 2026-11-19 — GH-1527: kickstart `build_queue.py` builds the run queue in one command
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` prints a kickstart run record's Authority,
+  Queue and Needs-operator sections from `pr_minder.py --json` plus one `gh pr list` (author, links,
+  raw `mergeable`) and `gh issue list` (open issues in a `--since-days` window). Ordering is a
+  closed first-match list; held, others', decision, other-session and unclassified items go to
+  Needs-operator. Saved inputs (`--prs-json`, `--pr-meta-json`, `--issues-json`) with `--as-of`
+  replay byte-identically. Read-only; writes only `--out`.
+- `skills/1-hourly/kickstart/SKILL.md`: new parent step 2 (build the queue, record the grant in the
+  run record, then dispatch) with the closed ordering list; later parent steps renumbered.
+- `skills/2-daily/pr-minder/scripts/pr_minder.py`: new `--no-conflict-files` flag skips the
+  conflicting-file lookup (`git fetch` + `merge-tree --write-tree`), so build_queue's live run writes
+  nothing to the checkout. Default behaviour unchanged.
+- No new test suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1527/`.
+
+## 2026-11-19 — GH-1518: start-task runs the full gate once, at push
+
+- `/start-task` now runs `ci-local.sh --fast` on the final approved commit and lets the pre-push hook run
+  the full `./validate.sh` suite as the single full-gate run. Before, a full `ci-local.sh` run was followed
+  by the same suite again at push (about 13 minutes extra per code PR). `utils/py/gate_receipt.py` is
+  unchanged; the operator chose the instruction change over receipt reuse.
+- The hand-off to the hook applies only when `bash githooks/install.sh --check` passes and the push is the
+  branch's first, so the hook classifies the whole PR diff. Otherwise (no hook installed, or the branch is
+  already on the remote and the pushed range could route `docs`), run full `./validate.sh` once on the final
+  commit before pushing; its receipt lets the hook skip the second run.
+
+## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
+
+- `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.
+- `skills/2-daily/flywheel/SKILL.md`: mode-qualified `Daily observation and 10days batches` and Operating Flow Step 3 so default `marathon` retains no Jog substitution while explicit `10days` `serial` mode may hand committed survivors to `jog` or `start-task` under one batch owner.
+- `ARCHITECTURE.md`: indexed `pr-minder` (`skills/2-daily/pr-minder/SKILL.md`) under `2-daily`.
+- Docs-only (`tier=1`); zero runtime code, queue, schema, or test-suite additions. Revert PR to undo. Evidence: `TESTS-RESULTS/2026-11-19+GH-1524/`.
+
+## 2026-11-17 — GH-1509: Kickstart skill for observer-led outer-loop child with session recovery
+
+- Added `skills/1-hourly/kickstart/SKILL.md` codifying the operator's assisted factory pattern:
+  an observer and session-recovery parent delegates outer-loop execution to exactly one child session,
+  composing Flywheel, Conveyor, and Jog with non-overlapping responsibilities and no competing writers.
+- Daily-goal intake routes existing issues directly to Conveyor and uncaptured prose through issue-creation
+  owners (`idea`/repo SOP) without premature execution readiness claims.
+- Concrete handoff states define normal completion, task-local holds obeying owner-specific continuation
+  semantics (e.g. Jog GH-1400 wake), shared unsafe stops, and session recovery.
+- Recovery protocol enforces stopped-ownership proof (including child-spawned builders/writers), refuses
+  replacement for live/paused/unknown owners, resolves saved results, and adheres to the recovery ladder
+  (`resume` -> `retry-gate` -> `retry-build`) within remaining unexpired budgets.
+- Indexed in `ARCHITECTURE.md` (Skills Index).
+- Evidence: `TESTS-RESULTS/2026-11-17+GH-1509/manual_walkthrough.md` and `provenance.jsonl`.
+
+## 2026-11-16 — GH-1498: `/pr-minder` and an author-activity PR clock
+
+New skill `skills/2-daily/pr-minder/` runs one manual pass over the current repo's open PRs. Each PR gets a rung on an age ladder (fresh, nudge, repair, decide, retire), with a matching action. Plan mode writes nothing. `--apply` updates behind branches (at most 2 per stale episode), sets `pr-minder:stale`/`pr-minder:decide` and keeps one owned comment per PR, with conflict files, a repair command or a re-cut option. It never merges, closes, rebases or retargets. Held and stacked-under-held PRs are report-only. Each PR is re-checked before writes (head, base, title/body/label holds), and every write is receipted.
+
+The age now comes from a shared author-activity clock in `planner_core.py` (`fetch_pr_activity`, `author_activity`), replacing `updatedAt`. Labels, marker comments and GitHub server-side branch syncs no longer reset it. `/daily-planner`'s Stalled report uses the same clock and names any PR that fell back to `updatedAt`.
+
+`merge_cleanup.refresh_pr` now also fetches `body`. Failing-check comments give the check name and its link instead of the first log line (spec deviation). Evidence: `TESTS-RESULTS/2026-11-16+GH-1498/`.
+
+## 2026-11-17
+
+- GH-1476 / OL-09: retained the real raw/reuse/hold preparation trial, original acceptance-fidelity failure and repair, daily-goal #1520 interpretation and explicit instruction walkthroughs. Independent preparation QA approved in round 1; no implementation, OL-10 admission or unattended credit. Evidence: `TESTS-RESULTS/2026-11-17+GH-1476/ol09-followup/`. Hosted-check correction: prior head had one success, two skipped and CodeRabbit neutral, not four passes.
+- **GH-1511: connect-the-dots searches the graph by capability verbs.** Rung 2 now says to search
+  the code graph by capability verbs and synonyms, not module names; call tracing stays optional.
+  In the 2026-11-17 comparison runs, verb searches first surfaced the unmapped subsystems, while
+  call tracing found no new module.
+
+## 2026-11-17 — GH-1476: bounded research before preparation
+
+Conveyor now owns medium-depth research for selected raw tasks, freshness reuse, evidence-based deeper research and explicit risk deferral. Daily-goals links remain bounded candidates rather than execution authority. 10days consumes that policy after cheap validity triage, preserves held work and operator ratings, and performs one parent-owned pickup only after a real capture exists. Preparation and live execution admission remain separate. This instruction slice does not complete OL-09: a real bounded preparation run is still required; OL-10 runtime enforcement is unchanged. Verification and limitations: `TESTS-RESULTS/2026-11-17+GH-1476/`. Revert the instruction change to undo; no deployed copies changed.
+
+## 2026-11-17 — GH-1493: published retirement preserves one bad checkout instead of aborting the call
+
+`merge_cleanup.py --retire-published-pr N` used to refuse the whole call (exit 2) when any
+`--checkout` path failed admission, so a `-gate` helper cloned from the task clone also kept
+the task clone and `-verify` helper on disk. Each path is now admitted or printed as
+`PRESERVED <path>: <reason>`; the rest still run, and the call exits 1 if anything was preserved.
+The origin refusal names how to make a helper (keep the canonical origin), and start-task says so.
+Classification is unchanged: another repository or an unpublished local commit is still preserved.
+An admitted checkout that contains a refused one is preserved too, so it is never moved with it.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1493/SUMMARY.md`.
+
+## 2026-11-17 — GH-1512: chain connect-the-dots on invariant and escalate unread paths to recon
+
+- In `skills/3-weekly/whack-a-mole/SKILL.md`: added invariant-enforcer discovery in §5 to run `/connect-the-dots` on the violated rule (the invariant) before proposing a new mechanism, naming existing enforcers in the umbrella issue and handing off candidates and gaps to §6.
+- In `skills/1-hourly/debug-mantra/SKILL.md`: added an explicit escalation in §2 (trace the fail path) to run `/recon` when a fail path traverses unread modules before forming the hypothesis.
+Evidence: `TESTS-RESULTS/2026-11-17+GH-1512/`.
+
+## 2026-11-16 — GH-1503: relay-drive refuses an approval over the reviewer's own failing verdict; one rule reads `STATUS:`
+
+`relay_drive.py` attested `STATUS: Approved` whatever the reviewer's block said, so a block ending `VERDICT: FAIL` closed a relay as approved (BinoidCBD/LTVera-Pandas#981, gap 4). `judge_terminal` now refuses that turn with escalation reason `approved-over-fail` (exit 4, no attestation record). A failing word is `FAIL`, `Changes requested` or `Blocked` on the last verdict line the reviewer added this turn; a block with no verdict line is judged as before. Second change: the driver, the attestation, marathon and two Bash readers needed the bare `STATUS:` prefix while the turn wrapper, `poll.py` and `bin/validate-relay-block` accepted `**STATUS:** Approved`, so one file read as approved to the wrapper (which closed the token) and as no status to the driver (`token-state`, exit 4). All readers now use the wrapper's rule (`relay_attest.header_field`; the same pattern in `marathon-recover.sh`, `extract-relay-telemetry.sh` and `marathon.sh`). The frozen Bash twins and `utils/pdda/check_marathon_qa.py` are not changed. Third: exit 5 still means both a review-once "changes requested" handback and a failed turn; `.relay-scratch/escalation-reason` now says which (`review-handback` or `turn-failed-rc<N>`). No exit code number, record format, trailer or commit subject changes. No new suite: three cases (D4, D5, D6) added to `test/gh505-relay-attest.sh`. Revert the PR to undo. No issue number yet. Evidence: `TESTS-RESULTS/2026-11-16+GH-1503/`.
+
+## 2026-11-16 — GH-1502: instructions given to relay turns agree with what the harness does
+
+Text only; no harness behavior changes. The turn prompt (`rtl_turn_prompt`) no longer says "The
+harness runs the gate after your turn": a gate command runs only when one is configured for the
+relay, and both roles are now told so. The thread scaffold (`new-relay.sh`) and `/relay` mark
+"commit only the relay file" and the "other window" wording as manual-relay instructions, because
+the turn prompt forbids git in a driven turn. `/relay` states that driven threads use
+`VERDICT: PASS|FAIL|PARKED`. `/start-task` no longer calls reviewer findings "advisory evaluations,
+NOT a mandate", and `/start-task` and `/relay-xyz` replace "not unrequested enterprise multi-tenant
+threat models" with "the target repository's own stated threat model governs". The `[Blocker]`
+rule is unchanged. Pinned assertions updated in `test/gh91`, `test/gh615`, `test/gh616`; no suite added;
+`relay-pkg.tar.gz` rebuilt. Evidence: `TESTS-RESULTS/2026-11-16+GH-1502/`.
+
+## 2026-11-16
+
+- **GH-1400: supervised Jog continues past a task-local failure.** A supervised wake used to stop
+  at any failed task, so independent ready work waited for a parent restart (dogfood wake 1).
+  It now continues only when the task's own receipt shows its gate ran and failed; the row stays
+  failed and is never retried. Shared conditions (lock owners, guard-killed gates, missing or
+  corrupt receipts, clone ledger changes) still stop all dispatch.
+  Evidence: `TESTS-RESULTS/2026-11-16+GH-1400/SUMMARY.md`.
+
+## 2026-11-15
+
+- **GH-1400: opt-in bounded Jog supervision.** `jog run --supervise-until` composes
+  approved-result recovery, safe execution-clone alignment and independent continuation.
+  Uncertain latest results hold, existing attempt history remains, and preserved local branches
+  and logs are retained. The bet is that composing existing owners removes the demonstrated
+  manual handoff without another queue. Costly rollback disables the opt-in path and retains state.
+  Controlled CLI checks cover recovery, continuation and preserved work; review and gate receipts are recorded with the implementation PR.
+  Evidence: `TESTS-RESULTS/2026-11-15+GH-1400/SUMMARY.md`.
+
+## 2026-11-15 — GH-1479: typed swarm-preflight stages and a scoped mypy baseline
+
+`utils/py/swarm_preflight.py`'s 734-line `main()` is now an 11-line sequence over named stages (source resolution, contract loading, repository inspection, candidate evaluation, normalization, reporting, packet writing) that pass three frozen records instead of shared locals. Every function is annotated. `mypy.ini` checks this one module, `requirements-dev.txt` pins `mypy==1.14.1` beside the existing gate dependencies, and the three hosted install steps plus `README.md`/`ROUTER.md` point at it. The existing `test_swarm_preflight_module_load` now also runs the scoped mypy check, so the gate's Python needs mypy installed (`python3 -m pip install -r requirements-dev.txt`). No CLI, output, packet, exit-code or write-mechanism change: old and new executors produced byte-identical results across ten scenarios. No new tests. Revert the PR to undo. Evidence: `TESTS-RESULTS/2026-11-14+GH-1479/`.
+
+## 2026-11-14 — GH-1486: `/re-vendor-xyz` refreshes one vendored `.xyz/` copy safely
+
+New instruction-only skill `skills/4-occasional/re-vendor-xyz/` that sequences the existing
+`xyz-sync.sh` refresh for one repository. The bare commands can report success while the copy is
+stale or built from unpublished code, or replace it under a live run (#1011). The skill stops,
+by a closed list, when the Forge source is dirty, not canonical, unfetchable or ahead of origin;
+when the target is unregistered; when a driver lock or a process uses the copy; or when a tier-2
+copy would lose its RELEASES overlay. It backs the copy up, refreshes, and counts the copy current
+only when `check` prints `ok`, prints no `SAFETY GUARD MISSING` line, and `.xyz/VERSION` matches the
+Forge `HEAD`. It then reads Skills Army HQ status and hands deployed-skill drift to `/skills-army-hq`.
+No script, flag or test suite added; `xyz-sync.sh` and `xyz-vendor.sh` are unchanged. Pointers in
+`ARCHITECTURE.md`, `README.md` and `vendor-stack`. Evidence: `TESTS-RESULTS/2026-11-14+GH-1486/`.
+
+## 2026-11-14 — GH-1475: merge-cleanup Phase 2A (fewer cycles and waits)
+
+A hub PR that this run B1-repaired no longer needs a second dry run and execute. The run waits for the new head's checks on that exact commit, re-checks that nothing else moved it, re-pins it (selection file and batch allowlist), and lands it. Anything else off its pin still defers. `.merge-cleanup.json` gains the opt-in `qualification.wait_for_checks: [names]`, so the existing pending, poll and defer logic applies to named checks even when GitHub reports no required checks. Retained clones are bounded: per prefix, the newest 3 (`MERGE_CLEANUP_KEEP_WORKDIRS`) and anything touched in the last hour are kept, and older `merge-cleanup-*`/`merge-check-*` folders are removed only when `lsof` verifies them idle and no other `merge_cleanup.py` is running. On exit 3, landed PRs' clones are released. The shared open-handle probe now also counts a process whose cwd is the folder root (it missed that holder before, which affected teardown too). A dry run now previews B1-repairable PRs and continues instead of stopping at the first one. Existing tests that pinned the old second cycle were updated; no new tests. Code revert is easy; pruned scratch is not restored by a revert. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/`.
+
+## 2026-11-14 — GH-1475: merge-cleanup Phase 1 quick wins
+
+From a 13-PR batch post-mortem. `wave_reconcile.py` now fetches and fast-forwards to `origin/<branch>` instead of `git pull`, retrying briefly when a concurrent fetch holds the ref lock; `merge_cleanup.py` treats that lock error as transient too. Output is line-buffered, so a redirected log shows progress live. A landing loop that completes cleanly with nothing marked for keeping removes its own `merge-cleanup-*` workdir; otherwise it is kept, and `merge-check-*` clones stay retained. A successful `--reconcile-pr` records the PR as merged and reconciled in its unfinished batch, and `--record-sweep` names `--reconcile-pr N` for a landed-but-unreconciled PR instead of always suggesting `--resume`. SKILL.md gains an exit-code table and corrects the "single-PR runs never exit 4" line. The dry run prints read-only `PRE-FLIGHT:` warnings (low disk, battery, harness `TMPDIR`, another `--execute` running, no required checks); nothing refuses. Revert the PR to undo; deleted scratch workdirs are not restored. Evidence: `TESTS-RESULTS/2026-11-14+GH-1475/`.
+
+## 2026-11-12 — GH-1443 target-aware Jog readiness
+
+Explicit-target dry-run now refuses invalid roles, promotion probes, static publication-clone
+constraints and any failed/unevaluated selected preflight, while still displaying every selected
+outcome. Bare queue preview is unchanged. Existing promotion/publication owners are shared; live
+recovery ordering and queue state are unchanged. This deliberately tightens readiness exit status,
+not live execution. Environment/services, provider credits, remote freshness and recovery eligibility
+remain unverified. Revert this PR to undo the CLI change; no schema or data conversion.
+Evidence: `TESTS-RESULTS/2026-11-12+GH-1443/`.
+
+## 2026-11-10 — GH-1000 consolidation inventory and evidence reconstruction
+
+- Documentation only. Inventoried the Storyline, Kanban and dashboard efforts with a recommended disposition each; they reduce to three systems. The Forge board policy, labels connector, Flightdeck and Paperclip already share one reader (`load_work_evidence`); the raw board connector, release cards and Rebalance's history layer read separately.
+- Reconstructed GH-1254 from committed records alone: six attempts found, none with a fully resolvable evidence chain. Manual check and its GH-1064 control are in `TESTS-RESULTS/2026-11-10+GH-1000/`.
+- Recommends Flightdeck as the first-slice interface and drafts five follow-on issues. None is filed; three operator decisions (board target, Paperclip, the unidentified knowledge-graph component) come first. The umbrella stays open and the interface demonstration is still owed.
+- 2026-11-11: board target decided as `noelsaw1` project 9. A read-only policy preview would add 206 cards; only this repo gets Ready and In progress cards because no other repo has a ledger. Handoff steps are in the plan doc.
+- No code, schema, contract, suite or gate change. Easy to revert.
+
+## 2026-11-14 — GH-1470: forecast clean-first landing passes
+
+Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. The dry run also warns, read-only, when a listed PR maps to an open Jog row while the Jog primary is unpinned, and the forecast names stacked members (branches sharing commits not on the base) as a blind spot. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
 
 ## 2026-11-14 — GH-1465: relay-drive runs the reviewer gate itself; an earlier finding stays open
 
@@ -6,6 +247,7 @@ In a host relay run (BinoidCBD/LTVera-Pandas#981) AI reviews turned a FAIL with 
 
 Manual red control on the real GH-955 builder and reviewer blocks: the base attests a declared `yes — exit 0` over a gate that exits 1; the fix refuses it, also refuses when the builder declared nothing unverified, attests a green gate with no declaration, and leaves an unarmed relay as it was. Not exercised: the timeout path. In a marathon the focused gate now runs up to three times (reviewer, driver, pre-advance).
 Evidence: `TESTS-RESULTS/2026-11-14+GH-1465/`.
+
 
 ## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
 
@@ -152,6 +394,12 @@ its exact-head re-check approved 6e040869. All three skill validators now pass a
 pre-existing intake description syntax. The final push gate, full runtime gate and
 managed deployment remain outstanding at this checkpoint.
 Evidence: `TESTS-RESULTS/2026-11-10+GH-1414/`.
+
+## 2026-11-10 — GH-1409 vendored-smoke pins its judge files to the PR base
+
+- On pull requests, `vendored-smoke` now restores the inventory ratchet, gh421, gh308 and the four vendored suites from the merge ref's first parent before running them. It refuses a grown inventory baseline (including effective bypass cardinality) or newly added `SQLITE-*-OK` markers; a `judge-change` label skips the pin. One inline step, no new suite, script or gate.
+- `main` now requires the `vendored smoke gate` check (repository setting, 2026-11-10). `development` stays unprotected until a reviewed bot-bypass policy exists for `wave-reconcile.yml`.
+- Accepted residuals: a PR can still edit `ci.yml`; helpers the suites source are not pinned. Easy to revert (one workflow commit; one protection setting).
 
 ## 2026-11-09 — GH-1400 downstream flywheel composition
 

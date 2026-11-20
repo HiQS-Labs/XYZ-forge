@@ -1,0 +1,20 @@
+gh505-relay-attest.sh rc=0 91s
+gh308-frozen-twin-guard.sh rc=0 5s
+gh306-registry-bidirectional.sh rc=0 3s
+relay-pkg-freshness.sh rc=0 1s
+relay-review-once.sh rc=0 10s
+relay-escalation-not-stall.sh rc=0 4s
+gh115-round-cap.sh rc=0 11s
+gh204-sed-portability.sh rc=0 1s
+gh372-escalation-log-tail.sh rc=0 4s
+gh371-interrupt-snapshot.sh rc=0 2s
+gh384-crash-recovery.sh rc=0 1s
+gh438-removal-is-progress.sh rc=0 8s
+lane-attempt-cap.sh rc=0 1s
+gh509-gate-evidence.sh rc=0 2s
+archive-telemetry.sh rc=0 3s
+gh280-jog-marathon-adapter.sh rc=0 275s
+jog-queue.sh rc=0 8s
+gh681-reviewer-probe-rules.sh rc=0 3s
+marathon-drive.sh rc=0 171s
+DONE

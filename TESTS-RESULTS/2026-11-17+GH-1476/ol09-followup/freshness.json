@@ -1,0 +1,30 @@
+{
+  "development": "88df7852cca000b712944d76dd05909fc1ffecae",
+  "policy_head": "2e22cce06edaa1a4f0a58b85cff9e23ab62a18af",
+  "files": [
+    {
+      "path": "skills/2-daily/merge-cleanup/SKILL.md",
+      "live_sha256": "8b8c203ab9d54c58ac2ace4b856b0dce9336af3553d58c270ff5f58202e50c1f",
+      "branch_sha256": "4e0f19de712f5fa0a41633de8152992e90ea562dcf9369482cdead8c62af4e4b",
+      "identical": false
+    },
+    {
+      "path": "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "live_sha256": "6ccb850d9b0a208ba1ce85ca732f7e130d03609b33daea5a017bc9b4c066524a",
+      "branch_sha256": "0e42e0dcac2b9d440bb52be34b17c3d03881307c5cedcc71477282bee509ec79",
+      "identical": false
+    },
+    {
+      "path": "PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md",
+      "live_sha256": "114d82993c866ecf9c31656f1704d146b4ed63e4b00ba026e2205ee6e3c18a54",
+      "branch_sha256": "114d82993c866ecf9c31656f1704d146b4ed63e4b00ba026e2205ee6e3c18a54",
+      "identical": true
+    },
+    {
+      "path": "utils/py/relay_drive.py",
+      "live_sha256": "be24546256b55d3a05c6b0561c164ec9374bc9c1df1364bb2b60b0422c7add0e",
+      "branch_sha256": "a85a894e80947668dd396eb183513700f98bc688b93c18e3eac9b8f099728655",
+      "identical": false
+    }
+  ]
+}
