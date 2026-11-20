@@ -7,6 +7,36 @@
   and reported `0 ok, 0 drifted` with exit 0. Flat-layout results are unchanged. No new suite (GH-831).
   Evidence: `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md`.
 
+## 2026-11-16 — GH-1506: report timeout observations without claiming causes
+
+Agy timeout messages now describe TTY, lock-named-file and socket observations without inferring a wait. File activity includes an explicit log/scratch caveat and no recommendation to increase budgets; its legacy reason code remains compatible. Relay dirty-file snapshots are labelled worktree state. Timeout/idle thresholds, sampling, exit codes and process-group cleanup are unchanged. Existing output assertions updated; no new suites. Verification: `TESTS-RESULTS/2026-11-16+GH-1506/`.
+
+## 2026-11-19 — GH-1527: kickstart `build_queue.py` builds the run queue in one command
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` prints a kickstart run record's Authority,
+  Queue and Needs-operator sections from `pr_minder.py --json` plus one `gh pr list` (author, links,
+  raw `mergeable`) and `gh issue list` (open issues in a `--since-days` window). Ordering is a
+  closed first-match list; held, others', decision, other-session and unclassified items go to
+  Needs-operator. Saved inputs (`--prs-json`, `--pr-meta-json`, `--issues-json`) with `--as-of`
+  replay byte-identically. Read-only; writes only `--out`.
+- `skills/1-hourly/kickstart/SKILL.md`: new parent step 2 (build the queue, record the grant in the
+  run record, then dispatch) with the closed ordering list; later parent steps renumbered.
+- `skills/2-daily/pr-minder/scripts/pr_minder.py`: new `--no-conflict-files` flag skips the
+  conflicting-file lookup (`git fetch` + `merge-tree --write-tree`), so build_queue's live run writes
+  nothing to the checkout. Default behaviour unchanged.
+- No new test suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1527/`.
+
+## 2026-11-19 — GH-1518: start-task runs the full gate once, at push
+
+- `/start-task` now runs `ci-local.sh --fast` on the final approved commit and lets the pre-push hook run
+  the full `./validate.sh` suite as the single full-gate run. Before, a full `ci-local.sh` run was followed
+  by the same suite again at push (about 13 minutes extra per code PR). `utils/py/gate_receipt.py` is
+  unchanged; the operator chose the instruction change over receipt reuse.
+- The hand-off to the hook applies only when `bash githooks/install.sh --check` passes and the push is the
+  branch's first, so the hook classifies the whole PR diff. Otherwise (no hook installed, or the branch is
+  already on the remote and the pushed range could route `docs`), run full `./validate.sh` once on the final
+  commit before pushing; its receipt lets the hook skip the second run.
+
 ## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
 
 - `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.

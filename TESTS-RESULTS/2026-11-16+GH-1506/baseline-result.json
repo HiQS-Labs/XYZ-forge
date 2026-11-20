@@ -1,0 +1,44 @@
+{
+  "scope": "component reproduction: exact AST-extracted probe, imported classifier with controlled CPU samples, real git status; NOT full agy-turn CLI",
+  "source_head": "0d1dc0fe8395b4f0fc58280fc32b86d4957d47d9",
+  "results": [
+    {
+      "trial": 1,
+      "benign_open_file_probe": [
+        "lock",
+        "the process tree held a .lock file open (e.g. a git index or harness driver lock) \u2014 it was waiting on a lock held by someone else, not working."
+      ],
+      "no_log_control": [
+        "timeout-unclassified",
+        "live sampling never established a safe idle window for the network probe [cpu=0.00s/s, samples=2, worktree-progress=no]"
+      ],
+      "log_only_classification": [
+        "timeout-slow-but-progressing",
+        "the agent was writing files but did not finish \u2014 genuinely slow; raising the turn budget is the appropriate response. [cpu=0.00s/s, samples=2, worktree-progress=yes]"
+      ],
+      "unchanged_dirty_tree_counts": [
+        2,
+        2
+      ]
+    },
+    {
+      "trial": 2,
+      "benign_open_file_probe": [
+        "lock",
+        "the process tree held a .lock file open (e.g. a git index or harness driver lock) \u2014 it was waiting on a lock held by someone else, not working."
+      ],
+      "no_log_control": [
+        "timeout-unclassified",
+        "live sampling never established a safe idle window for the network probe [cpu=0.00s/s, samples=2, worktree-progress=no]"
+      ],
+      "log_only_classification": [
+        "timeout-slow-but-progressing",
+        "the agent was writing files but did not finish \u2014 genuinely slow; raising the turn budget is the appropriate response. [cpu=0.00s/s, samples=2, worktree-progress=yes]"
+      ],
+      "unchanged_dirty_tree_counts": [
+        2,
+        2
+      ]
+    }
+  ]
+}

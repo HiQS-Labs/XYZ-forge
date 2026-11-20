@@ -7,7 +7,7 @@
 # or a hung network call". The fix has two halves, both pinned here:
 #   1. agy-turn.py provisions a pty for the turn by default (AGY_PTY=0 restores the pipe path).
 #   2. On an idle/wall kill it runs _probe_idle_blocker BEFORE signalling and emits an
-#      "idle-blocker attribution: blocker=<tty|lock|network|unknown>" block to stderr + transcript.
+#      "timeout observation: category=<tty|lock|network|unknown>" block to stderr + transcript.
 #
 # Drives the real shim with a stub `agy` (same shape as test/agy-turn.sh) for the e2e cases, and
 # imports the module directly for the lsof-based blocker branches (a live network hang is not
@@ -83,10 +83,10 @@ AGY_PTY=0 RELAY_TURN_IDLE_S=4 RELAY_DIAG_INTERVAL_S=1 RELAY_TURN_TIMEOUT_S=40 \
 bash "$SHIM" >/dev/null 2>"$err2"; rc=$?
 [ "$rc" -eq 7 ] && pass "idle stall (pipe mode): watchdog kills at exit 7" \
   || fail "idle stall: expected exit 7, got $rc"
-grep -q "idle-blocker attribution: blocker=tty" "$err2" \
+grep -q "timeout observation: category=tty" "$err2" \
   && pass "idle stall: stderr attribution block names blocker=tty" \
   || fail "idle stall: no blocker=tty attribution block on stderr"
-grep -q "\[GH-114 idle-blocker\] blocker=tty" "$log2" \
+grep -q "\[GH-114 timeout observation\] category=tty" "$log2" \
   && pass "idle stall: the transcript carries the same attribution block" \
   || fail "idle stall: transcript missing the attribution block"
 
