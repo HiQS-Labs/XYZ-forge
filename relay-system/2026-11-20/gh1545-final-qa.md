@@ -70,4 +70,13 @@ No blocking defect found in the reviewed template change. The retained patch cov
 swept file: yes
 VERDICT: PASS
 
+
+### Attestation · relay-drive — 2026-11-20T07:59:27Z
+task: RELAY-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 22e5605c0020875dd7957c1910b412caf5f47e4a
+added-range: 7185+3149
+added-sha256: 064775240bb7fb501c013fb970f09d3ff0c549e53697514cb448fb166c76859f
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
