@@ -209,4 +209,13 @@ VERDICT: PASS
 Basis: F1–F3 remain resolved and the concrete reproducible procedure plus retained execution results now satisfy F4; no remaining blocking finding.
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-20T06:57:07Z
+task: RELAY-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: b7773aa56e715936d297dbae72155f4dfb363452
+added-range: 25948+4033
+added-sha256: 665e3edda4ee47b9fd984ca7492cbda77a656ef87d6e0a8ceaedaf7fb65170e4
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
