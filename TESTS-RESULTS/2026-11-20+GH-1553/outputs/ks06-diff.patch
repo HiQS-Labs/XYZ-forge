@@ -1,0 +1,127 @@
+diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
+index 7269eaac..96dc6b4a 100644
+--- a/skills/1-hourly/kickstart/SKILL.md
++++ b/skills/1-hourly/kickstart/SKILL.md
+@@ -127,6 +127,10 @@ contract rather than ad-hoc regexes or unlocked appends.
+ - **Subcommands (`run_record.py`):**
+   - `validate <record> [--require-landing-clone] [--json]` — validates v1 grammar and reports
+     `unresolved_amendments` and `escalated_amendments`.
++  - `check-amendments <record> [--require-landing-clone] [--json]` — strictly read-only pre-landing
++    and on-resume gate; exits `0` ONLY when the record parses cleanly and zero unresolved entries
++    remain across `OPERATOR_AMENDMENT:`, `PARENT_NOTE:`, and `INTERVENTION:` (exits `2` on any
++    pending/escalated entry or parse error).
+   - `append <record> --kind <...> ...` — acquires a persistent sibling lock (`<record>.lock`),
+     reads and validates the complete candidate record inside the lock, then writes atomically
+     via temp file + `fsync` + `os.replace`.
+@@ -136,6 +140,32 @@ contract rather than ad-hoc regexes or unlocked appends.
+     commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
+     non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
+ 
++### Authoritative Amendment Enforcement (KS-06, U2/U11/U12)
++- **Single Authoritative Channel:** The run record is the sole authoritative channel for
++  mid-run amendments (`OPERATOR_AMENDMENT:` citing the operator turn/comment/decision,
++  `PARENT_NOTE:`, and `INTERVENTION:`). Thread or chat messages are at most wake-up signals
++  and NEVER satisfy, clear, or supersede a run-record amendment.
++- **Explicit Disposition Required:** Every declared entry across all three prefixes carries a
++  stable ID and MUST reach an explicit disposition in the run record:
++  - `applied` — names the concrete action/artifact taken,
++  - `superseded` — names a later declared amendment ID (which itself must reach a terminal
++    disposition before the global amendment check clears), or
++  - `escalated` — explicitly holds the run (remains blocking until resolved).
++- **Mandatory Pre-Landing & On-Resume Gate:** Before every landing and at every session resume,
++  run `run_record.py check-amendments <record>` (or `kickstart_status.py`). Any non-zero exit
++  (exit `2`) blocks all landings and unrelated work until every unresolved entry is dispositioned.
++  Append `APPLIED: <ID> → <disposition> <action/artifact>` BEFORE executing the affected action.
++- **Two Crash-Window Recovery Rules on Resume:**
++  1. *Window A (crash after chat/wake acknowledgement, before `APPLIED:` is persisted):*
++     `run_record.py check-amendments` exits `2` on resume and blocks landings and unrelated work
++     until a valid disposition is persisted to the run record.
++  2. *Window B (crash after `APPLIED: <ID> → applied <action/artifact>` is persisted, before the
++     affected action's external effect completes):* on resume, before advancing unrelated work,
++     reconcile the recorded action/artifact against actual observable state (remote PR/issue state,
++     git ref, or saved receipt) per Transition 4 step 3: adopt if verified complete; execute before
++     unrelated work if provably unstarted and safe; HOLD without repeating external effects if the
++     outcome is uncertain.
++
+ ---
+ 
+ ## 2. Daily-Goal Intake and Preparation Boundary
+diff --git a/skills/1-hourly/kickstart/scripts/run_record.py b/skills/1-hourly/kickstart/scripts/run_record.py
+index 83ad7d7e..8e43f458 100755
+--- a/skills/1-hourly/kickstart/scripts/run_record.py
++++ b/skills/1-hourly/kickstart/scripts/run_record.py
+@@ -177,18 +177,14 @@ def parse_record(text: str, *, require_landing_clone: bool = False) -> dict[str,
+                 continue
+ 
+             entry = {"kind": kind, "id": ev_id, "ts": ts, "text": body, "line_no": line_no}
++            if ev_id in amendment_by_id:
++                errors.append(f"line {line_no}: duplicate {kind} ID {ev_id!r} (already declared)")
++                continue
++            amendment_by_id[ev_id] = entry
++            amendments.append(entry)
+             if kind == "INTERVENTION":
+-                if ev_id in intervention_ids:
+-                    errors.append(f"line {line_no}: duplicate INTERVENTION ID {ev_id!r}")
+-                    continue
+                 intervention_ids.add(ev_id)
+                 interventions.append(entry)
+-            else:
+-                if ev_id in amendment_by_id:
+-                    errors.append(f"line {line_no}: duplicate amendment ID {ev_id!r}")
+-                    continue
+-                amendment_by_id[ev_id] = entry
+-                amendments.append(entry)
+ 
+         elif kind == "APPLIED":
+             m_ap = APPLIED_SPLIT_RE.match(payload)
+@@ -660,6 +656,14 @@ def main(argv: list[str] | None = None) -> int:
+     p_val.add_argument("--require-landing-clone", action="store_true")
+     p_val.add_argument("--json", action="store_true", dest="as_json")
+ 
++    p_chk = sub.add_parser(
++        "check-amendments",
++        help="strictly read-only check: exit 0 iff record is valid and zero unresolved amendments/interventions remain (exit 2 otherwise)",
++    )
++    p_chk.add_argument("record", help="path to run record file")
++    p_chk.add_argument("--require-landing-clone", action="store_true")
++    p_chk.add_argument("--json", action="store_true", dest="as_json")
++
+     p_app = sub.add_parser("append", help="atomically validate and append one v1 event line")
+     p_app.add_argument("record", help="path to run record file")
+     p_app.add_argument("--kind", choices=["operator-amendment", "parent-note", "intervention", "applied", "gate"])
+@@ -711,6 +715,35 @@ def main(argv: list[str] | None = None) -> int:
+                         sys.stderr.write(f"run_record: {err}\n")
+             return 0 if parsed["valid"] else 1
+ 
++        if args.cmd == "check-amendments":
++            rec = Path(args.record)
++            if not rec.is_file():
++                sys.stderr.write(f"run_record: file not found: {rec}\n")
++                return 2
++            parsed = parse_record(rec.read_text(encoding="utf-8"), require_landing_clone=args.require_landing_clone)
++            unresolved = parsed["unresolved_amendments"]
++            ok = parsed["valid"] and len(unresolved) == 0
++            if args.as_json:
++                payload = {
++                    "ok": ok,
++                    "valid": parsed["valid"],
++                    "errors": parsed["errors"],
++                    "unresolved_amendments": unresolved,
++                    "escalated_amendments": parsed["escalated_amendments"],
++                }
++                print(json.dumps(payload, indent=2, sort_keys=True))
++            else:
++                if ok:
++                    print(f"OK amendments={len(parsed['amendments'])} unresolved=0")
++                else:
++                    for err in parsed["errors"]:
++                        sys.stderr.write(f"run_record: parse error: {err}\n")
++                    for item in unresolved:
++                        sys.stderr.write(
++                            f"run_record: unresolved {item['kind']} {item['id']} (state={item['state']})\n"
++                        )
++            return 0 if ok else 2
++
+         if args.cmd == "append":
+             if bool(args.line) == bool(args.kind):
+                 sys.stderr.write("run_record: specify exactly one of --kind or --line\n")

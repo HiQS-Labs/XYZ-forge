@@ -1,0 +1,2 @@
+PASS Control 1 (03:12Z #1495/#1496 replay): unapplied OA-0312 blocked rc=2 (read-only, no .lock created); after APPLIED disposition -> rc=0 (OK amendments=1 unresolved=0)
+PASS Control 2 (3 prefixes + Window A + escalated + superseded chain + cross-prefix ID uniqueness): Window A blocked all 4 IDs (rc=2); interventions list preserved (['I-1']); escalated I-1 stayed blocking (rc=2); PN-1 superseded by PN-2 stayed blocking until PN-2 resolved (rc=2 -> rc=0: OK amendments=4 unresolved=0); cross-prefix duplicate INTERVENTION ID OA-1 rejected (rc=1)
