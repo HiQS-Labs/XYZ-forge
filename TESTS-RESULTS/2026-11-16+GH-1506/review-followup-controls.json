@@ -1,0 +1,9 @@
+{
+  "runtime_nonstring_ast_unchanged": true,
+  "regular_tcp_filename": [
+    "network",
+    "the open-file listing contains tcp or udp; this does not establish sockets, a stalled request, waiting, or inactivity."
+  ],
+  "baseline-repro.py_dirty_refusal": true,
+  "repro.py_dirty_refusal": true
+}

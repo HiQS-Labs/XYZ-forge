@@ -1,0 +1,7 @@
+== test: gh370-progress-telemetry ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh370-progress-telemetry.XXXXXX.nsUxpCGmW3
+  PASS: fixture relay completes successfully
+  PASS: progress telemetry identifies the non-isolated main-tree fallback
+  PASS: progress telemetry records the fixture worktree's changed-file count
+  PASS: Python supervisor change site retains the GH-370 preflight marker
+  gh370-progress-telemetry: 4 pass, 0 fail

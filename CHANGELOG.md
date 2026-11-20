@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-16 — GH-1506: report timeout observations without claiming causes
+
+Agy timeout messages now describe TTY, lock-named-file and socket observations without inferring a wait. File activity includes an explicit log/scratch caveat and no recommendation to increase budgets; its legacy reason code remains compatible. Relay dirty-file snapshots are labelled worktree state. Timeout/idle thresholds, sampling, exit codes and process-group cleanup are unchanged. Existing output assertions updated; no new suites. Verification: `TESTS-RESULTS/2026-11-16+GH-1506/`.
+
 ## 2026-11-19 — GH-1527: kickstart `build_queue.py` builds the run queue in one command
 
 - `skills/1-hourly/kickstart/scripts/build_queue.py` prints a kickstart run record's Authority,

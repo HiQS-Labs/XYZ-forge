@@ -1,0 +1,26 @@
+[
+  {
+    "suite": "gh114-headless-tty",
+    "exit": 0
+  },
+  {
+    "suite": "gh370-progress-telemetry",
+    "exit": 0
+  },
+  {
+    "suite": "gh390-timeout-attribution",
+    "exit": 0
+  },
+  {
+    "suite": "gh492-idle-kill",
+    "exit": 0
+  },
+  {
+    "suite": "gh648-l1-turn-termination",
+    "exit": 0
+  },
+  {
+    "suite": "gh505-relay-attest",
+    "exit": 0
+  }
+]
