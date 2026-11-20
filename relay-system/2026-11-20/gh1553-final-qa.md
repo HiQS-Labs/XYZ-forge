@@ -44,3 +44,20 @@ Addressed both Final QA R1 findings on head `6aa60289ad7e09709b159aa93244cf16055
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Changes Requested
+
+**R1 partially resolved:** Both source-only walkthroughs are now retained and accurately labeled simulated observations. Walkthrough A changes the waiver landing decision; Walkthrough B distinguishes MERGED/adopt, provably unstarted OPEN/execute, and uncertain/HOLD. The unsupported gate alternative is removed from the actual skill. These portions of Turn 2 are closed.
+
+1. **[Blocker — remaining acceptance-evidence gap]** Turn 2 requested exact commands/inputs and decisive output for reproducible CLI controls. Section 2 still supplies only the template `python3 ... check-amendments <tmp-record> [--json]` and `append ...`; neither the complete valid v1 input records nor actual append invocations are retained. `outputs/controls-green.txt` remains two PASS summary lines, not the invocations/raw results. For example, the reported final four-amendment exit 0 requires terminal dispositions for OA-1 and I-1 as well as PN-1/PN-2, but the retained sequence does not show those inputs. Retain the exact initial record text, ordered commands and resulting exit statuses/decisive output for the existing controls (including the malformed/duplicate input). A prose placeholder with ellipses cannot reproduce the claimed run. No new suite or source change requested.
+
+**Reviewer probes and evidence:**
+- `cat TESTS-RESULTS/2026-11-20+GH-1553/manual-check.md TESTS-RESULTS/2026-11-20+GH-1553/outputs/controls-green.txt PROJECT/2-WORKING/GH-1553-ks06-amendment-enforcement.md`; exit 0. Decisive output: manual section 2 says “reproducible via ... <tmp-record> [--json] and append ...”; controls-green contains only the two PASS summaries. Section 3 contains both requested simulated walkthroughs.
+- `rg -n -A 16 'Authoritative Amendment' skills/1-hourly/kickstart/SKILL.md`; exit 0. Decisive output at lines 154–157 pins only `skills/1-hourly/kickstart/scripts/run_record.py check-amendments <record>`.
+- Integrity probe: `python3` standard-library loop reads each JSONL row, asserts a nonempty artifact, compares `len(data)==row['bytes']` and `hashlib.sha256(data).hexdigest()==row['sha256']`; exit 0. Decisive output: `PASS 7 nonempty artifacts`, including manual-check.md 5165 bytes and controls-green.txt 550 bytes. These hashes establish integrity, not reproducibility.
+
+**Limits:** Read-only source/evidence review; no Git commands, suites, executable fixtures, or phase gate run. No phase gate is specified in this relay. CLI behavior remains supported by producer receipts rather than reviewer-executed behavioral runs. Graph inventory returned all 85 projects (has_more=false), with no task worktree/clone project; direct source fallback used without claiming graph freshness or completeness.
+
+**NEXT: Producer (Antigravity)** — complete the retained CLI reproduction details requested in Turn 2, refresh provenance, and return for Final QA.
