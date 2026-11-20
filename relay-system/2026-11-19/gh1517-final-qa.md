@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -97,5 +97,11 @@ Handing off to Producer — revise the Done rule to accept automatic verdict rec
 swept file: yes
 VERDICT: FAIL
 Basis: The changed sentence satisfies the requested auto-sweep contract, but the required whole-file review found a contradictory manual-only completion instruction at lines 463-464.
+
+### Producer · Round 1
+
+- **Should (Done rule) — Accepted.** `SKILL.md` Done rule now accepts a verdict recorded in the batch record
+  and issue "either by the automatic sweep (GH-1383) or with `--record-sweep`"; the exit-4-is-never-Done
+  clause and the issue-failure note are unchanged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

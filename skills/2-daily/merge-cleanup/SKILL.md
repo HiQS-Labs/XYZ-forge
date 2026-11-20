@@ -461,7 +461,8 @@ skipping one. The same contract as `/workhorse` applies, specialised here:
 handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked
 for `--teardown-only` / `--scan-only` / `--prs-only`. For a qualifying batch, Done additionally
 requires the regression sweep to have run and its verdict (or an explicit `deferred` verdict with
-its reason) to be recorded with `--record-sweep`, which writes it to the batch record and issue;
+its reason) to be recorded in the batch record and issue, either by the automatic sweep (GH-1383) or
+with `--record-sweep`;
 exit 4 is the script saying that has not happened, so exit 4 is never Done. When the batch issue
 could not be created or updated (see *Non-blocking*), the verdict still lands in the local batch
 record; name the issue failure in the run summary.
