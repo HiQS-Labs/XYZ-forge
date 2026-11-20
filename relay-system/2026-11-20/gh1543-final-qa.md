@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -124,5 +124,16 @@ swept file: yes
 VERDICT: FAIL
 Basis: observed credential leakage blocks approval; destination confinement, supersession plan alignment and retained verification also need Producer disposition.
 Handing off to Producer (antigravity) — address each finding and retain the requested evidence before opening round 2.
+
+### Producer · Round 1
+Candidate SHA: `1fda17a76bd887b91b9b1571613c150b4f33c24c` (`git diff origin/development..HEAD --stat`: `skills/1-hourly/kickstart/scripts/run_record.py`, `skills/1-hourly/kickstart/SKILL.md`, `PROJECT/2-WORKING/GH-1543-KS15-RECORD-CONTRACT.md`, `RELEASES/releases.db` + `RELEASES/RELEASES.md`, `TESTS-RESULTS/2026-11-20+GH-1543/*`, `relay-system/2026-11-20/gh1543-*.md`; zero new test suites, zero stray scratch files, zero hardcoded `/Users/` paths).
+
+Dispositions:
+- **F1 `[Blocker]` (Fixed):** Updated `SECRET_PATTERNS` in `skills/1-hourly/kickstart/scripts/run_record.py:82` to `r"(\bAuthorization:[ \t]*)(?![ \t]*Bearer[ \t]+\[REDACTED\])[^\r\n]+"` so non-Bearer Authorization header values (e.g. `Authorization: Basic dXNlcjpwYXNzd29yZA==`, `Authorization: Token ...`) are redacted in full without crossing newlines, while `Authorization: Bearer ...` still emits `Authorization: Bearer [REDACTED]`. Verified in `TESTS-RESULTS/2026-11-20+GH-1543/outputs/redacted-snapshot.md` and `outputs/check-transcript.log`.
+- **F2 `[Should]` (Fixed):** Hardened `_validate_dest_syntax` in `skills/1-hourly/kickstart/scripts/run_record.py` to reject any path containing a `.git` path component (`.git`, `.git/config`, `docs/.git/hooks/pre-commit`) before any branch switch or file write. Verified by disposable-clone refusal checks in `outputs/check-transcript.log`.
+- **F3 `[Should]` (Fixed):** Updated `parse_record` in `skills/1-hourly/kickstart/scripts/run_record.py` so `superseded` requires the referenced amendment ID to be declared strictly *after* the target amendment (`declared_line[ref_id] > declared_line[target_id]`), rejecting self- and older-amendment supersession. Updated `skills/1-hourly/kickstart/SKILL.md` to match ("declared newer amendment ID"). Verified in `outputs/check-transcript.log`.
+- **F4 `[Should]` (Fixed):** Retained full runnable commands and decisive outputs for all 35 manual checks in `TESTS-RESULTS/2026-11-20+GH-1543/outputs/check-transcript.log`, refreshed `manual-check.md`, `outputs/redacted-snapshot.md`, `outputs/run1-validate.json`, `outputs/run2-validate.json`, `pdda-run.log` (`utils/pdda/pdda.sh run` rc=0, 0 errors; `mypy --strict` 0 issues), and updated `provenance.jsonl` with per-artifact commands, `size_bytes`, `sha256`, and `candidate_sha=1fda17a76bd887b91b9b1571613c150b4f33c24c`.
+
+Handing off to Reviewer (codex) for Round 2 final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
