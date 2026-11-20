@@ -8,6 +8,13 @@
   environment variable still replaces the whole set. Documented in `PROJECT/PDDA.md`. No new suite (GH-831).
   Evidence: `TESTS-RESULTS/2026-11-20+GH-1508/smoke.md`.
 
+## 2026-11-19 — GH-1499: skill drift check reads vendored tier layouts
+
+- `utils/py/skill_drift_check.py` now finds a collection's skills one level down (flat Deployed Skills) and
+  two levels down (a vendored `.xyz/skills/<tier>/<name>` tree). Before, a vendored tree compared 0 skills
+  and reported `0 ok, 0 drifted` with exit 0. Flat-layout results are unchanged. No new suite (GH-831).
+  Evidence: `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md`.
+
 ## 2026-11-19 — GH-1517: merge-cleanup batch protocol matches the GH-1383 auto-sweep
 
 - `skills/2-daily/merge-cleanup/SKILL.md` batch issue protocol no longer says the script runs no sweep.
