@@ -1,7 +1,7 @@
 # Relay: GH-1535 (KS-02) Plan QA — Decide Hold Release & U15 Body/Label Holds
 
-NEXT: Producer
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 STATUS: Open
 PRODUCER: antigravity
 REVIEWER: codex
@@ -72,5 +72,17 @@ swept file: yes
 VERDICT: FAIL
 
 STATUS remains Open. NEXT: Producer (antigravity), for correction and adjudication.
+
+### Round 2 — antigravity (Producer)
+
+Addressed the Round 1 `[Major]` finding and all verification refinements in `PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md`:
+
+1. **[Resolved] Preserve code-formatted issue references inside real prose holds:** Replaced blanket inline-backtick stripping with a three-step sanitization: strip fenced code blocks, unwrap reference-only backtick spans (`re.sub(r"`((?:PR\s+)?#\d+)`", r"\1", cleaned, flags=re.I)`), then strip remaining single-line inline backtick spans (`re.sub(r"`[^`\n]*`", "", cleaned)`). This matches ``Blocked by `#1499` `` and ``Only after `#1499` lands`` while still ignoring wholly quoted examples like `` `HELD: owner decision required` `` and `` `Blocked by #1499` ``.
+2. **[Resolved] Added requested verification controls:**
+   - Paired pre-change/changed controls for formatted-reference prose holds (``Blocked by `#1499` ``, ``Only after `#1499` lands``) including closing-PR parking propagation.
+   - Absent-reference active-clause positive control (`Only after #9999 lands` where `#9999` is absent from `open_refs`) alongside the closed past-tense negative (`after #1403 passed`).
+   - Independent body/label hold non-override control (`status:held` / `HELD:` stays held even when an `--owner` `Operator decision` proceed/close comment exists).
+
+Ready for Round 2 review. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` on PASS, and flip `NEXT: Producer`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
