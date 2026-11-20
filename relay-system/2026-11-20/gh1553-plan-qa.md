@@ -1,7 +1,7 @@
 # Relay: GH-1553 (KS-06) Plan QA — Amendments Are Applied, Not Just Acknowledged
 
 STATUS: Open
-NEXT: Reviewer
+NEXT: antigravity
 ROUND: 1 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -21,3 +21,36 @@ Key points:
 - Paired red/green manual controls for the 03:12Z amendment (#1495/#1496) and crash-after-acknowledgement resume block.
 
 If the plan is sound, set `STATUS: Approved` and `NEXT: Done`.
+
+## Reviewer Round 1 — codex
+
+Verdict: **Needs changes**. STATUS remains Open. The small read-only subcommand is a reasonable reuse boundary, but the proposed predicate and crash protocol do not yet establish the stated acceptance criteria.
+
+1. **[Blocker] Include INTERVENTION in disposition resolution, not just CLI wiring.** Plan lines 24–26 reuse `parse_record().unresolved_amendments`, while the objective and line 32 include INTERVENTION. In the seeded parser, INTERVENTION goes into a separate list, never `amendment_by_id`; unresolved computation iterates only amendments, and APPLIED for an intervention is rejected as undeclared. A record containing only an unresolved intervention therefore meets the proposed success predicate. Explicitly plan the minimal parser/ID-resolution compatibility change and paired controls for all three prefixes, including intervention escalation and terminal resolution.
+
+2. **[Blocker] Distinguish durable action intent from completed application on resume.** Plan lines 33–34 append terminal `applied` BEFORE execution, but only test a crash before that append. A crash after the append and before the action leaves zero unresolved entries and permits unrelated work despite no application. Issue #1541 KS-06 does require recording before the affected action; retain that ordering while specifying how resume reconciles the recorded action/artifact with observed completion, holding uncertain outcomes without repeating external effects. Add this precise crash-window control. No new runner or suite is needed.
+
+**Probe evidence for 1 and 2:** narrow in-memory parser probe, exit **0**; no gates or executable fixtures ran. Command:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import runpy,json
+p=runpy.run_path("skills/1-hourly/kickstart/scripts/run_record.py")["parse_record"]
+for name,body in [("intervention","INTERVENTION: I-1 2026-11-20T03:12Z must pause"),("pre-action-applied","OPERATOR_AMENDMENT: OA-1 2026-11-20T03:12Z operator turn requires action\nAPPLIED: OA-1 -> applied will execute action")]:
+ r=p("RUN-RECORD-VERSION: 1\n"+body+"\n")
+ print(name,json.dumps({k:r[k] for k in ("valid","unresolved_amendments","errors")}))
+PYPROBE
+```
+
+Decisive output:
+
+```text
+intervention {"valid": true, "unresolved_amendments": [], "errors": []}
+pre-action-applied {"valid": true, "unresolved_amendments": [], "errors": []}
+```
+
+3. **[Should] Make the paired replay demonstrate changed execution decisions.** Plan lines 37–38 currently end at appending a disposition and a green parser result. #1541 R2 requires a discriminating check through real work or the real entry point; its KS-06 control specifically observes #1495/#1496 waiting. Retain a source-only runbook replay if appropriate, clearly label it instruction evidence, and record the old wait versus changed permitted action on the saved amendment inputs, plus refusal of unrelated work on resume. Merely invoking a previously nonexistent subcommand and clearing its own input is insufficient to claim the historical behavior fixed. Superseding an amendment must also resolve the newer amendment before expecting global exit 0.
+
+Scope/evidence: read the seeded plan, parser and kickstart skill directly; `gh issue view 1541 --repo HiQS-Labs/XYZ-forge --json body` exited 0 and confirmed KS-06/R2. Graph inventory has no project for this worktree; nearest Forge index is generation 2026-11-18T19:39:07Z, with missing freshness for all three reviewed paths, so conclusions use direct source and the probe rather than graph completeness. Implementation gates remain unrun and are not inferred to run later. Only this relay file was edited.
