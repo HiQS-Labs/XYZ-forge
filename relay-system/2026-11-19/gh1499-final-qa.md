@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,45 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis; set STATUS Approve
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+- [Blocker] Flat collections can now hide real drift. At `utils/py/skill_drift_check.py:41-42`, globally sorting both depths lets `collection/zeta/alpha/SKILL.md` replace `collection/alpha/SKILL.md`; the comment that depth one wins is false. Ignore depth-two documents beneath a directory that already has its own SKILL.md, and ensure direct skills take precedence over tier candidates.
+  Observed input: canonical `alpha/SKILL.md="fresh"`; flat collection `alpha/SKILL.md="stale"`, `zeta/SKILL.md="zeta"`, `zeta/alpha/SKILL.md="fresh"`. The nested document masks the stale real alpha.
+  Affected scope: depth-two SKILL.md files below a flat skill directory, particularly names colliding with direct skills.
+  Falsifier: this input must report alpha drifted; a genuine `collection/1-hourly/alpha/SKILL.md` without `collection/1-hourly/SKILL.md` must still compare alpha. Existing flat results must remain unchanged.
+  Probe command (exit 0; Python bytecode disabled; inputs confined to scratch):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 -B - <<'PROBE'
+  import importlib.util, tempfile
+  from pathlib import Path
+  spec=importlib.util.spec_from_file_location("drift", "utils/py/skill_drift_check.py")
+  m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+  with tempfile.TemporaryDirectory(dir=".relay-scratch/tmp") as d:
+      root=Path(d)
+      for rel, content in {"canonical/alpha/SKILL.md":"fresh","collection/alpha/SKILL.md":"stale","collection/zeta/SKILL.md":"zeta","collection/zeta/alpha/SKILL.md":"fresh"}.items():
+          p=root/rel; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(content)
+      r=m.scan(root/"canonical",root/"collection")
+      print("flat with nested alpha:", {k:[x["skill"] for x in v] for k,v in r.items()})
+      print("chosen alpha digest matches nested fresh:",r["ok"][0]["vendored_sha256"]==m._digest(root/"collection/zeta/alpha/SKILL.md"))
+      (root/"collection/zeta/alpha/SKILL.md").unlink()
+      print("same flat collection without nested document:", {k:[x["skill"] for x in v] for k,v in m.scan(root/"canonical",root/"collection").items()})
+  PROBE
+  ```
+  Decisive output:
+  ```text
+  flat with nested alpha: {'drifted': [], 'ok': ['alpha'], 'unrecognized': ['zeta']}
+  chosen alpha digest matches nested fresh: True
+  same flat collection without nested document: {'drifted': ['alpha'], 'ok': [], 'unrecognized': ['zeta']}
+  ```
+- [Pass] Tier and direct discovery are both present in the collection glob (`utils/py/skill_drift_check.py:41`). The retained smoke records the red pre-fix zero comparison and post-fix 78 comparisons (`TESTS-RESULTS/2026-11-19+GH-1499/smoke.md:8-20`), but its identical real-tree counts do not cover nested documents.
+- [Unverified — needs clone run] The existing suite is reported as seven passes at `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md:22`. I read its complete expectations; no suite was executed in this linked worktree. No approval assumes a later gate.
+- Whole-file sweep: read all 98 lines of the checker and all 22 lines of smoke, plus the existing gh660 suite. No additional pre-existing defect found in that bounded sweep. Graph coverage came from the main checkout generation 2026-11-18T19:39:07Z, not this worktree; smoke freshness was missing, so exact local source was used for every finding.
+
+swept file: yes
+VERDICT: FAIL
+Basis: the observed flat-layout regression violates the Definition of Done and can turn a real drift into a clean comparison.
+Handing off to Producer (claude-a) — fix flat-skill nesting/precedence and record focused evidence before the next review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
