@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -130,5 +130,50 @@ Handing off to Producer (claude-a) — fix flat-skill nesting/precedence and rec
   Fixture with your falsifier (`coll/alpha` drifted, `coll/zeta/alpha` matching): `0 ok, 1 drifted`;
   the previous candidate `ca351b11a` on the same fixture: `1 ok, 0 drifted` (red control). Real trees and
   gh660 re-run; table in `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md` "Round 2"; provenance refreshed.
+
+
+### Reviewer · Round 2
+
+- [Pass] Round 1 blocker resolved: `utils/py/skill_drift_check.py:40-45` excludes depth-two documents under a direct skill and applies `vendored_by_name.update(flat)` last. The narrow probe below reports alpha drift despite a matching nested alpha, excludes a nested extra, and preserves genuine tier discovery and direct-over-tier precedence.
+- [Pass] The retained red controls show both the original zero-comparison failure and the previous candidate hiding drift (`TESTS-RESULTS/2026-11-19+GH-1499/smoke.md:8-20,30-34`). The probe checked the nonempty smoke artifact's byte count and SHA256 against its provenance receipt; both match.
+- [Unverified — needs clone run] Existing gh660 execution remains producer-reported (`TESTS-RESULTS/2026-11-19+GH-1499/smoke.md:35`: “7 pass, 0 fail”). Read the whole suite: the revised collection lookup preserves its flat vendors, tiered canonical lookup, mutation, extras and JSON expectations. No suite or gate was executed here; approval does not assume a later gate.
+- Whole-file sweep: read all 101 checker lines and all 35 smoke lines, plus the existing gh660 suite. No additional pre-existing defect found in this bounded review. Graph coverage refers to the main checkout generation 2026-11-18T19:39:07Z, not this worktree; smoke freshness is missing. Exact local source was used throughout.
+
+Probe command (exit 0; only scratch inputs created):
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PROBE'
+import importlib.util, tempfile, hashlib, json
+from pathlib import Path
+spec=importlib.util.spec_from_file_location("drift","utils/py/skill_drift_check.py")
+m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+with tempfile.TemporaryDirectory(dir=".relay-scratch/tmp") as d:
+ r=Path(d)
+ for rel,content in {"canonical/alpha/SKILL.md":"fresh","flat/alpha/SKILL.md":"stale","flat/zeta/SKILL.md":"zeta","flat/zeta/alpha/SKILL.md":"fresh","flat/zeta/extra/SKILL.md":"foreign","tier/1-hourly/alpha/SKILL.md":"fresh","mixed/alpha/SKILL.md":"stale","mixed/1-hourly/alpha/SKILL.md":"fresh"}.items():
+  p=r/rel;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(content)
+ for layout in ("flat","tier","mixed"):
+  result=m.scan(r/"canonical",r/layout)
+  names={k:[e["skill"] for e in v] for k,v in result.items()}
+  print(layout,names)
+  assert names==({"drifted":[],"ok":["alpha"],"unrecognized":[]} if layout=="tier" else {"drifted":["alpha"],"ok":[],"unrecognized":["zeta"] if layout=="flat" else []})
+p=Path("TESTS-RESULTS/2026-11-19+GH-1499/smoke.md")
+receipt=json.loads(p.with_name("provenance.jsonl").read_text())
+assert p.stat().st_size==receipt["bytes"] and hashlib.sha256(p.read_bytes()).hexdigest()==receipt["sha256"]
+print("smoke receipt: bytes and SHA256 match")
+PROBE
+```
+Decisive output:
+```text
+flat {'drifted': ['alpha'], 'ok': [], 'unrecognized': ['zeta']}
+tier {'drifted': [], 'ok': ['alpha'], 'unrecognized': []}
+mixed {'drifted': ['alpha'], 'ok': [], 'unrecognized': []}
+smoke receipt: bytes and SHA256 match
+```
+
+swept file: yes
+VERDICT: PASS
+Basis: tier discovery meets the DoD, flat nesting no longer changes direct-skill results, and retained evidence includes red controls. No new suite requested or created; suite execution remains explicitly producer-reported.
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
