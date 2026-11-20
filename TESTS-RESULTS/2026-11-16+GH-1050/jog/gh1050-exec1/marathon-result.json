@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1050-exec1",
+  "generated_at": "2026-11-16T05:45:37Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1050",
+  "phase": "gh-1050-no-swap-false-low-swap-warning",
+  "lane": "gh-1050-no-swap-false-low-swap-warning",
+  "token": "MARATHON-GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "claude",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-dogfood-exec-2026-11-15",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1050-no-swap-false-low-swap-warning-2026-11-15",
+  "head_sha": "cca2ed21f845e3682b969baf6ff8c90b9381b624",
+  "reviewed_candidate": "cca2ed21f845e3682b969baf6ff8c90b9381b624",
+  "reviewed_head": "87c9bf9223b07731ce105a1f38df9e59b33cc51a",
+  "added_sha256": "ca2707198b5f08a577bd5e5396c70a63ff348579b3c50fc1b07342dfe6802e76",
+  "attest_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-dogfood-exec-2026-11-15/.git/relay-attest/MARATHON-GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash validate.sh --auto development",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-dogfood-exec-2026-11-15/.xyz/receipts/cca2ed21f845e3682b969baf6ff8c90b9381b624.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": 1496,
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1496",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-16T05:11:44Z",
+    "finished_at": "2026-11-16T05:45:37Z"
+  }
+}
