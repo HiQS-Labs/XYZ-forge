@@ -152,7 +152,7 @@ contract rather than ad-hoc regexes or unlocked appends.
     disposition before the global amendment check clears), or
   - `escalated` — explicitly holds the run (remains blocking until resolved).
 - **Mandatory Pre-Landing & On-Resume Gate:** Before every landing and at every session resume,
-  run `run_record.py check-amendments <record>` (or `kickstart_status.py`). Any non-zero exit
+  run `skills/1-hourly/kickstart/scripts/run_record.py check-amendments <record>`. Any non-zero exit
   (exit `2`) blocks all landings and unrelated work until every unresolved entry is dispositioned.
   Append `APPLIED: <ID> → <disposition> <action/artifact>` BEFORE executing the affected action.
 - **Two Crash-Window Recovery Rules on Resume:**
