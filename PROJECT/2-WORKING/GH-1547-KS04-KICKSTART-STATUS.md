@@ -73,10 +73,10 @@ Build `skills/1-hourly/kickstart/scripts/kickstart_status.py` (Python stdlib onl
      - `unknown`: latest canonical `final-QA` is `green` with no later `MERGED` line, but `--development-head` was not supplied (cannot prove no unseen landing occurred).
 6. **Current Run's Stop Reason Verbatim (Invocation-Attributed, Rejects Mtime-Only Shared Files, seam for KS-05):**
    - Accepts optional `--run-log <path>`, `--receipt <path>`, `--invocation-id <id>`, and `--harness-root <path>` (explicit harness root; does NOT blindly assume `--target-root` is the harness root — defaults to `--harness-root` only when passed, or checks `--escalation-file <path>` directly).
-   - **Strict attribution order (mtime alone is NEVER accepted as attribution!):**
+   - **Strict attribution order (mtime alone AND sidecar-only metadata are NEVER accepted as attribution!):**
      1. Exclusive per-run `--receipt <path>` or `--run-log <path>`: if an explicit stop diagnostic line/field exists for this run, quote it **verbatim** (`attribution: "run-receipt"` or `"run-log"`).
-     2. Shared harness-root `<harness-root>/.relay-scratch/escalation-reason` (or `--escalation-file <path>`): accepted ONLY when `--invocation-id <id>` is provided AND matching invocation provenance exists — either structured JSON/keyed lines inside the file (`invocation_id=<id>` or `"invocation_id": "<id>"`) OR a sibling metadata file `<escalation-file>.meta.json` with `"invocation_id": "<id>"`.
-     3. If a shared escalation file exists WITHOUT matching invocation provenance (including a newer file written by a different concurrent invocation after this run started!), report `stop_reason: "unknown"`, `attribution: "unattributable"`, `unattributed_shared_file_present: true` — NEVER inherit its text and NEVER infer quota or cap!
+     2. Shared harness-root `<harness-root>/.relay-scratch/escalation-reason` (or `--escalation-file <path>`): accepted ONLY when `--invocation-id <id>` is provided AND the shared file ITSELF is a single self-contained structured payload carrying BOTH matching `invocation_id == <id>` AND an explicit non-empty `reason` (either JSON object `{"invocation_id": "<id>", "reason": "<verbatim>"}` or keyed lines `invocation_id=<id>` + `reason=<verbatim>`). Sidecar-only metadata (e.g., `<escalation-file>.meta.json`) is **NEVER** accepted because a plain-text writer (like current `relay_drive.py:636-640`) can overwrite the shared file without updating any sidecar; any sidecar is ignored (and if payload `invocation_id` differs from `--invocation-id`, it is rejected).
+     3. If a shared escalation file exists without a matching self-contained `invocation_id` + `reason` payload (plain-text file, missing `--invocation-id`, newer file written by a different invocation, stale sidecar with overwritten plain-text payload, or conflicting payload `invocation_id`), report `stop_reason: "unknown"`, `attribution: "unattributable"`, `unattributed_shared_file_present: true` — NEVER inherit its text and NEVER infer quota or cap!
      4. If no stop evidence exists anywhere, report `stop_reason: "none"` (or `"unknown"` if `liveness == "confirmed-stopped"` with no recorded stop reason).
 
 ### Output Formats
@@ -111,6 +111,8 @@ Build `skills/1-hourly/kickstart/scripts/kickstart_status.py` (Python stdlib onl
 6. **Stop-reason attribution fixtures:**
    - Previous stale `cap-stalled` file (plain text, no invocation ID) → `unknown (unattributable)`
    - Different invocation writing a NEWER shared file (mtime > run start, different/missing invocation ID) → STILL `unknown (unattributable)` (mtime alone rejected!)
-   - Invocation-keyed shared file matching `--invocation-id` (or exclusive `--receipt`) → quoted verbatim
+   - Matching-A stale sidecar `.meta.json` paired with plain-text overwritten-B payload → `unknown (unattributable)` (sidecar-only rejected!)
+   - Conflicting payload `invocation_id=B` paired with matching-A sidecar `.meta.json` → `unknown (unattributable)`
+   - Single self-contained structured shared payload matching `--invocation-id` (JSON or keyed lines) and exclusive per-run `--receipt` → quoted verbatim
 7. **GH-1527 Read-Only Live Check:** live `kickstart_status.py` run with logging `git` shim on `PATH` and before/after `git show-ref`, `FETCH_HEAD` stat/sha256, `git count-objects -v` → 0 mutating git calls, all 3 snapshots byte-identical.
 8. **Static & Governance Gates:** `utils/ci-route.sh pull_request` (`route=docs`), `mypy --allow-untyped-defs --allow-incomplete-defs`, `./utils/pdda/pdda.sh run` (0 errors), zero raw `/Users/` paths, full `provenance.jsonl`.
