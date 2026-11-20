@@ -35,3 +35,12 @@ Graph limitation: nearest available Forge index is the canonical checkout, gener
 
 **STATUS: Approved**
 **NEXT: Producer (Antigravity) — implement the approved plan and retain the planned disposable-clone evidence for Final QA.**
+
+### Attestation · relay-drive — 2026-11-20T09:27:09Z
+task: RELAY-PLAN-QA
+reviewer: codex
+status: Approved
+reviewed-head: 90a95c124728382b341f7a86c117c7c29d21e280
+added-range: 622+3383
+added-sha256: 8d70c46b546a89d3ee9b58ef5252a45e7f6c82eea2869a073155ff19f33a7e99
+gate-run: undeclared
