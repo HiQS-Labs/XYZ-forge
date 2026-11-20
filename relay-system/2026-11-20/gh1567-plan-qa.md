@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-20.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -147,5 +147,45 @@ invalid-config / no-canonical-harness / valid-config branches as retained manual
 Other `[Pass]` findings acknowledged (keep the `save this harness on this Mac: ` prefix and quoting; canonical-clone condition on save targets).
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+**What this proposes:** Add the per-Mac setup remedy to the scanner refusal and show config readiness on vendored harness checks. Keep the implementation to the existing scanner, locator and skill documentation.
+
+**How the existing system works, per this document:** The scanner excludes discovery through the audited checkout and uses trusted installation/configuration channels. The locator can successfully select vendored tick while its existing save hint is restricted to non-vendored resolution.
+
+**What it's not:** The frontmatter excludes changing GH-1362 / GH-744 trust, automatic config writes, and new tests or suites. Inference from Plan steps 1–3: resolution precedence remains unchanged.
+
+**Source-backed technical validation**
+
+swept file: yes
+
+- [Pass] Reviewed the entire revised artifact; no additional pre-existing defect found. The R1 acceptance finding is addressed by Acceptance's “outside any harness ancestry”, “controlled PATH with no tick”, isolated HOME/config and cleared overrides. The recipe measures saved bytes and exact resolved tick path; it no longer infers claim verification from discovery. This matches the distinct discovery and claims contracts in `scan_clones.py:254-285,321-350`.
+- [Pass] Fix sites still match HEAD: `scan_clones.py:323` emits the bare refusal with `verified: False`; `find-harness.sh:424-431` restricts the save hint to `VENDORED=0`. Vendored live discovery tries script ancestry, config and bounded search even without XYZ_HARNESS (`find-harness.sh:303-317`). Plan step 2 correctly conditions a save target on `_canonical_clone`, while allowing the no-live-harness manual pointer; that helper requires basename and canonical origin (`find-harness.sh:32-40`).
+- [Pass] Scope preserves the trust boundary and existing writer: frontmatter excludes “Relaxing GH-1362 / GH-744” and “Auto-writing ~/.config/xyz/harness”; Plan uses only refusal/checklist output and a skill sentence. Acceptance explicitly preserves the executable save-line prefix and quoting consumed by `test/find-harness.sh:205-216`. Vendored coverage checks substrings rather than full output (`test/find-harness.sh:69-72,264-269`); the named scanner suites contain no old-refusal literal pin. Existing manual instructions already use XDG-aware config (`skills/1-hourly/relay-xyz/SKILL.md:130-135`). No second subsystem or new suite is proposed.
+- [Pass] The baseline refusal cannot meet the planned new-message assertion. Narrow AST probe below, exit 0: `resolution: None`; `baseline: {'has_claims': False, 'verified': False, 'details': 'tick binary not found'}`; `new-message assertion: False`. This measures the actual baseline function bodies with synthetic outside-harness `__file__` and a stubbed coordination-root lookup; it does not establish an end-to-end clone result.
+  ```python
+  # export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'
+  import ast, os, pathlib, shutil, typing
+  p=pathlib.Path('skills/2-daily/merge-cleanup/scripts/scan_clones.py'); t=ast.parse(p.read_text())
+  f=[n for n in t.body if isinstance(n,ast.FunctionDef) and n.name in ('_tick_binary','inspect_tick_claims')]
+  root=pathlib.Path(os.environ['TMPDIR'])/'gh1567-r2'
+  # Scratch audit/.tick directory was created beforehand, with no locks.
+  ns={'Optional':typing.Optional,'Dict':typing.Dict,'Any':typing.Any,'os':os,'Path':pathlib.Path,'__file__':'/__gh1567_copied__/scan_clones.py','TICK_BIN_ENV':'MERGE_CLEANUP_TICK_BIN','shutil':shutil,'coordination_root':lambda p:p}
+  exec(compile(ast.Module(body=f,type_ignores=[]),str(p),'exec'),ns)
+  for k in ('XYZ_HARNESS','XYZ_REPO_ROOT','MERGE_CLEANUP_TICK_BIN'): os.environ.pop(k,None)
+  os.environ.update(HOME=str(root/'home'),XDG_CONFIG_HOME=str(root/'config'),PATH=str(root/'empty-path'))
+  print('resolution:',ns['_tick_binary']());r=ns['inspect_tick_claims'](root/'audit');print('baseline:',r)
+  print('new-message assertion:',all(x in r['details'] for x in ('~/.config/xyz/harness','XYZ_HARNESS')))
+  # PY
+  ```
+  An initial probe placed synthetic `__file__` under scratch inside this checkout: own-ancestor discovery found its tick, then the incomplete probe namespace raised NameError (exit 1). The corrected probe above excludes that ancestry; no tick executable was run by either probe.
+- [Unverified — needs clone run] Actual baseline/fixed vendored checklist runs, saved-command execution, real claim verification and existing suites remain implementation acceptance work in a disposable full clone. The plan names their receipts directory; retain `provenance.jsonl` there. No phase gate is configured here and no later gate is assumed. Graph lookup was unavailable under the session's never-approval policy; validation used direct reads of the named sources.
+
+**VERDICT: PASS**
+
+**Basis:** Approve the plan, not delivery. Its bounded output changes satisfy the stated scope, and the revised acceptance procedure would reject unfixed output while proving the config remedy through saved bytes and exact resolution. No remaining blocking plan finding.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
