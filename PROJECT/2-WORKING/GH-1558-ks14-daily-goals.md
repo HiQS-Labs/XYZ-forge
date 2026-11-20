@@ -1,8 +1,8 @@
 ---
-issue: 1558
+gh_issue: 1558
 title: "kickstart(KS-14): build_queue.py --daily-goals <issue> scopes run to daily-goals issue"
 status: active
-roadmap_id: rmi-01M7W542W35G5JCV8M0WX2YA9A
+roadmap_id: rmi-01M7WV7C6MVMYPZ1C61BVYQBEQ
 parent_arc: 1541
 milestone: KS-14
 owner: antigravity

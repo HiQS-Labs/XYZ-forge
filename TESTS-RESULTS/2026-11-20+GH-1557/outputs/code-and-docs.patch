@@ -1,0 +1,293 @@
+diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
+index 1432309b6..b6c42ab0d 100644
+--- a/skills/1-hourly/kickstart/SKILL.md
++++ b/skills/1-hourly/kickstart/SKILL.md
+@@ -101,6 +101,26 @@ session and the single delegated outer-loop child session. There are never compe
+ 4. **Shared Unsafe Stops:** On shared unsafe conditions (lock contention, git safety
+    violations, ledger drift, exhausted global budget) or owner-mandated stops, halts dispatch
+    immediately, leaves a resumable checkpoint with observed evidence, and reports to parent.
++5. **Pre-Handback Final-QA Staleness Gate & Autonomous Re-Run (KS-13 / GH-1557):** Before handing
++   back on Normal Completion, the child fetches `origin/development` in `LANDING_CLONE` and queries
++   `python3 skills/1-hourly/kickstart/scripts/kickstart_status.py --record <run-record> --development-head $(git -C <LANDING_CLONE> rev-parse origin/development) --skip-prs --json`,
++   following one reconciled decision table:
++   - `handback_allowed == true` (`status == "fresh"`, or `status == "missing"` with 0 landings in
++     the run -> `handback-ready` / `handback-ready-no-landings`): proceed to handback.
++   - `rerun_required == true` (`status == "stale"` due to any landing recorded after the last
++     canonical `GATE: final-QA`, red verdict, or verified `origin/development` drift; or
++     `status == "missing"` with >=1 landings -> `rerun-final-qa` / `run-final-qa`): **autonomously**
++     run/re-run final QA (tier 1 + full disposable-clone gate on the verified `origin/development`
++     tip, backgrounded in full) **without waiting for the parent or operator to ask**. Record
++     `GATE: final-QA <tested-sha> full <Ns> green` via `run_record.py append` ONLY after both
++     checks succeed, then **re-fetch and re-verify the current `origin/development` head AFTER QA
++     completes** and re-run `kickstart_status.py` so any landing that occurred during QA cannot be
++     certified using a stale head. If the re-run fails, record `GATE: final-QA <tested-sha> full
++     <Ns> red`, keep `handback_allowed == false`, do NOT claim Normal Completion, and hand back with
++     the failure evidence within run budgets.
++   - `status == "unknown"` (`handback_allowed == false`, `rerun_required == false` ->
++     `verify-development-head`): fetch/verify live `origin/development` head and reassess; if remote
++     head verification fails, hold handback and never claim Normal Completion.
+ 
+ ### Unambiguous Landing Path & Exit-Code Handling (KS-09, U10)
+ - **Single Pinned `LANDING_CLONE:`:** The run record (`## 1a. Run Record Contract (v1)`) declares
+@@ -324,9 +344,14 @@ writes refs, `FETCH_HEAD`, objects, or locks):
+   `confirmed-stopped` requires complete 4-part ownership proof (`owner=stopped`, `lock=clear`,
+   `children=stopped`, `sessions=stopped`); log age alone NEVER yields `confirmed-stopped` and NEVER
+   authorizes `attempt_record.py finish` or redispatch.
+-- **Final-QA staleness (KS-13 seam):** reads canonical `GATE: final-QA <sha> ... green|red` and
+-  separates actual landings (`MERGED` progress lines and caller-verified `--development-head`) from
+-  non-landing task `GATE:` lines; unverified local heads report `unknown`.
++- **Final-QA staleness (KS-13 / GH-1557):** reads canonical `GATE: final-QA <sha> ... green|red`,
++  separates actual landings (`MERGED` progress lines — catching multi-SHA lines citing both `qa_sha`
++  and a new landing SHA, plus SHA-less later `MERGED` lines — and caller-verified
++  `--development-head`) from non-landing task `GATE:` lines, and emits deterministic handback fields
++  (`rerun_required`, `handback_allowed`, `latest_landing_sha`, `target_head`, `recommended_action`).
++  Handback is allowed ONLY when `handback_allowed == true` (`fresh`, or `missing` with 0 landings);
++  `stale` or `missing` with landings requires autonomous child re-run before handback, and `unknown`
++  requires verifying the live remote head.
+ - **Verbatim stop reason (KS-05 seam):** quotes exclusive `--receipt` / `--run-log` diagnostics, or a
+   shared `<harness-root>/.relay-scratch/escalation-reason` ONLY when its own self-contained payload
+   carries both matching `--invocation-id` and `reason` (mtime-only and sidecar-only attribution are
+@@ -363,8 +388,15 @@ Every state transition leaves durable, verifiable evidence.
+ 
+ ### Transition 1: Normal Completion
+ - **Condition:** Child completes the requested batch or daily-goal tasks, runs classified gates,
+-  commits review receipts, opens ready PRs, and completes the execution owner's closeout.
+-- **Evidence:** PR URLs, commit SHAs, passing gate logs, and independent review verdicts.
++  commits review receipts, opens ready PRs, completes the execution owner's closeout, AND passes
++  the KS-13 pre-handback `kickstart_status.py` staleness gate (`final_qa.handback_allowed == true`:
++  `fresh` on freshly verified `origin/development` with 0 later landings, or `missing` with 0
++  landings). If `final_qa.rerun_required == true`, the child autonomously re-runs final QA,
++  re-verifies `origin/development` after QA completes, and re-checks before handback; on a red
++  re-run or unverified remote head (`unknown`), the child holds Normal Completion and hands back
++  with failure/hold evidence.
++- **Evidence:** PR URLs, commit SHAs, passing gate logs, canonical `GATE: final-QA` matching the
++  final verified `origin/development` head (when landings occurred), and independent review verdicts.
+ - **Action:** Child returns completion event with summary. Parent inspects results, records
+   completion, and presents the deliverable to the operator.
+ 
+diff --git a/skills/1-hourly/kickstart/scripts/kickstart_status.py b/skills/1-hourly/kickstart/scripts/kickstart_status.py
+index 3a5f45449..108ea2b89 100755
+--- a/skills/1-hourly/kickstart/scripts/kickstart_status.py
++++ b/skills/1-hourly/kickstart/scripts/kickstart_status.py
+@@ -517,7 +517,39 @@ def _assess_final_qa(
+         g for g in (parsed.get("gates") or [])
+         if str(g.get("target", "")).lower() in ("final-qa", "final_qa")
+     ]
+-    qa_gates.sort(key=lambda g: int(g.get("line", 0)))
++    qa_gates.sort(key=lambda g: int(g.get("line_no") or g.get("line") or 0))
++
++    latest_landing_sha: str | None = None
++    for m in reversed(merged_landings):
++        if m.get("sha"):
++            latest_landing_sha = str(m["sha"])
++            break
++    target_head: str | None = development_head or latest_landing_sha
++
++    def _result(
++        status: str,
++        qa_sha: str | None,
++        qa_verdict: str | None,
++        dev_head: str | None,
++        later: list[dict[str, Any]],
++        reason: str,
++        rerun_required: bool,
++        handback_allowed: bool,
++        recommended_action: str,
++    ) -> dict[str, Any]:
++        return {
++            "status": status,
++            "final_qa_sha": qa_sha,
++            "final_qa_verdict": qa_verdict,
++            "development_head": dev_head,
++            "later_landings": later,
++            "latest_landing_sha": latest_landing_sha,
++            "target_head": target_head,
++            "rerun_required": rerun_required,
++            "handback_allowed": handback_allowed,
++            "recommended_action": recommended_action,
++            "reason": reason,
++        }
+ 
+     latest_qa: dict[str, Any] | None = qa_gates[-1] if qa_gates else None
+     if latest_qa is None and final_qa_sha_override:
+@@ -530,72 +562,110 @@ def _assess_final_qa(
+         }
+ 
+     if latest_qa is None:
+-        return {
+-            "status": "missing",
+-            "final_qa_sha": None,
+-            "final_qa_verdict": None,
+-            "development_head": development_head,
+-            "later_landings": [],
+-            "reason": "no canonical GATE: final-QA recorded",
+-        }
++        if merged_landings:
++            return _result(
++                status="missing",
++                qa_sha=None,
++                qa_verdict=None,
++                dev_head=development_head,
++                later=[],
++                reason=f"no canonical GATE: final-QA recorded after {len(merged_landings)} landing(s)",
++                rerun_required=True,
++                handback_allowed=False,
++                recommended_action="run-final-qa",
++            )
++        return _result(
++            status="missing",
++            qa_sha=None,
++            qa_verdict=None,
++            dev_head=development_head,
++            later=[],
++            reason="no canonical GATE: final-QA recorded (0 landings in run)",
++            rerun_required=False,
++            handback_allowed=True,
++            recommended_action="handback-ready-no-landings",
++        )
+ 
+     qa_sha = str(latest_qa.get("sha") or "")
+     qa_verdict = str(latest_qa.get("verdict") or "")
+-    qa_line = int(latest_qa.get("line", 0))
++    qa_line = int(latest_qa.get("line_no") or latest_qa.get("line") or 0)
+ 
+     if qa_verdict != "green":
+-        return {
+-            "status": "stale",
+-            "final_qa_sha": qa_sha,
+-            "final_qa_verdict": qa_verdict,
+-            "development_head": development_head,
+-            "later_landings": [],
+-            "reason": f"latest canonical GATE: final-QA verdict is {qa_verdict}",
+-        }
++        return _result(
++            status="stale",
++            qa_sha=qa_sha,
++            qa_verdict=qa_verdict,
++            dev_head=development_head,
++            later=[],
++            reason=f"latest canonical GATE: final-QA verdict is {qa_verdict}",
++            rerun_required=True,
++            handback_allowed=False,
++            recommended_action="rerun-final-qa",
++        )
++
++    # KS-13 (GH-1557): a post-qa_line MERGED entry is excluded ONLY when it carries at least one
++    # SHA and EVERY SHA on that line matches qa_sha (prevents multi-SHA lines citing both qa_sha
++    # and a new merge/reconcile SHA from falsely suppressing staleness, while preserving SHA-less
++    # later-landing detection).
++    later_landings = []
++    for m in merged_landings:
++        if int(m.get("line", 0)) <= qa_line:
++            continue
++        shas = [str(s) for s in (m.get("shas") or [])]
++        if shas and all(_sha_matches(s, qa_sha) is True for s in shas):
++            continue
++        later_landings.append(m)
+ 
+-    later_landings = [
+-        m for m in merged_landings
+-        if int(m.get("line", 0)) > qa_line
+-        and not any(_sha_matches(s, qa_sha) for s in (m.get("shas") or []))
+-    ]
+     if later_landings:
+-        return {
+-            "status": "stale",
+-            "final_qa_sha": qa_sha,
+-            "final_qa_verdict": qa_verdict,
+-            "development_head": development_head,
+-            "later_landings": later_landings,
+-            "reason": f"{len(later_landings)} landing(s) recorded after final-QA",
+-        }
++        return _result(
++            status="stale",
++            qa_sha=qa_sha,
++            qa_verdict=qa_verdict,
++            dev_head=development_head,
++            later=later_landings,
++            reason=f"{len(later_landings)} landing(s) recorded after final-QA",
++            rerun_required=True,
++            handback_allowed=False,
++            recommended_action="rerun-final-qa",
++        )
+ 
+     if development_head:
+         matched = _sha_matches(qa_sha, development_head)
+         if matched is True:
+-            return {
+-                "status": "fresh",
+-                "final_qa_sha": qa_sha,
+-                "final_qa_verdict": qa_verdict,
+-                "development_head": development_head,
+-                "later_landings": [],
+-                "reason": "canonical green final-QA matches caller-verified development head with no later landings",
+-            }
+-        return {
+-            "status": "stale",
+-            "final_qa_sha": qa_sha,
+-            "final_qa_verdict": qa_verdict,
+-            "development_head": development_head,
+-            "later_landings": [],
+-            "reason": f"development head ({development_head}) differs from final-QA head ({qa_sha})",
+-        }
++            return _result(
++                status="fresh",
++                qa_sha=qa_sha,
++                qa_verdict=qa_verdict,
++                dev_head=development_head,
++                later=[],
++                reason="canonical green final-QA matches caller-verified development head with no later landings",
++                rerun_required=False,
++                handback_allowed=True,
++                recommended_action="handback-ready",
++            )
++        return _result(
++            status="stale",
++            qa_sha=qa_sha,
++            qa_verdict=qa_verdict,
++            dev_head=development_head,
++            later=[],
++            reason=f"development head ({development_head}) differs from final-QA head ({qa_sha})",
++            rerun_required=True,
++            handback_allowed=False,
++            recommended_action="rerun-final-qa",
++        )
+ 
+-    return {
+-        "status": "unknown",
+-        "final_qa_sha": qa_sha,
+-        "final_qa_verdict": qa_verdict,
+-        "development_head": None,
+-        "later_landings": [],
+-        "reason": "development head freshness unverified; pass --development-head",
+-    }
++    return _result(
++        status="unknown",
++        qa_sha=qa_sha,
++        qa_verdict=qa_verdict,
++        dev_head=None,
++        later=[],
++        reason="development head freshness unverified; pass --development-head",
++        rerun_required=False,
++        handback_allowed=False,
++        recommended_action="verify-development-head",
++    )
+ 
+ 
+ def _parse_structured_escalation_payload(raw_text: str) -> tuple[str | None, str | None]:
+@@ -793,6 +863,15 @@ def _render_markdown(report: dict[str, Any]) -> str:
+         f"- Status: **{fqa['status']}** (final_qa_sha=`{fqa['final_qa_sha'] or 'none'}`, "
+         f"verdict=`{fqa['final_qa_verdict'] or 'none'}`, dev_head=`{fqa['development_head'] or 'unverified'}`)"
+     )
++    lines.append(
++        f"- Handback allowed: `{str(fqa['handback_allowed']).lower()}` | "
++        f"Rerun required: `{str(fqa['rerun_required']).lower()}` | "
++        f"Recommended action: `{fqa['recommended_action']}` "
++        f"(target_head=`{fqa['target_head'] or 'none'}`)"
++    )
++    if fqa.get("later_landings"):
++        for lm in fqa["later_landings"]:
++            lines.append(f"- Later landing (line {lm.get('line')}): {lm.get('text')}")
+     lines.append(f"- Detail: {fqa['reason']}")
+     lines.append("")
+ 

@@ -1,0 +1,140 @@
+=== CONTROL_1A_RED_PIN_MISMATCH (rc=2) ===
+PIN_KEY=xyz.primary.repo-7640ec7706729605e696547d
+PINNED=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+PASSED=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/wrong_primary
+STDOUT:
+
+STDERR:
+merge-cleanup: ERROR — cannot resolve the primary path '/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/wrong_primary': --primary differs from the pinned Jog primary: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+
+
+=== CONTROL_1B_GREEN_PINNED_PRIMARY (rc=0) ===
+STDOUT:
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+  branch: development  (integration: development)
+  clean: yes
+  landing: NOT READY
+    - 7 local commit(s) on 'development' are not on origin — push or explicitly abandon them first
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+Scanned roots: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/Documents/GH Repos, /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/agent-workspaces, /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/Documents/agent-workspaces, /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/marathon-clones (skipped /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie: NEVER_DELETE root)
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `landing_pinned` | standalone_clone | `development` | ✅ | 🔥 Active (9140 in 10m) | 0 | ⚠️ 2 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+
+merge-cleanup: No open PRs found for this repository.
+
+STDERR:
+
+
+=== CONTROL_2A_RED_REASONLESS_DEFERRED_CLI (rc=2) ===
+STDOUT:
+
+STDERR:
+merge-cleanup: ERROR — verdict not recorded: a deferred verdict needs a reason
+
+
+=== CONTROL_2B_GREEN_RECORD_SWEEP_CLI (rc=0) ===
+STDOUT:
+merge-cleanup: verdict deferred recorded for #9901, #9902
+
+STDERR:
+
+BATCH_VERDICT={
+  "at": "2026-11-20T10:34:59Z",
+  "body": "Full post-merge sweep deferred to promotion gate per repo promotion policy (GH-1554 KS-09 control).",
+  "covers": [
+    9901,
+    9902
+  ],
+  "value": "deferred"
+}
+
+=== CONTROL_3_ACTIVE_HOSTED_RUN_TRANSITIONS ===
+MOCKING_BOUNDARY:
+  - Disposable full clone created at /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned (origin unchanged).
+  - Disposable clone's `utils/py/wave_reconcile.py` stubbed (committed inside disposable clone only) to exit 8 (active hosted CI run) then 0 (cleared) while logging every invocation to `wave_reconcile_calls.log`.
+  - Stub `gh` on PATH returns PR #9901 state=MERGED (no live GitHub mutation).
+  - Isolated `HOME` at /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/fake_home.
+
+--- PART A: EXECUTED CLI & WRAPPER CHECKS (REAL merge_cleanup.py) ---
+CMD_ACTIVE_EXIT_8: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --reconcile-pr 9901 --execute
+CLI_ACTIVE_RC=2 (expected 2 when child wave_reconcile.py exits 8)
+CLI_ACTIVE_STDOUT:
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #9901 in /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+CLI_ACTIVE_STDERR:
+merge-cleanup: ERROR — wave_reconcile FAILED for PR #9901 (exit 8): wave-reconcile: REFUSING — active hosted CI run in progress on development (exit 8)
+DIRECT_run_local_wave_reconcile_CHILD_8=False (expected False)
+
+CMD_CLEARED_EXIT_0: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --reconcile-pr 9901 --execute
+CLI_CLEARED_RC=0 (expected 0 when child wave_reconcile.py exits 0)
+CLI_CLEARED_STDOUT:
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #9901 in /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned...
+merge-cleanup: ✅ local wave_reconcile for PR #9901 passed
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: PR #9901: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #9901 committed; primary is clean at origin/development
+CLI_CLEARED_STDERR:
+
+DIRECT_run_local_wave_reconcile_CHILD_0=True (expected True)
+
+OBSERVED_WAVE_RECONCILE_INVOCATIONS:
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+
+--- PART B: CONTROLLED DOCUMENTATION-PROTOCOL WALKTHROUGH (SKILL.md RULES) ---
+NOTE: Part B is a deterministic protocol walkthrough verifying SKILL.md's decision table and checkpoint transition (explicitly distinct from the executed CLI runs in Part A).
+CHECKPOINT_BEFORE:
+# Simulated Run Record
+
+## Progress log
+TRANSITION_NON_MERGED_EXIT_2={"branch": "non_merged_exit_2", "action": "inspect_preflight_or_pin_error", "enter_reconcile_wait": false, "re_merge": false}
+TRANSITION_CLEARED_WITHIN_DEADLINE={"branch": "cleared_within_15m_deadline", "action": "run_reconcile_pr_once", "reconcile_cmd": "--reconcile-pr 9901 --execute", "force_local_reconcile": false, "re_merge": false}
+TRANSITION_DEADLINE_EXPIRED={"branch": "deadline_expired_15m", "action": "HOLD_AND_HAND_BACK", "force_local_reconcile": false, "re_merge": false}
+CHECKPOINT_AFTER:
+# Simulated Run Record
+
+## Progress log
+- HOLD PR #9901: MERGED but active hosted run did not clear within 15m deadline; preserving LANDING_CLONE and handing back (no --force-local-reconcile, no re-merge)

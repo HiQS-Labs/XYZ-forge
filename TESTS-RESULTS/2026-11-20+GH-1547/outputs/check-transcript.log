@@ -1,0 +1,30 @@
+=== 1. Pre-change red control: kickstart_status.py absent at PRE_SHA ===
+PASS: red control confirmed (kickstart_status.py absent at 0edbab45d60f9b7d92e4d2b616743d3874b526d5)
+PASS: candidate commit verified (ee70eced1b30963559c1744e99af704868812f09)
+=== 2. Fixtures: U3 liveness, unapplied amendments, U10 attempts+remote, final-QA, stop-reason ===
+PASS: U3 liveness matrix (all 6 sub-cases; stuck fixture never live or confirmed-stopped without 4-part proof)
+PASS: unapplied amendments surfaced (including legacy OA-1) and cleared when APPLIED
+PASS: PR merge-ready summary derived cleanly
+PASS: U10 pinned attempt records + remote PR state (MERGED / OPEN-same / OPEN-changed / unknown; unpinned ignored)
+PASS: final-QA staleness (green+task-gate+short/full match=fresh, unverified=unknown, later-MERGED=stale, diff-head=stale, red-QA=stale)
+PASS: stop-reason attribution (stale/newer plain-text, sidecar+plain-text, conflicting payload+sidecar -> unknown; self-contained & receipt -> verbatim)
+=== 3. GH-1527 Read-Only Live Check (git shim + refs/FETCH_HEAD/count-objects) ===
+PASS: git show-ref unchanged
+PASS: FETCH_HEAD unchanged
+PASS: git count-objects unchanged
+PASS: zero mutating git verbs in live run (7 read-only git calls logged)
+=== 4. CI route classification & mypy ===
+docs_only=true
+pdda_needed=true
+full_required=false
+changed_tests=
+route=docs
+tier=1
+tier2_subsystems=
+tier2_tests=
+tier_reason=docs-only
+Success: no issues found in 1 source file
+
+=== 5. Final QA Round-1 Fix Verification (bulleted legacy + repo-scoped attempts) ===
+PASS: bullet-prefixed legacy amendment surfaced (OA-1 legacy_unparsed=true) and cleared by bulleted APPLIED
+PASS: attempt scan scoped to target repo dir (excluded OtherOrg-OtherRepo), mismatched repo field kept unknown, unresolved repo identity withheld
