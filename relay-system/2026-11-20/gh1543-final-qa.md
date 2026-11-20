@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -83,5 +83,46 @@ Cite `file:line` for findings. End with `swept file: yes|no`, `VERDICT: PASS|FAI
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+Block — full seeded module (lines 1–732), approved plan, full SKILL.md, and retained evidence reviewed. Findings apply to the seeded artifact; no source files changed.
+
+- [Blocker] F1 — Authorization redaction exposes Basic credentials. At `.relay-artifacts/run_record.py:82`, the non-Bearer pattern consumes only the scheme, leaving its credential behind; `:393` applies this result to snapshots and `:529` to checkpoints.
+  Observed input: `Authorization: Basic dXNlcjpwYXNzd29yZA==`.
+  Affected scope: non-Bearer Authorization values containing a scheme and credential on the same line.
+  Falsifier: Basic input must retain neither credential nor reversible encoded credential; Bearer input must still redact its token and preserve the following unrelated line.
+  Probe command (stdlib, no files written): `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import runpy; m=runpy.run_path(".relay-artifacts/run_record.py"); print(repr(m["redact_text"]("Authorization: Basic dXNlcjpwYXNzd29yZA=="))); print(repr(m["redact_text"]("Authorization: Bearer FakeCredential123456")))' `.
+  Observed rc=0; decisive output: `'Authorization: [REDACTED] dXNlcjpwYXNzd29yZA==\n'`; Bearer control: `'Authorization: Bearer [REDACTED]\n'`.
+  Root cause: matching one whitespace-delimited token after Authorization; Fix site: SECRET_PATTERNS; Why not downstream: both snapshot and checkpoint must share the corrected redactor. Fix by consuming the complete header value without crossing a newline; retain a manual red/green control.
+
+- [Should] F2 — Refuse Git metadata destinations before any branch/write mutation. `.relay-artifacts/run_record.py:434` and `:467` permit `.git/config`; `:558` atomically replaces the accepted destination before `git add` can refuse it. In a full clone this can overwrite configuration and break subsequent Git commands.
+  Observed input: `dest_rel=".git/config"`; the pure syntax/confinement helpers return the path without raising.
+  Affected scope: destinations equal to or nested beneath the clone's Git administrative directory (including `.git` itself).
+  Falsifier: `records/run.md` remains accepted; `.git/config` and `.git` refuse before changing bytes, index, branch or refs in a disposable full-clone run.
+  Probe command: `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import runpy; from pathlib import Path; m=runpy.run_path(".relay-artifacts/run_record.py"); d=m["_validate_dest_syntax"](".git/config"); print(m["_check_fs_confinement"](Path.cwd(),d))'`.
+  Observed rc=0; output ends in `rtl-wt.K6r2Xg/.git/config`. This probes acceptance only; destructive checkpoint execution was deliberately not run. End-to-end corruption/refusal: [Unverified — needs clone run]. Fix at destination validation before mutation.
+
+- [Should] F3 — Supersession accepts an older amendment, contrary to the approved plan's “declared newer amendment ID.” `.relay-artifacts/run_record.py:229` checks only existence and inequality; SKILL.md:100 likewise weakens this to “another.”
+  Observed input:
+  ```text
+  RUN-RECORD-VERSION: 1
+  OPERATOR_AMENDMENT: OA-1 2026-11-20T07:00Z operator turn old
+  OPERATOR_AMENDMENT: OA-2 2026-11-20T07:01Z operator turn new
+  APPLIED: OA-2 → superseded by OA-1
+  ```
+  Affected scope: superseded dispositions referencing amendments older than their target.
+  Falsifier: reversing the last line to `APPLIED: OA-1 → superseded by OA-2` must remain valid.
+  Probe command: load the seeded module with `runpy.run_path(".relay-artifacts/run_record.py")`, call `parse_record` on the exact text above and then the reversed control, and print `valid` and `errors`. Observed rc=0; both returned `valid=True errors=[]`. Fix by enforcing the approved newer-amendment relation and documenting its ordering definition consistently, or obtain an explicit scoped plan disposition.
+
+- [Should] F4 — Retain reproducible commands and decisive outputs for the claimed 29 checks. `TESTS-RESULTS/2026-11-20+GH-1543/manual-check.md:21`–38 supplies assertions but no runnable setup/commands for the bad-input, concurrent append, confinement, or remote-blob/retry checks; `provenance.jsonl:1`–6 uses only `manual KS-15 contract checks (see manual-check.md)`. There are only two input fixtures, two parser JSON outputs, one redacted output, the summary, PDDA log and provenance. In particular no retained race stdout/exit statuses, pre/post identity/byte measurements, or remote-blob command/output substantiates the publication claim. Fix by retaining the exact manual commands/setup and nonempty results with provenance in the existing evidence directory, from disposable full clones where required; no new suite. These claims are [Unverified — needs clone run], not disproven. Do not replace missing evidence with an assertion that a later gate will run.
+
+- [Pass] Saved parser outputs match fresh in-memory parses of both retained fixtures, and all seven provenance artifact byte counts/SHA-256 values match their files (`provenance.jsonl:1`–7; `outputs/run1-validate.json`, `outputs/run2-validate.json`). Probe: stdlib `json.loads` + `hashlib.sha256(Path(row["artifact"]).read_bytes())`, then compare saved JSON with seeded `parse_record` results (run2 uses `require_landing_clone=True`); rc=0, seven `size_match=True hash_match=True`, both `matches=True`. This establishes artifact integrity and parser reproducibility, not all 29 historical runs.
+- [Pass] Sibling lock precedes the read and full candidate validation precedes replace (`.relay-artifacts/run_record.py:366`–378); unresolved escalation is computed from latest disposition (`:303`–312). These are source-inspection findings, not fresh concurrency qualification. The live acceptance limit is stated truthfully: “Live run-2 checkpoint publication remains uncredited until run 2” (`manual-check.md:44`).
+- Review limits: no git, gates, fixtures, pytest, or checkpoint executed. Actual candidate diff/new-test/stray-file exclusion is unverified without a supplied diff (git is prohibited this turn). Nearest graph is another checkout, generation 2026-11-18T19:39:07Z, and coverage reports all three candidate paths freshness=missing; complete local source reads were used instead. No additional pre-existing defects found in the full seeded file beyond the findings above.
+
+swept file: yes
+VERDICT: FAIL
+Basis: observed credential leakage blocks approval; destination confinement, supersession plan alignment and retained verification also need Producer disposition.
+Handing off to Producer (antigravity) — address each finding and retain the requested evidence before opening round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
