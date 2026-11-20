@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Created fresh clone off reconciled `origin/development` (post KS-02), registered `rmi-01M7W542W35G5JCV8M0WX2YA9A`, and completed grounded recon of `skills/1-hourly/kickstart/scripts/build_queue.py` and `skills/1-hourly/kickstart/SKILL.md`. | Complete Codex Plan QA, implement `--daily-goals <issue>` in `build_queue.py` and document in `kickstart/SKILL.md`, run paired red/green checks + mypy + PDDA under `TESTS-RESULTS/2026-11-20+GH-1558/`, and pass Final QA. |
+| Folded Plan QA R1 blockers (Major 1: preserve safety/hold evidence for all closing targets of admitted PRs before applying queue scope + park on unresolved safety metadata; Major 2: atomic same-repo ref parsing, explicit issue-vs-PR resolution, offline replay fail-closed on missing refs, post-resolution empty-selection check, and `build_queue.py:377-379` folded old-issue bypass). | Complete Codex Plan QA R2 approval, implement `--daily-goals <issue>` in `build_queue.py` and document in `kickstart/SKILL.md`, run paired red/green checks + mypy + PDDA under `TESTS-RESULTS/2026-11-20+GH-1558/`, and pass Final QA. |
 
 ## Objective
 Implement issue #1541 milestone KS-14 (OL-17): add `--daily-goals <issue>` to `skills/1-hourly/kickstart/scripts/build_queue.py` so a kickstart run can take its scope directly from a daily-goals GitHub issue (ignoring `--since-days` for issues referenced by that daily-goals issue, lifting the `Daily goals*` out-of-scope rule for that selected input, while preserving KS-02/U15 holds, `--other-session`, `--needs-operator`, and replay determinism). No new test suite (GH-831).
@@ -31,14 +31,26 @@ Implement issue #1541 milestone KS-14 (OL-17): add `--daily-goals <issue>` to `s
 ## Plan
 1. **`skills/1-hourly/kickstart/scripts/build_queue.py`:**
    - Add CLI flag `--daily-goals <issue_number>` (optional int, plus optional `--daily-goals-json <file>` for deterministic offline replay of a saved `gh issue view <N> --json number,title,body,labels,state,comments` payload; when `--issues-json` is supplied and the daily-goals issue is already inside `--issues-json`, resolve it directly from `--issues-json` without network calls).
-   - Parse selected issue/PR references from the daily-goals issue body:
-     - Sanitize fenced code blocks and wholly quoted inline spans (reusing `_sanitize_body` so example/code snippets do not create false references), extract referenced `#N` (and same-repo `OWNER/REPO#N`) numbers (excluding the daily-goals issue number itself and closed/checked-off `- [x]` list items so completed checklist entries are NOT re-queued).
-     - Fail closed with a clear non-zero exit if `--daily-goals <N>` cannot be found, is closed, or contains zero open/unchecked issue/PR references.
-   - Scope filtering when `--daily-goals <N>` is given:
-     - Lift the `Daily goals*` out-of-scope skip for that selected daily-goals input (do NOT put the daily-goals issue itself into `Not queued` as a dropped item, and record `daily-goals #<N>` in the rendered header comment).
-     - **Ignore `--since-days` for referenced issues:** in live mode, fetch any referenced open issue missing from the `created:>={cutoff}` list via `gh issue view <num> --json number,title,labels,body,createdAt,comments,state` (skipping closed issues); in `classify_issues()`, pass `include_ids: set[int] | None` so referenced issues bypass the `createdAt < cutoff` skip while still honoring every safety rule (KS-02 `operator_decision`, U15 `issue_hold_reason`, `--other-session`, `--needs-operator`, folded PRs).
-     - Scope the queue to the selected daily-goals references (plus open PRs explicitly referenced by the daily-goals issue OR closing/referencing a selected issue), rather than pulling unrelated repo backlog outside the daily-goals issue. Unselected issues/PRs stay out of the daily-goals queue.
-     - Keep default behavior (when `--daily-goals` is NOT passed) 100% unchanged!
+   - **Atomic reference parsing from the daily-goals issue body:**
+     - Sanitize fenced code blocks and wholly quoted inline spans (reusing `_sanitize_body`), skip checked-off checklist lines (`- [x]` / `* [x]`), and parse references atomically using a single token regex matching `(?:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#(\d+)` anchored so `other/repo#123` is parsed as foreign-repo and NEVER falls back to bare `#123`! Keep only bare `#N` and same-repo `slug#N` (excluding the daily-goals issue number itself).
+   - **Complete issue-vs-PR resolution & offline fail-closed contract:**
+     - Determine offline/replay mode whenever any of `--prs-json`, `--pr-meta-json`, `--issues-json`, or `--daily-goals-json` is provided (zero network calls in replay mode!).
+     - For every referenced number `num` in the daily-goals body:
+       - If `num` is in open PR metadata (`meta`) AND in `pr_minder` rows -> classify as selected open PR. If `num` is in `meta` (open PR) but absent from `pr_minder` rows (or vice versa) -> fail closed with a clear non-zero exit naming the incomplete PR input (never silently drop!).
+       - Else if `num` is in `issues` -> classify as selected issue (skip if `state` is explicitly `"CLOSED"`).
+       - Else in **live mode**: resolve via `gh issue view <num> --json number,title,labels,body,createdAt,comments,state` (and if it is a PR or closed, handle explicitly: open PR absent from open PR lists fails closed; closed issue/PR is skipped; unresolvable/API error fails closed).
+       - Else in **offline replay mode**: fail closed with a non-zero exit naming the missing referenced `#num` (NEVER silently drop a missing replay reference and NEVER call `gh`!).
+     - **Post-resolution empty-selection check:** after resolving open/closed state, if `--daily-goals <N>` itself is missing or closed, OR zero open selected issues/PRs remain (e.g., all referenced items are closed), fail closed with a clear non-zero exit.
+   - **Preserve safety/hold evidence BEFORE applying queue scope (Major 1):**
+     - Scope limits *emitted work*, NEVER safety evidence:
+       1. Identify candidate admitted PRs: open PRs explicitly selected by `--daily-goals` OR closing a selected issue.
+       2. Collect EVERY closing target `#target` of every candidate admitted PR (including unselected or older issues beyond `--since-days`).
+       3. Resolve any missing `#target` issue metadata (`labels`, `body`, `comments`, `state`, `title`, `createdAt`) before building `parked_issues(...)`: in live mode via `gh issue view`; if any closing target's safety metadata cannot be resolved (offline missing or API failure), treat that target as **parked** (fail closed so the PR cannot merge and close an uninspected issue!).
+       4. Build `parked_issues(...)` over the FULL safety issue set (including unselected/older closing targets with their comments/labels/body) BEFORE scoping `classify_prs(...)` and `classify_issues(...)`.
+   - **Scope filtering & old-issue bypass (including `build_queue.py:377-379`):**
+     - Lift `Daily goals*` out-of-scope for `--daily-goals <N>` (do NOT emit `<N>` into `Not queued`; record `daily-goals #<N>` in the header comment).
+     - Ignore `--since-days` for selected issues in BOTH `classify_issues(...)` (`include_ids=selected_issue_ids`) AND the folded-annotation filter at `build_queue.py:377-379` (`open_issues = {i["number"] for i in issues if i["createdAt"][:10] >= cutoff or i["number"] in selected_issue_ids}`), so a selected old issue folded into an admitted PR remains visible in `(closes #...)`.
+     - Emit only selected issues and admitted PRs; unselected backlog stays out of the daily-goals queue. Default mode (without `--daily-goals`) remains 100% unchanged.
    - Verify `mypy --allow-untyped-defs --allow-incomplete-defs skills/1-hourly/kickstart/scripts/build_queue.py`.
 2. **`skills/1-hourly/kickstart/SKILL.md`:**
    - Document `build_queue.py --daily-goals <issue>` in the kickoff/queue-building instructions (ignores `--since-days` for referenced issues, lifts `Daily goals*` out-of-scope for that one input, honors all holds/decisions).
@@ -47,7 +59,8 @@ Implement issue #1541 milestone KS-14 (OL-17): add `--daily-goals <issue>` to `s
    - **Changed Green Controls:**
      - Control 1: `build_queue.py --daily-goals <N>` includes the >14-day referenced open issue in the execution queue, omits checked-off `- [x]` items and unrelated backlog, does NOT put the daily-goals issue in `Not queued`, and still parks U15-held / `--other-session` referenced issues cleanly.
      - Control 2: Default invocation without `--daily-goals` preserves exact legacy behavior (daily-goals issue still routed to `Not queued`, >14-day issue filtered by `--since-days`).
-     - Control 3: Fail-closed error when `--daily-goals` targets a missing/closed/empty-selection issue (non-zero exit).
+     - Control 3: Fail-closed errors (non-zero exit) for: (a) missing/closed daily-goals issue, (b) all-closed references (post-resolution empty selection), (c) missing reference in offline replay mode (zero network calls), (d) incomplete PR input (selected open PR missing from `pr_minder` rows).
+     - Control 4 (Safety preservation & foreign-repo atomicity): (a) admitted PR closing selected issue #10 AND unselected older held issue #30 (`status:held` / operator hold) -> #30's hold is preserved and PR is parked rather than queued; (b) KS-02 latest-owner `hold` vs `proceed` comment on a selected issue; (c) explicit open PR selection (`#PR`) in daily-goals body; (d) foreign-repo reference `other/repo#123` is ignored cleanly and does NOT match local `#123`; (e) selected old issue folded into an admitted PR still displays `(closes #<old>)` (`build_queue.py:377-379` bypass).
    - Run `mypy`, `ci-route.sh`, `./utils/pdda/pdda.sh run` (0 errors), and generate `provenance.jsonl`.
 
 ## Acceptance Criteria
