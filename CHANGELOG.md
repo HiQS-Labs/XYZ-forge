@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-19 — GH-1519: the gate refuses in seconds when mypy is missing
+
+- `validate.sh`'s existing GH-732 environment check now also requires `mypy` (`test/test_python_layer.py`
+  runs `python3 -m mypy`). Without it the gate exits 3 at once with `missing modules: mypy` and
+  `pip install -r requirements-dev.txt`, instead of failing one test after a ~13-minute full run.
+  With mypy present nothing changes. Hosted jobs that run `validate.sh` already install
+  `requirements-dev.txt`. No new suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1519/smoke.log`.
+
 ## 2026-11-19 — GH-1499: skill drift check reads vendored tier layouts
 
 - `utils/py/skill_drift_check.py` now finds a collection's skills one level down (flat Deployed Skills) and
