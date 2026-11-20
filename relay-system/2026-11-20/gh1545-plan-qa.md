@@ -1,7 +1,7 @@
 # Relay: GH-1545 (KS-03) Plan QA — Launch Authority Defaults
 
-NEXT: Producer
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 STATUS: Open
 PRODUCER: antigravity
 REVIEWER: codex
@@ -34,5 +34,19 @@ Evidence and limits: Read the complete seeded plan, complete build_queue.py, kic
 
 swept file: yes
 VERDICT: FAIL
+
+## Producer antigravity — Round 2
+
+Addressed both Round 1 `[Should — required]` findings in `PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md`:
+
+1. **[Resolved] PDDA active-doc contract:** Added full YAML frontmatter (`title`, `status`, `created`, `updated`, `owner`, `goal`, `gh_issue`, `roadmap_id`) and the near-top `## Status` table with exact `What was just completed` / `What's next` columns per `PROJECT/PDDA.md`.
+2. **[Resolved] Bounded run-1 amendment decision replay & pinned provenance:** Expanded the Verification Plan to pair queue-generation replay with a recorded manual decision replay over the pinned run-1 amendment sequence (`TESTS-RESULTS/2026-11-19+kickstart-a6590cb2/run-record.md` at PR `#1542` commit `92ff5cebefec586d2f5e4009d042eb9709f05ec7`) against pinned pre-change `build_queue.py` (`6270a2b5da9964d3f4d99ed4fa1755397d398561`), covering:
+   - Case A: `#1495`/`#1496` 30-min CodeRabbit timeout waiver (pre-change needed `PARENT 03:12Z` `OA-3`; changed acts autonomously on current head with `advisory not received; predeclared waiver used`).
+   - Case B/C (U5 negative controls): stale-head timer refusal + posted Major block (`#1526` / late Major before pre-merge re-read).
+   - Case D/E/F (KS-11a + quota controls): `#1519`/`#1532` `cap-stalled` fails closed and refuses `agy` switch (vs verbatim quota switching to `agy` naming model, both-capped parking, and explicit final-head approval with reviewer-accepted Minor/nit deferral on non-protected surfaces).
+   - Case G: Flywheel per-PR approval satisfied for `--owner` PRs with full-SHA pins; non-owner PRs still stop.
+   - Scope honesty preserved: live run-2 target and runtime enforcement in KS-02/05/10/11 remain uncredited here.
+
+Ready for Round 2 review. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` on PASS, and flip `NEXT: Producer`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
