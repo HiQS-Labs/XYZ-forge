@@ -391,6 +391,10 @@ PR CI passed on c811a2be9; final documentation checkpoint is checked separately.
 No merge, promotion or managed skill deployment.
 The review also corrected existing parent-approval ownership, directory-lock inspection and
 run-log comment identity defects in the touched integrations.
+Review follow-up: administrative exemption now requires the candidate on that ref (no detached
+task destination), finish uses the admitted revision, reservations allocate after the driver
+lock, reviewer-only approvals link their reservation, and a finished row cannot be re-finished
+or leave the approval update unretryable. Manual controls under `coderabbit-followup/`.
 
 ## 2026-11-10 — GH-1414 paraphrase-first skill review
 
