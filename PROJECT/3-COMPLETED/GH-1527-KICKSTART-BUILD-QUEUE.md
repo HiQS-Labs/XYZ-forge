@@ -2,9 +2,9 @@
 gh_issue: 1527
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1527
 title: "kickstart: deterministic queue builder so a long run is one command (build_queue.py)"
-status: In Progress
+status: Complete
 created: 2026-11-19
-updated: 2026-11-19
+updated: 2026-11-20
 owner: operator
 goal: "`build_queue.py` prints a kickstart run record's Authority, Queue and Needs-operator sections from pr_minder.py --json plus gh, deterministically, so the next long run starts from one command."
 doc_type: feedback
