@@ -38,3 +38,19 @@ Folded both Plan QA R1 blockers and the `build_queue.py:377-379` reminder into `
 Please review Round 2 for Plan QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Approved
+
+**Verdict: Ship the plan.** Both Round 1 blockers are resolved in the canonical plan. This approves proceeding to implementation, not runtime correctness or merge readiness.
+
+- Plan lines 44–49 retain all closing-target safety evidence before queue scoping and park unresolved targets; Control 4(a)/(b) covers the older unselected held target and latest-owner decisions.
+- Lines 35–43 define atomic repository qualification, issue/PR resolution, incomplete PR-input rejection, zero-network replay, and the post-resolution empty-selection check. Controls 3 and 4(c)/(d) cover the requested cases.
+- Lines 50–53 explicitly cover the second age filter used for folded annotations, restrict emitted work, and preserve default mode; Controls 2 and 4(e) check those contracts.
+
+The implementation remains within the existing classifier and skill documentation, with retained manual controls rather than a new suite. The key bet is that full safety context remains available even when emitted work is scoped. Reversibility: **Easy** for this optional queue-generation feature; downstream consumers still depend on correct hold enforcement, so final QA must inspect the recorded controls before accepting generated execution scope.
+
+Evidence: read the complete canonical plan and existing `skills/1-hourly/kickstart/scripts/build_queue.py`; `nl -ba PROJECT/2-WORKING/GH-1558-ks14-daily-goals.md | sed -n '32,89p'` exited 0 and showed the contracts and controls cited above. Graph `list_projects` returned no index for this task worktree; the nearest Forge index generation was `2026-11-18T19:39:07Z`, and `check_index_coverage` reported freshness `missing` for both evidence paths. Accordingly, this review relies on direct source reads, not completeness of that other checkout's graph. Applied the SWE review rubric. No executable probes, fixtures, tests, phase gates, or git commands ran. Implementation checks and Final QA remain outstanding; no later gate is assumed. No embedded TAKE YOUR TURN block is present, so the operator's explicit reviewer protocol governed this turn.
+
+**NEXT: Producer (Antigravity)** — implement the approved plan and retain the specified verification evidence for Final QA.
