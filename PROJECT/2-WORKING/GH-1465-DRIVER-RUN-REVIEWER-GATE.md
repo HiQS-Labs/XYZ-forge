@@ -1,7 +1,8 @@
 ---
 title: relay-drive runs the configured reviewer gate itself; finding-continuity rule in the reviewer protocol
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-11-14
+updated: 2026-11-20
 owner: Noel Saw
 gh_issue: 1465
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1465
@@ -26,9 +27,17 @@ goal: >
 
 # GH-1465 — relay-drive runs the configured reviewer gate itself; finding-continuity rule
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Driver-run reviewer gate and finding-continuity rule implemented on PR #1467; development (including #1417 attempt accounting) merged in | Gate and independent review of the final head, then land PR #1467 |
+
+## Acceptance
+
+- [x] With `MARATHON_REVIEWER_GATE_CMD` set, an Approved is attested only after relay-drive itself ran the command to exit 0.
+- [x] The reviewer protocol states that an earlier finding stays open until new evidence closes it (rule text and mirrors).
+- [x] The group-RSS guard applies to the driver-run gate (shared `proc_group.run_bounded`).
 
 ## Symptom
 In a host relay run (BinoidCBD/LTVera-Pandas#981) AI reviews turned a FAIL with open findings into a
