@@ -16,7 +16,8 @@
     },
     "task_id": "c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113",
     "scheduled_utc": "2026-11-20T09:55:09.114516Z",
-    "wakeup_message_verbatim": "[Message] timestamp=2026-11-20T10:05:29Z sender=c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113 priority=MESSAGE_PRIORITY_HIGH content=KS-07 detached 605s outer probe (pid 37102) has reached 620s \u2014 collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3"
+    "wakeup_message_verbatim": "[Message] timestamp=2026-11-20T10:05:29Z sender=c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113 priority=MESSAGE_PRIORITY_HIGH content=KS-07 detached 605s outer probe (pid 37102) has reached 620s \u2014 collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3",
+    "annotation": "MISCLASSIFIED KEY (historical): this is a fixed-time reminder created with schedule(DurationSeconds=620, TimerCondition=never), not a completion-triggered notification; kept verbatim as the record of what the Antigravity run did. See manual-check.md section 2."
   },
   "os_exit_receipt": {
     "synthetic_workload": true,

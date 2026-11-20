@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Instruction implementation complete: rule 6 (Long Operations, KS-07) in `skills/1-hourly/kickstart/SKILL.md` merged with development's KS-13 rule 5; >600s host check green on Claude Code (`sleep 660`, exit 0, native completion notification; `TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code.md`). | Re-run Final QA on the merged diff, open PR, and land. U7 (real run-2 operation >10 min) stays uncredited until run 2. |
+| Instruction implementation complete: rule 6 (Long Operations, KS-07) in `skills/1-hourly/kickstart/SKILL.md` merged with development's KS-13 rule 5; >600s host check green on Claude Code (`sleep 660`, exit 0, native completion notification; `TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code.md`). | PR #1572 is open: independent review of its final head, then land. U7 (real run-2 operation >10 min) stays uncredited until run 2. |
 
 ## Objective
 Codify in `skills/1-hourly/kickstart/SKILL.md` that long operations (`merge-cleanup --execute` and full classified gates) MUST be launched via the host's native background execution and completion-notification mechanism, never in the foreground, without adding any new guard or runner wrapper.

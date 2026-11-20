@@ -3,8 +3,8 @@
 - **Issue:** #1551 (KS-07 from #1541)
 - **Date:** 2026-11-20
 - **Branch:** `feat/XYZ-forge-gh1551-ks07-bg-long-ops-2026-11-20`
-- **Route:** `docs` (touches `skills/1-hourly/kickstart/SKILL.md` only)
-- **Workload Classification:** Synthetic 605s/3s probes (U8). Real >10-minute production/run-2 landing or gate completion consumed exactly once (U7) remains **explicitly uncredited until run 2**.
+- **Route:** `docs` (18-file diff: rule 6 in `skills/1-hourly/kickstart/SKILL.md`, this evidence folder, the working doc and the GH-1551 ledger row; PR #1572)
+- **Workload Classification:** Synthetic 605s/3s probes on Antigravity and a synthetic 660s probe on Claude Code (U8). Real >10-minute production/run-2 landing or gate completion consumed exactly once (U7) remains **explicitly uncredited until run 2**.
 
 ## 1. Host-Native Background Capability Probe (`outputs/native-bg-host-capability-probe.json`)
 - **Sub-600s native completion (`task-1290`):** Launched `run_command(WaitMsBeforeAsync=500)` sleeping 3s (`pid=35815`, `10:28:00Z`). Host delivered a real completion-triggered `SYSTEM_MESSAGE` at `10:28:03Z` with `exit_code=0` and `KS07_NATIVE_BG_3S_DONE`.
