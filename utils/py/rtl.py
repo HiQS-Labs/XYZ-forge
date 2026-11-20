@@ -2,6 +2,7 @@ import atexit
 import contextlib
 import datetime
 import fcntl
+import glob
 import hashlib
 import json
 import uuid
@@ -156,6 +157,11 @@ def lane_attempt_finish(context, outcome, sha=None, archive=False, attestation=N
         last = json.loads(lines[-1])
         if not isinstance(last, dict) or last.get("id") != row["id"]:
             raise ValueError("cannot finish a superseded reservation")
+        # The state moves only forward: a concurrent finish may already have closed this row.
+        # A completed row may be re-finished as the same candidate while its archive is pending.
+        if row["state"] == "failed" or (row["state"] == "completed" and (
+                outcome != "completed" or (sha and row.get("candidate") != sha))):
+            raise ValueError(f"reservation already finished as {row['state']}")
         row["state"] = outcome
         if outcome != "active":
             row.setdefault("finished", datetime.datetime.now(datetime.timezone.utc).isoformat())
@@ -187,11 +193,55 @@ def lane_attempt_finish(context, outcome, sha=None, archive=False, attestation=N
 
 def archive_lane_attempts(attempts_file, *, _locked=False):
     if not os.path.exists(attempts_file):
-        return None
+        return _resume_archived_approval(attempts_file)
     canonical = (os.path.basename(os.path.dirname(attempts_file)) == "attempts" and
                  os.path.basename(os.path.dirname(os.path.dirname(attempts_file))) == ".tick")
     with (contextlib.nullcontext() if _locked or not canonical else lane_attempt_lock(attempts_file)):
         return _archive_lane_attempts(attempts_file)
+
+
+def lane_attempt_archives(attempts_file, context):
+    """Archived copies of this reservation's budget: [(archive path, row)]."""
+    history = os.path.join(os.path.dirname(os.path.dirname(attempts_file)), "attempt-history")
+    found = []
+    for candidate in glob.glob(os.path.join(glob.escape(history), glob.escape(os.path.basename(attempts_file)) + "-*", "attempts")):
+        try:
+            found.append((candidate, lane_attempt_row(dict(context, record=candidate, archived=True))))
+        except (OSError, ValueError):
+            continue
+    return found
+
+
+def _read_approval(context):
+    # The protected approval this reservation is linked to, checked before any archive move.
+    with open(context["attestation"]) as f:
+        approved = json.load(f)
+    if not isinstance(approved, dict) or approved.get("attempt_context", {}).get("id") != context["id"]:
+        raise ValueError("approval reservation changed before archive")
+    return approved
+
+
+def _bind_archived_approval(approved, context):
+    # Update the existing protected approval, never the immutable archive.
+    import relay_attest
+    approved["attempt_context"] = context
+    relay_attest.write(approved)
+
+
+def _resume_archived_approval(attempts_file):
+    """Finish an approval update left pending after the archive rename (the live file is gone)."""
+    raw = os.environ.get(ATTEMPT_CONTEXT_ENV)
+    context = json.loads(raw) if raw else None
+    if not (context and context.get("record") == os.path.abspath(attempts_file) and context.get("attestation")):
+        return None
+    found = lane_attempt_archives(os.path.abspath(attempts_file), context)
+    if len(found) != 1:
+        return None
+    approved = _read_approval(context)
+    context = dict(context, record=os.path.abspath(found[0][0]), archived=True)
+    _bind_archived_approval(approved, context)
+    os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
+    return context["record"]
 
 
 def _archive_lane_attempts(attempts_file):
@@ -205,8 +255,11 @@ def _archive_lane_attempts(attempts_file):
         return None
     raw = os.environ.get(ATTEMPT_CONTEXT_ENV)
     context = json.loads(raw) if raw else None
+    approved = None
     if context and context.get("record") == os.path.abspath(attempts_file):
         lane_attempt_row(context)
+        if context.get("attestation"):
+            approved = _read_approval(context)   # refuse before the rename, not after it
     history = os.path.join(os.path.dirname(os.path.dirname(attempts_file)), "attempt-history")
     os.makedirs(history, exist_ok=True)
     archive_dir = tempfile.mkdtemp(prefix=os.path.basename(attempts_file) + "-", dir=history)
@@ -217,16 +270,10 @@ def _archive_lane_attempts(attempts_file):
             context["record"] = os.path.abspath(archive)
             context["archived"] = True
             os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
-            if context.get("attestation"):
-                # Update the existing protected approval, never the immutable archive.
-                import relay_attest
-                with open(context["attestation"]) as f:
-                    approved = json.load(f)
-                old = approved.get("attempt_context", {})
-                if old.get("id") != context["id"]:
-                    raise ValueError("approval reservation changed before archive")
-                approved["attempt_context"] = context
-                relay_attest.write(approved)
+            if approved is not None:
+                # A failure here is retried by _resume_archived_approval from the approval's
+                # own (still live-path) reference; the archived bytes are never touched.
+                _bind_archived_approval(approved, context)
     return archive
 
 

@@ -17,10 +17,11 @@ import os
 import sys
 import re
 import shlex
+import subprocess
 from pathlib import Path
 
 from rtl import (ATTEMPT_CONTEXT_ENV, attempt_git, attempt_origin, attempt_origin_url, archive_lane_attempts,
-                 lane_attempt_row, lane_attempt_reserve, lane_attempt_finish)
+                 lane_attempt_archives, lane_attempt_row, lane_attempt_reserve, lane_attempt_finish)
 
 
 ADMIN_BRANCHES = {"main", "development", "master"}
@@ -81,14 +82,8 @@ def _resolve_lane_context(context):
     original = Path(context.get("record", ""))
     if not original.is_absolute() or original.parent.name != "attempts":
         raise ValueError("attempt record is missing")
-    matches = []
-    for candidate in (original.parent.parent / "attempt-history").glob(original.name + "-*/attempts"):
-        recovered = dict(context, record=str(candidate), archived=True)
-        try:
-            row = lane_attempt_row(recovered)
-        except (OSError, ValueError):
-            continue
-        matches.append((recovered, row))
+    matches = [(dict(context, record=archive, archived=True), row)
+               for archive, row in lane_attempt_archives(str(original), context)]
     if len(matches) != 1:
         raise ValueError("no unique archived reservation matches the missing reference")
     return matches[0]
@@ -106,6 +101,13 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
     if not raw and os.environ.get("MERGE_CLEANUP_RECORD"):
         raw = json.dumps({"kind": "merge-repair", "record": os.environ["MERGE_CLEANUP_RECORD"]})
     if not raw and branch in ADMIN_BRANCHES and not destination_task:
+        if sha:
+            # The exemption covers commits on the administrative ref, not a task commit named from it.
+            try:
+                attempt_git(repo_root, "merge-base", "--is-ancestor",
+                            attempt_git(repo_root, "rev-parse", sha + "^{commit}"), "refs/heads/" + branch)
+            except subprocess.CalledProcessError:
+                raise ValueError(f"candidate is not on the administrative ref {branch}") from None
         return {"kind": "non-task", "branch": branch}
     sha = attempt_git(repo_root, "rev-parse", (sha or "HEAD") + "^{commit}")
     if not raw:
@@ -116,9 +118,7 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
             expected = "https://github.com/" + os.environ["GITHUB_REPOSITORY"]
             if hashlib.sha256(expected.encode()).hexdigest() == attempt_origin(repo_root):
                 return {"kind": "hosted-actions", "sha": sha}
-        if branch in ADMIN_BRANCHES and not destination_task:
-            return {"kind": "non-task", "branch": branch}
-        if not branch:
+        if not branch and not destination_task:
             for base in ("refs/heads/development", "refs/heads/main",
                          "refs/remotes/origin/development", "refs/remotes/origin/main"):
                 try:
@@ -354,13 +354,13 @@ def main():
             context = json.loads(os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
             if context.get("kind") != "manual":
                 raise ValueError("attempt-finish requires the manual reservation context")
-            attempt_admission(repo_root, context_override=context)
+            admitted = attempt_admission(repo_root, context_override=context)
             context, current = _resolve_lane_context(context)
             if current.get("state") == "completed" and args.outcome == "completed" and context.get("archived"):
                 print(json.dumps({"id": current["id"], "state": "completed", "context": context}))
                 return
             os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
-            row = lane_attempt_finish(context, args.outcome, attempt_git(repo_root, "rev-parse", "HEAD"),
+            row = lane_attempt_finish(context, args.outcome, admitted["sha"],
                                       archive=args.outcome == "completed")
             print(json.dumps({"id": row["id"], "state": row["state"],
                               "context": json.loads(os.environ[ATTEMPT_CONTEXT_ENV])}))
