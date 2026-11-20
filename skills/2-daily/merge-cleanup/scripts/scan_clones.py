@@ -320,7 +320,10 @@ def inspect_tick_claims(repo_path: Path) -> Dict[str, Any]:
 
     tick = _tick_binary()
     if not tick:
-        return {"has_claims": False, "verified": False, "details": "tick binary not found"}
+        # GH-1567: the vendored `.xyz/bin/tick` is never trusted here (GH-1362), so name the per-Mac fix.
+        return {"has_claims": False, "verified": False,
+                "details": "tick binary not found; save the XYZ-forge clone path to ~/.config/xyz/harness "
+                           "or set XYZ_HARNESS (relay-xyz/find-harness.sh --check prints the command)"}
     env = dict(os.environ)
     env["TICK_REPO_ROOT"] = str(coord)
     try:

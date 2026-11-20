@@ -1,0 +1,71 @@
+probe dir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF
+base=5c3388dd fixed=6edbe5d2
+== A. scanner, no config (RED control on base; fixed must name the remedy and stay verified=False) ==
+-- base
+  _tick_binary(): None
+  inspect_tick_claims: {'has_claims': False, 'verified': False, 'details': 'tick binary not found'}
+  names remedy (~/.config/xyz/harness + XYZ_HARNESS): False | verified: False
+-- fixed
+  _tick_binary(): None
+  inspect_tick_claims: {'has_claims': False, 'verified': False, 'details': 'tick binary not found; save the XYZ-forge clone path to ~/.config/xyz/harness or set XYZ_HARNESS (relay-xyz/find-harness.sh --check prints the command)'}
+  names remedy (~/.config/xyz/harness + XYZ_HARNESS): True | verified: False
+== B. find-harness --check from a vendored repo, no config ==
+-- base
+find-harness: HARNESS=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz REPO_ROOT=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo vendored=1 via=caller-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+relay harness readiness:
+  ok  harness  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  ok  vendored resolution  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   vendored copy differs from or can't be compared to the live harness
+  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available
+  exit=0
+-- fixed
+find-harness: HARNESS=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz REPO_ROOT=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo vendored=1 via=caller-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+relay harness readiness:
+  ok  harness  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   no valid per-device harness config (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz/harness); configure it if merge-cleanup reports tick binary not found
+  save this harness on this Mac: mkdir -p /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz && printf %s\\n /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/fixed/XYZ-forge > /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz/harness
+  ok  vendored resolution  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   vendored copy differs from or can't be compared to the live harness
+  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available
+  exit=0
+== C. run the printed save command under the isolated config; assert saved bytes; config supplies scanner resolution ==
+  hint: mkdir -p /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz && printf %s\\n /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/fixed/XYZ-forge > /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz/harness
+  saved config bytes match: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/fixed/XYZ-forge
+  --check after save:
+find-harness: HARNESS=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz REPO_ROOT=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo vendored=1 via=caller-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+relay harness readiness:
+  ok  harness  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  ok  per-device harness config  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/fixed/XYZ-forge)
+  ok  vendored resolution  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   vendored copy differs from or can't be compared to the live harness
+  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available
+  exit=0
+  fixed scanner after save (bin/tick resolved via config; fixed clone has bin/tick):
+  _tick_binary(): /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/fixed/XYZ-forge/bin/tick | equals saved harness tick: True
+  inspect_tick_claims: {'has_claims': False, 'verified': True, 'details': 'no claimed tasks', 'claims': []}
+== D. adjacent: invalid config content, then no canonical live harness (copied script outside any clone) ==
+-- invalid config
+find-harness: HARNESS=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz REPO_ROOT=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo vendored=1 via=caller-.xyz
+find-harness: vendored copy differs from or can't be compared to the live harness.
+relay harness readiness:
+  ok  harness  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   no valid per-device harness config (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz/harness); configure it if merge-cleanup reports tick binary not found
+  save this harness on this Mac: mkdir -p /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz && printf %s\\n /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/fixed/XYZ-forge > /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz/harness
+  ok  vendored resolution  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   vendored copy differs from or can't be compared to the live harness
+  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available
+  exit=0
+-- copied script, no live harness reachable
+find-harness: HARNESS=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz REPO_ROOT=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo vendored=1 via=caller-.xyz
+relay harness readiness:
+  ok  harness  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  !   no valid per-device harness config (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF/cfg/xyz/harness); configure it if merge-cleanup reports tick binary not found
+      no canonical XYZ-forge clone found to save; write the config by hand (relay-xyz SKILL.md) or set XYZ_HARNESS
+  ok  vendored resolution  (/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1567-probe.vxaeWF/vrepo/.xyz)
+  ok  no reachable live harness to compare; using vendored copy
+  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available
+  exit=0
+probe dir kept: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh1567-probe.vxaeWF
