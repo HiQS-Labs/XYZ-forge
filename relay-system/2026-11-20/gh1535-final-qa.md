@@ -91,3 +91,12 @@ PYPROBE
 Verification limits: paired red/green replays, read-only Git invariance, mypy, and PDDA are producer-recorded evidence, inspected rather than rerun. The transcript records all paired controls passing, byte-identical determinism, unchanged refs/FETCH_HEAD/object counts, docs tier 1 routing, and mypy success. PDDA records zero errors and 36 warnings, not a warning-free run. No full runtime gate or hosted verification is claimed; approval does not presume a later gate. No git command was run by this reviewer.
 
 Graph context: nearest indexed project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-18T19:39:07Z`, is a different checkout and predates the candidate. Target-symbol search returned zero; coverage reported target freshness missing. Review therefore relied on the exact seeded source and retained diff, not graph completeness.
+
+### Attestation · relay-drive — 2026-11-20T08:17:29Z
+task: RELAY-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 7ce09312f10414cfade92e83287d21de4ee407d6
+added-range: 4737+3499
+added-sha256: 511e76ef1bbd94a8e396bee0da0ad70fa09ff036f3bed8fa00e46b4f4d390be7
+gate-run: undeclared
