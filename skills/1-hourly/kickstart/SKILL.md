@@ -174,6 +174,10 @@ contract rather than ad-hoc regexes or unlocked appends.
 - **Subcommands (`run_record.py`):**
   - `validate <record> [--require-landing-clone] [--json]` — validates v1 grammar and reports
     `unresolved_amendments` and `escalated_amendments`.
+  - `check-amendments <record> [--require-landing-clone] [--json]` — strictly read-only pre-landing
+    and on-resume gate; exits `0` ONLY when the record parses cleanly and zero unresolved entries
+    remain across `OPERATOR_AMENDMENT:`, `PARENT_NOTE:`, and `INTERVENTION:` (exits `2` on any
+    pending/escalated entry or parse error).
   - `append <record> --kind <...> ...` — acquires a persistent sibling lock (`<record>.lock`),
     reads and validates the complete candidate record inside the lock, then writes atomically
     via temp file + `fsync` + `os.replace`.
@@ -182,6 +186,32 @@ contract rather than ad-hoc regexes or unlocked appends.
   - `checkpoint --record <path> --clone <dir> --primary <dir> --branch <branch> --dest <relpath> [--push]` —
     commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
     non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
+
+### Authoritative Amendment Enforcement (KS-06, U2/U11/U12)
+- **Single Authoritative Channel:** The run record is the sole authoritative channel for
+  mid-run amendments (`OPERATOR_AMENDMENT:` citing the operator turn/comment/decision,
+  `PARENT_NOTE:`, and `INTERVENTION:`). Thread or chat messages are at most wake-up signals
+  and NEVER satisfy, clear, or supersede a run-record amendment.
+- **Explicit Disposition Required:** Every declared entry across all three prefixes carries a
+  stable ID and MUST reach an explicit disposition in the run record:
+  - `applied` — names the concrete action/artifact taken,
+  - `superseded` — names a later declared amendment ID (which itself must reach a terminal
+    disposition before the global amendment check clears), or
+  - `escalated` — explicitly holds the run (remains blocking until resolved).
+- **Mandatory Pre-Landing & On-Resume Gate:** Before every landing and at every session resume,
+  run `skills/1-hourly/kickstart/scripts/run_record.py check-amendments <record>`. Any non-zero exit
+  (exit `2`) blocks all landings and unrelated work until every unresolved entry is dispositioned.
+  Append `APPLIED: <ID> → <disposition> <action/artifact>` BEFORE executing the affected action.
+- **Two Crash-Window Recovery Rules on Resume:**
+  1. *Window A (crash after chat/wake acknowledgement, before `APPLIED:` is persisted):*
+     `run_record.py check-amendments` exits `2` on resume and blocks landings and unrelated work
+     until a valid disposition is persisted to the run record.
+  2. *Window B (crash after `APPLIED: <ID> → applied <action/artifact>` is persisted, before the
+     affected action's external effect completes):* on resume, before advancing unrelated work,
+     reconcile the recorded action/artifact against actual observable state (remote PR/issue state,
+     git ref, or saved receipt) per Transition 4 step 3: adopt if verified complete; execute before
+     unrelated work if provably unstarted and safe; HOLD without repeating external effects if the
+     outcome is uncertain.
 
 ---
 
@@ -333,6 +363,42 @@ When a parent session drops, disconnects, or is reinvoked to recover an in-fligh
    - *Never retry an unknown outcome:* an uncertain build or external mutation holds for operator inspection.
 5. **Budget Preservation:** Recovery preserves original deadlines, attempt counters, and authority;
    redispatches only within remaining unexpired budgets.
+
+### Killed-Landing Self-Recovery Protocol (KS-08)
+When a landing (`merge-cleanup --execute`) is killed or interrupted mid-flight, the child executes
+this fail-closed recovery protocol BEFORE touching any stale attempt record:
+
+1. **Stopped-Ownership Proof (Mandatory First Gate):**
+   - Verify the prior landing owner, its lock owner (`<record>.lock` and any repo/driver lock), and
+     every associated builder, check, or push subprocess or detached session are truly stopped
+     (using the stopped-ownership protocol above). Live, paused, or unknown ownership MUST hold
+     immediately without modifying any attempt record or redispatching.
+   - Identify the exact coordinator record under the pinned
+     `<LANDING_CLONE>/.tick/merge-cleanup/<repo_slug>/pr-<N>.json` and the exact `in_progress`
+     attempt index before any `finish` call. Never create or switch to a second landing clone, and
+     never delete or reset attempt entries (preserving the 2-repair ceiling).
+2. **Remote PR State Check (`gh pr view <N> --json state,headRefOid,mergeCommit`):**
+   - **`MERGED` (unreconciled locally):** launch
+     `merge_cleanup.py --primary <LANDING_CLONE> --reconcile-pr <N> --integration-branch <original-integration-branch> --execute` (backgrounded),
+     passing the exact integration branch used by the interrupted landing. If that integration branch
+     cannot be confirmed, HOLD recovery rather than relying on the default branch.
+     NEVER run `--resume` or attempt another merge.
+   - **`OPEN` with `headRefOid` unchanged** (matching BOTH the original authorized full-SHA pin AND
+     the interrupted `in_progress` attempt's `head_sha`):
+     1. Record the diagnostic cause (consumes no budget):
+        `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py note --kind diagnosis --text "<cause>"`
+     2. Close the interrupted attempt (preserving its entry and repair count):
+        `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<cause>`
+     3. Confirm every PR in the original `--prs` list is still `OPEN` (do NOT run `--resume --execute`
+        while any PR in the original `--prs` list is no longer open; reconcile already-merged PRs via
+        `--reconcile-pr` with the original `--integration-branch` or HOLD for operator review before
+        proceeding) and confirm `repair_count` is preserved and within budget, then launch
+        `merge_cleanup.py --primary <LANDING_CLONE> --root <ROOT> --prs <original-authorized-N@full-sha-list> [<original-landing-policy-flags>] --resume --execute`
+        (backgrounded). Never widen the PR selection during recovery.
+   - **`OPEN` with `headRefOid` changed, `CLOSED`, or remote state/outcome unknown:** HOLD (never
+     retry an unknown outcome).
+3. **Budget & Repair-Ceiling Preservation:** Recovery preserves original wall deadlines, global
+   task budgets, authority bounds, and the 2-repair ceiling across retries.
 
 ---
 

@@ -252,6 +252,17 @@ def _request_material(snapshot: dict, config: dict) -> str:
     return "\n".join(parts)
 
 
+PROVIDER_QUOTA_RE = re.compile(
+    r"(?:\b429\b|too many requests|rate.?limit|usage.?limit|insufficient_quota|\bquota\b)",
+    re.I,
+)
+
+
+def is_provider_quota_error(text: str) -> bool:
+    """Classify provider 429 / rate-limit / usage-limit / quota failures (GH-1548 / U13)."""
+    return bool(PROVIDER_QUOTA_RE.search(text or ""))
+
+
 def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
     if not snapshot["inbox"] and not _probe_due(snapshot):
         d = _decision("idle", {}, "no actionable input (no agent call)")
@@ -309,7 +320,7 @@ def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
             return accounted((res.stdout or "")[-2000:], "timeout", None, None, "unknown")
         text = (res.stdout or "") + (res.stderr or "")
         if res.rc != 0:
-            normalized = "rate-limited" if re.search(r"429|rate.?limit|usage.?limit|quota", text, re.I) else "adapter-error"
+            normalized = "provider-quota" if is_provider_quota_error(text) else "adapter-error"
             return accounted(text[-2000:], normalized, None, None, "unknown")
         for line in (res.stdout or "").splitlines():
             line = line.strip()

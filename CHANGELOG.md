@@ -1,3 +1,5 @@
+- **GH-1548 (KS-05):** Attributed per-invocation stop-reason receipts (`relay-drive.py` `--invocation-id` / `--stop-receipt` + verbatim stderr trailer), fresh per-turn driver-owned shim logs via child-only `turn_env`, and U13 `429`/quota classification as `provider-quota` (distinct from `turn-error` and `cap-stalled`) across `utils/py/harness.py` and `utils/py/relay_drive.py`.
+
 # Changelog
 
 ## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
