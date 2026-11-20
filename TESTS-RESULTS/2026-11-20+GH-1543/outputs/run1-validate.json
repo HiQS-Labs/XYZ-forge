@@ -1,0 +1,116 @@
+{
+  "amendments": [
+    {
+      "id": "OA-1",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 3,
+      "text": "#1508 decided: extends default list (operator turn)",
+      "ts": "2026-11-20T01:50Z"
+    },
+    {
+      "id": "OA-2",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 4,
+      "text": "#1519/#1532 accepted at round cap (operator turn)",
+      "ts": "2026-11-20T~03:00Z"
+    },
+    {
+      "id": "OA-3",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 5,
+      "text": "CodeRabbit advisory, 30-min max wait (operator turn)",
+      "ts": "2026-11-20T03:12Z"
+    },
+    {
+      "id": "PN-1",
+      "kind": "PARENT_NOTE",
+      "line_no": 6,
+      "text": "Check remaining four PRs before handback",
+      "ts": "2026-11-20T03:45Z"
+    }
+  ],
+  "applied": [
+    {
+      "action": "merged #1508",
+      "disposition": "applied",
+      "id": "OA-1",
+      "line_no": 8,
+      "superseded_by": null,
+      "ts": null
+    },
+    {
+      "action": "landed #1532 at 5db9db385",
+      "disposition": "applied",
+      "id": "OA-2",
+      "line_no": 9,
+      "superseded_by": null,
+      "ts": "2026-11-20T05:17Z"
+    },
+    {
+      "action": "waiting on operator confirmation",
+      "disposition": "escalated",
+      "id": "PN-1",
+      "line_no": 10,
+      "superseded_by": null,
+      "ts": "2026-11-20T04:00Z"
+    },
+    {
+      "action": "all four PRs checked and landed",
+      "disposition": "applied",
+      "id": "PN-1",
+      "line_no": 11,
+      "superseded_by": null,
+      "ts": "2026-11-20T05:20Z"
+    }
+  ],
+  "baselines": [
+    {
+      "line_no": 14,
+      "text": "merged=13 interventions=7 operator_decisions=4"
+    }
+  ],
+  "errors": [],
+  "escalated_amendments": [],
+  "gates": [
+    {
+      "line_no": 12,
+      "note": null,
+      "route": "full",
+      "seconds": 856,
+      "sha": "2e9bb2bdd",
+      "target": "#1501",
+      "verdict": "green"
+    },
+    {
+      "line_no": 13,
+      "note": "(duration not recorded)",
+      "route": "tier1+full",
+      "seconds": null,
+      "sha": "0a87e686d",
+      "target": "final-QA",
+      "verdict": "green"
+    }
+  ],
+  "interventions": [
+    {
+      "id": "I-1",
+      "kind": "INTERVENTION",
+      "line_no": 7,
+      "text": "parent closed #1518 by hand",
+      "ts": "2026-11-20T01:50Z"
+    }
+  ],
+  "landing_clone": null,
+  "unresolved_amendments": [
+    {
+      "id": "OA-3",
+      "kind": "OPERATOR_AMENDMENT",
+      "line_no": 5,
+      "state": "pending",
+      "text": "CodeRabbit advisory, 30-min max wait (operator turn)",
+      "ts": "2026-11-20T03:12Z"
+    }
+  ],
+  "valid": true,
+  "version": 1
+}

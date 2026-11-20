@@ -6,7 +6,7 @@ updated: 2026-11-20
 owner: noelsaw1
 goal: "Bake KS-03 run defaults (CodeRabbit 30-min current-head wait + U5 waiver, KS-11 fail-closed decision defaults, verbatim quota fallback to agy, Flywheel per-PR approval satisfaction) into build_queue.py AUTHORITY and mirror in kickstart/SKILL.md"
 gh_issue: 1545
-roadmap_id: rmi-01M7VYA2QRZN12K734SE2NJ6WB
+roadmap_id: rmi-01M7W0M2J1GME4PAS6VC3Z93E5
 ---
 
 # GH-1545 (KS-03): Bake launch authority defaults into `build_queue.py` and `kickstart/SKILL.md`

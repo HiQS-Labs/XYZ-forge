@@ -98,6 +98,46 @@ session and the single delegated outer-loop child session. There are never compe
 
 ---
 
+## 1a. Run Record Contract (v1)
+
+Every kickstart run record uses the versioned v1 grammar parsed and written by a single
+canonical stdlib tool: `skills/1-hourly/kickstart/scripts/run_record.py` (GH-1543 / KS-15).
+Downstream status, amendment, recovery, and checkpoint steps read and append through this
+contract rather than ad-hoc regexes or unlocked appends.
+
+- **Initialization headers** (required when initializing or migrating a run record to v1):
+  - `RUN-RECORD-VERSION: 1` (mandatory; single header, no duplicates)
+  - `LANDING_CLONE: <path>` (pinned landing checkout for active runs; single non-empty header)
+- **Machine-readable event lines** (optional leading `- ` bullet tolerated):
+  - `OPERATOR_AMENDMENT: <ID> <ISO-UTC-TS> <text citing operator turn/comment/decision>`
+  - `PARENT_NOTE: <ID> <ISO-UTC-TS> <text>`
+  - `INTERVENTION: <ID> <ISO-UTC-TS> <text>`
+  - `APPLIED: <ID> → <disposition: applied|superseded|escalated> <action/artifact> [<ISO-UTC-TS>]`
+    - *Reserved-word precedence:* if the first token after `→` (or `->`) is lowercase
+      `applied`, `superseded`, or `escalated`, it is parsed as the explicit disposition and
+      the remaining action/reason must be non-empty (so `APPLIED: OA-1 → escalated` alone is
+      invalid). `superseded` must name a declared newer amendment ID (appearing later in the record). Otherwise, compact legacy
+      text (`APPLIED: OA-1 → merged #1508`) defaults to `disposition="applied"`.
+    - *Progression & unresolved state:* repeated `APPLIED:` lines are allowed only after
+      `escalated` (never after terminal `applied` or `superseded`). Amendments with no `APPLIED:`
+      line or latest disposition `escalated` remain unresolved until resolved.
+  - `GATE: <target> [head <sha>] <route> [<Ns>|(duration not recorded)] <green|red>`
+    (also accepts `GATE: final-QA <sha> <route> <verdict> (duration not recorded)`).
+  - `BASELINE: <summary>` (optional summary line).
+- **Subcommands (`run_record.py`):**
+  - `validate <record> [--require-landing-clone] [--json]` — validates v1 grammar and reports
+    `unresolved_amendments` and `escalated_amendments`.
+  - `append <record> --kind <...> ...` — acquires a persistent sibling lock (`<record>.lock`),
+    reads and validates the complete candidate record inside the lock, then writes atomically
+    via temp file + `fsync` + `os.replace`.
+  - `snapshot <record> [--out PATH]` — rejects empty input, normalizes local macOS/Linux
+    absolute home-directory paths to `~`, redacts secret tokens, and strips stray XML/tool tags.
+  - `checkpoint --record <path> --clone <dir> --primary <dir> --branch <branch> --dest <relpath> [--push]` —
+    commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
+    non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
+
+---
+
 ## 2. Daily-Goal Intake and Preparation Boundary
 
 Raw intake is permitted at invocation, but raw intake alone never confers execution readiness.
