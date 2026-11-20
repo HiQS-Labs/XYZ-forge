@@ -118,4 +118,13 @@ VERDICT: PASS
 
 STATUS: Approved. NEXT: Producer (antigravity).
 
+
+### Attestation · relay-drive — 2026-11-20T08:07:33Z
+task: RELAY-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 44f9f960eff4ef3ffa531f9e1af0a25d0bd297e1
+added-range: 9324+2991
+added-sha256: e26d0bbe339e97f8955c480761ee5771698cc596684e174a311def10232e2609
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
