@@ -1,7 +1,7 @@
 # Relay: GH-1547 (KS-04) Plan QA — kickstart_status.py Thin Derived Read-Only Status Report
 
 STATUS: In Progress
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -62,3 +62,12 @@ Updated `PROJECT/2-WORKING/GH-1547-KS04-KICKSTART-STATUS.md` to resolve every fi
 4. **Governance note:** Removed unconditional `CHANGELOG.md` edit from Files Changed; ledger updates stay restricted to canonical `releases_app.py` registration.
 
 Please review Round 2; if clean, append your review block and set `STATUS: Approved` and `NEXT: Done`.
+
+
+## Reviewer Round 2 — codex
+
+**Verdict: Needs changes (one remaining Major).** Round 1 findings 1 and 2 and the governance correction are addressed at plan level: full ownership attestations and precedence are explicit, canonical red/green final-QA is separated from actual landing evidence, and freshness requires a caller-verified head. The shared-file attribution fix still has one hole.
+
+1. **[Major] Bind sidecar provenance to the exact reason payload, or reject sidecar-only attribution.** In plan Inputs 6.2, a sibling `<escalation-file>.meta.json` containing only matching `invocation_id` suffices to accept the independently mutable shared reason file. Counterexample: invocation A leaves metadata identifying A; invocation B overwrites the shared plain-text reason with `cap-stalled` without updating that metadata; querying A accepts B's reason. This is possible even without simultaneous reads: the existing writer in `utils/py/relay_drive.py:636-640` writes only the plain reason file. The same problem applies if payload provenance explicitly identifies B while a stale sidecar identifies A: the specified OR permits acceptance. This still violates invocation attribution. The smallest correction is to accept only a single structured payload containing both the matching invocation ID and reason, and treat sidecar-only evidence as unknown. Alternatively require sidecar identity plus a digest binding to the exact bytes read, and reject conflicting provenance; do not add a writer or state subsystem in KS-04. Extend the existing planned manual attribution cases with matching-A metadata + overwritten-B payload, and conflicting payload/metadata IDs; both must remain unknown. Existing exclusive per-run receipts/logs remain a valid source.
+
+**Evidence and limits:** This is review of the revised plan, not implemented behavior. Directly read the complete seeded plan and the narrow existing writer. Source inspection command `sed -n '620,657p' utils/py/relay_drive.py` succeeded (exit 0 for the containing shell call); decisive source: `with open(reason_file, "w") as f: f.write(reason_str)`. No candidate implementation, fixture, test suite, phase gate or git command was executed. The counterexample above follows the plan's acceptance rule; it is not a claimed execution result. Graph project discovery found only the canonical Forge checkout, not this seeded worktree; its ready index generation is `2026-11-18T19:39:07Z`. Coverage reported the plan freshness missing and the writer metadata matching in that other checkout. Current seeded files were read directly; no graph completeness or current-worktree generation claim is made. Implementation and disposable-clone verification remain outstanding.
