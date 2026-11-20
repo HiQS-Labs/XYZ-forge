@@ -6,7 +6,7 @@ updated: 2026-11-20
 owner: noelsaw1
 goal: "Update build_queue.py and kickstart/SKILL.md so --owner Operator decision comments release decide holds (proceed or close bucket, never rule 9), and status:held labels, HELD: markers, and Blocked by #N / after #N body holds are enforced across all issue types"
 gh_issue: 1535
-roadmap_id: rmi-01M7VZEFJCGEV7EC8NKCJH5FEK
+roadmap_id: rmi-01M7W0THJHY59CNMVJPPN94A3A
 ---
 
 # GH-1535 (KS-02): Operator decision releases decide holds & body/label holds across all issue types
