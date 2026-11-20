@@ -392,9 +392,23 @@ def main() -> int:
     args.other, args.decide = numbers(args.other_session), numbers(args.needs_operator)
     cutoff = (dt.date.fromisoformat(args.as_of) - dt.timedelta(days=args.since_days)).isoformat()
     offline_replay = bool(args.prs_json or args.pr_meta_json or args.issues_json or args.daily_goals_json)
-    if not args.owner:
-        if offline_replay:
-            sys.exit("build_queue: replay needs --owner (saved inputs must not depend on who runs it)")
+    if offline_replay:
+        missing_replay = [
+            flag for flag, val in [
+                ("--prs-json", args.prs_json),
+                ("--pr-meta-json", args.pr_meta_json),
+                ("--issues-json", args.issues_json),
+                ("--owner", args.owner),
+                ("--repo-slug", args.repo_slug),
+            ]
+            if not val
+        ]
+        if missing_replay:
+            sys.exit(
+                "build_queue: offline replay requires complete saved inputs (zero network/git calls); "
+                f"missing: {', '.join(missing_replay)}"
+            )
+    elif not args.owner:
         args.owner = run_json(["gh", "api", "user"], root)["login"]
 
     minder = root / "skills/2-daily/pr-minder/scripts/pr_minder.py"
