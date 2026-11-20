@@ -1,0 +1,9 @@
+{"path": "manual-check.md", "sha256": "97bc2fa0ce6b8fd3941bb7bb162891fe2f1a83de9ce36b90b4bfdab7df807527", "bytes": 2202}
+{"path": "outputs/ci-route.txt", "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1", "bytes": 138}
+{"path": "outputs/code-and-docs.patch", "sha256": "2c1f6aa06236617cfee0e264837d1e2e393c51b89cabdb06aa3430d56f3b8847", "bytes": 4424}
+{"path": "outputs/controls.txt", "sha256": "e7c59318db43ec5a39c74f4e713df4e50fd3e80bbb0e7df95f302fa0a5db5a68", "bytes": 1398}
+{"path": "outputs/disposable-controls.txt", "sha256": "0b6d504c14fe765bd5f83eaa627e3f2bf62d7727ed2c1b61496e3fa773444208", "bytes": 1101}
+{"path": "outputs/mypy.log", "sha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e", "bytes": 42}
+{"path": "outputs/mypy.txt", "sha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e", "bytes": 42}
+{"path": "outputs/pdda-run.log", "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a", "bytes": 28982}
+{"path": "outputs/pre-change-build-queue.txt", "sha256": "64017a1bd175c45232ca254d2e0e180bf192b77ae881050c533bd39baa1f9f93", "bytes": 222}

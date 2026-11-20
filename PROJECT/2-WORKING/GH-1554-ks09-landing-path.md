@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Created fresh clone, registered `rmi-01M7W49M932C2F89M7XTM9S5KW`, completed grounded recon of `merge_cleanup.py:2498-2530,2711-2713,3005-3112`, `merge-cleanup/SKILL.md:129-145,366-377`, `kickstart/SKILL.md`, and `build_queue.py:203-207`. | Complete Codex Plan QA, implement KS-09 in `kickstart/SKILL.md` and `build_queue.py`, run paired disposable-clone red/green controls + mypy + PDDA under `TESTS-RESULTS/2026-11-20+GH-1554/`, and pass Final QA. |
+| Implemented KS-09 unambiguous landing path (`LANDING_CLONE`, exit-4 `--record-sweep`, exit-8 preserve/reconcile/HOLD) in `SKILL.md` and `build_queue.py`; passed disposable-clone Controls 1A/1B/2/3, mypy (0 issues), and PDDA (0 errors). | Complete Codex Final QA, open PR, and land. |
 
 ## Objective
 Make kickstart's landing path unambiguous (issue #1541 KS-09, U10): one pinned `LANDING_CLONE:` for the entire run, one canonical `merge-cleanup --execute` writer, deterministic exit-4 and exit-8 handling, and removal of the contradicting `"Reconcile once at the end."` line in `build_queue.py`.

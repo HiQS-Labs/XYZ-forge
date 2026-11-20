@@ -1,0 +1,11 @@
+=== CONTROL 1A: Changed build_queue.py Bucket C Output (Executable) ===
+PASS: 1. Mergeability UNKNOWN or behind: #1501 Sample behind PR. Refresh their state, then land them as one merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.
+
+=== CONTROL 1B: Pinned Primary Enforcement & Single LANDING_CLONE (Executable CLI) ===
+Green pinned LANDING_CLONE --scan-only: rc=0
+Red invalid --primary refusal: rc=2 msg=merge-cleanup: ERROR — cannot read merge policy /private<tmp-dir>/missing-primary/.merge-cleanup.json: [Errno 2] No such file or directory: '/private<tmp-dir>/missing-primary/.merge-cleanup.json'
+
+=== CONTROL 2: Exit-4 --record-sweep with verdict: deferred (Executable CLI) ===
+batch_record inspection: batch_record attrs: ['qa_pending', 'record_verdict', 'unfinished_batches']
+Real --record-sweep with no pending batch (fail-closed): rc=2 msg=merge-cleanup: ERROR — no merge batch with QA pending for /private<tmp-dir>/landing-clone on 'development'
+Disposable clone git status: (clean)

@@ -203,7 +203,7 @@ def render(args, prb, issb, needs, skipped, folded_map) -> str:
     if prb["C"]:
         items = "; ".join(f"#{n} {t}{with_issues(n, c)}" for n, t, c in prb["C"])
         lines.append(f"Mergeability UNKNOWN or behind: {items}. Refresh their state, then land them as one "
-                     "merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Reconcile once at the end.")
+                     "merge-cleanup batch from the pinned LANDING_CLONE (--primary \"$LANDING_CLONE\"; the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.")
     for n, title, closes in prb["D"]:
         lines.append(f"Draft #{n} {title}{with_issues(n, closes)}: finish or close, with evidence.")
     for n, title, _ in issb["E"]:
