@@ -88,3 +88,12 @@ Please review Round 3; if clean, append your review block and set `STATUS: Appro
 **Verdict: Approved (plan only).** The remaining Round 2 Major is resolved in Inputs 6.2–6.3 and Verification 6. Shared-file attribution now requires a single self-contained payload with both the matching invocation ID and a non-empty reason; sidecars are ignored. Consequently matching-A stale metadata cannot authenticate overwritten plain text, and payload-B cannot be accepted for invocation A. Both counterexamples are explicitly included in the planned manual checks. This is the smallest correction and introduces no writer or state subsystem. Earlier plan-level resolutions remain intact; no blocking plan findings remain.
 
 **Evidence and limits:** Read the seeded plan directly, including the revised attribution rules and manual cases, and re-read the existing writer with `sed -n '620,650p' utils/py/relay_drive.py` (exit 0). Decisive source remains `with open(reason_file, "w") as f: f.write(reason_str)`, which confirms why plain text plus a stale sidecar is insufficient. This turn performed source review, not an executable behavior probe. The canonical Forge graph is ready at generation `2026-11-18T19:39:07Z`; coverage reports the plan missing in that other checkout and writer metadata matching. Current seeded files were therefore read directly; no current-worktree graph completeness claim is made. No git command, executable fixture, test suite, or phase gate was run. Approval authorizes proceeding from the plan; implementation, red/green checks, read-only invariance evidence, and final independent QA remain outstanding and are not presumed satisfied by any later gate.
+
+### Attestation · relay-drive — 2026-11-20T08:27:15Z
+task: RELAY-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 8a3691208841c38d3e088419975dfe2cf38b8ab7
+added-range: 12803+1631
+added-sha256: a53439c206951f7bf778a5ce36192c8bf7a6db874e2b635782199a43cb082cc4
+gate-run: undeclared
