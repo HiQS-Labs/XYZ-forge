@@ -1,6 +1,6 @@
-{"path": "manual-check.md", "sha256": "d3397eb09e9a3c23b61dff74293402f60be8fb1138b5c2833ec88b8b73a353ac", "bytes": 3451}
-{"path": "outputs/ci-route.txt", "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1", "bytes": 138}
-{"path": "outputs/disposable-controls.txt", "sha256": "9271b4f86e19c8228b3c1c6b8cb34c37b768f3a6186cda63414f57b559c97cdb", "bytes": 1177}
-{"path": "outputs/pdda-run.log", "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a", "bytes": 28982}
-{"path": "outputs/positive-cli-controls.txt", "sha256": "86b9139f1467cdc858868fcf5cadf8e398199f8e32b15b38d63794f8d0ff77d2", "bytes": 3170}
-{"path": "outputs/skill-diff.patch", "sha256": "62dd90c19ee6658953e0b1a225202c5307defbbde134681b087c6b896ede7428", "bytes": 3010}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1552/manual-check.md", "bytes": 3451, "sha256": "d3397eb09e9a3c23b61dff74293402f60be8fb1138b5c2833ec88b8b73a353ac"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1552/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1552/outputs/disposable-controls.txt", "bytes": 1177, "sha256": "9271b4f86e19c8228b3c1c6b8cb34c37b768f3a6186cda63414f57b559c97cdb"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1552/outputs/pdda-run.log", "bytes": 28982, "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1552/outputs/positive-cli-controls.txt", "bytes": 3170, "sha256": "86b9139f1467cdc858868fcf5cadf8e398199f8e32b15b38d63794f8d0ff77d2"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1552/outputs/skill-diff.patch", "bytes": 3573, "sha256": "202e81f5c7917985fb140eb3ebb42fd4e2cc0286487421965c5b5595b6cd3e17"}
