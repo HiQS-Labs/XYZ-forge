@@ -259,6 +259,37 @@ When a parent session drops, disconnects, or is reinvoked to recover an in-fligh
 5. **Budget Preservation:** Recovery preserves original deadlines, attempt counters, and authority;
    redispatches only within remaining unexpired budgets.
 
+### Killed-Landing Self-Recovery Protocol (KS-08)
+When a landing (`merge-cleanup --execute`) is killed or interrupted mid-flight, the child executes
+this fail-closed recovery protocol BEFORE touching any stale attempt record:
+
+1. **Stopped-Ownership Proof (Mandatory First Gate):**
+   - Verify the prior landing owner, its lock owner (`<record>.lock` and any repo/driver lock), and
+     every associated builder, check, or push subprocess or detached session are truly stopped
+     (using the stopped-ownership protocol above). Live, paused, or unknown ownership MUST hold
+     immediately without modifying any attempt record or redispatching.
+   - Identify the exact coordinator record under the pinned
+     `<LANDING_CLONE>/.tick/merge-cleanup/<repo_slug>/pr-<N>.json` and the exact `in_progress`
+     attempt index before any `finish` call. Never create or switch to a second landing clone, and
+     never delete or reset attempt entries (preserving the 2-repair ceiling).
+2. **Remote PR State Check (`gh pr view <N> --json state,headRefOid,mergeCommit`):**
+   - **`MERGED` (unreconciled locally):** launch
+     `merge_cleanup.py --primary <LANDING_CLONE> --reconcile-pr <N> --execute` (backgrounded).
+     NEVER run `--resume` or attempt another merge.
+   - **`OPEN` with `headRefOid` unchanged** (matching BOTH the original authorized full-SHA pin AND
+     the interrupted `in_progress` attempt's `head_sha`):
+     1. Record the diagnostic cause (consumes no budget):
+        `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py note --kind diagnosis --text "<cause>"`
+     2. Close the interrupted attempt (preserving its entry and repair count):
+        `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<cause>`
+     3. Confirm `repair_count` is preserved and within budget, then launch
+        `merge_cleanup.py --primary <LANDING_CLONE> --root <ROOT> --prs <original-authorized-N@full-sha-list> [<original-landing-policy-flags>] --resume --execute`
+        (backgrounded). Never widen the PR selection during recovery.
+   - **`OPEN` with `headRefOid` changed, `CLOSED`, or remote state/outcome unknown:** HOLD (never
+     retry an unknown outcome).
+3. **Budget & Repair-Ceiling Preservation:** Recovery preserves original wall deadlines, global
+   task budgets, authority bounds, and the 2-repair ceiling across retries.
+
 ---
 
 ## 5. Verification and Acceptance
