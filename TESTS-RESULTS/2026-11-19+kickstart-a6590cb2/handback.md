@@ -16,7 +16,7 @@
 | 8 #1517 | MERGED via PR #1534 (express refused: execution-authority skill) | da1bfef4c |
 | 9 #1499 / #1500 | #1499 MERGED via PR #1533; #1500 PARKED (digest migration) | caf8e2724 |
 | 10 #1522 | MERGED via PR #1531 | a943bc50c |
-| 11 #1508 | PARKED mid-landing — PR #1539 (see below) | head 1115f376d |
+| 11 #1508 | PARKED mid-landing — PR #1539 (details: run-record.md, item 11 entry and the INTERVENTION I-7 line) | head 1115f376d |
 | 12 stale batch issues | PARKED — none verified complete; status comment on each | — |
 | 13 refactors #1480–#1483 | BLOCKED on unlanded predecessors | — |
-| 14 final QA | run 1 on 0a87e686d: 408/408; run 2 on new tip: see run record | — |
+| 14 final QA | run 1 on 0a87e686d: rc=0, 0 failing; run 2 on 04979701a: 408/408 (see run record) | — |
