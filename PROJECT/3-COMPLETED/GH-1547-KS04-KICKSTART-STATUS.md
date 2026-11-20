@@ -1,6 +1,6 @@
 ---
 title: "GH-1547 (KS-04): kickstart_status.py thin derived read-only status report"
-status: active
+status: Complete
 created: 2026-11-20
 updated: 2026-11-20
 owner: noelsaw1
