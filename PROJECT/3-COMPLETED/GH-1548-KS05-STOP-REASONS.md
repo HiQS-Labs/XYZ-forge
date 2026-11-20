@@ -1,6 +1,6 @@
 ---
 title: "GH-1548 (KS-05): quote stop reasons verbatim, attribute to current run, and surface 429 as provider-quota"
-status: active
+status: Complete
 created: 2026-11-20
 updated: 2026-11-20
 owner: noelsaw1
