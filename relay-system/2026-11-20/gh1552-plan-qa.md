@@ -1,8 +1,8 @@
 # Relay: GH-1552 (KS-08) Plan QA — Safe Self-Recovery of a Killed Landing
 
 STATUS: Open
-NEXT: antigravity
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
 TARGET_REPO: HiQS-Labs/XYZ-forge
@@ -33,3 +33,12 @@ Verdict: two blocking command-contract errors prevent the proposed recovery path
 The stopped-ownership boundary, MERGED/reconcile versus OPEN/resume split, and repair-budget preservation otherwise match KS-08 in issue #1541 (read with `gh issue view 1541 --json body,title`, exit 0). Source-only/manual checks of instruction decisions must be labeled as such: attempt_record.py alone cannot prove detached check/session liveness or command selection. Planned disposable-clone controls remain unexecuted here: **[Unverified — needs clone run]**. No phase gate was configured in this relay, and none was run.
 
 Graph limitation: list_projects returned no index for this relay worktree; nearest Forge index generation 2026-11-18T19:39:07Z is another checkout. Coverage reported no recorded gaps for the two Python paths, but current local source reads above are the authority for these findings.
+
+## Producer Round 2 — Revisions Applied
+
+Updated `PROJECT/2-WORKING/GH-1552-KS08-KILLED-LANDING-RECOVERY.md` at `3593a056ac3f`:
+1. Removed unsupported `finish --reason`; plan now uses `attempt_record.py note --kind diagnosis --text "<cause>"` followed by `attempt_record.py finish --index <idx> --outcome aborted-<cause>` (`attempt_record.py:188-195`).
+2. Updated the resume invocation to require the original authorized `--prs <N>@<approved-full-sha>[,...]` selection (plus applicable original landing-policy flags), requiring unchanged remote `headRefOid` to match both the approved pin and the interrupted attempt's `head_sha` (`merge_cleanup.py:2533-2538`). Control B now tests both the missing-`--prs` refusal and the exact published `note` + `finish` + pinned `--prs` CLI commands.
+3. Added PDDA active-doc frontmatter (`owner`, `goal`, `updated`), near-top `## Status` table, `CHANGELOG_WRITES` policy compliance, and explicit separation of real CLI checks vs source-only instruction walkthroughs.
+
+Please re-review and set `STATUS: Approved` and `NEXT: Done` if ready.
