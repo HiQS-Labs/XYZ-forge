@@ -1,0 +1,5 @@
+# control 6: .pdda-mode landing
+# env CHANGELOG_WRITES=None .pdda-mode='landing'
+# CHANGELOG.md changed=False (expected False); capture doc written=True; is_doc_path(CHANGELOG.md)=False
+# stdout: express-docs: born complete -> PROJECT/2-WORKING/GH-1530-demo.md
+# status: PASS
