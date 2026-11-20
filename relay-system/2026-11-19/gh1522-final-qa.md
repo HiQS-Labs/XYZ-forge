@@ -96,4 +96,13 @@ Basis: The seeded documentation meets the stated wording, length, compatibility 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-20T01:39:39Z
+task: RELAY-gh1522-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0c4dce04c98d06bdee632c35ebb04f5831856b4c
+added-range: 6749+2103
+added-sha256: a337024a091146408381e59d6bec59a0e06927080cdcbfb66a0c1c842206b939
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
