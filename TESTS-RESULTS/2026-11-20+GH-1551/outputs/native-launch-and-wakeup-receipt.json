@@ -1,0 +1,71 @@
+{
+  "host": "antigravity (T3 Code harness)",
+  "outer_launch_invocation": {
+    "tool": "run_command",
+    "mechanism": "python3 subprocess.Popen([sys.executable, '/tmp/ks07-outer-probe/outer-launch.py'], start_new_session=True, stdin=subprocess.DEVNULL)",
+    "launch_event_file": "outputs/launch-event.json",
+    "detached_pid": 37102,
+    "launched_utc": "2026-11-20T09:53:47Z"
+  },
+  "native_completion_notification": {
+    "tool": "schedule",
+    "args": {
+      "DurationSeconds": 620,
+      "TimerCondition": "never",
+      "Prompt": "KS-07 detached 605s outer probe (pid 37102) has reached 620s \u2014 collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3"
+    },
+    "task_id": "c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113",
+    "scheduled_utc": "2026-11-20T09:55:09.114516Z",
+    "wakeup_message_verbatim": "[Message] timestamp=2026-11-20T10:05:29Z sender=c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113 priority=MESSAGE_PRIORITY_HIGH content=KS-07 detached 605s outer probe (pid 37102) has reached 620s \u2014 collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3"
+  },
+  "os_exit_receipt": {
+    "synthetic_workload": true,
+    "u7_boundary": "Synthetic 605s sleep workload; zero repo, git, or GitHub mutations.",
+    "outer_launcher_cmd": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/tmp/ks07-outer-probe/outer-launch.py"
+    ],
+    "outer_launcher_pid": 37102,
+    "outer_started_utc": "2026-11-20T09:53:47Z",
+    "outer_completed_utc": "2026-11-20T10:03:52Z",
+    "red_arm": {
+      "arm": "red_fg_600s_cap",
+      "cmd": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-c",
+        "import time; time.sleep(605)"
+      ],
+      "started_utc": "2026-11-20T09:53:47Z",
+      "ended_utc": "2026-11-20T10:03:47Z",
+      "elapsed_s": 600.01,
+      "timed_out": true,
+      "error": "TimeoutExpired after 600s (process killed by foreground timeout)"
+    },
+    "green_arm": {
+      "arm": "green_detached_start_new_session",
+      "launcher_pid": 37102,
+      "launcher_sid": 37102,
+      "child_pid": 37143,
+      "child_pgid": 37143,
+      "child_sid": 37143,
+      "detached_new_session": true,
+      "cmd": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-c",
+        "import os, time; print(f'START pid={os.getpid()} pgid={os.getpgrp()} sid={os.getsid(0)}', flush=True); time.sleep(605); print('DONE_605S', flush=True)"
+      ],
+      "started_utc": "2026-11-20T09:53:47Z",
+      "ended_utc": "2026-11-20T10:03:52Z",
+      "elapsed_s": 605.04,
+      "waitpid_pid": 37143,
+      "waitpid_raw_status": 0,
+      "wifexited": true,
+      "os_exit_code": 0,
+      "workload_log": "START pid=37143 pgid=37143 sid=37143\nDONE_605S"
+    },
+    "assertions_passed": true
+  },
+  "outer_rc_raw": "0",
+  "synthetic_workload": true,
+  "u7_boundary": "Synthetic 605s sleep workload; NOT a production merge-cleanup --execute landing replay. U7 remains uncredited until Run 2."
+}

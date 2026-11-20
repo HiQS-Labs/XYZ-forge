@@ -1,21 +1,31 @@
 # Manual Check — GH-1551 (KS-07: Long Operations Background-Only)
 
-Date: 2026-11-20
-Scope: `skills/1-hourly/kickstart/SKILL.md` (`route=docs`; no new test suite per GH-831).
+- **Issue:** #1551 (parent arc #1541, milestone KS-07)
+- **Scope:** `skills/1-hourly/kickstart/SKILL.md` (rule 5: Long Operations Background-Only Execution)
+- **Workload Classification:** **Synthetic mechanism check** (605-second sleep workload; zero repo, git, or GitHub mutations). Explicitly distinct from a production `merge-cleanup --execute` landing entry point. **U7 remains uncredited until Run 2.**
+- **CI Route:** `route=docs`, `tier=1`, `full_required=false` (`outputs/ci-route.txt`)
 
-## Synthetic Paired >10-Minute Mechanism Probe (Distinct From Production Landing Entry Point)
-Both arms ran the exact same synthetic 605-second workload (`outputs/run-ks07-probe.py`, invoked inside detached background session PID `95306` from `2026-11-20T09:14:12Z` to `09:24:17Z`; raw receipts in `outputs/launch-and-completion-receipt.txt` and `outputs/red-green-probe.txt`):
+## Exact Outer Launch & Native Completion Notification Receipts
 
-- **Red Control (Synthetic 600s Foreground Timeout Cap):**
-  - Executed the 605s workload under `subprocess.run(..., timeout=600)` (simulating the host tool's 600s foreground timeout that kills >10-min runs).
-  - Observed result: `subprocess.TimeoutExpired` (SIGKILL) at `600.0s`, `killed: true`, `marker_state: "started"`, `completed_reached: false`.
-- **Green Control (Background Execution Beyond 10 Minutes):**
-  - Executed the identical 605s workload in a detached background session (`start_new_session=True`, PID `95306`, exit-code receipt `probe.rc = 0` at `2026-11-20T09:24:17Z`), surviving past the 600s cap.
-  - Observed result: `returncode: 0`, `elapsed_s: 605.04`, `marker_state: "started\ncompleted"`, `completed_reached: true`.
-- **Truthful Scope & U7 / U8 Credit Boundaries:**
-  - This probe is a **synthetic mechanism check**, explicitly distinct from a production `merge-cleanup --execute` landing or live `#1539` incident replay (U8 forbids manufacturing a production incident).
-  - Real Run-2 acceptance (**U7**: at least one real Run-2 >10-min operation completing via host-native background launch + completion notification consumed exactly once) remains **uncredited** until Run 2 executes.
+1. **Outer Detached Launch (`outputs/launch-event.json` + `outputs/outer-launch.py`):**
+   - Outer launch invoked via `run_command` calling `subprocess.Popen([sys.executable, '/tmp/ks07-outer-probe/outer-launch.py'], start_new_session=True, stdin=subprocess.DEVNULL)` at `2026-11-20T09:53:47Z`, spawning detached outer launcher PID `37102`.
+   - Inside `outputs/outer-launch.py`, the **Green arm** launches the 605s workload in a new OS session (`start_new_session=True`, `stdin=DEVNULL`, `child_pid=37143`, `child_pgid=37143`, `child_sid=37143`, `detached_new_session=true`) and reaps its real kernel exit status via `os.waitpid(child_pid, 0)` (`waitpid_raw_status=0`, `os.WIFEXITED=true`, `os.WEXITSTATUS=0`), writing `outputs/outer-receipt.json` and `outputs/outer.rc` (`0`).
+   - In parallel, the **Red arm** runs the identical 605s workload under a 600s foreground timeout (`subprocess.run(..., timeout=600)`), which is killed at `600.01s` (`TimeoutExpired after 600s`) at `2026-11-20T10:03:47Z` before completion.
+2. **Host-Native Completion Notification (`outputs/native-launch-and-wakeup-receipt.json`):**
+   - Armed Antigravity host-native `schedule(DurationSeconds=620, TimerCondition="never")` (`task-1113`, scheduled `2026-11-20T09:55:09.114516Z`) so the session waited asynchronously without polling.
+   - Host delivered verbatim completion wakeup message at `2026-11-20T10:05:29Z`:
+     `[Message] timestamp=2026-11-20T10:05:29Z sender=c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113 priority=MESSAGE_PRIORITY_HIGH content=KS-07 detached 605s outer probe (pid 37102) has reached 620s — collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3`
+   - On wakeup, the session read `outputs/outer-receipt.json` confirming green arm finished cleanly at `2026-11-20T10:03:52Z` (`elapsed_s=605.04`, `os_exit_code=0`, stdout `START pid=37143 pgid=37143 sid=37143\nDONE_605S`).
 
-## PDDA & Route Verification
-- `utils/ci-route.sh pull_request` (piped changed files): `route=docs`, `tier=1` (`outputs/ci-route.txt`)
-- `./utils/pdda/pdda.sh run`: 0 errors (`outputs/pdda-run.log`)
+## Paired Red/Green Summary
+
+| Arm | Mechanism | Started UTC | Ended UTC | Elapsed | Result |
+|---|---|---|---|---|---|
+| **Red (foreground 600s cap)** | `subprocess.run(..., timeout=600)` on 605s workload | `2026-11-20T09:53:47Z` | `2026-11-20T10:03:47Z` | `600.01s` | **KILLED** (`TimeoutExpired` before completion) |
+| **Green (detached + OS `waitpid` + host-native `schedule` wakeup)** | `start_new_session=True` (`pid=37143`, `pgid=37143`, `sid=37143`) + `os.waitpid` + native `schedule` `task-1113` wakeup | `2026-11-20T09:53:47Z` | `2026-11-20T10:03:52Z` (wakeup `10:05:29Z`) | `605.04s` | **PASS** (`waitpid_raw_status=0`, `os_exit_code=0`, `DONE_605S`) |
+
+## Governance & Gate Checks
+- `utils/ci-route.sh pull_request` (`outputs/ci-route.txt`): `route=docs`, `tier=1`, `full_required=false`.
+- `env -u PDDA_LLM_BIN bash ./utils/pdda/pdda.sh run` (`outputs/pdda-run.log`): `0` errors.
+- `outputs/skill-diff.patch`: exact 11-line diff to `skills/1-hourly/kickstart/SKILL.md`.
+- `provenance.jsonl`: SHA-256 and byte counts for all retained artifacts under `TESTS-RESULTS/2026-11-20+GH-1551/`.

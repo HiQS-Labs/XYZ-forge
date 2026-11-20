@@ -1,7 +1,9 @@
-{"path": "manual-check.md", "sha256": "71937c73ccc73a257ba14ff44c5e850540bb3ac3ee67314014c4377bf3f08ba1", "bytes": 1969}
-{"path": "outputs/ci-route.txt", "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1", "bytes": 138}
-{"path": "outputs/launch-and-completion-receipt.txt", "sha256": "22725c880a84e98db7c6c2107879b8b81332930ed079082341082a73c664e632", "bytes": 2145}
-{"path": "outputs/pdda-run.log", "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a", "bytes": 28982}
-{"path": "outputs/red-green-probe.txt", "sha256": "0166524c4a7216d4fc18907f8c2bca6c6889de75a1d52d6db3789576d7220638", "bytes": 372}
-{"path": "outputs/run-ks07-probe.py", "sha256": "c77617f455fa22c6547cba3aab0daf0c6127d601ced07b8f000fb74905974931", "bytes": 2736}
-{"path": "outputs/skill-diff.patch", "sha256": "579e9055b811e84ff69c8288affdc2f66d4d0a4cae950bf22b6c39e2758abbf6", "bytes": 1597}
+{"path": "manual-check.md", "bytes": 3634, "sha256": "ea222c6d33658f63c532a0cdab1c88981b768550e2547d624cc18fa774cd34cb"}
+{"path": "outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
+{"path": "outputs/launch-event.json", "bytes": 315, "sha256": "8803e4a14d8fd5f8940440320257e8c4aea16c25f26d528210c9162148d37f9a"}
+{"path": "outputs/native-launch-and-wakeup-receipt.json", "bytes": 2986, "sha256": "e232b5cbbf3bd96a68246133bc90d52381a94a8a0cc73095c50e841c1b171473"}
+{"path": "outputs/outer-launch.py", "bytes": 4304, "sha256": "bec9e55bd3cd4458ab6522640194266c7eed1e473d1862f77b620a17e09cbc3d"}
+{"path": "outputs/outer-receipt.json", "bytes": 1544, "sha256": "85207d8c6f1e316528003a524276309f026f6cde73e87637926bce5b38f06c5e"}
+{"path": "outputs/outer.rc", "bytes": 2, "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"}
+{"path": "outputs/pdda-run.log", "bytes": 28983, "sha256": "d984af7cc16697692f55bfc5cbe479b9db86a131dc3472266ec0b20d5cea32ea"}
+{"path": "outputs/skill-diff.patch", "bytes": 1597, "sha256": "579e9055b811e84ff69c8288affdc2f66d4d0a4cae950bf22b6c39e2758abbf6"}

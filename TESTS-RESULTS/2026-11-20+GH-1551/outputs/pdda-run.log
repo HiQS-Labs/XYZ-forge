@@ -211,3 +211,4 @@ INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a mode
 SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
 
 PDDA run complete: no errors, 36 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+
