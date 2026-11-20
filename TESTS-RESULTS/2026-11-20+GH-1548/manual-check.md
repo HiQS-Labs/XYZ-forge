@@ -1,21 +1,28 @@
-# Manual Check — GH-1548 (KS-05: Verbatim Stop Reasons, Fresh Turn Logs, and U13 429→provider-quota)
+# Manual Check — GH-1548 (KS-05: Verbatim Stop Reasons, Fresh Per-Turn Logs, and U13 429→`provider-quota`)
 
+- **Issue:** #1548 (KS-05 from #1541)
 - **Date:** 2026-11-20
-- **Code Head Verified by Full Gate:** `b280e6709ce93b7e89676d0ac61c859bce119968`
-- **Changed Files Covered (`outputs/code-and-docs.patch`):** `utils/py/relay_drive.py`, `utils/py/harness.py`, `skills/1-hourly/relay-xyz/SKILL.md`
-- **Route:** `full` (`outputs/ci-route.txt`; touches `utils/py/` core harness code)
+- **Branch:** `feat/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20`
+- **Route:** `full` (`outputs/ci-route.txt`)
 
-## 1. Full Disposable-Clone Gate R2 (`outputs/disposable-full-gate.log` + `outputs/disposable-full-gate.done.json`)
-- Executed `./validate.sh` detached in a fresh disposable full clone of exact code head `b280e6709ce93b7e89676d0ac61c859bce119968` with `mypy==1.14.1` on `PATH`.
-- Complete `PRE-GATE SNAPSHOT` and `POST-GATE SNAPSHOT` recorded in `outputs/disposable-full-gate.log`: `HEAD=b280e6709ce93b7e89676d0ac61c859bce119968`, `core.bare=false`, `origin` preserved, local `user.email` unset (`rc=1`, unchanged), `git status --short` clean (`''`).
-- Result: **`validate_rc=0`**, `elapsed_s=996`, including `test/gh648-l7-checkout-aftermath.sh`, `python:test_python_layer.py`, `clone-identity-invariant`, and `gamma-poison-staleness-probe`.
+## Controls & Evidence (`outputs/controls-r3.txt`, 14231 bytes)
+1. **Control 1 (Red pre-change base vs Green candidate `zero-output-stall`):**
+   - `CONTROL_1A_RED_PRE_CHANGE_BASE`: pre-change `origin/development` `relay_drive.py` on zero-output exit-3 stall leaves stale `.relay-scratch/escalation-reason` (`cap-stalled`) untouched and writes 0 stop-reason receipts.
+   - `CONTROL_1B_GREEN_ZERO_OUTPUT_STALL`: candidate overwrites `.relay-scratch/escalation-reason` with `zero-output-stall` and writes `.relay-scratch/stop-reasons/<invocation_id>.json` (`reason="zero-output-stall"`, `exit_code=3`).
+2. **Control 2 (U13 Adapter-Level & Live-Stderr `provider-quota` Classification):**
+   - `CONTROL_2A_ADAPTER_CODEX_DECIDE`: pre-change `harness.py:codex_decide` vs candidate `harness.py:codex_decide` on HTTP 429/quota (`provider-quota`) vs non-quota error (`adapter-error`).
+   - `CONTROL_2B_LIVE_STDERR_QUOTA_VS_TURN_ERROR`: `relay_drive.py` classifies live stderr HTTP 429 as `provider-quota` and generic stderr failure as `turn-error`.
+3. **Control 3 (Per-Turn Fresh Log Isolation & Caller-Reused Log Falsifiers):**
+   - Three consecutive runs on the SAME relay task without `CODEX_LOG` receive 3 distinct fresh per-turn `CODEX_LOG` paths: Turn 1 quota -> `provider-quota`, Turn 2 repeated identical quota -> `provider-quota`, Turn 3 generic error -> `turn-error`.
+   - Caller-reused `CODEX_LOG` pre-seeded with stale HTTP 429: partial overwrite with generic error -> `turn-error` (stale 429 never leaks); live stderr HTTP 429 -> `provider-quota`.
+4. **Control 4 (Post-Start Consult Escalation Write Failure & Preflight Lock Contention):**
+   - `CONTROL_4A_POST_START_CONSULT_ESCALATION_WRITE_FAILED`: relay file missing `STATUS:` header with consult divergence exits `1`, sets legacy `escalation-reason` to `consult-escalation-write-failed`, and writes matching receipt.
+   - `CONTROL_4B_PREFLIGHT_LOCK_CONTENTION_PRESERVES_LEGACY`: active `.git/relay-driver.lock` causes competing driver to exit `1`, write `driver-lock-active` receipt, and preserve the active driver's `.relay-scratch/escalation-reason` (`active-driver-preserved-reason`).
+5. **Control 5 (Direct KS-04 Compatibility):**
+   - Executed authoritative KS-04 `skills/1-hourly/kickstart/scripts/kickstart_status.py --record ... --skip-prs --receipt <receipt> --json` directly against candidate `provider-quota` and `driver-lock-active` receipts — both exit `0` and parse cleanly.
+6. **Existing Regression Suites:** `test/gh115-round-cap.sh` and `test/gh505-relay-attest.sh` both exit `0`.
 
-## 2. Targeted Red/Green Controls (`outputs/manual-controls.txt`)
-- **Control 1 (`CONTROL_1_STALE_OVERWRITE_NO_ACTION_STALL`, exit 3):** Pre-seeded stale `.relay-scratch/escalation-reason` (`cap-stalled`) and stale `relay-drive-RELAY-KS05-1.log` (`STALE_OLD_RUN_LOG_LINE`); invoked real `relay_drive.py --review-once` with no-op shim; verified legacy `escalation-reason` overwritten to `no-action-stall`, per-invocation JSON receipt created with `reason="no-action-stall"` and `exit_code=3`, and stale legacy log untouched.
-- **Control 2 (`CONTROL_2_U13_PROVIDER_QUOTA`):** Verified `is_provider_quota_error` classifies 429 / quota / rate-limit errors as `True` and non-quota failures as `False`.
-- **Control 3 & 4 (`CONTROL_3_AND_4_429_PROVIDER_QUOTA_FRESH_RECEIPT`):** Invoked real `relay_drive.py --review-once` with HTTP 429 quota shim; verified verbatim `provider-quota` stop reason and distinct per-invocation receipt (`invocation_id` differs from Control 1).
-
-## 3. Governance & Route
-- `utils/ci-route.sh pull_request` (piped): `route=full` (`outputs/ci-route.txt`).
-- `./utils/pdda/pdda.sh run`: 0 errors (`outputs/pdda-run.log`).
-- No new test suites added (GH-831).
+## Full Disposable-Clone Gate Receipt (`outputs/full-gate-disposable-r2.log`)
+- Executed full `./validate.sh` in a fresh disposable clone with `user.email` unset and `mypy==1.14.1` on PATH: `validate_rc=0`, `elapsed_s=996`, complete PRE-GATE + POST-GATE snapshots retained.
+- `outputs/pdda-run.log`: `./utils/pdda/pdda.sh run` 0 errors.
+- `provenance.jsonl`: exact SHA-256 + byte lengths verified across all artifacts.
