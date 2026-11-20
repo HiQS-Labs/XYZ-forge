@@ -176,4 +176,13 @@ VERDICT: PASS
 Basis: tier discovery meets the DoD, flat nesting no longer changes direct-skill results, and retained evidence includes red controls. No new suite requested or created; suite execution remains explicitly producer-reported.
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-20T00:44:15Z
+task: RELAY-gh1499-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: d71a41e06f5fa6f990fd46738146e48c9037f41a
+added-range: 11191+3390
+added-sha256: 085b269d4009709551c75052a7894b906f7ca0e886b937b6e77f7ddd235c2b1f
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
