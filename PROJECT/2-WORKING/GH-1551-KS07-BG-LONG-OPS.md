@@ -36,6 +36,7 @@ Codify in `skills/1-hourly/kickstart/SKILL.md` that long operations (`merge-clea
 2. Honor the repository's configured `CHANGELOG_WRITES` mode (no task-branch `CHANGELOG.md` edit under default `off` / `landing`).
 3. Retain paired red/green evidence under `TESTS-RESULTS/2026-11-20+GH-1551/` (no new test suite, GH-831):
    - **Controlled mechanism probe (`605s` > 10 min):** paired synthetic workload labeled explicitly as a controlled foreground-timeout vs host-native-background mechanism check (not a replay of the production landing entry point) — red foreground 600s timeout kill (incomplete marker) vs green host-native background completion at 605s (completed marker, exit 0, delivered via native completion notification), recording exact command, exit status, launch/completion timestamps, and U7/U8 scope limits.
+     - **Superseded by what was executed:** the original plan expected one 605 s probe to show both the 600 s kill and a native completion. On Antigravity the 605 s probe showed only the red arm (kill at exactly 600 s) plus detached-OS survival at 605 s; native completion past 600 s was shown separately on Claude Code with a 660 s `run_in_background` command (`TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code.md`). Read the green arm above as that split, not as a single 605 s native completion.
    - Source-only instruction walkthrough + `./utils/pdda/pdda.sh run` (0 errors) + `provenance.jsonl`.
 
 ## Acceptance Criteria

@@ -3,7 +3,7 @@
 - **Issue:** #1551 (KS-07 from #1541)
 - **Date:** 2026-11-20
 - **Branch:** `feat/XYZ-forge-gh1551-ks07-bg-long-ops-2026-11-20`
-- **Route:** `docs` (18-file diff: rule 6 in `skills/1-hourly/kickstart/SKILL.md`, this evidence folder, the working doc and the GH-1551 ledger row; PR #1572)
+- **Route:** `docs` (PR #1572 scope: rule 6 in `skills/1-hourly/kickstart/SKILL.md`; this evidence folder; the working doc; the earlier relay QA receipts `relay-system/2026-11-20/gh1551-plan-qa.md` and `gh1551-final-qa.md`; the GH-1551 ledger row in `releases.db`/`releases.sql`)
 - **Workload Classification:** Synthetic 605s/3s probes on Antigravity and a synthetic 660s probe on Claude Code (U8). Real >10-minute production/run-2 landing or gate completion consumed exactly once (U7) remains **explicitly uncredited until run 2**.
 
 ## 1. Host-Native Background Capability Probe (`outputs/native-bg-host-capability-probe.json`)

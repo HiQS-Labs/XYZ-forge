@@ -1,4 +1,4 @@
-{"path": "TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md", "bytes": 3416, "sha256": "79cc68ca2ffde6d56f5ccbbaf2a49d3b4dedcb2aaf51c748a3d27c629f729a5f"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md", "bytes": 3537, "sha256": "499b035efabb58a9aaa07f8bb2e5c1da06c3d627e034a4783a545c17f786a2f8"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code.md", "bytes": 1871, "sha256": "6c0dc78d89b094707c19f564755b75dc0de7d620203cce3a0ebd51548cefb40f"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ks07-skill.patch", "bytes": 1936, "sha256": "8dfa370a1f97962575f12318c9d89a3382685a6bf111265c9a1dd87b8549e7b0"}
