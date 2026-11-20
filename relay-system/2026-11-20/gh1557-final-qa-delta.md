@@ -73,3 +73,12 @@ No Git commands were run. Candidate `ccdf14297cab7780d7565e2f7eb3895be5310811`, 
 **[Unverified — needs clone run]** Full-gate execution and actual autonomous child rerun remain run-2 acceptance work. Part B remains an explicitly simulated walkthrough. No suites, executable fixtures, phase gate, source edits, other tracked changes, or self-commit occurred. Approval assumes no subsequent gate.
 
 **NEXT: Done** — scoped delta approved; preserve these evidence limits in downstream reporting.
+
+### Attestation · relay-drive — 2026-11-20T15:20:25Z
+task: RELAY-FINAL-QA-DELTA-1557
+reviewer: codex
+status: Approved
+reviewed-head: d13827797e2fee6f54e67e46b5aeee58442ddea2
+added-range: 1528+4739
+added-sha256: 655d3b46d0eb3fcba4ba401d256d63351823f9ddb1061393f03224b3f7251bf7
+gate-run: undeclared
