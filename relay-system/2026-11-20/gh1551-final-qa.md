@@ -59,3 +59,16 @@ NEXT: antigravity
 Evidence commands (all exit 0): `cat TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md TESTS-RESULTS/2026-11-20+GH-1551/outputs/run-ks07-probe.py TESTS-RESULTS/2026-11-20+GH-1551/outputs/launch-and-completion-receipt.txt` showed the blocking subprocess arms and narrative-only outer-launch account; `tail -35 TESTS-RESULTS/2026-11-20+GH-1551/outputs/run-ks07-probe.py` showed both thread joins followed by writes of summary JSON and literal `0` to `probe.rc`. A read-only Python integrity check asserted nonempty artifact bytes, declared length and SHA-256 for each provenance row; decisive output: all seven paths `hash/size OK`. `tail -3 TESTS-RESULTS/2026-11-20+GH-1551/outputs/pdda-run.log` showed `PDDA run complete: no errors, 36 warning(s)` (producer evidence, not a reviewer rerun).
 
 Verification limits: no configured reviewer phase gate or TAKE YOUR TURN block appears in this thread. No validate/test/pytest/fixture or PDDA command ran, and no later gate is assumed. Graph inventory was consulted; this review concerns exact supplied text/artifacts, with no structural or exhaustive code claim. Only this relay file was edited; no git commands ran.
+
+## Turn 5 — Producer (Antigravity)
+
+Addressed the Final QA R2 finding by rerunning the synthetic 605-second paired probe through a real outer detached launch + kernel `os.waitpid` exit reaping + Antigravity host-native `schedule` completion wakeup, and retaining all raw receipts on head `ef396b0232b8cb9cdfb7b49beeacba661aa55321`:
+- `TESTS-RESULTS/2026-11-20+GH-1551/outputs/outer-launch.py`: actual executable outer launcher using `subprocess.Popen(..., start_new_session=True, stdin=subprocess.DEVNULL)` and real OS `os.waitpid` reaping (`waitpid_raw_status=0`, `wifexited=true`, `os_exit_code=0`).
+- `TESTS-RESULTS/2026-11-20+GH-1551/outputs/launch-event.json`: outer launch invocation receipt (`detached_pid=37102`, `launched_utc=2026-11-20T09:53:47Z`).
+- `TESTS-RESULTS/2026-11-20+GH-1551/outputs/outer-receipt.json` and `outputs/outer.rc` (`0`): paired red arm (`TimeoutExpired after 600s`, `600.01s`, ended `10:03:47Z`) vs green detached arm (`child_pid=37143`, `child_pgid=37143`, `child_sid=37143`, `detached_new_session=true`, `elapsed_s=605.04`, `waitpid_raw_status=0`, `os_exit_code=0`, stdout `START pid=37143 pgid=37143 sid=37143\nDONE_605S`, ended `10:03:52Z`).
+- `TESTS-RESULTS/2026-11-20+GH-1551/outputs/native-launch-and-wakeup-receipt.json`: verbatim host-native `schedule` (`task-1113`, scheduled `09:55:09Z`) completion notification delivered at `2026-11-20T10:05:29Z`, tying the outer launch and OS exit receipt together without polling.
+- Removed the earlier narrative-only reconstruction, kept the synthetic workload label and U7 boundary explicit, re-ran `pdda.sh run` (0 errors), and regenerated `provenance.jsonl`.
+
+Please review Round 3 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
