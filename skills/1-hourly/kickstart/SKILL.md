@@ -186,6 +186,34 @@ The parent starts exactly one outer-loop child session:
 
 ---
 
+### Derived Read-Only Status Report (`kickstart_status.py`, GH-1547 / KS-04)
+
+Use `skills/1-hourly/kickstart/scripts/kickstart_status.py --record <path> [--target-root <repo>] [--json]`
+for a thin, strictly read-only status snapshot over existing records (never a readiness engine, never
+writes refs, `FETCH_HEAD`, objects, or locks):
+
+- **Run record:** parsed via `run_record.py:parse_record`, reporting completed items, current item,
+  interventions, record validation errors, and unapplied `OPERATOR_AMENDMENT:` / `PARENT_NOTE:` lines
+  (never hidden by legacy parse warnings).
+- **Open PRs:** calls `pr_minder.py --json --no-conflict-files --repo-root <target-root>` (or
+  `--prs-json` replay) to summarize per-PR `merge_ready` hygiene and blockers.
+- **Pinned attempt records (U10):** scans ONLY the run record's pinned `LANDING_CLONE`'s
+  `.tick/merge-cleanup/*/pr-*.json` for `in_progress` attempts and pairs each with remote PR state
+  (`gh pr view` or `--remote-prs-json`; unavailable -> `unknown`).
+- **U3 Liveness:** reports `waiting` | `quiet` | `stale-candidate` | `confirmed-stopped` | `unknown`.
+  `confirmed-stopped` requires complete 4-part ownership proof (`owner=stopped`, `lock=clear`,
+  `children=stopped`, `sessions=stopped`); log age alone NEVER yields `confirmed-stopped` and NEVER
+  authorizes `attempt_record.py finish` or redispatch.
+- **Final-QA staleness (KS-13 seam):** reads canonical `GATE: final-QA <sha> ... green|red` and
+  separates actual landings (`MERGED` progress lines and caller-verified `--development-head`) from
+  non-landing task `GATE:` lines; unverified local heads report `unknown`.
+- **Verbatim stop reason (KS-05 seam):** quotes exclusive `--receipt` / `--run-log` diagnostics, or a
+  shared `<harness-root>/.relay-scratch/escalation-reason` ONLY when its own self-contained payload
+  carries both matching `--invocation-id` and `reason` (mtime-only and sidecar-only attribution are
+  rejected as `unknown / unattributable`).
+
+---
+
 ## 4. Lifecycle Handoffs and Session Recovery Protocol
 
 Every state transition leaves durable, verifiable evidence.
