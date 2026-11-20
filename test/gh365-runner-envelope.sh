@@ -206,7 +206,7 @@ grep -q 'python:test_python_layer.py" >> "$GATE_VERDICTS' "$REPO/ci-local.sh" \
 CB="$WORK/ci-fixture"
 mkdir -p "$CB/test/lib" "$CB/utils/pdda" "$CB/utils/py" "$CB/utils/hq" "$CB/relay-automation" "$CB/githooks"
 require_fixture "$CB" "fail-closed fixture"
-git -C "$CB" init -q; git -C "$CB" config user.email t@t; git -C "$CB" config user.name t
+git -C "$CB" init -q -b main; git -C "$CB" config user.email t@t; git -C "$CB" config user.name t
 cp "$REPO/validate.sh" "$CB/validate.sh"; chmod +x "$CB/validate.sh"
 cp "$REPO/test/lib/clone-identity.sh" "$CB/test/lib/clone-identity.sh"
 cp "$REPO/relay-automation/gate-env.sh" "$CB/relay-automation/gate-env.sh"

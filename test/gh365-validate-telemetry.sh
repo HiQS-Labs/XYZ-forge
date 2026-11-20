@@ -65,7 +65,7 @@ mkfixture() {
   local r="$WORK/vt-repo"
   rm -rf "$r"; mkdir -p "$r"
   require_fixture "$r" "telemetry fixture"
-  git -C "$r" init -q; git -C "$r" config user.email t@t; git -C "$r" config user.name t
+  git -C "$r" init -q -b main; git -C "$r" config user.email t@t; git -C "$r" config user.name t
   mkdir -p "$r/test/lib" "$r/utils/pdda" "$r/utils/py" "$r/utils/hq" "$r/relay-automation" "$r/githooks"
   cp "$REPO/validate.sh" "$r/validate.sh"; chmod +x "$r/validate.sh"
   cp "$REPO/test/lib/clone-identity.sh"   "$r/test/lib/clone-identity.sh"

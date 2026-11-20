@@ -14,12 +14,13 @@ trap 'rm -rf "$WORK"' EXIT
 [ -n "$WORK" ] && [ -d "$WORK" ] || { echo "FAIL: invalid test workdir"; exit 1; }
 
 echo "=== 1. Testing gate_receipt.py ==="
-TEST_SHA="11223344556677889900aabbccddeeff11223344"
 FAIL_SHA="ffffffffffffffffffffffffffffffffffffffff"
 
 # The receipt contract now identifies an actual repository/admin branch.
 RECEIPT_REPO="$WORK/receipt"
-git init -q "$RECEIPT_REPO"
+git init -q -b main "$RECEIPT_REPO"
+git -C "$RECEIPT_REPO" -c user.email=t@t -c user.name=t commit -q --allow-empty -m receipt
+TEST_SHA="$(git -C "$RECEIPT_REPO" rev-parse HEAD)"   # the administrative exemption covers a real candidate on main
 # Write valid receipt
 python3 "$ROOT/utils/py/gate_receipt.py" write \
   --repo "$RECEIPT_REPO" \

@@ -178,7 +178,7 @@ mkfixture() {  # -> prints fixture repo path
   local r
   r="$(mktemp -d "$WORK/repo.XXXXXX")"
   require_fixture "$r" "mkfixture repo"
-  git -C "$r" init -q
+  git -C "$r" init -q -b main
   git -C "$r" config user.email t@t
   git -C "$r" config user.name t
   mkdir -p "$r/relay-automation" "$r/utils/py" "$r/utils/pdda" "$r/utils/hq" "$r/githooks" "$r/test/lib"
