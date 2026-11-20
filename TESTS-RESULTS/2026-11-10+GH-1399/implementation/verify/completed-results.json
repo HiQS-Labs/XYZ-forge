@@ -1,0 +1,10 @@
+{
+  "completed_candidate": "998732eaaac0e894b388c80acd098c691132ef23",
+  "archive_sha256": "6343c24acc614a96b75485eaf4dfb72f7e1b92fe260dc445f4eaaf45fc912a7c",
+  "count": 1,
+  "same_candidate": true,
+  "unrelated_refused": true,
+  "historical_receipt_readable": true,
+  "actual_unaccounted_push_rc": 1,
+  "quality_receipt": "synthetic negative input, not a test pass"
+}

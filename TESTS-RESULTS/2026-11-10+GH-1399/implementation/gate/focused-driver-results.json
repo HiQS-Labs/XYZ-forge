@@ -1,0 +1,12 @@
+[
+  {
+    "suite": "gh129-relay-tick-root.sh",
+    "rc": 0,
+    "elapsed": 0.9883079528808594
+  },
+  {
+    "suite": "gh505-relay-attest.sh",
+    "rc": 0,
+    "elapsed": 23.211675882339478
+  }
+]

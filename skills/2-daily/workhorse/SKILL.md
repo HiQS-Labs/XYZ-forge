@@ -332,6 +332,17 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      - Test execution and verification results (Rung 6), plus any genuinely optional follow-ups.
    - If paused or externally blocked, report the accurate unfinished state and precise resumption
      requirement instead of claiming completion.
+**Forge qualification accounting:** before a standalone implementation episode qualifies
+or publishes, use the existing `gate_receipt.py attempt-start --repo TASK --accounting-root
+PRIMARY --task GH-N-workhorse --env` command and retain the returned context. Resolve PRIMARY
+from the run's maintained checkout, not the disposable gate clone. Pass the same reference to
+full verification clones; do not copy/reset counters. A parent-supplied lane or
+`MERGE_CLEANUP_RECORD` reservation is reused and validated, never double-booked. Finish only
+an owned manual reservation after intended publication (`attempt-finish --outcome completed`),
+or mark a stopped failed episode failed without clearing its budget. Diagnosis/review alone
+is not a build fire. Missing/exhausted context stops qualification and points to the existing
+booking command; it does not authorize a new identity, silent reset or bypass.
+
 5. **Re-Entry & Autonomous Loop:**
    - **Direct invocation:** re-read the run checklist on resume, reconcile it with the request, and
      continue feasible required work. `[!]` records a blocker; `[-]` is not an escape from required scope.

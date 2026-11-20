@@ -47,13 +47,13 @@ spec.loader.exec_module(mod)
 print(mod.runlog_find_comment_id(os.environ["MD_PAYLOAD"], os.environ["MD_MARKER"]))
 PYEOF
 }
-got="$(parser_probe "[[{\"id\":111,\"body\":\"$MARKER x\"}]]" 2>&1)"
+got="$(parser_probe "[[{\"id\":111,\"body\":\"$MARKER\\n x\"}]]" 2>&1)"
 [ "$got" = "111" ] && pass "parser finds the marker in a single slurped page" \
   || fail "single-page lookup returned '$got', expected 111"
-got="$(parser_probe "[[{\"id\":222,\"body\":\"unrelated\"}],[{\"id\":111,\"body\":\"$MARKER x\"}]]" 2>&1)"
+got="$(parser_probe "[[{\"id\":222,\"body\":\"unrelated\"}],[{\"id\":111,\"body\":\"$MARKER\\n x\"}]]" 2>&1)"
 [ "$got" = "111" ] && pass "parser finds the marker across MULTI-PAGE responses (no duplicate POST)" \
   || fail "multi-page lookup returned '$got', expected 111 — a miss here re-POSTs a duplicate marker"
-got="$(parser_probe "[{\"id\":111,\"body\":\"$MARKER x\"}]" 2>&1)"
+got="$(parser_probe "[{\"id\":111,\"body\":\"$MARKER\\n x\"}]" 2>&1)"
 [ "$got" = "111" ] && pass "parser still handles a flat (non-slurp) array" \
   || fail "flat-array lookup returned '$got', expected 111"
 got="$(parser_probe '[[]]' 2>&1)"

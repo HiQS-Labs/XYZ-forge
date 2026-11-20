@@ -1,0 +1,14 @@
+7a ok refused: reservation already finished as failed
+7b ok same-candidate completed retry accepted
+7c ok different candidate refused: reservation already finished as completed
+8a ok first attempt failed after rename: simulated write failure | live gone: True
+8b approval still points at live path: True
+8c retry returned archive: True
+8d approval now archived: True True
+8e archive bytes unchanged: True | env updated: True
+8f ok refused before rename: approval reservation changed before archive | live kept: True
+2a main tip sha -> {'kind': 'non-task', 'branch': 'main'}
+2b main no sha -> {'kind': 'non-task', 'branch': 'main'}
+2c task commit named from main -> REFUSED ValueError
+3a detached at main tip, no destination -> {'kind': 'integration-tip', 'ref': 'refs/heads/main'}
+3b detached at main tip, destination task -> REFUSED ValueError
