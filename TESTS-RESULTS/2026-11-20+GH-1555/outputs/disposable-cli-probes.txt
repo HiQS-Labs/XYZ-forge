@@ -1,25 +1,40 @@
-=== PROBE 1: ledger_merge.py Withheld Recommendation Branch (Disposable Full Clone) ===
-CMD: inspect ledger_merge.py clean-set fold / recommendation=None branch
+=== PROBE 1: Real ledger_merge.landing_forecast Execution (Withheld recommendation=None) ===
+CMD: python3 -c 'ledger_merge.landing_forecast(<disp>, base_sha, [1501,1502,1503], heads)' (1A: clean-set fold did not run; 1B: unknown member)
 EXIT: 0
-line 938: rec, reason = None, "forecast incomplete, no recommendation: " + "; ".join(bits)
-line 940: rec, reason = None, f"forecast incomplete, no recommendation: clean-set fold did not run at #{hubs['fold']['at']} ({hubs['fold'].get('reason') or 'not simulated'})"
-forecast_fns: ['_conflict_hubs', 'landing_forecast']
-_conflict_hubs (order: List[int], prs: Dict[str, Dict[str, Any]], pairs: List[Dict[str, Any]], hard_deps: Dict[int, Set[int]]) -> Dict[str, List[int]]
-landing_forecast (clone: pathlib.Path, base_sha: str, order: List[int], heads: Dict[int, str], unknown: Dict[int, str] | None = None, consumed: Dict[int, int] | None = None, timeout: int = 120, hard_deps: Dict[int, Set[int]] | None = None) -> Dict[str, Any]
+PROBE_1A_CALL_COUNT: 2
+PROBE_1A_RECOMMENDATION: None
+PROBE_1A_REASON: forecast incomplete, no recommendation: clean-set fold did not run at #1501 (simulated clean-set fold timeout)
+PROBE_1A_JSON: {"hubs": {"base": [], "clean_set": [1501, 1502], "dependents": [], "fold": {"at": 1501, "reason": "simulated clean-set fold timeout", "state": "unknown"}, "greedy": [1503], "later": [1503], "members": [1503]}, "reason": "forecast incomplete, no recommendation: clean-set fold did not run at #1501 (simulated clean-set fold timeout)", "recommendation": null}
+PROBE_1B_RECOMMENDATION: None
+PROBE_1B_REASON: forecast incomplete, no recommendation: #1503 (head fetch failed)
 
-=== PROBE 2: merge_cleanup.py --execute 3+ PR Queue Without --landing-plan (Disposable Full Clone) ===
-CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp> --root <tmp> --prs 1501,1502,1503 --execute
-EXIT: 2
+=== PROBE 2: Real merge_cleanup.py --execute 3+ PR Queue Without --landing-plan (GH-1066 Refusal) ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp> --root <tmp> --prs 1501@e3e7b8ee4890870d2cc533b70814d2a50d59ccfc,1502@2649c484d0061e1b04ee481d42e82052bbe93397,1503@f6900bd2d0769e56e8df18d57cedb55ce8699655 --execute --allow-unready-primary
+EXIT: 5
 DECISIVE OUTPUT:
-  merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/private<tmp-dir>/disp-repo/.merge-cleanup.json
-  merge-cleanup: Operating on primary repo: /private<tmp-dir>/disp-repo
+  REFUSAL: LANDING PLAN DECISION REQUIRED (GH-1066)
+  ================================================================================
   
-  merge-cleanup: ERROR — PR discovery failed after 3 attempts: none of the git remotes configured for this repository point to a known GitHub host. To tell gh about a new GitHub host, please use `gh auth login` — refusing to continue; the queue cannot be verified empty
+  Trade-offs to evaluate:
+    • direct: Sequential landing on development. Best when PRs are small, independent,
+              and have zero or low conflict risk. Each PR exercises the gate independently.
+    • group:  Combine candidates into a single integration branch (staging/<topic> or group/<topic>),
+              run preflight gates once on the combined tip, and land as a single merge.
+              Best when PRs are cross-dependent, touch shared subsystems, or to minimize gate churn.
+  
+  Guidance: See skills/2-daily/merge-cleanup/SKILL.md (GH-1066 section).
+  
+  To proceed, re-run with:
+    --landing-plan direct|group --landing-reason "<justification>"
+  
+  
+  merge-cleanup: ERROR — REFUSING to execute: 3 PRs ready to merge (#1501, #1502, #1503).
+  merge-cleanup: ERROR — GH-1066 merge-group policy requires an explicit landing decision for queues of 3+ PRs.
 
-=== PROBE 3: Verified merge_cleanup.py Threshold & Dry-Run Contract Lines ===
+=== SOURCE INSPECTION (Separate from Executable Probes 1 & 2): merge_cleanup.py Threshold & Dry-Run Lines ===
 L2775: if len(listed_order) >= 3:
 L2776: forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
 L2204: if dry_run:
 L2205: log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
 
-Disposable clone git status: (clean, zero mutations)
+Disposable clone boundary proof: isolated HOME + read-only fake gh shim (zero remote/working-tree mutations); git status = (clean)

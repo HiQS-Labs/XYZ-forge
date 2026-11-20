@@ -1,5 +1,5 @@
-{"path": "manual-check.md", "sha256": "23f6c9d60c2a344f7b3bd95f7c3e61e6d4a965cbdfea0c796fafe632e9a764d6", "bytes": 5114}
+{"path": "manual-check.md", "sha256": "edb79696a1cfc83dc312890c07b8632471fc8b6626a6a76c84483428902ea940", "bytes": 5931}
 {"path": "outputs/ci-route.txt", "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1", "bytes": 138}
-{"path": "outputs/disposable-cli-probes.txt", "sha256": "bfab980173cafd85693a1ac8618969ce0524324814f8da58fb2118c4754e419f", "bytes": 2003}
+{"path": "outputs/disposable-cli-probes.txt", "sha256": "75d6ff2c0a819b5f7ad5b27da97a94ffcf11fea2a76dffb9f958900a66c749cc", "bytes": 2816}
 {"path": "outputs/pdda-run.log", "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a", "bytes": 28982}
 {"path": "outputs/skill-diff.patch", "sha256": "9745149972d03b557873d752c6ef9623706db34e62dea39fbeee525374e5cf05", "bytes": 3498}
