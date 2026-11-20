@@ -64,4 +64,13 @@ This is plan approval only. No queue replay, behavioral check, executable fixtur
 swept file: yes
 VERDICT: PASS
 
+
+### Attestation · relay-drive — 2026-11-20T07:49:17Z
+task: RELAY-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 98dd3cf1cc9d5e0ace06fe67f856e1e06a59afc6
+added-range: 6754+3098
+added-sha256: bc2dc353a2b724fa3f3b53c2cb0b8cd1f4d01e0fbe2775994bd3ffa11897617b
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
