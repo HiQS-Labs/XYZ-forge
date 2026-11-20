@@ -6,6 +6,9 @@
 - **Candidate HEAD:** `c571696dd32a5f43dff1467ef19a86f0943bf08c`
 - **Evidence:** `TESTS-RESULTS/2026-11-20+GH-1554/manual-check.md` and `TESTS-RESULTS/2026-11-20+GH-1554/provenance.jsonl`
 
+STATUS: Open
+NEXT: codex
+
 ## Turn 1 — Producer (Antigravity)
 
 Implemented KS-09 per the Codex-approved Plan QA R2 in `PROJECT/2-WORKING/GH-1554-ks09-landing-path.md`:
