@@ -44,7 +44,7 @@ if ! grep -qE '^status:[[:space:]]+done$' <<<"$("$tick" info "$task" 2>/dev/null
   exit 3
 fi
 python3 - "$HARNESS" "$relay_file" "$task" "$reviewer" "$target_root" <<'PY'
-import os, sys, time
+import os, sys, time, json
 harness, relay_file, task, reviewer, target_root = sys.argv[1:6]
 sys.path.insert(0, os.path.join(harness, "utils", "py"))
 import relay_attest
@@ -70,9 +70,19 @@ rec = {
     "added_start": len(pre), "added_len": len(added), "added_sha256": relay_attest.sha256(added),
     "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "driver_pid": os.getpid(),
 }
+raw_context = os.environ.get("XYZ_ATTEMPT_CONTEXT")
+context = json.loads(raw_context) if raw_context else None
+if context and context.get("kind") == "lane":
+    from gate_receipt import attempt_admission
+    attempt_admission(target_root)
+    context["attestation"] = str(relay_attest.path_for(task, target_root))
+    rec["attempt_context"] = context
 trailer = relay_attest.trailer_text(rec)
 rec["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
 with open(relay_file, "a", encoding="utf-8") as f:
     f.write(trailer)
-relay_attest.write(rec)
+path = relay_attest.write(rec)
+if rec.get("attempt_context"):
+    from rtl import lane_attempt_finish
+    lane_attempt_finish(context, "active", rec["reviewed_head"], attestation=str(path))
 PY

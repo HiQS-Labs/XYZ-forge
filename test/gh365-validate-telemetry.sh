@@ -65,7 +65,7 @@ mkfixture() {
   local r="$WORK/vt-repo"
   rm -rf "$r"; mkdir -p "$r"
   require_fixture "$r" "telemetry fixture"
-  git -C "$r" init -q; git -C "$r" config user.email t@t; git -C "$r" config user.name t
+  git -C "$r" init -q -b main; git -C "$r" config user.email t@t; git -C "$r" config user.name t
   mkdir -p "$r/test/lib" "$r/utils/pdda" "$r/utils/py" "$r/utils/hq" "$r/relay-automation" "$r/githooks"
   cp "$REPO/validate.sh" "$r/validate.sh"; chmod +x "$r/validate.sh"
   cp "$REPO/test/lib/clone-identity.sh"   "$r/test/lib/clone-identity.sh"
@@ -74,6 +74,7 @@ mkfixture() {
   cp "$REPO/relay-automation/gate-env.sh" "$r/relay-automation/gate-env.sh"
   cp "$REPO/utils/ci-route.sh" "$r/utils/ci-route.sh"; chmod +x "$r/utils/ci-route.sh"
   cp "$REPO/utils/py/gate_env.py" "$r/utils/py/gate_env.py"
+  cp "$REPO/utils/py/gate_receipt.py" "$REPO/utils/py/rtl.py" "$r/utils/py/"
   printf '#!/usr/bin/env bash\necho stub-pdda ran\nexit 0\n' > "$r/utils/pdda/pdda.sh"; chmod +x "$r/utils/pdda/pdda.sh"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$r/utils/hq/hq.sh"
   # The real repo gitignores .tick/ (line 1 of its .gitignore) — the telemetry store lives under

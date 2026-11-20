@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1049-exec2",
+  "generated_at": "2026-11-16T06:25:31Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1049",
+  "phase": "gh-1049-dep-drift-absent-surface",
+  "lane": "gh-1049-dep-drift-absent-surface",
+  "token": "MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN-2",
+  "attempt": {
+    "count": 2,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "claude",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-dogfood-exec-2026-11-15",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": null,
+  "head_branch": "marathon/gh-1049-dep-drift-absent-surface-2026-11-15",
+  "head_sha": "f78df36c2553321fae00fc89e3c1c2f2019babd5",
+  "reviewed_candidate": "f78df36c2553321fae00fc89e3c1c2f2019babd5",
+  "reviewed_head": "e546a02fa788cc30db9e82bc344d11831e0de440",
+  "added_sha256": "cc6a534a96b14da6383dba034f6e1e57201dc2de84d2b7ef7e1384b94075ed76",
+  "attest_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-dogfood-exec-2026-11-15/.git/relay-attest/MARATHON-GH-1049-DEP-DRIFT-ABSENT-SURFACE-TURN-2.json",
+  "branch_redirect": false,
+  "gate": {
+    "cmd": "bash validate.sh --auto development",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-dogfood-exec-2026-11-15/.xyz/receipts/f78df36c2553321fae00fc89e3c1c2f2019babd5.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-16T06:07:46Z",
+    "finished_at": "2026-11-16T06:25:31Z"
+  }
+}

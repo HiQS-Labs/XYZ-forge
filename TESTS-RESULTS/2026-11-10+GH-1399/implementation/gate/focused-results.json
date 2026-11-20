@@ -1,0 +1,32 @@
+[
+  {
+    "suite": "gh35-test-tiers.sh",
+    "rc": 1,
+    "elapsed": 8.230395793914795
+  },
+  {
+    "suite": "gh509-gate-evidence.sh",
+    "rc": 0,
+    "elapsed": 0.9140667915344238
+  },
+  {
+    "suite": "gh441-gate-env-contract.sh",
+    "rc": 0,
+    "elapsed": 0.41103315353393555
+  },
+  {
+    "suite": "gh307-gate-env-scrub.sh",
+    "rc": 0,
+    "elapsed": 0.060671091079711914
+  },
+  {
+    "suite": "lane-attempt-cap.sh",
+    "rc": 0,
+    "elapsed": 0.1169440746307373
+  },
+  {
+    "suite": "gh129-relay-tick-root.sh",
+    "rc": 1,
+    "elapsed": 1.0497281551361084
+  }
+]
