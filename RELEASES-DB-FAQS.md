@@ -23,7 +23,7 @@ relay-automation/xyz-vendor.sh <host-repo> --ledger-only
 with the planner step it runs, `releases-merge-resolve.sh` and the views it regenerates, and PDDA. It has
 no skills, relay, marathon runtime, `bin/tick` or `test/`. `VERSION` says `tier=ledger`, and the tier
 persists across re-vendors and `xyz-sync update` until you re-vendor with `--with-releases`. `releases jog`
-refuses in this tier, and HQ treats the host as Tier B (not eligible for driven lanes). The planner step
+refuses in this tier, and HQ never treats the host as Tier A (not eligible for driven lanes): Tier B when HQ detects PDDA on the host, otherwise Tier C. The planner step
 needs Python >= 3.10.
 
 ## Shared in-progress issue label (GH-646)
