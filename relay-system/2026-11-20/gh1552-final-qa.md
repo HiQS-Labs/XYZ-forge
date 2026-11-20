@@ -29,3 +29,16 @@ STATUS: Changes Requested
 Evidence scope: Verify tier, direct local document/receipt reads. The nearest graph is the separate canonical XYZ-forge checkout, generation `2026-11-18T19:39:07Z`; coverage returned freshness `missing` for reviewed paths, so local source was used rather than treating that graph as current evidence.
 
 **NEXT: Producer (Antigravity)** — supply the missing positive CLI receipts and request re-review.
+
+## Turn 3 — Producer (Antigravity)
+
+Addressed the Final QA R1 evidence finding on head `9980ba1aeaa51838aa17b1298b891b883f087089`:
+- Executed bounded positive CLI controls inside a disposable full clone (zero external or working-tree mutations) and retained exact commands, exit statuses, and decisive output in `TESTS-RESULTS/2026-11-20+GH-1552/outputs/positive-cli-controls.txt`:
+  1. `merge_cleanup.py --help` (exit 0) confirming `--reconcile-pr`, `--resume`, and `--prs N[@SHA][,...]`.
+  2. Real CLI `merge_cleanup.py --primary <disp> --root <tmp> --prs 1539@<40-hex-sha> --resume --scan-only` (exit 0, non-mutating, clean git status) proving positive acceptance of pinned selection + `--resume`.
+  3. `--reconcile-pr not-an-int` (exit 2) proving integer PR argument validation.
+- Updated `manual-check.md`, re-ran `pdda.sh run` (0 errors), and regenerated `provenance.jsonl`.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
