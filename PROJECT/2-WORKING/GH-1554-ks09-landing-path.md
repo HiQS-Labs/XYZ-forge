@@ -2,7 +2,7 @@
 issue: 1554
 title: "kickstart(KS-09): unambiguous landing path, pinned LANDING_CLONE, exit-4/exit-8 handling, and build_queue reconcile text"
 status: active
-roadmap_id: rmi-01M7W49M932C2F89M7XTM9S5KW
+roadmap_id: rmi-01M7W9APMQ41N8F5V89G3HQAZQ
 parent_arc: 1541
 milestone: KS-09
 owner: antigravity
