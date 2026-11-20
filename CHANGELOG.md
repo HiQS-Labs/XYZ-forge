@@ -4,6 +4,17 @@
 
 Agy timeout messages now describe TTY, lock-named-file and socket observations without inferring a wait. File activity includes an explicit log/scratch caveat and no recommendation to increase budgets; its legacy reason code remains compatible. Relay dirty-file snapshots are labelled worktree state. Timeout/idle thresholds, sampling, exit codes and process-group cleanup are unchanged. Existing output assertions updated; no new suites. Verification: `TESTS-RESULTS/2026-11-16+GH-1506/`.
 
+## 2026-11-19 — GH-1518: start-task runs the full gate once, at push
+
+- `/start-task` now runs `ci-local.sh --fast` on the final approved commit and lets the pre-push hook run
+  the full `./validate.sh` suite as the single full-gate run. Before, a full `ci-local.sh` run was followed
+  by the same suite again at push (about 13 minutes extra per code PR). `utils/py/gate_receipt.py` is
+  unchanged; the operator chose the instruction change over receipt reuse.
+- The hand-off to the hook applies only when `bash githooks/install.sh --check` passes and the push is the
+  branch's first, so the hook classifies the whole PR diff. Otherwise (no hook installed, or the branch is
+  already on the remote and the pushed range could route `docs`), run full `./validate.sh` once on the final
+  commit before pushing; its receipt lets the hook skip the second run.
+
 ## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
 
 - `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.
