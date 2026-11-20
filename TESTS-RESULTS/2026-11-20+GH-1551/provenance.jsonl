@@ -1,6 +1,6 @@
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md", "bytes": 2530, "sha256": "376a6230029b89327ace0c13d2348b5af2b8777847b78913d9a8e2ec74530893"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
-{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ks07-skill.patch", "bytes": 1597, "sha256": "579e9055b811e84ff69c8288affdc2f66d4d0a4cae950bf22b6c39e2758abbf6"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ks07-skill.patch", "bytes": 3528, "sha256": "e5576e001954222a9cb94f5629173b8a966b99e8d45209651e3b548e73ad66e4"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/launch-event.json", "bytes": 315, "sha256": "8803e4a14d8fd5f8940440320257e8c4aea16c25f26d528210c9162148d37f9a"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/native-bg-host-capability-probe.json", "bytes": 2965, "sha256": "6e414a83ba534768ea6e70776972fa32563e3646d9fcd7ced36dd1c2ef38756c"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/native-launch-and-wakeup-receipt.json", "bytes": 2986, "sha256": "e232b5cbbf3bd96a68246133bc90d52381a94a8a0cc73095c50e841c1b171473"}

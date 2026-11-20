@@ -1,8 +1,27 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index 7269eaac..025ac0d9 100644
+index 874e93cf..c6059a43 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
-@@ -95,6 +95,17 @@ session and the single delegated outer-loop child session. There are never compe
+@@ -55,15 +55,9 @@ session and the single delegated outer-loop child session. There are never compe
+    The script's ordering is a
+    closed list, first match wins: own clean (confirmed `MERGEABLE`) PRs, own conflicting or
+    failing PRs, own behind or not-yet-`MERGEABLE` PRs as one merge-cleanup batch, drafts (finish
+-   or close; a draft stays a draft even when it also conflicts), small bug issues, operator-decided
+-   proceed issues (released by a latest `--owner` comment whose first non-empty line starts with
+-   `Operator decision`, never falling into unclassified), docs issues, stale merge-batch and
+-   inventory issues (verify, then close), operator-decided close issues (`Operator decision: close`
+-   — child verifies acceptance on `origin/development` and closes citing the commit), refactors
+-   gated on a named predecessor, final QA. Held PRs, other authors' PRs, decision-needed (unless
+-   released by `--owner`), `Operator decision: hold` overrides, issues with a `status:held` label,
+-   body `HELD:` marker, `Blocked by #N`, or open/active-gating `after #N` (fail-closed across all
+-   issue types, not overridden by an operator decision comment), other-session-owned and
++   or close; a draft stays a draft even when it also conflicts), small bug issues, docs issues,
++   stale merge-batch and inventory issues (verify, then close), refactors gated on a named
++   predecessor, final QA. Held PRs, other authors' PRs, decision-needed, other-session-owned and
+    unclassified items go to Needs-operator, and so does any PR whose closing keywords name a
+    parked issue: merging it would close an issue the run may not close.
+ 3. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts
+@@ -101,6 +95,19 @@ session and the single delegated outer-loop child session. There are never compe
  4. **Shared Unsafe Stops:** On shared unsafe conditions (lock contention, git safety
     violations, ledger drift, exhausted global budget) or owner-mandated stops, halts dispatch
     immediately, leaves a resumable checkpoint with observed evidence, and reports to parent.
@@ -11,8 +30,10 @@ index 7269eaac..025ac0d9 100644
 +   through the host's native background execution mechanism and wait via native completion
 +   notification (no polling loops, no `sleep`, no custom guard or runner wrapper). Foreground
 +   execution of these operations is forbidden; if the host lacks native background execution and
-+   completion notification, halt under Transition 3 (Shared Unsafe Stop) rather than falling back
-+   to foreground execution. Qualification boundaries: controlled/disposable-clone checks verify
++   completion notification that survives >10 minutes (for example, hosts whose background command
++   tool enforces a hard 600s wall-clock kill), halt under Transition 3 (Shared Unsafe Stop) rather
++   than falling back to foreground execution or mislabeling a fixed-time timer as a completion
++   notification. Qualification boundaries: controlled/disposable-clone checks verify
 +   foreground-timeout kill versus host-native background completion without manufacturing
 +   production incidents (U8), while full run-2 acceptance additionally requires at least one real
 +   run-2 operation exceeding 10 minutes completing in the background with its result consumed
