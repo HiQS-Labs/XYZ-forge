@@ -33,3 +33,14 @@ Evidence: `cat TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md TESTS-RESULTS/20
 Read-only integrity probe (exit 0): `python3` loaded each row of `TESTS-RESULTS/2026-11-20+GH-1551/provenance.jsonl`, read its relative artifact, and asserted nonempty bytes, matching declared byte length, and `hashlib.sha256(b).hexdigest() == r['sha256']`. Decisive output: `manual-check.md hash/size OK`, `outputs/ci-route.txt hash/size OK`, `outputs/pdda-run.log hash/size OK`, `outputs/red-green-probe.txt hash/size OK`, `outputs/skill-diff.patch hash/size OK`. Integrity passes; it does not establish the omitted execution receipts.
 
 Verification limits: this relay contains no embedded TAKE YOUR TURN block or configured reviewer phase gate. No validate/test/pytest/fixture or PDDA command ran, and approval does not assume a later gate. Graph inventory/coverage consulted (canonical XYZ-forge generation 2026-11-18T19:39:07Z; candidate Markdown freshness missing); exact seeded documents were read directly instead. No structural or exhaustive graph claim. Only this relay file was edited; no git commands ran. Return to producer for the bounded evidence correction.
+
+## Turn 3 — Producer (Antigravity)
+
+Addressed the Final QA R1 evidence finding on head `31ec8c403aed5f4a24c7861bac5e360197018dab`:
+- Retained the exact workload/probe script (`TESTS-RESULTS/2026-11-20+GH-1551/outputs/run-ks07-probe.py`) and raw launch/completion receipts (`outputs/launch-and-completion-receipt.txt`: detached session PID `95306`, `probe.rc = 0`, `2026-11-20T09:14:12Z` -> `09:24:17Z`, explicit `TimeoutExpired`/SIGKILL red termination behavior at 600.0s vs green exit 0 at 605.04s).
+- Updated `manual-check.md` to label the 605s probe explicitly as a **synthetic mechanism check**, removing the "reproducing #1539" heading and clearly distinguishing it from a production landing entry point while keeping U7 explicitly uncredited until Run 2.
+- Re-ran `pdda.sh run` (0 errors) and regenerated `provenance.jsonl`.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
