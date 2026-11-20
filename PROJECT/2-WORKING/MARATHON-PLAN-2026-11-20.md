@@ -206,6 +206,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1414 Pilot paraphrase-first plan review and explicit reviewer context from EGM — `unrated`
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
+- #1538 Merge batch 2026-11-19 — HiQS-Labs-XYZ-forge — #1495, #1496 — `needs-doc`
 - #1537 pre-push: a branch that only merged development in is routed by its own diff, not sent to the full gate — `needs-doc`
 - #1536 kickstart: codify the 2026-11-19 long-run lessons into the runbook and scripts — `needs-doc`
 - #1535 build_queue.py: an operator decision comment clears an issue's "decide" hold — `needs-doc`
@@ -347,7 +348,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #802 Retrospective: CI versus actual harness file repo issue coverage — `needs-doc`
 - #792 gen4_campaign.make_sandbox deletes the existing clone before checking it is disjoint from the source repo — `needs-doc`
 - #786 merge-cleanup: file one GH issue per PR merge batch (feeds rebalanceOS sync, Focus 5, Flightdeck) — `needs-doc`
-- #785 merge-cleanup: a hold-labelled or closed predecessor does not block its hard dependents — `needs-doc`
 
 ## How to fire a lane
 
