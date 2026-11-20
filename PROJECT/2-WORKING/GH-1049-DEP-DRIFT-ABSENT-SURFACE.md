@@ -27,12 +27,12 @@ roadmap_exempt: true
 
 | What was just completed | What's next |
 |---|---|
-| Captured with source evidence and settled one-side semantics against the GH-68 decision (GH-1400 dogfood round). | Implement the two-line resolution change and extend `test/relay-dep-drift.sh`. |
+| Captured with source evidence and settled one-side semantics against the GH-68 decision (GH-1400 dogfood round). | Implemented: surface lookups use `rev-parse --verify` and clear a failed lookup to empty; `test/relay-dep-drift.sh` covers absent-at-both, addition and deletion. |
 
 ## Evidence (development `be0a37520`)
 
 - `relay-automation/relay-turn-lib.sh:1742-1744` capture `git rev-parse "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null || true`. An unresolvable path makes `rev-parse` print its own argument, so two heads give two different strings and the event fires with `(0 lines)`.
-- `git rev-parse --verify --quiet "<sha>:<missing>"` prints nothing; that is the resolution the existing `[[ "$_psha" == "$_csha" ]]` comparison and the `${_psha:-none}` fallbacks were written for.
+- `git rev-parse --verify "<sha>:<missing>"` (stderr redirected, failure cleared to an empty string in `rtl_enforce`) yields no ID; that is the resolution the existing `[[ "$_psha" == "$_csha" ]]` comparison and the `${_psha:-none}` fallbacks were written for.
 - Every Python turn shim reaches this Bash `rtl_enforce`; no Python copy of the emitter exists.
 
 ## One-side-missing semantics (settled)
@@ -77,7 +77,7 @@ Additional acceptance:
   ],
   "remediation": {
     "source": "issue#1049",
-    "criteria": "rtl_enforce resolves surface blobs with rev-parse --verify --quiet so absence is empty; absent-at-both emits nothing; real changes and one-sided additions/deletions still emit (none on the absent side); test/relay-dep-drift.sh covers all three."
+    "criteria": "rtl_enforce resolves surface blobs with rev-parse --verify (stderr redirected, failed lookups cleared to empty) so absence is empty; absent-at-both emits nothing; real changes and one-sided additions/deletions still emit (none on the absent side); test/relay-dep-drift.sh covers all three."
   }
 }
 ```

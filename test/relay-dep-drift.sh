@@ -157,6 +157,24 @@ assert events[0]['prior_sha'] == 'none', events
 assert events[0]['current_sha'] == sys.argv[2], events
 PYJSON
 ) && pass=$((pass+1)) || fail=$((fail+1))
+# --- 7: a deleted shared surface emits once, with real blob SHA -> none -----------------------------
+git -C "$D3" add -A; git -C "$D3" commit -qm "add surface" >/dev/null 2>&1 || true
+"$T3" claim RELAY-T --agent agent-a --paths "src/project.js,relay-system/x/thread.md" >/dev/null 2>&1 || true
+deleted_sha="$(git -C "$D3" rev-parse HEAD:src/project.js)"
+rm -f "$D3/src/project.js"
+printf 'deleted surface\n' >> "$D3/relay-system/x/thread.md"
+rm -rf "$D3/.tick/events"/*dependency.drift*.jsonl 2>/dev/null
+enforce_turn "$D3" "src/project.js" >/dev/null 2>&1
+( python3 - "$D3/.tick/events" "$deleted_sha" <<'PYJSON'
+import json, pathlib, sys
+events = [json.loads(line) for path in pathlib.Path(sys.argv[1]).glob('*dependency.drift*.jsonl')
+          for line in path.read_text().splitlines() if line.strip()]
+assert len(events) == 1, events
+assert events[0]['surface'] == 'src/project.js', events
+assert events[0]['prior_sha'] == sys.argv[2], events
+assert events[0]['current_sha'] == 'none', events
+PYJSON
+) && pass=$((pass+1)) || fail=$((fail+1))
 rm -rf "$D3"
 
 echo "  relay-dep-drift: $pass pass, $fail fail"
