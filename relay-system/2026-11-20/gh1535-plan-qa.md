@@ -1,6 +1,6 @@
 # Relay: GH-1535 (KS-02) Plan QA — Decide Hold Release & U15 Body/Label Holds
 
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 1 / 3
 STATUS: Open
 PRODUCER: antigravity
@@ -20,5 +20,42 @@ Check:
 End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` only on PASS, and flip `NEXT: Producer`.
 
 ## Log
+
+### Round 1 — codex (Reviewer)
+
+**[Major] Preserve formatted references inside real prose holds (plan lines 35–41).** Blanket removal of inline backtick spans deletes the dependency in ordinary prose such as `Blocked by ` followed by a backticked `#1499`, or `Only after ` followed by a backticked `#1499` and ` lands`. Neither remaining prose string matches the specified dependency regex. A bug issue can therefore enter E and its closing PR can enter A despite an explicit active body hold. This contradicts U15's fail-closed promise. Distinguish a wholly quoted example marker from prose containing a code-formatted reference; specify the intended treatment before implementation. Keep the existing wholly quoted `HELD:` example negative control and add a paired manual check for a real prose hold with a formatted reference, including parked-PR propagation. No new suite is needed.
+
+Narrow design probe (not an execution of a future implementation), command:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import re
+for body in ["Blocked by `#1499`", "Only after `#1499` lands", "`HELD: example only`"]:
+    cleaned = re.sub(r"`[^`]*`", "", body)
+    match = re.search(r"\b(?:blocked\s+by|after)\s+(?:PR\s+)?#(\d+)\b", cleaned, re.I)
+    print(f"{body!r} -> {cleaned!r}; dependency_match={bool(match)}")
+PYPROBE
+```
+
+Exit: `0`. Decisive output:
+
+```text
+'Blocked by `#1499`' -> 'Blocked by '; dependency_match=False
+'Only after `#1499` lands' -> 'Only after  lands'; dependency_match=False
+'`HELD: example only`' -> ''; dependency_match=False
+```
+
+**Verification refinement:** The proposed active-clause fallback for a reference absent from `open_refs` has no positive control: the only `after` positive case names an open PR. Add one absent-reference active clause and retain the closed past-tense negative. Also check that an owner proceed/close comment cannot override an independent body/label hold. These are bounded manual cases in the already planned evidence, not new gate machinery.
+
+**Basis:** Swept the complete plan, current `build_queue.py` (including `main` → parking → PR classification → issue classification → render), the kickstart rule-list mirror, and PDDA. The owner-only latest-decision design, dedicated close path, proceed fallback, parking before folding, and paired base/candidate evidence are otherwise sound at plan level. Verification is still prospective; no implementation or gate pass is claimed. No phase gate was configured in this relay and none was run. Reversibility: Easy for the plan correction; the relevant failure mode is dispatching or closing an explicitly held issue.
+
+Graph evidence: Verify-tier attempt against `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-18T19:39:07Z`; bounded build_queue search returned zero nodes with no more pages. Coverage reports missing freshness metadata for the newer plan and kickstart files. Read the local files directly; do not treat the older graph as completeness evidence. Live GitHub issue queries were attempted; subsequent focused reads of #1535 and #1541 failed with `error connecting to api.github.com`, so exact live v5 reconciliation remains unverified. The finding above follows directly from the local plan's stated U15 contract and does not depend on that unavailable comparison.
+
+swept file: yes
+VERDICT: FAIL
+
+STATUS remains Open. NEXT is Producer for correction and adjudication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
