@@ -21,8 +21,10 @@ Output log: `outputs/disposable-controls.txt`
 - `utils/ci-route.sh --base origin/development --head HEAD`: `route=docs`
 - `./utils/pdda/pdda.sh run`: 0 errors (see `outputs/pdda-run.log`)
 
-## Positive CLI Controls Added (Final QA R1 Follow-Up — `outputs/positive-cli-controls.txt`)
-All three bounded controls executed inside a disposable full clone with zero remote or working-tree mutations (`git status` clean):
-1. **`merge_cleanup.py --help` (`exit 0`):** verified `--reconcile-pr RECONCILE_PR`, `--resume`, and `--prs N[@SHA][,...]` CLI flags.
-2. **Real CLI positive pinned `--prs 1539@<40-hex-sha> --resume --scan-only` (`exit 0`):** proved the real CLI accepts pinned full-SHA selection with `--resume` in non-mutating scan mode (paired against the negative missing-`--prs` refusal in Control C).
-3. **`--reconcile-pr` argument validation (`exit 2` on invalid non-int `not-an-int`):** proved parser enforcement of integer PR numbers.
+## Positive & Negative Pinned-Selection CLI Controls (`outputs/positive-cli-controls.txt`)
+Executed inside a disposable full clone with isolated `HOME` and a read-only fake `gh` shim (answers `pr list` with fixture PR `#1539@37cd84e6...`, refuses any mutating subcommand; zero external/working-tree mutations; pin snapshot contained inside `<tmp-dir>`):
+1. `merge_cleanup.py --help` (`rc=0`): confirms `--reconcile-pr`, `--resume`, and `--prs N[@SHA][,...]`.
+2. **Real CLI dry-run reaching `pin_selection` (`L2778`, without `--scan-only`):** `merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@37cd84e6... --prs-only` (`rc=0`) validated `#1539`, wrote the pin snapshot inside `<tmp-dir>`, and printed `Pinned for --execute: --prs 1539@37cd84e6...`.
+3. **Real CLI `--execute` reaching `verify_selection` (`L2571`) with mismatched pin:** `merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@00000000... --resume --execute --allow-unready-primary` exited non-zero (`rc=2`) logging `REFUSING to merge: the --prs selection no longer matches the dry run: - #1539 head moved 0000000000 -> 37cd84e670`.
+4. **Paired `verify_selection` (`L667`) direct match vs mismatch proof:** matching pin returned `{1539: '37cd84e6...'}`; mismatched pin returned `None` with `REFUSING to merge`.
+5. `--reconcile-pr not-an-int` (`rc=2`): confirms integer argument validation (`invalid int value: 'not-an-int'`).
