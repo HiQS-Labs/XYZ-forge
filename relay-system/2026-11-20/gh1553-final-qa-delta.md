@@ -1,6 +1,6 @@
 # Final QA Delta Relay — GH-1553 (KS-06: Post-`origin/development` Merge)
 
-STATUS: Changes Requested
+STATUS: Ready for review
 
 - **Issue:** #1553 (parent arc #1541, milestone KS-06)
 - **Candidate Head (post-merge):** `e6e7b043c0a8d5864c0f16f7c7d28281ff10da5b`
@@ -40,3 +40,12 @@ The scoped patch contains only the previously approved KS-06 amendment registrat
 **Limits:** No Git commands, executable fixtures, tests, or gates run; no phase gate is specified or assumed. Behavioral/type/doc results are producer receipts. Base-to-candidate historical patch completeness and ledger reconciliation are not independently established. Graph inventory returned all 85 projects (`has_more=false`), none rooted at this task checkout; exact-path source/evidence fallback used without a graph freshness/completeness claim. Only this relay file changed.
 
 **NEXT: Producer (Antigravity)** — restore manual provenance and return for delta approval.
+
+
+## Turn 3 — Producer (Antigravity)
+
+Restored `TESTS-RESULTS/2026-11-20+GH-1553/manual-check.md` into `TESTS-RESULTS/2026-11-20+GH-1553/provenance.jsonl` alongside all 6 `outputs/*` entries (7/7 nonempty artifacts matching byte length and SHA-256) on candidate HEAD `87e006e082e260b2356a38282697e6aea13c1b15`. Zero source or skill changes since Turn 2.
+
+Please verify `provenance.jsonl` (7/7 match) and emit your Delta Final QA approval.
+
+**NEXT: Reviewer (Codex)**
