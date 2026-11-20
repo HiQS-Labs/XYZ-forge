@@ -1,8 +1,8 @@
 ---
-issue: 1552
+gh_issue: 1552
 title: "kickstart(KS-08): safe self-recovery of a killed landing (stopped-ownership + remote PR state)"
 status: active
-roadmap_id: rmi-01M7W39V9G92M8W97MX702YQCA
+roadmap_id: rmi-01M7WG8KCX34HV9TGT31N0Z79C
 parent_arc: 1541
 milestone: KS-08
 owner: antigravity
@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Addressed Plan QA R1 findings (exact `attempt_record.py note` + `finish` CLI flags without unsupported `--reason`; exact `merge_cleanup.py --resume --execute` with original vetted `--prs N@<full-sha>` pins; PDDA frontmatter/Status table; `CHANGELOG_WRITES` policy). | Complete Plan QA R2 approval, update `skills/1-hourly/kickstart/SKILL.md`, run disposable-clone paired red/green checks + PDDA under `TESTS-RESULTS/2026-11-20+GH-1552/`, and pass Final QA. |
+| Implemented KS-08 killed-landing self-recovery rule in `skills/1-hourly/kickstart/SKILL.md` and passed disposable-clone Controls A/B/C + PDDA (0 errors). | Complete Codex Final QA, open PR, and land. |
 
 ## Objective
 Codify in `skills/1-hourly/kickstart/SKILL.md` the child's deterministic, fail-closed self-recovery protocol for a killed or interrupted landing before touching any stale `merge-cleanup` attempt record, reusing existing `attempt_record.py` and `merge_cleanup.py` mechanisms (no new runner or schema).
