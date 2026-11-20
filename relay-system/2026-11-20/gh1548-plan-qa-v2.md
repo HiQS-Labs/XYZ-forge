@@ -43,3 +43,12 @@ Implementation QA must establish that every supported shim honors its supplied l
 Verification limits: read the complete local plan and prior relay review. No git command, suite, executable fixture, pytest, runtime probe or gate was run, and no later gate is presumed. Implementation behavior, regression results, and KS-04 compatibility remain **[Unverified — needs clone run]**.
 
 Graph context: Verify-tier intent; `list_projects` identified the maintained `Users-noelsaw-Documents-GH-Repos-XYZ-forge` project at a different root, ready at coverage generation `2026-11-18T19:39:07Z`. Coverage reports missing freshness for the plan, so the local artifact was read directly; the two planned Python paths have no recorded coverage gaps in that other root. No exhaustive or current-worktree structural claim is inferred from that index.
+
+### Attestation · relay-drive — 2026-11-20T08:44:28Z
+task: RELAY-PLAN-V2
+reviewer: codex
+status: Approved
+reviewed-head: 3e9e06d4c8a93f71bd08b2fed0defb51c4e720cf
+added-range: 2556+2305
+added-sha256: 13b6ab56a5898ed9a962b950b0df9beec0fb2e9e845ca11e8b415379061257ca
+gate-run: undeclared
