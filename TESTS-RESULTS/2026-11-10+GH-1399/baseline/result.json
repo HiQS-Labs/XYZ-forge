@@ -1,0 +1,26 @@
+{
+  "event": "unaccounted-task-push-baseline",
+  "ref_was_absent": true,
+  "pushed_ref": "refs/heads/fix/gh1399-unaccounted-new",
+  "push_rc": 0,
+  "elapsed": 73.23373508453369,
+  "before": {
+    "head": "86c14f68fac73327e7f26f4b56853640f43f952a",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "email": ""
+  },
+  "after": {
+    "head": "86c14f68fac73327e7f26f4b56853640f43f952a",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "email": ""
+  },
+  "identity_unchanged": true,
+  "attempt_record_present": false,
+  "expected_refusal": true,
+  "assert_refusal_passed": false,
+  "published_to_isolated_control": true,
+  "canonical_remote_write": false,
+  "negative_control": "RED"
+}

@@ -382,6 +382,28 @@ revert this change if it cannot preserve the review contract. SmallCode isolated
 reviewers are refused because their current shim disables isolation.
 Evidence: `TESTS-RESULTS/2026-11-11+GH-1419/`.
 
+## 2026-11-10 — GH-1399 qualification accounting
+
+Extend the existing qualification boundaries to require canonical accounting for task
+candidates before docs routing, receipt reuse or legacy green recording. Lane reservations
+retain legacy consumed lines; protected phase attestations carry archived references through
+post-approve. Manual skill workflows use the same writer and a maintained accounting root.
+Administrative routing and documented bypasses retain their existing scope. This is a Costly
+control change: rollback must revert admission and producer integrations together while
+preserving attempt/history bytes. It prevents missing accounting, not inference of logical
+repair rounds or hostile local state changes. Focused/manual controls passed; final Codex
+review Approved in round6 after existing qualification fixtures adopted the dependencies
+and their own accounting. Normal full publication gate passed408/408 without bypass at
+2daec744ca27; committed receipts bind that runtime to the evidence-only checkpoint. Hosted
+PR CI passed on c811a2be9; final documentation checkpoint is checked separately.
+No merge, promotion or managed skill deployment.
+The review also corrected existing parent-approval ownership, directory-lock inspection and
+run-log comment identity defects in the touched integrations.
+Review follow-up: administrative exemption now requires the candidate on that ref (no detached
+task destination), finish uses the admitted revision, reservations allocate after the driver
+lock, reviewer-only approvals link their reservation, and a finished row cannot be re-finished
+or leave the approval update unretryable. Manual controls under `coderabbit-followup/`.
+
 ## 2026-11-10 — GH-1414 paraphrase-first skill review
 
 Added document-only paraphrase and grounded scope boundaries to existing start-task
