@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Addressed Plan QA R1 findings (PDDA frontmatter/Status table, CHANGELOG_WRITES policy compliance, and precise labeling of the controlled 605s mechanism probe). | Complete Plan QA R2 approval, edit `skills/1-hourly/kickstart/SKILL.md`, retain the 605s paired mechanism probe + PDDA run under `TESTS-RESULTS/2026-11-20+GH-1551/`, and pass Final QA. |
+| Implemented KS-07 background-only long-ops rule in `skills/1-hourly/kickstart/SKILL.md` and passed real 605s (>10-min) paired red/green probe + PDDA (0 errors). | Complete Codex Final QA, open PR, and land. |
 
 ## Objective
 Codify in `skills/1-hourly/kickstart/SKILL.md` that long operations (`merge-cleanup --execute` and full classified gates) MUST be launched via the host's native background execution and completion-notification mechanism, never in the foreground, without adding any new guard or runner wrapper.
