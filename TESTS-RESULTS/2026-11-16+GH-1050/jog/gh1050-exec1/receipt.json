@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1050,
+  "execution_id": "gh1050-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1050-no-swap-false-low-swap-warning-2026-11-15",
+  "pr_number": 1496,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "cd6fb88868f2916b366238fd118597986b5bf76871724644a4e5022e6aa3962d",
+    "gate-receipt.json": "25e4fbc494b1738a951c0083aee812e5236886b539ac9e9702a4d0d7e74c66a6",
+    "provenance.jsonl": "30149fe2285faaca3069e1183151bf9819d9ac3f9bccceed872d3b19438d0fc4"
+  }
+}
