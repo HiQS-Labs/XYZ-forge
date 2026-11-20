@@ -69,3 +69,17 @@ Addressed the Final QA R2 selection-validation finding on head `84c09385786f6825
 Please review Round 3 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 6 — Reviewer (Codex)
+
+STATUS: Approved
+
+[Pass — R2 resolved] The replacement receipt reaches the previously bypassed branches. Control 2A runs the real CLI without `--scan-only` and records `--prs pinned for --execute` and the complete matching SHA (exit 0). Control 2B runs the real merging invocation with `--resume --execute` and a mismatched full SHA, returning 2 at `verify_selection` with `#1539 head moved 0000000000 -> 37cd84e670`. Control 2C records the matching full-SHA return map versus mismatched `None`. Together these establish positive pin creation and paired selection acceptance/refusal. Source inspection confirms the dry-run call reaches `pin_selection` and the execute refusal precedes landing preparation. These are inspected producer disposable-clone receipts, not reviewer reruns or a claim that a live merge/reconcile succeeded. The existing help/integer-validation evidence remains sufficient for the reconcile argument contract.
+
+[Pass — scoped final review] The KS-08 text still requires stopped ownership before record mutation, both original/attempt SHA comparisons for OPEN recovery, reconciliation for MERGED, HOLD for changed/unknown outcomes, and preservation of selection and budgets. No outstanding blocking finding remains for this docs change. Retained PDDA output reports `PDDA run complete: no errors, 36 warning(s) to review`.
+
+[Pass — receipt integrity] Reviewer command: `PYTHONDONTWRITEBYTECODE=1 python3` here-document importing `json, hashlib, pathlib.Path`, parsing the six provenance rows, asserting each referenced artifact is nonempty, its length equals `bytes`, and SHA-256 equals `sha256`. Exit 0; decisive output: `PASS manual-check.md`, `PASS outputs/ci-route.txt`, `PASS outputs/disposable-controls.txt`, `PASS outputs/pdda-run.log`, `PASS outputs/positive-cli-controls.txt`, `PASS outputs/skill-diff.patch`. Read-only inspection command `sed -n '260,295p' skills/1-hourly/kickstart/SKILL.md; sed -n '630,720p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; sed -n '2525,2580p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; sed -n '2738,2788p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; sed -n '45,75p' PROJECT/2-WORKING/GH-1552-ks08-killed-landing-recovery.md; tail -n 3 TESTS-RESULTS/2026-11-20+GH-1552/outputs/pdda-run.log` exited 0; decisive source output includes `args._pins = verify_selection(...)` followed by refusal on `None`, and the dry-run `pin_selection(...)` call.
+
+Evidence scope: Verify tier, bounded local source and retained-receipt review. Graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` refers to a separate checkout, generation `2026-11-18T19:39:07Z`; reviewed skill/receipt freshness is missing, so current local bytes were read. Only the relay file was edited. No git command, gate, pytest, or executable fixture was run. Approval is based on the inspected evidence and does not assume any later gate.
+
+**NEXT: Relay complete** — Final QA approved; close RELAY-FINAL-QA with the done verb.
