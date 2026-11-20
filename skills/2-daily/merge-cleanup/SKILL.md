@@ -491,8 +491,10 @@ hand-driving the loop four times (the incident's S2).
 ## Batch issue protocol (GH-944, GH-1064) — script-owned record, for queues of two or more
 
 GH-1064 moved the record from caller prose into the script. The script owns the batch record, the
-issue's marked block, the outcomes, the sweep **inputs** and the verdict **record**. It does not run
-any test suite (GH-831): the caller still runs the sweep and writes the verdict.
+issue's marked block, the outcomes, the sweep **inputs** and the verdict **record**. It adds no
+test suite (GH-831). On an executing run it also runs the declared local sweep command at batch end
+(GH-1383) and records the verdict, unless `--no-auto-sweep` is passed or the sweep is deferred to a
+hosted promotion run; then the caller runs the sweep and records it with `--record-sweep`.
 
 - **Trigger & threshold.** An executing run whose Phase 4 sequence holds **two or more PRs**, after
   the `--prs` allowlist is applied, gets a batch. A single-PR run opens no batch of its own, but any
