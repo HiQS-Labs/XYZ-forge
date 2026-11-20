@@ -47,7 +47,7 @@ BRANCH = "development"
 RECEIPT_ATTEMPTS = 3
 
 # --- the declared-artifact allowlist, verbatim from the former inline step ------------------------
-EXACT = {'releases.db', 'releases.sql', 'ROADMAP.md',
+EXACT = {'releases.db', 'releases.sql', 'ROADMAP.md', 'CHANGELOG.md',
          'RELEASES-PREVIEW.html', 'LEADERBOARD.html', 'LEADERBOARD.md'}
 # GH-721: 1-INBOX is the deletion side of a closed-issue capture promotion (GH-698 item 2);
 # keep this alternation equal to wave_reconcile.RECONCILE_FOLDERS plus the two destinations.

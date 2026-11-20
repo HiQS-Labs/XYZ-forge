@@ -1,0 +1,81 @@
+# Question: should GitHub issue #1409 be closed now that PR #1413 has landed?
+
+Advisory only. Do not edit any file. Read the files named below, then answer with file:line or quoted-span
+citations for every claim. Operational envelope: a single-maintainer harness repo (XYZ-forge); judge
+proportionately, and do not ask for new test suites or new gate machinery (repo rule GH-831, AGENTS.md).
+
+## Situation
+
+Issue #1409, "ci(vendored-smoke): base-pin ratchet, frozen-twin guard, and vendored smoke suites against
+self-modification", is still OPEN. PR #1413 ("ci(vendored-smoke): pin judge files to the PR base (GH-1409)")
+merged into `development` on 2026-11-16 as merge commit `efcfc6140`. The PR body said "Leaves #1409 open
+until merge and reconcile", and did not use a closing keyword, so GitHub did not auto-close the issue.
+
+### What the issue asked for (its execution plan)
+
+- Phase 0: add `.github/CODEOWNERS` over the judge files; verify branch protection / rulesets on
+  `development` AND `main` require the check `vendored smoke gate (blocking on development + main)`.
+- Phase 1: in `.github/workflows/ci.yml` job `vendored-smoke`: resolve a trusted BASE_SHA (merge ref's first
+  parent), pin `check_inventory_ratchet.py` with monotonic-shrink support, refuse newly added
+  `SQLITE-BYPASS-OK:` / `SQLITE-GATEWAY-OK:` lines (unless a `judge-change` label), pin gh421 and gh308 to
+  the base, and pin the four vendored smoke suites to the base.
+- Phase 2: witnessed red/green controls recorded under `TESTS-RESULTS/<date>+GH-<n>/` with
+  `provenance.jsonl` (no new test suites).
+- Out of scope: hidden test suites, new test suites or gate runners.
+
+### What changed after the issue was written
+
+A recon comment on the issue (2026-11-10) records operator-accepted changes to scope:
+- CODEOWNERS dropped (single-author repo; GitHub does not count self-approval).
+- `main` now requires `vendored smoke gate (blocking on development + main)` (repository setting, applied
+  2026-11-10). `development` has no branch protection and no required checks.
+- `development` protection is blocked on an operator decision: `.github/workflows/wave-reconcile.yml:41-47`
+  fails closed on a protected branch until a reviewed bot-bypass policy exists.
+- The loophole that a PR can still edit `.github/workflows/ci.yml` itself is accepted.
+- Rating recorded: 25/30/50/70, latent risk with no incident on record.
+
+### What #1413 delivered
+
+One inline step `Pin judge files to PR base (GH-1409)` in `vendored-smoke` (pull_request only), covering
+R1 (BASE_SHA from `HEAD^1`, fail closed if not a merge), R2 (refuse a grown inventory baseline, including
+distinct bypass entries), R3 (refuse newly added SQLITE-*-OK markers outside `test/`), R4 (restore the seven
+judge scripts from BASE_SHA in place), R5 (a live `judge-change` label skips R2-R4). Evidence under
+`TESTS-RESULTS/2026-11-10+GH-1409/` (six controls plus a discriminator). Codex plan QA and final QA passed.
+No new test suite was added.
+
+### Observed since landing
+
+PR #1494 (merged right after #1413) carried the `judge-change` label for an approved edit to
+`test/gh421-auto-wave-reconcile.sh`. Its hosted run logged
+`##[warning]judge-change label: running this PR's own judge files`, and the smoke check passed. The PR body
+for #1413 had said the labelled path was previously witnessed only by a stubbed control.
+
+## Read these
+
+- `.github/workflows/ci.yml` (job `vendored-smoke`, step `Pin judge files to PR base (GH-1409)`, and the
+  gh308 step that now reads `$BASE_SHA` from the environment)
+- `.github/workflows/wave-reconcile.yml` lines 30-60
+- `PROJECT/2-WORKING/GH-1409-VENDORED-SMOKE-BASE-PIN.md`
+- `TESTS-RESULTS/2026-11-10+GH-1409/SUMMARY.md` and `controls-procedure.md`
+- `relay-system/2026-11-10/gh1409-final-qa.md`
+
+## Questions
+
+1. Map each item of the issue's Phase 0, Phase 1 and Phase 2 to one of: delivered by #1413 (cite the
+   workflow lines or evidence file), dropped by an accepted decision (cite where it was decided), or still
+   open. Is anything still open other than the `development` protection decision?
+2. Does the delivered step actually do what R1-R5 claim? Look for a way a PR could still weaken one of the
+   seven judge files or inflate the baseline and get a green `vendored-smoke`, other than the accepted
+   `ci.yml` self-edit loophole and the accepted label/helper residuals. Quote the exact lines. If you find
+   none, say so.
+3. Is the remaining `development` protection decision a reason to keep #1409 open, or is it better tracked
+   as its own follow-up issue so #1409 can close? Consider that the issue's own Phase 0 listed it, that the
+   decision is the operator's and is not scheduled, and what an open issue communicates to the next agent.
+4. Give one recommendation, exactly one of:
+   (A) close #1409 as completed now;
+   (B) close #1409 as completed after opening a follow-up issue for the `development` protection decision
+       (say what that issue should contain);
+   (C) keep #1409 open (say precisely which item blocks closing and what would unblock it).
+   State your confidence and the single strongest fact behind it.
+
+Be concrete. Do not pad. Cite file:line.

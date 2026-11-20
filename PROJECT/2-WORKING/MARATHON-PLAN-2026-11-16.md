@@ -146,6 +146,8 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1000 GH-1000 · Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-linked workflow — `needs-contract`
 - #1475 GH-1475 · merge-cleanup: 3-phase remediation from a 13-PR batch post-mortem — `needs-contract`
 - #1484 GH-1484 · connect-the-dots skill — `needs-contract`
+- #1409 GH-1409 · ci(vendored-smoke): base-pin judge files against self-modification — `needs-contract`
+- #1479 GH-1479 · refactor: add Python static analysis and decompose swarm-preflight main — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
 - #61 GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) — `needs-doc`
@@ -211,7 +213,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1482 refactor: type and decompose releases_app boundaries after #1471 — `needs-doc`
 - #1481 refactor: decompose marathon-drive main after #1467 — `needs-doc`
 - #1480 refactor: decompose merge-cleanup entry point and landing loop after #1475 — `needs-doc`
-- #1479 refactor: add Python static analysis and decompose swarm-preflight main — `needs-doc`
 - #1477 Spike: local tick supervision simulator using existing ATE and semantic recovery controls — `needs-doc`
 - #1476 Plan: accept RAW intake, bound preparation research, and require fresh readiness at execution admission — `needs-doc`
 - #1474 Research: adapt Agent Orchestrator's durable supervision concepts to Forge's daily-goals loop (explicit attribution) — `needs-doc`
@@ -224,7 +225,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1435 Default Claude spending caps to a subscription paradigm; apply API-billing caps only when the user opts in — `needs-doc`
 - #1418 Flywheel proving runs: two-bug automatic progression, then Jose’s five-bug overnight session — `needs-doc`
 - #1412 Merge batch 2026-11-10 — HiQS-Labs-XYZ-forge — #1403, #1404 — `needs-doc`
-- #1409 ci(vendored-smoke): base-pin ratchet, frozen-twin guard, and vendored smoke suites against self-modification — `needs-doc`
 - #1408 Merge batch 2026-11-09 — HiQS-Labs-XYZ-forge — #1327, #1402, #1405, #1406 — `needs-doc`
 - #1399 Enforce attempt-accounting entry gate / fail closed when repairs bypass attempt_record — `needs-doc`
 - #1398 Merge batch 2026-11-09 — HiQS-Labs-XYZ-forge — #1396, #1397 — `needs-doc`

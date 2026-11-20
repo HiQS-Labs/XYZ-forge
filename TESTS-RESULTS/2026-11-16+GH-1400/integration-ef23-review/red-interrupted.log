@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890622
+rc=0
+jog: execution clone aligned at 243e852f7bd27082ac5fe86cc2c3eb6ca3a92914; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/primary/.tick/jog/jog-01M7KX00X5PYQZ7267V78CY02S/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: marathon interrupted: interrupted (exit 143) (exit 143) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/primary/.tick/jog/jog-01M7KX00X5PYQZ7267V78CY02S/gh901-exec1/preflight/result.json]
+jog: published primary checkpoint af05f9aac7ee15d2e10183af7d34c5bdca47cd5d
+Switched to a new branch 'fixture-901-gh901-exec1'

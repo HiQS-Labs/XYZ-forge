@@ -60,7 +60,7 @@ for kind in ("empty-directory", "missing-transcript"):
         record = d.termination_record(td.TERMINATION_WALL_CAP)
         check(record["reason"] == td.REASON_SLOW_PROGRESS,
               f"{kind}: wall cap preserves file progress")
-        check("worktree-progress=yes" in record["detail"], f"{kind}: honest detail")
+        check("file-activity=yes" in record["detail"], f"{kind}: honest detail")
 
 stub = pathlib.Path(os.environ["GH648_WORK"]) / "bin"
 stub.mkdir()

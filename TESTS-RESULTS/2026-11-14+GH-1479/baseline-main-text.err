@@ -1,0 +1,1 @@
+swarm-preflight: WARNING — /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1479-static-analysis-swarm-2026-11-14/temp/gh1479/preflight-main.md has an Acceptance section with no '- [ ]' checklist items; the packet will inline 0 criteria and the builder gets no definition of done. Convert the criteria to a '- [ ]' checklist (or add one).

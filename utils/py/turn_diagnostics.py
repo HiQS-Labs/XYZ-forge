@@ -484,7 +484,7 @@ class TurnDiagnostics:
 
         GH-492: this exists so a hang can be contained on a short idle threshold
         instead of only at the full wall cap. The observed incident produced 90
-        consecutive samples reading ``cpu=0.02s/s, worktree-progress=no`` and they
+        consecutive samples reading ``cpu=0.02s/s, file-activity=no`` and they
         were unanimous from the start — the run learned nothing between sample 3
         and sample 90, it just spent ~900s to reach the same conclusion.
 
@@ -516,7 +516,7 @@ class TurnDiagnostics:
             bits.append(f"cpu={ratio:.2f}s/s")
         bits.append(f"samples={len(self.samples)}")
         if self.worktree:
-            bits.append("worktree-progress=" + ("yes" if progressed else "no"))
+            bits.append("file-activity=" + ("yes" if progressed else "no"))
         detail = ", ".join(bits)
 
         if self.security_dialog_seen:
@@ -538,8 +538,9 @@ class TurnDiagnostics:
         if progressed:
             return (
                 REASON_SLOW_PROGRESS,
-                "the agent was writing files but did not finish — genuinely slow; raising the "
-                f"turn budget is the appropriate response. [{detail}]",
+                "file activity was observed; logs or scratch files can contribute. Useful work "
+                "progress and a reason to increase the budget are not established. "
+                f"The reason code is a legacy category, not a progress verdict. [{detail}]",
             )
         # Never probe here: timeout handling has already reaped the child tree.
         # A missing cached observation means live sampling never established a

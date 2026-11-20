@@ -1,0 +1,62 @@
+[
+  {
+    "id": "unchanged-recovery-rejected",
+    "pass": true,
+    "observed": {
+      "schema": "jog/execution-state@1",
+      "gid": "jog-01M7FZ518GZR5CA1D1YAZPP53J",
+      "gh_number": 901,
+      "executions": [
+        {
+          "execution_id": "gh901-exec1",
+          "status": "projected-parked",
+          "packet_dir": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/adjacent/baseline/primary/.tick/jog/jog-01M7FZ518GZR5CA1D1YAZPP53J/gh901-exec1/preflight",
+          "result_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/adjacent/baseline/primary/.tick/jog/jog-01M7FZ518GZR5CA1D1YAZPP53J/gh901-exec1/preflight/result.json",
+          "projected_reason": "awaiting-landing (PR #901: https://example.invalid/pr/901)"
+        }
+      ]
+    },
+    "rc": 0,
+    "predicate": "recovered approved A must publish its receipt before continuation"
+  },
+  {
+    "id": "cancel-stops-worker",
+    "pass": true,
+    "rc": 130,
+    "worker_absent": true,
+    "restart_rows": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ53S3PNHPK2BJ8452548N",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "fixture A held for cancellation control"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ53Z9E3Q96QWK28XM0AX4",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "supervision held: latest execution has no valid result; explicit retry decision required"
+      }
+    ]
+  },
+  {
+    "id": "unknown-owner-held",
+    "pass": true,
+    "stderr": "jog: held: driver lock owner is unknown or initializing: .git/relay-driver.lock\n"
+  },
+  {
+    "id": "aggregation-red-controls",
+    "pass": true,
+    "checks": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  }
+]

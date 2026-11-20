@@ -1,0 +1,19 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/restart-adopts-once/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/restart-adopts-once/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/restart-adopts-once/publication --builder codex --reviewer agy --max-tasks 1 --supervise-until 1794851763
+rc=0
+jog: resume GH-901: terminal Marathon result re-projected (parked) — awaiting-landing (PR #901: https://example.invalid/pr/901)
+jog: recovered GH-901 without a new builder or attempt
+jog: published primary checkpoint aa00291bb8f11de8d1ca7f4e8096ea12d6cefdc6
+jog: execution clone aligned at aa00291bb8f11de8d1ca7f4e8096ea12d6cefdc6; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/restart-adopts-once/primary/.tick/jog/jog-01M7JQY1TGZHXVVXVMMYG5DZF7/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: reached max-tasks limit (1); pausing queue.
+jog: GH-901 parked: awaiting-landing (PR #901: https://example.invalid/pr/901)
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: published primary checkpoint 3222860e8c34e6e36bea6e7324ef4c2a25bc9824
+jog: reclaiming stale relay-driver.lock (holder pid 71813 not running).
+Switched to a new branch 'fixture-902-gh902-exec1'

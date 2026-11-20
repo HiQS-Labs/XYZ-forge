@@ -1,0 +1,8 @@
+== test: gh438-removal-is-progress ==
+  workdir: <scratch>/tick-gh438-removal-is-progress.XXXXXX.yINqJVREMG
+  PASS: a lane whose deliverable is a removal can complete (exit 0)
+  PASS: the removal is recognized as a real phase delta
+  PASS: the artifact really is gone
+  PASS: an untouched artifact is still NOT progress (the check can fail)
+  PASS: a lane that did nothing does not exit 0 (rc=3)
+  PASS: a newly created empty artifact is still rejected

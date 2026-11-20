@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/red-missing-receipt/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/red-missing-receipt/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/red-missing-receipt/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794851807
+rc=0
+jog: execution clone aligned at 3df7b626690a1769ef66a66a399ec26f28e5795a; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/red-missing-receipt/primary/.tick/jog/jog-01M7JQZFMR8M25VB6NKXVAA95A/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: marathon-drive exited 0 without a valid result receipt: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/red-missing-receipt/primary/.tick/jog/jog-01M7JQZFMR8M25VB6NKXVAA95A/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/red-missing-receipt/primary/.tick/jog/jog-01M7JQZFMR8M25VB6NKXVAA95A/gh901-exec1/preflight/result.json'
+jog: published primary checkpoint 9e872f92f90ad98b0f8936059810af559a4e98f5
+Switched to a new branch 'fixture-901-gh901-exec1'
