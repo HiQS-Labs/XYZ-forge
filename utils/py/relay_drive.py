@@ -794,8 +794,11 @@ def main():
         except Exception:
             return 0
 
-    def write_escalation_reason(reason_str, exit_code=4):
-        write_stop_receipt(reason_str, exit_code, update_legacy_file=True)
+    _pending_exit_code: list[int | None] = [None]
+
+    def write_escalation_reason(reason_str, exit_code=None):
+        code = exit_code if exit_code is not None else (_pending_exit_code[0] if _pending_exit_code[0] is not None else 4)
+        write_stop_receipt(reason_str, code, update_legacy_file=True)
 
     def exit_escalate(reason_str):
         write_stop_receipt(reason_str, 4, update_legacy_file=True)
@@ -1149,6 +1152,20 @@ def main():
                 subprocess.run([tick_bin, "cost", args.relay_task, "--agent", actor, "--peak-rss-mb", str(peak_turn_rss_mb)], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception:
                 pass
+        turn_fail_reason = "turn-error"
+        _pending_exit_code[0] = None
+        if res_code:
+            # GH-1548 (KS-05 / U13): classify 429/quota exhaustion as provider-quota, distinct from
+            # cap-stalled and turn-error. Scan only this turn's exclusive stderr pipe plus its fresh
+            # per-turn log (never a caller-reused <ENV>_LOG). Computed outside `if res_code != 0:` so
+            # AST-extracted boundary tests (gh648-l7-checkout-aftermath.sh) keep their minimal namespace.
+            evidence = turn_stderr_text
+            if turn_log and turn_log_is_fresh:
+                evidence = evidence + "\n" + _read_head_tail(turn_log)
+            if is_provider_quota_error(evidence):
+                turn_fail_reason = "provider-quota"
+            _pending_exit_code[0] = res_code
+
         if res_code != 0:
             # GH-505 F3: a failed turn is NEVER attested — whatever its role — but a terminal STATUS it
             # left behind is still reverted, and the shim's own code (5/6/7) is preserved.
@@ -1156,17 +1173,11 @@ def main():
             if verdict[0] == "forged":
                 fail_reason = ("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed"
             else:
-                # GH-1548 (KS-05 / U13): classify 429/quota exhaustion as provider-quota, distinct from
-                # cap-stalled and turn-error. Scan only this turn's exclusive stderr pipe plus its fresh
-                # per-turn log (never a caller-reused <ENV>_LOG).
-                evidence = turn_stderr_text
-                if turn_log and turn_log_is_fresh:
-                    evidence = evidence + "\n" + _read_head_tail(turn_log)
-                fail_reason = "provider-quota" if is_provider_quota_error(evidence) else "turn-error"
+                fail_reason = locals().get("turn_fail_reason", "turn-error")
             eprint(f"relay-drive: the {actor} turn itself failed (shim exit {res_code}, reason={fail_reason}) — this is a failed turn, not a review handback")
             if res_code == 7:
                 restore_checkout_after_timeout(progress_main_tree, checkout_before)
-            write_stop_receipt(fail_reason, res_code, update_legacy_file=True)
+            write_escalation_reason(fail_reason)
             sys.exit(res_code)
 
         round_idx += 1
