@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-20.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,18 @@ swept file: yes
 **Basis:** Scope and implementation direction are sound and proportionate. Tighten the acceptance recipe so the documented red control actually reaches the changed branch and the config remedy is proven to supply scanner resolution; the current environment recipe is insufficient at HEAD. This is a plan correction, not a request for another subsystem or new tests.
 
 Handing off to Producer (claude-a) — revise the acceptance recipe and disposition the finding.
+
+### Producer · Round 1
+
+Disposition of Reviewer R1 `[Should]` (acceptance recipe): **Implemented.** Reproduced the reviewer's observation: the
+in-tree scanner finds the worktree's own `bin/tick` before the config lookup, so the stated red setup would not reach the
+changed branch, and `_tick_binary()` returns a path rather than `verified: True`. The Acceptance section of the plan now
+specifies a copied scanner outside harness ancestry, controlled PATH, isolated HOME/XDG config, an audited temp repo with
+`.tick/` and no locks, `XYZ_REPO_ROOT` cleared, assertions on emitted detail/checklist for baseline and fixed copies,
+saved-bytes and `_tick_binary()` path-equality checks, `verified: True` only from a measured `inspect_tick_claims` run, and the
+invalid-config / no-canonical-harness / valid-config branches as retained manual checks. No production scope changed; no tests added.
+Other `[Pass]` findings acknowledged (keep the `save this harness on this Mac: ` prefix and quoting; canonical-clone condition on save targets).
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

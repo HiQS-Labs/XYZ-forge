@@ -55,14 +55,27 @@ Existing subsystems extended; no new writer, no new file other than this doc.
 
 ### Acceptance (no new tests)
 
-- Red control: in an isolated `XDG_CONFIG_HOME` with `env -u XYZ_HARNESS -u MERGE_CLEANUP_TICK_BIN`, the unfixed
-  scanner returns the bare string and the unfixed `--check` (from a vendored repo) prints no config line.
-- After: scanner detail contains `~/.config/xyz/harness` and `XYZ_HARNESS`; `--check` from a vendored fixture prints
-  the `!` config line + save command when config is absent, the `ok` line once the printed command is run, and the
-  saved config makes `_tick_binary()` resolve (`verified: True`).
-- Existing suites: `test/find-harness.sh`, `test/gh396-find-harness-roots.sh`, `test/gh534_phase_a_tests.py`,
-  `test/gh436-merge-cleanup.py`, relay-xyz skill guard. No existing assertion pins the old string.
-- Smoke receipts under `TESTS-RESULTS/2026-11-20+GH-1567/`.
+Fixture (manual check, receipts under `TESTS-RESULTS/2026-11-20+GH-1567/`): copy `scan_clones.py` (with its sibling
+imports) to a temp dir outside any harness ancestry, so the own-ancestor `bin/tick` lookup (`scan_clones.py:264-267`)
+finds nothing. Run with `env -u XYZ_HARNESS -u XYZ_REPO_ROOT -u MERGE_CLEANUP_TICK_BIN`, `HOME` and `XDG_CONFIG_HOME`
+pointing at empty temp dirs, and a controlled `PATH` with no `tick`. The audited repo is a temp git repo with a `.tick/`
+dir and no `.tick/locks` entries, so `inspect_tick_claims` reaches `_tick_binary()`.
+
+- Red control (baseline = unfixed `origin/development` copy): `_tick_binary()` is `None` and `inspect_tick_claims` detail
+  is exactly `tick binary not found`; the new-message assertion (detail names `~/.config/xyz/harness` and `XYZ_HARNESS`)
+  FAILS on it. Unfixed `find-harness.sh --check` from a vendored fixture repo prints no per-device config line.
+- After (fixed copy, same fixture): detail contains both remedy tokens, still `verified: False`; `--check` from the vendored
+  fixture prints the `!` config line + `save this harness on this Mac:` command (when no canonical live harness is known:
+  the `!` line with the manual-command pointer only). Run the printed command under the isolated config, assert the saved
+  bytes equal the harness path, then assert `_tick_binary()` equals `<saved harness>/bin/tick` (config supplied the
+  resolution), and `--check` now prints the `ok` per-device line.
+- `verified: True` is claimed only from a measured `inspect_tick_claims` run against a real `tick claims --json` of the
+  saved harness (valid claims JSON), not inferred from resolution.
+- Adjacent-path retained checks: invalid config content (non-canonical or missing path) and a valid config at `--check`.
+- Existing suites, unchanged: `test/find-harness.sh` (consumes the `save this harness on this Mac: ` prefix, keep it and its
+  quoting), `test/gh396-find-harness-roots.sh`, `test/gh534_phase_a_tests.py`, `test/gh436-merge-cleanup.py`,
+  `test/relay-xyz-skill-guard.sh`. No existing assertion pins the old refusal string. Save targets must pass
+  `_canonical_clone` (basename `XYZ-forge`, canonical origin).
 
 ### Preflight bet check
 
