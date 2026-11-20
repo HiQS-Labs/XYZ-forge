@@ -517,7 +517,7 @@ def _assess_final_qa(
         g for g in (parsed.get("gates") or [])
         if str(g.get("target", "")).lower() in ("final-qa", "final_qa")
     ]
-    qa_gates.sort(key=lambda g: int(g.get("line", 0)))
+    qa_gates.sort(key=lambda g: int(g.get("line_no") or g.get("line") or 0))
 
     latest_landing_sha: str | None = None
     for m in reversed(merged_landings):
@@ -588,7 +588,7 @@ def _assess_final_qa(
 
     qa_sha = str(latest_qa.get("sha") or "")
     qa_verdict = str(latest_qa.get("verdict") or "")
-    qa_line = int(latest_qa.get("line", 0))
+    qa_line = int(latest_qa.get("line_no") or latest_qa.get("line") or 0)
 
     if qa_verdict != "green":
         return _result(
