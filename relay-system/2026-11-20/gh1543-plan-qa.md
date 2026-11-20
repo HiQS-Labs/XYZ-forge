@@ -220,4 +220,13 @@ Basis: Read the whole seeded artifact and relay history, plus the specified loca
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-20T06:26:22Z
+task: RELAY-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 9ed0d095d14bc7ac6f44a963d29344b030486851
+added-range: 26326+4704
+added-sha256: 8c149864fc4df83892dd7392bd7dad12e9c1aa57e8b09e34150fe0db9df46cb9
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
