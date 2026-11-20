@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -187,5 +187,37 @@ Disposition for Round 2 finding:
 - **F2 (`[Should]`, mandatory `--primary` identity + target-branch write-boundary symlink confinement):** **Implemented.** Made `--primary <dir>` mandatory on `checkpoint` (refuses before any mutation if omitted, missing, matching `realpath(clone)`, or sharing `git-common-dir` with `--clone`, in addition to `LANDING_CLONE` and `development`/`main`/`master` refusals). Added pre-switch `git ls-tree <branch>` symlink checks on `--dest` and all ancestor prefixes (preserving the starting branch untouched on refusal) plus post-switch filesystem confinement re-verification immediately before writing (restoring original branch on refusal with zero bytes written). Extended manual bad-input check (c) to exercise omitted `--primary` and an existing target branch with `records -> <outside-dir>`.
 
 Updated `PROJECT/2-WORKING/GH-1543-KS15-RECORD-CONTRACT.md`. Handing off to Reviewer (codex) for Round 3 plan QA.
+
+### Reviewer · Round 3
+
+**Ship — plan approval only.**
+
+**What this proposes**
+
+One stdlib Python module will own v1 Markdown record parsing, locked appends, redacted snapshots and confined checkpoint publication. A concise skill section and retained manual evidence complete the implementation scope.
+
+**How the existing system works, per this document**
+
+Records currently use free-form Markdown; the queue builder writes its output directly. Existing completion rules require PRs, SHAs, passing gates and independent review; this contract supplies record mechanics for later consumers. Historical record excerpts remain an implementation evidence dependency.
+
+**What it's not**
+
+This is not runtime qualification, a delivery-state implementation, or credit for live run-2 acceptance.
+
+- [Pass] F2 is resolved at specification level: `.relay-artifacts/GH-1543-KS15-RECORD-CONTRACT.md:58–61` makes `--primary` mandatory, rejects matching checkout/common-dir identities, requires a clean checkout, checks target-branch symlink entries before switching, and rechecks resolved confinement immediately before writing. The missing-primary and target-branch symlink inputs from round 2 now have explicit refusal outcomes at line 100. Scoped commits, explicit non-force pushes and unchanged-snapshot retry remain at lines 62–63. These statements define the required behavior; they are not executed proof.
+- [Pass] Grammar coverage and F4 remain sound at plan level: artifact lines 31–49 name all eight requested headers/events, allow historical compact forms, define reserved-word precedence and terminal/escalated disposition behavior, and document initialization at line 64. Actual run-1/run-2 compatibility remains unverified until the sourced fixtures promised at lines 72 and 103 are retained and exercised.
+- [Pass] F1 and F3 remain addressed: artifact lines 53–56 specify a persistent sibling lock spanning read, full-candidate validation and replacement; lines 97–105 distinguish invalid-input rejections, positive contamination detection, same-ID concurrency and publication observed from the bare remote. Redaction at line 57 covers home paths, named token families and stray tool tags, with empty-input rejection. This is proportionate for the stated local workflow; it does not claim universal secret detection. The former “four red controls” claim has been replaced by concrete, discriminating checks.
+- [Pass] An unchanged/unbuilt candidate cannot earn delivery merely from this contract: artifact line 78 explicitly leaves KS-15 acceptance uncredited until run 2, and `skills/1-hourly/kickstart/SKILL.md:151–156` requires PR URLs, commit SHAs, passing gate logs and independent review. `build_queue.py:248–249` still writes its output directly; template migration is expressly excluded at artifact line 78.
+- [Pass] The implementation envelope remains one module and one contract section (artifact lines 77–79,112). Retained manual verification with provenance (line 65) respects `AGENTS.md:165–173`; `utils/ci-route.sh:62–69` docs routing is classification, not proof of runtime correctness. The PRS rationale at artifact lines 84–89 explicitly makes appeal 50 neutral and recurrence a single-run observation; the other scores remain source-attributed planning estimates. No additional substantive pre-existing defect or unjustified subsystem was found in the whole seeded plan.
+- [Nit] Artifact line 21's next-action cell still says “round 2” beside completed “round 3” preparation. Correct that stale status text when the plan is next updated; it does not alter the contract.
+- [Unverified — needs clone run] No implementation or historical record compatibility was executed in this turn. All runtime acceptance checks, including rejection without mutation, redaction, serialization and remote publication, remain required implementation evidence in a disposable full clone. No later gate is assumed.
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Read the whole seeded artifact and relay history, plus the specified local skill, queue-builder, router and no-new-tests policy. F1–F4 are now resolved at plan level. Graph project discovery found only the separate canonical XYZ-forge checkout; coverage generation `2026-11-18T19:39:07Z` reports missing freshness for the two kickstart paths, so direct local source was used rather than treating that graph as proof of this worktree. Applied the swe review rubric. No git command, gate, executable fixture, pytest or test suite was run. Approval authorizes proceeding with the specified implementation and its retained evidence; it does not qualify delivery.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
