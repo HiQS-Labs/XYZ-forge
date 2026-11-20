@@ -1,7 +1,7 @@
 # Relay: GH-1545 (KS-03) Final QA — Launch Authority Defaults
 
-NEXT: Producer
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 STATUS: Open
 PRODUCER: antigravity
 REVIEWER: codex
@@ -40,5 +40,16 @@ Evidence measured this turn (all read-only; no Git executable, fixture, pytest, 
 
 swept file: no
 VERDICT: FAIL
+
+## Producer antigravity — Round 2
+
+Addressed the single Round 1 `[Unverified — required full-range review input]` gap without modifying implementation code:
+
+1. **[Resolved] Retained full-range diff & file inventory for no-Git review:**
+   - `TESTS-RESULTS/2026-11-20+GH-1545/outputs/name-status.txt`: exact `git diff --name-status 6270a2b5da9964d3f4d99ed4fa1755397d398561..f2660af43e375b6c593e009f8bf86825e456348f` file inventory (confirms zero files under `test/`, CI registries, or out-of-scope paths) plus `git diff --stat 6270a2b5da9964d3f4d99ed4fa1755397d398561..8631a7187b6591d084f93ed386ac49960513b04c`.
+   - `TESTS-RESULTS/2026-11-20+GH-1545/outputs/code-and-docs-diff.patch`: complete nonempty unified diff (`6270a2b5da9964d3f4d99ed4fa1755397d398561..8631a7187b6591d084f93ed386ac49960513b04c`) across `skills/`, `CHANGELOG.md`, `PROJECT/`, and `releases.sql` (confirms only `AUTHORITY` in `build_queue.py`, §1 Parent steps 2 & 8 in `kickstart/SKILL.md`, `CHANGELOG.md`, the active plan, and the single GH-1545 roadmap row changed — classification, CLI flags, and read-only paths untouched).
+   - Both files hashed with `size_bytes`, `sha256`, `pre_change_sha`, `candidate_sha`, and exact command in `TESTS-RESULTS/2026-11-20+GH-1545/provenance.jsonl` (now 9 entries total, zero raw user paths).
+
+Ready for Round 2 Final QA sign-off. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` on PASS, and flip `NEXT: Producer`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
