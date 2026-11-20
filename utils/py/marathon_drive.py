@@ -263,10 +263,7 @@ def _write_terminal_result_inner(code):
         relay_file = os.path.join(_RESULT["phases_dir"], lane, "RELAY.md")
         try:
             with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        relay_status = line.split(":", 1)[1].strip()
-                        break
+                relay_status = relay_attest.header_field(f.read(), "STATUS") or None
         except OSError:
             pass
 
@@ -1129,11 +1126,15 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
     """Sample host memory (compressor and free swap) at phase boundary (GH-382)."""
     compressor_mb = None
     swap_free_mb = None
+    swap_total = None  # Only zero matters; native units differ by platform.
     if sys.platform == "darwin":
         try:
             out = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True, timeout=5).stdout
             # format: total = 3072.00M  used = 1024.00M  free = 2048.00M  (encrypted)
             import re
+            total = re.search(r"total\s*=\s*([0-9.]+)([MGK]?)", out)
+            if total:
+                swap_total = float(total.group(1))
             m = re.search(r"free\s*=\s*([0-9.]+)([MGK]?)", out)
             if m:
                 val = float(m.group(1))
@@ -1157,12 +1158,18 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
         try:
             with open("/proc/meminfo", "r") as f:
                 for line in f:
-                    if line.startswith("SwapFree:"):
+                    if line.startswith("SwapTotal:"):
+                        swap_total = int(line.split()[1])
+                    elif line.startswith("SwapFree:"):
                         swap_free_mb = int(line.split()[1]) // 1024
                     elif line.startswith("Zswap:") or line.startswith("Zswapped:"):
                         compressor_mb = int(line.split()[1]) // 1024
         except Exception:
             pass
+
+    # No configured swap is not exhausted swap (GH-1050).
+    if swap_total == 0:
+        swap_free_mb = None
 
     bits = []
     if compressor_mb is not None:
@@ -1956,8 +1963,8 @@ def main():
             try:
                 with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
                     for ln in f:
-                        if ln.startswith("STATUS:"):
-                            status_line = ln.strip()
+                        if relay_attest.header_field(ln, "STATUS"):
+                            status_line = "STATUS: " + relay_attest.header_field(ln, "STATUS")
                         if ln.lstrip().startswith("### Round"):
                             round_count += 1
             except OSError:
@@ -2580,9 +2587,7 @@ relay-file: {rel_relay}
     def file_status():
         try:
             with open(relay_file) as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        return line.split(":", 1)[1].strip()
+                return relay_attest.header_field(f.read(), "STATUS")
         except Exception:
             pass
         return ""

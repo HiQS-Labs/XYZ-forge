@@ -7,6 +7,44 @@ description: Immediate serial task queue execution engine and conversational cap
 
 `jog` manages a serial queue of tasks for immediate execution today. It provides conversational task intake and runs tasks one by one with zero concurrency overhead, using `releases.db` (`jog_queue` table), the outer `relay-driver.lock`, and `swarm-preflight`. Since the GH-280 recalibration, per-task execution defaults to Marathon's reviewed one-phase driver (`--executor marathon`); `--executor relay` keeps the legacy single-phase `relay-drive` path as the documented rollback during a bounded compatibility window.
 
+## Bounded composed wake (GH-1400)
+
+For an already selected/prepared queue, invoke the existing runner with
+`releases jog run --target-root <execution-clone> --builder codex --reviewer agy
+--max-tasks 2 --supervise-until <UTC-epoch-seconds>` (one shell line).
+An optional `--checkpoint-root <publication-clone>` retains the existing primary
+publication owner. This is an operator-invoked wake, not an installed scheduler.
+
+The wake recovers latest approved results before dispatch, publishes their existing
+receipts and leaves them awaiting landing without another builder. Missing, mismatched
+or failed results remain held for an explicit retry decision. It then aligns the execution
+clone to freshly fetched development, preserving ahead development under
+`jog-preserved-development-<full-SHA>`, all other branches and untracked files. Tracked
+changes, dependent worktrees, unknown/live/stopped lock owners or an untracked overwrite
+collision hold; nothing is reset, cleaned or discarded. Keep preserved branches for review.
+
+Each selected pending item counts toward max-tasks, including a readiness refusal. Current
+Swarm preflight still gates dispatch. Newly approved published PR results permit
+continued independent pending work, and so does one task-local failure: a valid receipt for
+the execution just run whose own gate ran and failed (`escalated`, reason `pre-advance-failed`,
+exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row stays `failed`
+with its reason and receipt path and is never retried. Every other failure (lock contention,
+guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
+change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
+Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon
+attempts and legacy Jog orphan thresholds persist. This wake never calls retry-build or
+renews a retry budget. Reinvoke with the same absolute deadline after an interruption;
+expired deadlines refuse. Preflight/worker groups receive the remaining dispatch time;
+cancellation stops the owned group. Publication gates and cleanup retain their own clocks
+and may end after dispatch cutoff. No global wall-time or whole-process-tree guarantee is
+claimed for children that escape those existing owners.
+
+RAW requests remain accepted by Conveyor/preparation; do not put prose into Jog admission.
+Research-depth defaults remain owned by GH-1476. No merge, deployment, new API spend or
+schedule activation follows from preparing this command. Agent Orchestrator's durable
+result-adoption and explicit wait concepts informed GH-1474; this composes Forge primitives
+without copied AO source. No persistent agent context or exactly-once external effects.
+
 ## Conversational Triggers
 
 When the operator speaks naturally:
@@ -378,3 +416,5 @@ Keep the verb order above: run `resume` first (spends no token), then `retry-gat
 Before anything is cleared, rely on `/merge-cleanup`'s existing checks — dirty files, unpublished refs, dependent worktrees, and live handles — rather than repeating them by hand.
 
 **Fresh-clone rule for `retry-build`:** after a cold-start park, `jog retry-build --target-root <clone>` targets a **fresh disposable full clone**, never the crashed one. The crashed clone is retired through `/merge-cleanup`, which preserves an unpushed branch until the operator says it is disposable.
+
+Implementation review correction (2026-11-15): supervised clone alignment also holds on a detached HEAD, preserving its unique commits in place. Explicit resume holds when the newest recorded gate retry lacks a valid matching result. Gate retry records its exact identity and result path before dispatch, so an interrupted retry remains visible without adding a new ledger.

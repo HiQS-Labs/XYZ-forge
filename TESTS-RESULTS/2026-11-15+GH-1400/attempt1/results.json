@@ -1,0 +1,151 @@
+[
+  {
+    "id": "adoption-continuation",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "rows": [
+        {
+          "gh_number": 901,
+          "global_id": "jog-01M7FZ25F1XZKYNJP8S7FWC91H",
+          "status": "parked",
+          "attempt_count": 1,
+          "lease_pid": null,
+          "failure_reason": "awaiting-landing (PR #901: https://example.invalid/pr/901)"
+        },
+        {
+          "gh_number": 902,
+          "global_id": "jog-01M7FZ25P0GCW17KR47FR22A39",
+          "status": "parked",
+          "attempt_count": 1,
+          "lease_pid": null,
+          "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+        }
+      ],
+      "stdout": "jog: resume GH-901: terminal Marathon result re-projected (parked) \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\njog: recovered GH-901 without a new builder or attempt\njog: execution clone aligned at 14962c078a34d7c2cab527d20b80fe6aaf7ead5b; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt1/main/primary/.tick/jog/jog-01M7FZ25P0GCW17KR47FR22A39/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: queue complete (0 pending tasks).\n"
+    }
+  },
+  {
+    "id": "repeat-no-build",
+    "pass": true,
+    "detail": "jog: queue complete (0 pending tasks).\n"
+  },
+  {
+    "id": "native-attempt-retained",
+    "pass": true,
+    "detail": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ25F1XZKYNJP8S7FWC91H",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #901: https://example.invalid/pr/901)"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ25P0GCW17KR47FR22A39",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+      }
+    ]
+  },
+  {
+    "id": "readiness-hold",
+    "pass": true,
+    "detail": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ296FF2789F9FQ5M9VCEZ",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #901: https://example.invalid/pr/901)"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ29D2G1RFKHK2C918WWYR",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "preflight-refused (exit 3): not-ready (exit 3)"
+      }
+    ]
+  },
+  {
+    "id": "mismatch-hold",
+    "pass": true,
+    "detail": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ2BVH02BKC1Q6P67N67MF",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "supervision held: result receipt does not match the selected issue/execution"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ2C2DT0BGY27TAAHWF1XD",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+      }
+    ]
+  },
+  {
+    "id": "missing-hold",
+    "pass": true,
+    "detail": [
+      {
+        "gh_number": 901,
+        "global_id": "jog-01M7FZ2ENG4ZPPMSVMXVAW3FCV",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "supervision held: latest execution has no valid result; explicit retry decision required"
+      },
+      {
+        "gh_number": 902,
+        "global_id": "jog-01M7FZ2EW6ZZ1ZHSAXFRDVZQYE",
+        "status": "parked",
+        "attempt_count": 1,
+        "lease_pid": null,
+        "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+      }
+    ]
+  },
+  {
+    "id": "malformed-hold",
+    "pass": true,
+    "detail": "jog: held: invalid execution state at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt1/malformed/primary/.tick/jog/jog-01M7FZ2HGXRYQAD0CGC3JRSK3J/state.json; preserve it before recovery\n"
+  },
+  {
+    "id": "expired-deadline",
+    "pass": true,
+    "detail": "jog: held: supervision deadline already expired; no work started\n"
+  },
+  {
+    "id": "tracked-dirty-held",
+    "pass": true,
+    "detail": "jog: resume GH-901: terminal Marathon result re-projected (parked) \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\njog: recovered GH-901 without a new builder or attempt\njog: held: execution clone has tracked changes; preserve them before alignment\n"
+  },
+  {
+    "id": "worker-timeout",
+    "pass": true,
+    "detail": "jog: held: supervision deadline reached; owned process group stopped; result requires recovery\n"
+  },
+  {
+    "id": "branch-log-preserved",
+    "pass": true,
+    "detail": "jog: resume GH-901: terminal Marathon result re-projected (parked) \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\njog: recovered GH-901 without a new builder or attempt\njog: preserved local development at jog-preserved-development-09d4087f82b57d96a6e95f3f5618044e5d055d7f\njog: execution clone aligned at daceb3659537842930c3b454551ff9ae3710bcfd; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt1/preserve/primary/.tick/jog/jog-01M7FZ2SVX3GW7CP6A2THPP33M/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: queue complete (0 pending tasks).\nSwitched to a new branch 'fixture-902'\n"
+  },
+  {
+    "id": "stopped-owner",
+    "pass": true,
+    "detail": "jog: another driver is active in this repo (pid 35479, lock: .git/relay-driver.lock).\njog: Concurrent runs in the same clone are unsafe (GH-42 / GH-354).\n"
+  }
+]

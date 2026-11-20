@@ -1,0 +1,6 @@
+== test: archive-telemetry ==
+  workdir: <scratch>/tick-archive-telemetry.XXXXXX.l3wYM2i3nP
+  PASS: archive mode: feed aggregates BOTH source repos' transcripts
+  PASS: archive mode: same-named threads in different repos do not collide (namespaced by slug)
+  PASS: unset mode: empty date range → valid [] (default path intact)
+  archive-telemetry: 3 pass, 0 fail

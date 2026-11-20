@@ -1,0 +1,8 @@
+# Control 8: Absent-file rollback removes created file
+# Command: RollbackJournal.track_created & rollback
+# Candidate Revision: b459c3f15b2971852917caa36ac48f889ad04194
+# Timestamp: 2026-11-16T19:17:48.329078+00:00
+# Status: PASS
+
+CHANGELOG.md deleted on rollback of newly created file: True
+

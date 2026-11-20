@@ -1,0 +1,13 @@
+PRESERVED <GH Repos>/XYZ-forge-gh1493-retire-published-batch-2026-11-17-localorigin: checkout origin (<GH Repos>/XYZ-forge-gh1493-retire-published-batch-2026-11-17) differs from the protected primary (https://github.com/HiQS-Labs/XYZ-forge.git); a -gate/-verify helper must keep the canonical origin — clone the task clone, then: git -C <helper> remote set-url origin https://github.com/HiQS-Labs/XYZ-forge.git
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1493-retire-published-batch-2026-11-17` | standalone_clone | `fix/XYZ-forge-gh1493-retire-published-batch-2026-11-17` | ✅ | 🔥 Active (3 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: [DRY RUN] Would remove verified standalone clone: <GH Repos>/XYZ-forge-gh1493-retire-published-batch-2026-11-17
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1493-retire-published-batch-2026-11-17-gate` | standalone_clone | `fix/XYZ-forge-gh1493-retire-published-batch-2026-11-17` | ✅ | 🔥 Active (13 in 10m) | 0 | 0 | **ACTIVE_PROCESS** | Open file handles inside the checkout: PID 84633 (sleep), PID 85147 (sleep) (Active writing: 13 file(s) in last 10m) |
+merge-cleanup: Skipping XYZ-forge-gh1493-retire-published-batch-2026-11-17-gate: disposition is ACTIVE_PROCESS (Open file handles inside the checkout: PID 84633 (sleep), PID 85147 (sleep) (Active writing: 13 file(s) in last 10m))
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1493-retire-published-batch-2026-11-17-verify` | standalone_clone | `fix/XYZ-forge-gh1493-retire-published-batch-2026-11-17` | ✅ | 🔥 Active (8880 in 10m) | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/fix/XYZ-forge-gh1493-retire-published-batch-2026-11-17 @ 3c660c3317: not reachable from origin/development; no merged PR has this head within the first 500 merged PRs |
+merge-cleanup: Skipping XYZ-forge-gh1493-retire-published-batch-2026-11-17-verify: disposition is PRESERVE_UNPUSHED (Unlanded local refs: refs/heads/fix/XYZ-forge-gh1493-retire-published-batch-2026-11-17 @ 3c660c3317: not reachable from origin/development; no merged PR has this head within the first 500 merged PRs)

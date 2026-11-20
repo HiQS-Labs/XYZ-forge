@@ -282,7 +282,9 @@ replace a live link it does not own (GH-678), so running one there is a no-op wi
 
 ---
 
-The gate toolchain requires **Python >=3.10** with `PyYAML`, `pytest`, and `requests`.
+The gate toolchain requires **Python >=3.10**. Install `PyYAML`, `pytest`, `requests`, and the
+pinned `mypy` toolchain with `python3 -m pip install -r requirements-dev.txt`. The existing Python
+layer runs mypy against the scoped `mypy.ini` configuration.
 If the gate reports an environment fault, use the prepared gate-toolchain venv:
 `PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh` (retain your gate arguments).
 The gate does not install Python or create this venv automatically.

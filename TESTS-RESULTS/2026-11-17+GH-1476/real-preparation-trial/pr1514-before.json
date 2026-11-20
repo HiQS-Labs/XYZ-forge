@@ -1,0 +1,1 @@
+{"c":["promotion boundary (macOS — the platform we ship to):SKIPPED","portability canary (ubuntu — advisory, never breakage):SKIPPED","vendored smoke gate (blocking on development + main):SUCCESS","CodeRabbit:NEUTRAL"],"d":false,"h":"2e22cce06edaa1a4f0a58b85cff9e23ab62a18af","r":"","s":"OPEN"}

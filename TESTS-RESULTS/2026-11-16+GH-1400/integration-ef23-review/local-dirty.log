@@ -1,0 +1,12 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local-dirty/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local-dirty/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local-dirty/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890607
+rc=2
+jog: execution clone aligned at 74b5137862a53d67adc2fad82bbca242d2f7a7e3; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local-dirty/primary/.tick/jog/jog-01M7KWZHXH25BTTY57HS4592RX/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-901 failed task-locally (pre-advance-failed, gate exit 1; result: gh901-exec1/preflight/result.json); retained without retry; continuing independent pending work.
+Switched to a new branch 'fixture-901-gh901-exec1'
+jog: held: execution clone has tracked changes; preserve them before alignment

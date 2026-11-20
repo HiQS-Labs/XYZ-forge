@@ -1,0 +1,49 @@
+diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
+index a9fef680..1432309b 100644
+--- a/skills/1-hourly/kickstart/SKILL.md
++++ b/skills/1-hourly/kickstart/SKILL.md
+@@ -251,6 +251,19 @@ contract rather than ad-hoc regexes or unlocked appends.
+ 
+ ---
+ 
++
++### Fail-Closed Decision Defaults (KS-11)
++
++When an item hits a decision point during an authorized run, the child applies these deterministic defaults instead of asking the operator or guessing:
++
++- **(a) Relay Round Cap (`KS-11a`):** Land ONLY with an independent reviewer's explicit approval covering the exact final head SHA (`reviewed_sha == current_head`). Minor/nit findings may be deferred ONLY when ALL hold:
++  1. The reviewer explicitly tagged every deferred finding `Minor`/`nit` AND explicitly accepted the deferral on the current head SHA; AND
++  2. Direct inspection of the actual changed files AND change-level reversibility confirms NO gate, hook (e.g., `githooks/*`), containment, schema, kernel, or Costly/irreversible surface is touched; AND
++  3. `utils/ci-route.sh` does NOT report `full_required=true`. Treat `full_required=false` conservatively: it NEVER grants permission to defer on a named protected surface (for example, `githooks/pre-push` classifies as `full_required=false` because it is unmapped) or when surface/reversibility classification is unknown (`unknown -> PARK`).
++  Any PR landed with reviewer-accepted Minor/nit deferrals MUST state the deferred items explicitly in the PR body and run record and NEVER claim unqualified `Approved` beyond what the reviewer stated. Otherwise, **PARK** the item in `PARKED/` and continue independent work.
++- **(b) Conflict Hubs (`KS-11b`):** PRs identified as conflict hubs by the `merge-cleanup` landing forecast route to a separate recorded batch rather than stalling clean PRs or asking the operator.
++- **(c) Operator Decisions (`KS-11c` / KS-02):** Honor an operator hold release ONLY when authored by `--owner`, applicable to the current issue/head state, and not superseded by a later owner decision or run-record amendment; otherwise keep the item **HELD**.
++
+ ## 2. Daily-Goal Intake and Preparation Boundary
+ 
+ Raw intake is permitted at invocation, but raw intake alone never confers execution readiness.
+diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
+index 93fffa37..f562a9f8 100755
+--- a/skills/1-hourly/kickstart/scripts/build_queue.py
++++ b/skills/1-hourly/kickstart/scripts/build_queue.py
+@@ -60,11 +60,15 @@ AUTHORITY = """## Authority granted (one grant, covers the whole run)
+ - Post status comments on PRs and issues.
+ - Decision defaults (KS-11, fail-closed):
+   - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+-    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+-    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+-    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+-    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+-    what the reviewer stated.
++    head. Minor/nit findings may be deferred ONLY when ALL hold: (1) the reviewer explicitly tagged
++    them Minor/nit and accepted the deferral on the current head, AND (2) direct inspection of the
++    actual changed files and reversibility confirms NO gate, hook (such as githooks/*), containment,
++    schema, kernel, or Costly/irreversible surface is touched, AND (3) utils/ci-route.sh does NOT
++    report full_required=true (full_required=false never waives a named protected surface; unknown
++    classification -> park). Never defer on any protected/Costly/irreversible surface or when
++    full_required=true; otherwise park and continue independent work. A PR landed with accepted
++    Minor/nit deferrals states so explicitly and never claims Approved beyond what the reviewer
++    stated.
+   - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+     recorded batch.
+   - Operator decisions (KS-11c / KS-02): release holds only when authored by {owner}, applicable,

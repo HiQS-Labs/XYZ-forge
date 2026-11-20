@@ -1,0 +1,7 @@
+== test: gh308-swarm-gate-path ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh308-swarm-gate-path.IT6H5g
+  PASS: baseline: with npm on PATH the npm-gate contract reads ready (exit 0)
+  PASS: curated PATH keeps python3 (shim routes to the Python lane) and hides npm
+  PASS: default lane: an uninstalled npm gate program is refused NOT-READY (exit 5)
+  PASS: default lane: the verdict names the missing gate program
+  gh308-swarm-gate-path: 4 pass, 0 fail

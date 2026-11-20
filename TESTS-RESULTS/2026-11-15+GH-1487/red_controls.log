@@ -1,0 +1,9 @@
+[PASS] Control 1: Default is OFF - mode=off, CHANGELOG.md exists=False
+[PASS] Control 2: Invalid config fallback - mode returned: off
+[PASS] Control 3: Landing writes sanitized entry with exact marker - all sanitization and exact marker verified
+[PASS] Control 4: Idempotency (0 bytes on rerun) - bytes1=129, bytes2=129, mtime unchanged=True
+[PASS] Control 5: B1 accepts valid marker & rejects malicious HTML/conflicts - ok_marker=True, rejected_html=True, rejected_conflict=True
+[PASS] Control 6: Journal rollback restores original file - content matched original byte-for-byte: True
+[PASS] Control 7: Raced publication retry contract - EXACT has CHANGELOG.md=True, retry_argv=['--pr', '1487', '--only-receipted', '--skip-pull']
+[PASS] Control 8: Absent-file rollback removes created file - CHANGELOG.md deleted on rollback: True
+[PASS] Control 9: Missing adoption history fails closed (code 6) - failed_closed=True, code=6

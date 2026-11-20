@@ -1,0 +1,2 @@
+utils/py/swarm_preflight.py:2187: error: Incompatible return value type (got "str", expected "int")  [return-value]
+Found 1 error in 1 file (checked 1 source file)

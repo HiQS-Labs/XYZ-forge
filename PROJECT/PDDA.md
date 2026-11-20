@@ -459,6 +459,10 @@ script only catches the unambiguous signals.
 
 Purpose:
 - nudge that `CHANGELOG.md` (the first-class end-of-iteration record) was updated this iteration
+- governed by `CHANGELOG_WRITES` configuration (`off` / `landing` / `branch`):
+  - `off` (universal default): PR branches do not write `CHANGELOG.md`, the post-landing reconciler writes nothing, and `pdda.sh run` skips aggregate changelog freshness warnings. Eliminates merge conflicts with zero author ceremony.
+  - `landing` (opt-in): Authoritative single writer in `utils/py/wave_reconcile.py` synthesizes `CHANGELOG.md` entries from merged PR descriptions at merge time. PR branches do not write `CHANGELOG.md`, and `pdda.sh run` skips aggregate warnings.
+  - `branch` (legacy opt-in): PR branches author entries in `CHANGELOG.md`, and `pdda.sh run` warns if commits postdate the newest entry.
 
 Minimum behavior:
 - read `CHANGELOG.md` (override via `PDDA_CHANGELOG`); find the newest dated heading, accepting
@@ -637,6 +641,12 @@ Expected exceptions:
   `pdda.sh hardcoded-paths`)
 - override the doc set with `PDDA_GOVERNANCE_DOCS` (space-separated, repo-relative) and the index doc
   with `PDDA_GOVERNANCE_INDEX` (default `ROUTER.md`) for a repo with a different layout
+- extend the default doc set, without replacing it, with a committed `.pdda-mode` line
+  `PDDA_GOVERNANCE_DOCS_EXTRA=docs/a.md SOP.md` (space-separated, repo-relative; GH-1508). `.pdda-mode`
+  is a create-only seed, so install and sync keep it; the `PDDA_GOVERNANCE_DOCS` variable still replaces the
+  whole set. Each added doc still needs a pointer in the index doc, or the orphan check flags it.
+  Grammar: one line, unquoted space-separated paths (quotes and a trailing CR are stripped), text after `#` is
+  a comment, and the last such line wins
 - override the shipped-doc exemption manifest with `PDDA_GOV_SHIPPED_DOCS`,
   `PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS`, and `PDDA_GOV_SHIPPED_DOC_ENVVAR_EXEMPTIONS` (all
   space-separated) for a repo with a different shipped-doc layout
@@ -1050,11 +1060,15 @@ How this is enforced (so it cannot quietly rot in either direction):
 
 ## CHANGELOG.md — end-of-iteration record (first-class)
 
-`CHANGELOG.md` is a first-class PDDA artifact: the canonical, newest-first running log of what changed,
-updated **at the end of each iteration**. It is the one narrative/provenance log this contract
-prescribes — if an adopting repo kept its own ad hoc recap or run-observation notes before adopting
-PDDA, `CHANGELOG.md` supersedes them; PDDA does not require or name any such file itself (Principle #4 —
-one canonical place per fact). Durable Costly / one-way-door bets still earn a `decisions/` record.
+`CHANGELOG.md` is a first-class PDDA artifact: the canonical, newest-first running log of what changed.
+Under the universal default (`CHANGELOG_WRITES=off` or unset), changelog writing is disabled on PR branches
+and during reconciliation; under opt-in `CHANGELOG_WRITES=landing`, changelog entries are synthesized
+automatically post-landing at reconcile time from merged PR descriptions (PR branches do not write to
+`CHANGELOG.md`); under legacy `CHANGELOG_WRITES=branch`, it is updated **at the end of each iteration**
+directly on the PR branch. It is the one narrative/provenance log this contract prescribes — if an adopting
+repo kept its own ad hoc recap or run-observation notes before adopting PDDA, `CHANGELOG.md` supersedes them;
+PDDA does not require or name any such file itself (Principle #4 — one canonical place per fact). Durable
+Costly / one-way-door bets still earn a `decisions/` record.
 
 It should contain:
 
@@ -1085,9 +1099,11 @@ Recording a bet (when a change is consequential):
   behavioral trigger — *record the bet*; this contract owns the *where and how*.)
 
 How this is enforced (a nudge, not a gate):
-- **deterministic** — `pdda.sh changelog` **warns** (never `error`, so it never blocks —
-  even in `full`) when the newest dated entry predates the latest git commit by more than
-  `PDDA_CHANGELOG_STALE_DAYS` days (default `0`), i.e. an iteration shipped without a changelog entry
+- **deterministic** — when `CHANGELOG_WRITES=branch` (or in direct standalone `pdda.sh changelog` invocations),
+  `pdda.sh changelog` **warns** (never `error`, so it never blocks — even in `full`) when the newest dated entry
+  predates the latest git commit by more than `PDDA_CHANGELOG_STALE_DAYS` days (default `0`), i.e. an iteration shipped
+  without a changelog entry. Under default `CHANGELOG_WRITES=off` and `CHANGELOG_WRITES=landing`, aggregate freshness
+  checks in `pdda.sh run` are skipped to eliminate branch-time conflicts.
 - whether an entry is actually *substantive* stays a human / LLM judgment, not a regex
 
 ## Activity log artifact

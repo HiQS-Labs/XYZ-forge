@@ -1,0 +1,40 @@
+=== PINNED HISTORICAL BASELINE: 0edbab45d6 (pre-KS-03, parent of #1546 merge d87a4e1bfc) ===
+LABEL: Historical absence (NOT a witnessed behavioral failure).
+git merge-base --is-ancestor 0edbab45d6 HEAD -> rc=0
+0edbab45d6:skills/1-hourly/kickstart/scripts/build_queue.py bytes=14072 ks11_mentions=0 round_cap_mentions=0
+0edbab45d6:skills/1-hourly/kickstart/SKILL.md bytes=16786 ks11_mentions=0 round_cap_mentions=0
+
+--- 0edbab45d6 build_queue.py AUTHORITY block ---
+import datetime as dt
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+AUTHORITY = """## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by {owner} when: development merged in, the gate is green on that exact SHA,
+  CodeRabbit has no open Major finding, and hosted checks are green.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session{other}.
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch."""
+
+DECISION = re.compile(r"\bdecid(?:e|ing)\b|\bdecision\b", re.I)
+BATCH = re.compile(r"^merge batch|merge inventory|^\S+ sweep \d{4}-\d{2}-\d{2}", re.I)
+REFACTOR = re.compile(r"^refactor\b", re.I)
+AFTER = re.compile(r"\bafter\s+(?:PR\s+)?#(\d+)", re.I)
+MD_FILE = re.compile(r"[\w./-]+\.md\b")
+CODE_FILE = re.compile(r"[\w./-]+\.(?:py|sh|txt|json|ya?ml)\b")
+OUT_OF_SCOPE = re.compile(r"^(?:arc:|plan:|architectural plan|research:|spike:|umbrella:|radar|daily goals)", re.I)
+CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/[\w.-]+))?#(\d+)", re.I)
+TITLE_GH = re.compile(r"\bGH-(\d+)\b")
+
+
+def run_json(argv: list[str], cwd: Path):
+    out = subprocess.run(argv, cwd=cwd, capture_output=True, text=True)
+    if out.returncode:
+        sys.exit(f"build_queue: {' '.join(argv[:3])} failed: {out.stderr.strip()[-300:]}")
+    return json.loads(out.stdout or "null")
