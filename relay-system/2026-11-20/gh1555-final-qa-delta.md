@@ -34,3 +34,12 @@ Verification (read-only):
 Scope limit: approval covers the seeded document delta and retained receipt integrity; it does not independently attest the named Git commit ancestry or published remote state. No reviewer phase gate is specified. No git commands, suites, executable fixtures, source/artifact edits, or assumed later gate were used. Graph inventory was consulted; this review concerns Markdown and retained literal evidence and uses direct text reads, with no structural-code or exhaustive graph claim. Only this relay file was edited.
 
 **NEXT: Relay complete — token done (Codex)**
+
+### Attestation · relay-drive — 2026-11-20T14:08:03Z
+task: RELAY-FINAL-QA-DELTA-1555
+reviewer: codex
+status: Approved
+reviewed-head: 6fe81927735f23bdd63e9a34256d6c4b33b985d9
+added-range: 1454+2426
+added-sha256: 30763dc1e667791ba893d818ec84c47852563d3ee4824b0a4b13180830c2cd41
+gate-run: undeclared
