@@ -6,8 +6,8 @@
 - **Candidate HEAD:** `c571696dd32a5f43dff1467ef19a86f0943bf08c`
 - **Evidence:** `TESTS-RESULTS/2026-11-20+GH-1554/manual-check.md` and `TESTS-RESULTS/2026-11-20+GH-1554/provenance.jsonl`
 
-STATUS: Changes requested
-NEXT: agy
+STATUS: Approved
+NEXT: none
 
 ## Turn 1 — Producer (Antigravity)
 
@@ -96,3 +96,17 @@ Resolved R3 P1 on candidate HEAD `4fe050056fbd8859b21544c662d50ececa763216` (mer
 Please review Round 4 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 8 — Reviewer (Codex), Final QA R4
+
+Verdict: Approved for the seeded candidate identified in Turn 7 as `4fe050056fbd8859b21544c662d50ececa763216`. No remaining blocking finding in this bounded final review. R3 P1 is resolved: the retained current-base patch contains only the KS-09 skill subsection and Bucket C wording replacement; exact seeded source restores the operator-decision, held-label/body/dependency, parked-issue, CLOSE and DECIDED paths. The landing instructions retain the corrected child-exit-8 / wrapper-exit-2 distinction, live-state checks, reasoned deferred receipt, quiet-window wait and deadline HOLD protocol.
+
+Verification performed this turn:
+- Read-only `cat TESTS-RESULTS/2026-11-20+GH-1554/outputs/code-and-docs.patch` and `sed -n '1,225p' skills/1-hourly/kickstart/scripts/build_queue.py`, followed by `sed -n '245,335p' skills/1-hourly/kickstart/scripts/build_queue.py`, all exit 0. Decisive source: `elif dec == "hold":`, `elif hold is not None:` precede folded/category dispatch; `parked_issues` includes operator holds and `issue_hold_reason`; CLOSE/DECIDED routes are present. Retained diff names only `SKILL.md` and `build_queue.py`, with no queue-policy deletions.
+- Re-read `manual-check.md`, `outputs/disposable-controls.txt`, `outputs/controls.txt` and the active plan via cat (exit 0). Retained CLI evidence includes wrong-pin rc=2, pinned-primary dry-run rc=0, reasonless-deferred rc=2, reasoned-deferred rc=0, and mocked recovery child 8 -> CLI 2 / child 0 -> CLI 0. Control 3 Part B remains a documentation-protocol walkthrough, not executed orchestration or live hosted-run coverage.
+- Standard-library Python probe (exit 0): parsed every provenance JSONL row, read each artifact with `Path.read_bytes()`, asserted nonempty bytes, exact byte count and `hashlib.sha256(b).hexdigest() == row['sha256']`. Decisive output: `9 nonempty artifacts: size/hash MATCH`. A read-only patch-header extraction printed exactly the two intended skill/source paths.
+
+Review limits: no git commands, suites, executable fixtures, or phase gate ran. The relay specifies no reviewer phase gate; approval assumes none later. Current-base ancestry and the candidate SHA are producer-reported, not independently queried with git under this turn's prohibition. Verify-tier graph startup found the Forge graph in a different checkout; coverage generation `2026-11-18T19:39:07Z` marks both reviewed skill/source paths freshness `missing`, so exact seeded-file reads govern the verdict. Only this relay file was edited. Retained controls support the documented CLI contracts within their stated mocks; this is not promotion qualification or long-horizon orchestration proof.
+
+**NEXT: Complete — Approved**
