@@ -1,6 +1,6 @@
 ---
 title: "GH-1545 (KS-03): Bake launch authority defaults into build_queue.py and kickstart/SKILL.md"
-status: active
+status: Complete
 created: 2026-11-20
 updated: 2026-11-20
 owner: noelsaw1
