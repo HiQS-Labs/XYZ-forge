@@ -1,0 +1,6 @@
+PASS Control 1: stale cap-stalled overwritten & attributed receipt=no-action-stall (exit 3)
+PASS Control 2: U13 429 -> provider-quota, non-quota -> turn-error (word-boundary safe), harness helper verified
+PASS Control 3: 3 distinct per-turn logs, repeated 429 works, caller-reused CODEX_LOG negative clean, live stderr positive works
+PASS Control 4b: orphaned grandchild holding stderr exited driver in 0.83s (<4.5s) with reason=provider-quota
+PASS Control 4c: KS-04 kickstart_status.py reads KS-05 receipt verbatim (provider-quota, run-receipt) and reports unknown for unattributed shared escalation-reason
+PASS ALL 4 KS-05 PAIRED RED/GREEN MANUAL CONTROLS
