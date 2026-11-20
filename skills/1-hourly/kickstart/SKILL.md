@@ -144,6 +144,15 @@ contract rather than ad-hoc regexes or unlocked appends.
 
 ---
 
+
+### Daily-Goals Queue Scoping (`build_queue.py --daily-goals <issue>`, KS-14)
+
+When launching a run scoped to a daily-goals issue, pass `--daily-goals <issue>` (and optionally `--daily-goals-json <file>` for deterministic offline replay) to `skills/1-hourly/kickstart/scripts/build_queue.py`:
+- Scopes the execution queue to unchecked local `#N` / same-repo `owner/repo#N` items referenced in that issue (foreign-repo references like `other/repo#123` are ignored atomically; checked-off `- [x]` lines are excluded).
+- Lifts the `Daily goals*` out-of-scope filter for that single input issue (omitting it from `Not queued`) and ignores `--since-days` for referenced issues (including folded `(closes #...)` annotations).
+- Preserves all U15/KS-02 holds and safety evidence across every closing target of admitted PRs (including unselected/older targets), failing closed on missing/closed daily-goals issues, zero open selections, incomplete PR inputs, or uninspectable closing targets.
+- Default invocations without `--daily-goals` remain unchanged.
+
 ## 2. Daily-Goal Intake and Preparation Boundary
 
 Raw intake is permitted at invocation, but raw intake alone never confers execution readiness.

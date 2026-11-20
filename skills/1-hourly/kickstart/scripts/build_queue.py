@@ -90,6 +90,8 @@ CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/
 TITLE_GH = re.compile(r"\bGH-(\d+)\b")
 FENCED_CODE = re.compile(r"```.*?```", re.S)
 REF_BACKTICK = re.compile(r"`((?:PR\s+)?#\d+)`", re.I)
+CHECKED_LINE = re.compile(r"^\s*(?:[-*]|\d+\.)\s*\[[xX]\]")
+ATOMIC_REF = re.compile(r"(?<![\w/-])(?:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#(\d+)\b")
 INLINE_BACKTICK = re.compile(r"`[^`\n]*`")
 HELD_LINE = re.compile(r"^\s*(?:[-*]\s*)?(?:\*\*)?HELD:(?:\*\*)?", re.I | re.M)
 BLOCKED_BY = re.compile(r"\bblocked\s+by\s+(?:PR\s+)?#(\d+)\b", re.I)
@@ -250,14 +252,47 @@ def classify_prs(rows, meta, owner, other, decide, parked, slug):
     return buckets, needs
 
 
-def classify_issues(issues, cutoff, other, decide, folded, owner: str = "", open_refs: set[int] | None = None):
+def parse_daily_goals_refs(body: str, slug: str, self_num: int) -> list[int]:
+    """Parse unchecked local #N and same-repo slug#N references atomically.
+    Foreign-repo references (other/repo#123) are consumed atomically and never fall back to #123.
+    """
+    clean = _sanitize_body(body or "")
+    seen: set[int] = set()
+    ordered: list[int] = []
+    slug_l = slug.lower()
+    for line in clean.splitlines():
+        if CHECKED_LINE.match(line):
+            continue
+        for m in ATOMIC_REF.finditer(line):
+            repo_qual, num_s = m.group(1), m.group(2)
+            if repo_qual and repo_qual.lower() != slug_l:
+                continue
+            n = int(num_s)
+            if n == self_num or n in seen:
+                continue
+            seen.add(n)
+            ordered.append(n)
+    return ordered
+
+
+def _gh_view_issue(num: int, root: Path):
+    p = subprocess.run(
+        ["gh", "issue", "view", str(num), "--json", "number,title,labels,body,createdAt,comments,state"],
+        cwd=root, capture_output=True, text=True,
+    )
+    if p.returncode != 0:
+        return None
+    return json.loads(p.stdout or "null")
+
+
+def classify_issues(issues, cutoff, other, decide, folded, owner: str = "", open_refs: set[int] | None = None, include_ids: set[int] | None = None):
     """Issue rules 1-13. Returns (buckets {E,F,G,H,CLOSE,DECIDED}, needs, not_queued)."""
     refs = open_refs or set()
     buckets: dict[str, list] = {k: [] for k in ("E", "DECIDED", "F", "G", "CLOSE", "H")}
     needs, skipped = [], []
     for it in sorted(issues, key=lambda i: i["number"]):
         n, title = it["number"], it["title"]
-        if it["createdAt"][:10] < cutoff:
+        if it["createdAt"][:10] < cutoff and (include_ids is None or n not in include_ids):
             continue
         labels = {lab["name"] for lab in it.get("labels") or []}
         dec = operator_decision(it, owner) if owner else None
@@ -293,7 +328,8 @@ def classify_issues(issues, cutoff, other, decide, folded, owner: str = "", open
 
 
 def render(args, prb, issb, needs, skipped, folded_map) -> str:
-    out = [f"<!-- build_queue.py (GH-1527) as of {args.as_of}; window {args.since_days} days; "
+    dg_note = f"; daily-goals #{args.daily_goals}" if getattr(args, "daily_goals", None) else ""
+    out = [f"<!-- build_queue.py (GH-1527) as of {args.as_of}; window {args.since_days} days{dg_note}; "
            f"inputs: pr_minder.py --json, gh pr list, gh issue list -->", ""]
     other = f" ({fmt(args.other)})" if args.other else ""
     out += [AUTHORITY.format(owner=args.owner, other=other), "", "## Queue (execution order)"]
@@ -349,12 +385,15 @@ def main() -> int:
     ap.add_argument("--prs-json", help="saved pr_minder.py --json output")
     ap.add_argument("--pr-meta-json", help="saved gh pr list --json number,author,title,body,mergeable output")
     ap.add_argument("--issues-json", help="saved gh issue list --json number,title,labels,body,createdAt,comments output")
+    ap.add_argument("--daily-goals", type=int, help="scope queue to items referenced by this daily-goals issue (ignores --since-days for referenced items)")
+    ap.add_argument("--daily-goals-json", help="saved gh issue view <N> --json number,title,body,labels,state,comments output (offline replay)")
     args = ap.parse_args()
     root = Path(args.repo_root).resolve()
     args.other, args.decide = numbers(args.other_session), numbers(args.needs_operator)
     cutoff = (dt.date.fromisoformat(args.as_of) - dt.timedelta(days=args.since_days)).isoformat()
+    offline_replay = bool(args.prs_json or args.pr_meta_json or args.issues_json or args.daily_goals_json)
     if not args.owner:
-        if args.prs_json:
+        if offline_replay:
             sys.exit("build_queue: replay needs --owner (saved inputs must not depend on who runs it)")
         args.owner = run_json(["gh", "api", "user"], root)["login"]
 
@@ -367,14 +406,111 @@ def main() -> int:
          "--json", "number,title,labels,body,createdAt,comments"], root))
     meta = {m["number"]: m for m in meta_rows}
     slug = args.repo_slug or origin_slug(root)
-    open_refs = set(meta.keys()) | {r["pr"] for r in rows} | {i["number"] for i in issues}
+    issues_by_num = {i["number"]: i for i in issues}
+    rows_by_pr = {r["pr"]: r for r in rows}
+    selected_issue_ids: set[int] | None = None
+    scoped_rows = rows
+    scoped_issues = issues
+    safety_issues = list(issues)
+    uninspectable_targets: set[int] = set()
 
-    prb, pr_needs = classify_prs(rows, meta, args.owner, args.other, args.decide,
-                                 parked_issues(issues, args.other, args.decide, args.owner, open_refs), slug)
+    if args.daily_goals is not None:
+        dg_num = args.daily_goals
+        dg_obj = None
+        if args.daily_goals_json:
+            dg_obj = json.loads(Path(args.daily_goals_json).read_text())
+            if isinstance(dg_obj, list):
+                dg_obj = next((x for x in dg_obj if x.get("number") == dg_num), None)
+            elif dg_obj and dg_obj.get("number") is not None and dg_obj.get("number") != dg_num:
+                sys.exit(f"build_queue: --daily-goals-json contains issue #{dg_obj.get('number')}, expected #{dg_num}")
+        elif dg_num in issues_by_num:
+            dg_obj = issues_by_num[dg_num]
+        elif offline_replay:
+            sys.exit(f"build_queue: daily-goals issue #{dg_num} not found in offline replay inputs (supply --daily-goals-json or include it in --issues-json)")
+        else:
+            dg_obj = _gh_view_issue(dg_num, root)
+        if not dg_obj:
+            sys.exit(f"build_queue: daily-goals issue #{dg_num} not found")
+        if str(dg_obj.get("state", "OPEN")).upper() != "OPEN":
+            sys.exit(f"build_queue: daily-goals issue #{dg_num} is {dg_obj.get('state')} (expected OPEN)")
+
+        refs = parse_daily_goals_refs(dg_obj.get("body") or "", slug, dg_num)
+        selected_prs: set[int] = set()
+        sel_issues: set[int] = set()
+        for num in refs:
+            in_meta = num in meta
+            in_rows = num in rows_by_pr
+            if in_meta and in_rows:
+                selected_prs.add(num)
+            elif in_meta or in_rows:
+                sys.exit(f"build_queue: incomplete PR input for selected PR #{num} (present in {'pr-meta' if in_meta else 'pr-minder'} only)")
+            elif num in issues_by_num:
+                if str(issues_by_num[num].get("state", "OPEN")).upper() == "OPEN":
+                    sel_issues.add(num)
+            elif offline_replay:
+                sys.exit(f"build_queue: referenced #{num} in daily-goals #{dg_num} is missing from offline replay inputs")
+            else:
+                fetched = _gh_view_issue(num, root)
+                if not fetched:
+                    sys.exit(f"build_queue: failed to resolve referenced #{num} from daily-goals #{dg_num}")
+                if str(fetched.get("state", "OPEN")).upper() != "OPEN":
+                    continue
+                if num in meta or num in rows_by_pr:
+                    sys.exit(f"build_queue: incomplete PR input for selected PR #{num}")
+                issues_by_num[num] = fetched
+                safety_issues.append(fetched)
+                sel_issues.add(num)
+
+        if not selected_prs and not sel_issues:
+            sys.exit(f"build_queue: daily-goals #{dg_num} selected zero open issues or PRs after resolution")
+
+        admitted_prs: set[int] = set(selected_prs)
+        for r in rows:
+            pr_n = r["pr"]
+            m = meta.get(pr_n, {})
+            if set(closing_refs(m.get("body") or "", slug)) & sel_issues:
+                admitted_prs.add(pr_n)
+
+        safety_by_num = {i["number"]: i for i in safety_issues}
+        for pr_n in sorted(admitted_prs):
+            m = meta.get(pr_n, {})
+            for target in closing_refs(m.get("body") or "", slug):
+                if target in safety_by_num:
+                    continue
+                if offline_replay:
+                    uninspectable_targets.add(target)
+                else:
+                    fetched = _gh_view_issue(target, root)
+                    if fetched:
+                        safety_by_num[target] = fetched
+                        safety_issues.append(fetched)
+                    else:
+                        uninspectable_targets.add(target)
+
+        selected_issue_ids = sel_issues
+        scoped_rows = [r for r in rows if r["pr"] in admitted_prs]
+        scoped_issues = [issues_by_num[n] for n in sorted(sel_issues)]
+
+    open_refs = (
+        set(meta.keys())
+        | {r["pr"] for r in rows}
+        | {i["number"] for i in safety_issues if str(i.get("state", "OPEN")).upper() == "OPEN"}
+    )
+    parked = parked_issues(safety_issues, args.other, args.decide, args.owner, open_refs)
+    parked |= uninspectable_targets
+
+    prb, pr_needs = classify_prs(scoped_rows, meta, args.owner, args.other, args.decide, parked, slug)
     folded_map = {n: set(closes) for k in "ABCD" for n, _, closes in prb[k]}
     folded = set().union(*folded_map.values()) if folded_map else set()
-    issb, issue_needs, skipped = classify_issues(issues, cutoff, args.other, args.decide, folded, args.owner, open_refs)
-    open_issues = {i["number"] for i in issues if i["createdAt"][:10] >= cutoff}
+    issb, issue_needs, skipped = classify_issues(
+        scoped_issues, cutoff, args.other, args.decide, folded, args.owner, open_refs,
+        include_ids=selected_issue_ids,
+    )
+    open_issues = {
+        i["number"]
+        for i in scoped_issues
+        if i["createdAt"][:10] >= cutoff or (selected_issue_ids is not None and i["number"] in selected_issue_ids)
+    }
     # a folded mention is shown only for issues that did not route to Needs-operator (rules 1-2 win)
     folded_map = {n: (c & open_issues) - {i for i, _ in issue_needs} for n, c in folded_map.items()}
 
