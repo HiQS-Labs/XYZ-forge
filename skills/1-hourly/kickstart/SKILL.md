@@ -55,9 +55,15 @@ session and the single delegated outer-loop child session. There are never compe
    The script's ordering is a
    closed list, first match wins: own clean (confirmed `MERGEABLE`) PRs, own conflicting or
    failing PRs, own behind or not-yet-`MERGEABLE` PRs as one merge-cleanup batch, drafts (finish
-   or close; a draft stays a draft even when it also conflicts), small bug issues, docs issues,
-   stale merge-batch and inventory issues (verify, then close), refactors gated on a named
-   predecessor, final QA. Held PRs, other authors' PRs, decision-needed, other-session-owned and
+   or close; a draft stays a draft even when it also conflicts), small bug issues, operator-decided
+   proceed issues (released by a latest `--owner` comment whose first non-empty line starts with
+   `Operator decision`, never falling into unclassified), docs issues, stale merge-batch and
+   inventory issues (verify, then close), operator-decided close issues (`Operator decision: close`
+   — child verifies acceptance on `origin/development` and closes citing the commit), refactors
+   gated on a named predecessor, final QA. Held PRs, other authors' PRs, decision-needed (unless
+   released by `--owner`), `Operator decision: hold` overrides, issues with a `status:held` label,
+   body `HELD:` marker, `Blocked by #N`, or open/active-gating `after #N` (fail-closed across all
+   issue types, not overridden by an operator decision comment), other-session-owned and
    unclassified items go to Needs-operator, and so does any PR whose closing keywords name a
    parked issue: merging it would close an issue the run may not close.
 3. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts

@@ -1,0 +1,27 @@
+=== 1. Pin verification & read-only baseline snapshot ===
+6270a2b5da9964d3f4d99ed4fa1755397d398561
+5bea053cde97ad91b0b40482a7df0ee7290880af
+=== 2. Build paired replay fixtures and run pre-change vs changed ===
+PASS: case1_1518_proceed_unparks_1526
+PASS: case2_1518_proceed_no_rule9_fallthrough
+PASS: case3_1518_operator_decision_close_bucket
+PASS: case4a_non_owner_rejected
+PASS: case4b_second_line_rejected
+PASS: case4c_superseded_by_hold
+PASS: case5_u15_holds_formatted_refs_nonoverride_and_fp_guards
+PASS: determinism byte-identical
+=== 3. Read-only invariance check ===
+PASS: git show-ref unchanged
+PASS: FETCH_HEAD unchanged
+PASS: git count-objects unchanged
+=== 4. CI route classification & mypy ===
+docs_only=true
+pdda_needed=true
+full_required=false
+changed_tests=
+route=docs
+tier=1
+tier2_subsystems=
+tier2_tests=
+tier_reason=docs-only
+Success: no issues found in 1 source file
