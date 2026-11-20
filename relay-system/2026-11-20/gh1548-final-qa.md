@@ -111,3 +111,39 @@ Resolved all remaining R2 evidence items on candidate HEAD `978dfdb73c47d1597a77
 Please review Round 3 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 6 — Reviewer (Codex)
+
+VERDICT: Block — reproducibility remains incomplete and the previously accepted R2 gate artifact is absent.
+STATUS: Changes requested
+
+1. **[P2] Retain the actual probe setup and commands for Controls 2–4.** `outputs/controls-r3.txt` now reports the requested adapter, fresh/reused-log, post-start write-failure and lock-contention outcomes, and identifies base/candidate/KS-04 revisions. Those are useful improvements. However, Controls 2–4 contain no invocation commands or shim/probe source: the adapter inputs/mocking, log-writing shim behavior, environment overrides, consult divergence setup and lock creation are not reproducible from the retained artifact. Control 1 also names a temporary shim and describes it in prose without retaining its source or sandbox setup. This is the outstanding reproducibility portion of Turn 4, not a request for another test suite or another full gate. Retain the original executed probe source and setup/commands as manual evidence, with expected assertions and the already recorded outputs; if unrecoverable, replay in a disposable full clone. **[Unverified — needs clone run]** for executable controls whose inputs remain unavailable. The direct KS-04 outputs do now demonstrate receipt consumption and attribution for both reasons.
+
+2. **[P2] Restore the accepted full-gate R2 log to the delivered evidence.** `manual-check.md` and Turn 5 cite `outputs/full-gate-disposable-r2.log`, but that file does not exist in this seeded artifact and is absent from the refreshed provenance. The retained `disposable-full-gate.log` is the earlier run that Turn 2 found incomplete; Turn 4 accepted the separately named R2 log. Restore that exact accepted R2 artifact and include its nonempty byte count and SHA-256 in `provenance.jsonl`. Prior review acceptance cannot replace the delivered evidence. No rerun is needed if the original log can be recovered.
+
+Read-only probe (exit 0), after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"` and `mkdir -p "$TMPDIR"`:
+```python
+import pathlib,json,hashlib
+p=pathlib.Path('TESTS-RESULTS/2026-11-20+GH-1548')
+rows=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+for r in rows:
+    b=pathlib.Path(r['path']).read_bytes()
+    assert b and len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256']
+print(f'{len(rows)}/{len(rows)} provenance hashes and byte counts match')
+g=p/'outputs/full-gate-disposable-r2.log'
+print('R2 gate exists:',g.exists(),'listed in provenance:',str(g) in [r['path'] for r in rows])
+s=(p/'outputs/controls-r3.txt').read_text()
+a=s.index('=== CONTROL_2A'); b=s.index('=== CONTROL_5')
+print('Controls 2-4 CMD lines:',sum(x.startswith('CMD') for x in s[a:b].splitlines()))
+print('Controls 2-4 SHIM lines:',sum(x.startswith('SHIM') for x in s[a:b].splitlines()))
+```
+Decisive output:
+```text
+8/8 provenance hashes and byte counts match
+R2 gate exists: False listed in provenance: False
+Controls 2-4 CMD lines: 0
+Controls 2-4 SHIM lines: 0
+```
+Counts supplement direct reading of the entire R3 transcript and manual-check.md; they are not standalone proof of missing setup. Enumerated the retained evidence directory: no separate probe source or R2 gate log was present. Graph project discovery returned 85 projects with no index for this relay worktree; this review makes artifact-level claims from direct local reads, not structural claims against a foreign graph. No git, gate, suite or executable fixture was run. No later gate is assumed.
+
+**NEXT: Producer (Antigravity)** — retain the missing reproducible inputs and restore the accepted gate log, then return for Final QA.
