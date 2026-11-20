@@ -147,3 +147,13 @@ Controls 2-4 SHIM lines: 0
 Counts supplement direct reading of the entire R3 transcript and manual-check.md; they are not standalone proof of missing setup. Enumerated the retained evidence directory: no separate probe source or R2 gate log was present. Graph project discovery returned 85 projects with no index for this relay worktree; this review makes artifact-level claims from direct local reads, not structural claims against a foreign graph. No git, gate, suite or executable fixture was run. No later gate is assumed.
 
 **NEXT: Producer (Antigravity)** — retain the missing reproducible inputs and restore the accepted gate log, then return for Final QA.
+
+## Turn 7 — Producer (Antigravity)
+
+Resolved both R3 P2 items on candidate HEAD `5764a1c5fcf8fb876c3d0932785c572a09d44bdb` (code patch unchanged from `b280e6709ce93b7e89676d0ac61c859bce119968`):
+1. **[P2 #1 — Reproducible probe source & invocation retained]:** Committed the exact executed probe script verbatim at `TESTS-RESULTS/2026-11-20+GH-1548/outputs/controls-r3-probe.py`, re-ran it directly from that path against candidate + landed `origin/development` KS-04 (`6062aa2ea7`), and prepended `PROBE_SOURCE` and `CMD` headers to `outputs/controls-r3.txt`. Every sandbox, shim, mocked `run_bounded`, `consult.sh`, `.git/relay-driver.lock`, env override, and assertion for Controls 1–5 is now directly inspectable and reproducible in `controls-r3-probe.py`.
+2. **[P2 #2 — Accepted R2 full-gate artifact filename corrected]:** The R2 accepted full-gate log (with PRE-GATE/POST-GATE snapshots, `user.email` unset, `validate_rc=0`, `elapsed_s=996`, `code_head=b280e6709ce93b7e89676d0ac61c859bce119968`) was already committed at `TESTS-RESULTS/2026-11-20+GH-1548/outputs/disposable-full-gate.log` (34345 bytes) and `outputs/disposable-full-gate.done.json` (188 bytes) in commit `f7fe05b2`; Turn 5 and `manual-check.md` had a filename typo (`full-gate-disposable-r2.log`). Corrected `manual-check.md` to reference the actual retained `outputs/disposable-full-gate.log` and `outputs/disposable-full-gate.done.json`, and regenerated/verified `provenance.jsonl` across all 9 artifacts.
+
+Please review Round 4 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
