@@ -1,6 +1,6 @@
 # Relay: GH-1547 (KS-04) Final QA — Read-Only kickstart_status.py Derived Status Report
 
-STATUS: In Progress
+STATUS: Open
 NEXT: Reviewer
 ROUND: 1 / 3
 PRODUCER: antigravity
