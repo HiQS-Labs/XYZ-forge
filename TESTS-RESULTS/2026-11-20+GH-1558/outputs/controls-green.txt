@@ -187,3 +187,116 @@ STDERR:
 === CONTROL_3E_PARTIAL_OFFLINE_REPLAY_ZERO_SUBPROCESS ===
 exit=build_queue: offline replay requires complete saved inputs (zero network/git calls); missing: --prs-json, --pr-meta-json, --issues-json
 subprocess_calls=0
+
+=== CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER (rc=1) ===
+STDOUT:
+
+STDERR:
+build_queue: incomplete PR input for selected PR #201 (present in pr-meta only)
+
+
+=== CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE (rc=0) ===
+STDOUT:
+<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; daily-goals #992; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+
+## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
+  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
+  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
+  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
+  reviews immediately before the merge. Record the timeout path as "advisory not received;
+  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
+  until it is fixed or answered.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Decision defaults (KS-11, fail-closed):
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+    what the reviewer stated.
+  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+    recorded batch.
+  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
+    and not superseded.
+- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
+  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
+  infer quota from a round cap or generic failure.
+- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
+  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
+  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session.
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+
+## Queue (execution order)
+1. #203 Fix 102 and older clean 51 (closes #51, #102): CLEAN. Wait for review, then merge.
+2. #101 Selected daily goal bug A: small bug fix through start-task or jog.
+3. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+
+## Needs the operator (the run parks these and keeps going)
+- #50 Older unselected held bug: held (body HELD: marker)
+- PR #202 Fix 101 and held 50: merging it would close parked #50
+
+## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
+- (none)
+
+STDERR:
+
+
+=== CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED (rc=0) ===
+STDOUT:
+<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; daily-goals #993; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+
+## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
+  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
+  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
+  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
+  reviews immediately before the merge. Record the timeout path as "advisory not received;
+  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
+  until it is fixed or answered.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Decision defaults (KS-11, fail-closed):
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+    what the reviewer stated.
+  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+    recorded batch.
+  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
+    and not superseded.
+- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
+  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
+  infer quota from a round cap or generic failure.
+- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
+  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
+  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session.
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+
+## Queue (execution order)
+1. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+
+## Needs the operator (the run parks these and keeps going)
+- PR #204 Closes unknown 9991: merging it would close parked #9991
+
+## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
+- (none)
+
+STDERR:
+
+
+=== CONTROL_3G_ALL_CLOSED_REFERENCES (rc=1) ===
+STDOUT:
+
+STDERR:
+build_queue: daily-goals #994 selected zero open issues or PRs after resolution
+
