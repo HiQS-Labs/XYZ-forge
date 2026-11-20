@@ -132,3 +132,7 @@ Final QA round 2 approved (`3bbb710ab`); Small gate passed on that head with ide
 ## Merge evidence
 
 - PR #1521 merged 2026-11-19 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit b76b62b1e02c landed 2026-11-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -144,3 +144,7 @@ change is a single inline workflow step, so it is cheap.
 ## Merge evidence
 
 - PR #1413 merged 2026-11-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit f346d8908a42 landed 2026-11-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

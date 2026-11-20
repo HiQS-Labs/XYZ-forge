@@ -92,3 +92,7 @@ The live issue contains source links and the reviewer paraphrases. No RELEASES r
 ## Merge evidence
 
 - PR #1445 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1492 merged 2026-11-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

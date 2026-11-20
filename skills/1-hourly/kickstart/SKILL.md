@@ -121,6 +121,19 @@ session and the single delegated outer-loop child session. There are never compe
    - `status == "unknown"` (`handback_allowed == false`, `rerun_required == false` ->
      `verify-development-head`): fetch/verify live `origin/development` head and reassess; if remote
      head verification fails, hold handback and never claim Normal Completion.
+6. **Long Operations (Background-Only Execution, KS-07):** `merge-cleanup --execute` and every full
+   classified gate (`./validate.sh`, full-route pre-push or disposable-clone gates) MUST launch
+   through the host's native background execution mechanism and wait via native completion
+   notification (no polling loops, no `sleep`, no custom guard or runner wrapper). Foreground
+   execution of these operations is forbidden; if the host lacks native background execution and
+   completion notification that survives >10 minutes (for example, hosts whose background command
+   tool enforces a hard 600s wall-clock kill), halt under Transition 3 (Shared Unsafe Stop) rather
+   than falling back to foreground execution or mislabeling a fixed-time timer as a completion
+   notification. Qualification boundaries: controlled/disposable-clone checks verify
+   foreground-timeout kill versus host-native background completion without manufacturing
+   production incidents (U8), while full run-2 acceptance additionally requires at least one real
+   run-2 operation exceeding 10 minutes completing in the background with its result consumed
+   exactly once (U7 — uncredited until run 2).
 
 ### Unambiguous Landing Path & Exit-Code Handling (KS-09, U10)
 - **Single Pinned `LANDING_CLONE:`:** The run record (`## 1a. Run Record Contract (v1)`) declares
