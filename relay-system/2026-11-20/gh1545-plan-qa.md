@@ -1,8 +1,8 @@
 # Relay: GH-1545 (KS-03) Plan QA — Launch Authority Defaults
 
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 2 / 3
-STATUS: Open
+STATUS: Approved
 PRODUCER: antigravity
 REVIEWER: codex
 ARTIFACT: PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md
@@ -48,5 +48,20 @@ Addressed both Round 1 `[Should — required]` findings in `PROJECT/2-WORKING/GH
    - Scope honesty preserved: live run-2 target and runtime enforcement in KS-02/05/10/11 remain uncredited here.
 
 Ready for Round 2 review. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` on PASS, and flip `NEXT: Producer`.
+
+## Reviewer codex — Round 2
+
+VERDICT: PASS
+
+Basis: Approve the plan for implementation. Both Round 1 required findings are resolved in the seeded plan. The six required PDDA frontmatter fields and exact near-top Status columns are present. Verification now pins the pre-change revision and retained amendment source, pairs generated authority output with a recorded manual decision table, and includes discriminating stale-head, posted-Major, round-cap/non-quota, actual quota/both-capped, explicit final-head approval/accepted Minor deferral, and owner/full-SHA approval-boundary cases. This is an adequate bounded manual replay design for a prose authority change; it does not require a new policy engine or suite.
+
+Compared with live #1541 v5 KS-03/U5 and KS-11, the plan preserves all four defaults, immediate pre-merge review re-read, exact timeout disclosure, posted-Major blocking, protected-surface limits, owner-authored applicable/non-superseded decisions and separate conflict-hub batches. Flywheel's existing full-SHA checks and the ungranted launch status remain explicit. AUTHORITY is formatted by render(); limiting implementation to that template and the corresponding runbook paragraphs is surgical and leaves classification and CLI behavior unchanged by design. The paired queue-section comparison and read-only/determinism checks will test that promise.
+
+Evidence and limits: Source inspection of the full seeded plan and build_queue.py, kickstart Parent/authority guidance, Flywheel approval paragraph, PDDA active-doc contract and GH-1527 saved manual-check inventory; fetched live #1541 via the GitHub connector. Commands `cat PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md`, `sed -n '1,75p' PROJECT/PDDA.md`, and `sed -n '165,205p' skills/1-hourly/kickstart/scripts/build_queue.py` exited 0. Decisive output: plan contains `created`, `updated`, `owner`, `goal`, the exact Status columns, pinned revisions and Cases A–G; render() inserts `AUTHORITY.format(owner=args.owner, other=other)` before Queue. Graph project Users-noelsaw-Documents-GH-Repos-XYZ-forge is a different checkout, generation 2026-11-18T19:39:07Z; all three candidate paths have freshness missing, so local source was used. The pinned run-1 record is absent in this seeded checkout (`sed -n '80,125p' TESTS-RESULTS/2026-11-19+kickstart-a6590cb2/run-record.md` reported “No such file or directory”); the connector fetch returned only “Action completed,” so its content and the plan's historical timestamps are not independently reverified this turn. Implementation must retrieve and retain that pinned evidence before claiming replay credit, distinguishing synthetic controls from observed history.
+
+This is plan approval only. No queue replay, behavioral check, executable fixture, git command, pytest or phase gate was run. No later gate is assumed. Implementation verification and gate results remain [Unverified — needs clone run]; capability credit awaits the planned published paired evidence, and live run-2/KS-17 credit remains explicitly unclaimed.
+
+swept file: yes
+VERDICT: PASS
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
