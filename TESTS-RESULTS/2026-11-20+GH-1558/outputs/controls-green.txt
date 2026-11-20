@@ -189,6 +189,51 @@ exit=build_queue: offline replay requires complete saved inputs (zero network/gi
 subprocess_calls=0
 
 === CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER (rc=1) ===
+CMD: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1558-ks14-daily-goals-2026-11-20/skills/1-hourly/kickstart/scripts/build_queue.py --daily-goals 991 --daily-goals-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER/goal.json --prs-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER/prs.json --pr-meta-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER/pr_meta.json --issues-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER/issues.json --owner noelsaw1 --repo-slug HiQS-Labs/XYZ-forge --as-of 2026-11-20
+INPUT_GOAL_JSON:
+{
+  "number": 991,
+  "title": "Daily Goals 3D",
+  "body": "Ship #201",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "state": "OPEN",
+  "labels": [
+    {
+      "name": "bug"
+    }
+  ],
+  "comments": []
+}
+INPUT_PRS_JSON:
+[]
+INPUT_PR_META_JSON:
+[
+  {
+    "number": 201,
+    "title": "PR missing from pr_minder",
+    "body": "",
+    "author": {
+      "login": "noelsaw1"
+    },
+    "mergeable": "MERGEABLE"
+  }
+]
+INPUT_ISSUES_JSON:
+[
+  {
+    "number": 991,
+    "title": "Daily Goals 3D",
+    "body": "Ship #201",
+    "createdAt": "2026-11-19T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  }
+]
 STDOUT:
 
 STDERR:
@@ -196,6 +241,131 @@ build_queue: incomplete PR input for selected PR #201 (present in pr-meta only)
 
 
 === CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE (rc=0) ===
+CMD: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1558-ks14-daily-goals-2026-11-20/skills/1-hourly/kickstart/scripts/build_queue.py --daily-goals 992 --daily-goals-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE/goal.json --prs-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE/prs.json --pr-meta-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE/pr_meta.json --issues-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE/issues.json --owner noelsaw1 --repo-slug HiQS-Labs/XYZ-forge --as-of 2026-11-20
+INPUT_GOAL_JSON:
+{
+  "number": 992,
+  "title": "Daily Goals 4A",
+  "body": "Today's goals: #202 #203 #101 #102",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "state": "OPEN",
+  "labels": [
+    {
+      "name": "bug"
+    }
+  ],
+  "comments": []
+}
+INPUT_PRS_JSON:
+[
+  {
+    "pr": 202,
+    "title": "Fix 101 and held 50",
+    "held": false,
+    "draft": false,
+    "conflicting": false,
+    "failing": false,
+    "behind": false
+  },
+  {
+    "pr": 203,
+    "title": "Fix 102 and older clean 51",
+    "held": false,
+    "draft": false,
+    "conflicting": false,
+    "failing": false,
+    "behind": false
+  }
+]
+INPUT_PR_META_JSON:
+[
+  {
+    "number": 202,
+    "title": "Fix 101 and held 50",
+    "body": "Fixes #101; fixes #50",
+    "author": {
+      "login": "noelsaw1"
+    },
+    "mergeable": "MERGEABLE"
+  },
+  {
+    "number": 203,
+    "title": "Fix 102 and older clean 51",
+    "body": "Fixes #102; fixes #51",
+    "author": {
+      "login": "noelsaw1"
+    },
+    "mergeable": "MERGEABLE"
+  }
+]
+INPUT_ISSUES_JSON:
+[
+  {
+    "number": 992,
+    "title": "Daily Goals 4A",
+    "body": "Today's goals: #202 #203 #101 #102",
+    "createdAt": "2026-11-19T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  },
+  {
+    "number": 101,
+    "title": "Selected daily goal bug A",
+    "body": "fix me",
+    "createdAt": "2026-11-19T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  },
+  {
+    "number": 102,
+    "title": "Selected older daily goal bug B",
+    "body": "older than 14d cutoff",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  },
+  {
+    "number": 50,
+    "title": "Older unselected held bug",
+    "body": "HELD: waiting on operator",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  },
+  {
+    "number": 51,
+    "title": "Older unselected clean bug",
+    "body": "clean older bug",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  }
+]
 STDOUT:
 <!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; daily-goals #992; inputs: pr_minder.py --json, gh pr list, gh issue list -->
 
@@ -232,12 +402,11 @@ STDOUT:
 - Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
 
 ## Queue (execution order)
-1. #203 Fix 102 and older clean 51 (closes #51, #102): CLEAN. Wait for review, then merge.
+1. #203 Fix 102 and older clean 51 (closes #102): CLEAN. Wait for review, then merge.
 2. #101 Selected daily goal bug A: small bug fix through start-task or jog.
 3. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
 
 ## Needs the operator (the run parks these and keeps going)
-- #50 Older unselected held bug: held (body HELD: marker)
 - PR #202 Fix 101 and held 50: merging it would close parked #50
 
 ## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
@@ -247,6 +416,61 @@ STDERR:
 
 
 === CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED (rc=0) ===
+CMD: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1558-ks14-daily-goals-2026-11-20/skills/1-hourly/kickstart/scripts/build_queue.py --daily-goals 993 --daily-goals-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED/goal.json --prs-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED/prs.json --pr-meta-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED/pr_meta.json --issues-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED/issues.json --owner noelsaw1 --repo-slug HiQS-Labs/XYZ-forge --as-of 2026-11-20
+INPUT_GOAL_JSON:
+{
+  "number": 993,
+  "title": "Daily Goals 4C",
+  "body": "Ship #204",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "state": "OPEN",
+  "labels": [
+    {
+      "name": "bug"
+    }
+  ],
+  "comments": []
+}
+INPUT_PRS_JSON:
+[
+  {
+    "pr": 204,
+    "title": "Closes unknown 9991",
+    "held": false,
+    "draft": false,
+    "conflicting": false,
+    "failing": false,
+    "behind": false
+  }
+]
+INPUT_PR_META_JSON:
+[
+  {
+    "number": 204,
+    "title": "Closes unknown 9991",
+    "body": "Fixes #9991",
+    "author": {
+      "login": "noelsaw1"
+    },
+    "mergeable": "MERGEABLE"
+  }
+]
+INPUT_ISSUES_JSON:
+[
+  {
+    "number": 993,
+    "title": "Daily Goals 4C",
+    "body": "Ship #204",
+    "createdAt": "2026-11-19T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  }
+]
 STDOUT:
 <!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; daily-goals #993; inputs: pr_minder.py --json, gh pr list, gh issue list -->
 
@@ -295,6 +519,54 @@ STDERR:
 
 
 === CONTROL_3G_ALL_CLOSED_REFERENCES (rc=1) ===
+CMD: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1558-ks14-daily-goals-2026-11-20/skills/1-hourly/kickstart/scripts/build_queue.py --daily-goals 994 --daily-goals-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3G_ALL_CLOSED_REFERENCES/goal.json --prs-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3G_ALL_CLOSED_REFERENCES/prs.json --pr-meta-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3G_ALL_CLOSED_REFERENCES/pr_meta.json --issues-json /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp2fa2hf87/CONTROL_3G_ALL_CLOSED_REFERENCES/issues.json --owner noelsaw1 --repo-slug HiQS-Labs/XYZ-forge --as-of 2026-11-20
+INPUT_GOAL_JSON:
+{
+  "number": 994,
+  "title": "Daily Goals 3G",
+  "body": "Only closed item: #107",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "state": "OPEN",
+  "labels": [
+    {
+      "name": "bug"
+    }
+  ],
+  "comments": []
+}
+INPUT_PRS_JSON:
+[]
+INPUT_PR_META_JSON:
+[]
+INPUT_ISSUES_JSON:
+[
+  {
+    "number": 994,
+    "title": "Daily Goals 3G",
+    "body": "Only closed item: #107",
+    "createdAt": "2026-11-19T00:00:00Z",
+    "state": "OPEN",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  },
+  {
+    "number": 107,
+    "title": "Already closed issue",
+    "body": "",
+    "createdAt": "2026-11-19T00:00:00Z",
+    "state": "CLOSED",
+    "labels": [
+      {
+        "name": "bug"
+      }
+    ],
+    "comments": []
+  }
+]
 STDOUT:
 
 STDERR:
