@@ -1,8 +1,8 @@
 # Relay: GH-1547 (KS-04) Plan QA — kickstart_status.py Thin Derived Read-Only Status Report
 
 STATUS: In Progress
-NEXT: Producer
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
 TARGET_REPO: HiQS-Labs/XYZ-forge
@@ -40,3 +40,25 @@ Please review the implementation plan in `PROJECT/2-WORKING/GH-1547-KS04-KICKSTA
 **Small governance correction:** Files Changed unconditionally schedules CHANGELOG and releases DB/dump edits. ROUTER/PDDA place routine views at reconciliation and disable branch changelog writes by default. Keep only explicitly necessary, policy-permitted task edits; name any applicable configuration exception.
 
 **Evidence and limits:** Read the seeded plan, canonical parser, pr-minder assessment/main/receipts paths, kickstart ownership protocol, routing rules and PDDA contract directly. `gh issue view 1541 --repo HiQS-Labs/XYZ-forge --json body` exited 0 and returned v5 KS-04 (derived report), KS-05 (invocation-attributed reason), KS-08 (all associated processes stopped), KS-09 (pinned clone), and KS-13 (later landing invalidates QA). Graph tools were unavailable; no graph completeness claim is made. No executable fixture, suite, gate, or git command was run. This is plan QA, not implementation verification; the planned clone-run evidence remains outstanding.
+
+
+## Producer Round 2 — All 3 Round 1 Majors + Governance Note Addressed
+
+Updated `PROJECT/2-WORKING/GH-1547-KS04-KICKSTART-STATUS.md` to resolve every finding cleanly:
+
+1. **Major 1 (`confirmed-stopped` full 4-part ownership proof & unambiguous precedence):**
+   - `confirmed-stopped` now strictly requires ALL four ownership components verified stopped/clear: coordinator/owner (`--owner-state stopped` + dead `--owner-pid` if supplied), lock (`--lock-state clear` / absent `--lock-path`), associated builders/checks/push subprocesses (`--children-state stopped`), and detached sessions (`--sessions-state stopped`). Any `live` or `unknown` component refuses `confirmed-stopped`.
+   - Unambiguous precedence: `confirmed-stopped` > `stale-candidate` (log age `>= stale_seconds`, taking precedence over `waiting`/`quiet` even if ownership appears live) > `quiet` > `waiting` > `unknown`.
+   - Added explicit manual cases for dead coordinator + live child/session, dead coordinator + unknown child/session, and old log + live ownership (`stale-candidate`).
+2. **Major 2 (Canonical `GATE: final-QA` + landed-head separation + prefix-safe SHA + `unknown` on unverified head):**
+   - Consumes canonical `GATE: final-QA <sha> ... green|red` from `parse_record()["gates"]`; red final-QA is never fresh.
+   - Separates actual landings (`MERGED` progress lines and explicit `--development-head`) from non-landing task `GATE:` lines (task gates never invalidate Final QA).
+   - Prefix-safe SHA comparison (`>= 7` hex chars) handles abbreviated vs full SHAs; unverified local `origin/development` without `--development-head` returns `unknown` rather than falsely claiming `fresh`.
+   - Added manual cases for green/red canonical `GATE: final-QA`, later non-landing task gate, real later landing, abbreviated-vs-full SHA match, and unverified head (`unknown`).
+3. **Major 3 (Invocation-attributed stop reason; reject mtime-only shared files; explicit `--harness-root`):**
+   - Replaced implicit `target-root` assumption with explicit `--harness-root <path>`.
+   - Shared `.relay-scratch/escalation-reason` is accepted ONLY when matching `--invocation-id <id>` provenance exists (in payload or sibling `.meta.json`); mtime alone ALWAYS returns `stop_reason: "unknown"`, `attribution: "unattributable"`.
+   - Added manual case for a different invocation writing a NEWER shared file after run start (must still return `unknown`).
+4. **Governance note:** Removed unconditional `CHANGELOG.md` edit from Files Changed; ledger updates stay restricted to canonical `releases_app.py` registration.
+
+Please review Round 2; if clean, append your review block and set `STATUS: Approved` and `NEXT: Done`.
