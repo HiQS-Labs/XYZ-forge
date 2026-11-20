@@ -1,8 +1,8 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index 7269eaac..fc4c03ac 100644
+index a1736be3..5bec9af5 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
-@@ -127,6 +127,10 @@ contract rather than ad-hoc regexes or unlocked appends.
+@@ -133,6 +133,10 @@ contract rather than ad-hoc regexes or unlocked appends.
  - **Subcommands (`run_record.py`):**
    - `validate <record> [--require-landing-clone] [--json]` — validates v1 grammar and reports
      `unresolved_amendments` and `escalated_amendments`.
@@ -13,7 +13,7 @@ index 7269eaac..fc4c03ac 100644
    - `append <record> --kind <...> ...` — acquires a persistent sibling lock (`<record>.lock`),
      reads and validates the complete candidate record inside the lock, then writes atomically
      via temp file + `fsync` + `os.replace`.
-@@ -136,6 +140,32 @@ contract rather than ad-hoc regexes or unlocked appends.
+@@ -142,6 +146,32 @@ contract rather than ad-hoc regexes or unlocked appends.
      commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
      non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
  
