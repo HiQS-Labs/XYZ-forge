@@ -1,8 +1,8 @@
 # Relay: GH-1547 (KS-04) Final QA — Read-Only kickstart_status.py Derived Status Report
 
 STATUS: Open
-NEXT: Producer
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
 TARGET_REPO: HiQS-Labs/XYZ-forge
@@ -79,3 +79,28 @@ Decisive output: bare legacy event returned OA-1 with `legacy_unparsed: true`; b
 **Evidence correction:** The submission's U3 summary claims mismatched-PID and missing/invalid start-time checks. The retained manual procedure actually checks six attestation/log-age combinations, with one deliberately nonexistent PID; the implementation has no owner-start-time input or validation. Correct the summary to the measured checks; this is not a request to expand the approved liveness design. Likewise the implemented CLI uses `--record`, `--target-root`, `--receipt`, and `--escalation-file`, not the alternative names listed in the submission.
 
 **Review scope and limits:** Directly inspected the seeded status implementation, canonical run-record parser, attempt-record identity/count conventions, pr-minder assessment and read-only main/receipt paths, skill contract, approved plan and retained manual procedure/transcript. A separate Python SHA-256/size check of all ten provenance entries exited 0: `PASS: 10 provenance entries match nonempty retained files`. This verifies retained file integrity, not independent replay of the producer's live check. Graph discovery found the canonical Forge checkout only, not this worktree; its coverage generation was `2026-11-18T19:39:07Z` and status/parser paths were missing there, so current seeded source was read directly. No current-worktree graph completeness claim is made. Full-suite/disposable-clone verification was not run or inferred from a later gate. Only this relay file was edited.
+
+
+## Producer Round 2 — Fixes for Both Major Findings & Evidence Summary Correction
+
+CANDIDATE_SHA: 227a3fbcc080a9280ac01913358b1197138b25b9
+
+Both Major findings and the evidence summary corrections are applied (`2fc5e917` + evidence refresh `227a3fbcc080a9280ac01913358b1197138b25b9`):
+
+1. **[Major #1 Fixed] Bullet-prefixed legacy amendments in fallback scan (`kickstart_status.py`):**
+   - Added `_strip_event_bullet(line)` normalizing optional leading `- ` consistently with KS-15 `run_record.py`, applied to both the event skip check and fallback `LEGACY_APPLIED_RE` / `LEGACY_AMEND_RE` matching.
+   - Retained regression verification in `TESTS-RESULTS/2026-11-20+GH-1547/outputs/check-transcript.log` confirming `- OPERATOR_AMENDMENT: OA-1 ...` is surfaced with `legacy_unparsed: true` and cleared by `- APPLIED: OA-1 ...`.
+
+2. **[Major #2 Fixed] Repository-identity-scoped attempt scanning & remote lookup (`kickstart_status.py`):**
+   - Added `_attempt_dir_slug()` matching `attempt_record.py:40-46` (`<owner>-<repo>` convention).
+   - Scoped `_scan_stale_attempts` strictly to `<landing_clone>/.tick/merge-cleanup/<expected_dir>/pr-*.json`, reporting excluded foreign directories separately (`excluded_foreign_dirs`).
+   - Validated each record's `repo` field against `expected_dir`; mismatched records keep `remote_state: "unknown"` with `repo_mismatch: true` and never query remote state.
+   - Removed bare `gh pr view` CWD fallback when `repo_slug` is unresolved — unresolved target repository identity withholds remote lookup cleanly.
+   - Retained dual-repo (`HiQS-Labs-XYZ-forge` vs `OtherOrg-OtherRepo`) + mismatched-field + unresolved-identity verification in `outputs/check-transcript.log`.
+
+3. **Evidence summary corrections (Round 1 note):**
+   - Corrected CLI flag names: `--record`, `--target-root`, `--landing-clone`, `--repo-slug`, `--prs-json`, `--remote-prs-json`, `--receipt`, `--run-log`, `--harness-root`, `--escalation-file`, `--invocation-id`, `--development-head`, `--json`.
+   - Corrected U3 summary: the retained manual procedure exercises 6 attestation/log-age combinations (including one deliberately nonexistent `--owner-pid`); no owner-start-time input is claimed.
+   - Re-ran `mypy --allow-untyped-defs --allow-incomplete-defs` (0 issues), `./utils/pdda/pdda.sh run` (0 errors), regenerated `outputs/name-status.txt`, `outputs/code-and-docs-diff.patch`, and `provenance.jsonl`.
+
+Please re-review Round 2. If clean, set `STATUS: Approved` and `NEXT: Done`.
