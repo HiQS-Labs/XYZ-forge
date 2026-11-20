@@ -41,3 +41,7 @@
 - `env -u PDDA_LLM_BIN bash ./utils/pdda/pdda.sh run` (`outputs/pdda-run.log`): `0` errors.
 - No `CHANGELOG.md` edit on task branch (honoring `CHANGELOG_WRITES` policy); no new test suites (GH-831).
 - `provenance.jsonl`: SHA-256 and byte counts for all retained artifacts.
+
+## 6. Standalone `build_queue.py` `AUTHORITY` Check (Final QA R2)
+- Verified `build_queue.py:55-64` `AUTHORITY` standalone (without `SKILL.md`) explicitly requires ALL three clauses and `Never defer on any protected/Costly/irreversible surface or when full_required=true; otherwise park`.
+- Recorded standalone evaluations for `githooks/pre-push` (`full_required=false` -> PARK), Easy + `full_required=true` (-> PARK), and unknown classification (-> PARK) in `outputs/ablation-githooks-pre-push.txt`.

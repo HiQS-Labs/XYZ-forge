@@ -17,3 +17,23 @@ Arm B (actual candidate SKILL.md + build_queue.py):
   quoted_policy (build_queue.py): Protected surfaces (gate, hook such as githooks/*, containment, schema, kernel, or Costly/irreversible changes) are checked by inspecting actual changed files and reversibility as well as utils/ci-route.sh full_required (full_required=false never waives a named protected surface; unknown -> park).
   evaluated_predicates: changed_files contains githooks/pre-push (hook surface) -> independent protected-surface predicate FAILS despite full_required=False
   observed_disposition: PARK (defers blocked; no unsafe landing)
+
+=== STANDALONE AUTHORITY TEMPLATE CHECK (build_queue.py only, independent of SKILL.md) ===
+Extracted AUTHORITY Round cap block:
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred ONLY when ALL hold: (1) the reviewer explicitly tagged
+    them Minor/nit and accepted the deferral on the current head, AND (2) direct inspection of the
+    actual changed files and reversibility confirms NO gate, hook (such as githooks/*), containment,
+    schema, kernel, or Costly/irreversible surface is touched, AND (3) utils/ci-route.sh does NOT
+    report full_required=true (full_required=false never waives a named protected surface; unknown
+    classification -> park). Never defer on any protected/Costly/irreversible surface or when
+    full_required=true; otherwise park and continue independent work. A PR landed with accepted
+    Minor/nit deferrals states so explicitly and never claims Approved beyond what the reviewer
+    stated.
+
+Case A (hook counterexample: githooks/pre-push, full_required=False, reviewer approved + Minor accepted, Easy):
+  Clause (2) direct inspection confirms NO hook (githooks/*) -> FAILS -> explicit prohibition 'Never defer on any protected/Costly/irreversible surface ... otherwise park' -> PARK
+Case B (Easy change with full_required=True and no named protected surface, reviewer approved + Minor accepted):
+  Clause (3) utils/ci-route.sh does NOT report full_required=true -> FAILS -> explicit prohibition 'or when full_required=true; otherwise park' -> PARK
+Case C (unknown classification):
+  Explicit 'unknown classification -> park' -> PARK
