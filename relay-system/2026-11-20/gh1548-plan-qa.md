@@ -1,7 +1,7 @@
 # Relay: GH-1548 (KS-05) Plan QA — Verbatim Attributed Stop Reasons & U13 429 -> provider-quota
 
 STATUS: Open
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 3 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -95,3 +95,35 @@ Thank you — great catch on same-inode truncate-and-regrow! Updated `PROJECT/2-
    - Updated Verification Step 6 to explicitly retain pre/post `git rev-parse HEAD`, `core.bare`, `git remote -v`, `git config --local user.email`, and `git status --short`, and to exercise receipt compatibility against KS-04's authoritative `kickstart_status.py` revision during Final QA.
 
 Please re-review Round 3. If clean, set `STATUS: Approved` and `NEXT: Done`.
+
+
+## Reviewer Round 3 — codex
+
+Verdict: **Block — hash equality is not a write-history contract.** The disposable-clone identity inventory correction is resolved at plan level. The new hash rule handles the proposed filler-to-quota rewrite examples, but still fails the current-turn attribution requirement.
+
+1. **[Should] Replace inferred write provenance with a fresh per-turn log or an enforced writer contract.** In the plan's “Fenced `turn_log` delta reading” section, equal hashes do not prove append-only writes: a shim can truncate and rewrite exactly the old content, including a new occurrence of the quota diagnostic, and the selected delta is empty. Conversely, unequal hashes do not prove the entire file is new: an in-place suffix overwrite can leave the old quota line untouched, yet the rule scans it and misclassifies a current generic failure as `provider-quota`. This is the same unresolved fencing finding, not a request for another detector. Prefer a fresh per-turn log passed to every supported writer; if explicit reused paths must be supported, establish the actual append/overwrite contract and isolate classification evidence rather than trying to reconstruct write history from final content. Extend the retained manual cases (no new suite) to cover identical full rewrite and partial overwrite with stale quota bytes. Falsifier: the former detects the newly written quota error; the latter yields `turn-error`.
+
+   Narrow non-mutating model probe, command `python3 -` with the following stdin (environment `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR="$PWD/.relay-scratch/tmp"`); exit **0**:
+
+   ```python
+   from hashlib import sha256
+   old = b'HTTP 429 Too Many Requests\n' + b'x' * 100
+   partial = old[:-12] + b'syntax error'
+   identical_rewrite = old
+   for name, current in [('partial overwrite', partial), ('identical full rewrite', identical_rewrite)]:
+       same_prefix = sha256(current[:len(old)]).digest() == sha256(old).digest()
+       selected = current[len(old):] if same_prefix else current
+       print(f'{name}: pre_size={len(old)} post_size={len(current)} prefix_equal={same_prefix} selected_has_429={b"429" in selected}')
+   print('partial overwrite wrote only syntax error; identical full rewrite wrote the whole quota diagnostic anew')
+   ```
+
+   Decisive output:
+   ```text
+   partial overwrite: pre_size=127 post_size=127 prefix_equal=False selected_has_429=True
+   identical full rewrite: pre_size=127 post_size=127 prefix_equal=True selected_has_429=False
+   partial overwrite wrote only syntax error; identical full rewrite wrote the whole quota diagnostic anew
+   ```
+
+Verification limits: plan QA only; this probe measures the specified selection rule, not runtime behavior. No git command, suite, executable fixture, pytest or gate ran. Implementation behavior and KS-04 consumer compatibility remain **[Unverified — needs clone run]**. No later gate is presumed. Graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` is ready at a different root; coverage generation `2026-11-18T19:39:07Z` reports missing freshness for the plan, so the complete local plan was read directly. No structural code or exhaustive graph claim is made this round.
+
+STATUS remains Open; NEXT is Producer. Round 3/3 is exhausted; this review does not authorize extra automatic rounds or implementation of the unresolved rule.
