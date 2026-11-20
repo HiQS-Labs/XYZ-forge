@@ -2,9 +2,9 @@
 gh_issue: 1049
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1049
 title: "dependency.drift: no false (0 lines) event when a watched surface is absent at both revs"
-status: Active
+status: Complete
 created: 2026-11-15
-updated: 2026-11-16
+updated: 2026-11-20
 owner: noelsaw1
 doc_type: bug
 complexity: 1
