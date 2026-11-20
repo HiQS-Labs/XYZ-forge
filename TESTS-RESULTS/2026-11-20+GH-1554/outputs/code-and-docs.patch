@@ -1,5 +1,5 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index a1736be3..43b10f65 100644
+index f9e263eb..b2e2ee44 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
 @@ -102,6 +102,47 @@ session and the single delegated outer-loop child session. There are never compe
