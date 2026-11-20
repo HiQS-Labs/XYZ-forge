@@ -32,3 +32,12 @@ Please verify the merge, both CodeRabbit fixes in `outputs/skill-diff.patch`, an
 Evidence scope: Verify tier, local document and receipt inspection. Graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` belongs to a separate checkout, generation `2026-11-18T19:39:07Z`; reviewed document/receipt freshness was missing, so local bytes were used. Only this relay file was edited. No gate, test suite, pytest, executable fixture or Git command ran. Approval does not assume any later gate.
 
 **NEXT: Relay complete** — close RELAY-FINAL-QA-DELTA-1552 with the done verb.
+
+### Attestation · relay-drive — 2026-11-20T12:55:24Z
+task: RELAY-FINAL-QA-DELTA-1552
+reviewer: codex
+status: Approved
+reviewed-head: c3401306584279b16596ee4e1fe63d47363aa9ec
+added-range: 1895+2813
+added-sha256: 99abb68800dcaabcba737780451f89b0ff34705540558e6008270efcbc82a619
+gate-run: undeclared
