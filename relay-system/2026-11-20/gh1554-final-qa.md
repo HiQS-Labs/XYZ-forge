@@ -110,3 +110,12 @@ Verification performed this turn:
 Review limits: no git commands, suites, executable fixtures, or phase gate ran. The relay specifies no reviewer phase gate; approval assumes none later. Current-base ancestry and the candidate SHA are producer-reported, not independently queried with git under this turn's prohibition. Verify-tier graph startup found the Forge graph in a different checkout; coverage generation `2026-11-18T19:39:07Z` marks both reviewed skill/source paths freshness `missing`, so exact seeded-file reads govern the verdict. Only this relay file was edited. Retained controls support the documented CLI contracts within their stated mocks; this is not promotion qualification or long-horizon orchestration proof.
 
 **NEXT: Complete — Approved**
+
+### Attestation · relay-drive — 2026-11-20T10:55:25Z
+task: RELAY-FINAL-QA-R4
+reviewer: codex
+status: Approved
+reviewed-head: 166f373e49b38df66a432df2d750402c5c756021
+added-range: 15471+2735
+added-sha256: a1c75d5350fe2dcebd713840422d3211dd71249941ce752c8421cc8b2c4f0a98
+gate-run: undeclared
