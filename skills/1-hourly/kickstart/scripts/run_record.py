@@ -19,8 +19,8 @@ Reserved-word precedence on APPLIED:
   If the first whitespace-delimited token after the arrow (stripping optional trailing ":")
   is exact lowercase "applied", "superseded", or "escalated", it is parsed as the explicit
   disposition and the remaining action/reason MUST be non-empty (so "APPLIED: OA-1 → escalated"
-  is a validation error). For "superseded", the remainder must reference another declared
-  amendment ID. Repeated APPLIED lines for the same ID are allowed only when the prior
+  is a validation error). For "superseded", the remainder must reference a declared newer
+  amendment ID (appearing later in the record). Repeated APPLIED lines for the same ID are allowed only when the prior
   disposition was "escalated"; any APPLIED after terminal "applied" or "superseded" is an error.
 
 Compatibility examples:
@@ -78,8 +78,9 @@ SECRET_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{10,}\b"), "[REDACTED]"),
     (re.compile(r"\bgithub_pat_[A-Za-z0-9_]{10,}\b"), "[REDACTED]"),
     (re.compile(r"\bsk-[A-Za-z0-9_-]{16,}\b"), "[REDACTED]"),
+    (re.compile(r"(\bAuthorization:\s*Bearer\s+)[^\r\n]+", re.I), r"\1[REDACTED]"),
+    (re.compile(r"(\bAuthorization:[ \t]*)(?![ \t]*Bearer[ \t]+\[REDACTED\])[^\r\n]+", re.I), r"\1[REDACTED]"),
     (re.compile(r"(\bBearer\s+)[A-Za-z0-9._~+/=-]{8,}", re.I), r"\1[REDACTED]"),
-    (re.compile(r"(\bAuthorization:\s*)(?!Bearer\b)\S+", re.I), r"\1[REDACTED]"),
 ]
 STRAY_TAG_RE = re.compile(r"</?(?:content|invoke(?:\s+[^>]*)?|parameter(?:\s+[^>]*)?)>", re.I)
 
@@ -226,17 +227,20 @@ def parse_record(text: str, *, require_landing_clone: bool = False) -> dict[str,
 
             superseded_by: str | None = None
             if disposition == "superseded":
-                other_ids = [
+                target_line = amendment_by_id[target_id]["line_no"]
+                newer_ids = [
                     aid
-                    for aid in amendment_by_id
-                    if aid != target_id and re.search(rf"(?<![A-Za-z0-9._-]){re.escape(aid)}(?![A-Za-z0-9._-])", action)
+                    for aid, aentry in amendment_by_id.items()
+                    if aid != target_id
+                    and aentry["line_no"] > target_line
+                    and re.search(rf"(?<![A-Za-z0-9._-]){re.escape(aid)}(?![A-Za-z0-9._-])", action)
                 ]
-                if not other_ids:
+                if not newer_ids:
                     errors.append(
-                        f"line {line_no}: APPLIED {target_id} disposition 'superseded' must name a declared superseding amendment ID"
+                        f"line {line_no}: APPLIED {target_id} disposition 'superseded' must name a declared newer amendment ID (declared after {target_id})"
                     )
                     continue
-                superseded_by = other_ids[-1]
+                superseded_by = newer_ids[-1]
 
             prior = latest_applied.get(target_id)
             if prior is not None and prior["disposition"] in TERMINAL_DISPOSITIONS:
@@ -439,6 +443,8 @@ def _validate_dest_syntax(dest_rel: str) -> Path:
         raise ValueError(f"--dest must be relative, got absolute path {dest_rel!r}")
     if any(part in ("..", "") for part in p.parts):
         raise ValueError(f"--dest must not contain '..' traversal: {dest_rel!r}")
+    if any(part == ".git" for part in p.parts):
+        raise ValueError(f"--dest must not target Git metadata (.git): {dest_rel!r}")
     return p
 
 

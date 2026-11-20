@@ -97,7 +97,7 @@ contract rather than ad-hoc regexes or unlocked appends.
     - *Reserved-word precedence:* if the first token after `→` (or `->`) is lowercase
       `applied`, `superseded`, or `escalated`, it is parsed as the explicit disposition and
       the remaining action/reason must be non-empty (so `APPLIED: OA-1 → escalated` alone is
-      invalid). `superseded` must name another declared amendment ID. Otherwise, compact legacy
+      invalid). `superseded` must name a declared newer amendment ID (appearing later in the record). Otherwise, compact legacy
       text (`APPLIED: OA-1 → merged #1508`) defaults to `disposition="applied"`.
     - *Progression & unresolved state:* repeated `APPLIED:` lines are allowed only after
       `escalated` (never after terminal `applied` or `superseded`). Amendments with no `APPLIED:`

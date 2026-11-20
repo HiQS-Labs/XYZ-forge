@@ -1,6 +1,13 @@
-# Contaminated run record fixture
+# Kickstart run redaction check
 RUN-RECORD-VERSION: 1
 LANDING_CLONE: ~/kickstart-clones/landing
-PARENT_NOTE: PN-1 2026-11-20T07:00Z saw path ~/work and token [REDACTED] and Bearer [REDACTED]
-APPLIED: PN-1 → applied sanitized 2026-11-20T07:01Z
 
+## Progress log
+- note-ghp: [REDACTED]
+- note-pat: [REDACTED]
+- note-sk: [REDACTED]
+- note-bearer: Authorization: Bearer [REDACTED]
+- note-basic: Authorization: [REDACTED]
+- note-token: Authorization: [REDACTED]
+- note-path: ~/Documents/GH Repos/XYZ-forge
+- note-tags: kept bar
