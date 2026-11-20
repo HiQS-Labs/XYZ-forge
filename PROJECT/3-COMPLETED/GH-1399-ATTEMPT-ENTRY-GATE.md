@@ -2,9 +2,9 @@
 gh_issue: 1399
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1399
 title: Attempt accounting at qualification entry
-status: Active
+status: Complete
 created: 2026-11-10
-updated: 2026-11-11
+updated: 2026-11-20
 owner: Codex
 goal: Refuse unaccounted task qualification through existing gate boundaries while preserving legitimate harness and administrative flows
 ---
