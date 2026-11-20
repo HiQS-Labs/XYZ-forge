@@ -1,7 +1,7 @@
 # Relay: GH-1547 (KS-04) Plan QA — kickstart_status.py Thin Derived Read-Only Status Report
 
 STATUS: In Progress
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 1 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -25,3 +25,18 @@ Please review the implementation plan in `PROJECT/2-WORKING/GH-1547-KS04-KICKSTA
 1. Does the plan satisfy every KS-04, U3, and U10 requirement in `#1541` v5 without overbuilding a readiness engine or adding a new test suite?
 2. Are all fail-closed edge cases covered (unapplied amendments even with legacy parse warnings, unattributable escalation-reason files, missing remote PR state, log age vs stopped-ownership separation, read-only invariant)?
 3. If clean, append your review block and set `STATUS: Approved` and `NEXT: Done`. Otherwise list numbered findings and set `NEXT: Producer`.
+
+
+## Reviewer Round 1 — codex
+
+**Verdict: Needs changes.** The thin report, reuse of `parse_record` and read-only pr-minder mode, pinned attempt source, and manual evidence rather than new suites are appropriate. Resolve the following before implementation.
+
+1. **[Major] `confirmed-stopped` requires the complete ownership proof, not one dead PID and an absent lock.** Plan Inputs 4 and verification 2 permit `--owner-state stopped` + dead PID + no lock to produce `confirmed-stopped`, even if an associated builder, gate, push subprocess or detached session remains live (or cannot be inspected). The canonical kickstart recovery protocol (`skills/1-hourly/kickstart/SKILL.md:55-57,229-230`) and #1541 KS-08 require all associated ownership stopped; unknown holds. Define how the report consumes that full proof without becoming a recovery engine; missing checks must remain unknown/stale-candidate. Add manual cases for dead coordinator with live child/session and unknown child ownership; neither may report confirmed-stopped. Also specify precedence so an old log with live ownership follows the planned stale-candidate rule rather than the overlapping waiting rule.
+
+2. **[Major] Final-QA freshness conflates check heads with landed heads and omits the canonical QA event.** Inputs 5 accepts latest `GATE:` as latest landed SHA, although `run_record.py:parse_record` returns gates with independent `target`, `sha`, and `verdict`; a task gate does not establish a landing. It also names `FINAL_QA:`/free-text mentions but does not explicitly consume the canonical `GATE: final-QA <sha> ... green` event. This can miss valid QA, mark an unlanded task head as a later landing, or treat failed QA as fresh. Specify successful canonical final-QA selection, separate actual landing evidence/current integration head from task gate SHAs, and return unknown when ordering/freshness cannot be established (including abbreviated-vs-full SHAs and a stale local origin/development). Manual checks should cover canonical green and red final-QA lines, a later non-landing task gate, and a real later landing.
+
+3. **[Major] Shared escalation-file mtime is recency evidence, not invocation attribution.** Inputs 6 and verification 6 accept any shared file written after run start as this run's reason. A concurrent different relay can write cap-stalled after this run starts, so this report would quote the other invocation's reason as its own. #1541 KS-05 explicitly identifies the shared harness-root file as the problem and requires attribution to this invocation. Require a matching invocation key or equivalent exclusive provenance; mtime alone must stay unknown. Cover a different invocation writing a newer shared file, as well as the already planned old-file replay. Clarify the actual harness-root path rather than assuming target-root is the harness that produced the reason.
+
+**Small governance correction:** Files Changed unconditionally schedules CHANGELOG and releases DB/dump edits. ROUTER/PDDA place routine views at reconciliation and disable branch changelog writes by default. Keep only explicitly necessary, policy-permitted task edits; name any applicable configuration exception.
+
+**Evidence and limits:** Read the seeded plan, canonical parser, pr-minder assessment/main/receipts paths, kickstart ownership protocol, routing rules and PDDA contract directly. `gh issue view 1541 --repo HiQS-Labs/XYZ-forge --json body` exited 0 and returned v5 KS-04 (derived report), KS-05 (invocation-attributed reason), KS-08 (all associated processes stopped), KS-09 (pinned clone), and KS-13 (later landing invalidates QA). Graph tools were unavailable; no graph completeness claim is made. No executable fixture, suite, gate, or git command was run. This is plan QA, not implementation verification; the planned clone-run evidence remains outstanding.
