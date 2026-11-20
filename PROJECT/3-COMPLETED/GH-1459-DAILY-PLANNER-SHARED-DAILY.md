@@ -2,8 +2,8 @@
 gh_issue: 1459
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1459
 title: "daily-planner: shared Daily Work Ledger GH issue, carryover, checkout calibration, and vendored repo support"
-status: "Working — Phase 1 (Plan QA)"
-updated: 2026-11-13
+status: Complete
+updated: 2026-11-20
 created: 2026-11-13
 owner: agent-agy
 doc_type: feature
