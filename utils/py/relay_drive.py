@@ -8,6 +8,7 @@ import shutil
 import pathlib
 import json
 import secrets
+import select
 import tempfile
 import threading
 from contextlib import contextmanager
@@ -72,37 +73,55 @@ def _read_head_tail(file_path: str, cap: int = 16384) -> str:
 
 
 class _StderrTee:
-    """Forward shim stderr live to sys.stderr while keeping bounded head+tail bytes for this turn."""
+    """Forward shim stderr live to sys.stderr while keeping bounded head+tail bytes for this turn.
+
+    Uses select()+os.read() so finish() drains buffered bytes and exits promptly even if an orphaned
+    grandchild still holds the pipe's write end open after the shim exits.
+    """
 
     def __init__(self, stream, cap: int = 16384):
         self._stream = stream
+        self._fd = stream.fileno()
         self._cap = cap
         self._head = bytearray()
         self._tail = bytearray()
+        self._stop = threading.Event()
+        self._eof = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
+
+    def _append(self, chunk: bytes) -> None:
+        try:
+            sys.stderr.buffer.write(chunk)
+            sys.stderr.buffer.flush()
+        except Exception:
+            pass
+        if len(self._head) < self._cap:
+            need = self._cap - len(self._head)
+            self._head.extend(chunk[:need])
+        self._tail.extend(chunk)
+        if len(self._tail) > self._cap:
+            del self._tail[:-self._cap]
 
     def _run(self) -> None:
         try:
             while True:
-                chunk = self._stream.read(4096)
-                if not chunk:
+                ready, _, _ = select.select([self._fd], [], [], 0.05)
+                if ready:
+                    chunk = os.read(self._fd, 4096)
+                    if not chunk:
+                        self._eof.set()
+                        break
+                    self._append(chunk)
+                elif self._stop.is_set():
                     break
-                try:
-                    sys.stderr.buffer.write(chunk)
-                    sys.stderr.buffer.flush()
-                except Exception:
-                    pass
-                if len(self._head) < self._cap:
-                    need = self._cap - len(self._head)
-                    self._head.extend(chunk[:need])
-                self._tail.extend(chunk)
-                if len(self._tail) > self._cap:
-                    del self._tail[:-self._cap]
         except Exception:
             pass
 
     def finish(self, timeout_s: float = 2.0) -> str:
+        # Wait briefly for natural EOF, then signal stop so orphaned grandchildren cannot hang the driver.
+        self._eof.wait(timeout=min(timeout_s, 0.35))
+        self._stop.set()
         self._thread.join(timeout=timeout_s)
         try:
             self._stream.close()
