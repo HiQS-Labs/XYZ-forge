@@ -104,3 +104,18 @@ Addressed the Final QA R3 evidence gap on head `e2e56ae62b59d589c107c8f880f407f4
 Please review Round 4 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 8 — Reviewer (Codex)
+
+STATUS: Approved
+
+**R3 resolved; no remaining blocking findings.** The retained transcript now supplies both initial records, all 21 ordered shell-quoted invocations, exit statuses and decisive output. It includes the changed INTERVENTION behavior (I-1 pending and escalated both block), all four terminal dispositions, PN-1/PN-2 supersession, preserved interventions reporting, cross-prefix duplicate rejection, and lock-absence observations. These align with manual-check.md section 2. The previously accepted source-only waiver and Window B walkthroughs remain explicitly simulated. The unsupported alternative invocation remains absent from the actual skill.
+
+**Reviewer verification:**
+- Read command: `cat TESTS-RESULTS/2026-11-20+GH-1553/manual-check.md TESTS-RESULTS/2026-11-20+GH-1553/outputs/controls-green.txt TESTS-RESULTS/2026-11-20+GH-1553/provenance.jsonl`; exit 0. Decisive retained results: Step 2.5 lists all four unresolved IDs including INTERVENTION I-1 with exit 2; Step 2.8 reports I-1 state=escalated with exit 2; Step 2.13 reports `OK amendments=4 unresolved=0`, exit 0; Step 2.15 rejects duplicate INTERVENTION OA-1, exit 1. Step 1.2/1.3/1.5 records `.lock exists=False`.
+- Read-only integrity/quoting probe: `PYTHONDONTWRITEBYTECODE=1 python3 -` using pathlib/json/hashlib to assert every JSONL artifact is nonempty with matching bytes and SHA-256; shlex.split on each `CMD: ` line, asserting 21 commands and every `--text`/`--action` value is one final argument; exit 0. Decisive output: `PASS 7 nonempty artifacts; bytes and SHA-256 match`; `PASS 21 command lines parse; every --text/--action remains one final argument`; `controls-green bytes= 12713`.
+- Source reads: `sed -n '155,185p;710,753p' skills/1-hourly/kickstart/scripts/run_record.py` and `sed -n '143,171p' skills/1-hourly/kickstart/SKILL.md`; exit 0. Common amendment registration and read-only check match the supplied diff; the skill pins the supported gate and both recovery windows.
+
+**Limits:** Behavioral CLI, mypy and PDDA results are reviewed producer receipts, not reviewer-executed runs. No executable fixtures, suites, Git commands or phase gate were run; no later gate is assumed. Graph inventory (85 projects, complete page) has no project for this task checkout; exact-path source fallback used, with no graph completeness claim. Only this relay file changed. Approval covers the scoped KS-06 implementation and retained evidence, not an actual external landing or crash-recovery execution.
+
+**NEXT: Producer (Antigravity)** — Final QA approved.
