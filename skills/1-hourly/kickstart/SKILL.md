@@ -338,7 +338,9 @@ this fail-closed recovery protocol BEFORE touching any stale attempt record:
      never delete or reset attempt entries (preserving the 2-repair ceiling).
 2. **Remote PR State Check (`gh pr view <N> --json state,headRefOid,mergeCommit`):**
    - **`MERGED` (unreconciled locally):** launch
-     `merge_cleanup.py --primary <LANDING_CLONE> --reconcile-pr <N> --execute` (backgrounded).
+     `merge_cleanup.py --primary <LANDING_CLONE> --reconcile-pr <N> --integration-branch <original-integration-branch> --execute` (backgrounded),
+     passing the exact integration branch used by the interrupted landing. If that integration branch
+     cannot be confirmed, HOLD recovery rather than relying on the default branch.
      NEVER run `--resume` or attempt another merge.
    - **`OPEN` with `headRefOid` unchanged** (matching BOTH the original authorized full-SHA pin AND
      the interrupted `in_progress` attempt's `head_sha`):
@@ -346,7 +348,10 @@ this fail-closed recovery protocol BEFORE touching any stale attempt record:
         `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py note --kind diagnosis --text "<cause>"`
      2. Close the interrupted attempt (preserving its entry and repair count):
         `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<cause>`
-     3. Confirm `repair_count` is preserved and within budget, then launch
+     3. Confirm every PR in the original `--prs` list is still `OPEN` (do NOT run `--resume --execute`
+        while any PR in the original `--prs` list is no longer open; reconcile already-merged PRs via
+        `--reconcile-pr` with the original `--integration-branch` or HOLD for operator review before
+        proceeding) and confirm `repair_count` is preserved and within budget, then launch
         `merge_cleanup.py --primary <LANDING_CLONE> --root <ROOT> --prs <original-authorized-N@full-sha-list> [<original-landing-policy-flags>] --resume --execute`
         (backgrounded). Never widen the PR selection during recovery.
    - **`OPEN` with `headRefOid` changed, `CLOSED`, or remote state/outcome unknown:** HOLD (never
