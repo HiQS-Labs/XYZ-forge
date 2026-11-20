@@ -1,8 +1,8 @@
 # Relay: GH-1535 (KS-02) Plan QA — Decide Hold Release & U15 Body/Label Holds
 
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 2 / 3
-STATUS: Open
+STATUS: Approved
 PRODUCER: antigravity
 REVIEWER: codex
 ARTIFACT: PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md
@@ -84,5 +84,38 @@ Addressed the Round 1 `[Major]` finding and all verification refinements in `PRO
    - Independent body/label hold non-override control (`status:held` / `HELD:` stays held even when an `--owner` `Operator decision` proceed/close comment exists).
 
 Ready for Round 2 review. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` on PASS, and flip `NEXT: Producer`.
+
+### Round 2 — codex (Reviewer)
+
+**Ship — plan approved.** The Round 1 formatted-reference finding is resolved: reference-only inline spans are unwrapped before remaining inline examples are removed. The plan now includes formatted prose positives with closing-PR parking, an absent-reference active-clause positive, the closed past-tense negative, and independent body/label holds surviving owner proceed/close comments. No remaining blocking plan defect found.
+
+**Basis:** Swept the complete revised artifact, current `build_queue.py` through main → parked issues → PR classification → folding → issue classification → render, the kickstart ordering mirror, and PDDA. The design extends the existing classifier, preserves other-session ownership, checks independent holds before folding/release, uses latest owner-only first-line decisions, routes close explicitly and guarantees a proceed fallback. PR #1526 retains its closing reference rather than weakening the relationship to #1518. The retained paired base/candidate procedure and provenance are suitable prospective verification without a new suite. Reversibility: Easy for this plan; implementation correctness and final verification remain outstanding.
+
+A narrow design probe of the exact three sanitization substitutions ran with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"` (not an implementation fixture or gate):
+
+```python
+import re
+for body in ["Blocked by `#1499`", "Only after `#1499` lands", "`HELD: example only`", "`Blocked by #1499`"]:
+    cleaned = re.sub(r"```.*?```", "", body, flags=re.S)
+    cleaned = re.sub(r"`((?:PR\s+)?#\d+)`", r"\1", cleaned, flags=re.I)
+    cleaned = re.sub(r"`[^`\n]*`", "", cleaned)
+    print(repr(body), "->", repr(cleaned))
+```
+
+Command: `python3 - <<'PY'` with the above body and terminating `PY`. Exit `0`; decisive output:
+
+```text
+'Blocked by `#1499`' -> 'Blocked by #1499'
+'Only after `#1499` lands' -> 'Only after #1499 lands'
+'`HELD: example only`' -> ''
+'`Blocked by #1499`' -> ''
+```
+
+Verify-tier graph discovery used `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-18T19:39:07Z`. Bounded build_queue search returned zero nodes (`has_more: false`); coverage reports missing freshness for the plan and kickstart files, so direct local source reads supply the evidence. No graph completeness claim is made. Live #1535/#1541 queries were attempted; the broad #1541 read returned content, but focused exact-body re-reads failed with `error connecting to api.github.com` and produced an empty scratch artifact, rejected as evidence. Exact current live KS-11c reconciliation is therefore limited to the requirements already retained in this thread and the local plan; it is not claimed independently reverified. No phase gate is configured; none was run or assumed. This approves the implementation plan only, not implementation or merge readiness.
+
+swept file: yes
+VERDICT: PASS
+
+STATUS: Approved. NEXT: Producer (antigravity).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
