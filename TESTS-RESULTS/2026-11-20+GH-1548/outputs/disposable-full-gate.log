@@ -1,30 +1,14 @@
-Cloning into '<home-dir>/kickstart-clones-ks1541/ks05-gate2'...
-done.
-Updating files:  61% (7262/11749)Updating files:  62% (7285/11749)Updating files:  63% (7402/11749)Updating files:  64% (7520/11749)Updating files:  65% (7637/11749)Updating files:  66% (7755/11749)Updating files:  67% (7872/11749)Updating files:  68% (7990/11749)Updating files:  69% (8107/11749)Updating files:  70% (8225/11749)Updating files:  71% (8342/11749)Updating files:  72% (8460/11749)Updating files:  73% (8577/11749)Updating files:  74% (8695/11749)Updating files:  75% (8812/11749)Updating files:  76% (8930/11749)Updating files:  77% (9047/11749)Updating files:  78% (9165/11749)Updating files:  79% (9282/11749)Updating files:  80% (9400/11749)Updating files:  81% (9517/11749)Updating files:  82% (9635/11749)Updating files:  83% (9752/11749)Updating files:  84% (9870/11749)Updating files:  85% (9987/11749)Updating files:  86% (10105/11749)Updating files:  87% (10222/11749)Updating files:  88% (10340/11749)Updating files:  89% (10457/11749)Updating files:  90% (10575/11749)Updating files:  91% (10692/11749)Updating files:  92% (10810/11749)Updating files:  93% (10927/11749)Updating files:  94% (11045/11749)Updating files:  95% (11162/11749)Updating files:  96% (11280/11749)Updating files:  97% (11397/11749)Updating files:  98% (11515/11749)Updating files:  99% (11632/11749)Updating files: 100% (11749/11749)Updating files: 100% (11749/11749), done.
-Note: switching to 'b280e6709ce93b7e89676d0ac61c859bce119968'.
+=== PRE-GATE SNAPSHOT (2026-11-20T10:05:39Z) ===
+git rev-parse HEAD: rc=0 out='b280e6709ce93b7e89676d0ac61c859bce119968' err=''
+git config --get core.bare: rc=0 out='false' err=''
+git remote -v: rc=0 out='origin\t$HOME/Documents/GH Repos/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20 (fetch)\norigin\t$HOME/Documents/GH Repos/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20 (push)' err=''
+git config --local --get user.email: rc=1 out='' err=''
+git status --short: rc=0 out='' err=''
 
-You are in 'detached HEAD' state. You can look around, make experimental
-changes and commit them, and you can discard any commits you make in this
-state without impacting any branches by switching back to a branch.
-
-If you want to create a new branch to retain commits you create, you may
-do so (now or later) by using -c with the switch command. Example:
-
-  git switch -c <new-branch-name>
-
-Or undo this operation with:
-
-  git switch -
-
-Turn off this advice by setting config variable advice.detachedHead to false
-
-HEAD is now at b280e670 fix(relay-drive): keep failed-turn block compatible with gh648 AST boundary test
-githooks: NOT INSTALLED in this clone.
-  <home-dir>/kickstart-clones-ks1541/ks05-gate2/.git/hooks/pre-push does not exist.
-  This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh
-validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified.
+=== ./validate.sh ===
+validate_rc=0 elapsed_s=996
 validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
-runner-envelope: validate.sh — harness registry at scratch (/tmp/runner-envelope.21ofLJ/harnesses.db), envelope state captured
+runner-envelope: validate.sh — harness registry at scratch ($HOME/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/runner-envelope.n4M3PR/harnesses.db), envelope state captured
 validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
   389 pooled suites + 16 in the sequential driver-lock lane (GH-528)
   NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
@@ -70,11 +54,11 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] workstealing-verdict.sh rc=0
 [parallel] verdict-edge.sh rc=0
 [parallel] claim-cap.sh rc=0
-[parallel] gh251-validate-pytest-skip.sh rc=0
 [parallel] reap.sh rc=0
 [parallel] heartbeat.sh rc=0
-[parallel] take.sh rc=0
 [parallel] cost.sh rc=0
+[parallel] gh251-validate-pytest-skip.sh rc=0
+[parallel] take.sh rc=0
 [parallel] watchdog-liveness.sh rc=0
 [parallel] runner-loop.sh rc=0
 [parallel] poll-driver.sh rc=0
@@ -86,13 +70,13 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh280-jog-marathon-adapter.sh rc=0
 [parallel] gh278-turn-timeout-parity.sh rc=0
 [parallel] gh308-frozen-twin-guard.sh rc=0
-[parallel] gh245-agy-probe-verb-invariant.sh rc=0
-[parallel] agy-turn.sh rc=0
-[parallel] gh788-python-path-space.sh rc=0
 [parallel] aider-turn.sh rc=0
-[parallel] gh777-start-task-prior-art.sh rc=0
+[parallel] gh245-agy-probe-verb-invariant.sh rc=0
+[parallel] gh788-python-path-space.sh rc=0
+[parallel] agy-turn.sh rc=0
 [parallel] gh777-inventory-ratchet.sh rc=0
 [parallel] gh609-sdlc-agent-gaps.sh rc=0
+[parallel] gh777-start-task-prior-art.sh rc=0
 [parallel] ate-run-variations.sh rc=0
 [parallel] model-alias.sh rc=0
 [parallel] gh450-model-catalog-pin.sh rc=0
@@ -104,44 +88,44 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh346-telemetry-row-written.sh rc=0
 [parallel] gh496-telemetry-isolation.sh rc=0
 [parallel] gh346-registry-view-freshness.sh rc=0
-[parallel] gh518-muse-adapter-containment.sh rc=0
+[parallel] gh346-profile-resolve.sh rc=0
 [parallel] gh368-same-lane-routing.sh rc=0
 [parallel] gh373-reviewer-validation.sh rc=0
-[parallel] gh346-profile-resolve.sh rc=0
+[parallel] gh518-muse-adapter-containment.sh rc=0
 [parallel] gh369-group-kill.sh rc=0
+[parallel] gh371-interrupt-snapshot.sh rc=0
 [parallel] gh370-progress-telemetry.sh rc=0
 [parallel] gh267-express-skill.sh rc=0
-[parallel] gh371-interrupt-snapshot.sh rc=0
 [parallel] gh374-drift-path-filter.sh rc=0
 [parallel] swe-diagram.sh rc=0
 [parallel] gh648-l8-zero-output-handback.sh rc=0
 [parallel] gh372-escalation-log-tail.sh rc=0
-[parallel] gh648-l9-369-regression.sh rc=0
 [parallel] gh698-planner-db-ratings.sh rc=0
+[parallel] gh648-l9-369-regression.sh rc=0
 [parallel] gh708-vendored-suite-skips.sh rc=0
 [parallel] commandcode-turn.sh rc=0
 [parallel] claude-turn.sh rc=0
+[parallel] worktree-isolation.sh rc=0
 [parallel] gh610-claude-subscription.sh rc=0
 [parallel] marathon-yaml.sh rc=0
-[parallel] worktree-isolation.sh rc=0
 [parallel] gh284-runlog-heartbeat.sh rc=0
 [parallel] gh115-round-cap.sh rc=0
 [parallel] gh307-gate-env-scrub.sh rc=0
-[parallel] gh319-gate-path-with-space.sh rc=0
 [parallel] shim-worktree.sh rc=0
 [parallel] gh320-twin-timeout-parity.sh rc=0
+[parallel] gh319-gate-path-with-space.sh rc=0
 [parallel] gh308-poll-guards.sh rc=0
 [parallel] gh308-swarm-gate-path.sh rc=0
 [parallel] gh343-gate-program-target-root.sh rc=0
 [parallel] gh322-runlog-python-lane.sh rc=0
 [parallel] gh308-turn-shim-parity.sh rc=0
 [parallel] gh342-sentinel-debug-log-python.sh rc=0
-[parallel] gh308-consult-guards.sh rc=0
 [parallel] gh369-find-doc-root-resolution.sh rc=0
+[parallel] gh308-consult-guards.sh rc=0
 [parallel] gh400-acceptance-fidelity.sh rc=0
 [parallel] gh557-unknown-blocks-manifest.sh rc=0
-[parallel] gh419-gate-inventory.sh rc=0
 [parallel] gh400-source-url.sh rc=0
+[parallel] gh419-gate-inventory.sh rc=0
 [parallel] litmus-release.sh rc=0
 [parallel] gh418-issue-state-frozen.sh rc=0
 [parallel] gh422-backfill-source-url.sh rc=0
@@ -153,32 +137,32 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh417-turn-root-symlink-prefix.sh rc=0
 [parallel] gh457-gate-tiers.sh rc=0
 [parallel] gh407-gate-ran-attribution.sh rc=0
-[parallel] gh436-merge-cleanup.sh rc=0
 [parallel] gh390-timeout-attribution.sh rc=0
-[parallel] gh441-gate-env-contract.sh rc=0
 [parallel] gh387-gate-not-first-executor.sh rc=0
+[parallel] gh441-gate-env-contract.sh rc=0
 [parallel] gh218-synthetic-nested-driver-lock.sh rc=0
+[parallel] gh432-failed-turn-persist.sh rc=0
 [parallel] gh448-driver-lock-resolver.sh rc=0
 [parallel] gh376-relay-drive-lock-parity.sh rc=0
-[parallel] gh432-failed-turn-persist.sh rc=0
+[parallel] gh217-gate-env-plan-outside.sh rc=0
 [parallel] gh397-reviewer-turn-role.sh rc=0
 [parallel] gh401-dry-run-no-mutation.sh rc=0
 [parallel] gh375-agy-auth-preflight.sh rc=0
-[parallel] gh217-gate-env-plan-outside.sh rc=0
+[parallel] gh436-merge-cleanup.sh rc=0
 [parallel] gh375-auth-timeout-verdict.sh rc=0
 [parallel] gh408-tick-failure-visibility.sh rc=0
 [parallel] nightwatch-release.sh rc=0
 [parallel] gh378-gate-requires-green-suite.sh rc=0
-[parallel] gh385-retry-token-satisfied.sh rc=0
-[parallel] gh380-claude-trust.sh rc=0
 [parallel] gh379-claude-builder-diagnosis.sh rc=0
+[parallel] gh380-claude-trust.sh rc=0
+[parallel] gh385-retry-token-satisfied.sh rc=0
 [parallel] gh382-marathon-memory-telemetry.sh rc=0
 [parallel] gh551-resolver-refuses.sh rc=0
 [parallel] meter-release.sh rc=0
 [parallel] ballast-release.sh rc=0
-[parallel] gh491-gate-only-refire.sh rc=0
-[parallel] gh386-turn-budget-honesty.sh rc=0
 [parallel] marathon-drive.sh rc=0
+[parallel] gh386-turn-budget-honesty.sh rc=0
+[parallel] gh491-gate-only-refire.sh rc=0
 [parallel] gh255-remedy-ordering.sh rc=0
 [parallel] gh256-target-root-guard-root.sh rc=0
 [parallel] gh426-worktree-leak.sh rc=0
@@ -188,21 +172,21 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh505-relay-attest.sh rc=0
 [parallel] gh438-removal-is-progress.sh rc=0
 [parallel] gh467-index-only-lane-blocked.sh rc=0
+[parallel] gh409-claim-leak.sh rc=0
 [parallel] hq-marathon-live.sh rc=0
-[parallel] debug-mantra.sh rc=0
+[parallel] gh438-acceptance-recheck.sh rc=0
 [parallel] lane-attempt-cap.sh rc=0
-[parallel] driver-lock.sh rc=0
 [parallel] measure.sh rc=0
 [parallel] loop-stop.sh rc=0
-[parallel] gh409-claim-leak.sh rc=0
-[parallel] oracle-guard.sh rc=0
-[parallel] heldout-check.sh rc=0
+[parallel] driver-lock.sh rc=0
 [parallel] champion.sh rc=0
+[parallel] oracle-guard.sh rc=0
+[parallel] debug-mantra.sh rc=0
 [parallel] loop-cost.sh rc=0
-[parallel] gh438-acceptance-recheck.sh rc=0
+[parallel] heldout-check.sh rc=0
 [parallel] improve-loop-dogfood.sh rc=0
-[parallel] improve-loop.sh rc=0
 [parallel] gh430-state-dir-tracked-default.sh rc=0
+[parallel] improve-loop.sh rc=0
 [parallel] gh536-evidence-detail.sh rc=0
 [parallel] improve-loop-qa.sh rc=0
 [parallel] gh402-board-sync.sh rc=0
@@ -232,30 +216,30 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh91-relay-scratch.sh rc=0
 [parallel] gh113-headless-scratch.sh rc=0
 [parallel] gh365-pdda-gov-scan.sh rc=0
-[parallel] gh114-headless-tty.sh rc=0
 [parallel] gh124-closeout.sh rc=0
 [parallel] gh129-relay-tick-root.sh rc=0
+[parallel] gh114-headless-tty.sh rc=0
 [parallel] gh130-agy-auth-whoami.sh rc=0
 [parallel] gh139-pipe-grep-guard.sh rc=0
 [parallel] synthetic/gh101-consult-programmatic.sh rc=0
-[parallel] gh549-work-events.sh rc=0
 [parallel] synthetic/gh101-relay-programmatic-stress.sh rc=0
-[parallel] synthetic/gh94-containment-invariants.sh rc=0
-[parallel] synthetic/gh102-telemetry-schema.sh rc=0
-[parallel] synthetic/synthetic-claude-target-root.sh rc=0
 [parallel] gh131-marathon-target-root.sh rc=0
-[parallel] synthetic/synthetic-marathon-worktree-guard.sh rc=0
+[parallel] synthetic/gh102-telemetry-schema.sh rc=0
+[parallel] synthetic/gh94-containment-invariants.sh rc=0
+[parallel] synthetic/synthetic-claude-target-root.sh rc=0
 [parallel] synthetic/synthetic-marathon-env-leak.sh rc=0
+[parallel] synthetic/synthetic-marathon-worktree-guard.sh rc=0
 [parallel] synthetic/synthetic-pi-model-unset.sh rc=0
 [parallel] synthetic/synthetic-pi-provider-unsupported.sh rc=0
-[parallel] gh141-fuzz-inputs.sh rc=0
 [parallel] synthetic/gh94-script-serialization.sh rc=0
+[parallel] gh141-fuzz-inputs.sh rc=0
 [parallel] gh141-synthetic-registry.sh rc=0
+[parallel] gh549-work-events.sh rc=0
 [parallel] gh608-deepseek-effort.sh rc=0
 [parallel] gh648-l7-checkout-aftermath.sh rc=0
 [parallel] gh142-ate-exit-contract.sh rc=0
-[parallel] gh648-l5-gh237-repro.sh rc=0
 [parallel] gh148-deepseek-turn.sh rc=0
+[parallel] gh648-l5-gh237-repro.sh rc=0
 [parallel] gh648-l3-consult-cap.sh rc=0
 [parallel] gh648-l6-muse-attribution.sh rc=0
 [parallel] gh648-l1-turn-termination.sh rc=0
@@ -264,13 +248,13 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh156-turn-shims-help.sh rc=0
 [parallel] gh648-l4-285-revalidate.sh rc=0
 [parallel] gh648-l2-token-aftermath.sh rc=0
+[parallel] gh155-phase3-repro-builder.sh rc=0
 [parallel] gh155-phase1-metamorphic-invariants.sh rc=0
 [parallel] gh155-phase4-self-healer.sh rc=0
-[parallel] gh155-phase3-repro-builder.sh rc=0
 [parallel] gh155-phase5-active-explorer.sh rc=0
 [parallel] gh174-harness-registry.sh rc=0
-[parallel] gh180-repro-timeout-crash.sh rc=0
 [parallel] gh168-wave-reconcile-scope.sh rc=0
+[parallel] gh180-repro-timeout-crash.sh rc=0
 [parallel] gh181-repro-adapter-fidelity.sh rc=0
 [parallel] gh183-explorer-env-soundness.sh rc=0
 [parallel] gh184-no-tracked-scratch.sh rc=0
@@ -293,12 +277,12 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh32-releases-app.sh rc=0
 [parallel] gh57-releases-fuzz.sh rc=0
 [parallel] gh351-manifest-unship.sh rc=0
-[parallel] gh69-roadmap-shadow.sh rc=0
 [parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
-[parallel] gh349-releases-roadmap-vendored.sh rc=0
-[parallel] gh362-marathon-plan-link-bullets.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
 [parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh349-releases-roadmap-vendored.sh rc=0
 [parallel] gh358-wave-reconcile-vendored-paths.sh rc=0
+[parallel] gh362-marathon-plan-link-bullets.sh rc=0
 [parallel] gh429-wave-reconcile-vendored-observe.sh rc=0
 [parallel] gh32-release-target-advisory.sh rc=0
 [parallel] gh39-releases-project-sync.sh rc=0
@@ -317,27 +301,27 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh77-standup-triage.sh rc=0
 [parallel] agent-chorus.sh rc=0
 [parallel] skills-army-hq.sh rc=0
-[parallel] gh233-agent-chorus-concurrency.sh rc=0
 [parallel] agent-chorus-bridge.sh rc=0
+[parallel] gh233-agent-chorus-concurrency.sh rc=0
 [parallel] gh620-skills-army-mini-sync.sh rc=0
 [parallel] xyz-sync-check.sh rc=0
 [parallel] gh642-consumer-fruit.sh rc=0
-[parallel] relay-concurrent-commit.sh rc=0
 [parallel] gh293-vendored-guard-drift.sh rc=0
-[parallel] relay-case-insensitive.sh rc=0
-[parallel] relay-commit-pathspec.sh rc=0
-[parallel] gh292-worktree-vendored-discovery.sh rc=0
-[parallel] find-harness.sh rc=0
-[parallel] xyz-vendor.sh rc=0
-[parallel] pdda-changelog.sh rc=0
-[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] relay-concurrent-commit.sh rc=0
 [parallel] gh365-tier-fail-closed.sh rc=0
+[parallel] relay-commit-pathspec.sh rc=0
+[parallel] relay-case-insensitive.sh rc=0
+[parallel] gh292-worktree-vendored-discovery.sh rc=0
+[parallel] pdda-changelog.sh rc=0
+[parallel] find-harness.sh rc=0
+[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] xyz-vendor.sh rc=0
 [parallel] gh649-pdda-migration.sh rc=0
+[parallel] pdda-local-checks.sh rc=0
 [parallel] gh784-marathon-qa-gate.sh rc=0
 [parallel] gh460-pipe-buffer-sigpipe.sh rc=0
 [parallel] gh284-p3-release-milestone.sh rc=0
 [parallel] gh284-p4-release-lanes.sh rc=0
-[parallel] pdda-local-checks.sh rc=0
 [parallel] ci-workflow.sh rc=0
 [parallel] ci-route.sh rc=0
 [parallel] gh509-gate-evidence.sh rc=0
@@ -349,14 +333,14 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh23-path-overlap-enforcement.sh rc=0
 [parallel] pdda-install-startup-docs.sh rc=0
 [parallel] preflight-docs.sh rc=0
+[parallel] xyz-harness-hooks.sh rc=0
 [parallel] marathon-plan.sh rc=0
 [parallel] hq.sh rc=0
-[parallel] xyz-harness-hooks.sh rc=0
-[parallel] hq-park.sh rc=0
 [parallel] hq-park-synthesis.sh rc=0
+[parallel] hq-park.sh rc=0
 [parallel] hq-next.sh rc=0
-[parallel] hq-dispatch.sh rc=0
 [parallel] hq-locator.sh rc=0
+[parallel] hq-dispatch.sh rc=0
 [parallel] hq-promote.sh rc=0
 [parallel] hq-hardening.sh rc=0
 [parallel] hq-marathon-scan.sh rc=0
@@ -367,9 +351,9 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] mktemp-trap-guard.sh rc=0
 [parallel] gh703-raw-text-asterisk.sh rc=0
 [parallel] gh257-roadmap-ledger-fixes.sh rc=0
-[parallel] gh239-hq-status-releases-mode.sh rc=0
 [parallel] gh568-releases-md-retired.sh rc=0
 [parallel] gh423-roadmap-render.sh rc=0
+[parallel] gh239-hq-status-releases-mode.sh rc=0
 [parallel] gh454-reconciler-defects.sh rc=0
 [parallel] gh424-roadmap-status-marker.sh rc=0
 [parallel] gh418-planner-ledger-source.sh rc=0
@@ -383,8 +367,8 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
 [parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
 [parallel] gh681-reviewer-probe-rules.sh rc=0
-[parallel] gh527-issue-url-repair.sh rc=0
 [parallel] gh605-work-state.sh rc=0
+[parallel] gh527-issue-url-repair.sh rc=0
 [parallel] gh269-roadmap-retired.sh rc=0
 [parallel] jog-queue.sh rc=0
 [parallel] gh291-contract-goldens.sh rc=0
@@ -402,8 +386,8 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] security-scan.sh rc=0
 [parallel] signal-triage.sh rc=0
 [parallel] fixtures/canary-token-reuse/verify-fixture.sh rc=0
-[parallel] fixtures/canary-peer-orphan/verify-fixture.sh rc=0
 [parallel] marathon-monitor.sh rc=0
+[parallel] fixtures/canary-peer-orphan/verify-fixture.sh rc=0
 [parallel] fixtures/canary-reviewer-overstep/verify-fixture.sh rc=0
 [parallel] phase3-signoff-guard.sh rc=0
 [parallel] agy-tui-takeover-verdict.sh rc=0
@@ -413,10 +397,10 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh165-governance-canonical-paths-guard.sh rc=0
 [parallel] pdda-repo-contract.sh rc=0
 [parallel] gh273-marathon-root-audit-python-shape.sh rc=0
-[parallel] gh312-vendor-preserves-state.sh rc=0
+[parallel] gh132-review-xyz-skill.sh rc=0
 [parallel] relay-uncited-findings.sh rc=0
 [parallel] gh197-vendor-tier-split.sh rc=0
-[parallel] gh132-review-xyz-skill.sh rc=0
+[parallel] gh312-vendor-preserves-state.sh rc=0
 [parallel] wave-reconcile.sh rc=0
 [parallel] gh693-lessons-learned-advisory.sh rc=0
 [parallel] gh306-registry-bidirectional.sh rc=0
@@ -424,8 +408,8 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 [parallel] gh496-phase2-reconciliation-views.sh rc=0
 [parallel] gh-gen4-phase2-adaptive-ate.sh rc=0
 [parallel] gh-gen4-phase4-repro-synth.sh rc=0
-[parallel] gh712-jev-triage.sh rc=0
 [parallel] gh-gen4-phase5-campaign.sh rc=0
+[parallel] gh712-jev-triage.sh rc=0
 [parallel] gh393-deepseek-readiness.sh rc=0
 [parallel] gh591-prepush-commit-boundary.sh rc=0
 [parallel] gh396-find-harness-roots.sh rc=0
@@ -438,10 +422,10 @@ validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced defaul
 Running python3 -m pytest test/test_python_layer.py
 ===============================
 ============================= test session starts ==============================
-platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- <home-dir>/kickstart-clones/mypyvenv/bin/python3
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- $HOME/kickstart-clones/mypyvenv/bin/python3
 cachedir: .pytest_cache
 hypothesis profile 'default'
-rootdir: <home-dir>/kickstart-clones-ks1541/ks05-gate2
+rootdir: /private/tmp/ks05-disposable-gate-r2
 configfile: pytest.ini
 plugins: hypothesis-6.167.1, anyio-4.13.0
 collecting ... collected 21 items
@@ -468,7 +452,7 @@ test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
 test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
 test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
 
-============================= 21 passed in 20.39s ==============================
+============================= 21 passed in 20.32s ==============================
 
 ===============================
 Running clone-identity invariant (GH-1)
@@ -482,19 +466,19 @@ Running gamma-poison fixture staleness probe
 ===============================
 Summary
 ===============================
-telemetry: <home-dir>/kickstart-clones-ks1541/ks05-gate2/.tick/telemetry/validate-parallel-1795167175046-97146.jsonl (407 suite events, 405 registered)
+telemetry: /private/tmp/ks05-disposable-gate-r2/.tick/telemetry/validate-parallel-1795169140627-69681.jsonl (407 suite events, 405 registered)
 10 slowest suites:
   name  duration_s  rc
-  gh436-merge-cleanup.sh  365.228  0
-  gh365-tier-fail-closed.sh  266.598  0
-  gh280-jog-marathon-adapter.sh  187.402  0
-  pdda-repo-contract.sh  186.064  0
-  marathon-drive.sh  121.438  0
-  gh549-work-events.sh  113.585  0
-  relay-self-sufficiency.sh  101.784  0
-  gh251-validate-pytest-skip.sh  100.622  0
-  gh528-parallel-contention-retry.sh  78.878  0
-  pdda-install-startup-docs.sh  78.178  0
+  gh436-merge-cleanup.sh  365.931  0
+  gh365-tier-fail-closed.sh  232.069  0
+  pdda-repo-contract.sh  184.687  0
+  gh280-jog-marathon-adapter.sh  177.087  0
+  marathon-drive.sh  119.888  0
+  gh549-work-events.sh  111.540  0
+  relay-self-sufficiency.sh  109.671  0
+  gh251-validate-pytest-skip.sh  95.050  0
+  gh528-parallel-contention-retry.sh  77.621  0
+  pdda-install-startup-docs.sh  76.694  0
 re-run ladder: 0 suite(s), 0.000s total
 passed: 408 / 408
   + gh732-l3-gate-summary.sh
@@ -539,11 +523,11 @@ passed: 408 / 408
   + workstealing-verdict.sh
   + verdict-edge.sh
   + claim-cap.sh
-  + gh251-validate-pytest-skip.sh
   + reap.sh
   + heartbeat.sh
-  + take.sh
   + cost.sh
+  + gh251-validate-pytest-skip.sh
+  + take.sh
   + watchdog-liveness.sh
   + runner-loop.sh
   + poll-driver.sh
@@ -555,13 +539,13 @@ passed: 408 / 408
   + gh280-jog-marathon-adapter.sh
   + gh278-turn-timeout-parity.sh
   + gh308-frozen-twin-guard.sh
-  + gh245-agy-probe-verb-invariant.sh
-  + agy-turn.sh
-  + gh788-python-path-space.sh
   + aider-turn.sh
-  + gh777-start-task-prior-art.sh
+  + gh245-agy-probe-verb-invariant.sh
+  + gh788-python-path-space.sh
+  + agy-turn.sh
   + gh777-inventory-ratchet.sh
   + gh609-sdlc-agent-gaps.sh
+  + gh777-start-task-prior-art.sh
   + ate-run-variations.sh
   + model-alias.sh
   + gh450-model-catalog-pin.sh
@@ -573,44 +557,44 @@ passed: 408 / 408
   + gh346-telemetry-row-written.sh
   + gh496-telemetry-isolation.sh
   + gh346-registry-view-freshness.sh
-  + gh518-muse-adapter-containment.sh
+  + gh346-profile-resolve.sh
   + gh368-same-lane-routing.sh
   + gh373-reviewer-validation.sh
-  + gh346-profile-resolve.sh
+  + gh518-muse-adapter-containment.sh
   + gh369-group-kill.sh
+  + gh371-interrupt-snapshot.sh
   + gh370-progress-telemetry.sh
   + gh267-express-skill.sh
-  + gh371-interrupt-snapshot.sh
   + gh374-drift-path-filter.sh
   + swe-diagram.sh
   + gh648-l8-zero-output-handback.sh
   + gh372-escalation-log-tail.sh
-  + gh648-l9-369-regression.sh
   + gh698-planner-db-ratings.sh
+  + gh648-l9-369-regression.sh
   + gh708-vendored-suite-skips.sh
   + commandcode-turn.sh
   + claude-turn.sh
+  + worktree-isolation.sh
   + gh610-claude-subscription.sh
   + marathon-yaml.sh
-  + worktree-isolation.sh
   + gh284-runlog-heartbeat.sh
   + gh115-round-cap.sh
   + gh307-gate-env-scrub.sh
-  + gh319-gate-path-with-space.sh
   + shim-worktree.sh
   + gh320-twin-timeout-parity.sh
+  + gh319-gate-path-with-space.sh
   + gh308-poll-guards.sh
   + gh308-swarm-gate-path.sh
   + gh343-gate-program-target-root.sh
   + gh322-runlog-python-lane.sh
   + gh308-turn-shim-parity.sh
   + gh342-sentinel-debug-log-python.sh
-  + gh308-consult-guards.sh
   + gh369-find-doc-root-resolution.sh
+  + gh308-consult-guards.sh
   + gh400-acceptance-fidelity.sh
   + gh557-unknown-blocks-manifest.sh
-  + gh419-gate-inventory.sh
   + gh400-source-url.sh
+  + gh419-gate-inventory.sh
   + litmus-release.sh
   + gh418-issue-state-frozen.sh
   + gh422-backfill-source-url.sh
@@ -622,32 +606,32 @@ passed: 408 / 408
   + gh417-turn-root-symlink-prefix.sh
   + gh457-gate-tiers.sh
   + gh407-gate-ran-attribution.sh
-  + gh436-merge-cleanup.sh
   + gh390-timeout-attribution.sh
-  + gh441-gate-env-contract.sh
   + gh387-gate-not-first-executor.sh
+  + gh441-gate-env-contract.sh
   + gh218-synthetic-nested-driver-lock.sh
+  + gh432-failed-turn-persist.sh
   + gh448-driver-lock-resolver.sh
   + gh376-relay-drive-lock-parity.sh
-  + gh432-failed-turn-persist.sh
+  + gh217-gate-env-plan-outside.sh
   + gh397-reviewer-turn-role.sh
   + gh401-dry-run-no-mutation.sh
   + gh375-agy-auth-preflight.sh
-  + gh217-gate-env-plan-outside.sh
+  + gh436-merge-cleanup.sh
   + gh375-auth-timeout-verdict.sh
   + gh408-tick-failure-visibility.sh
   + nightwatch-release.sh
   + gh378-gate-requires-green-suite.sh
-  + gh385-retry-token-satisfied.sh
-  + gh380-claude-trust.sh
   + gh379-claude-builder-diagnosis.sh
+  + gh380-claude-trust.sh
+  + gh385-retry-token-satisfied.sh
   + gh382-marathon-memory-telemetry.sh
   + gh551-resolver-refuses.sh
   + meter-release.sh
   + ballast-release.sh
-  + gh491-gate-only-refire.sh
-  + gh386-turn-budget-honesty.sh
   + marathon-drive.sh
+  + gh386-turn-budget-honesty.sh
+  + gh491-gate-only-refire.sh
   + gh255-remedy-ordering.sh
   + gh256-target-root-guard-root.sh
   + gh426-worktree-leak.sh
@@ -657,21 +641,21 @@ passed: 408 / 408
   + gh505-relay-attest.sh
   + gh438-removal-is-progress.sh
   + gh467-index-only-lane-blocked.sh
+  + gh409-claim-leak.sh
   + hq-marathon-live.sh
-  + debug-mantra.sh
+  + gh438-acceptance-recheck.sh
   + lane-attempt-cap.sh
-  + driver-lock.sh
   + measure.sh
   + loop-stop.sh
-  + gh409-claim-leak.sh
-  + oracle-guard.sh
-  + heldout-check.sh
+  + driver-lock.sh
   + champion.sh
+  + oracle-guard.sh
+  + debug-mantra.sh
   + loop-cost.sh
-  + gh438-acceptance-recheck.sh
+  + heldout-check.sh
   + improve-loop-dogfood.sh
-  + improve-loop.sh
   + gh430-state-dir-tracked-default.sh
+  + improve-loop.sh
   + gh536-evidence-detail.sh
   + improve-loop-qa.sh
   + gh402-board-sync.sh
@@ -701,30 +685,30 @@ passed: 408 / 408
   + gh91-relay-scratch.sh
   + gh113-headless-scratch.sh
   + gh365-pdda-gov-scan.sh
-  + gh114-headless-tty.sh
   + gh124-closeout.sh
   + gh129-relay-tick-root.sh
+  + gh114-headless-tty.sh
   + gh130-agy-auth-whoami.sh
   + gh139-pipe-grep-guard.sh
   + synthetic/gh101-consult-programmatic.sh
-  + gh549-work-events.sh
   + synthetic/gh101-relay-programmatic-stress.sh
-  + synthetic/gh94-containment-invariants.sh
-  + synthetic/gh102-telemetry-schema.sh
-  + synthetic/synthetic-claude-target-root.sh
   + gh131-marathon-target-root.sh
+  + synthetic/gh102-telemetry-schema.sh
+  + synthetic/gh94-containment-invariants.sh
+  + synthetic/synthetic-claude-target-root.sh
   + synthetic/synthetic-marathon-env-leak.sh
   + synthetic/synthetic-marathon-worktree-guard.sh
-  + synthetic/synthetic-pi-provider-unsupported.sh
   + synthetic/synthetic-pi-model-unset.sh
-  + gh141-fuzz-inputs.sh
+  + synthetic/synthetic-pi-provider-unsupported.sh
   + synthetic/gh94-script-serialization.sh
+  + gh141-fuzz-inputs.sh
   + gh141-synthetic-registry.sh
+  + gh549-work-events.sh
   + gh608-deepseek-effort.sh
   + gh648-l7-checkout-aftermath.sh
   + gh142-ate-exit-contract.sh
-  + gh648-l5-gh237-repro.sh
   + gh148-deepseek-turn.sh
+  + gh648-l5-gh237-repro.sh
   + gh648-l3-consult-cap.sh
   + gh648-l6-muse-attribution.sh
   + gh648-l1-turn-termination.sh
@@ -733,13 +717,13 @@ passed: 408 / 408
   + gh156-turn-shims-help.sh
   + gh648-l4-285-revalidate.sh
   + gh648-l2-token-aftermath.sh
+  + gh155-phase3-repro-builder.sh
   + gh155-phase1-metamorphic-invariants.sh
   + gh155-phase4-self-healer.sh
-  + gh155-phase3-repro-builder.sh
   + gh155-phase5-active-explorer.sh
   + gh174-harness-registry.sh
-  + gh180-repro-timeout-crash.sh
   + gh168-wave-reconcile-scope.sh
+  + gh180-repro-timeout-crash.sh
   + gh181-repro-adapter-fidelity.sh
   + gh183-explorer-env-soundness.sh
   + gh184-no-tracked-scratch.sh
@@ -762,12 +746,12 @@ passed: 408 / 408
   + gh32-releases-app.sh
   + gh57-releases-fuzz.sh
   + gh351-manifest-unship.sh
-  + gh69-roadmap-shadow.sh
   + gh360-scoped-receipt-chain-rebuild.sh
-  + gh349-releases-roadmap-vendored.sh
-  + gh362-marathon-plan-link-bullets.sh
+  + gh69-roadmap-shadow.sh
   + gh57-live-merge-resolve.sh
+  + gh349-releases-roadmap-vendored.sh
   + gh358-wave-reconcile-vendored-paths.sh
+  + gh362-marathon-plan-link-bullets.sh
   + gh429-wave-reconcile-vendored-observe.sh
   + gh32-release-target-advisory.sh
   + gh39-releases-project-sync.sh
@@ -786,27 +770,27 @@ passed: 408 / 408
   + gh77-standup-triage.sh
   + agent-chorus.sh
   + skills-army-hq.sh
-  + gh233-agent-chorus-concurrency.sh
   + agent-chorus-bridge.sh
+  + gh233-agent-chorus-concurrency.sh
   + gh620-skills-army-mini-sync.sh
   + xyz-sync-check.sh
   + gh642-consumer-fruit.sh
-  + relay-concurrent-commit.sh
   + gh293-vendored-guard-drift.sh
-  + relay-case-insensitive.sh
-  + relay-commit-pathspec.sh
-  + gh292-worktree-vendored-discovery.sh
-  + find-harness.sh
-  + xyz-vendor.sh
-  + pdda-changelog.sh
-  + pdda-roadmap-coverage.sh
+  + relay-concurrent-commit.sh
   + gh365-tier-fail-closed.sh
+  + relay-commit-pathspec.sh
+  + relay-case-insensitive.sh
+  + gh292-worktree-vendored-discovery.sh
+  + pdda-changelog.sh
+  + find-harness.sh
+  + pdda-roadmap-coverage.sh
+  + xyz-vendor.sh
   + gh649-pdda-migration.sh
+  + pdda-local-checks.sh
   + gh784-marathon-qa-gate.sh
   + gh460-pipe-buffer-sigpipe.sh
   + gh284-p3-release-milestone.sh
   + gh284-p4-release-lanes.sh
-  + pdda-local-checks.sh
   + ci-workflow.sh
   + ci-route.sh
   + gh509-gate-evidence.sh
@@ -818,14 +802,14 @@ passed: 408 / 408
   + gh23-path-overlap-enforcement.sh
   + pdda-install-startup-docs.sh
   + preflight-docs.sh
+  + xyz-harness-hooks.sh
   + marathon-plan.sh
   + hq.sh
-  + xyz-harness-hooks.sh
-  + hq-park.sh
   + hq-park-synthesis.sh
+  + hq-park.sh
   + hq-next.sh
-  + hq-dispatch.sh
   + hq-locator.sh
+  + hq-dispatch.sh
   + hq-promote.sh
   + hq-hardening.sh
   + hq-marathon-scan.sh
@@ -836,9 +820,9 @@ passed: 408 / 408
   + mktemp-trap-guard.sh
   + gh703-raw-text-asterisk.sh
   + gh257-roadmap-ledger-fixes.sh
-  + gh239-hq-status-releases-mode.sh
   + gh568-releases-md-retired.sh
   + gh423-roadmap-render.sh
+  + gh239-hq-status-releases-mode.sh
   + gh454-reconciler-defects.sh
   + gh424-roadmap-status-marker.sh
   + gh418-planner-ledger-source.sh
@@ -852,8 +836,8 @@ passed: 408 / 408
   + gh645-merge-cleanup-xyz-tools.sh
   + gh674-merge-cleanup-hosted-lookup.sh
   + gh681-reviewer-probe-rules.sh
-  + gh527-issue-url-repair.sh
   + gh605-work-state.sh
+  + gh527-issue-url-repair.sh
   + gh269-roadmap-retired.sh
   + jog-queue.sh
   + gh291-contract-goldens.sh
@@ -871,8 +855,8 @@ passed: 408 / 408
   + security-scan.sh
   + signal-triage.sh
   + fixtures/canary-token-reuse/verify-fixture.sh
-  + fixtures/canary-peer-orphan/verify-fixture.sh
   + marathon-monitor.sh
+  + fixtures/canary-peer-orphan/verify-fixture.sh
   + fixtures/canary-reviewer-overstep/verify-fixture.sh
   + phase3-signoff-guard.sh
   + agy-tui-takeover-verdict.sh
@@ -882,10 +866,10 @@ passed: 408 / 408
   + gh165-governance-canonical-paths-guard.sh
   + pdda-repo-contract.sh
   + gh273-marathon-root-audit-python-shape.sh
-  + gh312-vendor-preserves-state.sh
+  + gh132-review-xyz-skill.sh
   + relay-uncited-findings.sh
   + gh197-vendor-tier-split.sh
-  + gh132-review-xyz-skill.sh
+  + gh312-vendor-preserves-state.sh
   + wave-reconcile.sh
   + gh693-lessons-learned-advisory.sh
   + gh306-registry-bidirectional.sh
@@ -893,8 +877,8 @@ passed: 408 / 408
   + gh496-phase2-reconciliation-views.sh
   + gh-gen4-phase2-adaptive-ate.sh
   + gh-gen4-phase4-repro-synth.sh
-  + gh712-jev-triage.sh
   + gh-gen4-phase5-campaign.sh
+  + gh712-jev-triage.sh
   + gh393-deepseek-readiness.sh
   + gh591-prepush-commit-boundary.sh
   + gh396-find-harness-roots.sh
@@ -905,11 +889,17 @@ passed: 408 / 408
   + python:test_python_layer.py
   + clone-identity-invariant
   + gamma-poison-staleness-probe
-=== POST-GATE SNAPSHOT (2026-11-20T09:50:05Z) ===
-validate_rc=0 elapsed_s=1031
-HEAD: b280e6709ce93b7e89676d0ac61c859bce119968
-core.bare: false
-remotes:
-origin	<home-dir>/Documents/GH Repos/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20 (fetch)
-origin	<home-dir>/Documents/GH Repos/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20 (push)
-status: 
+
+--- STDERR ---
+githooks: NOT INSTALLED in this clone.
+  /private/tmp/ks05-disposable-gate-r2/.git/hooks/pre-push does not exist.
+  This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh
+validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified.
+
+
+=== POST-GATE SNAPSHOT (2026-11-20T10:22:16Z) ===
+git rev-parse HEAD: rc=0 out='b280e6709ce93b7e89676d0ac61c859bce119968' err=''
+git config --get core.bare: rc=0 out='false' err=''
+git remote -v: rc=0 out='origin\t$HOME/Documents/GH Repos/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20 (fetch)\norigin\t$HOME/Documents/GH Repos/XYZ-forge-gh1548-ks05-stop-reasons-2026-11-20 (push)' err=''
+git config --local --get user.email: rc=1 out='' err=''
+git status --short: rc=0 out='' err=''

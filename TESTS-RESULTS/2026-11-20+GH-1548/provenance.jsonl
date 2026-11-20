@@ -1,6 +1,7 @@
-{"path": "manual-check.md", "sha256": "7c0205cb9b2facb106b59728997bb090f8a729243c0bdc1e47d0e2ae779226b8", "bytes": 1346}
-{"path": "outputs/ci-route.txt", "sha256": "d5136b06c44b22151bc50750a9cc7ffcbf5257272486ec5676bd3334fc5612ac", "bytes": 161}
-{"path": "outputs/code-and-docs.patch", "sha256": "bc77d1ed69e5cffcc1b27098cbeab6d1e132cab0389a55fb695b0844bc614565", "bytes": 1767}
-{"path": "outputs/disposable-full-gate.log", "sha256": "296b54ca019643f6aa5ca0142f844b0f5f1009ad407ac5937b013df0da142a38", "bytes": 35804}
-{"path": "outputs/manual-controls.txt", "sha256": "a78847b945020c3a2a39c86476f19c033b2177fab496d2e751a50f2cde360ec6", "bytes": 1175}
-{"path": "outputs/pdda-run.log", "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a", "bytes": 28982}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/manual-check.md", "bytes": 2365, "sha256": "d370bae289fd379513868413a5a0f1f06bf34836e39162b8cb132958aed3a386"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/ci-route.txt", "bytes": 161, "sha256": "d5136b06c44b22151bc50750a9cc7ffcbf5257272486ec5676bd3334fc5612ac"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/code-and-docs.patch", "bytes": 22129, "sha256": "1fbe9966424207913e2c19f92a1c9d47756ceb07ac83ccc7559a27599527b384"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/disposable-full-gate.done.json", "bytes": 188, "sha256": "1a16e9f8c1bb57a9dc589277eb0d2a992cab7a96b0ea19e5efe8ffe09d680553"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/disposable-full-gate.log", "bytes": 34345, "sha256": "dd3b17e788afef5e91b361c5cbd4f9cdbcccdd8e761ad3e790a54fe1c113d97a"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/manual-controls.txt", "bytes": 2747, "sha256": "39cdedd88658f5a84c392d050b2cb96704c765afe04f5ad528b957cb0a808776"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/pdda-run.log", "bytes": 28982, "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a"}
