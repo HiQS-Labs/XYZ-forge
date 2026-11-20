@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-20.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -132,5 +132,26 @@ A	TESTS-RESULTS/2026-11-20+GH-1567/provenance.jsonl
 ```
 
 Handing off to Reviewer (codex) for Round 2. Check both Round 1 findings, the name-status scope and retained acceptance evidence.
+
+### Reviewer · Round 2
+
+**Approved — both Round 1 requests are addressed.**
+
+swept file: yes
+
+Swept scanner, locator and skill document, including pre-existing code. No git commands, suites or executable fixtures run. Scope comparison relies on the Producer's retained name-status above; the requested base-to-HEAD diff was not independently obtained because this turn prohibits git. This is implementation QA approval, not exact-head publication-gate attestation.
+
+- [Pass] Corrected conditional guidance: `find-harness.sh:434` now says “configure it if merge-cleanup reports tick binary not found”; `skills/1-hourly/relay-xyz/SKILL.md:133-142` supplies config or XYZ_HARNESS without making config mandatory. Round 1 wording finding closed.
+- [Pass] `scan_clones.py:254-285` still resolves override, explicit harness, own installation, config and PATH without taking the audited checkout as an executable source. The refusal retains `verified: False` at `:321-327`, coordination pinning remains at `:328-331`, and malformed claims remain unverified at `:339-350`. Locator config checks and canonical save-target validation remain at `find-harness.sh:421-447`, with advisory `true` at `:537`. No new writer in these runtime paths; the Producer's name-status lists no new suite or registry.
+- [Pass] Evidence correction closes Round 1's retention finding: `TESTS-RESULTS/2026-11-20+GH-1567/probe.sh:42-46` captures locator status before filtering and returns it; `:54-57` rejects empty hints and mismatching saved bytes. `provenance.jsonl:1` identifies baseline 5c3388dd720ef19acf71b1c230407f6ea81d6285 and tested revision 6edbe5d2f4cc21af684d3365eb3d963f285f4312, command, platform and hashes. Read-only probe: `python3` using `json.loads`, `hashlib.sha256((p/name).read_bytes()).hexdigest() == want` for each recorded hash; exit 0, decisive output: `probe.sh hash matches: True`, `probe.log hash matches: True`.
+- [Pass] Retained `probe.log` section A observes baseline remedy False versus fixed True while both remain unverified. Sections B–D observe missing/valid/invalid config and no-live-clone guidance, all locator exits 0; section C records exact saved-byte match, resolved tick equality True and real empty claims `verified: True`. These are author observations, not fixtures rerun in this worktree. No extra machinery needed for these message changes.
+- [Pass] Plan rating remains **50/40/50/85** in the plan's “PRS rating rationale”; accepted start is retained in `releases.sql:5938` (`"accepted_start": true`). Previously approved plan QA remains the plan review record.
+- [Unverified — needs clone run] Full Darwin gate on d99763ea99c27c6c0110819001da1f7e75695d09 remains author evidence only for that earlier revision. Exact publication-head gate remains outstanding as the Producer states; approval assumes no future gate result.
+
+**VERDICT: PASS**
+
+**Basis:** Requested messages and retained baseline/fixed observations satisfy the bounded plan, preserve scanner executable discovery and fail-closed behavior, and resolve the two prior requests. Publication still needs its separately required exact-revision gate.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
