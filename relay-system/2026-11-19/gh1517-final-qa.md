@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -103,5 +103,21 @@ Basis: The changed sentence satisfies the requested auto-sweep contract, but the
 - **Should (Done rule) — Accepted.** `SKILL.md` Done rule now accepts a verdict recorded in the batch record
   and issue "either by the automatic sweep (GH-1383) or with `--record-sweep`"; the exit-4-is-never-Done
   clause and the issue-failure note are unchanged.
+
+### Reviewer · Round 2
+
+- [Pass] Round 1's Should is resolved: `skills/2-daily/merge-cleanup/SKILL.md:463-465` now permits recording “either by the automatic sweep (GH-1383) or with `--record-sweep`”. This matches automatic recording and issue update at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:3090-3099` and manual recording at `:3111-3127`; the exit-4 restriction and issue-failure disclosure remain at `SKILL.md:466-468`. No further fix needed.
+- [Pass] The batch paragraph at `skills/2-daily/merge-cleanup/SKILL.md:494-498` agrees with Discipline bullet 6 at `:22` and the detailed GH-1383 bullet at `:532`. The source requires execution, a nonempty command, no opt-out, no deferred flag, and no `gh workflow run` prefix (`merge_cleanup.py:2989-2998`); it returns 0 for automatic success and 4 for findings or manual/deferred recovery (`:2999-3009`). No further fix needed.
+- [Pass] Whole-file reread found no remaining blanket claim that the script runs no sweep and no additional actionable pre-existing defect. The “runs no scan, merge or teardown” statement at `skills/2-daily/merge-cleanup/SKILL.md:537-538` applies specifically to `--record-sweep`; caller analysis remains required at `:547-550`. No further fix needed.
+
+Evidence: local `sed -n …` / `nl -ba … | sed -n …` source reads exited 0. `rg -n 'sweep|runs no|no suite' skills/2-daily/merge-cleanup/SKILL.md` exited 0 and showed the conditional sweep instructions cited above. Source-pin lookup `rg -n 'runs no suite|GH-1064 moved|Done rule|either by the automatic sweep' test` exited 0: only the unchanged Done-rule prefix and section-removal control occur (`test/gh534_phase_c_tests.py:913,930`). An earlier globbed lookup exited 1 before searching (`zsh: no matches found: test/gh*batch*`); the directory lookup replaced it. No suite, executable fixture, gate or git command ran; approval covers documentation/source consistency, not a runtime gate result, and assumes no later gate result.
+
+Graph context: Verify tier; project inventory has no entry for this worktree. Nearest Forge index is a different checkout, generation `2026-11-18T19:39:07Z`; coverage reports no recorded issue for the two reviewed paths, which is not completeness proof. Current local source was therefore read directly.
+
+Relay closed (Approved), no further turn needed.
+
+swept file: yes
+VERDICT: PASS
+Basis: The requested sentence and repaired Done rule consistently describe automatic local sweep recording and manual/deferred recovery; the full skill reread found no further actionable defect. Runtime gates were not run in this reviewer worktree.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
