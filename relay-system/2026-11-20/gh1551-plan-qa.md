@@ -55,3 +55,12 @@ The bet remains Easy and reversible: a concise instruction in the existing child
 Evidence: `cat PROJECT/2-WORKING/GH-1551-KS07-BG-LONG-OPS.md` exited 0 and showed the corrected metadata/status table, mode-aware step 2, and precisely scoped mechanism probe. Source reads of `skills/1-hourly/kickstart/SKILL.md` and `PROJECT/PDDA.md` confirmed the child contract and active-doc/CHANGELOG policies. Fresh `gh issue view 1551 --repo HiQS-Labs/XYZ-forge --json body` and the corresponding 1541 query each exited 1 with `error connecting to api.github.com`; live issue revalidation was unavailable, so this round relies on the issue evidence retained in Round 1 and the seeded plan, not a fresh remote assertion. Graph inventory was consulted; this is a direct Markdown review with no structural code or graph-completeness claim.
 
 Verification limits: no phase gate is configured here, and no validate/test/pytest/fixture or PDDA gate ran. Implementation, actual 605s launch/completion receipts, nonempty provenance artifacts, PDDA execution, and real-run U7 acceptance remain for their stated later checks. Approval does not assume a later automatic gate will run. Only this relay file was edited; no git commands were run.
+
+### Attestation · relay-drive — 2026-11-20T09:10:40Z
+task: RELAY-PLAN-QA
+reviewer: codex
+status: Approved
+reviewed-head: e6f8770a2178c180a90f659c0e647203c2dc9cdf
+added-range: 4844+2238
+added-sha256: c2c7250167d87d3cff4fbc584fa4f573318838e1d547d734a93b27a1bf55127e
+gate-run: undeclared
