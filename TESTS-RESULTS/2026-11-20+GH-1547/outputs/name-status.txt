@@ -1,4 +1,16 @@
 A	PROJECT/2-WORKING/GH-1547-KS04-KICKSTART-STATUS.md
+A	TESTS-RESULTS/2026-11-20+GH-1547/manual-check.md
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/check-transcript.log
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/code-and-docs-diff.patch
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/fixture-live-report.json
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/fixture-live-report.md
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/fixture-stale-candidate.json
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/live-readonly-report.json
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/name-status.txt
+A	TESTS-RESULTS/2026-11-20+GH-1547/outputs/readonly-git-verbs.log
+A	TESTS-RESULTS/2026-11-20+GH-1547/pdda-run.log
+A	TESTS-RESULTS/2026-11-20+GH-1547/provenance.jsonl
+A	relay-system/2026-11-20/gh1547-final-qa.md
 A	relay-system/2026-11-20/gh1547-plan-qa.md
 M	releases.db
 M	releases.sql

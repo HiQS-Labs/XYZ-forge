@@ -299,3 +299,9 @@ echo "=== 4. CI route classification & mypy ==="
 git diff --name-only "${PRE_SHA}..HEAD" | ./utils/ci-route.sh pull_request
 mypy --allow-untyped-defs --allow-incomplete-defs skills/1-hourly/kickstart/scripts/kickstart_status.py
 ```
+
+
+## Round-2 Regression Additions (Codex Final QA Round 1 Findings)
+
+1. **Bullet-prefixed legacy amendments:** verifies `- OPERATOR_AMENDMENT: OA-1 ...` (without operator turn citation) is surfaced as `legacy_unparsed: true` and cleared by `- APPLIED: OA-1 ...`.
+2. **Repo-scoped attempt scan & unresolved identity:** populates both `HiQS-Labs-XYZ-forge/pr-123.json` and `OtherOrg-OtherRepo/pr-123.json` plus a mismatched `repo` field inside `pr-124.json`; confirms only `HiQS-Labs-XYZ-forge` is scanned (`excluded_foreign_dirs: ["OtherOrg-OtherRepo"]`), mismatched `pr-124` remains `remote_state: "unknown"` with `repo_mismatch: true`, and an unresolved non-git `--target-root` withholds cross-repo lookup cleanly.

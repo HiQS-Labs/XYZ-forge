@@ -24,3 +24,7 @@ tier2_subsystems=
 tier2_tests=
 tier_reason=docs-only
 Success: no issues found in 1 source file
+
+=== 5. Final QA Round-1 Fix Verification (bulleted legacy + repo-scoped attempts) ===
+PASS: bullet-prefixed legacy amendment surfaced (OA-1 legacy_unparsed=true) and cleared by bulleted APPLIED
+PASS: attempt scan scoped to target repo dir (excluded OtherOrg-OtherRepo), mismatched repo field kept unknown, unresolved repo identity withheld
