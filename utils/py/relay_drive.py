@@ -967,7 +967,7 @@ def main():
                     )
                     if status.returncode == 0:
                         changed_count = len(status.stdout.splitlines())
-                        eprint(f"relay-drive: GH-370 progress ({sample_kind}: {sample_root}) changed-files={changed_count}")
+                        eprint(f"relay-drive: GH-370 worktree state ({sample_kind}: {sample_root}) changed-files={changed_count}")
                 except Exception:
                     pass
                 last_progress_at = now

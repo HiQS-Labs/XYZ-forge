@@ -1,0 +1,31 @@
+{
+  "kind": "controller-run-receipt-not-approval-attestation",
+  "task": "GH1506 independent plan review",
+  "input_head": "6b2be6c8032cb453e5e62b0ae9047dba64cbf55b",
+  "reviewed_head": "4cfd976f397c49138b55eb65901c847dc085f9a6",
+  "review_commit": "a88857192d38e20190991e08ddb7c52418d84e51",
+  "reviewer": "Claude subscription CLI via shipped claude-turn.sh and relay-drive.sh",
+  "round": 1,
+  "round_cap": 3,
+  "driver_exit": 5,
+  "cli_result": {
+    "subtype": "success",
+    "is_error": false,
+    "num_turns": 15
+  },
+  "verdict": "PASS",
+  "relay_status": "Open",
+  "next": "Producer",
+  "approval_attestation": null,
+  "attestation_absence_reason": "Reviewer left STATUS Open; driver review-once returned non-approval handback.",
+  "finding": "Name and update test/gh648-l1-turn-termination.sh:63 for worktree-progress to file-activity detail-key change.",
+  "controller_limitations": [
+    "Reviewer discusses unchanged REASON_SLOW_PROGRESS value compatibility but plan proposes changing that value; changed-value compatibility was not conclusively reviewed.",
+    "Reviewer declared swept file yes but reports only relay_drive.py:940-970, not whole driver.",
+    "No implementation, tests or final gate were run.",
+    "Telemetry row failed: reasoning-effort cli-default rejected by harness_app.py choices."
+  ],
+  "relay": "relay-system/2026-11-16/gh1506-plan-claude.md",
+  "transcript": "relay-system/logs/2026-11-16/claude-turn-RELAY-gh1506-plan-claude-27327.log",
+  "next_action": "Parent dispositions finding and resolves changed-value compatibility; no ceremonial reviewer retry performed."
+}

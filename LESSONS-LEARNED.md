@@ -231,3 +231,12 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: gate
 - **source**: #1479
 - **date**: 2026-11-15
+
+## A "plan-only" CLI can still write to the checkout: trace the JSON path before calling it read-only
+- **cue**: a new script that shells out to an existing plan-only or `--json` CLI and promises to be read-only
+- **lesson**: read the callee's path from argument parsing to its JSON print, not just its default mode; `pr_minder.py --json` writes nothing to GitHub but ran `git fetch` and `merge-tree --write-tree` for every conflicting PR before printing. Run the caller once under a logging `git` shim (refs, `FETCH_HEAD`, object counts before and after) and keep the pre-fix argv as the red control
+- **evidence**: `TESTS-RESULTS/2026-11-19+GH-1527/readonly-live-check.log` (0 fetch/merge-tree calls with `--no-conflict-files`, 21 without)
+- **confidence**: high; deterministic red control on the same inputs. Edit verdicts: `--no-conflict-files` flag helped; build_queue argv change helped
+- **area**: skills
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1527
+- **date**: 2026-11-19
