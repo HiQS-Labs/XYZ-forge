@@ -5,10 +5,19 @@ status: active
 roadmap_id: rmi-01M7W39V9G92M8W97MX702YQCA
 parent_arc: 1541
 milestone: KS-08
+owner: antigravity
+goal: "Codify fail-closed child self-recovery for killed landings in skills/1-hourly/kickstart/SKILL.md using exact supported attempt_record.py and merge_cleanup.py CLI contracts."
 created: 2026-11-20
+updated: 2026-11-20
 ---
 
 # GH-1552 (KS-08) — Safe Self-Recovery of a Killed Landing
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Addressed Plan QA R1 findings (exact `attempt_record.py note` + `finish` CLI flags without unsupported `--reason`; exact `merge_cleanup.py --resume --execute` with original vetted `--prs N@<full-sha>` pins; PDDA frontmatter/Status table; `CHANGELOG_WRITES` policy). | Complete Plan QA R2 approval, update `skills/1-hourly/kickstart/SKILL.md`, run disposable-clone paired red/green checks + PDDA under `TESTS-RESULTS/2026-11-20+GH-1552/`, and pass Final QA. |
 
 ## Objective
 Codify in `skills/1-hourly/kickstart/SKILL.md` the child's deterministic, fail-closed self-recovery protocol for a killed or interrupted landing before touching any stale `merge-cleanup` attempt record, reusing existing `attempt_record.py` and `merge_cleanup.py` mechanisms (no new runner or schema).
@@ -16,9 +25,14 @@ Codify in `skills/1-hourly/kickstart/SKILL.md` the child's deterministic, fail-c
 ## Grounded Recon
 - `skills/1-hourly/kickstart/SKILL.md` Section 4 (Transition 4) defines parent-level stopped-ownership proof and recovery ladder, but does not define the child's exact killed-landing recovery sequence for `merge-cleanup` attempt records.
 - `skills/2-daily/merge-cleanup/scripts/attempt_record.py` stores per-PR records at `<LANDING_CLONE>/.tick/merge-cleanup/<repo_slug>/pr-<N>.json` with exclusive `RecordLock` (`<record>.lock`), `MAX_REPAIRS = 2`, and `repair_count(rec) = len(rec["attempts"])`.
-  - `MERGE_CLEANUP_RECORD=<abs-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<reason> --reason "..."` closes an `in_progress` attempt while preserving the attempt entry and repair count.
-- `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` supports `--reconcile-pr <N> --execute` (for a PR already `MERGED` remotely but unreconciled locally) and `--resume --execute` (for an `OPEN` PR after settling an aborted attempt).
-- `utils/ci-route.sh` classifies edits to `skills/1-hourly/kickstart/SKILL.md`, `PROJECT/**`, `TESTS-RESULTS/**`, `CHANGELOG.md`, and `releases.db`/`releases.sql` as `route=docs`.
+  - Exact CLI (`attempt_record.py:188-195`):
+    - Attach diagnostic cause (consumes no budget): `MERGE_CLEANUP_RECORD=<abs-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py note --kind diagnosis --text "<cause>"`
+    - Close the `in_progress` attempt: `MERGE_CLEANUP_RECORD=<abs-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<cause>` (no `--reason` CLI flag exists).
+- `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`:
+  - `--reconcile-pr <N> --execute` reconciles a PR that is already `MERGED` remotely.
+  - `--resume --execute` (`merge_cleanup.py:2533-2538`) STILL requires the original authorized `--prs <N>@<approved-full-sha>[,...]` selection (and applicable original landing-policy arguments); never widen the selection during recovery.
+- `PROJECT/PDDA.md:462-465`: honor configured `CHANGELOG_WRITES` mode (no task-branch `CHANGELOG.md` edit under default `off`/`landing`).
+- `utils/ci-route.sh` classifies edits to `skills/1-hourly/kickstart/SKILL.md`, `PROJECT/**`, `TESTS-RESULTS/**`, and `releases.db`/`releases.sql` as `route=docs`.
 
 ## Plan
 1. Add a concise **Killed-Landing Self-Recovery Protocol (KS-08)** subsection under Section 4 (Transition 4) of `skills/1-hourly/kickstart/SKILL.md`:
@@ -28,17 +42,22 @@ Codify in `skills/1-hourly/kickstart/SKILL.md` the child's deterministic, fail-c
      - Identify the exact coordinator record under the pinned `LANDING_CLONE/.tick/merge-cleanup/<repo_slug>/pr-<N>.json` and the exact `in_progress` attempt index before any `finish` call; never create or switch to a second landing clone, and never reset or delete attempt entries (preserving the 2-repair ceiling).
    - **Precondition 2 — Remote PR State Verification (`gh pr view <N> --json state,headRefOid,mergeCommit`):**
      - **`MERGED` (unreconciled locally):** run `merge_cleanup.py --primary <LANDING_CLONE> --reconcile-pr <N> --execute` (backgrounded); NEVER run `--resume` or re-merge.
-     - **`OPEN` with `headRefOid` unchanged** (matching the `in_progress` attempt's `head_sha`): settle the interrupted attempt via `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<cause> --reason "..."`, verify `repair_count` is preserved, then launch `merge_cleanup.py --primary <LANDING_CLONE> --resume --execute` (backgrounded).
+     - **`OPEN` with `headRefOid` unchanged** (matching BOTH the original authorized full-SHA pin AND the interrupted `in_progress` attempt's `head_sha`):
+       1. Record the diagnostic cause via `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py note --kind diagnosis --text "<cause>"`.
+       2. Close the interrupted attempt via `MERGE_CLEANUP_RECORD=<abs-record-path> python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index <idx> --outcome aborted-<cause>`.
+       3. Verify `repair_count` is preserved (never reset), then launch `merge_cleanup.py --primary <LANDING_CLONE> --root <ROOT> --prs <original-authorized-N@full-sha-list> [<original-landing-policy-flags>] --resume --execute` (backgrounded), never widening the PR selection.
      - **`OPEN` with `headRefOid` changed, `CLOSED`, or remote state/outcome unknown:** HOLD (never retry an unknown outcome).
    - **Budget Preservation:** Preserve original wall deadline, global task budget, and the 2-repair ceiling across recovery.
-2. Update `CHANGELOG.md` with a concise GH-1552 (KS-08) entry.
-3. Retain disposable-clone paired red/green checks under `TESTS-RESULTS/2026-11-20+GH-1552/` (no new test suite, GH-831; real `attempt_record.py` entry point in a disposable repo):
-   - **Control A (Live check/lock session -> HOLD):** While a lock/check subprocess is live (holding `RecordLock` / live PID), recovery refuses to touch the attempt record; `attempt_record.py` preserves `in_progress` untouched and lock contention refuses mutation.
-   - **Control B (Stopped owner + OPEN unchanged head -> `finish aborted-timeout` + `--resume`, repair count preserved):** Pre-change (run-1 #1539 shape) required manual parent intervention; changed path proves stopped ownership + unchanged head, runs real `attempt_record.py finish --index 0 --outcome aborted-timeout`, confirms `outcome == "aborted-timeout"` and `repair_count == 1` (NOT reset to 0), and confirms remaining budget is `1/2` for `--resume`.
-   - **Control C (Post-merge interruption / remote `MERGED` -> `--reconcile-pr`, NOT `--resume`):** Controlled decision replay where remote PR state is `MERGED` with an `in_progress` attempt: verifies the protocol selects `--reconcile-pr N --execute` and refuses `--resume`, and verifies changed-head `OPEN` holds.
-   - Run `./utils/pdda/pdda.sh run` and generate `provenance.jsonl`.
+2. Honor configured `CHANGELOG_WRITES` mode (no task-branch `CHANGELOG.md` edit under default `off`/`landing`).
+3. Retain disposable-clone paired red/green checks under `TESTS-RESULTS/2026-11-20+GH-1552/` (no new test suite, GH-831), clearly distinguishing real CLI execution checks from source-only instruction walkthroughs:
+   - **Control A (Live lock / check subprocess -> HOLD, real `attempt_record.py` CLI):** While a live child holds `RecordLock` (simulating an active check/landing session), `attempt_record.py finish` with `MERGE_CLEANUP_LOCK_TIMEOUT_S=0.3` fails with `lock-timeout` and leaves `in_progress` untouched; instruction walkthrough confirms live/unknown ownership holds before touching any record.
+   - **Control B (Stopped owner + OPEN unchanged head -> exact published `note` + `finish --index 0 --outcome aborted-timeout` + `merge_cleanup.py` CLI validation):**
+     - Runs the EXACT published `attempt_record.py note --kind diagnosis ...` and `attempt_record.py finish --index 0 --outcome aborted-timeout` commands in a disposable clone, verifying `outcome == "aborted-timeout"`, `diagnosis` note recorded, and `repair_count == 1` (NOT reset to 0).
+     - Runs real `merge_cleanup.py --primary <disposable-clone> --resume --execute` WITHOUT `--prs` (red: refused exit 2 with `a merging run needs --prs`) vs WITH `--prs N@<full-sha>` (green: passes CLI selection validation in dry-run/preflight without hitting the missing-`--prs` refusal).
+   - **Control C (Post-merge interruption / remote `MERGED` -> `--reconcile-pr`, NOT `--resume`, plus changed-head HOLD):** Source-only instruction walkthrough + real `merge_cleanup.py --help` / argument validation confirming `--reconcile-pr N` accepts the post-merge reconcile mode distinct from `--resume --prs ...`, and changed-head `OPEN` maps to HOLD.
+   - Run `./utils/pdda/pdda.sh run` (0 errors) and generate `provenance.jsonl`.
 
 ## Acceptance Criteria
-- `skills/1-hourly/kickstart/SKILL.md` specifies exact stopped-ownership proof (owner + lock + builders/checks/push/sessions), exact coordinator record + index lookup, remote PR state branching (`MERGED` -> `--reconcile-pr`, unchanged `OPEN` -> `finish aborted-*` + `--resume`, changed/unknown -> hold), and budget/repair-count preservation.
-- All three disposable-clone paired red/green controls executed against real `attempt_record.py` and recorded with `provenance.jsonl`.
-- `./utils/pdda/pdda.sh run` passes with 0 errors.
+- `skills/1-hourly/kickstart/SKILL.md` specifies exact stopped-ownership proof, exact coordinator record + index lookup, exact supported `attempt_record.py note`/`finish` CLI flags, exact `merge_cleanup.py --reconcile-pr` vs `--prs <original-pins> --resume --execute` branching, and budget/repair-count preservation.
+- Controls A, B, and C executed and accurately labeled (real CLI checks vs instruction walkthrough) under `TESTS-RESULTS/2026-11-20+GH-1552/` with `provenance.jsonl`.
+- `./utils/pdda/pdda.sh run` passes with 0 errors and `CHANGELOG_WRITES` policy is respected.
