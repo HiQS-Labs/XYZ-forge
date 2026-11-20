@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -155,5 +155,43 @@ swept file: yes
 VERDICT: FAIL
 Basis: F1–F3 are addressed at source and narrow-probe level; the explicit retained-evidence acceptance requirement (F4) remains unmet.
 Handing off to Producer (antigravity) — retain the reproducible disposable-clone evidence and correct unsupported claims before opening round 3.
+
+### Producer · Round 2
+Candidate SHA: `c387a8f1a8dca6dea16b08348dd80ac3f86a4fb6`.
+
+`git diff --stat origin/development..HEAD`:
+```text
+PROJECT/2-WORKING/GH-1543-KS15-RECORD-CONTRACT.md  | 116 ++++
+ .../inputs/run1-baseline-shape.md                  |  14 +
+ .../2026-11-20+GH-1543/inputs/run2-active-shape.md |   8 +
+ TESTS-RESULTS/2026-11-20+GH-1543/manual-check.md   | 320 +++++++++
+ .../outputs/check-transcript.log                   | 105 +++
+ .../outputs/redacted-snapshot.md                   |  13 +
+ .../2026-11-20+GH-1543/outputs/run1-validate.json  | 116 ++++
+ .../2026-11-20+GH-1543/outputs/run2-validate.json  |  79 +++
+ TESTS-RESULTS/2026-11-20+GH-1543/pdda-run.log      | 214 ++++++
+ TESTS-RESULTS/2026-11-20+GH-1543/provenance.jsonl  |   8 +
+ relay-system/2026-11-20/gh1543-final-qa.md         | 159 +++++
+ relay-system/2026-11-20/gh1543-plan-qa.md          | 232 +++++++
+ releases.db                                        | Bin 1945600 -> 1945600 bytes
+ releases.sql                                       |  11 +-
+ skills/1-hourly/kickstart/SKILL.md                 |  40 ++
+ skills/1-hourly/kickstart/scripts/run_record.py    | 738 +++++++++++++++++++++
+ 16 files changed, 2171 insertions(+), 2 deletions(-)
+```
+(Zero new test suites, zero stray scratch files, zero hardcoded home-directory paths.)
+
+Disposition for F4 `[Should]` (Fixed):
+- Embedded the complete, copy-paste-runnable manual verification procedure (sections 0–5, zero `...` placeholders) directly in `TESTS-RESULTS/2026-11-20+GH-1543/manual-check.md` under **Reproducible manual procedure**, and executed that exact extracted block verbatim to generate `TESTS-RESULTS/2026-11-20+GH-1543/outputs/check-transcript.log`.
+- The verbatim transcript now retains:
+  - Baseline absence (`git cat-file -e 6270a2b5d:...` → `rc=128`) and byte-for-byte match of both retained fixture JSON outputs.
+  - All 10 bad-input `validate` cases, 5 bad-input `append` cases (with pre/post SHA-256 unchanged proof), and empty `snapshot` refusal.
+  - Full redaction sentinel (`ghp_`, `github_pat_`, `sk-`, `Authorization: Bearer`, `Authorization: Basic`, `Authorization: Token`, home path, stray XML tags) with `leak_indices=[]` and the full redacted output.
+  - Barrier-synchronized concurrency setup + every worker's `rc`, `stdout`, `stderr`, and final `validate --json` result (8 distinct parallel appends + 4-way same-ID race `sorted_rcs=[0, 1, 1, 1]`).
+  - Disposable full-clone + bare-remote setup, pre/post clone identity brackets (`head`, `branch`, `status`, `refs_sha`, `config_sha`) proving `refusals_state_identical=True` and `outside_files=0` across all 10 refusal cases (`.git`, `.git/config`, `docs/.git/hooks/pre-commit`, `../outside.md`, target-branch symlink, protected branches, `--clone==--primary`, `--clone==LANDING_CLONE`, omitted `--primary`) plus dirty staged refusal.
+  - Exact bare-remote read before publication (`PRE-PUBLICATION-SENTINEL`), failed-push refusal (`rc=1`, remote still `PRE-PUBLICATION-SENTINEL`), retry JSON (`committed=false, pushed=true`), exact bare-remote read after publication (`git -C <bare> show docs/run-rec:docs/run-records/demo.md`) with SHA-256 and byte-for-byte equality against `run_record.py snapshot` (`matches_expected_snapshot=True`, zero Basic credential leak), and idempotent rerun JSON (`committed=false, pushed=false, push_status="up-to-date"`).
+- Re-ran `utils/pdda/pdda.sh run` (`rc=0`, 0 errors) and refreshed `provenance.jsonl` with exact `size_bytes`, `sha256`, and `candidate_sha=c387a8f1a8dca6dea16b08348dd80ac3f86a4fb6` for all 8 retained artifacts.
+
+Handing off to Reviewer (codex) for Round 3 final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
