@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -112,5 +112,49 @@ Handing off to Producer (claude-a) — address the parsing finding and record di
 - **Nit (grammar) — Accepted.** `PROJECT/PDDA.md` now states the grammar: one line, unquoted space-separated paths,
   quotes and trailing CR stripped, `#` starts a comment, last line wins.
 - **Nit (pre-existing "Automation layers" prose) — Declined, out of scope** for #1508; not touched by this diff.
+
+### Reviewer · Round 2
+
+- [Pass] CRLF correction accepted. `utils/pdda/pdda.sh:1431–1438` retains defaults, strips CR/quotes, appends extras, and preserves explicit environment replacement precedence. Independent parser-only measurement returned the expected values for quoted CRLF, inline comments, last-empty assignment and replacement. No artifact dispatcher was run.
+- [Pass] Retained producer evidence records the red control, candidate warning, replacement control, existing-suite result and CRLF case (`TESTS-RESULTS/2026-11-20+GH-1508/smoke.md:9–16`). Command `shasum -a 256 TESTS-RESULTS/2026-11-20+GH-1508/smoke.md` exited 0 with `018ebf9c800e51a35150d8f63278897ab974d22397465024816938761d73d418`, matching `provenance.jsonl:1`. Those suite results remain producer evidence, not an independent rerun. `/bin/bash -n utils/pdda/pdda.sh` exited 0, no output.
+- [Pass] Ordinary install preservation and sync exclusion hold: `utils/pdda/pdda-install.sh:450–459` preserves existing seeds unless forced, `:762–770` seeds mode, and `utils/pdda/pdda-sync-manifest.conf:16–29` does not distribute the root mode file. Grammar prose matches the parser (`PROJECT/PDDA.md:644–649`); quote removal is documented and does not evaluate shell code.
+- [Nit] The round-1 preservation qualifier remains unaddressed: `PROJECT/PDDA.md:645–646` and `CHANGELOG.md:7` should qualify ordinary install preservation with the explicit installer `--force` overwrite exception (`pdda-install.sh:453–458`). This does not invalidate ordinary preservation.
+- [Nit] Whole-file sweep retains the pre-existing three-outcome documentation drift at `PROJECT/PDDA.md:353–360` versus the four closing branches in `utils/pdda/pdda.sh:1840–1862`. No additional material pre-existing source defect was established. The CRLF table row also follows a list item (`smoke.md:15–16`); move it above the list for table rendering when convenient.
+
+Independent probe command: `python3 -` with the following stdin, after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`. Exit 0. It extracts only the seeded parser block; data files stay in scratch.
+```python
+from pathlib import Path
+import os, subprocess
+s=Path('utils/pdda/pdda.sh').read_text()
+block=s[s.index('  local docs="${PDDA_GOVERNANCE_DOCS:-}"'):s.index('  local index_doc=',s.index('check_governance()'))]
+root=Path(os.environ['TMPDIR'])/'parser-probe'
+root.mkdir(exist_ok=True)
+script='probe() {\n'+block+'\nprintf "docs=%s\\n" "$docs"\n}; probe'
+for label,value,replacement in [
+ ('CRLF quoted','PDDA_GOVERNANCE_DOCS_EXTRA="README.md"\r\n',''),
+ ('comment','PDDA_GOVERNANCE_DOCS_EXTRA=README.md # ignored.md\n',''),
+ ('last empty','PDDA_GOVERNANCE_DOCS_EXTRA=README.md\nPDDA_GOVERNANCE_DOCS_EXTRA=\n',''),
+ ('replacement','PDDA_GOVERNANCE_DOCS_EXTRA=README.md\n','override.md')]:
+ (root/'.pdda-mode').write_bytes(value.encode())
+ env={**os.environ,'PDDA_REPO_ROOT':str(root),'PDDA_GOVERNANCE_DOCS_DEFAULT':'DEFAULT.md','PDDA_GOVERNANCE_DOCS':replacement}
+ r=subprocess.run(['/bin/bash','-c',script],env=env,text=True,capture_output=True)
+ print(label, 'exit='+str(r.returncode),r.stdout.strip(),r.stderr.strip())
+ assert r.returncode==0
+ expected={'CRLF quoted':'DEFAULT.md README.md','comment':'DEFAULT.md README.md','last empty':'DEFAULT.md','replacement':'override.md'}[label]
+ assert r.stdout.strip()=='docs='+expected
+```
+Decisive output:
+```text
+CRLF quoted exit=0 docs=DEFAULT.md README.md
+comment exit=0 docs=DEFAULT.md README.md
+last empty exit=0 docs=DEFAULT.md
+replacement exit=0 docs=override.md
+```
+
+swept file: yes
+VERDICT: PASS
+Basis: Swept all three named artifacts in full and inspected supporting installer/sync paths and the CHANGELOG entry. Verify-tier graph orientation/coverage identifies another checkout, generation 2026-11-18T19:39:07Z; smoke is missing there and manifest lines 16–29 have partial coverage, so direct seeded source governs. The observed parser defect is corrected and the extension/replacement contract holds. No new suite is requested. No executable fixture, suite, full gate or git command was run; approval does not assume a later gate. Remaining documentation nits are nonblocking.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
