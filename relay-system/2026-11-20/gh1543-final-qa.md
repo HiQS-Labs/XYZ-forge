@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -193,5 +193,20 @@ Disposition for F4 `[Should]` (Fixed):
 - Re-ran `utils/pdda/pdda.sh run` (`rc=0`, 0 errors) and refreshed `provenance.jsonl` with exact `size_bytes`, `sha256`, and `candidate_sha=c387a8f1a8dca6dea16b08348dd80ac3f86a4fb6` for all 8 retained artifacts.
 
 Handing off to Reviewer (codex) for Round 3 final QA.
+
+### Reviewer · Round 3
+Reviewed the complete seeded module (lines 1–743), SKILL.md, approved plan, and retained manual procedure, transcript, parser outputs and provenance. No additional pre-existing defects found in the full module sweep. Applied the SWE review rubric.
+
+- [Pass] F4 addressed: the literal procedure now includes synchronized workers, disposable full-clone/bare-remote setup, refusal state brackets, failed-push retry and exact remote-blob comparison (`TESTS-RESULTS/2026-11-20+GH-1543/manual-check.md:145–317`). Retained results report eight successful distinct appends, same-ID exit codes `[0, 1, 1, 1]`, identical refusal brackets, a distinct pre-publication sentinel, matching snapshot/remote hashes and an idempotent rerun (`outputs/check-transcript.log:42–105`, relative to that evidence directory). The failed-push remote sentinel is asserted by the retained procedure at `manual-check.md:299`. These are reviewed Producer execution receipts, not fresh Reviewer clone runs.
+- [Pass] Integrity and reproducibility: all eight nonempty artifacts match their recorded sizes and SHA-256 values (`provenance.jsonl:1–8`); both retained parser JSON results reproduce from the seeded parser, and seeded/source bytes match. Probe command: `PYTHONDONTWRITEBYTECODE=1 python3` with `runpy.run_path('.relay-artifacts/run_record.py')`; for each provenance row read `Path(r['artifact']).read_bytes()` and compare length/hash; compare `parse_record(fixture, require_landing_clone=required)` against each saved JSON and compare seeded/source bytes. rc=0; decisive output: eight `True True True` triples, `run1 matches True`, `run2 matches True`, `seed_source_equal True`.
+- [Pass] F1–F3 remain addressed: full Authorization redaction (`.relay-artifacts/run_record.py:81–83`), Git-metadata syntax refusal before mutations (`:445–446`, `:506`), and strictly later declaration ordering for supersession (`:230–243`). Narrow probe command: load seeded module using runpy and print `repr(redact_text('Authorization: Basic dXNlcjpwYXNzd29yZA==\nUnrelated: keep'))`; rc=0, output `'Authorization: [REDACTED]\nUnrelated: keep\n'`.
+- [Pass] Core contract remains aligned: persistent sibling locking/in-lock candidate validation precedes replace (`.relay-artifacts/run_record.py:372–384`); checkpoint identity, cleanliness, pre/post-switch confinement and retry logic are present (`:497–591`). SKILL.md section 1a describes the same dispositions and mandatory checkpoint flags. The evidence explicitly withholds live run-2 credit (`manual-check.md:28`). Retained PDDA output ends “no errors, 37 warning(s)” (`pdda-run.log`, final line); this is not a claim of warning-free qualification.
+- [Nit] Evidence wording: `manual-check.md:4` and provenance row 6 call the transcript “verbatim,” but home paths in its checkpoint JSON/errors are normalized to `~` (`outputs/check-transcript.log:76–98`), whereas the literal procedure prints absolute paths. Describe it as path-anonymized captured output and document that transformation on the next evidence refresh. The retained commands and decisive comparisons are sufficient for F4 despite this presentation mismatch.
+- Limits: no Git command, checkpoint, executable fixture or gate was run this turn; none is configured in the Reviewer steps. Candidate-wide exclusion of unrelated changes/new suites relies on the Producer's supplied file stat, not an independently obtained diff. Graph Verify fallback: nearest indexed Forge project is another checkout, generation `2026-11-18T19:39:07Z`; coverage reports all three seed/source/skill paths freshness=missing, so complete local reads supplied source evidence. Approval covers this reviewed artifact and retained local contract evidence, not live factory acceptance or promotion.
+
+swept file: yes
+VERDICT: PASS
+Basis: F1–F3 remain resolved and the concrete reproducible procedure plus retained execution results now satisfy F4; no remaining blocking finding.
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
