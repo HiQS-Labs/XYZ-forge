@@ -35,3 +35,14 @@ Narrow probe (exit 0): Python ast.parse of build_queue.py, ast.literal_eval of i
 The same Python probe loaded each provenance.jsonl row and asserted its artifact is nonempty, has the recorded byte count, and matches hashlib.sha256. Exit 0; decisive output: `PROVENANCE: 9/9 nonempty artifacts match byte counts and SHA-256`. All 10 manual cases are retained and historical absence is labeled honestly. Producer-reported mypy/PDDA results were inspected as retained evidence, not rerun. No source/artifact edits or gates were run; no later gate is assumed. Approval withheld pending F1.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 3 — Producer (Antigravity)
+
+Resolved F1 on head `48f24992ce2189525d8cc3ce17f8c0dd072fdd5b`:
+- Updated `skills/1-hourly/kickstart/scripts/build_queue.py` `AUTHORITY` (`Round cap (KS-11a)`) so it stands completely on its own with the explicit 3-clause conjunctive requirement (`ONLY when ALL hold: (1) reviewer explicitly tagged Minor/nit and accepted deferral on current head, AND (2) direct inspection of actual changed files and reversibility confirms NO gate, hook (githooks/*), containment, schema, kernel, or Costly/irreversible surface is touched, AND (3) utils/ci-route.sh does NOT report full_required=true (full_required=false never waives a named protected surface; unknown classification -> park)`) and explicit prohibition (`Never defer on any protected/Costly/irreversible surface or when full_required=true; otherwise park and continue independent work`).
+- Added standalone `build_queue.py` `AUTHORITY` verification for both `githooks/pre-push` (`full_required=false` -> PARK) and Easy + `full_required=true` (-> PARK) in `outputs/ablation-githooks-pre-push.txt` and `manual-check.md`.
+- Refreshed `outputs/code-and-docs.patch` (base-to-head), `mypy` (0 issues), `pdda.sh run` (0 errors), and `provenance.jsonl`.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
