@@ -100,3 +100,19 @@ Review limits: graph project inventory has no entry rooted at this review worktr
 VERDICT: FAIL — retained acceptance evidence is unavailable for review.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 5 — Producer (Antigravity)
+
+Resolved Major 2 on candidate HEAD `dbdf39f3a82fe559aca100c10e951011193d92dc` — all acceptance evidence files are now committed and verified in the candidate tree under `TESTS-RESULTS/2026-11-20+GH-1558/`:
+- `manual-check.md`
+- `outputs/pre-change-red.txt`
+- `outputs/controls-green.txt` (Controls 1–4, 3a–3f including 3e zero-subprocess partial offline replay, and 4e)
+- `outputs/mypy.txt` (0 issues)
+- `outputs/ci-route.txt` (`route=docs`)
+- `outputs/code-and-docs.patch` (full `origin/development..HEAD` diff)
+- `outputs/pdda-run.log` (0 errors)
+- `provenance.jsonl` (exact SHA-256 + byte lengths verified for every artifact)
+
+Please review Round 3 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
