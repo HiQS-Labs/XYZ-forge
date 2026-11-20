@@ -17,7 +17,10 @@
 - **Green arm (detached OS survival only):** `subprocess.Popen(..., start_new_session=True)` survived `605.04s` (`pid=37143`, `pgid=37143`, `sid=37143`, kernel `os.waitpid` `waitpid_raw_status=0`, `os_exit_code=0`).
 - **Timer caveat (`outputs/native-launch-and-wakeup-receipt.json`):** `schedule(DurationSeconds=620, TimerCondition="never")` (`task-1113`) is explicitly documented as a **fixed-time reminder**, NOT a completion-triggered notification.
 
-## 3. Governance & Evidence Integrity
-- `outputs/ks07-skill.patch`: full `origin/development..HEAD` diff of `skills/1-hourly/kickstart/SKILL.md`.
+## 3. >600s Host Check (`outputs/host-bg-600s-claude-code.md`)
+- **Host without the 600s ceiling:** Claude Code `Bash run_in_background` (`timeout 900000`) ran `sleep 660` from `2026-11-20T21:03:35Z` to `21:14:35Z`, exit 0, with a native completion notification delivered (task `buwc0oaro`). Contrasts with the Antigravity 600s kill in section 1. Closes the Final QA hold that the mechanism needed a >600s-capable host (operator "proceed", 2026-11-20). U7 (real run-2 operation) remains uncredited until run 2.
+
+## 4. Governance & Evidence Integrity
+- `outputs/ks07-skill.patch`: full `origin/development` vs `HEAD` diff of `skills/1-hourly/kickstart/SKILL.md` (rule 6, including the hard-600s-kill Transition 3 clarification; regenerated after merging `origin/development`).
 - `outputs/pdda-run.log`: `./utils/pdda/pdda.sh run` — 0 errors.
-- `provenance.jsonl`: exact SHA-256 and byte-size ledger verified for every artifact.
+- `provenance.jsonl`: exact SHA-256 and byte-size ledger verified for every artifact. The superseded first-draft `outputs/skill-diff.patch` was removed; `ks07-skill.patch` is the single skill diff.

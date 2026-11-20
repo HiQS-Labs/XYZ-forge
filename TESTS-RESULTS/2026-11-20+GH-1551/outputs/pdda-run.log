@@ -134,6 +134,7 @@ INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visi
 INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
 INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1080-express-docs.md:1 roadmap coverage check skipped because roadmap_exempt=true
 INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1100-jog-target-root.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1399-attempt-entry-gate.md:1 roadmap coverage check skipped because roadmap_exempt=true
 INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1400-supervision-composition.md:1 roadmap coverage check skipped because roadmap_exempt=true
 INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
 INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh796-integration.md:1 roadmap coverage check skipped because roadmap_exempt=true
@@ -148,7 +149,7 @@ INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1414-PARAPHRASE-FIRST-REVI
 INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md)
 INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
 INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
-SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=134
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=135
 
 == pdda-check-changelog ==
 INFO [pdda-check-changelog] CHANGELOG.md CHANGELOG_WRITES=off — aggregate freshness warnings skipped (reconciler/off mode)

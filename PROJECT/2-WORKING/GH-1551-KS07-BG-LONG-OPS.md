@@ -2,7 +2,7 @@
 issue: 1551
 title: "kickstart(KS-07): enforce host-native background execution for long operations (>10 min)"
 status: active
-roadmap_id: rmi-01M7W39TSPD8DMM0575S9FDM8Z
+roadmap_id: rmi-01M7XEJR8KTN1FWEFYCJB2HFRE
 parent_arc: 1541
 milestone: KS-07
 owner: antigravity
@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Implemented KS-07 background-only long-ops rule in `skills/1-hourly/kickstart/SKILL.md` and passed real 605s (>10-min) paired red/green probe + PDDA (0 errors). | Complete Codex Final QA, open PR, and land. |
+| Instruction implementation complete: rule 6 (Long Operations, KS-07) in `skills/1-hourly/kickstart/SKILL.md` merged with development's KS-13 rule 5; >600s host check green on Claude Code (`sleep 660`, exit 0, native completion notification; `TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code.md`). | Re-run Final QA on the merged diff, open PR, and land. U7 (real run-2 operation >10 min) stays uncredited until run 2. |
 
 ## Objective
 Codify in `skills/1-hourly/kickstart/SKILL.md` that long operations (`merge-cleanup --execute` and full classified gates) MUST be launched via the host's native background execution and completion-notification mechanism, never in the foreground, without adding any new guard or runner wrapper.
@@ -42,3 +42,8 @@ Codify in `skills/1-hourly/kickstart/SKILL.md` that long operations (`merge-clea
 - `skills/1-hourly/kickstart/SKILL.md` mandates host-native background launch + completion notification for `merge-cleanup --execute` and full gates, forbids foreground fallback (unsupported host -> Transition 3), introduces zero new wrappers/runners, and states U7/U8 honestly.
 - Controlled >10-min paired mechanism check (labeled accurately, with U7 real-run acceptance explicitly deferred) recorded under `TESTS-RESULTS/2026-11-20+GH-1551/` with `provenance.jsonl`.
 - `./utils/pdda/pdda.sh run` passes with 0 errors and `CHANGELOG_WRITES` policy is respected.
+
+## Rating
+- 2026-11-20: rated 40/35/50/70 (pri/sev/appeal/effort).
+- Rationale: process hardening of the kickstart skill text; a missed foreground ban risks a killed landing, not data loss.
+- Roadmap row `rmi-01M7XEJR8KTN1FWEFYCJB2HFRE` picked up via `releases_app.py roadmap pickup`.
