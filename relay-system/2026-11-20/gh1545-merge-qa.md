@@ -1,7 +1,7 @@
 # Relay: GH-1545 (KS-03) Post-Merge Delta QA (Merged origin/development KS-15)
 
-STATUS: In Progress
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 1 / 2
 PRODUCER: antigravity
 REVIEWER: codex
@@ -29,3 +29,21 @@ After PR #1544 (KS-15 / GH-1543) merged to `origin/development` (`0edbab45d6`), 
 ### Review Checklist
 1. Verify the merge with `origin/development` (`0edbab45d6`) preserved both KS-15 (`run_record.py`, `SKILL.md` contract) and KS-03 (`build_queue.py`, `SKILL.md` launch authority, `CHANGELOG.md`) with clean ledger state and no unintended drift.
 2. If clean, append your review block and set `STATUS: Approved` and `NEXT: Done`.
+
+## Reviewer codex — Round 1
+
+VERDICT: PASS
+
+Basis: No blocking merge defect found in the seeded candidate. Inspected the retained merge patch/inventory, prior approved final-QA receipt, merged runbook and KS-15 parser grammar. The runbook retains the v1 run-record contract alongside all four KS-03 defaults and recorded-grant boundary. The SQL delta is confined to GH-1545 pickup/start and generation/receipt/event bookkeeping; KS-15 completion and PR-merged records remain present. The new GH-1545 GID matches plan frontmatter.
+
+Verification (standard-library, non-mutating; no Git executable, fixture, suite or gate):
+- Command: `python3` reads `outputs/merge-diff.patch`, extracts each destination index, computes Git blob SHA-1 directly from file bytes and asserts the destination prefix matches. Exit 0: `PATCH_BLOB_MATCH ... True` for all five destinations (CHANGELOG, active plan, releases.sql, kickstart/SKILL.md, build_queue.py). Patch SHA-256: `6c0b4a62a5f2cd24b6775ae2c28806b21d6d869de878f52d962c12ce92bef8c7`.
+- Same command compares build_queue.py and CHANGELOG with destination blob IDs in the prior approved implementation patch. Exit 0: both `PRIOR_APPROVED_BLOB_MATCH ... True`; those files have no post-review drift.
+- Command: `python3` computes run_record.py blob ID and extracts retained KS-15 review index lines using `re.findall`. Exit 0: `RUN_RECORD_BLOB 83ad7d7e80555cf9ba3de5140e623ea2d7403d32`; `gh1543-cr-fixes-qa.md` contains `index 26a14035c..83ad7d7e8 100755`. KS-15 implementation matches its independently approved final-fix patch.
+- Command: `python3` opens SQLite with `mode=ro&immutable=1`, runs `pragma integrity_check` and `select * from roadmap_items where gh_number in ('1543','1545')`. Exit 0: `DB_INTEGRITY ok`; GH-1543 Completed; GH-1545 In progress, GID `rmi-01M7W0M2J1GME4PAS6VC3Z93E5`, rating 85/65/55/85, correct active doc and `status_label=in-progress`. This proves integrity and selected-row consistency, not full DB/dump equivalence.
+- Graph inventory has no project for this seeded worktree. Nearest Forge generation is `2026-11-18T19:39:07Z`; coverage freshness is `missing` for both Python files and runbook. Used direct seeded source and patch evidence.
+
+Limits: bounded post-merge delta approval using the retained range/inventory and matching seeded bytes; no live remote ancestry or hosted-check claim. Producer reports post-merge docs routing and PDDA success, but no retained post-merge gate receipt was supplied here. Fresh final-head gate qualification remains **[Unverified — needs clone run]**. Prior retained PDDA evidence belongs to the pre-merge implementation. No later gate is assumed; no promotion or live factory qualification credit is granted.
+
+swept file: yes
+VERDICT: PASS
