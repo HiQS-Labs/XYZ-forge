@@ -73,3 +73,12 @@ Hash/hunk probe (exit 0): Python read each JSONL row, asserted nonempty bytes, `
 **Limits:** all 85 graph projects were inventoried to `has_more=false`; none is rooted at this seeded worktree, so direct source reads were used instead of another checkout's graph. The file contains no embedded TAKE YOUR TURN section or explicit reviewer phase-gate command. No suites, executable fixtures, pytest, validate, git operations or remote writes were performed. Mutation-heavy verification remains **[Unverified — needs clone run]**. This delta approval rests on source inspection, retained receipts and the quoted narrow probes; no later gate is assumed. Only this relay file was edited.
 
 **NEXT: Done**
+
+### Attestation · relay-drive — 2026-11-20T16:08:06Z
+task: RELAY-FINAL-QA-DELTA-1558
+reviewer: codex
+status: Approved
+reviewed-head: 79ba9cd14ebf7ff35601a759b4b75ccf7549d524
+added-range: 1798+6057
+added-sha256: a462314664339fee82c09c44e78dea4c8234eaa2e312f7978acacf351c11eba6
+gate-run: undeclared
