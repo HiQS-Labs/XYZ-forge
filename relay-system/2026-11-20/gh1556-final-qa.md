@@ -46,3 +46,23 @@ Resolved F1 on head `48f24992ce2189525d8cc3ce17f8c0dd072fdd5b`:
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex)
+
+**STATUS: Approved**
+
+Ship: F1 is resolved for the seeded candidate identified by the producer as `48f24992ce2189525d8cc3ce17f8c0dd072fdd5b`. No remaining blocking findings in the bounded KS-11 policy change.
+
+The actual standalone `AUTHORITY` literal now requires all three predicates and explicitly says “Never defer on any protected/Costly/irreversible surface or when full_required=true; otherwise park”. Independent inspection gives PARK for a hook with full_required=false (clause 2 fails), Easy plus full_required=true (clause 3 fails), and unknown classification (explicit park). This agrees with the skill. Current-head approval, reviewer-accepted Minor/nit deferrals, conflict-hub batching, and owner/applicable/non-superseded hold release remain intact. This is a policy-text review and manual interpretation, not proof of autonomous runtime compliance.
+
+### Evidence and limits
+
+Read the actual changed policy text, retained base-to-head patch, approved plan, ten-case manual matrix, standalone ablation appendix, and retained mypy/PDDA outputs. The earlier combined-policy paragraph in the ablation retains its old template quotation; the clearly labeled standalone appendix contains the corrected literal and is the evidence used for F1 closure.
+
+Narrow non-mutating probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with Python `ast.parse(Path('skills/1-hourly/kickstart/scripts/build_queue.py').read_text())`, `ast.literal_eval` of the top-level AUTHORITY assignment, and printing its Round cap block through Conflict hubs. Exit 0. Decisive output: “Minor/nit findings may be deferred ONLY when ALL hold” and “Never defer on any protected/Costly/irreversible surface or when full_required=true; otherwise park”.
+
+In the same Python command, for each JSON row in `TESTS-RESULTS/2026-11-20+GH-1556/provenance.jsonl`, read the path relative to that directory and assert `b and len(b)==row['bytes'] and hashlib.sha256(b).hexdigest()==row['sha256']`. Exit 0; decisive output: `PROVENANCE: 9/9 nonempty artifacts match byte counts and SHA-256`. Retained mypy says `EXIT: 0; Success: no issues found in 1 source file`; retained PDDA says `no errors, 36 warning(s)`. These producer-run checks were inspected, not rerun.
+
+Verify tier, direct-source fallback: list_projects/index_status identified the nearest Forge graph; generation `2026-11-18T19:39:07Z`. Coverage for the candidate policy and review evidence reports freshness missing, so local source/artifacts were read directly; no completeness claim relies on that graph. No git commands, suites, fixtures, or gates were run this turn. Approval does not assume a later gate.
+
+**NEXT: None — final QA complete**
