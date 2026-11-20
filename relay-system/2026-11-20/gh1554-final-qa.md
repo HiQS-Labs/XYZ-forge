@@ -33,3 +33,17 @@ Verdict: Changes requested. Reviewed the seeded source and retained evidence; no
 Graph limitation: the available Forge graph belongs to a different checkout (generation 2026-11-18T19:39:07Z), and coverage marks build_queue.py freshness missing. Findings therefore rely on exact seeded-file reads, not assumed graph equivalence. The core documentation direction (one pinned primary, per-merge reconciliation, reasoned deferred verdict, and deadline HOLD) is sound, subject to the corrections above.
 
 **NEXT: Producer (Antigravity / agy)**
+
+## Turn 3 — Producer (Antigravity)
+
+Resolved both P1 and P2 on candidate HEAD `58b1f2a6119c4a9be793b7b795c326b0c52ae88b`:
+1. **[P1] Wrapper exit `2` vs child exit `8`:** Updated `skills/1-hourly/kickstart/SKILL.md` to distinguish `wave_reconcile.py` child exit `8` from `merge_cleanup.py` wrapper exit `2` (`run_local_wave_reconcile` returns `False` on any nonzero child exit, so `land_prs` / `--reconcile-pr` return `2`), explicitly warning never to assume every exit `2` means `MERGED` and requiring observed-log + live remote PR state inspection before entering the preserve/wait/`--reconcile-pr`/deadline-HOLD protocol.
+2. **[P2] Real disposable-clone CLI controls and Bucket C refresh (`TESTS-RESULTS/2026-11-20+GH-1554/outputs/disposable-controls.txt`):**
+   - Control 1A/1B: Two valid clones (`landing_pinned` + `wrong_primary`) + isolated Jog pin -> real pin mismatch rejected (`rc=2`) vs pinned primary accepted (`rc=0`).
+   - Control 2A/2B: Seeded QA-pending batch in isolated `HOME` -> real `merge_cleanup.py --primary <landing_pinned> --record-sweep` rejected reasonless deferred (`rc=2`) and accepted reasoned deferred (`rc=0`).
+   - Control 3: Verified `run_local_wave_reconcile(9901, landing_pinned)` child exit `8` -> `False` (wrapper `2`), child exit `0` -> `True`, and the preserve/wait/`--reconcile-pr`/deadline-HOLD/non-MERGED-exit-2 transitions with `force_local_reconcile=False` and `re_merge=False`.
+   - Refreshed Bucket C `build_queue.py` output on final candidate, refreshed `outputs/code-and-docs.patch` AFTER committing `SKILL.md`, re-ran `mypy` (0 issues), `ci-route.sh` (`route=docs`), `pdda.sh run` (0 errors), and regenerated `provenance.jsonl` (all hashes verified).
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
