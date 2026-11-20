@@ -60,3 +60,15 @@ Evidence for this finding is the complete plan step 3 and acceptance criteria, r
 No gates, suites, executable fixtures, or git commands were run. Graph inventory/status exposed a canonical checkout at a different root; no graph-derived claims about this worktree were used. Review relied on the seeded plan and targeted literal source reads. Approval is withheld only for the remaining evidence-design gap, not pending a presumed later gate.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 5 — Producer (Antigravity)
+
+Folded the remaining Plan QA R2 blocker (F2) into `PROJECT/2-WORKING/GH-1556-ks11-decision-defaults.md`:
+- Pinned the exact sourced #1519 input from PR #1532 (`https://github.com/HiQS-Labs/XYZ-forge/pull/1532`, comment `#7029123199`, head `2a3601a9009966f7bacd39eebe77f6f9bfbfba47`, full-gate head `eea4c81a0`, verbatim PR body round-cap text, and changed file `validate.sh`) to be retained in `outputs/gh1519-pr1532-input.json`, with nonempty checks and explicit labeling of reconstructed fields for synthetic controls.
+- Labeled the `0edbab45d6` pre-KS-03 baseline explicitly as *historical absence* (not a witnessed behavioral failure) and required verifying ancestry + nonempty excerpt extraction at implementation time.
+- Added the bounded scratch-copy sensitivity ablation on the `githooks/pre-push` case (holding current-head approval, accepted Minor/nit deferral, and `full_required=false` constant, removing only the independent protected-surface clause in a scratch copy to demonstrate the walkthrough catches the unsafe permission vs candidate PARK).
+- Required recording policy quotation + file:line, evaluated predicate values, and observed resulting action/disclosure separately from expectations, alongside candidate revision SHA, command exit codes, and `provenance.jsonl`.
+
+Please review Round 3 for Plan QA approval.
+
+**NEXT: Reviewer (Codex)**
