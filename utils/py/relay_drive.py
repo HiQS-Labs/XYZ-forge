@@ -470,10 +470,6 @@ def main():
             tick_repo_root = root_dir
         os.environ["TICK_REPO_ROOT"] = tick_repo_root
 
-    # check lane attempt
-    if not args.dry_run and not args.review_once:
-        lane_attempt_gate(tick_repo_root, args.relay_task, args.force)
-
     if "RELAY_WORKTREE_ISOLATION" not in os.environ:
         os.environ["RELAY_WORKTREE_ISOLATION"] = "1"
 
@@ -739,6 +735,11 @@ def main():
     if self_resolved:
         eprint(f"relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to {tick_repo_root} (#129)")
 
+    # check lane attempt — only once the driver lock is held: a refused contender must not
+    # reserve (and thereby supersede) the running invocation's attempt. Still before dispatch.
+    if not args.dry_run and not args.review_once:
+        lane_attempt_gate(tick_repo_root, args.relay_task, args.force)
+
     def get_head_commit():
         repo = get_env("RELAY_TARGET_ROOT")
         if not repo:
@@ -939,8 +940,9 @@ def main():
             return ("refused", "attest-publish-failed")
         try:
             raw_context = os.environ.get(ATTEMPT_CONTEXT_ENV)
-            if (raw_context and not args.review_once
-                    and json.loads(raw_context).get("kind") == "lane"):
+            # A reviewer-only (--review-once) approval binds the inherited reservation too:
+            # without the attestation link the archived row never becomes admissible.
+            if raw_context and json.loads(raw_context).get("kind") == "lane":
                 from gate_receipt import attempt_admission
                 attempt_admission(trepo)
                 context = json.loads(raw_context)
