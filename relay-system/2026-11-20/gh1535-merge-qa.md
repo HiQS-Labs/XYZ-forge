@@ -71,3 +71,12 @@ PYPROBE
 Verification limits: approval covers this source-level integration delta, not live factory qualification. Prior paired red/green evidence remains producer-recorded; no full gate, mypy, PDDA, or hosted run was rerun by this reviewer. The retained PDDA log reports zero errors and 36 warnings. No post-merge mypy transcript was supplied, so that specific rerun claim is unverified. No later gate is assumed. Candidate SHA and ancestry are producer-supplied, not independently measured because this turn forbids git.
 
 Graph context: Verify tier attempted against the nearest indexed Forge project at `/Users/noelsaw/Documents/GH Repos/XYZ-forge`, a different checkout. Target graph search returned no symbols and coverage reported missing freshness for both target paths; exact seeded source and retained patch were therefore read directly. No graph completeness claim is made.
+
+### Attestation · relay-drive — 2026-11-20T08:53:19Z
+task: RELAY-MERGE-QA
+reviewer: codex
+status: Approved
+reviewed-head: 672e0c576bb42c9ced4b9945bbfedf90ae67ab07
+added-range: 1490+3278
+added-sha256: a049c4266139677953ffccb3c56a78f4b6bf997ab35394588636593efd0ae710
+gate-run: undeclared
