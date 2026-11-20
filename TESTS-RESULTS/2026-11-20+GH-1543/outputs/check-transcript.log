@@ -39,22 +39,22 @@ LANDING_CLONE: ~/kickstart-clones/landing
 - note-path: ~/Documents/GH Repos/XYZ-forge
 - note-tags: kept bar
 === 4. Concurrency (8 distinct parallel appends + 4-way same-ID race) ===
-conc8 worker=0 rc=0 stdout='PARENT_NOTE: PN-0 2026-11-20T06:53:37Z worker-0' stderr=''
-conc8 worker=1 rc=0 stdout='PARENT_NOTE: PN-1 2026-11-20T06:53:37Z worker-1' stderr=''
-conc8 worker=2 rc=0 stdout='PARENT_NOTE: PN-2 2026-11-20T06:53:37Z worker-2' stderr=''
-conc8 worker=3 rc=0 stdout='PARENT_NOTE: PN-3 2026-11-20T06:53:37Z worker-3' stderr=''
-conc8 worker=4 rc=0 stdout='PARENT_NOTE: PN-4 2026-11-20T06:53:37Z worker-4' stderr=''
-conc8 worker=5 rc=0 stdout='PARENT_NOTE: PN-5 2026-11-20T06:53:37Z worker-5' stderr=''
-conc8 worker=6 rc=0 stdout='PARENT_NOTE: PN-6 2026-11-20T06:53:37Z worker-6' stderr=''
-conc8 worker=7 rc=0 stdout='PARENT_NOTE: PN-7 2026-11-20T06:53:37Z worker-7' stderr=''
-conc8 validate_rc=0 valid=True amendments=8 ids=['PN-3', 'PN-4', 'PN-2', 'PN-6', 'PN-1', 'PN-5', 'PN-7', 'PN-0']
+conc8 worker=0 rc=0 stdout='PARENT_NOTE: PN-0 2026-11-20T07:33:37Z worker-0' stderr=''
+conc8 worker=1 rc=0 stdout='PARENT_NOTE: PN-1 2026-11-20T07:33:37Z worker-1' stderr=''
+conc8 worker=2 rc=0 stdout='PARENT_NOTE: PN-2 2026-11-20T07:33:37Z worker-2' stderr=''
+conc8 worker=3 rc=0 stdout='PARENT_NOTE: PN-3 2026-11-20T07:33:37Z worker-3' stderr=''
+conc8 worker=4 rc=0 stdout='PARENT_NOTE: PN-4 2026-11-20T07:33:37Z worker-4' stderr=''
+conc8 worker=5 rc=0 stdout='PARENT_NOTE: PN-5 2026-11-20T07:33:37Z worker-5' stderr=''
+conc8 worker=6 rc=0 stdout='PARENT_NOTE: PN-6 2026-11-20T07:33:37Z worker-6' stderr=''
+conc8 worker=7 rc=0 stdout='PARENT_NOTE: PN-7 2026-11-20T07:33:37Z worker-7' stderr=''
+conc8 validate_rc=0 valid=True amendments=8 ids=['PN-1', 'PN-4', 'PN-3', 'PN-6', 'PN-0', 'PN-2', 'PN-7', 'PN-5']
 conc4 worker=0 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
 conc4 worker=1 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
-conc4 worker=2 rc=0 stdout='PARENT_NOTE: PN-RACE 2026-11-20T06:53:37Z racer-2' stderr=''
-conc4 worker=3 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=2 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=3 rc=0 stdout='PARENT_NOTE: PN-RACE 2026-11-20T07:33:37Z racer-3' stderr=''
 conc4 sorted_rcs=[0, 1, 1, 1] validate_rc=0 valid=True amendments=1
 === 5. Disposable full-clone checkpoint refusals, unchanged-state brackets, failed-push retry, bare-remote blob proof, and idempotent rerun ===
-bracket[pre-refusals]: {"branch": "development", "config_sha": "31c769ce5c0c6161", "head": "7aa23949e2abef1396212e1c27df954738a9f804", "refs_sha": "d78697effbfd6ae9", "status": ""}
+bracket[pre-refusals]: {"branch": "development", "config_sha": "91b54e7b833f98ff", "head": "872ff5fd2f39c9917f588ca31db2b863c2fbf747", "refs_sha": "72b474e945e47cda", "status": ""}
 refusal:omitted_primary rc=2 stderr=usage: run_record.py checkpoint [-h] --record RECORD --clone CLONE
                                 --primary PRIMARY --branch BRANCH --dest DEST
                                 [--message MESSAGE] [--push]
@@ -68,38 +68,44 @@ refusal:git_dir_F2 rc=1 stderr=run_record: --dest must not target Git metadata (
 refusal:git_config_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): '.git/config'
 refusal:nested_git_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): 'docs/.git/hooks/pre-commit'
 refusal:target_branch_symlink rc=1 stderr=run_record: target branch 'docs/sym-escape' has symlink entry at 'escape_link'; refusing before branch switch
-bracket[post-refusals]: {"branch": "development", "config_sha": "31c769ce5c0c6161", "head": "7aa23949e2abef1396212e1c27df954738a9f804", "refs_sha": "d78697effbfd6ae9", "status": ""}
+bracket[post-refusals]: {"branch": "development", "config_sha": "91b54e7b833f98ff", "head": "872ff5fd2f39c9917f588ca31db2b863c2fbf747", "refs_sha": "72b474e945e47cda", "status": ""}
 refusals_state_identical=True outside_files=0
 refusal:dirty_staged rc=1 stderr=run_record: refusing checkpoint: --clone has staged, unstaged, or untracked changes
 bare_remote_pre_blob='PRE-PUBLICATION-SENTINEL'
-expected_redacted_bytes=232 expected_sha256=56fc119de16029017dd4d1c64e0c92f11c8c1d9fec22e5e8a77f918eb7c292c8
-push_fail rc=1 stderr=run_record: git ls-remote --heads origin refs/heads/docs/run-rec failed (rc=128): fatal: '~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/nonexistent.git' does not appear to be a git repository
+expected_redacted_bytes=232 expected_sha256=efee6bf09113111882ba74b398313b459d85a4e208683e2a354eb37e20329a71
+push_fail rc=1 stderr=run_record: git ls-remote --heads origin refs/heads/docs/run-rec failed (rc=128): fatal: '~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/nonexistent.git' does not appear to be a git repository
 fatal: Could not read from remote repository.
 
 Please make sure you have the correct access rights
 and the repository exists.
 push_retry rc=0 stdout={
   "branch": "docs/run-rec",
-  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/cp_clone",
+  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/cp_clone",
   "committed": false,
   "dest": "docs/run-records/demo.md",
-  "head_sha": "1e017c4dfd6e4156db34ceca844757a591998c32",
+  "head_sha": "84b6b6f5aee3641d925430445fd64dfbb833ab16",
   "push_status": "pushed",
   "pushed": true
 }
-bare_remote_post_bytes=232 post_sha256=56fc119de16029017dd4d1c64e0c92f11c8c1d9fec22e5e8a77f918eb7c292c8 matches_expected_snapshot=True
+bare_remote_post_bytes=232 post_sha256=efee6bf09113111882ba74b398313b459d85a4e208683e2a354eb37e20329a71 matches_expected_snapshot=True
 --- bare remote published blob ---
 RUN-RECORD-VERSION: 1
-LANDING_CLONE: ~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/landing_fake
+LANDING_CLONE: ~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/landing_fake
 - OPERATOR_AMENDMENT: OA-1 2026-11-20T01:00Z proceed (operator turn)
 - note-auth: Authorization: [REDACTED]
 idempotent_noop rc=0 stdout={
   "branch": "docs/run-rec",
-  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-4QFgET/cp_clone",
+  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/cp_clone",
   "committed": false,
   "dest": "docs/run-records/demo.md",
-  "head_sha": "1e017c4dfd6e4156db34ceca844757a591998c32",
+  "head_sha": "84b6b6f5aee3641d925430445fd64dfbb833ab16",
   "push_status": "up-to-date",
   "pushed": false
 }
+=== 6. CodeRabbit PR #1544 Major-fix controls (JSON Authorization, symlink append, duplicate LANDING_CLONE, showUntrackedFiles=no, gitignored dest) ===
+cr6a_json_auth='RUN-RECORD-VERSION: 1\n- note: {"Authorization": "[REDACTED]"}'
+cr6b_symlink_rc=0 still_symlink=True target_has_event=True
+cr6c_dup_lc_rc=1 stderr=run_record: refusing checkpoint: invalid LANDING_CLONE header: duplicate LANDING_CLONE headers at lines [2, 3]
+cr6d_untracked_rc=1 preserved='keep-me' stderr=run_record: refusing checkpoint: --clone has staged, unstaged, or untracked changes
+cr6e_ignored_rc=1 preserved='LOCAL-UNTRACKED-IGNORED' branch=development stderr=run_record: refusing checkpoint: destination is gitignored and untracked: ignored.md
 === ALL MANUAL CHECKS PASSED ===

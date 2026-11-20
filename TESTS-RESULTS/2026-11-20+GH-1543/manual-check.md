@@ -19,6 +19,7 @@ commit and file hashes are recorded in `provenance.jsonl`.
 - **Redaction sentinel (F1):** synthetic `ghp_`, `github_pat_`, `sk-`, `Authorization: Bearer ...`, `Authorization: Basic ...`, `Authorization: Token ...`, home-directory path, and stray XML tags produced `leak_indices=[]`, preserved `Authorization: Bearer [REDACTED]` and `Authorization: [REDACTED]`, normalized home paths to `~`, and passed `validate` (`rc=0`; retained in `outputs/redacted-snapshot.md`).
 - **Concurrency:** 8-worker barrier-synchronized distinct appends all exited `rc=0` with 8/8 amendments valid; 4-worker barrier-synchronized same-ID race returned sorted exit codes `[0, 1, 1, 1]` with 1 valid `PN-RACE` amendment.
 - **Disposable-clone checkpoint refusals & state invariance (F2 + confinement):** 10 refusal cases (omitted `--primary`, `--clone == --primary`, `--clone == LANDING_CLONE`, protected branches `development`/`main`, `../outside.md`, `.git`, `.git/config`, `docs/.git/hooks/pre-commit`, and target-branch escaping symlink `docs/sym-escape`) all failed with expected exit codes and `refusals_state_identical=True` (identical pre/post `HEAD`, branch, `status --porcelain`, `for-each-ref` SHA-256, `.git/config` SHA-256, and `outside_files=0`), plus dirty staged clone refusal (`rc=1`).
+- **CodeRabbit PR #1544 Major-fix controls (section 6):** verified quoted JSON `"Authorization": "Basic ..."` redaction, symlink `atomic_append` canonical lock/target update, duplicate `LANDING_CLONE` refusal before checkout, `status.showUntrackedFiles=no` untracked-file refusal, and gitignored untracked destination refusal with zero local data loss.
 - **Failed-push retry, bare-remote blob proof & idempotent rerun:** bare remote held `PRE-PUBLICATION-SENTINEL` before and after failed push (`rc=1`); retry succeeded (`committed=false, pushed=true`); `git -C <bare> show docs/run-rec:docs/run-records/demo.md` matched `run_record.py snapshot` byte-for-byte (`matches_expected_snapshot=True`, exact SHA-256 equality, zero Basic credential leak); immediate rerun returned `committed=false, pushed=false, push_status="up-to-date"`.
 
 ## Scope boundary
@@ -315,6 +316,67 @@ r_noop = subprocess.run([sys.executable, rr, "checkpoint", "--record", str(rec_o
 print(f"idempotent_noop rc={r_noop.returncode} stdout={r_noop.stdout.strip()}")
 d_noop = json.loads(r_noop.stdout)
 assert r_noop.returncode == 0 and d_noop["committed"] is False and d_noop["pushed"] is False and d_noop["push_status"] == "up-to-date"
+PYEOF
+echo "=== 6. CodeRabbit PR #1544 Major-fix controls (JSON Authorization, symlink append, duplicate LANDING_CLONE, showUntrackedFiles=no, gitignored dest) ==="
+python3 - "$RR" "$WORK" <<'PYEOF'
+import subprocess, sys
+from pathlib import Path
+rr, work = sys.argv[1], Path(sys.argv[2])
+
+def git(repo: Path, *args: str) -> str:
+    return subprocess.check_output(["git", "-C", str(repo), *args], text=True).strip()
+
+# 6a. Quoted JSON Authorization field redaction
+j_src = work / "json-auth.md"
+j_src.write_text('RUN-RECORD-VERSION: 1\n- note: {"Authorization": "Basic dXNlcjpwYXNzd29yZA=="}\n')
+r = subprocess.run([sys.executable, rr, "snapshot", str(j_src)], text=True, capture_output=True, check=True)
+print(f"cr6a_json_auth={r.stdout.strip()!r}")
+assert "dXNlcjpwYXNzd29yZA==" not in r.stdout and '"Authorization": "[REDACTED]"' in r.stdout
+
+# 6b. Symlink record_path in atomic_append preserves symlink and updates canonical target
+real_rec = work / "real-rec.md"
+real_rec.write_text("RUN-RECORD-VERSION: 1\n")
+link_rec = work / "link-rec.md"
+link_rec.symlink_to(real_rec)
+r = subprocess.run([sys.executable, rr, "append", str(link_rec), "--kind", "parent-note", "--id", "PN-SYM", "--text", "via-link"], text=True, capture_output=True)
+print(f"cr6b_symlink_rc={r.returncode} still_symlink={link_rec.is_symlink()} target_has_event={'PN-SYM' in real_rec.read_text()}")
+assert r.returncode == 0 and link_rec.is_symlink() and "PN-SYM" in real_rec.read_text()
+
+# 6c-6e. Disposable clone for duplicate LANDING_CLONE, showUntrackedFiles=no, and gitignored dest
+repo = work / "cr_repo"
+prim = work / "cr_prim"
+prim.mkdir()
+subprocess.run(["git", "init", "-b", "development", str(repo)], check=True, capture_output=True)
+git(repo, "config", "user.email", "t@example.com")
+git(repo, "config", "user.name", "Test")
+(repo / ".gitignore").write_text("ignored.md\n")
+(repo / "README.md").write_text("seed\n")
+git(repo, "add", ".gitignore", "README.md")
+git(repo, "commit", "-m", "init")
+
+# 6c. Duplicate LANDING_CLONE header rejected before checkout
+dup_lc = work / "dup-lc.md"
+dup_lc.write_text(f"RUN-RECORD-VERSION: 1\nLANDING_CLONE: {prim}\nLANDING_CLONE: {repo}\n")
+r = subprocess.run([sys.executable, rr, "checkpoint", "--record", str(dup_lc), "--clone", str(repo), "--primary", str(prim), "--branch", "docs/cr-test", "--dest", "docs/rec.md"], text=True, capture_output=True)
+print(f"cr6c_dup_lc_rc={r.returncode} stderr={r.stderr.strip()}")
+assert r.returncode == 1 and "invalid LANDING_CLONE" in r.stderr
+
+# 6d. Untracked file refused even when status.showUntrackedFiles=no
+ok_rec = work / "ok-rec.md"
+ok_rec.write_text("RUN-RECORD-VERSION: 1\n")
+git(repo, "config", "status.showUntrackedFiles", "no")
+(repo / "untracked.md").write_text("keep-me\n")
+r = subprocess.run([sys.executable, rr, "checkpoint", "--record", str(ok_rec), "--clone", str(repo), "--primary", str(prim), "--branch", "docs/cr-test", "--dest", "untracked.md"], text=True, capture_output=True)
+print(f"cr6d_untracked_rc={r.returncode} preserved={(repo / 'untracked.md').read_text().strip()!r} stderr={r.stderr.strip()}")
+assert r.returncode == 1 and (repo / "untracked.md").read_text() == "keep-me\n"
+(repo / "untracked.md").unlink()
+git(repo, "config", "--unset", "status.showUntrackedFiles")
+
+# 6e. Gitignored untracked dest refused before writing; local content preserved
+(repo / "ignored.md").write_text("LOCAL-UNTRACKED-IGNORED\n")
+r = subprocess.run([sys.executable, rr, "checkpoint", "--record", str(ok_rec), "--clone", str(repo), "--primary", str(prim), "--branch", "docs/cr-test", "--dest", "ignored.md"], text=True, capture_output=True)
+print(f"cr6e_ignored_rc={r.returncode} preserved={(repo / 'ignored.md').read_text().strip()!r} branch={git(repo, 'rev-parse', '--abbrev-ref', 'HEAD')} stderr={r.stderr.strip()}")
+assert r.returncode == 1 and (repo / "ignored.md").read_text() == "LOCAL-UNTRACKED-IGNORED\n" and git(repo, "rev-parse", "--abbrev-ref", "HEAD") == "development"
 PYEOF
 echo "=== ALL MANUAL CHECKS PASSED ==="
 ```

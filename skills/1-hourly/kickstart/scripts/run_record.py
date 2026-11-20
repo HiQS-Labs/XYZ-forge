@@ -80,6 +80,7 @@ SECRET_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bsk-[A-Za-z0-9_-]{16,}\b"), "[REDACTED]"),
     (re.compile(r"(\bAuthorization:\s*Bearer\s+)[^\r\n]+", re.I), r"\1[REDACTED]"),
     (re.compile(r"(\bAuthorization:[ \t]*)(?![ \t]*Bearer[ \t]+\[REDACTED\])[^\r\n]+", re.I), r"\1[REDACTED]"),
+    (re.compile(r"([\"\']Authorization[\"\']\s*:\s*[\"\'])[^\"\'\r\n]+([\"\'])", re.I), r"\1[REDACTED]\2"),
     (re.compile(r"(\bBearer\s+)[A-Za-z0-9._~+/=-]{8,}", re.I), r"\1[REDACTED]"),
 ]
 STRAY_TAG_RE = re.compile(r"</?(?:content|invoke(?:\s+[^>]*)?|parameter(?:\s+[^>]*)?)>", re.I)
@@ -367,6 +368,9 @@ def atomic_append(record_path: Path, line: str, *, require_landing_clone: bool =
     if not EVENT_PREFIX_RE.match(line_stripped):
         raise ValueError(f"line does not match a v1 event prefix: {line_stripped!r}")
 
+    record_path = record_path.resolve()
+    if not record_path.is_file():
+        raise FileNotFoundError(f"run record does not exist: {record_path}")
     lock_path = Path(f"{record_path}.lock")
     lock_fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o600)
     try:
@@ -527,6 +531,9 @@ def checkpoint_record(
 
     raw_record = record_path.read_text(encoding="utf-8")
     parsed = parse_record(raw_record)
+    lc_errors = [err for err in parsed["errors"] if "LANDING_CLONE" in err]
+    if lc_errors:
+        raise ValueError(f"refusing checkpoint: invalid LANDING_CLONE header: {'; '.join(lc_errors)}")
     if parsed["landing_clone"]:
         lc_resolved = Path(os.path.expanduser(parsed["landing_clone"])).resolve()
         if clone_root == lc_resolved:
@@ -534,7 +541,7 @@ def checkpoint_record(
 
     redacted = redact_text(raw_record)
 
-    status = _git(clone_root, "status", "--porcelain")
+    status = _git(clone_root, "status", "--porcelain", "--untracked-files=all")
     if status.stdout.strip():
         raise ValueError("refusing checkpoint: --clone has staged, unstaged, or untracked changes")
 
@@ -556,6 +563,11 @@ def checkpoint_record(
 
     try:
         dest_abs = _check_fs_confinement(clone_root, dest)
+        tracked = _git(clone_root, "ls-files", "--error-unmatch", "--", dest.as_posix(), check=False).returncode == 0
+        if not tracked:
+            ignored = _git(clone_root, "check-ignore", "-q", "--", dest.as_posix(), check=False).returncode == 0
+            if ignored:
+                raise ValueError(f"refusing checkpoint: destination is gitignored and untracked: {dest.as_posix()}")
     except Exception:
         if orig_ref != branch:
             _git(clone_root, "checkout", orig_ref, check=False)
