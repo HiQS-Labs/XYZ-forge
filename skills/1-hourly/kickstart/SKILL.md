@@ -100,8 +100,10 @@ session and the single delegated outer-loop child session. There are never compe
    through the host's native background execution mechanism and wait via native completion
    notification (no polling loops, no `sleep`, no custom guard or runner wrapper). Foreground
    execution of these operations is forbidden; if the host lacks native background execution and
-   completion notification, halt under Transition 3 (Shared Unsafe Stop) rather than falling back
-   to foreground execution. Qualification boundaries: controlled/disposable-clone checks verify
+   completion notification that survives >10 minutes (for example, hosts whose background command
+   tool enforces a hard 600s wall-clock kill), halt under Transition 3 (Shared Unsafe Stop) rather
+   than falling back to foreground execution or mislabeling a fixed-time timer as a completion
+   notification. Qualification boundaries: controlled/disposable-clone checks verify
    foreground-timeout kill versus host-native background completion without manufacturing
    production incidents (U8), while full run-2 acceptance additionally requires at least one real
    run-2 operation exceeding 10 minutes completing in the background with its result consumed

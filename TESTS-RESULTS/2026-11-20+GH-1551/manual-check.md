@@ -1,31 +1,23 @@
 # Manual Check — GH-1551 (KS-07: Long Operations Background-Only)
 
-- **Issue:** #1551 (parent arc #1541, milestone KS-07)
-- **Scope:** `skills/1-hourly/kickstart/SKILL.md` (rule 5: Long Operations Background-Only Execution)
-- **Workload Classification:** **Synthetic mechanism check** (605-second sleep workload; zero repo, git, or GitHub mutations). Explicitly distinct from a production `merge-cleanup --execute` landing entry point. **U7 remains uncredited until Run 2.**
-- **CI Route:** `route=docs`, `tier=1`, `full_required=false` (`outputs/ci-route.txt`)
+- **Issue:** #1551 (KS-07 from #1541)
+- **Date:** 2026-11-20
+- **Branch:** `feat/XYZ-forge-gh1551-ks07-bg-long-ops-2026-11-20`
+- **Route:** `docs` (touches `skills/1-hourly/kickstart/SKILL.md` only)
+- **Workload Classification:** Synthetic 605s/3s probes (U8). Real >10-minute production/run-2 landing or gate completion consumed exactly once (U7) remains **explicitly uncredited until run 2**.
 
-## Exact Outer Launch & Native Completion Notification Receipts
+## 1. Host-Native Background Capability Probe (`outputs/native-bg-host-capability-probe.json`)
+- **Sub-600s native completion (`task-1290`):** Launched `run_command(WaitMsBeforeAsync=500)` sleeping 3s (`pid=35815`, `10:28:00Z`). Host delivered a real completion-triggered `SYSTEM_MESSAGE` at `10:28:03Z` with `exit_code=0` and `KS07_NATIVE_BG_3S_DONE`.
+- **Over-600s native probe (`task-1226`):** Launched `run_command(WaitMsBeforeAsync=500)` sleeping 605s (`pid=11951`, `10:14:57Z`). Host killed the command at exactly 600s (`10:24:57Z`) with verbatim error:
+  `Command timed out, needed to complete in 600s. This timeout applies to all commands.`
+- **Honest Host-Limitation & Transition 3 Finding:** This host (Antigravity ACP) supports native completion-triggered background commands for `<600s`, but enforces a hard 600s wall-clock cap on all `run_command` invocations. Therefore, this host **cannot** natively prove >600s completion-triggered background execution; it triggers the KS-07 **Transition 3** unsupported-host boundary for >600s operations.
 
-1. **Outer Detached Launch (`outputs/launch-event.json` + `outputs/outer-launch.py`):**
-   - Outer launch invoked via `run_command` calling `subprocess.Popen([sys.executable, '/tmp/ks07-outer-probe/outer-launch.py'], start_new_session=True, stdin=subprocess.DEVNULL)` at `2026-11-20T09:53:47Z`, spawning detached outer launcher PID `37102`.
-   - Inside `outputs/outer-launch.py`, the **Green arm** launches the 605s workload in a new OS session (`start_new_session=True`, `stdin=DEVNULL`, `child_pid=37143`, `child_pgid=37143`, `child_sid=37143`, `detached_new_session=true`) and reaps its real kernel exit status via `os.waitpid(child_pid, 0)` (`waitpid_raw_status=0`, `os.WIFEXITED=true`, `os.WEXITSTATUS=0`), writing `outputs/outer-receipt.json` and `outputs/outer.rc` (`0`).
-   - In parallel, the **Red arm** runs the identical 605s workload under a 600s foreground timeout (`subprocess.run(..., timeout=600)`), which is killed at `600.01s` (`TimeoutExpired after 600s`) at `2026-11-20T10:03:47Z` before completion.
-2. **Host-Native Completion Notification (`outputs/native-launch-and-wakeup-receipt.json`):**
-   - Armed Antigravity host-native `schedule(DurationSeconds=620, TimerCondition="never")` (`task-1113`, scheduled `2026-11-20T09:55:09.114516Z`) so the session waited asynchronously without polling.
-   - Host delivered verbatim completion wakeup message at `2026-11-20T10:05:29Z`:
-     `[Message] timestamp=2026-11-20T10:05:29Z sender=c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1113 priority=MESSAGE_PRIORITY_HIGH content=KS-07 detached 605s outer probe (pid 37102) has reached 620s — collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3`
-   - On wakeup, the session read `outputs/outer-receipt.json` confirming green arm finished cleanly at `2026-11-20T10:03:52Z` (`elapsed_s=605.04`, `os_exit_code=0`, stdout `START pid=37143 pgid=37143 sid=37143\nDONE_605S`).
+## 2. Paired Detached-OS Survival vs 600s Timeout Control (`outputs/outer-launch.py`, `outputs/launch-event.json`, `outputs/outer-receipt.json`, `outputs/outer.rc`)
+- **Red arm:** `subprocess.run(..., timeout=600)` killed at `600.01s` (`TimeoutExpired`).
+- **Green arm (detached OS survival only):** `subprocess.Popen(..., start_new_session=True)` survived `605.04s` (`pid=37143`, `pgid=37143`, `sid=37143`, kernel `os.waitpid` `waitpid_raw_status=0`, `os_exit_code=0`).
+- **Timer caveat (`outputs/native-launch-and-wakeup-receipt.json`):** `schedule(DurationSeconds=620, TimerCondition="never")` (`task-1113`) is explicitly documented as a **fixed-time reminder**, NOT a completion-triggered notification.
 
-## Paired Red/Green Summary
-
-| Arm | Mechanism | Started UTC | Ended UTC | Elapsed | Result |
-|---|---|---|---|---|---|
-| **Red (foreground 600s cap)** | `subprocess.run(..., timeout=600)` on 605s workload | `2026-11-20T09:53:47Z` | `2026-11-20T10:03:47Z` | `600.01s` | **KILLED** (`TimeoutExpired` before completion) |
-| **Green (detached + OS `waitpid` + host-native `schedule` wakeup)** | `start_new_session=True` (`pid=37143`, `pgid=37143`, `sid=37143`) + `os.waitpid` + native `schedule` `task-1113` wakeup | `2026-11-20T09:53:47Z` | `2026-11-20T10:03:52Z` (wakeup `10:05:29Z`) | `605.04s` | **PASS** (`waitpid_raw_status=0`, `os_exit_code=0`, `DONE_605S`) |
-
-## Governance & Gate Checks
-- `utils/ci-route.sh pull_request` (`outputs/ci-route.txt`): `route=docs`, `tier=1`, `full_required=false`.
-- `env -u PDDA_LLM_BIN bash ./utils/pdda/pdda.sh run` (`outputs/pdda-run.log`): `0` errors.
-- `outputs/skill-diff.patch`: exact 11-line diff to `skills/1-hourly/kickstart/SKILL.md`.
-- `provenance.jsonl`: SHA-256 and byte counts for all retained artifacts under `TESTS-RESULTS/2026-11-20+GH-1551/`.
+## 3. Governance & Evidence Integrity
+- `outputs/ks07-skill.patch`: full `origin/development..HEAD` diff of `skills/1-hourly/kickstart/SKILL.md`.
+- `outputs/pdda-run.log`: `./utils/pdda/pdda.sh run` — 0 errors.
+- `provenance.jsonl`: exact SHA-256 and byte-size ledger verified for every artifact.
