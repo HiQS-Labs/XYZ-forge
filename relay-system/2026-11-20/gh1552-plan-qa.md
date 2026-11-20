@@ -54,3 +54,12 @@ Verdict: **Ship the plan.** Both Round 1 blockers are resolved in the seeded pla
 Verification limits: planned disposable-clone controls and PDDA execution remain **[Unverified — needs clone run]**. No phase gate is configured in this thread; none was run, and this approval assumes no later automatic gate. Final QA must inspect the retained, nonempty evidence and provenance.
 
 Graph limitation: fully paginated list_projects has no index for this worktree. The nearest Forge project is another checkout at generation 2026-11-18T19:39:07Z; check_index_coverage reports no recorded gaps for the two Python paths, which is not completeness proof. Current local source reads above govern this review.
+
+### Attestation · relay-drive — 2026-11-20T09:10:45Z
+task: RELAY-PLAN-QA
+reviewer: codex
+status: Approved
+reviewed-head: c0a73685d33fbc650b749918c5705df1249dda5b
+added-range: 5266+2331
+added-sha256: 34c8cb6cc6d91ef830c1e71f0c0515bc535cfd09221b343a81b840fb8d95fdce
+gate-run: undeclared
