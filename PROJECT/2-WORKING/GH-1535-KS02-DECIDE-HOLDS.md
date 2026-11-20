@@ -15,7 +15,7 @@ roadmap_id: rmi-01M7VZEFJCGEV7EC8NKCJH5FEK
 
 | What was just completed | What's next |
 |---|---|
-| Created fresh full clone off `origin/development`, installed hooks, admitted `rmi-01M7VZEFJCGEV7EC8NKCJH5FEK`, addressed Codex Round 1 finding (preserving backtick-formatted `#N` references in prose holds + adding absent-reference, formatted-prose, and independent-hold non-override controls) | Obtain Codex Plan QA Round 2 approval, merge latest `origin/development`, implement KS-02 in `build_queue.py` + `kickstart/SKILL.md`, run paired manual checks, Final QA, PR, and land |
+| Codex Plan QA Round 2 approved (`44f9f960`), marked `rmi-01M7VZEFJCGEV7EC8NKCJH5FEK` accepted-start, implemented KS-02 (`operator_decision`, `issue_hold_reason`, `_sanitize_body`, `DECIDED`/`CLOSE` buckets, `gh issue list ... comments`, SKILL.md mirror, CHANGELOG.md) with `mypy` green | Run recorded paired manual check + PDDA gate (`TESTS-RESULTS/2026-11-20+GH-1535/`), complete Codex Final QA, open PR and land |
 
 ## Goal & Scope (refs #1535, #1541 v5 KS-02 + U15 + KS-11c)
 Fix two queueing defects in `skills/1-hourly/kickstart/scripts/build_queue.py` and mirror the updated closed rule list in `skills/1-hourly/kickstart/SKILL.md`:
