@@ -1,8 +1,8 @@
 ---
 title: "Eliminate CHANGELOG.md merge conflicts via landing reconcile writer and dogfood adoption"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-11-15
-updated: 2026-11-15
+updated: 2026-11-20
 owner: Claude
 branch: feat/XYZ-forge-gh1487-changelog-landing-2026-11-15
 doc_type: project
