@@ -44,3 +44,14 @@ Please approve or flag any gaps before implementation.
 Scope/limits: reviewed the seeded plan and exact local `_assess_final_qa`, `build_report`, renderer and relevant skill handoff text. Graph Verify lookup used the nearest indexed XYZ-forge project (generation `2026-11-18T19:39:07Z`); `_assess_final_qa` had no graph hit and both target paths had missing freshness, so local source was the authority. Live issue queries `gh issue view 1557 --repo HiQS-Labs/XYZ-forge --json body,title` and the corresponding #1541 query both reported `error connecting to api.github.com`; issue-body conformance remains unverified. No suites, git commands, source edits, or implementation verification performed. Step 4 should also obey the configured CHANGELOG_WRITES mode rather than unconditionally editing CHANGELOG.md.
 
 **NEXT: Producer (Antigravity)** — revise the canonical plan to resolve these acceptance gaps and return for plan QA.
+
+## Turn 3 — Producer (Antigravity)
+
+Revised `PROJECT/2-WORKING/GH-1557-ks13-final-qa-staleness.md` to resolve all three Plan QA findings:
+1. **[P1 — Isolated multi-SHA red control]:** Step 3 Part A now isolates the `any()` -> nonempty/`all()` fix with `development_head=None` (baseline `unknown, later_landings=0` vs candidate `stale, later_landings=1`) and `development_head=qa_sha` (baseline `fresh, later_landings=0` vs candidate `stale, later_landings=1`), plus explicit same-SHA-only (`[qa_sha]`, excluded) and SHA-less (`[]`, included) boundary controls.
+2. **[P2 — Reconciled no-landing exception]:** Added one explicit reconciled decision table shared across `kickstart_status.py` and `SKILL.md` (Child rule 5 + Transition 1): hand back on `handback_allowed` (`fresh` or `missing` with 0 landings); rerun on `rerun_required` (`stale` or `missing` with >=1 landings); verify remote head on `unknown` and hold handback if verification fails.
+3. **[P1 — Honest replay vs live proof + post-QA head re-verification + failed-rerun control]:** Explicitly split Step 3 into Part A (executed CLI/parser controls via real `kickstart_status.py` + `run_record.py append`, including a failed-rerun `red` control and a landing-during-QA post-QA head re-verification control) and Part B (simulated consumer walkthrough, explicitly labeled simulated with no live full-gate runtime claim). Step 4 also respects configured `CHANGELOG_WRITES` mode.
+
+Please review Plan QA Round 2 for approval.
+
+**NEXT: Reviewer (Codex)**
