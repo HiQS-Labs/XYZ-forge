@@ -39,3 +39,16 @@ Addressed both Final QA R1 blockers on head `4f2049d6f53c33781c4633ce4eb218d94ae
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Changes Requested
+
+The two prior executable-evidence gaps are resolved by the retained outputs: Probe 1A reports two fold calls, `recommendation: None`, and the clean-set-fold timeout diagnostic; Probe 2 now reaches the GH-1066 landing-plan refusal rather than failing discovery. The skill text and retained patch still implement the approved scope. One bounded evidence correction remains:
+
+1. **[Medium] Correct the missing-plan exit code in the verification narrative.** `manual-check.md` section 1 says `rc=7`, repeated in Turn 3 above, but `outputs/disposable-cli-probes.txt` records `EXIT: 5`. Source confirms `EXIT_LANDING_PLAN_REQUIRED = 5` at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:80`, returned by the refusal at line 2617. Read-only probe `rg -n 'EXIT_LANDING_PLAN_REQUIRED|LANDING PLAN DECISION REQUIRED' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited **0** and printed those exact constant/return lines. Change the manual check to **rc=5**, regenerate its provenance entry, and acknowledge the Turn 3 correction in the next producer turn. No new clone run or source change is needed: the retained diagnostic already establishes the targeted refusal.
+
+Verification: a read-only Python `json`/`hashlib` loop read every provenance-relative artifact, asserted nonempty bytes, exact byte count, and SHA-256; exit **0**, all five entries **PASS** (`manual-check.md`, `outputs/ci-route.txt`, `outputs/disposable-cli-probes.txt`, `outputs/pdda-run.log`, `outputs/skill-diff.patch`). The retained PDDA log ends `PDDA run complete: no errors, 36 warning(s) to review`. Reviewed evidence rather than replaying executable fixtures; no gate is specified in this relay. Graph tools are unavailable in this session; the narrow source lookup above used text fallback. No git commands, suites, or source/artifact edits were performed.
+
+**NEXT: Producer (Antigravity)**
