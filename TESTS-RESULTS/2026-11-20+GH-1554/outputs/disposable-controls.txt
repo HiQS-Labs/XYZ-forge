@@ -64,55 +64,77 @@ BATCH_VERDICT={
 }
 
 === CONTROL_3_ACTIVE_HOSTED_RUN_TRANSITIONS ===
-run_local_wave_reconcile(9901, landing_pinned) with child_rc=8 -> False (wrapper exits 2)
-run_local_wave_reconcile(9901, landing_pinned) with child_rc=0 -> True (reconcile completes)
-state_active={"action": "PRESERVE_AND_WAIT_HOSTED_RUN", "force_local_reconcile": false, "re_merge": false}
-state_cleared_within_deadline={"action": "run --reconcile-pr <N> --execute", "force_local_reconcile": false, "re_merge": false}
-state_deadline_expired={"action": "HOLD_AND_HAND_BACK", "force_local_reconcile": false, "re_merge": false}
-state_exit2_not_merged={"action": "INSPECT_PREFLIGHT_OR_PIN_FAILURE_DO_NOT_ASSUME_MERGED", "force_local_reconcile": false, "re_merge": false}
+MOCKING_BOUNDARY:
+  - Disposable full clone created at /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned (origin unchanged).
+  - Disposable clone's `utils/py/wave_reconcile.py` stubbed (committed inside disposable clone only) to exit 8 (active hosted CI run) then 0 (cleared) while logging every invocation to `wave_reconcile_calls.log`.
+  - Stub `gh` on PATH returns PR #9901 state=MERGED (no live GitHub mutation).
+  - Isolated `HOME` at /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/fake_home.
 
-=== CONTROL_BUCKET_C_BUILD_QUEUE_REFRESH (rc=0) ===
-<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+--- PART A: EXECUTED CLI & WRAPPER CHECKS (REAL merge_cleanup.py) ---
+CMD_ACTIVE_EXIT_8: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --reconcile-pr 9901 --execute
+CLI_ACTIVE_RC=2 (expected 2 when child wave_reconcile.py exits 8)
+CLI_ACTIVE_STDOUT:
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
 
-## Authority granted (one grant, covers the whole run)
-- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
-  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
-  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
-  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
-  reviews immediately before the merge. Record the timeout path as "advisory not received;
-  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
-  until it is fixed or answered.
-- Close issues whose acceptance criteria are verified on development, with a comment that cites
-  the commit.
-- Post status comments on PRs and issues.
-- Decision defaults (KS-11, fail-closed):
-  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
-    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
-    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
-    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
-    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
-    what the reviewer stated.
-  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
-    recorded batch.
-  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
-    and not superseded.
-- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
-  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
-  infer quota from a round cap or generic failure.
-- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
-  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
-  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
-- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
-  ledger rewrites outside the reconcile, anything owned by another session.
-- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
 
-## Queue (execution order)
-1. Mergeability UNKNOWN or behind: #1554 KS-09 landing path. Refresh their state, then land them as one merge-cleanup batch from the pinned LANDING_CLONE (--primary "$LANDING_CLONE"; the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.
-2. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+Primary checkout: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
 
-## Needs the operator (the run parks these and keeps going)
-- (none)
+merge-cleanup: Running post-merge reconciliation for PR #9901 in /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+CLI_ACTIVE_STDERR:
+merge-cleanup: ERROR — wave_reconcile FAILED for PR #9901 (exit 8): wave-reconcile: REFUSING — active hosted CI run in progress on development (exit 8)
+DIRECT_run_local_wave_reconcile_CHILD_8=False (expected False)
 
-## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
-- (none)
+CMD_CLEARED_EXIT_0: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --reconcile-pr 9901 --execute
+CLI_CLEARED_RC=0 (expected 0 when child wave_reconcile.py exits 0)
+CLI_CLEARED_STDOUT:
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
 
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #9901 in /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned...
+merge-cleanup: ✅ local wave_reconcile for PR #9901 passed
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: PR #9901: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #9901 committed; primary is clean at origin/development
+CLI_CLEARED_STDERR:
+
+DIRECT_run_local_wave_reconcile_CHILD_0=True (expected True)
+
+OBSERVED_WAVE_RECONCILE_INVOCATIONS:
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+CALL: --root /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmp0x6foy8p/landing_pinned --pr 9901
+
+--- PART B: CONTROLLED DOCUMENTATION-PROTOCOL WALKTHROUGH (SKILL.md RULES) ---
+NOTE: Part B is a deterministic protocol walkthrough verifying SKILL.md's decision table and checkpoint transition (explicitly distinct from the executed CLI runs in Part A).
+CHECKPOINT_BEFORE:
+# Simulated Run Record
+
+## Progress log
+TRANSITION_NON_MERGED_EXIT_2={"branch": "non_merged_exit_2", "action": "inspect_preflight_or_pin_error", "enter_reconcile_wait": false, "re_merge": false}
+TRANSITION_CLEARED_WITHIN_DEADLINE={"branch": "cleared_within_15m_deadline", "action": "run_reconcile_pr_once", "reconcile_cmd": "--reconcile-pr 9901 --execute", "force_local_reconcile": false, "re_merge": false}
+TRANSITION_DEADLINE_EXPIRED={"branch": "deadline_expired_15m", "action": "HOLD_AND_HAND_BACK", "force_local_reconcile": false, "re_merge": false}
+CHECKPOINT_AFTER:
+# Simulated Run Record
+
+## Progress log
+- HOLD PR #9901: MERGED but active hosted run did not clear within 15m deadline; preserving LANDING_CLONE and handing back (no --force-local-reconcile, no re-merge)
