@@ -60,3 +60,8 @@ Manual red control and existing focused suites: `TESTS-RESULTS/2026-11-14+GH-146
 - In a marathon the focused gate now runs up to three times (reviewer, driver, pre-advance gate).
 - The 900-second timeout path (exit 124) was not exercised; the driver-run gate uses wall-clock
   and group-RSS caps (no `ulimit -t` CPU cap, which stays on `run_pre_advance_gate`).
+
+## Rating
+- 2026-11-20: rated 55/60/50/55 (pri/sev/appeal/effort), recorded on the ledger row via `roadmap pickup`.
+- Severity 60: a relay reviewer approved over open findings with no run, a false pass of the QA gate; recoverable, reach is relay users. Priority 55 is severity-led.
+- Appeal 50 is neutral; effort 55 is moderate (one driver function, one shared helper, one protocol rule plus mirrors).
