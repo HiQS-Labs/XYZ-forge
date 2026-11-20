@@ -299,7 +299,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1071 Low: deferred documentation and historical-provenance follow-ups from GH1063 — `needs-doc`
 - #1070 cleanup QA: trace unexplained ignored-query replay and preserve receipt attribution — `needs-doc`
 - #1063 Merge batch 2026-10-15 — XYZ Forge 1054 → 1065 → 1058 → 1061 → 1067 — `needs-doc`
-- #1049 dependency.drift fires "(0 lines)" on every turn when RTL_ROOT is a target repo without the harness surfaces: failed rev-parse echoes its argument and the echoed strings compare as SHAs — `needs-doc`
 - #1048 Weekly Plan Outline — 2026-10-13 — `needs-doc`
 - #1041 Rename review-code to review-xyz and existing review-xyz to review-models — `needs-doc`
 - #1040 Muse follow-ups from #1038 review: log --approval-mode in telemetry; check consult/eval muse exec callers — `needs-doc`
@@ -348,6 +347,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #805 Audit: how many tests do we need? Evidence-based consolidation and enforced test admission — `needs-doc`
 - #802 Retrospective: CI versus actual harness file repo issue coverage — `needs-doc`
 - #792 gen4_campaign.make_sandbox deletes the existing clone before checking it is disjoint from the source repo — `needs-doc`
+- #786 merge-cleanup: file one GH issue per PR merge batch (feeds rebalanceOS sync, Focus 5, Flightdeck) — `needs-doc`
 
 ## How to fire a lane
 
