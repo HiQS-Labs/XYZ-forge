@@ -1,0 +1,15 @@
+swarm-preflight · project-doc · slug=variant-missing
+  target-root : /private/tmp/gh1479-ab.7EtceF/target (ab-work @ 4635abe09)
+  branch      : suggested=marathon/variant-missing-2026-11-14 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=0
+  ref-probed  : development @ 4635abe09 (checkout matches)
+  candidate   : ready
+  inlined-acc : 0 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1479 (https://github.com/HiQS-Labs/XYZ-forge/issues/1479)
+  acceptance  : match — 0/0 criteria copied verbatim from issue #1479
+  issue-state : OPEN — issue #1479 is OPEN
+  readiness   : ready=0 — next: artifact path not found at target.ref: utils/py/does_not_exist_gh1479.py — fix the contract artifacts[] or push the file
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : NOT-READY (exit 5)
+
+No packet written — candidate is not preflight-ready (NOT-READY).

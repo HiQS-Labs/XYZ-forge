@@ -14,6 +14,8 @@
 #       and the candidate check refuses the drifted HEAD
 #   C   a file that is already terminal at startup is refused `unattested-terminal` — RED at base
 #   D1  STATUS-only change by the reviewer → empty-approval;  D3 rewritten body → review-body-rewritten
+#   D4  Approved over the reviewer's own VERDICT: FAIL → approved-over-fail;  D5 VERDICT: PASS still attests
+#   D6  `**STATUS:** Approved` is read as Approved by the driver, the attestation and the Bash reader
 #   E2  no --reviewer → exit 2 before any tick mutation;  E3 builder == reviewer → exit 2
 #   K   reviewer leaves the token claimed → close-mismatch, no record
 #   L   the reader refuses a changed reviewer / STATUS / review text / truncated record
@@ -89,6 +91,12 @@ case "\$mode" in
   citeafter)
     printf '\n### Round 1 · Reviewer · %s\nsee \`src.txt\`\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
     perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  approvefail|passapprove|boldapprove)
+    v=PASS; [ "\$mode" = approvefail ] && v=FAIL
+    printf '\n### Round 1 · Reviewer · %s\nVERDICT: %s\nBasis: \`src.txt:1\`\n' "\$RELAY_AGENT" "\$v" >>"\$f"
+    if [ "\$mode" = boldapprove ]; then perl -pi -e 's/^STATUS:.*/**STATUS:** Approved/' "\$f"
+    else perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"; fi
     "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
   parentcommit|approve|failafter)
     printf '\n### Round 1 · Reviewer · %s\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
@@ -258,6 +266,32 @@ run_driver "$DRIVER" T-D3 rewrite --reviewer rev --builder bld; rc=$?
 [ "$rc" -eq 4 ] && [ "$(reason)" = review-body-rewritten ] && pass "D3: rewritten body → review-body-rewritten" || fail "D3: rc=$rc reason=$(reason)"
 [ ! -f "$(record_path T-D3)" ] && pass "D3: no record" || fail "D3: record written"
 
+# --- D4 / D5 / D6: the reviewer's own verdict line and the bold STATUS form ------------------------
+# D4 is red without the approved-over-fail refusal in judge_terminal (the base driver attests, exit 0).
+reset_repo; seed_to T-D4 rev
+run_driver "$DRIVER" T-D4 approvefail --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 4 ] && [ "$(reason)" = approved-over-fail ] && pass "D4: STATUS Approved over the reviewer's own VERDICT: FAIL → approved-over-fail (exit 4)" || fail "D4: rc=$rc reason=$(reason): $(tail -3 "$WORK/out-T-D4")"
+[ ! -f "$(record_path T-D4)" ] && pass "D4: no record" || fail "D4: record written for an approval over a failing verdict"
+# D5 is the control: the refusal must not fire on a passing verdict.
+reset_repo; seed_to T-D5 rev
+run_driver "$DRIVER" T-D5 passapprove --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 0 ] && [ -f "$(record_path T-D5)" ] && pass "D5: STATUS Approved with VERDICT: PASS is still attested (exit 0)" || fail "D5: rc=$rc reason=$(reason): $(tail -3 "$WORK/out-T-D5")"
+# D6 is red without the shared header rule (relay_attest.header_field): the base driver reads no
+# STATUS at all from `**STATUS:** Approved`, while the turn wrapper reads Approved and closes the token.
+reset_repo; seed_to T-D6 rev
+run_driver "$DRIVER" T-D6 boldapprove --reviewer rev --builder bld; rc=$?
+[ "$rc" -eq 0 ] && [ -f "$(record_path T-D6)" ] && pass "D6: bold **STATUS:** Approved is read as Approved and attested (exit 0)" || fail "D6: rc=$rc reason=$(reason): $(tail -3 "$WORK/out-T-D6")"
+grep -q '^\*\*STATUS:\*\* Approved' "$A/relay.md" && pass "D6: control — the fixture really carries the bold form" || fail "D6: control — STATUS line is: $(grep -n 'STATUS' "$A/relay.md" | head -2)"
+py_status="$(python3 - "$MAIN" "$A/relay.md" <<'PY'
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest
+print(relay_attest.file_status(sys.argv[2]))
+PY
+)"
+sed -n '/^status_for_relay() {/,/^}/p' "$MAIN/relay-automation/marathon-recover.sh" > "$A/status_for_relay.sh"
+sh_status="$(. "$A/status_for_relay.sh"; status_for_relay "$A/relay.md")"
+[ "$py_status" = Approved ] && [ "$sh_status" = Approved ] && pass "D6: the Python reader and the Bash reader (marathon-recover) both read Approved from the bold line" || fail "D6: python='$py_status' bash='$sh_status'"
+
 # --- E2 / E3 / S1: refusals before any tick mutation --------------------------------------------
 reset_repo
 seed_to T-E2 rev
@@ -297,7 +331,7 @@ tick_a done T-K2 --agent rev >/dev/null 2>&1 || true   # release the bare agent'
 # --- L: the reader refuses tampering ------------------------------------------------------------
 reset_repo; seed_to T-L rev
 run_driver "$DRIVER" T-L approve --reviewer rev --builder bld; rc=$?
-[ "$rc" -eq 0 ] && pass "L: fixture approval attested" || fail "L: fixture driver rc=$rc: $(grep -v 'GH-370 progress' "$WORK/out-T-L" | tail -6)"
+[ "$rc" -eq 0 ] && pass "L: fixture approval attested" || fail "L: fixture driver rc=$rc: $(grep -v 'GH-370 worktree state' "$WORK/out-T-L" | tail -6)"
 python3 - "$MAIN" "$A/relay.md" "$(record_path T-L)" <<'PY' && pass "L: reader refuses wrong reviewer / edited STATUS / edited review text / truncated record" || fail "L: reader accepted a tampered record"
 import sys, os, json, shutil
 sys.path.insert(0, os.path.join(sys.argv[1], "utils", "py")); import relay_attest

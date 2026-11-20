@@ -1,0 +1,31 @@
+  PASS: rtl_check: a scratch write is NOT a violation
+  PASS: rtl_check: the scratch dir is DISCARDED from ROOT (not committed, not lingering)
+  PASS: rtl_check: the legitimate lane edit is untouched
+  PASS: rtl_check: the collapsed '.relay-scratch/' status form is exempted and discarded too
+test-turn: OFF-ALLOWLIST change: stray.txt — reverting
+test-turn: pre-revert copy of stray.txt saved under <scratch>
+  PASS: CONTROL: a stray file OUTSIDE .relay-scratch still violates (exit-6 path intact)
+  PASS: CONTROL: the stray file is reverted as before
+test-turn: OFF-ALLOWLIST change: .relay-scratch2/out.json — reverting
+test-turn: pre-revert copy of .relay-scratch2/out.json saved under <scratch>
+  PASS: CONTROL: '.relay-scratch2' (lookalike prefix) is NOT exempt
+  PASS: rtl_worktree_begin: the scratch dir EXISTS in the worktree (affordance, not prose)
+  PASS: rtl_worktree_end: probe output in .relay-scratch is NOT off-lane
+  PASS: rtl_worktree_end: the lane edit still copies back
+  PASS: rtl_worktree_end: scratch is NEVER copied back to ROOT
+  PASS: CONTROL: a stray write in the worktree still goes off-lane
+  PASS: CONTROL: off-lane turns copy NOTHING back (lane edit withheld)
+  PASS: rtl_turn_prompt: the prompt TELLS the builder where scratch goes
+  PASS: rtl_turn_prompt: and says what happens to it (never copied back)
+  PASS: rtl_turn_prompt: the template renders EXACTLY once (no printf recycling)
+  PASS: rtl_turn_prompt: the scratch note appears exactly once
+  PASS: rtl_turn_prompt: the note lands in its own slot at the end of the template
+  PASS: INTEGRATION precondition: the ignore rule really hides scratch from porcelain
+test-turn: committed builder turn (file-scoped, no push)
+test-turn: dependency.drift — builder changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+test-turn: dependency.drift — builder changed src/project.js (0 lines); signalled for the next turn
+test-turn: dependency.drift — builder changed src/events.js (0 lines); signalled for the next turn
+  PASS: rtl_enforce: the turn PASSES with ignored scratch present (exit 0, not 6)
+  PASS: rtl_enforce: ignored scratch is STILL discarded (unconditional sweep)
+  PASS: rtl_enforce: the lane edit was committed file-scoped; nothing lingers but .tick/ (exempt coordination state)
+  gh91-relay-scratch: 22 pass, 0 fail

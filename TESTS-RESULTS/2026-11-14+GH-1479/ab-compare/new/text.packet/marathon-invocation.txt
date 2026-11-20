@@ -1,0 +1,8 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=preflight-main RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex --round-cap 1 \
+  --artifact utils/py/swarm_preflight.py,test/gh280-jog-marathon-adapter.sh,test/gh343-gate-program-target-root.sh,test/gh386-turn-budget-honesty.sh,test/gh399-packet-acceptance-continuation.sh,test/gh400-acceptance-fidelity.sh,test/gh400-source-url.sh,test/gh418-issue-state-frozen.sh,test/gh422-backfill-source-url.sh,test/gh425-source-url-slug.sh,test/gh557-unknown-blocks-manifest.sh,test/gh642-consumer-fruit.sh,test/test_python_layer.py,test/_setup.sh \
+  --target-root /private/tmp/gh1479-ab.7EtceF/target \
+  --pre-advance-cmd 'python3 -c "print('gate-ok')"' \
+  --require-clean

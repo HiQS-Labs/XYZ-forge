@@ -32,7 +32,7 @@ XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md
 3. Run `python3 utils/py/releases_app.py roadmap list` to find the active effort or parked intake. -> expect links outward to the canonical `PROJECT/**` docs; the roadmap is a pointer ledger, not a plan body. (`ROADMAP.md` is the frozen legacy file — do not read it for current state or edit it.)
 4. Read the linked `PROJECT/**` document that owns the work you are touching. -> expect the near-top `## Status` table to tell you what was just completed and what is next.
 5. If the task touches project docs, read `PROJECT/PDDA.md` and follow the PDDA contract. -> expect `PROJECT/2-WORKING` docs to have frontmatter, the exact status table, and QA gates when phased.
-6. Before reporting success on code or runtime work, check that the same `python3` used by the gate imports `requests`, `yaml` (PyYAML), and `pytest`, then run `./validate.sh`. -> expect the suite to stay green; do not claim completion if it fails or was skipped.
+6. Install the gate and scoped static-analysis toolchain with `python3 -m pip install -r requirements-dev.txt`. Before reporting success on code or runtime work, check that the same `python3` used by the gate imports `requests`, `yaml` (PyYAML), `pytest`, and `mypy`, then run `./validate.sh`. The existing Python layer invokes mypy with the repository's scoped `mypy.ini`. -> expect the suite to stay green; do not claim completion if it fails or was skipped.
 7. Before reporting success on doc-hygiene or roadmap work, run `utils/pdda/pdda.sh run` (or the relevant `utils/pdda/pdda.sh <check>` subcommand). -> expect deterministic findings first, then any LLM review.
 
 ## Canonical rules
@@ -53,7 +53,7 @@ XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md
 - **`GH-<n>` numbering spans two repos.** This repo succeeded [`Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm) and the migration did **not** renumber references, so a `GH-<n>` in a source comment, test name, or CHANGELOG entry may belong to either repo. Upstream ledger entries are preserved verbatim in [`docs/ROADMAP-UPSTREAM-ARCHIVE.md`](docs/ROADMAP-UPSTREAM-ARCHIVE.md), which states its own numbering caveat and is not parsed by anything. Where an upstream number is cited from code that ships here, mirror it as a closed `[upstream archive]` issue so the citation resolves locally (#407, #408 are the pattern) rather than editing the comment. Raised externally as GH-406 §3.1.
 - Do not override deterministic PDDA findings with prose.
 - Do not report a win you did not verify with the relevant script or test.
-- Update `CHANGELOG.md` at the end of each iteration; its governance lives in `PROJECT/PDDA.md` — do not re-specify CHANGELOG rules in `AGENTS.md` or elsewhere.
+- Under the default `CHANGELOG_WRITES=off` or `CHANGELOG_WRITES=landing`, PR branches do not write to `CHANGELOG.md` (it is skipped or synthesized at landing); under legacy `CHANGELOG_WRITES=branch`, update `CHANGELOG.md` at the end of each iteration. Its governance lives in `PROJECT/PDDA.md` — do not re-specify CHANGELOG rules in `AGENTS.md` or elsewhere.
 
 ## PDDA distribution
 

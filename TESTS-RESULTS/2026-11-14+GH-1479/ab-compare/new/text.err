@@ -1,0 +1,1 @@
+swarm-preflight: WARNING — /tmp/gh1479-ab.7EtceF/target/temp/gh1479/preflight-main.md has an Acceptance section with no '- [ ]' checklist items; the packet will inline 0 criteria and the builder gets no definition of done. Convert the criteria to a '- [ ]' checklist (or add one).

@@ -1,0 +1,16 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/publication --builder codex --reviewer agy --max-tasks 1 --supervise-until 1794890569
+rc=0
+jog: execution clone aligned at 398424792ba15831d50836f1cc2ee4ac82750dc2; other branches and untracked files retained
+
+============================================================
+jog: processing GH-903 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-903 (execution gh903-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY9JMZR6CRCAJ7C7HQW0J/gh903-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-903 published awaiting approval; continuing independent pending work.
+jog: reached max-tasks limit (1); pausing queue.
+jog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: GH-903 parked: awaiting-landing (PR #903: https://example.invalid/pr/903)
+jog: published primary checkpoint 20ba91e8fdd521e4f62fd54d4d5f06599d904193
+Switched to a new branch 'fixture-903-gh903-exec1'

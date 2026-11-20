@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/private/tmp/gh1476-real-preparation-trial/prepared-1171/branch-src/../manual_probe.py", line 20, in <module>
+    ns["preflight_setup_artifact_paths"]()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "relay-preflight-probe", line 492, in preflight_setup_artifact_paths
+  File "/private/tmp/gh1476-real-preparation-trial/prepared-1171/branch-src/../manual_probe.py", line 9, in die
+    def die(message): raise RuntimeError(message)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: artifact path not found in worktree: fix/gh1171-probe
+rc=1

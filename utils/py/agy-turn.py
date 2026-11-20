@@ -67,7 +67,7 @@ def _kill_turn_group(proc):
             continue
 
 def _probe_idle_blocker(proc, log_path):
-    """GH-114: name WHAT an idle turn was blocked on, BEFORE the kill destroys the evidence.
+    """GH-114: capture timeout observations BEFORE the kill destroys the evidence.
 
     The observed stall showed `bubbletea: could not open TTY` in the transcript while the
     watchdog reported only the generic "a lock, a prompt, or a hung network call". Probe in
@@ -75,10 +75,10 @@ def _probe_idle_blocker(proc, log_path):
 
       tty     — the transcript already contains agy's TTY error prefixes
       lock    — the process tree holds a .lock file open (git index, harness driver lock)
-      network — the process tree has TCP/UDP sockets open (model backend call hung)
+      network — the process tree has TCP/UDP sockets open (waiting is unproven)
       unknown — nothing probe-able; say so rather than guess
 
-    Returns (blocker, human_detail). Best-effort throughout: a probe failure degrades to
+    Returns (legacy_category, human_detail); categories do not establish a cause. Best-effort throughout: a probe failure degrades to
     "unknown" and can never fail the turn it is describing.
     """
     tail = ""
@@ -89,9 +89,8 @@ def _probe_idle_blocker(proc, log_path):
         pass
     if "could not open tty" in tail or "error opening tty" in tail or "open /dev/tty" in tail:
         return ("tty",
-                "the CLI's terminal UI reported it could not open /dev/tty — the headless turn had "
-                "no usable TTY (bubbletea blocking on terminal setup). If AGY_PTY=0 was set, remove "
-                "it; otherwise investigate why the pty allocation did not reach the child.")
+                "the transcript contains a TTY access error; this observation alone does not "
+                "establish the current timeout cause or whether the turn was still working.")
     open_files = ""
     try:
         open_files = subprocess.run(
@@ -101,15 +100,15 @@ def _probe_idle_blocker(proc, log_path):
         open_files = ""
     if ".lock" in open_files:
         return ("lock",
-                "the process tree held a .lock file open (e.g. a git index or harness driver lock) — "
-                "it was waiting on a lock held by someone else, not working.")
+                "the open-file listing contains .lock; this does not establish lock ownership, "
+                "contention, waiting, or inactivity.")
     if "tcp" in open_files or "udp" in open_files:
         return ("network",
-                "the process tree had open network sockets — it was waiting on a network call "
-                "(most likely the model backend), not working.")
+                "the open-file listing contains tcp or udp; this does not establish sockets, a stalled "
+                "request, waiting, or inactivity.")
     return ("unknown",
-            "no TTY error, no open lock, no open socket in the process tree — the blocker left no "
-            "probe-able trace; the transcript is the remaining evidence.")
+            "no matching TTY error or .lock/tcp/udp listing text was observed, or probing failed; "
+            "the timeout cause remains unknown.")
 
 def agy_auth_preflight(agy_bin):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
@@ -601,20 +600,19 @@ def main():
         _reason, _detail = diag.classify()
         if idle_blocker is not None:
             _blk, _blk_detail = idle_blocker
-            _blk_line = (f"agy-turn: idle-blocker attribution: blocker={_blk} — {_blk_detail}")
+            _blk_line = (f"agy-turn: timeout observation: category={_blk} — {_blk_detail}")
             print(_blk_line, file=sys.stderr)
             try:
                 with open(agy_log, "a") as log_f:
-                    log_f.write(f"\n[GH-114 idle-blocker] blocker={_blk} — {_blk_detail}\n")
+                    log_f.write(f"\n[GH-114 timeout observation] category={_blk} — {_blk_detail}\n")
             except OSError:
                 pass
         if idle_killed:
-            print(f"agy-turn: agy -p was IDLE for >={idle_cap}s (no CPU, no worktree progress) — "
+            print(f"agy-turn: agy -p reached the {idle_cap}s idle threshold without sampled activity resetting it — "
                   f"killed early at ~{int(time.monotonic() - started)}s of a {turn_timeout}s wall cap "
                   f"[{_reason}]", file=sys.stderr)
-            print("agy-turn: this is an EXTERNAL condition the harness detected and contained, not one "
-                  "it prevented — agy stopped making progress and the harness stopped waiting. "
-                  "Nothing here fixes agy; the observed 2026-08-10 hang recovered on its own.",
+            print("agy-turn: the idle threshold uses sampled CPU growth and file activity; "
+                  "it does not establish zero CPU use, lack of useful progress, or an external cause.",
                   file=sys.stderr)
         else:
             print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)

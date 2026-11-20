@@ -1,0 +1,1172 @@
+{
+ "complete": true,
+ "identity_start": [
+  "ef23e77b24e51add4be9476191257bcbc7d7c432",
+  "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "false",
+  "",
+  ""
+ ],
+ "identity_end": [
+  "ef23e77b24e51add4be9476191257bcbc7d7c432",
+  "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "false",
+  "",
+  ""
+ ],
+ "records": [
+  {
+   "id": "local-failure-continues",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWY952F8NJPCSEZC4WSJN6",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWY9BWA35PFJ8DQZDYPX8F",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWY9JMZR6CRCAJ7C7HQW0J",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWY9SAP83DF2JW3SR6J0HJ",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-901 failed task-locally (pre-advance-failed, gate exit 1; result: gh901-exec1/preflight/result.json); retained without retry; continuing independent pending work.\njog: execution clone aligned at fbab544f1a661f0ccf625deee210f9cb85fc1b12; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY9BWA35PFJ8DQZDYPX8F/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: reached max-tasks limit (2); pausing queue.\njog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\njog: published primary checkpoint 398424792ba15831d50836f1cc2ee4ac82750dc2\n",
+    "stderr": "Switched to a new branch 'fixture-901-gh901-exec1'\nSwitched to a new branch 'fixture-902-gh902-exec1'\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "budgets-held",
+   "pass": true,
+   "detail": {
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWY952F8NJPCSEZC4WSJN6",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWY9BWA35PFJ8DQZDYPX8F",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWY9JMZR6CRCAJ7C7HQW0J",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWY9SAP83DF2JW3SR6J0HJ",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    }
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "no-reentry-next-wake",
+   "pass": true,
+   "detail": {
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 1,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWY952F8NJPCSEZC4WSJN6",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWY9BWA35PFJ8DQZDYPX8F",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWY9JMZR6CRCAJ7C7HQW0J",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #903: https://example.invalid/pr/903)"
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWY9SAP83DF2JW3SR6J0HJ",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "-review/local/primary/.tick/jog/jog-01M7KWY9JMZR6CRCAJ7C7HQW0J/gh903-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-903 published awaiting approval; continuing independent pending work.\njog: reached max-tasks limit (1); pausing queue.\njog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local/primary/.tick/jog/jog-01M7KWY952F8NJPCSEZC4WSJN6/gh901-exec1/preflight/result.json]\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\njog: GH-903 parked: awaiting-landing (PR #903: https://example.invalid/pr/903)\njog: published primary checkpoint 20ba91e8fdd521e4f62fd54d4d5f06599d904193\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "dependent-not-dispatched",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 1,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWYGET8DDJ9V0QA1V1P8XT",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYGET8DDJ9V0QA1V1P8XT/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWYGNRKSE29XB6FKS6NC5N",
+      "status": "parked",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": "fixture: held before the wake"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWYGWNXNKHS8G2YNW8X614",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #903: https://example.invalid/pr/903)"
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWYH3E2PJ51QTW54TXNBVW",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "preflight-refused (exit 3): not-ready (exit 3) \u2014 next: dependency GH-901 not delivered"
+     }
+    },
+    "stdout": ": processing GH-904 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-904 (execution gh904-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYH3E2PJ51QTW54TXNBVW/gh904-exec1/preflight)\njog: GH-904 preflight refused: not-ready (exit 3) \u2014 next: dependency GH-901 not delivered\njog: advancing halted: GH-904 parked \u2014 preflight-refused (exit 3): not-ready (exit 3) \u2014 next: dependency GH-901 not delivered\njog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/held/primary/.tick/jog/jog-01M7KWYGET8DDJ9V0QA1V1P8XT/gh901-exec1/preflight/result.json]\njog: GH-902 parked: fixture: held before the wake\njog: GH-903 parked: awaiting-landing (PR #903: https://example.invalid/pr/903)\njog: GH-904 parked: preflight-refused (exit 3): not-ready (exit 3) \u2014 next: dependency GH-901 not delivered\njog: published primary checkpoint 8a20a00670fcef3ae5d549729070794d1e5bac65\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "restart-adopts-once",
+   "pass": true,
+   "detail": {
+    "killed_rc": -9,
+    "after_kill": {
+     "starts": {
+      "901": 1,
+      "902": 0,
+      "903": 0,
+      "904": 0
+     },
+     "row": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWYPB5XRFECXDCNRRJ5CFM",
+      "status": "running",
+      "attempt_count": 1,
+      "lease_pid": 23392,
+      "failure_reason": null
+     },
+     "journal_phase": "running"
+    },
+    "restart_rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWYPB5XRFECXDCNRRJ5CFM",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #901: https://example.invalid/pr/901)"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWYPJ5Q8AATCVDQSNETYZN",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWYPS4B3XJ9VZ69GERPFE6",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWYPZZRSV577CNTHCMBSHT",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "executions": [
+     {
+      "execution_id": "gh901-exec1",
+      "mode": "run",
+      "started_at": "2026-11-17T04:41:30Z",
+      "status": "projected-parked",
+      "packet_dir": "gh901-exec1/preflight",
+      "result_path": "gh901-exec1/preflight/result.json",
+      "committed_receipt": "TESTS-RESULTS/2026-11-16+GH-901/jog/gh901-exec1",
+      "published_head": "2ed4e9ccc521bb76e9b964ae9354e89badce0da2",
+      "projected_reason": "awaiting-landing (PR #901: https://example.invalid/pr/901)"
+     }
+    ],
+    "stdout": "sult re-projected (parked) \u2014 awaiting-landing (PR #901: https://example.invalid/pr/901)\njog: recovered GH-901 without a new builder or attempt\njog: published primary checkpoint 340c0dceb16c4521e58898cdf2b22dd0fcb26852\njog: execution clone aligned at 340c0dceb16c4521e58898cdf2b22dd0fcb26852; other branches and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-adopts-once/primary/.tick/jog/jog-01M7KWYPJ5Q8AATCVDQSNETYZN/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: reached max-tasks limit (1); pausing queue.\njog: GH-901 parked: awaiting-landing (PR #901: https://example.invalid/pr/901)\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\njog: published primary checkpoint 6da77f3f5cb3463d6fba24027eb581b66f92c665\n",
+    "stderr": "jog: reclaiming stale relay-driver.lock (holder pid 23392 not running).\nSwitched to a new branch 'fixture-902-gh902-exec1'\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "restart-missing-holds",
+   "pass": true,
+   "detail": {
+    "killed_rc": -9,
+    "after_kill": {
+     "starts": {
+      "901": 1,
+      "902": 0,
+      "903": 0,
+      "904": 0
+     },
+     "row": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWYXRKSRSE62KAJBBQ0WZ4",
+      "status": "running",
+      "attempt_count": 1,
+      "lease_pid": 24403,
+      "failure_reason": null
+     },
+     "journal_phase": "running"
+    },
+    "restart_rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWYXRKSRSE62KAJBBQ0WZ4",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json'"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWYXZG03P0S5JTZWWP1F10",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWYY6EPPK2W1HJQ50W29JF",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWYYDAMSNX32WFCGBD4KBF",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "executions": [
+     {
+      "execution_id": "gh901-exec1",
+      "mode": "run",
+      "started_at": "2026-11-17T04:41:37Z",
+      "status": "dispatched",
+      "packet_dir": "gh901-exec1/preflight",
+      "result_path": "gh901-exec1/preflight/result.json"
+     }
+    ],
+    "stdout": "======================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXZG03P0S5JTZWWP1F10/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: reached max-tasks limit (1); pausing queue.\njog: GH-901 parked: supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json'\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\njog: published primary checkpoint e3dcaaca45306e404bee4948bc92ccc4426a2287\n",
+    "stderr": "jog: reclaiming stale relay-driver.lock (holder pid 24403 not running).\nSwitched to a new branch 'fixture-902-gh902-exec1'\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "restart-corrupt-holds",
+   "pass": true,
+   "detail": {
+    "killed_rc": -9,
+    "after_kill": {
+     "starts": {
+      "901": 1,
+      "902": 0,
+      "903": 0,
+      "904": 0
+     },
+     "row": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZ4Q94DMC4QNY2DV5QFG4",
+      "status": "running",
+      "attempt_count": 1,
+      "lease_pid": 26377,
+      "failure_reason": null
+     },
+     "journal_phase": "running"
+    },
+    "restart_rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZ4Q94DMC4QNY2DV5QFG4",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "supervision held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary/.tick/jog/jog-01M7KWZ4Q94DMC4QNY2DV5QFG4/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZ4Y84D4A6E5G44SQB2W6",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZ5512S5WFCAQ4H24T4KW",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZ5BX180A2WDQ4VTHZZ65",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "executions": [
+     {
+      "execution_id": "gh901-exec1",
+      "mode": "run",
+      "started_at": "2026-11-17T04:41:45Z",
+      "status": "dispatched",
+      "packet_dir": "gh901-exec1/preflight",
+      "result_path": "gh901-exec1/preflight/result.json"
+     }
+    ],
+    "stdout": "es and untracked files retained\n\n============================================================\njog: processing GH-902 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary/.tick/jog/jog-01M7KWZ4Y84D4A6E5G44SQB2W6/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: reached max-tasks limit (1); pausing queue.\njog: GH-901 parked: supervision held: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-corrupt-holds/primary/.tick/jog/jog-01M7KWZ4Q94DMC4QNY2DV5QFG4/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\njog: published primary checkpoint e46ef2a5ae7b07c6167331cf192c61d30224a2d4\n",
+    "stderr": "jog: reclaiming stale relay-driver.lock (holder pid 26377 not running).\nSwitched to a new branch 'fixture-902-gh902-exec1'\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "stop-owner-after-failure",
+   "pass": true,
+   "detail": {
+    "rc": 4,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZBPBNTE6X8N9PNNQBD1A",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary/.tick/jog/jog-01M7KWZBPBNTE6X8N9PNNQBD1A/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZBX07X01DVG9N2YKXM7X",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZC3MVSAC296R73Y5KCNP",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZCA9JCNAKHRK6B13539C",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "jog: execution clone aligned at b73c601faeb80aee9459b4ff72078c69b01bf77e; other branches and untracked files retained\n\n============================================================\njog: processing GH-901 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary/.tick/jog/jog-01M7KWZBPBNTE6X8N9PNNQBD1A/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-901 failed task-locally (pre-advance-failed, gate exit 1; result: gh901-exec1/preflight/result.json); retained without retry; continuing independent pending work.\n",
+    "stderr": "Switched to a new branch 'fixture-901-gh901-exec1'\njog: another driver is active in this repo (pid 30713, lock: .git/relay-driver.lock).\njog: Concurrent runs in the same clone are unsafe (GH-42 / GH-354).\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "stop-owner-next-wake-publishes",
+   "pass": true,
+   "detail": {
+    "journal_before": "running",
+    "unpublished_before": true,
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 1,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZBPBNTE6X8N9PNNQBD1A",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary/.tick/jog/jog-01M7KWZBPBNTE6X8N9PNNQBD1A/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZBX07X01DVG9N2YKXM7X",
+      "status": "parked",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "awaiting-landing (PR #902: https://example.invalid/pr/902)"
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZC3MVSAC296R73Y5KCNP",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZCA9JCNAKHRK6B13539C",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "h1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary/.tick/jog/jog-01M7KWZBX07X01DVG9N2YKXM7X/gh902-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: GH-902 published awaiting approval; continuing independent pending work.\njog: reached max-tasks limit (1); pausing queue.\njog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/stop-owner/primary/.tick/jog/jog-01M7KWZBPBNTE6X8N9PNNQBD1A/gh901-exec1/preflight/result.json]\njog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)\njog: published primary checkpoint 010b7de33877ed35fe47e778a5babd11dc6db18a\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "local-failure-dirty-holds",
+   "pass": true,
+   "detail": {
+    "rc": 2,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZHXH25BTTY57HS4592RX",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/local-dirty/primary/.tick/jog/jog-01M7KWZHXH25BTTY57HS4592RX/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZJ4DYKEMH4YQZ7G3C38Z",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZJBAX9J7WZTGMY7T9P49",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZJHY8GY6CJVS43EE9J0H",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stderr": "Switched to a new branch 'fixture-901-gh901-exec1'\njog: held: execution clone has tracked changes; preserve them before alignment\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "stop-checkpoint-contradiction",
+   "pass": true,
+   "detail": {
+    "rc": 2,
+    "starts": {
+     "901": 0,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "stderr": "jog: checkpoint held: checkpoint primary HEAD changed outside this wake\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-gate-killed",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZPYFEY7GEGKCNQ0KH6HB",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: gate-killed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/primary/.tick/jog/jog-01M7KWZPYFEY7GEGKCNQ0KH6HB/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZQ50A5094YKW3S1HCGZH",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZQBFD609FRPF15HY6G6X",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZQHZ2GH2QS4G7RVBR9Y3",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "============================================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/primary/.tick/jog/jog-01M7KWZPYFEY7GEGKCNQ0KH6HB/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon escalated: gate-killed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-killed/primary/.tick/jog/jog-01M7KWZPYFEY7GEGKCNQ0KH6HB/gh901-exec1/preflight/result.json]\njog: published primary checkpoint 57b373124255fbdee2279922487445ae042a5911\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-post-approve-failed",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZTACNZ5EGNPFBPM2G2D6",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon post-approve-failed: post-approve-failed (exit 9) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-post-approve-failed/primary/.tick/jog/jog-01M7KWZTACNZ5EGNPFBPM2G2D6/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZTGNKRXAC6VDJC40R4RH",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZTPPSJDW4RKB2DX5WC3Z",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZTWVJV53PGJBMSJJ0RHA",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "==========\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-post-approve-failed/primary/.tick/jog/jog-01M7KWZTACNZ5EGNPFBPM2G2D6/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon post-approve-failed: post-approve-failed (exit 9) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-post-approve-failed/primary/.tick/jog/jog-01M7KWZTACNZ5EGNPFBPM2G2D6/gh901-exec1/preflight/result.json]\njog: published primary checkpoint 9ede381b4a2928463ca35d32aa60389c00e5c14e\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-refused",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KWZXKHAKXFH37RCFQ1CK0J",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon refused: builder-equals-reviewer (exit 2) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-refused/primary/.tick/jog/jog-01M7KWZXKHAKXFH37RCFQ1CK0J/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KWZXSJP4Z8D9Q2QA733R38",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KWZXZYZD5FMRC685B54V0P",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KWZY6BQRNATA38XM6KY9KG",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "==========================================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-refused/primary/.tick/jog/jog-01M7KWZXKHAKXFH37RCFQ1CK0J/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon refused: builder-equals-reviewer (exit 2) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-refused/primary/.tick/jog/jog-01M7KWZXKHAKXFH37RCFQ1CK0J/gh901-exec1/preflight/result.json]\njog: published primary checkpoint b9cd5a82519e61c7268d38010e6e0feabbd851b4\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-interrupted",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX00X5PYQZ7267V78CY02S",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon interrupted: interrupted (exit 143) (exit 143) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/primary/.tick/jog/jog-01M7KX00X5PYQZ7267V78CY02S/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX013J5XN2K9A8W7RVWJBK",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX019R89Z334B7NCDC647D",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX01G5HYJEY53N4QEFNEPW",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "=============================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/primary/.tick/jog/jog-01M7KX00X5PYQZ7267V78CY02S/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon interrupted: interrupted (exit 143) (exit 143) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-interrupted/primary/.tick/jog/jog-01M7KX00X5PYQZ7267V78CY02S/gh901-exec1/preflight/result.json]\njog: published primary checkpoint af05f9aac7ee15d2e10183af7d34c5bdca47cd5d\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-missing-receipt",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX048WWX0ZHSM60W2JVTS6",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon-drive exited 0 without a valid result receipt: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-missing-receipt/primary/.tick/jog/jog-01M7KX048WWX0ZHSM60W2JVTS6/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-missing-receipt/primary/.tick/jog/jog-01M7KX048WWX0ZHSM60W2JVTS6/gh901-exec1/preflight/result.json'"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX04F25SEJY7CV1PJ221T1",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX04N47CPFR8C0FVAWCM3S",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX04VJ6DM19MT94VBQWTHF",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "2JVTS6/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon-drive exited 0 without a valid result receipt: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-missing-receipt/primary/.tick/jog/jog-01M7KX048WWX0ZHSM60W2JVTS6/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-missing-receipt/primary/.tick/jog/jog-01M7KX048WWX0ZHSM60W2JVTS6/gh901-exec1/preflight/result.json'\njog: published primary checkpoint bd42ef311a54917d0e494825942b9445103e0d12\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-clone-ledger-changed",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX07GRP1KVZFWM7E8ZXRJQ",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "execution changed clone releases artifacts; preserve clone for inspection"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX07QDFKTZ02PE139JP7H5",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX07XH0F3QVSSY23M6M5ZH",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX0845FP4MMY4QAGKM0SQ0",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "dfc49e0f30c115bf0527cc0a635be; other branches and untracked files retained\n\n============================================================\njog: processing GH-901 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-clone-ledger-changed/primary/.tick/jog/jog-01M7KX07GRP1KVZFWM7E8ZXRJQ/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: execution changed clone releases artifacts; preserve clone for inspection\njog: published primary checkpoint a6fc4d0dec371134ee0624648a6fb149c643e942\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-lock-contention",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX0ARBHQXKV1DDSE1HECGB",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon lock-contention: driver lock held by a live peer (exit 1) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-lock-contention/primary/.tick/jog/jog-01M7KX0ARBHQXKV1DDSE1HECGB/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX0AYJ9Z8G2Q9VM2QBXR0R",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX0B4RJ7QHST11AHXQZM97",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX0BAWEF6RXK5Q8Y5YY1YJ",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "==========\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-lock-contention/primary/.tick/jog/jog-01M7KX0ARBHQXKV1DDSE1HECGB/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon lock-contention: driver lock held by a live peer (exit 1) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-lock-contention/primary/.tick/jog/jog-01M7KX0ARBHQXKV1DDSE1HECGB/gh901-exec1/preflight/result.json]\njog: published primary checkpoint 8ca4033a6ef05a3b425f8d58bdc250c6300d5458\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-crashed",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX0E3NQDKRB7YDHPB191ZX",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon crashed: driver raised an unhandled exception (exit 1) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-crashed/primary/.tick/jog/jog-01M7KX0E3NQDKRB7YDHPB191ZX/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX0EA9ECT75BQ1KPM7W01V",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX0EGWFP5D16T8VFHY8Z1H",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX0EQ8WKVXKFCS1VSS9C7V",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "=============================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-crashed/primary/.tick/jog/jog-01M7KX0E3NQDKRB7YDHPB191ZX/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon crashed: driver raised an unhandled exception (exit 1) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-crashed/primary/.tick/jog/jog-01M7KX0E3NQDKRB7YDHPB191ZX/gh901-exec1/preflight/result.json]\njog: published primary checkpoint f4451ed22a269421eb245bf39854f40216fb7766\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-gate-not-run",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX0HKQ3FHPEDNXQ830Z0ES",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon escalated: relay-failed-before-gate (exit 4) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-not-run/primary/.tick/jog/jog-01M7KX0HKQ3FHPEDNXQ830Z0ES/gh901-exec1/preflight/result.json]"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX0HT5FQX1KVEP6HXFMYMD",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX0J0KCYA4NQD9XG53ZK7M",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX0J71C80H0HRRB8WVSJ61",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "=============================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-not-run/primary/.tick/jog/jog-01M7KX0HKQ3FHPEDNXQ830Z0ES/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon escalated: relay-failed-before-gate (exit 4) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-gate-not-run/primary/.tick/jog/jog-01M7KX0HKQ3FHPEDNXQ830Z0ES/gh901-exec1/preflight/result.json]\njog: published primary checkpoint 7d5905837ea106ed214d7a756aff4775db91c53f\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-corrupt-receipt",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX0N2S420HV4W6ACEQ78ZS",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon-drive exited 0 without a valid result receipt: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/primary/.tick/jog/jog-01M7KX0N2S420HV4W6ACEQ78ZS/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX0N97BSW0JEEMP20PPV4M",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX0NFJJ6A7RH04T11TMB2K",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX0NNVDE2QKQSJMBZV73PF",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "s/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/primary/.tick/jog/jog-01M7KX0N2S420HV4W6ACEQ78ZS/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon-drive exited 0 without a valid result receipt: marathon result at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-corrupt-receipt/primary/.tick/jog/jog-01M7KX0N2S420HV4W6ACEQ78ZS/gh901-exec1/preflight/result.json is not valid JSON: Expecting property name enclosed in double quotes: line 1 column 39 (char 38)\njog: published primary checkpoint 42a3c29608442b810f30ef61f39e9f583a5d9aa0\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "red-mismatched-receipt",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "rows": {
+     "901": {
+      "gh_number": 901,
+      "global_id": "jog-01M7KX0RAE980Q26V9TJAXZ9HS",
+      "status": "failed",
+      "attempt_count": 1,
+      "lease_pid": null,
+      "failure_reason": "marathon-drive exited 0 without a valid result receipt: result receipt does not match the selected issue/execution"
+     },
+     "902": {
+      "gh_number": 902,
+      "global_id": "jog-01M7KX0RGHWH0J4AAK8JNWCDBK",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "903": {
+      "gh_number": 903,
+      "global_id": "jog-01M7KX0RPVSY2R4W1S712MYWA5",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     },
+     "904": {
+      "gh_number": 904,
+      "global_id": "jog-01M7KX0RXD2MVXH9T2DR72YD5A",
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null
+     }
+    },
+    "stdout": "anches and untracked files retained\n\n============================================================\njog: processing GH-901 (attempt 1) at position 1\n============================================================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-mismatched-receipt/primary/.tick/jog/jog-01M7KX0RAE980Q26V9TJAXZ9HS/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon-drive exited 0 without a valid result receipt: result receipt does not match the selected issue/execution\njog: published primary checkpoint bee7f7f3da0e92bc30a355709b22c590ea5572d5\n"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  },
+  {
+   "id": "baseline-red",
+   "pass": true,
+   "detail": {
+    "baseline": "1d9658c3c63c1b1a8780ad26e4962f808b3c7625",
+    "blob": "a021d17764a0cd1c69d32fe62b25610792da0697",
+    "rc": 0,
+    "starts": {
+     "901": 1,
+     "902": 0,
+     "903": 0,
+     "904": 0
+    },
+    "stdout": "===================================================\njog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/primary/.tick/jog/jog-01M7KX0VJ8ACWYSPCWJWM8BTMV/gh901-exec1/preflight)\njog: dispatching marathon-drive (controlled worker)\njog: stopping queue execution on task failure.\njog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/primary/.tick/jog/jog-01M7KX0VJ8ACWYSPCWJWM8BTMV/gh901-exec1/preflight/result.json]\njog: published primary checkpoint e36ab0b64c18b27f1c75b1da17957bf180b30391\n",
+    "predicate": "unfixed runtime must leave independent B undispatched"
+   },
+   "source": "ef23e77b24e51add4be9476191257bcbc7d7c432"
+  }
+ ]
+}

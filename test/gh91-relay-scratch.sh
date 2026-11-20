@@ -133,7 +133,7 @@ grep -q 'never copied back' <<<"$(printf '%s' "$out")" \
 [ "$(printf '%s' "$out" | grep -c '.relay-scratch')" -eq 1 ] \
   && pass "rtl_turn_prompt: the scratch note appears exactly once" \
   || fail "rtl_turn_prompt: scratch note appears $(printf '%s' "$out" | grep -c '.relay-scratch') times"
-grep -q 'gate after your turn. Verification output' <<<"$(printf '%s' "$out")" \
+grep -q 'what you could not. Verification output' <<<"$(printf '%s' "$out")" \
   && pass "rtl_turn_prompt: the note lands in its own slot at the end of the template" \
   || fail "rtl_turn_prompt: scratch note is not in the intended position"
 

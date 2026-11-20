@@ -263,10 +263,7 @@ def _write_terminal_result_inner(code):
         relay_file = os.path.join(_RESULT["phases_dir"], lane, "RELAY.md")
         try:
             with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        relay_status = line.split(":", 1)[1].strip()
-                        break
+                relay_status = relay_attest.header_field(f.read(), "STATUS") or None
         except OSError:
             pass
 
@@ -1966,8 +1963,8 @@ def main():
             try:
                 with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
                     for ln in f:
-                        if ln.startswith("STATUS:"):
-                            status_line = ln.strip()
+                        if relay_attest.header_field(ln, "STATUS"):
+                            status_line = "STATUS: " + relay_attest.header_field(ln, "STATUS")
                         if ln.lstrip().startswith("### Round"):
                             round_count += 1
             except OSError:
@@ -2590,9 +2587,7 @@ relay-file: {rel_relay}
     def file_status():
         try:
             with open(relay_file) as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        return line.split(":", 1)[1].strip()
+                return relay_attest.header_field(f.read(), "STATUS")
         except Exception:
             pass
         return ""

@@ -82,7 +82,8 @@ with tempfile.TemporaryDirectory(prefix='gh648-l7-', dir=scratch) as tmp:
                          progress_main_tree=str(fixture), sys=sys, subprocess=subprocess,
                          judge_terminal=lambda *a, **kw: ('none', True),
                          file_status=lambda: 'Open', role='builder', pre_turn={},
-                         write_escalation_reason=lambda reason: None)
+                         write_escalation_reason=lambda reason: None,
+                         eprint=lambda *a, **kw: None, actor='builder')
         with patch.object(rtl.subprocess, 'run', side_effect=git):
             execute(capture, namespace)
         child = ('from pathlib import Path; import time; '
