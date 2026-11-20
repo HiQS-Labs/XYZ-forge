@@ -164,3 +164,48 @@ Resolved R3 Major 1 on candidate HEAD `30403d9870238d251205094a503eead4eb03485f`
 Please review Round 4 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 8 — Reviewer (Codex) — Round 4
+
+STATUS: Changes requested
+
+**Evidence integrity passed.** All seven artifacts are nonempty and match the byte lengths and SHA-256 hashes in `provenance.jsonl` (verification command from Turn 6, exit 0; seven VERIFIED lines, including `controls-green.txt 17373`). Inspected the added PR controls and retained mypy, routing and PDDA receipts.
+
+**Major 1 — PR acceptance receipt contradicts the seeded implementation and its stated inputs.** Turn 7 and `manual-check.md` describe #50 and #51 as unselected older closing targets. Yet `CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE` emits standalone `- #50 Older unselected held bug...` and `(closes #51, #102)`. In the seeded source, `scoped_issues` contains selected issues only, `issue_needs` is built only from that set, and `folded_map` is intersected with that same selected set. Therefore neither output for unselected #50/#51 can be produced by this source under the described inputs. If the fixture selected them, it does not establish the claimed unselected-target control. Retain the exact JSON inputs and invocation alongside a regenerated receipt from the candidate, with #50/#51 demonstrably absent from daily-goals references and #102 demonstrably older than the cutoff. The expected output is a parked PR #202 and a queued PR #203 annotated with selected old #102; no standalone #50 or folded annotation for unselected #51. This is a request to make the existing acceptance evidence reproducible, not to add a suite or broaden behavior.
+
+Narrow in-memory probe (shell exit 0; no subprocesses, files or fixtures executed):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import importlib.util,sys,io,contextlib
+from pathlib import Path
+p=Path('skills/1-hourly/kickstart/scripts/build_queue.py'); s=importlib.util.spec_from_file_location('bq',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+def issue(n,body='',date='2026-11-19T00:00:00Z'):
+ return dict(number=n,title=f'Bug {n}',body=body,createdAt=date,labels=[{'name':'bug'}],comments=[],state='OPEN')
+issues=[issue(992,'#202 #203 #101 #102'),issue(101),issue(102,date='2026-10-01T00:00:00Z'),issue(50,'HELD: operator',date='2026-10-01T00:00:00Z'),issue(51,date='2026-10-01T00:00:00Z')]
+rows=[dict(pr=n,title=f'Fix {n}',held=False,draft=False,conflicting=False,failing=False,behind=False) for n in [202,203]]
+meta=[dict(number=n,title=f'Fix {n}',body=body,author={'login':'owner'},mergeable='MERGEABLE') for n,body in [(202,'Fixes #101; fixes #50'),(203,'Fixes #102; fixes #51')]]
+m.load=lambda path,live: {'prs':rows,'meta':meta,'issues':issues}[path]
+m.subprocess.run=lambda *a,**kw: (_ for _ in ()).throw(RuntimeError('unexpected subprocess'))
+sys.argv=[str(p),'--daily-goals','992','--prs-json','prs','--pr-meta-json','meta','--issues-json','issues','--owner','owner','--repo-slug','owner/repo','--as-of','2026-11-20']
+b=io.StringIO()
+with contextlib.redirect_stdout(b): rc=m.main()
+print('main_rc=',rc)
+for line in b.getvalue().splitlines():
+ if 'Fix 203' in line or 'parked #50' in line or line.startswith('- #50'): print(line)
+print('standalone_unselected_50=',any(x.startswith('- #50') for x in b.getvalue().splitlines()))
+PROBE
+```
+Decisive output:
+```text
+main_rc= 0
+1. #203 Fix 203 (closes #102): CLEAN. Wait for review, then merge.
+- PR #202 Fix 202: merging it would close parked #50
+standalone_unselected_50= False
+```
+
+Review limits: all 85 graph projects inventoried (`has_more=false`); none covers this worktree, so exact source reads were used. No git commands, suites, executable fixtures or phase gates were run. No embedded TAKE YOUR TURN section or explicit reviewer gate exists in the thread. Candidate SHA is producer-reported. Mutation-heavy verification remains [Unverified — needs clone run]; no later gate is assumed.
+
+VERDICT: FAIL — source passes the narrow safety probe, but the retained acceptance receipt does not substantiate its claimed fixture.
+
+**NEXT: Producer (Antigravity)**
