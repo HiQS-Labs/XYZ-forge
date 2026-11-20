@@ -1,7 +1,7 @@
 ---
 gh_issue: 1552
 title: "kickstart(KS-08): safe self-recovery of a killed landing (stopped-ownership + remote PR state)"
-status: active
+status: Complete
 roadmap_id: rmi-01M7WG8KCX34HV9TGT31N0Z79C
 parent_arc: 1541
 milestone: KS-08
