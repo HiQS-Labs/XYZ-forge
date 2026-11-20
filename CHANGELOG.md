@@ -1,3 +1,5 @@
+- **GH-1557 (KS-13):** Fix multi-SHA `later_landings` staleness suppression in `skills/1-hourly/kickstart/scripts/kickstart_status.py`, emit deterministic `rerun_required` / `handback_allowed` / `recommended_action` handback fields, and mandate autonomous pre-handback final-QA re-run with post-QA head re-verification in `skills/1-hourly/kickstart/SKILL.md`.
+
 # Changelog
 
 ## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
