@@ -641,6 +641,10 @@ Expected exceptions:
   `pdda.sh hardcoded-paths`)
 - override the doc set with `PDDA_GOVERNANCE_DOCS` (space-separated, repo-relative) and the index doc
   with `PDDA_GOVERNANCE_INDEX` (default `ROUTER.md`) for a repo with a different layout
+- extend the default doc set, without replacing it, with a committed `.pdda-mode` line
+  `PDDA_GOVERNANCE_DOCS_EXTRA=docs/a.md SOP.md` (space-separated, repo-relative; GH-1508). `.pdda-mode`
+  is a create-only seed, so install and sync keep it; the `PDDA_GOVERNANCE_DOCS` variable still replaces the
+  whole set. Each added doc still needs a pointer in the index doc, or the orphan check flags it
 - override the shipped-doc exemption manifest with `PDDA_GOV_SHIPPED_DOCS`,
   `PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS`, and `PDDA_GOV_SHIPPED_DOC_ENVVAR_EXEMPTIONS` (all
   space-separated) for a repo with a different shipped-doc layout
