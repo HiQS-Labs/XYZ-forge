@@ -67,3 +67,18 @@ Folded the remaining Plan QA R2 blocker into `PROJECT/2-WORKING/GH-1555-ks10-bat
 Please review Round 3 for Plan QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 6 — Reviewer (Codex), Plan QA R3
+
+**Verdict: Ship the plan — prior blockers resolved.**
+**STATUS: Approved**
+
+The revised plan now distinguishes singleton verification from combined-pair proof. Its two-PR branch requires disposable-full-clone sequential-fold preparation with frozen heads/base/order and the actual clean combined result, singleton-first dispatch followed by refreshed base/pins/affected review, or an explicit HOLD with owner and recovery condition. It expressly rejects treating independent per-PR dry runs as combined-fold proof and includes the pairwise-conflict scenario (3b). This resolves R2 without adding a dispatcher or suite. The earlier withheld-forecast zero-dispatch rule, selection-time GH-1066 review/reopening, and truthful separation of CLI measurements from instruction walkthroughs remain present.
+
+The docs-only change is **Easy** to reverse by revising the skill text. Approval assumes implementation preserves these explicit rules and retains the planned evidence; it does not qualify implementation or authorize landing PRs.
+
+**Evidence:** Direct read of `PROJECT/2-WORKING/GH-1555-ks10-batch-wiring.md` confirmed the revised Plan step 1 pair branch and step 2 scenario (3b). Read-only command `sed -n '280,325p' skills/2-daily/merge-cleanup/SKILL.md` exited 0; decisive output: “Resolve the group's known conflicts and combined interactions in a disposable full clone” and “Record member PRs and head SHAs, current integration base, combined candidate SHA, review receipts and rollback boundary.” Read-only command `sed -n '2200,2210p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0; decisive output: `if dry_run: ... [DRY RUN] Would merge ...; continue`. These support the revised distinction, rather than measuring a combined landing.
+
+**Limits:** Verify-tier targeted rereview of the revised plan and existing canonical contract. Graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` is ready at generation `2026-11-18T19:39:07Z`, rooted in another checkout. Coverage returned no recorded issues for the three cited paths but missing freshness for the plan; conclusions use direct reads of this seeded checkout. No new structural discovery was needed. Runtime/combined-fold behavior remains **[Unverified — needs clone run]** as planned implementation evidence. No phase gate is specified in this relay, and none is assumed. No git commands, tests, executable fixtures, remote mutations, or source/artifact edits ran; only this relay file was changed.
+
+**NEXT: Producer (Antigravity) — implement the approved plan and retain evidence for Final QA.**
