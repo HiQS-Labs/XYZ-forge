@@ -1,8 +1,8 @@
 # Relay: GH-1548 (KS-05) Plan QA — Verbatim Attributed Stop Reasons & U13 429 -> provider-quota
 
 STATUS: In Progress
-NEXT: Producer
-ROUND: 1 / 3
+NEXT: Reviewer
+ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
 TARGET_REPO: HiQS-Labs/XYZ-forge
@@ -43,3 +43,23 @@ Verdict: Changes requested before implementation. The receipt shape, legacy plai
 Verification notes: read the complete plan and targeted current source. The available graph project is the maintained XYZ-forge checkout, generation 2026-11-18T19:39:07Z, not this relay worktree; `search_graph(prepare_turn_log)` returned no match. Coverage reported no recorded gap for the two Python files, but local source reads were used because the graph is not evidence of this worktree's freshness. No runtime fixture, suite, or gate was executed. Full implementation correctness and compatibility remain **[Unverified — needs clone run]**. The producer's gate plan must explicitly use a disposable full clone and retain pre/post Git identity checks; running in the background does not provide isolation. Approval must depend on actual retained results, not a presumed later gate.
 
 Parent issue #1541 v5 and the KS-04 consumer were not present among the seeded plan artifacts inspected, so exact cross-lane schema compatibility remains unverified; confirm against those authoritative artifacts during implementation QA.
+
+## Producer Round 2 — Plan Revision Addressing Round 1 Findings
+
+Thank you — both `[Should]` findings are incorporated into `PROJECT/2-WORKING/GH-1548-KS05-STOP-REASONS.md`:
+
+1. **Finding #1 (Fence `turn_log` evidence to bytes produced by THIS turn):**
+   - Added pre-dispatch `(st_dev, st_ino, st_size)` + `dispatch_ns` snapshot before spawning the turn shim.
+   - Same file & `st_size >= pre_size`: seek to `pre_size` and scan ONLY newly appended bytes (capped to last 16 KiB); zero new bytes yields `""`.
+   - Replaced/truncated file: scan only if `st_mtime_ns >= dispatch_ns`, else `""`.
+   - Added **Red Control 3** testing the exact falsifier: reused `turn_log` with earlier `HTTP 429 Too Many Requests` followed by a turn appending only `syntax error` (exit 5) → `turn-error`, while newly appended `HTTP 429 Too Many Requests` → `provider-quota`.
+
+2. **Finding #2 (Complete non-zero exit inventory):**
+   - Added a complete exit-code attribution table covering every non-zero `sys.exit` / `exit_escalate` in `utils/py/relay_drive.py`: line 30 (exit 2, explicitly excluded CLI usage), line 274 (exit 8, `lane-attempt-cap` receipt without touching shared legacy file), lines 543/551 (exit 1, `driver-lock-active`/`driver-lock-acquire-failed` receipt without touching active driver's legacy file), line 642 (exit 4 escalations), line 1003 (failed shim `provider-quota`/`turn-error`, preserving `res_code`), lines 1090/1097 (post-start exit 1 `consult-escalation-write-failed` writing receipt + updating legacy file), line 1157 (exit 5 `review-handback`), and lines 1160/1163/1168 (exit 3 stalls).
+   - Added **Red Control 4** verifying post-start exit 1 (`consult-escalation-write-failed`) replaces stale `cap-stalled` and writes the invocation receipt while preserving exit 1, and preflight lock contention does not clobber the active driver's legacy file.
+
+3. **Verification & Cross-Lane Alignment:**
+   - Explicitly pinned the full classified gate to a fresh disposable full clone with retained pre/post Git identity checks and mypy venv on `PATH` (run in background).
+   - Confirmed exact receipt JSON fields (`schema: 1`, `invocation_id`, `reason`, `stop_reason`, `exit_code`, `recorded_at`) match KS-04's `kickstart_status.py` consumer.
+
+Please re-review Round 2. If ready for implementation, set `STATUS: Approved` and `NEXT: Done`.
