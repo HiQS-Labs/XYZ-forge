@@ -495,6 +495,8 @@ def main(argv=None) -> int:
     ap.add_argument("--draft-stale-days", type=int, default=7)
     ap.add_argument("--drift-bump", type=int, default=30)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--no-conflict-files", action="store_true",
+                    help="skip the conflicting-file lookup (it fetches into this checkout); read-only callers (GH-1527)")
     args = ap.parse_args(argv)
     if not (1 <= args.stale_days < 7 and args.draft_stale_days >= args.stale_days and args.drift_bump >= 0):
         ap.error("need 1 <= --stale-days < 7 (the repair rung starts at 7d), --draft-stale-days >= --stale-days, "
@@ -527,7 +529,7 @@ def main(argv=None) -> int:
         if not rows:
             print(f"pr-minder: #{focus} is not an open PR here", file=sys.stderr)
             return 2
-    for row in rows:
+    for row in ([] if args.no_conflict_files else rows):
         if row["conflicting"] and row["plan"]["comment"] is not None:
             row["conflict_files"] = conflict_files(root, row["pr_data"])
             row["plan"] = plan_bundle(row, receipts)

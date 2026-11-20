@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-19 — GH-1527: kickstart `build_queue.py` builds the run queue in one command
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` prints a kickstart run record's Authority,
+  Queue and Needs-operator sections from `pr_minder.py --json` plus one `gh pr list` (author, links,
+  raw `mergeable`) and `gh issue list` (open issues in a `--since-days` window). Ordering is a
+  closed first-match list; held, others', decision, other-session and unclassified items go to
+  Needs-operator. Saved inputs (`--prs-json`, `--pr-meta-json`, `--issues-json`) with `--as-of`
+  replay byte-identically. Read-only; writes only `--out`.
+- `skills/1-hourly/kickstart/SKILL.md`: new parent step 2 (build the queue, record the grant in the
+  run record, then dispatch) with the closed ordering list; later parent steps renumbered.
+- `skills/2-daily/pr-minder/scripts/pr_minder.py`: new `--no-conflict-files` flag skips the
+  conflicting-file lookup (`git fetch` + `merge-tree --write-tree`), so build_queue's live run writes
+  nothing to the checkout. Default behaviour unchanged.
+- No new test suite (GH-831). Evidence: `TESTS-RESULTS/2026-11-19+GH-1527/`.
+
 ## 2026-11-19 — GH-1518: start-task runs the full gate once, at push
 
 - `/start-task` now runs `ci-local.sh --fast` on the final approved commit and lets the pre-push hook run
