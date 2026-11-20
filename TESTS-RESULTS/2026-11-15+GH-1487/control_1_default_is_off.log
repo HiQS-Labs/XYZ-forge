@@ -1,0 +1,10 @@
+# Control 1: Default is OFF
+# Command: read_changelog_writes_mode(tmp) & reconcile_changelog(tmp, ...)
+# Candidate Revision: b459c3f15b2971852917caa36ac48f889ad04194
+# Timestamp: 2026-11-16T19:17:47.759117+00:00
+# Status: PASS
+
+Mode: off
+CHANGELOG.md exists: False
+Journal backups: {}
+
