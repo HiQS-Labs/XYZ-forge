@@ -1,3 +1,4 @@
+{"path": "TESTS-RESULTS/2026-11-20+GH-1553/manual-check.md", "bytes": 5165, "sha256": "c93cb04d926757fc31086dedf25ca145641edfecafc8bb54b012bbf9bccc0ee3"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1553/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1553/outputs/code-and-skill-diff.patch", "bytes": 7532, "sha256": "801beb1c12a494f349bc4883821d7b1416919bc7970a56251a0c507ff8c1c618"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1553/outputs/controls-green.txt", "bytes": 12713, "sha256": "cc5168a2fece7e898d68565da85c71fbdcf62df8d1859e8ef360cbd191cfefbb"}
