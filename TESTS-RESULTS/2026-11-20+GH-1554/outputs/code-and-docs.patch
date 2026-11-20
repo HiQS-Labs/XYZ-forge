@@ -1,0 +1,65 @@
+diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
+index f9e263eb..b2e2ee44 100644
+--- a/skills/1-hourly/kickstart/SKILL.md
++++ b/skills/1-hourly/kickstart/SKILL.md
+@@ -102,6 +102,47 @@ session and the single delegated outer-loop child session. There are never compe
+    violations, ledger drift, exhausted global budget) or owner-mandated stops, halts dispatch
+    immediately, leaves a resumable checkpoint with observed evidence, and reports to parent.
+ 
++### Unambiguous Landing Path & Exit-Code Handling (KS-09, U10)
++- **Single Pinned `LANDING_CLONE:`:** The run record (`## 1a. Run Record Contract (v1)`) declares
++  exactly one `LANDING_CLONE: <path>` header for the entire run. Every `merge_cleanup.py`
++  invocation (`--execute`, `--reconcile-pr`, `--record-sweep`, `--retire-published-pr`) MUST pass
++  `--primary <LANDING_CLONE>`. Never create or switch to a second landing clone mid-run, and
++  never write to the user's primary checkout unless it was explicitly pinned as `LANDING_CLONE`.
++  If an existing Jog primary pin conflicts with `LANDING_CLONE` (`merge_cleanup.py:2502-2515`,
++  exit `2`), resolve the pin explicitly before launch rather than switching primaries mid-run.
++  Task builds NEVER write to `LANDING_CLONE`. Status, recovery, and audit tools read attempt
++  records ONLY from `<LANDING_CLONE>/.tick/merge-cleanup/` so the 2-repair ceiling cannot be
++  reset by switching clones.
++- **Per-Merge Durability (No Deferred Reconciliation):** `merge-cleanup` runs post-merge
++  reconciliation after EACH verified remote merge (`merge-cleanup/SKILL.md:370`); do NOT defer
++  reconciliation to the end of a batch. One post-batch sweep runs at the end.
++- **Exit 4 (`landed, QA pending`):** When `merge_cleanup.py` exits `4` under a
++  `qualification.full_suite=promotion` policy, first confirm the pending batch record is the
++  intended batch and preserve any real findings if a sweep ran; only when the promotion policy
++  explicitly defers the full sweep to promotion, write a sweep receipt file whose first line is
++  `verdict: deferred` followed by a non-empty reason citing the deferred promotion-gate policy,
++  and run `merge_cleanup.py --primary <LANDING_CLONE> --record-sweep <file>`. Note that exit `0`
++  from `--record-sweep` records receipt of the deferred verdict — it is NOT proof of a passing
++  full gate.
++- **Active Hosted `wave-reconcile.yml` Run During Local Reconciliation (Child Exit `8` → Wrapper Exit `2`):**
++  `wave_reconcile.py` exits `8` when a hosted `wave-reconcile.yml` run is active, while the
++  `merge_cleanup.py` wrapper (`run_local_wave_reconcile` → `land_prs` / `--reconcile-pr`) converts
++  any nonzero child exit to `False` and exits `2` (`post-merge reconciliation FAILED — stopping
++  before the next PR`). Because primary-pin and preflight failures also exit `2`, **never assume
++  every exit `2` means `MERGED`**. Always inspect the observed command logs (for child exit `8` /
++  active hosted `wave-reconcile.yml` output) AND verify live remote PR state first. When remote
++  state confirms the PR is ALREADY `MERGED` with an incomplete local durability checkpoint:
++  1. Preserve the `MERGED` PR and its incomplete durability checkpoint; stop further landings
++     immediately.
++  2. Never pass `--force-local-reconcile` and NEVER re-merge.
++  3. Wait via the host's supported background/wakeup mechanism within the original run wall
++     deadline until the active hosted `wave-reconcile.yml` run and any promotion quiet window
++     finish.
++  4. Re-check stopped ownership and live remote PR state, then complete reconciliation via
++     `merge_cleanup.py --primary <LANDING_CLONE> --reconcile-pr <N> --execute`.
++  5. If the original run wall deadline expires before reconciliation completes, stay in a
++     recorded `HOLD` and hand back with observed evidence.
++
+ ---
+ 
+ ## 1a. Run Record Contract (v1)
+diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
+index 0b702021..93fffa37 100755
+--- a/skills/1-hourly/kickstart/scripts/build_queue.py
++++ b/skills/1-hourly/kickstart/scripts/build_queue.py
+@@ -310,7 +310,7 @@ def render(args, prb, issb, needs, skipped, folded_map) -> str:
+     if prb["C"]:
+         items = "; ".join(f"#{n} {t}{with_issues(n, c)}" for n, t, c in prb["C"])
+         lines.append(f"Mergeability UNKNOWN or behind: {items}. Refresh their state, then land them as one "
+-                     "merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Reconcile once at the end.")
++                     "merge-cleanup batch from the pinned LANDING_CLONE (--primary \"$LANDING_CLONE\"; the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.")
+     for n, title, closes in prb["D"]:
+         lines.append(f"Draft #{n} {title}{with_issues(n, closes)}: finish or close, with evidence.")
+     for n, title, _ in issb["E"]:

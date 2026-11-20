@@ -1,4 +1,21 @@
+- **GH-1557 (KS-13):** Fix multi-SHA `later_landings` staleness suppression in `skills/1-hourly/kickstart/scripts/kickstart_status.py`, emit deterministic `rerun_required` / `handback_allowed` / `recommended_action` handback fields, and mandate autonomous pre-handback final-QA re-run with post-QA head re-verification in `skills/1-hourly/kickstart/SKILL.md`.
+- **GH-1548 (KS-05):** Attributed per-invocation stop-reason receipts (`relay-drive.py` `--invocation-id` / `--stop-receipt` + verbatim stderr trailer), fresh per-turn driver-owned shim logs via child-only `turn_env`, and U13 `429`/quota classification as `provider-quota` (distinct from `turn-error` and `cap-stalled`) across `utils/py/harness.py` and `utils/py/relay_drive.py`.
+
 # Changelog
+
+## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing
+  `gh issue list` call, releases `decide` holds when the latest `--owner` comment's first non-empty
+  line starts with `Operator decision` (proceed, routed so it never falls into rule 9 unclassified)
+  or `Operator decision: close` (dedicated close bucket where the child verifies acceptance on
+  `origin/development` and closes citing the commit), honours superseding `Operator decision: hold`
+  comments, and keeps closing PRs (`Closes #N`) unparked once the issue is released.
+- Also enforces fail-closed U15 holds (`status:held` label, body `HELD:` marker, `Blocked by #N`,
+  and open/active-gating `after #N`) across all issue types while preserving code-formatted `#N`
+  references inside prose holds and ignoring fenced blocks / wholly quoted inline examples. Mirrored
+  in `skills/1-hourly/kickstart/SKILL.md`. No new suite (GH-831). Evidence:
+  `TESTS-RESULTS/2026-11-20+GH-1535/manual-check.md`.
 
 ## 2026-11-20 — GH-1545 (KS-03): bake launch authority defaults into build_queue.py and kickstart/SKILL.md
 
@@ -356,6 +373,28 @@ after the measured pair passes; iterate on a grounded routing defect; abandon an
 revert this change if it cannot preserve the review contract. SmallCode isolated
 reviewers are refused because their current shim disables isolation.
 Evidence: `TESTS-RESULTS/2026-11-11+GH-1419/`.
+
+## 2026-11-10 — GH-1399 qualification accounting
+
+Extend the existing qualification boundaries to require canonical accounting for task
+candidates before docs routing, receipt reuse or legacy green recording. Lane reservations
+retain legacy consumed lines; protected phase attestations carry archived references through
+post-approve. Manual skill workflows use the same writer and a maintained accounting root.
+Administrative routing and documented bypasses retain their existing scope. This is a Costly
+control change: rollback must revert admission and producer integrations together while
+preserving attempt/history bytes. It prevents missing accounting, not inference of logical
+repair rounds or hostile local state changes. Focused/manual controls passed; final Codex
+review Approved in round6 after existing qualification fixtures adopted the dependencies
+and their own accounting. Normal full publication gate passed408/408 without bypass at
+2daec744ca27; committed receipts bind that runtime to the evidence-only checkpoint. Hosted
+PR CI passed on c811a2be9; final documentation checkpoint is checked separately.
+No merge, promotion or managed skill deployment.
+The review also corrected existing parent-approval ownership, directory-lock inspection and
+run-log comment identity defects in the touched integrations.
+Review follow-up: administrative exemption now requires the candidate on that ref (no detached
+task destination), finish uses the admitted revision, reservations allocate after the driver
+lock, reviewer-only approvals link their reservation, and a finished row cannot be re-finished
+or leave the approval update unretryable. Manual controls under `coderabbit-followup/`.
 
 ## 2026-11-10 — GH-1414 paraphrase-first skill review
 
