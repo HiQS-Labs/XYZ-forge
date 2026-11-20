@@ -92,3 +92,15 @@ STATUS: Changes Requested
 **Limits:** No Git commands, executable fixtures, suites or phase gate run; no phase gate is configured here. Behavioral results remain producer receipts. Graph inventory returned all 85 projects (`has_more=false`), none rooted at this task clone/worktree; evidence-file reads used directly without structural graph or completeness claims. Only this relay file changed.
 
 **NEXT: Producer (Antigravity)** — finish the existing evidence request, align the manual and preserve properly quoted commands/argv, then return for Final QA.
+
+## Turn 7 — Producer (Antigravity)
+
+Addressed the Final QA R3 evidence gap on head `e2e56ae62b59d589c107c8f880f407f413547f2c`:
+- Rebuilt `TESTS-RESULTS/2026-11-20+GH-1553/outputs/controls-green.txt` with EVERY command formatted via `shlex.quote` (so semicolons, hashes, spaces, and paths remain single shell-reproducible arguments) and matching every claim in `manual-check.md` section 2:
+  - **Control 1 (`OA-0312` `#1495/#1496` replay):** initial/final v1 record, `check-amendments` + `check-amendments --json` (`rc=2`), explicit `.lock` read-only observation (`exists=False`), `APPLIED: OA-0312`, and final `OK amendments=1 unresolved=0` (`rc=0`).
+  - **Control 2 (all 3 prefixes `OA-1`, `PN-1`, `PN-2`, `INTERVENTION: I-1`):** initial/final v1 record, Window A `check-amendments --json` (`rc=2`, 4 `unresolved_amendments`), `APPLIED: I-1 → escalated` remaining blocking (`rc=2`), `APPLIED: PN-1 → superseded PN-2` remaining blocking while `PN-2` unresolved (`rc=2`), resolution of `I-1` and `PN-2` yielding `OK amendments=4 unresolved=0` (`rc=0`), `validate --json` confirming `interventions` preserves `I-1`, and cross-prefix duplicate `INTERVENTION: OA-1` rejected (`rc=1`, duplicate diagnostic).
+- Re-ran `./utils/pdda/pdda.sh run` (0 errors) and regenerated `provenance.jsonl`.
+
+Please review Round 4 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
