@@ -1,10 +1,10 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index 7269eaac..2e7bb1e4 100644
+index b2e2ee44..a9fef680 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
-@@ -96,6 +96,42 @@ session and the single delegated outer-loop child session. There are never compe
-    violations, ledger drift, exhausted global budget) or owner-mandated stops, halts dispatch
-    immediately, leaves a resumable checkpoint with observed evidence, and reports to parent.
+@@ -143,6 +143,42 @@ session and the single delegated outer-loop child session. There are never compe
+   5. If the original run wall deadline expires before reconciliation completes, stay in a
+      recorded `HOLD` and hand back with observed evidence.
  
 +### Batch Planning & 3+ PR Landing Defaults (KS-10, U5/U9)
 +- **Forecast Acquisition & U5 Pin Revalidation:** Before landing a 3+ PR batch, obtain the
