@@ -1,6 +1,6 @@
 {"path": "TESTS-RESULTS/2026-11-20+GH-1554/manual-check.md", "bytes": 2856, "sha256": "e123af3be8a9d44714311ed3690d2ad2e99c27d6764ce80aadd2520fe4106f2d"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1554/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
-{"path": "TESTS-RESULTS/2026-11-20+GH-1554/outputs/code-and-docs.patch", "bytes": 19862, "sha256": "b88957be1960aef37dc378a79d85abbb86cf453f40fe2212c0c2f3df901044fc"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1554/outputs/code-and-docs.patch", "bytes": 5011, "sha256": "4d92b62edf19e1fb2995d962d1db59f4e9d4646812e4730cb60091602e3154d1"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1554/outputs/controls.txt", "bytes": 1398, "sha256": "e7c59318db43ec5a39c74f4e713df4e50fd3e80bbb0e7df95f302fa0a5db5a68"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1554/outputs/disposable-controls.txt", "bytes": 8844, "sha256": "9640f2bbdc97bed822a28471e80b58488ae1f8045a7f3f971a2d22ce6f794b64"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1554/outputs/mypy.log", "bytes": 42, "sha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"}
