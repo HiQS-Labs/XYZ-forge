@@ -1,0 +1,11 @@
+jog: GH-901 held: result receipt does not match the selected issue/execution
+jog: execution clone aligned at 15e5eaeb37fd5a96cd8e9809f8cfab8f8747c6a6; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/attempt1/mismatch/primary/.tick/jog/jog-01M7FZ2C2DT0BGY27TAAHWF1XD/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: queue complete (0 pending tasks).
+Switched to a new branch 'fixture-902'

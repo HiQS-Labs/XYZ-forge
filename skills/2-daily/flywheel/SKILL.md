@@ -95,6 +95,9 @@ Keep the objective, exact work/PR identities and heads, dependencies, approved s
 remaining budgets, evidence and next owner in the existing plan or batch record.
 Re-read those facts on resume; a new conversation supplies no new attempt allowance.
 Preparation, execution and landing retain their own canonical writers.
+Before reporting completion, map every requested outcome and later amendment to observed
+evidence or an explicit unresolved disposition in that same plan or batch record. A completed
+subtask does not establish integration.
 
 **Prepared intake is a signal for selection.** When upstream preparation (such as
 `conveyor`, GH-1401) publishes a capture and Preflight Contract, the selected execution
@@ -159,12 +162,16 @@ live evidence. This is instruction-level support, not an automatic observer adap
 Do not install Daily, start schedules or edit deployed copies as part of a run.
 
 **An explicitly requested [10days](../../3-weekly/10days/SKILL.md) sweep keeps one batch
-owner.** 10days owns its scan window, issue selection, ratings, plan, preflight and
-batch execution. Its named auto-fire exception applies only when that skill is
+owner.** 10days owns its scan window, issue selection, `HAS-PR` routing, ratings, plan,
+preflight and batch execution. Its named auto-fire exception applies only when that skill is
 explicitly invoked; selecting Flywheel alone does not invoke it or authorize a sweep.
-Do not send its issues through Jog or start a second sweep to resume it. Standalone
-10days remains supported without Flywheel. The start-marathon route still needs its
-own exact-plan/order confirmation.
+In default `marathon` mode do not send its issues through Jog, and in any mode do not
+silently re-enqueue issues or start a second sweep to resume it. When the operator
+explicitly selects `10days` `serial` mode (Step 3.5), handing committed survivors to
+`jog` (after Step 4 / `conveyor` prep) or `start-task` under that one batch owner is
+permitted with no duplicate enqueueing and no auto-merge. Standalone 10days remains
+supported without Flywheel. The start-marathon route still needs its own exact-plan/order
+confirmation.
 
 For a Flywheel-coordinated 10days run, a red wave gate stops advancement. Preserve
 its halt and evidence; within the recorded limits, repair only the affected work
@@ -202,12 +209,15 @@ needed and step 6 for verified ready PRs, preserving per-PR merge approval.
    only for genuinely marathon-shaped work that needs its preparation, lanes and dry-run.
    Marathon preparation never authorizes firing. A single task does not need a new
    marathon, queue or parallel executor.
-3. **Ready and dispatch through the selected owner.** For 10days, use its preflight,
-   collision checks and existing firing exception; do not substitute Jog dispatch or
-   add start-marathon confirmation to that explicitly requested sweep. For a prepared multi-lane
+3. **Ready and dispatch through the selected owner.** For 10days, honor the operator's
+   selected mode (Step 3.5): in default `marathon` mode use its preflight, collision
+   checks and existing firing exception without substituting Jog dispatch or adding
+   start-marathon confirmation; in `remediate` mode stop after Step 4 preparation; in
+   explicitly selected `serial` mode route committed survivors through `conveyor` → `jog`
+   or `start-task` under the same batch owner without duplicate enqueueing. For a prepared multi-lane
    marathon, retain start-marathon ownership and hand off to `/pre-marathon` only
    after the operator confirms the exact dry-run-approved plan and order. Do not
-   route that arc into serial Jog dispatch. For the Jog route, Jog owns pickup-time ledger registration,
+   route that arc into serial Jog dispatch. For the Jog route, use [Jog’s preparation handoff](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/jog/SKILL.md#preparation-handoff-gh-1439) for missing preparation and reuse its one readiness record; do not duplicate its environment/capacity/clone checklist here. Jog owns pickup-time ledger registration,
    admission, the primary writer, preflight, the driver lock and the separate full-clone
    runner. Preserve its explicit builder/reviewer split and existing attempt limits.
    Formal work verifies the selected deployment and observer before dispatch; setup and

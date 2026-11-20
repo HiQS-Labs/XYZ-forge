@@ -1,0 +1,70 @@
+=== 1. Pin verification & read-only baseline snapshot ===
+6270a2b5da9964d3f4d99ed4fa1755397d398561
+8631a7187b6591d084f93ed386ac49960513b04c
+=== 2. Paired queue-generation replay (pre-change vs changed) ===
+=== 3. Determinism & Queue/Needs-operator/Not-queued byte-invariance ===
+PASS: determinism cmp=0
+PASS: Queue / Needs-operator / Not-queued byte-identical; Status: NOT YET GRANTED preserved
+CLAUSE cr_30min_current_head: pre_change=False changed=True
+CLAUSE cr_reread_pre_merge: pre_change=False changed=True
+CLAUSE cr_waiver_wording: pre_change=False changed=True
+CLAUSE cr_major_blocks: pre_change=False changed=True
+CLAUSE ks11a_round_cap: pre_change=False changed=True
+CLAUSE ks11a_protected_surfaces: pre_change=False changed=True
+CLAUSE ks11b_conflict_hubs: pre_change=False changed=True
+CLAUSE ks11c_ks02_decisions: pre_change=False changed=True
+CLAUSE quota_fallback_verbatim: pre_change=False changed=True
+CLAUSE flywheel_per_pr_approval: pre_change=False changed=True
+CLAUSE flywheel_full_sha_pin: pre_change=False changed=True
+RUN1_ANCHOR OK: OA-3 03:12Z CodeRabbit advisory
+RUN1_ANCHOR OK: #1495/#1496 02:50Z rate-limited
+RUN1_ANCHOR OK: #1526 2 CodeRabbit Majors
+RUN1_ANCHOR OK: #1519/#1532 3-round cap
+RUN1_ANCHOR OK: S-2 02:02Z false agy switch
+RUN1_ANCHOR OK: 02:06Z withdrawal
+REPLAY Case A (Observed run-1: #1495/#1496 02:50Z->03:20Z+)
+  PRE: HOLD / MANUAL_AMENDMENT_REQUIRED: pre-change authority has no 30-min advisory waiver
+  CHG: MERGE_AUTONOMOUS: advisory not received; predeclared waiver used (current head verified)
+REPLAY Case B (Synthetic U5 control: stale-head request timer)
+  PRE: HOLD / MANUAL_AMENDMENT_REQUIRED: pre-change authority has no 30-min advisory waiver
+  CHG: WAIT: U5 stale-head request does not start the 30-min clock on current head
+REPLAY Case C1 (Observed run-1: #1526 posted CodeRabbit Majors)
+  PRE: BLOCK: open CodeRabbit Major must be fixed or answered
+  CHG: BLOCK: open CodeRabbit Major must be fixed or answered
+REPLAY Case C2 (Synthetic U5 control: late Major found on pre-merge re-read)
+  PRE: HOLD / MANUAL_AMENDMENT_REQUIRED: pre-change authority has no 30-min advisory waiver
+  CHG: BLOCK: immediate pre-merge re-read found a posted Major
+REPLAY Case D (Observed run-1: #1519/#1532 cap-stalled on gate surface)
+  PRE: HOLD / OPERATOR_ESCALATION: pre-change authority lacks KS-11a round-cap and quota rules
+  CHG: PARK_FAIL_CLOSED: no explicit final-head approval or protected surface; refuse agy switch on non-quota cap
+REPLAY Case E1 (Synthetic quota control: verbatim quota -> agy)
+  PRE: HOLD / PARENT_INTERVENTION: pre-change authority has no quota fallback rule
+  CHG: SWITCH_REVIEWER_AGY: verbatim quota stop reason; record actual agy model
+REPLAY Case E2 (Synthetic quota control: both providers capped -> park)
+  PRE: HOLD / PARENT_INTERVENTION: pre-change authority has no quota fallback rule
+  CHG: PARK: both reviewer providers quota-capped
+REPLAY Case F (Synthetic KS-11a control: explicit approval + accepted Minor/nit deferral on docs)
+  PRE: HOLD / OPERATOR_ESCALATION: pre-change authority lacks KS-11a round-cap and quota rules
+  CHG: LAND_WITH_DISCLOSURE: explicit final-head approval with reviewer-accepted Minor/nit deferral
+REPLAY Case G1 (Observed run-1: noelsaw1 PR with verified full-SHA pin)
+  PRE: MANUAL_PER_PR_APPROVAL_REQUIRED: pre-change authority does not state Flywheel per-PR satisfaction
+  CHG: APPROVED_UNDER_LAUNCH_GRANT: Flywheel per-PR approval satisfied for noelsaw1 with verified full-SHA pin
+REPLAY Case G2 (Synthetic boundary control: non-owner PR)
+  PRE: STOP_AND_ASK: non-owner PR out of scope
+  CHG: STOP_AND_ASK: non-owner PR out of scope
+PASS: all 10 paired decision-replay assertions passed
+=== 4. Read-only invariance check ===
+PASS: git show-ref unchanged
+PASS: FETCH_HEAD unchanged
+PASS: git count-objects unchanged
+=== 5. CI route classification & mypy ===
+docs_only=true
+pdda_needed=true
+full_required=false
+changed_tests=
+route=docs
+tier=1
+tier2_subsystems=
+tier2_tests=
+tier_reason=docs-only
+Success: no issues found in 1 source file

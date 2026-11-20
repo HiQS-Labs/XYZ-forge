@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""GH-1470 follow-up manual check (throwaway; GH-831 forbids a new suite).
+
+Builds local git fixtures under a fresh temp directory (outside any checkout) and calls the real
+ledger_merge.landing_forecast, merge_cleanup.format_landing_forecast and
+merge_cleanup.jog_primary_precondition from the clone named on the command line.
+Usage: python3 driver.py <clone-root>
+"""
+import subprocess, sys, tempfile, json
+from pathlib import Path
+from unittest import mock
+
+ROOT = Path(sys.argv[1]).resolve()
+sys.path[:0] = [str(ROOT / "skills/2-daily/merge-cleanup/scripts"), str(ROOT / "utils/py")]
+import ledger_merge, merge_cleanup  # noqa: E402
+
+FAIL = []
+def check(label, cond, **kv):
+    print(("PASS " if cond else "FAIL ") + label + " " + json.dumps(kv, default=str))
+    if not cond:
+        FAIL.append(label)
+
+def git(repo, *a):
+    r = subprocess.run(["git", "-C", str(repo), *a], capture_output=True, text=True)
+    assert r.returncode == 0, (a, r.stderr)
+    return r.stdout.strip()
+
+def edit(repo, lines_to_text, extra=None):
+    p = repo / "CHANGELOG.md"
+    ls = p.read_text().splitlines(keepends=True)
+    for i, t in lines_to_text.items():
+        ls[i - 1] = f"- {t}\n"
+    p.write_text("".join(ls))
+    if extra:
+        (repo / extra).write_text(extra + "\n")
+
+def fixture():
+    d = Path(tempfile.mkdtemp(prefix="gh1470-fu-"))
+    repo = d / "repo"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "development")
+    git(repo, "config", "user.email", "fx@local"); git(repo, "config", "user.name", "fx")
+    (repo / "CHANGELOG.md").write_text("".join(f"- entry {i}\n" for i in range(1, 41)))
+    git(repo, "add", "-A"); git(repo, "commit", "-qm", "seed")
+    return repo, git(repo, "rev-parse", "HEAD")
+
+def branch(repo, name, start, lines, extra=None):
+    git(repo, "checkout", "-q", "-b", name, start)
+    edit(repo, lines, extra)
+    git(repo, "add", "-A"); git(repo, "commit", "-qm", name)
+    sha = git(repo, "rev-parse", "HEAD")
+    git(repo, "checkout", "-q", "development")
+    return sha
+
+def advance_base(repo, lines):
+    edit(repo, lines)
+    git(repo, "commit", "-qam", "base moves")
+    return git(repo, "rev-parse", "HEAD")
+
+def hubs_queue(stacked=False):
+    """#100 rewrites lines 10-30 (pairwise hub); #101 conflicts alone with the base (line 2);
+    #102-#105 edit spaced lines 12/16/20/24 plus their own file."""
+    repo, seed = fixture()
+    heads = {100: branch(repo, "h100", seed, {i: f"hub rewrite {i}" for i in range(10, 31)}),
+             101: branch(repo, "h101", seed, {2: "hub101 line 2"}, "f101")}
+    prev = seed
+    for n, ln in zip((102, 103, 104, 105), (12, 16, 20, 24)):
+        start = heads[102] if (stacked and n == 103) else seed
+        heads[n] = branch(repo, f"m{n}", start, {ln: f"member {n}"}, f"f{n}")
+    base = advance_base(repo, {2: "base moved line 2"})
+    return repo, base, heads
+
+def show(fc):
+    out = merge_cleanup.format_landing_forecast(fc, "development")
+    print("\n".join("    " + l for l in out.splitlines()))
+    return out
+
+order = [100, 101, 102, 103, 104, 105]
+
+print("== S1: two hubs + four clean members -> direct in passes, no stacked line")
+repo, base, heads = hubs_queue()
+fc = ledger_merge.landing_forecast(repo, base, order, heads)
+out = show(fc)
+check("S1 passes", fc["recommendation"] == "direct" and fc["passes"] == [[102, 103, 104, 105], [100, 101]],
+      rec=fc["recommendation"], passes=fc["passes"])
+check("S1 pass lists printed", "pass 1: --prs 102,103,104,105" in out and "pass 2: --prs 100,101" in out)
+check("S1 hub count", "Conflict hubs (GH-1470): 2" in out and "Clean once hubs are set aside: 4 of 6" in out)
+check("S1 no stacked line", fc["stacked"] == [] and "stacked members" not in out)
+
+print("== S2: hubs are most of the queue (non-hubs conflict among themselves) -> group, no passes")
+repo, seed = fixture()
+h = {200: branch(repo, "a", seed, {5: "a"}), 201: branch(repo, "b", seed, {5: "b"}),
+     202: branch(repo, "c", seed, {15: "c"}), 203: branch(repo, "d", seed, {15: "d"}),
+     204: branch(repo, "e", seed, {25: "e"})}
+base = advance_base(repo, {25: "base 25"})
+fc = ledger_merge.landing_forecast(repo, base, sorted(h), h)
+show(fc)
+check("S2 group, no passes", fc["recommendation"] == "group" and not fc["passes"], rec=fc["recommendation"], reason=fc["reason"])
+
+print("== S3: a failed step (head fetch) -> recommendation withheld")
+repo, base, heads = hubs_queue()
+fc = ledger_merge.landing_forecast(repo, base, order, heads, unknown={103: "fetch of pull/103/head failed: simulated"})
+show(fc)
+check("S3 withheld", fc["recommendation"] is None and not fc["passes"] and "forecast incomplete" in fc["reason"], reason=fc["reason"])
+heads_bad = dict(heads); heads_bad[104] = "0" * 40
+fc = ledger_merge.landing_forecast(repo, base, order, heads_bad)
+check("S3b merge-tree failure withheld", fc["recommendation"] is None, reason=fc["reason"])
+
+print("== S4: stacked member (#103 built on #102) -> blind-spot line printed")
+repo, base, heads = hubs_queue(stacked=True)
+fc = ledger_merge.landing_forecast(repo, base, order, heads)
+out = show(fc)
+check("S4 stacked detected", fc["stacked"] == ["#102/#103"], stacked=fc["stacked"])
+check("S4 blind-spot line", "Blind spot: stacked members #102/#103" in out and "CONFLICTING" in out)
+
+print("== S5: Jog precondition (policy and Jog reader stubbed; real mapping and message)")
+class Unpinned:
+    @staticmethod
+    def primary_root(root):
+        raise ValueError("primary is not pinned; explicitly set `git config --global xyz.primary.repo-abc <primary-path>`")
+class Pinned:
+    @staticmethod
+    def primary_root(root):
+        return root
+listed = [{"number": 1067, "title": "lane", "body": "", "headRefName": "marathon/gh-77-x"},
+          {"number": 1068, "title": "fix", "body": "Closes #78", "headRefName": "feat/other"},
+          {"number": 1009, "title": "plain", "body": "", "headRefName": "feat/plain"}]
+with mock.patch.object(merge_cleanup.ledger_merge, "harness_paths_module", return_value=Unpinned), \
+     mock.patch.object(merge_cleanup, "jog_open_issues", return_value={77, 78}):
+    w = merge_cleanup.jog_primary_precondition(Path("/nonexistent"), listed)
+print("    " + str(w))
+check("S5 unpinned + mapped warns", bool(w) and "#1067 (GH-77)" in w and "#1068 (GH-78)" in w and "#1009" not in w
+      and "rule=jog-primary" in w)
+with mock.patch.object(merge_cleanup.ledger_merge, "harness_paths_module", return_value=Unpinned), \
+     mock.patch.object(merge_cleanup, "jog_open_issues", return_value={999}):
+    check("S5 unpinned, no mapped PR: silent", merge_cleanup.jog_primary_precondition(Path("/x"), listed) is None)
+with mock.patch.object(merge_cleanup.ledger_merge, "harness_paths_module", return_value=Pinned), \
+     mock.patch.object(merge_cleanup, "jog_open_issues", side_effect=AssertionError("must not read")):
+    check("S5 pinned: silent, no ledger read", merge_cleanup.jog_primary_precondition(Path("/x"), listed) is None)
+with mock.patch.object(merge_cleanup.ledger_merge, "harness_paths_module", return_value=Unpinned), \
+     mock.patch.object(merge_cleanup, "jog_open_issues", side_effect=ValueError("dump unreadable")):
+    w = merge_cleanup.jog_primary_precondition(Path("/x"), listed)
+    check("S5 unreadable Jog rows: named, not silent", bool(w) and "not checked" in w, w=w)
+
+print(f"\nRESULT: {'FAIL ' + ', '.join(FAIL) if FAIL else 'all checks passed'}")
+sys.exit(1 if FAIL else 0)

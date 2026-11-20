@@ -1,0 +1,153 @@
+{
+  "fixture_root": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g",
+  "source": "630fff3ef45fecc616c6a47c3fa21ffa321d0b21",
+  "cases": [
+    {
+      "case": "valid target main path",
+      "expected": 0,
+      "actual": 0,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: controlled (exit 0) (1-INBOX doc; live run promotes it first)\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "failed preflight",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: controlled (exit 3) (1-INBOX doc; live run promotes it first)\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "already landed is not new work readiness",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: controlled (exit 4) (1-INBOX doc; live run promotes it first)\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "missing reviewer",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: --reviewer <agent> is required with --executor marathon (the default executor since the Phase 5 flip) \u2014 Jog does not select a reviewer by default (GH-280: no silent cost-bearing or same-agent route)\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "same reviewer",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: --reviewer must differ from --builder (both are 'codex')\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "missing binary",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: marathon-drive: reviewer binary 'gh1443-does-not-exist' not found on PATH (--reviewer agent 'agy')\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "unknown role",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: agent 'unrecognized' not recognized \u2014 must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "auto merge unsupported",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: --auto-merge requires the separate durable-transition publisher; use the primary publication checkpoint and merge-cleanup for delivery 1\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "valid checkpoint",
+      "expected": 0,
+      "actual": 0,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: controlled (exit 0) (1-INBOX doc; live run promotes it first)\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "publication equals execution",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] live run would refuse preparation: publication and execution clones must be distinct\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "checkpoint needs bounded tasks",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] live run would refuse preparation: --checkpoint-root requires positive --max-tasks and the real Marathon executor\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "dirty publication",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] live run would refuse preparation: checkpoint publication clone is dirty; preserve it before retry\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "wrong publication branch",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] live run would refuse preparation: checkpoint publication clone must be on development\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "promotion unsupported command",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: unreviewed-probe-contract: no valid probes in unattended mode\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "inbox identity cannot be evaluated",
+      "expected": 2,
+      "actual": 2,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] not verified: live provider capacity, gate environment/services, remote freshness or checkpoint recovery eligibility\njog: [dry-run] would process 1 pending item(s) (capped at 1):\n  1. GH-99001 (builder=codex, auto_merge=False)\n     preflight: not evaluated \u2014 1-INBOX doc PROJECT/1-INBOX/GH-99001-CONTROL.md has no numeric gh_issue: 99001, so readiness cannot be evaluated before promotion\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    },
+    {
+      "case": "bare preview adjacent compatibility",
+      "expected": 0,
+      "actual": 0,
+      "pass_": true,
+      "output": "jog: [dry-run] simulating queue execution (root: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1443-cli-2sj5u08g/primary)\njog: [dry-run] would process 1 pending item(s):\n  1. GH-99001 (builder=agy, auto_merge=False)\n",
+      "ledger_unchanged": true,
+      "no_jog_state": true
+    }
+  ],
+  "passed": 16,
+  "total": 16,
+  "all_preserved": true
+}

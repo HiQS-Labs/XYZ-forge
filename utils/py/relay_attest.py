@@ -99,12 +99,53 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
+# One rule for reading a relay header line (`STATUS:`, `NEXT:`, `ROUND:`, and a review block's
+# `VERDICT:`): the key may be wrapped in markdown bold or backticks, as a model often writes it
+# (`**STATUS:** Approved`). This is the rule rtl_relay_field (relay-turn-lib.sh), poll.py and
+# bin/validate-relay-block already apply; the driver, the attestation and marathon used to need the
+# bare `STATUS:` prefix, so the same file read as Approved to one and as no status to the other.
+_HEADER_LINE_RES = {key: re.compile(rb"^[`*]*" + re.escape(key[:-1]) + rb"[`*]*:")
+                    for key in (b"STATUS:", b"NEXT:", b"ROUND:")}
+
+
+def header_field(text, key):
+    """Value of the FIRST `key:` header line in `text` (str), bold/backtick tolerant; "" if none."""
+    pat = re.compile(r"^[`*]*" + re.escape(key) + r"[`*]*:[`*]*[ \t]*(.*)$", re.M)
+    m = pat.search(text)
+    return m.group(1).strip("`* \t\r\n") if m else ""
+
+
+def set_header_field(text, key, value):
+    """`text` with the FIRST `key:` header line rewritten to the bare `key: value` form.
+    Returns (new_text, n) where n is 0 when no such line exists."""
+    pat = re.compile(r"^[`*]*" + re.escape(key) + r"[`*]*:.*$", re.M)
+    return pat.subn(lambda _m: f"{key}: {value}", text, count=1)
+
+
+_VERDICT_RE = re.compile(r"^[ \t]*[`*]*VERDICT[`*]*:[`*]*[ \t]*(.*)$", re.I | re.M)
+
+
+def last_verdict(added):
+    """The value of the LAST `VERDICT:` line in the text a reviewer added this turn (the line
+    bin/validate-relay-block requires: PASS, FAIL or PARKED; marathon's brief writes
+    `**Verdict:** Approved`). "" when the block carries no verdict line."""
+    found = _VERDICT_RE.findall(_text(added))
+    return found[-1].strip("`* \t\r\n") if found else ""
+
+
+def verdict_contradicts_approval(verdict):
+    """True when a verdict word says the review did NOT pass. Only explicit failing words count;
+    an absent or unrecognised verdict is left to the other checks."""
+    v = verdict.strip().lower()
+    return v.startswith(("fail", "changes requested", "changes-requested", "blocked"))
+
+
 def _normalise_headers(lines):
     seen = set()
     out = []
     for line in lines:
         for key in _HEADER_KEYS:
-            if key not in seen and line.startswith(key):
+            if key not in seen and _HEADER_LINE_RES[key].match(line):
                 seen.add(key)
                 line = key + b"\n"
                 break
@@ -242,9 +283,7 @@ def append_before_marker(path, text):
 def file_status(path):
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
-            for line in f:
-                if line.startswith("STATUS:"):
-                    return line.split(":", 1)[1].strip()
+            return header_field(f.read(), "STATUS")
     except OSError:
         pass
     return ""
@@ -264,11 +303,40 @@ def path_for(task, target_repo):
     return os.path.join(git_common_dir(target_repo), "relay-attest", safe + ".json")
 
 
+GATE_RUN_VALUES = ("yes", "failed", "no", "undeclared")
+_GATE_RUN_RE = re.compile(r"^[ \t]*[-*]?[ \t]*gate run:[ \t]*(yes|no)\b(.*)$", re.I | re.M)
+_BUILDER_BLOCK_RE = re.compile(r"^### Round [^\n]*· Builder ·[^\n]*\n(.*?)(?=^### |\Z)", re.M | re.S)
+
+
+def _text(data):
+    return data.decode("utf-8", "replace") if isinstance(data, (bytes, bytearray)) else (data or "")
+
+
+def declared_gate_run(added):
+    """GH-1428: the reviewer's last `gate run:` declaration. "yes" only for an explicit exit 0."""
+    found = _GATE_RUN_RE.findall(_text(added))
+    if not found:
+        return "undeclared"
+    word, rest = found[-1]
+    if word.lower() == "no":
+        return "no"
+    return "yes" if re.search(r"\bexit[ \t:=]*0\b", rest, re.I) else "failed"
+
+
+def builder_declared_unverified(pre_text):
+    """GH-1428: does the LATEST `### Round N · Builder ·` block say anything is unverified?"""
+    blocks = _BUILDER_BLOCK_RE.findall(_text(pre_text))
+    return bool(blocks) and re.search(r"\bunverified\b", blocks[-1], re.I) is not None
+
+
 def trailer_text(record):
     # GH-1220: bind config_sha256 into the trailer when present so a tampered value is refused at
     # load() while legacy records without the field continue to match their legacy trailers.
     cfg = record.get("config_sha256")
     cfg_line = f"config-sha256: {cfg}\n" if cfg else ""
+    # GH-1428: same pattern for the reviewer's gate-run declaration.
+    if record.get("gate_run"):
+        cfg_line += f"gate-run: {record['gate_run']}\n"
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"
@@ -344,6 +412,8 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None, any_re
         # GH-1220: optional config identity; when present it must be a non-empty string.
         if not isinstance(rec["config_sha256"], str) or not rec["config_sha256"]:
             return None, "attestation record field config_sha256 is not a non-empty string"
+    if "gate_run" in rec and rec["gate_run"] not in GATE_RUN_VALUES:
+        return None, "attestation record field gate_run is not one of " + "/".join(GATE_RUN_VALUES)
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:

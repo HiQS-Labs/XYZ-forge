@@ -1,0 +1,8 @@
+{
+  "vulnerable_control": true,
+  "ignored_preserved": false,
+  "alignment_refused": false,
+  "held_lease_refused": false,
+  "held_status": "running",
+  "head": "a19799e20e2246ee69b2cfb196df74a99ba92475"
+}

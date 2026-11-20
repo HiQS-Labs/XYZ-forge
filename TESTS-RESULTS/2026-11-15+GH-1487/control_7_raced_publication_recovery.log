@@ -1,0 +1,35 @@
+# Control 7: Raced publication recovery
+# Command: /Library/Developer/CommandLineTools/usr/bin/python3 /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1487-changelog-landing-2026-11-15/utils/py/hosted_lane_publish.py --reconcile-args --catch-up --gate --qualify --pr 1487 --reconcile-cmd /Library/Developer/CommandLineTools/usr/bin/python3 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmpgh3u_kmd/real_reconcile.py
+# Candidate Revision: b459c3f15b2971852917caa36ac48f889ad04194
+# Timestamp: 2026-11-16T19:17:48.315292+00:00
+# Status: PASS
+
+hosted_lane_publish exit code: 0
+STDOUT:
+hosted-lane-publish: push rejected — origin/development moved to 7781f05b42b3; discarding b6b2cbb2bf26, publishing its 2 receipt file(s) first
+hosted-lane-publish: receipts published as dd16d42ab118 (attempt 1)
+hosted-lane-publish: recompute: /Library/Developer/CommandLineTools/usr/bin/python3 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmpgh3u_kmd/real_reconcile.py --catch-up --gate --qualify --pr 1487 --only-receipted --skip-pull
+wave-reconcile: wave-reconcile: prepended 1 changelog entry/entries to CHANGELOG.md
+wave-reconcile: Changelog: no new entries to write (up to date)
+real_reconcile: successfully executed production reconcile_changelog and catchup candidate selection
+hosted-lane-publish: pushed recomputed transitions as 8687f17b5e8a
+
+STDERR:
+To /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmpgh3u_kmd/upstream.git
+ ! [rejected]        HEAD -> development (fetch first)
+error: failed to push some refs to '/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-WjcHIk/tmpgh3u_kmd/upstream.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+Remote log:
+8687f17 chore: reconcile merged development work
+dd16d42 chore: retain qualification receipts for 82806517fba8d2bf0ea045160ec79cde610c95ac
+7781f05 feat: concurrent
+8280651 chore: baseline
+
+Receipted PR marker present on origin/development: True
+Real reconciler executed and witnessed catchup selection: True
+

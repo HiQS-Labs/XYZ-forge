@@ -16,7 +16,7 @@ STUB="$WORK/cmd"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-printf '%s\n' "$*" > "$WORK/cmd-args" 2>/dev/null || true
+printf '%s\n' "$@" > "$WORK/cmd-args"
 export TICK_REPO_ROOT="$A"
 if [ "${STUB_MODE:-good}" = fail ]; then
   printf 'commandcode fake failure\n'
@@ -81,6 +81,34 @@ grep -q -- "--no-session" "$WORK/cmd-args" && pass "default COMMANDCODE_FLAGS re
 grep -q -- "--yolo" "$WORK/cmd-args" && pass "--yolo flag reaches cmd" || fail "--yolo flag missing"
 grep -q -- "--model" "$WORK/cmd-args" && grep -q -- "meta/muse-spark-1.2-contributor" "$WORK/cmd-args" && pass "default COMMANDCODE_MODEL reaches cmd" || fail "model flag missing"
 grep -q -- "--print" "$WORK/cmd-args" && pass "--print flag reaches cmd" || fail "--print missing"
+
+# --- effort: CLI default, profile passthrough, and explicit flag precedence -----
+# One argv element per line keeps the relay prompt out of flag matching.
+if grep -Eq -- '^--effort(=|$)' "$WORK/cmd-args"; then
+  fail "unset effort should leave the CLI default"
+else
+  pass "unset effort adds no --effort flag"
+fi
+
+seed_token RELAY-TURN-effort
+run_shim RELAY-TURN-effort commandcode good RELAY_PEER=claude-a COMMANDCODE_REASONING_EFFORT=max; rc=$?
+[ "$rc" -eq 0 ] && [ "$(grep -c -E -- '^--effort(=|$)' "$WORK/cmd-args")" -eq 1 ] \
+  && [ "$(sed -n '/^--effort$/{n;p;}' "$WORK/cmd-args")" = max ] \
+  && pass "profile effort reaches cmd exactly once" || fail "profile effort missing or duplicated (rc=$rc)"
+
+seed_token RELAY-TURN-effort-flag
+run_shim RELAY-TURN-effort-flag commandcode good RELAY_PEER=claude-a \
+  COMMANDCODE_REASONING_EFFORT=max 'COMMANDCODE_FLAGS=--no-session --effort high'; rc=$?
+[ "$rc" -eq 0 ] && [ "$(grep -c -E -- '^--effort(=|$)' "$WORK/cmd-args")" -eq 1 ] \
+  && [ "$(sed -n '/^--effort$/{n;p;}' "$WORK/cmd-args")" = high ] \
+  && pass "explicit effort overrides profile effort" || fail "explicit effort precedence failed (rc=$rc)"
+
+seed_token RELAY-TURN-effort-equals
+run_shim RELAY-TURN-effort-equals commandcode good RELAY_PEER=claude-a \
+  COMMANDCODE_REASONING_EFFORT=max 'COMMANDCODE_FLAGS=--no-session --effort=high'; rc=$?
+[ "$rc" -eq 0 ] && [ "$(grep -c -E -- '^--effort(=|$)' "$WORK/cmd-args")" -eq 1 ] \
+  && grep -qx -- '--effort=high' "$WORK/cmd-args" \
+  && pass "explicit --effort=value overrides profile effort" || fail "equals effort precedence failed (rc=$rc)"
 
 # --- (2b) Python-only entry point ignores an old global Bash opt-out ---------------
 seed_token RELAY-TURN-python-entry

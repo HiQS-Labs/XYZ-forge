@@ -371,7 +371,7 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
       1. absent binary / timeout / launch failure            -> incomplete
       2. not a normal exit with return code 0 or 1           -> incomplete (signal-killed etc.)
       3. anything on stderr (`lsof: WARNING: can't opendir`) -> incomplete: the tree was not covered
-      4. completed + empty stderr -> parse records; keep `n` paths strictly within the checkout,
+      4. completed + empty stderr -> parse records; keep `n` paths at or within the checkout,
          drop our own PID and ancestors; matches -> ACTIVE_PROCESS, none -> verified idle.
     Returns {"verified": bool, "active": bool, "details": str, "holders": [{"pid","command","paths"}]}.
     """
@@ -412,7 +412,10 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
         elif tag == "c":
             cmd = val
         elif tag == "n" and pid is not None and pid not in skip:
-            if _within(Path(val), repo_path) or _within(Path(val), resolved_repo):
+            # GH-1475: the checkout root itself counts (a shell whose cwd is the clone holds it);
+            # `_within` alone is strictly-inside and missed that holder.
+            name = Path(val)
+            if name in (repo_path, resolved_repo) or _within(name, repo_path) or _within(name, resolved_repo):
                 holders.setdefault(pid, {"pid": pid, "command": cmd, "paths": []})["paths"].append(val)
     if holders:
         names = ", ".join(f"PID {h['pid']} ({h['command'] or '?'})" for h in holders.values())

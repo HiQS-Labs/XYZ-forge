@@ -1,0 +1,4 @@
+contract_keys ['artifacts', 'fix_probes', 'gate', 'remediation', 'round_cap', 'target']
+labels ['command:python3 TESTS-RESULTS/2026-11-11+GH-1171/manual_probe.py']
+reason None
+PARSER+LINTER OK

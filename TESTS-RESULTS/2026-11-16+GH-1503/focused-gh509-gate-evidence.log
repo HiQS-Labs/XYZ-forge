@@ -1,0 +1,29 @@
+== test: gh509-gate-evidence ==
+  workdir: <scratch>/tick-gh509-gate-evidence.XXXXXX.kToYBspDWc
+-- case 1: a clean tree records, keyed to the commit
+  PASS: a clean tree records (exit 0)
+  PASS: the record is keyed to the commit hash
+  PASS: the record names the commit it attests to
+  PASS: the record states it is NOT promotion evidence
+-- case 2: a dirty tree is REFUSED (the assertion this file exists for)
+  PASS: a dirty tree is refused with its own exit code (3)
+  PASS: a refused run writes nothing at all
+  PASS: the refusal explains WHY (the record would name an untested state)
+  PASS: the refusal names what made the tree dirty
+  PASS: an UNTRACKED file also counts as dirty
+-- case 3: a repo with no commits refuses distinctly
+  PASS: no-commit refuses with its own code (4), distinct from dirty (3)
+-- case 4: the operator surface reads the record and never lies about the network
+  PASS: status reports a recorded commit as verified
+  PASS: status repeats that a local record is not promotion evidence
+  PASS: offline status reports UNKNOWN rather than inventing a verdict
+  PASS: status flags a dirty working tree
+  PASS: status reports an unrecorded commit as unrecorded
+-- case 5: the status filter mirrors the boundary job's own trigger
+  PASS: the status filter accepts push-to-main only, and no longer accepts workflow_dispatch
+  PASS: the boundary job triggers on push-to-main only (its workflow_dispatch trigger was removed for cost)
+-- case 6: canary status comes from the advisory job, not the green workflow
+  PASS: a green workflow with a failed canary job reports drift and its source SHA
+  PASS: the failed advisory job cannot collapse to a workflow-level green
+
+  gh509-gate-evidence: 19 passed, 0 failed

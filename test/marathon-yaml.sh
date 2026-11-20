@@ -80,15 +80,11 @@ run "$WORK/m6.yaml" >/dev/null; rc=$?
   && pass "duplicate phase id -> error" || fail "should error on duplicate id (rc=$rc)"
 
 # --- (7) unsupported reviewer -> error ------------------------------------
-# Checks rejection + the "must start with codex" hint substring, not the full message verbatim —
-# src/marathon-yaml.js's accepted-prefix list (currently codex/gemini/agy) is untouched by this
-# lane (GH-113/114 follow-up: this test previously hardcoded the pre-agy message text, which went
-# stale the moment 'agy' was appended to it), so a hardcoded exact string here would drift again
-# on the next legitimate prefix-list change.
-printf 'name: x\nphases:\n  - id: p1\n    reviewer: claude\n' > "$WORK/m7.yaml"
+# Unknown routes remain invalid; supported Claude reviewers are no longer rejected.
+printf 'name: x\nphases:\n  - id: p1\n    reviewer: unsupported-reviewer\n' > "$WORK/m7.yaml"
 run "$WORK/m7.yaml" >/dev/null; rc=$?
-{ [ "$rc" -ne 0 ] && grep -q "must start with codex" "$WORK/err"; } \
-  && pass "reviewer must be an accepted prefix -> error" || fail "should reject 'claude' reviewer (rc=$rc)"
+{ [ "$rc" -ne 0 ] && grep -q "not recognized" "$WORK/err"; } \
+  && pass "reviewer must be an accepted prefix -> error" || fail "should reject unsupported reviewer (rc=$rc)"
 
 # --- (8) json format emits the marathon name ------------------------------
 grep -q '"name": "trinity-sync-refactor"' <<<"$(run "$WORK/m1.yaml" --format json)" \

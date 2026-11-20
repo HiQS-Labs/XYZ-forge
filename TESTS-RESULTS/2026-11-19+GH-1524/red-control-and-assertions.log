@@ -1,0 +1,7 @@
+CHECK [HAS-PR disposition in 10days]: base_red=True new_green=True
+CHECK [Step 3.5 Execution mode routing in 10days]: base_red=True new_green=True
+CHECK [Narrow single-harness exception over start-task:235]: base_red=True new_green=True
+CHECK [HAS-PR Ledger in 10days Step 8]: base_red=True new_green=True
+CHECK [Flywheel mode-qualified serial handoff (section + step 3)]: base_red=True new_green=True
+CHECK [pr-minder indexed in ARCHITECTURE.md]: base_red=True new_green=True
+ALL RED CONTROLS AND POST-EDIT ASSERTIONS PASSED (6/6)

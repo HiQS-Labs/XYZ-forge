@@ -1,0 +1,38 @@
+[
+  {
+    "case": "1171-original",
+    "accepted": false,
+    "reason": "probe target path does not resolve: -c"
+  },
+  {
+    "case": "1171-repaired",
+    "accepted": true,
+    "reason": "ok"
+  },
+  {
+    "case": "1315-original",
+    "accepted": false,
+    "reason": "probe target path does not resolve: -c"
+  },
+  {
+    "case": "1315-repaired",
+    "accepted": true,
+    "reason": "ok"
+  },
+  {
+    "case": "empty",
+    "accepted": false,
+    "reason": "empty probe command"
+  },
+  {
+    "case": "trivial",
+    "accepted": false,
+    "reason": "trivial probe pattern rejected: 'echo ok'"
+  },
+  {
+    "case": "missing",
+    "accepted": false,
+    "reason": "probe target path does not resolve: missing.py"
+  }
+]
+PASS: 7/7 expected lint classifications; semantic acceptance unverified

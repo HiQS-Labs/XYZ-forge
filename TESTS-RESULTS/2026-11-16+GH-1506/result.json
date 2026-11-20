@@ -1,0 +1,44 @@
+{
+  "scope": "component reproduction: exact AST-extracted probe, imported classifier with controlled CPU samples, real git status; NOT full agy-turn CLI",
+  "source_head": "a71663d52c35e5f7fa564759f6493a86f2b2e59d",
+  "results": [
+    {
+      "trial": 1,
+      "benign_open_file_probe": [
+        "lock",
+        "the open-file listing contains .lock; this does not establish lock ownership, contention, waiting, or inactivity."
+      ],
+      "no_log_control": [
+        "timeout-unclassified",
+        "live sampling never established a safe idle window for the network probe [cpu=0.00s/s, samples=2, file-activity=no]"
+      ],
+      "log_only_classification": [
+        "timeout-slow-but-progressing",
+        "file activity was observed; logs or scratch files can contribute. Useful work progress and a reason to increase the budget are not established. The reason code is a legacy category, not a progress verdict. [cpu=0.00s/s, samples=2, file-activity=yes]"
+      ],
+      "unchanged_dirty_tree_counts": [
+        2,
+        2
+      ]
+    },
+    {
+      "trial": 2,
+      "benign_open_file_probe": [
+        "lock",
+        "the open-file listing contains .lock; this does not establish lock ownership, contention, waiting, or inactivity."
+      ],
+      "no_log_control": [
+        "timeout-unclassified",
+        "live sampling never established a safe idle window for the network probe [cpu=0.00s/s, samples=2, file-activity=no]"
+      ],
+      "log_only_classification": [
+        "timeout-slow-but-progressing",
+        "file activity was observed; logs or scratch files can contribute. Useful work progress and a reason to increase the budget are not established. The reason code is a legacy category, not a progress verdict. [cpu=0.00s/s, samples=2, file-activity=yes]"
+      ],
+      "unchanged_dirty_tree_counts": [
+        2,
+        2
+      ]
+    }
+  ]
+}

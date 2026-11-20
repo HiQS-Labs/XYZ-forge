@@ -1,0 +1,18 @@
+=== git diff --name-status 6270a2b5da9964d3f4d99ed4fa1755397d398561..5bea053cde97ad91b0b40482a7df0ee7290880af ===
+M	CHANGELOG.md
+A	PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md
+A	relay-system/2026-11-20/gh1535-plan-qa.md
+M	releases.db
+M	releases.sql
+M	skills/1-hourly/kickstart/SKILL.md
+M	skills/1-hourly/kickstart/scripts/build_queue.py
+
+=== git diff --stat 6270a2b5da9964d3f4d99ed4fa1755397d398561..5bea053cde97ad91b0b40482a7df0ee7290880af ===
+ CHANGELOG.md                                     |  14 +++
+ PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md   |  96 ++++++++++++++
+ relay-system/2026-11-20/gh1535-plan-qa.md        | 130 +++++++++++++++++++
+ releases.db                                      | Bin 1945600 -> 1945600 bytes
+ releases.sql                                     |   9 +-
+ skills/1-hourly/kickstart/SKILL.md               |  12 +-
+ skills/1-hourly/kickstart/scripts/build_queue.py | 152 ++++++++++++++++++++---
+ 7 files changed, 388 insertions(+), 25 deletions(-)

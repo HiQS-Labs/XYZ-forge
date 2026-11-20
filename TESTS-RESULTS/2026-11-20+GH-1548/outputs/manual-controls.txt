@@ -1,0 +1,60 @@
+=== CONTROL_2_U13_PROVIDER_QUOTA ===
+sample='HTTP 429 Too Many Requests from api.openai.com' -> detected=True expect=True
+sample='Error: You have exceeded your current quota / usage limit' -> detected=True expect=True
+sample='rate_limit_exceeded: try again in 30s' -> detected=True expect=True
+sample='429: Resource exhausted' -> detected=True expect=True
+sample='normal syntax error in python file' -> detected=False expect=False
+sample='git status exit 1' -> detected=False expect=False
+
+=== CONTROL_1_STALE_OVERWRITE_NO_ACTION_STALL (rc=3) ===
+STDERR:
+relay-drive: GH-370 worktree state (main tree fallback: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpw59rospq) changed-files=5
+relay-drive: review-once — reviewer took no action (relay file unchanged, NEXT unchanged, STATUS still In progress, token open:codex) — genuine stall
+relay-drive: stop-reason=no-action-stall invocation_id=RELAY-KS05-1-36402-1795170481825 exit_code=3 receipt=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpw59rospq/.relay-scratch/stop-reasons/RELAY-KS05-1-36402-1795170481825.json
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+
+
+LEGACY_ESC=no-action-stall
+RECEIPT_1={
+  "exit_code": 3,
+  "invocation_id": "RELAY-KS05-1-36402-1795170481825",
+  "reason": "no-action-stall",
+  "recorded_at": "2026-11-20T10:28:02Z",
+  "relay_task": "RELAY-KS05-1",
+  "schema": 1,
+  "stop_reason": "no-action-stall"
+}
+
+=== CONTROL_3_AND_4_429_PROVIDER_QUOTA_FRESH_RECEIPT (rc=1) ===
+STDERR:
+relay-drive: GH-370 worktree state (main tree fallback: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpw59rospq) changed-files=5
+Error: HTTP 429 Too Many Requests - quota exceeded
+relay-drive: the codex turn itself failed (shim exit 1, reason=provider-quota) — this is a failed turn, not a review handback
+relay-drive: stop-reason=provider-quota invocation_id=RELAY-KS05-2-36475-1795170482334 exit_code=1 receipt=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpw59rospq/.relay-scratch/stop-reasons/RELAY-KS05-2-36475-1795170482334.json
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+
+
+LEGACY_ESC=provider-quota
+RECEIPT_2={
+  "exit_code": 1,
+  "invocation_id": "RELAY-KS05-2-36475-1795170482334",
+  "reason": "provider-quota",
+  "recorded_at": "2026-11-20T10:28:02Z",
+  "relay_task": "RELAY-KS05-2",
+  "schema": 1,
+  "stop_reason": "provider-quota"
+}

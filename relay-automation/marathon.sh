@@ -185,9 +185,10 @@ def emit(context, kind, **extra):
     relay = bounded_read(phase.get("relay_file")) or ""
     fields = {}
     for line in relay.splitlines():
-        if line.startswith(("STATUS:", "NEXT:")):
-            key, value = line.split(":", 1)
-            fields.setdefault(key, value.strip())
+        # Same rule as relay_attest.header_field: the key may be wrapped in bold or backticks.
+        m = re.match(r"[`*]*(STATUS|NEXT)[`*]*:[`*]*[ \t]*(.*)$", line)
+        if m:
+            fields.setdefault(m.group(1), m.group(2).strip("`* \t"))
     result = matching_receipt(context) if phase else {}
     report = {
         "kind": kind, "observed_at": utc(), "run_id": context["run_id"],

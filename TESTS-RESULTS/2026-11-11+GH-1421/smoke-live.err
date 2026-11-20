@@ -1,0 +1,1 @@
+board_sync: repos_source: rebalanceOS DB is unreadable (unable to open database file); this may be the WAL DB with no -shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421); using the pinned repos

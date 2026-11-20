@@ -1,0 +1,5 @@
+jog: [dry-run] simulating queue execution (root: <verify>/primary)
+jog: [dry-run] would process 2 pending item(s):
+  1. GH-1427 (builder=agy, auto_merge=False)
+  2. GH-1426 (builder=agy, auto_merge=False)
+rc=0

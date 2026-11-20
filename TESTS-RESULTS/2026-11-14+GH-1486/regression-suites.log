@@ -1,0 +1,22 @@
+identity: head=eb9a48126a1a00c3ed8b094a2f08ca55bc966829 origin=<repos>/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14 bare=false status=0
+### gh589-skill-viewer
+rc=0
+  PASS: red: empty skills dir → exit 2 (two empty inventories cannot pass)
+gh589-skill-viewer: 8 passed, 0 failed
+### path-integrity
+rc=0
+  PASS: cross-folder skill Markdown links resolve
+  path-integrity: 3 pass, 0 fail
+### gh660-skill-drift
+rc=0
+  PASS: --json verdict matches
+gh660-skill-drift: 7 pass, 0 fail
+### gh312-vendor-preserves-state
+rc=0
+  PASS: fresh vendor does not fabricate empty runtime dirs
+  gh312-vendor-preserves-state: 14 pass, 0 fail
+### gh293-vendored-guard-drift
+rc=0
+  PASS: guard inspection remains meaningful when source_commit is unknown
+  gh293-vendored-guard-drift: 15 pass, 0 fail
+identity: head=eb9a48126a1a00c3ed8b094a2f08ca55bc966829 origin=<repos>/XYZ-forge-gh1486-re-vendor-xyz-skill-2026-11-14 bare=false status=0

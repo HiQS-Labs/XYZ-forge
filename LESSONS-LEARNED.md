@@ -157,3 +157,86 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: skills
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 - **date**: 2026-11-04
+
+## A hand-written relay thread must state the validator's VERDICT and Basis contract
+
+- **cue**: Scaffolding a relay review thread by hand (not with `new-relay.sh`) and driving it with `relay-drive.sh --review-once` and a Codex or agy shim.
+- **lesson**: Tell the reviewer to end with one `### `-headed block whose last lines are exactly `VERDICT: PASS|FAIL|PARKED` and a non-empty `Basis:` line (`bin/validate-relay-block`). Without them the shim exits 8 and the driver reverts an approving `STATUS:`, so a substantive approval counts as a failed review and burns a round. `VERDICT: Approved` is also refused.
+- **evidence**: relay-system/2026-11-10/gh1409-plan-qa.md (rounds 1-3 exit 8: missing VERDICT, `Approved` refused, missing Basis; round 4 with the contract stated attested Approved), relay-system/2026-11-10/gh1409-final-qa.md (contract stated up front, attested on the first turn), https://github.com/HiQS-Labs/XYZ-forge/issues/1409
+- **confidence**: high. Deterministic validator messages, and the same reviewer passed as soon as the thread stated the contract.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1409
+- **date**: 2026-11-10
+
+### Edit verdicts
+
+| Component | Verdict |
+|---|---|
+| Thread without the VERDICT/Basis contract (rounds 1-3) | hurt (three structurally failed approvals) |
+| Thread stating the contract (plan round 4, final round 1) | helped (attested on the first try) |
+
+## Before blaming a turn for skipping verification, read every instruction it was given
+
+- **cue**: A relay or marathon reviewer (or builder) "should have run" a test or gate and did not, and the fix being planned is a stronger obligation on that agent.
+- **lesson**: Read the shared turn prompt (`rtl_turn_prompt` in `relay-automation/relay-turn-lib.sh`), the preflight brief and the rendered TAKE YOUR TURN steps before diagnosing. The reviewer had been told "Do NOT run … pytest" and graded the claim `[Unverified — needs clone run]` exactly as instructed. Adding a new obligation without amending the prohibition would leave the two in conflict. Resolve that conflict with a narrow, named exception.
+- **evidence**: TESTS-RESULTS/2026-11-11+GH-1428/gh955-reviewer.md, TESTS-RESULTS/2026-11-11+GH-1428/red-control.out, https://github.com/HiQS-Labs/XYZ-forge/issues/1428
+- **confidence**: medium. One incident (two attempts on one item). The prohibition text is in `relay-automation/relay-turn-lib.sh:1067`.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1428
+
+## A failed `claude -p` JSON result zeroes `usage`; count tokens from `modelUsage`
+- **cue**: harness code that reads token counts or cost from a `claude -p --output-format json` result on a non-success turn (budget or turn ceiling, error subtype)
+- **lesson**: in `utils/py/claude-turn.py` (and any other reader of the Claude CLI result), do not trust `usage` alone on an error result; when its input/cache-read/output totals are zero, sum the per-model `modelUsage` counts, and verify against one live bounded error result instead of a fixture
+- **evidence**: `TESTS-RESULTS/2026-11-11+GH-1427/smoke-live-r1.log` (real `error_max_budget_usd`, `usage` 0/0, 0 cost rows) vs `smoke-live-r3.log` + `accounting-SMOKE-BUDGET.json` (same path after the fallback: 1 row equal to the `modelUsage` sum, MATCH); the fake-JSON check `m1m2-green.log` passed throughout and could not see it
+- **confidence**: medium — observed on claude 2.1.322 only, with an isolated single-change before/after
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1427
+- **date**: 2026-11-11
+
+## A check that asserts published state must read the published artifact, not the clone that wrote it
+
+- **cue**: writing a manual check or fixture that asserts "the other session's change survived on the remote" after a merge, reconcile or publish
+- **lesson**: read the value from the published artifact itself (for the ledger, `releases.db` taken from the remote ref), never from the clone that made the write, which holds the value whether or not publication kept it. Add one observer control: the same reader against the pre-change ref must return a different value, or the check cannot tell kept from lost.
+- **evidence**: `relay-system/2026-11-13/gh1453-final-qa.md` (Round 2, F4: the reviewer's stubbed reader returned `[61]` with zero published-ledger reads); `TESTS-RESULTS/2026-11-13+GH-1453/candidate-A1-A14.log` lines 14–15 after the fix (`published_roadmap_pri: [61]`, `observer_control_pri_at_base: [60]`); `TESTS-RESULTS/2026-11-13+GH-1453/fixture-checks.py.txt` (`Fx.remote_pri`)
+- **confidence**: medium. One incident. The first two evidence runs passed with the wrong-target reader and passed again with the corrected one, so the product result did not change; what changed is that the check could now fail.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1453
+- **date**: 2026-11-13
+
+## Every backticked path on a relay's "Artifact under review" line must exist from the repo root
+
+- **cue**: writing the `## Setup` "Artifact under review:" line of a relay thread that `relay-drive.sh` will drive, especially when it names evidence files by bare filename
+- **lesson**: the driver checks every path-like backticked token on that line against the worktree root and exits 2 (`relay-drive: artifact path not found in worktree: <token>`) before the reviewer runs; write repo-relative paths in full (`TESTS-RESULTS/<date>+GH-<n>/SUMMARY.md`, not `SUMMARY.md`), or move bare filenames to another Setup line.
+- **evidence**: `utils/py/relay_drive.py:479-492` (the check); `relay-system/2026-11-14/gh1486-final-qa.md` history: the first drive exited 2 on `SUMMARY.md`, the second, after the Setup line was rewritten with full paths, ran the review.
+- **confidence**: high for the mechanism (read from source and reproduced once); one incident.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1486
+- **date**: 2026-11-14
+
+## A deletion guard is only as good as the probe it trusts: drive the held case end to end
+
+- **cue**: adding or reviewing code that deletes a folder only when an existing "is it in use" probe (lsof, session or claim checks) says it is idle
+- **lesson**: before trusting the probe, run one manual check where a real process holds the target in the most common way (a shell whose cwd is the folder root, not just an open file inside it). Then watch the deletion path refuse. A probe whose tests only cover a file held inside the folder can still report a held root as idle.
+- **evidence**: `TESTS-RESULTS/2026-11-14+GH-1475-phase2a/manual-check-run.log` ("P2.3 open-handle probe, process cwd = folder root": base `active=False`, new `active=True`; prune row: `held-open` kept on new). `README.md` in the same folder records that the first prune run removed the held-open folder before the `scan_clones.inspect_open_handles` fix. The existing suite pins only a held file (`test/gh534_phase_a_tests.py` `test_ix_held_descriptor_is_active_process_naming_the_pid`).
+- **confidence**: medium. One incident, observed deterministically against base and fix; the same probe gates teardown.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1475
+- **date**: 2026-11-14
+
+## Source-text pins sit outside a refactor's focused suites
+- **cue**: a behavior-preserving refactor of a module, or a reworded workflow line, verified only by the suites that exercise its behavior
+- **lesson**: before the refactor, run `grep -rn '<module>\|<literal line>' test/` and add every suite that greps the source text to the focused set; in GH-1479 five behavior suites passed while `test/gh642-consumer-fruit.sh` and `test/gh421-auto-wave-reconcile.sh` failed in the full gate on literal-string pins
+- **evidence**: https://github.com/HiQS-Labs/XYZ-forge/issues/1479
+- **confidence**: high, observed once in the full gate at `6ffa3f359` and resolved by re-pointing both pins
+- **area**: gate
+- **source**: #1479
+- **date**: 2026-11-15
+
+## A "plan-only" CLI can still write to the checkout: trace the JSON path before calling it read-only
+- **cue**: a new script that shells out to an existing plan-only or `--json` CLI and promises to be read-only
+- **lesson**: read the callee's path from argument parsing to its JSON print, not just its default mode; `pr_minder.py --json` writes nothing to GitHub but ran `git fetch` and `merge-tree --write-tree` for every conflicting PR before printing. Run the caller once under a logging `git` shim (refs, `FETCH_HEAD`, object counts before and after) and keep the pre-fix argv as the red control
+- **evidence**: `TESTS-RESULTS/2026-11-19+GH-1527/readonly-live-check.log` (0 fetch/merge-tree calls with `--no-conflict-files`, 21 without)
+- **confidence**: high; deterministic red control on the same inputs. Edit verdicts: `--no-conflict-files` flag helped; build_queue argv change helped
+- **area**: skills
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1527
+- **date**: 2026-11-19

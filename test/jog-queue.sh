@@ -171,7 +171,7 @@ has "$out_post_rebuild" "GH-102"
 ok "jog queue items survive dump rebuild" $?
 
 # 12. Hermetic --dry-run: zero mutation
-out_dry="$(ra "$R" jog run --dry-run 2>&1)"
+out_dry="$(python3 "$APP" --root "$R" jog run --dry-run 2>&1)"
 has "$out_dry" "would process"
 ok "jog run --dry-run reports simulated execution plan" $?
 

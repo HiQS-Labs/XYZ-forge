@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline_jog.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/primary --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890649
+rc=0
+jog: execution clone aligned at 6d1c53bb514edfb9f04f4cf4c49fbfb6d4f265d0; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/primary/.tick/jog/jog-01M7KX0VJ8ACWYSPCWJWM8BTMV/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/baseline/primary/.tick/jog/jog-01M7KX0VJ8ACWYSPCWJWM8BTMV/gh901-exec1/preflight/result.json]
+jog: published primary checkpoint e36ab0b64c18b27f1c75b1da17957bf180b30391
+Switched to a new branch 'fixture-901-gh901-exec1'

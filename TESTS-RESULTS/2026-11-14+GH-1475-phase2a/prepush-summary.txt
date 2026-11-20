@@ -1,0 +1,4 @@
+# pre-push full gate on 5d9be5bf8 (TMPDIR=<isolated>, PATH with the gate venv)
+passed: 408 / 408
+pre-push: full gate GREEN in 646s — pushing.
+ * [new branch]          feat/XYZ-forge-gh1475-merge-cleanup-remediation-2026-11-14 -> feat/XYZ-forge-gh1475-merge-cleanup-remediation-2026-11-14

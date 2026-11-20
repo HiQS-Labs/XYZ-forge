@@ -1,0 +1,44 @@
+# usage: python3 p16.py <scripts-dir> <label>
+import sys, os, io, contextlib, argparse, tempfile, subprocess, shutil, stat
+from pathlib import Path
+scripts, label = sys.argv[1], sys.argv[2]
+sys.path.insert(0, scripts)
+import merge_cleanup as mc
+primary = Path("/tmp/gh1475-manual/p11-new/primary")
+gh_calls = []
+real_gh = mc._gh
+mc._gh = lambda args, cwd, timeout=180: (gh_calls.append(args), subprocess.CompletedProcess(args, 1, "", "stub"))[1]
+mc.refresh_pr = lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": "development", "labels": [], "mergeCommit": None, "isDraft": False}
+mc.prepare_landing_clone = lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}
+mc.pre_merge_ledger_gate = lambda *a, **k: {"green": True, "failures": [], "diagnostics": []}
+def loop(checks):
+    mc.required_checks_state = lambda n, p: checks
+    gh_calls.clear()
+    args = argparse.Namespace(integration_branch="development", strategy=None, resume=False, prs=[1, 2], _pins={1: "a" * 40, 2: "a" * 40})
+    out = io.StringIO()
+    prs = [{"number": n, "headRefName": "feat/x", "baseRefName": "development", "title": "t", "labels": []} for n in (1, 2)]
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+        try: rc = mc._land_prs_loop(prs, primary, args, dry_run=True)
+        except Exception as e: rc = f"raised {type(e).__name__}: {e}"
+    pf = [l for l in out.getvalue().splitlines() if "PRE-FLIGHT" in l]
+    return rc, pf, len(gh_calls)
+for checks in (("ok", "no required checks"), ("ok", "1 required check(s) passing: ci")):
+    rc, pf, n = loop(checks)
+    print(f"{label} F6 checks={checks[1]!r}: rc={rc} preflight_lines={len(pf)} gh_calls={n}")
+if hasattr(mc, "preflight_warnings"):
+    stub = Path(tempfile.mkdtemp(dir="/tmp/gh1475-manual"))
+    (stub / "pmset").write_text("#!/bin/sh\necho \"Now drawing from 'Battery Power'\"\n")
+    (stub / "pgrep").write_text("#!/bin/sh\necho 424242\n")
+    for f in ("pmset", "pgrep"): os.chmod(stub / f, 0o755)
+    env0 = dict(os.environ)
+    os.environ["TMPDIR"] = "/tmp"; tempfile.tempdir = None
+    print(f"{label} clean env: {mc.preflight_warnings()}")
+    os.environ["PATH"] = f"{stub}:{env0['PATH']}"
+    nested = tempfile.mkdtemp(dir="/tmp/gh1475-manual", prefix="harness-turn-")
+    os.environ["TMPDIR"] = nested; tempfile.tempdir = None
+    real_du = shutil.disk_usage
+    shutil.disk_usage = lambda p: real_du(p)._replace(free=5 * 10**9)
+    for w in mc.preflight_warnings(): print(f"{label} forced: {w}")
+    shutil.disk_usage = real_du
+else:
+    print(f"{label}: no preflight_warnings() (base tree)")

@@ -1,0 +1,13 @@
+interpreter: /Library/Developer/CommandLineTools/usr/bin/python3 3.9.6 sqlite 3.54.0
+PASS  fixture: journal_mode=wal side files=[]
+PASS  red control: old code fails: returned []; stderr 'board_sync: repos_source: rebalanceOS DB is unreadable (unable to open database file); this may be the WAL DB with no -shm sidecar that SQLite cannot open read-only until Rebalance holds it open (GH-1421); using the pinned repos'
+PASS  new code reads: returned ['o/gh', 'o/agent-only']; stderr ''
+PASS  fixture bytes+mtime unchanged after new read: sha 6479acdd4866.. -> 6479acdd4866.., mtime 1794454763390940358 -> 1794454763390940358
+      side files after new read: ['-wal', '-shm']
+PASS  new code uses mode=rw + query_only: connect string and pragma present in _rebalance_active_repos
+PASS  write refused: attempt to write a readonly database
+PASS  fixture unchanged after refused write: sha/mtime compared
+PASS  missing file falls back: returned []; stderr 'board_sync: repos_source: rebalanceOS DB not found (set REBALANCE_DB); using the pinned repos'
+PASS  missing file not created: <tmp>/gh1430-3_4c7lur/nope/rebalance.db
+PASS  mode=rw does not create a missing file: unable to open database file
+RESULT: PASS (10/10)

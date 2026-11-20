@@ -1,0 +1,3 @@
+$ gh pr list --state open --limit 300 --json number,commits,comments,createdAt,mergeStateStatus,isCrossRepository,maintainerCanModify
+GraphQL: By the time this query traverses to the authors connection, it is requesting up to 1,000,000 possible nodes which exceeds the maximum limit of 500,000.
+rc=1

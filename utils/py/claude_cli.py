@@ -70,3 +70,27 @@ def read_result(path):
         return data["result"]
     except (OSError, ValueError, TypeError):
         raise ValueError("Claude returned an error or empty/invalid result; inspect the local transcript (no API fallback)") from None
+
+
+def result_error_summary(path):
+    """GH-1427: name WHY a turn failed from the CLI's own JSON result, or return "".
+
+    `claude -p --output-format json` exits 1 with empty stderr on a spend/turn ceiling and reports
+    the cause only in stdout (`subtype: error_max_budget_usd`, `errors: [...]`). Best-effort and
+    read-only: a missing or unparseable file yields "" so a diagnostic never fails the turn.
+    """
+    try:
+        with open(path, encoding="utf-8") as stream:
+            data = json.load(stream)
+    except (OSError, ValueError, TypeError):
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    subtype = data.get("subtype")
+    errors = data.get("errors")
+    errors = [str(e) for e in errors if e] if isinstance(errors, list) else []
+    if not subtype and not errors:
+        return ""
+    if subtype == "success" and not errors:
+        return ""
+    return ": ".join(part for part in (str(subtype or "error"), "; ".join(errors)) if part)

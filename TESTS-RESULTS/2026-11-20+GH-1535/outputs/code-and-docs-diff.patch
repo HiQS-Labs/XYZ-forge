@@ -1,0 +1,427 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index cc8332d1..27126573 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,19 @@
+ # Changelog
+ 
++## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
++
++- `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing
++  `gh issue list` call, releases `decide` holds when the latest `--owner` comment's first non-empty
++  line starts with `Operator decision` (proceed, routed so it never falls into rule 9 unclassified)
++  or `Operator decision: close` (dedicated close bucket where the child verifies acceptance on
++  `origin/development` and closes citing the commit), honours superseding `Operator decision: hold`
++  comments, and keeps closing PRs (`Closes #N`) unparked once the issue is released.
++- Also enforces fail-closed U15 holds (`status:held` label, body `HELD:` marker, `Blocked by #N`,
++  and open/active-gating `after #N`) across all issue types while preserving code-formatted `#N`
++  references inside prose holds and ignoring fenced blocks / wholly quoted inline examples. Mirrored
++  in `skills/1-hourly/kickstart/SKILL.md`. No new suite (GH-831). Evidence:
++  `TESTS-RESULTS/2026-11-20+GH-1535/manual-check.md`.
++
+ ## 2026-11-20 — GH-1508: per-repo governance doc list that survives install and sync
+ 
+ - `pdda.sh governance` now adds the docs named on a committed `.pdda-mode` line
+diff --git a/PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md b/PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md
+new file mode 100644
+index 00000000..48b8fe15
+--- /dev/null
++++ b/PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md
+@@ -0,0 +1,96 @@
++---
++title: "GH-1535 (KS-02): Operator decision releases decide holds; body/label holds across all issue types"
++status: active
++created: 2026-11-20
++updated: 2026-11-20
++owner: noelsaw1
++goal: "Update build_queue.py and kickstart/SKILL.md so --owner Operator decision comments release decide holds (proceed or close bucket, never rule 9), and status:held labels, HELD: markers, and Blocked by #N / after #N body holds are enforced across all issue types"
++gh_issue: 1535
++roadmap_id: rmi-01M7VZEFJCGEV7EC8NKCJH5FEK
++---
++
++# GH-1535 (KS-02): Operator decision releases decide holds & body/label holds across all issue types
++
++## Status
++
++| What was just completed | What's next |
++|---|---|
++| Codex Plan QA Round 2 approved (`44f9f960`), marked `rmi-01M7VZEFJCGEV7EC8NKCJH5FEK` accepted-start, implemented KS-02 (`operator_decision`, `issue_hold_reason`, `_sanitize_body`, `DECIDED`/`CLOSE` buckets, `gh issue list ... comments`, SKILL.md mirror, CHANGELOG.md) with `mypy` green | Run recorded paired manual check + PDDA gate (`TESTS-RESULTS/2026-11-20+GH-1535/`), complete Codex Final QA, open PR and land |
++
++## Goal & Scope (refs #1535, #1541 v5 KS-02 + U15 + KS-11c)
++Fix two queueing defects in `skills/1-hourly/kickstart/scripts/build_queue.py` and mirror the updated closed rule list in `skills/1-hourly/kickstart/SKILL.md`:
++
++1. **Fetch issue comments in the existing single `gh issue list` call:**
++   - Extend live `gh issue list --json` fields to `number,title,labels,body,createdAt,comments` (no N+1 API calls; read-only).
++   - Replay `--issues-json` accepts inputs with or without a `comments` key (defaults to `[]`), maintaining full backward compatibility with `TESTS-RESULTS/2026-11-19+GH-1527/inputs/issues.json`.
++2. **Owner-authored operator decision parsing (`operator_decision(issue, owner)` — KS-02 & KS-11c):**
++   - Scan `issue.get("comments") or []` in chronological order (`(c.get("createdAt") or "", idx)`).
++   - Accept ONLY comments whose `(c.get("author") or {}).get("login") == owner`. Non-owner comments never release or alter a hold.
++   - Read the first non-empty stripped line of the comment body:
++     - `^Operator decision:\s*close\b` (case-insensitive) → `"close"`
++     - `^Operator decision:\s*hold\b` (case-insensitive) → `"hold"` (explicitly supersedes an earlier proceed/close decision per KS-11c)
++     - `^Operator decision\b` (case-insensitive, excluding `: close` and `: hold`) → `"proceed"`
++   - Supersession: the **latest** matching `--owner` decision comment wins. Any comment whose first non-empty line does not start with `Operator decision` (including prose or line-2 markers) is ignored.
++3. **Body and label hold detection (`issue_hold_reason(issue, open_refs)` — U15) across ALL issue types:**
++   - Sanitize `body` in three ordered steps so real prose holds containing code-formatted issue references are preserved while fenced code blocks and wholly quoted inline example phrases are ignored:
++     1. Strip markdown fenced code blocks (`re.sub(r"```.*?```", "", body, flags=re.S)`).
++     2. Unwrap inline backtick spans that contain ONLY an issue/PR reference token (`re.sub(r"`((?:PR\s+)?#\d+)`", r"\1", cleaned, flags=re.I)`), preserving e.g. ``Blocked by `#1499` `` → `Blocked by #1499` and ``Only after `#1499` lands`` → `Only after #1499 lands`.
++     3. Strip remaining single-line inline backtick spans (`re.sub(r"`[^`\n]*`", "", cleaned)`), which removes wholly quoted example phrases like `` `HELD: owner decision required` `` and `` `Blocked by #1499` ``.
++   - Detect holds in priority order across all issue types (bugs, docs, refactors, merge-batches, decided, unclassified):
++     1. Label `status:held` (case-insensitive) → `"label status:held"`.
++     2. Line/bullet marker `(?mi)^\s*(?:[-*]\s*)?(?:\*\*)?HELD:(?:\*\*)?` in sanitized body → `"body HELD: marker"`.
++     3. Explicit blocker `(?i)\bblocked\s+by\s+(?:PR\s+)?#(\d+)\b` in sanitized body → `"blocked by #N"` (fail-closed regardless of whether `#N` is in `open_refs` or the 14-day window).
++     4. Dependency gating `after #N` in sanitized body (`(?i)\bafter\s+(?:PR\s+)?#(\d+)\b`) when EITHER `#N` is in `open_refs` (open PR numbers ∪ open issue numbers in the snapshot) OR written as an explicit active gating clause (`after [PR] #N lands|merges|is merged|completes|closes`, or line/bullet-initial `after [PR] #N` / `depends on [PR] #N` / `gated on [PR] #N`, excluding past-tense narrative like `"after #1403 passed"` or `"After #1389's"`).
++   - Body/label holds are fail-closed: an issue with an active `status:held`, `HELD:`, `Blocked by #N`, or open/gating `after #N` hold stays in `Needs-operator` and in `parked_issues` (so no queued PR silently closes it), and an `--owner` `Operator decision` (proceed or close) comment does **not** silently override an independent body/label hold.
++4. **Rule ordering in `parked_issues(...)` and `classify_issues(...)` (never fall into rule 9):**
++   - `parked_issues(issues, other, decide, owner, open_refs)`:
++     An issue is parked (blocking PR rule 3) iff:
++     - `n in other`, OR
++     - `decision == "hold"`, OR
++     - `(n in decide or DECISION.search(title)) and decision not in ("proceed", "close")`, OR
++     - `issue_hold_reason(issue, open_refs)` is non-empty.
++     Therefore, once `--owner` posts `Operator decision` or `Operator decision: close` on `#1518` (and `#1518` has no body/label hold), `#1518` leaves `parked_issues` and PR `#1526` (`Closes #1518`) moves out of `Needs-operator` back to queue bucket `A` keeping `(closes #1518)`.
++   - `classify_issues(...)` closed order (first match wins):
++     1. `n in other` → Needs-operator (`owned by another session; remind only`).
++     2. `decision == "hold"` → Needs-operator (`operator decision: hold`).
++     3. `(n in decide or DECISION.search(title)) and decision not in ("proceed", "close")` → Needs-operator (`operator decision`).
++     4. `hold = issue_hold_reason(it, open_refs)`: if `hold` → Needs-operator (`held ({hold})`).
++     5. `n in folded` → skip (folded into the open own queued PR that closes it).
++     6. `decision == "close"` → **Close bucket** (rendered as `#N <title>: operator decision: close — verify acceptance on development, then close with a comment citing the commit.`). Never falls into rule 9.
++     7. Rules G (`merge-batch`/BATCH), H (`REFACTOR`), F (`documentation`/`.md`), E (`bug`/code file).
++     8. `decision == "proceed"` → **Decided-proceed queue item** (`#N <title>: operator decision recorded — execute via start-task or jog.`). Guarantees a released issue NEVER falls into rule 9 (`unclassified`).
++     9. `OUT_OF_SCOPE` → Not queued.
++     10. Anything else → Needs-operator (`unclassified; operator picks scope`).
++5. **Runbook mirror (`skills/1-hourly/kickstart/SKILL.md`):**
++   - Mirror the updated closed ordering, `--owner` `Operator decision` / `Operator decision: close` / `Operator decision: hold` release/supersession rules, U15 body/label holds (`status:held`, `HELD:`, `Blocked by #N`, `after #N`), and the child closeout rule (for `operator decision: close` items, verify acceptance on `origin/development` and close the issue citing the landing commit).
++6. **No new test suites (GH-831):** Recorded paired manual checks under `TESTS-RESULTS/2026-11-20+GH-1535/`.
++
++## Preflight Contract
++- **Target files:** `skills/1-hourly/kickstart/scripts/build_queue.py`, `skills/1-hourly/kickstart/SKILL.md`, `CHANGELOG.md`, `PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md`, `TESTS-RESULTS/2026-11-20+GH-1535/*`, `relay-system/2026-11-20/gh1535-*.md`, `releases.db`, `releases.sql`.
++- **Classified route:** `utils/ci-route.sh pull_request` → `route=docs`, `tier=1` (`utils/pdda/pdda.sh run`).
++- **Static check:** `mypy --allow-untyped-defs --allow-incomplete-defs skills/1-hourly/kickstart/scripts/build_queue.py` (with new helper functions cleanly typed).
++
++## Verification Plan (R2 Discriminating Manual Check)
++Record a literal runnable manual procedure, retained diff/name-status, transcripts, and `provenance.jsonl` under `TESTS-RESULTS/2026-11-20+GH-1535/` against pinned pre-change `build_queue.py` (base commit SHA recorded in `provenance.jsonl`) and the 2026-11-19 saved inputs (`TESTS-RESULTS/2026-11-19+GH-1527/inputs/`):
++1. **Red control 1 — `#1518` decide-hold release (`Operator decision` proceed) & PR `#1526` unparking:**
++   Add an `--owner noelsaw1` comment `Operator decision: ...` to `#1518`. Pre-change keeps `#1518` in Needs-operator AND parks PR `#1526` (`merging it would close parked #1518`). Changed moves `#1526` to bucket `A` keeping `(closes #1518)` and removes `#1518` from Needs-operator.
++2. **Red control 2 — Released issue must NOT fall into rule 9 (`unclassified`):**
++   Replay `#1518` with `--owner noelsaw1` `Operator decision` proceed AND without `#1526` closing it (`Refs #1518`). Pre-change keeps `#1518` held; a naive release without the post-rules-4-7 proceed catch would drop `#1518` (no labels, no file extension in title) into rule 9 (`unclassified`). Changed queues `#1518` cleanly in the Queue section (`operator decision recorded`).
++3. **Red control 3 — `Operator decision: close` bucket:**
++   Replay `#1518` with `--owner noelsaw1` `Operator decision: close — verified on development` (not folded into a PR). Pre-change keeps `#1518` in Needs-operator; changed queues `#1518` in the close bucket (`verify acceptance on development, then close with a comment citing the commit`).
++4. **Negative controls (KS-11c fail-closed):**
++   - Non-`--owner` comment (`author=someone-else`, `Operator decision: proceed`) → stays held in Needs-operator.
++   - Wrong first line (`author=noelsaw1`, `Decided by operator` or `Operator decision` on line 2) → stays held.
++   - Superseded decision (`author=noelsaw1` `Operator decision: proceed` followed by later `Operator decision: hold`) → stays held (`operator decision: hold`).
++5. **Red control 4 (U15) — `#1400` OL-10 body/label hold shapes across issue types:**
++   - Bug issue (`bug` label) with `HELD: owner decision required` in body only → pre-change queues in bucket `E`; changed holds in Needs-operator.
++   - Docs issue (`documentation` label) with `status:held` label → pre-change queues in bucket `F`; changed holds in Needs-operator.
++   - Bug issue with `Blocked by #1499` in body only → pre-change queues in bucket `E`; changed holds in Needs-operator.
++   - Bug issue with `after #1467` (open PR) in body only → pre-change queues in bucket `E`; changed holds in Needs-operator.
++   - Absent-reference active clause positive control: bug issue with `Only after #9999 lands` (`#9999` absent from `open_refs`) → pre-change queues in bucket `E`; changed holds in Needs-operator.
++   - Formatted-reference prose positive controls: bug issue with ``Blocked by `#1499` `` and bug issue with ``Only after `#1499` lands`` → pre-change queues in bucket `E`; changed holds both in Needs-operator AND parks any open PR with `Closes #<bug>` (`merging it would close parked`).
++   - Independent body/label hold non-override control: issue with `status:held` or `HELD:` plus an `--owner` `Operator decision: proceed` or `Operator decision: close` comment → stays held in Needs-operator.
++   - False-positive guards: past-tense `"after #1403 passed"` (`#1412`) and wholly backtick-quoted `` `HELD: ...` `` (`#1476`) / `` `Blocked by #1499` `` do NOT spuriously trigger holds.
++6. **Determinism, read-only invariance & classified gate:**
++   - Two back-to-back replays produce `cmp=0`; `git show-ref`, `FETCH_HEAD`, `git count-objects -v` unchanged.
++   - `utils/ci-route.sh pull_request` → `route=docs`, `tier=1`; `./utils/pdda/pdda.sh run` exits `0` (`0 errors`); `mypy` exits `0`.
+diff --git a/releases.sql b/releases.sql
+index 0db2e7b1..ee377938 100644
+--- a/releases.sql
++++ b/releases.sql
+@@ -1,6 +1,6 @@
+ -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
+ -- no integer PKs/FKs as values; rebuild renumbers deterministically)
+--- generation: 2831
++-- generation: 2833
+ -- table: schema_migrations
+ INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
+ INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
+@@ -13,7 +13,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-12T16:07
+ INSERT INTO schema_migrations(version, applied_at) VALUES('9', '2026-09-23T01:01:18Z');
+ -- table: settings
+ INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
+-INSERT INTO settings(key, value, updated_at) VALUES('generation', '2831', '2026-11-20T05:53:55Z');
++INSERT INTO settings(key, value, updated_at) VALUES('generation', '2833', '2026-11-20T08:07:47Z');
+ INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
+ -- table: repos
+ INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
+@@ -1028,6 +1028,7 @@ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, positi
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M7VGW0ZHHVT9QQ4GN85SKPDD', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1499', 'skill_drift_check.py reports 0 ok / 0 drifted on a vendored .xyz/skills tree, so a green result proves nothing', 'Completed', '153', '✅', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1499.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1499', '- **GH-1499 · skill_drift_check.py reports 0 ok / 0 drifted on a vendored .xyz/skills tree, so a green result proves nothing** ✅ **SHIPPED 2026-11-20 (PR #1533)** — [GH-1499.md](PROJECT/2-WORKING/GH-1499.md) · [#1499](https://github.com/HiQS-Labs/XYZ-forge/issues/1499)', '2026-11-20T03:44:13Z', '2026-11-20T04:51:33Z', NULL, NULL, NULL, NULL, NULL, NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M7VN3JDA46P82QTMP7QNWCMM', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1519', 'Gate preflight: fail fast when mypy (requirements-dev.txt) is missing, instead of failing a 13-minute full gate at test_python_layer.py', 'Completed', '153', '✅', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1519.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1519', '- **GH-1519 · Gate preflight: fail fast when mypy (requirements-dev.txt) is missing, instead of failing a 13-minute full gate at test_python_layer.py** ✅ **SHIPPED 2026-11-20 (PR #1532)** — [GH-1519.md](PROJECT/2-WORKING/GH-1519.md) · [#1519](https://github.com/HiQS-Labs/XYZ-forge/issues/1519)', '2026-11-20T04:58:14Z', '2026-11-20T05:21:24Z', NULL, NULL, NULL, NULL, NULL, NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M7VQW02KMDKEVC6SAXN6TQRN', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1508', 'PDDA: per-repo override for the governance doc list (survives install/sync)', 'Completed', '153', '✅', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1508.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1508', '- **GH-1508 · PDDA: per-repo override for the governance doc list (survives install/sync)** ✅ **SHIPPED 2026-11-20 (PR #1539)** — [GH-1508.md](PROJECT/2-WORKING/GH-1508.md) · [#1508](https://github.com/HiQS-Labs/XYZ-forge/issues/1508) (rated 45/35/50/85)', '2026-11-20T05:46:32Z', '2026-11-20T05:48:27Z', '45', '35', '50', '85', NULL, NULL);
++INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M7VZEFJCGEV7EC8NKCJH5FEK', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1535', 'KS-02: operator decision releases decide hold & body/label holds (GH-1535)', 'In progress', '153', '🚧', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1535', '- **GH-1535 · KS-02: operator decision releases decide hold & body/label holds (GH-1535)** 🆕 (rated 85/70/55/85) — [GH-1535-KS02-DECIDE-HOLDS.md](PROJECT/2-WORKING/GH-1535-KS02-DECIDE-HOLDS.md) · [#1535](https://github.com/HiQS-Labs/XYZ-forge/issues/1535)', '2026-11-20T07:58:58Z', '2026-11-20T08:07:47Z', '85', '70', '55', '85', NULL, 'in-progress');
+ -- table: jog_queue
+ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M122D1G6F8AWEKQHKFPCFD37', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '275', '1', 'completed', '2026-08-27T16:56:10Z', '2026-08-27T18:11:04Z', '5', NULL, 'preflight: already-landed');
+ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M122D1WM4Z659A8N591AR0H8', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '269', '1', 'failed', '2026-08-27T16:56:10Z', '2026-08-27T18:39:22Z', '3', NULL, 'drive failed (exit 7)');
+@@ -4218,6 +4219,8 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:315', '2026-11-20T05:46:35Z', '9786a579f31941bdae03658f01ef3dc9', 'default', '1a5cd796144771e993f015f715249b4cd31f59b762e0a9403234f370bb86ca01', 'f25691644130ed45f2127ff9520658e24c0ece34c29412816293a6fd14135bd8');
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M7VQW02KMDKEVC6SAXN6TQRN', '2026-11-20T05:48:27Z', '018b6547e1ca4d37b0c555b7158e343a', 'default', 'f25691644130ed45f2127ff9520658e24c0ece34c29412816293a6fd14135bd8', 'ec73d2ea7389249d844e34696757a4dd8bc8db0a5514d26521edafc93b0d39b2');
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('work-emit', NULL, '2026-11-20T05:53:55Z', '55f96d7254d04aa096c35c89b17fdd45', 'default', 'ec73d2ea7389249d844e34696757a4dd8bc8db0a5514d26521edafc93b0d39b2', 'ec73d2ea7389249d844e34696757a4dd8bc8db0a5514d26521edafc93b0d39b2');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-pickup', 'rmi-01M7VZEFJCGEV7EC8NKCJH5FEK', '2026-11-20T07:58:58Z', '56ea21188c834f9f8b5dd399318de8b0', 'default', 'ec73d2ea7389249d844e34696757a4dd8bc8db0a5514d26521edafc93b0d39b2', 'bca04b2c226bac3b477c2e81e638f9d294cadfbd0580d9ab9aa6d49473fa880f');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M7VZEFJCGEV7EC8NKCJH5FEK', '2026-11-20T08:07:47Z', 'e993a5226fcf4050887f99e44001d64e', 'default', 'bca04b2c226bac3b477c2e81e638f9d294cadfbd0580d9ab9aa6d49473fa880f', '72f9cf1ac0c4d5e7136ee4a541542878e240421ea27107cada5871737aa37f77');
+ -- table: work_events
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CBC3C2HSWRSBY81TAZHYY0', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '568', 'df2ee890077d486dbe23311c5dd74d82', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-13T03:01:02Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CGH1A7Z979TG5DQJHN8DX6', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '591', '6d3d7a7619c247b5a85a039ea98756bd', 'parked', '{"section": "Queue / parked intake"}', '2026-09-13T04:31:07Z');
+@@ -5823,3 +5826,5 @@ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload,
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7VQW0DWTR8WFAZAYCD8N3MZ', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1508', '8c9e76f61e1147e28400f08474f66a26', 'updated', '{"marker": "\ud83c\udd95", "section": "Queue / parked intake", "source": "roadmap-update", "transition": false}', '2026-11-20T05:46:32Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7VQZGPZEEAEGYF53BB2J2EV', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1508', '018b6547e1ca4d37b0c555b7158e343a', 'completed', '{"marker": "\u2705", "section": "Completed", "source": "roadmap-update", "transition": true}', '2026-11-20T05:48:27Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7VR9H3H3GC6DJGANF28B1V7', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1508', '55f96d7254d04aa096c35c89b17fdd45', 'pr_merged', '{"base": "development", "pr": 1539}', '2026-11-20T05:53:55Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7VZEFKH09VTBRX8VJW2AJB2', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1535', '56ea21188c834f9f8b5dd399318de8b0', 'parked', '{"section": "Queue / parked intake"}', '2026-11-20T07:58:58Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M7VZYM9BTYMKAM8VDRF3S4DJ', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1535', 'e993a5226fcf4050887f99e44001d64e', 'in_flight', '{"accepted_start": true, "marker": "\ud83d\udea7", "section": "In progress", "source": "roadmap-update", "transition": true}', '2026-11-20T08:07:47Z');
+diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
+index 2b73eb98..985d45f6 100644
+--- a/skills/1-hourly/kickstart/SKILL.md
++++ b/skills/1-hourly/kickstart/SKILL.md
+@@ -37,9 +37,15 @@ session and the single delegated outer-loop child session. There are never compe
+    A resumed session re-reads the grant there instead of asking again. The script's ordering is a
+    closed list, first match wins: own clean (confirmed `MERGEABLE`) PRs, own conflicting or
+    failing PRs, own behind or not-yet-`MERGEABLE` PRs as one merge-cleanup batch, drafts (finish
+-   or close; a draft stays a draft even when it also conflicts), small bug issues, docs issues,
+-   stale merge-batch and inventory issues (verify, then close), refactors gated on a named
+-   predecessor, final QA. Held PRs, other authors' PRs, decision-needed, other-session-owned and
++   or close; a draft stays a draft even when it also conflicts), small bug issues, operator-decided
++   proceed issues (released by a latest `--owner` comment whose first non-empty line starts with
++   `Operator decision`, never falling into unclassified), docs issues, stale merge-batch and
++   inventory issues (verify, then close), operator-decided close issues (`Operator decision: close`
++   — child verifies acceptance on `origin/development` and closes citing the commit), refactors
++   gated on a named predecessor, final QA. Held PRs, other authors' PRs, decision-needed (unless
++   released by `--owner`), `Operator decision: hold` overrides, issues with a `status:held` label,
++   body `HELD:` marker, `Blocked by #N`, or open/active-gating `after #N` (fail-closed across all
++   issue types, not overridden by an operator decision comment), other-session-owned and
+    unclassified items go to Needs-operator, and so does any PR whose closing keywords name a
+    parked issue: merging it would close an issue the run may not close.
+ 3. **Child Dispatch:** Records one child owner and durable handoff pointer, then starts
+diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
+index 051a0d51..7b2cb79c 100755
+--- a/skills/1-hourly/kickstart/scripts/build_queue.py
++++ b/skills/1-hourly/kickstart/scripts/build_queue.py
+@@ -16,15 +16,22 @@ Ordering is a CLOSED list, first match wins (mirrored in skills/1-hourly/kicksta
+           6 draft -> D (a draft stays D even when it also conflicts)   7 conflicting or failing,
+           or raw mergeable CONFLICTING -> B   8 behind, or raw mergeable not MERGEABLE -> C
+           9 otherwise (confirmed MERGEABLE) -> A
+-  Issues: 1 --other-session -> Needs-operator   2 --needs-operator or "decide/decision" title
+-          -> Needs-operator   3 closed by an open own queued PR -> folded into that PR's line
+-          4 merge-batch label or "Merge batch / merge inventory / <skill> sweep <date>" title -> G
+-          5 "refactor" title -> H (gated on the first "after #N")   6 documentation label or a
+-          *.md in the title -> F   7 bug label or a code/config file in the title -> E
+-          8 Arc/Plan/Research/Spike/Umbrella/Radar/Daily goals title -> Not queued
+-          9 anything else -> Needs-operator (unclassified; the operator picks scope)
+-
+-  Queue order: A -> B -> C -> D -> E -> F -> G -> H -> final QA; ascending number inside each.
++  Issues: 1 --other-session -> Needs-operator   2 latest --owner "Operator decision: hold" comment
++          -> Needs-operator   3 --needs-operator or "decide/decision" title unless released by a
++          latest --owner comment whose first non-empty line starts with "Operator decision"
++          (proceed) or "Operator decision: close" (close) -> Needs-operator
++          4 label status:held, body HELD: marker, Blocked by #N, or open/active-gating after #N
++          across all issue types (fail-closed; not overridden by an operator decision comment)
++          -> Needs-operator   5 closed by an open own queued PR -> folded into that PR's line
++          6 released "Operator decision: close" -> CLOSE (verify on development, then close)
++          7 merge-batch label or "Merge batch / merge inventory / <skill> sweep <date>" title -> G
++          8 "refactor" title -> H (gated on the first "after #N")   9 documentation label or a
++          *.md in the title -> F   10 bug label or a code/config file in the title -> E
++          11 released "Operator decision" (proceed) not matched by 7-10 -> DECIDED (never falls
++          into unclassified)   12 Arc/Plan/Research/Spike/Umbrella/Radar/Daily goals title ->
++          Not queued   13 anything else -> Needs-operator (unclassified; the operator picks scope)
++
++  Queue order: A -> B -> C -> D -> E -> DECIDED -> F -> G -> CLOSE -> H -> final QA; ascending number inside each.
+ 
+ Replay: --prs-json/--pr-meta-json/--issues-json read saved inputs; with the same files, --as-of,
+ --owner, --other-session, --needs-operator and --since-days, the output is byte-identical.
+@@ -59,6 +66,20 @@ CODE_FILE = re.compile(r"[\w./-]+\.(?:py|sh|txt|json|ya?ml)\b")
+ OUT_OF_SCOPE = re.compile(r"^(?:arc:|plan:|architectural plan|research:|spike:|umbrella:|radar|daily goals)", re.I)
+ CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/[\w.-]+))?#(\d+)", re.I)
+ TITLE_GH = re.compile(r"\bGH-(\d+)\b")
++FENCED_CODE = re.compile(r"```.*?```", re.S)
++REF_BACKTICK = re.compile(r"`((?:PR\s+)?#\d+)`", re.I)
++INLINE_BACKTICK = re.compile(r"`[^`\n]*`")
++HELD_LINE = re.compile(r"^\s*(?:[-*]\s*)?(?:\*\*)?HELD:(?:\*\*)?", re.I | re.M)
++BLOCKED_BY = re.compile(r"\bblocked\s+by\s+(?:PR\s+)?#(\d+)\b", re.I)
++AFTER_ACTIVE = re.compile(
++    r"(?:^\s*(?:[-*]\s*)?(?:\*\*)?(?:gated\s+on|depends\s+on|wait\s+for|after)\s+(?:PR\s+)?#(\d+)\b"
++    r"(?!\s*(?:'s|\u2019s|passed\b|merged\b|landed\b|completed\b|closed\b)))"
++    r"|\bafter\s+(?:PR\s+)?#(\d+)\s+(?:lands?|merges?|is\s+merged|completes?|closes?)\b",
++    re.I | re.M,
++)
++OP_DECISION_CLOSE = re.compile(r"^operator\s+decision\s*:\s*close\b", re.I)
++OP_DECISION_HOLD = re.compile(r"^operator\s+decision\s*:\s*hold\b", re.I)
++OP_DECISION_PROCEED = re.compile(r"^operator\s+decision\b", re.I)
+ 
+ 
+ def run_json(argv: list[str], cwd: Path):
+@@ -94,9 +115,84 @@ def closing_refs(body: str, slug: str) -> set[int]:
+     return {int(num) for repo, num in CLOSES.findall(body or "") if not repo or repo.lower() == slug.lower()}
+ 
+ 
+-def parked_issues(issues, other, decide) -> set[int]:
+-    """Issues the run parks by issue rules 1-2 (any creation date): a queued PR must not close them."""
+-    return set(other) | set(decide) | {i["number"] for i in issues if DECISION.search(i["title"])}
++def _sanitize_body(body: str) -> str:
++    """Strip fenced blocks and wholly quoted inline spans while unwrapping backticked #N refs."""
++    cleaned = FENCED_CODE.sub("", body or "")
++    cleaned = REF_BACKTICK.sub(r"\1", cleaned)
++    return INLINE_BACKTICK.sub("", cleaned)
++
++
++def operator_decision(issue: dict, owner: str) -> str | None:
++    """Return latest --owner first-line Operator decision ('proceed'|'close'|'hold') or None."""
++    comments = issue.get("comments") or []
++    ordered = sorted(
++        enumerate(comments),
++        key=lambda pair: ((pair[1].get("createdAt") or ""), pair[0]),
++    )
++    decision: str | None = None
++    for _, comment in ordered:
++        author = (comment.get("author") or {}).get("login")
++        if author != owner:
++            continue
++        first_line = ""
++        for raw_line in (comment.get("body") or "").splitlines():
++            stripped = raw_line.strip()
++            if stripped:
++                first_line = stripped
++                break
++        if not first_line:
++            continue
++        if OP_DECISION_CLOSE.match(first_line):
++            decision = "close"
++        elif OP_DECISION_HOLD.match(first_line):
++            decision = "hold"
++        elif OP_DECISION_PROCEED.match(first_line):
++            decision = "proceed"
++    return decision
++
++
++def issue_hold_reason(issue: dict, open_refs: set[int]) -> str | None:
++    """U15 fail-closed label/body hold detection across all issue types."""
++    labels = {(lab.get("name") or "").lower() for lab in issue.get("labels") or []}
++    if "status:held" in labels:
++        return "label status:held"
++    cleaned = _sanitize_body(issue.get("body") or "")
++    if HELD_LINE.search(cleaned):
++        return "body HELD: marker"
++    blocked = BLOCKED_BY.search(cleaned)
++    if blocked:
++        return f"blocked by #{blocked.group(1)}"
++    active_after = AFTER_ACTIVE.search(cleaned)
++    if active_after:
++        ref = active_after.group(1) or active_after.group(2)
++        return f"after #{ref}"
++    for m in AFTER.finditer(cleaned):
++        ref_num = int(m.group(1))
++        if ref_num in open_refs:
++            return f"after #{ref_num}"
++    return None
++
++
++def parked_issues(issues, other, decide, owner: str = "", open_refs: set[int] | None = None) -> set[int]:
++    """Issues parked by issue rules 1-4 (any creation date): a queued PR must not close them."""
++    refs = open_refs or set()
++    by_num = {i["number"]: i for i in issues}
++    parked: set[int] = set(other)
++    for num in decide:
++        it = by_num.get(num)
++        dec = operator_decision(it, owner) if (it and owner) else None
++        if dec not in ("proceed", "close"):
++            parked.add(num)
++    for it in issues:
++        num = it["number"]
++        dec = operator_decision(it, owner) if owner else None
++        if dec == "hold":
++            parked.add(num)
++        elif DECISION.search(it["title"]) and dec not in ("proceed", "close"):
++            parked.add(num)
++        elif issue_hold_reason(it, refs) is not None:
++            parked.add(num)
++    return parked
+ 
+ 
+ def classify_prs(rows, meta, owner, other, decide, parked, slug):
+@@ -132,21 +228,30 @@ def classify_prs(rows, meta, owner, other, decide, parked, slug):
+     return buckets, needs
+ 
+ 
+-def classify_issues(issues, cutoff, other, decide, folded):
+-    """Issue rules 1-9. Returns (buckets {E..H: [(n, title, after)]}, needs, not_queued, folded_hits)."""
+-    buckets: dict[str, list] = {k: [] for k in "EFGH"}
++def classify_issues(issues, cutoff, other, decide, folded, owner: str = "", open_refs: set[int] | None = None):
++    """Issue rules 1-13. Returns (buckets {E,F,G,H,CLOSE,DECIDED}, needs, not_queued)."""
++    refs = open_refs or set()
++    buckets: dict[str, list] = {k: [] for k in ("E", "DECIDED", "F", "G", "CLOSE", "H")}
+     needs, skipped = [], []
+     for it in sorted(issues, key=lambda i: i["number"]):
+         n, title = it["number"], it["title"]
+         if it["createdAt"][:10] < cutoff:
+             continue
+         labels = {lab["name"] for lab in it.get("labels") or []}
++        dec = operator_decision(it, owner) if owner else None
++        hold = issue_hold_reason(it, refs)
+         if n in other:
+             needs.append((n, f"#{n} {title}: owned by another session; remind only"))
+-        elif n in decide or DECISION.search(title):
++        elif dec == "hold":
++            needs.append((n, f"#{n} {title}: operator decision: hold"))
++        elif (n in decide or DECISION.search(title)) and dec not in ("proceed", "close"):
+             needs.append((n, f"#{n} {title}: operator decision"))
++        elif hold is not None:
++            needs.append((n, f"#{n} {title}: held ({hold})"))
+         elif n in folded:
+             continue
++        elif dec == "close":
++            buckets["CLOSE"].append((n, title, None))
+         elif "merge-batch" in labels or BATCH.search(title):
+             buckets["G"].append((n, title, None))
+         elif REFACTOR.search(title):
+@@ -156,6 +261,8 @@ def classify_issues(issues, cutoff, other, decide, folded):
+             buckets["F"].append((n, title, None))
+         elif "bug" in labels or CODE_FILE.search(title):
+             buckets["E"].append((n, title, None))
++        elif dec == "proceed":
++            buckets["DECIDED"].append((n, title, None))
+         elif OUT_OF_SCOPE.search(title):
+             skipped.append(n)
+         else:
+@@ -186,11 +293,15 @@ def render(args, prb, issb, needs, skipped, folded_map) -> str:
+         lines.append(f"Draft #{n} {title}{with_issues(n, closes)}: finish or close, with evidence.")
+     for n, title, _ in issb["E"]:
+         lines.append(f"#{n} {title}: small bug fix through start-task or jog.")
++    for n, title, _ in issb["DECIDED"]:
++        lines.append(f"#{n} {title}: operator decision recorded — execute via start-task or jog.")
+     for n, title, _ in issb["F"]:
+         lines.append(f"#{n} {title}: docs fix through express.")
+     if issb["G"]:
+         lines.append(f"Stale merge-batch and inventory issues {fmt(n for n, _, _ in issb['G'])}: "
+                      "close each once it is verified complete.")
++    for n, title, _ in issb["CLOSE"]:
++        lines.append(f"#{n} {title}: operator decision: close — verify acceptance on development, then close with a comment citing the commit.")
+     for n, title, after in issb["H"]:
+         gate = f"only after #{after} has landed" if after else "no predecessor named; confirm before starting"
+         lines.append(f"#{n} {title}: refactor, {gate}.")
+@@ -215,7 +326,7 @@ def main() -> int:
+     ap.add_argument("--as-of", default=dt.datetime.now(dt.timezone.utc).date().isoformat(), help="YYYY-MM-DD")
+     ap.add_argument("--prs-json", help="saved pr_minder.py --json output")
+     ap.add_argument("--pr-meta-json", help="saved gh pr list --json number,author,title,body,mergeable output")
+-    ap.add_argument("--issues-json", help="saved gh issue list --json number,title,labels,body,createdAt output")
++    ap.add_argument("--issues-json", help="saved gh issue list --json number,title,labels,body,createdAt,comments output")
+     args = ap.parse_args()
+     root = Path(args.repo_root).resolve()
+     args.other, args.decide = numbers(args.other_session), numbers(args.needs_operator)
+@@ -231,15 +342,16 @@ def main() -> int:
+         ["gh", "pr", "list", "--state", "open", "--limit", "300", "--json", "number,author,title,body,mergeable"], root))
+     issues = load(args.issues_json, lambda: run_json(
+         ["gh", "issue", "list", "--state", "open", "--limit", "1000", "--search", f"created:>={cutoff}",
+-         "--json", "number,title,labels,body,createdAt"], root))
++         "--json", "number,title,labels,body,createdAt,comments"], root))
+     meta = {m["number"]: m for m in meta_rows}
+     slug = args.repo_slug or origin_slug(root)
++    open_refs = set(meta.keys()) | {r["pr"] for r in rows} | {i["number"] for i in issues}
+ 
+     prb, pr_needs = classify_prs(rows, meta, args.owner, args.other, args.decide,
+-                                 parked_issues(issues, args.other, args.decide), slug)
++                                 parked_issues(issues, args.other, args.decide, args.owner, open_refs), slug)
+     folded_map = {n: set(closes) for k in "ABCD" for n, _, closes in prb[k]}
+     folded = set().union(*folded_map.values()) if folded_map else set()
+-    issb, issue_needs, skipped = classify_issues(issues, cutoff, args.other, args.decide, folded)
++    issb, issue_needs, skipped = classify_issues(issues, cutoff, args.other, args.decide, folded, args.owner, open_refs)
+     open_issues = {i["number"] for i in issues if i["createdAt"][:10] >= cutoff}
+     # a folded mention is shown only for issues that did not route to Needs-operator (rules 1-2 win)
+     folded_map = {n: (c & open_issues) - {i for i, _ in issue_needs} for n, c in folded_map.items()}

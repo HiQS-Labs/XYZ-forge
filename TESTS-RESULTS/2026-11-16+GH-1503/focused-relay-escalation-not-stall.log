@@ -1,0 +1,8 @@
+== test: relay-escalation-not-stall ==
+  workdir: <scratch>/tick-relay-escalation-not-stall.XXXXXX.o6LEkAaxO5
+  PASS: by-design Escalated exits 4 (not the stall's 3)
+  PASS: by-design Escalated reports a clean handback message
+  PASS: by-design Escalated is NOT reported as no-progress
+  PASS: a true stall still exits 3 (no-progress guard intact)
+  PASS: pre-escalated relay caught at loop top (exit 4)
+  relay-escalation-not-stall: 5 pass, 0 fail

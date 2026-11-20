@@ -1,0 +1,7 @@
+{
+  "test": "Control 4: Signature Rejection Control",
+  "input_cluster": "merge-lock-race",
+  "witnessed_rejection": "REJECTED: Missing required keys: ['window', 'weights', 'errors', 'issues', 'commits', 'signals']; Path is absolute, contract requires repo-relative",
+  "contract_enforced": true,
+  "verdict": "PASS"
+}
