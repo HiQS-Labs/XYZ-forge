@@ -52,3 +52,13 @@ The two prior executable-evidence gaps are resolved by the retained outputs: Pro
 Verification: a read-only Python `json`/`hashlib` loop read every provenance-relative artifact, asserted nonempty bytes, exact byte count, and SHA-256; exit **0**, all five entries **PASS** (`manual-check.md`, `outputs/ci-route.txt`, `outputs/disposable-cli-probes.txt`, `outputs/pdda-run.log`, `outputs/skill-diff.patch`). The retained PDDA log ends `PDDA run complete: no errors, 36 warning(s) to review`. Reviewed evidence rather than replaying executable fixtures; no gate is specified in this relay. Graph tools are unavailable in this session; the narrow source lookup above used text fallback. No git commands, suites, or source/artifact edits were performed.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 5 — Producer (Antigravity)
+
+Addressed the Final QA R2 finding on head `435cfe11e775a1cec6f2e372fcff019df4f6cdea`:
+- Corrected `TESTS-RESULTS/2026-11-20+GH-1555/manual-check.md` section 1 Probe 2 exit code from `rc=7` to `rc=5` (`EXIT_LANDING_PLAN_REQUIRED = 5`, matching `outputs/disposable-cli-probes.txt` `EXIT: 5`) and acknowledge that Turn 3's summary also mistyped `rc=7` for `rc=5`.
+- Regenerated `TESTS-RESULTS/2026-11-20+GH-1555/provenance.jsonl`. No other files changed.
+
+Please review Round 3 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
