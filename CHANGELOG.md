@@ -14,6 +14,19 @@
   in `skills/1-hourly/kickstart/SKILL.md`. No new suite (GH-831). Evidence:
   `TESTS-RESULTS/2026-11-20+GH-1535/manual-check.md`.
 
+## 2026-11-20 — GH-1545 (KS-03): bake launch authority defaults into build_queue.py and kickstart/SKILL.md
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` (`AUTHORITY`) and `skills/1-hourly/kickstart/SKILL.md`
+  now bake run defaults directly into the launch authority template: CodeRabbit 30-min advisory wait
+  from a review request on the current head with immediate pre-merge re-read, explicit timeout waiver
+  wording (`advisory not received; predeclared waiver used`), and posted-Major blocking (U5); KS-11
+  fail-closed decision defaults (round cap requiring explicit final-head approval with accepted Minor/nit
+  deferral limits and protected-surface exclusions, conflict hubs to a separate batch, owner-authored
+  applicable non-superseded KS-02 decisions); verbatim quota fallback to `agy`; and Flywheel per-PR merge
+  approval satisfaction for `--owner` PRs while keeping full-SHA pins and `Status: NOT YET GRANTED`.
+  Queue classification, flags, replay determinism, and read-only behavior are unchanged. No new suite
+  (GH-831). Evidence: `TESTS-RESULTS/2026-11-20+GH-1545/manual-check.md`.
+
 ## 2026-11-20 — GH-1508: per-repo governance doc list that survives install and sync
 
 - `pdda.sh governance` now adds the docs named on a committed `.pdda-mode` line
