@@ -4,3 +4,19 @@ PASS Control 3: 3 distinct per-turn logs, repeated 429 works, caller-reused CODE
 PASS Control 4b: orphaned grandchild holding stderr exited driver in 0.83s (<4.5s) with reason=provider-quota
 PASS Control 4c: KS-04 kickstart_status.py reads KS-05 receipt verbatim (provider-quota, run-receipt) and reports unknown for unattributed shared escalation-reason
 PASS ALL 4 KS-05 PAIRED RED/GREEN MANUAL CONTROLS
+
+=== POST-FIX AST REGRESSION (test/gh648-l7-checkout-aftermath.sh on b280e6709c) ===
+EXIT: 0
+PASS: branch-timeout
+PASS: detached-timeout
+PASS: healthy-switch
+PASS: no-restore mutation rejected by preservation assertion
+PASS: unchanged
+PASS: moved-ref
+PASS: dirty-conflict
+PASS: snapshot failure: RuntimeError
+PASS: snapshot failure: CalledProcessError
+PASS: snapshot failure: OSError
+PASS: snapshot failure: ValueError
+PASS: snapshot failure: TimeoutExpired
+PASS: missing snapshot recovery performs no Git operations

@@ -1,0 +1,15 @@
+diff --git a/skills/1-hourly/relay-xyz/SKILL.md b/skills/1-hourly/relay-xyz/SKILL.md
+index 1d2b465f..5bec932c 100644
+--- a/skills/1-hourly/relay-xyz/SKILL.md
++++ b/skills/1-hourly/relay-xyz/SKILL.md
+@@ -486,8 +486,8 @@ the same repo/worktree state (observed: a stray `git worktree` plus a `tick` tok
+   | Exit | Meaning |
+   |---|---|
+   | `0` | reviewer Approved/Closed |
+-  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall. The same code is a turn shim's "CLI failed"; `.relay-scratch/escalation-reason` in the harness root says which: `review-handback` or `turn-failed-rc5` |
+-  | `3` | genuine stall — the reviewer did nothing (token + STATUS unchanged) |
++  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall. The same code is a turn shim's "CLI failed"; the per-invocation stop receipt (`.relay-scratch/stop-reasons/<invocation-id>.json`, plus stderr `relay-drive: stop-reason=...`) and `.relay-scratch/escalation-reason` distinguish `review-handback`, `provider-quota` (429 / quota / usage-limit), and `turn-error` |
++  | `3` | genuine stall (`zero-output-stall`, `no-action-stall`, or `no-progress`, written to both the per-invocation stop receipt and `.relay-scratch/escalation-reason` so no earlier `cap-stalled` leaks into a new run) |
+   | `4` | escalated by design (`STATUS: Escalated`), round cap, a close mismatch, or a refused approval (the reason file names it, for example `approved-over-fail`: `STATUS: Approved` over the reviewer's own failing verdict line) |
+ 
+   Without `--review-once` a non-approval handback advances the multi-round loop instead (the producer
