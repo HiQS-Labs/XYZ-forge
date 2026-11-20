@@ -2,7 +2,7 @@
 gh_issue: 1543
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1543
 title: "kickstart(KS-15): versioned run-record contract, atomic appends, redacted snapshot and checkpoint helper"
-status: In Progress
+status: Complete
 created: 2026-11-20
 updated: 2026-11-20
 owner: operator
