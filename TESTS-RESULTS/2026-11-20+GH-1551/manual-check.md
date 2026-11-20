@@ -3,15 +3,18 @@
 Date: 2026-11-20
 Scope: `skills/1-hourly/kickstart/SKILL.md` (`route=docs`; no new test suite per GH-831).
 
-## Paired Real >10-Minute Red/Green Probe (`outputs/red-green-probe.txt`)
-Both sides executed the exact same 605-second (>10 min) workload in parallel (`2026-11-20T09:14:12Z` -> `09:24:17Z`):
+## Synthetic Paired >10-Minute Mechanism Probe (Distinct From Production Landing Entry Point)
+Both arms ran the exact same synthetic 605-second workload (`outputs/run-ks07-probe.py`, invoked inside detached background session PID `95306` from `2026-11-20T09:14:12Z` to `09:24:17Z`; raw receipts in `outputs/launch-and-completion-receipt.txt` and `outputs/red-green-probe.txt`):
 
-- **Red Control (Foreground 600s Tool Timeout — reproducing #1539):**
-  - `timeout_s: 600`, `elapsed_s: 600.0`, `killed: true`, `marker_state: "started"`, `completed_reached: false`.
-  - Confirmed that a >10-min operation launched under a 600s foreground/tool timeout is killed mid-flight before reaching completion.
+- **Red Control (Synthetic 600s Foreground Timeout Cap):**
+  - Executed the 605s workload under `subprocess.run(..., timeout=600)` (simulating the host tool's 600s foreground timeout that kills >10-min runs).
+  - Observed result: `subprocess.TimeoutExpired` (SIGKILL) at `600.0s`, `killed: true`, `marker_state: "started"`, `completed_reached: false`.
 - **Green Control (Background Execution Beyond 10 Minutes):**
-  - Launched in a detached background session (`start_new_session=True`, explicit PID + exit-code receipt, surviving the host shell's 600s cap), completing in `605.04s` with `returncode: 0`, `marker_state: "started\ncompleted"`, `completed_reached: true`.
-- **U7 / U8 Credit Boundaries:** This milestone satisfies capability rubrics R1–R3 via the real >10-min paired red/green probe without manufacturing a production incident (U8); full U7 run-2 acceptance (at least one real run-2 operation >10 min completing in background with its result consumed exactly once) remains uncredited until Run 2 executes.
+  - Executed the identical 605s workload in a detached background session (`start_new_session=True`, PID `95306`, exit-code receipt `probe.rc = 0` at `2026-11-20T09:24:17Z`), surviving past the 600s cap.
+  - Observed result: `returncode: 0`, `elapsed_s: 605.04`, `marker_state: "started\ncompleted"`, `completed_reached: true`.
+- **Truthful Scope & U7 / U8 Credit Boundaries:**
+  - This probe is a **synthetic mechanism check**, explicitly distinct from a production `merge-cleanup --execute` landing or live `#1539` incident replay (U8 forbids manufacturing a production incident).
+  - Real Run-2 acceptance (**U7**: at least one real Run-2 >10-min operation completing via host-native background launch + completion notification consumed exactly once) remains **uncredited** until Run 2 executes.
 
 ## PDDA & Route Verification
 - `utils/ci-route.sh pull_request` (piped changed files): `route=docs`, `tier=1` (`outputs/ci-route.txt`)
