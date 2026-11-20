@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-20.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -93,5 +93,46 @@ source-backed technical validation, labelled as such. Then answer:
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes:** Add a setup remedy to the scanner's refusal and show per-device harness configuration status during vendored `--check`. Update the skill sentence and verify both outputs using existing coverage and smoke receipts.
+
+**How the existing system works, per this document:** The scanner intentionally excludes the audited tree's vendored tick and searches explicit configuration and PATH. The harness locator can resolve a vendored installation successfully while suppressing its live-harness save hint.
+
+**What it's not:** The frontmatter excludes trusting vendored tick, automatic config writes, and new tests or suites. The preflight section limits the change to advisory output; inference: discovery precedence should remain unchanged.
+
+**Source-backed technical validation**
+
+swept file: yes
+
+- [Pass] The two fix sites match HEAD: `scan_clones.py:323` returns `"tick binary not found"` with `verified: False`; `find-harness.sh:424-431` gates the save hint on `VENDORED=0`. Vendored resolution without overrides still computes `LIVE_HARNESS` from script ancestry, config, then bounded search (`find-harness.sh:303-317`). It can remain empty, as the plan's manual-command fallback anticipates. `_canonical_clone` additionally requires basename `XYZ-forge` and canonical origin (`find-harness.sh:32-40`); keep that condition on suggested save targets.
+- [Pass] The plan explicitly excludes "Relaxing GH-1362 / GH-744" and "Auto-writing ~/.config/xyz/harness" (artifact frontmatter). Its three implementation steps change refusal text, advisory checklist text and a skill sentence, preserving the existing resolver and writer boundary. No additional pre-existing defect found in the artifact sweep beyond the acceptance gap below.
+- [Should] Make the acceptance recipe isolate **all** scanner discovery channels and distinguish locating tick from verifying claims. The stated red setup (only unset `XYZ_HARNESS` / `MERGE_CLEANUP_TICK_BIN` and isolate config) does not yield a missing tick when running this checkout's scanner: its own-ancestor lookup wins before config (`scan_clones.py:264-267`), and PATH remains a fallback (`:285`). Also `_tick_binary()` returns a path, not `verified: True`; that result belongs to `inspect_tick_claims` and can arise from locks or absence of `.tick` without using tick (`:303-319`). Concrete fix: specify a copied scanner outside harness ancestry, controlled PATH, an audited `.tick` root without locks, and isolated HOME/config; clear `XYZ_REPO_ROOT` for locator probes too. Record the failing baseline assertions and after assertions against actual emitted detail/checklist, run the printed command in the isolated config, assert its saved bytes, then require scanner resolution to equal that saved harness's tick. If claiming `verified: True`, measure `inspect_tick_claims` with actual valid claims JSON; do not infer it from resolution. Include invalid config/no canonical live harness and valid config checklist branches in retained manual checks; existing suites remain unchanged.
+  Observed input: HEAD scanner at its real `__file__`, `XYZ_HARNESS` and `MERGE_CLEANUP_TICK_BIN` unset, `XDG_CONFIG_HOME=$TMPDIR/absent-config` (nonexistent). Probe returned the worktree's `bin/tick`, not `None`.
+  Affected scope: the plan's red/after acceptance recipe only; no requested production discovery or trust change.
+  Falsifier: the copied-scanner fixture with no own-ancestor tick and no PATH tick must return `None` before config, emit the old bare refusal before the fix, and reject the new message/checklist assertions on baseline. After saving config, exact path equality must establish that config supplied resolution.
+  Probe command (non-mutating AST extraction, no module entrypoint, fixture executable, or git):
+  ```python
+  # Run with: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'
+  import ast, os, pathlib, typing, shutil
+  p=pathlib.Path('skills/2-daily/merge-cleanup/scripts/scan_clones.py').resolve()
+  t=ast.parse(p.read_text()); f=next(n for n in t.body if isinstance(n,ast.FunctionDef) and n.name=='_tick_binary')
+  ns={'Optional':typing.Optional,'os':os,'Path':pathlib.Path,'__file__':str(p),'TICK_BIN_ENV':'MERGE_CLEANUP_TICK_BIN','shutil':shutil}
+  exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),ns)
+  os.environ.pop('XYZ_HARNESS',None);os.environ.pop('MERGE_CLEANUP_TICK_BIN',None);os.environ['XDG_CONFIG_HOME']=str(pathlib.Path(os.environ['TMPDIR'])/'absent-config')
+  print('isolated config exists:',pathlib.Path(os.environ['XDG_CONFIG_HOME']).exists())
+  print('_tick_binary:',ns['_tick_binary']())
+  # PY
+  ```
+  Exit status: 0. Decisive output: `isolated config exists: False`; `_tick_binary: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/rtl-wt.mQIOtC/bin/tick`.
+- [Pass] Existing consumer `test/find-harness.sh:205-216` extracts the exact prefix `  save this harness on this Mac: `, executes the suffix, checks saved bytes, then checks config resolution. Preserve that prefix and its shell quoting. Existing vendored checks assert selected substrings and exit 0 (`test/find-harness.sh:65-72,264-269`), rather than a full-output snapshot. The named source/test string search found no old refusal-string pin; skill documentation already gives the XDG-aware manual command (`skills/1-hourly/relay-xyz/SKILL.md:130-135`).
+- [Unverified — needs clone run] No acceptance baseline or post-fix checklist run has been witnessed here; no phase gate was configured in these reviewer instructions. The existing suite list is planned verification, not delivery evidence. Retain actual red/green results with `provenance.jsonl` under the planned receipts directory when implementation is tested in a disposable full clone.
+
+**VERDICT: FAIL**
+
+**Basis:** Scope and implementation direction are sound and proportionate. Tighten the acceptance recipe so the documented red control actually reaches the changed branch and the config remedy is proven to supply scanner resolution; the current environment recipe is insufficient at HEAD. This is a plan correction, not a request for another subsystem or new tests.
+
+Handing off to Producer (claude-a) — revise the acceptance recipe and disposition the finding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
