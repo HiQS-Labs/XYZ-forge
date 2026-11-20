@@ -223,3 +223,33 @@ Resolved R4 Major 1 on candidate HEAD `92b8b5a6a1eeb008fe12ce1909a9e84e98791d47`
 Please review Round 5 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 10 — Reviewer (Codex) — Round 5
+
+STATUS: Approved
+
+**R4 Major 1 resolved.** The regenerated receipt retains exact JSON inputs and CLI invocations. Goal #992 references only #202/#203/#101/#102; #50/#51 are absent and selected #102 predates the cutoff. Independent in-memory evaluation of those retained inputs against the seeded source exactly matched the recorded stdout: PR #203 queues with `(closes #102)` only, PR #202 parks because it closes held #50, and no standalone #50 is emitted. The missing-PR-input, unresolved-closing-target and all-closed-reference controls also matched their recorded outcomes. Every probe blocked subprocess execution and observed zero calls.
+
+**Evidence integrity passed.** All seven provenance entries are nonempty and match their recorded byte counts and SHA-256 hashes, including `controls-green.txt 25245`. Reviewed the retained red control, source and acceptance plan, mypy receipt, docs route and PDDA receipt. No remaining blocking finding in this review scope.
+
+Verification commands and results:
+
+1. Hash verification command from Turn 6, unchanged: exit 0 through all seven VERIFIED lines. The combined initial comparison probe subsequently exited 1 because its own redundant JSON wrapper recursed on its second case; this was a reviewer-probe defect, not a candidate failure. Removed that wrapper and reran the comparison below successfully.
+2. Narrow comparison probe (shell exit 0): imported `skills/1-hourly/kickstart/scripts/build_queue.py` with `importlib.util.spec_from_file_location`, parsed each `INPUT_*_JSON` using `json.JSONDecoder().raw_decode` from the four named control blocks in `outputs/controls-green.txt`, supplied those objects through `m.load` and the separate goal through a `Path.read_text` interceptor, and called `m.main()` with the recorded arguments (`--daily-goals`, all four saved-input flags, `--owner noelsaw1 --repo-slug HiQS-Labs/XYZ-forge --as-of 2026-11-20`). Replaced `m.subprocess.run` with a function raising `AssertionError` on any call. Asserted exact stdout equality for successful cases and the exact SystemExit diagnostic's presence in the receipt for rejected cases. Ran with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`.
+
+Decisive output:
+```text
+MATCH CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER rc= build_queue: incomplete PR input for selected PR #201 (present in pr-meta only) subprocess_calls= 0
+MATCH CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE rc= 0 subprocess_calls= 0
+1. #203 Fix 102 and older clean 51 (closes #102): CLEAN. Wait for review, then merge.
+- PR #202 Fix 101 and held 50: merging it would close parked #50
+MATCH CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED rc= 0 subprocess_calls= 0
+MATCH CONTROL_3G_ALL_CLOSED_REFERENCES rc= build_queue: daily-goals #994 selected zero open issues or PRs after resolution subprocess_calls= 0
+```
+
+Review limits: all 85 graph projects inventoried (`has_more=false`); none covers this worktree, so direct seeded-source inspection was used. Candidate SHA `92b8b5a6a1eeb008fe12ce1909a9e84e98791d47` remains producer-reported. No git commands, suites, executable fixtures or phase gates were run. Mutation-heavy verification remains [Unverified — needs clone run]; this approval covers the inspected implementation and retained acceptance evidence, and assumes no later gate.
+
+VERDICT: PASS
+
+**NEXT: Done**
