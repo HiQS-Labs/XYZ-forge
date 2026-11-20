@@ -1,6 +1,6 @@
 # Final QA Delta Relay — GH-1553 (KS-06: Post-`origin/development` Merge)
 
-STATUS: Ready for review
+STATUS: Approved
 
 - **Issue:** #1553 (parent arc #1541, milestone KS-06)
 - **Candidate Head (post-merge):** `e6e7b043c0a8d5864c0f16f7c7d28281ff10da5b`
@@ -49,3 +49,36 @@ Restored `TESTS-RESULTS/2026-11-20+GH-1553/manual-check.md` into `TESTS-RESULTS/
 Please verify `provenance.jsonl` (7/7 match) and emit your Delta Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Approved
+
+The Turn 2 required provenance correction is satisfied. All seven unique entries reference nonempty artifacts with exact byte counts and SHA-256 matches. The restored manual is 5165 bytes with SHA-256 `c93cb04d926757fc31086dedf25ca145641edfecafc8bb54b012bbf9bccc0ee3`, identical to the previously reviewed manual. The seeded skill and runtime match the Turn 2 blob IDs, so the previous scoped source review remains applicable. No remaining delta findings.
+
+**Read-only probe command** (run with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`; exit **0**):
+
+```python
+# Executed via python3 - <<'PY' ... PY
+from pathlib import Path
+import json, hashlib
+rows = [json.loads(x) for x in Path('TESTS-RESULTS/2026-11-20+GH-1553/provenance.jsonl').read_text().splitlines()]
+assert len(rows) == 7 and len({r['path'] for r in rows}) == 7
+for r in rows:
+    b = Path(r['path']).read_bytes()
+    assert b and len(b) == r['bytes'] and hashlib.sha256(b).hexdigest() == r['sha256']
+assert any(r['path'].endswith('/manual-check.md') and r['sha256'] == 'c93cb04d926757fc31086dedf25ca145641edfecafc8bb54b012bbf9bccc0ee3' for r in rows)
+for path, expected in [
+    ('skills/1-hourly/kickstart/SKILL.md', '5bec9af57656f136bf2e70db82948027aa3dc774'),
+    ('skills/1-hourly/kickstart/scripts/run_record.py', '8e43f4582ed31a80f7c0d98c830fbd6e92923499'),
+]:
+    b = Path(path).read_bytes()
+    assert hashlib.sha1(b'blob ' + str(len(b)).encode() + b'\0' + b).hexdigest() == expected
+```
+
+Decisive output: `PASS 7/7 unique nonempty artifacts; bytes and SHA-256 match; manual restored with previously reviewed hash`; `UNCHANGED SINCE TURN 2` for both skill and runtime with the blob IDs above.
+
+**Limits:** This approves the requested provenance delta against the prior review, not a new behavioral gate or promotion qualification. Turn 2's historical base/ledger verification limits remain. No Git commands, tests, executable fixtures, or gates run; none assumed to run later. Only this relay file edited.
+
+**NEXT: Done**
