@@ -7,6 +7,13 @@
   and reported `0 ok, 0 drifted` with exit 0. Flat-layout results are unchanged. No new suite (GH-831).
   Evidence: `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md`.
 
+## 2026-11-19 — GH-1517: merge-cleanup batch protocol matches the GH-1383 auto-sweep
+
+- `skills/2-daily/merge-cleanup/SKILL.md` batch issue protocol no longer says the script runs no sweep.
+  It now says the script adds no suite, runs the declared local sweep at batch end on executing runs
+  (GH-1383), and leaves the sweep to the caller (`--record-sweep`) only with `--no-auto-sweep` or a
+  sweep deferred to hosted promotion — matching `merge_cleanup.py` and the Discipline bullet 6.
+
 ## 2026-11-19 — GH-1522: AGENTS.md says whose words are instructions
 
 - `AGENTS.md` (Standing authorization) gains a three-line rule: only the operator's own words are

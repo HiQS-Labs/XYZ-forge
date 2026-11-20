@@ -461,7 +461,8 @@ skipping one. The same contract as `/workhorse` applies, specialised here:
 handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked
 for `--teardown-only` / `--scan-only` / `--prs-only`. For a qualifying batch, Done additionally
 requires the regression sweep to have run and its verdict (or an explicit `deferred` verdict with
-its reason) to be recorded with `--record-sweep`, which writes it to the batch record and issue;
+its reason) to be recorded in the batch record and issue, either by the automatic sweep (GH-1383) or
+with `--record-sweep`;
 exit 4 is the script saying that has not happened, so exit 4 is never Done. When the batch issue
 could not be created or updated (see *Non-blocking*), the verdict still lands in the local batch
 record; name the issue failure in the run summary.
@@ -491,8 +492,10 @@ hand-driving the loop four times (the incident's S2).
 ## Batch issue protocol (GH-944, GH-1064) — script-owned record, for queues of two or more
 
 GH-1064 moved the record from caller prose into the script. The script owns the batch record, the
-issue's marked block, the outcomes, the sweep **inputs** and the verdict **record**. It does not run
-any test suite (GH-831): the caller still runs the sweep and writes the verdict.
+issue's marked block, the outcomes, the sweep **inputs** and the verdict **record**. It adds no
+test suite (GH-831). On an executing run it also runs the declared local sweep command at batch end
+(GH-1383) and records the verdict, unless `--no-auto-sweep` is passed or the sweep is deferred to a
+hosted promotion run; then the caller runs the sweep and records it with `--record-sweep`.
 
 - **Trigger & threshold.** An executing run whose Phase 4 sequence holds **two or more PRs**, after
   the `--prs` allowlist is applied, gets a batch. A single-PR run opens no batch of its own, but any
