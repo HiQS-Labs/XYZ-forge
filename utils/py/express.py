@@ -924,7 +924,7 @@ goal: >
         f.write(body)
 
     # CHANGELOG — newest-first under a fresh dated Unreleased section; only under
-    # CHANGELOG_WRITES=branch (off/landing: the landing reconcile owns the entry, GH-1487).
+    # CHANGELOG_WRITES=branch (off/landing: express does not append; the post-landing synthesis skips direct commit landings, GH-1487).
     if not write_changelog:
         print("express-docs: born complete -> %s" % os.path.relpath(doc, root))
         return dict(doc=os.path.relpath(doc, root))
