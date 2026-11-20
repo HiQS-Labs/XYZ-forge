@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-20 — GH-1508: per-repo governance doc list that survives install and sync
+
+- `pdda.sh governance` now adds the docs named on a committed `.pdda-mode` line
+  `PDDA_GOVERNANCE_DOCS_EXTRA=...` to its default doc set (extends, never replaces, per the operator's
+  decision). `.pdda-mode` is a create-only seed, so install and sync keep it. The `PDDA_GOVERNANCE_DOCS`
+  environment variable still replaces the whole set. Documented in `PROJECT/PDDA.md`. No new suite (GH-831).
+  Evidence: `TESTS-RESULTS/2026-11-20+GH-1508/smoke.md`.
+
 ## 2026-11-19 — GH-1519: the gate refuses in seconds when mypy is missing
 
 - `validate.sh`'s existing GH-732 environment check now also requires `mypy` (`test/test_python_layer.py`

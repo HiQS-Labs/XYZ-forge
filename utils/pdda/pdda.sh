@@ -1039,6 +1039,9 @@ cmd_releases_current() {
 # default set because many installs carry one at the repo root beside AGENTS.md; a repo without one
 # (like this one) just has it silently skipped. Override the set via PDDA_GOVERNANCE_DOCS
 # (space-separated, repo-relative) and the index doc via PDDA_GOVERNANCE_INDEX (default ROUTER.md).
+# GH-1508: a repo EXTENDS the default set (never replaces it) with a committed `.pdda-mode` line
+# `PDDA_GOVERNANCE_DOCS_EXTRA=docs/a.md SOP.md` (space-separated, repo-relative; last line wins).
+# `.pdda-mode` is a create-only seed, so install and sync keep it. PDDA_GOVERNANCE_DOCS still replaces all.
 PDDA_GOVERNANCE_DOCS_DEFAULT="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md PROJECT/PDDA.md utils/pdda/PDDA-INSTALL.md"
 PDDA_GOVERNANCE_INDEX_DEFAULT="ROUTER.md"
 
@@ -1426,7 +1429,13 @@ _pdda_check_comment_references() {
 check_governance() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-governance" rc=0
-  local docs="${PDDA_GOVERNANCE_DOCS:-$PDDA_GOVERNANCE_DOCS_DEFAULT}"
+  local docs="${PDDA_GOVERNANCE_DOCS:-}" gov_extra=""
+  if [ -z "$docs" ]; then
+    docs="$PDDA_GOVERNANCE_DOCS_DEFAULT"
+    [ -f "$PDDA_REPO_ROOT/.pdda-mode" ] && gov_extra="$(sed -nE 's/^[[:space:]]*PDDA_GOVERNANCE_DOCS_EXTRA[[:space:]]*=[[:space:]]*([^#]*).*/\1/p' \
+      "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | tr -d '\r"'"'"'')"   # CRLF and quotes stripped
+    [ -n "$gov_extra" ] && docs="$docs $gov_extra"
+  fi
   local index_doc="${PDDA_GOVERNANCE_INDEX:-$PDDA_GOVERNANCE_INDEX_DEFAULT}"
   local shipped_docs="${PDDA_GOV_SHIPPED_DOCS:-$PDDA_GOV_SHIPPED_DOCS_DEFAULT}"
   local ref_exempt="${PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS:-$PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT}"
