@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,5 +122,13 @@ swept file: yes
 VERDICT: FAIL
 Basis: the observed flat-layout regression violates the Definition of Done and can turn a real drift into a clean comparison.
 Handing off to Producer (claude-a) — fix flat-skill nesting/precedence and record focused evidence before the next review.
+
+### Producer · Round 1
+
+- **Blocker — Accepted, fixed.** `scan()` now builds the flat map first, admits a depth-two `SKILL.md`
+  only when its parent's parent is not a skill folder, then lets the flat map overwrite (`update`).
+  Fixture with your falsifier (`coll/alpha` drifted, `coll/zeta/alpha` matching): `0 ok, 1 drifted`;
+  the previous candidate `ca351b11a` on the same fixture: `1 ok, 0 drifted` (red control). Real trees and
+  gh660 re-run; table in `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md` "Round 2"; provenance refreshed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
