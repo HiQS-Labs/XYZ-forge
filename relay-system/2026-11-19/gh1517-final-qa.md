@@ -120,4 +120,13 @@ swept file: yes
 VERDICT: PASS
 Basis: The requested sentence and repaired Done rule consistently describe automatic local sweep recording and manual/deferred recovery; the full skill reread found no further actionable defect. Runtime gates were not run in this reviewer worktree.
 
+
+### Attestation · relay-drive — 2026-11-20T01:38:15Z
+task: RELAY-gh1517-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: f96fdd92d72621dd86764e03d5f9fcc9e95d511d
+added-range: 10147+2627
+added-sha256: 8438a9119926fa7ad21966bf3dbd8b64bf95de23ecb570f5ea442411e392213c
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
