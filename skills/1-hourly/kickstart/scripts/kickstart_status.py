@@ -517,7 +517,39 @@ def _assess_final_qa(
         g for g in (parsed.get("gates") or [])
         if str(g.get("target", "")).lower() in ("final-qa", "final_qa")
     ]
-    qa_gates.sort(key=lambda g: int(g.get("line", 0)))
+    qa_gates.sort(key=lambda g: int(g.get("line_no") or g.get("line") or 0))
+
+    latest_landing_sha: str | None = None
+    for m in reversed(merged_landings):
+        if m.get("sha"):
+            latest_landing_sha = str(m["sha"])
+            break
+    target_head: str | None = development_head or latest_landing_sha
+
+    def _result(
+        status: str,
+        qa_sha: str | None,
+        qa_verdict: str | None,
+        dev_head: str | None,
+        later: list[dict[str, Any]],
+        reason: str,
+        rerun_required: bool,
+        handback_allowed: bool,
+        recommended_action: str,
+    ) -> dict[str, Any]:
+        return {
+            "status": status,
+            "final_qa_sha": qa_sha,
+            "final_qa_verdict": qa_verdict,
+            "development_head": dev_head,
+            "later_landings": later,
+            "latest_landing_sha": latest_landing_sha,
+            "target_head": target_head,
+            "rerun_required": rerun_required,
+            "handback_allowed": handback_allowed,
+            "recommended_action": recommended_action,
+            "reason": reason,
+        }
 
     latest_qa: dict[str, Any] | None = qa_gates[-1] if qa_gates else None
     if latest_qa is None and final_qa_sha_override:
@@ -530,72 +562,110 @@ def _assess_final_qa(
         }
 
     if latest_qa is None:
-        return {
-            "status": "missing",
-            "final_qa_sha": None,
-            "final_qa_verdict": None,
-            "development_head": development_head,
-            "later_landings": [],
-            "reason": "no canonical GATE: final-QA recorded",
-        }
+        if merged_landings:
+            return _result(
+                status="missing",
+                qa_sha=None,
+                qa_verdict=None,
+                dev_head=development_head,
+                later=[],
+                reason=f"no canonical GATE: final-QA recorded after {len(merged_landings)} landing(s)",
+                rerun_required=True,
+                handback_allowed=False,
+                recommended_action="run-final-qa",
+            )
+        return _result(
+            status="missing",
+            qa_sha=None,
+            qa_verdict=None,
+            dev_head=development_head,
+            later=[],
+            reason="no canonical GATE: final-QA recorded (0 landings in run)",
+            rerun_required=False,
+            handback_allowed=True,
+            recommended_action="handback-ready-no-landings",
+        )
 
     qa_sha = str(latest_qa.get("sha") or "")
     qa_verdict = str(latest_qa.get("verdict") or "")
-    qa_line = int(latest_qa.get("line", 0))
+    qa_line = int(latest_qa.get("line_no") or latest_qa.get("line") or 0)
 
     if qa_verdict != "green":
-        return {
-            "status": "stale",
-            "final_qa_sha": qa_sha,
-            "final_qa_verdict": qa_verdict,
-            "development_head": development_head,
-            "later_landings": [],
-            "reason": f"latest canonical GATE: final-QA verdict is {qa_verdict}",
-        }
+        return _result(
+            status="stale",
+            qa_sha=qa_sha,
+            qa_verdict=qa_verdict,
+            dev_head=development_head,
+            later=[],
+            reason=f"latest canonical GATE: final-QA verdict is {qa_verdict}",
+            rerun_required=True,
+            handback_allowed=False,
+            recommended_action="rerun-final-qa",
+        )
 
-    later_landings = [
-        m for m in merged_landings
-        if int(m.get("line", 0)) > qa_line
-        and not any(_sha_matches(s, qa_sha) for s in (m.get("shas") or []))
-    ]
+    # KS-13 (GH-1557): a post-qa_line MERGED entry is excluded ONLY when it carries at least one
+    # SHA and EVERY SHA on that line matches qa_sha (prevents multi-SHA lines citing both qa_sha
+    # and a new merge/reconcile SHA from falsely suppressing staleness, while preserving SHA-less
+    # later-landing detection).
+    later_landings = []
+    for m in merged_landings:
+        if int(m.get("line", 0)) <= qa_line:
+            continue
+        shas = [str(s) for s in (m.get("shas") or [])]
+        if shas and all(_sha_matches(s, qa_sha) is True for s in shas):
+            continue
+        later_landings.append(m)
+
     if later_landings:
-        return {
-            "status": "stale",
-            "final_qa_sha": qa_sha,
-            "final_qa_verdict": qa_verdict,
-            "development_head": development_head,
-            "later_landings": later_landings,
-            "reason": f"{len(later_landings)} landing(s) recorded after final-QA",
-        }
+        return _result(
+            status="stale",
+            qa_sha=qa_sha,
+            qa_verdict=qa_verdict,
+            dev_head=development_head,
+            later=later_landings,
+            reason=f"{len(later_landings)} landing(s) recorded after final-QA",
+            rerun_required=True,
+            handback_allowed=False,
+            recommended_action="rerun-final-qa",
+        )
 
     if development_head:
         matched = _sha_matches(qa_sha, development_head)
         if matched is True:
-            return {
-                "status": "fresh",
-                "final_qa_sha": qa_sha,
-                "final_qa_verdict": qa_verdict,
-                "development_head": development_head,
-                "later_landings": [],
-                "reason": "canonical green final-QA matches caller-verified development head with no later landings",
-            }
-        return {
-            "status": "stale",
-            "final_qa_sha": qa_sha,
-            "final_qa_verdict": qa_verdict,
-            "development_head": development_head,
-            "later_landings": [],
-            "reason": f"development head ({development_head}) differs from final-QA head ({qa_sha})",
-        }
+            return _result(
+                status="fresh",
+                qa_sha=qa_sha,
+                qa_verdict=qa_verdict,
+                dev_head=development_head,
+                later=[],
+                reason="canonical green final-QA matches caller-verified development head with no later landings",
+                rerun_required=False,
+                handback_allowed=True,
+                recommended_action="handback-ready",
+            )
+        return _result(
+            status="stale",
+            qa_sha=qa_sha,
+            qa_verdict=qa_verdict,
+            dev_head=development_head,
+            later=[],
+            reason=f"development head ({development_head}) differs from final-QA head ({qa_sha})",
+            rerun_required=True,
+            handback_allowed=False,
+            recommended_action="rerun-final-qa",
+        )
 
-    return {
-        "status": "unknown",
-        "final_qa_sha": qa_sha,
-        "final_qa_verdict": qa_verdict,
-        "development_head": None,
-        "later_landings": [],
-        "reason": "development head freshness unverified; pass --development-head",
-    }
+    return _result(
+        status="unknown",
+        qa_sha=qa_sha,
+        qa_verdict=qa_verdict,
+        dev_head=None,
+        later=[],
+        reason="development head freshness unverified; pass --development-head",
+        rerun_required=False,
+        handback_allowed=False,
+        recommended_action="verify-development-head",
+    )
 
 
 def _parse_structured_escalation_payload(raw_text: str) -> tuple[str | None, str | None]:
@@ -793,6 +863,15 @@ def _render_markdown(report: dict[str, Any]) -> str:
         f"- Status: **{fqa['status']}** (final_qa_sha=`{fqa['final_qa_sha'] or 'none'}`, "
         f"verdict=`{fqa['final_qa_verdict'] or 'none'}`, dev_head=`{fqa['development_head'] or 'unverified'}`)"
     )
+    lines.append(
+        f"- Handback allowed: `{str(fqa['handback_allowed']).lower()}` | "
+        f"Rerun required: `{str(fqa['rerun_required']).lower()}` | "
+        f"Recommended action: `{fqa['recommended_action']}` "
+        f"(target_head=`{fqa['target_head'] or 'none'}`)"
+    )
+    if fqa.get("later_landings"):
+        for lm in fqa["later_landings"]:
+            lines.append(f"- Later landing (line {lm.get('line')}): {lm.get('text')}")
     lines.append(f"- Detail: {fqa['reason']}")
     lines.append("")
 

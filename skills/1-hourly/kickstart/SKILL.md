@@ -101,6 +101,26 @@ session and the single delegated outer-loop child session. There are never compe
 4. **Shared Unsafe Stops:** On shared unsafe conditions (lock contention, git safety
    violations, ledger drift, exhausted global budget) or owner-mandated stops, halts dispatch
    immediately, leaves a resumable checkpoint with observed evidence, and reports to parent.
+5. **Pre-Handback Final-QA Staleness Gate & Autonomous Re-Run (KS-13 / GH-1557):** Before handing
+   back on Normal Completion, the child fetches `origin/development` in `LANDING_CLONE` and queries
+   `python3 skills/1-hourly/kickstart/scripts/kickstart_status.py --record <run-record> --development-head $(git -C <LANDING_CLONE> rev-parse origin/development) --skip-prs --json`,
+   following one reconciled decision table:
+   - `handback_allowed == true` (`status == "fresh"`, or `status == "missing"` with 0 landings in
+     the run -> `handback-ready` / `handback-ready-no-landings`): proceed to handback.
+   - `rerun_required == true` (`status == "stale"` due to any landing recorded after the last
+     canonical `GATE: final-QA`, red verdict, or verified `origin/development` drift; or
+     `status == "missing"` with >=1 landings -> `rerun-final-qa` / `run-final-qa`): **autonomously**
+     run/re-run final QA (tier 1 + full disposable-clone gate on the verified `origin/development`
+     tip, backgrounded in full) **without waiting for the parent or operator to ask**. Record
+     `GATE: final-QA <tested-sha> full <Ns> green` via `run_record.py append` ONLY after both
+     checks succeed, then **re-fetch and re-verify the current `origin/development` head AFTER QA
+     completes** and re-run `kickstart_status.py` so any landing that occurred during QA cannot be
+     certified using a stale head. If the re-run fails, record `GATE: final-QA <tested-sha> full
+     <Ns> red`, keep `handback_allowed == false`, do NOT claim Normal Completion, and hand back with
+     the failure evidence within run budgets.
+   - `status == "unknown"` (`handback_allowed == false`, `rerun_required == false` ->
+     `verify-development-head`): fetch/verify live `origin/development` head and reassess; if remote
+     head verification fails, hold handback and never claim Normal Completion.
 
 ### Unambiguous Landing Path & Exit-Code Handling (KS-09, U10)
 - **Single Pinned `LANDING_CLONE:`:** The run record (`## 1a. Run Record Contract (v1)`) declares
@@ -324,9 +344,14 @@ writes refs, `FETCH_HEAD`, objects, or locks):
   `confirmed-stopped` requires complete 4-part ownership proof (`owner=stopped`, `lock=clear`,
   `children=stopped`, `sessions=stopped`); log age alone NEVER yields `confirmed-stopped` and NEVER
   authorizes `attempt_record.py finish` or redispatch.
-- **Final-QA staleness (KS-13 seam):** reads canonical `GATE: final-QA <sha> ... green|red` and
-  separates actual landings (`MERGED` progress lines and caller-verified `--development-head`) from
-  non-landing task `GATE:` lines; unverified local heads report `unknown`.
+- **Final-QA staleness (KS-13 / GH-1557):** reads canonical `GATE: final-QA <sha> ... green|red`,
+  separates actual landings (`MERGED` progress lines — catching multi-SHA lines citing both `qa_sha`
+  and a new landing SHA, plus SHA-less later `MERGED` lines — and caller-verified
+  `--development-head`) from non-landing task `GATE:` lines, and emits deterministic handback fields
+  (`rerun_required`, `handback_allowed`, `latest_landing_sha`, `target_head`, `recommended_action`).
+  Handback is allowed ONLY when `handback_allowed == true` (`fresh`, or `missing` with 0 landings);
+  `stale` or `missing` with landings requires autonomous child re-run before handback, and `unknown`
+  requires verifying the live remote head.
 - **Verbatim stop reason (KS-05 seam):** quotes exclusive `--receipt` / `--run-log` diagnostics, or a
   shared `<harness-root>/.relay-scratch/escalation-reason` ONLY when its own self-contained payload
   carries both matching `--invocation-id` and `reason` (mtime-only and sidecar-only attribution are
@@ -363,8 +388,15 @@ Every state transition leaves durable, verifiable evidence.
 
 ### Transition 1: Normal Completion
 - **Condition:** Child completes the requested batch or daily-goal tasks, runs classified gates,
-  commits review receipts, opens ready PRs, and completes the execution owner's closeout.
-- **Evidence:** PR URLs, commit SHAs, passing gate logs, and independent review verdicts.
+  commits review receipts, opens ready PRs, completes the execution owner's closeout, AND passes
+  the KS-13 pre-handback `kickstart_status.py` staleness gate (`final_qa.handback_allowed == true`:
+  `fresh` on freshly verified `origin/development` with 0 later landings, or `missing` with 0
+  landings). If `final_qa.rerun_required == true`, the child autonomously re-runs final QA,
+  re-verifies `origin/development` after QA completes, and re-checks before handback; on a red
+  re-run or unverified remote head (`unknown`), the child holds Normal Completion and hands back
+  with failure/hold evidence.
+- **Evidence:** PR URLs, commit SHAs, passing gate logs, canonical `GATE: final-QA` matching the
+  final verified `origin/development` head (when landings occurred), and independent review verdicts.
 - **Action:** Child returns completion event with summary. Parent inspects results, records
   completion, and presents the deliverable to the operator.
 

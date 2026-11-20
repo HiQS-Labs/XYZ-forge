@@ -1,3 +1,4 @@
+- **GH-1557 (KS-13):** Fix multi-SHA `later_landings` staleness suppression in `skills/1-hourly/kickstart/scripts/kickstart_status.py`, emit deterministic `rerun_required` / `handback_allowed` / `recommended_action` handback fields, and mandate autonomous pre-handback final-QA re-run with post-QA head re-verification in `skills/1-hourly/kickstart/SKILL.md`.
 - **GH-1548 (KS-05):** Attributed per-invocation stop-reason receipts (`relay-drive.py` `--invocation-id` / `--stop-receipt` + verbatim stderr trailer), fresh per-turn driver-owned shim logs via child-only `turn_env`, and U13 `429`/quota classification as `provider-quota` (distinct from `turn-error` and `cap-stalled`) across `utils/py/harness.py` and `utils/py/relay_drive.py`.
 
 # Changelog

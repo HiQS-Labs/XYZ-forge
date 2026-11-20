@@ -1,0 +1,44 @@
+=== KS-13 PROBE METADATA ===
+BASE_ORIGIN_DEVELOPMENT=6062aa2ea77a01a9d395f0cee971a0bdcf62c3e0
+CANDIDATE_HEAD=d3568cd9f8787aef9528f2fa7897446d0274fa68
+PROBE_SOURCE=TESTS-RESULTS/2026-11-20+GH-1557/outputs/ks13-probe.py
+
+=== PART_A1_ISOLATED_MULTI_SHA_RED_VS_GREEN ===
+BASE (dev_head=None): status=unknown later_landings=0 has_handback_allowed=False
+CAND (dev_head=None): status=stale later_landings=1 rerun_required=True handback_allowed=False action=rerun-final-qa
+BASE (dev_head=SHA1): status=fresh later_landings=0
+CAND (dev_head=SHA1): status=stale later_landings=1 rerun_required=True handback_allowed=False action=rerun-final-qa
+
+=== PART_A2_BOUNDARY_SAME_SHA_AND_SHALESS ===
+SAME_SHA_ONLY (CAND): status=fresh later_landings=0 handback_allowed=True
+SHALESS (BASE preserved): status=stale later_landings=1
+SHALESS (CAND preserved): status=stale later_landings=1 rerun_required=True handback_allowed=False
+
+=== PART_A3_RUN1_LATER_LANDING_SEQUENCE_CLI_REPLAY ===
+STEP1_INITIAL_QA_SHA1: {"development_head": "1111111111111111111111111111111111111111", "final_qa_sha": "1111111111111111111111111111111111111111", "final_qa_verdict": "green", "handback_allowed": true, "later_landings": [], "latest_landing_sha": "1111111111111111111111111111111111111111", "reason": "canonical green final-QA matches caller-verified development head with no later landings", "recommended_action": "handback-ready", "rerun_required": false, "status": "fresh", "target_head": "1111111111111111111111111111111111111111"}
+STEP2_AFTER_PR1539_SHA2: {"development_head": "2222222222222222222222222222222222222222", "final_qa_sha": "1111111111111111111111111111111111111111", "final_qa_verdict": "green", "handback_allowed": false, "later_landings": [{"line": 9, "sha": "2222222222222222222222222222222222222222", "shas": ["2222222222222222222222222222222222222222"], "text": "- PR #1539: MERGED (2222222222222222222222222222222222222222) 2026-11-20T08:45Z"}], "latest_landing_sha": "2222222222222222222222222222222222222222", "reason": "1 landing(s) recorded after final-QA", "recommended_action": "rerun-final-qa", "rerun_required": true, "status": "stale", "target_head": "2222222222222222222222222222222222222222"}
+STEP3_FAILED_RERUN_RED: {"development_head": "2222222222222222222222222222222222222222", "final_qa_sha": "2222222222222222222222222222222222222222", "final_qa_verdict": "red", "handback_allowed": false, "later_landings": [], "latest_landing_sha": "2222222222222222222222222222222222222222", "reason": "latest canonical GATE: final-QA verdict is red", "recommended_action": "rerun-final-qa", "rerun_required": true, "status": "stale", "target_head": "2222222222222222222222222222222222222222"}
+STEP4_LANDING_DURING_QA_SHA3: {"development_head": "3333333333333333333333333333333333333333", "final_qa_sha": "2222222222222222222222222222222222222222", "final_qa_verdict": "green", "handback_allowed": false, "later_landings": [], "latest_landing_sha": "2222222222222222222222222222222222222222", "reason": "development head (3333333333333333333333333333333333333333) differs from final-QA head (2222222222222222222222222222222222222222)", "recommended_action": "rerun-final-qa", "rerun_required": true, "status": "stale", "target_head": "3333333333333333333333333333333333333333"}
+STEP5_FINAL_GREEN_SHA3: {"development_head": "3333333333333333333333333333333333333333", "final_qa_sha": "3333333333333333333333333333333333333333", "final_qa_verdict": "green", "handback_allowed": true, "later_landings": [], "latest_landing_sha": "2222222222222222222222222222222222222222", "reason": "canonical green final-QA matches caller-verified development head with no later landings", "recommended_action": "handback-ready", "rerun_required": false, "status": "fresh", "target_head": "3333333333333333333333333333333333333333"}
+MARKDOWN_FRESH_SNIPPET:
+## Final-QA Staleness
+- Status: **fresh** (final_qa_sha=`3333333333333333333333333333333333333333`, verdict=`green`, dev_head=`3333333333333333333333333333333333333333`)
+- Handback allowed: `true` | Rerun required: `false` | Recommended action: `handback-ready` (target_head=`3333333333333333333333333333333333333333`)
+- Detail: canonical green final-QA matches caller-verified development head with no later landings
+
+## Stop Reason (Verbatim)
+- Reason: `none` (attribution: `none`, source: `none`)
+
+
+
+=== PART_A4_DECISION_TABLE_EDGE_CONTROLS ===
+NON_LANDING_TASK_GATE: status=fresh handback_allowed=True
+MISSING_WITH_LANDINGS: status=missing rerun_required=True handback_allowed=False action=run-final-qa
+MISSING_ZERO_LANDINGS: status=missing rerun_required=False handback_allowed=True action=handback-ready-no-landings
+UNKNOWN_DEV_HEAD: status=unknown rerun_required=False handback_allowed=False action=verify-development-head
+
+=== PART_B_SIMULATED_CONSUMER_WALKTHROUGH (SIMULATED; NO LIVE FULL-GATE RUNTIME CLAIM) ===
+SIM_EMPTY_RUN: ['check(head=11111111) -> status=missing action=handback-ready-no-landings handback=True', 'HANDBACK_OK (handback-ready-no-landings)']
+SIM_STALE_CONCURRENT_LANDING_RERUN: ['check(head=22222222) -> status=stale action=rerun-final-qa handback=False', 'SIMULATED_AUTONOMOUS_RERUN(tested=22222222, verdict=green, parent_prompts=0)', 'check(head=33333333) -> status=stale action=rerun-final-qa handback=False', 'SIMULATED_AUTONOMOUS_RERUN(tested=33333333, verdict=green, parent_prompts=0)', 'check(head=33333333) -> status=fresh action=handback-ready handback=True', 'HANDBACK_OK (handback-ready)']
+SIM_FAILED_RERUN_HOLD: ['check(head=22222222) -> status=stale action=rerun-final-qa handback=False', 'SIMULATED_AUTONOMOUS_RERUN(tested=22222222, verdict=red, parent_prompts=0)', 'HOLD_NORMAL_COMPLETION (failed rerun red)']
+SIM_UNKNOWN_HEAD_HOLD: ['check(head=None) -> status=unknown action=verify-development-head handback=False', 'HOLD_HANDBACK (remote development head unverified)']
