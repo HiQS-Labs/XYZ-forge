@@ -3,6 +3,17 @@
 
 # Changelog
 
+## 2026-11-20 — GH-1567: name the per-Mac harness config when merge-cleanup cannot find tick
+
+- `skills/2-daily/merge-cleanup/scripts/scan_clones.py`: the `tick binary not found` refusal now says to save the
+  XYZ-forge clone path to `~/.config/xyz/harness` or set `XYZ_HARNESS`. It stays `verified: False`, and the GH-1362
+  rule that the audited tree's vendored `.xyz/bin/tick` is never trusted is unchanged.
+- `skills/1-hourly/relay-xyz/find-harness.sh --check`: on a vendored resolution it reports the per-device harness
+  config on its own line (`ok` with the path, or `no valid per-device harness config` plus the existing
+  `save this harness on this Mac:` command for the known canonical live harness). Still advisory, exit 0.
+  `SKILL.md` notes it. Evidence: `TESTS-RESULTS/2026-11-20+GH-1567/`. No new tests (GH-831).
+  → [GH-1567-TICK-HARNESS-HINT.md](PROJECT/2-WORKING/GH-1567-TICK-HARNESS-HINT.md) · [#1567](https://github.com/HiQS-Labs/XYZ-forge/issues/1567)
+
 ## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
 
 - `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing
