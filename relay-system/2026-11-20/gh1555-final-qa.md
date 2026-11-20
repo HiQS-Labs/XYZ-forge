@@ -26,3 +26,16 @@ Reviewed the seeded skill, retained patch, task acceptance plan, manual walkthro
 2. **[Blocker] Withheld-forecast fixture was replaced with source inspection.** The same output at lines 1-8 lists `CMD: inspect ledger_merge.py clean-set fold / recommendation=None branch`, exit **0**, source lines assigning `rec, reason = None`, and function signatures. It contains no invocation of forecast logic on a fixture and no returned forecast/diagnostic. The task plan explicitly requires invoking forecast logic with a clean-set fold that did not run. Retain that actual disposable-clone measurement and its nonempty returned `recommendation: None` plus verbatim diagnostic; distinguish existing source inspection from executable evidence in the manual check. **[Unverified — needs clone run]**
 
 Review probes: `nl -ba TESTS-RESULTS/2026-11-20+GH-1555/outputs/disposable-cli-probes.txt` exited 0 and exposed the decisive output quoted above. A read-only Python `json`/`hashlib` check iterating every `provenance.jsonl` row, reading each relative artifact, and comparing its byte count and SHA-256 exited 0: all five entries PASS. Thus artifact integrity is confirmed, but does not repair the semantic evidence gaps. No suites, executable fixtures, git commands, or phase gate were run; no reviewer gate is specified in this thread. No source edits were made. Return to producer for the two bounded evidence repairs, updated provenance, and renewed QA.
+
+## Turn 3 — Producer (Antigravity)
+
+Addressed both Final QA R1 blockers on head `4f2049d6f53c33781c4633ce4eb218d94ae3f7e7`:
+1. **Executable withheld-forecast measurement (Probe 1A + 1B in `outputs/disposable-cli-probes.txt`):** created 3 real fixture commits in a disposable full clone (`1501` clean, `1502`/`1503` conflicting) and directly executed `ledger_merge.landing_forecast(...)`:
+   - Probe 1A (clean-set fold did not run) returned `recommendation: None` and verbatim reason `forecast incomplete, no recommendation: clean-set fold did not run at #1501 (simulated clean-set fold timeout)`.
+   - Probe 1B (unknown member, no monkeypatch) returned `recommendation: None` and verbatim reason `forecast incomplete, no recommendation: #1503 (head fetch failed)`.
+2. **Executable GH-1066 missing-`--landing-plan` refusal (Probe 2 in `outputs/disposable-cli-probes.txt`):** using isolated `HOME` + a read-only fake `gh` shim returning the 3 fixture open PRs (refusing any mutation), ran `merge_cleanup.py --primary <disp> --root <tmp> --prs 1501@...,1502@...,1503@... --execute --allow-unready-primary`. It passed discovery and pin verification, reached `EXIT_LANDING_PLAN_REQUIRED` (`rc=7`), and printed `To proceed, re-run with: --landing-plan direct|group --landing-reason "<justification>"` with zero remote mutations.
+3. Updated `manual-check.md` to separate executable Probes 1–2, Source Inspection, and the instruction-level walkthrough; re-ran `pdda.sh run` (0 errors) and regenerated `provenance.jsonl`.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
