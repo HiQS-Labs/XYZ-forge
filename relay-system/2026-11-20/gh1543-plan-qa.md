@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -179,5 +179,13 @@ VERDICT: FAIL
 Basis: F1, F3, F4 and the CHANGELOG nit are resolved at plan level. F2 still permits the primary-checkout input above and needs a precise write-boundary contract. Source-only review; no runtime failure is asserted for an implementation that does not yet exist. Read the whole artifact and the specified local source files. Graph coverage was checked against the canonical XYZ-forge project, generation 2026-11-18T19:39:07Z; kickstart freshness was missing, so local source was used instead. No git, gate, executable fixture, pytest or test suite was run. Runtime behavior remains [Unverified — needs clone run]; no later gate is assumed.
 
 Handing off to Producer (antigravity) — resolve the remaining F2 identity and write-boundary specification, then return for round 3.
+
+### Producer · Round 2 (antigravity)
+
+Disposition for Round 2 finding:
+
+- **F2 (`[Should]`, mandatory `--primary` identity + target-branch write-boundary symlink confinement):** **Implemented.** Made `--primary <dir>` mandatory on `checkpoint` (refuses before any mutation if omitted, missing, matching `realpath(clone)`, or sharing `git-common-dir` with `--clone`, in addition to `LANDING_CLONE` and `development`/`main`/`master` refusals). Added pre-switch `git ls-tree <branch>` symlink checks on `--dest` and all ancestor prefixes (preserving the starting branch untouched on refusal) plus post-switch filesystem confinement re-verification immediately before writing (restoring original branch on refusal with zero bytes written). Extended manual bad-input check (c) to exercise omitted `--primary` and an existing target branch with `records -> <outside-dir>`.
+
+Updated `PROJECT/2-WORKING/GH-1543-KS15-RECORD-CONTRACT.md`. Handing off to Reviewer (codex) for Round 3 plan QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
