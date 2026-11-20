@@ -1,0 +1,11 @@
+{"path": "manual-check.md", "sha256": "38f261c898156aac35625067e94e7c9b26663c455f6d9e55a88a84389ef36aef", "bytes": 18752}
+{"path": "outputs/check-transcript.log", "sha256": "5ab4c84c846735467aff3e81dc35fb76f6e79c369f951c926a3597325f44401e", "bytes": 1803}
+{"path": "outputs/code-and-docs-diff.patch", "sha256": "dc0a8b0e94d0f702fa3ae50dd0ba5db4067109265ca83262ba7a61f7838e984f", "bytes": 41935}
+{"path": "outputs/fixture-live-report.json", "sha256": "9e2d120bc14c88a048774ecf86962497c3b57ce7c7ea2e05ea198aaeca001412", "bytes": 4286}
+{"path": "outputs/fixture-live-report.md", "sha256": "f81def9a05c9bb599c4d0ab5d5f1f370c0fc5ffb5e7757ad4c6d9594e75c4a06", "bytes": 1787}
+{"path": "outputs/fixture-stale-candidate.json", "sha256": "d2c430573802a6e6accf882a62d003fc19b02c04afd90c2e1fff513604903c15", "bytes": 3808}
+{"path": "outputs/live-readonly-report.json", "sha256": "fc92829886f04ee98c5595f855ab4bbcd63e1a5d3bc69a9ab70529fe5a3908f2", "bytes": 3382}
+{"path": "outputs/name-status.txt", "sha256": "418e70cdf2d06407089c4921fa7852742099615e00403604a0f5ba92de7d282c", "bytes": 947}
+{"path": "outputs/pdda-run-after-dev-merge.log", "sha256": "30f4e253da160853b44fba7a4679cc3d9a762067926f12076531981b183f1142", "bytes": 29202}
+{"path": "outputs/readonly-git-verbs.log", "sha256": "b1391be01f2d2eff003969ceb288047089d6809769903805c80fcbe901111519", "bytes": 264}
+{"path": "pdda-run.log", "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a", "bytes": 28982}

@@ -1,0 +1,51 @@
+# KS-03 Paired Authority Decision Replay (pre-change 6270a2b5 vs changed 8631a718)
+
+## Case A (Observed run-1: #1495/#1496 02:50Z->03:20Z+)
+- Source: OBSERVED run-1 history (run1-run-record-92ff5ce.md lines 91, 96, 100, 112)
+- Pre-change (`6270a2b5`): HOLD / MANUAL_AMENDMENT_REQUIRED: pre-change authority has no 30-min advisory waiver
+- Changed    (`8631a718`): MERGE_AUTONOMOUS: advisory not received; predeclared waiver used (current head verified)
+
+## Case B (Synthetic U5 control: stale-head request timer)
+- Source: SYNTHETIC negative control (head pushed after request)
+- Pre-change (`6270a2b5`): HOLD / MANUAL_AMENDMENT_REQUIRED: pre-change authority has no 30-min advisory waiver
+- Changed    (`8631a718`): WAIT: U5 stale-head request does not start the 30-min clock on current head
+
+## Case C1 (Observed run-1: #1526 posted CodeRabbit Majors)
+- Source: OBSERVED run-1 history (run1-run-record-92ff5ce.md line 73)
+- Pre-change (`6270a2b5`): BLOCK: open CodeRabbit Major must be fixed or answered
+- Changed    (`8631a718`): BLOCK: open CodeRabbit Major must be fixed or answered
+
+## Case C2 (Synthetic U5 control: late Major found on pre-merge re-read)
+- Source: SYNTHETIC negative control (late Major before merge)
+- Pre-change (`6270a2b5`): HOLD / MANUAL_AMENDMENT_REQUIRED: pre-change authority has no 30-min advisory waiver
+- Changed    (`8631a718`): BLOCK: immediate pre-merge re-read found a posted Major
+
+## Case D (Observed run-1: #1519/#1532 cap-stalled on gate surface)
+- Source: OBSERVED run-1 history (run1-run-record-92ff5ce.md lines 85-87, 94, 111, 115)
+- Pre-change (`6270a2b5`): HOLD / OPERATOR_ESCALATION: pre-change authority lacks KS-11a round-cap and quota rules
+- Changed    (`8631a718`): PARK_FAIL_CLOSED: no explicit final-head approval or protected surface; refuse agy switch on non-quota cap
+
+## Case E1 (Synthetic quota control: verbatim quota -> agy)
+- Source: SYNTHETIC positive control
+- Pre-change (`6270a2b5`): HOLD / PARENT_INTERVENTION: pre-change authority has no quota fallback rule
+- Changed    (`8631a718`): SWITCH_REVIEWER_AGY: verbatim quota stop reason; record actual agy model
+
+## Case E2 (Synthetic quota control: both providers capped -> park)
+- Source: SYNTHETIC negative control
+- Pre-change (`6270a2b5`): HOLD / PARENT_INTERVENTION: pre-change authority has no quota fallback rule
+- Changed    (`8631a718`): PARK: both reviewer providers quota-capped
+
+## Case F (Synthetic KS-11a control: explicit approval + accepted Minor/nit deferral on docs)
+- Source: SYNTHETIC positive control (non-protected surface)
+- Pre-change (`6270a2b5`): HOLD / OPERATOR_ESCALATION: pre-change authority lacks KS-11a round-cap and quota rules
+- Changed    (`8631a718`): LAND_WITH_DISCLOSURE: explicit final-head approval with reviewer-accepted Minor/nit deferral
+
+## Case G1 (Observed run-1: noelsaw1 PR with verified full-SHA pin)
+- Source: OBSERVED run-1 class (#1525/#1529/#1495/#1496)
+- Pre-change (`6270a2b5`): MANUAL_PER_PR_APPROVAL_REQUIRED: pre-change authority does not state Flywheel per-PR satisfaction
+- Changed    (`8631a718`): APPROVED_UNDER_LAUNCH_GRANT: Flywheel per-PR approval satisfied for noelsaw1 with verified full-SHA pin
+
+## Case G2 (Synthetic boundary control: non-owner PR)
+- Source: SYNTHETIC negative control
+- Pre-change (`6270a2b5`): STOP_AND_ASK: non-owner PR out of scope
+- Changed    (`8631a718`): STOP_AND_ASK: non-owner PR out of scope

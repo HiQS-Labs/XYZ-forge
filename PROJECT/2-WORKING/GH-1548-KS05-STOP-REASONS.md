@@ -6,7 +6,7 @@ updated: 2026-11-20
 owner: noelsaw1
 goal: "Emit invocation-attributed per-run stop receipts and verbatim stop diagnostics in utils/py/relay_drive.py and classify 429/quota failures as provider-quota in utils/py/harness.py and utils/py/relay_drive.py, distinct from cap-stalled and turn-error"
 gh_issue: 1548
-roadmap_id: rmi-01M7W0ZV5PABDCY8K0SWKV6QKS
+roadmap_id: rmi-01M7W9MRP1BTEE1QAC6P0A7BGP
 ---
 
 # GH-1548 (KS-05): Stop Reasons Quoted Verbatim, Invocation-Attributed & 429 → `provider-quota`

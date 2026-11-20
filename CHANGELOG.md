@@ -2,6 +2,33 @@
 
 # Changelog
 
+## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing
+  `gh issue list` call, releases `decide` holds when the latest `--owner` comment's first non-empty
+  line starts with `Operator decision` (proceed, routed so it never falls into rule 9 unclassified)
+  or `Operator decision: close` (dedicated close bucket where the child verifies acceptance on
+  `origin/development` and closes citing the commit), honours superseding `Operator decision: hold`
+  comments, and keeps closing PRs (`Closes #N`) unparked once the issue is released.
+- Also enforces fail-closed U15 holds (`status:held` label, body `HELD:` marker, `Blocked by #N`,
+  and open/active-gating `after #N`) across all issue types while preserving code-formatted `#N`
+  references inside prose holds and ignoring fenced blocks / wholly quoted inline examples. Mirrored
+  in `skills/1-hourly/kickstart/SKILL.md`. No new suite (GH-831). Evidence:
+  `TESTS-RESULTS/2026-11-20+GH-1535/manual-check.md`.
+
+## 2026-11-20 — GH-1545 (KS-03): bake launch authority defaults into build_queue.py and kickstart/SKILL.md
+
+- `skills/1-hourly/kickstart/scripts/build_queue.py` (`AUTHORITY`) and `skills/1-hourly/kickstart/SKILL.md`
+  now bake run defaults directly into the launch authority template: CodeRabbit 30-min advisory wait
+  from a review request on the current head with immediate pre-merge re-read, explicit timeout waiver
+  wording (`advisory not received; predeclared waiver used`), and posted-Major blocking (U5); KS-11
+  fail-closed decision defaults (round cap requiring explicit final-head approval with accepted Minor/nit
+  deferral limits and protected-surface exclusions, conflict hubs to a separate batch, owner-authored
+  applicable non-superseded KS-02 decisions); verbatim quota fallback to `agy`; and Flywheel per-PR merge
+  approval satisfaction for `--owner` PRs while keeping full-SHA pins and `Status: NOT YET GRANTED`.
+  Queue classification, flags, replay determinism, and read-only behavior are unchanged. No new suite
+  (GH-831). Evidence: `TESTS-RESULTS/2026-11-20+GH-1545/manual-check.md`.
+
 ## 2026-11-20 — GH-1508: per-repo governance doc list that survives install and sync
 
 - `pdda.sh governance` now adds the docs named on a committed `.pdda-mode` line
