@@ -431,7 +431,7 @@ case "$ACTION" in
     else
       # GH-1567: a vendored .xyz resolves fine here, but merge-cleanup's scan_clones never trusts it (GH-1362),
       # so without this config it reports "tick binary not found". Report it on its own line.
-      echo "  !   no per-device harness config (${CONFIG_FILE:-unknown}); merge-cleanup cannot find tick without it"
+      echo "  !   no valid per-device harness config (${CONFIG_FILE:-unknown}); merge-cleanup cannot find tick without it"
       _save_target="$LIVE_HARNESS"
       if [ -z "$_save_target" ] || ! _canonical_clone "$_save_target"; then
         _save_target=""
