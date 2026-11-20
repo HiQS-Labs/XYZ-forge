@@ -5,30 +5,40 @@ status: active
 roadmap_id: rmi-01M7W39TSPD8DMM0575S9FDM8Z
 parent_arc: 1541
 milestone: KS-07
+owner: antigravity
+goal: "Require host-native background execution and completion notification for merge-cleanup --execute and full classified gates in skills/1-hourly/kickstart/SKILL.md without adding new runners."
 created: 2026-11-20
+updated: 2026-11-20
 ---
 
 # GH-1551 (KS-07) — Long Operations Cannot Run in the Foreground
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Addressed Plan QA R1 findings (PDDA frontmatter/Status table, CHANGELOG_WRITES policy compliance, and precise labeling of the controlled 605s mechanism probe). | Complete Plan QA R2 approval, edit `skills/1-hourly/kickstart/SKILL.md`, retain the 605s paired mechanism probe + PDDA run under `TESTS-RESULTS/2026-11-20+GH-1551/`, and pass Final QA. |
 
 ## Objective
 Codify in `skills/1-hourly/kickstart/SKILL.md` that long operations (`merge-cleanup --execute` and full classified gates) MUST be launched via the host's native background execution and completion-notification mechanism, never in the foreground, without adding any new guard or runner wrapper.
 
 ## Grounded Recon
-- `skills/1-hourly/kickstart/SKILL.md` currently specifies observer/child delegation and session recovery (sections 1 and 4) and launch authority defaults (KS-03), but does not explicitly forbid running `merge-cleanup --execute` or full classified gates in the foreground or specify the host-native background + completion-notification rule and U7/U8 qualification boundaries.
+- `skills/1-hourly/kickstart/SKILL.md` specifies observer/child delegation and session recovery (sections 1 and 4) and launch authority defaults (KS-03), but does not explicitly forbid foreground execution of `merge-cleanup --execute` or full classified gates or state the U7/U8 qualification boundaries.
 - Run-1 incident (#1539): a foreground `merge-cleanup --execute` crossed the 10-minute tool timeout and was killed mid-landing, stranding PR #1539.
-- `utils/ci-route.sh` classifies edits limited to `skills/1-hourly/kickstart/SKILL.md`, `PROJECT/**`, `TESTS-RESULTS/**`, `CHANGELOG.md`, and `releases.db`/`releases.sql` as `route=docs`.
+- `PROJECT/PDDA.md:462-465` defines `CHANGELOG_WRITES` modes (`off` default, `landing` opt-in, legacy `branch`): PR branches under `off`/`landing` must NOT edit `CHANGELOG.md`.
+- `utils/ci-route.sh` classifies edits limited to `skills/1-hourly/kickstart/SKILL.md`, `PROJECT/**`, `TESTS-RESULTS/**`, and `releases.db`/`releases.sql` as `route=docs`.
 
 ## Plan
-1. Add a concise, explicit **Long Operations (Background-Only Execution, KS-07)** subsection to `skills/1-hourly/kickstart/SKILL.md` under Section 1 (Child execution contract):
+1. Add a concise **Long Operations (Background-Only Execution, KS-07)** subsection to `skills/1-hourly/kickstart/SKILL.md` under Section 1 (Child execution contract):
    - `merge-cleanup --execute` and full classified gates (`./validate.sh` / full-route pre-push or disposable-clone gates) MUST launch through the host's native background execution mechanism and wait via native completion notification (no polling loops, no `sleep`, no custom wrapper/guard/runner).
-   - Explicitly forbid foreground execution of those operations and record that a host lacking native background execution stops under Transition 3 (Shared Unsafe Stop) rather than falling back to foreground execution.
-   - Record U7/U8 qualification boundaries honestly: synthetic/disposable-clone checks verify the foreground-timeout kill vs background-completion rule without manufacturing production incidents (U8), while full run-2 acceptance additionally requires at least one real run-2 >10-minute operation completing in the background with its result consumed exactly once (U7 — remains uncredited until run 2).
-2. Update `CHANGELOG.md` with a concise GH-1551 (KS-07) entry.
+   - Explicitly forbid foreground execution of those operations; a host lacking native background execution halts under Transition 3 (Shared Unsafe Stop) rather than falling back to foreground execution.
+   - Record U7/U8 qualification boundaries honestly: controlled/disposable-clone checks verify the foreground-timeout kill vs host-native background-completion mechanism without manufacturing production incidents (U8), while full run-2 acceptance additionally requires at least one real run-2 >10-minute operation completing in the background with its result consumed exactly once (U7 — explicitly uncredited until run 2).
+2. Honor the repository's configured `CHANGELOG_WRITES` mode (no task-branch `CHANGELOG.md` edit under default `off` / `landing`).
 3. Retain paired red/green evidence under `TESTS-RESULTS/2026-11-20+GH-1551/` (no new test suite, GH-831):
-   - Real >10-min (`605s`) paired probe: red foreground 600s timeout kill (incomplete marker, reproduces #1539) vs green host-native background completion at 605s (completed marker, exit 0, delivered via native completion notification).
-   - Source-only instruction walkthrough + `utils/pdda/pdda.sh run` + `provenance.jsonl`.
+   - **Controlled mechanism probe (`605s` > 10 min):** paired synthetic workload labeled explicitly as a controlled foreground-timeout vs host-native-background mechanism check (not a replay of the production landing entry point) — red foreground 600s timeout kill (incomplete marker) vs green host-native background completion at 605s (completed marker, exit 0, delivered via native completion notification), recording exact command, exit status, launch/completion timestamps, and U7/U8 scope limits.
+   - Source-only instruction walkthrough + `./utils/pdda/pdda.sh run` (0 errors) + `provenance.jsonl`.
 
 ## Acceptance Criteria
 - `skills/1-hourly/kickstart/SKILL.md` mandates host-native background launch + completion notification for `merge-cleanup --execute` and full gates, forbids foreground fallback (unsupported host -> Transition 3), introduces zero new wrappers/runners, and states U7/U8 honestly.
-- Paired >10-min red/green probe recorded under `TESTS-RESULTS/2026-11-20+GH-1551/` with `provenance.jsonl`.
-- `./utils/pdda/pdda.sh run` passes with 0 errors.
+- Controlled >10-min paired mechanism check (labeled accurately, with U7 real-run acceptance explicitly deferred) recorded under `TESTS-RESULTS/2026-11-20+GH-1551/` with `provenance.jsonl`.
+- `./utils/pdda/pdda.sh run` passes with 0 errors and `CHANGELOG_WRITES` policy is respected.
