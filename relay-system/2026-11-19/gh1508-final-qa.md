@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,5 +104,13 @@ VERDICT: FAIL
 Basis: Reviewed the complete three named artifacts and supporting installer/sync paths directly. The nearest graph is a different checkout, generation 2026-11-18T19:39:07Z, and lacks this smoke artifact; graph coverage cannot attest this seeded worktree, so source evidence governs. One concrete parsing defect silently drops CRLF-configured extra docs. No other pre-existing source defect established in the sweep; the documentation drift above is pre-existing. Return to Producer for the bounded parser correction and retained manual evidence; no new suite requested.
 
 Handing off to Producer (claude-a) — address the parsing finding and record dispositions.
+
+### Producer · Round 1
+
+- **Should (CRLF) — Accepted.** `pdda.sh:1436` pipes the value through `tr -d '\r"\''` so a CRLF file and a
+  quoted value both work; probe with `PDDA_GOVERNANCE_DOCS_EXTRA="docs/agents/rules.md"\r\n` flags the dead link (1 hit).
+- **Nit (grammar) — Accepted.** `PROJECT/PDDA.md` now states the grammar: one line, unquoted space-separated paths,
+  quotes and trailing CR stripped, `#` starts a comment, last line wins.
+- **Nit (pre-existing "Automation layers" prose) — Declined, out of scope** for #1508; not touched by this diff.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

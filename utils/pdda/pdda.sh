@@ -1433,7 +1433,7 @@ check_governance() {
   if [ -z "$docs" ]; then
     docs="$PDDA_GOVERNANCE_DOCS_DEFAULT"
     [ -f "$PDDA_REPO_ROOT/.pdda-mode" ] && gov_extra="$(sed -nE 's/^[[:space:]]*PDDA_GOVERNANCE_DOCS_EXTRA[[:space:]]*=[[:space:]]*([^#]*).*/\1/p' \
-      "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1)"
+      "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | tr -d '\r"'"'"'')"   # CRLF and quotes stripped
     [ -n "$gov_extra" ] && docs="$docs $gov_extra"
   fi
   local index_doc="${PDDA_GOVERNANCE_INDEX:-$PDDA_GOVERNANCE_INDEX_DEFAULT}"

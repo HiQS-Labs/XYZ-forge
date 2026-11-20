@@ -12,3 +12,4 @@ Fixture (in a disposable clone of this branch): `docs/agents/rules.md` containin
 | Extra line removed | this branch | 0 (default set unchanged) |
 | Extra line present + `PDDA_GOVERNANCE_DOCS=README.md` | this branch | 0 (the variable still replaces the whole set) |
 - Existing suite: `bash test/gh365-pdda-gov-scan.sh` → == gh365-pdda-gov-scan: 22 passed, 0 failed ==
+| CRLF line ending + quoted value `"docs/agents/rules.md"` | this branch (after final QA round 1) | 1 (CR and quotes stripped) |
