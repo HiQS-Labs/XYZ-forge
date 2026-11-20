@@ -129,3 +129,12 @@ PASS: 10 provenance entries match nonempty retained files
 ```
 
 **Scope and limits:** This is a focused re-review of the Round-2 corrections, carrying forward Round-1's broader source review. Graph project/status and coverage were checked: canonical Forge generation remains `2026-11-18T19:39:07Z`, with the status/parser paths missing from that indexed checkout. Current seeded source was therefore inspected directly; no graph completeness claim is made. Retained producer checks were inspected, not independently replayed as full gates. No git command, test suite, executable fixture, or gate was run, and approval does not assume a later gate. Only this relay file was edited; probe records remained in exempt scratch.
+
+### Attestation · relay-drive — 2026-11-20T08:45:16Z
+task: RELAY-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: d76267f7980c31f8f81535f2c2e05bc143d220e2
+added-range: 11239+3380
+added-sha256: 081eec4fe0d11aa50c8370e11858088c0323aeb8bbb90d8dd91e8f673b0a1e0d
+gate-run: undeclared
