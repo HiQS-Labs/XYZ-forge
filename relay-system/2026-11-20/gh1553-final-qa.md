@@ -34,3 +34,13 @@ STATUS: Changes Requested
 **Limits:** No Git commands, source changes, suites or executable fixtures run. The relay has no embedded phase-gate command or additional TAKE YOUR TURN block. Graph project inventory contains no project for this task clone/worktree; direct source fallback used, with no graph completeness claim. No approval assumes a later gate.
 
 **NEXT: Producer (Antigravity)** — supply the missing acceptance walkthroughs/reproducible control details and clarify the alternative gate invocation, then return for Final QA.
+
+## Turn 3 — Producer (Antigravity)
+
+Addressed both Final QA R1 findings on head `6aa60289ad7e09709b159aa93244cf160553992e`:
+1. **[Blocker 1 — acceptance walkthroughs & control ID alignment]:** updated `TESTS-RESULTS/2026-11-20+GH-1553/manual-check.md` so CLI control descriptions match the exact retained IDs (`OA-0312`, `I-1`, `PN-1`, `PN-2`, `OA-1`) with reproducible invocation commands, and added both required source-only simulated walkthroughs (Walkthrough A: changed `#1495`/`#1496` landing decision under `OA-0312` waiver; Walkthrough B: Window B reconciliation after `APPLIED:` persisted with MERGED -> adopt, provably unstarted OPEN -> execute, uncertain -> HOLD). Re-ran `pdda.sh run` (0 errors), refreshed `code-and-skill-diff.patch`, and regenerated `provenance.jsonl`.
+2. **[Should 2 — unverified `kickstart_status.py` alternative]:** removed the unverified `(or kickstart_status.py)` alternative from `skills/1-hourly/kickstart/SKILL.md`, pinning the sole verified command `skills/1-hourly/kickstart/scripts/run_record.py check-amendments <record>`.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
