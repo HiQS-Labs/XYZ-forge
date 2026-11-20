@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,27 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis; set STATUS Approve
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+- [Should] Normalize the extra-list value before tokenization (`utils/pdda/pdda.sh:1435–1436`, consumed at `:1454–1455`). CRLF leaves a literal carriage return on the last path, so an existing extra doc is silently skipped. Strip trailing CR/whitespace (the existing `pdda_trim` helper suffices for this case); retain defaults and replacement precedence.
+  Observed input: `PDDA_GOVERNANCE_DOCS_EXTRA=README.md\r\n`; the existing `README.md` becomes the non-existent filename `README.md\r`.
+  Affected scope: extra-list assignments with CRLF endings, specifically the last whitespace-delimited path.
+  Falsifier: the same existing doc selected from LF and CRLF assignments must produce the same path and findings; an empty last assignment must still retain defaults.
+  Probe (exit 0), using the exact parser expression and file-existence predicate:
+  ```bash
+  /bin/bash -c 'extra="$(printf "PDDA_GOVERNANCE_DOCS_EXTRA=README.md\r\n" | sed -nE "s/^[[:space:]]*PDDA_GOVERNANCE_DOCS_EXTRA[[:space:]]*=[[:space:]]*([^#]*).*/\1/p" | tail -n1)"; for doc in $extra; do printf "token=%q\n" "$doc"; if [ -f "$PWD/$doc" ]; then echo present=yes; else echo present=no; fi; done; [ -f README.md ] && echo control-present=yes'
+  ```
+  Decisive output: `token=$'README.md\r'`, `present=no`, `control-present=yes`.
+- [Nit] State the configuration grammar in `PROJECT/PDDA.md:644–647`: quoted values currently retain literal quotes, comments begin at the first `#`, and the last assignment wins (`pdda.sh:1435–1436`). Document unquoted values and last-assignment behavior, or support balanced outer quotes without sourcing/eval.
+- [Pass] Core extension/replacement order is correct by inspection: `docs="$PDDA_GOVERNANCE_DOCS_DEFAULT"` is reached only when the environment replacement is empty, and extras are appended (`utils/pdda/pdda.sh:1432–1437`). Empty extra values cannot remove defaults.
+- [Pass] Preservation is correct for ordinary installs/sync: `utils/pdda/pdda-install.sh:450–459` keeps existing seed files unless `--force`; `.pdda-mode` is seeded at `:762/:767`. `utils/pdda/pdda-sync-manifest.conf:16–29` includes only `utils/pdda`, `PROJECT/PDDA.md`, and two Python scanners, so mode is outside normal sync. Qualify the new docs/CHANGELOG preservation statement with the explicit install `--force` exception.
+- [Pass] The recorded smoke table includes the requested red control and candidate warning (`TESTS-RESULTS/2026-11-20+GH-1508/smoke.md:9–13`), and the sibling `provenance.jsonl` identifies its candidate SHA. This is retained producer evidence, not an independently rerun suite. No gate or executable fixture was run here.
+- [Nit] Whole-file sweep found pre-existing documentation drift: `PROJECT/PDDA.md` under "Automation layers" says warnings never leave the clean state, while `utils/pdda/pdda.sh:1852–1857` explicitly reports warnings separately. Correct that prose to four outcomes when convenient; it does not invalidate this extension.
+
+swept file: yes
+VERDICT: FAIL
+Basis: Reviewed the complete three named artifacts and supporting installer/sync paths directly. The nearest graph is a different checkout, generation 2026-11-18T19:39:07Z, and lacks this smoke artifact; graph coverage cannot attest this seeded worktree, so source evidence governs. One concrete parsing defect silently drops CRLF-configured extra docs. No other pre-existing source defect established in the sweep; the documentation drift above is pre-existing. Return to Producer for the bounded parser correction and retained manual evidence; no new suite requested.
+
+Handing off to Producer (claude-a) — address the parsing finding and record dispositions.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
