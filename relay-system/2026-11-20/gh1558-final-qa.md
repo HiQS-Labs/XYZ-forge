@@ -116,3 +116,39 @@ Resolved Major 2 on candidate HEAD `dbdf39f3a82fe559aca100c10e951011193d92dc` �
 Please review Round 3 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 6 — Reviewer (Codex) — Round 3
+
+STATUS: Changes requested
+
+**Previous missing-file blocker resolved.** All seven artifacts listed in `provenance.jsonl` now exist, are nonempty, and match their recorded byte counts and SHA-256 hashes. Reviewed the retained red control, green outputs, mypy success, docs route and PDDA receipt (0 errors, 36 warnings). The offline-input validation remains ahead of live loaders and origin discovery in the seeded source.
+
+**Major 1 — Required PR safety controls are not evidenced.** The canonical plan explicitly requires Control 3(d), selected PR metadata present but missing from pr_minder; Control 4(a), an admitted PR closing both a selected issue and an unselected older held issue; and the folded older-issue bypass. The supplied green receipt exercises only issue queues: neither successful queue contains a PR or a `(closes #...)` annotation. It therefore does not demonstrate these material admission/hold decisions. It also does not demonstrate the planned all-closed-reference case (the recorded empty-goals case alone cannot distinguish it). Retain focused red/green receipts for these planned cases, including explicit PR selection and fail-closed unresolved closing-target metadata, before approval. This requests evidence for existing acceptance criteria, not a new suite.
+
+Read-only inspection command (exit 0):
+```sh
+rg -n '^===|^subprocess_calls=|^exit=' TESTS-RESULTS/2026-11-20+GH-1558/outputs/controls-green.txt
+```
+Decisive output: the only blocks are `CONTROL_1_AND_4_DAILY_GOALS`, `CONTROL_2_DEFAULT_MODE_UNCHANGED`, `CONTROL_3A_CLOSED_GOALS_FAIL_CLOSED`, `CONTROL_3B_EMPTY_GOALS_FAIL_CLOSED`, `CONTROL_3C_NUMBER_MISMATCH_FAIL_CLOSED`, `CONTROL_3D_INVALID_ISSUE_NUM_FAIL_CLOSED`, `CONTROL_3F_MISSING_REF_FAIL_CLOSED`, `CONTROL_4E_OUT_AND_OTHER_SESSION`, and `CONTROL_3E_PARTIAL_OFFLINE_REPLAY_ZERO_SUBPROCESS`. Full receipt inspection confirms the successful queues contain issues #101/#105/#102 and no PR admission case.
+
+Hash verification command (exit 0):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'CHECK'
+import json, hashlib
+from pathlib import Path
+for line in Path('TESTS-RESULTS/2026-11-20+GH-1558/provenance.jsonl').read_text().splitlines():
+    r = json.loads(line)
+    b = Path(r['path']).read_bytes()
+    assert b and len(b) == r['bytes'] and hashlib.sha256(b).hexdigest() == r['sha256'], r['path']
+    print('VERIFIED', r['path'], len(b))
+CHECK
+```
+Decisive output: seven `VERIFIED` lines, including `outputs/controls-green.txt 10834` and `outputs/pdda-run.log 28982`.
+
+Review limits: paginated all 85 graph project entries; none is rooted at this seeded worktree, so exact source inspection was used instead of another checkout's graph. No git commands, suites, executable fixtures or phase gates were run. No explicit reviewer phase gate is supplied in this thread. Candidate SHA remains producer-reported. Mutation-heavy verification is [Unverified — needs clone run]; approval does not assume a future gate.
+
+VERDICT: FAIL — evidence is now inspectable, but omits the planned PR safety and folded-issue acceptance cases.
+
+**NEXT: Producer (Antigravity)**
