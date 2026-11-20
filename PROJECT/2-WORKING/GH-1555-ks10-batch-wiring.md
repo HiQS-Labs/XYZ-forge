@@ -17,7 +17,7 @@ updated: 2026-11-20
 
 | What was just completed | What's next |
 |---|---|
-| Addressed Plan QA R2 blocker: clarified that `merge_cleanup.py:1981-1990,2204-2206` dry-run simulates each PR against the current integration head without advancing it, so a 2-PR subset requires disposable-clone sequential-fold preparation (`merge-cleanup/SKILL.md:308-313`), singleton-first dispatch with refreshed base/pins/review before the second, or explicit HOLD — never treating per-PR dry-run output as combined-fold proof — and added the 2-PR pairwise-conflict walkthrough scenario. | Complete Plan QA R3 approval, implement KS-10 in `skills/1-hourly/kickstart/SKILL.md`, run disposable-clone CLI checks + instruction walkthrough + PDDA under `TESTS-RESULTS/2026-11-20+GH-1555/`, and pass Final QA. |
+| Implemented KS-10 3+ PR batch wiring (`--landing-plan`, GH-1066 selection/reopen, U5 pins, 1-PR/2-PR/3+ PR subset rules, withheld-forecast HOLD) in `skills/1-hourly/kickstart/SKILL.md`; passed disposable-clone probes, instruction walkthrough (incl. 3b pairwise-conflict), and PDDA (0 errors). | Complete Codex Final QA, open PR, and land. |
 
 ## Objective
 Wire `skills/1-hourly/kickstart/SKILL.md` to merge-cleanup's existing batch-planning machinery (`--landing-plan`, `--landing-reason`, `qualification.canary_command`, `ledger_merge.py` landing forecast, and GH-1066 sequence review) with fail-closed defaults for 3+ PR batches (issue #1541 KS-10, U5/U9). Docs-only change; no new dispatcher, runner, or test suite is created.

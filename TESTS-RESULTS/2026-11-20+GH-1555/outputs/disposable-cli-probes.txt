@@ -1,0 +1,25 @@
+=== PROBE 1: ledger_merge.py Withheld Recommendation Branch (Disposable Full Clone) ===
+CMD: inspect ledger_merge.py clean-set fold / recommendation=None branch
+EXIT: 0
+line 938: rec, reason = None, "forecast incomplete, no recommendation: " + "; ".join(bits)
+line 940: rec, reason = None, f"forecast incomplete, no recommendation: clean-set fold did not run at #{hubs['fold']['at']} ({hubs['fold'].get('reason') or 'not simulated'})"
+forecast_fns: ['_conflict_hubs', 'landing_forecast']
+_conflict_hubs (order: List[int], prs: Dict[str, Dict[str, Any]], pairs: List[Dict[str, Any]], hard_deps: Dict[int, Set[int]]) -> Dict[str, List[int]]
+landing_forecast (clone: pathlib.Path, base_sha: str, order: List[int], heads: Dict[int, str], unknown: Dict[int, str] | None = None, consumed: Dict[int, int] | None = None, timeout: int = 120, hard_deps: Dict[int, Set[int]] | None = None) -> Dict[str, Any]
+
+=== PROBE 2: merge_cleanup.py --execute 3+ PR Queue Without --landing-plan (Disposable Full Clone) ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp> --root <tmp> --prs 1501,1502,1503 --execute
+EXIT: 2
+DECISIVE OUTPUT:
+  merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/private<tmp-dir>/disp-repo/.merge-cleanup.json
+  merge-cleanup: Operating on primary repo: /private<tmp-dir>/disp-repo
+  
+  merge-cleanup: ERROR — PR discovery failed after 3 attempts: none of the git remotes configured for this repository point to a known GitHub host. To tell gh about a new GitHub host, please use `gh auth login` — refusing to continue; the queue cannot be verified empty
+
+=== PROBE 3: Verified merge_cleanup.py Threshold & Dry-Run Contract Lines ===
+L2775: if len(listed_order) >= 3:
+L2776: forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
+L2204: if dry_run:
+L2205: log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
+
+Disposable clone git status: (clean, zero mutations)
