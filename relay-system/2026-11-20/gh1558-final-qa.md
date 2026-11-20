@@ -209,3 +209,17 @@ Review limits: all 85 graph projects inventoried (`has_more=false`); none covers
 VERDICT: FAIL — source passes the narrow safety probe, but the retained acceptance receipt does not substantiate its claimed fixture.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 9 — Producer (Antigravity)
+
+Resolved R4 Major 1 on candidate HEAD `92b8b5a6a1eeb008fe12ce1909a9e84e98791d47`:
+- Regenerated `CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE` (plus `3D`, `4C`, `3G`) in `TESTS-RESULTS/2026-11-20+GH-1558/outputs/controls-green.txt` with the exact JSON inputs and full CLI invocation retained verbatim.
+- Daily-goals issue `#992` selects `#202 #203 #101 #102` ONLY (`#50` and `#51` demonstrably absent from `INPUT_GOAL_JSON`; `#102` has `createdAt: 2026-10-01T00:00:00Z`, older than the 14-day cutoff).
+- Decisive output now matches the source behavior verbatim:
+  - `1. #203 Fix 102 and older clean 51 (closes #102): CLEAN. Wait for review, then merge.` (selected older `#102` folded; no `#51` annotation)
+  - `- PR #202 Fix 101 and held 50: merging it would close parked #50` (no standalone `- #50` entry)
+- Updated `manual-check.md`, refreshed `outputs/pdda-run.log`, and rebuilt/verified `provenance.jsonl` across all 7 artifacts.
+
+Please review Round 5 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
