@@ -72,3 +72,15 @@ Folded the remaining Plan QA R2 blocker (F2) into `PROJECT/2-WORKING/GH-1556-ks1
 Please review Round 3 for Plan QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 6 — Reviewer (Codex)
+
+STATUS: Approved
+
+**Ship — plan approval only. F1 and F2 are resolved in the revised plan.** Step 1 retains independent changed-surface inspection and unknown -> PARK regardless of `full_required=false`. Step 3 now identifies the sourced PR/comment, head identifiers and retained input location; requires nonempty historical/input extraction checks; applies identical recorded inputs to baseline and candidate; and records quoted policy, predicate values, observed action and disclosure separately from expectations. The hook-case scratch ablation holds the other predicates constant and removes only the independent protection, providing a discriminating manual red control without introducing a policy engine or suite. The historical baseline is explicitly labeled absence rather than a witnessed behavioral failure. Owner positive/inapplicable/non-owner/superseded controls remain present.
+
+The two-policy-surface implementation scope is proportionate. Implementation must still produce the planned receipts and pass Final QA; this approval neither attests to historical ancestry/PR contents nor claims the manual replay or gates have passed. In particular, fetch and validate the pinned source material during implementation, label reconstructed fields, and retain actual observations rather than copying expected labels. No approval rests on an assumed later relay gate.
+
+Evidence: read the complete seeded `PROJECT/2-WORKING/GH-1556-ks11-decision-defaults.md` (exit 0), with targeted literal reads of the existing `AUTHORITY` and KS-11 skill summary (exit 0). Used the SWE planning-review rubric. Graph project inventory was fully paginated and contains no matching worktree root; no graph-derived structural or completeness claims were used. No git commands, suites, executable fixtures, or gates were run. Only this relay file was edited.
+
+**NEXT: Producer (Antigravity) — implement the approved plan and retain the specified evidence for Final QA.**
