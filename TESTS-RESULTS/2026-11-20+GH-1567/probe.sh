@@ -37,15 +37,26 @@ echo "-- base"; scan base; echo "-- fixed"; scan fixed
 V="$T/vrepo"; mkdir -p "$V/.xyz/relay-automation" "$V/.xyz/bin"; git -C "$V" init -q
 printf '#!/bin/sh\n' > "$V/.xyz/relay-automation/relay-drive.sh"; chmod +x "$V/.xyz/relay-automation/relay-drive.sh"
 printf '#!/bin/sh\nexit 0\n' > "$V/.xyz/bin/tick"; chmod +x "$V/.xyz/bin/tick"
-check() { (cd "$V" && env -i HOME="$T/home" XDG_CONFIG_HOME="$T/cfg" PATH=/usr/bin:/bin bash "$T/$1/XYZ-forge/skills/1-hourly/relay-xyz/find-harness.sh" --check 2>&1 | grep -v 'CLI\|case-collision'); echo "  exit=$?"; }
+check() {
+  local output rc
+  output="$(cd "$V" && env -i HOME="$T/home" XDG_CONFIG_HOME="$T/cfg" PATH=/usr/bin:/bin bash "$1" --check 2>&1)"
+  rc=$?
+  printf '%s\n' "$output" | grep -v 'CLI\|case-collision'
+  echo "  exit=$rc"
+  return "$rc"
+}
+check_variant() { check "$T/$1/XYZ-forge/skills/1-hourly/relay-xyz/find-harness.sh" || exit 1; }
 echo "== B. find-harness --check from a vendored repo, no config =="
-echo "-- base"; check base; echo "-- fixed"; out="$(check fixed)"; echo "$out"
+echo "-- base"; check_variant base; echo "-- fixed"; out="$(check_variant fixed)" || exit 1; echo "$out"
 hint="$(printf '%s\n' "$out" | sed -n 's/^  save this harness on this Mac: //p')"
 echo "== C. run the printed save command under the isolated config; assert saved bytes; config supplies scanner resolution =="
 echo "  hint: $hint"
-[ -n "$hint" ] && env HOME="$T/home" XDG_CONFIG_HOME="$T/cfg" bash -c "$hint"
-echo "  saved: $(cat "$T/cfg/xyz/harness" 2>/dev/null)  expected: $T/fixed/XYZ-forge"
-echo "  --check after save:"; check fixed
+[ -n "$hint" ] || { echo "Missing save hint"; exit 1; }
+env HOME="$T/home" XDG_CONFIG_HOME="$T/cfg" bash -c "$hint" || exit 1
+expected="$(cd -P "$T/fixed/XYZ-forge" && pwd)"
+printf '%s\n' "$expected" | cmp -s - "$T/cfg/xyz/harness" || { echo "Saved config bytes differ from $expected"; exit 1; }
+echo "  saved config bytes match: $expected"
+echo "  --check after save:"; check_variant fixed
 echo "  fixed scanner after save (bin/tick resolved via config; fixed clone has bin/tick):"
 env -i HOME="$T/home" XDG_CONFIG_HOME="$T/cfg" PATH="$T/nodebin:/usr/bin:/bin" "$(command -v python3)" -I - "$T/scan-fixed" "$A" "$(cd -P "$T/fixed/XYZ-forge" && pwd)/bin/tick" <<'PY'
 import sys, pathlib
@@ -54,9 +65,9 @@ t = sc._tick_binary(); print("  _tick_binary():", t, "| equals saved harness tic
 r = sc.inspect_tick_claims(pathlib.Path(sys.argv[2])); print("  inspect_tick_claims:", r)
 PY
 echo "== D. adjacent: invalid config content, then no canonical live harness (copied script outside any clone) =="
-printf '/missing/XYZ-forge\n' > "$T/cfg/xyz/harness"; echo "-- invalid config"; check fixed
+printf '/missing/XYZ-forge\n' > "$T/cfg/xyz/harness"; echo "-- invalid config"; check_variant fixed
 rm -f "$T/cfg/xyz/harness"
 mkdir -p "$T/copied"; cp "$T/fixed/XYZ-forge/skills/1-hourly/relay-xyz/find-harness.sh" "$T/copied/"
 echo "-- copied script, no live harness reachable"
-(cd "$V" && env -i HOME="$T/home" XDG_CONFIG_HOME="$T/cfg" PATH=/usr/bin:/bin bash "$T/copied/find-harness.sh" --check 2>&1 | grep -v 'CLI'); echo "  exit=$?"
+check "$T/copied/find-harness.sh" || exit 1
 echo "probe dir kept: $T"
