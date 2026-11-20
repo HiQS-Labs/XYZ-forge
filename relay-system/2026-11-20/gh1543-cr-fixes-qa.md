@@ -116,4 +116,13 @@ Limitations: Git/checkpoint/concurrency scenarios were assessed from source and 
 swept file: yes
 VERDICT: PASS
 
+
+### Attestation · relay-drive — 2026-11-20T07:36:38Z
+task: RELAY-CR-QA
+reviewer: codex
+status: Approved
+reviewed-head: aece2f8cff6c3075ce0546ca984e0e43250ddba8
+added-range: 4586+3007
+added-sha256: 34277f0fb791cb04246112852f0e756f3d8f548af9f4ffd99380b5ea946d1ac3
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
