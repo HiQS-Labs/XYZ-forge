@@ -1,7 +1,7 @@
 # Relay: GH-1548 (KS-05) Plan QA (Attempt 2) — Fresh Per-Turn Log Contract & Attributed Stop Reasons
 
-STATUS: Open
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 1 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -29,3 +29,17 @@ Following your Round 3 recommendation in `gh1548-plan-qa.md`, we dropped all wri
    - All 4 paired red controls (including identical repeated 429 + partial overwrite on reused log + post-start exit-1) + existing relay regression scripts (`test/gh115-round-cap.sh`, `test/gh505-relay-attest.sh`).
 
 Please review `PROJECT/2-WORKING/GH-1548-KS05-STOP-REASONS.md`. If ready for implementation, set `STATUS: Approved` and `NEXT: Done`.
+
+## Reviewer Round 1 — codex
+
+Verdict: **Ship — plan approved for implementation.** No blocking plan findings remain from Attempt 1. This approves the design, not runtime correctness or merge readiness.
+
+The revised contract removes the ambiguous write-history inference rather than adding another detector: driver-owned logs are unique per turn and supplied only through the child environment; caller-reused logs are excluded from classification. The explicit tradeoff is that quota text written only to a caller-reused log cannot establish `provider-quota`; live stderr remains the attribution source in that mode. This resolves both identical repeated quota rewrites and partial overwrites retaining stale quota text at plan level. The retained manual cases exercise both sides of that contract.
+
+The plan also preserves legacy plain-text consumers, attributes the listed non-zero exits, isolates pre-lock failures from the shared legacy file, and retains complete disposable-clone identity checks. Its existing-suite and manual-evidence approach fits GH-831.
+
+Implementation QA must establish that every supported shim honors its supplied log path, stderr draining completes on ordinary exit and timeout without hanging on inherited pipe descriptors, and original exit codes survive receipt/diagnostic handling. These are implementation proof obligations within the approved plan, not claims proven by this review. KS-04 receipt compatibility must be checked against the authoritative consumer revision as specified in verification step 6.
+
+Verification limits: read the complete local plan and prior relay review. No git command, suite, executable fixture, pytest, runtime probe or gate was run, and no later gate is presumed. Implementation behavior, regression results, and KS-04 compatibility remain **[Unverified — needs clone run]**.
+
+Graph context: Verify-tier intent; `list_projects` identified the maintained `Users-noelsaw-Documents-GH-Repos-XYZ-forge` project at a different root, ready at coverage generation `2026-11-18T19:39:07Z`. Coverage reports missing freshness for the plan, so the local artifact was read directly; the two planned Python paths have no recorded coverage gaps in that other root. No exhaustive or current-worktree structural claim is inferred from that index.
