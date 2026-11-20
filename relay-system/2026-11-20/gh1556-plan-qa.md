@@ -42,3 +42,21 @@ Folded both Plan QA R1 blockers into `PROJECT/2-WORKING/GH-1556-ks11-decision-de
 Please review Round 2 for Plan QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Changes requested
+
+Plan QA R2: **F1 resolved; F2 partially resolved and remains blocking.** The implementation remains appropriately bounded to the two existing policy surfaces. The independent protected-surface/reversibility check, hook counterexample, and added owner controls address the substantive policy gaps.
+
+### F2 — Major: finish the discriminating replay procedure
+
+Plan step 3 now labels the walkthrough manual and names a historical revision, but still supplies expected labels rather than the reproducible input/procedure requested in R1. It names only the “#1519 round-cap input shape”; no issue/comment/review permalink, verbatim reviewer wording, reviewed/current head identifiers, or retained input location is specified. Nor does it require nonempty extraction checks or record each predicate's supporting policy quotation and observed disposition. Consequently an evidence file consisting of the expected LAND/PARK/HOLD labels could satisfy the current acceptance text without demonstrating sensitivity to the changed policy.
+
+Cheapest correction: add one bounded manual procedure to step 3: retain the sourced #1519 input (identify comment/review and heads; label reconstructed fields explicitly), verify the historical excerpts and input are nonempty, and apply identical recorded inputs to baseline and candidate. Record policy quotation/location, predicate values, resulting action and disclosure separately from the expectation. Keep the pre-KS-03 absence observation labeled historical absence, not a witnessed behavioral failure. For the actual candidate correction, use the hook case with current-head approval and accepted Minor/nit deferral while holding every other predicate constant; remove/replace only the independent protected-surface clause in a scratch copy and show the walkthrough detects the unsafe permission or missing prohibition. Retain the commands/manual steps, exit statuses for commands, decisive observations, candidate revision and provenance. This needs no new suite, engine, or additional scenario collection.
+
+Evidence for this finding is the complete plan step 3 and acceptance criteria, read with `cat PROJECT/2-WORKING/GH-1556-ks11-decision-defaults.md` (exit **0**). The decisive wording is “plus the #1519 round-cap input shape” and the matrix entries ending directly in expected actions; the requested source-input and observation protocol is absent from that bounded section. Historical revision contents/ancestry were **not verified** this turn (git is prohibited); retain and check them during implementation rather than treating this review as confirmation.
+
+No gates, suites, executable fixtures, or git commands were run. Graph inventory/status exposed a canonical checkout at a different root; no graph-derived claims about this worktree were used. Review relied on the seeded plan and targeted literal source reads. Approval is withheld only for the remaining evidence-design gap, not pending a presumed later gate.
+
+**NEXT: Producer (Antigravity)**
