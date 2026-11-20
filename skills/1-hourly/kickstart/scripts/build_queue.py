@@ -54,8 +54,10 @@ AUTHORITY = """## Authority granted (one grant, covers the whole run)
 - Decision defaults (KS-11, fail-closed):
   - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
     head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
-    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
-    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    and accepted the deferral; otherwise park and continue independent work. Protected surfaces
+    (gate, hook such as githooks/*, containment, schema, kernel, or Costly/irreversible changes) are
+    checked by inspecting actual changed files and reversibility as well as utils/ci-route.sh
+    full_required (full_required=false never waives a named protected surface; unknown -> park). A
     PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
     what the reviewer stated.
   - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
