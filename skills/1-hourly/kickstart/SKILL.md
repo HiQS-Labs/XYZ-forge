@@ -34,7 +34,25 @@ session and the single delegated outer-loop child session. There are never compe
    `python3 skills/1-hourly/kickstart/scripts/build_queue.py --repo-root . --out <run record>`
    (pass `--other-session` and `--needs-operator` for the holds resolved in step 1), records the
    operator's authority grant in the printed Authority block of that run record, then dispatches.
-   A resumed session re-reads the grant there instead of asking again. The script's ordering is a
+   A resumed session re-reads the grant there instead of asking again. The printed Authority block
+   bakes in the run defaults (KS-03) so mid-run amendments are not needed for these classes:
+   - **CodeRabbit advisory (U5):** merge requires current-head review with no open Major, OR 30 min
+     elapsed since a `@coderabbitai review` request on the **current head** with no review; reviews
+     are re-read immediately before merge, the timeout path is recorded as `advisory not received;
+     predeclared waiver used` (never as reviewed/approved), and any posted Major blocks until fixed
+     or answered.
+   - **Fail-closed decision defaults (KS-11):** round cap requires explicit independent reviewer
+     approval of the final head (Minor/nit deferral only when explicitly tagged and accepted by the
+     reviewer, never auto-accepted on gate/hook/containment/schema/kernel/Costly `full_required`
+     surfaces, and never claiming `Approved` beyond what the reviewer stated; otherwise park);
+     forecast conflict hubs route to a separate recorded batch; KS-02 decision comments apply only
+     when authored by `--owner`, applicable, and not superseded.
+   - **Quota fallback:** switch the reviewer seat to `agy` (recording the actual model) ONLY when
+     the stop reason verbatim states quota; if both providers are capped, park.
+   - **Flywheel per-PR approval:** once granted by the operator, this block satisfies Flywheel's
+     per-PR merge approval step (`skills/2-daily/flywheel/SKILL.md:109-120`) for `--owner` PRs while
+     preserving full-SHA `--prs N@<approved-full-sha>` pin verification before `--execute`.
+   The script's ordering is a
    closed list, first match wins: own clean (confirmed `MERGEABLE`) PRs, own conflicting or
    failing PRs, own behind or not-yet-`MERGEABLE` PRs as one merge-cleanup batch, drafts (finish
    or close; a draft stays a draft even when it also conflicts), small bug issues, docs issues,
@@ -58,8 +76,9 @@ session and the single delegated outer-loop child session. There are never compe
    original deadlines, attempt counters, and authority.
 7. **Bounded Assisted Repair:** Performs explicit, bounded parent repair when needed, and
    reports assisted versus unattended operation truthfully.
-8. **Authority Boundary:** Never merges PRs, deploys code, or updates installed skills
-   without explicit separate operator authorization.
+8. **Authority Boundary:** Merging `--owner` PRs requires the operator's recorded grant in the
+   run record's Authority block (step 2). Never merges anyone else's PR, deploys code, or updates
+   installed skills without explicit separate operator authorization.
 
 ### Child (Outer-Loop Executor)
 1. **Skill Composition:** Composes existing skills — Conveyor for raw intake and preparation,
