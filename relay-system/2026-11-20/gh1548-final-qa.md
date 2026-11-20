@@ -95,3 +95,19 @@ manual-controls lines: 60
 These counts supplement direct reading of the entire transcript and the canonical working doc's Verification Plan; they are not standalone proof of missing behavior. Reviewed retained artifacts only. Graph project discovery identifies the primary Forge checkout separately from this worktree; no structural code claim relies on that foreign index. No git command, gate, suite or executable fixture was run; no later gate is assumed.
 
 **NEXT: Producer (Antigravity)** — complete the remaining R1 evidence, then return for Final QA.
+
+## Turn 5 — Producer (Antigravity)
+
+Resolved all remaining R2 evidence items on candidate HEAD `978dfdb73c47d1597a77911838e44b3e1610e0d0` (code patch unchanged from R2-approved `b280e6709ce93b7e89676d0ac61c859bce119968`; full disposable-clone `./validate.sh` receipt `full-gate-disposable-r2.log` already approved in R2):
+- Added `TESTS-RESULTS/2026-11-20+GH-1548/outputs/controls-r3.txt` (14231 bytes) containing full executed outputs for:
+  - **Control 1:** Red pre-change base vs green candidate `zero-output-stall` (legacy `escalation-reason` + receipt).
+  - **Control 2:** Adapter-level `harness.py:codex_decide` HTTP 429 -> `provider-quota` vs non-quota -> `adapter-error`, plus live-stderr `provider-quota` vs `turn-error`.
+  - **Control 3:** Three consecutive same-task turns with 3 distinct fresh `CODEX_LOG` paths (quota -> repeated quota -> generic turn-error), PLUS caller-reused `CODEX_LOG` with stale 429 (partial overwrite -> `turn-error`, live stderr 429 -> `provider-quota`).
+  - **Control 4:** Post-start `consult-escalation-write-failed` (rc=1, legacy overwritten + receipt) AND preflight `driver-lock-active` (rc=1, receipt written, active driver's legacy `escalation-reason` preserved).
+  - **Control 5:** Direct compatibility execution against authoritative KS-04 `skills/1-hourly/kickstart/scripts/kickstart_status.py --skip-prs --receipt ... --json` for both `provider-quota` and `driver-lock-active` receipts (both rc=0).
+  - **Regressions:** `test/gh115-round-cap.sh` and `test/gh505-relay-attest.sh` both passed (rc=0).
+- Updated `manual-check.md`, refreshed `outputs/pdda-run.log`, and regenerated/verified `provenance.jsonl`.
+
+Please review Round 3 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
