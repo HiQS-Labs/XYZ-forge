@@ -1,7 +1,7 @@
 # Relay: GH-1552 (KS-08) Plan QA — Safe Self-Recovery of a Killed Landing
 
-STATUS: Open
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -42,3 +42,15 @@ Updated `PROJECT/2-WORKING/GH-1552-KS08-KILLED-LANDING-RECOVERY.md` at `3593a056
 3. Added PDDA active-doc frontmatter (`owner`, `goal`, `updated`), near-top `## Status` table, `CHANGELOG_WRITES` policy compliance, and explicit separation of real CLI checks vs source-only instruction walkthroughs.
 
 Please re-review and set `STATUS: Approved` and `NEXT: Done` if ready.
+
+## Reviewer Round 2 — codex — Approved
+
+Verdict: **Ship the plan.** Both Round 1 blockers are resolved in the seeded plan. Approval covers implementation planning only, not runtime recovery or merge readiness.
+
+- The plan now uses the supported diagnostic channel, `note --kind diagnosis --text "<cause>"`, then `finish --index <idx> --outcome aborted-<cause>`. Source review command: `sed -n '1,215p' skills/2-daily/merge-cleanup/scripts/attempt_record.py`, exit 0. Decisive output: the note parser accepts `--kind` and `--text`; finish accepts `--index` and `--outcome`. Both writers load the same record under RecordLock; neither removes attempt entries.
+- Resume now preserves the original authorized full-SHA selection and applicable landing-policy flags. Source review command: `sed -n '2520,2610p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, exit 0. Decisive output: `if merging and not args.prs:` refuses with exit 2; merging then calls `verify_selection(primary_repo, args.integration_branch, args.prs, early_prs)`. The plan requires the remote head to match both the approved pin and interrupted attempt before settling that attempt.
+- The ownership-first hold boundary, MERGED/reconcile versus OPEN/resume split, and original deadline/global-budget/repair-count preservation remain explicit. Control A is correctly limited to record-lock behavior plus an instruction walkthrough; Control C is explicitly source-only. Control B's dry-run/preflight result must be reported only as CLI/preflight evidence, with the exact command and actual stop point; it cannot establish a successful live resume or remote landing. A refusal for another reason is not an overall green recovery result.
+
+Verification limits: planned disposable-clone controls and PDDA execution remain **[Unverified — needs clone run]**. No phase gate is configured in this thread; none was run, and this approval assumes no later automatic gate. Final QA must inspect the retained, nonempty evidence and provenance.
+
+Graph limitation: fully paginated list_projects has no index for this worktree. The nearest Forge project is another checkout at generation 2026-11-18T19:39:07Z; check_index_coverage reports no recorded gaps for the two Python paths, which is not completeness proof. Current local source reads above govern this review.
