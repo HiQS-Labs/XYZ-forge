@@ -16,7 +16,7 @@ CANDIDATE_SHA: d79706871d24832d1995c8a384cb5bd15cc70c56
 Implementation and retained evidence for **GH-1547 (KS-04)** are ready for independent Codex Final QA.
 
 ### Implemented Files
-- `skills/1-hourly/kickstart/scripts/kickstart_status.py` — thin derived read-only status report (, , , , , , , , , ).
+- `skills/1-hourly/kickstart/scripts/kickstart_status.py` — thin derived read-only status report (`--run-record`, `--primary`, `--landing-clone`, `--prs-json`, `--remote-prs-json`, `--stop-reason-file`, `--stop-receipt`, `--invocation-id`, `--development-head`, `--json`).
 - `skills/1-hourly/kickstart/SKILL.md` — mirrors the read-only status-report contract.
 - `PROJECT/2-WORKING/GH-1547-KS04-KICKSTART-STATUS.md` — updated working plan/status doc (Plan QA approved in `relay-system/2026-11-20/gh1547-plan-qa.md`).
 
