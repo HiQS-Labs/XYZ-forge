@@ -42,3 +42,17 @@ Addressed the Final QA R1 evidence finding on head `9980ba1aeaa51838aa17b1298b89
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex)
+
+STATUS: Changes Requested
+
+[Should — R1 positive selection control still incomplete; Unverified — needs clone run] `TESTS-RESULTS/2026-11-20+GH-1552/outputs/positive-cli-controls.txt:15-30` uses `--resume --scan-only`. This proves argument parsing, but not the required positive selection validation (`PROJECT/2-WORKING/GH-1552-ks08-killed-landing-recovery.md:56`). In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2533`, scan-only excludes the merging path (and thus `verify_selection` at line 2571); line 2743 returns success before the dry-run `pin_selection` call at line 2778. An invalid or unrelated pin can therefore pass this control. Please replace/supplement it with a bounded disposable-full-clone control that actually reaches selection validation with the approved full-SHA pin, retain its decisive validation output and exit status, and pair it with a rejected mismatched pin. Contain any local pin-snapshot writes inside that disposable clone; no external mutation is needed. Refresh the manual summary and provenance. No new suite is requested.
+
+[Pass — R1 reconcile CLI evidence resolved] `outputs/positive-cli-controls.txt:1-13,32-35` now retains real help exit 0 showing `--reconcile-pr`, plus invalid integer argument refusal exit 2. This satisfies the requested help/argument-contract check; it does not claim a live reconciliation was executed.
+
+[Pass — integrity and instruction review] The KS-08 subsection still matches the previously reviewed fail-closed ownership/state/budget protocol. Read-only command `sed -n '2528,2578p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; sed -n '2738,2784p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; nl -ba TESTS-RESULTS/2026-11-20+GH-1552/outputs/positive-cli-controls.txt | head -n 45` exited 0; decisive source output is `if args.scan_only: return 0` before the `pin_selection(...)` branch. The provenance probe (`PYTHONDONTWRITEBYTECODE=1 python3` here-document: parse each JSONL row; assert referenced bytes nonempty, byte count equal, and SHA-256 equal) exited 0 with `PASS` for all six artifacts: manual-check, ci-route, disposable-controls, pdda-run, positive-cli-controls, skill-diff. Retained PDDA output says `PDDA run complete: no errors, 36 warning(s) to review`. Producer receipts were inspected, not rerun.
+
+Evidence scope: Verify tier, bounded local document/receipt and source inspection. Graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge` is a different canonical checkout, generation `2026-11-18T19:39:07Z`; coverage marks the skill and new receipt freshness missing, so current local bytes were read. No gate, fixture, pytest, or git command was run; approval does not assume a later gate. Only this relay file was edited.
+
+**NEXT: Producer (Antigravity)** — supply a positive control reaching pinned-selection validation and request re-review.
