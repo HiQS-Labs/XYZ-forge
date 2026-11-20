@@ -1,0 +1,21 @@
+=== CONTROL 1A & 1B: Post-Batch Sweep Deferred Verdict Reason Requirement (Disposable Full Clone) ===
+CMD: batch_record.record_verdict(rec, 'verdict: deferred\n') [RED] vs non-empty reason [GREEN]
+EXIT: 0
+RED_EMPTY_DEFERRED: ok=False msg=a deferred verdict needs a reason
+GREEN_NONEMPTY_DEFERRED: ok=True msg=verdict deferred recorded for #1501
+
+=== CONTROL 2: build_queue.py Bucket C Landing-Path Contract ===
+L206: "merge-cleanup batch from the pinned LANDING_CLONE (`--primary "$LANDING_CLONE"`; the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.")
+
+=== CONTROL 3: merge_cleanup.py Exit 4 & Exit 8 Contract Citations ===
+L2491: parser.add_argument("--record-sweep", metavar="FILE", help="Record the post-merge regression-sweep verdict for the newest batch with QA pending (first line `verdict: clean|findings|deferred`), update its issue, and exit; nothing is scanned, merged or torn down (GH-1064)")
+L2711: log("STATUS: landed, QA pending — record a verdict with --record-sweep <file> "
+L2713: return 4
+L3005: return 4
+L3007: log(f"STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: {where})")
+L3009: return 4
+L3080: return 4
+L3088: return 4
+L3097: return 4
+L3108: return 4
+L3112: """GH-1064 --record-sweep: store the caller's sweep verdict on the newest QA-pending batch."""

@@ -1,8 +1,8 @@
 ---
-issue: 1556
+gh_issue: 1556
 title: "kickstart(KS-11): fail-closed decision defaults in launch authority template and SKILL.md"
 status: active
-roadmap_id: rmi-01M7W49MQWX5WDGFH04176P39V
+roadmap_id: rmi-01M7WQ3CNCG4FBDBZ90J5BMZC9
 parent_arc: 1541
 milestone: KS-11
 owner: antigravity

@@ -1,0 +1,7 @@
+remote -v
+config --get-regexp ^remote\..*\.gh-resolved$
+remote -v
+config --get-regexp ^remote\..*\.gh-resolved$
+remote -v
+config --get-regexp ^remote\..*\.gh-resolved$
+-C ~/Documents/GH Repos/XYZ-forge-gh1547-ks04-kickstart-status-2026-11-20 remote get-url origin
