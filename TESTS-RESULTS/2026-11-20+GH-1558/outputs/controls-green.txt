@@ -1,0 +1,189 @@
+=== CONTROL_1_AND_4_DAILY_GOALS (rc=0) ===
+<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; daily-goals #999; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+
+## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
+  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
+  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
+  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
+  reviews immediately before the merge. Record the timeout path as "advisory not received;
+  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
+  until it is fixed or answered.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Decision defaults (KS-11, fail-closed):
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+    what the reviewer stated.
+  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+    recorded batch.
+  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
+    and not superseded.
+- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
+  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
+  infer quota from a round cap or generic failure.
+- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
+  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
+  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session.
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+
+## Queue (execution order)
+1. #101 First daily goal bug: small bug fix through start-task or jog.
+2. #105 DECISION item with proceed: operator decision recorded — execute via start-task or jog.
+3. #102 Second daily goal docs: docs fix through express.
+4. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+
+## Needs the operator (the run parks these and keeps going)
+- #103 Held by body marker: held (body HELD: marker)
+- #106 DECISION item without proceed: operator decision
+
+## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
+- (none)
+
+STDERR:
+
+
+=== CONTROL_2_DEFAULT_MODE_UNCHANGED (rc=0) ===
+<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+
+## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
+  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
+  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
+  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
+  reviews immediately before the merge. Record the timeout path as "advisory not received;
+  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
+  until it is fixed or answered.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Decision defaults (KS-11, fail-closed):
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+    what the reviewer stated.
+  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+    recorded batch.
+  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
+    and not superseded.
+- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
+  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
+  infer quota from a round cap or generic failure.
+- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
+  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
+  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session.
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+
+## Queue (execution order)
+1. #101 First daily goal bug: small bug fix through start-task or jog.
+2. #104 Non-goal background bug: small bug fix through start-task or jog.
+3. #107 Already closed goal: small bug fix through start-task or jog.
+4. #123 Local issue 123 (must NOT be pulled by other/repo#123): small bug fix through start-task or jog.
+5. #105 DECISION item with proceed: operator decision recorded — execute via start-task or jog.
+6. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+
+## Needs the operator (the run parks these and keeps going)
+- #103 Held by body marker: held (body HELD: marker)
+- #106 DECISION item without proceed: operator decision
+
+## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
+- (none)
+
+STDERR:
+
+
+=== CONTROL_3A_CLOSED_GOALS_FAIL_CLOSED (rc=1) ===
+
+STDERR:
+build_queue: daily-goals issue #998 is CLOSED (expected OPEN)
+
+
+=== CONTROL_3B_EMPTY_GOALS_FAIL_CLOSED (rc=1) ===
+
+STDERR:
+build_queue: daily-goals #997 selected zero open issues or PRs after resolution
+
+
+=== CONTROL_3C_NUMBER_MISMATCH_FAIL_CLOSED (rc=1) ===
+
+STDERR:
+build_queue: --daily-goals-json contains issue #999, expected #555
+
+
+=== CONTROL_3D_INVALID_ISSUE_NUM_FAIL_CLOSED (rc=1) ===
+
+STDERR:
+build_queue: --daily-goals-json contains issue #999, expected #0
+
+
+=== CONTROL_3F_MISSING_REF_FAIL_CLOSED (rc=1) ===
+
+STDERR:
+build_queue: referenced #404 in daily-goals #996 is missing from offline replay inputs
+
+
+=== CONTROL_4E_OUT_AND_OTHER_SESSION (rc=0) ===
+FILE:
+<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; daily-goals #999; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+
+## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
+  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
+  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
+  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
+  reviews immediately before the merge. Record the timeout path as "advisory not received;
+  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
+  until it is fixed or answered.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Decision defaults (KS-11, fail-closed):
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+    what the reviewer stated.
+  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+    recorded batch.
+  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
+    and not superseded.
+- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
+  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
+  infer quota from a round cap or generic failure.
+- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
+  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
+  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session (#101).
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+
+## Queue (execution order)
+1. #105 DECISION item with proceed: operator decision recorded — execute via start-task or jog.
+2. #102 Second daily goal docs: docs fix through express.
+3. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+
+## Needs the operator (the run parks these and keeps going)
+- #101 First daily goal bug: owned by another session; remind only
+- #103 Held by body marker: held (body HELD: marker)
+- #106 DECISION item without proceed: operator decision
+
+## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
+- (none)
+
+STDERR:
+
+
+=== CONTROL_3E_PARTIAL_OFFLINE_REPLAY_ZERO_SUBPROCESS ===
+exit=build_queue: offline replay requires complete saved inputs (zero network/git calls); missing: --prs-json, --pr-meta-json, --issues-json
+subprocess_calls=0
