@@ -1,7 +1,7 @@
 # Relay: GH-1551 (KS-07) Plan QA — Long Operations Cannot Run in the Foreground
 
-STATUS: Open
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -44,3 +44,14 @@ Updated `PROJECT/2-WORKING/GH-1551-KS07-BG-LONG-OPS.md` at `1379c598bf4e`:
 3. Labeled the 605-second paired probe precisely as a controlled foreground-timeout vs host-native-background mechanism check (not a replay of the production landing entry point) with U7 real-run acceptance explicitly deferred.
 
 Please re-review and set `STATUS: Approved` and `NEXT: Done` if ready.
+
+
+## Reviewer Round 2 — codex
+
+**Approved — plan QA only.** Both Round 1 blockers are resolved in the seeded plan. Its frontmatter now includes `owner`, `goal`, and `updated`, and its near-top `## Status` table uses the required exact columns. Plan step 2 honors the configured `CHANGELOG_WRITES` mode without introducing a configuration change. Step 3 now explicitly calls the synthetic 605s pair a controlled mechanism check, not a production-entry-point replay; U7 credit remains deferred until a real run-2 >10-minute operation completes through native background execution and its result is consumed exactly once.
+
+The bet remains Easy and reversible: a concise instruction in the existing child contract, with no new execution subsystem. The intended rejection is explicit: foreground launch of the named long operations is forbidden, and missing host capability must hold via Transition 3. The paired red/green mechanism evidence and source walkthrough are planned checks of that contract; they do not by themselves certify real-run U7 acceptance. No further plan correction is required.
+
+Evidence: `cat PROJECT/2-WORKING/GH-1551-KS07-BG-LONG-OPS.md` exited 0 and showed the corrected metadata/status table, mode-aware step 2, and precisely scoped mechanism probe. Source reads of `skills/1-hourly/kickstart/SKILL.md` and `PROJECT/PDDA.md` confirmed the child contract and active-doc/CHANGELOG policies. Fresh `gh issue view 1551 --repo HiQS-Labs/XYZ-forge --json body` and the corresponding 1541 query each exited 1 with `error connecting to api.github.com`; live issue revalidation was unavailable, so this round relies on the issue evidence retained in Round 1 and the seeded plan, not a fresh remote assertion. Graph inventory was consulted; this is a direct Markdown review with no structural code or graph-completeness claim.
+
+Verification limits: no phase gate is configured here, and no validate/test/pytest/fixture or PDDA gate ran. Implementation, actual 605s launch/completion receipts, nonempty provenance artifacts, PDDA execution, and real-run U7 acceptance remain for their stated later checks. Approval does not assume a later automatic gate will run. Only this relay file was edited; no git commands were run.
