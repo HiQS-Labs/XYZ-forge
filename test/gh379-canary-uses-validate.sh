@@ -264,7 +264,8 @@ check "  and no suite ran before the refusal" \
 all_skips=()
 while IFS= read -r t; do all_skips+=(--skip "${t#test/}"); done < <(bash "$V" --list 2>/dev/null)
 check "the registry listed at least one suite to skip" test "${#all_skips[@]}" -gt 0
-rc=0; out="$(bash "$V" ${all_skips[@]+"${all_skips[@]}"} --sequential 2>&1)" || rc=$?
+_skip_context="$(python3 "$REPO/utils/py/gate_receipt.py" attempt-start --repo "$REPO" --accounting-root "$REPO/temp/gh379-fixture-$$" --task gh379-empty-run)"
+rc=0; out="$(XYZ_ATTEMPT_CONTEXT="$_skip_context" bash "$V" ${all_skips[@]+"${all_skips[@]}"} --sequential 2>&1)" || rc=$?
 check "skipping EVERY suite refuses (exit 1) rather than reporting a zero-test green" test "$rc" -eq 1
 check "  and it says so, instead of dying on an unbound variable" \
   matches 'refusing a zero-test green' "$out"

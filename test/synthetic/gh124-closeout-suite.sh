@@ -14,12 +14,16 @@ trap 'rm -rf "$WORK"' EXIT
 [ -n "$WORK" ] && [ -d "$WORK" ] || { echo "FAIL: invalid test workdir"; exit 1; }
 
 echo "=== 1. Testing gate_receipt.py ==="
-TEST_SHA="11223344556677889900aabbccddeeff11223344"
 FAIL_SHA="ffffffffffffffffffffffffffffffffffffffff"
 
+# The receipt contract now identifies an actual repository/admin branch.
+RECEIPT_REPO="$WORK/receipt"
+git init -q -b main "$RECEIPT_REPO"
+git -C "$RECEIPT_REPO" -c user.email=t@t -c user.name=t commit -q --allow-empty -m receipt
+TEST_SHA="$(git -C "$RECEIPT_REPO" rev-parse HEAD)"   # the administrative exemption covers a real candidate on main
 # Write valid receipt
 python3 "$ROOT/utils/py/gate_receipt.py" write \
-  --repo "$WORK" \
+  --repo "$RECEIPT_REPO" \
   --sha "$TEST_SHA" \
   --gate "ci-local.sh" \
   --mode "sequential" \
@@ -29,13 +33,13 @@ python3 "$ROOT/utils/py/gate_receipt.py" write \
   --duration 12.5 >/dev/null 2>&1
 
 # Verify valid receipt passes
-python3 "$ROOT/utils/py/gate_receipt.py" check --repo "$WORK" --sha "$TEST_SHA" >/dev/null 2>&1 || {
+python3 "$ROOT/utils/py/gate_receipt.py" check --repo "$RECEIPT_REPO" --sha "$TEST_SHA" >/dev/null 2>&1 || {
   echo "FAIL: gate_receipt.py check failed for valid receipt"
   exit 1
 }
 
 # Verify missing receipt fails
-if python3 "$ROOT/utils/py/gate_receipt.py" check --repo "$WORK" --sha "$FAIL_SHA" >/dev/null 2>&1; then
+if python3 "$ROOT/utils/py/gate_receipt.py" check --repo "$RECEIPT_REPO" --sha "$FAIL_SHA" >/dev/null 2>&1; then
   echo "FAIL: gate_receipt.py check unexpectedly succeeded for missing receipt"
   exit 1
 fi
