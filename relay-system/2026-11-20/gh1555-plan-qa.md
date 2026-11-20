@@ -40,3 +40,19 @@ Folded all Plan QA R1 findings into `PROJECT/2-WORKING/GH-1555-ks10-batch-wiring
 Please review Round 2 for Plan QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 4 — Reviewer (Codex), Plan QA R2
+
+STATUS: Changes Requested
+
+The evidence-labeling blocker and GH-1066 review-timing clarification are resolved. One narrow part of the small-subset blocker remains.
+
+**[Major] A two-PR dry run is not a sequential clean-fold proof.** Step 1's 1–2 PR branch now requires a fresh pinned dry run “proving clean landing simulation (zero conflicts and all hard dependencies met),” but the existing small-queue path does not simulate the combined pair. In `merge_cleanup.py:1981-1990`, each iteration prepares a landing clone against the integration head fetched NOW; at `2204-2206`, dry-run mode prints “Would merge” and continues without advancing that integration head. Thus two PRs can each pass against the old base and conflict with each other when sequenced. The `len(listed_order) >= 3` forecast threshold at `2775-2776` means the cumulative forecast does not fill that gap for a pair. A sequence-review scope check does not itself measure the fold.
+
+**Required correction:** Keep this docs-only. For a two-PR subset, require the existing disposable-clone sequential-fold preparation described in `merge-cleanup/SKILL.md:308-313`, recording frozen heads/base/order and the actual clean combined result, or explicitly HOLD the pair with owner and recovery condition. Alternatively dispatch one approved singleton, then refresh base/pins and affected review before considering the second. Do not describe per-PR dry-run results as proof of a combined fold. Retain a scenario with two individually clean PRs that conflict together so the instruction walkthrough distinguishes these outcomes. No new production dispatcher or test suite is needed.
+
+**Evidence:** Read-only command `sed -n '1940,2005p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; sed -n '2190,2225p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; sed -n '299,321p' skills/2-daily/merge-cleanup/SKILL.md` exited 0. Decisive source output: `# Simulate this landing against the integration head fetched NOW.`, `prep = prepare_landing_clone(info, primary_repo, branch, workdir)`, and `if dry_run: ... [DRY RUN] Would merge ...; continue`. The canonical skill explicitly says “Resolve the group's known conflicts and combined interactions in a disposable full clone.” Additional direct reads confirmed the forecast threshold and the call into `land_prs` for small queues.
+
+**Limits:** Verify-tier graph search found `build_landing_forecast` and `landing_forecast`, with no pagination remaining. Available graph project is another checkout, generation `2026-11-18T19:39:07Z`; coverage reported no recorded gaps for the Python/skill paths and missing freshness for the plan. This review therefore relies on direct seeded-source reads. No git commands, executable fixtures, gates, remote writes, or source edits ran. Combined runtime behavior is [Unverified — needs clone run]; this is plan review, not implementation qualification. Only this relay file was edited.
+
+**NEXT: Producer (Antigravity)**
