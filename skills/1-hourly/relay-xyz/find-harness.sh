@@ -421,13 +421,27 @@ case "$ACTION" in
     _caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"
     echo "relay harness readiness:"
     echo "  ok  harness  ($HARNESS)"
-    if [ "$VENDORED" = 0 ] && _canonical_clone "$HARNESS"; then
-      _configured_now="$(_read_config || true)"
-      if [ "$_configured_now" != "$HARNESS" ]; then
-        _config_dir="$(dirname "$CONFIG_FILE")"
-        printf '  save this harness on this Mac: mkdir -p %q && printf %q %q > %q\n' \
-          "$_config_dir" '%s\n' "$HARNESS" "$CONFIG_FILE"
+    _save_target=""
+    _configured_now="$(_read_config || true)"
+    if [ "$VENDORED" = 0 ]; then
+      _save_target="$HARNESS"
+      [ "$_configured_now" != "$HARNESS" ] || _save_target=""
+    elif [ -n "$_configured_now" ]; then
+      echo "  ok  per-device harness config  ($_configured_now)"
+    else
+      # GH-1567: a vendored .xyz resolves fine here, but merge-cleanup's scan_clones never trusts it (GH-1362),
+      # so without this config it reports "tick binary not found". Report it on its own line.
+      echo "  !   no per-device harness config (${CONFIG_FILE:-unknown}); merge-cleanup cannot find tick without it"
+      _save_target="$LIVE_HARNESS"
+      if [ -z "$_save_target" ] || ! _canonical_clone "$_save_target"; then
+        _save_target=""
+        echo "      no canonical XYZ-forge clone found to save; write the config by hand (relay-xyz SKILL.md) or set XYZ_HARNESS"
       fi
+    fi
+    if [ -n "$_save_target" ] && _canonical_clone "$_save_target"; then
+      _config_dir="$(dirname "$CONFIG_FILE")"
+      printf '  save this harness on this Mac: mkdir -p %q && printf %q %q > %q\n' \
+        "$_config_dir" '%s\n' "$_save_target" "$CONFIG_FILE"
     fi
     if [ "$VENDORED" = 0 ] && git -C "$HARNESS" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       _h_branch="$(_branch "$HARNESS")"

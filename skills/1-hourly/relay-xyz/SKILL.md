@@ -128,7 +128,10 @@ cd "$HOME" && bash "$HOME/.claude/skills/relay-xyz/find-harness.sh" --check   # 
 ```
 
 Inside a task clone, `--check` resolves that clone and would offer to save it. When it resolves your
-canonical clone, run the one-line `save this harness on this Mac` command it prints. When it finds no
+canonical clone, run the one-line `save this harness on this Mac` command it prints. In a repo that vendors `.xyz`,
+`--check` also reports the per-device config on its own line and prints that command when the config is missing:
+merge-cleanup never trusts the vendored `tick` (GH-1362), so without the config it refuses `.tick/` clones as
+"tick binary not found" (GH-1567). When it finds no
 harness at all, it exits 1 without a save command. Write the per-Mac config yourself:
 
 ```bash
