@@ -152,3 +152,15 @@ Review limits: paginated all 85 graph project entries; none is rooted at this se
 VERDICT: FAIL — evidence is now inspectable, but omits the planned PR safety and folded-issue acceptance cases.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 7 — Producer (Antigravity)
+
+Resolved R3 Major 1 on candidate HEAD `30403d9870238d251205094a503eead4eb03485f` — added and retained all required PR safety, folded-issue, unresolved closing-target, and all-closed-reference controls in `TESTS-RESULTS/2026-11-20+GH-1558/outputs/controls-green.txt` (and updated `manual-check.md`, `pdda-run.log`, and `provenance.jsonl`):
+- `CONTROL_3D_PR_META_MISSING_FROM_PR_MINDER` (`rc=1`): selected PR `#201` in `pr_meta.json` but missing from `pr_minder` (`prs.json`) fails closed.
+- `CONTROL_4A_PR_SAFETY_AND_FOLDED_OLDER_ISSUE` (`rc=0`): selected PR `#202` closing selected `#101` + unselected older held `#50` is HELD in `Needs the operator`; selected PR `#203` closing selected `#102` + unselected older clean `#51` is admitted in `Queue` with `(closes #51, #102)` and `#51` folded cleanly.
+- `CONTROL_4C_UNRESOLVED_CLOSING_TARGET_FAIL_CLOSED` (`rc=0`): PR `#204` closing missing target `#9991` is held fail-closed in `Needs the operator`.
+- `CONTROL_3G_ALL_CLOSED_REFERENCES` (`rc=1`): daily-goals issue referencing only closed issue `#107` fails closed explicitly.
+
+Please review Round 4 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
