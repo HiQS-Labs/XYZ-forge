@@ -36,7 +36,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - The long-term canonical deterministic surface is `utils/pdda/pdda.sh`; do not add wrapper commands unless a real external integration forces them.
 - Do not override deterministic PDDA findings with prose.
 - Do not report a win you did not verify with the relevant script or test.
-- Update `CHANGELOG.md` at the end of each iteration; its governance lives in `PROJECT/PDDA.md` — do not re-specify CHANGELOG rules in `AGENTS.md` or elsewhere.
+- By default (`CHANGELOG_WRITES=off` or `landing`), PR branches do not edit `CHANGELOG.md`; post-landing changelog generation is handled at merge time by the reconciler when enabled (`CHANGELOG_WRITES=landing`). Legacy per-branch updates apply only when explicitly configured (`CHANGELOG_WRITES=branch`). Governance lives in `PROJECT/PDDA.md`.
 
 ## Command rails
 

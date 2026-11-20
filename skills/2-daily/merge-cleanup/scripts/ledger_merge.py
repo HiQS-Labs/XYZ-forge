@@ -468,7 +468,7 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
         additions = text[len(preamble):len(text) - len(history)]
         # This deliberately narrow resolver does not interpret fenced/HTML Markdown blocks:
         # a heading inside an example must never become a separately sorted release entry.
-        if "<!--" in additions or re.search(r"(?m)^[ \t]{0,3}(?:`{3,}|~{3,}|<)", additions):
+        if re.search(r"(?m)^[ \t]{0,3}(?:`{3,}|~{3,})", additions):
             raise ValueError("fenced or HTML additions require manual changelog resolution")
         starts = list(re.finditer(r"(?m)^## ", additions))
         if additions and (not starts or starts[0].start() != 0):
@@ -483,6 +483,29 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
                 raise ValueError("malformed or empty dated section")
             # Calendar validation is cheap and prevents impossible dates sorting as real entries.
             date.fromisoformat(date_match[1])
+
+            if "<" in heading or "`" in heading or "~" in heading:
+                raise ValueError("fenced or HTML additions require manual changelog resolution")
+
+            # GH-1487: Permit only the exact generated full-SHA marker line:
+            # <!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->
+            # strictly at the first non-blank line of the section body.
+            # All other HTML comments, raw HTML tags, code fences, conflict markers, or
+            # secondary markers anywhere else in the body must raise ValueError.
+            body_lines = body.splitlines()
+            first_nonblank_idx = None
+            for idx, line in enumerate(body_lines):
+                if line.strip():
+                    first_nonblank_idx = idx
+                    break
+
+            for idx, line in enumerate(body_lines):
+                stripped_l = line.strip()
+                if idx == first_nonblank_idx and re.fullmatch(r"<!-- pr:[1-9][0-9]* merge:[0-9a-f]{40} -->", stripped_l):
+                    continue
+                if "<!--" in line or "<" in line:
+                    raise ValueError("fenced or HTML additions require manual changelog resolution")
+
             if heading in seen:
                 raise ValueError("duplicate heading on one side")
             seen.add(heading)

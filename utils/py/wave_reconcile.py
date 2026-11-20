@@ -1932,6 +1932,338 @@ def handle_marathon_plan_result(result, reconciled_issues):
         log(f"    - {describe_finding(finding)}")
 
 
+def read_changelog_writes_mode(repo_root):
+    """GH-1487: Read CHANGELOG_WRITES mode.
+
+    Precedence:
+    1. CHANGELOG_WRITES env var (if set).
+    2. .pdda-mode setting (if present).
+    3. Default: 'off'.
+    Allowed values: 'off', 'landing', 'branch'. Invalid values log warning and fall back to 'off'.
+    """
+    val = os.environ.get("CHANGELOG_WRITES")
+    if val is not None:
+        v = val.strip().lower()
+        if v in ("off", "landing", "branch"):
+            return v
+        print(f"wave-reconcile: WARNING — invalid CHANGELOG_WRITES env value '{val}'; falling back to 'off'")
+        return "off"
+
+    pdda_mode = os.path.join(repo_root, ".pdda-mode")
+    val = None
+    if os.path.exists(pdda_mode):
+        try:
+            with open(pdda_mode, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    m = re.match(r"^CHANGELOG_WRITES\s*=\s*([^#\s]+)", line)
+                    if m:
+                        val = m.group(1).strip().lower()
+        except Exception:
+            pass
+
+    if val:
+        if val in ("off", "landing", "branch"):
+            return val
+        print(f"wave-reconcile: WARNING — invalid CHANGELOG_WRITES in .pdda-mode '{val}'; falling back to 'off'")
+        return "off"
+
+    return "off"
+
+
+def read_changelog_cutover(repo_root):
+    """GH-1487: Read durable cutover boundary timestamp for CHANGELOG_WRITES=landing.
+
+    Precedence:
+    1. CHANGELOG_CUTOVER env var (if set).
+    2. .pdda-mode setting CHANGELOG_CUTOVER=<ISO-8601>.
+    3. First commit introducing CHANGELOG_WRITES=landing in .pdda-mode via git log -S.
+    4. If none, fail closed (code 6). Never falls back to a moving clock or workflow activation.
+    """
+    raw = os.environ.get("CHANGELOG_CUTOVER")
+    if not raw:
+        pdda_mode = os.path.join(repo_root, ".pdda-mode")
+        if os.path.exists(pdda_mode):
+            try:
+                with open(pdda_mode, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if line.startswith("CHANGELOG_CUTOVER="):
+                            raw = line.split("=", 1)[1].strip()
+            except Exception:
+                pass
+
+    if not raw:
+        # Check git history for the first commit introducing CHANGELOG_WRITES=landing
+        try:
+            res = subprocess.run(
+                ["git", "log", "-S", "CHANGELOG_WRITES=landing", "--reverse", "--format=%cI", "--", ".pdda-mode"],
+                cwd=repo_root, capture_output=True, text=True, check=False
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                raw = res.stdout.strip().splitlines()[0]
+        except Exception:
+            pass
+
+    if not raw:
+        die("CHANGELOG_WRITES=landing requires explicit CHANGELOG_CUTOVER=<ISO-8601> when adoption history cannot be established from git", code=6)
+
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except Exception as exc:
+        die(f"Invalid CHANGELOG_CUTOVER timestamp '{raw}'; must be valid ISO-8601: {exc}", code=6)
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def changelog_entry_exists(repo_root, pr_number, merge_sha):
+    """GH-1487: Test if the candidate PR entry already exists in CHANGELOG.md.
+
+    Checks literal equality to `<!-- pr:{pr_number} merge:{merge_sha} -->` at the
+    first non-blank line of the section starting with `(GH-{pr_number})` or `GH-{pr_number}`.
+    """
+    path = os.path.join(repo_root, "CHANGELOG.md")
+    if not os.path.exists(path):
+        return False
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
+    except Exception:
+        return False
+
+    expected_marker = f"<!-- pr:{pr_number} merge:{merge_sha} -->"
+    if expected_marker not in content:
+        return False
+
+    starts = list(re.finditer(r"(?m)^## ", content))
+    for i, match in enumerate(starts):
+        end = starts[i + 1].start() if i + 1 < len(starts) else len(content)
+        block = content[match.start():end]
+        heading, _, body = block.partition("\n")
+        if f"GH-{pr_number}" in heading:
+            body_lines = [l.strip() for l in body.splitlines() if l.strip()]
+            if body_lines and body_lines[0] == expected_marker:
+                return True
+    return False
+
+
+def format_changelog_entry(pr_meta):
+    """GH-1487: Synthesize a sanitized, dated changelog entry block from PR metadata."""
+    number = int(pr_meta["number"])
+    sha = (pr_meta.get("mergeCommit") or {}).get("oid", "")
+    merged_at = pr_meta.get("mergedAt") or datetime.now(timezone.utc).isoformat()
+    try:
+        dt = datetime.fromisoformat(merged_at.replace("Z", "+00:00")).astimezone(timezone.utc)
+        date_str = dt.strftime("%Y-%m-%d")
+    except Exception:
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Sanitize title
+    raw_title = pr_meta.get("title") or f"PR #{number}"
+    clean_title = re.sub(r"<[^>]+>", "", raw_title)
+    clean_title = clean_title.replace("`", "").replace("~", "-").replace("\r", " ").replace("\n", " ")
+    for ch in ("<", ">", "=", "|"):
+        clean_title = clean_title.replace(ch, "")
+    clean_title = re.sub(r"\s+", " ", clean_title).strip()
+    if not clean_title:
+        clean_title = f"PR #{number}"
+
+    # Extract body under ## Changelog
+    body = pr_meta.get("body") or ""
+    changelog_body = ""
+    match = re.search(r"(?im)^##\s+Changelog\s*$", body)
+    if match:
+        rest = body[match.end():]
+        end_match = re.search(r"(?m)^##\s+", rest)
+        section = rest[:end_match.start()] if end_match else rest
+        changelog_body = section.strip()
+
+    marker_line = f"<!-- pr:{number} merge:{sha} -->"
+
+    if not changelog_body:
+        entry_body = f"changelog: fallback-title\n{clean_title}."
+    else:
+        # Sanitize body
+        # 1. Strip all HTML comments
+        s = re.sub(r"<!--[\s\S]*?-->", "", changelog_body)
+        s = s.replace("<!--", "")
+        # 2. Strip conflict markers (<{7}|={7}|>{7}|\|{7})
+        s = re.sub(r"(?m)^[ \t]*(?:<{7}|={7}|>{7}|\|{7})(?: |$).*\n?", "", s)
+        # 3. Strip raw HTML tags
+        s = re.sub(r"<[^>]+>", "", s)
+        # 4. Neutralize residual less-than characters (e.g. 'x < 5') so B1 does not see any '<'
+        s = s.replace("<", "&lt;")
+        # 5. Neutralize code fences for B1 safety: replace line-leading triple backticks/tildes with 4 spaces
+        lines = []
+        in_fence = False
+        for line in s.splitlines():
+            stripped = line.lstrip()
+            if stripped.startswith("```") or stripped.startswith("~~~"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                lines.append("    " + line)
+            else:
+                # Down-level headings
+                if stripped.startswith("#"):
+                    heading_text = stripped.lstrip("#").strip()
+                    lines.append(f"- **{heading_text}**")
+                else:
+                    lines.append(line)
+        cleaned_text = "\n".join(lines).strip()
+        if not cleaned_text:
+            entry_body = f"changelog: fallback-title\n{clean_title}."
+        else:
+            entry_body = cleaned_text
+
+    return f"## {date_str} — {clean_title} (GH-{number})\n\n{marker_line}\n{entry_body}\n\n"
+
+
+def changelog_catchup_candidates(repo_root, repo_slug, cutover_dt, offline_manifest=None):
+    """GH-1487: Discover merged development PRs merged on/after cutover_dt that lack entries in CHANGELOG.md."""
+    if offline_manifest and "prs" in offline_manifest:
+        prs_list = []
+        for p in offline_manifest.get("prs", []):
+            if isinstance(p, dict):
+                prs_list.append(p)
+    else:
+        result = subprocess.run(
+            ['gh', 'api', '--paginate', '--slurp',
+             f'repos/{repo_slug}/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100'],
+            cwd=repo_root, capture_output=True, text=True, check=False)
+        if result.returncode:
+            print(f"wave-reconcile: WARNING — changelog catch-up candidate query failed: {result.stderr}")
+            return []
+        try:
+            pages = json.loads(result.stdout)
+            prs_list = [pr for page in pages for pr in page if isinstance(pr, dict)]
+        except Exception as e:
+            print(f"wave-reconcile: WARNING — failed parsing changelog recovery response: {e}")
+            return []
+
+    candidates = []
+    for pr in prs_list:
+        # Offline manifests use the gh CLI's camelCase shape (mergedAt, baseRefName, mergeCommit);
+        # the REST query returns merged_at / base.ref / merge_commit_sha. Accept both.
+        merged = pr.get("merged_at") or pr.get("mergedAt")
+        if not merged:
+            continue
+        try:
+            merged_dt = datetime.fromisoformat(merged.replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if merged_dt.tzinfo is None:
+            merged_dt = merged_dt.replace(tzinfo=timezone.utc)
+        if merged_dt < cutover_dt:
+            continue
+        if ((pr.get("base") or {}).get("ref") or pr.get("baseRefName")) != "development":
+            continue
+        num = pr.get("number")
+        sha = pr.get("merge_commit_sha") or ((pr.get("mergeCommit") or {}).get("oid"))
+        if type(num) is not int or num <= 0 or not re.fullmatch(r"[0-9a-f]{40}", sha or ""):
+            continue
+        if changelog_entry_exists(repo_root, num, sha):
+            continue
+        meta = dict(
+            number=num,
+            title=pr.get("title") or "",
+            body=pr.get("body") or "",
+            state="MERGED",
+            mergedAt=merged,
+            baseRefName="development",
+            mergeCommit={"oid": sha},
+            url=pr.get("html_url") or "",
+            headRefOid=(pr.get("head") or {}).get("sha"),
+            commits=[]
+        )
+        candidates.append(meta)
+    return candidates
+
+
+def reconcile_changelog(repo_root, landing_items, metadata, repo_slug, catch_up=False, dry_run=False, journal=None, offline_manifest=None):
+    """GH-1487: Post-landing changelog reconciliation.
+
+    When CHANGELOG_WRITES=landing, synthesizes dated changelog entries from merged PR descriptions
+    and prepends them to CHANGELOG.md after the preamble. Idempotent via literal marker lines.
+    """
+    mode = read_changelog_writes_mode(repo_root)
+    if mode != "landing":
+        return
+
+    cutover_dt = read_changelog_cutover(repo_root)
+
+    candidates = {}
+    for kind, val in landing_items:
+        if kind != "pr":
+            continue
+        meta = metadata.get(("pr", str(val)))
+        if not meta or meta.get("state") != "MERGED" or meta.get("baseRefName") != "development":
+            continue
+        sha = (meta.get("mergeCommit") or {}).get("oid", "")
+        if not re.fullmatch(r"[0-9a-f]{40}", sha):
+            continue
+        if not changelog_entry_exists(repo_root, meta["number"], sha):
+            candidates[meta["number"]] = meta
+
+    if catch_up:
+        caught_up = changelog_catchup_candidates(repo_root, repo_slug, cutover_dt, offline_manifest=offline_manifest)
+        for meta in caught_up:
+            if meta["number"] not in candidates:
+                candidates[meta["number"]] = meta
+
+    if not candidates:
+        log("Changelog: no new entries to write (up to date)")
+        return
+
+    # Sort descending by UTC mergedAt, tie-broken by PR number descending
+    def candidate_sort_key(m):
+        ts = m.get("mergedAt") or ""
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except Exception:
+            dt = datetime.min.replace(tzinfo=timezone.utc)
+        return (dt, m.get("number") or 0)
+
+    sorted_candidates = sorted(candidates.values(), key=candidate_sort_key, reverse=True)
+    new_blocks = [format_changelog_entry(m) for m in sorted_candidates]
+
+    changelog_path = os.path.join(repo_root, "CHANGELOG.md")
+    snapshot_ledger_artifacts(repo_root, dry_run=dry_run, journal=journal)
+
+    existing_text = ""
+    if os.path.exists(changelog_path):
+        try:
+            with open(changelog_path, "r", encoding="utf-8", errors="replace") as f:
+                existing_text = f.read()
+        except Exception as e:
+            die(f"Failed reading CHANGELOG.md for reconciliation: {e}", code=6)
+
+    first = re.search(r"(?m)^## ", existing_text)
+    if first:
+        preamble, history = existing_text[:first.start()], existing_text[first.start():]
+    else:
+        preamble = existing_text.rstrip() + ("\n\n" if existing_text.strip() else "# Changelog\n\n")
+        history = ""
+
+    new_content = preamble + "".join(new_blocks) + history
+
+    if dry_run:
+        log(f"Dry-run: would prepend {len(sorted_candidates)} entry/entries to CHANGELOG.md")
+    else:
+        try:
+            with open(changelog_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            log(f"wave-reconcile: prepended {len(sorted_candidates)} changelog entry/entries to CHANGELOG.md")
+        except Exception as e:
+            die(f"Failed writing updated CHANGELOG.md: {e}", code=6)
+
+
 def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
     """GH-424: capture the ledger and generated views BEFORE the first write.
 
@@ -1944,6 +2276,7 @@ def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
         "releases.db", "releases.sql",
         "RELEASES-PREVIEW.html",
         "LEADERBOARD.html", "LEADERBOARD.md",
+        "CHANGELOG.md",
         os.path.join(".tick", "marathon-plan.fingerprint"),
     ):
         path = os.path.abspath(os.path.join(repo_root, name))
@@ -2550,6 +2883,9 @@ def main():
                     pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest, base=args.base)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
+                # GH-1487: keep what this loop fetched so reconcile_changelog (after the loop) sees a plain
+                # `--pr N` landing; owner ranks above were computed before the loop and are unaffected.
+                metadata.setdefault((landing_kind, landing_id), pr_meta)
                 landing = landing_label(pr_meta)
                 log(f"Processing {landing}...")
                 state = pr_meta.get("state", "").upper()
@@ -2688,6 +3024,8 @@ def main():
 
             # Global roadmap cleanups
             fix_mangled_roadmap_entries(repo_root, dry_run=args.dry_run, journal=journal)
+
+            reconcile_changelog(repo_root, landing_items, metadata, repo_slug, catch_up=args.catch_up, dry_run=args.dry_run, journal=journal, offline_manifest=offline_manifest)
 
             # GH-421: skip downstream regeneration only when there was genuinely nothing to
             # act on this run (catch-up mode found no new PRs, and no --pr/--marathon target
