@@ -105,3 +105,26 @@ Budgets: wall deadline 2026-11-20T06:00Z; max 2 attempts per item; then park and
 - PARENT 2026-11-20T05:45Z: NEXT RUN follows arc #1541 order (KS-02 #1535 → KS-03/04 #1536 → … → KS-10 #1537). Baseline for KS-18: 7 parent interventions, 12 merges, ~7.2h.
 - item 14 (re-run): FINAL QA on development 04979701a (after #1534 #1495 #1496 #1533 #1532) — tier 1 pdda rc=0; full ./validate.sh in disposable clone rc=0, 408/408 (poll-driver.sh failed once in parallel, passed on the solo contention retry). Later commit 919421078 changes LEADERBOARD.md only. Batches #1538 and #1540 sweep verdicts recorded deferred (full_suite=promotion); #1540 still lists #1539 as planned. 2026-11-20T05:45Z
 - HANDBACK 2026-11-20T05:45Z: child stops. Summary returned to parent; scratch copy kickstart-a6590cb2-handback.md.
+
+## Machine-readable baseline lines (KS-15 v1 grammar, appended at publication 2026-11-20)
+OPERATOR_AMENDMENT: OA-1 2026-11-20T01:50Z #1508 decided: a committed override file that extends the default list (operator turn)
+OPERATOR_AMENDMENT: OA-2 2026-11-20T~03:00Z #1519/#1532 accepted at the round cap (operator turn)
+OPERATOR_AMENDMENT: OA-3 2026-11-20T03:12Z CodeRabbit advisory, 30-min max wait (operator turn)
+OPERATOR_AMENDMENT: OA-4 2026-11-20T~03:10Z pre-push own-diff routing approved, #1537 (operator turn)
+INTERVENTION: I-1 2026-11-20T01:50Z parent closed #1518 by hand (decide hold not released)
+INTERVENTION: I-2 2026-11-20T02:02Z parent instructed an agy QA switch (round cap misread as quota)
+INTERVENTION: I-3 2026-11-20T02:06Z parent withdrew I-2
+INTERVENTION: I-4 2026-11-20T03:12Z OA-3 not applied by the child (run record not re-read)
+INTERVENTION: I-5 2026-11-20T03:45Z parent reminder for #1532 not applied by the child
+INTERVENTION: I-6 2026-11-20T~04:00Z parent sent a direct steering message delivering I-4 and I-5
+INTERVENTION: I-7 2026-11-20T05:45Z parent settled #1539's stale B1 attempt and resumed it (landed 70480a188)
+GATE: #1501 head 2e9bb2bdd full 856s green
+GATE: #1526 head b7102ff9e full 872s green
+GATE: #1507 head 4b0ed0f7a full 836s green
+GATE: #1460 head 4fb99d619 full 834s green
+GATE: #1533 head 7dcd09532 full 1085s green
+GATE: #1532 head 2a3601a90 full 1042s green
+GATE: #1539 head 1115f376d full 1038s green
+GATE: final-QA 0a87e686d tier1+full green (duration not recorded)
+GATE: final-QA 04979701a tier1+full green 408/408 (duration not recorded)
+BASELINE: merged=13 (incl. #1539 after parent recovery) interventions=7 operator_decisions=4 elapsed≈7.2h recorded_full_gate_seconds=6563 over 7 recorded gates (docs-route gates and unrecorded runs not counted; KS-19 must report "not comparable" where denominators are missing)

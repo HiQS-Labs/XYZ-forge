@@ -20,5 +20,3 @@
 | 12 stale batch issues | PARKED — none verified complete; status comment on each | — |
 | 13 refactors #1480–#1483 | BLOCKED on unlanded predecessors | — |
 | 14 final QA | run 1 on 0a87e686d: 408/408; run 2 on new tip: see run record | — |
-</content>
-</invoke>
