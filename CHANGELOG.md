@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 — GH-1499: skill drift check reads vendored tier layouts
+
+- `utils/py/skill_drift_check.py` now finds a collection's skills one level down (flat Deployed Skills) and
+  two levels down (a vendored `.xyz/skills/<tier>/<name>` tree). Before, a vendored tree compared 0 skills
+  and reported `0 ok, 0 drifted` with exit 0. Flat-layout results are unchanged. No new suite (GH-831).
+  Evidence: `TESTS-RESULTS/2026-11-19+GH-1499/smoke.md`.
+
 ## 2026-11-19 — GH-1524: `10days` `HAS-PR` routing and `remediate` / `serial` / `marathon` modes
 
 - `skills/3-weekly/10days/SKILL.md`: added Step 3 open-PR lookup and `HAS-PR` disposition (`open_prs`, routed to `pr-minder` for behind/conflicting/failing/stale PRs or `merge-cleanup` for green mergeable PRs, kept out of build paths), added Step 3.5 execution mode routing (`remediate` prepare-only via `conveyor`, `serial` JIT via `conveyor → jog` or `start-task` with an explicit narrow single-harness exception over `start-task:235` carrying verbatim `Independent review did not run.` disclosure, and default `marathon` parallel waves on exit-0 items), aligned `Optional Flywheel coordination`, and added **Mode selected** + **HAS-PR Ledger** to Step 8 Report.

@@ -35,12 +35,17 @@ def scan(canonical: Path, collection: Path) -> dict:
     result = {"drifted": [], "ok": [], "unrecognized": []}
     # GH-744: the forge keeps skills two levels down (skills/<tier>/<name>); a mini collection keeps
     # them one level down. Both are canonical layouts, so scan both depths.
+    # GH-1499: a vendored `.xyz/skills` tree keeps the forge's tier layout too, so the collection is
+    # scanned at both depths; a flat Deployed Skills collection still matches at depth one.
+    vendored_by_name = {}
+    for md in sorted(list(collection.glob("*/*/SKILL.md")) + list(collection.glob("*/SKILL.md"))):
+        vendored_by_name[md.parent.name] = md   # depth one wins when a name exists at both depths
     canonical_names = set()
     for skill_md in sorted(list(canonical.glob("*/SKILL.md")) + list(canonical.glob("*/*/SKILL.md"))):
         name = skill_md.parent.name
         canonical_names.add(name)
-        vendored = collection / name / "SKILL.md"
-        if not vendored.is_file():
+        vendored = vendored_by_name.get(name)
+        if vendored is None:
             continue  # canonical skill the collection doesn't vendor: not its defect
         entry = {"skill": name,
                  "canonical_sha256": _digest(skill_md),
@@ -51,8 +56,7 @@ def scan(canonical: Path, collection: Path) -> dict:
             result["drifted"].append(entry)
         else:
             result["ok"].append(entry)
-    for vendored_md in sorted(collection.glob("*/SKILL.md")):
-        name = vendored_md.parent.name
+    for name, vendored_md in sorted(vendored_by_name.items()):
         if name not in canonical_names:
             result["unrecognized"].append({"skill": name,
                                            "vendored_path": str(vendored_md)})
