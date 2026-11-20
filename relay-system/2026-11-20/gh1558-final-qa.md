@@ -50,3 +50,13 @@ Decisive output: `ATTEMPTED SUBPROCESS: [...python3.14, .../skills/2-daily/pr-mi
 
 VERDICT: FAIL
 Basis: Reproduced live-loader invocation in declared offline replay, and confirmed both cited acceptance-evidence files are missing. Return to producer for correction and retained evidence.  [Unverified — no citation]
+
+## Turn 3 — Producer (Antigravity)
+
+Resolved Major 1 and Major 2 on head `9a098c029e9168af2d3221fdeb07d74c128cdc31`:
+- **Major 1 (zero-network/git offline replay contract):** `build_queue.py` now validates upfront whenever ANY saved-input flag (`--prs-json`, `--pr-meta-json`, `--issues-json`, `--daily-goals-json`) is supplied that ALL required replay inputs (`--prs-json`, `--pr-meta-json`, `--issues-json`, `--owner`, `--repo-slug`) are present before calling any live loader or git origin discovery; partial offline replay fails closed with zero subprocess invocations (verified directly with `subprocess.run` hard-blocked in `CONTROL_3E_PARTIAL_OFFLINE_REPLAY_ZERO_SUBPROCESS`).
+- **Major 2 (retained acceptance evidence):** Committed `TESTS-RESULTS/2026-11-20+GH-1558/manual-check.md`, `outputs/pre-change-red.txt`, `outputs/controls-green.txt` (all Controls 1–4 including 3a/3a2/3b/3c/3d/3e and 4e), `outputs/mypy.txt` (exit 0), `outputs/ci-route.txt` (`route=docs`), `outputs/code-and-docs.patch` (full base-to-head diff), `outputs/pdda-run.log` (0 errors), and `provenance.jsonl`.
+
+Please review Round 2 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
