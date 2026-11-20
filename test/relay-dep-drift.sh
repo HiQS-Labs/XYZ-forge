@@ -159,7 +159,10 @@ PYJSON
 ) && pass=$((pass+1)) || fail=$((fail+1))
 # --- 7: a deleted shared surface emits once, with real blob SHA -> none -----------------------------
 git -C "$D3" add -A; git -C "$D3" commit -qm "add surface" >/dev/null 2>&1 || true
-"$T3" claim RELAY-T --agent agent-a --paths "src/project.js,relay-system/x/thread.md" >/dev/null 2>&1 || true
+# Same handoff as case 6: the previous turn left the token with agent-b.
+"$T3" claim RELAY-T --agent agent-b --paths "src/project.js,relay-system/x/thread.md" >/dev/null
+"$T3" release RELAY-T --agent agent-b --to agent-a >/dev/null
+"$T3" claim RELAY-T --agent agent-a --paths "src/project.js,relay-system/x/thread.md" >/dev/null
 deleted_sha="$(git -C "$D3" rev-parse HEAD:src/project.js)"
 rm -f "$D3/src/project.js"
 printf 'deleted surface\n' >> "$D3/relay-system/x/thread.md"

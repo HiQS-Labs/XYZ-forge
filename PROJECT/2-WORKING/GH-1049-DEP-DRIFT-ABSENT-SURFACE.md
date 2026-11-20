@@ -48,7 +48,7 @@ Blast radius: `relay-turn-lib.sh` is sourced by every relay turn (containment ke
 - [ ] A surface added between the two revs emits once with `prior_sha` `none`.
 - [ ] `test/relay-dep-drift.sh` covers the three cases and passes.
 
-Builder note: the existing end-to-end fixture (`test/relay-dep-drift.sh:71-93`) already lacks `relay-automation/relay-turn-lib.sh` and `src/events.js`, and its `-ge 1` assertion (`:90`) hides the bug. Tightening it to exactly one event naming `src/project.js` covers absent-at-both without a new fixture.
+Historical builder note (before the fix): the end-to-end fixture already lacked `relay-automation/relay-turn-lib.sh` and `src/events.js`, and its old `-ge 1` assertion hid the bug. That assertion is now tightened to exactly one event naming `src/project.js` (`test/relay-dep-drift.sh:100`), which covers absent-at-both without a new fixture.
 
 ## Correction after attempt 1 (gate evidence, GH-1400 dogfood round)
 
