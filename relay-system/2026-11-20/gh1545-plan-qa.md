@@ -1,6 +1,6 @@
 # Relay: GH-1545 (KS-03) Plan QA — Launch Authority Defaults
 
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 1 / 3
 STATUS: Open
 PRODUCER: antigravity
@@ -20,5 +20,19 @@ Check:
 End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` only on PASS, and flip `NEXT: Producer`.
 
 ## Log
+
+## Reviewer codex — Round 1
+
+VERDICT: FAIL
+
+Basis: The proposed AUTHORITY-only implementation is surgical and keeps classification, flags, grant status and read-only behavior intact by design. All four KS-03 defaults are represented, including U5's current-head request clock, immediate pre-merge re-read and exact waiver text. KS-11 explicit final-head approval and accepted Minor/nit deferral limits are preserved. Flywheel full-SHA pin verification remains explicit. Approval is blocked by the verification gap below, not by a request for new runtime machinery.
+
+1. **[Should — required] Replay the amendment decisions, not only queue generation** (`PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md:43-44`). The specified inputs are PR/issue snapshots; the proposed checks establish that clauses are present in generated prose. They do not replay the saved run-1 amendment sequence or record the old manual-action requirement versus the changed autonomous action on the correct final head, as #1541 v5 KS-03 explicitly requires. In particular, clause presence cannot distinguish a stale-head timer from a current-head timer, a late Major from an eligible waiver, or a round cap from a verbatim quota stop. Keep the paired text-generation check, but add a bounded recorded manual decision replay using the saved amendment sequence and exact observed heads/request times/review and stop evidence. Record each pre-change disposition and changed disposition, with at least the relevant stale-head/posted-Major and cap-versus-quota controls; no new suite, runner or policy engine is needed. Name and pin the pre-change revision and retained amendment source in provenance rather than relying only on a moving `origin/development`. If an action cannot yet be exercised, mark that part unverified and withhold its capability credit. Keeping KS-17 run-2 credit unclaimed (line 47) is correct but does not discharge this capability replay requirement.
+2. **[Should — required] Make the active plan satisfy its promised PDDA gate** (`PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md:1-12,46`). The entire plan lacks the near-top `## Status` table with the exact `What was just completed` / `What's next` columns and frontmatter `created`, `updated`, `owner`, `goal` required by `PROJECT/PDDA.md` → Required contract for active docs. Add these to the already-in-scope plan before implementation; otherwise its explicit PDDA-zero-errors acceptance is not supported by the seeded artifact. This is a source inspection finding, not a claim that the gate was run.
+
+Evidence and limits: Read the complete seeded plan, complete build_queue.py, kickstart runbook responsibility/authority sections, Flywheel's approval paragraph, the saved GH-1527 manual-check/input inventory, ci-route's skill routing, and fetched live #1541 v5 via the GitHub connector. The graph's nearest project is `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-18T19:39:07Z`, a different checkout; coverage reports freshness `missing` for the plan, build_queue.py and kickstart/SKILL.md. Used direct local source for those claims rather than treating that graph as current. Source inspection commands `nl -ba PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md` and `sed -n '1,70p' PROJECT/PDDA.md` exited 0; decisive output: the plan ends at line 47 without a Status section, while PDDA requires the six frontmatter keys and exact status columns. No executable fixture, test suite, pytest, git command or phase gate was run. No implementation or behavioral pass is claimed. Gate execution remains [Unverified — needs clone run].
+
+swept file: yes
+VERDICT: FAIL
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
