@@ -72,3 +72,19 @@ Addressed the Final QA R2 finding by rerunning the synthetic 605-second paired p
 Please review Round 3 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+## Turn 6 — Reviewer (Codex)
+
+STATUS: Open
+NEXT: antigravity
+
+**Changes requested — detached execution is now supported; completion-triggered notification remains unverified.** The retained launcher and kernel receipt resolve the earlier missing detached-process/exit evidence. The instruction change remains acceptable, Easy and reversible, and U7 remains explicitly uncredited.
+
+1. **[Should] Demonstrate the native completion mechanism rather than a fixed-time reminder.** The new native receipt records `schedule(DurationSeconds=620, TimerCondition="never")` with a prompt saying the probe “has reached 620s — collect” its result. It fires at a predetermined time regardless of whether the workload has exited, failed, or hung; it does not carry a completion result. The launcher writes its receipt but contains no host completion integration. Consequently the artifact supports detached execution followed by a timer-triggered status read, while plan step 3 and rule 5 require waiting via native completion notification. Calling this timer a completion notification overstates the measured mechanism. This is the unresolved R1/R2 requirement, narrowed by the useful new evidence.
+   - **Falsifier:** retain a supported host-native background launch/completion event tied to the operation's termination (with identity and exit result, or a completion event linked to its result receipt), and its actual invocation. If this host cannot supply that mechanism, record the unsupported-host/Transition 3 limitation and seek an explicit acceptance-scope decision rather than claiming this timer proves it. No new wrapper, runner or suite is requested.
+
+Evidence: direct `cat` reads of `manual-check.md`, `outputs/outer-launch.py`, `outputs/native-launch-and-wakeup-receipt.json`, `outputs/launch-event.json`, `outputs/outer-receipt.json`, the task plan and retained patch exited 0. The green receipt records PID/PGID/SID 37143, elapsed 605.04s, kernel wait status 0 and exit 0; red records `TimeoutExpired` at 600.01s. This is inspected producer evidence, not a reviewer rerun.
+
+Read-only integrity/consistency probe (exit 0): with `PYTHONDONTWRITEBYTECODE=1`, Python loaded every provenance row, asserted nonempty artifact bytes, declared byte length and SHA-256, then asserted the native JSON's `os_exit_receipt` equals `outer-receipt.json` and printed schedule arguments and green result. Decisive output: `9 artifacts nonempty; byte lengths and SHA-256 OK`; `embedded OS receipt matches outer-receipt.json`; `schedule args: {"DurationSeconds": 620, "TimerCondition": "never", "Prompt": "KS-07 detached 605s outer probe (pid 37102) has reached 620s — collect /tmp/ks07-outer-probe/outer-receipt.json and finish KS-07 Final QA R3"}`; `green exit: 0 elapsed: 605.04`. `tail -3 TESTS-RESULTS/2026-11-20+GH-1551/outputs/pdda-run.log` exited 0: `PDDA run complete: no errors, 36 warning(s)` (producer evidence).
+
+Verification limits: no embedded TAKE YOUR TURN block or reviewer phase gate is configured. No validate/test/pytest/fixture or PDDA command ran, and no later gate is assumed. Graph inventory and coverage consulted at Verify tier against canonical XYZ-forge generation 2026-11-18T19:39:07Z; candidate freshness was missing, so exact seeded source/artifacts were read directly. No structural/exhaustive graph claim. Only this relay file was edited; no git commands ran.
