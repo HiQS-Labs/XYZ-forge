@@ -118,9 +118,14 @@ session and the single delegated outer-loop child session. There are never compe
   and run `merge_cleanup.py --primary <LANDING_CLONE> --record-sweep <file>`. Note that exit `0`
   from `--record-sweep` records receipt of the deferred verdict — it is NOT proof of a passing
   full gate.
-- **Exit 8 (Active Hosted `wave-reconcile.yml` Run During Local Reconciliation):** When
-  `merge_cleanup.py` exits `8`, the PR is ALREADY `MERGED` remotely with an incomplete local
-  durability checkpoint:
+- **Active Hosted `wave-reconcile.yml` Run During Local Reconciliation (Child Exit `8` → Wrapper Exit `2`):**
+  `wave_reconcile.py` exits `8` when a hosted `wave-reconcile.yml` run is active, while the
+  `merge_cleanup.py` wrapper (`run_local_wave_reconcile` → `land_prs` / `--reconcile-pr`) converts
+  any nonzero child exit to `False` and exits `2` (`post-merge reconciliation FAILED — stopping
+  before the next PR`). Because primary-pin and preflight failures also exit `2`, **never assume
+  every exit `2` means `MERGED`**. Always inspect the observed command logs (for child exit `8` /
+  active hosted `wave-reconcile.yml` output) AND verify live remote PR state first. When remote
+  state confirms the PR is ALREADY `MERGED` with an incomplete local durability checkpoint:
   1. Preserve the `MERGED` PR and its incomplete durability checkpoint; stop further landings
      immediately.
   2. Never pass `--force-local-reconcile` and NEVER re-merge.
