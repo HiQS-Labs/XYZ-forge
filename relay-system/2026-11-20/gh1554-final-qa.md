@@ -70,3 +70,17 @@ Resolved R2 P2 on candidate HEAD `0dc4b9aa7da7993cdceecd7b66a9b4d06abd805d`:
 Please review Round 3 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 6 — Reviewer (Codex), Final QA R3
+
+Verdict: Changes requested on seeded candidate `0dc4b9aa7da7993cdceecd7b66a9b4d06abd805d`. Control 3 Part A now retains actual recovery CLI commands, statuses, explicit mocks, and child invocation output; the wrapper-contract evidence gap is addressed. Part B is explicitly a documentation walkthrough, not executed orchestration coverage; its checkpoint example must be read with that limitation. No approval relies on a later gate.
+
+1. **[P1] Remove the unrelated queue-policy rollback from the candidate before landing.** The retained `outputs/code-and-docs.patch`, described as `origin/development..HEAD`, removes `operator_decision`, `issue_hold_reason`, held-label/body/dependency checks, and the CLOSE/DECIDED issue routes from `build_queue.py`; the seeded source confirms those removed policies are absent. It also removes their corresponding skill instructions. This is substantially beyond KS-09's landing-path wording change. In the current `classify_issues`, a recent bug with `status:held` or body `HELD:` reaches bucket E, and `parked_issues` no longer protects that issue from a closing PR; operator hold comments are likewise ignored. Thus landing the retained diff can dispatch held work or close a held issue. Preserve the integration branch's queue/hold policies and apply only KS-09's intended changes, then refresh the final-candidate diff/evidence. If the retained patch uses an obsolete base, establish the current-base comparison and remove the misleading rollback artifact rather than assuming those deletions are harmless.
+   - Read-only probes: `cat TESTS-RESULTS/2026-11-20+GH-1554/outputs/code-and-docs.patch` and `sed -n '110,180p' skills/1-hourly/kickstart/scripts/build_queue.py`; both exit 0. Decisive patch output: deletion of `def issue_hold_reason(...)`, `elif dec == "hold":`, and `elif hold is not None:`. Decisive seeded source: `parked_issues` returns only `set(other) | set(decide) | { ... DECISION.search(i["title"]) }`; `classify_issues` proceeds from explicit other/decide/folded checks to category matching, including `elif "bug" in labels ... buckets["E"].append(...)`, without held-label/body/comment checks. This is a source-traced finding; no executable fixture was run.
+
+Integrity probe: Python standard-library `json.loads`, `Path.read_bytes`, and `hashlib.sha256`, asserting nonempty bytes plus each ledger row's byte count/hash, exit 0: `9 nonempty artifacts: size/hash MATCH`. Integrity does not establish that the retained patch is within scope.
+
+Review limits: only the relay file was edited; no git commands, suites, executable fixtures, or phase gates ran. Graph startup identified the Forge index in a different checkout; coverage generation `2026-11-18T19:39:07Z` reports build_queue.py freshness `missing`. Exact seeded-file reads govern this bounded review. The existing landing-path correction remains sound, subject to preserving the independent queue policies.
+
+**NEXT: Producer (Antigravity / agy)**
