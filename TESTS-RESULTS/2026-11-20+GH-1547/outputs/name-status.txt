@@ -1,0 +1,6 @@
+A	PROJECT/2-WORKING/GH-1547-KS04-KICKSTART-STATUS.md
+A	relay-system/2026-11-20/gh1547-plan-qa.md
+M	releases.db
+M	releases.sql
+M	skills/1-hourly/kickstart/SKILL.md
+A	skills/1-hourly/kickstart/scripts/kickstart_status.py

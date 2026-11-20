@@ -15,7 +15,7 @@ roadmap_id: rmi-01M7W0NS5BZNRPBKBJP51QQ5M1
 
 | What was just completed | What's next |
 |---|---|
-| Addressed all 3 Codex Plan QA Round 1 Majors (full 4-part stopped-ownership proof & unambiguous U3 precedence; canonical `GATE: final-QA` + actual landing separation + prefix-safe SHA matching; invocation-keyed stop-reason attribution rejecting mtime-only shared files + explicit `--harness-root`) and governance note | Complete Codex Plan QA Round 2 (`relay-system/2026-11-20/gh1547-plan-qa.md`), mark accepted-start, implement `kickstart_status.py` + `SKILL.md` mirror, record paired red/green + read-only evidence, Final QA, PR, and land |
+| Codex Plan QA Round 3 approved (`8a369120`), implemented `kickstart_status.py` + `SKILL.md` mirror (`ee70eced`), passed all paired red/green, U3/U10/final-QA/stop-reason, GH-1527 live read-only check, `mypy`, and PDDA gate (`TESTS-RESULTS/2026-11-20+GH-1547/`) | Complete Codex Final QA (`relay-system/2026-11-20/gh1547-final-qa.md`), push branch, open PR, and land from pinned `LANDING_CLONE` |
 
 ## Goal & Scope (refs #1547, #1541 v5 KS-04 + U3 + U10, #1536)
 
@@ -115,4 +115,4 @@ Build `skills/1-hourly/kickstart/scripts/kickstart_status.py` (Python stdlib onl
    - Conflicting payload `invocation_id=B` paired with matching-A sidecar `.meta.json` → `unknown (unattributable)`
    - Single self-contained structured shared payload matching `--invocation-id` (JSON or keyed lines) and exclusive per-run `--receipt` → quoted verbatim
 7. **GH-1527 Read-Only Live Check:** live `kickstart_status.py` run with logging `git` shim on `PATH` and before/after `git show-ref`, `FETCH_HEAD` stat/sha256, `git count-objects -v` → 0 mutating git calls, all 3 snapshots byte-identical.
-8. **Static & Governance Gates:** `utils/ci-route.sh pull_request` (`route=docs`), `mypy --allow-untyped-defs --allow-incomplete-defs`, `./utils/pdda/pdda.sh run` (0 errors), zero raw `/Users/` paths, full `provenance.jsonl`.
+8. **Static & Governance Gates:** `utils/ci-route.sh pull_request` (`route=docs`), `mypy --allow-untyped-defs --allow-incomplete-defs`, `./utils/pdda/pdda.sh run` (0 errors), zero raw `<home-dir>/` paths, full `provenance.jsonl`.
