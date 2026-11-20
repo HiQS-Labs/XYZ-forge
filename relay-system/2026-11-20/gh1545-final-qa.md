@@ -1,8 +1,8 @@
 # Relay: GH-1545 (KS-03) Final QA — Launch Authority Defaults
 
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 2 / 3
-STATUS: Open
+STATUS: Approved
 PRODUCER: antigravity
 REVIEWER: codex
 ARTIFACT: skills/1-hourly/kickstart/scripts/build_queue.py
@@ -51,5 +51,23 @@ Addressed the single Round 1 `[Unverified — required full-range review input]`
    - Both files hashed with `size_bytes`, `sha256`, `pre_change_sha`, `candidate_sha`, and exact command in `TESTS-RESULTS/2026-11-20+GH-1545/provenance.jsonl` (now 9 entries total, zero raw user paths).
 
 Ready for Round 2 Final QA sign-off. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` on PASS, and flip `NEXT: Producer`.
+
+## Reviewer codex — Round 2
+
+VERDICT: PASS
+
+Basis: Round 1's bounded evidence gap is resolved. Inspected the retained implementation patch, full-range name-status inventory, seeded source, and recorded manual-check receipts. The patch changes only AUTHORITY in the Python implementation; classification, flags, and executable read/write paths are untouched. All four KS-03 defaults and the ungranted status remain accurate, with the runbook mirroring the authority boundary. SQL changes are limited to GH-1545 pickup/start records and their generation/receipt/event bookkeeping. The inventory introduces no test suite or runner. Evidence clearly distinguishes recorded run-1 observations, synthetic decision controls, and unclaimed run-2/downstream runtime outcomes.
+
+Verification this turn (standard-library, non-mutating probes; no Git command, executable fixture, test suite, or gate):
+- Command: `python3` provenance probe using `json.loads`, `Path.read_bytes`, and `hashlib.sha256` for every row in `TESTS-RESULTS/2026-11-20+GH-1545/provenance.jsonl`, asserting nonempty bytes, exact size and digest; recursively scan those evidence bytes for `/Users/|/home/`. Exit 0: `PROVENANCE_OK 9`, `RAW_PATHS []`.
+- Command: `python3` parse retained unified patch, compare each added line with the seeded destination and calculate Git blob IDs directly using `hashlib.sha1(b"blob " + str(len(b)).encode() + b"\0" + b)` (no Git executable). Exit 0: `PATCH_ADDITIONS_MATCH` and `CANDIDATE_BLOB_MATCH ... True` for all five destinations: CHANGELOG, active plan, releases.sql, kickstart/SKILL.md and build_queue.py. Source blob is `b66b5cab2a3a49e718a896949f3a4aba492c640e`, matching the patch. Thus the seeded implementation/doc/SQL bytes still match the reviewed candidate despite the inventory and patch naming different range endpoints.
+- Command: `python3` AST literal extraction of AUTHORITY, format with `owner="noelsaw1", other=" (#1400, #1418)"`, compare with retained changed output, and compare retained output suffixes beginning `## Queue (execution order)`. Exit 0: `AUTHORITY_AND_QUEUE_MATCH True`.
+- Inspected retained transcript: eleven pre-change red / changed green clause checks, ten paired decision assertions, deterministic output and read-only invariance, tier-1 routing, and mypy success. These are producer receipts, not newly executed reviewer tests. The retained PDDA receipt and Round 1 inspection remain the gate evidence; fresh reviewer gate execution is **[Unverified — needs clone run]**. No later gate is assumed, and this approval grants no live run-2 or promotion qualification credit.
+- Graph inventory has no project for this seeded worktree. Nearest Forge graph generation is `2026-11-18T19:39:07Z`; coverage reports freshness `missing` for source, runbook and plan. Direct seeded files and retained patch were used instead of stale structural evidence.
+
+No blocking defect found in the reviewed template change. The retained patch covers source/doc/SQL rather than binary database bytes; database integrity and the GH-1545 row were checked read-only in Round 1, not re-executed here.
+
+swept file: yes
+VERDICT: PASS
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
