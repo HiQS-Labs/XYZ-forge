@@ -1,7 +1,7 @@
 # Relay: GH-1547 (KS-04) Final QA — Read-Only kickstart_status.py Derived Status Report
 
-STATUS: Open
-NEXT: Reviewer
+STATUS: Approved
+NEXT: Done
 ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -104,3 +104,28 @@ Both Major findings and the evidence summary corrections are applied (`2fc5e917`
    - Re-ran `mypy --allow-untyped-defs --allow-incomplete-defs` (0 issues), `./utils/pdda/pdda.sh run` (0 errors), regenerated `outputs/name-status.txt`, `outputs/code-and-docs-diff.patch`, and `provenance.jsonl`.
 
 Please re-review Round 2. If clean, set `STATUS: Approved` and `NEXT: Done`.
+
+
+## Reviewer Round 2 — codex
+
+**Verdict: Approved.** Both Round-1 Major findings are resolved in the seeded candidate identified by the producer as `227a3fbcc080a9280ac01913358b1197138b25b9`. No remaining blocker was found in this focused re-review.
+
+- Optional event bullets are normalized before both legacy amendment recognition and APPLIED recognition, and before excluding canonical events from item/landing summaries.
+- Attempt selection now uses the canonical origin-to-directory convention and excludes foreign repository directories before remote lookup. Explicit record identity mismatches remain unknown; unresolved target identity withholds the scan and live remote lookup. The canonical `attempt_record.py` slug implementation was read directly and matches the new helper.
+- Round-2 corrects the CLI and liveness evidence descriptions. The refreshed transcript contains both regression checks, and all ten nonempty retained evidence files match their inventory byte counts and SHA-256 hashes.
+
+**Independent narrow probe:** executed `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PROBE' … PROBE` (exit **0**). The Python body imported the seeded module with `importlib.util.spec_from_file_location`, called `_load_run_record_module()`, and asserted the following against temporary records created solely with `tempfile.TemporaryDirectory()` under the exported scratch directory:
+
+1. For both bare and `- ` prefixed legacy OA-1 amendment lines, `_extract_progress_summary(text, rr.parse_record(text))["unapplied_amendments"]` contained exactly OA-1 with `legacy_unparsed: true`; appending the correspondingly prefixed APPLIED line emptied it.
+2. Target and foreign directories each held PR 123, with the same attempt SHA and an offline MERGED map. `_scan_stale_attempts(root, "HiQS-Labs/XYZ-forge", remote)` scanned exactly one record, excluded exactly `OtherOrg-OtherRepo`, and returned MERGED only for the target. Changing the target record's repo to `OtherOrg/OtherRepo` returned `repo_mismatch: true`, `remote_state: unknown`, and `head_matches_attempt: None`. Passing no repo identity scanned zero records. Replacing `subprocess.run` with a function raising on any invocation proved `_fetch_remote_pr_state(123, None, None)` returns unknown without a subprocess.
+3. Loaded each JSONL inventory entry, read its retained file, and asserted nonempty bytes, exact byte count, and `hashlib.sha256(b).hexdigest() == r["sha256"]`.
+
+Decisive stdout:
+
+```text
+PASS: bare/bulleted legacy surfaced and cleared
+PASS: dual-repo isolation, mismatched identity unknown, unresolved lookup withheld
+PASS: 10 provenance entries match nonempty retained files
+```
+
+**Scope and limits:** This is a focused re-review of the Round-2 corrections, carrying forward Round-1's broader source review. Graph project/status and coverage were checked: canonical Forge generation remains `2026-11-18T19:39:07Z`, with the status/parser paths missing from that indexed checkout. Current seeded source was therefore inspected directly; no graph completeness claim is made. Retained producer checks were inspected, not independently replayed as full gates. No git command, test suite, executable fixture, or gate was run, and approval does not assume a later gate. Only this relay file was edited; probe records remained in exempt scratch.
