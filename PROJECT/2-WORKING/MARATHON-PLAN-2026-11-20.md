@@ -204,7 +204,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
 - #1050 marathon memory telemetry: no false low-swap warning on hosts with no swap — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
-- #1573 Hosted wave-reconcile lane needs attention — `needs-doc`
 - #1569 build_queue --daily-goals admits #N references from prose, not just checklist items — `needs-doc`
 - #1568 Daily goals 2026-11-20: kickstart run 2 (#1541 trial) — `needs-doc`
 - #1567 merge-cleanup refuses .tick clones as "tick binary not found" although tick is installed: per-Mac harness config is never prompted when repos vendor .xyz — `needs-doc`
@@ -345,6 +344,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #802 Retrospective: CI versus actual harness file repo issue coverage — `needs-doc`
 - #792 gen4_campaign.make_sandbox deletes the existing clone before checking it is disjoint from the source repo — `needs-doc`
 - #786 merge-cleanup: file one GH issue per PR merge batch (feeds rebalanceOS sync, Focus 5, Flightdeck) — `needs-doc`
+- #785 merge-cleanup: a hold-labelled or closed predecessor does not block its hard dependents — `needs-doc`
 
 ## How to fire a lane
 
