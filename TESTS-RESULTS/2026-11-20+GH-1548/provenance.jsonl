@@ -1,8 +1,7 @@
-{"path": "TESTS-RESULTS/2026-11-20+GH-1548/manual-check.md", "bytes": 3730, "sha256": "333644618dff283a0b270af5fa01094f6fc46c3bd681979e5a2899ad60961f87"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/ci-route.txt", "bytes": 161, "sha256": "d5136b06c44b22151bc50750a9cc7ffcbf5257272486ec5676bd3334fc5612ac"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/code-and-docs.patch", "bytes": 22129, "sha256": "1fbe9966424207913e2c19f92a1c9d47756ceb07ac83ccc7559a27599527b384"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/controls-r3-probe.py", "bytes": 20435, "sha256": "b824d6a2f8823f087d84ae36bfd616c87df71644863654f89d52f556fc584a71"}
-{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/controls-r3.txt", "bytes": 14687, "sha256": "77884cb667d7e46622e252065880f7ff0d4cbd8850ed59d4230b07429d16e0b8"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/controls-r3.txt", "bytes": 14247, "sha256": "a14f29332473987c9fe268cd35b396cfcea1d54770df13afa8a36d48d8554b5d"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/disposable-full-gate.done.json", "bytes": 188, "sha256": "1a16e9f8c1bb57a9dc589277eb0d2a992cab7a96b0ea19e5efe8ffe09d680553"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/disposable-full-gate.log", "bytes": 34345, "sha256": "dd3b17e788afef5e91b361c5cbd4f9cdbcccdd8e761ad3e790a54fe1c113d97a"}
 {"path": "TESTS-RESULTS/2026-11-20+GH-1548/outputs/manual-controls.txt", "bytes": 2747, "sha256": "39cdedd88658f5a84c392d050b2cb96704c765afe04f5ad528b957cb0a808776"}
