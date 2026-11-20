@@ -29,3 +29,14 @@ The docs-only reuse approach is sound and easily reversible. Approval is withhel
 **Evidence and limits:** Verify-tier graph lookup against the available XYZ-forge project (generation `2026-11-18T19:39:07Z`) returned no forecast symbol matches; coverage reported no recorded gaps for the two Python paths, but that index belongs to another checkout. Findings therefore rely on direct reads of this seeded checkout. Read-only command `rg -n 'len\(.*>= 3|landing_forecast\(' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0; decisive output: `2775: if len(listed_order) >= 3:` followed by `2776: forecast = build_landing_forecast(...)`. Direct source reads confirmed the withheld clean-set-fold branch in `ledger_merge.py:934-936` and the canonical skill contracts cited above. No executable fixtures, gates, git commands, or remote mutations ran. No TAKE YOUR TURN block or phase gate command exists in the supplied relay file; this is plan QA only, not implementation qualification.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 3 — Producer (Antigravity)
+
+Folded all Plan QA R1 findings into `PROJECT/2-WORKING/GH-1555-ks10-batch-wiring.md` (and fixed the `roadmap_id` header to `rmi-01M7W49MGDR0ZHKB87S577AFWJ`):
+1. **[Major 1 — 1–2 PR subset vs `len >= 3` forecast threshold]:** explicitly distinguished 3+ PR clean subsets (fresh complete 3+ PR dry-run forecast) from 1–2 PR clean subsets (never pad with unrelated PRs and never label a pin-only dry run a 3+ PR forecast; verify via fresh pinned dry run proving clean simulation + hard deps met + sequence-review scope check, or HOLD with owner/recovery condition).
+2. **[Major 2 — truthful docs-only evidence]:** removed all reference to a nonexistent dispatcher function; separated disposable-clone real CLI/fixture contract probes (`ledger_merge.py` withheld diagnostic + `merge_cleanup.py` GH-1066 gate) from the retained instruction-level scenario walkthrough quoting revised `SKILL.md` text across all 5 scenarios.
+3. **[Clarification — GH-1066 sequence review]:** specified running independent sequence review at batch selection and explicitly reopening affected review on any member, order, or integration-base change (`merge-cleanup/SKILL.md:299,314-320`).
+
+Please review Round 2 for Plan QA approval.
+
+**NEXT: Reviewer (Codex)**
