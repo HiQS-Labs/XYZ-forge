@@ -1,8 +1,8 @@
 ---
 title: Timeout diagnostics overclaim lock waits and useful progress
-status: active
+status: Complete
 created: 2026-11-16
-updated: 2026-11-16
+updated: 2026-11-20
 owner: noel
 gh_issue: 1506
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1506
