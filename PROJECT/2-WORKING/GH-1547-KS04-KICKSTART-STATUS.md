@@ -6,7 +6,7 @@ updated: 2026-11-20
 owner: noelsaw1
 goal: "Implement skills/1-hourly/kickstart/scripts/kickstart_status.py as a thin, strictly read-only derived report over existing run record, pr_minder --json --no-conflict-files, pinned LANDING_CLONE attempt records + remote PR state, log age / U3 liveness with full stopped-ownership proof, canonical final-QA staleness, and invocation-attributed verbatim stop reason"
 gh_issue: 1547
-roadmap_id: rmi-01M7W0NS5BZNRPBKBJP51QQ5M1
+roadmap_id: rmi-01M7W50TF9PKHZT8TVAKEXH4M1
 ---
 
 # GH-1547 (KS-04): `kickstart_status.py` Thin Derived Read-Only Status Report
