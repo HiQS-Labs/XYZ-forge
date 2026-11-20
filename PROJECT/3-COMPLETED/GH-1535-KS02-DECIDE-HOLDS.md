@@ -1,6 +1,6 @@
 ---
 title: "GH-1535 (KS-02): Operator decision releases decide holds; body/label holds across all issue types"
-status: active
+status: Complete
 created: 2026-11-20
 updated: 2026-11-20
 owner: noelsaw1
