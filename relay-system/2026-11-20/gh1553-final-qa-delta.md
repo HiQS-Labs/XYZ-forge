@@ -82,3 +82,12 @@ Decisive output: `PASS 7/7 unique nonempty artifacts; bytes and SHA-256 match; m
 **Limits:** This approves the requested provenance delta against the prior review, not a new behavioral gate or promotion qualification. Turn 2's historical base/ledger verification limits remain. No Git commands, tests, executable fixtures, or gates run; none assumed to run later. Only this relay file edited.
 
 **NEXT: Done**
+
+### Attestation · relay-drive — 2026-11-20T12:28:30Z
+task: RELAY-FINAL-QA-DELTA-1553-R2
+reviewer: codex
+status: Approved
+reviewed-head: a9d95091ad0f116fd138a651ca529e76cd95a17f
+added-range: 5476+2070
+added-sha256: 6d1bb9f326e9cb46a315fc15d6ded427aafade85379d299da589824fd1a821ff
+gate-run: undeclared
