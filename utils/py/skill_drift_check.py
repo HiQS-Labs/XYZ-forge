@@ -37,9 +37,12 @@ def scan(canonical: Path, collection: Path) -> dict:
     # them one level down. Both are canonical layouts, so scan both depths.
     # GH-1499: a vendored `.xyz/skills` tree keeps the forge's tier layout too, so the collection is
     # scanned at both depths; a flat Deployed Skills collection still matches at depth one.
-    vendored_by_name = {}
-    for md in sorted(list(collection.glob("*/*/SKILL.md")) + list(collection.glob("*/SKILL.md"))):
-        vendored_by_name[md.parent.name] = md   # depth one wins when a name exists at both depths
+    flat = {md.parent.name: md for md in sorted(collection.glob("*/SKILL.md"))}
+    skill_dirs = {md.parent for md in flat.values()}
+    # Depth two counts only under a tier folder, never inside a skill folder, and depth one always wins.
+    vendored_by_name = {md.parent.name: md for md in sorted(collection.glob("*/*/SKILL.md"))
+                        if md.parent.parent not in skill_dirs}
+    vendored_by_name.update(flat)
     canonical_names = set()
     for skill_md in sorted(list(canonical.glob("*/SKILL.md")) + list(canonical.glob("*/*/SKILL.md"))):
         name = skill_md.parent.name
