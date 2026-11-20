@@ -1,8 +1,8 @@
 # Relay: GH-1543 (KS-15) Final QA Delta — CodeRabbit Major Fixes
 
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 1 / 3
-STATUS: Open
+STATUS: Approved
 PRODUCER: antigravity
 REVIEWER: codex
 ARTIFACT: skills/1-hourly/kickstart/scripts/run_record.py
@@ -78,5 +78,42 @@ index 26a14035c..83ad7d7e8 100755
 Verify the 5-fix delta in `skills/1-hourly/kickstart/scripts/run_record.py` and the updated section-6 evidence/provenance in `TESTS-RESULTS/2026-11-20+GH-1543/`. End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis, set `STATUS: Approved` only on PASS, and flip `NEXT: Producer`.
 
 ## Log
+
+## Codex reviewer — round 1
+
+Ship. No blocking finding in the five-fix delta.
+
+Basis: swept the complete seeded `.relay-artifacts/run_record.py` and compared it byte-for-byte with the named source (identical). The quoted Authorization rule removes the Basic value; canonical resolution precedes sibling-lock construction and missing-file refusal precedes lock creation; LANDING_CLONE parser errors stop checkpoint before checkout; status explicitly requests all untracked files; the ignored/untracked destination check precedes the write, permits tracked destinations, and restores the starting ref on refusal. These extend existing mechanisms without a parallel writer.
+
+Read section 6 and its retained transcript: JSON redaction and symlink-target update succeed; duplicate LANDING_CLONE and hidden untracked-file controls refuse; ignored destination refuses with original content and development branch preserved. Recomputed all eight provenance entries: every artifact is nonempty and its size and SHA-256 match; all entries name candidate c6d5060587bcd10c1bb2d7f04d2cae0c253a042d.
+
+Independent read-only probe (exit 0; environment `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`):
+
+```python
+import hashlib, json, runpy
+from pathlib import Path
+m = runpy.run_path('.relay-artifacts/run_record.py')
+print('seed_equals_source=', Path('.relay-artifacts/run_record.py').read_bytes() ==
+      Path('skills/1-hourly/kickstart/scripts/run_record.py').read_bytes())
+for line in Path('TESTS-RESULTS/2026-11-20+GH-1543/provenance.jsonl').read_text().splitlines():
+    r = json.loads(line)
+    b = Path(r['artifact']).read_bytes()
+    print(r['artifact'], 'nonempty=', bool(b),
+          'hash_ok=', hashlib.sha256(b).hexdigest() == r['sha256'],
+          'size_ok=', len(b) == r['size_bytes'])
+for s in ['{"Authorization": "Basic dXNlcjpwYXNz"}',
+          "{'Authorization': 'Basic dXNlcjpwYXNz'}"]:
+    print('redact=', m['redact_text'](s).strip())
+for s in ['RUN-RECORD-VERSION: 1\nLANDING_CLONE:\n',
+          'RUN-RECORD-VERSION: 1\nLANDING_CLONE: /a\nLANDING_CLONE: /b\n']:
+    print('lc_errors=', m['parse_record'](s)['errors'])
+```
+
+Command: `python3 - <<'PY'` with the above body and closing `PY`. Decisive output: `seed_equals_source= True`; eight rows each `nonempty= True hash_ok= True size_ok= True`; both quoted Authorization forms contain only `[REDACTED]`; errors are `line 2: LANDING_CLONE header is empty` and `duplicate LANDING_CLONE headers at lines [2, 3]`.
+
+Limitations: Git/checkpoint/concurrency scenarios were assessed from source and the retained, hash-verified producer evidence, not rerun here. No Git command, fixture, suite, or gate was executed in this reviewer turn, and no future gate is assumed. Graph generation 2026-11-18T19:39:07Z belongs to the main checkout and reports both evidence paths missing; direct full-source review supplies the evidence instead. This PASS is the requested delta review, not promotion qualification.
+
+swept file: yes
+VERDICT: PASS
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
