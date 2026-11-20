@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1049,
+  "execution_id": "gh1049-exec2",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1049-dep-drift-absent-surface-2026-11-15",
+  "pr_number": null,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "36e553c642c06ac0597e13b8b26602417773068adbff303f5c13f4df9b6b92c8",
+    "gate-receipt.json": "5dcea47fdce8981d2c3fb5bed4f0b600ef9f1fdc6edc03d86de81feb842cafa6",
+    "provenance.jsonl": "91d55df5d9f18ddbbd7500258a2d638652189c20781076091fa29750957665b0"
+  }
+}
