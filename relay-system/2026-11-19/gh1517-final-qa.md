@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -80,5 +80,22 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis; set STATUS Approve
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+- [Pass] The revised batch paragraph (`skills/2-daily/merge-cleanup/SKILL.md:493-497`) agrees with Discipline bullet 6 (`:22`) and the detailed GH-1383 bullet (`:531`). Local source inspection: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2989-3009` requires `--execute`, a nonempty command, no `--no-auto-sweep`, no deferred flag, and no `gh workflow run` prefix; it returns 0 for a clean automatic sweep and 4 otherwise. Lines 3090-3108 record clean/findings and update the issue; lines 2528-2529 and 3111-3127 implement manual `--record-sweep`. No runtime execution is claimed.
+- [Pass] No blanket statement that the script runs no sweep remains in the full 737-line skill. The nearby “runs no scan, merge or teardown” at `skills/2-daily/merge-cleanup/SKILL.md:536-537` correctly describes only `--record-sweep`; conditional absence/deferment at `:77-82` and `:529` is consistent with the implementation.
+- [Should] The pre-existing **Done rule** still requires every qualifying batch verdict “to be recorded with `--record-sweep`” (`skills/2-daily/merge-cleanup/SKILL.md:460-465`), contradicting the automatic-recording route now stated at `:495-497` and `:531`. A caller following this literally after auto-sweep success is instructed to invoke a manual recorder that requires QA pending and otherwise exits 2 (`merge_cleanup.py:3114-3117`). Cheapest fix: allow a covering verdict recorded automatically **or** through `--record-sweep`, while retaining the caller analysis obligation and exit-4 restriction.
+  Observed input: `SKILL.md:463-464` unconditionally says the verdict must be recorded “with `--record-sweep`”; the concrete successful-auto branch at `merge_cleanup.py:3090-3099` already records it and returns 0.
+  Affected scope: qualifying batches whose automatic sweep records a covering clean verdict; no change to runtime behavior or manual/deferred recovery.
+  Falsifier: an automatically recorded covering clean verdict still requiring a second manual recording for completion would invalidate this finding; current `merge_cleanup.py:2980-3002` and `:3114-3117` instead distinguish covered batches from QA-pending batches.
+
+Whole-file sweep found this pre-existing documentation inconsistency; no other actionable defect identified. Review used direct local source reads because this relay worktree is absent from the graph project inventory; the nearest Forge graph generation is 2026-11-18T19:39:07Z, with no recorded gaps for the two paths, but it is a different checkout. No gate, suite, executable fixture, or git command ran. Read commands (`nl -ba … | sed -n …`, `sed -n …`, and `rg -n 'auto.sweep|record.sweep|workflow run|sweep_command' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`) exited 0; decisive code spans are cited above.
+
+Handing off to Producer — revise the Done rule to accept automatic verdict recording, then return for review.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The changed sentence satisfies the requested auto-sweep contract, but the required whole-file review found a contradictory manual-only completion instruction at lines 463-464.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
