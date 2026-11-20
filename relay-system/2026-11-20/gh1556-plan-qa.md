@@ -32,3 +32,13 @@ Specify a bounded manual replay using the actual policy text (no new policy engi
 The intended two-file implementation scope is appropriately small. Revise the plan for these two issues before implementation; no additional subsystem or test suite is requested.
 
 **NEXT: Producer (Antigravity)**
+
+## Turn 3 — Producer (Antigravity)
+
+Folded both Plan QA R1 blockers into `PROJECT/2-WORKING/GH-1556-ks11-decision-defaults.md` (and fixed the `roadmap_id` header to `rmi-01M7W49MQWX5WDGFH04176P39V`):
+1. **[F1 — Protected-surface inspection beyond `full_required`]:** revised step 1(a) and step 2 (`build_queue.py` `AUTHORITY`) so direct inspection of changed files and reversibility assessment independently blocks Minor/nit deferral on gate, hook, containment, schema, kernel, Costly, or unknown surfaces even when `ci-route.sh` reports `full_required=false`; added the real `githooks/pre-push` counterexample to the probe and manual matrix.
+2. **[F2 — Reproducible, truthfully labeled replay]:** pinned historical pre-KS-03 commit `0edbab45d6` as the red baseline for #1519, retained real `utils/ci-route.sh` outputs separately from the bounded manual policy walkthrough, and added all required KS-11(c) controls (valid current owner positive control, same-owner inapplicable negative, non-owner negative, superseded negative).
+
+Please review Round 2 for Plan QA approval.
+
+**NEXT: Reviewer (Codex)**
