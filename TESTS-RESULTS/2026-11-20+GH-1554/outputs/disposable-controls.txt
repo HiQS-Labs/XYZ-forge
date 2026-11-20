@@ -1,11 +1,118 @@
-=== CONTROL 1A: Changed build_queue.py Bucket C Output (Executable) ===
-PASS: 1. Mergeability UNKNOWN or behind: #1501 Sample behind PR. Refresh their state, then land them as one merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.
+=== CONTROL_1A_RED_PIN_MISMATCH (rc=2) ===
+PIN_KEY=xyz.primary.repo-7640ec7706729605e696547d
+PINNED=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+PASSED=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/wrong_primary
+STDOUT:
 
-=== CONTROL 1B: Pinned Primary Enforcement & Single LANDING_CLONE (Executable CLI) ===
-Green pinned LANDING_CLONE --scan-only: rc=0
-Red invalid --primary refusal: rc=2 msg=merge-cleanup: ERROR — cannot read merge policy /private<tmp-dir>/missing-primary/.merge-cleanup.json: [Errno 2] No such file or directory: '/private<tmp-dir>/missing-primary/.merge-cleanup.json'
+STDERR:
+merge-cleanup: ERROR — cannot resolve the primary path '/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/wrong_primary': --primary differs from the pinned Jog primary: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
 
-=== CONTROL 2: Exit-4 --record-sweep with verdict: deferred (Executable CLI) ===
-batch_record inspection: batch_record attrs: ['qa_pending', 'record_verdict', 'unfinished_batches']
-Real --record-sweep with no pending batch (fail-closed): rc=2 msg=merge-cleanup: ERROR — no merge batch with QA pending for /private<tmp-dir>/landing-clone on 'development'
-Disposable clone git status: (clean)
+
+=== CONTROL_1B_GREEN_PINNED_PRIMARY (rc=0) ===
+STDOUT:
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/landing_pinned
+  branch: development  (integration: development)
+  clean: yes
+  landing: NOT READY
+    - 7 local commit(s) on 'development' are not on origin — push or explicitly abandon them first
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+Scanned roots: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/Documents/GH Repos, /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/agent-workspaces, /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/Documents/agent-workspaces, /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie/home/marathon-clones (skipped /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpfq3v46ie: NEVER_DELETE root)
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `landing_pinned` | standalone_clone | `development` | ✅ | 🔥 Active (9140 in 10m) | 0 | ⚠️ 2 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+
+merge-cleanup: No open PRs found for this repository.
+
+STDERR:
+
+
+=== CONTROL_2A_RED_REASONLESS_DEFERRED_CLI (rc=2) ===
+STDOUT:
+
+STDERR:
+merge-cleanup: ERROR — verdict not recorded: a deferred verdict needs a reason
+
+
+=== CONTROL_2B_GREEN_RECORD_SWEEP_CLI (rc=0) ===
+STDOUT:
+merge-cleanup: verdict deferred recorded for #9901, #9902
+
+STDERR:
+
+BATCH_VERDICT={
+  "at": "2026-11-20T10:34:59Z",
+  "body": "Full post-merge sweep deferred to promotion gate per repo promotion policy (GH-1554 KS-09 control).",
+  "covers": [
+    9901,
+    9902
+  ],
+  "value": "deferred"
+}
+
+=== CONTROL_3_ACTIVE_HOSTED_RUN_TRANSITIONS ===
+run_local_wave_reconcile(9901, landing_pinned) with child_rc=8 -> False (wrapper exits 2)
+run_local_wave_reconcile(9901, landing_pinned) with child_rc=0 -> True (reconcile completes)
+state_active={"action": "PRESERVE_AND_WAIT_HOSTED_RUN", "force_local_reconcile": false, "re_merge": false}
+state_cleared_within_deadline={"action": "run --reconcile-pr <N> --execute", "force_local_reconcile": false, "re_merge": false}
+state_deadline_expired={"action": "HOLD_AND_HAND_BACK", "force_local_reconcile": false, "re_merge": false}
+state_exit2_not_merged={"action": "INSPECT_PREFLIGHT_OR_PIN_FAILURE_DO_NOT_ASSUME_MERGED", "force_local_reconcile": false, "re_merge": false}
+
+=== CONTROL_BUCKET_C_BUILD_QUEUE_REFRESH (rc=0) ===
+<!-- build_queue.py (GH-1527) as of 2026-11-20; window 14 days; inputs: pr_minder.py --json, gh pr list, gh issue list -->
+
+## Authority granted (one grant, covers the whole run)
+- Merge PRs authored by noelsaw1 when ALL hold: development is merged in where needed; the classified
+  gate is green on that exact SHA; independent cross-model QA has approved the final head; hosted
+  checks are green; and EITHER CodeRabbit has reviewed the current head with no open Major OR 30 min
+  have passed since a "@coderabbitai review" request on the current head with no review. Re-read
+  reviews immediately before the merge. Record the timeout path as "advisory not received;
+  predeclared waiver used", never as reviewed or approved. Any Major that CodeRabbit posted blocks
+  until it is fixed or answered.
+- Close issues whose acceptance criteria are verified on development, with a comment that cites
+  the commit.
+- Post status comments on PRs and issues.
+- Decision defaults (KS-11, fail-closed):
+  - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
+    head. Minor/nit findings may be deferred only when the reviewer explicitly tagged them Minor/nit
+    and accepted the deferral; otherwise park and continue independent work. Never auto-accept on
+    gate, hook, containment, schema, kernel, or Costly surfaces (utils/ci-route.sh full_required). A
+    PR landed with accepted Minor/nit deferrals states so explicitly and never claims Approved beyond
+    what the reviewer stated.
+  - Conflict hubs (KS-11b): conflict hubs reported by the merge-cleanup forecast route to a separate
+    recorded batch.
+  - Operator decisions (KS-11c / KS-02): release holds only when authored by noelsaw1, applicable,
+    and not superseded.
+- Provider quota fallback: when the reviewer seat's stop reason verbatim states quota, switch that
+  turn's reviewer to agy and record the actual model name; if both providers are capped, park. Never
+  infer quota from a round cap or generic failure.
+- Flywheel per-PR approval: once granted below, this launch grant satisfies Flywheel's per-PR merge
+  approval step (skills/2-daily/flywheel/SKILL.md:109-120) for noelsaw1 PRs within these bounds;
+  exact full-SHA --prs N@<approved-full-sha> pin verification before --execute still applies.
+- Out of scope, so the run stops and asks: merging anyone else's PR, deploys, installed-skill updates,
+  ledger rewrites outside the reconcile, anything owned by another session.
+- Status: NOT YET GRANTED. The parent records the operator's grant here before dispatch.
+
+## Queue (execution order)
+1. Mergeability UNKNOWN or behind: #1554 KS-09 landing path. Refresh their state, then land them as one merge-cleanup batch from the pinned LANDING_CLONE (--primary "$LANDING_CLONE"; the fold/aggregate policy applies to 3+ PRs). Merge-cleanup reconciles after each verified merge; run one post-batch sweep at the end.
+2. Final QA pass on development: tier 1, plus the full gate in a disposable clone.
+
+## Needs the operator (the run parks these and keeps going)
+- (none)
+
+## Not queued (arcs, plans, research, spikes, umbrellas, radar, daily goals)
+- (none)
+
