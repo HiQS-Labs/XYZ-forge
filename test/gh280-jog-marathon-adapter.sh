@@ -794,7 +794,7 @@ grep -q 'module.exports = 2' "$FT/src/feature.js" \
 
 # I7: --dry-run unchanged — hermetic plan, no notice, no reviewer requirement, zero mutation
 cleanup_root_fixture
-I7_OUT="$(jog_run_root --dry-run 2>&1)"; rc=$?
+I7_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --dry-run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && has "$I7_OUT" "would process 1 pending item" \
   && ! has "$I7_OUT" "relay executor is legacy" \
   && pass "I7 --dry-run unchanged (plan only, no notice, no reviewer needed)" \

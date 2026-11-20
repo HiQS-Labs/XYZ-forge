@@ -1,0 +1,10 @@
+{
+  "candidate": "97aa938be8472214abeca429fbac45a43f64621c",
+  "original_head": "452cc4d6cbd094b3951f7582aa089b27cd6e1267",
+  "current_head": "2036d17db8f42d7f0b142dae4c622d4bbf26dc7f",
+  "containing_branches": "",
+  "starts": "901\n902\n",
+  "rc": 0,
+  "pass": false,
+  "predicate": "unique detached work remains current or preserved under a named branch"
+}

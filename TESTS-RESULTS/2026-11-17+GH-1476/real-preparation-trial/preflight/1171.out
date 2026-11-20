@@ -1,0 +1,182 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-17T19:15:03Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "capture-branch"
+  },
+  "provenance": {
+    "source_docs": [
+      "/private/tmp/gh1476-real-preparation-trial/prepared-1171/capture-branch.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1476-preparation-trial-2026-11-17-gate",
+    "branch": "development",
+    "commit": "6000f3de1e24995806eb151bc1720b7cff77350a",
+    "suggested_branch": "marathon/capture-branch-2026-11-17",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh376-relay-drive-lock-parity.sh",
+    "round_cap": 2,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "python3 TESTS-RESULTS/2026-11-11+GH-1171/manual_probe.py",
+        "expect_nonzero": true
+      }
+    ],
+    "artifacts": [
+      "utils/py/relay_drive.py",
+      "TESTS-RESULTS/2026-11-11+GH-1171/"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#1171",
+      "criteria": "Recognize verified local or origin branch refs before path existence enforcement in the Python relay preflight. Keep genuine missing path rejection and URL/embedded-artifact handling. Do not change the frozen Bash twin. Record branch and missing-file manual controls; use existing relay coverage."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "6000f3de1e24995806eb151bc1720b7cff77350a",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1171 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "0 issue criteria reconciled: 3 deviation(s) declared and accounted for",
+      "issue": "1171",
+      "dropped": [],
+      "added": [],
+      "declared": 3
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1171 (https://github.com/HiQS-Labs/XYZ-forge/issues/1171)",
+      "issue": "1171",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1171",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/relay_drive.py",
+      "TESTS-RESULTS/2026-11-11+GH-1171/",
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/relay_drive.py",
+      "TESTS-RESULTS/2026-11-11+GH-1171/",
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

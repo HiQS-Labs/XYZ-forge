@@ -1,0 +1,20 @@
+# usage: python3 p13.py <scripts-dir> <label>
+import sys, os, tempfile, argparse
+from pathlib import Path
+scripts, label = sys.argv[1], sys.argv[2]
+sys.path.insert(0, scripts)
+import merge_cleanup as mc
+primary = Path("/tmp/gh1475-manual/p11-new/primary")
+def run(case, prs, stub):
+    tmp = tempfile.mkdtemp(prefix=f"p13-{label}-{case}-", dir="/tmp/gh1475-manual")
+    os.environ["TMPDIR"] = tmp; tempfile.tempdir = None
+    if stub: mc.refresh_pr_with_retry = lambda n, p, *a, **k: {"error": "simulated network failure"}
+    args = argparse.Namespace(integration_branch="development", strategy=None, resume=False, prs=[])
+    try:
+        rc = mc._land_prs_loop(prs, primary, args, dry_run=True)
+    except Exception as e:
+        rc = f"raised {type(e).__name__}: {e}"
+    left = [d for d in os.listdir(tmp) if d.startswith("merge-cleanup-")]
+    print(f"{label} {case}: rc={rc} merge-cleanup-* left={len(left)}")
+run("clean", [], False)
+run("deferred", [{"number": 9001, "headRefName": "x", "baseRefName": "development", "title": "t"}], True)

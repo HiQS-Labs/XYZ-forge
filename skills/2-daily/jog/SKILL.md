@@ -7,6 +7,44 @@ description: Immediate serial task queue execution engine and conversational cap
 
 `jog` manages a serial queue of tasks for immediate execution today. It provides conversational task intake and runs tasks one by one with zero concurrency overhead, using `releases.db` (`jog_queue` table), the outer `relay-driver.lock`, and `swarm-preflight`. Since the GH-280 recalibration, per-task execution defaults to Marathon's reviewed one-phase driver (`--executor marathon`); `--executor relay` keeps the legacy single-phase `relay-drive` path as the documented rollback during a bounded compatibility window.
 
+## Bounded composed wake (GH-1400)
+
+For an already selected/prepared queue, invoke the existing runner with
+`releases jog run --target-root <execution-clone> --builder codex --reviewer agy
+--max-tasks 2 --supervise-until <UTC-epoch-seconds>` (one shell line).
+An optional `--checkpoint-root <publication-clone>` retains the existing primary
+publication owner. This is an operator-invoked wake, not an installed scheduler.
+
+The wake recovers latest approved results before dispatch, publishes their existing
+receipts and leaves them awaiting landing without another builder. Missing, mismatched
+or failed results remain held for an explicit retry decision. It then aligns the execution
+clone to freshly fetched development, preserving ahead development under
+`jog-preserved-development-<full-SHA>`, all other branches and untracked files. Tracked
+changes, dependent worktrees, unknown/live/stopped lock owners or an untracked overwrite
+collision hold; nothing is reset, cleaned or discarded. Keep preserved branches for review.
+
+Each selected pending item counts toward max-tasks, including a readiness refusal. Current
+Swarm preflight still gates dispatch. Newly approved published PR results permit
+continued independent pending work, and so does one task-local failure: a valid receipt for
+the execution just run whose own gate ran and failed (`escalated`, reason `pre-advance-failed`,
+exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row stays `failed`
+with its reason and receipt path and is never retried. Every other failure (lock contention,
+guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
+change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
+Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon
+attempts and legacy Jog orphan thresholds persist. This wake never calls retry-build or
+renews a retry budget. Reinvoke with the same absolute deadline after an interruption;
+expired deadlines refuse. Preflight/worker groups receive the remaining dispatch time;
+cancellation stops the owned group. Publication gates and cleanup retain their own clocks
+and may end after dispatch cutoff. No global wall-time or whole-process-tree guarantee is
+claimed for children that escape those existing owners.
+
+RAW requests remain accepted by Conveyor/preparation; do not put prose into Jog admission.
+Research-depth defaults remain owned by GH-1476. No merge, deployment, new API spend or
+schedule activation follows from preparing this command. Agent Orchestrator's durable
+result-adoption and explicit wait concepts informed GH-1474; this composes Forge primitives
+without copied AO source. No persistent agent context or exactly-once external effects.
+
 ## Conversational Triggers
 
 When the operator speaks naturally:
@@ -24,6 +62,83 @@ When the operator speaks naturally:
   4. Creates the roadmap row at pickup (`releases roadmap pickup --issue-num <num>`) with rating from the issue body/doc.
   5. Enqueues into `jog_queue` (`releases jog add <num>`).
   6. Confirms the newly created issue number and queue position with the operator.
+
+## Preparation handoff (GH-1439)
+
+“Prepare N bugs for Jog”, “preflight this queue”, or “make this ready for another
+operator/device” uses the following existing workflow before enqueue/dispatch.
+Preparation alone does not fire builders. An explicit execution request continues
+through these steps into the existing runner without asking again for routine setup.
+For multi-lane marathon planning, use start-marathon instead; do not create a second
+queue or invent a JSON import format.
+
+1. **Reuse real work and authority.** Reconcile selected issues against current source,
+   open PRs, retained candidates and historical queue/native attempts. Name the ordered
+   IDs, exact acceptance and write sets; retain existing ratings/counters. Use the
+   existing capture/RELEASES writers and independent plan review where required.
+   Reuse already-valid preparation rather than repeating inventory or rebuilding a candidate.
+2. **Resolve the actual machine and engine.** Record canonical origin, integration ref,
+   harness source revision, skill deployment receipt and vendored runtime revision.
+   Skills Army HQ owns instruction installation; supported xyz-vendor owns `.xyz`.
+   Updating one does not update the other. Verify the harness interpreter and product
+   test interpreter separately; a binary named `python3` is not a version/dependency proof.
+   Preserve dirty/divergent clones; use the existing full-clone/primary-pin path, not
+   destructive cleanup or a hardcoded “main folder” assumption.
+3. **Map gates to environments.** Read the target's existing CI/dependency recipes.
+   Associate each declared gate with its actual interpreter, dependency set, local service
+   prerequisites and working directory. Do not combine incompatible app/service pins.
+   Where separate environments are needed, use existing gate commands with explicit
+   verified interpreter paths/configuration; do not add a wrapper runner. Prove required
+   configuration is nonempty and missing configuration refuses. Keep secrets out of receipts.
+   Run relevant baseline checks in disposable full clones; classify existing failures
+   separately from the intended bug control. No product/service deployment is implied.
+4. **Verify roles and capacity once, near dispatch.** Resolve explicit supported builder
+   and independent reviewer identities, exact model/effort/auth route and effective limits.
+   Same-provider roles must remain distinct. Reuse the installed route/auth validation
+   and one small bounded real request through the selected review route; version/help or
+   dry-run is not capacity proof. A successful request is availability now, not reserved
+   credits for the whole run. Record UNKNOWN when unavailable; stop on credit/auth failure,
+   with no silent model/account fallback. Do not probe once per queued task unless new
+   evidence invalidates the result. Honor Claude-builder's existing explicit-user-choice rule.
+5. **Publish and align, then exercise the real boundary.** For preparation-only work,
+   record unpublished integration as pending instead of claiming dispatch readiness.
+   Once landing/publication is authorized, use the normal path and reconcile. Choose one
+   exclusive clean published development coordinator plus separate full execution and
+   checkpoint-publication clones. Fetch and normally fast-forward; prove target ledger
+   has no delta against its fresh integration tracking ref. Use supported queue admission
+   or resume/retry, preserving history. Run actual target-aware `jog run --dry-run` with
+   explicit roles/max-tasks and inspect every selected result, not an empty-queue exit0.
+   Inspect generated packet roots, nonempty/lossless criteria, artifacts, effective caps
+   and promotion-probe lint as well as Swarm readiness. Command probes must use supported
+   committed paths; a packet that parses is not proof promotion accepts its command.
+6. **Hand off one bounded invocation and observe.** Record the actual command with
+   target/checkpoint roots, selected order, UTC deadline/closeout reserve, remaining
+   attempt budgets and owner. Individual turn/gate timeouts are not an overall deadline;
+   the supervising session must enforce the authorized wall window. Do not start work
+   whose allowed duration cannot fit. Preserve existing PR outer inspection, landing
+   authority and recovery verbs. Measure useful reviewed deliveries, engine-owned
+   advancement, interventions, elapsed time, observed API/CLI usage and repeated gates.
+   Unknown HTTP/token counts stay unknown. No automatic-success claim for manual dispatch.
+
+Keep one compact record in the existing umbrella issue and committed evidence/provenance;
+this is an instruction contract, **not a new runtime receipt schema or state machine**:
+
+| Evidence | Required record / honest limit |
+|---|---|
+| Selection | Ordered IDs, current base, retained candidates/attempts and declared acceptance |
+| Contract-ready | Actual per-item packet + promotion-lint results, nonempty criteria/artifacts |
+| Environment-verified | Per-gate interpreter/dependencies/services; actual role/model/auth/capacity observation |
+| Integration-aligned | Coordinator/execution/publication roots and SHAs, fresh tracking refs, clean/ledger checks |
+| Dispatch-ready | Prior evidence still applies, exact bounded invocation and active owner; otherwise name pending facts |
+| Result | Deliveries, advancement, interventions, time/calls/gate repeats; unknowns and preserved failures |
+
+Use these as evidence descriptions, never parallel queue statuses. Reuse valid observations
+and rerun only what changed. A prepared contract may be complete while dispatch is blocked
+by unpublished intake or another machine's unverified environment. After a metadata-only
+tail, record tested versus delivered SHAs and check the relevant unchanged boundaries rather
+than reflexively rerunning broad qualification. Do not label the whole run “ready” solely
+because preflight/dry-run returned zero. LTVera-Pandas#1014/#1015 is the worked example:
+its aligned five-item dry-run passed, but Jose's capacity and useful deliveries remained unproven.
 
 ## CLI Commands
 
@@ -78,7 +193,18 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 ## Runner Execution Lifecycle (`jog run`)
 
 1. **Outer Driver Lock & Hermetic Dry-Run:**
-   - `--dry-run`: Hermetic simulation with zero locks and zero mutations (leaves queue and DB untouched).
+   - Bare `--dry-run`: queue preview with zero Jog state writes, locks or leases.
+   - With `--target-root`, dry-run checks explicit Marathon roles/binaries, inbox promotion probes,
+     and per-item preflight. Any selected nonzero preflight (including already-landed) exits 2
+     after displaying all outcomes. Empty queues and `--max-tasks 0` without checkpoint mode
+     evaluate no items and are previews, not workload readiness. Inbox probe checks use unattended
+     rules even in a terminal; an attended live run may instead prompt for missing probes.
+     When supplied, `--checkpoint-root` also checks bounded-run options, separate full-clone origin,
+     clean publication tree and development branch. It never begins checkpoint recovery/publication.
+     Preflight itself can fetch, create transient worktrees and execute contract probes; this is
+     not a universally side-effect-free command. Live provider capacity, gate environments/services,
+     primary cleanliness, remote freshness and recovery eligibility remain unverified. Follow preparation instructions
+     before dispatch; a passing dry-run does not certify an unattended run.
    - Real run: Acquires `relay-driver.lock` via `rtl.driver_lock_path()`, sets `RELAY_DRIVER_LOCKED=1`, and registers a clean exit handler. Concurrently running marathons or relays in the same clone are safely excluded (GH-42 / GH-354).
 
 2. **Receipt-Backed State Transitions:**
@@ -290,3 +416,5 @@ Keep the verb order above: run `resume` first (spends no token), then `retry-gat
 Before anything is cleared, rely on `/merge-cleanup`'s existing checks — dirty files, unpublished refs, dependent worktrees, and live handles — rather than repeating them by hand.
 
 **Fresh-clone rule for `retry-build`:** after a cold-start park, `jog retry-build --target-root <clone>` targets a **fresh disposable full clone**, never the crashed one. The crashed clone is retired through `/merge-cleanup`, which preserves an unpushed branch until the operator says it is disposable.
+
+Implementation review correction (2026-11-15): supervised clone alignment also holds on a detached HEAD, preserving its unique commits in place. Explicit resume holds when the newest recorded gate retry lacks a valid matching result. Gate retry records its exact identity and result path before dispatch, so an interrupted retry remains visible without adding a new ledger.

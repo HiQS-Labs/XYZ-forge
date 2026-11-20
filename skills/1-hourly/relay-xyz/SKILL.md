@@ -486,9 +486,9 @@ the same repo/worktree state (observed: a stray `git worktree` plus a `tick` tok
   | Exit | Meaning |
   |---|---|
   | `0` | reviewer Approved/Closed |
-  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall |
-  | `3` | genuine stall — the reviewer did nothing (token + STATUS unchanged) |
-  | `4` | escalated by design (`STATUS: Escalated`), round cap, or a close mismatch |
+  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall. The same code is a turn shim's "CLI failed"; the per-invocation stop receipt (`.relay-scratch/stop-reasons/<invocation-id>.json`, plus stderr `relay-drive: stop-reason=...`) and `.relay-scratch/escalation-reason` distinguish `review-handback`, `provider-quota` (429 / quota / usage-limit), and `turn-error` |
+  | `3` | genuine stall (`zero-output-stall`, `no-action-stall`, or `no-progress`, written to both the per-invocation stop receipt and `.relay-scratch/escalation-reason` so no earlier `cap-stalled` leaks into a new run) |
+  | `4` | escalated by design (`STATUS: Escalated`), round cap, a close mismatch, or a refused approval (the reason file names it, for example `approved-over-fail`: `STATUS: Approved` over the reviewer's own failing verdict line) |
 
   Without `--review-once` a non-approval handback advances the multi-round loop instead (the producer
   takes the next turn); use `--review-once` when you want exactly one review and a clean exit code.
@@ -712,7 +712,7 @@ Reviewers (Codex, agy, Claude, etc.) and authors must adhere to a strict standar
 
 1. **Surgical, DRY, Safe, Secure, and Stable within Reason:** Reviews must evaluate correctness, safety, and invariants against the stated requirements without encouraging speculative over-engineering.
 2. **Commensurate Machinery & Tests:** Defensive handling, recovery mechanisms, and test footprints must remain strictly commensurate with the scale and role of the core code. An 80-line sync script or local tool must not become entangled with multi-layered enterprise fail-safes, distributed locks, journaled recovery, or bespoke fuzzing/scanning runtimes unless the operator explicitly specifies it.
-3. **Operational Envelope Grounding:** Reviewers must grade against the explicitly declared operational envelope (e.g. local developer CLI, single-repo task) rather than unrequested enterprise multi-tenant threat models.
+3. **Operational Envelope Grounding:** Reviewers must grade against the explicitly declared operational envelope (e.g. local developer CLI, single-repo task). The target repository's own stated threat model governs: where the target states one (for example tenant isolation), a finding against it is in scope.
 4. **Challenge Unwarranted Complexity:** Reviewers should actively challenge speculative abstractions, parallel subsystems, and overbuilding, acting as a filter *against* bloat rather than an engine of scope creep.
 5. **Measure, read-only (GH-681):** a headless Reviewer MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim — output and temp files under `.relay-scratch/` or `$TMPDIR` only, with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"` first, and the command, exit status and decisive output quoted in the finding (scratch is discarded after the turn). It may NOT run `validate.sh`, `test/*.sh`, pytest, or executable fixtures in the relay worktree — those belong in a disposable full clone (`AGENTS.md`); a claim only measurable that way is graded `[Unverified — needs clone run]`. Containment is unchanged. The canonical wording is the reviewer note in `relay-automation/relay-turn-lib.sh` (`rtl_turn_prompt`); the marathon reviewer brief (`utils/py/marathon_drive.py`, step 4b) already allows `$TMPDIR` probes.
 6. **Generalizations carry a falsifier (GH-681):** a finding that asks for a behaviour change is a generalization unless the Reviewer can paste the concrete input — a row, a value, a `file:line` — that fails under the current code. Every `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`, `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Producer may disposition a request lacking these as `Declined — unproven generalization`. Protocol rule, not a mechanical check; canonical wording in `relay-automation/new-relay.sh` (Reviewer bullet), mirrored in `skills/1-hourly/relay/SKILL.md` and the marathon brief (step 4c). Origin: the gh673 final QA relay, where a Round-1 `[Blocker]` generalized one late-error observation into a rule that blanks every issue on real data, and the same seat `[Pass]`ed it next round.
@@ -748,7 +748,7 @@ STATUS: Open
 
 Adjudicate the implementation of Phase 3 Semantic Layer against its plan in PROJECT/2-WORKING/GH-1-firebase-ai-reports-plan.md.
 
-Operational Envelope: Local CLI tool. Tests and machinery must be commensurate with scope; do not demand unrequested enterprise multi-tenant fail-safes.
+Operational Envelope: Local CLI tool. Tests and machinery must be commensurate with scope; the target repository's own stated threat model governs.
 
 Read the plan doc in full, plus the code it references:
 - api/src/indexer.ts

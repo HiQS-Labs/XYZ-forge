@@ -1,0 +1,38 @@
+=== PROBE: positive_docs_only (skills/1-hourly/kickstart/SKILL.md) ===
+CMD: printf '%s\n' skills/1-hourly/kickstart/SKILL.md | bash utils/ci-route.sh pull_request
+EXIT: 0
+docs_only=true
+pdda_needed=true
+full_required=false
+changed_tests=
+route=docs
+tier=1
+tier2_subsystems=
+tier2_tests=
+tier_reason=docs-only
+
+=== PROBE: hook_counterexample (githooks/pre-push) ===
+CMD: printf '%s\n' githooks/pre-push | bash utils/ci-route.sh pull_request
+EXIT: 0
+docs_only=false
+pdda_needed=false
+full_required=false
+changed_tests=
+route=fast
+tier=3
+tier2_subsystems=
+tier2_tests=
+tier_reason=unmapped path: githooks/pre-push
+
+=== PROBE: gh1519_pr1532_gate_surface (validate.sh) ===
+CMD: printf '%s\n' validate.sh | bash utils/ci-route.sh pull_request
+EXIT: 0
+docs_only=false
+pdda_needed=true
+full_required=true
+changed_tests=
+route=full
+tier=3
+tier2_subsystems=
+tier2_tests=
+tier_reason=kernel/gate surface (route=full)

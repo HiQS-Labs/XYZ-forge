@@ -1,0 +1,10 @@
+both old=2 new=2
+checklist old=5 new=5
+ghissue old=3 new=3
+json old=0 new=0
+landed old=4 new=4
+missing old=5 new=5
+missingjson old=5 new=5
+noargs old=2 new=2
+text old=0 new=0
+unknown old=2 new=2

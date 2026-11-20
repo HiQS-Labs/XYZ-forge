@@ -1,0 +1,12 @@
+jog: execution clone aligned at bd857a84e30c5fe9bc1edd8b37e7ef3eef56db10; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/detached-before/detached/primary/.tick/jog/jog-01M7FZGXVSJMD6WTCE1SATGHYM/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: no pending tasks; held outcomes remain below.
+jog: GH-901 parked: controlled hold
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+Switched to a new branch 'fixture-902'

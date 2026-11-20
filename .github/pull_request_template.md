@@ -13,3 +13,6 @@
 - [ ] **Linked Issue**: Closes #...
 - [ ] **Capture Doc Updated**: `PROJECT/2-WORKING/GH-...` status table refreshed (or `roadmap_exempt: true`)
 - [ ] **No Hardcoded Machine Paths**: Clean under `check_machine_paths.py` (0 `/Users/` violations)
+
+## Changelog
+<!-- Optional: When CHANGELOG_WRITES=landing is configured, the post-landing reconciler synthesizes the CHANGELOG.md entry from this section at merge time. If omitted or empty, the PR title is used. -->

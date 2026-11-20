@@ -1,0 +1,28 @@
+# Full-range name-status inventory: 6270a2b5da9964d3f4d99ed4fa1755397d398561..f2660af43e375b6c593e009f8bf86825e456348f
+M	CHANGELOG.md
+A	PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md
+A	TESTS-RESULTS/2026-11-20+GH-1545/inputs/run1-run-record-92ff5ce.md
+A	TESTS-RESULTS/2026-11-20+GH-1545/manual-check.md
+A	TESTS-RESULTS/2026-11-20+GH-1545/outputs/changed-authority.md
+A	TESTS-RESULTS/2026-11-20+GH-1545/outputs/check-transcript.log
+A	TESTS-RESULTS/2026-11-20+GH-1545/outputs/decision-replay.txt
+A	TESTS-RESULTS/2026-11-20+GH-1545/outputs/pre-change-authority.md
+A	TESTS-RESULTS/2026-11-20+GH-1545/pdda-run.log
+A	TESTS-RESULTS/2026-11-20+GH-1545/provenance.jsonl
+A	relay-system/2026-11-20/gh1545-final-qa.md
+A	relay-system/2026-11-20/gh1545-plan-qa.md
+M	releases.db
+M	releases.sql
+M	skills/1-hourly/kickstart/SKILL.md
+M	skills/1-hourly/kickstart/scripts/build_queue.py
+
+# Candidate implementation diff stat: 6270a2b5da9964d3f4d99ed4fa1755397d398561..8631a7187b6591d084f93ed386ac49960513b04c
+ CHANGELOG.md                                       |  13 +++
+ PROJECT/2-WORKING/GH-1545-KS03-LAUNCH-AUTHORITY.md |  61 ++++++++++
+ .../inputs/run1-run-record-92ff5ce.md              | 130 +++++++++++++++++++++
+ relay-system/2026-11-20/gh1545-plan-qa.md          |  76 ++++++++++++
+ releases.db                                        | Bin 1945600 -> 1945600 bytes
+ releases.sql                                       |   9 +-
+ skills/1-hourly/kickstart/SKILL.md                 |  25 +++-
+ skills/1-hourly/kickstart/scripts/build_queue.py   |  26 ++++-
+ 8 files changed, 333 insertions(+), 7 deletions(-)

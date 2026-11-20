@@ -49,7 +49,7 @@ jobs:
       - name: Install runtime dependencies
         run: npm ci
       - name: Install Python dependencies for complete qualification
-        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
+        run: python3 -m pip install --quiet --break-system-packages -r requirements-dev.txt
       - name: Reconcile merged PR or catch up
         id: reconcile
         env:

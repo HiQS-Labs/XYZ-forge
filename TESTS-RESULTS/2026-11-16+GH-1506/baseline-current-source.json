@@ -1,0 +1,20 @@
+[
+  {
+    "path": "utils/py/agy-turn.py",
+    "development_sha": "f346d8908a42cd6e7e92f80657f9e7a21208e0ae",
+    "byte_identical_to_reproduced_source": true,
+    "sha256": "c4dc0c02a66362eb34312b20ededec01af80c129a6b09a44f531428b6e9b0ca8"
+  },
+  {
+    "path": "utils/py/turn_diagnostics.py",
+    "development_sha": "f346d8908a42cd6e7e92f80657f9e7a21208e0ae",
+    "byte_identical_to_reproduced_source": true,
+    "sha256": "a0f8f4340ac3e9d212fe4fa049246af49588bbbb2f19862496e14273ea95322b"
+  },
+  {
+    "path": "utils/py/relay_drive.py",
+    "development_sha": "f346d8908a42cd6e7e92f80657f9e7a21208e0ae",
+    "byte_identical_to_reproduced_source": true,
+    "sha256": "a85a894e80947668dd396eb183513700f98bc688b93c18e3eac9b8f099728655"
+  }
+]

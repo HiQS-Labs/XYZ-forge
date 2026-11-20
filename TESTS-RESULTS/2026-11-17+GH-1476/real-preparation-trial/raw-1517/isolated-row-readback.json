@@ -1,0 +1,23 @@
+[
+ {
+  "global_id": "rmi-01M7NERCQV784J7A707AZP7ZGZ",
+  "gh_number": 1517,
+  "repo_slug": "XYZ-forge",
+  "is_selected_repo": true,
+  "title": "merge-cleanup batch protocol agrees with the GH-1383 auto-sweep",
+  "section": "Queue / parked intake",
+  "position": 153,
+  "status_marker": "\ud83c\udd95",
+  "doc_path": "PROJECT/1-INBOX/GH-1517-MERGE-CLEANUP-SWEEP-WORDING.md",
+  "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1517",
+  "raw_text": "- **GH-1517 \u00b7 merge-cleanup batch protocol agrees with the GH-1383 auto-sweep** \ud83c\udd95 (rated 30/30/50/90) \u2014 [GH-1517-MERGE-CLEANUP-SWEEP-WORDING.md](PROJECT/1-INBOX/GH-1517-MERGE-CLEANUP-SWEEP-WORDING.md) \u00b7 [#1517](https://github.com/HiQS-Labs/XYZ-forge/issues/1517)",
+  "status_label_supported": true,
+  "status_label": null,
+  "rating_pri": 30,
+  "rating_sev": 30,
+  "rating_appeal": 50,
+  "rating_effort": 90,
+  "rating_ovr": null,
+  "risk": null
+ }
+]

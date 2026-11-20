@@ -1032,13 +1032,13 @@ if command -v php >/dev/null 2>&1; then
 fi
 _python_version="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null)"
 _python_missing=""
-for _python_module in yaml pytest requests; do
+for _python_module in yaml pytest requests mypy; do  # mypy: test_python_layer runs python3 -m mypy (GH-1519)
   if ! python3 -c "import $_python_module" >/dev/null 2>&1; then
     _python_missing="${_python_missing:+$_python_missing,}$_python_module"
   fi
 done
 if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1 || [ -n "$_python_missing" ]; then
-  echo "ENVIRONMENT FAULT: python3 ($(command -v python3 || echo unavailable)) version ${_python_version:-unavailable}; missing modules: ${_python_missing:-none}; requires Python >=3.10 with yaml/pytest/requests — rerun with PATH=\"\$HOME/.cache/xyz-forge-test-venv/bin:\$PATH\" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)"
+  echo "ENVIRONMENT FAULT: python3 ($(command -v python3 || echo unavailable)) version ${_python_version:-unavailable}; missing modules: ${_python_missing:-none}; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt) — rerun with PATH=\"\$HOME/.cache/xyz-forge-test-venv/bin:\$PATH\" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)"
   exit 3
 fi
 export XYZ_ENV_FAULTS

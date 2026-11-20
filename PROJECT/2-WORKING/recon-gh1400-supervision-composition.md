@@ -86,3 +86,25 @@ not proof of an active universal attempt lease. Rollback is reverting the instru
 Flywheel callers, Jog/Marathon execution owners, merge-cleanup pinned batch/repair records and native same-conversation continuation facilities.
 
 No lane was cut off within the instruction scope; broader #1399 enforcement and #1386 runtime qualification were deliberately left with their owners.
+
+
+## Runtime continuation — 2026-11-15
+
+Historical instruction recon above is unchanged. Runtime base7dd85cd3a, candidate97aa938be.
+Verify-tier graph generation2026-11-15T07:36:58Z was used for jog_run_main, jog_resume,
+run_marathon_phase and JogCheckpoint discovery; both-direction depth1 traces of main/resume
+were complete at44/4 and18/0 respectively. Exact source fallback rejects heuristic false edges.
+Coverage for jog_run.py, releases_app.py, proc_group.py, harness.py, marathon_drive.py,
+Jog/Flywheel skills and both owned project documents reports metadata_match/no recorded gaps;
+this is best-effort primary-index evidence, compared with exact task-clone source reads.
+
+Entry: releases_app parser/handler -> jog_run_main -> primary driver lock -> supervised latest
+receipt recovery -> optional checkpoint -> target lock/alignment -> existing lease writer ->
+preflight/Marathon -> existing receipt publisher/projection. Added supervision does not write
+native Marathon attempt state. Legacy orphan reconciliation still has its existing three-lease
+threshold; the earlier plan's absolute claim that queue count was never a budget was corrected.
+Cancellation/deadline uses proc_group.run_bounded; publication retains existing gate clocks.
+State source remains .tick/jog execution history plus releases canonical writers. Unknown lock
+owner, invalid history/latest receipt and dirty tracked target refuse; branch alignment retains
+unique development under a named ref. Observed controlled evidence and limits are in the dated
+SUMMARY; it is not a whole-repository audit or live qualification.

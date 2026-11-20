@@ -1,0 +1,85 @@
+# Gate run in disposable full clone XYZ-forge-gh1498-pr-minder-2026-11-16-gate at c8ca1ccd6
+
+## Publisher suites (published skill folder added)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+
+## ci-local.sh run 1 (system python3.14, no mypy) — rc=1
+Only failure: test/test_python_layer.py::test_swarm_preflight_module_load — '<homebrew python3.14>: No module named mypy'. Environment prerequisite (ROUTER.md startup step 6; requirements-dev.txt mypy==1.14.1), not this change.
+
+## ci-local.sh run 2 (throwaway venv: --system-site-packages + mypy==1.14.1) — rc=0
+python3 -> $TMPDIR/gh1498-venv/bin/python3
+pre: c8ca1ccd664df2b0eb106fbb177b64967b7710f4        0
+post: c8ca1ccd664df2b0eb106fbb177b64967b7710f4        0
+  PASS: ci-local.sh passes --suite-log to gate-record
+  PASS: B5: ci-local still passes --suite-log to gate-record (GH-536 pin)
+  PASS: D1 CONTROL: gate-record records from a clean tree (this clone)
+Green on the shipping platform, with the full suite — including the one hosted ubuntu skips.
+gate-record: recorded .gate-evidence/c8ca1ccd.txt
+
+## Re-gate after final QA r1 fixes — 326b47088 (same disposable clone, reset to the branch head)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+python3 -> $TMPDIR/gh1498-venv/bin/python3
+pre: 326b47088184fb9369c0cc792ad84a22a3126dcd        0
+post: 326b47088184fb9369c0cc792ad84a22a3126dcd        0
+gate-record: recorded .gate-evidence/326b4708.txt
+Later commits 07538331d (pr-minder clean exit on read failure, manual check 19/19) and a260bad2c (smoke log) post-date this run; a final gate runs on the approved head.
+
+## Final-commit gate — f8ecd37d7 (last code/evidence commit before PR; later commits are relay thread + this log only)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: f8ecd37d7fa58b5bfd6ec20069105aedf26e72d8        0
+post: f8ecd37d7fa58b5bfd6ec20069105aedf26e72d8        0
+gate-record: recorded .gate-evidence/f8ecd37d.txt
+
+## Gate after CodeRabbit #1510 fixes — 72bfb6348 (fresh disposable clone)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: 72bfb6348b27050560e3dedb641415a8abc6d77c        0
+post: 72bfb6348b27050560e3dedb641415a8abc6d77c        0
+gate-record: recorded .gate-evidence/72bfb634.txt
+Codex delta review approved (relay-system/2026-11-16/gh1498-coderabbit-delta-qa.md). Merge of origin/development (fc1cdc751) is covered by the pre-push full gate.
+
+## Gate after CodeRabbit second pass — 0522ef4b0
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: 0522ef4b01165a2574c3043438526444d573514f        0
+post: 0522ef4b01165a2574c3043438526444d573514f        0
+gate-record: recorded .gate-evidence/0522ef4b.txt
+
+## Gate on the Codex-approved head after delta2 fixes — 1382711a7
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: 1382711a7dec486ca4c20deab19ad97f70474ac7        0
+post: 1382711a7dec486ca4c20deab19ad97f70474ac7        0
+gate-record: recorded .gate-evidence/1382711a.txt
+Codex delta reviews: gh1498-coderabbit-delta2-qa.md (FAIL, 3 findings fixed) and gh1498-coderabbit-delta3-qa.md (Approved).
+
+## Gate after CodeRabbit third pass — 019328074 (code unchanged in later commits: evidence + relay only)
+test/gh589-xyz-mini-sync.sh rc=0
+test/gh620-skills-army-mini-sync.sh rc=0
+test/gh589-skill-viewer.sh rc=0
+test/gh589-consult-no-tick.sh rc=0
+ci-local rc=0
+pre: 0193280745baf291bc8162dfeecb5922268f4735        0
+post: 0193280745baf291bc8162dfeecb5922268f4735        0
+gate-record: recorded .gate-evidence/01932807.txt
+Codex re-run review approved (relay-system/2026-11-16/gh1498-coderabbit-delta5-qa.md); delta4 PASS was reverted by the harness after producer edits during the turn.
