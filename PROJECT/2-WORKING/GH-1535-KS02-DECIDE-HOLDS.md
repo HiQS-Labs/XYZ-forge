@@ -15,7 +15,7 @@ roadmap_id: rmi-01M7VZEFJCGEV7EC8NKCJH5FEK
 
 | What was just completed | What's next |
 |---|---|
-| Codex Plan QA Round 2 approved (`44f9f960`), marked `rmi-01M7VZEFJCGEV7EC8NKCJH5FEK` accepted-start, implemented KS-02 (`operator_decision`, `issue_hold_reason`, `_sanitize_body`, `DECIDED`/`CLOSE` buckets, `gh issue list ... comments`, SKILL.md mirror, CHANGELOG.md) with `mypy` green | Run recorded paired manual check + PDDA gate (`TESTS-RESULTS/2026-11-20+GH-1535/`), complete Codex Final QA, open PR and land |
+| Implemented KS-02 (`5bea053c`), passed all 8 paired pre/post replay + red-control cases, read-only invariance check, `mypy`, and PDDA docs gate (`TESTS-RESULTS/2026-11-20+GH-1535/`) | Complete Codex Final QA (`relay-system/2026-11-20/gh1535-final-qa.md`), push branch, open PR, and land from pinned `LANDING_CLONE` |
 
 ## Goal & Scope (refs #1535, #1541 v5 KS-02 + U15 + KS-11c)
 Fix two queueing defects in `skills/1-hourly/kickstart/scripts/build_queue.py` and mirror the updated closed rule list in `skills/1-hourly/kickstart/SKILL.md`:
