@@ -58,3 +58,40 @@ ENVIRONMENT FAULT: python3 (/opt/homebrew/bin/python3) version 3.14.7; missing m
 Please review Round 2 for Final QA approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 4 — Reviewer (Codex)
+
+VERDICT: Block — R1's paired-control evidence remains incomplete.
+STATUS: Changes requested
+
+R1 finding 2 is resolved: the retained R2 gate log contains matching complete PRE-GATE and POST-GATE snapshots (HEAD, core.bare, remotes, local user.email unset with rc=1, and clean status), with `validate_rc=0 elapsed_s=996` for code head `b280e6709ce93b7e89676d0ac61c859bce119968`. The bounded patch now covers the three planned implementation files, and manual-check.md names the correct owners. All seven provenance byte counts and SHA-256 hashes independently match.
+
+1. **[P2] Finish the existing planned paired controls; the new transcript does not cover Controls 3–4.** `outputs/manual-controls.txt` now retains useful exit-3 no-action-stall and exit-1 live-stderr quota receipts, but labeling the latter `CONTROL_3_AND_4` does not exercise the canonical plan's log-isolation or lock/write-failure decisions. Retain reproducible commands and probe/shim inputs, candidate/base revisions, exit statuses, and decisive red/green observations for: consecutive same-task fresh log paths including repeated quota text followed by a generic failure; caller-reused log with stale quota and partial overwrite producing `turn-error`; post-start consult escalation write failure producing `consult-escalation-write-failed`; and preflight lock contention preserving the active driver's legacy reason. Also retain the adapter-level quota/non-quota result and the direct receipt compatibility check against the identified authoritative KS-04 consumer revision. The helper's six boolean samples do not measure the adapter's emitted classification. No commands, shim source, pre-fix replay or mutated red failure are retained in the current 60-line control transcript. This leaves the original finding unresolved. **[Unverified — needs clone run]** for missing executable controls; recover existing complete records or run them in a disposable full clone, without adding a suite.
+
+Read-only probe (exit 0), executed with `PYTHONDONTWRITEBYTECODE=1` and scratch TMPDIR:
+```python
+import json, hashlib, pathlib
+p = pathlib.Path('TESTS-RESULTS/2026-11-20+GH-1548')
+for line in (p/'provenance.jsonl').read_text().splitlines():
+    r = json.loads(line); b = pathlib.Path(r['path']).read_bytes()
+    assert len(b) == r['bytes'] and hashlib.sha256(b).hexdigest() == r['sha256']
+s = (p/'outputs/manual-controls.txt').read_text()
+print('7/7 provenance byte counts and SHA-256 match')
+print('manual-controls lines:', len(s.splitlines()))
+for term in ['post-start', 'preflight', 'KS-04', 'python3', '--review-once']:
+    print(repr(term), 'count=', s.count(term))
+```
+Decisive output:
+```text
+7/7 provenance byte counts and SHA-256 match
+manual-controls lines: 60
+'post-start' count= 0
+'preflight' count= 0
+'KS-04' count= 0
+'python3' count= 0
+'--review-once' count= 0
+```
+These counts supplement direct reading of the entire transcript and the canonical working doc's Verification Plan; they are not standalone proof of missing behavior. Reviewed retained artifacts only. Graph project discovery identifies the primary Forge checkout separately from this worktree; no structural code claim relies on that foreign index. No git command, gate, suite or executable fixture was run; no later gate is assumed.
+
+**NEXT: Producer (Antigravity)** — complete the remaining R1 evidence, then return for Final QA.
