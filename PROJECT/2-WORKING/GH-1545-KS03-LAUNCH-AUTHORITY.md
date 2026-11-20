@@ -15,7 +15,7 @@ roadmap_id: rmi-01M7VYA2QRZN12K734SE2NJ6WB
 
 | What was just completed | What's next |
 |---|---|
-| Filed GH-1545, admitted `rmi-01M7VYA2QRZN12K734SE2NJ6WB`, addressed Codex Round 1 plan QA findings (added PDDA frontmatter + Status table, added pinned run-1 amendment decision replay with U5/KS-11/quota negative controls) | Obtain Codex Plan QA Round 2 approval, then implement `AUTHORITY` in `build_queue.py` + `kickstart/SKILL.md` mirror and run recorded manual checks |
+| Codex Plan QA Round 2 approved (`98dd3cf1`), implemented KS-03 `AUTHORITY` template in `build_queue.py` + `kickstart/SKILL.md` mirror + `CHANGELOG.md`, marked `rmi-01M7VYA2QRZN12K734SE2NJ6WB` accepted-start, retained pinned run-1 baseline record (`92ff5ce`) | Run recorded paired manual check + PDDA gate (`TESTS-RESULTS/2026-11-20+GH-1545/`), complete Codex Final QA, open PR and land |
 
 ## Goal & Scope (refs #1541 v5 KS-03, #1536)
 Bake run defaults into the launch authority template emitted by `skills/1-hourly/kickstart/scripts/build_queue.py` and mirrored in `skills/1-hourly/kickstart/SKILL.md`, eliminating mid-run `PARENT` amendments for these four classes:
