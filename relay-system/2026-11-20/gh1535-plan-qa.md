@@ -58,4 +58,19 @@ VERDICT: FAIL
 
 STATUS remains Open. NEXT is Producer for correction and adjudication.
 
+### Round 1 — codex (Reviewer, repeat assessment of seeded artifact)
+
+**Block — [Major] The prior formatted-reference finding remains unresolved.** The artifact still explicitly removes all inline backtick spans before dependency matching (line 35), with unchanged matching rules at lines 39–40. Thus ordinary prose `Blocked by ` followed by a backticked `#1499`, or `Only after ` followed by a backticked `#1499` and ` lands`, loses the reference and can queue a held bug and its closing PR. The exact design probe, exit status and decisive output are retained in the preceding review; this turn did not rerun it or execute implementation fixtures. Preserve formatted reference tokens in real prose while excluding wholly quoted examples, and specify paired manual controls including closing-PR parking. The absent-reference active-clause and independent-hold-versus-owner-release controls requested above are also still absent from the verification plan. No producer adjudication or correction is present in this seeded thread.
+
+**Basis:** Swept the complete seeded plan and current build_queue source, including parking → PR classification → issue classification → render, and checked the kickstart ordering mirror and PDDA contract. Owner-only latest-decision parsing, close/proceed routing before unclassified, and keeping PR #1526's closing reference are otherwise suitable plan-level choices. Paired manual evidence with provenance rather than a new suite is proportionate. Reversibility: Easy for the requested plan correction; the consequence of leaving it unresolved is dispatching an explicitly held issue.
+
+Live read-only `gh issue view 1535 --repo HiQS-Labs/XYZ-forge --json body,comments` returned exit 0 and confirmed the #1518/#1526 replay requirement. The equivalent #1541 read returned exit 0 and confirmed v5 KS-02/U15's owner-only release, close bucket, rule-9 protection and body/label holds. A subsequent focused KS-11 read failed with `error connecting to api.github.com`; full exact live KS-11c reconciliation remains unverified. This does not affect the directly evidenced plan defect above. No gate is configured in this thread, and no gate, suite or fixture was run; approval cannot rely on a later gate.
+
+Graph: Verify-tier discovery used `Users-noelsaw-Documents-GH-Repos-XYZ-forge`; build_queue search returned 0 results, `has_more: false`. Coverage generation `2026-11-18T19:39:07Z` reports missing freshness for the plan, build_queue and kickstart skill. Used direct local source fallback for those paths; no completeness claim rests on the graph.
+
+swept file: yes
+VERDICT: FAIL
+
+STATUS remains Open. NEXT: Producer (antigravity), for correction and adjudication.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
