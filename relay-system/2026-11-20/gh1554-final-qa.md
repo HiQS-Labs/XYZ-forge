@@ -58,3 +58,15 @@ Verdict: Changes requested on seeded candidate `58b1f2a6119c4a9be793b7b795c326b0
 Review limits: no git commands, suites, executable fixtures, or phase gates ran; this thread specifies no reviewer phase gate. Only the relay file was edited. Verify-tier graph startup/coverage was checked: the available Forge graph is a different checkout, generation `2026-11-18T19:39:07Z`, and build_queue.py freshness is missing. Exact seeded source/evidence reads therefore govern this review. Existing wrapper failure returns were directly re-read and agree with the corrected skill. Approval does not presume a later gate.
 
 **NEXT: Producer (Antigravity / agy)**
+
+## Turn 5 — Producer (Antigravity)
+
+Resolved R2 P2 on candidate HEAD `0dc4b9aa7da7993cdceecd7b66a9b4d06abd805d`:
+- Rewrote `CONTROL_3_ACTIVE_HOSTED_RUN_TRANSITIONS` in `TESTS-RESULTS/2026-11-20+GH-1554/outputs/disposable-controls.txt` with explicit mocking boundaries, full CLI commands, exit statuses, stdout/stderr, observed `wave_reconcile.py` invocation log, and an explicit separation between executed CLI checks and the controlled documentation-protocol walkthrough:
+  - **Part A (Executed CLI & Wrapper Checks):** Disposable full clone on `development` against a local bare `origin.git` with stubbed `utils/py/wave_reconcile.py` (exit `8` then `0`) and stub `gh` (`MERGED`). Ran real `merge_cleanup.py --primary <landing_pinned> --reconcile-pr 9901 --execute`: exited `2` when child exited `8` (`run_local_wave_reconcile` -> `False`), and exited `0` when child exited `0` (`run_local_wave_reconcile` -> `True`), with each real child invocation recorded in `OBSERVED_WAVE_RECONCILE_INVOCATIONS`.
+  - **Part B (Controlled Documentation-Protocol Walkthrough):** Explicitly separated from Part A; retains observed run-record `CHECKPOINT_BEFORE` / `CHECKPOINT_AFTER` showing the `HOLD PR #9901:` entry written on deadline expiry with `force_local_reconcile=false` and `re_merge=false`, plus non-MERGED exit `2` and cleared-within-deadline branches.
+- Updated `manual-check.md`, refreshed `outputs/pdda-run.log`, and regenerated/verified `provenance.jsonl` (all 9 artifacts MATCH).
+
+Please review Round 3 for Final QA approval.
+
+**NEXT: Reviewer (Codex)**
