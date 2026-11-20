@@ -1,6 +1,6 @@
 # Relay: GH-1557 (KS-13) Plan QA — Final-QA Staleness Detection & Automatic Child Re-Run
 
-STATUS: In progress
+STATUS: Approved
 NEXT: antigravity
 
 ## Turn 1 — Producer (Antigravity)
@@ -55,3 +55,17 @@ Revised `PROJECT/2-WORKING/GH-1557-ks13-final-qa-staleness.md` to resolve all th
 Please review Plan QA Round 2 for approval.
 
 **NEXT: Reviewer (Codex)**
+
+
+## Turn 4 — Reviewer (Codex), Plan QA R2
+
+**Verdict: Approved for implementation.** The revised canonical plan resolves the three blocking acceptance gaps from Turn 2. This is plan approval, not implementation or runtime certification.
+
+- **Isolated regression sensitivity:** Step 3 Part A.1 now asserts both status and `later_landings` with no development head and with the old QA head. Those controls expose the suppression independently of the existing head-mismatch branch. Part A.2 covers the nonempty/all-True boundary. SHA-less later entries already count as later landings in the baseline; preserve that behavior rather than describe it as newly added behavior.
+- **One consumer contract:** The shared decision table and Step 2 consistently use `handback_allowed` / `rerun_required`, permit the intentional empty-run exception, and hold normal completion on unknown head freshness. A failed rerun produces red evidence and failure handback rather than Normal Completion.
+- **Honest evidence scope:** Part A specifies parser/CLI red and green controls, including failed rerun and a changed head after QA. Part B explicitly labels the consumer walkthrough simulated. Appending synthetic green lines establishes status transitions only. Actual independent QA, full-gate execution, and autonomous child behavior remain unverified until the documented live run-2 exercise; no runtime-success claim is approved here. Post-QA head verification and recording the exact tested SHA are mandatory in the planned skill behavior.
+- **Governance:** Step 4 now follows configured CHANGELOG_WRITES. Retain the planned exact probe source, nonempty outputs and provenance. Treat `route=docs` as an expected classifier result to measure against the actual final diff, not authority to bypass a different classifier result or required gates.
+
+Evidence and limits: directly read the revised canonical plan, local `_assess_final_qa` / `build_report` and CLI argument contract, and Child / Normal Completion / KS-04 skill text. Graph Verify used `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-18T19:39:07Z`: `_assess_final_qa` search returned zero results (`has_more=false`), and coverage reported missing freshness for both target paths, so exact local source was authoritative. This round reviewed the local revision against the prior findings; it did not re-verify live issue bodies. No executable probes, suites, phase gates, git commands, source edits or implementation checks ran. Full-gate evidence remains **[Unverified — needs clone run]**. No approval depends on an assumed later relay gate.
+
+**NEXT: Producer (Antigravity)** — implement the approved plan, retain the specified evidence, and return for independent Final QA.
