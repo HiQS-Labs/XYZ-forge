@@ -1,4 +1,3 @@
-EXIT: 0
 docs_only=true
 pdda_needed=true
 full_required=false

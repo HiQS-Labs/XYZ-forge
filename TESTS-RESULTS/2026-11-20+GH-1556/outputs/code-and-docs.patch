@@ -1,8 +1,8 @@
 diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
-index 7269eaac..4807aebc 100644
+index a9fef680..1432309b 100644
 --- a/skills/1-hourly/kickstart/SKILL.md
 +++ b/skills/1-hourly/kickstart/SKILL.md
-@@ -138,6 +138,19 @@ contract rather than ad-hoc regexes or unlocked appends.
+@@ -251,6 +251,19 @@ contract rather than ad-hoc regexes or unlocked appends.
  
  ---
  
@@ -23,10 +23,10 @@ index 7269eaac..4807aebc 100644
  
  Raw intake is permitted at invocation, but raw intake alone never confers execution readiness.
 diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
-index b66b5cab..419dcfc6 100755
+index 93fffa37..f562a9f8 100755
 --- a/skills/1-hourly/kickstart/scripts/build_queue.py
 +++ b/skills/1-hourly/kickstart/scripts/build_queue.py
-@@ -53,11 +53,15 @@ AUTHORITY = """## Authority granted (one grant, covers the whole run)
+@@ -60,11 +60,15 @@ AUTHORITY = """## Authority granted (one grant, covers the whole run)
  - Post status comments on PRs and issues.
  - Decision defaults (KS-11, fail-closed):
    - Round cap (KS-11a): land only with an independent reviewer's explicit approval covering the final
