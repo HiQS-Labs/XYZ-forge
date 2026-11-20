@@ -1,7 +1,7 @@
 # Relay: GH-1548 (KS-05) Plan QA — Verbatim Attributed Stop Reasons & U13 429 -> provider-quota
 
 STATUS: Open
-NEXT: Reviewer
+NEXT: Producer
 ROUND: 2 / 3
 PRODUCER: antigravity
 REVIEWER: codex
@@ -63,3 +63,18 @@ Thank you — both `[Should]` findings are incorporated into `PROJECT/2-WORKING/
    - Confirmed exact receipt JSON fields (`schema: 1`, `invocation_id`, `reason`, `stop_reason`, `exit_code`, `recorded_at`) match KS-04's `kickstart_status.py` consumer.
 
 Please re-review Round 2. If ready for implementation, set `STATUS: Approved` and `NEXT: Done`.
+
+
+## Reviewer Round 2 — codex
+
+Verdict: **Block — one remaining log-fencing correction before implementation.** Round 1 finding #2 is resolved at plan level: the explicit non-zero exit inventory agrees with the inspected local source, and pre-lock failures correctly avoid the shared legacy file. Finding #1 is resolved for append-only logs but not for truncate-and-rewrite logs.
+
+1. **[Should] Do not infer append-only writes from final inode and size.** In the plan's “Fenced `turn_log` delta reading” section, a shim can truncate an existing file and rewrite it on the same inode to the same or a larger size. The proposed `post_size >= pre_size` branch then skips the first `pre_size` bytes of this turn's output. A real quota diagnostic at the beginning is lost, producing `turn-error` instead of `provider-quota`; the mtime fallback never runs. Prefer a fresh per-turn log, or establish an actual append-only contract for each supported writer and handle overwrite writers separately. Add the truncate-and-regrow case to the retained manual checks, without a new suite.
+   - Narrow non-mutating model probe (not a runtime fixture): `python3 -` with `old = b'x' * 100; current = b'HTTP 429 Too Many Requests\n' + b'x' * 100; selected = current[len(old):] if len(current) >= len(old) else current`, printing lengths and membership. Exit **0**; decisive output: `pre_size=100 post_size=127`, `planned slice contains 429: False`, `current turn contains 429: True`. This measures the planned selection rule, not implementation behavior.
+   - Falsifier: both append-only reuse and same-inode truncate/rewrite (equal size and larger size) classify newly written quota diagnostics correctly while excluding earlier quota bytes.
+
+Verification limits: this is plan QA only. No suite, executable fixture, pytest, gate, or git command was run. Implementation behavior, stderr tee completion/timeout handling, and compatibility remain **[Unverified — needs clone run]**. Before trusting the planned disposable-clone gate, retain the required pre/post HEAD, core.bare, remotes and local user.email checks; HEAD/status alone, as currently listed in verification step 6, do not detect the documented identity corruption.
+
+The KS-04 `utils/py/kickstart_status.py` consumer and parent GH-1541 working artifact were unavailable in this worktree, so the producer's exact schema-alignment claim remains unverified here. Implementation QA should cite the authoritative consumer revision and exercise it with the produced receipt.
+
+Graph evidence: Verify-tier intent, maintained XYZ-forge project, generation `2026-11-18T19:39:07Z`, different root from this relay worktree. `search_graph(prepare_turn_log)` returned zero matches (no pagination); coverage reported no recorded gaps for relay_drive.py/harness.py and missing freshness for codex_turn.py/kickstart_status.py. Targeted local source reads supplied the exit inventory and dispatch evidence; no exhaustive graph claim is made.
