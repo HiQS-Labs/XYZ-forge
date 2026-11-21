@@ -1,0 +1,3 @@
+BLOCKED: issue #345 has no in-repo GH-345-*.md capture doc under PROJECT/2-WORKING/.
+  Per GUIDING-PRINCIPLES.md §11 the planner reads the capture doc, not the issue thread.
+  Remediation: promote issue #345 to a GH-345 capture doc with a preflight contract first.

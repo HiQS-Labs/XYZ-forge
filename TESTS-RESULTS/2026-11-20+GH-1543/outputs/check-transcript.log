@@ -1,0 +1,111 @@
+=== 0. Baseline absence on origin/development (6270a2b5d) ===
+fatal: path 'skills/1-hourly/kickstart/scripts/run_record.py' exists on disk, but not in '6270a2b5d'
+baseline_rc=128
+=== 1. Validate retained run-1 and run-2 fixtures ===
+run1_rc=0 matches_retained=true
+run2_rc=0 matches_retained=true
+=== 2. Bad-input validate & append (including F3 older/self supersession) ===
+validate:missing_version rc=1 stderr=run_record: missing mandatory RUN-RECORD-VERSION: 1 header
+validate:wrong_version rc=1 stderr=run_record: line 1: unsupported RUN-RECORD-VERSION '2' (expected 1)
+validate:dup_landing_clone rc=1 stderr=run_record: duplicate LANDING_CLONE headers at lines [2, 3]
+validate:oa_no_cite rc=1 stderr=run_record: line 2: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision
+validate:dup_id rc=1 stderr=run_record: line 3: duplicate amendment ID 'PN-1'
+validate:applied_unknown rc=1 stderr=run_record: line 2: APPLIED references undeclared amendment ID 'NOPE'
+validate:applied_empty_escalated rc=1 stderr=run_record: line 3: APPLIED PN-1 missing action/reason after disposition 'escalated'
+validate:applied_dup_terminal rc=1 stderr=run_record: line 4: duplicate terminal disposition for 'PN-1' (already 'applied')
+validate:superseded_older_F3 rc=1 stderr=run_record: line 4: APPLIED OA-2 disposition 'superseded' must name a declared newer amendment ID (declared after OA-2)
+validate:superseded_self_F3 rc=1 stderr=run_record: line 3: APPLIED OA-1 disposition 'superseded' must name a declared newer amendment ID (declared after OA-1)
+append_pre_sha256=8f95af7a619e0ba6ad78b8dc3a4c32a3e5fc3bdd8b8fb083dd7ef5f07eebea18
+append:dup_id rc=1 sha256_unchanged=True stderr=run_record: line 3: duplicate amendment ID 'PN-1'
+append:oa_no_cite rc=1 sha256_unchanged=True stderr=run_record: line 3: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision
+append:unknown_id rc=1 sha256_unchanged=True stderr=run_record: line 3: APPLIED references undeclared amendment ID 'NOPE'
+append:reserved_empty rc=1 sha256_unchanged=True stderr=run_record: --kind applied requires --id and --action
+append:superseded_self_F3 rc=1 sha256_unchanged=True stderr=run_record: line 3: APPLIED PN-1 disposition 'superseded' must name a declared newer amendment ID (declared after PN-1)
+snapshot:empty rc=1 stderr=run_record: cannot create snapshot from empty input
+=== 3. Redaction sentinel (F1: Bearer + Basic + Token + tokens + /Users + XML tags) ===
+snapshot_rc=0 validate_rc=0 validate_out=OK v1 landing_clone=~/kickstart-clones/landing amendments=0 unresolved=0 interventions=0 gates=0 leak_indices=[]
+--- redacted-snapshot.md ---
+# Kickstart run redaction check
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: ~/kickstart-clones/landing
+
+## Progress log
+- note-ghp: [REDACTED]
+- note-pat: [REDACTED]
+- note-sk: [REDACTED]
+- note-bearer: Authorization: Bearer [REDACTED]
+- note-basic: Authorization: [REDACTED]
+- note-token: Authorization: [REDACTED]
+- note-path: ~/Documents/GH Repos/XYZ-forge
+- note-tags: kept bar
+=== 4. Concurrency (8 distinct parallel appends + 4-way same-ID race) ===
+conc8 worker=0 rc=0 stdout='PARENT_NOTE: PN-0 2026-11-20T07:33:37Z worker-0' stderr=''
+conc8 worker=1 rc=0 stdout='PARENT_NOTE: PN-1 2026-11-20T07:33:37Z worker-1' stderr=''
+conc8 worker=2 rc=0 stdout='PARENT_NOTE: PN-2 2026-11-20T07:33:37Z worker-2' stderr=''
+conc8 worker=3 rc=0 stdout='PARENT_NOTE: PN-3 2026-11-20T07:33:37Z worker-3' stderr=''
+conc8 worker=4 rc=0 stdout='PARENT_NOTE: PN-4 2026-11-20T07:33:37Z worker-4' stderr=''
+conc8 worker=5 rc=0 stdout='PARENT_NOTE: PN-5 2026-11-20T07:33:37Z worker-5' stderr=''
+conc8 worker=6 rc=0 stdout='PARENT_NOTE: PN-6 2026-11-20T07:33:37Z worker-6' stderr=''
+conc8 worker=7 rc=0 stdout='PARENT_NOTE: PN-7 2026-11-20T07:33:37Z worker-7' stderr=''
+conc8 validate_rc=0 valid=True amendments=8 ids=['PN-1', 'PN-4', 'PN-3', 'PN-6', 'PN-0', 'PN-2', 'PN-7', 'PN-5']
+conc4 worker=0 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=1 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=2 rc=1 stdout='' stderr="run_record: line 4: duplicate amendment ID 'PN-RACE'"
+conc4 worker=3 rc=0 stdout='PARENT_NOTE: PN-RACE 2026-11-20T07:33:37Z racer-3' stderr=''
+conc4 sorted_rcs=[0, 1, 1, 1] validate_rc=0 valid=True amendments=1
+=== 5. Disposable full-clone checkpoint refusals, unchanged-state brackets, failed-push retry, bare-remote blob proof, and idempotent rerun ===
+bracket[pre-refusals]: {"branch": "development", "config_sha": "91b54e7b833f98ff", "head": "872ff5fd2f39c9917f588ca31db2b863c2fbf747", "refs_sha": "72b474e945e47cda", "status": ""}
+refusal:omitted_primary rc=2 stderr=usage: run_record.py checkpoint [-h] --record RECORD --clone CLONE
+                                --primary PRIMARY --branch BRANCH --dest DEST
+                                [--message MESSAGE] [--push]
+run_record.py checkpoint: error: the following arguments are required: --primary
+refusal:clone_eq_primary rc=1 stderr=run_record: refusing checkpoint: --clone resolves to --primary checkout
+refusal:clone_eq_landing rc=1 stderr=run_record: refusing checkpoint: --clone resolves to the record's LANDING_CLONE
+refusal:protected_development rc=1 stderr=run_record: refusing checkpoint on protected integration branch 'development'
+refusal:protected_main rc=1 stderr=run_record: refusing checkpoint on protected integration branch 'main'
+refusal:traversal_dotdot rc=1 stderr=run_record: --dest must not contain '..' traversal: '../outside.md'
+refusal:git_dir_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): '.git'
+refusal:git_config_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): '.git/config'
+refusal:nested_git_F2 rc=1 stderr=run_record: --dest must not target Git metadata (.git): 'docs/.git/hooks/pre-commit'
+refusal:target_branch_symlink rc=1 stderr=run_record: target branch 'docs/sym-escape' has symlink entry at 'escape_link'; refusing before branch switch
+bracket[post-refusals]: {"branch": "development", "config_sha": "91b54e7b833f98ff", "head": "872ff5fd2f39c9917f588ca31db2b863c2fbf747", "refs_sha": "72b474e945e47cda", "status": ""}
+refusals_state_identical=True outside_files=0
+refusal:dirty_staged rc=1 stderr=run_record: refusing checkpoint: --clone has staged, unstaged, or untracked changes
+bare_remote_pre_blob='PRE-PUBLICATION-SENTINEL'
+expected_redacted_bytes=232 expected_sha256=efee6bf09113111882ba74b398313b459d85a4e208683e2a354eb37e20329a71
+push_fail rc=1 stderr=run_record: git ls-remote --heads origin refs/heads/docs/run-rec failed (rc=128): fatal: '~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/nonexistent.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+push_retry rc=0 stdout={
+  "branch": "docs/run-rec",
+  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/cp_clone",
+  "committed": false,
+  "dest": "docs/run-records/demo.md",
+  "head_sha": "84b6b6f5aee3641d925430445fd64dfbb833ab16",
+  "push_status": "pushed",
+  "pushed": true
+}
+bare_remote_post_bytes=232 post_sha256=efee6bf09113111882ba74b398313b459d85a4e208683e2a354eb37e20329a71 matches_expected_snapshot=True
+--- bare remote published blob ---
+RUN-RECORD-VERSION: 1
+LANDING_CLONE: ~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/landing_fake
+- OPERATOR_AMENDMENT: OA-1 2026-11-20T01:00Z proceed (operator turn)
+- note-auth: Authorization: [REDACTED]
+idempotent_noop rc=0 stdout={
+  "branch": "docs/run-rec",
+  "clone": "~/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/ks15-manual-EROGq6/cp_clone",
+  "committed": false,
+  "dest": "docs/run-records/demo.md",
+  "head_sha": "84b6b6f5aee3641d925430445fd64dfbb833ab16",
+  "push_status": "up-to-date",
+  "pushed": false
+}
+=== 6. CodeRabbit PR #1544 Major-fix controls (JSON Authorization, symlink append, duplicate LANDING_CLONE, showUntrackedFiles=no, gitignored dest) ===
+cr6a_json_auth='RUN-RECORD-VERSION: 1\n- note: {"Authorization": "[REDACTED]"}'
+cr6b_symlink_rc=0 still_symlink=True target_has_event=True
+cr6c_dup_lc_rc=1 stderr=run_record: refusing checkpoint: invalid LANDING_CLONE header: duplicate LANDING_CLONE headers at lines [2, 3]
+cr6d_untracked_rc=1 preserved='keep-me' stderr=run_record: refusing checkpoint: --clone has staged, unstaged, or untracked changes
+cr6e_ignored_rc=1 preserved='LOCAL-UNTRACKED-IGNORED' branch=development stderr=run_record: refusing checkpoint: destination is gitignored and untracked: ignored.md
+=== ALL MANUAL CHECKS PASSED ===

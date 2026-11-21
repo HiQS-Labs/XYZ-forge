@@ -1,0 +1,6 @@
+contract_keys ['artifacts', 'fix_probes', 'gate', 'remediation', 'target']
+labels ['grep_present:skills/2-daily/merge-cleanup/SKILL.md']
+reason None
+branch matches (unfixed expected True): True count 1
+simulated-fixed matches (landed expected False): False changed True
+PARSER+LINTER+POLARITY OK

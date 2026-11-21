@@ -1,0 +1,222 @@
+[
+  {
+    "control": "valid-plan-draft",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=raw-valid/None tool=plan-draft stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "malformed-json",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "json-non-object",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "empty-output",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "qa-r1-tool-is-list",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/tool-or-args-not-allowlisted tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "qa-r1-inbox-id-is-list",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/plan-draft-id-not-eligible tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "qa-r1-inbox-ids-has-dict",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/summarize-args tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "disallowed-tool",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/tool-or-args-not-allowlisted tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "injection-nonexistent-id",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/plan-draft-id-not-eligible tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "tool-event-is-adapter-error",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "rate-limited",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=rate-limited decision=rate-limited/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "nonzero-exit",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "transport-not-stdin-red-control",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "replay-hardened-stream",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=raw-valid/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "replay-baseline-stream-tool-events",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "timeout-no-retry",
+    "pass": true,
+    "detail": "norm=timeout stub_calls=1 elapsed=2.3s billing=unknown"
+  },
+  {
+    "control": "prompt-transport-positional",
+    "pass": true,
+    "detail": "prompt_head='# Evaluator v2\\n\\nReturn exactly one JSON ' snapshot_present=True"
+  },
+  {
+    "control": "effort-reaches-cli",
+    "pass": true,
+    "detail": "argv effort=['model_reasoning_effort=medium']"
+  },
+  {
+    "control": "fault-name-codex-arm",
+    "pass": true,
+    "detail": "norm=invalid-output stub_calls=0 agent_called=True (synthetic)"
+  },
+  {
+    "control": "empty-inbox-no-call",
+    "pass": true,
+    "detail": "stub_calls=0 agent_called=False reservation={'status': 'released', 'billing_status': 'unbilled', 'actual_cost': 0.0}"
+  },
+  {
+    "control": "call-cap-90-then-pause",
+    "pass": true,
+    "detail": "stub_calls=90 held_unknown=90 PAUSE=True slot91=paused rcs_nonzero=0"
+  },
+  {
+    "control": "rules-arm-unchanged",
+    "pass": true,
+    "detail": "norm=ok stub_calls=0 adapter=rules prompt_sha=dcca67813bb1"
+  },
+  {
+    "control": "config-freezes-route",
+    "pass": true,
+    "detail": "flags=25 refused_rc=2"
+  },
+  {
+    "control": "validate-red-control",
+    "pass": true,
+    "detail": "old=[None, 'TypeError', 'TypeError', 'TypeError'] new=[None, 'tool-or-args-not-allowlisted', 'plan-draft-id-not-eligible', 'summarize-args']"
+  },
+  {
+    "control": "a2-valid-authored-merged",
+    "pass": true,
+    "detail": "decision=raw-valid authored=True scope_sources=['PROJECT/1-INBOX/GH-1201-CODE-AUDIT.md:L21', 'codex-authored']"
+  },
+  {
+    "control": "a2-reject-blank-scope",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-unknown-key",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-oversize-string",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-too-many-items",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-non-string-item",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-scope-not-list",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-empty-authored",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-invented-path",
+    "pass": true,
+    "detail": "decision=rejected/authored-path-not-tracked tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-legit-new-file-policy-false-reject",
+    "pass": true,
+    "detail": "decision=rejected/authored-path-not-tracked tool=idle brief=none"
+  },
+  {
+    "control": "a2-off-mode-rejects-authored",
+    "pass": true,
+    "detail": "decision=rejected/plan-draft-id-not-eligible brief=none codex_authoring_in_cfg=False"
+  },
+  {
+    "control": "a2-authored-scope-lifts-missing-scope",
+    "pass": true,
+    "detail": "without=missing-scope with=draft sourced_scope_kept=False"
+  },
+  {
+    "control": "a2-write-set-draft-branch",
+    "pass": true,
+    "detail": "draft briefs checked=5"
+  },
+  {
+    "control": "a2-write-set-ready-branch",
+    "pass": true,
+    "detail": "ready briefs checked=0 (not exercised: no planner-ready request in this backlog)"
+  },
+  {
+    "control": "a2-collision-draft-lanes-separated",
+    "pass": true,
+    "detail": "issues=[1201, 1204] waves=[3, 1] both_claim_shared_path=True"
+  },
+  {
+    "control": "a2-ready-brief-ignores-authored-paths",
+    "pass": true,
+    "detail": "state=ready write_set=['utils/py/harness.py'] ignored=['write_set'] lane_paths=[]"
+  },
+  {
+    "control": "a2-prompt-12-requests-single-argv",
+    "pass": true,
+    "detail": "pending_requests=12 prompt_bytes=80269 (ARG_MAX=1048576)"
+  },
+  {
+    "control": "a2-off-mode-brief-byte-identical",
+    "pass": true,
+    "detail": "bytes old=1887 new=1887 equal=True"
+  },
+  {
+    "control": "a2-validator-direct",
+    "pass": true,
+    "detail": "got=[None, None, 'authored-path-not-tracked', 'plan-draft-id-not-eligible', 'authored-shape']"
+  },
+  {
+    "control": "ledger-files-unchanged",
+    "pass": true,
+    "detail": "releases.db/releases.sql hashes identical before and after"
+  }
+]

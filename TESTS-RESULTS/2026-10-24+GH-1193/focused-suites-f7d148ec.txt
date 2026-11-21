@@ -1,0 +1,22 @@
+HEAD f7d148eccd592e789b19f954cbd75790d7d2a546
+== gh534_phase_a
+merge-cleanup: task-clone: PRESERVE_UNPUSHED at scan time -> SAFE_REMOVE_CLONE now (100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees))
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.
+exit=0
+== gh534_phase_c
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (3/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (4/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (5/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6)
+exit=0
+== gh436-merge-cleanup.sh
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (1/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (2/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (3/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (4/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (5/6)
+merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6)
+exit=0
+HEAD f7d148eccd592e789b19f954cbd75790d7d2a546 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git

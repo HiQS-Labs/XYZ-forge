@@ -1,0 +1,6 @@
+clean run:
+  receipt scope= full exit= 0
+skipped suite:
+  receipt scope= None exit= 0
+env fault:
+  receipt scope= None exit= 0

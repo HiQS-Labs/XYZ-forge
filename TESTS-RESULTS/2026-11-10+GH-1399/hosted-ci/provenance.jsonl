@@ -1,0 +1,1 @@
+{"event": "GH1399-hosted-CI", "observed_at": "2026-11-11T17:27:20.199262+00:00", "queried_commit_sha": "c811a2be969576f32f4c284b4b82ba9a35095b04", "workflow_run": 43067783170, "conclusion": "success", "files": {"initial-head.json": "20fb0ffeafd6dc9a20b71886b46e774932ae95462812402704614df9b038b368"}}

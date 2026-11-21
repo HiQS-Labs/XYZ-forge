@@ -42,7 +42,7 @@ Once reproducible, find *where* the code breaks and *what stops it from breaking
    - config flags, env vars, feature toggles
    - branch conditions, input shape
    - timing, concurrency, build options
-   Each knob is a candidate axis to flip in the differential. Flip one at a time.
+   Each knob is a candidate axis to flip in the differential. Flip one at a time. When the fail path spans modules you have not read, run [recon](../recon/SKILL.md) on that path before forming the hypothesis.
 3. **In-code instrumentation.** If outside knobs can't move the failure, go inside: `printf` / log statements at the suspected fail site, dump the relevant internal state. Tag every probe with a unique prefix (e.g. `[DBG-a4f2]`) so cleanup is a single grep. Let the trace show where reality diverges from your model.
 
 ## 3. Falsify the hypothesis
@@ -53,6 +53,14 @@ When a candidate root cause surfaces, scrutinise it **before** testing it.
 - What is the simplest **proof**? What is the cleanest **disproof**?
 - Run the **disproof first**. If the hypothesis survives, it's real. If it dies, you saved yourself from chasing a phantom.
 - Generate 3–5 ranked hypotheses, not one. Single-hypothesis thinking anchors on the first plausible idea.
+
+**Verify relevance and preserve guarantees.** Before accepting a fix:
+
+1. Show that it addresses the failure path responsible for the reported symptom, then rerun the reported reproducer with the candidate and require the symptom to be resolved. If no runnable reproducer exists, verify resolution by direct observation. A synthetic reproduction of a related defect is insufficient to claim the reported symptom is fixed; label the distinction. Without evidence of resolution, record the fix as unverified.
+2. Identify existing guarantees the change touches, using code, tests and prior fix rationale.
+3. Try to violate those guarantees with the candidate applied, including combinations of inputs tested separately. Use existing tests or proportionate manual probes under the host repo's test policy.
+
+A red control proves the targeted behavior changed; it does not prove existing guarantees survived. Changing an existing assertion requires explaining why its protected behavior should change. Record unresolved checks as unverified; do not describe the candidate as regression-free.
 
 **Root cause or proximate cause?** A hypothesis that survives disproof explains *this* failure; it does not yet prove you are standing at the origin. Before accepting it, run the class-vs-instance test: *if I fix here, does the whole class of failure go away, or only this instance?* If only the instance, keep asking **"what let that happen?"** — one hop upstream at a time — until the answer is a design decision, a contract violation, or the place the bad state was first *produced*, not the line where it was first *noticed*. Record each hop; the chain is evidence, not narrative.
 

@@ -1,0 +1,112 @@
+{
+  "canary_file": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-stageb-window-2026-10-31/utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl",
+  "canary_sha256": "a376a571ea3206187c05adca930bc05ceffc0fe620e8425aaddc8812fe46fe04",
+  "identities": {
+    "codex": {
+      "backlog_files": {
+        "base-files.txt": "220a55ce7828288918cb2e51ec13d96164b0504909b91b0cbb4a401e8815d823",
+        "branches.txt": "8e0de38ea5abf276880c877cd3070eeae123e765e496dff2a67847fdcb783199",
+        "gh-state.json": "b3f186ca84534087736ab052cf0b5743604c8fa090a9b80dc23d01728cef5012",
+        "issues.json": "e15373505083f3726dc76a7de84b2a17056cff266ba777498341f61bf70d2cc4",
+        "releases.db": "4c68f4729b31932293e94c7505e162976873888ffbc5a71809ccf7a33ae5576f"
+      },
+      "config": "52f1a05dd1c33ad6670f878c1611095a05c6ecf60016c74c213a1bb72a55e70b",
+      "config_route": {
+        "adapter": "codex",
+        "adapter_timeout_s": 90.0,
+        "codex_authoring": true,
+        "codex_effort": "medium",
+        "codex_flags": [
+          "-s",
+          "read-only",
+          "--ephemeral",
+          "--ignore-user-config",
+          "--ignore-rules",
+          "--skip-git-repo-check",
+          "--disable",
+          "shell_tool",
+          "--disable",
+          "unified_exec",
+          "--disable",
+          "view_image",
+          "--disable",
+          "image_generation",
+          "--disable",
+          "apps",
+          "--disable",
+          "plugins",
+          "--disable",
+          "hooks",
+          "--disable",
+          "skill_search",
+          "-c",
+          "web_search=disabled",
+          "--json"
+        ],
+        "codex_model": "gpt-6.1-terra",
+        "daily_cap": 1.8,
+        "max_call_cost": 0.01,
+        "prompt_sha256": "54b5d003cf91018a7d9bb73246ca8a2dbe670bcb071f5b0bf94c00670cd44acb"
+      },
+      "harness": "5d811c9a8dd22ad6ab29a1d7e0df3af3eb83d1d0031574f42b169d080437d983",
+      "manifest_normalised": "8490c65b4e1cd0860859793229cd766eae04026143b7aae0dae1b174325a3e9f",
+      "prompts": {
+        "evaluator.v1.md": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+        "evaluator.v2.md": "1fe517ef45b840192daddfd0e5c38b8b952e85e7d07ddf561f33f6526e7f31c5",
+        "evaluator.v3.md": "54b5d003cf91018a7d9bb73246ca8a2dbe670bcb071f5b0bf94c00670cd44acb"
+      },
+      "source_head": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+      "source_ledger": "4d57a30f386ef3b18461cd6d7addac27ff34064f4577073ca57fb360ce426456"
+    },
+    "rules": {
+      "backlog_files": {
+        "base-files.txt": "220a55ce7828288918cb2e51ec13d96164b0504909b91b0cbb4a401e8815d823",
+        "branches.txt": "8e0de38ea5abf276880c877cd3070eeae123e765e496dff2a67847fdcb783199",
+        "gh-state.json": "b3f186ca84534087736ab052cf0b5743604c8fa090a9b80dc23d01728cef5012",
+        "issues.json": "e15373505083f3726dc76a7de84b2a17056cff266ba777498341f61bf70d2cc4",
+        "releases.db": "4c68f4729b31932293e94c7505e162976873888ffbc5a71809ccf7a33ae5576f"
+      },
+      "config": "d5d0151d14ac9ef1981e886a09a22b1e85c5d93b4746ad0eb964d07e838ec293",
+      "config_route": {
+        "adapter": "rules",
+        "adapter_timeout_s": null,
+        "codex_authoring": null,
+        "codex_effort": null,
+        "codex_flags": null,
+        "codex_model": null,
+        "daily_cap": 1.8,
+        "max_call_cost": 0.01,
+        "prompt_sha256": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3"
+      },
+      "harness": "5d811c9a8dd22ad6ab29a1d7e0df3af3eb83d1d0031574f42b169d080437d983",
+      "manifest_normalised": "8490c65b4e1cd0860859793229cd766eae04026143b7aae0dae1b174325a3e9f",
+      "prompts": {
+        "evaluator.v1.md": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+        "evaluator.v2.md": "1fe517ef45b840192daddfd0e5c38b8b952e85e7d07ddf561f33f6526e7f31c5",
+        "evaluator.v3.md": "54b5d003cf91018a7d9bb73246ca8a2dbe670bcb071f5b0bf94c00670cd44acb"
+      },
+      "source_head": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+      "source_ledger": "4d57a30f386ef3b18461cd6d7addac27ff34064f4577073ca57fb360ce426456"
+    }
+  },
+  "layout": {
+    "idle": 0,
+    "miss": [
+      85,
+      90
+    ],
+    "real": 66,
+    "slots": 96
+  },
+  "name": "stageb-2026-10-31",
+  "roots": {
+    "codex": "stageb-2026-10-31-codex",
+    "rules": "stageb-2026-10-31-rules"
+  },
+  "route": {
+    "authoring": true,
+    "call_cap": 180,
+    "effort": "medium",
+    "model": "gpt-6.1-terra"
+  }
+}

@@ -7,13 +7,51 @@ description: Immediate serial task queue execution engine and conversational cap
 
 `jog` manages a serial queue of tasks for immediate execution today. It provides conversational task intake and runs tasks one by one with zero concurrency overhead, using `releases.db` (`jog_queue` table), the outer `relay-driver.lock`, and `swarm-preflight`. Since the GH-280 recalibration, per-task execution defaults to Marathon's reviewed one-phase driver (`--executor marathon`); `--executor relay` keeps the legacy single-phase `relay-drive` path as the documented rollback during a bounded compatibility window.
 
+## Bounded composed wake (GH-1400)
+
+For an already selected/prepared queue, invoke the existing runner with
+`releases jog run --target-root <execution-clone> --builder codex --reviewer agy
+--max-tasks 2 --supervise-until <UTC-epoch-seconds>` (one shell line).
+An optional `--checkpoint-root <publication-clone>` retains the existing primary
+publication owner. This is an operator-invoked wake, not an installed scheduler.
+
+The wake recovers latest approved results before dispatch, publishes their existing
+receipts and leaves them awaiting landing without another builder. Missing, mismatched
+or failed results remain held for an explicit retry decision. It then aligns the execution
+clone to freshly fetched development, preserving ahead development under
+`jog-preserved-development-<full-SHA>`, all other branches and untracked files. Tracked
+changes, dependent worktrees, unknown/live/stopped lock owners or an untracked overwrite
+collision hold; nothing is reset, cleaned or discarded. Keep preserved branches for review.
+
+Each selected pending item counts toward max-tasks, including a readiness refusal. Current
+Swarm preflight still gates dispatch. Newly approved published PR results permit
+continued independent pending work, and so does one task-local failure: a valid receipt for
+the execution just run whose own gate ran and failed (`escalated`, reason `pre-advance-failed`,
+exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row stays `failed`
+with its reason and receipt path and is never retried. Every other failure (lock contention,
+guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
+change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
+Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon
+attempts and legacy Jog orphan thresholds persist. This wake never calls retry-build or
+renews a retry budget. Reinvoke with the same absolute deadline after an interruption;
+expired deadlines refuse. Preflight/worker groups receive the remaining dispatch time;
+cancellation stops the owned group. Publication gates and cleanup retain their own clocks
+and may end after dispatch cutoff. No global wall-time or whole-process-tree guarantee is
+claimed for children that escape those existing owners.
+
+RAW requests remain accepted by Conveyor/preparation; do not put prose into Jog admission.
+Research-depth defaults remain owned by GH-1476. No merge, deployment, new API spend or
+schedule activation follows from preparing this command. Agent Orchestrator's durable
+result-adoption and explicit wait concepts informed GH-1474; this composes Forge primitives
+without copied AO source. No persistent agent context or exactly-once external effects.
+
 ## Conversational Triggers
 
 When the operator speaks naturally:
 - `"jog GH-123"`:
   1. Validates the issue via `gh issue view 123`.
   2. Ensures a capture doc exists (in `PROJECT/1-INBOX/` or `PROJECT/2-WORKING/`).
-  3. Ensures the issue is parked in the roadmap ledger (`releases roadmap add`).
+  3. Ensures the issue has a roadmap ledger row created at pickup with real rating (`releases roadmap pickup --issue-num 123`).
   4. Enqueues the issue into `jog_queue` (`releases jog add GH-123`).
   5. Echoes: `jog: enqueued GH-123 at position N`.
 
@@ -21,9 +59,86 @@ When the operator speaks naturally:
   1. Extracts the immediate task/bug discussion from recent context.
   2. Creates the tracking GitHub issue via `gh issue create` (issue-first SOP).
   3. Writes the initial capture doc to `PROJECT/1-INBOX/GH-<num>-<title>.md`.
-  4. Parks the issue in the roadmap ledger (`releases roadmap add`).
+  4. Creates the roadmap row at pickup (`releases roadmap pickup --issue-num <num>`) with rating from the issue body/doc.
   5. Enqueues into `jog_queue` (`releases jog add <num>`).
   6. Confirms the newly created issue number and queue position with the operator.
+
+## Preparation handoff (GH-1439)
+
+“Prepare N bugs for Jog”, “preflight this queue”, or “make this ready for another
+operator/device” uses the following existing workflow before enqueue/dispatch.
+Preparation alone does not fire builders. An explicit execution request continues
+through these steps into the existing runner without asking again for routine setup.
+For multi-lane marathon planning, use start-marathon instead; do not create a second
+queue or invent a JSON import format.
+
+1. **Reuse real work and authority.** Reconcile selected issues against current source,
+   open PRs, retained candidates and historical queue/native attempts. Name the ordered
+   IDs, exact acceptance and write sets; retain existing ratings/counters. Use the
+   existing capture/RELEASES writers and independent plan review where required.
+   Reuse already-valid preparation rather than repeating inventory or rebuilding a candidate.
+2. **Resolve the actual machine and engine.** Record canonical origin, integration ref,
+   harness source revision, skill deployment receipt and vendored runtime revision.
+   Skills Army HQ owns instruction installation; supported xyz-vendor owns `.xyz`.
+   Updating one does not update the other. Verify the harness interpreter and product
+   test interpreter separately; a binary named `python3` is not a version/dependency proof.
+   Preserve dirty/divergent clones; use the existing full-clone/primary-pin path, not
+   destructive cleanup or a hardcoded “main folder” assumption.
+3. **Map gates to environments.** Read the target's existing CI/dependency recipes.
+   Associate each declared gate with its actual interpreter, dependency set, local service
+   prerequisites and working directory. Do not combine incompatible app/service pins.
+   Where separate environments are needed, use existing gate commands with explicit
+   verified interpreter paths/configuration; do not add a wrapper runner. Prove required
+   configuration is nonempty and missing configuration refuses. Keep secrets out of receipts.
+   Run relevant baseline checks in disposable full clones; classify existing failures
+   separately from the intended bug control. No product/service deployment is implied.
+4. **Verify roles and capacity once, near dispatch.** Resolve explicit supported builder
+   and independent reviewer identities, exact model/effort/auth route and effective limits.
+   Same-provider roles must remain distinct. Reuse the installed route/auth validation
+   and one small bounded real request through the selected review route; version/help or
+   dry-run is not capacity proof. A successful request is availability now, not reserved
+   credits for the whole run. Record UNKNOWN when unavailable; stop on credit/auth failure,
+   with no silent model/account fallback. Do not probe once per queued task unless new
+   evidence invalidates the result. Honor Claude-builder's existing explicit-user-choice rule.
+5. **Publish and align, then exercise the real boundary.** For preparation-only work,
+   record unpublished integration as pending instead of claiming dispatch readiness.
+   Once landing/publication is authorized, use the normal path and reconcile. Choose one
+   exclusive clean published development coordinator plus separate full execution and
+   checkpoint-publication clones. Fetch and normally fast-forward; prove target ledger
+   has no delta against its fresh integration tracking ref. Use supported queue admission
+   or resume/retry, preserving history. Run actual target-aware `jog run --dry-run` with
+   explicit roles/max-tasks and inspect every selected result, not an empty-queue exit0.
+   Inspect generated packet roots, nonempty/lossless criteria, artifacts, effective caps
+   and promotion-probe lint as well as Swarm readiness. Command probes must use supported
+   committed paths; a packet that parses is not proof promotion accepts its command.
+6. **Hand off one bounded invocation and observe.** Record the actual command with
+   target/checkpoint roots, selected order, UTC deadline/closeout reserve, remaining
+   attempt budgets and owner. Individual turn/gate timeouts are not an overall deadline;
+   the supervising session must enforce the authorized wall window. Do not start work
+   whose allowed duration cannot fit. Preserve existing PR outer inspection, landing
+   authority and recovery verbs. Measure useful reviewed deliveries, engine-owned
+   advancement, interventions, elapsed time, observed API/CLI usage and repeated gates.
+   Unknown HTTP/token counts stay unknown. No automatic-success claim for manual dispatch.
+
+Keep one compact record in the existing umbrella issue and committed evidence/provenance;
+this is an instruction contract, **not a new runtime receipt schema or state machine**:
+
+| Evidence | Required record / honest limit |
+|---|---|
+| Selection | Ordered IDs, current base, retained candidates/attempts and declared acceptance |
+| Contract-ready | Actual per-item packet + promotion-lint results, nonempty criteria/artifacts |
+| Environment-verified | Per-gate interpreter/dependencies/services; actual role/model/auth/capacity observation |
+| Integration-aligned | Coordinator/execution/publication roots and SHAs, fresh tracking refs, clean/ledger checks |
+| Dispatch-ready | Prior evidence still applies, exact bounded invocation and active owner; otherwise name pending facts |
+| Result | Deliveries, advancement, interventions, time/calls/gate repeats; unknowns and preserved failures |
+
+Use these as evidence descriptions, never parallel queue statuses. Reuse valid observations
+and rerun only what changed. A prepared contract may be complete while dispatch is blocked
+by unpublished intake or another machine's unverified environment. After a metadata-only
+tail, record tested versus delivered SHAs and check the relevant unchanged boundaries rather
+than reflexively rerunning broad qualification. Do not label the whole run “ready” solely
+because preflight/dry-run returned zero. LTVera-Pandas#1014/#1015 is the worked example:
+its aligned five-item dry-run passed, but Jose's capacity and useful deliveries remained unproven.
 
 ## CLI Commands
 
@@ -64,7 +179,7 @@ releases jog retry-build <GH-NUM> --target-root <disposable-full-clone>
     Fresh Marathon attempt on a fresh execution id (history preserved).
 
 releases jog land <GH-NUM> [--pr N]
-    Verify committed delivery after hosted reconciliation and complete the primary queue row.
+    Verify committed delivery after hosted or local reconciliation and complete the primary queue row.
 
 releases jog reconcile <GH-NUM>
     Idempotent replay entry for jog land (same verification and steps).
@@ -78,7 +193,18 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 ## Runner Execution Lifecycle (`jog run`)
 
 1. **Outer Driver Lock & Hermetic Dry-Run:**
-   - `--dry-run`: Hermetic simulation with zero locks and zero mutations (leaves queue and DB untouched).
+   - Bare `--dry-run`: queue preview with zero Jog state writes, locks or leases.
+   - With `--target-root`, dry-run checks explicit Marathon roles/binaries, inbox promotion probes,
+     and per-item preflight. Any selected nonzero preflight (including already-landed) exits 2
+     after displaying all outcomes. Empty queues and `--max-tasks 0` without checkpoint mode
+     evaluate no items and are previews, not workload readiness. Inbox probe checks use unattended
+     rules even in a terminal; an attended live run may instead prompt for missing probes.
+     When supplied, `--checkpoint-root` also checks bounded-run options, separate full-clone origin,
+     clean publication tree and development branch. It never begins checkpoint recovery/publication.
+     Preflight itself can fetch, create transient worktrees and execute contract probes; this is
+     not a universally side-effect-free command. Live provider capacity, gate environments/services,
+     primary cleanliness, remote freshness and recovery eligibility remain unverified. Follow preparation instructions
+     before dispatch; a passing dry-run does not certify an unattended run.
    - Real run: Acquires `relay-driver.lock` via `rtl.driver_lock_path()`, sets `RELAY_DRIVER_LOCKED=1`, and registers a clean exit handler. Concurrently running marathons or relays in the same clone are safely excluded (GH-42 / GH-354).
 
 2. **Receipt-Backed State Transitions:**
@@ -91,6 +217,7 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
    If a task's capture doc is in `PROJECT/1-INBOX/`, `jog run` promotes it to `PROJECT/2-WORKING/`, formats the status table, and lints its `fix_probes`:
    - Rejects trivial or dummy probe patterns (e.g. `exit 0`, `true`).
    - Requires referenced probe scripts/globs to resolve to actual files.
+   - With no frontmatter `fix_probes`, accepts the `## Swarm Preflight Contract` JSON `fix_probes` when every entry is well-formed (known `type`; non-empty `path`, grep `pattern`, or a `command` `cmd` that passes the same lint). Promotion evaluates no probe: preflight judges "unfixed" next, in its ref-pinned worktree (GH-1232).
    - In interactive mode, prompts operator to approve drafted probes before running preflight.
    - In unattended mode, unreviewed auto-scaffolding without verified probes is parked with `unreviewed-probe-contract` to prevent false-green runs.
 
@@ -114,11 +241,14 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 7. **Receipt-Backed Landing & `--auto-merge`:**
    A row is never marked `completed` on a self-report. `jog land` verifies GitHub truth first —
    merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
-   gate evidence after hosted `wave_reconcile` has completed issue/doc lifecycle — then completes
+   gate evidence after hosted or local `wave_reconcile` has recorded reconciliation — then completes
    the primary row and records its landing proof.
-   - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
-   - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
-   - **`--auto-merge` (verified, GH-300):** Verifies GitHub truth against the receipt BEFORE merging — the PR must still be OPEN on the receipt's base/head/head SHA in this repo with the gate green on that head — and refuses (parking the row) instead of merging blind; on pass, merges into `development` and re-anchors the checkout before advancing.
+   - **Real runs do not merge.** `jog run --auto-merge` is refused before any lease, and a published
+     task parks awaiting landing; independent pending work may continue. Land through
+     merge-cleanup, whose Jog hook calls `jog land` after reconciliation (see the interim publication
+     checkpoint below).
+   - **`--simulate` only:** the interactive confirm and `--auto-merge` paths remain for the hermetic
+     simulation and never touch a real PR.
 
 8. **Teardown Cleanliness:**
    Verifies clean worktree disposal, clean working tree status, and gate receipts between serial items.
@@ -157,23 +287,109 @@ landing prerequisite.
 **Interim publication checkpoint:** delivery 1 does not automatically push queue transitions.
 Before merge-cleanup, inspect the primary's status, index and local supervisor commits. Commit
 only owned Jog ledger/view paths explicitly, then normally push development. Confirm a clean,
-published, fast-forward-ready primary. Unrelated changes, divergence or rejected push stop and
-preserve state for reconciliation; do not bypass Phase 0. The automatic direct-push/rebuild
+published, fast-forward-ready primary. Unrelated changes or a rejected hand push stop and
+preserve state; do not bypass Phase 0. The automatic direct-push/rebuild
 path is a separate PR so it can be reverted independently. `--auto-merge` on native Jog dispatch/retry refuses before leasing during this interim;
 it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
-its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
+its mapped Jog hook runs after hosted or local reconciliation and before the existing final post-merge
 commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
 
-Landing requires merged GitHub truth, a green gate on the original approved SHA, clean
-`releases check`, green hosted reconciliation and merge reachability from freshly fetched
-`origin/<integration>`. A moved head may contain the exact validated receipt publication,
-ledger-only changes in B1's six-path set, or mechanically proven upstream merges. For each
-upstream merge, both parent trees and the recorded tree have those six paths stripped; a
-conflict-free `git merge-tree --write-tree` must reproduce exactly the recorded stripped tree.
-Any remaining conflict or extra/missing blob refuses. The committed `landing.json` records
-both approved/delivery heads, tree IDs, exclusions and hosted run. No manual override or broad
-document-directory exception exists. Replay uses canonical queue truth and emits no duplicate
-completion transition.
+### Checkpoint publication (`--checkpoint-root`): remote contact and legal stops (GH-1453)
+
+A `jog run --checkpoint-root <publication-clone> --max-tasks N` wake works from the primary's
+**local state**. It does not fetch at start and does not need the primary to equal
+`origin/development`. It contacts `origin/development` only during publication, after the last task.
+(Per-task preflight in the execution clone still fetches, so each task's PR starts from current
+`development`; that is separate from the checkpoint.)
+
+**"Competing writer", defined once.** A competing writer is anything else that changes *this
+wake's own queue rows* while the wake runs, from this clone or from another clone or machine. Jog
+handles each case itself:
+
+- A second `jog run` in the same primary clone is refused by the supervisor lock.
+- A change pushed from elsewhere to the `status`, `attempt_count` or `failure_reason` of a row this
+  wake wrote is the overlap stop at publication. A change to only that row's queue position is not
+  a stop; the published order is the remote's.
+- A queue write made in this primary by another process during the wake counts as part of the wake
+  when publication has to replay it (that is, when `development` moved). A lease or a status write
+  (for example from `jog resume`) is replayed with the rest; any other queue verb (`add`, `drop`,
+  `skip`, `bump`, `clear`, `retry`) or an orphan-lease reconcile is a stop.
+
+A session that pushes any other ledger change to `development` (a reconcile, intake, a rating,
+another coordinator's rows) is not a competing writer. Run directives, runbooks and issue checklists
+**cite this section** for Jog's stop conditions; they do not restate or paraphrase them.
+
+**A moved `development` is reconciled automatically.** At publication Jog merges the remote into
+the primary, takes the remote ledger, replays this wake's own queue writes through the canonical
+writers, runs `utils/releases-merge-resolve.sh` and publishes the merge. It prints
+`jog: reconciled wake checkpoint onto moved development <sha>` and then
+`jog: published primary checkpoint <sha>`. That is a normal successful run.
+
+**These are the only checkpoint stops.** For checkpoint publication, a stop exists only when Jog
+itself prints `jog: checkpoint held: <message>` and exits 2. The list below is closed: each entry is
+the fixed start of a message, and Jog appends the details (the rows, the paths, the failing command).
+Nobody adds to it. A conflict that an agent or a runbook predicts, with no command having failed, is
+not a stop: continue.
+
+This list covers checkpoint publication only. It does not override anything else Jog reports: a
+failed task or gate, a refusal that is not a checkpoint stop (the primary pin, the execution clone,
+the supervisor lock), or an unexpected error or traceback. Those are real outcomes; report them
+verbatim. An error you do not recognise is an error to report, never permission to continue.
+
+At start (nothing has run yet):
+
+- `checkpoint root must be a separate full clone with the same origin`
+- `checkpoint refuses unrelated changes` (a dirty path outside the ledger files and adopted HTML views)
+- `checkpoint refuses pre-existing ledger changes without an active journal`
+- `checkpoint requires a local origin/development ref`
+- `checkpoint refuses unpublished local commits`
+
+At publication:
+
+- `development changed the same Jog queue row(s) as this wake` (a real overlap; the rows are named)
+- `development moved and conflicts outside the ledger` (the primary's own files conflict with the remote)
+- `checkpoint cannot replay this wake onto a moved development` (the wake includes an orphan-lease
+  reconcile or an operator queue verb, which are not replayed against another ledger)
+- `checkpoint replay did not reproduce the wake's queue state`
+- `canonical writer refused the replay of`
+- `development kept moving through` (three reconcile attempts in one run)
+- `development moved and this checkpoint journal predates automatic reconcile`
+- `checkpoint refuses a merge in progress that this wake did not start` (finish or abort your own
+  merge in the primary first; Jog restores only a merge that matches the target it recorded and
+  whose `HEAD` is still its checkpoint, so a hand-made merge of that same commit from that same
+  `HEAD` would be treated as Jog's)
+- `unmerged or unstaged changes remain after the ledger merge resolver`
+- `checkpoint reconcile could not merge development`
+- `ledger merge resolver refused`
+- `checkpoint ledger command failed` (`releases check` or `check --rebuild`; the message quotes it)
+- `checkpoint primary HEAD changed outside this wake`
+- `checkpoint has new changes after its recorded commit`
+- `checkpoint publication clone is dirty; preserve it before retry`
+- `checkpoint publication clone must be on development`
+- `publication clone contains commits beyond this checkpoint`
+
+Any other message after `jog: checkpoint held:` is a command or system call that failed and is
+quoted as it failed: usually `git <command> failed: <git's own error>` (this includes the publication
+clone's push gate), otherwise a file or database error raised during the reconcile.
+
+**At a stop:** state is preserved. A stop while the merge is open restores the primary to its
+checkpoint commit; a stop after a reconcile merge keeps that merge. If a run died while its own
+merge was open, the rerun restores it first. Fix the named cause if there is one, then **rerun the
+same command**. What the rerun does depends on whether an unpublished checkpoint is retained, not
+on which message was printed: if one is (the wake had already committed its checkpoint), the rerun
+retries publication first and dispatches no task; if none is, the rerun is an ordinary start and may
+dispatch tasks. Never force-push, never `git reset` the primary, and never hand-edit `releases.db` or
+`releases.sql`.
+
+Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
+clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
+freshly fetched `origin/<integration>` and primary HEAD. A moved head must match this PR's
+fetched head; queue completion does not require exact approval ancestry or a permitted-file
+tail. It records delivery, not approval or test coverage of later edits. `landing.json` records
+`completion_policy: merged-pr`, the original approved/tested SHA, reported review head/candidate
+(null when absent), landed PR head, merge SHA and reconciliation evidence. Publication and
+retry-gate admission retain their existing checks. Replay uses canonical queue truth and emits
+no duplicate completion transition.
 
 ## Recovery Verbs
 
@@ -187,3 +403,18 @@ After an interrupted or failed item, pick the verb that matches what actually ne
   intake-hygiene fixes).
 - `jog retry-build <GH-NUM>` — the real rebuild: a fresh Marathon attempt on a fresh execution id
   when the build itself must be redone; all prior Tick history and execution records are preserved.
+
+### Crash leftovers
+
+Keep the verb order above: run `resume` first (spends no token), then `retry-gate` (approved build, failed gate), then `retry-build` (real rebuild). When a crashed run parks on cold-start (`cold-start-paused` / no valid result receipt), the crashed target clone may still hold four leftovers. For each, separate **"no process owns it"** from **"no unique work remains"**, and preserve on any uncertainty:
+
+1. **Isolation worktree (`rtl-wt.*`):** inspect `git worktree list` and confirm no live process holds the path (`lsof`). A worktree with no live owner can still hold unpublished edits, so check `git -C <wt> status` to confirm no unique work remains before removing it (`git worktree remove`).
+2. **Claimed tick token (`MARATHON-…-TURN`):** `tick info <token>` names an agent, not a pid. Establish the owning execution from the driver lock and the Jog row's `lease_pid` (`kill -0`). The token only clears once that execution is confirmed dead.
+3. **Clone driver lock (`.git/relay-driver.lock`):** confirm the pid in it is not alive (`kill -0`). Once no process owns it, the driver reclaims a stale lock itself on the next run.
+4. **Unpushed local marathon branch (`marathon/gh-…`):** this is evidence to **preserve**, never proof that removal is safe.
+
+Before anything is cleared, rely on `/merge-cleanup`'s existing checks — dirty files, unpublished refs, dependent worktrees, and live handles — rather than repeating them by hand.
+
+**Fresh-clone rule for `retry-build`:** after a cold-start park, `jog retry-build --target-root <clone>` targets a **fresh disposable full clone**, never the crashed one. The crashed clone is retired through `/merge-cleanup`, which preserves an unpushed branch until the operator says it is disposable.
+
+Implementation review correction (2026-11-15): supervised clone alignment also holds on a detached HEAD, preserving its unique commits in place. Explicit resume holds when the newest recorded gate retry lacks a valid matching result. Gate retry records its exact identity and result path before dispatch, so an interrupted retry remains visible without adding a new ledger.

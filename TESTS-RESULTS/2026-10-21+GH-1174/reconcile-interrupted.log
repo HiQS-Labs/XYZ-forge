@@ -1,0 +1,20 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/Users/noelsaw/Documents/Codex/2026-10-20/task-6/xyz-ate-docs)
+wave-reconcile: Processing commit abaa2620a3cb...
+wave-reconcile:   Provenance receipt matched for PR #abaa2620a3cb: TESTS-RESULTS/2026-10-21+GH-1174/provenance.jsonl:6 (commit=abaa2620a3cb297b4c47c031c0ce3d4e91e1ec2b)
+wave-reconcile:   commit abaa2620a3cb closes [1174]; references []
+wave-reconcile:   Found active doc: GH-1174-ATE-FUZZ-DOCS.md
+TRANSITION ["doc", "move", "GH-1174-ATE-FUZZ-DOCS.md", "3-COMPLETED", "2026-10-20"]
+wave-reconcile:   Moved -> GH-1174-ATE-FUZZ-DOCS.md (destination: 3-COMPLETED)
+TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5EA3D8TJH4CT1R3ZKKJCV70", "--doc-path", "PROJECT/3-COMPLETED/GH-1174-ATE-FUZZ-DOCS.md"]
+TRANSITION ["roadmap", "update", "--gid", "rmi-01M5EA3D8TJH4CT1R3ZKKJCV70", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-1174 · Reconcile ATE/fuzzing documentation** ✅ **SHIPPED 2026-10-20 (commit abaa2620a3cb)** — rated 70/65/75/85; manual docs hotfix explicitly approved → [capture](PROJECT/3-COMPLETED/GH-1174-ATE-FUZZ-DOCS.md)"]
+wave-reconcile:   ROADMAP.md entry updated for GH-1174
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> leaderboard.sh
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile: ERROR — Subprocess 'marathon-plan.sh' failed with exit -15:
+
+
+wave-reconcile: Rolling back all uncommitted mutations...

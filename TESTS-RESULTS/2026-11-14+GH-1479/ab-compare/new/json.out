@@ -1,0 +1,169 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-14T00:00:00Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "preflight-main"
+  },
+  "provenance": {
+    "source_docs": [
+      "/tmp/gh1479-ab.7EtceF/target/temp/gh1479/preflight-main.md"
+    ],
+    "issues": [],
+    "target_root": "/private/tmp/gh1479-ab.7EtceF/target",
+    "branch": "ab-work",
+    "commit": "4635abe093a3af0e1d95f3829871feefb0a63391",
+    "suggested_branch": "marathon/preflight-main-2026-11-14",
+    "branch_ready": false,
+    "skip_branch_prompt": true
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "python3 -c \"print('gate-ok')\"",
+    "round_cap": 1,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "test -e utils/py/swarm_preflight.py"
+      }
+    ],
+    "artifacts": [
+      "utils/py/swarm_preflight.py"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "GH-1479",
+      "criteria": "Behavior-preserving decomposition and typed static analysis"
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "4635abe093a3af0e1d95f3829871feefb0a63391",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1479 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "0/0 criteria copied verbatim from issue #1479",
+      "issue": "1479",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1479 (https://github.com/HiQS-Labs/XYZ-forge/issues/1479)",
+      "issue": "1479",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1479",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 0,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/swarm_preflight.py",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/swarm_preflight.py",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

@@ -1,0 +1,17 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/stop-owner/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/stop-owner/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/stop-owner/publication --builder codex --reviewer agy --max-tasks 1 --supervise-until 1794851783
+rc=0
+jog: published primary checkpoint bae54dbaf22185321db0c327e00bf5ebdb28dcf8
+jog: execution clone aligned at bae54dbaf22185321db0c327e00bf5ebdb28dcf8; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/stop-owner/primary/.tick/jog/jog-01M7JQYPN6ZXEQDQ85V86KX0GE/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: reached max-tasks limit (1); pausing queue.
+jog: GH-901 failed: marathon escalated: pre-advance-failed (exit 5) [gh901-exec1; result: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-followup/smoke/stop-owner/primary/.tick/jog/jog-01M7JQYPEN2B3TD2C7A57E4462/gh901-exec1/preflight/result.json]
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: published primary checkpoint 2b994405df9a455173bcf06aabd3e5a62beaafba
+jog: reclaiming stale relay-driver.lock (holder pid 77028 not running).
+Switched to a new branch 'fixture-902-gh902-exec1'

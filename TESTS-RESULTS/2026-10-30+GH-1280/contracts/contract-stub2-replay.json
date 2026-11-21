@@ -1,0 +1,67 @@
+{
+ "name": "stub2",
+ "target_names": [
+  "stub"
+ ],
+ "seed": 1280,
+ "batch": 25,
+ "streak_stop": null,
+ "quiet_batch_stop": null,
+ "max_mutations": 1000000000,
+ "canaries": {
+  "primary_head": "git -C \"/Users/noelsaw/Documents/GH Repos/XYZ-forge\" --no-optional-locks rev-parse HEAD",
+  "primary_status": "git -C \"/Users/noelsaw/Documents/GH Repos/XYZ-forge\" --no-optional-locks status --porcelain",
+  "primary_config": "git -C \"/Users/noelsaw/Documents/GH Repos/XYZ-forge\" --no-optional-locks config --local --list",
+  "primary_ledger": "shasum \"/Users/noelsaw/Documents/GH Repos/XYZ-forge/releases.db\"",
+  "task_head": "git -C \"/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30\" --no-optional-locks rev-parse HEAD",
+  "task_status": "git -C \"/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30\" --no-optional-locks status --porcelain",
+  "task_config": "git -C \"/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30\" --no-optional-locks config --local --list",
+  "canary_file": "shasum \"/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/canary/canary.txt\""
+ },
+ "sweep_patterns": [
+  "harness\\.py factory-primitive",
+  "gen4_campaign\\.py",
+  "gh1280/profile-"
+ ],
+ "telemetry": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-stub2/no-discovery-telemetry.jsonl",
+ "stopfile": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-stub2/STOP-replay",
+ "baseline": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-stub2/baseline.json",
+ "wall_s": 120,
+ "report": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-stub2/supervisor-report.json",
+ "gen4_cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30",
+ "gen4_env": {
+  "PATH": "/usr/bin:/bin",
+  "HOME": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-stub2/home",
+  "TMPDIR": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-stub2/tmp",
+  "PYTHONDONTWRITEBYTECODE": "1",
+  "LANG": "C.UTF-8"
+ },
+ "gen4_log": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-stub2/gen4.log",
+ "gen4_argv": [
+  "/opt/homebrew/bin/python3",
+  "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30/utils/py/gen4_campaign.py",
+  "--mode",
+  "run",
+  "--no-synth",
+  "--repo",
+  "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30",
+  "--sandbox-root",
+  "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-stub2",
+  "--out",
+  "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-stub2",
+  "--targets",
+  "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/targets-stub2.json",
+  "--max-mutations",
+  "200",
+  "--batch",
+  "25",
+  "--corpus-cap",
+  "100",
+  "--seed",
+  "1280",
+  "--duration",
+  "120",
+  "--keep-sandbox",
+  "--json"
+ ]
+}

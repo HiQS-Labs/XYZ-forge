@@ -31,8 +31,8 @@ def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Fetches open PRs via GitHub CLI. Raises FetchError; never a silent []."""
     cmd = [
         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
-        "--state", "open",
-        "--json", "number,title,headRefName,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
+        "--state", "open", "--limit", "1000",  # GH-1226: the default 30 would hide a listed --prs PR
+        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
     ]
     cwd = repo_path or "."
     try:

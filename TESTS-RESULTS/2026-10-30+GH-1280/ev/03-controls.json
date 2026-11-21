@@ -1,0 +1,242 @@
+{
+ "elapsed_s": 32.0,
+ "controls": [
+  {
+   "control": "known-good init+tick",
+   "pass": true,
+   "expect": "rc 0, rc 0",
+   "steps": [
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "--run-root",
+      "temp/factory-primitive/gh1280/good",
+      "init",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0"
+     ],
+     "rc": 0,
+     "stdout": "{\"instance\":\"/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone/temp/factory-primitive/gh1280/good/instances/C\",\"status\":\"initialized\"}\n",
+     "stderr": ""
+    },
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "--run-root",
+      "temp/factory-primitive/gh1280/good",
+      "tick",
+      "--slot",
+      "1"
+     ],
+     "rc": 0,
+     "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+     "stderr": ""
+    }
+   ],
+   "t": 0.4
+  },
+  {
+   "control": "known-invalid run root",
+   "pass": true,
+   "expect": "rc 2 run-root refusal, nothing created",
+   "steps": [
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "--run-root",
+      "../outside",
+      "status"
+     ],
+     "rc": 2,
+     "stdout": "",
+     "stderr": "factory-primitive: run root must stay under /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone/temp/factory-primitive\n"
+    }
+   ],
+   "t": 0.5
+  },
+  {
+   "control": "idempotence oracle red then green",
+   "pass": true,
+   "expect": "red cmd rc 1 (FAIL), repeated completed tick rc 0 (PASS)",
+   "steps": [
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/domain_oracles.py",
+      "--mode",
+      "idempotence",
+      "--cmd",
+      "/opt/homebrew/bin/python3 -c \"import random; open('temp/factory-primitive/gh1280/idem-red.txt','a').write(str(random.random()))\"",
+      "--cwd",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone",
+      "--repetitions",
+      "3",
+      "--json"
+     ],
+     "rc": 1,
+     "stdout": "{\n  \"run_id\": \"b3244863-99a0-41f3-8d47-042aae7745b2\",\n  \"passed\": false,\n  \"results\": [\n    {\n      \"oracle\": \"idempotence\",\n      \"passed\": false,\n      \"reasons\": [\n        \"tree digest diverged after repeated runs\"\n      ],\n      \"repetitions\": 3,\n      \"receipts_after_1\": 0,\n      \"receipts_after_n\": 0,\n      \"inner\": {\n        \"passed\": true,\n        \"repetitions\": 2,\n        \"concurrent\": false,\n        \"exit_codes\": [\n          0,\n          0\n        ],\n        \"completed\": true,\n        \"stdout_hashes\": [\n          \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\n          \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n        ],\n        \"divergences\": []\n      },\n      \"rc\": 0\n    }\n  ]\n}\n",
+     "stderr": ""
+    },
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "--run-root",
+      "temp/factory-primitive/gh1280/idem",
+      "init",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0"
+     ],
+     "rc": 0,
+     "stdout": "{\"instance\":\"/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone/temp/factory-primitive/gh1280/idem/instances/C\",\"status\":\"initialized\"}\n",
+     "stderr": ""
+    },
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "--run-root",
+      "temp/factory-primitive/gh1280/idem",
+      "tick",
+      "--slot",
+      "1"
+     ],
+     "rc": 0,
+     "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+     "stderr": ""
+    },
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "utils/py/domain_oracles.py",
+      "--mode",
+      "idempotence",
+      "--cmd",
+      "/opt/homebrew/bin/python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/gh1280/idem tick --slot 1",
+      "--cwd",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone",
+      "--repetitions",
+      "3",
+      "--json"
+     ],
+     "rc": 0,
+     "stdout": "{\n  \"run_id\": \"7403c018-c8b0-4547-9aab-795f5ac430e6\",\n  \"passed\": true,\n  \"results\": [\n    {\n      \"oracle\": \"idempotence\",\n      \"passed\": true,\n      \"reasons\": [],\n      \"repetitions\": 3,\n      \"receipts_after_1\": 0,\n      \"receipts_after_n\": 0,\n      \"inner\": {\n        \"passed\": true,\n        \"repetitions\": 2,\n        \"concurrent\": false,\n        \"exit_codes\": [\n          0,\n          0\n        ],\n        \"completed\": true,\n        \"stdout_hashes\": [\n          \"b48f52553c053c42619fe61a18c67fb263ff181c603827565c78cc45ee704eb2\",\n          \"b48f52553c053c42619fe61a18c67fb263ff181c603827565c78cc45ee704eb2\"\n        ],\n        \"divergences\": []\n      },\n      \"rc\": 0\n    }\n  ]\n}\n",
+     "stderr": ""
+    }
+   ],
+   "t": 3.3
+  },
+  {
+   "control": "sandbox denies outside write, allows in-root",
+   "pass": true,
+   "expect": "outside: refused, path absent; in-root: rc 0, file exists",
+   "steps": [
+    {
+     "argv": [
+      "/usr/bin/sandbox-exec",
+      "-f",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-ctl.sb",
+      "/opt/homebrew/bin/python3",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+      "--gate",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-ctl-replay.json",
+      "--",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "generate-manifest",
+      "--output",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/outside-probe/manifest.json"
+     ],
+     "rc": 2,
+     "stdout": "",
+     "stderr": "factory-primitive: [Errno 1] Operation not permitted: '/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/outside-probe'\n"
+    },
+    {
+     "argv": [
+      "/usr/bin/sandbox-exec",
+      "-f",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-ctl.sb",
+      "/opt/homebrew/bin/python3",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+      "--gate",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-ctl-replay.json",
+      "--",
+      "utils/py/harness.py",
+      "factory-primitive",
+      "generate-manifest",
+      "--output",
+      "temp/factory-primitive/ate-smoke/manifest.json"
+     ],
+     "rc": 0,
+     "stdout": "",
+     "stderr": ""
+    }
+   ],
+   "t": 4.2
+  },
+  {
+   "control": "gate stops exactly at streak 50",
+   "pass": true,
+   "expect": "51 executed (1 new + 50 seen), event 52 gated, no survivors",
+   "steps": [
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+      "--contract",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-stub1.json"
+     ],
+     "rc": 0,
+     "stdout": "{\"stop_reason\": \"no-new-signal: 50 consecutive cases with no new signature\", \"elapsed_s\": 19.3, \"events\": 51, \"counts\": {\"run-root-guard\": 51}, \"swept_pids\": [], \"survivors_after_sweep\": [], \"canaries_moved\": []}\n",
+     "stderr": ""
+    },
+    {
+     "executed": 51,
+     "first_gated_index": 51,
+     "gated": 6,
+     "stop_reason": "no-new-signal: 50 consecutive cases with no new signature",
+     "survivors": []
+    }
+   ],
+   "t": 23.9
+  },
+  {
+   "control": "canary edit stops the run",
+   "pass": true,
+   "expect": "stop reason CANARY VIOLATION; at most the in-flight case after the edit; no survivors",
+   "steps": [
+    {
+     "argv": [
+      "/opt/homebrew/bin/python3",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+      "--contract",
+      "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-stub2.json"
+     ],
+     "rc": 1,
+     "stdout": "{\"stop_reason\": \"CANARY VIOLATION: ['canary_file']\", \"elapsed_s\": 7.8, \"events\": 5, \"counts\": {\"run-root-guard\": 5}, \"swept_pids\": [], \"survivors_after_sweep\": [], \"canaries_moved\": [\"canary_file\"]}\n",
+     "stderr": ""
+    },
+    {
+     "events_at_edit": 5,
+     "executed_after_edit": 0,
+     "stop_reason": "CANARY VIOLATION: ['canary_file']",
+     "survivors": [],
+     "elapsed_s": 7.8
+    }
+   ],
+   "t": 32.0
+  }
+ ]
+}

@@ -1,0 +1,126 @@
+=== harness post-ac71e6169: ac71e6169e470305b96b7b7d324c6707732fe275
+[post-ac71e6169] a-lane-approval: relay-drive --review-once rc=0
+[post-ac71e6169] a-lane-approval:   | relay-drive: attested Approved by rev — reviewed d89b0a673e4e, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.se8g0owc/agent-a/.git/relay-attest/T-a-lane-approval.json
+[post-ac71e6169] a-lane-approval:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[post-ac71e6169] a-lane-approval: approval record written=True linked_attempt_context=True
+[post-ac71e6169] a-lane-approval: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] a: reservation row after approval: state=active attestation=set candidate=set
+[post-ac71e6169] a: archive_lane_attempts -> archived
+[post-ac71e6169] a: final candidate moved past the pre-review head (reviewer turn + attest commit): True
+[post-ac71e6169] a: attempt_admission(final candidate) -> ADMITTED {"kind": "lane", "archived": true, "state": "active"}
+[post-ac71e6169] b-no-context: relay-drive --review-once rc=0
+[post-ac71e6169] b-no-context:   | relay-drive: attested Approved by rev — reviewed ac6a4eafa273, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.0775xqil/agent-a/.git/relay-attest/T-b-no-context.json
+[post-ac71e6169] b-no-context:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[post-ac71e6169] b-no-context: approval record written=True linked_attempt_context=False
+[post-ac71e6169] b-no-context: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] c1-missing: relay-drive --review-once rc=4
+[post-ac71e6169] c1-missing:   | relay-drive: attestation record write FAILED: no unique archived reservation matches the missing reference
+[post-ac71e6169] c1-missing:   | relay-drive: terminal STATUS Approved by reviewer rev REFUSED — attest-publish-failed
+[post-ac71e6169] c1-missing: approval record written=False
+[post-ac71e6169] c1-missing: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] c2-superseded: relay-drive --review-once rc=4
+[post-ac71e6169] c2-superseded:   | relay-drive: attestation record write FAILED: reservation is not active or completed for this revision
+[post-ac71e6169] c2-superseded:   | relay-drive: terminal STATUS Approved by reviewer rev REFUSED — attest-publish-failed
+[post-ac71e6169] c2-superseded: approval record written=False
+[post-ac71e6169] c2-superseded: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] c3-archived: relay-drive --review-once rc=4
+[post-ac71e6169] c3-archived:   | relay-drive: attestation record write FAILED: reservation is not active or completed for this revision
+[post-ac71e6169] c3-archived:   | relay-drive: terminal STATUS Approved by reviewer rev REFUSED — attest-publish-failed
+[post-ac71e6169] c3-archived: approval record written=False
+[post-ac71e6169] c3-archived: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] c4-manual-kind: relay-drive --review-once rc=0
+[post-ac71e6169] c4-manual-kind:   | relay-drive: attested Approved by rev — reviewed bfa4bd1126d8, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.7plp3rsr/agent-a/.git/relay-attest/T-c4-manual-kind.json
+[post-ac71e6169] c4-manual-kind:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[post-ac71e6169] c4-manual-kind: approval record written=True linked_attempt_context=False
+[post-ac71e6169] c4-manual-kind: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] c5-rerun: relay-drive --review-once rc=4
+[post-ac71e6169] c5-rerun:   | relay-drive: attestation record write FAILED: no unique archived reservation matches the missing reference
+[post-ac71e6169] c5-rerun:   | relay-drive: terminal STATUS Approved by reviewer rev REFUSED — attest-publish-failed
+[post-ac71e6169] c5-rerun: approval record written=False
+[post-ac71e6169] c5-rerun: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[post-ac71e6169] c5: re-run of the same relay without the stale context -> rc=4
+[post-ac71e6169] c5:   | relay-drive: STATUS Approved but no attestation from this driver run (startup/loop after 0 turn(s)) — a terminal status counts only when this driver watched the reviewer write it (GH-505)
+=== harness pre-5dda75cd3: 5dda75cd3dd95cc7ae3a202e85d044b2aaab2762
+[pre-5dda75cd3] a-lane-approval: relay-drive --review-once rc=0
+[pre-5dda75cd3] a-lane-approval:   | relay-drive: attested Approved by rev — reviewed c7a467f30f36, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.c8qdsadn/agent-a/.git/relay-attest/T-a-lane-approval.json
+[pre-5dda75cd3] a-lane-approval:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] a-lane-approval: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] a-lane-approval: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] a: reservation row after approval: state=active attestation=ABSENT candidate=ABSENT
+[pre-5dda75cd3] a: archive_lane_attempts -> archived
+[pre-5dda75cd3] a: final candidate moved past the pre-review head (reviewer turn + attest commit): True
+[pre-5dda75cd3] a: attempt_admission(final candidate) -> REFUSED ValueError: reservation is not active or completed for this revision
+[pre-5dda75cd3] b-no-context: relay-drive --review-once rc=0
+[pre-5dda75cd3] b-no-context:   | relay-drive: attested Approved by rev — reviewed 276be251e33a, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.6__0mksm/agent-a/.git/relay-attest/T-b-no-context.json
+[pre-5dda75cd3] b-no-context:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] b-no-context: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] b-no-context: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] c1-missing: relay-drive --review-once rc=0
+[pre-5dda75cd3] c1-missing:   | relay-drive: attested Approved by rev — reviewed 6cf72348fabd, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.k_dzbh1n/agent-a/.git/relay-attest/T-c1-missing.json
+[pre-5dda75cd3] c1-missing:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] c1-missing: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] c1-missing: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] c2-superseded: relay-drive --review-once rc=0
+[pre-5dda75cd3] c2-superseded:   | relay-drive: attested Approved by rev — reviewed dc46e4b19a82, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.svkhmpzi/agent-a/.git/relay-attest/T-c2-superseded.json
+[pre-5dda75cd3] c2-superseded:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] c2-superseded: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] c2-superseded: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] c3-archived: relay-drive --review-once rc=0
+[pre-5dda75cd3] c3-archived:   | relay-drive: attested Approved by rev — reviewed 6e8f118be1e8, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.bo_3qux9/agent-a/.git/relay-attest/T-c3-archived.json
+[pre-5dda75cd3] c3-archived:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] c3-archived: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] c3-archived: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] c4-manual-kind: relay-drive --review-once rc=0
+[pre-5dda75cd3] c4-manual-kind:   | relay-drive: attested Approved by rev — reviewed 05be0d1a4e06, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.6py5lcxq/agent-a/.git/relay-attest/T-c4-manual-kind.json
+[pre-5dda75cd3] c4-manual-kind:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] c4-manual-kind: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] c4-manual-kind: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] c5-rerun: relay-drive --review-once rc=0
+[pre-5dda75cd3] c5-rerun:   | relay-drive: attested Approved by rev — reviewed daf4d6417569, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.re1fls_l/agent-a/.git/relay-attest/T-c5-rerun.json
+[pre-5dda75cd3] c5-rerun:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[pre-5dda75cd3] c5-rerun: approval record written=True linked_attempt_context=False
+[pre-5dda75cd3] c5-rerun: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[pre-5dda75cd3] c5: re-run of the same relay without the stale context -> rc=4
+[pre-5dda75cd3] c5:   | relay-drive: STATUS Approved but no attestation from this driver run (startup/loop after 0 turn(s)) — a terminal status counts only when this driver watched the reviewer write it (GH-505)
+=== harness base-5db40c50a: 5db40c50ac3f598b82ad55c4f75f557fade5aab1
+[base-5db40c50a] a-lane-approval: relay-drive --review-once rc=0
+[base-5db40c50a] a-lane-approval:   | relay-drive: attested Approved by rev — reviewed 54aaeca0b7fc, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.7kja12oc/agent-a/.git/relay-attest/T-a-lane-approval.json
+[base-5db40c50a] a-lane-approval:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] a-lane-approval: approval record written=True linked_attempt_context=False
+[base-5db40c50a] a-lane-approval: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] a: reservation row after approval: state=active attestation=ABSENT candidate=ABSENT
+[base-5db40c50a] a: archive_lane_attempts -> archived
+[base-5db40c50a] a: final candidate moved past the pre-review head (reviewer turn + attest commit): True
+[base-5db40c50a] a: attempt_admission(final candidate) -> REFUSED ValueError: reservation is not active or completed for this revision
+[base-5db40c50a] b-no-context: relay-drive --review-once rc=0
+[base-5db40c50a] b-no-context:   | relay-drive: attested Approved by rev — reviewed 28a6fc8add7e, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.crvnehc7/agent-a/.git/relay-attest/T-b-no-context.json
+[base-5db40c50a] b-no-context:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] b-no-context: approval record written=True linked_attempt_context=False
+[base-5db40c50a] b-no-context: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] c1-missing: relay-drive --review-once rc=0
+[base-5db40c50a] c1-missing:   | relay-drive: attested Approved by rev — reviewed c15f9b0ad5d6, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.8maxgtb_/agent-a/.git/relay-attest/T-c1-missing.json
+[base-5db40c50a] c1-missing:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] c1-missing: approval record written=True linked_attempt_context=False
+[base-5db40c50a] c1-missing: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] c2-superseded: relay-drive --review-once rc=0
+[base-5db40c50a] c2-superseded:   | relay-drive: attested Approved by rev — reviewed 5781a159dd80, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.kgd9vcyl/agent-a/.git/relay-attest/T-c2-superseded.json
+[base-5db40c50a] c2-superseded:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] c2-superseded: approval record written=True linked_attempt_context=False
+[base-5db40c50a] c2-superseded: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] c3-archived: relay-drive --review-once rc=0
+[base-5db40c50a] c3-archived:   | relay-drive: attested Approved by rev — reviewed 3ef59d39b499, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.r188kx22/agent-a/.git/relay-attest/T-c3-archived.json
+[base-5db40c50a] c3-archived:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] c3-archived: approval record written=True linked_attempt_context=False
+[base-5db40c50a] c3-archived: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] c4-manual-kind: relay-drive --review-once rc=0
+[base-5db40c50a] c4-manual-kind:   | relay-drive: attested Approved by rev — reviewed 055fd0981d89, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.ckim10v4/agent-a/.git/relay-attest/T-c4-manual-kind.json
+[base-5db40c50a] c4-manual-kind:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] c4-manual-kind: approval record written=True linked_attempt_context=False
+[base-5db40c50a] c4-manual-kind: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] c5-rerun: relay-drive --review-once rc=0
+[base-5db40c50a] c5-rerun:   | relay-drive: attested Approved by rev — reviewed 8a8827a95571, 54 bytes of review text, record /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/ro.qq730x84/agent-a/.git/relay-attest/T-c5-rerun.json
+[base-5db40c50a] c5-rerun:   | relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+[base-5db40c50a] c5-rerun: approval record written=True linked_attempt_context=False
+[base-5db40c50a] c5-rerun: relay.md STATUS=['STATUS: Approved'] attestation trailer committed=True
+[base-5db40c50a] c5: re-run of the same relay without the stale context -> rc=4
+[base-5db40c50a] c5:   | relay-drive: STATUS Approved but no attestation from this driver run (startup/loop after 0 turn(s)) — a terminal status counts only when this driver watched the reviewer write it (GH-505)

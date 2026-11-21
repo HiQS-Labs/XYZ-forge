@@ -1,0 +1,7 @@
+# Controlled command check
+
+At 2026-11-08 21:49Z, loaded baseline 1c2bd89eb and changed helper, patched policy/capability and GitHub boundary/confirmation only. Called execute_pr_merge with dry_run=False for merge, squash, rebase and exact head a×40. Baseline no-delete predicate FAILED in all three; fixed PASSED in all three. Both versions returned verified mocked merge OID b×40. Helper previews matched their deletion behavior. A real disposable Git linked worktree and untracked sentinel remained registered/intact throughout. This is controlled invocation evidence, not execution of GitHub's remote merge or deletion implementation. No worktree deletion occurred.
+
+Source verification: gh v2.101.0 merge.go lines 175, 325, 386–398, 591: default DeleteBranch false, explicit strategy avoids survey, capture_output prevents interactive prompt. https://github.com/cli/cli/blob/v2.101.0/pkg/cmd/pr/merge/merge.go
+
+Reproduction recipe: import each revision with script directory on sys.path; mock _gh to capture args and return CompletedProcess(rc=0), refresh_pr to MERGED with matching head/OID, policy to chosen strategy and capability success. Set _MATCH_HEAD[1381], call live helper, assert flag absence (baseline fails), matching strategy/head args, successful result; call dry_run=True and assert matching preview. Check git worktree list and sentinel content before/after. Fixture remains in retained gate clone temp/gh1381-fixture; nothing removed.

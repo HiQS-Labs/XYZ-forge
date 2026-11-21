@@ -249,3 +249,7 @@ it with an assertion, or it will be re-derived wrongly later.
 ## Merge evidence
 
 - PR #643 merged 2026-09-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

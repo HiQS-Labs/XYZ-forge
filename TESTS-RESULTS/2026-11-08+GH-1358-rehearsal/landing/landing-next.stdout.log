@@ -1,0 +1,248 @@
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub/XYZ-forge/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub/XYZ-forge
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GitHub/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (17 found)
+================================================================================
+
+Scanned roots: /Users/noelsaw/Documents/GitHub/XYZ-forge/temp
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge` | standalone_clone | `development` | ✅ | 🔥 Active (24 in 10m) | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh1296-primary-publish` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh1356-1288-diagnosis` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh1356-closeout-publication` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh1358-landing-gate1372-175838` | standalone_clone | `marathon/gh-1160-local-reconcile-startup-2026-11-08` | ✅ | ⏳ Idle (7484 in 60m) | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh1358-landing-gate1373-180612` | standalone_clone | `marathon/gh-1216-aider-openrouter-profile-2026-11-08` | ✅ | 🔥 Active (9 in 10m) | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh254-relay-harness` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh254-relay-target` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh762-start-marathon` | standalone_clone | `feat/gh762-start-marathon` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh764-baseline-gate` | standalone_clone | `fix/gh764-baseline-gate` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh764-push` | standalone_clone | `fix/gh764-baseline-gate` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh764-qualify` | standalone_clone | `fix/gh764-baseline-gate` | ❌ (10) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh764-repro` | standalone_clone | `development` | ❌ (3) | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh800-publish` | standalone_clone | `feat/gh800-cross-device-gate-benchmark` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh800-run1` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh800-run2` | standalone_clone | `development` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+| `gh800-task` | standalone_clone | `feat/gh800-cross-device-gate-benchmark` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: '/Users/noelsaw' |
+
+### 📋 In-Flight Checkouts & Follow-up Guidance
+
+#### `XYZ-forge` (Linked Issue: GH-#1372)
+- **Completion Status**: Open task checklists (181 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge` to close or finish remaining tasks.
+
+#### `gh1356-closeout-publication` (Linked Issue: GH-#1356)
+- **Completion Status**: Open task checklists (172 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh1356-closeout-publication` to close or finish remaining tasks.
+
+#### `gh1358-landing-gate1372-175838` (Linked Issue: GH-#1160)
+- **Completion Status**: Open task checklists (183 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh1358-landing-gate1372-175838` to close or finish remaining tasks.
+
+#### `gh1358-landing-gate1373-180612` (Linked Issue: GH-#1216)
+- **Completion Status**: Open task checklists (186 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh1358-landing-gate1373-180612` to close or finish remaining tasks.
+
+#### `gh254-relay-target` (Linked Issue: GH-#254)
+- **Completion Status**: Open task checklists (166 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh254-relay-target` to close or finish remaining tasks.
+
+#### `gh764-qualify` (Linked Issue: GH-#764)
+- **Completion Status**: In-flight uncommitted modifications (10 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh764-qualify` to close or finish remaining tasks.
+
+#### `gh764-repro` (Linked Issue: GH-#764)
+- **Completion Status**: In-flight uncommitted modifications (3 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (github-actions[bot]) in `gh764-repro` to close or finish remaining tasks.
+
+#### `gh800-publish` (Linked Issue: GH-#800)
+- **Completion Status**: Open task checklists (129 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh800-publish` to close or finish remaining tasks.
+
+#### `gh800-run1` (Linked Issue: GH-#800)
+- **Completion Status**: Open task checklists (129 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh800-run1` to close or finish remaining tasks.
+
+#### `gh800-run2` (Linked Issue: GH-#800)
+- **Completion Status**: Open task checklists (129 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `gh800-run2` to close or finish remaining tasks.
+
+merge-cleanup: PR #1024: not in --prs; not sequenced
+merge-cleanup: PR #1316: not in --prs; not sequenced
+merge-cleanup: PR #1318: not in --prs; not sequenced
+merge-cleanup: PR #1326: not in --prs; not sequenced
+merge-cleanup: PR #1327: not in --prs; not sequenced
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#1373](https://github.com/HiQS-Labs/XYZ-forge/pull/1373) | fix: prefix named Aider OpenRouter model | `marathon/gh-1216-aider-openrouter-profile-2026-11-08` | `development` | no | PASS | MERGEABLE | 19 |
+
+Ordering Notes:
+  - File collision on 1 file(s) between PR #1326 and PR #1373 — ordering #1326 before #1373
+  - File collision on 1 file(s) between PR #1318 and PR #1326 — ordering #1318 before #1326
+  - File collision on 1 file(s) between PR #1024 and PR #1326 — ordering #1024 before #1326
+  - File collision on 1 file(s) between PR #1024 and PR #1318 — ordering #1024 before #1318
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /Users/noelsaw/Documents/GitHub/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Resuming merge batch https://github.com/HiQS-Labs/XYZ-forge/issues/1374
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Resume mode: attempt records under /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub/XYZ-forge/.merge-cleanup.json
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-F1CCB6 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D7D2C4 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D248B2 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-79F036 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-A993B3 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-751A4C is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-7AFFE1 is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-AC68FA is 82 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 43 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.8.0 Sundown is still a draft and 22 day(s) past its target of 2026-10-17 — the plan has drifted from the calendar
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-216: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-255: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1075: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1087: Queue / parked intake -> Completed
+merge-cleanup: PR #1373: pre-merge ledger gate green on d8a9167c24 + origin/development
+merge-cleanup: PR #1373: required checks: no required checks
+merge-cleanup: Merging PR #1373 via `gh pr merge 1373 --merge --delete-branch --match-head-commit d8a9167c24b47f55663f4d3bf718e455f287a4aa`...
+merge-cleanup: ✅ PR #1373 is MERGED as bf18d49a34
+merge-cleanup: Running post-merge reconciliation for PR #1373 in /Users/noelsaw/Documents/GitHub/XYZ-forge...
+merge-cleanup: ✅ local wave_reconcile for PR #1373 passed
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: jog: GH-1216 landed from committed receipt — PR #1373, bf18d49a; publish owned post-merge writes before continuing
+merge-cleanup: ✅ PR #1373 post-merge writes committed; primary is clean at origin/development
+merge-cleanup: Merged set ⊆ --prs: #1373 within #1373
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://github.com/HiQS-Labs/XYZ-forge/issues/1374)
+merge-cleanup:   sweep: gh workflow run wave-reconcile.yml --ref development  # full registry, hosted, once before promotion (#1131); no local full rerun
+Merge made by the 'ort' strategy.
+ LEADERBOARD.md                                     | 453 ++++++++++-----------
+ PROJECT/2-WORKING/MARATHON-PLAN-2026-11-08.md      |   9 +-
+ .../GH-1216-AIDER-OPENROUTER-PROFILE.md            |  90 ++++
+ .../jog/gh1216-exec1/gate-receipt.json             |  11 +
+ .../jog/gh1216-exec1/landing.json                  |  18 +
+ .../jog/gh1216-exec1/marathon-result.json          |  52 +++
+ .../jog/gh1216-exec1/provenance.jsonl              |   1 +
+ .../jog/gh1216-exec1/receipt.json                  |  16 +
+ .../gh-1216-aider-openrouter-profile/RELAY.md      | 220 ++++++++++
+ ...thon-gh-1216-aider-openrouter-profile-120507.md | 220 ++++++++++
+ releases.db                                        | Bin 1740800 -> 1748992 bytes
+ releases.sql                                       |  15 +-
+ test/gh346-profile-resolve.sh                      |  32 ++
+ utils/py/profile_resolve.py                        |   8 +-
+ 14 files changed, 908 insertions(+), 237 deletions(-)
+ create mode 100644 PROJECT/3-COMPLETED/GH-1216-AIDER-OPENROUTER-PROFILE.md
+ create mode 100644 TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/gate-receipt.json
+ create mode 100644 TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/landing.json
+ create mode 100644 TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/marathon-result.json
+ create mode 100644 TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/provenance.jsonl
+ create mode 100644 TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/receipt.json
+ create mode 100644 marathon-system/gh-1216-aider-openrouter-profile/RELAY.md
+ create mode 100644 relay-system/2026-11-08/marathon-gh-1216-aider-openrouter-profile-120507.md
+{"transition": "approved-merge-reconcile-land-to-next", "merge": {"oid": "bf18d49a34fd4c993cb785aca354f889e68ac29d"}, "next_issue": 1254, "mode": "scheduled; prior admission assisted"}
+
+============================================================
+jog: processing GH-1254 (attempt 1) at position 1
+============================================================
+jog: marathon execution gh1254-exec1 for GH-1254 (packet: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner was on its trunk branch 'development' — cut 'marathon/gh-1254-outer-loop-borrow-decl-2026-11-08' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1254-outer-loop-borrow-decl/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN → codex
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1254-outer-loop-borrow-decl-start boundary — compressor=880MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+codex-turn: committed codex turn (file-scoped, no push)
+agy-turn: committed agy turn (file-scoped, no push)
+relay-drive: attested Approved by agy — reviewed 18a737311cca, 2485 bytes of review text, record /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN.json
+relay-drive: relay terminated (STATUS: Approved, token done, attested by agy) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json,datetime,re
+deadline=datetime.datetime.fromisoformat('"'"'2026-11-08T19:06:18+00:00'"'"').timestamp()
+gate_started=datetime.datetime.now(datetime.timezone.utc).timestamp()
+assert deadline-gate_started>=1800, '"'"'fixed preparation deadline leaves less than existing 1800s gate cap; preserve candidate without starting gate'"'"'
+root=pathlib.Path.cwd().resolve()
+assert root==pathlib.Path(os.environ['"'"'MARATHON_ROOT'"'"']).resolve()
+env={k:v for k,v in os.environ.items() if k in ('"'"'PATH'"'"','"'"'HOME'"'"','"'"'USER'"'"','"'"'LOGNAME'"'"','"'"'SHELL'"'"','"'"'TMPDIR'"'"','"'"'LANG'"'"','"'"'LC_ALL'"'"','"'"'TERM'"'"','"'"'SSH_AUTH_SOCK'"'"','"'"'GH_TOKEN'"'"','"'"'GITHUB_TOKEN'"'"')}
+def git(where,*args):return subprocess.check_output(['"'"'git'"'"','"'"'-C'"'"',str(where),*args],text=True,env=env).strip()
+sha=git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"');branch=git(root,'"'"'symbolic-ref'"'"','"'"'--short'"'"','"'"'HEAD'"'"');origin=git(root,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')
+assert branch.startswith('"'"'marathon/'"'"') and origin=='"'"'https://github.com/HiQS-Labs/XYZ-forge.git'"'"'
+clone=pathlib.Path(tempfile.mkdtemp(prefix='"'"'gh1358-lane-gate-'"'"')).resolve()
+print('"'"'GH1358 isolated existing gate/push:'"'"',clone,'"'"'candidate'"'"',sha,flush=True)
+def run(args):subprocess.run(args,cwd=clone,env=env,check=True)
+run(['"'"'git'"'"','"'"'clone'"'"','"'"'--no-local'"'"','"'"'--no-hardlinks'"'"',str(root),str(clone)])
+run(['"'"'git'"'"','"'"'remote'"'"','"'"'set-url'"'"','"'"'origin'"'"',origin]);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"']);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+run(['"'"'python3'"'"','"'"'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py'"'"','"'"'utils/py/marathon_drive.py'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh390-gate-guard.sh'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh280-jog-marathon-adapter.sh'"'"'])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'--push'"'"','"'"'--all'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"' and not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+live=subprocess.check_output(['"'"'ps'"'"','"'"'-axo'"'"','"'"'pid=,command='"'"'],text=True)
+other_gates=[line for line in live.splitlines() if re.match(r'"'"'^\s*\d+\s+(?:/\S*/)?bash\s+(?:\S*/)?(?:validate|ci-local)\.sh(?:\s|$)'"'"',line)]
+print('"'"'pre-push live host gate check:'"'"',other_gates,flush=True)
+assert not other_gates, '"'"'another host full gate is active; no peer was stopped'"'"'
+assert datetime.datetime.now(datetime.timezone.utc).timestamp()<deadline, '"'"'fixed preparation deadline reached before push'"'"'
+run(['"'"'git'"'"','"'"'push'"'"','"'"'--set-upstream'"'"','"'"'origin'"'"','"'"'HEAD:refs/heads/'"'"'+branch])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin and git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"'
+assert not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+receipt=clone/'"'"'.xyz/receipts'"'"'/f'"'"'{sha}.json'"'"';data=json.loads(receipt.read_text())
+assert data['"'"'sha'"'"']==sha and data['"'"'exit_code'"'"']==0 and data.get('"'"'scope'"'"')=='"'"'full'"'"'
+dest=root/'"'"'.xyz/receipts'"'"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)
+print('"'"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'"'"',flush=True)
+'
+marathon-drive: gate-guard: gate exit 1 after 1s — peak group RSS 3MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-183722.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1254-outer-loop-borrow-decl-escalated boundary — compressor=846MB, swap_free=1023MB
+marathon-drive: escalation written: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1254-outer-loop-borrow-decl/ESCALATION.md (reason: pre-advance-failed)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec1/preflight/marathon-result.json (outcome: escalated, exit 5)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/5 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 10h 0m
+per done-task: ≥0 tokens, 2h 0m wall-clock
+memory: compressor peak: 1431MB, swap free min: 1023MB
+  turn peak RSS: agy: 209MB peak RSS, codex: 336MB peak RSS
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+jog: stopping queue execution on task failure.
+jog: published primary checkpoint fb787acb459fa7166b4213af18e38c97774493a3

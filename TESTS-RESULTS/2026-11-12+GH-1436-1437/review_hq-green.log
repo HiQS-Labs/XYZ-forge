@@ -1,0 +1,2 @@
+PASS green: unterminated contract rejected before writes
+PASS green: absent placeholder remains accepted

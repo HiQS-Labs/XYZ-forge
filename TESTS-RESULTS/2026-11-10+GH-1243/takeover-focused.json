@@ -1,0 +1,31 @@
+{
+  "event": "parent_takeover_focused",
+  "source": "c06fcf34b6b111bf9bb59384084188c5b8dffbf7",
+  "reason": "User requested direct takeover; child and descendants cancelled. Completed prior consult/gh308 logs reused; interrupted gh589 and unfinished archive-writers rerun in disposable full clone.",
+  "checks": [
+    {
+      "file": "consult.log",
+      "passed": 62,
+      "sha256": "ef34ff2d51abf68b591b90885c784acc04c0efc244ad0833f9ce4f377c50326f"
+    },
+    {
+      "file": "gh308-consult-guards.log",
+      "passed": 4,
+      "sha256": "06d29b88ae6481f0e3df405615ffe41d8dd9d84736d2316968405c932d4a658b"
+    },
+    {
+      "file": "gh589-consult-no-tick-takeover.log",
+      "passed": 6,
+      "sha256": "eeaacd7a662800064414b7f9fa8ddcf0393a416ded9492545ba52f00f1ebf73e"
+    },
+    {
+      "file": "archive-writers-takeover.log",
+      "passed": 8,
+      "sha256": "ab8774b7975fd8241eaa986c11c618ae0d6e2a37d1776a6b95a342665813c608"
+    }
+  ],
+  "total_passed": 80,
+  "new_builder": false,
+  "new_review": false,
+  "automatic_progression": false
+}

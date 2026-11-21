@@ -1,0 +1,33 @@
+# Run 1 — 030db02d (failed one suite; fixed in 761389dd)
+before HEAD=030db02d277d40ede69f5644b211337c047d67ce bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git email=none status=0
+validate.sh rc=1 874s
+after HEAD=030db02d277d40ede69f5644b211337c047d67ce bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git email=none status=0
+  + gh-gen4-phase5-campaign.sh
+  + gh712-jev-triage.sh
+  + gh-gen4-phase4-repro-synth.sh
+  + gh393-deepseek-readiness.sh
+  + gh591-prepush-commit-boundary.sh
+  + gh396-find-harness-roots.sh
+  + gh589-skill-viewer.sh
+  + gh-gen4-phase3-fuzz-engine.sh
+  + gh589-consult-no-tick.sh
+  + relay-self-sufficiency.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+failed:
+  - gh423-roadmap-render.sh
+
+gh423 failure detail:
+AttributeError: 'Engine' object has no attribute 'RELEASES_DB'
+ERROR: test_planner_reader_uses_explicit_render (__main__.RoadmapRender.test_planner_reader_uses_explicit_render)
+
+# Run 2 — 761389dd (final)
+before HEAD=761389dd370ae7b04cd5f24adb6fc4d876f8afc7 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git email=none status=0
+validate.sh rc=0 883s
+after HEAD=761389dd370ae7b04cd5f24adb6fc4d876f8afc7 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git email=none status=0
+passed: 409 / 409
+  + relay-self-sufficiency.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe

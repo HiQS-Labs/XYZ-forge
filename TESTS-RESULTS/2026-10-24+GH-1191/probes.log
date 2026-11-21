@@ -1,0 +1,18 @@
+PASS happy-path proposal | {"rc": 0, "renamed": [{"task_id": "local_a", "old": "Fix login bug", "new": "10-24 Fix login bug", "activity_at": "2026-10-24T16:22:31.821Z"}]}
+PASS archived/running/self/old skipped | {"rc": 0, "section": {"swept": 0, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 4, "error": null, "scope": "list_sessions inventory; the sweeping session is excluded by the tool", "execution": "native-tools-required"}}
+PASS already stamped -> no proposal; stale stamp corrected | {"renamed": [{"task_id": "local_w", "old": "01-01 Old stamp", "new": "10-24 Old stamp", "activity_at": "2026-10-24T16:22:31.821Z"}]}
+PASS stale snapshot refused | {"rc": 3, "error": "claude-desktop snapshot stale or invalid (freshness limit 300s)"}
+PASS missing lastActivityAt refused | {"rc": 3, "error": "claude-desktop lastActivityAt missing/invalid for local_a"}
+PASS future lastActivityAt refused | {"rc": 3, "error": "claude-desktop lastActivityAt missing/invalid for local_a"}
+PASS duplicate id refused | {"rc": 3, "error": "claude-desktop inventory has duplicate session ID"}
+PASS non-string title refused | {"rc": 3, "error": "claude-desktop session title invalid for local_a"}
+PASS --apply refused | {"rc": 2, "stderr": "roup NAME] [--auto-pin]\ntask_sync.py: error: Claude Desktop plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"}
+PASS --set-title refused | {"rc": 2, "stderr": "roup NAME] [--auto-pin]\ntask_sync.py: error: Claude Desktop plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"}
+PASS missing --exclude-thread refused | {"rc": 2, "stderr": "in-days N] [--include-cron]\n                    [--group NAME] [--auto-pin]\ntask_sync.py: error: Claude Desktop requires --desktop-snapshot and --exclude-thread"}
+PASS empty inventory -> zero report | {"rc": 0, "section": {"swept": 0, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 0, "error": null, "scope": "list_sessions inventory; the sweeping session is excluded by the tool", "execution": "native-tools-required"}}
+PASS missing isRunning -> skipped | {"section": {"swept": 0, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 1, "error": null, "scope": "list_sessions inventory; the sweeping session is excluded by the tool", "execution": "native-tools-required"}}
+PASS doctor green, native-tools-required | {"rc": 0, "report": {"mode": "doctor", "heartbeat": {"state": "native-tools-required", "note": "snapshot readiness only; verify native changes in the app"}, "ides": {"claude-desktop": {"ok": true, "reds": [], "note": "snapshot ready; native mutations require set_session_title"}}}}
+PASS claude-cloud unchanged | {"renamed": [{"task_id": "cse_1", "old": "Cloud task", "new": "10-24 Cloud task", "activity_at": 1792858951.821821}]}
+PASS help lists claude-desktop and --desktop-snapshot | {}
+PASS codex plan-only guard unchanged | {"stderr": "     [--group NAME] [--auto-pin]\ntask_sync.py: error: Codex plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"}
+17/17 probes passed

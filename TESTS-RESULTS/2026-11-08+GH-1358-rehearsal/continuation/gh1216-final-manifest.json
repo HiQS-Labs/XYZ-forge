@@ -1,0 +1,21 @@
+{
+  "frozen_at": "2026-11-08T11:01:41.355051+00:00",
+  "runner_head": "3233afff2ef67df661b4617e0dfb3339df60e016",
+  "primary_checkpoint": "80c3156844018fffa482fce912b101f706268f32",
+  "runtime_candidate": "5182a77c12e3b43612b96d78f7c5a9639949aafc",
+  "queue_issue": 1216,
+  "prior_attempts": 1,
+  "remaining_dispatches": 1,
+  "queue_cap": 2,
+  "marathon_lane_cap": 2,
+  "worker_wall_s": 900,
+  "worker_idle_s": 900,
+  "relay_base": 5,
+  "relay_hard_max": 10,
+  "gate_wall_s": 1800,
+  "deadline": "2026-11-08T12:30:00Z",
+  "automatic_retry": false,
+  "scheduled_mode": "one launchd RunAtLoad wake; no idle soak",
+  "review": "gh1358-scope-observer-final.codex.md",
+  "merge_authority": false
+}

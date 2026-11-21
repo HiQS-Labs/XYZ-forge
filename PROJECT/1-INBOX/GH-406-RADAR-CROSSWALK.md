@@ -110,3 +110,7 @@ Fold R1, R3 and R5 into T2 rather than tracking them separately, and let R6 join
 item. T2 then has both an internal recurrence case (8 issues over 10 days) and an external
 corroboration, which is a materially stronger argument for writing `0.5.0 Lantern`'s exit criterion
 and pulling it forward than either instrument makes alone.
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

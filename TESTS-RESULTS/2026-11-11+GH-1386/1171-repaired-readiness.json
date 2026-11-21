@@ -1,0 +1,33 @@
+{
+  "ready": true,
+  "next_action": null,
+  "unscoped_index_only": [],
+  "issue_state": {
+    "status": "OPEN",
+    "closed_at": null,
+    "detail": "issue #1171 is OPEN"
+  },
+  "frozen_artifacts": [],
+  "acceptance_fidelity": {
+    "status": "match",
+    "cause": null,
+    "detail": "0 issue criteria reconciled: 3 deviation(s) declared and accounted for",
+    "issue": "1171",
+    "dropped": [],
+    "added": [],
+    "declared": 3
+  },
+  "source_url": {
+    "status": "ok",
+    "detail": "source: resolves to issue #1171 (https://github.com/HiQS-Labs/XYZ-forge/issues/1171)",
+    "issue": "1171",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1171",
+    "slug": "HiQS-Labs/XYZ-forge"
+  },
+  "acceptance_inline": {
+    "criteria": 3,
+    "scope": "acceptance-section",
+    "over_cap": 0,
+    "lossless": true
+  }
+}

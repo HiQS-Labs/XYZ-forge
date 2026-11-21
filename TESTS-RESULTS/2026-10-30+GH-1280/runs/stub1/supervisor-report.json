@@ -1,0 +1,27 @@
+{
+ "contract_sha256": "35495f835807356cbe07d544f819677655a542595208e97dd52534e29e493af6",
+ "gen4_pid": 8702,
+ "started": "2026-10-30T19:08:00-0700",
+ "stop_reason": "no-new-signal: 50 consecutive cases with no new signature",
+ "elapsed_s": 19.3,
+ "gen4_rc": -15,
+ "events": 51,
+ "gated_events": 6,
+ "streak_at_stop": 50,
+ "quiet_batches_at_stop": 1,
+ "counts": {
+  "run-root-guard": 51
+ },
+ "per_target": {
+  "stub": {
+   "run-root-guard": 51
+  }
+ },
+ "signatures": [
+  "stub|2|run-root-guard|factory-primitive: run root must stay under STUB"
+ ],
+ "candidates": [],
+ "swept_pids": [],
+ "survivors_after_sweep": [],
+ "canaries_moved": []
+}

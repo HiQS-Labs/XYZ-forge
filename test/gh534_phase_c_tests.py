@@ -280,6 +280,7 @@ class TestCScript(LedgerFixture):
         self.save()
 
         rc = self.run_main()
+        self.assert_repinned(2)  # GH-1475 (P2.1): PR 2's repaired head is re-pinned in the same run
 
         self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
@@ -383,17 +384,18 @@ class TestCScript(LedgerFixture):
         self.branch("feat/d", 4, lambda r: park(r, 301, "independent"))
         self.st["prs"]["3"]["body"] = "Depends on #2"
         self.save()
-        rc = self.run_main()
+        rc = self.run_main(extra=("--landing-plan", "direct", "--landing-reason", "direct landing for dependent test"))
         self.assertEqual(rc, 3)
+        self.assertIn("PR #3: NOT attempted — depends on #2 (handoff)", self.err)
+        self.pruner.assert_not_called()  # a handoff is still a non-zero Phase 5; teardown does not run
+        self.assert_repinned(4)  # GH-1475 (P2.1): independent PR 4 was B1-repaired and re-pinned in the same run
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
                          {"1": "MERGED", "2": "OPEN", "3": "OPEN", "4": "MERGED"})
-        self.assertIn("PR #3: NOT attempted — depends on #2 (handoff)", self.err)
         self.assertFalse(any(c[:2] == ["pr", "view"] and c[2] == "3" for c in st["calls"]), "PR 3 was refreshed, i.e. attempted")
         self.assertIn(301, self.dev_rows())
         self.assertNotIn(300, self.dev_rows())
         self.assertFalse(self.record_for(3).exists())
-        self.pruner.assert_not_called()  # a handoff is still a non-zero Phase 5; teardown does not run
 
     def test_omitted_primary_is_refused_and_no_record_root_is_minted(self):
         """R1-2: the coordinator is never the CWD. Run the orchestrator from a disposable clone
@@ -450,6 +452,7 @@ class TestCScript(LedgerFixture):
         self.branch("feat/a", 1, pr1)
         self.branch("feat/b", 2, pr2)
         rc = self.run_main()
+        self.assert_repinned(2)  # GH-1475 (P2.1): PR 2's repaired head is re-pinned in the same run
         self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
@@ -546,7 +549,7 @@ REQUIRED_CAPABILITIES = {
     "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
     # GH-1064: the script now owns the batch issue; the sweep record is script-owned too but has no
     # existing suite test (GH-831), so its SKILL.md row points at the manual checks instead.
-    "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
+    "mergeable-unknown-poll": "script", "prs-allowlist": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),
@@ -652,13 +655,14 @@ class TestGh623Resilience(LedgerFixture):
         st["prs"]["3"]["files"] = [{"path": "shared.txt"}]
         st["prs"]["4"]["body"] = "Depends on #2"
         self.save()
-        rc = self.run_main()
+        rc = self.run_main(extra=("--landing-plan", "direct", "--landing-reason", "direct landing for soft edge test"))
         self.assertEqual(rc, 3, self.err)
+        self.assertIn("attempting anyway", self.err)
+        self.assertIn("PR #4: NOT attempted — depends on #2 (handoff)", self.err)
+        self.assert_repinned(3)  # GH-1475 (P2.1): PR 3 was B1-repaired and re-pinned in the same run
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
                          {"1": "MERGED", "2": "OPEN", "3": "MERGED", "4": "OPEN"})
-        self.assertIn("attempting anyway", self.err)
-        self.assertIn("PR #4: NOT attempted — depends on #2 (handoff)", self.err)
         self.assertEqual(self.dev_rows(), [100, 101, 300])
 
     def test_transient_view_failure_defers_and_independents_land(self):
@@ -969,7 +973,7 @@ class TestParityGuard(unittest.TestCase):
         self.assertIn("test missing: landing-refetch-and-gate names TestE6Gate.test_gone", self._fails(skill=mutated))
 
     def test_control_documented_option_absent_from_argparse_is_named(self):
-        mutated = self.skill.replace("`--record-sweep`.", "`--record-sweep`, `--bogus-flag`.")
+        mutated = self.skill.replace("`--landing-reason`.", "`--landing-reason`, `--bogus-flag`.")
         self.assertNotEqual(mutated, self.skill, "the options line moved — repoint this control")
         self.assertIn("documented option not in argparse: --bogus-flag", self._fails(skill=mutated))
 

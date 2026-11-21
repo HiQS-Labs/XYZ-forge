@@ -1,0 +1,4 @@
+### verify clone (origin = local task clone, origin/HEAD -> task branch): new express
+express-refused: rule=task-branch — express runs from a task branch cut off origin/feat/XYZ-forge-gh1144-express-default-branch-2026-10-18 (SOP §4), not from 'feat/XYZ-forge-gh1144-express-default-branch-2026-10-18'
+### same clone, old express
+express-refused: rule=too-many-commits — the task branch carries 10 commits ahead of origin/development (> 2 allowed); express lands small hotfixes with <= 2 local commits — route to normal PR lane

@@ -1,0 +1,19 @@
+{
+  "base": "3b8c46fd8966c7ac59328f3c95865d2fb98c7671",
+  "pr_head": "d8a9167c24b47f55663f4d3bf718e455f287a4aa",
+  "merged_tree": "87c13ef548d719e9bbf2791fa097f2f0cb441d82",
+  "active1160_absent": true,
+  "completed1160_unchanged": true,
+  "AGENTS_unchanged": true,
+  "actual_merge_files": [
+    "PROJECT/2-WORKING/GH-1216-AIDER-OPENROUTER-PROFILE.md",
+    "TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/gate-receipt.json",
+    "TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/marathon-result.json",
+    "TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/provenance.jsonl",
+    "TESTS-RESULTS/2026-11-08+GH-1216/jog/gh1216-exec1/receipt.json",
+    "marathon-system/gh-1216-aider-openrouter-profile/RELAY.md",
+    "relay-system/2026-11-08/marathon-gh-1216-aider-openrouter-profile-120507.md",
+    "test/gh346-profile-resolve.sh",
+    "utils/py/profile_resolve.py"
+  ]
+}

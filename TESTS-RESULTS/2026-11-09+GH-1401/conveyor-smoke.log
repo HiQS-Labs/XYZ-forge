@@ -1,0 +1,6 @@
+contract in temp/conveyor-empty.md needs at least one fix_probes entry
+MAIN parser/Jog consumer: ["path_absent:skills/1-hourly/conveyor/SKILL.md"] reason= None
+RED empty fix_probes rejected exit=3
+PAIR grep_present BUG: bug-present= unfixed fixed= landed
+RED inverted polarity exposes mismatch: landed unfixed
+ALL MANUAL ASSERTIONS PASS

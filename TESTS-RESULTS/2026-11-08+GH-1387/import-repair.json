@@ -1,0 +1,6 @@
+{
+  "old_literal_check": false,
+  "new_literal_check": true,
+  "change": "import order only; same names from same module",
+  "review": "self-checked trivial formatting repair after independent QA; no behavioral change"
+}

@@ -1,0 +1,5 @@
+jog: [dry-run] simulating queue execution (root: <verify>/primary)
+jog: [dry-run] would process 2 pending item(s) (capped at 1):
+  1. GH-1427 (builder=agy, auto_merge=False)
+     preflight: not evaluated — 1-INBOX doc PROJECT/1-INBOX/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md has no numeric gh_issue: 1427, so readiness cannot be evaluated before promotion
+rc=0

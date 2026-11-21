@@ -1,0 +1,32 @@
+{
+  "host": "Antigravity (T3 Code ACP)",
+  "probe_purpose": "Empirically test whether this host's native background command tool (run_command with WaitMsBeforeAsync=500) provides completion-triggered notifications for operations >600s, or enforces a hard 600s wall-clock cap triggering Transition 3.",
+  "sub_600s_native_probe": {
+    "task_id": "c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1290",
+    "tool": "run_command",
+    "wait_ms_before_async": 500,
+    "command": "python3 -c 'import os, time; fmt=\"%Y-%m-%dT%H:%M:%SZ\"; print(f\"KS07_NATIVE_BG_3S_START pid={os.getpid()} pgid={os.getpgrp()} utc={time.strftime(fmt, time.gmtime())}\", flush=True); time.sleep(3); print(f\"KS07_NATIVE_BG_3S_DONE pid={os.getpid()} utc={time.strftime(fmt, time.gmtime())}\", flush=True)'",
+    "started_utc": "2026-11-20T10:28:00Z",
+    "completed_utc": "2026-11-20T10:28:03Z",
+    "pid": 35815,
+    "pgid": 35815,
+    "exit_code": 0,
+    "notification_mechanism": "host-native completion-triggered SYSTEM_MESSAGE",
+    "verbatim_output": "KS07_NATIVE_BG_3S_START pid=35815 pgid=35815 utc=2026-11-20T10:28:00Z\nKS07_NATIVE_BG_3S_DONE pid=35815 utc=2026-11-20T10:28:03Z"
+  },
+  "over_600s_native_probe": {
+    "task_id": "c3cb0a5e-3228-4f48-a9d6-d3596b2b6acf/task-1226",
+    "tool": "run_command",
+    "wait_ms_before_async": 500,
+    "command": "python3 -c \"import os, time; print(f'KS07_NATIVE_BG_START pid={os.getpid()} pgid={os.getpgrp()} utc={time.strftime(\\\"%Y-%m-%dT%H:%M:%SZ\\\", time.gmtime())}', flush=True); time.sleep(605); print(f'KS07_NATIVE_BG_DONE_605S pid={os.getpid()} utc={time.strftime(\\\"%Y-%m-%dT%H:%M:%SZ\\\", time.gmtime())}', flush=True)\"",
+    "started_utc": "2026-11-20T10:14:57Z",
+    "terminated_utc": "2026-11-20T10:24:57Z",
+    "elapsed_s": 600,
+    "pid": 11951,
+    "pgid": 11951,
+    "result": "FAILED_HOST_600S_CAP",
+    "verbatim_host_error": "Encountered error in step execution: Command timed out, needed to complete in 600s. This timeout applies to all commands. You won't be able to run this command with these arguments, do not retry exact the same command: command timed out",
+    "verbatim_output": "KS07_NATIVE_BG_START pid=11951 pgid=11951 utc=2026-11-20T10:14:57Z"
+  },
+  "honest_conclusion": "Antigravity's native run_command delivers genuine completion-triggered notifications for commands <600s (task-1290, 3s, exit 0), but enforces a hard 600s wall-clock kill even on backgrounded commands (task-1226, killed at 600s). Therefore, Antigravity does NOT support native >600s completion-triggered background execution; it falls under KS-07 Transition 3 (unsupported-host cap for >600s native completion). Detached OS execution (outer-launch.py, pid=37143, 605.04s, os_exit_code=0) survives >600s, while schedule(DurationSeconds=620) is strictly a fixed-time reminder and is NOT claimed to be a completion-triggered notification. U7 remains uncredited until run 2 on a host whose native background execution survives >600s."
+}

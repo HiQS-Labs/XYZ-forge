@@ -1,0 +1,39 @@
+import sys,pathlib,subprocess,tempfile,types,importlib.util
+source=pathlib.Path.cwd();sys.path.insert(0,str(source/'utils/py'));import jog_run as j
+root=pathlib.Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-requeue-control-wkqsg84i')
+target=pathlib.Path(tempfile.mkdtemp(prefix='gh1358-runner-control-'))
+def git(*args):return subprocess.check_output(['git','-C',str(target),*args],text=True,stderr=subprocess.STDOUT).strip()
+subprocess.run(['git','clone','--no-hardlinks','/Users/noelsaw/Documents/GitHub/XYZ-forge',str(target)],check=True)
+git('remote','set-url','origin','https://github.com/HiQS-Labs/XYZ-forge.git')
+def cli(*args):return subprocess.check_output([sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(root),*args],text=True)
+class Checkpoint:
+ def __init__(self,*a):pass
+ def begin(self):return True
+ def finish(self):pass
+j.JogCheckpoint=Checkpoint;j.find_issue_doc=lambda *a:None
+args=types.SimpleNamespace(root=str(root),target_root=str(target),checkpoint_root=str(target.parent/'unused-publication-control'),builder='codex',reviewer='agy',executor='marathon',simulate=False,dry_run=False,auto_merge=False,max_tasks=1)
+calls=[]
+def dispatch(*a,**k):
+ assert git('branch','--show-current')=='development'
+ name='control-lane-'+str(len(calls)+1);git('switch','-c',name)
+ (target/'lane-marker').write_text(name);git('add','lane-marker');git('commit','-m',name)
+ calls.append((name,git('rev-parse','HEAD')));return 'failed','stub dispatch; no model'
+j.run_marathon_phase=dispatch
+for n in (1,2):
+ cli('jog','retry','1358');j.jog_run_main(args)
+ print('PASS scheduled task starts prepared development; durable lane',calls[-1],flush=True)
+for name,sha in calls:assert git('rev-parse',name)==sha
+cli('jog','retry','1358')
+def refuse(kind):
+ before=cli('jog','list','--json');count=len(calls)
+ try:j.jog_run_main(args);raise AssertionError('unexpected dispatch: '+kind)
+ except (j.ContractError,SystemExit) as e:print('PASS refusal before lease:',kind,type(e).__name__,flush=True)
+ assert cli('jog','list','--json')==before and len(calls)==count
+foreign=target/'foreign.txt';foreign.write_text('preserve fixture foreign file');refuse('dirty');foreign.unlink()
+lock=j.JogSupervisorLock(str(target));lock.acquire()
+try:refuse('busy')
+finally:lock.release()
+saved=git('branch','--show-current');git('switch','--detach','HEAD');refuse('detached');git('switch',saved)
+Checkpoint.begin=lambda self:False
+before=git('rev-parse','HEAD');j.jog_run_main(args);assert git('rev-parse','HEAD')==before and len(calls)==2
+print('PASS retained-journal recovery makes no switch or dispatch; source fixture only',flush=True)

@@ -1,0 +1,5 @@
+{"items":27,"scenario_sha256":"bed30bb1ac9ffe5f6ff5283b21b84eb2eb8630402ba78f13152157736963bf70","stage":"init","status":"ok","tick_id":null,"ts":"2026-11-08T05:01:45.689890+00:00"}
+{"fault":null,"slot":1,"stage":"tick.started","status":"ok","tick_id":"slot_001","ts":"2026-11-08T05:01:45.750297+00:00"}
+{"agent_called":true,"stage":"evaluate","status":"ok","tick_id":"slot_001","ts":"2026-11-08T05:01:45.751334+00:00"}
+{"rejection":null,"stage":"validate","status":"raw-valid","tick_id":"slot_001","ts":"2026-11-08T05:01:45.751643+00:00"}
+{"decision_status":"raw-valid","error":"sandbox-exec: sandbox_apply: Operation not permitted","stage":"tick.completed","status":"failed","tick_id":"slot_001","ts":"2026-11-08T05:01:45.763091+00:00"}

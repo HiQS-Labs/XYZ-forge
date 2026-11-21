@@ -1,0 +1,32 @@
+{
+  "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1412",
+  "allowlist": {
+    "1403": "9f0dad9ac46816d2abd17c3e69d3199f80380788",
+    "1404": "8e05d8bc74a6eb985084ad4114e8c0f2e52f497c"
+  },
+  "landed_order": [
+    1403,
+    1404
+  ],
+  "outcomes": {
+    "1403": {
+      "merge_oid": "8155ff85e0022e0fbb2491aaff91c8a5fdf11cb3",
+      "reconcile": "ok",
+      "status": "merged"
+    },
+    "1404": {
+      "merge_oid": "8cb9cabcbb456b4cda575166b3e302cbacd2aa27",
+      "reconcile": "ok",
+      "status": "merged"
+    }
+  },
+  "verdict": {
+    "at": "2026-11-10T23:19:01Z",
+    "body": "Cross-PR review: #1403 supervision instructions and #1404 conveyor instructions retain per-PR approval, exact full-SHA binding and one landing owner. The reviewed flywheel/conveyor instruction bytes remain unchanged after canonical metadata integration. Canonical B1 preserved both task rows and the #1243 live acceptance ledger update. Both live receipt sets are published; STALE Preflight reports do not claim READY.\n\nThe existing Small regression sweep passed on #1403's reconciled development state. The remaining range changes no production runtime paths; normal documentation gates, committed negative controls and independent Opus medium approval cover the instruction repair. No duplicate runtime sweep was run merely to observe it.\n\nThe full registry remains deferred to the existing pre-promotion wave-reconcile.yml dispatch under repository policy. No promotion or full-registry qualification is claimed. Reconciliation and final publication status are recorded in the batch sequence.",
+    "covers": [
+      1403,
+      1404
+    ],
+    "value": "deferred"
+  }
+}

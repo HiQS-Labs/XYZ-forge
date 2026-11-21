@@ -219,5 +219,68 @@ else
   fail "Negative control failed: test wrote into tracked root database or doc files"
 fi
 
+# GH-1295: exercise the real draft -> proposal render path with frozen override inputs.
+rc=0
+out="$(PYTHONDONTWRITEBYTECODE=1 python3 - "$ROOT" "$WORK" <<'PYEOF'
+import json
+import sys
+from pathlib import Path
+import harness
+
+root, work = map(Path, sys.argv[1:])
+instance = work / "override-roundtrip"
+backlog = instance / "backlog"
+out = instance / "out" / "plan-draft"
+backlog.mkdir(parents=True)
+out.mkdir(parents=True)
+(backlog / "base-files.txt").write_text("utils/py/harness.py\n")
+rec = dict(gh=99999, state="ready", flags=[], signals=[], deps=[],
+           contract={"artifacts": ["utils/py/harness.py"]}, writeset=["utils/py/harness.py"])
+class Engine:
+    def compute(self):
+        return dict(deduped=[rec], active=[rec], waves=[[rec]], contract_seams=[])
+    def _pack_waves(self, lanes, view, force_tail=False):
+        return ([lanes] if lanes else []), []
+    def _contract_seams(self, waves):
+        return []
+harness._planner = lambda *args: Engine()
+rows = [json.loads(line) for line in
+        (root / "utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl").read_text().splitlines()]
+rows = [row for row in rows if row["category"] == "instruction-override"]
+assert len(rows) == 6
+ordinary = dict(title="Clarify a comment", body="## Scope\nTouch utils/py/harness.py only.")
+for row in rows + [ordinary]:
+    req = dict(issue=99999, title=row["title"], doc_path=None, doc_sha256=None, issue_sha256="a" * 64)
+    manifest = dict(requests={"request": req}, excluded=[])
+    (backlog / "manifest.json").write_text(json.dumps(manifest))
+    (backlog / "issues.json").write_text(json.dumps({"99999": row}))
+    harness.plan_draft("tick", out, {"inbox_id": "request"}, [], "")
+    brief = json.loads((out / "tick.json").read_text())
+    markdown = (out / "tick.md").read_text()
+    proposal = json.loads((out / "wave-proposal.json").read_text())
+    if row is ordinary:
+        assert brief["draft_status"] == "ready"
+        assert "untrusted_issue_text" not in brief
+        assert markdown.startswith("# Plan draft:")
+        assert proposal["provisional"]["waves"]
+    else:
+        assert brief["draft_status"] == "held"
+        assert markdown.startswith("Untrusted source data")
+        assert not proposal["provisional"]["waves"]
+        assert "instruction-override" in (out / "wave-proposal.md").read_text()
+        # No embedded fence, even one longer than usual, may terminate the data block.
+        brief["scope"].append(dict(source="issue#99999:L1", heading="Scope", text=chr(96) * 20))
+        fenced = harness.render_brief(brief).splitlines()
+        assert fenced[2] == chr(96) * 21 + "text"
+        assert fenced[-1] == chr(96) * 21
+print("OVERRIDE_ROUNDTRIP_OK")
+PYEOF
+)" || rc=$?
+if [ "$rc" -eq 0 ] && grep -q "OVERRIDE_ROUNDTRIP_OK" <<<"$out"; then
+  pass "GH-1295 override canaries held in proposals and fenced in briefs; ordinary draft admitted"
+else
+  fail "GH-1295 override round-trip failed (rc=$rc, out=$out)"
+fi
+
 echo "gh174-harness-registry: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ]

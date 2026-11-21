@@ -1,0 +1,29 @@
+**SINGLE-MODEL — NOT RECONCILED** (only codex answered; 1 of 2 requested advisor(s) failed — this is one model's read, not a cross-model consult. Do not treat any claim below as cross-verified.)
+
+**ANSWER:** The spike is grounded and distinct enough to file. It proposes no duplicate writer or runtime change. Tighten the acceptance criteria and evidence references before pickup; no blocker requires new machinery.
+
+**What this proposes:** A bounded investigation into whether existing contract validators could flag useful preparation mistakes. Its deliverable is a recommendation identifying an existing fix site—or recommending no code—with implementation deferred to a later authorized task.
+
+**How the existing system works per this document:** The draft describes Jog admission as checking command form and paths, and preflight as evaluating exit status. Existing HQ/PRS mechanisms own captures and contracts; GH1447 supplies historical offline replay evidence. This is the document’s account, distinguished from the source findings below.
+
+**What it is not:** The Non-goals explicitly exclude installation, new runners, ledgers, approval systems and runtime changes during this spike. Implementation is deferred, while lexical proof of semantic relevance is expressly disclaimed. I infer that a shared command-shape rule remains an option to evaluate, not an agreed design.
+
+**FINDINGS**
+
+- **[Pass] The concrete disagreement is real and narrowly evidenced.** `lint_probe` splits on whitespace and treats the second token after `python3` as a filesystem target, explaining rejection at `-c` (`utils/py/jog_run.py:1578`). Preflight executes command probes through the shell and interprets return status using `expect_nonzero` (`utils/py/swarm_preflight.py:271`). That supports investigating supported command forms; it does not establish a production semantic failure. **Disposition: retain this distinction.**
+
+- **[Should] “Syntax filter” overstates what the existing lint validates.** It rejects selected trivial patterns and checks certain target paths; it does not parse Python or shell syntax (`utils/py/jog_run.py:54`, `utils/py/jog_run.py:1568`). Likewise, `eval_probes` supports path and regex probes as well as command exit status (`utils/py/swarm_preflight.py:255`). **Disposition: call the first row “Existing command-form/path filter,” and qualify exit-status wording as applying to command probes.**
+
+- **[Pass] GH1447’s retained evidence supports the claimed 7/7 classification result.** The replay extracts the actual function and trivial-pattern definitions, reconstructs historical script files, and never executes inherited commands (`TESTS-RESULTS/2026-11-12+GH-1447/replay.py:6`, `:13`, `:23`). I checked that the four artifact hashes match the receipt and that current `jog_run.py` matches its recorded source hash (`TESTS-RESULTS/2026-11-12+GH-1447/provenance.jsonl:1`). This verifies retained evidence, not an independently rerun replay. **Disposition: cite these exact artifacts and publication commit; keep live delivery and semantic adequacy unverified.**
+
+- **[Should] Acceptance item three names a constraint as a red control.** Rejecting a parallel ledger/runner or a semantic-proof claim tests recommendation compliance, not heuristic usefulness. Also, “useful warnings” and “bounded” lack a concrete sampling boundary. **Disposition: use a small named retained corpus or explicit case/time cap; record expected classifications before evaluation and per-case false positives/negatives. Treat the architectural exclusions as recommendation constraints. No numerical success threshold or new harness is necessary.**
+
+- **[Pass] Scope is distinct, with one overlap to keep explicit.** GH1447 already owns the replay and a surgical-validator recommendation (`PROJECT/2-WORKING/GH-1447-ACCEPTANCE-RELEVANCE.md:27`). This spike adds the broader warning-versus-refusal and false-positive study. The fetched [GH1439](https://github.com/HiQS-Labs/XYZ-forge/issues/1439), [GH1296](https://github.com/HiQS-Labs/XYZ-forge/issues/1296), [GH1386](https://github.com/HiQS-Labs/XYZ-forge/issues/1386) and [GH1414](https://github.com/HiQS-Labs/XYZ-forge/issues/1414) address different preparation, packet, run-accounting and review concerns. **Disposition: consume GH1447’s recommendation as input rather than repeat its replay.**
+
+- **[Pass] No duplicate writer is proposed, but ownership remains investigation work.** Jog reuses preflight’s contract parser (`utils/py/jog_run.py:1640`) and owns working-contract promotion (`utils/py/jog_run.py:1744`). “Existing HQ/PRS writers” is therefore an incomplete ownership map, appropriately unresolved by plan step one. **Disposition: distinguish authoring, parsing, promotion and ledger writes in that map.**
+
+- **[Should] Ratings need narrower evidence language.** Appeal 50 is neutral; effort 70 is plausible for a genuinely bounded study. Priority’s “repeated preparation friction” risks implying an established recurrence trend, which GH1447 explicitly leaves unknown (`TESTS-RESULTS/2026-11-12+GH-1447/SUMMARY.md:13`). **Disposition: say “retained examples justify a bounded study; recurrence unknown.” Severity 55 is a proposed judgment, not a measured incident severity.**
+
+- **[Nit] External-reference verification remains unresolved.** Both attempts to retrieve the pinned unlazy file failed. **Disposition: retain its exact permalink, mark the characterization unverified until inspected, and keep it nonessential to the spike’s justification.**
+
+**RECOMMENDATION:** File with these small clarifications; authorize only bounded research, preserving no-code as a fully acceptable outcome.

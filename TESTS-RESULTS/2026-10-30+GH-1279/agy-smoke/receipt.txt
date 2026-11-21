@@ -1,0 +1,1 @@
+agy --model gemini-3.8-flash-medium --mode accept-edits -p "create smoke.txt containing ok, read it back" -> reply "ok", file smoke.txt = "ok", exit 0 (2026-10-30)

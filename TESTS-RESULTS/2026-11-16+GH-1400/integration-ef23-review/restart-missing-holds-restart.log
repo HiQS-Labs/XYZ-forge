@@ -1,0 +1,18 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/publication --builder codex --reviewer agy --max-tasks 1 --supervise-until 1794890589
+rc=0
+jog: GH-901 held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json'
+jog: published primary checkpoint fc58823b2136af8a864858b56bdc3810323347c8
+jog: execution clone aligned at fc58823b2136af8a864858b56bdc3810323347c8; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXZG03P0S5JTZWWP1F10/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: reached max-tasks limit (1); pausing queue.
+jog: GH-901 parked: supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/restart-missing-holds/primary/.tick/jog/jog-01M7KWYXRKSRSE62KAJBBQ0WZ4/gh901-exec1/preflight/result.json'
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: published primary checkpoint e3dcaaca45306e404bee4948bc92ccc4426a2287
+jog: reclaiming stale relay-driver.lock (holder pid 24403 not running).
+Switched to a new branch 'fixture-902-gh902-exec1'

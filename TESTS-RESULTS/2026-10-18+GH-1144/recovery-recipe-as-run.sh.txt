@@ -1,0 +1,14 @@
+set -euo pipefail
+SHA=8eeb20b29f6fafb1d2e016bc220d0f81c9b7b66f; N=1144; SUITE=test/demo.sh; BASE=main
+git checkout "$SHA"
+git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
+LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
+snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
+BEFORE=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$BEFORE" >"$LOG"
+set +e; bash "$SUITE" >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"                     # 3. record rc at once
+AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$AFTER" >>"$LOG"
+[ "$BEFORE" = "$AFTER" ] || { echo "VOID: identity drifted during the suite — no receipt"; exit 1; }  # 4.
+git checkout "$BASE" && git diff-index --quiet HEAD --                                           # 5. same helper, actual rc
+REC=$(python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
+cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6. retain the run beside the receipt
+git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin "$BASE"

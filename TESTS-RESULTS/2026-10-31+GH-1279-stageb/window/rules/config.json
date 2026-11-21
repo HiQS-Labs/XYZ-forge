@@ -1,0 +1,11 @@
+{
+  "adapter": "rules",
+  "daily_cap": 1.8,
+  "manifest_path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-stageb-window-2026-10-31/temp/factory-primitive/stageb-2026-10-31-rules/instances/C/backlog/manifest.json",
+  "max_call_cost": 0.01,
+  "probe_targets": [],
+  "prompt_sha256": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+  "scenario_path": null,
+  "scenario_sha256": "2eacc9dd8935438348a97e8b6255af0287c167dcb4a27eedf8a7a0fb40ac5873",
+  "source": "prs"
+}

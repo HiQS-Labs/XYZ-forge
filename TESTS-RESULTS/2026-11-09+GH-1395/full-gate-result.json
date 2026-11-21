@@ -1,0 +1,9 @@
+{
+  "sha": "273700069754f22d1ddebf274f33fd775207d58d",
+  "exit": 0,
+  "seconds": 623.056,
+  "passed": 408,
+  "total": 408,
+  "clone_integrity": "clean; nonbare; expected HEAD/remote; no local user identity",
+  "qualification": "manual validate full receipt reused by normal pre-push; not ci-local promotion evidence"
+}

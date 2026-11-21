@@ -67,7 +67,8 @@ fi
 # (which is what makes the manual --check drift comparison below meaningful).
 #
 # Usage:
-#   utils/marathon-plan.sh                         # report on stdout + write today's marathon-plan doc
+#   utils/marathon-plan.sh                         # report on stdout; writes nothing (GH-446)
+#   utils/marathon-plan.sh --write                 # report + write today's marathon-plan doc
 #   utils/marathon-plan.sh --dry-run               # report only; write nothing
 #   utils/marathon-plan.sh --check                 # exit non-zero if today's marathon-plan doc is out of sync
 #   utils/marathon-plan.sh --policy derisk-first   # high-risk work sorts earlier (default: quick-wins)
@@ -114,11 +115,12 @@ emit() { printf '%s\n' "$*" >&2; }
 
 usage() {
   cat <<'EOF'
-Usage: utils/marathon-plan.sh [--dry-run | --check] [--policy quick-wins|derisk-first]
+Usage: utils/marathon-plan.sh [--write | --dry-run | --check] [--policy quick-wins|derisk-first]
                            [--deep] [--require-gh] [--format text|json]
                            [--zones-config <file>]
 
-  (default)        Print the validation report and write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md.
+  (default)        Print the validation report; write nothing (same as --dry-run).
+  --write          Also write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md (GH-446: writing is opt-in).
   --dry-run        Print the report; write no marathon-plan doc.
   --check          Re-render and compare against today's marathon-plan doc; non-zero on drift. Writes nothing.
   --policy P       quick-wins (default; momentum, low-cost first) | derisk-first (high-risk first).
@@ -134,13 +136,14 @@ EOF
 
 POLICY="quick-wins"
 FORMAT="text"
-RUN_MODE="write"     # write | dry-run | check
+RUN_MODE="dry-run"   # write | dry-run | check (GH-446: bare run only reports)
 DEEP=0
 REQUIRE_GH=0
 ZONES_CONFIG=""
 
 while (($# > 0)); do
   case "$1" in
+    --write)      RUN_MODE="write"; shift ;;
     --dry-run)    RUN_MODE="dry-run"; shift ;;
     --check)      RUN_MODE="check"; shift ;;
     --policy)     POLICY="${2:-}"; shift 2 ;;
@@ -1194,7 +1197,7 @@ if [[ "$RUN_MODE" == "dry-run" ]]; then
   exit "$RC"
 fi
 
-# default: write today's marathon-plan doc.
+# --write: write today's marathon-plan doc.
 mkdir -p "$QUEUE_DIR"
 cp "$RENDER_OUT" "$QUEUE_DOC"
 emit "wrote ${QUEUE_DOC#$ROOT/}"

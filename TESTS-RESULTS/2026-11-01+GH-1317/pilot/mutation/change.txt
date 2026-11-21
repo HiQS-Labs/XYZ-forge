@@ -1,0 +1,3 @@
+Evaluator removed exactly the prompt identity comparison/refusal from actor candidate b3dd3e43 in the separate disposable verify clone. Actor did not control this mutation.
+    if sha_text(prompt) != config["prompt_sha256"]:
+        return AdapterResult("", "prompt-mismatch", None, 0.0, "unbilled", called=False)

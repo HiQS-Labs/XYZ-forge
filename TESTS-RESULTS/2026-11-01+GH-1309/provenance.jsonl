@@ -1,0 +1,3 @@
+{"kind": "manual_check", "name": "migrate-legacy-matrix", "commit": "190be352", "pr": 1312, "status": "pass", "qualification": "36 pass, 0 fail, incl. red controls A (base rejects the flag) and B/C (forged receipts rejected)", "receipt": "manual-check.md"}
+{"kind": "existing_suite", "name": "test/skills-army-hq.sh", "commit": "190be352", "pr": 1312, "status": "pass", "qualification": "33 passed, 4 subtests passed", "receipt": "manual-check.md"}
+{"kind": "gate", "name": "validate.sh --subsystem skills-army-hq", "commit": "d28cce4e", "pr": 1312, "status": "pass", "qualification": "tier 2, 6/6 incl. publisher suites; pdda.sh run exit 0; not promotion evidence", "receipt": "gates.md"}

@@ -1,0 +1,24 @@
+import sys,json,hashlib,datetime,os
+from pathlib import Path
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge');source=Path.cwd()
+base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg')
+e=source/'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery'
+sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogSupervisorLock,JogCheckpoint,_git
+record=json.loads((e/'gate-start.json').read_text())
+original=('\n'.join(record['attempt_lines'])+'\n').encode()
+assert hashlib.sha256(original).hexdigest()==record['attempt_sha256']
+path=base/'runner/.tick/attempts/gh-1254-outer-loop-borrow-decl'
+assert not path.exists()
+assert datetime.datetime.now(datetime.timezone.utc)<datetime.datetime.fromisoformat('2026-11-08T21:35:42.553636+00:00')
+lock=JogSupervisorLock(str(primary));lock.acquire()
+try:
+ with path.open('xb') as f:f.write(original)
+ assert path.read_bytes()==original
+ checkpoint=JogCheckpoint(str(primary),str(base/'publisher'))
+ assert checkpoint.begin() is False,'expected recovery-only finish, no new wake'
+ assert checkpoint.state['phase']=='published'
+ result={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'repair_round':1,'cause':'existing complete_phase_success calls lane_attempt_reset, deleting success history; recovery assertion caught it before checkpoint.finish','restored_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'builder_attempts':2,'checkpoint':checkpoint.state,'no_new_dispatch':True}
+ (e/'success-counter-repair.json').write_text(json.dumps(result,indent=2)+'\n')
+ print(json.dumps(result),flush=True)
+finally:lock.release()

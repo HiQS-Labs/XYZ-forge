@@ -1,0 +1,17 @@
+{
+  "source_commit": "4df6b0a4acd4702add981f241aecaab76ec7985c",
+  "digest": "3ac107523f1157a2a8e588895b3706a44cb37149f46fe0f75f72c326ae92210d",
+  "whole_folder_parity": true,
+  "receipt": "matching",
+  "links": [
+    "claude",
+    "antigravity",
+    "zcode",
+    "codex",
+    "grok-bot",
+    "kimi"
+  ],
+  "pulse_commit": "82d38e8b9",
+  "distribution": "existingPulse owns push; STALE_PULSE_COLLECTION behind1 warning retained, no rebase/reset/force",
+  "discovery": "existing links readable; GUI/picker refresh not observed"
+}

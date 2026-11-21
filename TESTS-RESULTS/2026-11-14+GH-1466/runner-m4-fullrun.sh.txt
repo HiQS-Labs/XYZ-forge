@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# M4 addendum: the full `pdda.sh run` (not only `frontmatter`) from a vendored ledger-only .xyz/.
+set -u
+SP="$1"; H="$2"; BASE="$3"; OUT="$4"
+eval "$(sed -n '/^set -u/,/^inv()/p' "$SP/gh1466-m1-m9.sh" | sed '1d' | sed 's#^H="\$1"; B="\$2"; OUT="\$3"#H="'"$H"'"; B="'"$BASE"'"; OUT="'"$OUT"'"#')"
+unset ANTHROPIC_API_KEY OPENAI_API_KEY PDDA_LLM GH_TOKEN
+export PDDA_GH_OFFLINE=1 PDDA_LLM_REVIEW=0
+# (a) valid minimal host
+V="$(mk_host ledger-m4full-valid)"; seed_ledger "$V" "$H/utils/py/releases_app.py"
+bash "$H/relay-automation/xyz-vendor.sh" "$V" --ledger-only --no-register > /dev/null 2>&1
+printf '# Changelog\n\n## %s — fixture\n\nFixture.\n' "$TODAY" > "$V/CHANGELOG.md"; git -C "$V" add -A; git -C "$V" commit -qm cl
+( cd "$V" && PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh run ) > "$OUT/M4-run-valid-candidate.log" 2>&1; rv=$?
+# (b) same host shape, malformed host doc, candidate vs base pdda-lib.sh
+M="$(mk_host ledger-m4full-bad)"; seed_ledger "$M" "$H/utils/py/releases_app.py"
+bash "$H/relay-automation/xyz-vendor.sh" "$M" --ledger-only --no-register > /dev/null 2>&1
+printf '# Changelog\n\n## %s — fixture\n\nFixture.\n' "$TODAY" > "$M/CHANGELOG.md"
+sed -i '' '/^updated:/d' "$M/PROJECT/2-WORKING/GH-4291-LEDGER.md"; git -C "$M" add -A; git -C "$M" commit -qm bad
+( cd "$M" && PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh run ) > "$OUT/M4-run-bad-candidate.log" 2>&1; rc=$?
+cp "$BASE/utils/pdda/pdda-lib.sh" "$M/.xyz/utils/pdda/pdda-lib.sh"
+( cd "$M" && PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh run ) > "$OUT/M4-run-bad-base-lib.log" 2>&1; rb=$?
+c=$(grep -c "PROJECT/2-WORKING/GH-4291-LEDGER.md:1 missing required frontmatter key 'updated'" "$OUT/M4-run-bad-candidate.log")
+b=$(grep -c "GH-4291-LEDGER.md" "$OUT/M4-run-bad-base-lib.log")
+ve=$(grep -E '^SUMMARY' "$OUT/M4-run-valid-candidate.log" | grep -v 'errors=0' | wc -l | tr -d ' ')
+grep -q -E 'No such file|command not found|Traceback' "$OUT/M4-run-valid-candidate.log" && miss=yes || miss=no
+[ "$rv" = 0 ] && [ "$ve" = 0 ] && [ "$miss" = no ] && [ "$rc" != 0 ] && [ "$c" -ge 1 ] && [ "$b" = 0 ] \
+  && rec M4-run PASS "full pdda.sh run from .xyz: valid host rc=0, every SUMMARY errors=0, no missing-script/traceback lines; malformed host rc=$rc with the host-path updated: error; base pdda-lib.sh rc=$rb, 0 host-path hits" \
+  || rec M4-run FAIL "valid rc=$rv nonzero-summaries=$ve missing=$miss bad rc=$rc hits=$c base rc=$rb hits=$b"

@@ -1,0 +1,10 @@
+claude-opus-4-8 0.50 -> WARNED
+claude-opus-4-8 1.00 -> WARNED
+claude-opus-4-8 3.00 -> SILENT
+claude-sonnet-4-6 0.50 -> SILENT
+claude-opus-4-8 abc -> SILENT
+'' -> ''
+'{"subtype":"success","is_error' -> ''
+'{"subtype":"error_max_turns","' -> 'error_max_turns'
+'not json' -> ''
+missing -> ''

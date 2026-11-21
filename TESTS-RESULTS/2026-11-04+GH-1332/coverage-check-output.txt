@@ -1,0 +1,14 @@
+== RED: origin/development 7af4ee3d (cases A move, B copy, C no row) ==
+pdda.sh exit 1
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/GH-1295-INJECTED
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/GH-1296-LAUN
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-99999-NO-ROW.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/GH-99999-NO-ROW.md) — park it 
+== GREEN: with the GH-1332 patch ==
+pdda.sh exit 1
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md:1 promoted in flight: the ledger still points at PROJECT/1-INBOX/GH-1295-INJECTED-TEXT-
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/GH-1296-LAUN
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-99999-NO-ROW.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/GH-99999-NO-ROW.md) — park it 
+
+== Case A alone (B and C removed; frontmatter 'updated' added as Jog's promotion does) ==
+patched: pdda.sh exit 0
+unpatched: pdda.sh exit 1

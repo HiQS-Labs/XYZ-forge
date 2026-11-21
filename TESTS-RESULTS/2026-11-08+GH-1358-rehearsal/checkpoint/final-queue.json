@@ -1,0 +1,47 @@
+[
+  {
+    "id": 25,
+    "global_id": "jog-01M6MX6BZVXZFQW0JP610THNWM",
+    "gh_number": 1344,
+    "position": 1,
+    "status": "parked",
+    "attempt_count": 1,
+    "lease_pid": null,
+    "failure_reason": "GH1344 exhausted; preserved without retry for GH1358 rehearsal",
+    "created_at": "2026-11-05T03:49:12Z",
+    "updated_at": "2026-11-08T08:04:27Z",
+    "title": "GH-1340 item 1: finishing work (Tasks 10, 9, 8, 7)",
+    "doc_path": "PROJECT/1-INBOX/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1344"
+  },
+  {
+    "id": 30,
+    "global_id": "jog-01M6MX6C56Q2HD17DZ8EWRGY8C",
+    "gh_number": 1345,
+    "position": 1,
+    "status": "parked",
+    "attempt_count": 1,
+    "lease_pid": null,
+    "failure_reason": "preflight-refused (exit 6):   Remediation: promote issue #1345 to a GH-1345 capture doc with a preflight contract first.",
+    "created_at": "2026-11-05T03:49:12Z",
+    "updated_at": "2026-11-08T08:04:29Z",
+    "title": "GH-1340 item 2: the cutover, rows at pickup (Tasks 2, 3, 4, 6, 11, 5, 12)",
+    "doc_path": "PROJECT/3-COMPLETED/GH-1345-CUTOVER-ROWS-AT-PICKUP.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1345"
+  },
+  {
+    "id": 32,
+    "global_id": "jog-01M6X2ZXGNHFVS268HFP4AQQ49",
+    "gh_number": 1296,
+    "position": 1,
+    "status": "parked",
+    "attempt_count": 1,
+    "lease_pid": null,
+    "failure_reason": "cold-start: dispatched Marathon execution has no valid result receipt \u2014 inspect manually before any refire",
+    "created_at": "2026-11-08T08:04:27Z",
+    "updated_at": "2026-11-08T08:11:11Z",
+    "title": "factory-primitive launch packets: lanes fail preflight on a stale artifact path or missing Preflight Contract",
+    "doc_path": "PROJECT/2-WORKING/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1296"
+  }
+]

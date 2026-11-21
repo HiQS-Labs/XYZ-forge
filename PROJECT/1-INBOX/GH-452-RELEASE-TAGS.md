@@ -53,3 +53,7 @@ releases.
 - Phase 1 — `releases_app.py` ship verb cuts the tag and records the SHA.
 - Phase 2 — GitHub Release publication from the ledger manifest.
 - Phase 3 — vendor stamp + `hq` version report.
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

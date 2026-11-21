@@ -1,0 +1,59 @@
+QUERY=ledger-host
+REPO=ledger-host
+RESOLVED_VIA=exact
+XYZ_REG_PATH=<work>/r21/outside-search/ledger-host
+XYZ_INSTALL=<work>/r21/outside-search/ledger-host/.xyz
+XYZ_TIER=ledger
+REPO_PATH=<work>/r21/outside-search/ledger-host
+REPO_PATH_SOURCE=xyz-registry
+resolver_rc=0
+--- status ---
+HQ · project card
+  query:        ledger-host
+  repo:         ledger-host
+  path:         <work>/r21/outside-search/ledger-host  (via xyz-registry)
+  capability:   Tier B — PDDA only (intake only, no dispatch)
+
+  Rebalance:    (no project_registry match)
+  PDDA rails:   (not in any git-pulse registry)
+  local mode:   ROADMAP_SOURCE=releases
+  startup docs: ROUTER ✗  AGENTS ✗  RELEASES-DB ✗ (releases-mode declared, but releases.db or CLI missing)
+  active docs:  0 in PROJECT/2-WORKING
+  marathon:     (none open)
+  XYZ install:  no (cannot run driven lanes)
+--- fire ---
+hq fire: ledger-host is not Tier A (needs PDDA + a vendored XYZ install to run driven lanes) — refusing.
+fire_rc=1
+--- tier2 ---
+HQ · project card
+  query:        tier2-host
+  repo:         tier2-host
+  path:         <work>/r21/outside-search/tier2-host  (via xyz-registry)
+  capability:   Tier A — PDDA + XYZ (dispatch-eligible)
+
+  Rebalance:    (no project_registry match)
+  PDDA rails:   (not in any git-pulse registry)
+  local mode:   ROADMAP_SOURCE=releases
+  startup docs: ROUTER ✗  AGENTS ✗  RELEASES-DB ✗ (releases-mode declared, but releases.db or CLI missing)
+  active docs:  0 in PROJECT/2-WORKING
+  marathon:     (none open)
+  XYZ install:  yes · tick 1 · harness commit seed
+                (run `relay-automation/xyz-sync.sh check` for the authoritative drift verdict)
+--- collision ---
+QUERY=api
+REPO=api
+RESOLVED_VIA=ambiguous
+CANDIDATES=<work>/r21/outside-search/org1/api,<work>/r21/outside-search/org2/api
+REPO_PATH=
+REPO_PATH_SOURCE=ambiguous
+collision_rc=2
+--- dup ---
+QUERY=dup-ledger
+REPO=dup-ledger
+RESOLVED_VIA=exact
+XYZ_REG_PATH=<work>/r21/outside-search/dup-ledger
+XYZ_INSTALL=<work>/r21/outside-search/dup-ledger/.xyz
+XYZ_TIER=ledger
+REPO_PATH=<work>/r21/outside-search/dup-ledger
+REPO_PATH_SOURCE=xyz-registry
+dup_rc=0

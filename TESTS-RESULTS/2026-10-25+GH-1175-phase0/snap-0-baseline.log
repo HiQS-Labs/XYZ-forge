@@ -1,0 +1,38 @@
+## snap 0-baseline at 2026-10-26T03:05:47Z
+### jog list --all (head)
+{
+ "id": 22,
+ "global_id": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+ "gh_number": 416,
+ "position": 1,
+ "status": "pending",
+ "attempt_count": 0,
+ "lease_pid": null,
+ "failure_reason": null,
+ "created_at": "2026-10-26T03:05:31Z",
+ "updated_at": "2026-10-26T03:05:31Z",
+ "title": "four documentation trues-ups",
+ "doc_path": "PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md",
+ "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/416"
+}
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge
+#### .tick/jog state files
+#### driver-heartbeat.json
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/driver-heartbeat.json: No such file or directory
+
+#### rtl_driver_heartbeat_status
+finished (rc=1)
+#### driver lock
+ls: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.git/relay-driver.lock: No such file or directory
+
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0
+#### .tick/jog state files
+#### driver-heartbeat.json
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/.tick/driver-heartbeat.json: No such file or directory
+
+#### rtl_driver_heartbeat_status
+finished (rc=1)
+#### driver lock
+ls: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/.git/relay-driver.lock: No such file or directory
+
+### processes

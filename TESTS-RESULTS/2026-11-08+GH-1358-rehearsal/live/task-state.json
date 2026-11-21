@@ -1,0 +1,19 @@
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M6X4GEMDS11PQ30QA8A52XZA",
+  "executions": [
+    {
+      "execution_id": "gh1295-exec1",
+      "mode": "run",
+      "started_at": "2026-11-08T08:35:35Z",
+      "status": "projected-failed",
+      "packet_dir": "gh1295-exec1/preflight",
+      "result_path": "gh1295-exec1/preflight/marathon-result.json",
+      "drive_exit": 7,
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "projected_reason": "marathon escalated: timeout-no-artifact (exit 7) [gh1295-exec1; result: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X4GEMDS11PQ30QA8A52XZA/gh1295-exec1/preflight/marathon-result.json]"
+    }
+  ],
+  "gh_number": 1295
+}

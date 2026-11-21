@@ -1,0 +1,17 @@
+# GH-1261 ledger identity rerun (2026-10-30T14:49:04Z), HEAD 7bc1742d, clone XYZ-forge-gh1261-plan-draft-phase-2b-2026-10-30-verify
+## before
+a0c9a6d1b30a396448a03d6476514ae1dd8d890e6d8407e43e1a41254cc74588  releases.db
+b6922bba94c3a1c609d2fbe44b3ebd0c37a083e5ed0f7e48a289c5f8b9a2c84b  releases.sql
+## run
+$ python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/pilot-4 init --from-prs --limit 3 --unregistered 3
+{"excluded":0,"instance":"<repos>/XYZ-forge-gh1261-plan-draft-phase-2b-2026-10-30-verify/temp/factory-primitive/pilot-4/instances/C","requests":6,"status":"initialized"}
+init rc=0
+$ tick --slot 1: {"status":"completed","tick_id":"slot_001"} rc=0
+$ tick --slot 2: {"status":"completed","tick_id":"slot_002"} rc=0
+$ tick --slot 3: {"status":"completed","tick_id":"slot_003"} rc=0
+$ tick --slot 4: {"status":"completed","tick_id":"slot_004"} rc=0
+$ tick --slot 5: {"status":"completed","tick_id":"slot_005"} rc=0
+$ tick --slot 6: {"status":"completed","tick_id":"slot_006"} rc=0
+## after
+a0c9a6d1b30a396448a03d6476514ae1dd8d890e6d8407e43e1a41254cc74588  releases.db
+b6922bba94c3a1c609d2fbe44b3ebd0c37a083e5ed0f7e48a289c5f8b9a2c84b  releases.sql

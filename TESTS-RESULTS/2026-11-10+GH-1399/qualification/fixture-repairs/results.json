@@ -1,0 +1,47 @@
+[
+  {
+    "suite": "gh280-jog-marathon-adapter.sh",
+    "rc": 0,
+    "elapsed": 98.51110196113586
+  },
+  {
+    "suite": "gh251-validate-pytest-skip.sh",
+    "rc": 0,
+    "elapsed": 48.89636826515198
+  },
+  {
+    "suite": "gh267-express-skill.sh",
+    "rc": 1,
+    "elapsed": 18.057766914367676
+  },
+  {
+    "suite": "gh372-escalation-log-tail.sh",
+    "rc": 0,
+    "elapsed": 1.8688750267028809
+  },
+  {
+    "suite": "gh371-interrupt-snapshot.sh",
+    "rc": 0,
+    "elapsed": 1.079632043838501
+  },
+  {
+    "suite": "gh379-canary-uses-validate.sh",
+    "rc": 0,
+    "elapsed": 1.288092851638794
+  },
+  {
+    "suite": "gh365-validate-telemetry.sh",
+    "rc": 0,
+    "elapsed": 1.5515110492706299
+  },
+  {
+    "suite": "gh365-runner-envelope.sh",
+    "rc": 0,
+    "elapsed": 2.0451841354370117
+  },
+  {
+    "suite": "gh528-parallel-contention-retry.sh",
+    "rc": 0,
+    "elapsed": 29.649302005767822
+  }
+]

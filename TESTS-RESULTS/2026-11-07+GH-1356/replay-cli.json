@@ -1,0 +1,84 @@
+{
+ "contract_sha256": "86e5b10a249edc790bf47f392fb53a68c8e1a5eae8b1bb3e13e0122cc32a2057",
+ "stop_reason": "no-new-signal: 3 consecutive batches without a new signature",
+ "stopped_at_event": 500,
+ "streak_at_stop": 193,
+ "quiet_batches_at_stop": 3,
+ "streak_stop_reason": "no-new-signal: 500 consecutive cases with no new signature",
+ "streak_stop_at_event": 1892,
+ "events": 10000,
+ "counts": {
+  "usage": 8949,
+  "pass": 773,
+  "run-root-guard": 234,
+  "cap-guard": 21,
+  "state-guard": 18,
+  "sandbox-denied": 2,
+  "input-error": 3
+ },
+ "per_target": {
+  "fp-help": {
+   "usage": 2062,
+   "pass": 438
+  },
+  "fp-genman": {
+   "usage": 2270,
+   "pass": 225,
+   "sandbox-denied": 2,
+   "input-error": 3
+  },
+  "fp-status": {
+   "usage": 2270,
+   "run-root-guard": 171,
+   "pass": 59
+  },
+  "fp-init": {
+   "usage": 2347,
+   "pass": 51,
+   "run-root-guard": 63,
+   "cap-guard": 21,
+   "state-guard": 18
+  }
+ },
+ "usage_signature_count": 23,
+ "signatures": [
+  "fp-genman|0|pass|",
+  "fp-genman|2|input-error|factory-primitive: [Errno N] Is a directory: P",
+  "fp-genman|2|input-error|factory-primitive: [Errno N] Not a directory: P",
+  "fp-genman|2|sandbox-denied|factory-primitive: [Errno N] Operation not permitted: P",
+  "fp-genman|2|usage|harness.py factory-primitive generate-manifest: error: ambiguous option",
+  "fp-genman|2|usage|harness.py factory-primitive generate-manifest: error: argument --output: expected one argument",
+  "fp-genman|2|usage|harness.py factory-primitive: error: ambiguous option",
+  "fp-genman|2|usage|harness.py factory-primitive: error: argument command: invalid choice",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments",
+  "fp-help|0|pass|",
+  "fp-help|2|usage|harness.py factory-primitive: error: ambiguous option",
+  "fp-help|2|usage|harness.py factory-primitive: error: argument command: invalid choice",
+  "fp-help|2|usage|harness.py factory-primitive: error: the following arguments are required: command",
+  "fp-init|0|pass|",
+  "fp-init|2|cap-guard|factory-primitive: invalid daily cap or maximum call cost",
+  "fp-init|2|run-root-guard|factory-primitive: run root must stay under P",
+  "fp-init|2|state-guard|factory-primitive: instance already initialized; use a new run root",
+  "fp-init|2|usage|harness.py factory-primitive init: error: ambiguous option",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --daily-cap: expected one argument",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --daily-cap: invalid float value",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --max-call-cost: expected one argument",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --max-call-cost: invalid float value",
+  "fp-init|2|usage|harness.py factory-primitive: error: ambiguous option",
+  "fp-init|2|usage|harness.py factory-primitive: error: argument --run-root: expected one argument",
+  "fp-init|2|usage|harness.py factory-primitive: error: argument command: invalid choice",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments",
+  "fp-status|0|pass|",
+  "fp-status|2|run-root-guard|factory-primitive: run root must stay under P",
+  "fp-status|2|usage|harness.py factory-primitive status: error: ambiguous option",
+  "fp-status|2|usage|harness.py factory-primitive: error: ambiguous option",
+  "fp-status|2|usage|harness.py factory-primitive: error: argument --run-root: expected one argument",
+  "fp-status|2|usage|harness.py factory-primitive: error: argument command: invalid choice",
+  "fp-status|2|usage|harness.py factory-primitive: error: the following arguments are required: command",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments"
+ ],
+ "candidates": [],
+ "max_streak": 7387,
+ "streak_at_end": 348,
+ "gated_events": 0
+}

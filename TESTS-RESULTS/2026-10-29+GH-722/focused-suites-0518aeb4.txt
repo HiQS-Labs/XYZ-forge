@@ -1,0 +1,10 @@
+commit 0518aeb4 (code); bash test/<suite> in disposable full clone XYZ-forge-gh722-merge-cleanup-safe-roots-parent-2026-10-29-gate (gh436 imports gh534 phase A/B/C); HEAD unchanged before/after, tree clean
+== gh436-merge-cleanup.sh
+Ran 201 tests in 350.709s
+OK
+== gh645-merge-cleanup-xyz-tools.sh
+Ran 8 tests in 0.076s
+OK
+== gh674-merge-cleanup-hosted-lookup.sh
+Ran 6 tests in 0.034s
+OK

@@ -1,0 +1,12 @@
+{
+  "CHECKS.md": "2799865ec0ae3405d3bdd9d36b3739cae5ce0fa75bce6c41a80857efc58149d5",
+  "PROPOSAL.md": "c8edf0c87c69cc3cc194dbb5c1717bc0eb5b529843d83367815a7163c78e927c",
+  "PROTOCOL.sanitized.md": "af71879d45dea81ca9818129bae6f8230713d8b715d603d7b3eb19f78c0c6f7f",
+  "SUMMARY.md": "cc33bae90c2370cc2e4f3621c3b17db88992e1b0dac31ba192ddc2811579386b",
+  "config.sanitized.json": "1754050de7d520d32869b8af456cbf22c1cd11f0fcbf81ddb7a732005443575b",
+  "helper.txt": "e5f697d48d2d0ad5699b84a8991e9ffbc57a8b1d91cfc43ec49bd3cbd59db02b",
+  "inconclusive.json": "8fb35192a16abe882b55384472a262f163c58df872ddb9349f3dfba89add6cf1",
+  "launch.sanitized.json": "d3e6cb30dae9b3493faa6371d4c734b0c0fcbc22c3cde4b91f41d851d9187c30",
+  "post-stop-owned-environment.json": "40cd06cb6571733266649e3dee988f9070cf4837a1b9f1134246fc3fa429ce13",
+  "provenance.jsonl": "058adc84be929fbf2b39a40b15d048c1c303a63b532e04e0fb5e2f6bcfe5e45f"
+}

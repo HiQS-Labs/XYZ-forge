@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "git",
+    "status",
+    "--porcelain"
+  ],
+  "rc": 0,
+  "stdout": "",
+  "stderr": ""
+}

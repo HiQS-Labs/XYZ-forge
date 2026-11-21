@@ -1,0 +1,12 @@
+3ba446f022b8d6900d57a3939837eac2c12b5e9f
+CHANGELOG.md
+releases.db
+releases.sql
+
+Auto-merging CHANGELOG.md
+CONFLICT (content): Merge conflict in CHANGELOG.md
+warning: Cannot merge binary files: releases.db (qa/finalbase vs. qa/held1403)
+Auto-merging releases.db
+CONFLICT (content): Merge conflict in releases.db
+Auto-merging releases.sql
+CONFLICT (content): Merge conflict in releases.sql

@@ -1,0 +1,61 @@
+[
+  {
+    "case": "valid-existing",
+    "blockers": [],
+    "pass": true
+  },
+  {
+    "case": "artifacts-only",
+    "blockers": [
+      "Preflight Contract missing required field: target"
+    ],
+    "pass": true
+  },
+  {
+    "case": "missing-target",
+    "blockers": [
+      "Preflight Contract missing required field: target"
+    ],
+    "pass": true
+  },
+  {
+    "case": "missing-gate",
+    "blockers": [
+      "Preflight Contract missing required field: gate"
+    ],
+    "pass": true
+  },
+  {
+    "case": "missing-fix_probes",
+    "blockers": [
+      "Preflight Contract needs at least one fix_probes entry"
+    ],
+    "pass": true
+  },
+  {
+    "case": "missing-target-repo",
+    "blockers": [
+      "Preflight Contract missing required field: target.repo"
+    ],
+    "pass": true
+  },
+  {
+    "case": "missing-target-ref",
+    "blockers": [
+      "Preflight Contract missing required field: target.ref"
+    ],
+    "pass": true
+  },
+  {
+    "case": "new-without-probe",
+    "blockers": [
+      "artifacts_new entry has no matching path_absent probe: new.md"
+    ],
+    "pass": true
+  },
+  {
+    "case": "new-with-probe",
+    "blockers": [],
+    "pass": true
+  }
+]

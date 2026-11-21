@@ -39,7 +39,9 @@ SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 
 status_for_relay() {
   local relay="$1" status
-  status="$(sed -n 's/^STATUS:[[:space:]]*//p' "$relay" | head -1)"
+  # Same rule as rtl_relay_field (relay-turn-lib.sh) and relay_attest.header_field: the key may be
+  # wrapped in markdown bold or backticks (`**STATUS:** Approved`).
+  status="$(sed -n 's/^[`*]*STATUS[`*]*:[`*]*[[:space:]]*//p' "$relay" | head -1 | sed -E 's/[`*]+[[:space:]]*$//; s/[[:space:]]*$//')"
   printf '%s' "${status:-missing}"
 }
 

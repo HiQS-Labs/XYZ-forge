@@ -1,0 +1,1 @@
+{"added_at": 1793412677.9184692, "added_tick": 7, "argv": ["--run-root", "--run-root", "temp/factory-primitive/fz", "status"], "env": {}, "family": "slice", "id": "ad110c14554d", "signature": "abd2373925d297a1", "size": 55, "vector": [2, 0, "be4a6866f8e03087", "fast_<1s"], "verdict": "fail"}

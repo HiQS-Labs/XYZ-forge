@@ -40,7 +40,7 @@ rc=$?
 [ "$rc" -eq 0 ] \
   && pass "fixture relay completes successfully" \
   || fail "fixture relay exited $rc: $out"
-printf '%s\n' "$out" | grep -Fq 'GH-370 progress (main tree fallback:' \
+printf '%s\n' "$out" | grep -Fq 'GH-370 worktree state (main tree fallback:' \
   && pass "progress telemetry identifies the non-isolated main-tree fallback" \
   || fail "progress telemetry did not name its sample root: $out"
 printf '%s\n' "$out" | grep -Fq 'changed-files=1' \

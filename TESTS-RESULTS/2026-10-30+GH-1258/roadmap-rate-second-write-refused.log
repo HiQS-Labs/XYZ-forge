@@ -1,0 +1,1 @@
+refused: rule=already-rated: GH-1263 is already rated. Re-scoring is a deliberate act, not a retry: pass --force if you mean to replace the existing scores.

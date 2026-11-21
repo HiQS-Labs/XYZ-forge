@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1254,
+  "execution_id": "gh1254-exec2-gateretry2",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1254-outer-loop-borrow-decl-2026-11-08",
+  "pr_number": null,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "cf39f59951541f6b55d47e4c992c0d3558caa9b01b48a9d1b6f6020f74eb2247",
+    "gate-receipt.json": "e37f966a092233805a99eed5fd6effbc5da11bb66a37f79ab2991ecb06bce6ac",
+    "provenance.jsonl": "f47358d4e6b7f3a37a3e2dd64090fd336e21b77475b5cd2af0c2c898a99503f9"
+  }
+}

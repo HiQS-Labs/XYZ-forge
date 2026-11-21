@@ -1,0 +1,21 @@
+import os, subprocess, sys, tempfile
+sys.path.insert(0, sys.argv[1] + "/utils/py")
+os.environ.pop("XYZ_ATTEMPT_CONTEXT", None)
+import gate_receipt as g
+def sh(*a): return subprocess.check_output(a, text=True).strip()
+r = tempfile.mkdtemp(prefix="adm.")
+sh("git","init","-q","-b","main",r); sh("git","-C",r,"config","user.email","t@t"); sh("git","-C",r,"config","user.name","t")
+open(r+"/f","w").write("1"); sh("git","-C",r,"add","-A"); sh("git","-C",r,"commit","-qm","c1")
+main_tip = sh("git","-C",r,"rev-parse","HEAD")
+sh("git","-C",r,"checkout","-q","-b","task"); open(r+"/f","w").write("2"); sh("git","-C",r,"commit","-qam","c2")
+task_tip = sh("git","-C",r,"rev-parse","HEAD")
+sh("git","-C",r,"checkout","-q","main")
+def t(label, **kw):
+    try: print(label, "->", g.attempt_admission(r, **kw))
+    except Exception as e: print(label, "-> REFUSED", type(e).__name__)
+t("2a main tip sha", sha=main_tip)
+t("2b main no sha")
+t("2c task commit named from main", sha=task_tip)
+sh("git","-C",r,"checkout","-q","--detach","main")
+t("3a detached at main tip, no destination")
+t("3b detached at main tip, destination task", destination_ref="refs/heads/task")

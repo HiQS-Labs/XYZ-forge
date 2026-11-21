@@ -1,0 +1,26 @@
+# GH-1169 F2: canonical (non-vendored) express, old (origin/development) vs new (task branch), on a successful
+# check --docs-only --dry-run in a fresh GitHub clone of XYZ Forge with a qualifying docs change and the gate installed.
+# Usage: bash canonical-compare.sh <task-clone-with-new-express> <work-dir>
+set -u
+NEW="$1"; C="$2/forge"; unset XYZ_HARNESS TICK_REPO_ROOT
+git clone -q https://github.com/HiQS-Labs/XYZ-forge.git "$C" && cd "$C" || exit 1
+git checkout -q -b docs/gh1169-canonical-compare origin/development
+bash githooks/install.sh >/dev/null 2>&1; echo "gate: $(bash githooks/install.sh --check 2>&1 | tail -1 | cut -c1-40)"
+printf '\nGH-1169 canonical comparison line.\n' >> README.md
+echo "base: $(git rev-parse --short origin/development) | origin/HEAD: $(git symbolic-ref --short refs/remotes/origin/HEAD) | change: $(git status --porcelain | tr '\n' ' ')"
+echo "old driver: $C/utils/py/express.py ($(git log -1 --format=%h -- utils/py/express.py)) | new driver: <task-clone>/utils/py/express.py ($(git -C "$NEW" log -1 --format=%h -- utils/py/express.py))"
+python3 -B utils/py/express.py --root "$C" check --issue 1169 --docs-only --dry-run --repo HiQS-Labs/XYZ-forge > "$2/old.txt" 2>&1; echo "old rc=$?"
+python3 -B "$NEW/utils/py/express.py" --root "$C" check --issue 1169 --docs-only --dry-run --repo HiQS-Labs/XYZ-forge > "$2/new.txt" 2>&1; echo "new rc=$?"
+echo "## old output"; cat "$2/old.txt"; echo "## new output"; cat "$2/new.txt"
+diff "$2/old.txt" "$2/new.txt" > /dev/null && echo "RESULT: byte-identical" || { echo "RESULT: differ"; diff "$2/old.txt" "$2/new.txt"; }
+echo "## canonical recovery text, old vs new (import only)"
+git show origin/development:utils/py/express.py > "$2/express_old.py"
+python3 -B - "$2/express_old.py" "$NEW/utils/py/express.py" "$NEW/utils/py" <<'PY'
+import sys, importlib.util
+sys.path.insert(0, sys.argv[3])
+def load(n, p):
+    s = importlib.util.spec_from_file_location(n, p); m = importlib.util.module_from_spec(s); s.loader.exec_module(m); return m
+old, new = load("old", sys.argv[1]), load("new", sys.argv[2])
+for suite in ("test/pdda-repo-contract.sh", "test/gh267-express-skill.sh"):
+    print(suite, "byte-identical" if old.recovery_recipe("b"*40, 1144, suite) == new.recovery_recipe("b"*40, 1144, suite) else "DIFFER")
+PY

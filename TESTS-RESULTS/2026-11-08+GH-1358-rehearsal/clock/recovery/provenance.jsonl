@@ -1,0 +1,10 @@
+{"at": "2026-11-08T20:28:02.584055+00:00", "action": "controlled-gate-recovery", "artifact": "approved-result.json", "sha256": "cf39f59951541f6b55d47e4c992c0d3558caa9b01b48a9d1b6f6020f74eb2247"}
+{"at": "2026-11-08T20:28:02.584225+00:00", "action": "controlled-gate-recovery", "artifact": "effective-caps.json", "sha256": "f557a10d1dd75f92a0086973c1d56fd2fda0afcf2edfe6fb07b288479e6da5ae"}
+{"at": "2026-11-08T20:28:02.584257+00:00", "action": "controlled-gate-recovery", "artifact": "full-gate-and-retry.log", "sha256": "240cc49af852fb72e8c13e760c86d3b7d65c0c71f0af0586d6f0b3cd66280a52"}
+{"at": "2026-11-08T20:28:02.584296+00:00", "action": "controlled-gate-recovery", "artifact": "full-gate-receipt.json", "sha256": "9177a9e490a781c1fc62fe99ac6a051619348db27755514288bd0bf69f839249"}
+{"at": "2026-11-08T20:28:02.584320+00:00", "action": "controlled-gate-recovery", "artifact": "gate-start.json", "sha256": "f85c9c5c9c83d1ef24ed0fd416bf98f7db3f03a9e7cdf3361e2fad4489df7f47"}
+{"at": "2026-11-08T20:28:02.584343+00:00", "action": "controlled-gate-recovery", "artifact": "marathon-gate-receipt.json", "sha256": "e37f966a092233805a99eed5fd6effbc5da11bb66a37f79ab2991ecb06bce6ac"}
+{"at": "2026-11-08T20:28:02.584369+00:00", "action": "controlled-gate-recovery", "artifact": "retained-result.json", "sha256": "9997616be15806c692a2d5ad8cda8786294fed352652d13741106637b0fb32db"}
+{"at": "2026-11-08T20:28:31.969702+00:00", "action": "preserved-compatible-verification", "artifact": "success-counter-repair.json", "sha256": "22dceeee85fa7c1e3cfa4fca32e1c8a3d5b432481913ef6374e7e8833898bdb4"}
+{"at": "2026-11-08T20:28:31.969838+00:00", "action": "preserved-compatible-verification", "artifact": "clock-main-adjacent.json", "sha256": "7264209e59642417f67961108cbf3098c0cd8cb8d6287748396074618bb146b1"}
+{"at": "2026-11-08T20:28:31.969868+00:00", "action": "preserved-compatible-verification", "artifact": "clock-main-adjacent.log", "sha256": "f2f67ef05db7d789d941c0364fb87528d5fe5ffd037dab30b71a57e07019d422"}

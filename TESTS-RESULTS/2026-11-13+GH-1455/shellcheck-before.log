@@ -1,0 +1,10 @@
+command: git ls-files -z -- '*.sh' | xargs -0 -P 4 -n 1 shellcheck -S error   (the exact scan in ci-local.sh shellcheck_tracked)
+tree: 37ca5e0d272c04fd2a9cd02ef4b0cfd1bbf5d2c8 (development, unfixed)
+
+In TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh line 1:
+# usage: pdda_fn.sh <tree> <fixture_root> <issue>
+^-- SC2148 (error): Tips depend on target shell and yours is unknown. Add a shebang or a 'shell' directive.
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2148 -- Tips depend on target shell and y...
+scan exit=1

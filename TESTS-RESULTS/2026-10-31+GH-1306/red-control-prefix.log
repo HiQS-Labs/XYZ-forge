@@ -1,0 +1,22 @@
+PASS setup: adopt-existing
+PASS setup: adopt-existing source points inside the collection
+PASS setup: catalog
+PASS setup: other has no recorded source
+PASS preview exits 0
+FAIL preview does not say Unchanged — Unchanged: other
+
+PASS preview leaves receipt without source
+  apply stdout: Unchanged: other
+  apply stderr: 
+PASS apply exits 0
+FAIL apply records source — {'description': 'Smoke fixture two.', 'digest': 'bfce09d9b9a95b063acca4df20f173e3a52ae69fecbc91397da254e97e585789', 'name': 'other', 'prerequisites': [], 'updated': '2026-10-31T20:41:48+00:00'}
+FAIL apply records commit — {'description': 'Smoke fixture two.', 'digest': 'bfce09d9b9a95b063acca4df20f173e3a52ae69fecbc91397da254e97e585789', 'name': 'other', 'prerequisites': [], 'updated': '2026-10-31T20:41:48+00:00'}
+PASS payload bytes unchanged
+PASS no backup archive written
+PASS no blocked-pulse WARN
+PASS no Pulse commit for receipt-only update
+FAIL adopt-existing receipt re-points to the owning repo — Unchanged: sample
+
+PASS rerun prints Unchanged
+PASS changed payload copies
+4 FAIL

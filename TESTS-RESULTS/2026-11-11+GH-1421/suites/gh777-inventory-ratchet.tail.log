@@ -1,0 +1,3 @@
+inventory_ratchet: clean (matches baseline, 0 new scripts/connects)
+Testing ratchet rejection of growth...
+PASS: inventory ratchet enforcement and negative controls verified

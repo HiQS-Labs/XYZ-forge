@@ -1,0 +1,1 @@
+tick: error: release --to Closed: "Closed" is a terminal status, not an agent — to close the token run `tick done RELAY-gh1020-check1-075603 --agent codex`; to hand it off, name the peer agent

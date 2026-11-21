@@ -1,0 +1,45 @@
+## snap 2-pre-attempt2 at 2026-10-26T03:22:05Z
+### jog list --all (head)
+{
+ "id": 22,
+ "global_id": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+ "gh_number": 416,
+ "position": 1,
+ "status": "pending",
+ "attempt_count": 1,
+ "lease_pid": null,
+ "failure_reason": null,
+ "created_at": "2026-10-26T03:05:31Z",
+ "updated_at": "2026-10-26T03:17:59Z",
+ "title": "four documentation trues-ups",
+ "doc_path": "PROJECT/2-WORKING/GH-416-DOC-TRUES-UP-BATCH.md",
+ "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/416"
+}
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge
+#### .tick/jog state files
+#### driver-heartbeat.json
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/driver-heartbeat.json: No such file or directory
+
+#### rtl_driver_heartbeat_status
+finished (rc=1)
+#### driver lock
+ls: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.git/relay-driver.lock: No such file or directory
+
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0
+#### .tick/jog state files
+#### driver-heartbeat.json
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/.tick/driver-heartbeat.json: No such file or directory
+
+#### rtl_driver_heartbeat_status
+finished (rc=1)
+#### driver lock
+ls: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/.git/relay-driver.lock: No such file or directory
+
+### processes
+21333 67990       00:06 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/gh280-jog-marathon-adapter.sh
+21334 21333       00:06 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFRkkq7j/ro
+22620 21334       00:05 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFR
+23476 22620       00:04 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFR
+24968 23476       00:02 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFR
+67919 67871       01:01 bash -c vp_run_one "$1" pool _ gh280-jog-marathon-adapter.sh
+67990 67919       01:01 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/gh280-jog-marathon-adapter.sh

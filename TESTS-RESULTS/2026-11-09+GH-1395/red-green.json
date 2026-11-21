@@ -1,0 +1,14 @@
+[
+  {
+    "source": "before",
+    "criterion": "dense90 native CLI calls <=3",
+    "observed": 90,
+    "verdict": "red"
+  },
+  {
+    "source": "after",
+    "criterion": "dense90 native CLI calls <=3",
+    "observed": 3,
+    "verdict": "green"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 416,
+  "execution_id": "gh416-exec2",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-416-doc-trues-up-batch-2026-10-25",
+  "pr_number": 1225,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "ab5c37b48a7943acadaf2d21c9d2bcb4585f2dca6e1a6f7ceb305f6540a9e85b",
+    "gate-receipt.json": "ad3d10d041272308185a0a9f90aacf516f4a1a94f9c4a430e8b5d8f814fe5bc2",
+    "provenance.jsonl": "b24f2b347b0437f950e4a56465b9964c8a17951efc8785bf252872522989da20"
+  }
+}

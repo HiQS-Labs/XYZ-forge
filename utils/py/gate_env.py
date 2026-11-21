@@ -58,6 +58,16 @@ PASS = "pass"
 # Keep the reason strings — they are the argument for the classification, and the next person to add
 # an export will read them to decide which side their variable belongs on.
 HARNESS_ENV = {
+    "XYZ_ATTEMPT_CONTEXT": (
+        PASS,
+        "Qualification must verify its canonical reservation before running. Standard gate "
+        "entry points consume this context and remove it from fixture-suite children.",
+    ),
+    "MERGE_CLEANUP_RECORD": (
+        PASS,
+        "The explicit coordinator-owned repair record is needed at qualification admission; "
+        "standard gates remove it from unrelated fixture children after checking it.",
+    ),
     # ── SCRUB: proven to flip a suite's verdict, or in the same family as one that does ────────────
     "ALLOW_PATHS": (
         SCRUB,
@@ -119,6 +129,7 @@ HARNESS_ENV = {
     # argument for generating this surface rather than curating it (issue #346, proposal B).
     "COMMANDCODE_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "DEEPSEEK_AGENT": (SCRUB, "See CLAUDE_AGENT."),
+    "KIMI_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "RELAY_TOOL_MODE": (SCRUB, "Turn tool mode (standard vs programmatic); suites set this per-invocation."),
     "XYZ_TOOL_MODE": (SCRUB, "Harness tool execution mode; suites set this per-invocation."),
     # ── PASS: load-bearing for the gate or for the drivers a suite legitimately spawns ─────────────

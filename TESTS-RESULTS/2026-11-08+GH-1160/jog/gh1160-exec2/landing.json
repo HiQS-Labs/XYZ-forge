@@ -1,0 +1,18 @@
+{
+  "issue": 1160,
+  "queue_gid": "jog-01M6X8FJA6VWWJDMXJ9BF5A1A4",
+  "execution_id": "gh1160-exec2",
+  "pr_number": 1372,
+  "merged_sha": "3decc7e46937651d2ffa4403a832ce14262f9005",
+  "approved_head_sha": "8eb0934c81bd822394b386181de7674fcdb75b59",
+  "landed_head_sha": "8ef5dcc060571d622f9675e3ce7bcf8a183fa621",
+  "reviewed_head_sha": "c8224dcf6cbf3cff825ced1ad23e62b6ce519a6f",
+  "reviewed_candidate_sha": "8eb0934c81bd822394b386181de7674fcdb75b59",
+  "tested_head_sha": "8eb0934c81bd822394b386181de7674fcdb75b59",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "roadmap_gid": "rmi-01M6X8FHSQPM17ZBPXS63V2QGP",
+    "raw_text": "- **GH-1160 \u00b7 Correct startup reconciliation instructions** \u2705 **SHIPPED 2026-11-08 (PR #1372)** \u2014 [GH-1160-LOCAL-RECONCILE-STARTUP.md](PROJECT/3-COMPLETED/GH-1160-LOCAL-RECONCILE-STARTUP.md) \u00b7 [#1160](https://github.com/HiQS-Labs/XYZ-forge/issues/1160)"
+  }
+}

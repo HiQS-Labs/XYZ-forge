@@ -1,0 +1,10 @@
+  PASS: GH-382: phase start memory telemetry sampled and logged
+  PASS: GH-382: phase complete memory telemetry sampled and logged
+  PASS: GH-382: tick analyze includes memory section
+  PASS: GH-382: tick analyze reports compressor peak
+  PASS: GH-382: tick analyze reports swap free min
+  PASS: GH-382: builder and reviewer peak RSS reported separately (codex)
+  PASS: GH-382: builder and reviewer peak RSS reported separately (agy)
+  PASS: GH-382: low-swap warning logged when free swap is below threshold
+  PASS: GH-382 (negative control): analyze omits memory section when no memory telemetry recorded
+  PASS: GH-382: all marathon memory telemetry tests passed

@@ -1,0 +1,2 @@
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub/XYZ-forge/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub/XYZ-forge

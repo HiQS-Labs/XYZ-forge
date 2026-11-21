@@ -1,0 +1,17 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 95c2d62385",
+  "log": [
+    "classification: keep=ours generation ours/theirs=(2533, 2528) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap update GH-1243 (raw_text): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "95c2d62385a958db80159b721eca668c214d4aa7",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}

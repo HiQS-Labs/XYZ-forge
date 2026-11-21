@@ -1,0 +1,15 @@
+{
+  "case": "success",
+  "mode": "baseline",
+  "rc": 0,
+  "live": false,
+  "archives": 0,
+  "hashes": [],
+  "receipt_attempt": {
+    "count": null,
+    "max": 2
+  },
+  "relay_dispatches": 0,
+  "fixture": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.QRmw6O7RLy",
+  "log": "marathon-drive: phase p1: legacy attestation without config identity \u2014 reusing (GH-1220)\nmarathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) \u2014 skipping render/reseed, re-running only the pre-advance gate\nmarathon-drive: relay approved \u2014 running pre-advance gate: true\nmarathon-drive: gate-guard: gate exit 0 after 1s \u2014 peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)\nmarathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.QRmw6O7RLy/agent-a/relay-system/2026-11-08/marathon-p1-235003.md\nmarathon-drive: warn: host free swap is critically low (1023MB < 1024MB)\nmarathon-drive: memory-telemetry: phase p1-complete boundary \u2014 compressor=739MB, swap_free=1023MB\nmarathon-drive: phase p1 complete \u2014 lane_already_satisfied, reviewer approved, gate passed\nmarathon-drive: result receipt written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.QRmw6O7RLy/result.json (outcome: approved, exit 0)\n"
+}

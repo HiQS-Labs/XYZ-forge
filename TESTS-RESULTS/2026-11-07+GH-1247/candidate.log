@@ -1,0 +1,14 @@
+warning: You appear to have cloned an empty repository.
+remote-identical {"ok": true, "failed_query": "", "unlanded": [], "landed": ["refs/heads/development @ f0179481bf (reachable from origin/development)", "refs/tags/archive/annotated @ 942a0d700b (exact tag object recoverable from origin)", "refs/tags/archive/light @ e506a464de (exact tag object recoverable from origin)"]}
+local-only {"ok": true, "failed_query": "", "unlanded": ["refs/tags/local-only @ e506a464de: tag absent from origin or object differs"], "landed": ["refs/heads/development @ f0179481bf (reachable from origin/development)", "refs/tags/archive/annotated @ 942a0d700b (exact tag object recoverable from origin)", "refs/tags/archive/light @ e506a464de (exact tag object recoverable from origin)"]}
+different {"ok": true, "failed_query": "", "unlanded": ["refs/tags/archive/light @ f0179481bf: tag absent from origin or object differs"], "landed": ["refs/heads/development @ f0179481bf (reachable from origin/development)", "refs/tags/archive/annotated @ 942a0d700b (exact tag object recoverable from origin)"]}
+lookup-failure {"ok": false, "failed_query": "git ls-remote --tags origin: fixture query failed", "unlanded": [], "landed": []}
+tick-env <fixture>/maintained/bin/tick
+tick-config <fixture>/maintained/bin/tick
+idle-claims {"has_claims": false, "verified": true, "details": "no claimed tasks", "claims": []}
+active-claims {"has_claims": true, "verified": true, "details": "live by peer", "claims": [{"task": "live", "agent": "peer"}]}
+foreign-config None
+tick-missing None
+unknown-claims {"has_claims": false, "verified": false, "details": "tick binary not found"}
+broken-override {"has_claims": false, "verified": false, "details": "tick claims did not run: [Errno 2] No such file or directory: '<fixture>/missing-tick'"}
+ALL FIXED CONTROLS PASS

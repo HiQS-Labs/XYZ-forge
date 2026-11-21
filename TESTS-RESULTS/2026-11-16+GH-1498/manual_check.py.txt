@@ -1,0 +1,885 @@
+# GH-1498 recorded manual check (NOT a test suite; GH-831). Run: python3 manual_check.py.txt <repo-root>
+# A stateful fake `gh` on PATH serves canned PRs/history and logs every write verb. Each assertion has a
+# pinned expected outcome; all but the render/behaviour checks (A12b, A18, A19d, A20a) also run a
+# controlled bad candidate (an in-process monkeypatch, discarded after the
+# run, never committed) that must make the same assertion fail.
+import contextlib, io, json, os, shutil, stat, subprocess, sys, tempfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+REPO = Path(sys.argv[1]).resolve()
+SCRIPT = REPO / "skills/2-daily/pr-minder/scripts/pr_minder.py"
+PLANNER = REPO / "skills/3-weekly/weekly-planner/scripts"
+NOW = datetime.now(timezone.utc)
+iso = lambda d: (NOW - timedelta(days=d)).isoformat().replace("+00:00", "Z")
+RESULTS = []
+ORIG_PATH = os.environ["PATH"]
+
+FAKE_GH = r'''#!/usr/bin/env python3
+import json, os, sys
+from datetime import datetime, timezone
+NOWZ = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+S = os.environ["FAKE_GH_STATE"]; st = json.load(open(S)); a = sys.argv[1:]
+def save(): json.dump(st, open(S, "w"))
+def log(v): open(os.environ["FAKE_GH_LOG"], "a").write(json.dumps(a) + "\n")
+def pr(n): return next(p for p in st["prs"] if p["number"] == int(n))
+def out(x): print(json.dumps(x) if not isinstance(x, str) else x)
+if a[:2] == ["repo", "view"]: out(st["slug"]); sys.exit(0)
+if a[:2] == ["pr", "list"]: out(st["prs"]); sys.exit(0)
+if a[:2] == ["issue", "list"]: out([]); sys.exit(0)
+if a[:2] == ["api", "user"]: out("op"); sys.exit(0)
+if a[:2] == ["api", "graphql"]:
+    if st.get("graphql_error"): print("GraphQL: boom", file=sys.stderr); sys.exit(1)
+    nodes = [dict(st["activity"][str(p["number"])], number=p["number"], createdAt=p["createdAt"])
+             for p in st["prs"] if str(p["number"]) in st["activity"]]
+    out({"data": {"repository": {"pullRequests": {"pageInfo": {"hasNextPage": False}, "nodes": nodes}}}}); sys.exit(0)
+if a[0] == "api" and "compare/" in " ".join(a):
+    head = a[-1].split("...")[-1]; p = next(p for p in st["prs"] if p["headRefOid"] == head)
+    out({"behind_by": st.get("behind", {}).get(str(p["number"]), 0)}); sys.exit(0)
+if a[:3] == ["api", "--paginate", "--slurp"]:
+    n = a[3].split("/")[-2]; out([st["comments"].get(n, [])]); sys.exit(0)
+if a[0] == "api" and a[1] == "-X" and a[2] == "PATCH":
+    log(a); cid = int(a[3].split("/")[-1]); body = a[5][5:]
+    for cs in st["comments"].values():
+        for c in cs:
+            if c["id"] == cid: c["body"] = body
+    for q in st["prs"]: q["updatedAt"] = NOWZ if str(q["number"]) in st["comments"] else q["updatedAt"]
+    save(); sys.exit(0)
+if a[0] == "api" and a[1].endswith("/comments") and "-f" in a:
+    log(a); n = a[1].split("/")[-2]; body = a[a.index("-f") + 1][5:]
+    st["comments"].setdefault(n, []).append({"id": 9000 + len(st["comments"][n]), "body": body, "user": {"login": "op"}})
+    st["activity"].get(n, {}).get("comments", {}).get("nodes", []).append({"createdAt": NOWZ, "body": body})
+    pr(n)["updatedAt"] = NOWZ; save(); sys.exit(0)
+if a[:2] == ["pr", "view"]:
+    p = dict(pr(a[2])); p.update(st.get("refresh_override", {}).get(a[2], {}))
+    if "-q" in a:
+        if st.get("stale_reads", 0) > 0 and p.get("_old"):   # async update-branch: head not visible yet
+            st["stale_reads"] -= 1; save(); out(p["_old"]); sys.exit(0)
+        out(p["headRefOid"]); sys.exit(0)
+    out(p); sys.exit(0)
+if a[:2] == ["pr", "update-branch"]:
+    log(a)
+    if st.get("fail_update"): print(st.get("fail_msg", "update failed"), file=sys.stderr); sys.exit(1)
+    q = pr(a[2]); q["_old"] = q["headRefOid"]; q["headRefOid"] += "-synced"; q["mergeStateStatus"] = "CLEAN"; q["updatedAt"] = NOWZ
+    st["activity"].get(a[2], {}).get("commits", {}).get("nodes", []).append({"commit": {
+        "oid": q["headRefOid"], "committedDate": NOWZ, "messageHeadline": f"Merge branch '{q['baseRefName']}' into {q['headRefName']}",
+        "committer": {"email": "noreply@github.com"}, "parents": {"totalCount": 2}}})
+    save(); sys.exit(0)
+if a[:2] == ["pr", "edit"]:
+    log(a); p = pr(a[2]); lab = a[4]
+    if a[3] == "--add-label": p["labels"].append({"name": lab})
+    else: p["labels"] = [l for l in p["labels"] if l["name"] != lab]
+    p["updatedAt"] = NOWZ; save(); sys.exit(0)
+if a[:2] == ["label", "create"]:
+    log(a); sys.exit(1 if st.get("fail_label_create") else 0)
+out([]); sys.exit(0)
+'''
+
+
+def commit(days, headline="work", parents=1, email="dev@example.com", oid=None):
+    return {"commit": {"oid": oid or f"c{days}{headline[:3]}{parents}", "committedDate": iso(days),
+                       "messageHeadline": headline, "committer": {"email": email},
+                       "parents": {"totalCount": parents}}}
+
+
+def conn(nodes, more=False):
+    return {"pageInfo": {"hasPreviousPage": more}, "nodes": nodes}
+
+
+def history(commits=(), comments=(), more_commits=False):
+    return {"commits": conn(list(commits), more_commits), "comments": conn(list(comments)),
+            "reviews": conn([]), "reviewThreads": conn([])}
+
+
+def mkpr(n, age, cond="clean", **kw):
+    p = {"number": n, "state": "OPEN", "title": kw.get("title", f"feat: pr {n}"), "body": kw.get("body", ""),
+         "labels": [{"name": l} for l in kw.get("labels", [])], "isDraft": kw.get("draft", False),
+         "headRefName": kw.get("head", f"feat/pr{n}"), "baseRefName": kw.get("base", "development"),
+         "mergeable": "CONFLICTING" if cond == "dirty" else "MERGEABLE",
+         "mergeStateStatus": {"dirty": "DIRTY", "behind": "BEHIND"}.get(cond, "CLEAN"),
+         "statusCheckRollup": ([{"name": "build", "conclusion": "FAILURE", "detailsUrl": kw.get("url", "https://ci/1")}]
+                               if cond == "failing" else []),
+         "headRefOid": f"h{n}", "isCrossRepository": False, "maintainerCanModify": True,
+         "createdAt": iso(60), "updatedAt": iso(kw.get("updated", age)), "url": f"u{n}",
+         "reviewDecision": "", "reviews": [], "files": [], "author": {"login": "x"}, "_age": age}
+    return p
+
+
+class Env:
+    def __init__(self, prs, activity=None, **extra):
+        self.dir = Path(tempfile.mkdtemp(prefix="gh1498-"))
+        (self.dir / "bin").mkdir(); (self.dir / "repo").mkdir(); (self.dir / "state").mkdir()
+        gh = self.dir / "bin/gh"; gh.write_text(FAKE_GH); gh.chmod(gh.stat().st_mode | stat.S_IEXEC)
+        acts = activity or {str(p["number"]): history([commit(p["_age"])]) for p in prs}
+        self.state = {"slug": "acme/repo", "prs": prs, "activity": acts, "comments": {}, **extra}
+        self.save()
+        self.activate()
+
+    def activate(self):
+        """Point the fake gh, its write log and pr-minder's receipts at THIS env (several envs may coexist)."""
+        os.environ.update(FAKE_GH_STATE=str(self.dir / "st.json"), FAKE_GH_LOG=str(self.dir / "writes.log"),
+                          PR_MINDER_STATE=str(self.dir / "state"), REPO_UNDER=str(self.dir / "repo"),
+                          PATH=f"{self.dir / 'bin'}:{ORIG_PATH}")
+
+    def save(self):
+        (self.dir / "st.json").write_text(json.dumps(self.state))
+
+    def load(self):
+        return json.loads((self.dir / "st.json").read_text())
+
+    def writes(self):
+        f = self.dir / "writes.log"
+        return [json.loads(l) for l in f.read_text().splitlines()] if f.exists() else []
+
+    def receipts(self):
+        f = self.dir / "state/acme/repo/actions.jsonl"
+        return [json.loads(l) for l in f.read_text().splitlines()] if f.exists() else []
+
+
+def own(env, n, label="pr-minder:stale"):
+    """Seed a receipt proving pr-minder added `label` to PR n (ownership for removal)."""
+    rec = env.dir / "state/acme/repo"; rec.mkdir(parents=True, exist_ok=True)
+    with (rec / "actions.jsonl").open("a") as fh:
+        fh.write(json.dumps({"ts": iso(30), "pr": n, "phase": "result", "action": "add-label",
+                             "arg": label, "outcome": "ok"}) + "\n")
+    return env
+
+
+sys.path.insert(0, str(SCRIPT.parent))
+import pr_minder as pm  # noqa: E402
+pc, mc = pm.pc, pm.mc
+
+
+def run(*argv):
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+        pm.main(["--repo-root", os.environ.get("REPO_UNDER", "."), *argv])
+    return buf.getvalue()
+
+
+def plans(env, *argv):
+    env.activate()
+    return {r["pr"]: r for r in json.loads(run("--json", *argv))}
+
+
+def apply(env):
+    env.activate()
+    run("--apply")
+    return env.writes()
+
+
+@contextlib.contextmanager
+def patched(obj, name, value):
+    old = getattr(obj, name); setattr(obj, name, value)
+    try:
+        yield
+    finally:
+        setattr(obj, name, old)
+
+
+def check(aid, desc, good, bad_desc, bad):
+    """good/bad are callables returning bool (assertion holds). The bad candidate must FAIL the assertion."""
+    try:
+        g = bool(good())
+    except Exception as exc:
+        g = False; desc += f" [good raised {exc!r}]"
+    crashed = None
+    try:
+        b = bool(bad()) if bad else None
+    except Exception as exc:   # a crashed bad candidate proves nothing: it is NOT a rejection
+        b, crashed = None, repr(exc)
+    ok = g and crashed is None and (b is None or b is False) and not (bad and b is None)
+    RESULTS.append({"id": aid, "assertion": desc, "candidate": "PASS" if g else "FAIL",
+                    "bad_candidate": bad_desc, "bad_rejected": None if b is None else (b is False),
+                    "bad_crashed": crashed, "verdict": "PASS" if ok else "FAIL"})
+    state = "n/a" if not bad else (f"CRASHED {crashed}" if crashed else ("rejected" if b is False else "NOT rejected"))
+    print(f"{'PASS' if ok else 'FAIL'} {aid}: {desc} | bad: {bad_desc} -> {state}")
+
+
+def acts(row):
+    p = row["plan"]
+    return (bool(p["update_branch"]), p["label"] if p["label"] not in (None,) else None, bool(p["comment"]))
+
+
+# ---------------- A1 zero writes ----------------
+def a1():
+    prs = [mkpr(1, 8, "behind"), mkpr(2, 8, "dirty"), mkpr(3, 15, "failing")]
+    e = Env(prs); plans(e); good = len(e.writes()) == 0
+    return good, e
+
+
+def a1_bad():
+    e = Env([mkpr(1, 8, "behind"), mkpr(2, 8, "dirty")])
+    return len(apply(e)) == 0          # the write detector must see apply's writes
+
+
+check("A1", "plan mode logs zero write verbs", lambda: a1()[0], "--apply against the same shim", a1_bad)
+
+# ---------------- A2 rung matrix ----------------
+EXPECT = {  # (age, cond) -> (update_branch, label, comment)
+    (1.5, "behind"): (False, None, False), (3.1, "behind"): (True, None, False),
+    (7.1, "behind"): (True, "pr-minder:stale", False), (14.1, "behind"): (False, "pr-minder:decide", True),
+    (30.1, "behind"): (False, None, False),
+    (1.5, "dirty"): (False, None, False), (3.1, "dirty"): (False, None, True),
+    (7.1, "dirty"): (False, "pr-minder:stale", True), (14.1, "dirty"): (False, "pr-minder:decide", True),
+    (30.1, "dirty"): (False, None, False),
+    (1.5, "failing"): (False, None, False), (3.1, "failing"): (False, None, True),
+    (7.1, "failing"): (False, "pr-minder:stale", True), (14.1, "failing"): (False, "pr-minder:decide", True),
+    (30.1, "failing"): (False, None, False),
+}
+
+
+def a2_rows():
+    prs, key = [], {}
+    for i, (age, cond) in enumerate(EXPECT, start=10):
+        prs.append(mkpr(i, age, cond)); key[i] = (age, cond)
+    prs.append(mkpr(90, 8.1, "behind", draft=True))            # draft floors +4 -> rung 1, no update-branch
+    prs.append(mkpr(91, 4.1, "behind"))                        # drift 50 > 30 -> rung 2
+    e = Env(prs, behind={"91": 50})
+    return plans(e), key
+
+
+def a2_holds():
+    rows, key = a2_rows()
+    for n, k in key.items():
+        if acts(rows[n]) != EXPECT[k]:
+            return False
+    rung4 = [n for n, k in key.items() if k[0] == 30.1]
+    return (all(rows[n]["rung"] == 4 and not rows[n]["plan"]["write"] for n in rung4)
+            and rows[90]["rung"] == 1 and not rows[90]["plan"]["update_branch"] and rows[90]["plan"]["comment"]
+            and rows[91]["rung"] == 2)
+
+
+def off_by_one(age, draft, stale, draft_stale):
+    shift = (draft_stale - stale) if draft else 0
+    return sum(1 for f in [stale + shift, 8 + shift, 15 + shift, 31 + shift] if age >= f)
+
+
+def a2_bad():
+    with patched(pm, "base_rung", off_by_one):
+        return a2_holds()
+
+
+check("A2", "each rung x {behind,dirty,failing} + draft + drift-bump gives the ladder's exact bundle",
+      a2_holds, "rung floors off by one day (8/15/31)", a2_bad)
+
+
+# ---------------- A3 holds ----------------
+def a3_env():
+    L = "pr-minder:stale"   # each already carries an OWNED label, so a removal would be possible if not guarded
+    prs = [mkpr(20, 1, "dirty", title="HOLD: parked spike", labels=[L]),        # engine hold
+           mkpr(21, 1, "dirty", labels=["hold", L]),                           # HOLD_LABELS
+           mkpr(22, 1, "dirty", body="owner decision: hold", labels=[L]),      # OWNER_HOLD_RE
+           mkpr(23, 8, "dirty", labels=["blocked", L]),                        # merge_cleanup.hold_label veto only
+           mkpr(24, 1, "dirty", base="feat/pr20", labels=[L])]                 # stacked on held #20
+    e = Env(prs)
+    for n in (20, 21, 22, 23, 24):
+        own(e, n)
+    return e
+
+
+def a3_ok():
+    e = a3_env(); return len(apply(e)) == 0
+
+
+def a3_bad():
+    with patched(mc, "hold_label", lambda info: None):
+        e = a3_env(); w = apply(e)
+    return not any(x[2:3] == ["23"] or "issues/23/" in " ".join(x) for x in w) and len(w) == 0
+
+
+check("A3", "engine/label/body/veto holds and a child of a held PR (each with an owned label, fresh enough to clear it) get zero writes", a3_ok,
+      "hold_label dropped from the union", a3_bad)
+
+
+# ---------------- A4 idempotency ----------------
+def a4(bad=False):
+    e = Env([mkpr(30, 8, "dirty"), mkpr(31, 4, "behind")])
+    apply(e); first = len(e.writes())
+    if bad:
+        with patched(pm, "owned_comment", lambda *a: None):
+            apply(e)
+    else:
+        apply(e)
+    return first > 0 and len(e.writes()) == first
+
+
+check("A4", "second --apply on the first run's state makes zero writes", a4,
+      "owned-comment lookup ignoring the marker", lambda: a4(bad=True))
+
+
+# ---------------- A5/A6 shared age (after pr-minder's own writes) ----------------
+def a5_env(graphql_error=False):
+    prs = [mkpr(40, 20, "dirty"), mkpr(41, 5, "behind")]
+    return Env(prs, graphql_error=graphql_error)
+
+
+def a5_applied(graphql_error=False):
+    e = a5_env(); apply(e)          # label + comment on #40, update-branch on #41: updatedAt -> now
+    st = e.load(); st["graphql_error"] = graphql_error; e.state = st; e.save()
+    return e
+
+
+def updated_clock(node, receipt_oids=frozenset()):
+    return datetime.now(timezone.utc), True
+
+
+def a5_check(e):
+    st = e.load()
+    wrote = (any(l["name"] == "pr-minder:decide" for l in st["prs"][0]["labels"])
+             and st["prs"][1]["headRefOid"].endswith("-synced") and st["prs"][0]["updatedAt"][:10] == iso(0)[:10])
+    r = plans(e)
+    return wrote and 19.5 < r[40]["age"] < 20.5 and 4.5 < r[41]["age"] < 5.5
+
+
+def a5_ok():
+    return a5_check(a5_applied())
+
+
+def a5_bad():
+    e = a5_applied()
+    with patched(pc, "author_activity", updated_clock):
+        return a5_check(e)
+
+
+check("A5", "after pr-minder labels/comments #40 and update-branches #41 (updatedAt = today), pr-minder still ages them 20d and 5d",
+      a5_ok, "clock reading updatedAt", a5_bad)
+
+
+def planner_report(env, patch=None):
+    env.activate()
+    code = ("import sys; sys.path.insert(0, %r); import planner_core as pc\n" % str(PLANNER)) + (patch or "") + \
+           "\nsys.argv=['planner_core.py','--mode','stalled','--repo-root',%r,'--gh-repo','acme/repo'," \
+           "'--local-roots',%r,'--operator','op','--device-id','dev']\npc.main()" % (str(env.dir / "repo"), str(env.dir / "repo"))
+    subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=os.environ.copy())
+    js = next((env.dir / "repo/temp/planner").glob("stalled-*.json"))
+    return json.loads(js.read_text())["stalled_stale"]
+
+
+DROP = ("_orig = pc.collect_stalled_stale\n"
+        "def _drop(*a, **k):\n    k.pop('activity', None); return _orig(*a, **k)\n"
+        "pc.collect_stalled_stale = _drop")
+
+
+def a6_rows(sec):
+    return {r["ref"]: r["last_activity"] for r in sec["stalled"]}
+
+
+def a6_ok():
+    rows = a6_rows(planner_report(a5_applied()))
+    err = planner_report(a5_applied(graphql_error=True))
+    return (rows.get("PR #40") == iso(20)[:10] and rows.get("PR #41") == iso(5)[:10]
+            and any("#40" in d and "#41" in d and "updatedAt was used" in d for d in err["disclosures"]))
+
+
+def a6_bad():
+    rows = a6_rows(planner_report(a5_applied(), DROP))
+    return rows.get("PR #40") == iso(20)[:10]
+
+
+check("A6", "after the same writes, the real `planner_core.py --mode stalled` report shows the 20d/5d dates; history error -> report names #40, #41 as fallback",
+      a6_ok, "production call without the activity pass-through", a6_bad)
+
+
+# ---------------- A7 cap / escalation ----------------
+def a7_env(age):
+    e = Env([mkpr(50, age, "behind")])
+    rec = Path(os.environ["PR_MINDER_STATE"]) / "acme/repo"; rec.mkdir(parents=True, exist_ok=True)
+    rows = [{"ts": iso(age - 0.5 - i * 0.1), "pr": 50, "phase": "result", "action": "update-branch",
+             "outcome": "ok", "head_after": f"s{i}"} for i in range(2)]
+    (rec / "actions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    return e
+
+
+def a7_ok():
+    r8 = plans(a7_env(8.1))[50]; r15 = plans(a7_env(14.1))[50]
+    return (not r8["plan"]["update_branch"] and "cap" in (r8["plan"]["comment"] or "") and r15["rung"] == 3)
+
+
+def a7_bad():
+    with patched(pm, "UPDATE_CAP", 99):
+        r8 = plans(a7_env(8.1))[50]
+    return not r8["plan"]["update_branch"]
+
+
+check("A7", "2 ok syncs this episode -> no 3rd update-branch; idle 14d -> rung 3", a7_ok, "cap removed", a7_bad)
+
+
+# ---------------- A8 author reset ----------------
+def a8_env(kind):
+    if kind == "author":            # single-parent commit with a sync-looking headline = author work
+        p = mkpr(60, 0, "behind", labels=["pr-minder:stale", "stale"], head="fix/x")
+        act = {"60": history([commit(10, "x"), commit(0.1, "Merge branch 'development' into fix/x", parents=1)])}
+        return own(Env([p], act), 60)
+    else:                           # maintenance merge; optionally after a head/base rename
+        head = {"maint": "fix/x", "rename-head": "fix/new", "rename-base": "fix/x"}[kind]
+        base = "release" if kind == "rename-base" else "development"
+        p = mkpr(60, 0, "behind", labels=["pr-minder:stale", "stale"], head=head, base=base)
+        act = {"60": history([commit(10, "x"), commit(0.1, "Merge branch 'development' into fix/x", parents=2,
+                                                       email="noreply@github.com")])}
+    return Env([p], act)
+
+
+def a8_ok():
+    e = a8_env("author"); w = apply(e)
+    labels = {l["name"] for l in e.load()["prs"][0]["labels"]}
+    reset = labels == {"stale"} and ["pr", "edit", "60", "--remove-label", "pr-minder:stale"] in w
+    noreset = all(plans(a8_env(k))[60]["rung"] == 2 for k in ("maint", "rename-head", "rename-base"))
+    return reset and noreset
+
+
+def headline_only(commit, receipt_oids=frozenset()):
+    return bool(pc.SERVER_MERGE_RE.match(commit.get("messageHeadline") or ""))
+
+
+def a8_bad_headline():
+    with patched(pc, "is_maintenance_commit", headline_only):
+        return a8_ok()
+
+
+def a8_bad_names():
+    """A predicate bound to the PR's CURRENT head name: right for the original name, wrong after a rename."""
+    def bound(head):
+        def current_names(commit, receipt_oids=frozenset()):
+            return ((commit.get("parents") or {}).get("totalCount") == 2
+                    and commit.get("messageHeadline") == f"Merge branch 'development' into {head}")
+        return current_names
+    with patched(pc, "is_maintenance_commit", bound("fix/x")):
+        original_ok = plans(a8_env("maint"))[60]["rung"] == 2          # handles the original name
+    with patched(pc, "is_maintenance_commit", bound("fix/new")):
+        renamed = plans(a8_env("rename-head"))[60]["rung"] == 2        # same OID, head renamed
+    return original_ok and renamed
+
+
+check("A8", "single-parent author commit resets (owned label removed, foreign kept); sync merge does not, even after head/base rename",
+      a8_ok, "headline-only predicate", a8_bad_headline)
+check("A8b", "maintenance classification survives a head rename", lambda: plans(a8_env("rename-head"))[60]["rung"] == 2,
+      "predicate bound to current branch names", a8_bad_names)
+
+
+# ---------------- A9 race ----------------
+def a9_env(override):
+    return Env([mkpr(70, 8, "dirty")], refresh_override={"70": override})
+
+
+def a9_ok():
+    out = []
+    for ov in ({"headRefOid": "moved"}, {"body": "owner decision: hold"}):
+        e = a9_env(ov); w = apply(e)
+        out.append(w == [] and any(r.get("outcome") == "aborted" for r in e.receipts()))
+    return all(out)
+
+
+def a9_bad():
+    orig = mc.refresh_pr_with_retry
+
+    def nobody(n, root):
+        d = dict(orig(n, root)); d.pop("body", None); return d
+    with patched(mc, "refresh_pr_with_retry", nobody):
+        e = a9_env({"body": "owner decision: hold"}); return apply(e) == []
+
+
+check("A9", "head SHA change or new body hold between measure and write -> 0 writes + aborted receipt", a9_ok,
+      "pre-write check without body", a9_bad)
+
+
+# ---------------- A10 receipts ----------------
+def paired(rows):
+    intents = [r for r in rows if r.get("phase") == "intent"]
+    results = [r for r in rows if r.get("phase") == "result" and r.get("action") != "bundle"]
+    return len(intents) == len(results) > 0 and all(
+        any(x["pr"] == i["pr"] and x["action"] == i["action"] for x in results) for i in intents)
+
+
+def write_results(rows):
+    return [r for r in rows if r.get("phase") == "result" and r.get("action") != "bundle"]
+
+
+def a10_ok():
+    e = Env([mkpr(80, 4, "behind"), mkpr(81, 8, "dirty")]); w = apply(e)
+    f = Env([mkpr(82, 4, "behind")], fail_update=True); apply(f)
+    g = Env([mkpr(83, 8, "dirty")], fail_label_create=True); apply(g)
+    return (paired(e.receipts()) and len(write_results(e.receipts())) == len(w)       # 1 receipt per shim write
+            and any(r.get("action") == "label-create" for r in e.receipts())
+            and any(r.get("outcome") == "failed" for r in f.receipts())
+            and any(r.get("action") == "label-create" and r.get("outcome") == "failed" for r in g.receipts())
+            and not any(r.get("action") == "add-label" for r in g.receipts()))
+
+
+def a10_bad():
+    orig = pm.Receipts.write
+
+    def drop_failed(self, **row):
+        if row.get("outcome") == "failed":
+            return
+        return orig(self, **row)
+    with patched(pm.Receipts, "write", drop_failed):
+        f = Env([mkpr(82, 4, "behind")], fail_update=True); apply(f)
+    return paired(f.receipts())
+
+
+def a10_bad_merged():
+    orig = pm.Receipts.write
+
+    def merged(self, **row):   # the old shape: label creation folded into the add-label receipt
+        if row.get("action") == "label-create":
+            return
+        return orig(self, **row)
+    with patched(pm.Receipts, "write", merged):
+        return a10_ok()
+
+
+check("A10", "every write has intent+result; failed update-branch / label-create recorded as failed", a10_ok,
+      "result line skipped on failure", a10_bad)
+check("A10b", "shim write count equals result receipts (label creation receipted on its own)", a10_ok,
+      "label creation folded into add-label", a10_bad_merged)
+
+
+# ---------------- A11 completeness ----------------
+def a11_env(err=False):
+    act = {"85": history([commit(0.1, "Merge branch 'development' into feat/pr85", 2, "noreply@github.com")],
+                         more_commits=True)}
+    return own(Env([mkpr(85, 0, "dirty", updated=0, labels=["pr-minder:stale"])], act, graphql_error=err), 85)
+
+
+def a11_ok():
+    r = plans(a11_env())[85]
+    return r["unknown"] and apply(a11_env()) == [] and apply(a11_env(err=True)) == []
+
+
+def a11_bad():
+    orig = pc.author_activity
+
+    def created_fallback(node, receipt_oids=frozenset()):
+        ts, ok = orig(node, receipt_oids)
+        return (ts, ok) if ok else (pc._parse_gh_time(iso(8)), True)   # createdAt-style fallback, rung 2
+    with patched(pc, "author_activity", created_fallback):
+        return apply(a11_env()) == []
+
+
+check("A11", "incomplete history or GraphQL error -> unknown, 0 writes (owned label kept)", a11_ok, "fallback to createdAt", a11_bad)
+
+
+# ---------------- A12 failing-check rendering ----------------
+def a12_ok():
+    rows = plans(Env([mkpr(95, 4, "failing"), mkpr(96, 4, "failing", url="")]))
+    return ("`build` — https://ci/1" in rows[95]["plan"]["comment"]
+            and "`build` — link unavailable" in rows[96]["plan"]["comment"])
+
+
+def a12b_ok():
+    p3 = mkpr(97, 15, "dirty"); p3["files"] = [{"path": "a.py", "additions": 10, "deletions": 2}]
+    rows = plans(Env([mkpr(98, 4, "dirty"), p3], behind={"98": 803, "97": 12}))
+    c1, c3 = rows[98]["plan"]["comment"], rows[97]["plan"]["comment"]
+    return ("Base has moved 803 commits" in c1 and "Base has moved 12 commits" in c3
+            and "1 files, +10/-2" in c3 and "work" in c3)
+
+
+def a12_bad():
+    with patched(pm, "failing_checks", lambda pr: [{"name": "build", "url": ""} for _ in pr.get("statusCheckRollup") or []]):
+        return a12_ok()
+
+
+check("A12", "failing check rendered as name + URL; missing URL -> 'link unavailable'", a12_ok,
+      "check URL dropped", a12_bad)
+check("A12b", "conflict comment states measured drift; rung-3 re-cut names the PR's own commits and diff size", a12b_ok, "—", None)
+
+
+# ---------------- A13 label ownership ----------------
+def a13(owned_fn=None):
+    e1 = Env([mkpr(100, 1, "clean", labels=["pr-minder:stale"])])            # no receipt: foreign
+    e2 = own(Env([mkpr(101, 1, "clean", labels=["pr-minder:stale"])]), 101)  # receipt: ours
+    ctx = patched(pm.Receipts, "owned_labels", owned_fn) if owned_fn else contextlib.nullcontext()
+    with ctx:
+        w1, w2 = apply(e1), apply(e2)
+    return w1 == [] and ["pr", "edit", "101", "--remove-label", "pr-minder:stale"] in w2
+
+
+check("A13", "a pr-minder:* label without an owning receipt is kept; with one, a fresh PR's label is cleared", a13,
+      "ownership inferred from the label name", lambda: a13(lambda self, n: set(pm.LABELS.values())))
+
+
+# ---------------- A14 failed sync still posts the diagnosis ----------------
+def a14(bad=False):
+    e = Env([mkpr(110, 8.1, "behind")], fail_update=True)
+    if bad:
+        orig = pm.plan_bundle
+        with patched(pm, "plan_bundle", lambda row, rec: {**orig(row, rec), "fallback": None}):
+            w = apply(e)
+    else:
+        w = apply(e)
+    ub = [x for x in w if x[:2] == ["pr", "update-branch"]]
+    st = e.load()
+    return (len(ub) == 1 and any(l["name"] == "pr-minder:stale" for l in st["prs"][0]["labels"])
+            and any("update-branch failed" in c["body"] for c in st["comments"].get("110", [])))
+
+
+check("A14", "rung-2 update-branch failure: one sync attempt, label added, failure diagnosis commented", a14,
+      "no fallback comment on failure", lambda: a14(bad=True))
+
+
+# ---------------- A15 author reset rewrites the owned comment ----------------
+def a15(bad=False):
+    marker = "<!-- pr-minder:v1 -->\n\n**pr-minder:** rung 3 (decide); old diagnosis"
+    humans = [{"createdAt": iso(0.6 + i * 0.01), "body": f"human reply {i}"} for i in range(20)]
+    act = {"120": history([commit(0.5)], [{"createdAt": iso(10), "body": marker}]),     # marker inside the window
+           "121": history([commit(0.5)]),                                               # never managed
+           "122": history([commit(0.5)], humans),                                       # marker BEYOND the window
+           "123": history([commit(0.5)], humans)}                                       # truncated, never managed
+    for n in ("122", "123"):
+        act[n]["comments"]["pageInfo"]["hasPreviousPage"] = True
+    e = Env([mkpr(n, 0.5, "clean") for n in (120, 121, 122, 123)], act)
+    e.state["comments"] = {"120": [{"id": 42, "body": marker, "user": {"login": "op"}}],
+                           "122": [{"id": 43, "body": marker, "user": {"login": "op"}}],
+                           "123": [{"id": 44, "body": "human, no marker", "user": {"login": "x"}}]}
+    e.save()
+    ctx = contextlib.nullcontext()
+    if bad:   # the r2 defect: presence inferred only from the visible window
+        orig = pm.assess
+        def visible_only(*a, **k):
+            rows = orig(*a, **k)
+            for r in rows:
+                r["owned_comment_maybe"] = r["has_owned_comment"]; r["plan"] = pm.plan_bundle(r, a[4])
+            return rows
+        ctx = patched(pm, "assess", visible_only)
+    with ctx:
+        w1 = apply(e); w2 = apply(e)
+    st = e.load()["comments"]
+    patched_ids = sorted(x[3].split("/")[-1] for x in w1 if x[:3] == ["api", "-X", "PATCH"])
+    created = [x for x in w1 if x[0] == "api" and x[1].endswith("/comments") and "-X" not in x]
+    return (patched_ids == ["42", "43"] and "rung 0 (fresh)" in st["120"][0]["body"]
+            and "rung 0 (fresh)" in st["122"][0]["body"] and not created and len(w2) == len(w1)
+            and st["123"][0]["body"] == "human, no marker" and not st.get("121"))
+
+
+check("A15", "author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched",
+      a15, "presence inferred only from the visible window", lambda: a15(bad=True))
+
+
+# ---------------- A16 flat installed layout ----------------
+def a16(old_resolver=False):
+    root = Path(tempfile.mkdtemp(prefix="gh1498-flat-")) / "skills"
+    for name, src in (("pr-minder", SCRIPT.parents[1]), ("weekly-planner", PLANNER.parent),
+                      ("merge-cleanup", REPO / "skills/2-daily/merge-cleanup")):
+        shutil.copytree(src, root / name, ignore=shutil.ignore_patterns("__pycache__"))
+    target = root / "pr-minder/scripts/pr_minder.py"
+    if old_resolver:
+        t = target.read_text().replace("HERE.parents[1] / rel_flat", "HERE.parents[1].parent / rel_flat")
+        target.write_text(t)
+    env = {k: v for k, v in os.environ.items() if k not in ("PLANNER_ENGINE", "MERGE_CLEANUP_DRIVER")}
+    r = subprocess.run([sys.executable, str(target), "--help"], capture_output=True, text=True, env=env)
+    return r.returncode == 0
+
+
+check("A16", "flat install (skills/<name>/scripts siblings, no env) resolves both bundles", a16,
+      "pre-fix resolver (parents[1].parent)", lambda: a16(old_resolver=True))
+
+# ---------------- A17/A18 CodeRabbit #1510 fixes ----------------
+def a17(bad=False):
+    p = mkpr(130, 4.1, "clean")                    # GitHub says CLEAN, but base moved 5 commits
+    e = Env([p], behind={"130": 5})
+    if bad:
+        orig = pm.assess
+        def state_only(*a, **k):
+            rows = orig(*a, **k)
+            for r in rows:
+                r["behind"] = str(r["pr_data"].get("mergeStateStatus")).upper() == "BEHIND"
+                r["plan"] = pm.plan_bundle(r, a[4])
+            return rows
+        with patched(pm, "assess", state_only):
+            w = apply(e)
+    else:
+        w = apply(e)
+    return ["pr", "update-branch", "130"] in w
+
+
+check("A17", "behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1", a17,
+      "behind from mergeStateStatus only", lambda: a17(bad=True))
+
+
+def a18():
+    ok = {}
+    q = plans(Env([mkpr(131, 8.1, "dirty", head="fix/$(id)")]))[131]["plan"]["comment"]
+    ok["quoted"] = "git checkout 'fix/$(id)'" in q and "git merge origin/development" in q
+    e = Env([mkpr(132, 8.1, "behind")], refresh_override={"132": {"isDraft": True}}); w = apply(e)
+    ok["draft_abort"] = w == [] and any(r.get("reason") == "draft status changed" for r in e.receipts())
+    e = Env([mkpr(133, 8.1, "dirty")], refresh_override={"133": {"labels": [{"name": "pr-minder:stale"}]}})
+    w = apply(e)
+    ok["label_race"] = (not any("--add-label" in x for x in w)
+                        and not any(r.get("action") == "add-label" for r in e.receipts()))
+    r = subprocess.run([sys.executable, str(SCRIPT), "--stale-days", "10"], capture_output=True, text=True)
+    ok["thresholds"] = r.returncode == 2 and "stale-days" in r.stderr
+    e = own(Env([mkpr(134, 1, "clean", labels=["pr-minder:stale"])]), 134)
+    row = plans(e)[134]
+    ok["plan_shows_removal"] = row["plan"]["remove_labels"] == ["pr-minder:stale"]
+    print("   A18 parts:", ok)
+    return all(ok.values())
+
+
+check("A18", "repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals",
+      a18, "—", None)
+
+# ---------------- A19 CodeRabbit #1510 second-pass fixes ----------------
+def a19a():
+    names = {140: "@org/team `x`", 145: "<https://attacker.example>", 146: r"\[click\](https://attacker.example)"}
+    prs = []
+    for n, name in names.items():
+        p = mkpr(n, 4.1, "failing"); p["statusCheckRollup"][0]["name"] = name; prs.append(p)
+    rows = plans(Env(prs))
+    c = {n: rows[n]["plan"]["comment"] for n in names}
+    return ("Failing check: `@org/team 'x'`" in c[140]
+            and "Failing check: `<https://attacker.example>`" in c[145]
+            and "Failing check: `" + names[146] + "`" in c[146])
+
+
+def a19a_bad():
+    with patched(pm, "lit", lambda t: str(t)):   # untrusted text rendered as live Markdown
+        return a19a()
+
+
+check("A19a", "check names (mention, backtick, autolink, escaped link) render only as inert code spans", a19a,
+      "no sanitising", a19a_bad)
+
+
+def a19b(bad=False):
+    e = Env([mkpr(141, 4.1, "dirty")])
+    e.state["comments"] = {"141": [{"id": 77, "body": "<!-- pr-minder:v1 --> fake", "user": {"login": "mallory"}}]}
+    e.save()
+    if bad:
+        def by_text(root, slug, n):
+            data = pm.gh_json(["api", "--paginate", "--slurp", f"repos/{slug}/issues/{n}/comments"], root)
+            return next((c for pg in data for c in pg if pm.MARKER in (c.get("body") or "")), None)
+        with patched(pm, "owned_comment", by_text):
+            w = apply(e)
+    else:
+        w = apply(e)
+    st = e.load()["comments"]["141"]
+    return (st[0]["body"].endswith("fake") and len(st) == 2 and st[1]["user"]["login"] == "op"
+            and not any(x[:3] == ["api", "-X", "PATCH"] for x in w))
+
+
+check("A19b", "a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own", a19b,
+      "ownership by marker text only", lambda: a19b(bad=True))
+
+
+def a19c(bad=False):
+    e = Env([mkpr(142, 8.1, "behind")])
+    rec = Path(os.environ["PR_MINDER_STATE"]) / "acme/repo"; rec.mkdir(parents=True, exist_ok=True)
+    rows = [{"ts": iso(7.5), "pr": 142, "phase": "result", "action": "update-branch", "outcome": o} for o in ("failed", "uncertain")]
+    (rec / "actions.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    if bad:
+        def ok_only(self, pr, since):
+            return sum(1 for r in self.rows if r.get("pr") == pr and r.get("phase") == "result"
+                       and r.get("action") == "update-branch" and r.get("outcome") == "ok")
+        with patched(pm.Receipts, "updates_since", ok_only):
+            return not plans(e)[142]["plan"]["update_branch"]
+    return not plans(e)[142]["plan"]["update_branch"]
+
+
+check("A19c", "failed and uncertain update-branch attempts count toward the 2-per-episode cap", a19c,
+      "cap counts ok only", lambda: a19c(bad=True))
+
+
+def a19d():
+    e = Env([mkpr(143, 8.1, "dirty"), mkpr(144, 8.1, "dirty")]); e.activate()
+    orig = pm.owned_comment
+    def boom(root, slug, n):
+        if n == 143:
+            raise RuntimeError("simulated rate limit")
+        return orig(root, slug, n)
+    with patched(pm, "owned_comment", boom):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+            rc = pm.main(["--repo-root", str(e.dir / "repo"), "--apply"])
+    w = e.writes()
+    return (rc == 1 and any("issues/144/comments" in " ".join(x) for x in w)
+            and any(r.get("pr") == 143 and r.get("outcome") == "failed" for r in e.receipts()))
+
+
+check("A19d", "one PR raising does not end the pass: next PR still written, failed receipt, exit code 1", a19d, "—", None)
+
+
+def a19e():
+    node = history([commit(20)], [{"createdAt": iso(0.5), "body": "<!-- pr-minder:v1 --> hidden?", "viewerDidAuthor": False}])
+    ts, ok = pc.author_activity(dict(node, createdAt=iso(60)))
+    return ok and pc._age_days(ts, NOW) < 1
+
+
+def a19e_bad():
+    orig = pc.author_activity
+    def marker_only(node, receipt_oids=frozenset()):   # pre-fix: any marker comment is dropped, whoever wrote it
+        n = dict(node)
+        cm = dict(n.get("comments") or {})
+        cm["nodes"] = [c for c in cm.get("nodes") or [] if pc.PR_MINDER_MARKER not in (c.get("body") or "")]
+        n["comments"] = cm
+        return orig(n, receipt_oids)
+    with patched(pc, "author_activity", marker_only):
+        return a19e()
+
+
+check("A19e", "a marker comment NOT written by the viewer still counts as author activity", a19e,
+      "marker-only filtering (ignores viewerDidAuthor)", a19e_bad)
+
+def a19f(bad=False):
+    e = Env([mkpr(147, 8.1, "behind")], fail_update=True, fail_msg="update rejected: @org/team <https://attacker.example>")
+    if bad:
+        with patched(pm, "lit", lambda t: str(t)):
+            apply(e)
+    else:
+        apply(e)
+    body = next(c["body"] for c in e.load()["comments"]["147"])
+    return "update-branch failed: `update rejected: @org/team <https://attacker.example>`" in body
+
+
+check("A19f", "a failed update-branch's CLI error is rendered as an inert code span in the fallback comment", a19f,
+      "raw error interpolated", lambda: a19f(bad=True))
+
+# ---------------- A20 CodeRabbit #1510 third pass ----------------
+def a20a():
+    base = history([commit(5)])
+    nulls = [dict(base, reviewThreads=conn([None])), dict(base, reviewThreads=conn([{"comments": {"nodes": [None]}}]))]
+    return all(pc.author_activity(dict(n, createdAt=iso(60))) == (None, False) for n in nulls)
+
+
+check("A20a", "a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising", a20a, "—", None)
+
+
+def a20b(bad=False):
+    e = Env([mkpr(150, 8.1, "dirty"), mkpr(151, 8.1, "dirty")]); e.activate()
+    seen = []
+    orig = pm.conflict_files
+    def spy(root, pr):
+        seen.append(pr["number"]); return orig(root, pr)
+    with patched(pm, "conflict_files", spy):
+        if bad:   # pre-fix order: look up conflicts for every PR, then narrow
+            orig_assess = pm.assess
+            def eager(*a, **k):
+                rows = orig_assess(*a, **k)
+                for r in rows:
+                    if r["conflicting"] and r["plan"]["comment"] is not None:
+                        spy(a[0], r["pr_data"])
+                return rows
+            with patched(pm, "assess", eager):
+                plans(e, "--pr", "150")
+        else:
+            plans(e, "--pr", "150")
+    return 151 not in seen and 150 in seen
+
+
+check("A20b", "--pr N runs the conflict lookup (git fetch) only for PR N", a20b,
+      "conflict lookup for every conflicting PR", lambda: a20b(bad=True))
+
+# ---------------- A21 async update-branch: poll the head ----------------
+def a21(poll):
+    e = Env([mkpr(160, 4.1, "behind")], stale_reads=2)   # the first two head reads still show the old SHA
+    with patched(pm, "SYNC_POLL", poll):
+        apply(e)
+    res = [r for r in e.receipts() if r.get("phase") == "result" and r.get("action") == "update-branch"]
+    return len(res) == 1 and res[0]["outcome"] == "ok" and res[0]["head_after"] == "h160-synced"
+
+
+check("A21", "update-branch whose new head appears only on the 3rd read is classified ok (bounded polling)",
+      lambda: a21((5, 0)), "single head read (pre-fix behaviour)", lambda: a21((1, 0)))
+
+print(json.dumps({"passed": sum(r["verdict"] == "PASS" for r in RESULTS), "failed": sum(r["verdict"] != "PASS" for r in RESULTS)}))
+(Path(__file__).parent / "manual-check-results.json").write_text(json.dumps(RESULTS, indent=2))

@@ -1,0 +1,8 @@
+{
+  "root": "deployment",
+  "path": "runner/.tick/attempts/gh-1254-outer-loop-borrow-decl",
+  "size": 52,
+  "sha256": "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2",
+  "nonempty_record_lines": 2,
+  "raw_content_omitted": true
+}

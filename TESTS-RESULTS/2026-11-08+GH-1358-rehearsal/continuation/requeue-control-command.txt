@@ -1,0 +1,27 @@
+import sys,subprocess,pathlib,importlib.util,types,json,tempfile
+source=pathlib.Path.cwd();sys.path.insert(0,str(source/'utils/py'))
+import jog_run as new
+oldpath=source/'temp/gh1358/pre-requeue-jog.py';oldpath.write_bytes(subprocess.check_output(['git','show','5f98fe6ad:utils/py/jog_run.py']))
+spec=importlib.util.spec_from_file_location('old_jog',oldpath);old=importlib.util.module_from_spec(spec);spec.loader.exec_module(old)
+root=pathlib.Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-requeue-control-wkqsg84i')
+subprocess.run(['git','-C',str(root),'remote','set-url','origin','https://github.com/HiQS-Labs/XYZ-forge.git'],check=True)
+runner=pathlib.Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner')
+from harness_paths import primary_config_key
+subprocess.run(['git','-C',str(root),'config',primary_config_key(str(root)),str(root)],check=True)
+def cli(*args):subprocess.run([sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(root),*args],check=True)
+def mutate(*commands):
+ for cmd in commands:cli(*cmd)
+mutate(['jog','add','1358'])
+args=types.SimpleNamespace(root=str(root),target_root=str(runner),builder='codex',reviewer='agy',executor='marathon',simulate=False,dry_run=False,auto_merge=False,max_tasks=1,checkpoint_root=None)
+def wake(module,expected):
+ modes=[]
+ def dispatch(*a,**k):modes.append(k.get('mode','run'));return 'failed','manual control stub: no model called'
+ module.run_marathon_phase=dispatch;module.find_issue_doc=lambda *a:None
+ module.jog_run_main(args)
+ assert modes==[expected],modes
+ print('observed dispatch mode',expected,flush=True)
+wake(old,'run')
+mutate(['jog','retry','1358'])
+wake(old,'run');print('RED: old explicit requeue still selected ordinary run',flush=True)
+mutate(['jog','retry','1358'])
+wake(new,'retry-build');print('PASS: deliberate requeue selects existing fresh-token dispatch; no fixture model was called',flush=True)

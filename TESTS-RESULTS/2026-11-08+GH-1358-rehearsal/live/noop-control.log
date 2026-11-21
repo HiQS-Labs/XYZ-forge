@@ -1,0 +1,9 @@
+jog: skipped GH-1344 (status: parked)
+jog: published primary checkpoint 26543a0018c6d15767a20be4b382bc0cd0acef38
+RED: old empty wake ran push hook once
+jog: published primary checkpoint 26543a0018c6d15767a20be4b382bc0cd0acef38
+PASS: repaired empty wake did not run push hook
+jog: published primary checkpoint be9fd1221ebc9e83fc734e3afa66ecf9c823b01b
+PASS: changed ledger ran normal push hook
+jog: published primary checkpoint be9fd1221ebc9e83fc734e3afa66ecf9c823b01b
+PASS: post-push crash recovery avoided duplicate gate and dispatch

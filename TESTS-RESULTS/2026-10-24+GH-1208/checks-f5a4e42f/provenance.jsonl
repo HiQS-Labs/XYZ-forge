@@ -1,0 +1,19 @@
+{"artifact":"checks-driver.log","sha256":"d810c761dca65b5ac49da2970b1151946b9b1cca157750a8bef0894861549907","bytes":1086,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"fixed-gh1127.log","sha256":"630e0fd0752a1a1c3cd98900a08bbe9025b9779d508babcbe01b359ce8cbc041","bytes":13959,"suite_exit":"0","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"fixed-neither.log","sha256":"66697d45b152cbce66d87980ae6f733fca6473cf981417c7ddcf422f9faf2063","bytes":10694,"suite_exit":"1","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"reverted-gh1127.log","sha256":"d33c2f9b9c496af2524efdb1ea59c7df8994db61952784181e05acb387583203","bytes":10527,"suite_exit":"1","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"wave-fixed-gh1127.log","sha256":"d8bf6715b33d70781f7430986680fe796d89d04cd1aa9cea2fc2cb6cc06d4542","bytes":1703,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"wave-reverted-gh1127.log","sha256":"6408b3622dd3b6ffa645b6b26fa3e6fabeee67c6da95259fe64a97ee1f670c33","bytes":1703,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"reevaluation.txt","sha256":"bffb66c2590b9940ecbbc23fa6b05a6221a1c2d2f7d9d0d71ea2f96d13b730e8","bytes":2143,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"repos-fixed-gh1127.txt","sha256":"2831a993204529abef7fd75ffed24c404c7c5f91911e5ae0bf49ba04bcfd1b9d","bytes":57,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"repos-reverted-gh1127.txt","sha256":"2831a993204529abef7fd75ffed24c404c7c5f91911e5ae0bf49ba04bcfd1b9d","bytes":57,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"seed-fixed-gh1127.txt","sha256":"db44ba7bef6c872068761309996c42eaa4634d465e7f4f68a1fe31ebff9236fd","bytes":62,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"seed-fixed-neither.txt","sha256":"9c0e1e50c9ce748770a31d4aa01dc433c3ebefe9c5afeb8946e685cc795bd979","bytes":62,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"seed-reverted-gh1127.txt","sha256":"1dc10ba689fea2bd9d8ce4a03eb24b9e6fa9c1bdc2dc8f2d3b8b9cc6a7852dc1","bytes":62,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"landing-fixed-gh1127.json","sha256":"1f73f7c20dd0f8243c76e88f576f57eab6a93193aa315b2260caffe07ee5df74","bytes":786,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"rows-fixed-gh1127.json","sha256":"aa9f8b7b7a5851b01f2a67e390a25d6c8ca88e717dd03573941152f29e48a1a6","bytes":732,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"rows-reverted-gh1127.json","sha256":"89a51cd0da15326688804820597c9fd49321e0daee1f868b4c3e33ca214d0289","bytes":732,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"checks.sh","sha256":"ca892a98d59efc249a0f833787ed0530b8e4b5e7cfdac897d85ad410d64f0fb3","bytes":7609,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"variant-GH1127.sh","sha256":"5928772f00f68b32440cc051c44008cada6eb530ac3870f1f8dedc0b4f572719","bytes":84599,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"variant-NEITHER.sh","sha256":"2cc45ae760528a26719f47c9bbe2f38fe20dfbcc2cb6b3762544860ff8928e09","bytes":84099,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"../gh280-unmodified-f5a4e42f.log","sha256":"9538f6eadf8203ab855be710d50989bb93180e930ce6b029d5f8452536a89801","bytes":13573,"suite_exit":"0 (223 pass, 0 fail)","revision":"f5a4e42f (clone -verify, git diff --quiet before run)","command":"env -u XYZ_HARNESS XYZ_WORK_CONNECTORS=0 RELAY_SELF_SUFFICIENCY_SKIP=1 bash test/gh280-jog-marathon-adapter.sh","date":"2026-10-25T03:50Z"}

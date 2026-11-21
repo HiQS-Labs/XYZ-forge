@@ -1,0 +1,2 @@
+Bad request.
+Could not find service "com.xyz-forge.gh1358-live-checkpoint" in domain for user gui: 501

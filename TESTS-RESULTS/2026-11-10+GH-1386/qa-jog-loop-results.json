@@ -1,0 +1,158 @@
+[
+  {
+    "version": "fixed",
+    "case": "published",
+    "leases": [
+      1,
+      2
+    ],
+    "dispatches": [
+      1,
+      2
+    ],
+    "switches": [
+      "development"
+    ],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "completed-bound",
+    "leases": [
+      1,
+      2
+    ],
+    "dispatches": [
+      1,
+      2
+    ],
+    "switches": [
+      "development"
+    ],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "dirty",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": "checkpoint execution clone is dirty; preserve it before dispatch",
+    "checkpoint_finished": false,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "promotion-failed",
+    "leases": [
+      1
+    ],
+    "dispatches": [],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "stale",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "publication-failed",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "missing-pr",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "fixed",
+    "case": "invalid-result",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true,
+    "pass": true
+  },
+  {
+    "version": "prior",
+    "case": "published",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true
+  },
+  {
+    "version": "prior",
+    "case": "completed-bound",
+    "leases": [
+      1
+    ],
+    "dispatches": [
+      1
+    ],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true
+  },
+  {
+    "version": "prior",
+    "case": "promotion-failed",
+    "leases": [
+      1,
+      2
+    ],
+    "dispatches": [],
+    "switches": [],
+    "error": null,
+    "checkpoint_finished": true
+  }
+]

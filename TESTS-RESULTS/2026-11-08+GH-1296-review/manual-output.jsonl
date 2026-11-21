@@ -1,0 +1,9 @@
+{"case": "malformed", "baseline": "TypeError", "candidate": ["artifacts_new must be an array of path strings"]}
+{"case": "normalized", "baseline": ["artifact path not found at target.ref:  ./a "], "candidate": []}
+{"case": "missing", "baseline": ["artifact path not found at target.ref: gone"], "candidate": ["artifact path not found at target.ref: gone"]}
+{"case": "new", "baseline": [], "candidate": []}
+{"case": "parent", "baseline": ["artifact path not found at target.ref: missing/../a"], "candidate": ["artifact parent traversal requires preflight verification: missing/../a"]}
+{"case": "raw exemption", "baseline": [], "candidate": ["artifact path not found at target.ref:  new "]}
+{"case": "unchanged", "candidate": "passed freshness boundary"}
+{"case": "edited", "candidate": "selected capture doc changed since init; create a new snapshot and proposal before packet"}
+{"case": "selected-other", "candidate": "selected capture doc changed since init; create a new snapshot and proposal before packet"}

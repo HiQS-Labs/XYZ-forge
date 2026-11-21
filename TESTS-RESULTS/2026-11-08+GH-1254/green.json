@@ -1,0 +1,349 @@
+{
+  "checks": [
+    {
+      "check": "cold deferred",
+      "result": "PASS",
+      "detail": {
+        "cache": {
+          "cold": true,
+          "deadline_unexecuted_ids": [],
+          "deferred": {
+            "a": 3
+          },
+          "due_ids": [],
+          "last_call_at": null,
+          "max_deferral_slots": 2,
+          "ttl_s": 300
+        },
+        "decision_status": "raw-valid",
+        "output_sha256": "5a76967f372455ecaea2d04ce7fc540d181ab0e8070be439555d7d2a0ec790b1",
+        "supervision": {
+          "declared": false,
+          "reason": "supervisor undeclared; no restart promised or performed",
+          "restart_performed": false
+        },
+        "tool": "idle"
+      }
+    },
+    {
+      "check": "rerun no event or call",
+      "result": "PASS",
+      "detail": {
+        "events": 6
+      }
+    },
+    {
+      "check": "skipped call does not warm",
+      "result": "PASS",
+      "detail": {
+        "cold": true,
+        "deadline_unexecuted_ids": [],
+        "deferred": {
+          "a": 3
+        },
+        "due_ids": [],
+        "last_call_at": null,
+        "max_deferral_slots": 2,
+        "ttl_s": 300
+      }
+    },
+    {
+      "check": "feasible deadline executes",
+      "result": "PASS",
+      "detail": {
+        "cache": {
+          "cold": true,
+          "deadline_unexecuted_ids": [],
+          "deferred": {},
+          "due_ids": [
+            "a"
+          ],
+          "last_call_at": null,
+          "max_deferral_slots": 2,
+          "ttl_s": 300
+        },
+        "decision_status": "raw-valid",
+        "output_sha256": "892608556e8f544feca9ffbe5d2846937ea292f495b311e3a92af1057f9c4633",
+        "supervision": {
+          "declared": false,
+          "reason": "supervisor undeclared; no restart promised or performed",
+          "restart_performed": false
+        },
+        "tool": "note"
+      }
+    },
+    {
+      "check": "urgent no cache delay",
+      "result": "PASS",
+      "detail": {
+        "cache": {
+          "cold": true,
+          "deadline_unexecuted_ids": [],
+          "deferred": {},
+          "due_ids": [],
+          "last_call_at": null,
+          "max_deferral_slots": 2,
+          "ttl_s": 300
+        },
+        "decision_status": "raw-valid",
+        "output_sha256": "1810167c2db20e7c036d87f81851632fc677e14aca54d4d04bbe086c7e99bb08",
+        "supervision": {
+          "declared": false,
+          "reason": "supervisor undeclared; no restart promised or performed",
+          "restart_performed": false
+        },
+        "tool": "note"
+      }
+    },
+    {
+      "check": "missing tokens null",
+      "result": "PASS",
+      "detail": {
+        "actual_cost": 0.0,
+        "billing_status": "reported",
+        "cache_creation_tokens": null,
+        "cache_read_tokens": null,
+        "normalized": "ok",
+        "raw": "{\"args\":{\"inbox_id\":\"u\",\"text\":\"hello u\"},\"confidence\":1.0,\"reason\":\"oldest note request\",\"tool\":\"note\"}"
+      }
+    },
+    {
+      "check": "declaration ''",
+      "result": "PASS",
+      "detail": {
+        "declared": false,
+        "reason": "supervisor undeclared; no restart promised or performed",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "declaration '0'",
+      "result": "PASS",
+      "detail": {
+        "declared": false,
+        "reason": "supervisor undeclared; no restart promised or performed",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "declaration 'false'",
+      "result": "PASS",
+      "detail": {
+        "declared": false,
+        "reason": "supervisor undeclared; no restart promised or performed",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "declaration 'no'",
+      "result": "PASS",
+      "detail": {
+        "declared": false,
+        "reason": "supervisor undeclared; no restart promised or performed",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "declaration 'off'",
+      "result": "PASS",
+      "detail": {
+        "declared": false,
+        "reason": "supervisor undeclared; no restart promised or performed",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "declaration '1'",
+      "result": "PASS",
+      "detail": {
+        "declared": true,
+        "reason": "supervisor declared; this tick has no self-restart mechanism",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "declaration 'true'",
+      "result": "PASS",
+      "detail": {
+        "declared": true,
+        "reason": "supervisor declared; this tick has no self-restart mechanism",
+        "restart_performed": false
+      }
+    },
+    {
+      "check": "oversubscribed deadline visible",
+      "result": "PASS",
+      "detail": {
+        "cache": {
+          "cold": true,
+          "deadline_unexecuted_ids": [
+            "b"
+          ],
+          "deferred": {},
+          "due_ids": [
+            "a",
+            "b"
+          ],
+          "last_call_at": null,
+          "max_deferral_slots": 2,
+          "ttl_s": 300
+        },
+        "decision_status": "raw-valid",
+        "output_sha256": "892608556e8f544feca9ffbe5d2846937ea292f495b311e3a92af1057f9c4633",
+        "supervision": {
+          "declared": false,
+          "reason": "supervisor undeclared; no restart promised or performed",
+          "restart_performed": false
+        },
+        "tool": "note"
+      }
+    },
+    {
+      "check": "contention work not dropped",
+      "result": "PASS",
+      "detail": {
+        "cache": {
+          "cold": true,
+          "deadline_unexecuted_ids": [],
+          "deferred": {},
+          "due_ids": [
+            "b"
+          ],
+          "last_call_at": null,
+          "max_deferral_slots": 2,
+          "ttl_s": 300
+        },
+        "decision_status": "raw-valid",
+        "output_sha256": "5523643fcdd939188cf1cee7c7bf8dd45f2b1b1831decf1167b216883d5c18c7",
+        "supervision": {
+          "declared": false,
+          "reason": "supervisor undeclared; no restart promised or performed",
+          "restart_performed": false
+        },
+        "tool": "note"
+      }
+    },
+    {
+      "check": "usage known",
+      "result": "PASS",
+      "detail": {
+        "raw": "{\"tool\": \"idle\", \"args\": {}, \"reason\": \"fixture\", \"confidence\": 0.0}",
+        "normalized": "ok",
+        "decision": {
+          "tool": "idle",
+          "args": {},
+          "reason": "fixture",
+          "confidence": 0.0
+        },
+        "actual_cost": null,
+        "billing_status": "unknown",
+        "called": true,
+        "cache_read_tokens": 40,
+        "cache_creation_tokens": 60
+      }
+    },
+    {
+      "check": "usage absent",
+      "result": "PASS",
+      "detail": {
+        "raw": "{\"tool\": \"idle\", \"args\": {}, \"reason\": \"fixture\", \"confidence\": 0.0}",
+        "normalized": "ok",
+        "decision": {
+          "tool": "idle",
+          "args": {},
+          "reason": "fixture",
+          "confidence": 0.0
+        },
+        "actual_cost": null,
+        "billing_status": "unknown",
+        "called": true,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null
+      }
+    },
+    {
+      "check": "usage failed",
+      "result": "PASS",
+      "detail": {
+        "raw": "{\"type\": \"turn.completed\", \"usage\": {\"cached_input_tokens\": 7}}",
+        "normalized": "adapter-error",
+        "decision": null,
+        "actual_cost": null,
+        "billing_status": "unknown",
+        "called": true,
+        "cache_read_tokens": 7,
+        "cache_creation_tokens": null
+      }
+    },
+    {
+      "check": "usage invalid",
+      "result": "PASS",
+      "detail": {
+        "raw": "{\"tool\": \"idle\", \"args\": {}, \"reason\": \"fixture\", \"confidence\": 0.0}",
+        "normalized": "ok",
+        "decision": {
+          "tool": "idle",
+          "args": {},
+          "reason": "fixture",
+          "confidence": 0.0
+        },
+        "actual_cost": null,
+        "billing_status": "unknown",
+        "called": true,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null
+      }
+    },
+    {
+      "check": "reported call warms following slot",
+      "result": "PASS",
+      "detail": {
+        "cold": false,
+        "deferred": {},
+        "due_ids": [
+          "a"
+        ],
+        "last_call_at": "2026-11-08T05:46:39.914728+00:00",
+        "max_deferral_slots": 2,
+        "ttl_s": 300
+      }
+    },
+    {
+      "check": "same-scenario modeled comparison",
+      "result": "PASS",
+      "detail": {
+        "without": {
+          "scenario_sha256": "202d5c33419c1c5afb02a01b292047ee4fe757a27cfcf2d42812fcefd26307cf",
+          "calls": 3,
+          "modeled_cost": 0.03,
+          "consumed": 3
+        },
+        "with": {
+          "scenario_sha256": "202d5c33419c1c5afb02a01b292047ee4fe757a27cfcf2d42812fcefd26307cf",
+          "calls": 1,
+          "modeled_cost": 0.01,
+          "consumed": 3
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "without": {
+      "scenario_sha256": "202d5c33419c1c5afb02a01b292047ee4fe757a27cfcf2d42812fcefd26307cf",
+      "calls": 3,
+      "modeled_cost": 0.03,
+      "consumed": 3
+    },
+    "with": {
+      "scenario_sha256": "202d5c33419c1c5afb02a01b292047ee4fe757a27cfcf2d42812fcefd26307cf",
+      "calls": 1,
+      "modeled_cost": 0.01,
+      "consumed": 3
+    }
+  },
+  "limitations": [
+    "modeled cost only; no live savings claim",
+    "restart not exercised",
+    "oversubscribed deadline remains open"
+  ]
+}

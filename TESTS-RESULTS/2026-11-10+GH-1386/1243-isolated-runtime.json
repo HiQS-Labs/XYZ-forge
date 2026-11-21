@@ -1,0 +1,36 @@
+{
+  "qualification_source": "bd7ce73d4a4fc2145803b037552d56eb99255627",
+  "qualification_state": "GREEN557s on source SHA",
+  "primary_base": "30263b42c",
+  "files": [
+    {
+      "path": "utils/py/jog_run.py",
+      "sha256": "039e4adce1c2ddc4e2b4625eeccb2077959e1e80576ed202dc87206510961d32"
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "sha256": "bf5510e0ce1e1828bd0cadf78a280897d4837f3afaf23a2fff6fde1e91a68b3c"
+    },
+    {
+      "path": "utils/py/swarm_preflight.py",
+      "sha256": "1908af1a14c76bf1054518366c8aea76f611a3626bef218010bee9052a80cd3a"
+    },
+    {
+      "path": "utils/py/marathon_drive.py",
+      "sha256": "8bb853444342e2276a5c217c6dced172519afb773c1a08d1a72b0ba91ba125da"
+    },
+    {
+      "path": "utils/py/relay_drive.py",
+      "sha256": "6976076d863fcc6114760bc6aabb8a441ff25dddf8afc8159ea951f3e130eeb7"
+    }
+  ],
+  "runtime_scope": "isolated trial only; no global install",
+  "dependency": "PR1402 source repair must land before task PR to avoid duplicate runtime landing",
+  "execution_head": "2577b30f9",
+  "current_primary": "30263b42c293249a0c726ec9eea7eb7b0ca642e0",
+  "preflight": "ready; issueOPEN; acceptance match",
+  "actual_packet_criteria": 5,
+  "explicit_round_cap": 2,
+  "history_builders_consumed": 0,
+  "automatic_pair": "already failed; future dispatch assisted independent continuation"
+}

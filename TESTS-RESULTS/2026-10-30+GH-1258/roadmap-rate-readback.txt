@@ -1,0 +1,1 @@
+{'global_id': 'rmi-01M66T7MQJ4X82GJFTJ2SZV72S', 'section': 'Queue / parked intake', 'doc_path': 'PROJECT/1-INBOX/GH-1263-HQ-PARK-RATING-GRAMMAR.md', 'rating_pri': 55, 'rating_sev': 45, 'rating_appeal': 50, 'rating_effort': 90, 'rating_ovr': None}

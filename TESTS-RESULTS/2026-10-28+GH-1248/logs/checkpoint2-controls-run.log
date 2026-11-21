@@ -1,0 +1,17 @@
+{"case": "ordinary-smoke", "detail": "four actions completed; 23 later-slot canaries remain pending", "verdict": "PASS"}
+{"case": "malformed-decision", "detail": "unsafe decision classified invalid-output; safe idle executed", "verdict": "PASS"}
+{"case": "disallowed-decision", "detail": "unsafe decision classified rejected; safe idle executed", "verdict": "PASS"}
+{"case": "escape-create", "detail": "sandbox denied attempted write; canary and external paths unchanged", "verdict": "PASS"}
+{"case": "escape-modify", "detail": "sandbox denied attempted write; canary and external paths unchanged", "verdict": "PASS"}
+{"case": "escape-external", "detail": "sandbox denied attempted write; canary and external paths unchanged", "verdict": "PASS"}
+{"case": "crash-act", "detail": "uncertain recorded; one item quarantined; no ambiguous retry", "verdict": "PASS"}
+{"case": "crash-intent", "detail": "unpersisted-intent-abort recorded; one item quarantined; no ambiguous retry", "verdict": "PASS"}
+{"case": "crash-before-snapshot", "detail": "missing snapshot paused instance and quarantined all pending inputs", "verdict": "PASS"}
+{"case": "missing-decision", "detail": "unpersisted-intent-abort recorded; one item quarantined; no ambiguous retry", "verdict": "PASS"}
+{"case": "missing-snapshot", "detail": "missing snapshot paused instance and quarantined all pending inputs", "verdict": "PASS"}
+{"case": "missing-receipt", "detail": "uncertain recorded; one item quarantined; no ambiguous retry", "verdict": "PASS"}
+{"case": "unbilled-error", "detail": "reservation released; honest unknown-cost state preserved", "verdict": "PASS"}
+{"case": "timeout-unknown", "detail": "reservation held; honest unknown-cost state preserved", "verdict": "PASS"}
+{"case": "budget-cap", "detail": "second tick paused before snapshot or agent evaluation", "verdict": "PASS"}
+{"case": "tool-failure", "detail": "explicit failed receipt; input remains pending", "verdict": "PASS"}
+{"case": "instance-path-guard", "detail": "path-like instance name rejected before initialization", "verdict": "PASS"}

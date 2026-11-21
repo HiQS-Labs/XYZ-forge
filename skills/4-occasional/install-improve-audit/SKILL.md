@@ -389,7 +389,7 @@ build commands.
    the history already shows which change cleared which error; do not squash it now.
    Improvement commits stay separate and keep their `improve:` prefix, so they can be
    dropped independently.
-2. **CHANGELOG.md** — if the repo already has one, add **one** entry summarizing the
+2. **CHANGELOG.md** — only if `CHANGELOG_WRITES=branch` (under default `off` or `landing`, branches do not edit `CHANGELOG.md`); if enabled and the repo already has one, add **one** entry summarizing the
    landed fixes. If the repo has no CHANGELOG, do not create one.
 3. **Push the branch.** If you lack push access to origin, stop here and hand back the
    branch name and the exact push command. That pair substitutes for the PR URL in the

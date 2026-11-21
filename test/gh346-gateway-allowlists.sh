@@ -86,7 +86,7 @@ lane_env_var() {
   case "$1" in
     claude) echo CLAUDE_AGENT ;; codex) echo CODEX_AGENT ;; agy) echo AGY_AGENT ;;
     aider) echo AIDER_AGENT ;; pi) echo PI_AGENT ;; smallcode) echo SMALLCODE_AGENT ;;
-    commandcode) echo COMMANDCODE_AGENT ;; deepseek) echo DEEPSEEK_AGENT ;;
+    commandcode) echo COMMANDCODE_AGENT ;; deepseek) echo DEEPSEEK_AGENT ;; kimi) echo KIMI_AGENT ;;
   esac
 }
 
@@ -179,7 +179,7 @@ fi
 
 # the two lanes GH-346 added must now get past BOTH route_agent (#2) and _probe_agent_bin (#4).
 # Skipped, not failed, where the lane's tooling is genuinely absent on this host.
-for lane in commandcode deepseek; do
+for lane in commandcode deepseek kimi; do
   rc="$(drive_rc "$lane")"
   if drive_locked_out; then
     echo "  SKIP: driver lock held — '$lane' routing not evaluated"
@@ -274,7 +274,7 @@ fi
 # #9 is not cosmetic: without it, a COMMANDCODE_AGENT left in the parent shell survives into a run
 # that never asked for that lane.
 # ------------------------------------------------------------------------------------------------
-for lane in commandcode deepseek; do
+for lane in commandcode deepseek kimi; do
   upper="$(printf '%s' "$lane" | tr '[:lower:]' '[:upper:]')"
   if grep -q "\"${upper}_AGENT\"" "$ROOT/utils/py/gate_env.py"; then
     pass "#8 gate_env.py classifies ${upper}_AGENT"
@@ -291,7 +291,7 @@ done
 scrub="$(sed -n '/GATE_SCRUBBED_ENV = (/,/^    )/p' "$ROOT/utils/py/marathon_drive.py")"
 for lane in $LANES; do
   upper="$(printf '%s' "$lane" | tr '[:lower:]' '[:upper:]')"
-  case "$lane" in claude|codex|agy|aider|pi|smallcode|commandcode|deepseek) ;; *) continue ;; esac
+  case "$lane" in claude|codex|agy|aider|pi|smallcode|commandcode|deepseek|kimi) ;; *) continue ;; esac
   if grep -q "\"${upper}_AGENT\"" <<<"$scrub"; then
     pass "#10 GATE_SCRUBBED_ENV includes ${upper}_AGENT"
   else
@@ -302,16 +302,23 @@ done
 # ------------------------------------------------------------------------------------------------
 # #6 — the reviewer gate. Two independent copies; `gemini` was a phantom with no shim anywhere.
 # ------------------------------------------------------------------------------------------------
-if grep -qv '^[0-9]*: *//' <<<"$(grep -n "gemini" "$ROOT/bin/marathon-yaml" 2>/dev/null)"; then
-  fail "#6 bin/marathon-yaml still admits the phantom 'gemini' reviewer outside a comment"
-else
-  pass "#6 bin/marathon-yaml no longer admits the phantom 'gemini' reviewer"
-fi
-if grep -qv '^[0-9]*: *//' <<<"$(grep -n "gemini" "$ROOT/src/marathon-yaml.js" 2>/dev/null)"; then
-  fail "#6 src/marathon-yaml.js still admits the phantom 'gemini' reviewer outside a comment"
-else
-  pass "#6 src/marathon-yaml.js no longer admits the phantom 'gemini' reviewer"
-fi
+export WORK
+for reader in bin/marathon-yaml src/marathon-yaml.js; do
+  if node - "$ROOT/$reader" <<'JS'
+const reader = process.argv[2];
+if (reader.endsWith('.js')) {
+  try { require(reader).resolveOrder({phases:[{id:'p',reviewer:'gemini'}]}); process.exit(1); }
+  catch (e) { process.exit(/not recognized/.test(e.message) ? 0 : 1); }
+}
+const {spawnSync} = require('child_process');
+const fs = require('fs');
+const file = require('path').join(process.env.WORK, 'phantom.yaml');
+fs.writeFileSync(file, 'name: phantom\nphases:\n  - id: p\n    reviewer: gemini\n');
+const r = spawnSync(reader,[file],{encoding:'utf8'});
+process.exit(r.status !== 0 && /not recognized/.test(r.stderr) ? 0 : 1);
+JS
+  then pass "#6 $reader rejects phantom reviewer"; else fail "#6 $reader phantom rejection failed"; fi
+done
 
 # there must be NO gemini shim -- if one is ever added, this test must be revisited, not deleted
 # The path is assembled from parts on purpose: test/path-integrity.sh scans suites for referenced
@@ -324,11 +331,12 @@ else
   pass "#6 no gemini shim exists, so removing it from the gates lost no capability"
 fi
 
-# the python reviewer gate must agree with the JS one
-if grep -q 'args.reviewer.startswith("codex") or args.reviewer.startswith("agy")' "$ROOT/utils/py/marathon_drive.py"; then
-  pass "#6 python reviewer gate agrees with the JS gates (codex/agy)"
+# Reviewer admission now shares Marathon's supported-route owner (GH-1419).
+if MARATHON_ROOT="$WORK" python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes claude-reviewer codex-reviewer agy-reviewer &&
+   ! MARATHON_ROOT="$WORK" python3 "$ROOT/utils/py/marathon_drive.py" --validate-agent-routes unsupported-reviewer 2>/dev/null; then
+  pass "#6 shared reviewer recognition accepts supported routes and refuses unknowns"
 else
-  fail "#6 python reviewer gate has drifted from bin/marathon-yaml + src/marathon-yaml.js"
+  fail "#6 shared reviewer route recognition failed"
 fi
 
 # ------------------------------------------------------------------------------------------------

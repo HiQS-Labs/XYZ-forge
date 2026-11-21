@@ -1,0 +1,36 @@
+{
+  "identity_before": {
+    "head": "0b597d7b7373771b2a679affd82abec3bc0b08b2",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "email": ""
+  },
+  "identity_after": {
+    "head": "0b597d7b7373771b2a679affd82abec3bc0b08b2",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "email": ""
+  },
+  "runs": [
+    {
+      "name": "marathon-plan",
+      "cmd": [
+        "bash",
+        "test/marathon-plan.sh"
+      ],
+      "python": "3.13.15",
+      "rc": 0,
+      "seconds": 3.3556621074676514
+    },
+    {
+      "name": "gh418",
+      "cmd": [
+        "bash",
+        "test/gh418-planner-ledger-source.sh"
+      ],
+      "python": "3.13.15",
+      "rc": 0,
+      "seconds": 0.2096099853515625
+    }
+  ]
+}

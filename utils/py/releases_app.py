@@ -823,9 +823,11 @@ def _migration_004(conn):
                       BEGIN SELECT RAISE(ABORT, 'releases.baseline_count is write-once'); END""")
     # Backfill releases already underway. Flagged 'backfilled', never 'observed': the count is
     # inferred from today's manifest, not witnessed at the kickoff it claims to describe.
+    # GH-1222: COUNT(DISTINCT issue_ref_id) because one issue can hold a shipped row and a
+    # redialed dialed_in row at once.
     stamp = now_iso()
     for row in conn.execute("SELECT id FROM releases WHERE status = 'active'").fetchall():
-        n = conn.execute("""SELECT COUNT(*) FROM manifest_items
+        n = conn.execute("""SELECT COUNT(DISTINCT issue_ref_id) FROM manifest_items
                              WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
                          (row["id"],)).fetchone()[0]
         if n:
@@ -1535,6 +1537,7 @@ def _extract_jog(conn, op, gid):
 
 WORK_EVENT_EXTRACTORS = {
     "roadmap-add":    _extract_roadmap_add,
+    "roadmap-pickup": _extract_roadmap_add,
     "roadmap-rate":   _extract_roadmap_rate,
     "roadmap-update": _extract_roadmap_update,
     "jog-lease":      _extract_jog,
@@ -2517,7 +2520,9 @@ def cmd_update(args):
 def _live_manifest_count(conn, release_id):
     """The commitment denominator: dialed-in plus shipped. Cut rows are history, not scope —
     counting them contradicts the repo's own prose that a cut REDUCES the manifest."""
-    return conn.execute("""SELECT COUNT(*) FROM manifest_items
+    # GH-1222: COUNT(DISTINCT issue_ref_id) because one issue can hold a shipped row and a
+    # redialed dialed_in row at once.
+    return conn.execute("""SELECT COUNT(DISTINCT issue_ref_id) FROM manifest_items
                             WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
                         (release_id,)).fetchone()[0]
 
@@ -3318,7 +3323,51 @@ _RATING_GRAMMAR = "the grammar is `rated N/N/N/N` (pri/sev/appeal/effort, 1-100)
                   "optional ` ovr N` (4-400)"
 
 
-def parse_rating(raw, title):
+def parse_prs_proposal(text):
+    """Parse a four-axis PRS proposal from markdown issue/doc text (Task 11)."""
+    if not text:
+        return None
+    m_sec = re.search(r"^##\s+PRS proposal\s*$(.*?)(?=^## |\Z)", text, flags=re.M | re.S)
+    proposal_text = m_sec.group(1) if m_sec else text
+    prs = {}
+    for m in re.finditer(r"^[•\-*]\s*(pri|sev|appeal|effort)\s+(\d{1,3})\s*:\s*(.*)$", proposal_text, re.M | re.I):
+        axis = m.group(1).lower()
+        val = int(m.group(2))
+        rationale = m.group(3).strip()
+        prs[axis] = (val, rationale)
+    if set(prs.keys()) != {"pri", "sev", "appeal", "effort"}:
+        m_slash = re.search(r"\bpri\s+(\d{1,3})\s*/\s*sev\s+(\d{1,3})\s*/\s*appeal\s+(\d{1,3})\s*/\s*effort\s+(\d{1,3})", proposal_text, re.I)
+        if m_slash:
+            prs = {
+                "pri": (int(m_slash.group(1)), "inline format"),
+                "sev": (int(m_slash.group(2)), "inline format"),
+                "appeal": (int(m_slash.group(3)), "inline format"),
+                "effort": (int(m_slash.group(4)), "inline format"),
+            }
+        else:
+            m_rated = re.search(r"\brated\s+(\d{1,3})/(\d{1,3})/(\d{1,3})/(\d{1,3})", proposal_text, re.I)
+            if m_rated:
+                prs = {
+                    "pri": (int(m_rated.group(1)), "rated format"),
+                    "sev": (int(m_rated.group(2)), "rated format"),
+                    "appeal": (int(m_rated.group(3)), "rated format"),
+                    "effort": (int(m_rated.group(4)), "rated format"),
+                }
+            else:
+                return None
+    vals = [prs[k][0] for k in ("pri", "sev", "appeal", "effort")]
+    if any(not (1 <= v <= 100) for v in vals) or all(v <= 5 for v in vals) or vals == [50, 50, 50, 50]:
+        return None
+    return {
+        "pri": prs["pri"][0],
+        "sev": prs["sev"][0],
+        "appeal": prs["appeal"][0],
+        "effort": prs["effort"][0],
+        "rationales": {k: prs[k][1] for k in prs}
+    }
+
+
+def parse_rating(raw, title, allow_placeholder=True):
     """Parse the rating tokens out of one ROADMAP entry. Returns the five column values."""
     blank = dict.fromkeys(RATING_COLUMNS)
     rated_tokens = _RATED_TOKEN_RE.findall(raw)
@@ -3356,6 +3405,10 @@ def parse_rating(raw, title):
         if not 1 <= value <= 100:
             refuse("rating-range", "%s scores %s at %d; every axis is 1-100 (100 = strongest, "
                                    "effort included — it scores cheapness)" % (where, axis, value))
+    if not allow_placeholder:
+        if values == [50, 50, 50, 50] or all(v <= 5 for v in values):
+            refuse("rating-placeholder", "%s carries placeholder scores %s; placeholders never count as a real rating (Task 11, GH-1340/GH-1345)"
+                   % (where, "/".join(str(v) for v in values)))
     out = dict(zip(RATING_COLUMNS[:4], values))
     out["rating_ovr"] = None
     if ovr_tokens:
@@ -3373,7 +3426,7 @@ def parse_rating(raw, title):
 
 def _without_rating(raw, title):
     """Remove the one rating accepted by parse_rating, including its optional override."""
-    parse_rating(raw, title)  # refuse malformed/duplicate stored tokens before rewriting them
+    parse_rating(raw, title, allow_placeholder=True)  # refuse malformed/duplicate stored tokens before rewriting them
     spans = []
     rated = _RATED_RE.search(raw)
     if rated:
@@ -3541,7 +3594,7 @@ def parse_roadmap_ledger(path):
                 "issue_url": issue_url,
                 "raw_text": raw,
             }
-            entry.update(parse_rating(raw, title))
+            entry.update(parse_rating(raw, title, allow_placeholder=True))
             entries.append(entry)
             i = j
             continue
@@ -3767,6 +3820,159 @@ def cmd_roadmap_rate(args):
         conn.close()
 
 
+def cmd_roadmap_pickup(args):
+    """GH-1340 / GH-1345 Task 3: Create roadmap row at pickup/selection.
+
+    If the row already exists, reuses it without duplicating, preserving existing ratings and operator ovr.
+    If the row is absent, extracts title, doc_path, and real PRS proposal from doc or issue,
+    validates the rating (Task 11), and creates the row exactly once.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        _ensure_roadmap_schema(conn)
+        row = conn.execute(
+            "SELECT global_id, gh_number, title, doc_path, rating_pri, rating_sev, "
+            "rating_appeal, rating_effort, rating_ovr, raw_text FROM roadmap_items WHERE gh_number = ?",
+            (args.issue_num,)
+        ).fetchone()
+
+        if row is not None:
+            # Row already exists: idempotent pickup, preserve ovr and ratings
+            if getattr(args, "doc_path", None) and row["doc_path"] != args.doc_path:
+                new = args.doc_path
+                if not os.path.isfile(os.path.join(root, new)):
+                    refuse("no-such-doc", "%s does not exist under %s — re-point to a real doc, never a "
+                                          "path that merely looks right" % (new, root))
+                old = row["doc_path"]
+                raw_text = row["raw_text"]
+                if old:
+                    raw_text = raw_text.replace(old, new)
+                    old_base = os.path.basename(old)
+                    new_base = os.path.basename(new)
+                    if old_base in raw_text:
+                        raw_text = raw_text.replace(old_base, new_base)
+                if not getattr(args, "dry_run", False):
+                    def repoint_mutate(c):
+                        c.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? WHERE global_id = ?",
+                                  (new, raw_text, now_iso(), row["global_id"]))
+                    perform_write(root, conn, "roadmap-repoint", row["global_id"], repoint_mutate)
+            print("roadmap-pickup: GH-%d already parked (%s); preserved" % (args.issue_num, row["global_id"]))
+            return
+
+        # Row does not exist: create it at pickup
+        doc_rel = getattr(args, "doc_path", None)
+        doc_text = ""
+        if not doc_rel:
+            cands = []
+            for st in ("2-WORKING", "1-INBOX"):
+                pdir = os.path.join(root, "PROJECT", st)
+                if os.path.isdir(pdir):
+                    cands.extend(os.path.join("PROJECT", st, f) for f in os.listdir(pdir)
+                                 if f.startswith("GH-%d-" % args.issue_num) and f.endswith(".md"))
+            if cands:
+                doc_rel = cands[0]
+            else:
+                doc_rel = "PROJECT/2-WORKING/GH-%d.md" % args.issue_num
+
+        doc_abs = os.path.join(root, doc_rel)
+        if os.path.isfile(doc_abs):
+            with open(doc_abs, encoding="utf-8", errors="replace") as f:
+                doc_text = f.read()
+
+        title = getattr(args, "title", None)
+        issue_url = getattr(args, "issue_url", None)
+        issue_body = ""
+
+        # Extract from doc frontmatter if available
+        if doc_text:
+            m_title = re.search(r"(?m)^title:\s*[\"']?(.*?)[\"']?$", doc_text)
+            if not title and m_title:
+                title = m_title.group(1).strip()
+            m_src = re.search(r"(?m)^source:\s*(https?://[^\s]+)", doc_text)
+            if not issue_url and m_src:
+                issue_url = m_src.group(1).strip()
+
+        # Query gh issue view if needed
+        if not title or not issue_url or not getattr(args, "rated", None):
+            try:
+                proc = subprocess.run(
+                    ["gh", "issue", "view", str(args.issue_num), "--json", "url,title,body"],
+                    cwd=root, capture_output=True, text=True, check=True, timeout=30
+                )
+                meta = json.loads(proc.stdout)
+                if not title:
+                    title = meta.get("title")
+                if not issue_url:
+                    issue_url = meta.get("url")
+                if not issue_body:
+                    issue_body = meta.get("body") or ""
+            except Exception:
+                pass
+
+        if not title:
+            title = "GH-%d" % args.issue_num
+        if not issue_url:
+            slug = _github_slug_from_origin(root)
+            if not slug:
+                refuse("roadmap-issue-url", "cannot resolve the issue URL for GH-%d; pass --issue-url" % args.issue_num)
+            issue_url = "https://github.com/%s/issues/%d" % (slug, args.issue_num)
+
+        validate_issue_identity(issue_url, args.issue_num)
+
+        # Resolve real rating (Task 11)
+        rated_str = getattr(args, "rated", None)
+        if not rated_str:
+            prs = parse_prs_proposal(doc_text) or parse_prs_proposal(issue_body)
+            if prs:
+                rated_str = "%d/%d/%d/%d" % (prs["pri"], prs["sev"], prs["appeal"], prs["effort"])
+            else:
+                refuse("rating-unrated", "GH-%d has no valid PRS proposal in issue or doc; supply --rated P/S/A/E (Task 11)"
+                       % args.issue_num)
+
+        token = "(rated %s%s)" % (rated_str, " ovr %d" % args.ovr if getattr(args, "ovr", None) is not None else "")
+        # Validate rating shape and reject placeholders
+        rating = parse_rating(token, title, allow_placeholder=False)
+
+        raw_text = "- **GH-%d · %s** 🆕 %s — [%s](%s) · [#%d](%s)" % (
+            args.issue_num, title, token, os.path.basename(doc_rel), doc_rel, args.issue_num, issue_url
+        )
+
+        if getattr(args, "dry_run", False):
+            print("ROADMAP line: %s" % raw_text)
+            print("rating: %s" % "/".join(str(rating[c]) for c in RATING_COLUMNS[:4]))
+            if rating["rating_ovr"] is not None:
+                print("ovr: %d" % rating["rating_ovr"])
+            return
+
+        gid = new_gid("rmi-")
+
+        def mutate(conn):
+            _ensure_roadmap_schema(conn)
+            ts = now_iso()
+            section = "Queue / parked intake"
+            max_pos = conn.execute("SELECT MAX(position) FROM roadmap_items WHERE section = ?", (section,)).fetchone()
+            pos = (max_pos[0] or 0) + 1 if max_pos else 1
+            repo = conn.execute("SELECT id FROM repos ORDER BY id LIMIT 1").fetchone()
+            if not repo:
+                refuse("no-repo", "the DB has no repos row; run `releases init` first")
+
+            cols = ["global_id", "repo_id", "gh_number", "title", "section", "position",
+                    "status_marker", "doc_path", "issue_url", "raw_text", "first_seen", "updated_at"]
+            vals = [gid, repo["id"], args.issue_num, title, section, pos,
+                    "🆕", doc_rel, issue_url, raw_text, ts, ts]
+            cols += list(RATING_COLUMNS)
+            vals += [rating[c] for c in RATING_COLUMNS]
+            conn.execute("INSERT INTO roadmap_items(%s) VALUES (%s)"
+                         % (", ".join(cols), ", ".join("?" * len(cols))), vals)
+
+        perform_write(root, conn, "roadmap-pickup", gid, mutate)
+        print("added roadmap entry %s for GH-%d (%s)" % (gid, args.issue_num, token))
+    finally:
+        conn.close()
+
+
 def cmd_roadmap_repoint(args):
     """Re-point a parked row's capture doc after the doc moves between PROJECT stages.
 
@@ -3972,7 +4178,7 @@ def cmd_roadmap_update(args):
                     and args.section is None and marker is None and issue_url is None):
                 print("roadmap update: %s raw_text unchanged; nothing written" % label)
                 return
-            rating = parse_rating(new_raw_text, row["title"])
+            rating = parse_rating(new_raw_text, row["title"], allow_placeholder=True)
             if not has_rating_cols and rating["rating_pri"] is not None:
                 refuse("schema-behind",
                        "this ledger has no rating columns. Run `releases migrate` first — rating "
@@ -4054,6 +4260,20 @@ def cmd_roadmap_move(args):
     return cmd_roadmap_update(args)
 
 
+def read_issue_closure_state(root, issue_url):
+    """Shared live stateReason read for ledger reconciliation and completion filing."""
+    result = subprocess.run(
+        [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", issue_url,
+         "--json", "state,stateReason"], cwd=root, capture_output=True,
+        text=True, check=False, timeout=30)
+    if result.returncode:
+        raise ValueError(f"issue lookup failed (exit {result.returncode}): {result.stderr.strip()}")
+    issue = json.loads(result.stdout)
+    if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
+        raise ValueError("invalid issue state")
+    return issue
+
+
 def cmd_roadmap_reconcile_state(args):
     """GH-492: preview by default; apply only positively verified terminal issue states.
 
@@ -4074,6 +4294,12 @@ def cmd_roadmap_reconcile_state(args):
         unresolvable = []
         owned_repos = {r["id"]: r["slug"] for r in conn.execute("SELECT id,slug FROM repos")}
         origin = _origin_repo_identity(root)
+        inventories = {}
+        repo_counts = {}
+        for candidate in rows:
+            owned = resolve_roadmap_identity(candidate, owned_repos, origin)
+            if owned["identity_valid"]:
+                repo_counts[owned["repo"]] = repo_counts.get(owned["repo"], 0) + 1
         for row in rows:
             # A URL cannot override the row's independently owned repository.
             url = row["issue_url"] or ""
@@ -4087,27 +4313,24 @@ def cmd_roadmap_reconcile_state(args):
                 unresolvable.append(row["gh_number"])
                 continue
             try:
-                native = read_native_issue(identity["repo"], row["gh_number"], url)
+                repo = identity["repo"]
+                # ponytail: at most two open-issue pages for a dense sweep; no persisted cache.
+                # Missing entries still require a singleton read, never an inferred open state.
+                if repo_counts[repo] >= 10 and repo not in inventories:
+                    inventories[repo] = read_native_open_inventory(repo)
+                native = inventories.get(repo, {}).get(row["gh_number"])
+                if native is None:
+                    native = read_native_issue(repo, row["gh_number"], url)
+                else:
+                    native = validate_native_issue(native, row["gh_number"], url)
             except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
                 refuse("roadmap-issue-state", "%s native identity/state unavailable (%s); refusing to guess "
                        "issue state" % (url, exc))
             try:
-                result = subprocess.run(
-                    [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
-                     "--json", "state,stateReason"], cwd=root,
-                    capture_output=True, text=True, check=False, timeout=30)
-            except (OSError, subprocess.TimeoutExpired) as exc:
+                issue = read_issue_closure_state(root, url)
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
                 refuse("roadmap-issue-state", "%s could not be read (%s); refusing to guess issue state"
                        % (url, exc))
-            if result.returncode:
-                refuse("roadmap-issue-state", "%s failed (exit %d): %s; refusing to guess issue state"
-                       % (url, result.returncode, result.stderr.strip()))
-            try:
-                issue = json.loads(result.stdout)
-            except ValueError:
-                issue = None
-            if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
-                refuse("roadmap-issue-state", "%s returned invalid state; refusing to guess issue state" % url)
             if issue["state"] == "OPEN":
                 if native["state"] != "open":
                     refuse("roadmap-issue-state", "%s changed from native closed to open during lookup; retry "
@@ -4846,7 +5069,7 @@ def cmd_jog_to_marathon(args):
         conn.close()
 
 
-def jog_acquire_lease(root, gh_num, pid):
+def jog_acquire_lease(root, gh_num, pid, *, expected_global_id=None):
     """Acquire a lease on an enqueued item via perform_write (receipt-backed)."""
     _require_jog_primary(root)
     paths = artifact_paths(root)
@@ -4865,6 +5088,10 @@ def jog_acquire_lease(root, gh_num, pid):
                 refuse("jog-event-identity",
                        "GH-%d matches multiple repositories; refusing queue mutation" % gh_num)
             row = rows[0]
+            if expected_global_id is not None and (
+                    row["global_id"] != expected_global_id or row["status"] != "pending"):
+                refuse("jog-selection-stale",
+                       "GH-%d identity or pending status changed; refusing stale dispatch" % gh_num)
             ts = now_iso()
             att = row["attempt_count"] + 1
             conn.execute("""UPDATE jog_queue SET status = 'running', lease_pid = ?, attempt_count = ?, updated_at = ?
@@ -4972,21 +5199,37 @@ def jog_reconcile_orphan_leases(root):
         conn.close()
 
 
+def _import_jog_run():
+    """Import jog_run beside this file, or refuse cleanly where it is absent (GH-1466: a .xyz
+    tier=ledger install ships the ledger CLI without the jog runtime)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        import jog_run
+    except ModuleNotFoundError as exc:
+        if exc.name != "jog_run":
+            raise
+        print("jog: unavailable in this install (jog_run.py absent; is .xyz tier=ledger? "
+              "re-vendor with --with-releases for jog)", file=sys.stderr)
+        sys.exit(2)
+    return jog_run
+
+
 def cmd_jog_run(args):
     """Execute the serial jog queue supervisor."""
+    jog_run = _import_jog_run()
     try:
-        from jog_run import jog_run_main
-    except ImportError:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from jog_run import jog_run_main
-    jog_run_main(args)
+        jog_run.jog_run_main(args)
+    except jog_run.ContractError as exc:
+        print(f"jog: held: {exc}", file=sys.stderr)
+        sys.exit(2)
 
 
 def _jog_verb_dispatch(fn_name):
     """GH-280 Phase 3 verb dispatch: shared root/target resolution, then delegate to jog_run."""
     def handler(args):
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        import jog_run
+        jog_run = _import_jog_run()
         root = resolve_root(getattr(args, "root", None))
         gh_num = resolve_issue_number(args.target)
         try:
@@ -5011,8 +5254,7 @@ def cmd_jog_retry_build(args):
 
 
 def cmd_jog_land(args):
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    import jog_run
+    jog_run = _import_jog_run()
     root = resolve_root(getattr(args, "root", None))
     gh_num = resolve_issue_number(args.target)
     sys.exit(jog_run.jog_land(root, gh_num, getattr(args, "pr", None)))
@@ -5476,13 +5718,48 @@ def read_native_issue(repo, number, issue_url, timeout=10):
                           capture_output=True, text=True, timeout=timeout)
     if proc.returncode:
         raise ValueError("native issue read failed: %s" % proc.stderr.strip())
-    issue = json.loads(proc.stdout)
+    return validate_native_issue(json.loads(proc.stdout), number, issue_url)
+
+
+def validate_native_issue(issue, number, issue_url):
     if (not isinstance(issue, dict) or "pull_request" in issue
             or issue.get("number") != number or issue.get("html_url") != issue_url
             or issue.get("state") not in ("open", "closed")
             or not isinstance(issue.get("labels"), list)):
         raise ValueError("native issue identity/state unavailable or pull request")
     return issue
+
+
+def read_native_open_inventory(repo, timeout=10):
+    """Bounded native observations, not a complete inventory or evidence of absence.
+
+    Errors fail closed. A valid page miss uses read_native_issue, including closed issues.
+    Retain PR entries so a requested PR is rejected by the same validator as singleton reads.
+    """
+    inventory = {}
+    for page in (1, 2):
+        proc = subprocess.run(
+            [os.environ.get("XYZ_LABELS_GH_BIN", os.environ.get("RELEASES_GH_BIN", "gh")),
+             "api", "repos/%s/issues?state=open&per_page=100&page=%d&sort=created&direction=asc"
+             % (repo, page)], capture_output=True, text=True, timeout=timeout)
+        if proc.returncode:
+            raise ValueError("native issue inventory failed: %s" % proc.stderr.strip())
+        items = json.loads(proc.stdout)
+        if not isinstance(items, list) or len(items) > 100:
+            raise ValueError("invalid native issue inventory page")
+        for item in items:
+            if not isinstance(item, dict) or type(item.get("number")) is not int:
+                raise ValueError("invalid native issue inventory identity")
+            number = item["number"]
+            if (number <= 0 or number in inventory
+                    or item.get("html_url") != "https://github.com/%s/issues/%d" % (repo, number)
+                    and item.get("html_url") != "https://github.com/%s/pull/%d" % (repo, number)
+                    or item.get("state") != "open" or not isinstance(item.get("labels"), list)):
+                raise ValueError("invalid or duplicate native issue inventory entry")
+            inventory[number] = item
+        if len(items) < 100:
+            break
+    return inventory
 
 
 def load_work_evidence(db_path, stale_days=3, as_of=None):
@@ -6764,6 +7041,15 @@ def build_parser():
                        help="replace an existing rating (refused by default)")
     sp_rr.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
 
+    sp_pk = rsub.add_parser("pickup", help="create or reuse a roadmap row at pickup/selection time (GH-1340 / GH-1345)")
+    sp_pk.add_argument("--issue-num", required=True, type=int, help="GH issue number")
+    sp_pk.add_argument("--issue-url", help="GH issue URL")
+    sp_pk.add_argument("--title", help="Issue title")
+    sp_pk.add_argument("--doc-path", help="Capture/working doc relpath")
+    sp_pk.add_argument("--rated", help="the four axes as N/N/N/N (pri/sev/appeal/effort, 1-100)")
+    sp_pk.add_argument("--ovr", type=int, default=None, help="operator override (4-400)")
+    sp_pk.add_argument("--dry-run", action="store_true", help="print what would be written and write nothing")
+
     sp_rp = rsub.add_parser("repoint", help="re-point a parked row's capture doc after the doc moves")
     sp_rp.add_argument("--issue-num", type=int, help="GH issue number of the parked row (unique match required)")
     sp_rp.add_argument("--gid", help="exact roadmap row global ID; pass exactly one selector")
@@ -6875,7 +7161,10 @@ def build_parser():
                               "reviewed one-phase driver via the structured contracts, requires "
                               "--reviewer; 'relay' is the legacy rollback path kept for a "
                               "documented compatibility window")
+    sp_jrun.add_argument("--checkpoint-root", help="dedicated disposable publication clone; requires positive --max-tasks")
     sp_jrun.add_argument("--max-tasks", type=int, default=None, help="maximum tasks to process in this run")
+    sp_jrun.add_argument("--supervise-until", type=int,
+                         help="opt-in composed wake; absolute UTC epoch dispatch deadline")
     sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
     sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
 
@@ -6904,7 +7193,8 @@ def main(argv=None):
                               "render": cmd_roadmap_render,
                               "repoint": cmd_roadmap_repoint, "update": cmd_roadmap_update,
                               "move": cmd_roadmap_move, "sections": cmd_roadmap_sections,
-                              "reconcile-state": cmd_roadmap_reconcile_state}[a.roadmap_cmd](a),
+                              "reconcile-state": cmd_roadmap_reconcile_state,
+                              "pickup": cmd_roadmap_pickup}[a.roadmap_cmd](a),
         "settings": lambda a: {"set": cmd_settings_set,
                                "list": cmd_settings_list,
                                "get": cmd_settings_get}[a.settings_cmd](a),

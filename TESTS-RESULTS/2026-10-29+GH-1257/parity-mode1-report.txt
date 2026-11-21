@@ -1,0 +1,368 @@
+marathon-plan · 2026-10-30 · policy=quick-wins · weights{eff:2,cx:1,risk:2,dep:3,zone:1} · gh=off
+  ledger items : 417  (queue 62 · in-progress 18)
+  active lanes : 6 across 2 wave(s)   held: 69   gh-unverified: 417
+  NOTE gh disabled: open/closed state not verified — relying on ledger section only
+
+FLAGS (deterministic signals — never auto-resolved)
+  WARN [already-landed]  GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison
+        all fix_probes report 'landed' — the fix is already present
+        → verify-and-close, not a build lane
+  WARN [already-landed]  GH-275 · medium-level write-ops logging of agent disk-write commands
+        all fix_probes report 'landed' — the fix is already present
+        → verify-and-close, not a build lane
+  WARN [already-landed]  GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on
+        all fix_probes report 'landed' — the fix is already present
+        → verify-and-close, not a build lane
+  WARN [already-landed]  GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR
+        all fix_probes report 'landed' — the fix is already present
+        → verify-and-close, not a build lane
+  WARN [already-landed]  GH-1087 · docs: restore spacing in the GH-1051 work record
+        all fix_probes report 'landed' — the fix is already present
+        → verify-and-close, not a build lane
+  WARN [coupled-lanes]  GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip
+        same-wave lane shares the `utils/py/` spine with #670 — write-disjoint but likely a shared contract seam
+        → pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching
+  WARN [coupled-lanes]  GH-418 · Marathon planner still reads the frozen ROADMAP.md — DB-parked items are invisible since the ROADMAP_SOURCE=releases flip
+        same-wave lane shares the `utils/py/` spine with #1098 — write-disjoint but likely a shared contract seam
+        → pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching
+  WARN [coupled-lanes]  GH-670 · Marathon: support explicitly selected Claude CLI reviewers instead of Codex/Agy-only restriction
+        same-wave lane shares the `utils/py/` spine with #1098 — write-disjoint but likely a shared contract seam
+        → pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching
+  WARN [drift]  GH-243 · GH-169 items 3-4: repoint agent docs + dashboard-staleness push guard
+        project doc pointer does not exist on disk: PROJECT/1-INBOX/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-114 · headless agy -p stalls on TTY allocation / network waits until the idle watchdog kills it (exit 7)
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-221 — agy-turn.sh auth pre-flight breaks on agy CLI >=1.1.19 — whoami subcommand removed
+        project doc pointer does not exist on disk: PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-113 · headless agy builder writes root scratch files, tripping containment (exit 6)
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-168 · wave_reconcile.py hard-fails and rolls back on pre-existing drift unrelated to the reconciled PR
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-50 · sandboxed git --track / branch -D half-applies and loses uncommitted work
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-2 · test-suite run relocated an untracked file into .tick/orphan-backups/
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-202 · wave_reconcile aborts on marathon-plan exit 5 (items held) and promotes capture docs for OPEN issues
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-202-WAVE-RECONCILER-STATE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-1 · suite-wide fixture containment + clone-identity invariant gate
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-246 · relay-xyz SKILL.md: explicit QA/Consult prompt template for headless agents (hotfix)
+        project doc pointer does not exist on disk: PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-249 · ubuntu canary: EUID=0 defeats chmod-based assertions
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-251 · validate.sh miscounts an absent pytest as FAILED
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-280 · Jog ↔ Marathon recalibration
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-314 · wave_reconcile archive line mangles separator-less ROADMAP entries
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-42 · relay automation: supported Commandcode turn-taker
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-42-COMMANDCODE-TURN.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-170 · Agent2Agent: close transcript glitches and harden publishing
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-358 · wave_reconcile resolves its five harness tools repo-root-relative — inert on every vendored install
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right?
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-365/377 · Test-suite recalibration: envelope, telemetry, contention-skip, PDDA single-scan, ShellCheck width, campaigns, tier routing, route matrix — executing under #377 (supersedes #365)
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-377-TEST-SUITE-RECALIBRATION.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-353 · audit and prompt for target ROUTER.md ROADMAP.md frozen status during vendored updates
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-360 · releases check receipt chain failure phrasing and scoped --rebuild
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-410 · The structural relay-block validator never runs on the driven path, and rejects the bold STATUS format real threads write
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-419 · Make the three marathon process rules deterministic — umbrella issue, full clone, derived clone name — by extending marathon.sh's existing --plan refusal
+        project doc pointer does not exist on disk: PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-349 · releases ledger roadmap layer never generalised to a vendored install
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-351 · manifest unship, the retraction verb
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-473 · feat(skill): add /unstuck goal-movement interrupt
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-505 · Builder can approve and close its own relay; no merge path checks for a reviewer
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-505-RELAY-REVIEWER-INTEGRITY.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-608 · fix(relay): honor Qwen/DeepSeek reasoning effort and correct false idle timeout attribution
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-608-FIX-RELAY-HONOR-QWEN-DEEPSEEK-REASONING-EFFORT-AND-CORRECT-F.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-654 · Marathon containment exit-6 discards completed builder work; rtl_worktree_end records no off-lane path list — blocks GH-648 phase p1 (2/2 codex turns)
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-654-MARATHON-CONTAINMENT-EXIT-6-DISCARDS-COMPLETED-BUILDER-WORK-.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-659 · rtl_init splits allow_csv with bare IFS=',' — no trim, so every artifact AFTER THE FIRST in a "a, b, c" allowlist is invisible to containment (reproduced; root cause #2 of #654)
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-663 · QA findings (agy relay review) on the GH-654/658/659/660 hotfix chain: turn_prompt csv leak, drift-check CLI ambiguity + CRLF false positives, offlane rename-source omission
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-712 · Offline Jev vs Tier-1/Gemma ATE triage replay, gated --classifier shadow flag
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-712-JEV-ATE-TRIAGE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-662 · fix(diagnostics): offlane prefix exemptions hide unrelated lookalike files
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-661-662-682-RELAY-CONTAINMENT.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-682 · relay-automation: harness-set PYTHONDONTWRITEBYTECODE/TMPDIR for reviewer probe turns
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-661-662-682-RELAY-CONTAINMENT.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-965 · merge-cleanup: skip draft PRs instead of stopping (folded into GH-789 port)
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-789-MERGE-CLEANUP-AUTONOMOUS-PIPELINE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-1140 · merge-cleanup: batch records trust stale captured state — verify, then one durable fix
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-1140-BATCH-STALE-STATE.md
+        → fix or drop the ledger link
+  WARN [drift]  GH-123 · Linux portability canary — remainder: gh358 lock contention on shared runners
+        project doc pointer does not exist on disk: PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md
+        → fix or drop the ledger link
+  INFO [dep-not-found]  GH-91 · a build turn has nowhere to write verification output
+        lists a dependency on #90, which is not in the ledger
+        → fix the issue number or add a ledger pointer
+  INFO [drift]  GH-75-RELEASES-ROADMAP-DASHBOARD.md
+        2-WORKING doc has no ROADMAP ledger pointer
+        → add a ledger pointer or set roadmap_exempt: true
+  INFO [drift]  GH-396-HARNESS-ROOT-RESOLVER.md
+        2-WORKING doc has no ROADMAP ledger pointer
+        → add a ledger pointer or set roadmap_exempt: true
+  INFO [needs-contract]  GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-5 · kernel robustness: node:test unit runner
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-760 · agent-chorus-bridge.sh flakes on hosted wave-reconcile
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-836 · CI refactor: trim the measured gate hotspots (gh549 race leg, gh436 parity double-run, gh649 /tmp bug) and take the tier decisions on hosted Small numbers
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-800 · Cross-device full-suite benchmark
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-879 · Post merge CI Audit skill improvements
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-854 · Execute approved gate dispositions
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-931 · Sanity-check cross-linkage and index registration
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-945 · radar: recommend the repo's own verification assets (harness/fuzzer) for recurring-defect clusters
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-964 · Claude Code mods: turn-free /xyz-status command
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1002 · builder scratch fails turn and burns attempt cap
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1006 · Marathon: bounded progress and safe repair handoff
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1112 · CI quick wins: marathon-root-audit single pass, heavy-suite ordering, gh648 guard
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1157 · skills-army-hq: hard rules first in SKILL.md (refusals are findings, status first/last, per-device root and canonical, rename propagation)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1191 · task-sync: Claude Desktop sidebar titles (native planner)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1257 · GH-1248 Phase 2A: read-only backlog-to-wave pilot
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-223 — pre-push gate push double-applies through ref lock
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-216 — marathon-plan.sh ledger parser rejects link-style ROADMAP.md bullets
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-32 · RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-28 · RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-17 · SOP for evaluating new agent harnesses and frontier models
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-256 — no preflight checks the builder can reach a phase's artifact paths
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-259 · Jog: serial immediate-queue execution engine and skill (Phase 1)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-254 · export_timeline: draft release cards render before active cards — open-bucket sort ignores status
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-299 · feat(ate): Gen 4 ATE & True Evolutionary Fuzzing
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-346 · Speed up harness → gateway → model resolution with a real cache
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-345 · Sleep-vs-readiness audit: one confirmed race in the agent-chorus doorbell assertion, and the case against the paid Test Reliability tier
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-341 · CI: attest Linux as an unprivileged user — the canary's 14 failures are almost all EUID=0 artifacts
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-384 · Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-399 — let the profile carry the route
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-402 · Board sync: auto-add issues to the Projects board when any agent starts work
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-406 · External review (Russ K.): eight findings on guards that cover a narrower path than the doc claims
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-443 · marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the marathon before it fires
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-445 · runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-446 · marathon_plan.py writes unprompted plan file to disk on default invocation without --dry-run
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-452 · Start publishing release tags (git tag + GitHub Release per shipped ledger release)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-453 · Governance document identity audit
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-460 · ATE/Fuzz campaign vs the model-alias resolver — counterexamples must land as fixes
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-484 · Deploy Skills
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-478 · ATE exit-cleanup / runaway-process guard — gen4 adaptive-ate test hung ~3 days at ~100% CPU
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-514 · skills: new co-author skill "keel" — balance modularity, flexibility, maintainability, and ponytail for spec writing and total refactors
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-518 · harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ route — catalog aliases, muse-turn.sh shim, four-surface evidence
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-522 · Continuous issue admission into Jog/Marathon proposals
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-579 · HiQS explicit model consumer
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-767 · Regenerate ARCHITECTURE diagrams from current codebase
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-768 · audit: DRY and optimization review of utils/py/releases_app.py (6,695 lines)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-769 · audit: DRY and optimization review of utils/py/marathon_drive.py (3,573 lines)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-772 · marathon_drive: memory-compressor figure assumes 4K pages, logs 4x low on 16K-page Macs
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-775 · umbrella: broken or fragile releases_app call sites (10days, standup, marathon-triage, jog_run, pdda)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-796 · Open PR integration review
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-937 · Umbrella: CLIO fleet completion and Rebalance integration
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-958 · skills-army-hq: replicate a collection to a second device, migrate-from name mismatch, and status exit-code semantics
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-959 · Link-drift reporting: name dangling/foreign/retargeted app links as DRIFT and list unmanaged app skill dirs
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-961 · skills-army-hq: make the publisher role device-agnostic (any device may publish)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-967 · Claude Code mods follow-ups (umbrella, gated on GH-964 keep)
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1052 · spike(recon): assess contracts across vendored artifacts and runtime
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  Code audit: reduce operational complexity while preserving safety contracts
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  Audit A: safely compact active documentation and source commentary
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  Audit B: evaluate and stage a pure-Python production runtime
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  Audit C: add logical SQLite ledger hygiene and safe maintenance
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  Audit D: split large core modules behind stable facades
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  Audit E: correct package identity entrypoint and contents
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-contract]  GH-1248 · Outer loop primitive
+        rated, but no preflight contract — not marathon-ready
+        → add a ## Swarm Preflight Contract json block
+  INFO [needs-doc]  GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view
+        issue #75 has no PROJECT capture doc linked in the ledger
+        → promote to a 2-WORKING capture doc with a preflight contract
+  INFO [needs-doc]  GH-61 · RELEASES ledger durability hardening (GH-57 follow-up)
+        issue #61 has no PROJECT capture doc linked in the ledger
+        → promote to a 2-WORKING capture doc with a preflight contract
+  INFO [needs-doc]  GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build
+        issue #67 has no PROJECT capture doc linked in the ledger
+        → promote to a 2-WORKING capture doc with a preflight contract
+  INFO [needs-doc]  GH-481 · consult.sh: agy lane answered from a months-old ~/.gemini scratch copy, not the throwaway worktree
+        issue #481 has no PROJECT capture doc linked in the ledger
+        → promote to a 2-WORKING capture doc with a preflight contract
+  INFO [needs-doc]  GH-482 · relay-drive.sh --artifact-file silently seeds nothing — the reviewer never sees the artifact
+        issue #482 has no PROJECT capture doc linked in the ledger
+        → promote to a 2-WORKING capture doc with a preflight contract
+
+SUMMARY [marathon-plan] items=417 active=6 waves=2 drift=true held=69 (exit 4)

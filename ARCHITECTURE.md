@@ -46,7 +46,7 @@ and usage; this index exists so a task can be routed to the right skill without 
 Re-tiering a skill is a `git mv` plus its row here; nothing in the harness depends on which tier a
 skill sits in, only on the two-level depth (see `skills/README.md`).
 
-### `1-hourly` — Every hour (15)
+### `1-hourly` — Every hour
 
 _the in-task loop: intake, recon, planning discipline, review relays, the ledger._
 
@@ -54,9 +54,12 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 |---|---|
 | [better-options](skills/1-hourly/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
 | [consult](skills/1-hourly/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
+| [conveyor](skills/1-hourly/conveyor/SKILL.md) | Refine existing issues into grounded capture plans, Preflight Contracts and rated, published pickup packets. |
 | [debug-mantra](skills/1-hourly/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
 | [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |
+| [idea](skills/1-hourly/idea/SKILL.md) | File a GitHub issue directly with operator alignment, targeted recon, architectural sketch, and EGM paraphrase-first consult review; zero disk footprint, no HQ or ledger. |
+| [kickstart](skills/1-hourly/kickstart/SKILL.md) | Codify the operator's assisted factory pattern with an observer parent delegating an outer-loop child. |
 | [ponytail](skills/1-hourly/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [recon](skills/1-hourly/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |
@@ -69,7 +72,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (21)
+### `2-daily` — A few times a day
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -81,10 +84,13 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [daily-planner](skills/2-daily/daily-planner/SKILL.md) | Adapt the weekly plan to daily outcomes using the shared planning engine. |
 | [express](skills/2-daily/express/SKILL.md) | Explicit hotfix or documentation fast lane — existing covering suite or PDDA docs gate, bounded direct development landing, commit-bound receipts and reconciliation. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
+| [flywheel](skills/2-daily/flywheel/SKILL.md) | Drive real work through existing intake, Jog, review, recovery and landing skills with bounded autonomous repair and explicit continuation. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
 | [merge-cleanup](skills/2-daily/merge-cleanup/SKILL.md) | Land open PRs in dependency order, reconcile, and tear down clones/worktrees that are proven landed. |
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
+| [pr-minder](skills/2-daily/pr-minder/SKILL.md) | One manual remediation pass over open PRs on an author-activity age ladder (nudge, repair, decide, retire); never merges or closes. |
+| [prs-backfill](skills/2-daily/prs-backfill/SKILL.md) | Backfill and keep current PRS four-axis ratings on registered unrated rows — scripted packets, agent rating, independent review, hash-approved writes via `roadmap rate`. |
 | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
 | [review-code-xyz](skills/2-daily/review-code-xyz/SKILL.md) | Meticulous ground-truth review of a local diff or branch using recon, debug-mantra, and workhorse/unstuck ladders (fixes reversible issues). |
@@ -96,14 +102,17 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
+| [next-steps-mod](skills/2-daily/next-steps-mod/SKILL.md) | Claude Code mod: every answer ends with a `Next:`/`Also:` block, drawn as one-press buttons above the prompt, the top one as the Tab suggestion, plus `/next-steps`; auto-loads from the Skills Army HQ link. |
 
-### `3-weekly` — Weekly (15)
+### `3-weekly` — Weekly
 
 _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 
 | Skill | Purpose |
 |---|---|
 | [10days](skills/3-weekly/10days/SKILL.md) | Sweep recent GitHub issues, verify still-valid, build a marathon plan from survivors. |
+| [baseline](skills/3-weekly/baseline/SKILL.md) | Turn a circular complaint thread about a process or policy into graded evidence, one concrete ask per item and a local HTML deck with one question to agree on per slide. |
+| [connect-the-dots](skills/3-weekly/connect-the-dots/SKILL.md) | Given a problem or new feature, restate it as capabilities and find the existing modules that already cover them (maps, then code index, then grep); returns a cited fit table and the remainder that is new. |
 | [converge](skills/3-weekly/converge/SKILL.md) | Cluster findings across several `/dry` Convergence Maps by shape to find what repeats. |
 | [dry](skills/3-weekly/dry/SKILL.md) | Trace a codebase resource-first and report the subsystems that should be one subsystem. |
 | [end-of-week](skills/3-weekly/end-of-week/SKILL.md) | Reconcile weekly governance evidence, file ranked gaps, correct metadata and verify the configured kanban projection. |
@@ -115,11 +124,12 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. Canonical here; published to XYZ-skills-army-mini via `push-downstream` (GH-955). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
+| [weekly-planner](skills/3-weekly/weekly-planner/SKILL.md) | Dual-horizon weekly planning and team orchestration skill built around XYZ Forge PRS (releases.db) and PDDA, with zero-dependency markdown fallback, 2nd-pass adversarial conflict audit, and shared engine with daily-planner. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 | [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
 
-### `4-occasional` — Least frequently (20)
+### `4-occasional` — Least frequently
 
 _setup, audits, one-off tooling and specialist lenses._
 
@@ -136,6 +146,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |
 | [install-improve-audit](skills/4-occasional/install-improve-audit/SKILL.md) | Get an unfamiliar repository building, fix blockers, and open a bounded PR. |
 | [open-router](skills/4-occasional/open-router/SKILL.md) | Resolve a colloquial model name to its canonical OpenRouter slug. |
+| [re-vendor-xyz](skills/4-occasional/re-vendor-xyz/SKILL.md) | Refresh one repo's vendored `.xyz/` copy safely: published source, no live run, backup, verified result. |
 | [read-only](skills/4-occasional/read-only/SKILL.md) | Add a narrow read-only command allowlist to Claude Code settings. |
 | [readme-audit](skills/4-occasional/readme-audit/SKILL.md) | Audit a README as both user-facing artifact and map of the repo's docs. |
 | [rpr](skills/4-occasional/rpr/SKILL.md) | Generalize recent permission prompts into narrow local allowlist rules. |

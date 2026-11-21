@@ -1,0 +1,83 @@
+{
+  "ticks": [
+    {
+      "tick_id": "slot_001",
+      "slot": 1,
+      "status": "completed",
+      "stage": "record",
+      "created_at": "2026-11-01T22:16:11.363608+00:00",
+      "updated_at": "2026-11-01T22:16:11.586081+00:00",
+      "error": null
+    }
+  ],
+  "decisions": [
+    {
+      "tick_id": "slot_001",
+      "raw": "{\"tool\": \"idle\", \"args\": {}, \"reason\": \"recording external fixture\", \"confidence\": 1}",
+      "validated_json": "{\"args\":{},\"confidence\":1,\"reason\":\"recording external fixture\",\"tool\":\"idle\"}",
+      "status": "raw-valid",
+      "rejected_reason": null
+    }
+  ],
+  "reservations": [
+    {
+      "tick_id": "slot_001",
+      "amount": 0.01,
+      "status": "held",
+      "billing_status": "unknown",
+      "actual_cost": null
+    }
+  ],
+  "events": [
+    {
+      "id": 2,
+      "ts": "2026-11-01T22:16:11.364693+00:00",
+      "tick_id": "slot_001",
+      "stage": "tick.started",
+      "status": "ok",
+      "json": "{\"fault\":null,\"slot\":1,\"stage\":\"tick.started\",\"status\":\"ok\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:16:11.364693+00:00\"}"
+    },
+    {
+      "id": 3,
+      "ts": "2026-11-01T22:16:11.422726+00:00",
+      "tick_id": "slot_001",
+      "stage": "evaluate",
+      "status": "ok",
+      "json": "{\"agent_called\":true,\"stage\":\"evaluate\",\"status\":\"ok\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:16:11.422726+00:00\"}"
+    },
+    {
+      "id": 4,
+      "ts": "2026-11-01T22:16:11.426709+00:00",
+      "tick_id": "slot_001",
+      "stage": "validate",
+      "status": "raw-valid",
+      "json": "{\"rejection\":null,\"stage\":\"validate\",\"status\":\"raw-valid\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:16:11.426709+00:00\"}"
+    },
+    {
+      "id": 5,
+      "ts": "2026-11-01T22:16:11.586282+00:00",
+      "tick_id": "slot_001",
+      "stage": "tick.completed",
+      "status": "completed",
+      "json": "{\"decision_status\":\"raw-valid\",\"output_sha256\":\"5a76967f372455ecaea2d04ce7fc540d181ab0e8070be439555d7d2a0ec790b1\",\"stage\":\"tick.completed\",\"status\":\"completed\",\"tick_id\":\"slot_001\",\"tool\":\"idle\",\"ts\":\"2026-11-01T22:16:11.586282+00:00\"}"
+    }
+  ],
+  "receipts": [
+    {
+      "tick_id": "slot_001",
+      "status": "completed",
+      "json": "{\"decision_status\":\"raw-valid\",\"output_sha256\":\"5a76967f372455ecaea2d04ce7fc540d181ab0e8070be439555d7d2a0ec790b1\",\"tool\":\"idle\"}",
+      "created_at": "2026-11-01T22:16:11.586081+00:00"
+    }
+  ],
+  "tool_runs": [
+    {
+      "tick_id": "slot_001",
+      "rc": 0,
+      "status": "ok",
+      "output_path": "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-mutant-eval-unchanged-v3/instances/C/out/idle/slot_001.json",
+      "sha256": "5a76967f372455ecaea2d04ce7fc540d181ab0e8070be439555d7d2a0ec790b1",
+      "error": null
+    }
+  ]
+}

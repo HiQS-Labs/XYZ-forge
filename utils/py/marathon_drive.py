@@ -18,7 +18,7 @@ import datetime as _dt
 # python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
-from rtl import driver_lock_path  # noqa: E402
+from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, ATTEMPT_CONTEXT_ENV  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
@@ -134,6 +134,16 @@ def _derive_issue_number(lane, task, brief_name):
     return None
 
 
+def lane_pr_notes(phase_id, issue, closes_issue):
+    """The lane PR body (GH-561). GH-1234: only a caller that knows this lane finishes the issue
+    (Jog: one issue, one phase) may close it; a wave phase of a multi-phase umbrella only
+    references it. No derivable issue leaves the body as it was."""
+    notes = f"Automated marathon closeout for phase `{phase_id}` (GH-561)."
+    if issue:
+        notes += f"\n\nCloses #{issue}" if closes_issue else f"\n\nRefs #{issue}"
+    return notes
+
+
 def _result_cmd_out(cmd, cwd=None):
     """Best-effort stdout capture for the receipt's git/gh probes; failure yields None."""
     try:
@@ -144,6 +154,51 @@ def _result_cmd_out(cmd, cwd=None):
         return None
     out = (res.stdout or "").strip()
     return out or None
+
+
+def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
+    """GH-1236: keep an existing validate.sh full-gate receipt for head_sha; otherwise write the
+    marathon receipt (replacing any absent, corrupt, failed, wrong-SHA, or weaker file)."""
+    receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
+    if not os.path.isfile(receipt_py):
+        return False
+    # Judge and write with the SAME implementation: the resolved harness's gate_receipt.py, loaded
+    # lazily from that path. A module-level import broke partial utils/py layouts (suite fixtures),
+    # and the driver's own utils/py need not be the harness that writes (XYZ_HARNESS).
+    is_full, receipt_path = None, None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_gate_receipt_resolved", receipt_py)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        is_full = getattr(mod, "is_full_gate_receipt", None)
+        receipt_path = mod.get_receipt_path(root, head_sha)
+    except Exception:
+        is_full, receipt_path = None, None
+    if receipt_path is None:
+        receipt_path = os.path.join(root, ".xyz", "receipts", f"{head_sha}.json")
+    if os.path.isfile(receipt_path):
+        try:
+            with open(receipt_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            existing = None
+        if is_full:
+            if is_full(existing, head_sha):
+                return False
+        elif (isinstance(existing, dict) and existing.get("sha") == head_sha
+              and not isinstance(existing.get("exit_code"), bool) and existing.get("exit_code") == 0):
+            # The writer cannot judge eligibility (older harness, or it failed to load): never
+            # downgrade a passing receipt for this SHA — it may carry a newer validator's scope=full.
+            # Absent, corrupt, failed and wrong-SHA files are still replaced, as closeout needs.
+            return False
+    subprocess.run(
+        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+         "--exit-code", "0"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+    )
+    return True
 
 
 def write_terminal_result(code):
@@ -208,10 +263,7 @@ def _write_terminal_result_inner(code):
         relay_file = os.path.join(_RESULT["phases_dir"], lane, "RELAY.md")
         try:
             with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        relay_status = line.split(":", 1)[1].strip()
-                        break
+                relay_status = relay_attest.header_field(f.read(), "STATUS") or None
         except OSError:
             pass
 
@@ -357,7 +409,7 @@ def runlog_find_comment_id(payload_text, marker):
             elif isinstance(entry, dict):
                 comments.append(entry)
     for comment in comments:
-        if isinstance(comment, dict) and marker in str(comment.get("body", "")):
+        if isinstance(comment, dict) and str(comment.get("body", "")).splitlines()[:1] == [marker]:
             return str(comment.get("id", ""))
     return ""
 
@@ -483,6 +535,58 @@ def die(msg):
 
 def log(msg):
     print(f"marathon-drive: {msg}")
+
+def compute_config_sha256(brief_file, builder, reviewer, env=None):
+    # GH-1220: idea adapted from Harness² core/runmark.py (google-research/harness2, Apache-2.0).
+    env = os.environ if env is None else env
+    with open(brief_file, "r", encoding="utf-8", errors="replace") as f:
+        brief_text = f.read()
+    def _model_val(agent_id):
+        for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek", "kimi"):
+            if agent_id.startswith(prefix):
+                val = env.get(f"{prefix.upper()}_MODEL") or "default"
+                if prefix == "aider" and env.get("AIDER_OPENAI_API_BASE"):
+                    # aider-turn.py passes the endpoint via --openai-api-base and picks its default from it.
+                    val += "@" + env["AIDER_OPENAI_API_BASE"]
+                return val
+        return "default"
+    canonical = "\n".join([brief_text, builder, reviewer, _model_val(builder), _model_val(reviewer)])
+    return relay_attest.sha256(canonical.encode("utf-8"))
+
+# GH-1428: the one gate shape a reviewer may run in its worktree. File/node selectors only; anything
+# broad, compound or unknown stays harness-only (AGENTS.md worktree rail, GH-681). A selector is a
+# scope check, not fixture-safety proof, so preflight's GH-54 fixture warning also disqualifies it.
+_FULL_SUITE_RE = re.compile(r'(?:^|/)(?:validate|ci-local|run-tests)\.sh$|(?:^|/)test/[^/]+\.sh$')
+
+def reviewer_runnable_gate(cmd, explicit, target_root, brief_text):
+    if not explicit or not cmd or re.search(r'&&|\|\||[;|`]|\$\(', cmd):
+        return ""
+    if "create temporary git fixtures" in (brief_text or "") or " -- " in f" {cmd} ":
+        return ""
+    try:
+        tokens = shlex.split(cmd)
+    except ValueError:
+        return ""
+    files, skip = 0, False
+    root_real = os.path.realpath(target_root)
+    for tok in tokens[1:]:
+        if skip:
+            skip = False
+            continue
+        if tok in ("-m", "-p", "-k"):
+            skip = True
+            continue
+        if tok.startswith("-"):
+            continue
+        path = tok.split("::", 1)[0]
+        # Relative, contained in the target (symlinks resolved), so it names the same file in the
+        # reviewer's worktree — never another checkout's copy (final QA R1).
+        real = os.path.realpath(os.path.join(root_real, path))
+        if (os.path.isabs(path) or _FULL_SUITE_RE.search(path) or not os.path.isfile(real)
+                or os.path.commonpath([root_real, real]) != root_real):
+            return ""
+        files += 1
+    return cmd if files and not _FULL_SUITE_RE.search(tokens[0]) else ""
 
 def resolve_force_relay_task(base_task, tick_bin, force, explicit):
     """GH-642: --force on a lane whose default token is already spent used to die at the tick
@@ -735,18 +839,22 @@ SMALLCODE_DEFAULT_BIN = os.path.join(
     os.path.expanduser("~"), "Documents", "GH Repos", "smallcode", "bin", "smallcode.js"
 )
 DEEPSEEK_DEFAULT_BIN = "/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js"
+# GH-1215: mirrors kimi-turn.py's INSTALLER_BIN (the Kimi Code installer's PATH edit is in ~/.zshrc).
+KIMI_DEFAULT_BIN = os.path.join(os.path.expanduser("~"), ".kimi-code", "bin", "kimi")
 
-def _probe_bin_or_file(candidates, role_label, agent_id, override_env):
+def _probe_bin_or_file(candidates, role_label, agent_id, override_env, executable=False):
     """Pass if ANY candidate resolves — on PATH, or as an existing file dispatched by interpreter.
 
     Mirrors the shim's own resolution order so preflight never rejects a lane the shim could run.
+    `executable=True` is for a lane whose shim execs the candidate directly (GH-1215 kimi): only an
+    executable counts there, since a plain file would pass preflight and then fail at launch.
     """
     tried = []
     for cand in candidates:
         if not cand:
             continue
         tried.append(cand)
-        if shutil.which(cand) or os.path.isfile(cand):
+        if shutil.which(cand) or (not executable and os.path.isfile(cand)):
             return
     _RESULT["reason"] = f"{role_label}-binary-missing"
     die(
@@ -767,6 +875,31 @@ def _probe_claude_bin(role_label):
             return
     _RESULT["reason"] = f"{role_label}-binary-missing"
     die(f"{role_label} binary 'claude' not found on PATH (set CLAUDE_BIN or use a codex/agy --{role_label} agent)")
+
+def route_agent(agent_id, env=None):
+    """Register an explicit actor in the existing dispatcher slots; no quality claim.
+
+    Pass a private mapping for recognition without changing this process's routing.
+    Frozen Bash routing remains unchanged (GH-308).
+    """
+    env = os.environ if env is None else env
+    if not isinstance(agent_id, str) or not agent_id or any(c.isspace() or c == "," for c in agent_id):
+        raise ValueError("agent id must be nonempty and contain no whitespace or comma")
+    if agent_id.startswith("claude"): slot = "CLAUDE_AGENT"
+    elif agent_id.startswith("codex"): slot = "CODEX_AGENT"
+    elif agent_id.startswith("agy"): slot = "AGY_AGENT"
+    elif agent_id.startswith("aider"): slot = "AIDER_AGENT"
+    elif agent_id.startswith("pi"): slot = "PI_AGENT"
+    elif agent_id.startswith("smallcode"): slot = "SMALLCODE_AGENT"
+    elif agent_id.startswith("commandcode"): slot = "COMMANDCODE_AGENT"
+    elif agent_id.startswith("deepseek"): slot = "DEEPSEEK_AGENT"
+    elif agent_id.startswith("kimi"): slot = "KIMI_AGENT"
+    else: raise ValueError(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi")
+    actors = [part for part in env.get(slot, "").split(",") if part]
+    if agent_id not in actors:
+        actors.append(agent_id)
+    env[slot] = ",".join(actors)
+    return slot
 
 def _probe_agent_bin(agent_id, role_label):
     # GH-117: fail before any tick mutation or clean-workspace scan if the lane's
@@ -795,6 +928,11 @@ def _probe_agent_bin(agent_id, role_label):
         # Faithful: commandcode-turn.py:26 resolves COMMANDCODE_BIN or "cmd" and execs it directly.
         _probe_bin(get_env("COMMANDCODE_BIN", "cmd"), role_label, agent_id)
     elif agent_id.startswith("smallcode"):
+        # The SmallCode shim explicitly disables worktree isolation. Do not admit
+        # a reviewer whose receipt would claim an isolation boundary it did not use.
+        if role_label == "reviewer" and get_env("RELAY_WORKTREE_ISOLATION", "1") != "0":
+            _RESULT["reason"] = "reviewer-isolation-unsupported"
+            die("SmallCode reviewers do not support worktree isolation; select a reviewer with isolation support")
         _probe_bin_or_file(
             [get_env("SMALLCODE_BIN"), SMALLCODE_DEFAULT_BIN],
             role_label, agent_id, "SMALLCODE_BIN",
@@ -805,6 +943,13 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin_or_file(
             [get_env("DEEPSEEK_BIN"), DEEPSEEK_DEFAULT_BIN, "dsh"],
             role_label, agent_id, "DEEPSEEK_BIN",
+        )
+    elif agent_id.startswith("kimi"):
+        # GH-1215: mirrors kimi-turn.py's default_kimi_bin(). A set KIMI_BIN is the ONLY candidate,
+        # because the shim never falls back from it; otherwise `kimi` on PATH, then the installer path.
+        _probe_bin_or_file(
+            [get_env("KIMI_BIN")] if get_env("KIMI_BIN") else ["kimi", KIMI_DEFAULT_BIN],
+            role_label, agent_id, "KIMI_BIN", executable=True,
         )
     else:
         # GH-346: the comment above used to STATE this invariant and nothing enforced it, so an id
@@ -981,11 +1126,15 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
     """Sample host memory (compressor and free swap) at phase boundary (GH-382)."""
     compressor_mb = None
     swap_free_mb = None
+    swap_total = None  # Only zero matters; native units differ by platform.
     if sys.platform == "darwin":
         try:
             out = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True, timeout=5).stdout
             # format: total = 3072.00M  used = 1024.00M  free = 2048.00M  (encrypted)
             import re
+            total = re.search(r"total\s*=\s*([0-9.]+)([MGK]?)", out)
+            if total:
+                swap_total = float(total.group(1))
             m = re.search(r"free\s*=\s*([0-9.]+)([MGK]?)", out)
             if m:
                 val = float(m.group(1))
@@ -999,21 +1148,28 @@ def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
             out = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=5).stdout
             import re
             m = re.search(r"Pages occupied by compressor:\s*([0-9]+)", out)
-            if m:
+            page_size = re.search(r"page size of\s+([0-9]+)\s+bytes", out)
+            if m and page_size and int(page_size.group(1)) > 0:
                 pages = int(m.group(1))
-                compressor_mb = (pages * 4096) // (1024 * 1024)
+                compressor_mb = (pages * int(page_size.group(1))) // (1024 * 1024)
         except Exception:
             pass
     elif os.path.exists("/proc/meminfo"):
         try:
             with open("/proc/meminfo", "r") as f:
                 for line in f:
-                    if line.startswith("SwapFree:"):
+                    if line.startswith("SwapTotal:"):
+                        swap_total = int(line.split()[1])
+                    elif line.startswith("SwapFree:"):
                         swap_free_mb = int(line.split()[1]) // 1024
                     elif line.startswith("Zswap:") or line.startswith("Zswapped:"):
                         compressor_mb = int(line.split()[1]) // 1024
         except Exception:
             pass
+
+    # No configured swap is not exhausted swap (GH-1050).
+    if swap_total == 0:
+        swap_free_mb = None
 
     bits = []
     if compressor_mb is not None:
@@ -1062,6 +1218,9 @@ def main():
     # land on main, which is the kind of coupling that is obvious only after it happens.
     parser.add_argument("--allow-trunk-commit", dest="allow_trunk_commit", action="store_true",
                         help="permit committing to the receiving repo's trunk/default branch (GH-402)")
+    parser.add_argument("--lane-closes-issue", dest="lane_closes_issue", action="store_true",
+                        help="this lane finishes its issue: the lane PR body says Closes #N, not Refs #N "
+                             "(passed by Jog, one issue = one phase; GH-1234)")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--log-github", dest="log_github", action="store_true")  # GH-284 P2 / GH-322
     # GH-280: opt-in durable terminal-result receipt for supervisors. No behavior change when unset.
@@ -1141,68 +1300,54 @@ def main():
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
     def lane_attempt_gate(root_dir, raw, force, check_only=False):
-        # GH-1002: check_only=True parks an at-cap lane exactly as below but never writes — it runs
-        # before the relay-file commit so a parked fire leaves no commit; the single append stays in
-        # the later full call.
-        if get_env("LANE_ATTEMPT_COUNTED"): return 0
-        if not raw: return 0
-        max_attempts = get_env("LANE_MAX_ATTEMPTS", "2")
-        try: max_attempts = int(max_attempts)
-        except ValueError: max_attempts = 2
-
-        key = _lane_key(raw)
-        attempts_dir = os.path.join(root_dir, ".tick", "attempts")
-        if not check_only:
-            os.makedirs(attempts_dir, exist_ok=True)
-        attempts_file = os.path.join(attempts_dir, key)
-
-        # One read-only reader for the attempts file (shared with the GH-162 debug-mantra note).
-        count = debug_mantra_prior_attempts(root_dir, raw)
-
-        if force:
-            if not check_only: eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
-        elif count >= max_attempts:
-            eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
-            eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
-            # GH-280: the receipt reports the count that PARKED the lane; the attempts file
-            # still holds it here, but record it explicitly so the receipt survives any later
-            # state change.
-            _RESULT["attempt_count"] = count
-            # Sentinel Tier 1 (GH-281/GH-342). The Bash lane emits this from the CALLER, on rc==8
-            # (marathon-drive.sh:1103-1106); this gate exits directly, so it emits here instead —
-            # same record, same position relative to the two messages above. `raw`, not `key`: the
-            # Bash message carries $LANE_STATE_KEY as given, not the sanitized form.
-            xyz_debug_log_append(
-                root, "warn", "marathon.lane-park",
-                f"lane {raw} parked at attempt cap",
-                action="re-anchor to QUEUE lanes or re-fire with --force",
-                target_root=args.target_root, phase_id=args.phase_id,
-                relay_task=relay_task)
-            sys.exit(8)
-        if check_only:
+        if get_env("LANE_ATTEMPT_COUNTED"):
+            from gate_receipt import attempt_admission
+            try:
+                proof = attempt_admission(args.target_root or root_dir)
+            except Exception as exc:
+                die(f"nested counted build has invalid accounting: {exc}")
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived") or proof.get("attestation"):
+                die("nested counted build requires an active canonical reservation")
             return 0
-
-        # append fire
-        ts = "fire"
+        if not raw:
+            return 0
         try:
-            ts = subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
-        except:
-            pass
-        with open(attempts_file, "a") as f:
-            f.write(f"{ts} fire\n")
-        # GH-280: record the attempt this fire represents — complete_phase_success RESETS the
-        # attempts file, so a receipt that re-reads it after a green phase would report null
-        # for a run that genuinely fired.
-        _RESULT["attempt_count"] = count + 1
+            cap = int(get_env("LANE_MAX_ATTEMPTS", "2"))
+        except ValueError:
+            cap = 2
+        count, context = lane_attempt_reserve(
+            root_dir, raw, args.target_root or root_dir, cap=cap, force=force,
+            check_only=check_only)
+        if count >= cap and context is None and not force:
+            eprint(f"lane-attempt-cap: lane {_lane_key(raw)} PARKED after {count} attempt(s) (cap {cap}) — no relay token seeded.")
+            _RESULT["attempt_count"] = count
+            xyz_debug_log_append(root, "warn", "marathon.lane-park",
+                                 f"lane {raw} parked at attempt cap",
+                                 action="re-anchor to QUEUE lanes or re-fire with --force",
+                                 target_root=args.target_root, phase_id=args.phase_id,
+                                 relay_task=relay_task)
+            sys.exit(8)
+        if force and context is not None:
+            eprint(f"lane-attempt-cap: --force override — lane {_lane_key(raw)} at {count - 1} attempt(s) (cap {cap}), proceeding.")
+        if context is not None:
+            _RESULT["attempt_count"] = count
         return 0
 
     def lane_attempt_reset(root_dir, raw):
         if get_env("LANE_ATTEMPT_COUNTED"): return
         if not raw: return
         attempts_file = os.path.join(root_dir, ".tick", "attempts", _lane_key(raw))
-        if os.path.exists(attempts_file):
-            try: os.remove(attempts_file)
-            except: pass
+        try:
+            # Gate-only recovery does not fire, so preserve its count before reset.
+            if _RESULT.get("attempt_count") is None and os.path.isfile(attempts_file):
+                with open(attempts_file) as f:
+                    _RESULT["attempt_count"] = sum(1 for _ in f)
+            archive = archive_lane_attempts(attempts_file)
+        except (OSError, ValueError) as exc:
+            die(f"cannot preserve lane attempts {attempts_file}: {exc}")
+        if archive:
+            eprint(f"lane-attempt history preserved: {archive}")
+        return archive
 
     def debug_mantra_prior_attempts(root_dir, raw):
         # GH-162: READ-ONLY peek at the .tick/attempts/<lane> file GH-45 maintains — how many prior
@@ -1797,8 +1942,8 @@ def main():
             try:
                 with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
                     for ln in f:
-                        if ln.startswith("STATUS:"):
-                            status_line = ln.strip()
+                        if relay_attest.header_field(ln, "STATUS"):
+                            status_line = "STATUS: " + relay_attest.header_field(ln, "STATUS")
                         if ln.lstrip().startswith("### Round"):
                             round_count += 1
             except OSError:
@@ -1979,76 +2124,18 @@ def main():
     # asked for. Omitting the two new lanes here would have left exactly that hole open for them.
     os.environ["COMMANDCODE_AGENT"] = ""
     os.environ["DEEPSEEK_AGENT"] = ""
+    os.environ["KIMI_AGENT"] = ""
 
-    def route_agent(agent_id):
-        # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
-        # (GH-295 shipped the shim, GH-451/PR #452 wired it here); the frozen Bash twin at
-        # relay-automation/marathon-drive.sh:779-783 accepts claude/codex/agy/aider ONLY and dies
-        # on `pi`. Same split in the binary probe: _probe_agent_bin below has a `pi` branch, the
-        # Bash twin's does not. Nothing is broken by this — marathon-drive.sh execs this file
-        # whenever XYZ_PYTHON is unset or 1, which is the default, so the Bash path is only
-        # reachable via XYZ_PYTHON=0 or a host with no python3 >= 3.8. On THAT path `--builder pi`
-        # fails at argument routing before any tick mutation.
-        #
-        # The Bash half is frozen under GH-308 and is NOT to be taught about Pi as a drive-by fix;
-        # doing so needs a `Frozen-twin-exception:` trailer and should happen only as part of
-        # retiring the twins. test/marathon-drive.sh case (20b) asserts the Bash rejection, so if
-        # anyone does teach it Pi, that case fails loudly and this note must be retired with it.
-        #
-        # GH-346 Phase 2 DECISION (allowlist #1), recorded rather than silently skipped: the same
-        # freeze applies to commandcode and deepseek, added below. The Bash twin still accepts only
-        # claude/codex/agy/aider. The divergence is now three ids wide instead of two, and it stays
-        # that way deliberately — teaching the frozen twin is a twin-retirement task, not a
-        # drive-by. Reachable only via XYZ_PYTHON=0 or a host without python3 >= 3.8, and on that
-        # path an unrecognized id fails at argument routing before any tick mutation.
-        #
-        # One more thing about the twin, since a reader under XYZ_PYTHON=0 will otherwise be misled:
-        # its USAGE TEXT (marathon-drive.sh:33, :593) still advertises `gemini` as a reviewer, and
-        # it keeps a `gemini*` arm in its reviewer gate at :795 — dead, because its own route_agent
-        # at :783 rejects the id first. No gemini shim has ever existed. The Python side dropped the
-        # phantom in GH-346; the twin advertises a lane that cannot run, and stays frozen anyway.
-        #
-        # REVIEWER routing is a separate, narrower set and Pi is NOT in it — see the check below
-        # and bin/marathon-yaml:95. A Pi *builder* fallback does not give you a Pi *reviewer*.
-        if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
-        elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
-        # A lane can carry both a builder and its reviewer.  Keep every agy actor in the one
-        # dispatcher-facing slot instead of letting the second route overwrite the first.
-        elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = ",".join(
-            part for part in (os.environ["AGY_AGENT"], agent_id) if part)
-        elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
-        elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
-        elif agent_id.startswith("smallcode"): os.environ["SMALLCODE_AGENT"] = agent_id
-        # GH-346 Phase 2 (allowlist #2). Order matters below: neither "commandcode" nor "deepseek"
-        # is a prefix of, or prefixed by, any id above ("commandcode" does NOT start with "codex"),
-        # so these are safe as the last two branches. The matching case in marathon-agent.sh
-        # (allowlist #3) landed in the same change — routing here without a dispatcher branch there
-        # is what made these two gateways accept-then-die.
-        elif agent_id.startswith("commandcode"): os.environ["COMMANDCODE_AGENT"] = agent_id
-        elif agent_id.startswith("deepseek"): os.environ["DEEPSEEK_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek")
-        
     if args.builder == args.reviewer:
         _RESULT["reason"] = "builder-equals-reviewer"
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
         
-    route_agent(args.builder)
-    route_agent(args.reviewer)
+    try:
+        route_agent(args.builder)
+        route_agent(args.reviewer)
+    except ValueError as exc:
+        die(str(exc))
     
-    # GH-346 Phase 2 (allowlist #6): `gemini` was a PHANTOM. No gemini shim exists anywhere in this
-    # tree, and route_agent() above — which runs first — has no gemini branch, so a gemini reviewer
-    # always died there with "not recognized". Naming it here only advertised a lane that cannot
-    # exist. Removed rather than implemented.
-    #
-    # Reviewer eligibility for commandcode/deepseek is DELIBERATELY NOT added here. Reviewer
-    # fitness is a quality claim, and HARNESS-MODELS-REGISTRY.md grades it per harness separately
-    # from builder fitness (aider is graded "Builder only" precisely because its reviewer turns can
-    # produce a review without persisting it). Phase 2 makes them dispatchable as BUILDERS; whether
-    # they review well is for the ROI checkpoint to answer with evidence, not for this change to
-    # assume. See PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md.
-    if not (args.reviewer.startswith("codex") or args.reviewer.startswith("agy")):
-        die(f"reviewer '{args.reviewer}' must start with codex/agy")
-
     _probe_agent_bin(args.builder, "builder")
     _probe_agent_bin(args.reviewer, "reviewer")
 
@@ -2147,7 +2234,7 @@ def main():
                 if log_text.startswith("{") and log_text.endswith("}"):
                     log_data = json.loads(log_text)
                     bits = []
-                    for k in ["is_error", "subtype", "terminal_reason", "total_cost_usd"]:
+                    for k in ["is_error", "subtype", "errors", "terminal_reason", "total_cost_usd"]:
                         if k in log_data:
                             bits.append(f"{k}={log_data[k]}")
                     if bits:
@@ -2297,7 +2384,7 @@ relay-file: {rel_relay}
         "SMALLCODE_AGENT",
         # GH-346 Phase 2: TENTH copy. Kept in lockstep with gate_env.py's registry, which
         # test/gh441-gate-env-contract.sh compares against this literal.
-        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT",
+        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT", "KIMI_AGENT",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "RELAY_TOOL_MODE", "XYZ_TOOL_MODE",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
@@ -2378,21 +2465,38 @@ relay-file: {rel_relay}
         proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash", cwd=cwd, env=env,
                                 start_new_session=True)
         started = time.monotonic()
+        wall_started = time.time()
+
+        def gate_elapsed():
+            # Wall time includes host sleep; monotonic time prevents a backward wall-clock
+            # adjustment from subtracting awake time. A forward jump expires conservatively.
+            return max(0.0, time.monotonic() - started, time.time() - wall_started)
+
         peak_rss_mb = 0
         rss_readable = rss_unreadable = 0
         rc = None
         while rc is None:
             rc = proc.poll()
+            rss_mb, rss_status = None, None
+            if rc is None:
+                rss_mb, rss_status = _gate_group_rss_mb(proc.pid)
+                if rss_status == "group-missing":
+                    # The child may have finished during the RSS probe. Reap it before
+                    # deciding whether it is safe to signal its process group.
+                    rc = proc.poll()
+            # Check after both polls and the potentially slow RSS probe, even for a reaped
+            # child: completion observed after the deadline is not a successful gate.
+            elapsed = gate_elapsed()
+            if cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]:
+                reason = f"wall clock {int(elapsed)}s >= cap {cfg['wall_s']}s"
+                if rc is None and proc.poll() is None:
+                    _gate_kill_group(proc, reason)
+                else:
+                    log(f"gate-guard: refusing completed gate — {reason}")
+                rc = GATE_GUARD_KILL_EXIT
+                break
             if rc is not None:
                 break
-            elapsed = int(time.monotonic() - started)
-            rss_mb, rss_status = _gate_group_rss_mb(proc.pid)
-            if rss_status == "group-missing":
-                # No row for the group: either the gate exited between poll() and ps (a clean
-                # finish, not a failed sample) or ps cannot see a live group (unreadable).
-                rc = proc.poll()
-                if rc is not None:
-                    break
             if rss_mb is None:
                 rss_unreadable += 1
                 if rss_unreadable == 1:
@@ -2401,9 +2505,7 @@ relay-file: {rel_relay}
                 rss_readable += 1
                 peak_rss_mb = max(peak_rss_mb, rss_mb)
             reason = None
-            if cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]:
-                reason = f"wall clock {elapsed}s >= cap {cfg['wall_s']}s"
-            elif cfg["rss_mb"] > 0 and rss_mb is not None and rss_mb >= cfg["rss_mb"]:
+            if cfg["rss_mb"] > 0 and rss_mb is not None and rss_mb >= cfg["rss_mb"]:
                 reason = f"gate group RSS {rss_mb}MB >= cap {cfg['rss_mb']}MB"
             if reason:
                 _gate_kill_group(proc, reason)
@@ -2436,7 +2538,7 @@ relay-file: {rel_relay}
         # Peak RSS is logged on EVERY run, pass or fail, deliberately: it is the only evidence that
         # can later answer whether the layer-3 poll is being outrun by a fast allocator — which is
         # the stated precondition for taking on container isolation at all.
-        log(f"gate-guard: gate exit {rc} after {int(time.monotonic() - started)}s — "
+        log(f"gate-guard: gate exit {rc} after {int(gate_elapsed())}s — "
             f"{_gate_rss_summary(peak_rss_mb, rss_readable, rss_unreadable)} "
             f"(tier {cfg['tier']}; caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, "
             f"CPU {cfg['cpu_s']}s)")
@@ -2464,9 +2566,7 @@ relay-file: {rel_relay}
     def file_status():
         try:
             with open(relay_file) as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        return line.split(":", 1)[1].strip()
+                return relay_attest.header_field(f.read(), "STATUS")
         except Exception:
             pass
         return ""
@@ -2518,6 +2618,8 @@ relay-file: {rel_relay}
         if not ok:
             log(f"{where}: attested approval found but candidate {cand[:12] if cand else '?'} is not the reviewed revision — {why} — not accepting it (GH-505)")
             return None
+        if record.get("attempt_context"):
+            os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(record["attempt_context"])
         return record
 
     def path_has_nonempty_phase_delta(path):
@@ -2652,10 +2754,11 @@ relay-file: {rel_relay}
         # --no-commit is the load-bearing flag: closeout's default is `git add -A` + commit, which in
         # an automated call would sweep every unrelated dirty file in the target into the PR. The
         # driver has already committed everything this phase produced.
+        notes = lane_pr_notes(args.phase_id, lane_issue_number(), args.lane_closes_issue)
         cmd = [closeout, "--repo", repo, "--head", head, "--base", base,
                "--open-only", "--no-commit",
                "--title", f"Marathon lane {args.phase_id}",
-               "--notes", f"Automated marathon closeout for phase `{args.phase_id}` (GH-561)."]
+               "--notes", notes]
         res = subprocess.run(cmd, capture_output=True, text=True)
         for line in (res.stdout or "").splitlines() + (res.stderr or "").splitlines():
             if line.strip():
@@ -2669,6 +2772,8 @@ relay-file: {rel_relay}
                 f"gh pr create --base {base} --head {head}")
 
     completed_candidate = [None]
+    config_sha256 = compute_config_sha256(args.phase_brief_file, args.builder, args.reviewer)
+    config_mismatch_rebuild = [False]
 
     def complete_phase_success(success_mode="approved"):
         historical = success_mode == "already-satisfied" and completed_candidate[0] is not None
@@ -2739,7 +2844,9 @@ relay-file: {rel_relay}
         candidate, record = bind_candidate(f"phase {args.phase_id} success")
         # Approval precedes the post-approve hook (GH-273); completion is stamped only later.
         subprocess.run([tick_bin, "log", "marathon.phase.approved", attested_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+        archive = lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+        if archive and os.environ.get(ATTEMPT_CONTEXT_ENV):
+            record = dict(record, attempt_context=json.loads(os.environ[ATTEMPT_CONTEXT_ENV]))
         refresh_remote_tracking_ref()
         if args.post_approve_cmd and not historical:
             log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
@@ -2772,14 +2879,7 @@ relay-file: {rel_relay}
         head_sha = candidate
         if head_sha and not historical:
             try:
-                receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
-                if os.path.isfile(receipt_py):
-                    subprocess.run(
-                        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
-                         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
-                         "--exit-code", "0"],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
-                    )
+                _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness)
             except Exception:
                 pass
             marathon_emit_phase_qa_attestation(head_sha, pre_advance_cmd)
@@ -2880,6 +2980,15 @@ relay-file: {rel_relay}
         # cannot be reopened (GH-274), so the run refuses loudly instead of re-dispatching.
         record = attested_terminal(task, where=f"phase {args.phase_id} startup", completed=True)
         if record is None:
+            # GH-1220: a valid record attested for a DIFFERENT reviewer is a config change — rebuild
+            # rather than halting as unattested. Never reused: the strict check above still refused it.
+            prior, _why = relay_attest.load(task, expected_reviewer=None, any_reviewer=True,
+                                            relay_file=relay_file, target_repo=args.target_root or root)
+            if prior is not None and prior.get("reviewer") != args.reviewer:
+                log(f"phase {args.phase_id}: attested by reviewer '{prior.get('reviewer')}' but this run names "
+                    f"'{args.reviewer}' — phase config changed, rebuilding (GH-1220)")
+                config_mismatch_rebuild[0] = True
+                return False
             if args.force and not args.relay_task:
                 # Preserve GH-642's explicit rebuild escape. This does not accept the old
                 # approval: normal render/seed/build/review runs on a fresh force token.
@@ -2890,6 +2999,14 @@ relay-file: {rel_relay}
             escalate("unattested-terminal", 0)
             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — terminal relay without a reviewer attestation")
             sys.exit(4)
+        # GH-1220: verify phase config identity (brief content + builder + reviewer + resolved models).
+        rec_cfg = record.get("config_sha256")
+        if not rec_cfg:
+            log(f"phase {args.phase_id}: legacy attestation without config identity — reusing (GH-1220)")
+        elif rec_cfg != config_sha256:
+            log(f"phase {args.phase_id}: phase config changed since attestation — rebuilding (GH-1220)")
+            config_mismatch_rebuild[0] = True
+            return False
         completion = record.get("phase_completion")
         completed_candidate[0] = completion["candidate"] if completion else None
         return True
@@ -2922,9 +3039,16 @@ relay-file: {rel_relay}
                     f"WITHOUT --retry would have re-run only the pre-advance gate and dispatched no "
                     f"builder or reviewer turn (GH-491)")
 
+    # GH-1220: never re-render over a spent explicit token — the old approved relay must stay intact.
+    if config_mismatch_rebuild[0] and args.relay_task and token_state(args.relay_task)[0] in ("done", "circuit_broken"):
+        _RESULT["reason"] = "config-mismatch-spent-explicit-task"
+        die(f"phase {args.phase_id}: config changed but explicit --relay-task {args.relay_task} is spent — "
+            f"re-fire with a fresh --relay-task (or --retry {args.phase_id} via marathon.sh) (GH-1220)")
+
     # GH-1042: only a lane that actually rebuilds needs GH-642's fresh force token.
+    # GH-1220: a config-mismatch rebuild also allocates a fresh token when the base token is spent.
     relay_task = resolve_force_relay_task(
-        relay_task, tick_bin, force=bool(args.force), explicit=bool(args.relay_task))
+        relay_task, tick_bin, force=bool(args.force or config_mismatch_rebuild[0]), explicit=bool(args.relay_task))
     _RESULT["token"] = relay_task
 
     if not args.dry_run:
@@ -2961,6 +3085,9 @@ relay-file: {rel_relay}
     # does not exist yet, so the mkdir moves down next to the write it actually exists for.
     with open(args.phase_brief_file, "r") as f:
         brief_text = f.read()
+    # GH-1428: a focused, explicit gate the reviewer may run; "" keeps it harness-only.
+    reviewer_gate_cmd = reviewer_runnable_gate(pre_advance_cmd, bool(args.pre_advance_cmd),
+                                               _target_root or root, brief_text)
 
     cli_round_cap = args.round_cap
     if cli_round_cap is None:
@@ -3000,6 +3127,27 @@ relay-file: {rel_relay}
         reviewer_read_line = "Read the latest builder block above."
         reviewer_scope_line = "Do NOT run git. Do NOT touch any other file."
 
+    # GH-1428: gate evidence. The reviewer either runs the focused gate or says why not; relay-drive
+    # refuses an Approved after a builder-declared "unverified" unless the gate ran to exit 0.
+    if reviewer_gate_cmd:
+        reviewer_gate_line = (
+            f"3a. GATE EVIDENCE (GH-1428): before writing Approved, run this phase's gate yourself: `{reviewer_gate_cmd}` "
+            "— the one exception to the turn prompt's no-pytest rule. Run it with cwd = your worktree, so the tests and source "
+            "under test are the reviewed revision. Only TOOLING missing from your worktree (e.g. an untracked .venv/bin/pytest) "
+            f"may be taken from {_target_root or root}; if a test or source path is missing, do NOT substitute that "
+            "checkout's copy. First: export PYTHONDONTWRITEBYTECODE=1 TMPDIR=\"$PWD/.relay-scratch/tmp\"; keep caches out "
+            "of the tree (pytest: add -p no:cacheprovider) — an off-lane write fails your turn (4b). If you cannot tell the "
+            "run is worktree-safe, do not run it. Every review block MUST carry a literal `gate run: yes — exit <rc>` or "
+            "`gate run: no — <why>` line. If the builder's latest block says anything is unverified and you did not run the "
+            "gate to exit 0, do NOT approve: relay-drive refuses that approval (reason unverified-approval)."
+        )
+    else:
+        reviewer_gate_line = (
+            f"3a. GATE EVIDENCE (GH-1428): this phase's gate (`{pre_advance_cmd}`) is not a focused file-only command, so it "
+            "runs only in the harness after your turn — do NOT run it. Declare a literal `gate run: no — harness gate` line "
+            "in your review block."
+        )
+
     relay_content = f"""# Marathon Phase {args.phase_id}
 STATUS: Open
 NEXT: {args.builder} (Builder)
@@ -3018,6 +3166,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. {builder_impl_line}
 2. Append a build block to this relay file: `### Round N · Builder · {args.builder}` summarizing what you did (files touched, key decisions).
+   If a verification the brief asks for could not run (e.g. your sandbox denied a local service), put it on its own line: `unverified: <what> — <why>` (GH-1428).
 3. Use this exact tick binary (run it from any directory): {tick_cli}
    - {tick_cli} claim {relay_task} --agent {args.builder} --paths "{claim_paths}"
    - {tick_cli} ping {relay_task} --agent {args.builder}
@@ -3037,6 +3186,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 1. Append a review block: `### Round N · Reviewer · {args.reviewer}` followed by your assessment.
 2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: {args.builder} (Builder)`, then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: {tick_cli} done {relay_task} --agent {args.reviewer}
+{reviewer_gate_line}
 4. Use this exact tick binary (run it from any directory) for all token operations: {tick_cli}
    {reviewer_scope_line}
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -3377,6 +3527,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
                 # GH-505/GH-509: the driver learns the roles from ITS invocation, never from the
                 # relay file or the token, and attests only the reviewer's approval.
                 "--reviewer", args.reviewer, "--builder", args.builder]
+        if cli_round_cap is not None:
+            cmd2.append("--strict-role-handoff")
         if review_once:
             cmd2.append("--review-once")   # GH-207: one approval pass, no round-cap
         else:
@@ -3389,6 +3541,11 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
         env2["RELAY_COST_SUMMARY"] = "0"
         env2["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root)
+        env2["MARATHON_CONFIG_SHA256"] = config_sha256  # GH-1220
+        if reviewer_gate_cmd:  # GH-1428: arms relay-drive's unverified-approval refusal
+            env2["MARATHON_REVIEWER_GATE_CMD"] = reviewer_gate_cmd
+        else:
+            env2.pop("MARATHON_REVIEWER_GATE_CMD", None)
         # GH-256: under --target-root the turn shim must GUARD the repo the worktree is cut FROM.
         #
         # relay-drive exports RELAY_TARGET_ROOT and relay-turn-lib.sh:251 reads
@@ -3412,7 +3569,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         # with no guard root — deepseek-turn.py:93 reads DEEPSEEK_TURN_ROOT, so a --target-root
         # deepseek turn was resolving containment against the harness clone, not the target.
         if args.target_root:
-            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK"):
+            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK", "KIMI"):
                 env2[f"{_shim}_TURN_ROOT"] = args.target_root
         return subprocess.run(cmd2, env=env2, cwd=root).returncode
 
@@ -3545,7 +3702,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
             log(f"timeout probe: builder still owns {relay_task} (STATUS: {s}) — treating this as a real hang")
             return 7
         log(f"timeout probe: artifact landed and {relay_task} moved to {actor} — resuming relay-drive from the post-timeout state")
-        r = _run_relay_drive()
+        r = _run_relay_drive(review_once=cli_round_cap is not None)
         if r == 7:
             timeout_reason[0] = "timeout-during-review-recovery"
             timeout_emit[0] = f"halted at phase {args.phase_id} — relay timed out again during review recovery"
@@ -3619,6 +3776,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         die(f"relay-drive exited with unexpected code {relay_exit}")
 
 if __name__ == "__main__":
+    # Recognition-only manifest seam: no probes, lease, result hooks or dispatch.
+    if sys.argv[1:2] == ["--validate-agent-routes"]:
+        try:
+            if not sys.argv[2:]:
+                raise ValueError("at least one agent id required")
+            for actor in sys.argv[2:]:
+                route_agent(actor, {})
+        except ValueError as exc:
+            die(str(exc))
+        sys.exit(0)
+
     # GH-284 P2 / GH-322: the Bash twin runs its run log + heartbeat stop from an EXIT trap that
     # captures `$?` first and re-exits with it explicitly, precisely so a failing reporting step can
     # never overwrite the driven run's real status. This is the same shape: the code is resolved

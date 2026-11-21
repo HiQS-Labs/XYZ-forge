@@ -1,0 +1,18 @@
+{
+ "recorded_at": "2026-10-31T07:03:40.981050+00:00",
+ "pinned_head": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+ "pr": "https://github.com/HiQS-Labs/XYZ-forge/pull/1282",
+ "operator_decisions": {
+  "model_and_effort": "gpt-6.1-terra, medium (operator: 'Codex Terra 6.1 medium')",
+  "codex_role": "authors plan content (operator: 'Codex author plan content')",
+  "codex_usage_cap": "no monetary or subscription ceiling ('ok with whatever amount of credits it takes'); up to 180 calls ('Up to 180 Codex calls are fine')",
+  "dry_run_cap": "10 ('1. ok' to the proposed default of 10 ready lanes)",
+  "qa_sample_size": "the issue minimums (default accepted with the other answers)",
+  "machine": "this machine; Mac Studio busy ('We'll do it here. Mac Studio is busy on something else.')",
+  "start_time": "after the tooling is built ('3. After it's built.'); started by the supervising session right after the tooling gate",
+  "merge_before_window": "not required; issue #1279 body edited by the operator's instruction; head pinned and pushed",
+  "supervisor": "Claude (Sonnet 5.5) interactive session; the issue named Opus 5.5 for this role, the operator directed this session to drive the run"
+ },
+ "canary_file_sha256": "a376a571ea3206187c05adca930bc05ceffc0fe620e8425aaddc8812fe46fe04",
+ "harness_sha256": "5d811c9a8dd22ad6ab29a1d7e0df3af3eb83d1d0031574f42b169d080437d983"
+}

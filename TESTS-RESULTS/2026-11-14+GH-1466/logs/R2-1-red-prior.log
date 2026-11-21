@@ -1,0 +1,17 @@
+QUERY=ledger-host
+REPO=ledger-host
+RESOLVED_VIA=fuzzy
+REPO_PATH=
+REPO_PATH_SOURCE=unresolved
+resolver_rc=1
+--- status ---
+HQ · project card
+  query:        ledger-host
+  repo:         ledger-host (candidate)
+  path:         UNRESOLVED — no registry or filesystem match
+
+  Try a bare repo name, or confirm the repo is cloned under one of:
+    <work>/r21/search
+  Fallback find recipe:
+    find ~ -type d -name "ledger-host" -exec test -d "{}/.git" \; -print
+status_rc=1

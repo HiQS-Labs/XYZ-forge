@@ -1,0 +1,11 @@
+GH-1098 rc=7 AMBIGUOUS (exit 7)   acceptance  : unknown [cause: no-issue-section] — issue #1098 has no '## Acceptance' section — nothing to copy fro
+GH-732 rc=4 STALE (exit 4) 
+GH-722 rc=6 BLOCKED (exit 6)   acceptance  : unknown [cause: no-issue-section] — issue #722 has no '## Acceptance' section — nothing to copy from
+GH-670 rc=0 ready (exit 0)   acceptance  : unknown [cause: no-issue-section] — issue #670 has no '## Acceptance' section — nothing to copy from
+GH-492 rc=4 STALE (exit 4) 
+GH-423 rc=4 STALE (exit 4) 
+GH-418 rc=7 AMBIGUOUS (exit 7) 
+GH-355 rc=4 STALE (exit 4) 
+GH-275 rc=4 STALE (exit 4)   acceptance  : unknown [cause: no-issue-section] — issue #275 has no '## Acceptance' section — nothing to copy from
+GH-141 rc=4 STALE (exit 4)   acceptance  : unknown [cause: no-issue-section] — issue #141 has no '## Acceptance' section — nothing to copy from
+GH-75 rc=4 STALE (exit 4)   acceptance  : unknown [cause: no-issue-section] — issue #75 has no '## Acceptance' section — nothing to copy from

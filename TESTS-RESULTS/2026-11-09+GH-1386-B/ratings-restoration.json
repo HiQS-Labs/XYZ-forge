@@ -1,0 +1,56 @@
+{
+  "base": [
+    [
+      "rmi-01M1AK7FZ0JKTFJH35R90DXN7S",
+      254,
+      14,
+      12,
+      50,
+      95
+    ],
+    [
+      "rmi-01M38B3876JR8V9BWY71TX3VHG",
+      772,
+      25,
+      20,
+      50,
+      85
+    ]
+  ],
+  "prior": [
+    [
+      "rmi-01M1AK7FZ0JKTFJH35R90DXN7S",
+      254,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      "rmi-01M38B3876JR8V9BWY71TX3VHG",
+      772,
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  "fixed": [
+    [
+      "rmi-01M1AK7FZ0JKTFJH35R90DXN7S",
+      254,
+      14,
+      12,
+      50,
+      95
+    ],
+    [
+      "rmi-01M38B3876JR8V9BWY71TX3VHG",
+      772,
+      25,
+      20,
+      50,
+      85
+    ]
+  ]
+}

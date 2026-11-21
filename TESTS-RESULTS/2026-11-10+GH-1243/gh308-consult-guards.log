@@ -1,0 +1,7 @@
+== test: gh308-consult-guards ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T//gh308-consult-guards.LfBSju
+  PASS: consult default lane: codex transcript is stamped with the ATTESTATION provenance header
+  PASS: consult default lane: a breached agy run is counted FAILED (all-advisors-failed, exit 5)
+  PASS: consult default lane: the breach is stamped into the agy transcript
+  PASS: consult default lane: a clean agy run (no real-root citation) is NOT flagged (exit 0)
+  gh308-consult-guards: 4 pass, 0 fail

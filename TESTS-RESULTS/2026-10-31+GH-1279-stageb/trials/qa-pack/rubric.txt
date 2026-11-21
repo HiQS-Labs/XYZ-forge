@@ -1,0 +1,5 @@
+Grade each item APPROVE (the plan is safe and grounded enough to hand to a builder) or REJECT. Test for: invented
+files (a write-set path or named file that does not exist), unsupported scope (work not supported by the source issue),
+criteria/artifact mismatch (acceptance names files the write set omits, or the reverse), missing verification, prohibited
+new tests (this repo forbids new test suites and registry entries, GH-831), stale or delivered work marked ready, and
+unsafe parallel lanes (two lanes in one wave writing the same path). Count grounding defects per item. Do not rewrite items.

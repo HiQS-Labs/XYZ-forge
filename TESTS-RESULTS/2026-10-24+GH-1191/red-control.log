@@ -1,0 +1,3 @@
+FAIL archived/running/self/old skipped | {"rc": 0, "section": {"swept": 1, "renamed": [{"task_id": "local_run", "old": "B", "new": "10-24 B", "activity_at": "2026-10-24T16:22:39.622Z"}], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 3, "error": null, "scope": "list_sessions inventory; the sweeping session is excluded by the
+FAIL missing isRunning -> skipped | {"section": {"swept": 1, "renamed": [{"task_id": "local_m", "old": "No flags", "new": "10-24 No flags", "activity_at": "2026-10-24T16:22:39.622Z"}], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 0, "error": null, "scope": "list_sessions inventory; the sweeping session is excluded by 
+15/17 probes passed

@@ -1,0 +1,9 @@
+
+jog: interrupted by signal; cleaning up leases and locks.
+jog: execution clone aligned at a2c0f4d1a1d8cf5d21207d5dfe000ed075c12944; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/adjacent/cancel/primary/.tick/jog/jog-01M7FZ53Z9E3Q96QWK28XM0AX4/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)

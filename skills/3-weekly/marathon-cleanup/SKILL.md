@@ -18,6 +18,14 @@ step, never the evidence that work completed.
 
 - Read `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md`, the RELEASES DB (`releases roadmap list`), `PROJECT/PDDA.md`, and the
   candidate marathon in full before classifying it.
+- During evidence review, for each verified-complete member task doc, read its `## Lessons Learned`
+  section (if present) as a candidate entry for root `LESSONS-LEARNED.md`. Apply the writer rules
+   before proposing an append in the confirmed cleanup set (or record `NO_ENTRY` for that member doc):
+  - **Entry format:** `## <short title>` followed by `- **cue**:`, `- **lesson**:`, `- **evidence**:`, `- **confidence**:`, `- **area**:` (`relay | marathon | pdda | gate | skills | releases`), `- **source**:`, `- **date**:`, and optional `- **superseded-by**:`.
+  - **Admission:** refuse an entry whose `cue`, `lesson` or `evidence` is empty. Adoption or a merge alone is not evidence. Writing `NO_ENTRY` is a valid outcome.
+  - **Edit verdicts:** before drafting, write one row per changed component: `helped` / `hurt` / `no observed effect` / `confounded`. Use `confounded` when several things changed at once or a single run is the only support. A lesson resting only on `confounded` rows is refused.
+  - **Public evidence:** use repo-relative paths to committed `TESTS-RESULTS/` receipts, stable IDs, or public issue/PR/commit links. Never paste DB narratives, transcripts, credentials, hostnames or absolute paths.
+  - **ATE/fuzz evidence (Phase 6a):** it counts only after semantic replay, and the cited record must show the predicate and the clean/failing controls. A raw cluster, or a replay matched only by digest or exit code, is `confounded`.
 - Default to audit-only. Do not edit, move, close issues, create commits, or change ROADMAP or
   CHANGELOG until the operator confirms the exact proposed move set.
 - Never classify from a closed issue, checked box, frontmatter word, commit message, or changelog

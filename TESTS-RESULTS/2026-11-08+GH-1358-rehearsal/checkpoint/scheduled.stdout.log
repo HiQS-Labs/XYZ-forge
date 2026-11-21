@@ -1,0 +1,22 @@
+
+============================================================
+jog: processing GH-1345 (attempt 1) at position 1
+============================================================
+jog: marathon execution gh1345-exec1 for GH-1345 (packet: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/.tick/jog/jog-01M6MX6C56Q2HD17DZ8EWRGY8C/gh1345-exec1/preflight)
+jog: advancing halted at landing boundary.
+jog: published primary checkpoint d91ef4db2fadc2118902f1f6c94d94096dbb8c3e
+marathon-drive: branch guard: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner was on its trunk branch 'development' — cut 'marathon/gh-1296-launch-lanes-fail-preflight-2026-11-08' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/marathon-system/gh-1296-launch-lanes-fail-preflight/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT-TURN → agy
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1296-launch-lanes-fail-preflight-start boundary — compressor=1364MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+
+============================================================
+jog: processing GH-1296 (attempt 1) at position 1
+============================================================
+jog: marathon execution gh1296-exec1 for GH-1296 (packet: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/.tick/jog/jog-01M6X2ZXGNHFVS268HFP4AQQ49/gh1296-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner/relay-automation/marathon-drive.sh)
+jog: cold start GH-1296: dispatched execution gh1296-exec1 has no valid result — parked; never silently refire
+jog: published primary checkpoint 26543a0018c6d15767a20be4b382bc0cd0acef38

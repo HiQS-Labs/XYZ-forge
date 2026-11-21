@@ -1,0 +1,4 @@
+unanchored_is_alternate = True
+anchored_is_candidate   = True
+vendored_is_consumer    = True
+resolver assertions passed (vendored file existence simulated only)

@@ -1,0 +1,4 @@
+jog: execution clone already has ledger changes; preserve and reconcile before dispatch
+real 0.14
+user 0.07
+sys 0.05

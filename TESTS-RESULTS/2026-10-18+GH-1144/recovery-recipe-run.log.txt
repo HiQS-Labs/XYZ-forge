@@ -1,0 +1,25 @@
+Note: switching to '8eeb20b29f6fafb1d2e016bc220d0f81c9b7b66f'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 8eeb20b docs(GH-1144): demo [express]
+Switched to branch 'main'
+[main f9cc253] chore(express): recovery receipt GH-1144 (commit 8eeb20b29f6fafb1d2e016bc220d0f81c9b7b66f)
+ 2 files changed, 11 insertions(+)
+ create mode 100644 TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl
+ create mode 100644 TESTS-RESULTS/2026-10-18+GH-1144-express/recovery-run.log
+To <tmp>
+   8eeb20b..f9cc253  main -> main

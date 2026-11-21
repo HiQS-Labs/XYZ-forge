@@ -1,0 +1,34 @@
+Reading additional input from stdin...
+OpenAI Codex v0.167.0-alpha.3.2
+--------
+workdir: <scratch>/codexnet
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a1cdc3-77bc-7fa3-826f-d15cc0978981
+--------
+user
+Run exactly this shell command and report its full output and exit code, nothing else: curl -sS --max-time 5 http://127.0.0.1:63111/probe.txt
+codex
+I’ll run the command and report its output and exit code.
+exec
+/bin/zsh -lc 'curl -sS --max-time 5 http://127.0.0.1:63111/probe.txt' in <scratch>/codexnet
+ exited 7 in 0ms:
+curl: (7) Failed to connect to 127.0.0.1 port 63111 after 0 ms: Couldn't connect to server
+
+codex
+```text
+curl: (7) Failed to connect to 127.0.0.1 port 63111 after 0 ms: Couldn't connect to server
+```
+
+Exit code: 7
+tokens used
+12,560
+```text
+curl: (7) Failed to connect to 127.0.0.1 port 63111 after 0 ms: Couldn't connect to server
+```
+
+Exit code: 7

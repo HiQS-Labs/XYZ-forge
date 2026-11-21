@@ -1,0 +1,51 @@
+# usage: python3 p14.py <scripts-dir> <label>
+import sys, os, json, shutil, subprocess, io, contextlib
+from pathlib import Path
+scripts, label = sys.argv[1], sys.argv[2]
+sys.path.insert(0, scripts)
+import merge_cleanup as mc, batch_record as br
+primary = Path("/tmp/gh1475-manual/p11-new/primary")
+origin = mc.origin_url(primary) or ""
+calls = []
+def fake_gh(args, cwd, timeout=180):
+    calls.append(args[:2])
+    if args[:2] == ["issue", "view"]:
+        return subprocess.CompletedProcess(args, 0, json.dumps({"body": "x\n" + br.START + "\nold\n" + br.END + "\n"}), "")
+    return subprocess.CompletedProcess(args, 0, "", "")
+mc._gh = fake_gh
+mc.refresh_pr_with_retry = lambda n, p, *a, **k: {"state": "MERGED", "mergeCommit": {"oid": "a" * 40}, "headRefOid": "b" * 40}
+def fresh(extra=False):
+    d = br._dir(primary, origin)
+    shutil.rmtree(d, ignore_errors=True)
+    prs = [{"number": 11, "title": "a", "headRefName": "a"}, {"number": 12, "title": "b", "headRefName": "b"}]
+    if extra: prs.append({"number": 13, "title": "c", "headRefName": "c"})
+    rec = br.new(primary, origin, "development", prs)
+    rec["issue"] = 777; rec["issue_url"] = "https://example.invalid/777"
+    br.set_outcome(rec, 11, status="merged", merge_oid="a" * 40, reconcile="failed: simulated")
+    br.set_outcome(rec, 12, status="closed")
+    return rec["path"]
+def case(name, argv, reconcile_ok=True, push_ok=True):
+    path = fresh(); calls.clear()
+    mc.run_post_merge_reconcile = lambda *a, **k: reconcile_ok
+    mc.commit_and_push_phase5_writes = lambda *a, **k: push_ok
+    sys.argv = ["merge_cleanup.py", "--primary", str(primary), "--allow-unready-primary"] + argv
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+        try: rc = mc.main()
+        except SystemExit as e: rc = e.code
+    o = json.loads(Path(path).read_text())["outcomes"]["11"]
+    print(f"{label} {name}: rc={rc} row11={o.get('status')}/{o.get('reconcile')} continuable={br.continuable(json.loads(Path(path).read_text()))} issue_edit={['issue','edit'] in calls}")
+    return path
+case("execute", ["--reconcile-pr", "11", "--execute"])
+case("dry-run", ["--reconcile-pr", "11"])
+case("reconcile-fails", ["--reconcile-pr", "11", "--execute"], reconcile_ok=False)
+case("push-fails", ["--reconcile-pr", "11", "--execute"], push_ok=False)
+# record_sweep hint on a merged-unreconciled row (+ a closed row, + an unattempted row variant)
+for variant in ("merged-unreconciled", "plus-open-row"):
+    path = fresh(extra=(variant == "plus-open-row"))
+    vf = Path("/tmp/gh1475-manual/verdict.md"); vf.write_text("verdict: deferred\nreason: manual check\n")
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+        rc = mc.record_sweep(primary, "development", vf)
+    hints = [l for l in out.getvalue().splitlines() if "--resume" in l or "--reconcile-pr" in l]
+    print(f"{label} record-sweep {variant}: rc={rc} hints={hints}")

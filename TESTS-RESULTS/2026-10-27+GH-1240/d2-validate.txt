@@ -1,0 +1,34 @@
+Validating plugin manifest: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/skills/2-daily/next-steps-mod/.claude-plugin/plugin.json
+
+⚠ Found 1 warning:
+
+  ❯ author: No author information provided. Consider adding author details for plugin attribution
+
+  ❯ types ./types/index.d.ts declares on $: nothing (no EngineInterface member)
+  ❯ types ./types/index.d.ts declares state: next-steps-mod.steps, next-steps-mod.isHidden
+
+Validating hooks: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/skills/2-daily/next-steps-mod/hooks/hooks.json
+
+  ❯ ./register.tsx hooks: session.start, command.run{command=next-steps}, prompt.compose, turn.complete, ui.render{component=AbovePrompt}
+  ❯ ./register.tsx gating hook with .catch: command.run{command=next-steps}
+  ❯ ./register.tsx calls: $.command.register, $.prompt.submit, $.prompt.suggest, $.state.get, $.state.set, $.ui.resolve
+  ❯ ./register.tsx state writes: next-steps-mod.isHidden, next-steps-mod.steps
+  ❯ ./register.tsx state reads: next-steps-mod.isHidden, next-steps-mod.steps
+
+Plugin directory checks for /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/skills/2-daily/next-steps-mod. The plugin directory is the catalog that plugins are submitted to; this is a subset of what it runs.
+
+⚠ Found 1 plugin directory warning:
+
+  ❯ .claude-plugin/plugin.json icon: No icon (ICON_MISSING). No icon found in the plugin. The validator looked for `icon` in plugin.json and for a file at .claude-plugin/icon.png or .svg, assets/icon.png or .svg, or a similar path.
+    Fix: Add a square PNG to the plugin folder at .claude-plugin/icon.png, or set `icon` in plugin.json to the path of a square PNG or JPEG in the plugin: 512 to 2048 px on each side, under 2 MB. SVG and WebP are not accepted. That file may become the listing icon only once: the first time the plugin is saved or submitted in the developer portal. Adding or changing it later does not change the icon.
+
+About these checks:
+
+  ❯ The repository root was taken to be /Users/noelsaw/Documents/GitHub Repos/XYZ-forge, the nearest parent folder with a .git folder or file. README.md and LICENSE were taken from it, because this plugin folder has none of its own. For a plugin submitted from a git repository, the repository root is the top folder of that repository, with only what is committed there, so check that the folder named above is that top folder.
+  ❯ hooks/hooks.json names a hooks module (a code file listed under `modules`). The plugin directory has rules of its own for such code, and these checks apply none of them, so passing here does not mean the directory accepts the plugin. The developer portal's own validation applies those rules.
+
+These plugin directory checks do not change the result below.
+
+The directory also runs a safety scan and a policy review that this command does not.
+
+✔ Validation passed with warnings

@@ -1,0 +1,1343 @@
+{
+ "B1": [
+  {
+   "case": "ordinary-smoke",
+   "pass": true,
+   "rcs": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/ordinary-smoke",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/ordinary-smoke",
+     "tick",
+     "--slot",
+     "1"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/ordinary-smoke",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/ordinary-smoke",
+     "tick",
+     "--slot",
+     "3"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/ordinary-smoke",
+     "tick",
+     "--slot",
+     "4"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/ordinary-smoke",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "four actions completed; 23 later-slot canaries remain pending"
+  },
+  {
+   "case": "malformed-decision",
+   "pass": true,
+   "rcs": [
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT status,rejected_reason FROM decisions": [
+     {
+      "status": "invalid-output",
+      "rejected_reason": null
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT status,rejected_reason FROM decisions": [
+     {
+      "rejected_reason": null,
+      "status": "invalid-output"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/malformed-decision",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/malformed-decision",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "malformed-decision"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/malformed-decision",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "unsafe decision classified invalid-output; safe idle executed"
+  },
+  {
+   "case": "disallowed-decision",
+   "pass": true,
+   "rcs": [
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT status,rejected_reason FROM decisions": [
+     {
+      "status": "rejected",
+      "rejected_reason": "tool-or-args-not-allowlisted"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT status,rejected_reason FROM decisions": [
+     {
+      "rejected_reason": "tool-or-args-not-allowlisted",
+      "status": "rejected"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/disallowed-decision",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/disallowed-decision",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "disallowed-decision"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/disallowed-decision",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "unsafe decision classified rejected; safe idle executed"
+  },
+  {
+   "case": "escape-create",
+   "pass": true,
+   "rcs": [
+    0,
+    1,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    1,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-create",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-create",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "escape-create"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-create",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "sandbox denied attempted write; canary and external paths unchanged"
+  },
+  {
+   "case": "escape-modify",
+   "pass": true,
+   "rcs": [
+    0,
+    1,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    1,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-modify",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-modify",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "escape-modify"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-modify",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "sandbox denied attempted write; canary and external paths unchanged"
+  },
+  {
+   "case": "escape-external",
+   "pass": true,
+   "rcs": [
+    0,
+    1,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    1,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-external",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-external",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "escape-external"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/escape-external",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "sandbox denied attempted write; canary and external paths unchanged"
+  },
+  {
+   "case": "crash-act",
+   "pass": true,
+   "rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "tick_id": "slot_001",
+      "status": "uncertain"
+     },
+     {
+      "tick_id": "slot_002",
+      "status": "completed"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "tick_id": "slot_002",
+      "tool": "summarize",
+      "status": "ok"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "status": "uncertain",
+      "tick_id": "slot_001"
+     },
+     {
+      "status": "completed",
+      "tick_id": "slot_002"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "status": "ok",
+      "tick_id": "slot_002",
+      "tool": "summarize"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-act",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-act",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "crash-act"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-act",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-act",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "uncertain recorded; one item quarantined; no ambiguous retry"
+  },
+  {
+   "case": "crash-intent",
+   "pass": true,
+   "rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "tick_id": "slot_001",
+      "status": "unpersisted-intent-abort"
+     },
+     {
+      "tick_id": "slot_002",
+      "status": "completed"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "tick_id": "slot_002",
+      "tool": "summarize",
+      "status": "ok"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "status": "unpersisted-intent-abort",
+      "tick_id": "slot_001"
+     },
+     {
+      "status": "completed",
+      "tick_id": "slot_002"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "status": "ok",
+      "tick_id": "slot_002",
+      "tool": "summarize"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-intent",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-intent",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "crash-intent"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-intent",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-intent",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "unpersisted-intent-abort recorded; one item quarantined; no ambiguous retry"
+  },
+  {
+   "case": "crash-before-snapshot",
+   "pass": true,
+   "rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-before-snapshot",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-before-snapshot",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "crash-before-snapshot"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-before-snapshot",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/crash-before-snapshot",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "missing snapshot paused instance and quarantined all pending inputs"
+  },
+  {
+   "case": "missing-decision",
+   "pass": true,
+   "rcs": [
+    0,
+    70,
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    70,
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "tick_id": "slot_001",
+      "status": "unpersisted-intent-abort"
+     },
+     {
+      "tick_id": "slot_002",
+      "status": "completed"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "tick_id": "slot_002",
+      "tool": "summarize",
+      "status": "ok"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "status": "unpersisted-intent-abort",
+      "tick_id": "slot_001"
+     },
+     {
+      "status": "completed",
+      "tick_id": "slot_002"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "status": "ok",
+      "tick_id": "slot_002",
+      "tool": "summarize"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-decision",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-decision",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "crash-intent"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "-c",
+     "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); c.executescript(sys.argv[2]); c.close()",
+     "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone/temp/factory-primitive/gh1280/b1/missing-decision/instances/C/state.db",
+     "DELETE FROM decisions WHERE tick_id='slot_001';"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-decision",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-decision",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "unpersisted-intent-abort recorded; one item quarantined; no ambiguous retry"
+  },
+  {
+   "case": "missing-snapshot",
+   "pass": true,
+   "rcs": [
+    0,
+    70,
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    70,
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-snapshot",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-snapshot",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "crash-intent"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "-c",
+     "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); c.executescript(sys.argv[2]); c.close()",
+     "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone/temp/factory-primitive/gh1280/b1/missing-snapshot/instances/C/state.db",
+     "DELETE FROM decisions WHERE tick_id='slot_001'; DELETE FROM snapshots WHERE tick_id='slot_001';"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-snapshot",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-snapshot",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "missing snapshot paused instance and quarantined all pending inputs"
+  },
+  {
+   "case": "missing-receipt",
+   "pass": true,
+   "rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    70,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "tick_id": "slot_001",
+      "status": "uncertain"
+     },
+     {
+      "tick_id": "slot_002",
+      "status": "completed"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "tick_id": "slot_001",
+      "tool": "note",
+      "status": "ok"
+     },
+     {
+      "tick_id": "slot_002",
+      "tool": "summarize",
+      "status": "ok"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT tick_id,status FROM receipts ORDER BY tick_id": [
+     {
+      "status": "uncertain",
+      "tick_id": "slot_001"
+     },
+     {
+      "status": "completed",
+      "tick_id": "slot_002"
+     }
+    ],
+    "SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents": [
+     {
+      "status": "ok",
+      "tick_id": "slot_001",
+      "tool": "note"
+     },
+     {
+      "status": "ok",
+      "tick_id": "slot_002",
+      "tool": "summarize"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-receipt",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-receipt",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "missing-receipt"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-receipt",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/missing-receipt",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "uncertain recorded; one item quarantined; no ambiguous retry"
+  },
+  {
+   "case": "unbilled-error",
+   "pass": true,
+   "rcs": [
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT status,billing_status,actual_cost FROM reservations": [
+     {
+      "status": "released",
+      "billing_status": "unbilled",
+      "actual_cost": 0.0
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT status,billing_status,actual_cost FROM reservations": [
+     {
+      "actual_cost": 0.0,
+      "billing_status": "unbilled",
+      "status": "released"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/unbilled-error",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0.1"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/unbilled-error",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "unbilled-error"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/unbilled-error",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "reservation released; honest unknown-cost state preserved"
+  },
+  {
+   "case": "timeout-unknown",
+   "pass": true,
+   "rcs": [
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT status,billing_status,actual_cost FROM reservations": [
+     {
+      "status": "held",
+      "billing_status": "unknown",
+      "actual_cost": null
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT status,billing_status,actual_cost FROM reservations": [
+     {
+      "actual_cost": null,
+      "billing_status": "unknown",
+      "status": "held"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/timeout-unknown",
+     "init",
+     "--daily-cap",
+     "0.1",
+     "--max-call-cost",
+     "0.1"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/timeout-unknown",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "timeout-unknown"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/timeout-unknown",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "reservation held; honest unknown-cost state preserved"
+  },
+  {
+   "case": "budget-cap",
+   "pass": false,
+   "rcs": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "status_match": true,
+   "queries_match": false,
+   "queries": {
+    "SELECT json FROM events WHERE stage='evaluate'": [
+     {
+      "json": "{\"agent_called\":true,\"stage\":\"evaluate\",\"status\":\"timeout\",\"tick_id\":\"slot_001\",\"ts\":\"2026-10-31T02:10:02.928661+00:00\"}"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT json FROM events WHERE stage='evaluate'": [
+     {
+      "json": "{\"agent_called\":true,\"stage\":\"evaluate\",\"status\":\"timeout\",\"tick_id\":\"slot_001\",\"ts\":\"2026-10-29T04:06:50.267477+00:00\"}"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/budget-cap",
+     "init",
+     "--daily-cap",
+     "0.1",
+     "--max-call-cost",
+     "0.1"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/budget-cap",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "timeout-unknown"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/budget-cap",
+     "tick",
+     "--slot",
+     "2"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/budget-cap",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "second tick paused before snapshot or agent evaluation"
+  },
+  {
+   "case": "tool-failure",
+   "pass": true,
+   "rcs": [
+    0,
+    1,
+    0
+   ],
+   "recorded_rcs": [
+    0,
+    1,
+    0
+   ],
+   "status_match": true,
+   "queries_match": true,
+   "queries": {
+    "SELECT status,error FROM tool_runs": [
+     {
+      "status": "failed",
+      "error": "tool error: injected tool failure"
+     }
+    ]
+   },
+   "recorded_queries": {
+    "SELECT status,error FROM tool_runs": [
+     {
+      "error": "tool error: injected tool failure",
+      "status": "failed"
+     }
+    ]
+   },
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/tool-failure",
+     "init",
+     "--daily-cap",
+     "1",
+     "--max-call-cost",
+     "0"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/tool-failure",
+     "tick",
+     "--slot",
+     "1",
+     "--fault",
+     "tool-failure"
+    ],
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/tool-failure",
+     "status"
+    ]
+   ],
+   "stderr_tails": [],
+   "recorded_detail": "explicit failed receipt; input remains pending"
+  },
+  {
+   "case": "instance-path-guard",
+   "pass": true,
+   "rcs": [
+    2
+   ],
+   "recorded_rcs": [
+    2
+   ],
+   "status_match": null,
+   "queries_match": true,
+   "queries": {},
+   "recorded_queries": {},
+   "adapted_argv": [
+    [
+     "/opt/homebrew/bin/python3",
+     "utils/py/harness.py",
+     "factory-primitive",
+     "--run-root",
+     "temp/factory-primitive/gh1280/b1/instance-path-guard",
+     "init",
+     "--instance",
+     "../escape"
+    ]
+   ],
+   "stderr_tails": [
+    "factory-primitive: instance must be a simple name without path separators\n"
+   ],
+   "recorded_detail": "path-like instance name rejected before initialization"
+  }
+ ],
+ "B2": {
+  "pass": true,
+  "rows_before": {
+   "receipts": 1,
+   "decisions": 1,
+   "intents": 1,
+   "tool_runs": 1
+  },
+  "rows_after": {
+   "receipts": 1,
+   "decisions": 1,
+   "intents": 1,
+   "tool_runs": 1
+  },
+  "repeat_stdout": [
+   "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+   "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+   "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+   "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n"
+  ]
+ },
+ "B3": {
+  "pass": true,
+  "rcs": [
+   0,
+   70,
+   0,
+   0
+  ],
+  "receipts": [
+   {
+    "tick_id": "slot_001",
+    "status": "uncertain"
+   },
+   {
+    "tick_id": "slot_002",
+    "status": "completed"
+   }
+  ],
+  "status": {
+   "heartbeat": {
+    "age_s": 0.1,
+    "stage": "closed",
+    "tick_id": "slot_002"
+   },
+   "last_receipt": {
+    "error": null,
+    "status": "completed",
+    "tick_id": "slot_002"
+   },
+   "lock": "free",
+   "paused": false,
+   "pending": 25,
+   "quarantined": 1,
+   "quarantined_ids": [
+    "note-001"
+   ],
+   "spent_or_reserved": 0,
+   "ticks": {
+    "completed": 1,
+    "uncertain": 1
+   },
+   "unknown_cost": false
+  },
+  "slot1_tool_runs_before_recovery": 0,
+  "slot1_tool_runs_after_recovery": 0,
+  "slot1_output_files": [],
+  "surviving_pids": []
+ }
+}

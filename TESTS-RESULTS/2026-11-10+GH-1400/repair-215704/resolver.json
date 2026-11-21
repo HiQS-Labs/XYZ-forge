@@ -1,0 +1,22 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit afa7b6598d",
+  "log": [
+    "CHANGELOG: proven prefix-additive sections; existing history preserved",
+    "classification: keep=theirs generation ours/theirs=(2513, 2521) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-1400: rc=0 ",
+    "roadmap rate GH-1400 75/60/50/80: rc=0 ",
+    "roadmap update GH-1400 (section/marker): rc=0 ",
+    "roadmap accepted-start GH-1400 (rmi-01M73QJ7J7D35D29XMDZ1FEG2C): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "afa7b6598d003e5abe5d50a1aed4cf2686f7f5a6",
+  "conflict_set": [
+    "CHANGELOG.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}

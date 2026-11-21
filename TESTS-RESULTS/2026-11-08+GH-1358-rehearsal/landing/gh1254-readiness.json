@@ -1,0 +1,33 @@
+{
+  "ready": true,
+  "next_action": null,
+  "unscoped_index_only": [],
+  "issue_state": {
+    "status": "OPEN",
+    "closed_at": null,
+    "detail": "issue #1254 is OPEN"
+  },
+  "frozen_artifacts": [],
+  "acceptance_fidelity": {
+    "status": "match",
+    "cause": null,
+    "detail": "4/4 criteria copied verbatim from issue #1254",
+    "issue": "1254",
+    "dropped": [],
+    "added": [],
+    "declared": 0
+  },
+  "source_url": {
+    "status": "ok",
+    "detail": "source: resolves to issue #1254 (https://github.com/HiQS-Labs/XYZ-forge/issues/1254)",
+    "issue": "1254",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1254",
+    "slug": "HiQS-Labs/XYZ-forge"
+  },
+  "acceptance_inline": {
+    "criteria": 4,
+    "scope": "acceptance-section",
+    "over_cap": 0,
+    "lossless": true
+  }
+}

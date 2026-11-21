@@ -1,0 +1,17 @@
+Cloning into '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc'...
+  FAIL: GH-382 reproducer was not attributed as gate-killed (rc=5, reason=pre-advance-failed): wall-clock (run window): 14s
+per done-task: ≥0 tokens, 3s wall-clock
+memory: compressor peak: 835MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+    run(['bash','test/gh390-gate-guard.sh'])
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 13, in run
+    def run(args):subprocess.run(args,cwd=clone,env=env,check=True)
+                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['bash', 'test/gh390-gate-guard.sh']' returned non-zero exit status 1.

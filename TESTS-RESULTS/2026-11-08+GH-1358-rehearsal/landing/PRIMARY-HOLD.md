@@ -1,0 +1,5 @@
+# Explicit peer landing hold
+
+The operator requested a primary-write hold for peer PR1318 then1316. Primary was verified clean at980afdb13e925a4ca2dd2353155494c9320ea532; that checkpoint was already published. SupervisorPID1992 alone was SIGSTOPped. Marathon2044 and gateprocessgroup2125 stayedrunning, preserving the720s gate guard. The ownedprimarydriverlock was preserved outsideprimary and releasedforpeer. The pendingresultdirectory was movedoutsideprimary and the originalpath madea symlink; postgate result output remainslocaloutsideprimary. No gate/peerprocess killed.
+
+The stopped supervisor cannot project the result to queue or publish a checkpoint. Do not automatically SIGCONT it after peer merges: its in-memory checkpoint base is980afdb13 and must be reconciled to peer changes beforepublication. Preserve the local result and heldprocess/taskidentity until explicitpeerrelease. The hold does not extend19:06:18Z or authorize additionalbuilders/gates/merges. Original checklist in primarytemp is notmodifiedduringhold; this is a handoffreceipt, not a secondplan.

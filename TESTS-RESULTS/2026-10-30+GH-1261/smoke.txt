@@ -1,0 +1,6 @@
+# GH-1261 smoke: replay of completed slots (2026-10-30T14:49:24Z), HEAD 7bc1742d
+run-root tree digest before: 79f59842949cc78c08e1bfcca4c7d7e6f53d99e84cea2e53386aada49f92145b
+$ tick --slot 5: {"status":"completed","tick_id":"slot_005"} rc=0
+$ tick --slot 22: {"status":"completed","tick_id":"slot_022"} rc=0
+run-root tree digest after:  79f59842949cc78c08e1bfcca4c7d7e6f53d99e84cea2e53386aada49f92145b
+$ status: {"quarantined_ids": [], "lock": "free", "last_receipt": {"error": null, "status": "completed", "tick_id": "slot_022"}}

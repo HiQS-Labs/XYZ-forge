@@ -1,0 +1,255 @@
+=== REVISIONS ===
+base_sha=6062aa2ea77a01a9d395f0cee971a0bdcf62c3e0
+candidate_code_sha=b280e6709ce93b7e89676d0ac61c859bce119968
+ks04_authoritative_sha=b2fddf79a0cbc119d72e80733708c1116d994be1
+
+=== CONTROL_1A_RED_PRE_CHANGE_BASE (base=6062aa2ea77a01a9d395f0cee971a0bdcf62c3e0, rc=3) ===
+CMD: /Users/noelsaw/kickstart-clones/mypyvenv/bin/python3 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/base_sb/utils/py/relay_drive.py --relay-file /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/base_sb/relay-system/2026-11-20/test-ks05.md --relay-task RELAY-C1-RED --agent-cmd /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/base_sb/shim_zero.sh --reviewer codex --review-once
+SHIM: append newline to sandbox relay file without review block
+LEGACY_ESC=cap-stalled
+STOP_RECEIPTS=0
+STDERR:
+relay-drive: GH-370 worktree state (main tree fallback: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/base_sb) changed-files=5
+relay-drive: review-once — the relay file moved but the reviewer appended NO review block: a zero-output turn is not review coverage (GH-397) — genuine stall
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+
+
+
+=== CONTROL_1B_GREEN_ZERO_OUTPUT_STALL (rc=3) ===
+CMD: /Users/noelsaw/kickstart-clones/mypyvenv/bin/python3 /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/utils/py/relay_drive.py --relay-file /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/relay-system/2026-11-20/test-ks05.md --relay-task RELAY-C1-GREEN --agent-cmd /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/shim_zero.sh --reviewer codex --review-once
+LEGACY_ESC=zero-output-stall
+RECEIPT={"exit_code": 3, "invocation_id": "RELAY-C1-GREEN-59295-1795172616154", "reason": "zero-output-stall", "recorded_at": "2026-11-20T11:03:36Z", "relay_task": "RELAY-C1-GREEN", "schema": 1, "stop_reason": "zero-output-stall"}
+STDERR:
+relay-drive: GH-370 worktree state (main tree fallback: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb) changed-files=5
+relay-drive: review-once — the relay file moved but the reviewer appended NO review block: a zero-output turn is not review coverage (GH-397) — genuine stall
+relay-drive: stop-reason=zero-output-stall invocation_id=RELAY-C1-GREEN-59295-1795172616154 exit_code=3 receipt=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/.relay-scratch/stop-reasons/RELAY-C1-GREEN-59295-1795172616154.json
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+
+
+
+=== CONTROL_2A_ADAPTER_CODEX_DECIDE ===
+base_429_result='rate-limited'
+cand_429_result='provider-quota'
+cand_non_quota_result='adapter-error'
+
+=== CONTROL_2B_LIVE_STDERR_QUOTA_VS_TURN_ERROR ===
+429_rc=1 receipt={"exit_code": 1, "invocation_id": "RELAY-C2-429-59324-1795172616930", "reason": "provider-quota", "recorded_at": "2026-11-20T11:03:37Z", "relay_task": "RELAY-C2-429", "schema": 1, "stop_reason": "provider-quota"}
+err_rc=1 receipt={"exit_code": 1, "invocation_id": "RELAY-C2-ERR-59347-1795172617391", "reason": "turn-error", "recorded_at": "2026-11-20T11:03:37Z", "relay_task": "RELAY-C2-ERR", "schema": 1, "stop_reason": "turn-error"}
+
+=== CONTROL_3_FRESH_LOG_ISOLATION_AND_REUSED_LOG_FALSIFIERS ===
+fresh_same_task_logs=['CODEX_LOG=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/relay-system/logs/2026-11-20/codex-turn-RELAY-C3-SAME-RELAY-C3-SAME-59370-1795172617988-r0-7e7ec83a.log', 'CODEX_LOG=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/relay-system/logs/2026-11-20/codex-turn-RELAY-C3-SAME-RELAY-C3-SAME-59393-1795172618449-r0-d618f321.log', 'CODEX_LOG=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/relay-system/logs/2026-11-20/codex-turn-RELAY-C3-SAME-RELAY-C3-SAME-59417-1795172618952-r0-52f95879.log']
+turn1_quota={"exit_code": 1, "invocation_id": "RELAY-C3-SAME-59370-1795172617988", "reason": "provider-quota", "recorded_at": "2026-11-20T11:03:38Z", "relay_task": "RELAY-C3-SAME", "schema": 1, "stop_reason": "provider-quota"}
+turn2_repeated_quota={"exit_code": 1, "invocation_id": "RELAY-C3-SAME-59393-1795172618449", "reason": "provider-quota", "recorded_at": "2026-11-20T11:03:38Z", "relay_task": "RELAY-C3-SAME", "schema": 1, "stop_reason": "provider-quota"}
+turn3_generic_after_quota={"exit_code": 1, "invocation_id": "RELAY-C3-SAME-59417-1795172618952", "reason": "turn-error", "recorded_at": "2026-11-20T11:03:39Z", "relay_task": "RELAY-C3-SAME", "schema": 1, "stop_reason": "turn-error"}
+caller_reused_stale429_partial_overwrite={"exit_code": 1, "invocation_id": "RELAY-C3-SAME-59441-1795172619455", "reason": "turn-error", "recorded_at": "2026-11-20T11:03:39Z", "relay_task": "RELAY-C3-SAME", "schema": 1, "stop_reason": "turn-error"}
+caller_reused_stale429_live_stderr_429={"exit_code": 1, "invocation_id": "RELAY-C3-SAME-59473-1795172619952", "reason": "provider-quota", "recorded_at": "2026-11-20T11:03:40Z", "relay_task": "RELAY-C3-SAME", "schema": 1, "stop_reason": "provider-quota"}
+
+=== CONTROL_4A_POST_START_CONSULT_ESCALATION_WRITE_FAILED (rc=1) ===
+LEGACY_ESC=consult-escalation-write-failed
+RECEIPT={"exit_code": 1, "invocation_id": "RELAY-C4-CV-59498-1795172620551", "reason": "consult-escalation-write-failed", "recorded_at": "2026-11-20T11:03:41Z", "relay_task": "RELAY-C4-CV", "schema": 1, "stop_reason": "consult-escalation-write-failed"}
+STDERR:
+relay-drive: NOTE — relay file is not committed at HEAD: relay-system/2026-11-20/test-nostatus.md
+  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, but its own
+  worktree-seeding step copies this file's current content in regardless — this is
+  usually fine. Commit it for a clean paper trail, or re-run with
+  RELAY_WORKTREE_ISOLATION=0 if you want to rule out isolation entirely; neither is required.
+relay-drive: GH-370 worktree state (main tree fallback: /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb) changed-files=16
+relay-drive: consult-verify DIVERGENCE after codex turn (taker: )
+codex: DISAGREE
+
+relay-drive: no STATUS: line in /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/relay-system/2026-11-20/test-nostatus.md -- the escalation write did not land.
+relay-drive: refusing to report an escalation that was never written (GH-204).
+relay-drive: stop-reason=consult-escalation-write-failed invocation_id=RELAY-C4-CV-59498-1795172620551 exit_code=1 receipt=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/.relay-scratch/stop-reasons/RELAY-C4-CV-59498-1795172620551.json
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 5s
+per done-task: n/a (0 tasks done)
+  turn peak RSS: codex: 1MB peak RSS
+
+
+
+=== CONTROL_4B_PREFLIGHT_LOCK_CONTENTION_PRESERVES_LEGACY (rc=1) ===
+LEGACY_ESC=active-driver-preserved-reason
+RECEIPT={"exit_code": 1, "invocation_id": "RELAY-C4-LOCK-59526-1795172621278", "reason": "driver-lock-active", "recorded_at": "2026-11-20T11:03:41Z", "relay_task": "RELAY-C4-LOCK", "schema": 1, "stop_reason": "driver-lock-active"}
+STDERR:
+relay-drive: another driver is active in this repo (pid 59233, lock: .git/relay-driver.lock).
+relay-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).
+relay-drive: stop-reason=driver-lock-active invocation_id=RELAY-C4-LOCK-59526-1795172621278 exit_code=1 receipt=/Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/.relay-scratch/stop-reasons/RELAY-C4-LOCK-59526-1795172621278.json
+
+
+=== CONTROL_5_KS04_DIRECT_COMPATIBILITY (ks04_sha=b2fddf79a0cbc119d72e80733708c1116d994be1) ===
+CMD_QUOTA: python3 kickstart_status.py --record /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/ks04_run_record.md --skip-prs --receipt /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/.relay-scratch/stop-reasons/RELAY-C2-429-59324-1795172616930.json --json (rc=0)
+STDOUT_QUOTA:
+{
+  "attempts": {
+    "landing_clone": "/private/tmp/landing",
+    "note": null,
+    "scanned_records": 0,
+    "stale_attempts": []
+  },
+  "current_item": null,
+  "final_qa": {
+    "development_head": null,
+    "final_qa_sha": null,
+    "final_qa_verdict": null,
+    "later_landings": [],
+    "reason": "no canonical GATE: final-QA recorded",
+    "status": "missing"
+  },
+  "interventions": [],
+  "items_done": [],
+  "landing_clone_mismatch_warning": null,
+  "landing_clone_pinned": "/private/tmp/landing",
+  "liveness": {
+    "advisory": null,
+    "newest_log": null,
+    "newest_log_age_seconds": null,
+    "ownership": {
+      "children": "unknown",
+      "lock": "unknown",
+      "owner": "unknown",
+      "owner_pid": null,
+      "owner_pid_live": null,
+      "sessions": "unknown"
+    },
+    "quiet_seconds": 120,
+    "stale_seconds": 600,
+    "state": "unknown"
+  },
+  "prs": {
+    "error": "skipped (--skip-prs)",
+    "items": [],
+    "note": "derived PR hygiene summary only; not a merge-readiness approval engine"
+  },
+  "record_errors": [],
+  "record_valid": true,
+  "record_version": 1,
+  "schema": 1,
+  "stop_reason": {
+    "attribution": "run-receipt",
+    "source": "RELAY-C2-429-59324-1795172616930.json",
+    "stop_reason": "provider-quota",
+    "unattributed_shared_file_present": false
+  },
+  "unapplied_amendments": []
+}
+
+CMD_LOCK: python3 kickstart_status.py --record /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/ks04_run_record.md --skip-prs --receipt /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-BFIR4Q/tmpnjkt3f9z/cand_sb/.relay-scratch/stop-reasons/RELAY-C4-LOCK-59526-1795172621278.json --json (rc=0)
+STDOUT_LOCK:
+{
+  "attempts": {
+    "landing_clone": "/private/tmp/landing",
+    "note": null,
+    "scanned_records": 0,
+    "stale_attempts": []
+  },
+  "current_item": null,
+  "final_qa": {
+    "development_head": null,
+    "final_qa_sha": null,
+    "final_qa_verdict": null,
+    "later_landings": [],
+    "reason": "no canonical GATE: final-QA recorded",
+    "status": "missing"
+  },
+  "interventions": [],
+  "items_done": [],
+  "landing_clone_mismatch_warning": null,
+  "landing_clone_pinned": "/private/tmp/landing",
+  "liveness": {
+    "advisory": null,
+    "newest_log": null,
+    "newest_log_age_seconds": null,
+    "ownership": {
+      "children": "unknown",
+      "lock": "unknown",
+      "owner": "unknown",
+      "owner_pid": null,
+      "owner_pid_live": null,
+      "sessions": "unknown"
+    },
+    "quiet_seconds": 120,
+    "stale_seconds": 600,
+    "state": "unknown"
+  },
+  "prs": {
+    "error": "skipped (--skip-prs)",
+    "items": [],
+    "note": "derived PR hygiene summary only; not a merge-readiness approval engine"
+  },
+  "record_errors": [],
+  "record_valid": true,
+  "record_version": 1,
+  "schema": 1,
+  "stop_reason": {
+    "attribution": "run-receipt",
+    "source": "RELAY-C4-LOCK-59526-1795172621278.json",
+    "stop_reason": "driver-lock-active",
+    "unattributed_shared_file_present": false
+  },
+  "unapplied_amendments": []
+}
+
+
+=== REGRESSION_test/gh115-round-cap.sh (rc=0) ===
+== test: gh115-round-cap ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh115-round-cap.XXXXXX.gihPzIAe09
+  PASS: Stalled run exits 4 and reports cap-stalled
+  PASS: Progressing run grants extension, approves, and records it
+  PASS: Progressing run hits hard ceiling and escalates
+  PASS: marathon-drive respects round-cap: in brief when no CLI arg given
+  PASS: marathon-drive --round-cap=7 overrides brief
+  PASS: marathon-drive --round-cap 9 overrides brief
+  PASS: marathon-drive correctly captured cap-stalled in durable ESCALATION.md (stale data ignored)
+  gh115-round-cap: 7 pass, 0 fail
+
+
+
+=== REGRESSION_test/gh505-relay-attest.sh (rc=0) ===
+ile for a reviewer)
+  PASS: G: both prompts render non-empty
+  PASS: G: builder prompt does not invite STATUS: Approved
+  PASS: G: reviewer prompt carries the approval instruction
+
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] jog: task GH-7 passed; auto-merging into development...
+jog: task GH-7 passed; auto-merging into development...
+  PASS: I/J: jog landing parks on merge failure, missing PR, drifted candidate; merges with --match-head-commit; no driver override
+  PASS: RED CONTROL A: base driver (a6441b9b) exits 0 on a BUILDER-written Approved
+  PASS: RED CONTROL C: base driver exits 0 on a pre-approved file after 0 turns
+
+viewed head 65c81a814680 (candidate-drifted-from-reviewed-head) — parking GH-7
+jog: merge refused: no valid reviewer attestation for this task (GH-505) — parking GH-7
+jog: auto-merge refused/failed: merge refused: candidate 6cab8a9d3c93 changes non-transcript content after reviewed head 65c81a814680 (candidate-drifted-from-reviewed-head)
+jog: auto-merge refused/failed: merge failed (gh exit 1): 
+jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)
+jog: --reviewer must differ from --builder (both are 'rev')
+

@@ -1,0 +1,23 @@
+jog: enqueued GH-1358
+
+============================================================
+jog: processing GH-1358 (attempt 1) at position 1
+============================================================
+jog: stopping queue execution on task failure.
+observed dispatch mode run
+jog: reset GH-1358 to pending
+
+============================================================
+jog: processing GH-1358 (attempt 2) at position 1
+============================================================
+jog: stopping queue execution on task failure.
+observed dispatch mode run
+RED: old explicit requeue still selected ordinary run
+jog: reset GH-1358 to pending
+
+============================================================
+jog: processing GH-1358 (attempt 3) at position 1
+============================================================
+jog: stopping queue execution on task failure.
+observed dispatch mode retry-build
+PASS: deliberate requeue selects existing fresh-token dispatch; no fixture model was called

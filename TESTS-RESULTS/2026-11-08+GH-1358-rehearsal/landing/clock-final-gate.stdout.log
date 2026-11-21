@@ -1,0 +1,818 @@
+jog: gate-only retry for GH-1254 against head c6cc2d6d7a3dddf313f08954b842f8136fc294f0 (no builder turn; satisfied-lane path)
+marathon-drive: phase gh-1254-outer-loop-borrow-decl already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json,datetime,re
+deadline=datetime.datetime.fromisoformat('"'"'2026-11-08T19:06:18+00:00'"'"').timestamp()
+gate_started=datetime.datetime.now(datetime.timezone.utc).timestamp()
+assert deadline-gate_started>=720, '"'"'fixed preparation deadline leaves less than reduced 720s gate cap; preserve candidate without starting gate'"'"'
+root=pathlib.Path.cwd().resolve()
+assert root==pathlib.Path(os.environ['"'"'MARATHON_ROOT'"'"']).resolve()
+env={k:v for k,v in os.environ.items() if k in ('"'"'PATH'"'"','"'"'HOME'"'"','"'"'USER'"'"','"'"'LOGNAME'"'"','"'"'SHELL'"'"','"'"'TMPDIR'"'"','"'"'LANG'"'"','"'"'LC_ALL'"'"','"'"'TERM'"'"','"'"'SSH_AUTH_SOCK'"'"','"'"'GH_TOKEN'"'"','"'"'GITHUB_TOKEN'"'"')}
+def git(where,*args):return subprocess.check_output(['"'"'git'"'"','"'"'-C'"'"',str(where),*args],text=True,env=env).strip()
+sha=git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"');branch=git(root,'"'"'symbolic-ref'"'"','"'"'--short'"'"','"'"'HEAD'"'"');origin=git(root,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')
+assert branch.startswith('"'"'marathon/'"'"') and origin=='"'"'https://github.com/HiQS-Labs/XYZ-forge.git'"'"'
+clone=pathlib.Path(tempfile.mkdtemp(prefix='"'"'gh1358-lane-gate-'"'"')).resolve()
+print('"'"'GH1358 isolated existing gate/push:'"'"',clone,'"'"'candidate'"'"',sha,flush=True)
+def run(args):subprocess.run(args,cwd=clone,env=env,check=True)
+run(['"'"'git'"'"','"'"'clone'"'"','"'"'--no-local'"'"','"'"'--no-hardlinks'"'"',str(root),str(clone)])
+run(['"'"'git'"'"','"'"'remote'"'"','"'"'set-url'"'"','"'"'origin'"'"',origin]);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"']);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+run(['"'"'python3'"'"','"'"'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py'"'"','"'"'utils/py/marathon_drive.py'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh390-gate-guard.sh'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh280-jog-marathon-adapter.sh'"'"'])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'--push'"'"','"'"'--all'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"' and not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+live=subprocess.check_output(['"'"'ps'"'"','"'"'-axo'"'"','"'"'pid=,command='"'"'],text=True)
+other_gates=[line for line in live.splitlines() if re.match(r'"'"'^\s*\d+\s+(?:/\S*/)?bash\s+(?:\S*/)?(?:validate|ci-local)\.sh(?:\s|$)'"'"',line)]
+print('"'"'pre-push live host gate check:'"'"',other_gates,flush=True)
+assert not other_gates, '"'"'another host full gate is active; no peer was stopped'"'"'
+assert datetime.datetime.now(datetime.timezone.utc).timestamp()<deadline, '"'"'fixed preparation deadline reached before push'"'"'
+run(['"'"'git'"'"','"'"'push'"'"','"'"'--set-upstream'"'"','"'"'origin'"'"','"'"'HEAD:refs/heads/'"'"'+branch])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin and git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"'
+assert not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+receipt=clone/'"'"'.xyz/receipts'"'"'/f'"'"'{sha}.json'"'"';data=json.loads(receipt.read_text())
+assert data['"'"'sha'"'"']==sha and data['"'"'exit_code'"'"']==0 and data.get('"'"'scope'"'"')=='"'"'full'"'"'
+dest=root/'"'"'.xyz/receipts'"'"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)
+print('"'"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'"'"',flush=True)
+'
+GH1358 isolated existing gate/push: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-uxra5laa candidate c6cc2d6d7a3dddf313f08954b842f8136fc294f0
+githooks: installed — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-uxra5laa/.git/hooks/pre-push
+  It runs the gate before any push, on EVERY branch in this clone (and its worktrees),
+  including branches with no githooks/ directory (GH-549).
+  Bypass: git push --no-verify   or   XYZ_SKIP_PREPUSH=1 git push
+  Verify: bash githooks/install.sh --check
+githooks: INSTALLED — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-uxra5laa/.git/hooks/pre-push is the gate stub (executable)
+[
+  {
+    "case": "normal-success",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 0,
+    "pass": true
+  },
+  {
+    "case": "genuine-red",
+    "exit": 7,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 7 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 7
+    },
+    "expected": 7,
+    "pass": true
+  },
+  {
+    "case": "sleep-running",
+    "exit": 108,
+    "kills": [
+      "wall clock 20s >= cap 10s"
+    ],
+    "log": [
+      "gate-guard: gate exit 108 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  },
+  {
+    "case": "sleep-child-already-exited",
+    "exit": 108,
+    "kills": [],
+    "log": [
+      "gate-guard: refusing completed gate \u2014 wall clock 20s >= cap 10s",
+      "gate-guard: gate exit 108 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  },
+  {
+    "case": "backward-wall-monotonic-expiry",
+    "exit": 108,
+    "kills": [],
+    "log": [
+      "gate-guard: refusing completed gate \u2014 wall clock 11s >= cap 10s",
+      "gate-guard: gate exit 108 after 11s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  },
+  {
+    "case": "cap-disabled",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 0s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 0,
+    "pass": true
+  },
+  {
+    "case": "group-missing-late-completion",
+    "exit": 108,
+    "kills": [],
+    "log": [
+      "gate-guard: refusing completed gate \u2014 wall clock 20s >= cap 10s",
+      "gate-guard: gate exit 108 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  }
+]
+== test: gh390-gate-guard ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.hzHfdTTCG8
+  PASS: all CPU signal/Bash attribution shapes are covered through the module-level seam
+  PASS: an honest gate still passes under the guard (exit 0)
+  PASS: peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)
+  PASS: a runaway allocator halts the phase (exit 5) instead of the host
+  PASS: layer 3 killed the gate's whole process group
+  PASS: ESCALATION.md records reason: gate-killed (distinct from a red gate)
+  PASS: the kill landed promptly (4s), well before the hog's own 1 GB ceiling
+  PASS: a hanging gate is killed at the wall-clock cap (4s, exit 5)
+  PASS: the kill reason names the wall-clock cap
+  PASS: a CPU spin is killed by the kernel-enforced cap (3s, exit 5)
+  PASS: a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect
+  PASS: GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed
+  PASS: GH-382 baseline records group kill and distinct guard exit (108, 5s)
+  PASS: a red gate still halts the phase (exit 5)
+  PASS: a red gate keeps reason pre-advance-failed — the guard does not relabel real failures
+  PASS: MARATHON_GATE_GUARD=0 restores the unguarded gate (the hog completes, exit 0)
+  PASS: no kill occurred with the guard disabled
+  PASS: GH-773: ps outcomes and every summary form are classified through the module seam
+  PASS: GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)
+  PASS: GH-773: the RSS-unavailable warning is logged exactly once across several polls
+  PASS: GH-773: the summary reports the peak as unknown
+  PASS: GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run
+  PASS: GH-773 control: a working ps still yields a numeric peak and no warning
+  gh390-gate-guard: 23 pass, 0 fail
+== test: gh280-jog-marathon-adapter ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.nwblRFNnq3
+  PASS: A1 root preflight exits 0 (candidate ready)
+  PASS: A2 packet still carries run-candidate.json (additive)
+  PASS: A2 packet still carries lane-plan.json (additive)
+  PASS: A2 packet still carries freshness.json (additive)
+  PASS: A2 packet still carries readiness.json (additive)
+  PASS: A2 packet still carries marathon-invocation.txt (additive)
+  PASS: A2 packet still carries packet.md (additive)
+  PASS: A2 packet still carries marathon-invocation.json (additive)
+  PASS: A3 invocation artifact schema is marathon-invocation@1
+  PASS: A4 argv[0] is the absolute executable drive path
+  PASS: A5 env entries carry swarm/session/isolation
+  PASS: A6 packet_path resolves
+  PASS: A7 result_path is beside the packet
+  PASS: A8 identity fields: issue/base_ref/builder/reviewer
+  PASS: A9 phase/lane/gate/artifacts carried
+  PASS: A10 argv embeds --result-file with result_path
+  PASS: A11 argv embeds --phase-brief with packet_path
+  PASS: A12 run-candidate@1 unchanged (compat)
+  PASS: A13 text invocation hint unchanged (compat)
+  PASS: B1 load_marathon_invocation accepts the real artifact
+  PASS: B2 unsupported schema version refused
+  PASS: B3 non-executable argv[0] refused
+  PASS: C1 approved run exits 0
+  PASS: C1 receipt written
+  PASS: C1 receipt outcome approved / exit 0
+  PASS: C1 receipt carries phase/lane/token
+  PASS: C1 unreached issue is an explicit null
+  PASS: C1 gate green + gate receipt path resolves
+  PASS: C1 head_sha matches repo HEAD
+  PASS: C1 no branch redirect recorded
+  PASS: C1 timestamps present
+  PASS: C1 attempt count/max recorded
+  PASS: C1 load_marathon_result accepts the real receipt
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C2 missing gate refuses pre-dispatch (exit 2)
+  PASS: C2 refusal still writes a receipt
+  PASS: C2 receipt outcome refused + reason
+  PASS: C2 gate result not-run
+  PASS: C2 nothing dispatched (no builder/reviewer turn spent)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C3 gate failure exits 5
+  PASS: C3 receipt escalated/pre-advance-failed/gate red
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C4 no-progress exits 3
+  PASS: C4 receipt reason no-progress
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C5 cap escalation exits 4
+  PASS: C5 receipt reason cap-or-close-mismatch
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C6 timeout exits 7
+  PASS: C6 receipt reason timeout-no-artifact
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C7 relay-failure exits 5
+  PASS: C7 receipt reason relay-failed-before-gate, gate not-run
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C8 lane parked at attempt cap exits 8
+  PASS: C8 receipt outcome parked, reason names the cap
+  PASS: C8 receipt attempt count 2/2
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C9 run without --result-file keeps exit 0
+  PASS: C9 no receipt written when option unused
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C10 malformed --result-file refuses (exit 2)
+  PASS: C10 malformed path dispatches nothing
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C11 invalid --execution-id refuses (exit 2)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: C12 caller execution id recorded
+  PASS: C12 re-run atomically replaces the receipt
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: D1 redirected run exits 0
+  PASS: D1 lane branch marathon/gh280-lane exists
+  PASS: D1 receipt records redirect base/head
+  PASS: D1 receipt carries verified PR identity
+  PASS: D1 no PR note on successful publication
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: D2 PR-publication failure keeps the phase green (exit 0)
+  PASS: D2 receipt approved with explicit null PR
+  PASS: D2 receipt notes the failed publication
+  PASS: E1 vendored preflight exits 0
+  PASS: E2 vendored artifact points inside .xyz
+  PASS: E3 vendored target_root is the consumer repo
+  PASS: E4 vendored drive exits 0 with receipt
+  PASS: E5 vendored receipt target_repo is the consumer repo
+  PASS: E6 vendored refusal exits 2
+  PASS: E7 vendored refusal receipt written
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: F1 real packet argv chain exits 0 (Preflight → Marathon → Relay)
+  PASS: F2 stub builder landed the declared artifact
+  PASS: F3 chain wrote the packet's result receipt
+  PASS: F4 receipt approved with relay STATUS Approved
+  PASS: F5 gate ran green inside the chain
+  PASS: F6 builder claim event in the fixture tick log
+  PASS: F7 reviewer claim event in the fixture tick log
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G1 marathon executor without --reviewer refuses (exit 2)
+  PASS: G1 refusal names the reviewer policy
+  PASS: G1 row untouched (pending, attempt_count 0)
+  PASS: G2 reviewer == builder refused before lease
+  PASS: G3 unavailable reviewer binary refused before lease
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G4 marathon executor queue run exits 0
+  PASS: G4 row parked awaiting-landing with receipt PR identity
+  PASS: G4 execution ledger exists under .tick/jog/<gid>
+  PASS: G4 ledger records one approved, projected execution
+  PASS: G4 receipt approved, PR 42, redirected lane branch
+  PASS: G4 stub builder landed the artifact through the real chain
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G5 refusing reviewer → row failed with marathon escalation
+  PASS: G5 receipt outcome escalated
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G6 cold-start without result parks (never refires)
+  PASS: G6 no second execution fired on cold start
+  PASS: G7 cold-start re-projects the terminal result idempotently
+  PASS: G7 re-projection fired no new execution
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G8 preflight refusal parks with exit code
+  PASS: H1 vendored marathon queue run exits 0 from a foreign cwd
+  PASS: H2 vendored row parked awaiting-landing (green, no PR)
+  PASS: H3 vendored execution ledger lives in the consumer repo
+  PASS: H4 vendored receipt approved, target is the consumer repo
+  PASS: H5 foreign cwd stayed clean (no root-relative lookups — GH-279 #2)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I1 --simulate stays on the relay machinery (behavior unchanged)
+  PASS: I1b simulated auto-merge completes the processed row
+  PASS: I2 legacy run leaves no marathon execution state
+  PASS: I3 --simulate prints the deprecation notice (window + separate removal)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I4 --executor relay rollback path completes the legacy simulate + notice
+  PASS: I4b relay simulate completes the processed row
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I5 bare jog run without --reviewer refuses (exit 2)
+  PASS: I5 refusal names the reviewer policy (marathon default)
+  PASS: I5 row untouched (pending, attempt_count 0)
+  PASS: I6 default run (no --executor) dispatches marathon, exits 0
+  PASS: I6 row parked awaiting-landing with receipt PR identity
+  PASS: I6 execution ledger exists under .tick/jog/<gid>
+  PASS: I6 ledger records one approved, projected execution
+  PASS: I6 receipt approved, PR 42, redirected lane branch
+  PASS: I6 stub builder landed the artifact through the real chain
+  PASS: I6 marathon-default run prints no deprecation notice
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: I7 --dry-run unchanged (plan only, no notice, no reviewer needed)
+  PASS: I7b dry-run leaves the row pending (zero mutation)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: J1 resume re-projects a terminal result (no dispatch)
+  PASS: J1 row parked awaiting-landing after resume
+  PASS: J1 resume fired no new execution
+  PASS: J2 resume parks a result-less dispatched execution (exit 1)
+  PASS: J2 row parked with resume reason
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: K1 red-gate execution fails the row (relay approved, gate red)
+  PASS: K1 failed row's reason carries the trace segment (execution id + result path — Scope 4)
+  PASS: K3 gate retry refuses when the head SHA moved (empty commit)
+  PASS: K3 refusal dispatched no gate run
+  PASS: K3b gate retry refuses when head moved to non-relay code
+  PASS: K3b refusal dispatched no gate run
+  PASS: K3c found relay file in execution target
+  PASS: K2 gate-only retry accepts a relay-receipt-only tail and exits 0 (GH-1332)
+  PASS: K2 row parked awaiting-landing after green gate retry
+  PASS: K2 retry receipt approved via satisfied-lane path
+  PASS: K2 only marathon's own transcript commit advanced the head past the relay tail
+  PASS: K2 gate retry spent no new tick token (1 task.created)
+  PASS: K4 retry-build exits 0
+  PASS: K4 row parked awaiting-landing after the rebuild
+  PASS: K4 ledger gained a second retry-build execution
+  PASS: K4 rebuild ran on a fresh suffixed token (-2)
+  PASS: K4 prior token history and execution records preserved
+  PASS: L1 wrong PR base refused
+  PASS: L2 head-SHA mismatch refused
+  PASS: L3 unmerged PR refused
+  PASS: L4 unreachable merge SHA refused
+  PASS: L1-L4 left the row un-landed (fail closed)
+  PASS: L5 release member fixture is nonempty
+  PASS: L5 exact owned member starts dialed_in
+  PASS: L5 jog land completes cleanly
+  PASS: L5 row completed with landed-PR reason
+  PASS: L5 wave_reconcile promoted the capture doc to 3-COMPLETED
+  PASS: L5 ROADMAP entry archived with the shipping badge
+  PASS: L5 landing evidence records verified merge
+  PASS: L5 completion retains historical attribution without final-head approval
+  PASS: L5 real reconciler ships owned dialed-in member
+  PASS: L5 shipped evidence equals verified full merge SHA
+  PASS: L6 land replay is idempotent
+  PASS: L6 replay retains exactly one shipped member
+  PASS: L6 replay emits no duplicate manifest evidence or receipts
+  PASS: L7 reconcile reads committed evidence without cache
+  PASS: L7 committed-channel landing evidence retained
+  PASS: L7 cache-independent replay emits no duplicate shipping evidence
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: L8 receipt without green gate evidence refused
+  PASS: L9 receipt naming a foreign repo refused
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: M0 promoted executor run exits 0
+  PASS: M1 dashboard not created after promotion (GH-567)
+  PASS: M3 execution contract committed before dispatch
+  PASS: M3 execution contract commit excludes ledger
+  PASS: M3 execution-tree mutation cannot lose primary queue
+  PASS: M2 re-add minted a fresh gid
+  PASS: M2 resume finds the ledger by gh-number after re-add (F2)
+  PASS: M2 ledger record present (relative-path form asserted below)
+  PASS: M2 result_path stored relative to the ledger (F2)
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: N0 token T reads done in the fixture root
+  PASS: N0 attestation fixture published for token T
+  PASS: N1 verified auto-merge completes on a matching PR
+  PASS: N1 the verified merge issued exactly one gh pr merge
+  PASS: N2 head-SHA mismatch refuses the auto-merge
+  PASS: N2 no merge call issued on refusal
+  PASS: N2b PR head ≠ validated candidate refuses the auto-merge even though head_sha matches
+  PASS: N2b no merge call issued
+  PASS: N2c unattested approved receipt refuses the auto-merge
+  PASS: N2c no merge call issued
+  PASS: N3 already-merged PR refuses the auto-merge
+  PASS: N4 red gate refuses the auto-merge
+  PASS: N5 foreign-repo receipt refuses the auto-merge
+  PASS: N5 refusal matrix issued no further merge calls
+  PASS: N6 retry-gate refuses under a live supervisor lock (exit 4)
+  PASS: N7 retry-build refuses under a live supervisor lock (exit 4)
+  PASS: N8 retry-gate proceeds past a free lock (exit 2, not lock refusal)
+  PASS: N8 retry-gate released the supervisor lock on exit
+  PASS: O1 refused projection carries the trace segment (execution id + result path)
+  PASS: O2 projection without trace args stays unannotated (back-compat)
+  PASS: P1 jog never creates PRs (Marathon owns PR identity)
+  PASS: P2 jog never invokes the tick binary or writes executor attempt state
+  PASS: P3 jog never cuts lane branches (branch identity is Marathon's)
+  PASS: seed fixture byte-unchanged after the full suite (final check) (containment)
+  gh280-jog-marathon-adapter: 227 pass, 0 fail
+githooks: INSTALLED — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-uxra5laa/.git/hooks/pre-push is the gate stub (executable)
+pre-push live host gate check: []
+pre-push: running the full gate before this push reaches the remote (GH-544).
+pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+pre-push:   validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+pre-push:   validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+pre-push:     NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.ZIr1lI/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  389 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh732-l3-gate-summary.sh rc=0
+[parallel] projection-idempotent.sh rc=0
+[parallel] concurrent-claim.sh rc=0
+[parallel] chaos-stale-writer.sh rc=0
+[parallel] chaos-concurrent-pollers.sh rc=0
+[parallel] chaos-midturn-kill.sh rc=0
+[parallel] path-overlap.sh rc=0
+[parallel] poll-relay.sh rc=0
+[parallel] scope-change.sh rc=0
+[parallel] tick-foreign-cwd.sh rc=0
+[parallel] gh411-tick-log-foreign-cwd.sh rc=0
+[parallel] gh346-gateway-allowlists.sh rc=0
+[parallel] gh391-emit-marathon-yaml.sh rc=0
+[parallel] gh554-tick-unknown-flags.sh rc=0
+[parallel] gh322-unknown-arg-rejection.sh rc=0
+[parallel] gh331-cost-summary.sh rc=0
+[parallel] gh589-xyz-mini-sync.sh rc=0
+[parallel] gh412-transient-claim-exit.sh rc=0
+[parallel] relay-target-root.sh rc=0
+[parallel] relay-target-root-paths.sh rc=0
+[parallel] relay-target-root-relayfile.sh rc=0
+[parallel] relay-target-root-newfile.sh rc=0
+[parallel] gh289-target-root-build-turn.sh rc=0
+[parallel] relay-token-collision.sh rc=0
+[parallel] relay-escalation-not-stall.sh rc=0
+[parallel] relay-untracked-file-warn.sh rc=0
+[parallel] relay-review-once.sh rc=0
+[parallel] relay-artifact-file.sh rc=0
+[parallel] relay-xyz-skill-guard.sh rc=0
+[parallel] gh413-launch-artifact-destination-guard.sh rc=0
+[parallel] gh414-comment-reference-check.sh rc=0
+[parallel] gh415-guard-hook-entrypoints.sh rc=0
+[parallel] handoff.sh rc=0
+[parallel] handoff-exclusive.sh rc=0
+[parallel] circuit-break.sh rc=0
+[parallel] terminality-seal.sh rc=0
+[parallel] write-ops-log.sh rc=0
+[parallel] auto-sync.sh rc=0
+[parallel] analyze.sh rc=0
+[parallel] workstealing-verdict.sh rc=0
+[parallel] verdict-edge.sh rc=0
+[parallel] claim-cap.sh rc=0
+[parallel] reap.sh rc=0
+[parallel] heartbeat.sh rc=0
+[parallel] cost.sh rc=0
+[parallel] take.sh rc=0
+[parallel] watchdog-liveness.sh rc=0
+[parallel] gh251-validate-pytest-skip.sh rc=0
+[parallel] runner-loop.sh rc=0
+[parallel] poll-driver.sh rc=0
+[parallel] watchdog-relay.sh rc=0
+[parallel] relay-loop.sh rc=0
+[parallel] codex-turn.sh rc=0
+[parallel] pi-turn.sh rc=0
+[parallel] relay-turn-trace.sh rc=0
+[parallel] gh280-jog-marathon-adapter.sh rc=0
+[parallel] gh278-turn-timeout-parity.sh rc=0
+[parallel] gh308-frozen-twin-guard.sh rc=0
+[parallel] gh245-agy-probe-verb-invariant.sh rc=0
+[parallel] aider-turn.sh rc=0
+[parallel] gh788-python-path-space.sh rc=0
+[parallel] gh777-start-task-prior-art.sh rc=0
+[parallel] gh777-inventory-ratchet.sh rc=0
+[parallel] gh609-sdlc-agent-gaps.sh rc=0
+[parallel] ate-run-variations.sh rc=0
+[parallel] agy-turn.sh rc=0
+[parallel] gh267-express-skill.sh rc=0
+[parallel] model-alias.sh rc=0
+[parallel] gh450-model-catalog-pin.sh rc=0
+[parallel] gh346-model-telemetry-honesty.sh rc=0
+[parallel] gh460-fuzz-resolver-smoke.sh rc=0
+[parallel] gh478-runaway-guard.sh rc=0
+[parallel] gh346-resolver-fallback.sh rc=0
+[parallel] gh346-telemetry-row-written.sh rc=0
+[parallel] gh518-muse-model-policy.sh rc=0
+[parallel] gh518-muse-adapter-containment.sh rc=0
+[parallel] gh346-registry-view-freshness.sh rc=0
+[parallel] gh368-same-lane-routing.sh rc=0
+[parallel] gh373-reviewer-validation.sh rc=0
+[parallel] gh496-telemetry-isolation.sh rc=0
+[parallel] gh346-profile-resolve.sh rc=0
+[parallel] gh371-interrupt-snapshot.sh rc=0
+[parallel] gh369-group-kill.sh rc=0
+[parallel] gh374-drift-path-filter.sh rc=0
+[parallel] gh370-progress-telemetry.sh rc=0
+[parallel] swe-diagram.sh rc=0
+[parallel] gh648-l8-zero-output-handback.sh rc=0
+[parallel] gh372-escalation-log-tail.sh rc=0
+[parallel] gh698-planner-db-ratings.sh rc=0
+[parallel] gh708-vendored-suite-skips.sh rc=0
+[parallel] gh648-l9-369-regression.sh rc=0
+[parallel] gh436-merge-cleanup.sh rc=0
+[parallel] commandcode-turn.sh rc=0
+[parallel] claude-turn.sh rc=0
+[parallel] marathon-yaml.sh rc=0
+[parallel] worktree-isolation.sh rc=0
+[parallel] gh284-runlog-heartbeat.sh rc=0
+[parallel] gh115-round-cap.sh rc=0
+[parallel] gh307-gate-env-scrub.sh rc=0
+[parallel] gh319-gate-path-with-space.sh rc=0
+[parallel] gh320-twin-timeout-parity.sh rc=0
+[parallel] shim-worktree.sh rc=0
+[parallel] gh308-poll-guards.sh rc=0
+[parallel] gh308-swarm-gate-path.sh rc=0
+[parallel] gh610-claude-subscription.sh rc=0
+[parallel] gh343-gate-program-target-root.sh rc=0
+[parallel] gh322-runlog-python-lane.sh rc=0
+[parallel] gh342-sentinel-debug-log-python.sh rc=0
+[parallel] gh308-turn-shim-parity.sh rc=0
+[parallel] gh369-find-doc-root-resolution.sh rc=0
+[parallel] gh400-acceptance-fidelity.sh rc=0
+[parallel] gh557-unknown-blocks-manifest.sh rc=0
+[parallel] gh419-gate-inventory.sh rc=0
+[parallel] gh400-source-url.sh rc=0
+[parallel] gh418-issue-state-frozen.sh rc=0
+[parallel] gh422-backfill-source-url.sh rc=0
+[parallel] gh308-consult-guards.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] gh410-relay-block-driven-path.sh rc=0
+[parallel] gh425-source-url-slug.sh rc=0
+[parallel] gh399-packet-acceptance-continuation.sh rc=0
+[parallel] gh410-containment-advisory.sh rc=0
+[parallel] gh90-allowlist-directory.sh rc=0
+[parallel] gh417-turn-root-symlink-prefix.sh rc=0
+[parallel] gh407-gate-ran-attribution.sh rc=0
+[parallel] gh457-gate-tiers.sh rc=0
+[parallel] gh387-gate-not-first-executor.sh rc=0
+[parallel] gh441-gate-env-contract.sh rc=0
+[parallel] gh218-synthetic-nested-driver-lock.sh rc=0
+[parallel] gh432-failed-turn-persist.sh rc=0
+[parallel] gh448-driver-lock-resolver.sh rc=0
+[parallel] gh390-timeout-attribution.sh rc=0
+[parallel] gh376-relay-drive-lock-parity.sh rc=0
+[parallel] gh397-reviewer-turn-role.sh rc=0
+[parallel] gh401-dry-run-no-mutation.sh rc=0
+[parallel] gh375-agy-auth-preflight.sh rc=0
+[parallel] gh217-gate-env-plan-outside.sh rc=0
+[parallel] gh375-auth-timeout-verdict.sh rc=0
+[parallel] gh408-tick-failure-visibility.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] gh385-retry-token-satisfied.sh rc=0
+[parallel] gh379-claude-builder-diagnosis.sh rc=0
+[parallel] gh380-claude-trust.sh rc=0
+[parallel] gh382-marathon-memory-telemetry.sh rc=0
+[parallel] gh378-gate-requires-green-suite.sh rc=0
+[parallel] gh551-resolver-refuses.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] gh505-relay-attest.sh rc=0
+[parallel] gh386-turn-budget-honesty.sh rc=0
+[parallel] gh491-gate-only-refire.sh rc=0
+[parallel] gh255-remedy-ordering.sh rc=0
+[parallel] gh256-target-root-guard-root.sh rc=0
+[parallel] gh426-worktree-leak.sh rc=0
+[parallel] gh384-crash-recovery.sh rc=0
+[parallel] gh388-run-log-durability.sh rc=0
+[parallel] gh514-write-set-trackable.sh rc=0
+[parallel] marathon-drive.sh rc=0
+[parallel] gh438-removal-is-progress.sh rc=0
+[parallel] gh467-index-only-lane-blocked.sh rc=0
+[parallel] hq-marathon-live.sh rc=0
+[parallel] debug-mantra.sh rc=0
+[parallel] gh409-claim-leak.sh rc=0
+[parallel] lane-attempt-cap.sh rc=0
+[parallel] gh438-acceptance-recheck.sh rc=0
+[parallel] loop-stop.sh rc=0
+[parallel] measure.sh rc=0
+[parallel] driver-lock.sh rc=0
+[parallel] heldout-check.sh rc=0
+[parallel] champion.sh rc=0
+[parallel] loop-cost.sh rc=0
+[parallel] oracle-guard.sh rc=0
+[parallel] improve-loop-dogfood.sh rc=0
+[parallel] gh430-state-dir-tracked-default.sh rc=0
+[parallel] improve-loop.sh rc=0
+[parallel] gh536-evidence-detail.sh rc=0
+[parallel] improve-loop-qa.sh rc=0
+[parallel] gh402-board-sync.sh rc=0
+[parallel] gh405-mock-board-harness.sh rc=0
+[parallel] gh544-parallel-default.sh rc=0
+[parallel] gh646-status-label.sh rc=0
+[parallel] gh379-canary-uses-validate.sh rc=0
+[parallel] gh544-pre-push-gate.sh rc=0
+[parallel] gh35-test-tiers.sh rc=0
+[parallel] gh365-runner-envelope.sh rc=0
+[parallel] gh365-validate-telemetry.sh rc=0
+[parallel] gh365-driver-lane-registry.sh rc=0
+[parallel] gh402-branch-enforcement.sh rc=0
+[parallel] gh365-shellcheck-parallel.sh rc=0
+[parallel] gh1-fixture-guard.sh rc=0
+[parallel] gh1-adoption-guard.sh rc=0
+[parallel] gh314-transcript-writeset.sh rc=0
+[parallel] gh520-default-reviewer-stub.sh rc=0
+[parallel] gh527-destructive-git-guard.sh rc=0
+[parallel] gh50-sandboxed-git-guard.sh rc=0
+[parallel] marathon.sh rc=0
+[parallel] marathon-closeout.sh rc=0
+[parallel] gh484-phase-dir-default.sh rc=0
+[parallel] marathon-root-audit.sh rc=0
+[parallel] rtl-orphan-backup.sh rc=0
+[parallel] gh2-orphan-backup-repro.sh rc=0
+[parallel] gh91-relay-scratch.sh rc=0
+[parallel] gh113-headless-scratch.sh rc=0
+[parallel] gh114-headless-tty.sh rc=0
+[parallel] gh124-closeout.sh rc=0
+[parallel] gh129-relay-tick-root.sh rc=0
+[parallel] gh130-agy-auth-whoami.sh rc=0
+[parallel] gh131-marathon-target-root.sh rc=0
+[parallel] gh139-pipe-grep-guard.sh rc=0
+[parallel] synthetic/gh101-consult-programmatic.sh rc=0
+[parallel] synthetic/gh101-relay-programmatic-stress.sh rc=0
+[parallel] synthetic/gh102-telemetry-schema.sh rc=0
+[parallel] synthetic/gh94-containment-invariants.sh rc=0
+[parallel] gh549-work-events.sh rc=0
+[parallel] synthetic/synthetic-claude-target-root.sh rc=0
+[parallel] synthetic/synthetic-marathon-env-leak.sh rc=0
+[parallel] synthetic/synthetic-marathon-worktree-guard.sh rc=0
+[parallel] synthetic/synthetic-pi-model-unset.sh rc=0
+[parallel] synthetic/synthetic-pi-provider-unsupported.sh rc=0
+[parallel] synthetic/gh94-script-serialization.sh rc=0
+[parallel] gh141-fuzz-inputs.sh rc=0
+[parallel] gh141-synthetic-registry.sh rc=0
+[parallel] gh148-deepseek-turn.sh rc=0
+[parallel] gh608-deepseek-effort.sh rc=0
+[parallel] gh142-ate-exit-contract.sh rc=0
+[parallel] gh648-l7-checkout-aftermath.sh rc=0
+[parallel] gh648-l5-gh237-repro.sh rc=0
+[parallel] gh365-pdda-gov-scan.sh rc=0
+[parallel] gh648-l3-consult-cap.sh rc=0
+[parallel] gh648-l6-muse-attribution.sh rc=0
+[parallel] gh648-l1-turn-termination.sh rc=0
+[parallel] gh654-offlane-log.sh rc=0
+[parallel] gh660-skill-drift.sh rc=0
+[parallel] gh156-turn-shims-help.sh rc=0
+[parallel] gh155-phase1-metamorphic-invariants.sh rc=0
+[parallel] gh648-l4-285-revalidate.sh rc=0
+[parallel] gh155-phase3-repro-builder.sh rc=0
+[parallel] gh648-l2-token-aftermath.sh rc=0
+[parallel] gh155-phase4-self-healer.sh rc=0
+[parallel] gh155-phase5-active-explorer.sh rc=0
+[parallel] gh168-wave-reconcile-scope.sh rc=0
+[parallel] gh174-harness-registry.sh rc=0
+[parallel] gh180-repro-timeout-crash.sh rc=0
+[parallel] gh181-repro-adapter-fidelity.sh rc=0
+[parallel] gh183-explorer-env-soundness.sh rc=0
+[parallel] gh184-no-tracked-scratch.sh rc=0
+[parallel] gh182-healer-facade-safety.sh rc=0
+[parallel] gh232-wave-reconcile-multiphase.sh rc=0
+[parallel] gh202-wave-reconcile-issue-state.sh rc=0
+[parallel] deep-research.sh rc=0
+[parallel] relay-pkg-freshness.sh rc=0
+[parallel] skill-extract.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] gh155-phase2-differential-oracle.sh rc=0
+[parallel] gh75-dashboard.sh rc=0
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh525-unshipped-version-tokens.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=0
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh360-dump-multiline-values.sh rc=0
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh351-manifest-unship.sh rc=0
+[parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
+[parallel] gh349-releases-roadmap-vendored.sh rc=0
+[parallel] gh429-wave-reconcile-vendored-observe.sh rc=0
+[parallel] gh362-marathon-plan-link-bullets.sh rc=0
+[parallel] gh358-wave-reconcile-vendored-paths.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=0
+[parallel] consult.sh rc=0
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] path-integrity.sh rc=0
+[parallel] archive-root.sh rc=0
+[parallel] archive-writers.sh rc=0
+[parallel] relay-turn-timeout.sh rc=0
+[parallel] archive-telemetry.sh rc=0
+[parallel] relay-file-seeding-visibility.sh rc=0
+[parallel] archive-commit.sh rc=0
+[parallel] gh304-vendored-relay-path.sh rc=0
+[parallel] relay-turn-handoff.sh rc=0
+[parallel] relay-dep-drift.sh rc=0
+[parallel] new-relay.sh rc=0
+[parallel] gh678-installer-live-links.sh rc=0
+[parallel] gh77-standup-triage.sh rc=0
+[parallel] skills-army-hq.sh rc=0
+[parallel] agent-chorus.sh rc=0
+[parallel] gh233-agent-chorus-concurrency.sh rc=0
+[parallel] agent-chorus-bridge.sh rc=0
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+[parallel] xyz-sync-check.sh rc=0
+[parallel] gh293-vendored-guard-drift.sh rc=0
+[parallel] relay-concurrent-commit.sh rc=0
+[parallel] relay-commit-pathspec.sh rc=0
+[parallel] relay-case-insensitive.sh rc=0
+[parallel] gh642-consumer-fruit.sh rc=0
+[parallel] gh292-worktree-vendored-discovery.sh rc=0
+[parallel] find-harness.sh rc=0
+[parallel] pdda-changelog.sh rc=0
+[parallel] xyz-vendor.sh rc=0
+[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] gh365-tier-fail-closed.sh rc=0
+[parallel] gh649-pdda-migration.sh rc=0
+[parallel] gh784-marathon-qa-gate.sh rc=0
+[parallel] pdda-local-checks.sh rc=0
+[parallel] gh460-pipe-buffer-sigpipe.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] ci-workflow.sh rc=0
+[parallel] ci-route.sh rc=0
+[parallel] gh509-gate-evidence.sh rc=0
+[parallel] swarm-preflight.sh rc=0
+[parallel] xyz-completion.sh rc=0
+[parallel] gh358-lock-instrumentation.sh rc=0
+[parallel] gh123-lock-progress-bound.sh rc=0
+[parallel] gh14-atomic-append.sh rc=0
+[parallel] gh23-path-overlap-enforcement.sh rc=0
+[parallel] gh528-parallel-contention-retry.sh rc=0
+[parallel] pdda-install-startup-docs.sh rc=0
+[parallel] marathon-plan.sh rc=0
+[parallel] hq.sh rc=0
+[parallel] hq-park.sh rc=0
+[parallel] hq-park-synthesis.sh rc=0
+[parallel] hq-dispatch.sh rc=0
+[parallel] hq-next.sh rc=0
+[parallel] hq-locator.sh rc=0
+[parallel] xyz-harness-hooks.sh rc=0
+[parallel] hq-hardening.sh rc=0
+[parallel] hq-promote.sh rc=0
+[parallel] hq-marathon-scan.sh rc=0
+[parallel] preflight-docs.sh rc=0
+[parallel] gh238-hq-releases-mode.sh rc=0
+[parallel] hq-rollup.sh rc=0
+[parallel] gh567-roadmap-dashboard-retired.sh rc=0
+[parallel] mktemp-trap-guard.sh rc=0
+[parallel] gh703-raw-text-asterisk.sh rc=0
+[parallel] gh239-hq-status-releases-mode.sh rc=0
+[parallel] gh257-roadmap-ledger-fixes.sh rc=0
+[parallel] gh423-roadmap-render.sh rc=0
+[parallel] pdda-repo-contract.sh rc=0
+[parallel] gh454-reconciler-defects.sh rc=0
+[parallel] gh418-planner-ledger-source.sh rc=0
+[parallel] gh568-releases-md-retired.sh rc=0
+[parallel] gh424-roadmap-status-marker.sh rc=0
+[parallel] gh684-hosted-lane-report.sh rc=0
+[parallel] gh421-auto-wave-reconcile.sh rc=0
+[parallel] gh425-gate-provenance-pr.sh rc=0
+[parallel] gh740-hosted-lane-publish.sh rc=0
+[parallel] gh605-work-state.sh rc=0
+[parallel] gh605-board-policy.sh rc=0
+[parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
+[parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
+[parallel] gh492-roadmap-state-sweep.sh rc=0
+[parallel] gh681-reviewer-probe-rules.sh rc=0
+[parallel] gh491-roadmap-section-validation.sh rc=0
+[parallel] gh527-issue-url-repair.sh rc=0
+[parallel] jog-queue.sh rc=0
+[parallel] gh291-contract-goldens.sh rc=0
+[parallel] gh205-gate-idempotency.sh rc=0
+[parallel] gh353-vendored-router-audit.sh rc=0
+[parallel] gh204-sed-portability.sh rc=0
+[parallel] transcript-audit.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] sentinel-tier1.sh rc=0
+[parallel] sentinel-network-guard.sh rc=0
+[parallel] sentinel-driver-hooks.sh rc=0
+[parallel] gh290-ate-variation-grid.sh rc=0
+[parallel] checkjs.sh rc=0
+[parallel] acorn-extract.sh rc=0
+[parallel] gh269-roadmap-retired.sh rc=0
+[parallel] marathon-monitor.sh rc=0
+[parallel] signal-triage.sh rc=0
+[parallel] fixtures/canary-token-reuse/verify-fixture.sh rc=0
+[parallel] fixtures/canary-peer-orphan/verify-fixture.sh rc=0
+[parallel] fixtures/canary-reviewer-overstep/verify-fixture.sh rc=0
+[parallel] relay-self-sufficiency.sh rc=0
+[parallel] phase3-signoff-guard.sh rc=0
+[parallel] agy-tui-takeover-verdict.sh rc=0
+[parallel] gh107-timeline-json-seam.sh rc=0
+[parallel] gh105-vendor-releases-addon.sh rc=0
+[parallel] security-scan.sh rc=0
+[parallel] gh165-governance-canonical-paths-guard.sh rc=0
+[parallel] gh273-marathon-root-audit-python-shape.sh rc=0
+[parallel] gh312-vendor-preserves-state.sh rc=0
+[parallel] relay-uncited-findings.sh rc=0
+[parallel] sentinel-overlay.sh rc=0
+[parallel] wave-reconcile.sh rc=0
+[parallel] gh132-review-xyz-skill.sh rc=0
+[parallel] gh693-lessons-learned-advisory.sh rc=0
+marathon-drive: gate-guard: KILLING gate process group (pgid 2125) — wall clock 720s >= cap 720s
+marathon-drive: gate-guard: gate exit 108 after 720s — peak group RSS 975MB (tier full; caps: RSS 8192MB, wall 720s, CPU 1200s)
+marathon-drive: pre-advance gate KILLED by the resource guard (exit 108) — escalating
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-190512.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1254-outer-loop-borrow-decl-escalated boundary — compressor=658MB, swap_free=1023MB
+marathon-drive: escalation written: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1254-outer-loop-borrow-decl/ESCALATION.md (reason: gate-killed)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/gate-retry-1/marathon-result.json (outcome: escalated, exit 5)

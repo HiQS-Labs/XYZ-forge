@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1264-exec2",
+  "generated_at": "2026-11-04T05:02:55Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1264",
+  "phase": "gh-1264-hq-park-goal-passthrough",
+  "lane": "gh-1264-hq-park-goal-passthrough",
+  "token": "MARATHON-GH-1264-HQ-PARK-GOAL-PASSTHROUGH-TURN",
+  "attempt": {
+    "count": 2,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-factory-batch1-2026-11-03",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1264-hq-park-goal-passthrough-2026-11-03",
+  "head_sha": "d02b9daa5772cb43c056de65806fb750b340b6bf",
+  "reviewed_candidate": "d02b9daa5772cb43c056de65806fb750b340b6bf",
+  "reviewed_head": "fefd0607f43d69c606d384a75a50d0d535ceb391",
+  "added_sha256": "5de2e275081a685f7e9747edd6dccfae1716c2e1e71ecd112327cc57c29d5217",
+  "attest_path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-factory-batch1-2026-11-03/.git/relay-attest/MARATHON-GH-1264-HQ-PARK-GOAL-PASSTHROUGH-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/hq-park-synthesis.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-factory-batch1-2026-11-03/.xyz/receipts/d02b9daa5772cb43c056de65806fb750b340b6bf.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": "pr-publication-failed: closeout exited 3; the phase stays green and its commits are on 'marathon/gh-1264-hq-park-goal-passthrough-2026-11-03' \u2014 open the PR by hand: gh pr create --base development --head marathon/gh-1264-hq-park-goal-passthrough-2026-11-03",
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-04T04:45:48Z",
+    "finished_at": "2026-11-04T05:02:55Z"
+  }
+}

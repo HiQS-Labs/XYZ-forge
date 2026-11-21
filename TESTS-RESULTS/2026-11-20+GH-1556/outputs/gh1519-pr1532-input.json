@@ -1,0 +1,34 @@
+{
+  "source": "live gh pr view 1532 --repo HiQS-Labs/XYZ-forge (issue #1519 PR)",
+  "fetched_utc": "2026-11-20T10:08:15Z",
+  "pr_number": 1532,
+  "pr_url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1532",
+  "title": "fix(validate): refuse in seconds when mypy is missing (GH-1519)",
+  "headRefOid": "2a3601a9009966f7bacd39eebe77f6f9bfbfba47",
+  "changed_files": [
+    "CHANGELOG.md",
+    "TESTS-RESULTS/2026-11-19+GH-1519/provenance.jsonl",
+    "TESTS-RESULTS/2026-11-19+GH-1519/smoke.log",
+    "relay-system/2026-11-19/gh1519-final-qa.md",
+    "releases.db",
+    "releases.sql",
+    "validate.sh"
+  ],
+  "body_excerpt": "## Summary\nCloses #1519. `validate.sh`'s existing GH-732 environment check now also requires `mypy` (`test/test_python_layer.py` runs `python3 -m mypy`). Without it the gate exits 3 at once with `missing modules: mypy` and `pip install -r requirements-dev.txt`, instead of failing one test after a ~13-minute full run. With mypy present nothing changes; hosted jobs that run `validate.sh` already install `requirements-dev.txt`.\n\n**Draft because independent review did not finish:** Codex final QA reached its 3-round cap with one open provenance nit (rows 4\u20135 of `provenance.jsonl` lacked an exit code and an exact command). Both were fixed after round 3 (`b75c282ff`) without a fourth round; per run rules a fourth round needs the operator. The code verdict itself passed in every round.\n\n## Prior-Art & Ground Truth\n- [x] **Prior-Art Search Run**: `rg -n \"yaml pytest requests|missing modules\" validate.sh test/` \u2014 one existing check (GH-732) to extend; `test/gh251-validate-pytest-skip.sh` pins only prefixes that still match.\n- [x] **Grounded Recon**: `.github/workflows/ci.yml` and `wave-reconcile.yml` install `requirements-dev.txt` before every `validate.sh` run.\n\n## Proof of Done\n- [x] **Mechanical Verification Command**: manual check `TESTS-RESULTS/2026-11-19+GH-1519/smoke.log` + `provenance.jsonl` (no new suite, GH-831); full pre-push gate GREEN on `eea4c81a0`.\n- [x] **Test Output**: without mypy `bash validate.sh --print-mode` \u2192 rc=3 in 0s naming mypy; with mypy rc=0; `test/gh251-validate-pytest-skip.sh` 4 pass; pre-fix red control (same python, `ad22311e8`) \u2192 rc=0, no refusal.\n\n## Governance & PDDA\n- [x] **Linked Issue**: Closes #1519\n- [x] **Capture Doc Updated**: none (two-line fix); PRS row `rated 60/40/50/95`.\n- [x] **No Hardcoded Machine Paths**: none added.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\n<!-- codesmith:footer -->\n---\n<a href=\"https://dashboardbackend.blacksmith.sh/track/enable-autofix?expires=1797732220&installation_model_id=449991&pr_number=1532&ref=codesmith_pr_footer&repository=HiQS-Labs%2FXYZ-forge&return_to=https%3A%2F%2Fgithub.com%2FHiQS-Labs%2FXYZ-forge%2Fpull%2F1532&signature=5f9869e98ca88460ea4d1f1aad9eb0781102e05c8f47cb8ab67e53dd4e252201\"><picture><source media=\"(prefers-color-scheme: dark)\" srcset=\"https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-dark.svg\"><source media=\"(prefers-color-scheme: light)\" srcset=\"https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-light.svg\"><img alt=\"Autofix with [code]smith\" src=\"https://pr-comments-assets.blacksmith.sh/codesmith/autofix-with-codesmith-dark-3x.png\" width=\"190\" height=\"28\"></picture></a>\n<sup><a href=\"https://app.blacksmith.sh/HiQS-Labs/codesmith/XYZ-forge/pr/1532?autoLogin=true&ref=codesmith_pr_footer\">Open in [code]smith</a> \u00b7 Need help on this PR? Tag <code>@codesmith-bot</code> with what you need.</sup>\n\n<!-- codesmith:autofix:disabled -->\n<!-- /codesmith:footer -->",
+  "comment_7029123199": {
+    "id": "IC_kwDOT5mrCM8AAAABovfofw",
+    "author": {
+      "login": "noelsaw1"
+    },
+    "authorAssociation": "MEMBER",
+    "body": "Operator decision 2026-11-20: accepted as is after the 3-round relay cap. The only open Codex point was a provenance note, fixed after round 3. Full gate passed at eea4c81a0. Ready to land once CodeRabbit shows no open Major.",
+    "createdAt": "2026-11-20T03:07:34Z",
+    "includesCreatedEdit": false,
+    "isMinimized": false,
+    "minimizedReason": "",
+    "reactionGroups": [],
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1532#issuecomment-7029123199",
+    "viewerDidAuthor": true
+  },
+  "synthetic_control_reconstructed_fields_note": "PR #1532 fields above are verbatim from GitHub. Synthetic control cases for KS-11(a) docs-only/githooks/stale-head, KS-11(b) conflict hub, and KS-11(c) owner/non-owner/inapplicable/superseded use explicitly labeled reconstructed fields documented in manual-check.md."
+}

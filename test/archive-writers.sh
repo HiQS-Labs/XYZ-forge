@@ -24,6 +24,9 @@ STUB="$WORK/advisor-stub"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+answer_file=""; previous=""
+for arg in "$@"; do [ "$previous" != "--output-last-message" ] || answer_file="$arg"; previous="$arg"; done
+[ -z "$answer_file" ] || printf 'ANSWER from stub\n[Pass] fine\nRECOMMENDATION: ship\n' >"$answer_file"
 printf 'ANSWER from stub\n[Pass] fine\nRECOMMENDATION: ship\n'
 exit 0
 STUB_EOF

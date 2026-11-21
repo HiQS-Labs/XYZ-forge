@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "issue": 1401,
+  "outcome": "failed preserved; no further repair permitted",
+  "stage": "after complete integration DB/dump adoption, check --rebuild and replay_ops GH1401 add; before resolver/commit",
+  "assertion": "all integration jog_queue rows unchanged",
+  "differences": [
+    {
+      "row": 32,
+      "changed_columns": [
+        "global_id",
+        "gh_number",
+        "position",
+        "created_at",
+        "updated_at",
+        "failure_reason"
+      ]
+    },
+    {
+      "row": 33,
+      "changed_columns": [
+        "global_id",
+        "gh_number",
+        "position",
+        "status",
+        "created_at",
+        "updated_at",
+        "failure_reason"
+      ]
+    },
+    {
+      "row": 34,
+      "changed_columns": [
+        "global_id",
+        "gh_number",
+        "status",
+        "created_at",
+        "updated_at",
+        "attempt_count",
+        "failure_reason"
+      ]
+    },
+    {
+      "row": 35,
+      "changed_columns": [
+        "global_id",
+        "gh_number",
+        "position"
+      ]
+    },
+    {
+      "row": 36,
+      "changed_columns": [
+        "global_id",
+        "gh_number",
+        "position",
+        "status",
+        "created_at",
+        "updated_at",
+        "attempt_count",
+        "failure_reason"
+      ]
+    },
+    {
+      "row": 37,
+      "changed_columns": [
+        "global_id",
+        "gh_number",
+        "position",
+        "status",
+        "created_at",
+        "updated_at",
+        "failure_reason"
+      ]
+    }
+  ],
+  "source_changed": false,
+  "b1_preview": "opus-publication-b1-preview.json",
+  "backups": [
+    "pre-replay-releases.db",
+    "pre-replay-releases.sql",
+    "development-before-replay.db"
+  ],
+  "accounting": "Second/final slot1 was parent-reserved before mutation; first earlier repair retrospectively recorded, no advance-reservation claim; cap not reset"
+}

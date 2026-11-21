@@ -1,0 +1,20 @@
+{
+  "command": "normal git push",
+  "head": "d291ac298ce7741f737c3b1ca667c3d2bc8186ea",
+  "rc": 0,
+  "elapsed": 556.0375597476959,
+  "before": {
+    "head": "d291ac298ce7741f737c3b1ca667c3d2bc8186ea",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "email": ""
+  },
+  "after": {
+    "head": "d291ac298ce7741f737c3b1ca667c3d2bc8186ea",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "email": ""
+  },
+  "identity_unchanged": true,
+  "bypass": false
+}

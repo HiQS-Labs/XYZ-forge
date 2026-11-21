@@ -1,0 +1,5 @@
+HQ park · Tier B — issue-first intake PREVIEW (writes nothing)
+  target repo:  XYZ-forge  →  XYZ-forge  (<repos>/XYZ-forge)
+  GitHub issue: spike: which of the Phase 0 STALE contracted issues are delivered-but-open (#423 #141 #275 #345)
+  capture doc:  PROJECT/1-INBOX/GH-<N>-SPIKE-WHICH-PHASE-0.md
+NEEDS-SPIKE: (preview only; not filed) issue <url> · doc PROJECT/1-INBOX/GH-<N>-SPIKE-WHICH-OF.md · row <gid>; no contract by design, not a build candidate

@@ -1,0 +1,37 @@
+"""GH-1144 manual check: canonical wave_reconcile --commit <sha> --base <b> --gate on a real
+git repo whose only branch is the base. Real: branch check, commit reachability, base guard,
+receipt attribution. Stubbed: network/side-effect helpers only."""
+import contextlib, io, json, os, subprocess, sys, tempfile
+from pathlib import Path
+from unittest.mock import patch
+forge = Path(sys.argv[1]); base = sys.argv[2]; pass_base = sys.argv[3] == "yes"
+sys.path.insert(0, str(forge / "utils/py"))
+import wave_reconcile as wave
+import importlib.util
+spec = importlib.util.spec_from_file_location("express", forge / "utils/py/express.py")
+express = importlib.util.module_from_spec(spec)
+with patch.object(sys, "argv", ["express"]): spec.loader.exec_module(express)
+repo = Path(tempfile.mkdtemp(prefix="gh1144-recon-"))
+g = lambda *a: subprocess.run(["git", "-C", str(repo), *a], check=True, capture_output=True, text=True).stdout.strip()
+g("init", "-q", "-b", base); g("config", "user.email", "t@t"); g("config", "user.name", "t")
+for d in ("PROJECT/2-WORKING", "PROJECT/3-COMPLETED", "PROJECT/4-MISC", "TESTS-RESULTS"): (repo / d).mkdir(parents=True)
+(repo / "README.md").write_text("x\n"); g("add", "-A"); g("commit", "-qm", "init")
+(repo / "README.md").write_text("y\n"); g("add", "-A"); g("commit", "-qm", "docs(GH-1144): demo [express]\n\nCloses #1144")
+sha = g("rev-parse", "HEAD")
+rel = express.write_receipt(str(repo), sha, 1144, "test/pdda-repo-contract.sh", 0, base=base)
+g("add", "-A"); g("commit", "-qm", "chore(releases): express ship GH-1144")
+print("repo branch:", g("branch", "--show-current"), "| branches:", g("branch", "--format=%(refname:short)").split())
+print("receipt:", rel, json.loads((repo / rel).read_text().splitlines()[0])["environment"])
+argv = ["wave-reconcile", "--root", str(repo), "--commit", sha, "--gate", "--skip-pull"] + (["--base", base] if pass_base else [])
+print("argv:", " ".join(argv[1:]))
+with contextlib.ExitStack() as st:
+    for name, value in (("check_porcelain_cleanliness", None), ("github_slug_from_origin", "example/repo"),
+                        ("run_subprocesses", None), ("run_validation_gate", None), ("fetch_issue_state", "OPEN")):
+        st.enter_context(patch.object(wave, name, return_value=value))
+    st.enter_context(patch.object(sys, "argv", argv))
+    out = st.enter_context(contextlib.redirect_stdout(io.StringIO())); st.enter_context(contextlib.redirect_stderr(out))
+    code = 0
+    try: wave.main()
+    except SystemExit as e: code = e.code
+lines = [l for l in out.getvalue().splitlines() if any(k in l for k in ("reachable", "target base", "Processing", "Active branch", "provenance", "receipt", "Error", "ERROR", "die"))]
+print("exit:", code); print("\n".join(lines[:8]))

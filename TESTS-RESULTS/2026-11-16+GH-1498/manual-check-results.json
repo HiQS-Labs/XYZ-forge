@@ -1,0 +1,272 @@
+[
+  {
+    "id": "A1",
+    "assertion": "plan mode logs zero write verbs",
+    "candidate": "PASS",
+    "bad_candidate": "--apply against the same shim",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A2",
+    "assertion": "each rung x {behind,dirty,failing} + draft + drift-bump gives the ladder's exact bundle",
+    "candidate": "PASS",
+    "bad_candidate": "rung floors off by one day (8/15/31)",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A3",
+    "assertion": "engine/label/body/veto holds and a child of a held PR (each with an owned label, fresh enough to clear it) get zero writes",
+    "candidate": "PASS",
+    "bad_candidate": "hold_label dropped from the union",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A4",
+    "assertion": "second --apply on the first run's state makes zero writes",
+    "candidate": "PASS",
+    "bad_candidate": "owned-comment lookup ignoring the marker",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A5",
+    "assertion": "after pr-minder labels/comments #40 and update-branches #41 (updatedAt = today), pr-minder still ages them 20d and 5d",
+    "candidate": "PASS",
+    "bad_candidate": "clock reading updatedAt",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A6",
+    "assertion": "after the same writes, the real `planner_core.py --mode stalled` report shows the 20d/5d dates; history error -> report names #40, #41 as fallback",
+    "candidate": "PASS",
+    "bad_candidate": "production call without the activity pass-through",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A7",
+    "assertion": "2 ok syncs this episode -> no 3rd update-branch; idle 14d -> rung 3",
+    "candidate": "PASS",
+    "bad_candidate": "cap removed",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A8",
+    "assertion": "single-parent author commit resets (owned label removed, foreign kept); sync merge does not, even after head/base rename",
+    "candidate": "PASS",
+    "bad_candidate": "headline-only predicate",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A8b",
+    "assertion": "maintenance classification survives a head rename",
+    "candidate": "PASS",
+    "bad_candidate": "predicate bound to current branch names",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A9",
+    "assertion": "head SHA change or new body hold between measure and write -> 0 writes + aborted receipt",
+    "candidate": "PASS",
+    "bad_candidate": "pre-write check without body",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A10",
+    "assertion": "every write has intent+result; failed update-branch / label-create recorded as failed",
+    "candidate": "PASS",
+    "bad_candidate": "result line skipped on failure",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A10b",
+    "assertion": "shim write count equals result receipts (label creation receipted on its own)",
+    "candidate": "PASS",
+    "bad_candidate": "label creation folded into add-label",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A11",
+    "assertion": "incomplete history or GraphQL error -> unknown, 0 writes (owned label kept)",
+    "candidate": "PASS",
+    "bad_candidate": "fallback to createdAt",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A12",
+    "assertion": "failing check rendered as name + URL; missing URL -> 'link unavailable'",
+    "candidate": "PASS",
+    "bad_candidate": "check URL dropped",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A12b",
+    "assertion": "conflict comment states measured drift; rung-3 re-cut names the PR's own commits and diff size",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A13",
+    "assertion": "a pr-minder:* label without an owning receipt is kept; with one, a fresh PR's label is cleared",
+    "candidate": "PASS",
+    "bad_candidate": "ownership inferred from the label name",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A14",
+    "assertion": "rung-2 update-branch failure: one sync attempt, label added, failure diagnosis commented",
+    "candidate": "PASS",
+    "bad_candidate": "no fallback comment on failure",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A15",
+    "assertion": "author came back: owned comment PATCHed to rung 0 once, whether inside or beyond the 20-comment window; rerun no-op; never-managed PRs (incl. truncated) untouched",
+    "candidate": "PASS",
+    "bad_candidate": "presence inferred only from the visible window",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A16",
+    "assertion": "flat install (skills/<name>/scripts siblings, no env) resolves both bundles",
+    "candidate": "PASS",
+    "bad_candidate": "pre-fix resolver (parents[1].parent)",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A17",
+    "assertion": "behind is derived from measured drift when GitHub reports CLEAN -> update-branch at rung 1",
+    "candidate": "PASS",
+    "bad_candidate": "behind from mergeStateStatus only",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A18",
+    "assertion": "repair command shell-quotes branches; draft flip aborts; label added by someone else is not re-added or owned; bad thresholds rejected; plan lists label removals",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19a",
+    "assertion": "check names (mention, backtick, autolink, escaped link) render only as inert code spans",
+    "candidate": "PASS",
+    "bad_candidate": "no sanitising",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19b",
+    "assertion": "a marker comment by someone else is not owned: never PATCHed, pr-minder posts its own",
+    "candidate": "PASS",
+    "bad_candidate": "ownership by marker text only",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19c",
+    "assertion": "failed and uncertain update-branch attempts count toward the 2-per-episode cap",
+    "candidate": "PASS",
+    "bad_candidate": "cap counts ok only",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19d",
+    "assertion": "one PR raising does not end the pass: next PR still written, failed receipt, exit code 1",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19e",
+    "assertion": "a marker comment NOT written by the viewer still counts as author activity",
+    "candidate": "PASS",
+    "bad_candidate": "marker-only filtering (ignores viewerDidAuthor)",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A19f",
+    "assertion": "a failed update-branch's CLI error is rendered as an inert code span in the fallback comment",
+    "candidate": "PASS",
+    "bad_candidate": "raw error interpolated",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A20a",
+    "assertion": "a null reviewThreads entry (thread or inner comment) makes that PR unknown instead of raising",
+    "candidate": "PASS",
+    "bad_candidate": "\u2014",
+    "bad_rejected": null,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A20b",
+    "assertion": "--pr N runs the conflict lookup (git fetch) only for PR N",
+    "candidate": "PASS",
+    "bad_candidate": "conflict lookup for every conflicting PR",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  },
+  {
+    "id": "A21",
+    "assertion": "update-branch whose new head appears only on the 3rd read is classified ok (bounded polling)",
+    "candidate": "PASS",
+    "bad_candidate": "single head read (pre-fix behaviour)",
+    "bad_rejected": true,
+    "bad_crashed": null,
+    "verdict": "PASS"
+  }
+]

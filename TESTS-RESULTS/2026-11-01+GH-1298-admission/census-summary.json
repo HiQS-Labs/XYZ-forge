@@ -1,0 +1,43 @@
+{
+ "head": "aba591006af268e2ae6c16cbca0aebb94c101a73",
+ "open_issues": 298,
+ "by_stage": {
+  "needs-contract": 67,
+  "no-ledger-row": 202,
+  "needs-doc": 7,
+  "already-landed": 4,
+  "completed-ref": 2,
+  "ready": 8,
+  "deferred": 6,
+  "unrated": 2
+ },
+ "preflight_rc": {
+  "4": 1,
+  "0": 6,
+  "7": 1
+ },
+ "admissible": [
+  670,
+  1263,
+  1264,
+  1265,
+  1266,
+  1267
+ ],
+ "ready_but_excluded": [
+  {
+   "issue": 355,
+   "open_pr": [],
+   "delivered_by": [],
+   "preflight_rc": 4
+  },
+  {
+   "issue": 1098,
+   "open_pr": [],
+   "delivered_by": [
+    1274
+   ],
+   "preflight_rc": 7
+  }
+ ]
+}

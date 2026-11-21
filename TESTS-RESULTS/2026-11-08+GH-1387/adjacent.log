@@ -1,0 +1,38 @@
+lane-attempt history preserved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-30l2iihb/.tick/attempt-history/p1-2m6tgelz/attempts
+lane-attempt-cap: lane p1 PARKED after 2 attempt(s) (cap 2) — no relay token seeded.
+  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-30l2iihb/.tick/attempts/p1
+lane-attempt history preserved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-30l2iihb/.tick/attempt-history/p1-feqgjkxe/attempts
+lane-attempt history preserved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-6lipi9pe/.tick/attempt-history/p1-fam61uu0/attempts
+lane-attempt-cap: lane p1 PARKED after 2 attempt(s) (cap 2) — no relay token seeded.
+  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-6lipi9pe/.tick/attempts/p1
+lane-attempt history preserved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-6lipi9pe/.tick/attempt-history/p1-87aw7_ue/attempts
+[
+  {
+    "driver": "marathon_drive.py",
+    "checks": [
+      "nested-no-reset",
+      "exact-bytes",
+      "missing-no-empty-archive",
+      "fresh-fire-count-one",
+      "failed-executions-cap-two",
+      "repeated-archives",
+      "rename-failure-retains-live"
+    ],
+    "passed": 7,
+    "fixture": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-30l2iihb"
+  },
+  {
+    "driver": "relay_drive.py",
+    "checks": [
+      "nested-no-reset",
+      "exact-bytes",
+      "missing-no-empty-archive",
+      "fresh-fire-count-one",
+      "failed-executions-cap-two",
+      "repeated-archives",
+      "rename-failure-retains-live"
+    ],
+    "passed": 7,
+    "fixture": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1387-adjacent-6lipi9pe"
+  }
+]

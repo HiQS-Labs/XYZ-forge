@@ -28,6 +28,8 @@ LABEL = "merge-batch"
 START = "<!-- merge-batch:script:start -->"
 END = "<!-- merge-batch:script:end -->"
 VERDICTS = ("clean", "findings", "deferred")
+NO_SWEEP_COMMAND = ("No sweep command declared for this repo; declare `qualification` in its "
+                    "`.merge-cleanup.json` (merge-cleanup SKILL.md, Project merge policy)")
 FULL_GATE = "validate.sh --parallel 4"
 CALLER_SECTIONS = (
     "## Strategy and sequence review\n<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; "
@@ -46,10 +48,10 @@ def _now() -> str:
 
 def _strip_marks(obj: Any) -> Any:
     """Drop the one-shot intent markers before persisting (`_touched`, `_verdict_touched`,
-    `_sweep_touched`, `_refreshed`) — they describe THIS save's intentional writes only."""
+    `_sweep_touched`, `_refreshed`, `_landing_plan_touched`, `_allowlist_touched`) — they describe THIS save's intentional writes only."""
     if isinstance(obj, dict):
         return {k: _strip_marks(v) for k, v in obj.items()
-                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed")}
+                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed", "_landing_plan_touched", "_allowlist_touched")}
     if isinstance(obj, list):
         return [_strip_marks(v) for v in obj]
     return obj
@@ -79,6 +81,7 @@ def new(primary: Path, origin: str, integration: str, ordered: List[Dict[str, An
     key = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + f"-{ordered[0]['number']}"
     rec = {"schema": 1, "repo": origin, "integration": integration, "created": _now(),
            "issue": None, "issue_url": "", "issue_error": "",
+           "landing_plan": None,
            "planned": [_row(i + 1, pr) for i, pr in enumerate(ordered)],
            "outcomes": {str(pr["number"]): {"status": "unattempted"} for pr in ordered},
            "landed_order": [], "sweep_inputs": {}, "verdict": None,
@@ -180,12 +183,16 @@ def _merge_records(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]
             order.append(n)
     out["landed_order"] = order
 
-    # verdict/sweep_inputs are intentional replacements by their owning mutators — an intent
+    # verdict/sweep_inputs/landing_plan are intentional replacements by their owning mutators — an intent
     # marker decides, so a same-second stale snapshot cannot resurrect the replaced value
     if isinstance(disk.get("verdict"), dict) and not mine.get("_verdict_touched"):
         out["verdict"] = disk["verdict"]      # a carried (unmarked) verdict never beats durable
     if isinstance(disk.get("sweep_inputs"), dict) and not mine.get("_sweep_touched"):
         out["sweep_inputs"] = disk["sweep_inputs"]
+    if isinstance(disk.get("landing_plan"), dict) and not mine.get("_landing_plan_touched"):
+        out["landing_plan"] = disk["landing_plan"]
+    if isinstance(disk.get("allowlist"), dict) and not mine.get("_allowlist_touched"):
+        out["allowlist"] = disk["allowlist"]
 
     for k in ("issue", "issue_url"):
         if not out.get(k) and disk.get(k):
@@ -206,6 +213,10 @@ def save(rec: Dict[str, Any]) -> None:
             merged = _merge_records(disk, rec)
             rec.clear()
             rec.update(merged)  # long-lived holders (the driver's batch) see the merged state
+        else:
+            stripped = _strip_marks(rec)
+            rec.clear()
+            rec.update(stripped)
         attempt_record.save(path, rec)
 
 
@@ -236,14 +247,14 @@ def qa_pending(rec: Dict[str, Any]) -> bool:
     return bool(got) and got != set((rec.get("verdict") or {}).get("covers") or [])
 
 
+def row_done(o: Dict[str, Any]) -> bool:
+    """A planned PR is finished when it closed, or merged and reconciled."""
+    status = o.get("status") or ""
+    return status == "closed" or status.startswith("closed:") or (status == "merged" and o.get("reconcile") == "ok")
+
+
 def continuable(rec: Dict[str, Any]) -> bool:
-    for row in rec["planned"]:
-        o = rec["outcomes"].get(str(row["pr"]), {})
-        status = o.get("status") or ""
-        if status == "closed" or status.startswith("closed:") or (status == "merged" and o.get("reconcile") == "ok"):
-            continue
-        return True
-    return False
+    return any(not row_done(rec["outcomes"].get(str(row["pr"]), {})) for row in rec["planned"])
 
 
 def find_unfinished(primary: Path, origin: str, integration: str, prs: List[int],
@@ -296,6 +307,35 @@ def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
     save(rec)
 
 
+def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[int],
+                     forecast: Optional[Dict[str, Any]] = None) -> None:
+    """Record an intentional landing plan decision (GH-1066) for queues of 3+ PRs.
+
+    GH-1452: `forecast` is the optional comparison against the planning-time landing forecast
+    (state match|override|no-recommendation, recommendation, stale flag and reasons). It is advice
+    about the decision, never the decision itself; omitted, the record is exactly what it was."""
+    rec["landing_plan"] = {
+        "decision": str(decision).strip(),
+        "reason": str(reason).strip(),
+        "decided_at": _now(),
+        "prs": sorted(int(p) for p in prs),
+    }
+    if forecast:
+        rec["landing_plan"]["forecast"] = forecast
+    rec["_landing_plan_touched"] = True
+    save(rec)
+
+
+def set_allowlist(rec: Dict[str, Any], pins: Dict[int, str]) -> None:
+    """GH-1226: the operator's --prs list and the head each PR was pinned to by the dry run. A resume
+    with a narrowed --prs adds to the record (latest pin wins), so earlier landings stay listed."""
+    merged = {int(n): sha for n, sha in (rec.get("allowlist") or {}).items()}
+    merged.update(pins)
+    rec["allowlist"] = {str(n): sha for n, sha in sorted(merged.items())}
+    rec["_allowlist_touched"] = True
+    save(rec)
+
+
 # --- the issue -----------------------------------------------------------------------------------
 
 def _cell(text: str) -> str:
@@ -303,10 +343,35 @@ def _cell(text: str) -> str:
 
 
 def script_block(rec: Dict[str, Any]) -> str:
-    lines = [START, "## Merge sequence",
-             "_Planned order from Phase 4. This block is maintained by merge-cleanup; edits inside it are replaced._", "",
-             "| # | PR | depends on | file overlap with | status | merge commit | reconcile |",
-             "|---|----|------------|-------------------|--------|--------------|-----------|"]
+    lines = [START]
+    lp = rec.get("landing_plan")
+    if lp and isinstance(lp, dict):
+        prs_str = ", ".join(f"#{n}" for n in (lp.get("prs") or [])) or "none"
+        lines += [
+            "## Landing decision (GH-1066)",
+            f"- Plan: `{lp.get('decision', '—')}`",
+            f"- Reason: {_cell(lp.get('reason') or '—')}",
+            f"- Decided: `{lp.get('decided_at') or '—'}` for PRs {prs_str}",
+        ]
+        fc = lp.get("forecast")
+        if isinstance(fc, dict):  # GH-1452: how the explicit decision compares with the planning-time forecast
+            stale = f"; stale: {_cell('; '.join(fc.get('stale_reasons') or []))}" if fc.get("stale") else ""
+            lines.append(f"- Forecast (GH-1452): `{fc.get('state', '—')}`, recommended `{fc.get('recommendation') or 'none'}`{stale}")
+        lines.append("")
+    allow = rec.get("allowlist")
+    if allow and isinstance(allow, dict):
+        lines += [
+            "## Allowlist (--prs, GH-1226)",
+            "- Only these PRs may land, each at the head the dry run pinned: "
+            + ", ".join(f"#{n} @ `{(sha or '')[:10]}`" for n, sha in allow.items()),
+            "",
+        ]
+    lines += [
+        "## Merge sequence",
+        "_Planned order from Phase 4. This block is maintained by merge-cleanup; edits inside it are replaced._", "",
+        "| # | PR | depends on | file overlap with | status | merge commit | reconcile |",
+        "|---|----|------------|-------------------|--------|--------------|-----------|",
+    ]
     for row in rec["planned"]:
         o = rec["outcomes"].get(str(row["pr"]), {})
         hard = ", ".join(f"#{d}" for d in row["hard"]) or "—"
@@ -326,8 +391,17 @@ def script_block(rec: Dict[str, Any]) -> str:
         conflicts = s.get("conflict_sites") or {}
         lines.append("- Repaired conflict sites: " + (
             "; ".join(f"#{n}: {', '.join(fs)}" for n, fs in conflicts.items()) or "none"))
-        lines.append(f"- Gate: `bash {s['gate']}` ({s['gate_reason']})")
-        if s.get("deferred"):
+        if s.get("gate"):  # GH-1159: only when the classifier ran; never for an undeclared repo
+            lines.append(f"- Gate: `bash {s['gate']}` ({s.get('gate_reason', '')})")
+        if s.get("full_suite") == "none":
+            lines.append("- This repo declares no full suite (`qualification.full_suite: none` in "
+                         "`.merge-cleanup.json`); the verdict records that and what did run")
+        elif not s.get("command") and s.get("deferred"):
+            lines.append("- Full sweep deferred to promotion, but this repo's `qualification` declares no "
+                         "`sweep_command`; record the verdict from the promotion run")
+        elif not s.get("command"):
+            lines.append(f"- {NO_SWEEP_COMMAND}")
+        elif s.get("deferred"):
             lines.append(f"- Full sweep deferred to the promotion dispatch (#1131): `{s['command']}` — record "
                          "`verdict: deferred` with that reason until the dispatch's receipt exists, or `clean` "
                          "naming the hosted run")
@@ -428,7 +502,8 @@ def _gate(primary: Path, landings: List[Tuple[int, str]]) -> Tuple[str, str]:
         return FULL_GATE, f"classifier unavailable: {str(exc)[:160]}"
 
 
-def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> None:
+def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str,
+                          qualification: Optional[Dict[str, Any]] = None) -> None:
     order = landed(rec)
     if not order:
         rec["sweep_inputs"] = {}
@@ -453,21 +528,30 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> No
                 files = []
         if files:
             conflicts[str(n)] = files
-    gate, reason = _gate(primary, [x for x in oids if x[1]]) if not missing else (FULL_GATE, "merge commit missing")
-    # GH-1127 / #1131: the full registry runs hosted, once, at the pre-promotion dispatch, never as
-    # a local rerun per batch. The Small list stays a cheap local sweep.
-    deferred = "--subsystem small" not in gate
+    # GH-1159: the repo's own `qualification` decides; without it no command (and no Forge gate)
+    # is printed. Only `promotion` consults Forge's classifier.
+    mode = (qualification or {}).get("full_suite") or "undeclared"
+    declared = (qualification or {}).get("sweep_command") or ""
+    clone = f'T=$(mktemp -d) && git clone --no-local {shlex.quote(str(primary))} "$T" && cd "$T"'
+    gate, reason, deferred, command = "", "", False, ""
+    if mode == "promotion":
+        gate, reason = _gate(primary, [x for x in oids if x[1]]) if not missing \
+            else (FULL_GATE, "merge commit missing")
+        # GH-1127 / #1131: the full registry runs hosted, once, at the pre-promotion dispatch,
+        # never as a local rerun per batch. The Small list stays a cheap local sweep.
+        deferred = "--subsystem small" not in gate
+        if not deferred:
+            command = f"{clone} && bash {gate}"
+        elif declared:
+            command = f"{declared}  # full registry, hosted, once before promotion (#1131); no local full rerun"
+    elif mode == "per_batch" and declared:
+        command = f"{clone} && ( {declared} )"  # grouped: a `;` inside never escapes the clone
     rec["_sweep_touched"] = True  # GH-1140: an intentional replacement, not a carried value
     rec["sweep_inputs"] = {
         "range": rng,
         "shared_files": {f: sorted(prs) for f, prs in sorted(owners.items()) if len(prs) > 1},
         "conflict_sites": conflicts, "gate": gate, "gate_reason": reason, "deferred": deferred,
-        "computed_at": _now(),
-        "command": (f"gh workflow run wave-reconcile.yml --ref {rec.get('integration') or 'development'}"
-                    "  # full registry, hosted, once before promotion (#1131); no local full rerun"
-                    if deferred else
-                    f'T=$(mktemp -d) && git clone --no-local {shlex.quote(str(primary))} "$T" '
-                    f'&& cd "$T" && bash {gate}'),
+        "full_suite": mode, "computed_at": _now(), "command": command,
     }
     save(rec)
 

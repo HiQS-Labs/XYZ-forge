@@ -1,0 +1,17 @@
+{
+  "control": "pre-fix",
+  "expected": "cold item stays pending, receipt declares supervision, token fields explicit null",
+  "pending": 0,
+  "receipt": {
+    "decision_status": "raw-valid",
+    "output_sha256": "3363c4a36824b3e6ece5d9c6deb738edeadb50adea9b52b5a84f621a355d0899",
+    "tool": "note"
+  },
+  "transcript": {
+    "actual_cost": 0.0,
+    "billing_status": "reported",
+    "normalized": "ok",
+    "raw": "{\"args\":{\"inbox_id\":\"n\",\"text\":\"hello\"},\"confidence\":1.0,\"reason\":\"oldest note request\",\"tool\":\"note\"}"
+  },
+  "red": true
+}

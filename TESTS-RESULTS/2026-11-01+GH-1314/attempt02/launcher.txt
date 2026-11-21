@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""GH-1314 attempt 02 setup/launch only; no retry or cleanup."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+
+GIT = "/Library/Developer/CommandLineTools/usr/bin/git"
+BAD = "b78df4b93049498b19dd47fe6a90d006f9c42700"
+GOOD = "47deab48b8c749d699c6b6c77c38dfdaa5682025"
+active = None
+launch = None
+log = {"attempt": "02", "candidate_invocations": "inspect helper evidence"}
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def save():
+    if launch is not None:
+        launch.write_text(json.dumps(log, sort_keys=True, indent=2) + "\n")
+
+def stopped(signum, frame):
+    raise RuntimeError(f"launcher interrupted by signal {signum}")
+
+def group_exists(pid):
+    try:
+        os.killpg(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+
+def terminate(proc):
+    event = {"pid": proc.pid, "sigterm_sent": False, "forced_kill": False,
+             "descendant_cleanup": "requires helper evidence; no global inventory"}
+    log.setdefault("termination_events", []).append(event)
+    if group_exists(proc.pid):
+        os.killpg(proc.pid, signal.SIGTERM)
+        event["sigterm_sent"] = True
+    try:
+        proc.wait(timeout=1.5)
+    except subprocess.TimeoutExpired:
+        pass
+    # Allow the helper's signal handler to stop its separately grouped candidate.
+    # A forced helper kill cannot establish descendant cleanup.
+    if proc.poll() is None or group_exists(proc.pid):
+        event["forced_kill"] = True
+        event["descendant_cleanup"] = "unverified"
+        log["descendant_cleanup"] = "unverified after forced kill"
+        os.killpg(proc.pid, signal.SIGKILL)
+    proc.wait(timeout=1)
+    event["process_group_gone"] = not group_exists(proc.pid)
+    if group_exists(proc.pid):
+        raise RuntimeError("uncertain owned group termination")
+
+def run(argv, cap, env):
+    global active
+    left = min(deadline - time.time(), end_mono - time.monotonic())
+    if left <= 4:
+        raise RuntimeError("setup/launch deadline exhausted")
+    started = time.monotonic()
+    active = subprocess.Popen(argv, cwd=workspace, env=env,
+                              stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, start_new_session=True)
+    proc = active
+    timeout = False
+    try:
+        out, err = proc.communicate(timeout=min(cap, left - 3))
+    except subprocess.TimeoutExpired:
+        timeout = True
+        terminate(proc)
+        out, err = proc.communicate(timeout=1)
+    survivor = group_exists(proc.pid)
+    if survivor:
+        terminate(proc)
+    active = None
+    row = {"argv": argv, "rc": proc.returncode, "timed_out": timeout,
+           "surviving_group_observed": survivor,
+           "duration_s": time.monotonic() - started,
+           "stdout": out.decode(errors="replace"),
+           "stderr": err.decode(errors="replace")}
+    log["commands"].append(row)
+    save()
+    if timeout or survivor or proc.returncode:
+        raise RuntimeError("setup/helper failure; no retry")
+
+try:
+    config = json.loads(Path(sys.argv[1]).read_text())
+    helper = Path(config["helper_path"]).resolve(strict=True)
+    protocol = Path(config["protocol_path"]).resolve(strict=True)
+    workspace = Path(config["workspace"]).resolve(strict=True)
+    source = Path(config["source_root"]).resolve(strict=True)
+    python = str(Path(sys.executable).resolve(strict=True))
+    if python != config["python"]:
+        raise RuntimeError("launcher is not using the approved direct Python")
+    for path, key in ((Path(__file__), "launcher_sha256"),
+                      (helper, "helper_sha256"), (protocol, "protocol_sha256")):
+        if sha(path) != config[key]:
+            raise RuntimeError("approved artifact hash mismatch")
+    # The 600-second clock starts before allocating either setup or candidate roots.
+    started = time.time()
+    deadline = started + 600
+    end_mono = time.monotonic() + 600
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGALRM):
+        signal.signal(sig, stopped)
+    signal.setitimer(signal.ITIMER_REAL, 597)
+    setup = Path(tempfile.mkdtemp(prefix="gh1314-attempt02-setup.", dir=workspace))
+    root = Path(tempfile.mkdtemp(prefix="gh1284-calibration.", dir=workspace))
+    launch = setup / "launch.json"
+    for name in ("home", "tmp"):
+        (setup / name).mkdir()
+    env = {"HOME": str(setup / "home"), "TMPDIR": str(setup / "tmp"),
+           "PATH": "/usr/bin:/bin", "LC_ALL": "C", "TZ": "UTC",
+           "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"}
+    log.update({"setup_start_epoch": started, "deadline_epoch": deadline,
+                "root": str(root), "setup_root": str(setup), "config": config,
+                "setup_environment": env, "git_sha256": sha(Path(GIT)),
+                "python_sha256": sha(Path(python)), "commands": []})
+    save()
+    for label, revision in (("bad", BAD), ("good", GOOD)):
+        run([GIT, "-c", "core.hooksPath=/dev/null", "clone", "--no-hardlinks",
+             "--no-checkout", str(source), str(root / label)], 120, env)
+        run([GIT, "-c", "core.hooksPath=/dev/null", "-C", str(root / label),
+             "checkout", "--detach", revision], 120, env)
+    # Candidate environment is newly created only after setup. Never erase scratch
+    # or allowlist xcrun_db to satisfy an empty-directory precondition.
+    for name in ("home", "tmp", "evidence"):
+        (root / name).mkdir()
+    (root / "evidence/helper.txt").write_bytes(helper.read_bytes())
+    (root / "evidence/PROTOCOL.md").write_bytes(protocol.read_bytes())
+    helper_config = {"root": str(root), "python": python,
+                     "deadline_epoch": deadline,
+                     "helper_sha256": config["helper_sha256"],
+                     "protocol_sha256": config["protocol_sha256"]}
+    config_path = setup / "helper-config.json"
+    config_path.write_text(json.dumps(helper_config, sort_keys=True, indent=2) + "\n")
+    run([python, "-B", str(helper), str(config_path)], 600, env)
+    if (root / "evidence/inconclusive.json").exists():
+        raise RuntimeError("helper produced inconclusive evidence")
+    result = json.loads((root / "evidence/outcome.json").read_text())
+    receipts = (root / "evidence/provenance.jsonl").read_text().splitlines()
+    if result.get("outcome") != "calibrated" or len(receipts) != 8:
+        raise RuntimeError("missing complete calibration evidence")
+    if min(deadline - time.time(), end_mono - time.monotonic()) <= 3:
+        raise RuntimeError("late result invalidated")
+    log["outcome"] = "helper completed; parent semantic acceptance pending"
+    signal.setitimer(signal.ITIMER_REAL, 0)
+except BaseException as exc:
+    signal.setitimer(signal.ITIMER_REAL, 0)
+    termination = "no active direct child"
+    if active is not None:
+        try:
+            terminate(active)
+            termination = "launcher child group terminated; descendant cleanup requires helper evidence"
+        except BaseException as cleanup:
+            termination = f"uncertain: {cleanup}"
+    log.update({"outcome": "inconclusive", "reason": str(exc),
+                "termination": termination, "retry": False,
+                "acceptance_rule": "inconclusive launcher outcome invalidates helper outcome"})
+    save()
+    print(json.dumps(log), file=sys.stderr)
+    sys.exit(2)
+finally:
+    if "started" in globals():
+        log["total_elapsed_s"] = time.time() - started
+    save()
+print(json.dumps(log, sort_keys=True, indent=2))

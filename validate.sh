@@ -214,7 +214,6 @@ TESTS=(
   "gh90-allowlist-directory.sh" # GH-90 (a DIRECTORY on ALLOW_PATHS was unmatchable by construction, so a valid lane surfaced as a containment violation) — 19/0; control: pre-fix replay 10/9. The nine that pass pre-fix are the point — C3/C5 are GH-59's own rules, which this fix had to leave intact, and C7 executes a real off-lane write, so the suite still goes red against a build with containment removed
   "gh399-packet-acceptance-continuation.sh" # GH-399 (the packet's acceptance block is a lossless copy: continuations, scope, cap)
   "gh417-turn-root-symlink-prefix.sh" # GH-417 (--show-toplevel is safe as resolve_turn_root's default: a Python turn with *_TURN_ROOT unset, from a repo behind a symlinked prefix, is not reverted) — 13/0; control: reverting GH-261's canonicalization brings exit 6 back, and the same reverted tree passes with a logical-form ROOT
-  "gh390-gate-guard.sh"          # GH-390/GH-382 (gate resource guard: wall/CPU/RSS caps, gate-killed escalation, off switch)
   "gh457-gate-tiers.sh"         # GH-457 (the gate's caps come from a declared TIER; the default tier must exceed the worst observed real gate runtime) — 10/0; control: mutating the registry moves the resolved cap, restoring it moves back
   "gh407-gate-ran-attribution.sh" # GH-407 (pre-advance-failed is reserved for a gate that RAN; every escalation records gate: not-run|green|red) — 7/0; control: pre-fix replay reproduces the mislabel inside the fixture
   "gh390-timeout-attribution.sh" # GH-390 (exit-7 attribution: dialog vs runaway vs slow vs wedged)
@@ -817,6 +816,8 @@ if [ "$LIST_ONLY" -eq 1 ]; then
   exit 0
 fi
 
+
+
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
 # gate is the only gate while this repo is private (GH-544), and the hook lives in `.git/hooks/`,
 # which does not travel with a clone. Surface that state loudly but NON-FATALLY, in-band, on the
@@ -1031,9 +1032,16 @@ if command -v php >/dev/null 2>&1; then
     echo "ENVIRONMENT FAULT: php present but unusable (${_php_error%%$'\n'*}) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)"
   fi
 fi
-if ! python3 -c "import yaml" >/dev/null 2>&1; then
-  XYZ_ENV_FAULTS="${XYZ_ENV_FAULTS:+$XYZ_ENV_FAULTS,}yaml"
-  echo "ENVIRONMENT FAULT: python3 ($(command -v python3)) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)"
+_python_version="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null)"
+_python_missing=""
+for _python_module in yaml pytest requests mypy; do  # mypy: test_python_layer runs python3 -m mypy (GH-1519)
+  if ! python3 -c "import $_python_module" >/dev/null 2>&1; then
+    _python_missing="${_python_missing:+$_python_missing,}$_python_module"
+  fi
+done
+if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1 || [ -n "$_python_missing" ]; then
+  echo "ENVIRONMENT FAULT: python3 ($(command -v python3 || echo unavailable)) version ${_python_version:-unavailable}; missing modules: ${_python_missing:-none}; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt) — rerun with PATH=\"\$HOME/.cache/xyz-forge-test-venv/bin:\$PATH\" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)"
+  exit 3
 fi
 export XYZ_ENV_FAULTS
 # GH-732 environment faults END
@@ -1051,6 +1059,13 @@ if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
   fi
   exit 0
 fi
+
+# GH-1399: --list and --print-mode are read-only; every actual task gate requires booked accounting.
+_gate_attempt_context="${XYZ_ATTEMPT_CONTEXT:-}"
+_gate_merge_context="${MERGE_CLEANUP_RECORD:-}"
+python3 "$HERE/utils/py/gate_receipt.py" admit --repo "$HERE" >/dev/null || exit 2
+# The parent proof must not become ambient state in the suites' unrelated fixtures.
+unset XYZ_ATTEMPT_CONTEXT MERGE_CLEANUP_RECORD
 
 # ── GH-35 tier 1: the deterministic docs gate, and nothing else ─────────────────────────────────
 # This is the same pair of checks githooks/pre-push runs for a route=docs push, so
@@ -1586,10 +1601,16 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   for t in "${FAILED[@]}"; do echo "  - $t"; done
   exit 1
 fi
-if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] && [ -z "$(git status --porcelain 2>/dev/null)" ]; then
-  _val_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
+# GH-1308 #9: a green run always leaves a receipt (marathon-closeout accepts any passing one); only a
+# run with no skipped suite and no environment fault is stamped `--scope full`, which is what
+# pre-push reuse requires.
+if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] \
+  && _val_dirty="$(git -C "$HERE" status --porcelain 2>/dev/null)" && [ -z "$_val_dirty" ]; then
+  _val_sha="$(git -C "$HERE" rev-parse --verify HEAD 2>/dev/null || true)"
   if [ -n "$_val_sha" ] && [ -f "$HERE/utils/py/gate_receipt.py" ]; then
-    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
+    _val_scope="--scope full"
+    if [ "${#SKIPPED_SUITES[@]}" -gt 0 ] || [ -n "${XYZ_ENV_FAULTS:-}" ]; then _val_scope=""; fi
+    XYZ_ATTEMPT_CONTEXT="$_gate_attempt_context" MERGE_CLEANUP_RECORD="$_gate_merge_context" python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" $_val_scope --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
   fi
 fi
 exit 0

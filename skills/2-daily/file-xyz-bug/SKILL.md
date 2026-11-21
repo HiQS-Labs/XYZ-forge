@@ -1,6 +1,7 @@
 ---
 name: file-xyz-bug
-description: File a bug against the xyz-3-agents-swarm harness from ANY repo or session — lands a PDDA-compliant capture in that repo's PROJECT/1-INBOX/ (GH-<n>-*.md), files the tracking GitHub issue, and parks a one-line ROADMAP pointer, without touching the repo you are standing in. Use when the xyz harness misbehaves while you are working somewhere else — a relay/marathon driver fails, `tick` misbehaves, a turn shim exits wrong, a vendored `.xyz/` drifts, an xyz skill (relay-xyz, consult, hq, xyz) breaks — and you want it recorded where it will actually be triaged instead of lost in the current session. Trigger on /file-xyz-bug, "file an xyz bug", "report this to the swarm repo", "log this harness bug upstream", "send this bug to xyz". NOT for bugs in the repo you are currently working on (use that repo's own intake, e.g. /idea or /triage).
+description: >-
+  File a bug against the xyz-3-agents-swarm harness from ANY repo or session — lands a PDDA-compliant capture in that repo's PROJECT/1-INBOX/ (GH-N-*.md), files the tracking GitHub issue, and parks a one-line ROADMAP pointer, without touching the repo you are standing in. Use when the xyz harness misbehaves while you are working somewhere else — a relay/marathon driver fails, `tick` misbehaves, a turn shim exits wrong, a vendored `.xyz/` drifts, an xyz skill (relay-xyz, consult, hq, xyz) breaks — and you want it recorded where it will actually be triaged instead of lost in the current session. Trigger on /file-xyz-bug, "file an xyz bug", "report this to the swarm repo", "log this harness bug upstream", "send this bug to xyz". NOT for bugs in the repo you are currently working on (use that repo's own intake, e.g. /idea or /triage).
 ---
 
 # /file-xyz-bug — cross-repo bug front-door into the xyz intake
@@ -84,6 +85,24 @@ you are standing in.
    `gh issue create` title + body, the full capture doc (with a `GH-<new>` placeholder), and the
    ROADMAP line. Say plainly which repo each lands in. This single preview **is** the human
    checkpoint — nothing is filed or written before the operator confirms once.
+   - **Comprehension lens (GH-1414):** Before presenting that same preview, read
+     the redacted capture as a new triager would. Include a brief **What this
+     proposes** (the reported failure and observable repair outcome), **How the
+     existing system works, per this capture**, and **What it's not** where a
+     consequential expectation could be mistaken. Cite the capture's evidence or
+     sections for boundaries; separate explicit exclusions from inference, deferred
+     work, unresolved choices and later authorization. Unknown behavior stays
+     unknown: do not invent a repro, root cause, non-goal or fix design. If an
+     expectation remains unclear, expose it in this preview using the existing
+     question budget. This is an author comprehension check, not independent QA;
+     it adds no reviewer, approval checkpoint, or permission to diagnose or fix.
+     Keep the useful clarification in the issue and capture so `/start-task` can
+     read it at pickup. Handoff to `/start-task` for its independent plan review
+     only when the operator asks to execute the bug; do not invoke it while filing.
+   - **Task 12: structured issue body format.** The created issue body must render `/idea`'s standard sections:
+     `## Observed` (measured table with claim, command, observed), `## Acceptance` (`- [ ]` items),
+     `## Preflight Contract` (JSON block with target, gate, fix_probes, artifacts), and `## PRS proposal`
+     (four lines: `pri N: ...`, `sev N: ...`, `appeal N: ...`, `effort N: ...` on 1–100 scale).
 
 4. **On confirm, execute in order** (issue-first SOP; a harness bug is above the trivial-fix bar):
    - `gh issue create --repo <owner/repo>` → capture the returned number `<n>`. Re-resolve the slug
@@ -97,29 +116,24 @@ you are standing in.
        is `runtime:bash`, a twin divergence is `runtime:parity`). These three labels already exist in
        the intake repo — don't recreate them. If you genuinely can't tell which twin ran, omit the
        label rather than guess; a wrong runtime tag misroutes triage.
+     - **Umbrella label.** For multiphase or tracking umbrella issues, apply `--label "umbrella"` so
+       intake metrics and software factory discovery exclude them from atomic build queues.
    - Write `<intake repo>/PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md` (SCREAMING-KEBAB, ~2–4 words, no
      zero-padding). `<SHORT-SLUG>` is a *title* slug (e.g. `RELAY-DRIVE-EXIT6`) — do not confuse it
      with the locator's `XYZ_SLUG`, which is the `owner/repo` origin slug and contains a `/`.
-   - Park the ROADMAP pointer (Step 5).
    - **Do not commit and do not push.** See Guardrails — this is the rule most likely to bite.
 
-5. **Park the intake in the RELEASES DB** — run against the resolved XYZ checkout, never
-   the caller's repo (the CLI writes that repo's `releases.db`): 
-   `(cd "$XYZ_REPO" && python3 utils/py/releases_app.py --root "$XYZ_REPO" roadmap add …)`;
-   or `hq park <project> …`, which resolves the target itself — required at capture time
-   (`ROUTER.md`, `PROJECT/PDDA.md` → RELEASES DB contract; ROADMAP.md is retired, GH-269):
-
-   ```md
-   - **GH-<n> — <short title>** (<YYYY-MM-DD>) - <one-line symptom>. Bug filed via /file-xyz-bug
-     from `<caller repo name>`. Issue [#<n>](<issue-url>). ->
-     [PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md](PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md)
-   ```
+5. **Ledger row deferred to pickup (decision 6)** — Filing creates the issue and
+   `PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md` capture doc. No `releases.db` row is created at filing
+   (GH-1340 / GH-1345 decision 6); row insertion and its stored rating are deferred to pickup/selection
+   time (`start-task`, Jog, `start-marathon`).
 
 6. **Report + verify.** Run `bash <intake repo>/utils/pdda/pdda.sh roadmap-coverage` to confirm the
-   capture is parked. Note `pdda.sh frontmatter` scans `2-WORKING` only — it does **not** validate a
-   1-INBOX capture, so don't claim it did. Then report back in three lines: the issue URL, the doc
-   path, and **the fact that the capture is uncommitted in the intake repo** (with the branch it is
-   sitting on), so the operator knows there is one action left that only they should take.
+   capture doc passes (under decision 6, unstarted inbox captures without a ledger pointer pass).
+   Note `pdda.sh frontmatter` scans `2-WORKING` only — it does **not** validate a 1-INBOX capture,
+   so don't claim it did. Then report back in three lines: the issue URL, the doc path, and **the
+   fact that the capture is uncommitted in the intake repo** (with the branch it is sitting on), so
+   the operator knows there is one action left that only they should take.
 
 ## Doc template
 

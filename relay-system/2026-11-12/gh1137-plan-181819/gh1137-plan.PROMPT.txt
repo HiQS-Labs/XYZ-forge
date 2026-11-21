@@ -1,0 +1,13 @@
+Advisory plan review for HiQS-Labs/XYZ-forge#1137. Read, in this repo:
+- PROJECT/1-INBOX/GH-1137-RELAY-SCRATCH-TRACKED.md (the plan — sections Observed, Plan, Acceptance)
+- relay-automation/relay-turn-lib.sh: rtl_check (around lines 1305-1345), rtl_enforce (around lines 1520-1560), rtl_worktree_begin/rtl_worktree_end (around lines 820-900), rtl_scratch_relocate, rtl_orphan_backup
+- test/gh91-relay-scratch.sh, test/gh184-no-tracked-scratch.sh, test/gh113-headless-scratch.sh
+
+Operational envelope: a local developer harness. A relay turn runs a headless model, then rtl_enforce contains its edits. The fix should stay as small as the plan says (two edits in one file); the repo forbids new test suites (AGENTS.md "No new tests", GH-831). Do not propose new machinery.
+
+Answer concisely, citing file:line:
+1. Is the plan's change correct: (a) in rtl_check, exempt a .relay-scratch path only when `git -C "$RTL_ROOT" ls-files --error-unmatch -- "$p"` fails, letting tracked paths fall through to the normal off-allowlist revert; (b) replace both `rm -rf "${RTL_ROOT:?}/.relay-scratch"` sites with `git -C "$RTL_ROOT" clean -fdxq -- .relay-scratch`? Give a concrete input that breaks it, if any (porcelain forms: collapsed `.relay-scratch/`, `?? .relay-scratch/tmp/`, ` D` / ` M` of a tracked file, renames `R`, a gitignored scratch dir, RTL_ROOT being a linked worktree, a nested git repo inside scratch, paths with spaces).
+2. Does anything else in the lib or the drivers (relay-drive.sh, marathon paths) delete or move `.relay-scratch` in the real tree that the plan misses?
+3. Will the existing gh91 suite (sections 1, 2, 6) still pass with git clean instead of rm -rf? Any assertion that would change?
+4. Is failing the turn (RTL_VIOLATION=1, exit 6) the right outcome when a turn modifies or deletes a host-tracked file under .relay-scratch, or should it be reverted without failing? Consider the reviewer prompt that tells models to write probes under .relay-scratch.
+5. Anything over-built or missing for the stated outcome?

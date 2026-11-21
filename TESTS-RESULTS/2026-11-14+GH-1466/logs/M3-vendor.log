@@ -1,0 +1,2 @@
+xyz-vendor.sh: ledger import check: work_connectors -> No module named 'device_config'
+xyz-vendor.sh: vendor incomplete: ledger tier import check failed (a dependency is missing from LEDGER_MANIFEST)

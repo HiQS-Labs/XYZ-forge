@@ -1,0 +1,17 @@
+{
+  "case": "post-failure",
+  "mode": "candidate",
+  "rc": 9,
+  "live": false,
+  "archives": 1,
+  "hashes": [
+    "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2"
+  ],
+  "receipt_attempt": {
+    "count": 2,
+    "max": 2
+  },
+  "relay_dispatches": 0,
+  "fixture": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.45PqXh56GE",
+  "log": "marathon-drive: phase p1: legacy attestation without config identity \u2014 reusing (GH-1220)\nmarathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) \u2014 skipping render/reseed, re-running only the pre-advance gate\nmarathon-drive: relay approved \u2014 running pre-advance gate: true\nmarathon-drive: gate-guard: gate exit 0 after 1s \u2014 peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)\nmarathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.45PqXh56GE/agent-a/relay-system/2026-11-08/marathon-p1-235025.md\nlane-attempt history preserved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.45PqXh56GE/agent-a/.tick/attempt-history/p1-wwwf0pxe/attempts\nmarathon-drive: phase approved \u2014 running post-approve command: false\nmarathon-drive: post-approve command FAILED (exit 1) \u2014 phase remains approved; escalating closeout\nmarathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.45PqXh56GE/agent-a/relay-system/2026-11-08/marathon-p1-235026.md\nmarathon-drive: warn: host free swap is critically low (1023MB < 1024MB)\nmarathon-drive: memory-telemetry: phase p1-escalated boundary \u2014 compressor=739MB, swap_free=1023MB\nmarathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.45PqXh56GE/agent-a/phases/p1/ESCALATION.md (reason: post-approve-failed)\nmarathon-drive: result receipt written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh1387-manual.XXXXXX.45PqXh56GE/result.json (outcome: post-approve-failed, exit 9)\n"
+}

@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1383-fixed-controls-2026-11-09
+configfile: pytest.ini
+collected 223 items / 215 deselected / 8 selected
+
+test/gh436-merge-cleanup.py ........                                     [100%]
+
+====================== 8 passed, 215 deselected in 2.12s =======================
