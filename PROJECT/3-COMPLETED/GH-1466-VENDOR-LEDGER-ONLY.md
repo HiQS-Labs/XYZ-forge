@@ -2,9 +2,9 @@
 gh_issue: 1466
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1466
 title: "xyz-vendor: --ledger-only mode that vendors only the ledger, reconcile and PDDA scripts (no skills/relay/marathon)"
-status: In Progress
+status: Complete
 created: 2026-11-14
-updated: 2026-11-14
+updated: 2026-11-21
 owner: operator
 goal: "`xyz-vendor.sh <host> --ledger-only` installs a persistent tier=ledger .xyz/ holding only the ledger CLI, reconcile, merge-resolve and PDDA closure, and it survives `xyz-sync update`."
 complexity: 2
