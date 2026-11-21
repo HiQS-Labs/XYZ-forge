@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+# GH-1466 manual checks M1-M9 (scratch runner; evidence only, not a suite).
+# usage: gh1466-m1-m9.sh <candidate-harness> <base-harness-dir> <out-dir>
+set -u
+H="$1"; B="$2"; OUT="$3"
+W="$(mktemp -d "${TMPDIR:-/tmp}/gh1466.XXXXXX")"
+mkdir -p "$OUT" "$W/repos" "$W/pdda-reg"
+export XYZ_REGISTRY="$W/reg.tsv" HQ_XYZ_REGISTRY="$W/reg.tsv" HQ_SEARCH_ROOTS="$W/repos" \
+       HQ_PDDA_REGISTRY_DIR="$W/pdda-reg" HQ_REBALANCE_DB="$W/none.db"
+unset XYZ_HARNESS TICK_REPO_ROOT PDDA_REPO_ROOT PDDA_MODE
+RES="$OUT/results.tsv"; : > "$RES"
+rec() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" | tee -a "$RES"; }   # check verdict detail
+TODAY="$(date +%Y-%m-%d)"
+
+mk_host() { # <name> -> bare host with a CLI-built ledger and one active doc (valid frontmatter)
+  local d="$W/repos/$1"
+  mkdir -p "$d/PROJECT/1-INBOX" "$d/PROJECT/2-WORKING" "$d/PROJECT/3-COMPLETED" "$d/PROJECT/4-MISC"
+  git -C "$d" init -q -b development
+  git -C "$d" config user.email t@t; git -C "$d" config user.name t
+  git -C "$d" remote add origin "https://github.com/example/$1.git"
+  printf '/.xyz/\n/.tick/\n' > "$d/.gitignore"
+  printf 'full\nROADMAP_SOURCE=releases\n' > "$d/.pdda-mode"
+  cat > "$d/PROJECT/2-WORKING/GH-4291-LEDGER.md" <<DOC
+---
+gh_issue: 4291
+title: "GH-4291 ledger host fixture"
+status: In Progress
+created: $TODAY
+updated: $TODAY
+owner: operator
+goal: "fixture"
+complexity: 1
+risk: 1
+effort: 1
+phases: 1
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fixture. | Nothing. |
+DOC
+  git -C "$d" add -A && git -C "$d" commit -qm fixture
+  echo "$d"
+}
+seed_ledger() { # <host> <releases_app.py>
+  local d="$1" app="$2"
+  python3 "$app" --root "$d" init --slug "example/$(basename "$d")" >/dev/null
+  python3 "$app" --root "$d" add --version 9.9.0 --codename Fixture --description "fixture release" --status active --tracking-issue "https://github.com/example/$(basename "$d")/issues/1" >/dev/null
+  python3 "$app" --root "$d" roadmap add --issue-num 4291 --issue-url "https://github.com/example/$(basename "$d")/issues/4291" \
+    --title "GH-4291 ledger host fixture" --created "$TODAY" --doc-path PROJECT/2-WORKING/GH-4291-LEDGER.md >/dev/null
+  git -C "$d" add -A && git -C "$d" commit -qm ledger
+}
+inv() { (cd "$1/.xyz" && find . -type f -not -path '*/__pycache__/*' | sort); }
+
+# ---------- M1 inventory ----------
+L1="$(mk_host ledger-m1)"
+bash "$H/relay-automation/xyz-vendor.sh" "$L1" --ledger-only > "$OUT/M1-vendor.log" 2>&1; rc=$?
+inv "$L1" > "$OUT/M1-inventory.txt"; n=$(wc -l < "$OUT/M1-inventory.txt" | tr -d ' ')
+bad=""; for x in bin src skills test relay-automation; do [ -e "$L1/.xyz/$x" ] && bad="$bad $x"; done
+grep -qx 'tier=ledger' "$L1/.xyz/VERSION" && t=ok || t=missing
+[ "$rc" = 0 ] && [ -z "$bad" ] && [ "$t" = ok ] && rec M1 PASS "rc=0 files=$n tier=ledger absent:bin,src,skills,test,relay-automation" || rec M1 FAIL "rc=$rc files=$n tier=$t present:$bad"
+
+# ---------- M2 missing manifest source (red control) ----------
+HC="$W/harness-m2"; cp -Rp "$H" "$HC"; rm -f "$HC/utils/leaderboard.sh"
+L2="$(mk_host ledger-m2)"
+bash "$HC/relay-automation/xyz-vendor.sh" "$L2" --ledger-only --no-register > "$OUT/M2-vendor.log" 2>&1; rc=$?
+grep -q 'ledger manifest entry missing.*utils/leaderboard.sh' "$OUT/M2-vendor.log" && [ "$rc" != 0 ] && [ ! -e "$L2/.xyz" ] \
+  && rec M2 PASS "rc=$rc; die names utils/leaderboard.sh; no .xyz created" || rec M2 FAIL "rc=$rc; see M2-vendor.log"
+
+# ---------- M3 import check (red control) ----------
+HC3="$W/harness-m3"; cp -Rp "$H" "$HC3"
+sed -i '' 's# utils/py/device_config.py##' "$HC3/relay-automation/xyz-vendor.sh"
+grep -q 'utils/py/device_config.py' "$HC3/relay-automation/xyz-vendor.sh" && echo "M3 setup failed" >&2
+cp -Rp "$L1/.xyz" "$W/m3-before"   # an existing install must survive a failed vendor
+L3="$L1"
+bash "$HC3/relay-automation/xyz-vendor.sh" "$L3" --ledger-only --no-register > "$OUT/M3-vendor.log" 2>&1; rc=$?
+diff -rq "$W/m3-before" "$L3/.xyz" > /dev/null && same=yes || same=no
+grep -q "ledger import check: .*No module named 'device_config'" "$OUT/M3-vendor.log" && [ "$rc" != 0 ] && [ "$same" = yes ] \
+  && rec M3 PASS "rc=$rc; import check names device_config; existing .xyz untouched" || rec M3 FAIL "rc=$rc same=$same; see M3-vendor.log"
+
+# ---------- M4 vendored PDDA scans host; releases-current ----------
+L4="$(mk_host ledger-m4)"; seed_ledger "$L4" "$H/utils/py/releases_app.py"
+bash "$H/relay-automation/xyz-vendor.sh" "$L4" --ledger-only --no-register > /dev/null 2>&1
+sed -i '' '/^updated:/d' "$L4/PROJECT/2-WORKING/GH-4291-LEDGER.md"
+( cd "$L4" && PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh frontmatter ) > "$OUT/M4-frontmatter-candidate.log" 2>&1; rc=$?
+( cd "$L4" && bash .xyz/utils/pdda/pdda.sh releases-current ) > "$OUT/M4-releases-current-candidate.log" 2>&1
+cp "$L4/.xyz/utils/pdda/pdda-lib.sh" "$W/pdda-lib.keep"; cp "$B/utils/pdda/pdda-lib.sh" "$L4/.xyz/utils/pdda/pdda-lib.sh"
+( cd "$L4" && PDDA_MODE=full bash .xyz/utils/pdda/pdda.sh frontmatter ) > "$OUT/M4-frontmatter-base-lib.log" 2>&1; rcb=$?
+cp "$W/pdda-lib.keep" "$L4/.xyz/utils/pdda/pdda-lib.sh"
+cp "$L4/.xyz/utils/pdda/pdda.sh" "$W/pdda.keep"; cp "$B/utils/pdda/pdda.sh" "$L4/.xyz/utils/pdda/pdda.sh"
+( cd "$L4" && bash .xyz/utils/pdda/pdda.sh releases-current ) > "$OUT/M4-releases-current-base.log" 2>&1
+cp "$W/pdda.keep" "$L4/.xyz/utils/pdda/pdda.sh"
+c1=$(grep -c 'GH-4291-LEDGER.md' "$OUT/M4-frontmatter-candidate.log"); b1=$(grep -c 'GH-4291-LEDGER.md' "$OUT/M4-frontmatter-base-lib.log")
+grep -q 'releases.db active releases' "$OUT/M4-releases-current-candidate.log" && grep -q '9.9.0' "$OUT/M4-releases-current-candidate.log" && rc_ok=yes || rc_ok=no
+grep -q 'RELEASES.md not found' "$OUT/M4-releases-current-base.log" && rcb_ok=yes || rcb_ok=no
+[ "$rc" != 0 ] && [ "$c1" -gt 0 ] && [ "$b1" = 0 ] && [ "$rc_ok" = yes ] && [ "$rcb_ok" = yes ] \
+  && rec M4 PASS "frontmatter: candidate rc=$rc names host doc ($c1 hits), base lib rc=$rcb 0 host hits; releases-current lists 9.9.0, base prints RELEASES.md not found" \
+  || rec M4 FAIL "cand rc=$rc hits=$c1 base rc=$rcb hits=$b1 rc_ok=$rc_ok rcb_ok=$rcb_ok"
+
+# ---------- M5 sticky across xyz-sync update ----------
+L5="$(mk_host ledger-m5)"; seed_ledger "$L5" "$H/utils/py/releases_app.py"
+bash "$H/relay-automation/xyz-vendor.sh" "$L5" --ledger-only > /dev/null 2>&1
+bash "$H/relay-automation/xyz-sync.sh" update "$L5/.xyz" > "$OUT/M5-sync-candidate.log" 2>&1; rc=$?
+t5=$(grep '^tier=' "$L5/.xyz/VERSION"); n5=$(inv "$L5" | wc -l | tr -d ' ')
+L5b="$(mk_host ledger-m5b)"; seed_ledger "$L5b" "$H/utils/py/releases_app.py"
+bash "$H/relay-automation/xyz-vendor.sh" "$L5b" --ledger-only > /dev/null 2>&1
+bash "$B/relay-automation/xyz-sync.sh" update "$L5b/.xyz" > "$OUT/M5-sync-base.log" 2>&1
+t5b=$(grep '^tier=' "$L5b/.xyz/VERSION"); n5b=$(inv "$L5b" | wc -l | tr -d ' ')
+[ "$rc" = 0 ] && [ "$t5" = tier=ledger ] && [ "$t5b" = tier=2 ] \
+  && rec M5 PASS "candidate update rc=0 keeps $t5 ($n5 files); base update on same shape -> $t5b ($n5b files)" || rec M5 FAIL "rc=$rc cand=$t5/$n5 base=$t5b/$n5b"
+
+# ---------- M6 flag conflict, upgrade, downgrade ----------
+L6="$(mk_host ledger-m6)"
+bash "$H/relay-automation/xyz-vendor.sh" "$L6" --ledger-only --with-releases --no-register > "$OUT/M6-conflict-candidate.log" 2>&1; rcc=$?
+bash "$B/relay-automation/xyz-vendor.sh" "$L6" --ledger-only --with-releases --no-register > "$OUT/M6-conflict-base.log" 2>&1; rcb=$?
+bash "$H/relay-automation/xyz-vendor.sh" "$L6" --ledger-only --no-register > /dev/null 2>&1
+mkdir -p "$L6/.xyz/relay-system/keep" && echo state > "$L6/.xyz/relay-system/keep/thread.md"
+bash "$H/relay-automation/xyz-vendor.sh" "$L6" --with-releases --no-register > "$OUT/M6-upgrade.log" 2>&1
+tu=$(grep '^tier=' "$L6/.xyz/VERSION"); [ -f "$L6/.xyz/bin/tick" ] && [ -f "$L6/.xyz/utils/py/releases_app.py" ] && up_inv=full || up_inv=missing
+bash "$H/relay-automation/xyz-vendor.sh" "$L6" --ledger-only --no-register > "$OUT/M6-downgrade.log" 2>&1
+td=$(grep '^tier=' "$L6/.xyz/VERSION"); [ ! -e "$L6/.xyz/bin" ] && dn_inv=ledger || dn_inv=full
+[ -f "$L6/.xyz/relay-system/keep/thread.md" ] && kept=yes || kept=no
+grep -q 'mutually exclusive' "$OUT/M6-conflict-candidate.log" && cand_msg=conflict || cand_msg=other
+grep -q 'unknown option' "$OUT/M6-conflict-base.log" && base_msg=unknown || base_msg=other
+[ "$rcc" = 2 ] && [ "$cand_msg" = conflict ] && [ "$base_msg" = unknown ] && [ "$tu" = tier=2 ] && [ "$up_inv" = full ] && [ "$td" = tier=ledger ] && [ "$dn_inv" = ledger ] && [ "$kept" = yes ] \
+  && rec M6 PASS "conflict rc=2 'mutually exclusive' (base rc=$rcb 'unknown option'); upgrade -> $tu full inventory; downgrade -> $td ledger inventory; relay-system state preserved" \
+  || rec M6 FAIL "rcc=$rcc msg=$cand_msg base=$base_msg up=$tu/$up_inv down=$td/$dn_inv kept=$kept"
+
+# ---------- M7 xyz-sync check guard probe ----------
+bash "$H/relay-automation/xyz-sync.sh" check "$L1/.xyz" > "$OUT/M7-check-candidate.log" 2>&1
+bash "$B/relay-automation/xyz-sync.sh" check "$L1/.xyz" > "$OUT/M7-check-base.log" 2>&1
+L7="$(mk_host tier2-m7)"; bash "$H/relay-automation/xyz-vendor.sh" "$L7" --with-releases > /dev/null 2>&1
+rm -f "$L7/.xyz/relay-automation/relay-drive.sh"
+bash "$H/relay-automation/xyz-sync.sh" check "$L7/.xyz" > "$OUT/M7-check-tier2.log" 2>&1
+grep -q '^ok ' "$OUT/M7-check-candidate.log" && ! grep -q 'SAFETY GUARD MISSING' "$OUT/M7-check-candidate.log" && c=ok || c=bad
+grep -q 'SAFETY GUARD MISSING' "$OUT/M7-check-base.log" && b=warns || b=silent
+grep -q 'SAFETY GUARD MISSING' "$OUT/M7-check-tier2.log" && t2=warns || t2=silent
+[ "$c" = ok ] && [ "$b" = warns ] && [ "$t2" = warns ] && rec M7 PASS "ledger row ok, no guard warning; base warns on same row; Tier 2 row without relay-drive.sh still warns" || rec M7 FAIL "cand=$c base=$b tier2=$t2"
+
+# ---------- M8 hq tier ----------
+( cd "$H" && bash utils/hq/hq.sh status ledger-m1 ) > "$OUT/M8-status-candidate.log" 2>&1
+( cd "$H" && bash utils/hq/hq.sh fire ledger-m1 --gh-issue 4291 --risk 1 ) > "$OUT/M8-fire-candidate.log" 2>&1; rcf=$?
+( cd "$H" && bash utils/hq/hq.sh status tier2-m7 ) > "$OUT/M8-status-tier2.log" 2>&1
+cp "$H/utils/hq/hq-lib.sh" "$W/hq-lib.keep"
+HB="$W/harness-m8"; cp -Rp "$H" "$HB"; cp "$B/utils/hq/hq-lib.sh" "$HB/utils/hq/hq-lib.sh"
+( cd "$HB" && bash utils/hq/hq.sh status ledger-m1 ) > "$OUT/M8-status-base-lib.log" 2>&1
+grep -q 'Tier B\|tier.*B\b' "$OUT/M8-status-candidate.log" && cs=B || cs=other
+grep -q 'is not Tier A' "$OUT/M8-fire-candidate.log" && cf=refused || cf=other
+grep -q 'Tier A\|tier.*A\b' "$OUT/M8-status-tier2.log" && t2s=A || t2s=other
+grep -q 'Tier A\|tier.*A\b' "$OUT/M8-status-base-lib.log" && bs=A || bs=other
+[ "$cs" = B ] && [ "$cf" = refused ] && [ "$t2s" = A ] && [ "$bs" = A ] \
+  && rec M8 PASS "ledger host status Tier B; fire refuses 'is not Tier A' (rc=$rcf); Tier 2 host Tier A; base hq-lib calls the ledger host Tier A" \
+  || rec M8 FAIL "cand=$cs fire=$cf/$rcf tier2=$t2s base=$bs"
+
+# ---------- M9 jog refusal ----------
+j9() { python3 "$1" --root "$L4" jog "${@:2}"; }
+APP="$L4/.xyz/utils/py/releases_app.py"
+for v in "run --dry-run" "resume 4291" "land 4291"; do
+  tag="${v%% *}"
+  j9 "$APP" $v > "$OUT/M9-jog-$tag-candidate.log" 2>&1; echo "rc=$?" >> "$OUT/M9-jog-$tag-candidate.log"
+done
+cp "$APP" "$W/app.keep"; cp "$B/utils/py/releases_app.py" "$APP"
+for v in "run --dry-run" "resume 4291" "land 4291"; do
+  tag="${v%% *}"
+  j9 "$APP" $v > "$OUT/M9-jog-$tag-base.log" 2>&1; echo "rc=$?" >> "$OUT/M9-jog-$tag-base.log"
+done
+cp "$W/app.keep" "$APP"
+ok=1; for tag in run resume land; do
+  grep -q 'rc=2' "$OUT/M9-jog-$tag-candidate.log" && grep -q 'jog: unavailable in this install' "$OUT/M9-jog-$tag-candidate.log" && ! grep -q Traceback "$OUT/M9-jog-$tag-candidate.log" || ok=0
+  grep -q "ModuleNotFoundError: No module named 'jog_run'" "$OUT/M9-jog-$tag-base.log" || ok=0
+done
+[ "$ok" = 1 ] && rec M9 PASS "jog run/resume/land: rc=2 + message, no traceback; base: ModuleNotFoundError traceback for all three" || rec M9 FAIL "see M9-*.log"
+
+echo "work dir: $W"

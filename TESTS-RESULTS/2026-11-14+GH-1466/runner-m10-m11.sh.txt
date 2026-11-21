@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# GH-1466 manual smoke M10 (non-dry-run reconcile) + M11 (re-vendor + merge-resolve) in a ledger-only host.
+# usage: gh1466-m10-m11.sh <candidate-harness> <out-dir>
+set -u
+H="$1"; OUT="$2"
+W="$(mktemp -d "${TMPDIR:-/tmp}/gh1466s.XXXXXX")"
+mkdir -p "$OUT" "$W/bin"
+# The planner needs Python >= 3.10 and reconcile shells out to a bare `python3`: put 3.13 first on PATH.
+ln -s "$(command -v python3.13)" "$W/bin/python3"
+export PATH="$W/bin:$PATH" XYZ_REGISTRY="$W/reg.tsv"
+unset XYZ_HARNESS TICK_REPO_ROOT PDDA_REPO_ROOT PDDA_MODE
+RES="$OUT/results.tsv"
+rec() { printf '%s\t%s\t%s\n' "$1" "$2" "$3" | tee -a "$RES"; }
+TODAY="$(date +%Y-%m-%d)"
+G=git
+
+mk_ledger_host() { # <name> -> host vendored --ledger-only, ledger + adopted views, one In-progress row
+  local d="$W/$1"; mkdir -p "$d/PROJECT/1-INBOX" "$d/PROJECT/2-WORKING" "$d/PROJECT/3-COMPLETED" "$d/PROJECT/4-MISC" "$d/TESTS-RESULTS/$TODAY"
+  $G -C "$d" init -q -b development; $G -C "$d" config user.email t@t; $G -C "$d" config user.name t
+  $G -C "$d" remote add origin "https://github.com/example/$1.git"
+  printf '/.xyz/\n/.tick/\n' > "$d/.gitignore"
+  printf 'full\nROADMAP_SOURCE=releases\n' > "$d/.pdda-mode"
+  cp "$H/.gitattributes" "$d/.gitattributes"
+  printf '# Changelog\n\n## %s — fixture\n\nFixture.\n' "$TODAY" > "$d/CHANGELOG.md"
+  cat > "$d/PROJECT/2-WORKING/GH-4291-LEDGER.md" <<DOC
+---
+gh_issue: 4291
+source: https://github.com/example/$1/issues/4291
+title: "GH-4291 ledger host fixture"
+status: In Progress
+created: $TODAY
+updated: $TODAY
+owner: operator
+goal: "fixture"
+complexity: 1
+risk: 1
+effort: 1
+phases: 1
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fixture. | Nothing. |
+
+## Lessons Learned (For Future Agents)
+- Fixture.
+DOC
+  echo '{"status": "PASS"}' > "$d/TESTS-RESULTS/$TODAY/provenance.jsonl"
+  bash "$H/relay-automation/xyz-vendor.sh" "$d" --ledger-only > "$d.vendor.log" 2>&1 || { echo "vendor failed: $d" >&2; cat "$d.vendor.log" >&2; }
+  local APP="$d/.xyz/utils/py/releases_app.py"
+  python3 "$APP" --root "$d" init --slug "example/$1" >/dev/null
+  python3 "$APP" --root "$d" add --version 9.9.0 --codename Fixture --description "fixture release" --status active --tracking-issue "https://github.com/example/$1/issues/1" >/dev/null
+  python3 "$APP" --root "$d" roadmap add --issue-num 4291 --issue-url "https://github.com/example/$1/issues/4291" \
+    --title "GH-4291 ledger host fixture" --created "$TODAY" --doc-path PROJECT/2-WORKING/GH-4291-LEDGER.md \
+    --raw-text "- **GH-4291 · ledger host fixture** (rated 60/60/50/60)" >/dev/null
+  python3 "$APP" --root "$d" roadmap move --issue-num 4291 --section 'In progress' >/dev/null
+  ( cd "$d" && python3 .xyz/utils/timeline/export_timeline.py --db releases.db --preview RELEASES-PREVIEW.html \
+      && python3 .xyz/utils/timeline/export_timeline.py --db releases.db --leaderboard LEADERBOARD.html \
+      && LEADERBOARD_DB=releases.db LEADERBOARD_OUTPUT=LEADERBOARD.md bash .xyz/utils/leaderboard.sh ) > "$d.views.log" 2>&1 \
+    || { echo "view seed failed: $d" >&2; cat "$d.views.log" >&2; }
+  python3 - "$d/manifest.json" "$1" <<'PY'
+import json, sys
+json.dump({"prs": [{"number": 5291, "title": "feat: ledger host fixture", "state": "MERGED",
+                    "mergedAt": "2026-11-14T00:00:00Z", "baseRefName": "development",
+                    "headRefName": "feat/f", "body": "Closes #4291.", "url": "https://example/pr/5291"}],
+           "issues": [{"number": 4291, "state": "CLOSED"}]}, open(sys.argv[1], "w"))
+PY
+  $G -C "$d" add -A && $G -C "$d" commit -qm fixture
+  echo "$d"
+}
+reconcile() { ( cd "$1" && python3 .xyz/utils/py/wave_reconcile.py --root "$1" --pr 5291 --offline "$1/manifest.json" --skip-pull ); }
+sum() { shasum -a 256 "$1" | cut -c1-12; }
+
+# ---------- M10 main path ----------
+L="$(mk_ledger_host ledger-m10)"
+for f in utils/pdda utils/py utils/timeline utils/marathon-plan.sh utils/leaderboard.sh; do [ -e "$L/$f" ] && echo "host copy present: $f" >&2; done
+python3 "$L/.xyz/utils/py/releases_app.py" --root "$L" check > "$OUT/M10-check.log" 2>&1; rc_check=$?
+cp "$L/RELEASES-PREVIEW.html" "$W/prev.before"; cp "$L/LEADERBOARD.md" "$W/lbmd.before"; cp "$L/LEADERBOARD.html" "$W/lbhtml.before"
+python3 "$L/.xyz/utils/py/releases_app.py" --root "$L" roadmap add --issue-num 4292 --issue-url "https://github.com/example/ledger-m10/issues/4292" \
+  --title "GH-4292 second row" --created "$TODAY" --doc-path PROJECT/1-INBOX/GH-4292-SECOND.md > "$OUT/M10-write.log" 2>"$OUT/M10-write.stderr"; rc_add=$?
+python3 "$L/.xyz/utils/py/releases_app.py" --root "$L" roadmap rate --issue-num 4292 --rated 40/40/50/40 >> "$OUT/M10-write.log" 2>>"$OUT/M10-write.stderr"; rc_rate=$?
+grep -q ModuleNotFoundError "$OUT/M10-write.stderr" && mnf=yes || mnf=no
+$G -C "$L" add -A && $G -C "$L" commit -qm "second row"
+reconcile "$L" > "$OUT/M10-reconcile.log" 2>&1; rc_rec=$?
+[ -f "$L/PROJECT/3-COMPLETED/GH-4291-LEDGER.md" ] && moved=yes || moved=no
+sec=$(sqlite3 "$L/releases.db" "select section from roadmap_items where gh_number=4291")
+grep -q 'marathon-plan' "$OUT/M10-reconcile.log" && ! grep -q 'skipping marathon-plan' "$OUT/M10-reconcile.log" && planner=ran || planner=not-run
+grep -q 'export_timeline.py --preview' "$OUT/M10-reconcile.log" && ! grep -q 'skipping export_timeline' "$OUT/M10-reconcile.log" && tl=ran || tl=not-run
+grep -q 'Running PDDA doc-hygiene gate' "$OUT/M10-reconcile.log" && gate=ran || gate=not-run
+cmp -s "$W/prev.before" "$L/RELEASES-PREVIEW.html" && pv=unchanged || pv=changed
+cmp -s "$W/lbmd.before" "$L/LEADERBOARD.md" && lb=unchanged || lb=changed
+{ echo "RELEASES-PREVIEW.html before=$(sum "$W/prev.before") after=$(sum "$L/RELEASES-PREVIEW.html")"
+  echo "LEADERBOARD.md before=$(sum "$W/lbmd.before") after=$(sum "$L/LEADERBOARD.md")"
+  echo "LEADERBOARD.html before=$(sum "$W/lbhtml.before") after=$(sum "$L/LEADERBOARD.html")"
+  $G -C "$L" log --oneline -3; $G -C "$L" show --stat --format=%s HEAD | head -20; } > "$OUT/M10-views.txt"
+[ "$rc_check" = 0 ] && [ "$rc_add" = 0 ] && [ "$rc_rate" = 0 ] && [ "$mnf" = no ] && [ "$rc_rec" = 0 ] && [ "$moved" = yes ] && [ "$planner" = ran ] && [ "$tl" = ran ] && [ "$gate" = ran ] && [ "$pv" = changed ] \
+  && rec M10 PASS "check=0 add=0 rate=0 no-MNF; reconcile rc=0, doc->3-COMPLETED, row=$sec, planner ran, timeline ran (preview $pv, LEADERBOARD.md $lb), vendored PDDA gate ran; no host tool copies" \
+  || rec M10 FAIL "check=$rc_check add=$rc_add rate=$rc_rate mnf=$mnf rec=$rc_rec moved=$moved sec=$sec planner=$planner tl=$tl gate=$gate preview=$pv lb=$lb"
+
+# M10 red controls: fresh hosts (no planner fingerprint), one installed file removed each
+Lt="$(mk_ledger_host ledger-m10-notemplate)"; rm -f "$Lt/.xyz/utils/timeline/RELEASES.html"
+reconcile "$Lt" > "$OUT/M10-red-template.log" 2>&1; rc_t=$?
+Lp="$(mk_ledger_host ledger-m10-noplanner)"; rm -f "$Lp/.xyz/utils/marathon-plan.sh"; [ -e "$Lp/.tick/marathon-plan.fingerprint" ] && echo "fingerprint present" >&2
+reconcile "$Lp" > "$OUT/M10-red-planner.log" 2>&1; rc_p=$?
+[ "$rc_t" != 0 ] && [ "$rc_p" != 0 ] && rec M10-red PASS "template removed -> reconcile rc=$rc_t; marathon-plan.sh removed (fresh host, planner selected) -> rc=$rc_p" \
+  || rec M10-red FAIL "template rc=$rc_t planner rc=$rc_p"
+
+# ---------- M11 adjacent path: re-vendor, then merge-resolve ----------
+M="$(mk_ledger_host ledger-m11)"
+bash "$H/relay-automation/xyz-vendor.sh" "$M" > "$OUT/M11-revendor.log" 2>&1; rc_rv=$?
+tier=$(grep '^tier=' "$M/.xyz/VERSION")
+APP="$M/.xyz/utils/py/releases_app.py"
+$G -C "$M" branch s-a; $G -C "$M" branch s-b
+$G -C "$M" checkout -q s-a
+python3 "$APP" --root "$M" add --version 1.0.0 --status draft --tracking-issue TMP-AAAAAA --description "A one." > /dev/null
+$G -C "$M" commit -qam a
+$G -C "$M" checkout -q s-b; sleep 1.1
+python3 "$APP" --root "$M" add --version 2.0.0 --status draft --tracking-issue TMP-BBBBBB --description "B one." > /dev/null
+$G -C "$M" commit -qam b
+cp "$M/RELEASES-PREVIEW.html" "$W/m11prev.before"
+$G -C "$M" merge s-a -m merge > "$OUT/M11-merge.log" 2>&1 || true
+$G -C "$M" diff --name-only --diff-filter=U > "$OUT/M11-unmerged.txt"
+# Resolve releases.sql the documented way (test/gh53 union_dump): one header, one generation row, dedupe.
+win="$( { $G -C "$M" show s-a:releases.sql; $G -C "$M" show s-b:releases.sql; } | grep "^INSERT INTO settings(key, value, updated_at) VALUES('generation', " | sort -t"'" -k4,4n -k6,6 | tail -n 1)"
+gen="$(printf '%s\n' "$win" | sed -n "s/.*VALUES('generation', '\([0-9][0-9]*\)'.*/\1/p")"
+{ printf -- '-- generation: %s\n' "$gen"
+  { $G -C "$M" show s-b:releases.sql; $G -C "$M" show s-a:releases.sql; } | grep -v '^-- generation' \
+    | awk -v win="$win" '/^INSERT INTO settings\(key, value, updated_at\) VALUES\(\x27generation\x27, / { if (!done) { print win; done = 1 }; next } !seen[$0]++'
+} > "$M/releases.sql"
+$G -C "$M" add releases.sql
+bash "$M/.xyz/utils/releases-merge-resolve.sh" --root "$M" > "$OUT/M11-resolve.log" 2>&1; rc_res=$?
+both=$(sqlite3 "$M/releases.db" "select count(*) from releases where version in ('1.0.0','2.0.0')")
+cmp -s "$W/m11prev.before" "$M/RELEASES-PREVIEW.html" && mpv=unchanged || mpv=changed
+grep -q 'regenerating adopted views' "$OUT/M11-resolve.log" && regen=yes || regen=no
+[ "$rc_rv" = 0 ] && [ "$tier" = tier=ledger ] && grep -q releases.db "$OUT/M11-unmerged.txt" && [ "$rc_res" = 0 ] && [ "$both" = 2 ] && [ "$regen" = yes ] && [ "$mpv" = changed ] \
+  && rec M11 PASS "re-vendor (no flags) rc=0 keeps $tier; merge conflicted on releases.db; union-resolved releases.sql; resolver rc=0, DB has both sides' releases, adopted views regenerated (preview $mpv)" \
+  || rec M11 FAIL "rv=$rc_rv tier=$tier res=$rc_res both=$both regen=$regen preview=$mpv unmerged=$(tr '\n' ' ' < "$OUT/M11-unmerged.txt")"
+
+# M11 red control: same merge shape, leaderboard.sh removed from the install
+N="$(mk_ledger_host ledger-m11-nolb)"; APPn="$N/.xyz/utils/py/releases_app.py"
+$G -C "$N" branch s-a; $G -C "$N" branch s-b; $G -C "$N" checkout -q s-a
+python3 "$APPn" --root "$N" add --version 1.0.0 --status draft --tracking-issue TMP-AAAAAA --description "A one." > /dev/null; $G -C "$N" commit -qam a
+$G -C "$N" checkout -q s-b; sleep 1.1
+python3 "$APPn" --root "$N" add --version 2.0.0 --status draft --tracking-issue TMP-BBBBBB --description "B one." > /dev/null; $G -C "$N" commit -qam b
+$G -C "$N" merge s-a -m merge > /dev/null 2>&1 || true
+win="$( { $G -C "$N" show s-a:releases.sql; $G -C "$N" show s-b:releases.sql; } | grep "^INSERT INTO settings(key, value, updated_at) VALUES('generation', " | sort -t"'" -k4,4n -k6,6 | tail -n 1)"
+gen="$(printf '%s\n' "$win" | sed -n "s/.*VALUES('generation', '\([0-9][0-9]*\)'.*/\1/p")"
+{ printf -- '-- generation: %s\n' "$gen"
+  { $G -C "$N" show s-b:releases.sql; $G -C "$N" show s-a:releases.sql; } | grep -v '^-- generation' \
+    | awk -v win="$win" '/^INSERT INTO settings\(key, value, updated_at\) VALUES\(\x27generation\x27, / { if (!done) { print win; done = 1 }; next } !seen[$0]++'
+} > "$N/releases.sql"; $G -C "$N" add releases.sql
+rm -f "$N/.xyz/utils/leaderboard.sh"
+bash "$N/.xyz/utils/releases-merge-resolve.sh" --root "$N" > "$OUT/M11-red-noleaderboard.log" 2>&1; rc_n=$?
+[ "$rc_n" != 0 ] && grep -q 'leaderboard.sh failed' "$OUT/M11-red-noleaderboard.log" && rec M11-red PASS "leaderboard.sh removed -> resolver rc=$rc_n at the leaderboard step" || rec M11-red FAIL "rc=$rc_n"
+echo "work dir: $W"

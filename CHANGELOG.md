@@ -248,6 +248,20 @@ In a host relay run (BinoidCBD/LTVera-Pandas#981) AI reviews turned a FAIL with 
 Manual red control on the real GH-955 builder and reviewer blocks: the base attests a declared `yes — exit 0` over a gate that exits 1; the fix refuses it, also refuses when the builder declared nothing unverified, attests a green gate with no declaration, and leaves an unarmed relay as it was. Not exercised: the timeout path. In a marathon the focused gate now runs up to three times (reviewer, driver, pre-advance).
 Evidence: `TESTS-RESULTS/2026-11-14+GH-1465/`.
 
+## 2026-11-14 — GH-1466: `xyz-vendor.sh --ledger-only` vendors just the ledger
+
+A host repo can now vendor only the governance half of the harness: `xyz-vendor.sh <host> --ledger-only`
+copies an allow-list (`LEDGER_MANIFEST`) of the RELEASES CLI and its connectors, post-merge reconcile and
+the planner step it runs, merge-resolve and the views it regenerates, and PDDA. That is 52 files instead of
+about 1,760, with no skills, relay, marathon runtime, tick or tests. A missing manifest source and a missing
+Python module both stop the vendor before the swap. `VERSION` records `tier=ledger`, and the tier now
+survives a flagless re-vendor, which `xyz-sync update` is; before this, `releases.db` turned every host back
+into Tier 2. Four readers were fixed so they don't treat a ledger install as a broken full one:
+`xyz-sync check` skips the relay guard probe for it, `hq_xyz_lookup` retains registry location and ambiguity checks while declining driven-lane capability (the host never reads as Tier A: Tier B when HQ detects PDDA on the host, otherwise Tier C), and `releases jog` refuses with a message instead of a
+`ModuleNotFoundError`. Two path fixes help any vendored PDDA copy: `pdda-lib.sh` now resolves a vendored
+copy's root to the host (it used to scan `.xyz/`), and both `pdda.sh releases-current` and the reconcile PDDA
+gate fall back to the vendored writer and script. Evidence: `TESTS-RESULTS/2026-11-14+GH-1466/`.
+
 
 ## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
 

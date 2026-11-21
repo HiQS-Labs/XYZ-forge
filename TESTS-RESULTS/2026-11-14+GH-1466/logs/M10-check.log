@@ -1,0 +1,5 @@
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 4 (DB <-> dump)
+OK: receipt chain intact (3 receipt(s), business-state digest matches)
+info: 0 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 0 warning(s))

@@ -431,7 +431,10 @@ check_rows() {
     [ "$rec_commit" = "$cur_commit" ] || drifted="${drifted}${drifted:+,}source_commit"
     missing_guards=""
 
+    # GH-1466: a ledger-tier install ships no relay runtime, so the relay safety-guard probe does not
+    # apply to it (drift comparison above still does -- tick_version is harness-derived).
     for ((j = 0; j < ${#SAFETY_GUARD_NAMES[@]}; j++)); do
+      grep -qx 'tier=ledger' "${SELECTED_INSTALL_DIRS[$i]}/VERSION" 2>/dev/null && break
       guard_path="${SELECTED_INSTALL_DIRS[$i]}/${SAFETY_GUARD_PATHS[$j]}"
       guard_pattern="${SAFETY_GUARD_PATTERNS[$j]}"
       if [ ! -f "$guard_path" ] || ! grep -Fq -- "$guard_pattern" "$guard_path" 2>/dev/null; then
