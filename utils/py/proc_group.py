@@ -33,12 +33,15 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 TIMEOUT_RC = 124
+RSS_KILL_RC = 108
+GATE_RSS_MB_DEFAULT = 8192
 
 
 class Cancelled(KeyboardInterrupt):
@@ -76,6 +79,33 @@ class BoundedResult:
     timed_out: bool
     pgid: int  # the child's pid; == its process group id (start_new_session)
     wall_seconds: float
+    rss_killed: bool = False
+    peak_rss_mb: Optional[int] = None
+
+
+def group_rss_mb(pgid: int, *, run=subprocess.run) -> Tuple[Optional[int], Optional[str]]:
+    """Summed RSS of a process group in MB as (mb, None), or (None, reason) when unreadable."""
+    try:
+        res = run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None, "ps-failed"
+    if res.returncode != 0 or not res.stdout.strip():
+        return None, "ps-failed"
+    total_kb = 0
+    matched = False
+    for line in res.stdout.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        try:
+            if int(parts[0]) == pgid:
+                total_kb += int(parts[1])
+                matched = True
+        except ValueError:
+            continue
+    if not matched:
+        return None, "group-missing"
+    return total_kb // 1024, None
 
 
 def kill_existing(pgid: int, grace: float = 5.0) -> None:
@@ -112,8 +142,10 @@ def run_bounded(
     env: Optional[dict] = None,
     timeout: Optional[float] = None,
     grace: float = 5.0,
+    max_rss_mb: Optional[int] = None,
+    rss_poll_s: float = 1.0,
 ) -> BoundedResult:
-    """Run argv in its own process group under a wall-clock ceiling.
+    """Run argv in its own process group under a wall-clock ceiling (and optional group-RSS cap).
 
     Spawn errors (FileNotFoundError, OSError, ValueError) propagate to the caller —
     they mean the command could not be launched at all.
@@ -123,26 +155,64 @@ def run_bounded(
         argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         stdin=subprocess.DEVNULL, text=True, errors="replace", start_new_session=True,
     )
+    rss_killed = False
+    peak_rss_mb: Optional[int] = None
+    rss_stop = threading.Event()
+    rss_thread: Optional[threading.Thread] = None
+    if max_rss_mb is not None and max_rss_mb > 0:
+        poll_interval = max(0.05, float(rss_poll_s))
+
+        def _watch_rss() -> None:
+            nonlocal rss_killed, peak_rss_mb
+            while not rss_stop.is_set():
+                # The launcher may exit while a group member still holds an output pipe.
+                rss_mb, reason = group_rss_mb(proc.pid)
+                if reason == "group-missing":
+                    return
+                if rss_mb is not None:
+                    peak_rss_mb = rss_mb if peak_rss_mb is None else max(peak_rss_mb, rss_mb)
+                    if rss_mb >= max_rss_mb:
+                        rss_killed = True
+                        kill_existing(proc.pid, grace=grace)
+                        return
+                if rss_stop.wait(poll_interval):
+                    return
+
+        rss_thread = threading.Thread(target=_watch_rss, daemon=True)
+        rss_thread.start()
     try:
         try:
             out, err = proc.communicate(timeout=timeout)
+            if rss_thread is not None:
+                rss_stop.set()
+                # A TERM/KILL sequence already in progress must finish before we return.
+                rss_thread.join()
             return BoundedResult(proc.returncode, out or "", err or "", False, proc.pid,
-                                 time.monotonic() - t0)
+                                 time.monotonic() - t0, rss_killed=rss_killed,
+                                 peak_rss_mb=peak_rss_mb)
         except subprocess.TimeoutExpired:
+            if rss_thread is not None:
+                rss_stop.set()
             kill_existing(proc.pid, grace=grace)
             try:
                 out, err = proc.communicate(timeout=grace + 5)
             except subprocess.TimeoutExpired:
                 out, err = "", ""
+            if rss_thread is not None:
+                rss_thread.join()
             return BoundedResult(None, out or "", err or "", True, proc.pid,
-                                 time.monotonic() - t0)
+                                 time.monotonic() - t0, rss_killed=rss_killed,
+                                 peak_rss_mb=peak_rss_mb)
     except BaseException:
+        rss_stop.set()
         kill_existing(proc.pid, grace=grace)
         try:
             proc.wait(timeout=grace + 5)
         finally:
             proc.stdout.close()
             proc.stderr.close()
+            if rss_thread is not None:
+                rss_thread.join()
         raise
 
 

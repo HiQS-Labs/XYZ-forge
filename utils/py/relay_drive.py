@@ -133,6 +133,9 @@ class _StderrTee:
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+# GH-1465: wall-clock cap on the driver-run reviewer gate; matches the turn shims' 900s default.
+DRIVER_GATE_TIMEOUT_S = 900
+
 def get_env(key, default=None):
     return os.environ.get(key, default)
 
@@ -896,16 +899,57 @@ def main():
             return ("refused", "approved-over-fail")
         if not added.strip():
             return ("refused", "empty-approval")
-        # GH-1428: marathon arms this only when the phase gate is one the reviewer may run. An
-        # Approved after the builder declared unverified work needs that gate run to exit 0.
+        # GH-1428: marathon arms this only when the phase gate is one the reviewer may run.
+        # GH-1465: the driver runs that gate ITSELF on an Approved and judges by its exit code; the
+        # reviewer's `gate run:` line is still recorded but no longer decides anything. It runs in the
+        # target checkout (the reviewed revision, where the later pre-advance gate also runs), in its
+        # own process group, with the harness env scrubbed. No turn follows a terminal verdict, so
+        # nothing the gate leaves behind can trip a turn's containment.
         gate_run = relay_attest.declared_gate_run(added)
         reviewer_gate = get_env("MARATHON_REVIEWER_GATE_CMD", "")
-        if reviewer_gate and gate_run != "yes" and relay_attest.builder_declared_unverified(post_canon[:added_start]):
-            eprint(f"relay-drive: the builder's latest block declares unverified work and the review's gate run is "
-                   f"'{gate_run}', not 'yes — exit 0'. Reviewer: run `{reviewer_gate}` before approving. Or let a Codex "
-                   f"builder verify for itself: CODEX_FLAGS='-s workspace-write -c approval_policy=never "
-                   f"-c sandbox_workspace_write.network_access=true' (relay-automation/README.md, GH-1428)")
-            return ("refused", "unverified-approval")
+        gate_exit = None
+        if reviewer_gate:
+            from gate_env import gate_env
+            from proc_group import GATE_RSS_MB_DEFAULT, RSS_KILL_RC, TIMEOUT_RC, run_bounded
+            gate_cwd, gate_out, rss_killed, peak_rss_mb = target_repo(), "", False, None
+            source_record = dict(reviewed_head=pre["reviewed_head"],
+                                 relay_file_rel=relay_attest.repo_relative(relay_file, gate_cwd))
+            source_ok, source_why = relay_attest.source_matches(source_record, get_head_commit(), gate_cwd)
+            if not source_ok:
+                eprint(f"relay-drive: driver-run gate refused source drift: {source_why}")
+                return ("refused", "gate-failed")
+            rss_cap = None
+            if (get_env("MARATHON_GATE_GUARD", "1") or "1").strip() != "0":
+                raw_rss = (get_env("MARATHON_GATE_RSS_MB") or "").strip()
+                try:
+                    rss_cap = int(raw_rss) if raw_rss else GATE_RSS_MB_DEFAULT
+                except ValueError:
+                    eprint(f"relay-drive: MARATHON_GATE_RSS_MB={raw_rss!r} is not an integer — falling back to {GATE_RSS_MB_DEFAULT}")
+                    rss_cap = GATE_RSS_MB_DEFAULT
+            try:
+                res = run_bounded(["/bin/bash", "-c", reviewer_gate], cwd=gate_cwd, timeout=DRIVER_GATE_TIMEOUT_S,
+                                  env=dict(gate_env(), PYTHONDONTWRITEBYTECODE="1"), max_rss_mb=rss_cap)
+                rss_killed, peak_rss_mb = res.rss_killed, res.peak_rss_mb
+                gate_exit = TIMEOUT_RC if res.timed_out else (RSS_KILL_RC if rss_killed else res.rc)
+                gate_out = res.stdout + res.stderr
+            except (OSError, ValueError) as e:
+                gate_exit, gate_out = 127, f"could not launch: {e}"
+            source_ok, source_why = relay_attest.source_matches(source_record, get_head_commit(), gate_cwd)
+            if not source_ok:
+                eprint(f"relay-drive: driver-run gate refused source drift: {source_why}")
+                return ("refused", "gate-failed")
+            eprint(f"relay-drive: driver-run gate `{reviewer_gate}` (cwd {gate_cwd}, reviewed "
+                   f"{pre['reviewed_head'][:12]}) exit {gate_exit}"
+                   + (f" — timed out after {DRIVER_GATE_TIMEOUT_S}s" if gate_exit == TIMEOUT_RC else "")
+                   + (f" — killed: group RSS {peak_rss_mb}MB >= cap {rss_cap}MB" if rss_killed else ""))
+            if gate_exit != 0:
+                eprint("\n".join("  | " + ln for ln in gate_out.splitlines()[-20:]))
+                if relay_attest.builder_declared_unverified(post_canon[:added_start]):
+                    eprint("relay-drive: the builder's latest block declares unverified work and the gate is not green. "
+                           "A Codex builder can verify for itself with CODEX_FLAGS='-s workspace-write -c approval_policy=never "
+                           "-c sandbox_workspace_write.network_access=true' (relay-automation/README.md, GH-1428)")
+                    return ("refused", "unverified-approval")
+                return ("refused", "gate-failed")
         tstat, tactor = token_state()
         if tstat != "done":
             return ("refused", "close-mismatch" if tactor else "token-state")
@@ -933,6 +977,9 @@ def main():
         if cfg_sha:
             record["config_sha256"] = cfg_sha
         record["gate_run"] = gate_run  # GH-1428: whether the reviewer declared a green gate run
+        if gate_exit is not None:  # GH-1465: the gate the driver itself ran, and its exit code
+            record["gate_cmd"], record["gate_exit"] = reviewer_gate, gate_exit
+            record["gate_cmd_format"] = "json"
         trailer = relay_attest.trailer_text(record)
         record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
         relay_attest.append_before_marker(relay_file, trailer)
