@@ -159,6 +159,37 @@ def run_bounded(
     peak_rss_mb: Optional[int] = None
     rss_stop = threading.Event()
     rss_thread: Optional[threading.Thread] = None
+
+    def _communicate_tail(wait_timeout: Optional[float]) -> Tuple[str, str]:
+        if getattr(proc, "stdout", None) is None or getattr(proc, "stderr", None) is None:
+            return proc.communicate(timeout=wait_timeout)
+        tails = {"stdout": "", "stderr": ""}
+
+        def _read_tail(name: str, stream) -> None:
+            tail = ""
+            while True:
+                chunk = stream.read(8192)
+                if not chunk:
+                    break
+                tail = (tail + chunk)[-65536:]
+            tails[name] = tail
+
+        readers = [
+            threading.Thread(target=_read_tail, args=("stdout", proc.stdout), daemon=True),
+            threading.Thread(target=_read_tail, args=("stderr", proc.stderr), daemon=True),
+        ]
+        for reader in readers:
+            reader.start()
+        try:
+            proc.wait(timeout=wait_timeout)
+        except BaseException:
+            for reader in readers:
+                reader.join(timeout=0.1)
+            raise
+        for reader in readers:
+            reader.join()
+        return tails["stdout"], tails["stderr"]
+
     if max_rss_mb is not None and max_rss_mb > 0:
         poll_interval = max(0.05, float(rss_poll_s))
 
@@ -182,7 +213,7 @@ def run_bounded(
         rss_thread.start()
     try:
         try:
-            out, err = proc.communicate(timeout=timeout)
+            out, err = _communicate_tail(timeout)
             if rss_thread is not None:
                 rss_stop.set()
                 # A TERM/KILL sequence already in progress must finish before we return.
@@ -195,9 +226,11 @@ def run_bounded(
                 rss_stop.set()
             kill_existing(proc.pid, grace=grace)
             try:
-                out, err = proc.communicate(timeout=grace + 5)
+                out, err = _communicate_tail(grace + 5)
             except subprocess.TimeoutExpired:
                 out, err = "", ""
+                proc.stdout.close()
+                proc.stderr.close()
             if rss_thread is not None:
                 rss_thread.join()
             return BoundedResult(None, out or "", err or "", True, proc.pid,

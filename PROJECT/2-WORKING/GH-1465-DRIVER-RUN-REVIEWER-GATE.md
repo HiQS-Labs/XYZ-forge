@@ -72,9 +72,12 @@ and any in-flight TERM/KILL sequence finishes before return. The existing enviro
 registry and marathon mirror scrub the outer reviewer-gate command from gate children.
 New attestation command metadata is JSON-quoted; legacy records keep their old format.
 The driver checks the existing source-comparison contract before and after the gate,
-allowing transcript-only commits and refusing source drift. Earlier Nit findings obey
+allowing transcript-only commits and refusing source drift. Gate stdout and stderr are
+drained incrementally into separate 65,536-character tails rather than buffered in full.
+Earlier Nit findings obey
 the verbatim continuity rule; only newly raised Nits may accompany an Approved verdict.
-Full-gate and independent final-head QA remain pending for this repair.
+The full gate passed on `6c3dc3aa2` in 935 seconds; independent final-head QA also passed.
+Any subsequent review repair requires its own classified gate and independent QA; promotion remains separate.
 
 This repair is Costly because `proc_group` is shared. Revert the repair commit if its
 controls, existing coverage or independent QA fail; no installed-harness update is in scope.

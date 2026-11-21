@@ -81,7 +81,7 @@ if expected=='green':
         (d/'src.txt').write_text('after\n')
         git('add','src.txt'); git('commit','-qm','source drift')
         assert not ra.source_matches(r,git('rev-parse','HEAD'),tmp)[0]
-        assert not ra.candidate_ok(dict(r,isolated=False),pin,tmp)[0]
+        assert not ra.candidate_ok(r,git('rev-parse','HEAD'),tmp)[0]
         result['source_drift_refused_transcript_only_allowed']=True
 print(json.dumps(result,sort_keys=True))
 assert result['normal_no_rss_control']

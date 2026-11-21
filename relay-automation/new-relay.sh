@@ -99,7 +99,7 @@ ROUND: 1 / $ROUND_CAP
      the change unnecessary or wrong, and its expected result).
      A \`[Blocker]\` must cite an observed failure.
      A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it.
-     This includes earlier [Nit] findings; only a newly raised [Nit] on an Approved verdict remains optional.
+     This includes earlier [Nit] findings; only a newly raised [Nit] with VERDICT: PASS on STATUS: Approved remains optional.
      This is a protocol rule, not a mechanical check —
      the Producer may disposition a request lacking these as \`Declined — unproven generalization\`.
    - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
