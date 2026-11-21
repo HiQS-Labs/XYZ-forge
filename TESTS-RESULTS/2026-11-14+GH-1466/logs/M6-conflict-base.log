@@ -1,0 +1,14 @@
+xyz-vendor.sh: unknown option --ledger-only
+
+Usage:
+  xyz-vendor.sh <target-repo> [--no-register] [--with-releases]
+  xyz-vendor.sh -h | --help
+
+Materialize a vendored xyz harness snapshot into <target-repo>/.xyz/.
+
+Options:
+  --no-register    Skip recording this install in the registry.
+  --with-releases  Include the Tier 2 RELEASES overlay (releases_app.py, timeline, etc.).
+
+Safety note: `xyz-sync update` refuses a dirty or non-canonical harness source by default before
+calling this script. For an intentional reviewed override, set XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1.

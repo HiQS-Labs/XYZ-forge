@@ -1,0 +1,2 @@
+ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-4291-LEDGER.md:1 missing required frontmatter key 'updated'
+SUMMARY [pdda-check-frontmatter] errors=1 warns=0 info=0
