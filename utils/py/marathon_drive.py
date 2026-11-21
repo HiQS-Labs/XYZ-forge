@@ -2355,7 +2355,7 @@ relay-file: {rel_relay}
         "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
         "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_ALLOW_PLAN_OUTSIDE_WORKING",
         "MARATHON_BUILDER",
-        "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
+        "MARATHON_LANE_NS", "MARATHON_REVIEWER", "MARATHON_REVIEWER_GATE_CMD", "RELAY_AGENT",
         "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         # GH-505/GH-509: the driver's per-turn role / pinned-revision / artifact-digest exports.
         "RELAY_ROLE", "RELAY_REVIEWED_HEAD", "RELAY_ARTIFACT_SHA256",
@@ -3179,6 +3179,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,
    `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure.
    A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it.
+   This includes earlier [Nit] findings; only a newly raised [Nit] on an Approved verdict remains optional.
+   The falsifier names the fixture or data and its expected result.
    The Builder may disposition a request lacking these as `Declined — unproven generalization`.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to {args.builder} —
    {args.builder}, take your turn" when requesting changes, or "relay closed, no further turn needed" when

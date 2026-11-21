@@ -912,6 +912,12 @@ def main():
             from gate_env import gate_env
             from proc_group import GATE_RSS_MB_DEFAULT, RSS_KILL_RC, TIMEOUT_RC, run_bounded
             gate_cwd, gate_out, rss_killed, peak_rss_mb = target_repo(), "", False, None
+            source_record = dict(reviewed_head=pre["reviewed_head"],
+                                 relay_file_rel=relay_attest.repo_relative(relay_file, gate_cwd))
+            source_ok, source_why = relay_attest.source_matches(source_record, get_head_commit(), gate_cwd)
+            if not source_ok:
+                eprint(f"relay-drive: driver-run gate refused source drift: {source_why}")
+                return ("refused", "gate-failed")
             rss_cap = None
             if (get_env("MARATHON_GATE_GUARD", "1") or "1").strip() != "0":
                 raw_rss = (get_env("MARATHON_GATE_RSS_MB") or "").strip()
@@ -928,6 +934,10 @@ def main():
                 gate_out = res.stdout + res.stderr
             except (OSError, ValueError) as e:
                 gate_exit, gate_out = 127, f"could not launch: {e}"
+            source_ok, source_why = relay_attest.source_matches(source_record, get_head_commit(), gate_cwd)
+            if not source_ok:
+                eprint(f"relay-drive: driver-run gate refused source drift: {source_why}")
+                return ("refused", "gate-failed")
             eprint(f"relay-drive: driver-run gate `{reviewer_gate}` (cwd {gate_cwd}, reviewed "
                    f"{pre['reviewed_head'][:12]}) exit {gate_exit}"
                    + (f" — timed out after {DRIVER_GATE_TIMEOUT_S}s" if gate_exit == TIMEOUT_RC else "")
@@ -969,6 +979,7 @@ def main():
         record["gate_run"] = gate_run  # GH-1428: whether the reviewer declared a green gate run
         if gate_exit is not None:  # GH-1465: the gate the driver itself ran, and its exit code
             record["gate_cmd"], record["gate_exit"] = reviewer_gate, gate_exit
+            record["gate_cmd_format"] = "json"
         trailer = relay_attest.trailer_text(record)
         record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
         relay_attest.append_before_marker(relay_file, trailer)

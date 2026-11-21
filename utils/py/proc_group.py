@@ -164,13 +164,14 @@ def run_bounded(
 
         def _watch_rss() -> None:
             nonlocal rss_killed, peak_rss_mb
-            while True:
-                if proc.poll() is not None:
+            while not rss_stop.is_set():
+                # The launcher may exit while a group member still holds an output pipe.
+                rss_mb, reason = group_rss_mb(proc.pid)
+                if reason == "group-missing":
                     return
-                rss_mb, _ = group_rss_mb(proc.pid)
                 if rss_mb is not None:
                     peak_rss_mb = rss_mb if peak_rss_mb is None else max(peak_rss_mb, rss_mb)
-                    if rss_mb >= max_rss_mb and proc.poll() is None:
+                    if rss_mb >= max_rss_mb:
                         rss_killed = True
                         kill_existing(proc.pid, grace=grace)
                         return
@@ -184,7 +185,8 @@ def run_bounded(
             out, err = proc.communicate(timeout=timeout)
             if rss_thread is not None:
                 rss_stop.set()
-                rss_thread.join(timeout=1.0)
+                # A TERM/KILL sequence already in progress must finish before we return.
+                rss_thread.join()
             return BoundedResult(proc.returncode, out or "", err or "", False, proc.pid,
                                  time.monotonic() - t0, rss_killed=rss_killed,
                                  peak_rss_mb=peak_rss_mb)
@@ -197,7 +199,7 @@ def run_bounded(
             except subprocess.TimeoutExpired:
                 out, err = "", ""
             if rss_thread is not None:
-                rss_thread.join(timeout=1.0)
+                rss_thread.join()
             return BoundedResult(None, out or "", err or "", True, proc.pid,
                                  time.monotonic() - t0, rss_killed=rss_killed,
                                  peak_rss_mb=peak_rss_mb)
@@ -209,6 +211,8 @@ def run_bounded(
         finally:
             proc.stdout.close()
             proc.stderr.close()
+            if rss_thread is not None:
+                rss_thread.join()
         raise
 
 

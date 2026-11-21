@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Driver-run reviewer gate and finding-continuity rule implemented on PR #1467; development (including #1417 attempt accounting) merged in | Gate and independent review of the final head, then land PR #1467 |
+| Development after #1471 merged; current CodeRabbit process lifetime, command canonicalization and nested-gate findings reproduced and repaired with retained red/green controls | Full gate and independent final-head QA, then current-head CodeRabbit disposition and landing |
 
 ## Acceptance
 
@@ -63,6 +63,21 @@ PASS with no new evidence, and approved without running anything, relying on the
 
 ## Verification
 Manual red control and existing focused suites: `TESTS-RESULTS/2026-11-14+GH-1465/`. No new suite (GH-831).
+
+### Run-2 CodeRabbit follow-up
+
+`TESTS-RESULTS/2026-11-20+GH-1465/` retains the bounded reproducers and recon map.
+The RSS watcher now follows surviving group members until communication completes,
+and any in-flight TERM/KILL sequence finishes before return. The existing environment
+registry and marathon mirror scrub the outer reviewer-gate command from gate children.
+New attestation command metadata is JSON-quoted; legacy records keep their old format.
+The driver checks the existing source-comparison contract before and after the gate,
+allowing transcript-only commits and refusing source drift. Earlier Nit findings obey
+the verbatim continuity rule; only newly raised Nits may accompany an Approved verdict.
+Full-gate and independent final-head QA remain pending for this repair.
+
+This repair is Costly because `proc_group` is shared. Revert the repair commit if its
+controls, existing coverage or independent QA fail; no installed-harness update is in scope.
 
 ## Limits
 - Applies only when a gate command is configured; an unarmed relay is unchanged.
