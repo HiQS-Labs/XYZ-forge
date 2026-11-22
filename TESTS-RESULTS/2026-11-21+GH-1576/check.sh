@@ -224,4 +224,30 @@ PY
 }
 ex e1 no "unwired clone"
 ex e2 yes "wired clone (express's own push sets XYZ_SKIP_PREPUSH, so this is wiring evidence only)"
+# express closeout: refuse on an unwired clone, repair the wiring, retry with the SAME extra_paths (plan QA F4).
+# Red (base) has no refusal, so it pushes at once; green must refuse with nothing committed, then publish on retry.
+e3() {
+  local n=e3 t="$W/trace-e3.log" before mid after line
+  newclone $n; mkdir -p "$W/$n/TESTS-RESULTS/gh1576-$n"; echo "$n" > "$W/$n/TESTS-RESULTS/gh1576-$n/receipt.md"
+  before="$(oref development)"
+  line="$(env GIT_TRACE="$t" python3 - "$CODE/utils/py" "$W/$n" "TESTS-RESULTS/gh1576-$n/receipt.md" "$ORIGIN" <<'PY' 2>&1 | tail -1
+import subprocess, sys; sys.path.insert(0, sys.argv[1]); import express as ex
+root, rel, origin = sys.argv[2], sys.argv[3], sys.argv[4]
+def head(): return subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+def oref(): return subprocess.run(["git", "--git-dir", origin, "rev-parse", "development"], capture_output=True, text=True).stdout.strip()
+h0, o0 = head(), oref()
+try: first = "pushed" if ex.persist_closeout(root, "chore: gh1576 e3", extra_paths=(rel,)) else "no-op"
+except SystemExit: first = "refused"
+committed = head() != h0
+dirty = bool(subprocess.run(["git", "-C", root, "status", "--porcelain"], capture_output=True, text=True).stdout.strip())
+subprocess.run(["bash", "githooks/install.sh"], cwd=root, capture_output=True)
+try: second = "pushed" if ex.persist_closeout(root, "chore: gh1576 e3", extra_paths=(rel,)) else "no-op"
+except SystemExit as e: second = "refused-%s" % e.code
+print("RESULT=first-%s,retry-%s DETAIL=after first call: committed=%s tree-dirty=%s origin-moved=%s; retry origin-moved=%s" % (first, second, committed, dirty, o0 != oref() if first != "pushed" else "n/a", o0 != oref()))
+PY
+)"
+  after="$(oref development)"
+  record "express:1284 closeout, refuse then retry" "unwired, install, retry with the same extra_paths" "$(printf '%s' "$line" | sed -n 's/RESULT=\([^ ]*\).*/\1/p')" "$(printf '%s' "$line" | sed -n 's/.*DETAIL=//p')" "$before" "$after" "$(chk "$W/$n")" "$(hookran "$t")"
+}
+e3
 say "== $LABEL done; provenance appended to $PROV =="

@@ -1281,14 +1281,19 @@ def persist_closeout(root, message, extra_paths=()):
     disallowed = [p for p in paths if not (is_allowed_closeout_path(p) or p in extra)]
     if disallowed:
         die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
-    git(root, "add", "--", *paths)
-    git(root, "commit", "-m", message)
-    # GH-1576: this push bypasses pre-push by lane design, so the wiring is proven immediately
-    # before it, with the same check the preflight uses.
+    # GH-1576: this push bypasses pre-push by lane design, so the wiring is proven with the same
+    # check the preflight uses. It runs BEFORE the commit: nothing between here and the push can
+    # unwire the clone, and a refusal then leaves the closeout exactly as it was (still dirty, not
+    # committed), so the retry after `bash githooks/install.sh` takes the same path with the same
+    # `extra_paths`. Checking after the commit would strand the receipt as an unpublished commit
+    # that neither a retry (empty commit) nor `resume` (unexpected dirt) accepts.
     wired, detail = gate_check(root)
     if not wired:
         die("refusing closeout push: `bash githooks/install.sh --check` did not prove the canonical "
-            "gate stub; run `bash githooks/install.sh` first (GH-1576): %s" % detail)
+            "gate stub; run `bash githooks/install.sh` first, then retry (nothing was committed) "
+            "(GH-1576): %s" % detail)
+    git(root, "add", "--", *paths)
+    git(root, "commit", "-m", message)
     git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
     return True
 
