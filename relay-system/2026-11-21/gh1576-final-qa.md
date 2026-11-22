@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -802,5 +802,159 @@ against this head.** Their round-2/round-3 text stays as written.
   fault injection; `attempt-finish` has no aborted-duplicate outcome (handled in the handback, not here).
 
 Handing off to Reviewer (codex) for Round 4 (extra round, F4 only).
+
+### Reviewer · Round 4 · codex
+
+**What this proposes**
+
+Finish F4 by restoring the wiring check immediately before the Express closeout push.
+Allow the documented `resume` command to publish the retained first ship transaction after
+hook repair, using the existing receipt matcher, allowlist and persistence function.
+
+**How the existing system works, per this document**
+
+The first closeout writes the receipt and ship outputs before persistence. An early wiring
+refusal leaves those files dirty; previously `resume` rejected that state as ordinary dirt.
+The existing resume flow also qualifies repository/issue ownership and supports a read-only preview.
+
+**What it's not**
+
+No new detector, writer, suite or general retry system. Inference: the added recovery must obey
+resume's existing preview and identity controls before it publishes anything.
+
+**Scope adjudication**
+
+The GitHub connector returned the operator-account comment
+[Operator decision 2026-11-22](https://github.com/HiQS-Labs/XYZ-forge/issues/1576#issuecomment-7083354655),
+including “authorize one extra repair + final-QA round (round 4), limited to F4” and the explicit
+exclusion of F5/F6. This review honors that scope decision; F5/F6 do not count against this head.
+Their historical findings remain unchanged. The finding below is introduced by the F4 repair.
+
+**Findings**
+
+- [Blocker] **F4 recovery publishes before the dry-run and identity controls.**
+  `utils/py/express.py:1503` calls `resume_pending_closeout`, which calls persistence at `:1482`;
+  persistence stages, commits and pushes at `:1299`–1302. Only afterward does `cmd_resume`
+  qualify repository/native issue ownership at `:1514` or honor `--dry-run` at `:1516`.
+  The exact-function probe below observes `add,commit,push` in BOTH a dry-run and a request
+  whose identity qualification subsequently refuses. Thus the documented preview can publish
+  to the integration branch, and the ownership refusal comes too late to prevent publication.
+  This contradicts the CLI promise at `:1639` (“preview operations without modifying files or
+  git state”) and the existing qualification boundary at `:1432`–1459. Move the new recovery
+  mutation behind successful identity qualification and the dry-run return; preview may inspect
+  and describe the eligible transaction but must not call persistence. Keep the existing dirty-path
+  restrictions and final wiring check. No new helper subsystem or suite is needed.
+  Observed input: the retained first-closeout state recorded at
+  `TESTS-RESULTS/2026-11-21+GH-1576/provenance.jsonl:46`: base branch, dirty ship outputs plus
+  a valid uncommitted receipt, then repaired wiring. The probe supplies that state with
+  `dry_run=True`, then with `dry_run=False` and an identity rejection; both reach the fake Git
+  commit/push before qualification. This is an observed exact-code ordering failure, not a
+  claim that this reviewer performed a real push.
+  Affected scope: `resume` calls entering the newly added dirty-closeout recovery branch,
+  including previews and calls with wrong repository or invalid owned-issue identity.
+  Falsifier: for this retained transaction, `resume --dry-run` and an identity-rejected resume
+  produce zero add/commit/push calls and preserve tree, HEAD and origin; the matching authorized
+  non-preview resume still publishes and completes. Retain a manual disposable-clone witness
+  or use existing coverage. End-to-end negative controls are [Unverified — needs clone run].
+
+- [Pass] **F4's immediate wiring check and normal recovery witness are now present.**
+  `utils/py/express.py:1298` checks before staging; `:1301` rechecks immediately before `:1302`
+  pushes. Both delegate through `require_gate_wired:1272` to the existing `gate_check:553`.
+  The skill documents install-then-resume at `skills/2-daily/express/SKILL.md:129`–135.
+  `TESTS-RESULTS/2026-11-21+GH-1576/provenance.jsonl:43`–48 distinguishes the previous resume
+  refusal from repaired ordinary execution: row 45 returns `rc=4` with an uncommitted receipt;
+  row 48 returns `rc=0`, `receipt-committed=1`, `tree-dirty-lines=0`, `origin-in-sync=yes`,
+  and `doc=moved`. Row 47 retains the unrelated-dirty-file refusal without moving HEAD/origin.
+  `recover.sh:53`–60 invokes real closeout with a supplied successful suite state, and `:71`/`:76`
+  invokes the real resume CLI in the existing hermetic fixture. It does not run the suite as
+  part of this manual scenario. One receipt line before/after supports the stated no-append
+  result; it is not a byte-for-byte receipt comparison. These are producer-recorded clone runs,
+  not runs performed in this reviewer worktree, and they omit the two failing modes above.
+
+- [Pass] **A local aggregate gate result is retained for the repaired implementation.**
+  `TESTS-RESULTS/2026-11-21+GH-1576/full-gate.log:1`–9 records
+  `6c69cbf3f9dd9cee7e833d38c9ed2f4751daa908`, `./validate.sh`, exit 0, 1339 seconds and
+  `passed: 408 / 408`; `:35`–39 records equal before/after HEAD, status, origin and local-config
+  hash. Lines 41–42 disclose retained summary/tail only and the superseded failed path-integrity
+  run. This is local producer evidence, not hosted qualification or a reviewer rerun. It does
+  not falsify the ordering bug. No future gate is counted toward this verdict.
+
+**Read-only probe receipt**
+
+Command below, with process exit **0**. Five exact AST function definitions are evaluated with
+in-memory dependencies. `git` is a Python fake; no Git process, real repository mutation, suite,
+fixture execution or network call occurs. Receipt lookup, landing resolution and identity results
+are supplied inputs; the probe measures the real caller/persistence ordering, not those validators.
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast
+from pathlib import Path
+from types import SimpleNamespace
+names={'cmd_resume','resume_pending_closeout','persist_closeout','require_gate_wired','is_allowed_closeout_path'}
+tree=ast.parse(Path('utils/py/express.py').read_text())
+nodes=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in names]
+ns={'BASE':'development','CLOSEOUT_ALLOWLIST_FILES':{'releases.db'},'CLOSEOUT_ALLOWLIST_PREFIXES':()}
+exec(compile(ast.Module(body=nodes,type_ignores=[]),'<exact-express-functions>','exec'),ns)
+receipt='TESTS-RESULTS/2026-11-21+GH-999-express/provenance.jsonl'
+class Refused(Exception): pass
+state={}
+def die(msg): raise Refused(msg)
+def fake_git(root,*args,**kwargs):
+ state['calls'].append(args[0])
+ if args[0]=='branch': out='development\n'
+ elif args[0]=='status': out=' M releases.db\n?? '+receipt+'\n' if state['dirty'] else ''
+ elif args[0] in ('add','commit','push'):
+  if args[0]=='commit': state['dirty']=False
+  out=''
+ else: raise AssertionError(args)
+ return SimpleNamespace(returncode=0,stdout=out,stderr='')
+def qualify(args):
+ state['calls'].append('qualify_identity')
+ if state['reject_identity']: die('requested repository differs from the landing root repository')
+ return {'issue_url':'https://github.com/H/H/issues/999'}
+ns.update(git=fake_git,die=die,resolve_landing_commit=lambda *a:'a'*40,normalize_suite=lambda s:s,find_receipt=lambda *a:receipt,change_paths=lambda r:['releases.db',receipt] if state['dirty'] else [],gate_check=lambda r:(True,'wired'),qualify_resume_identity=qualify)
+for label,dry,reject in [('dry-run recovery',True,False),('wrong repository recovery',False,True)]:
+ state.update(dirty=True,calls=[],reject_identity=reject)
+ args=SimpleNamespace(root='/fake',issue=999,sha='a'*40,suite='test/gh999-demo.sh',dry_run=dry,repo='wrong/repo' if reject else 'H/H')
+ try: ns['cmd_resume'](args)
+ except Refused as e: print(label,'REFUSED',e)
+ print(label,'calls='+','.join(state['calls']),'dirty='+str(state['dirty']))
+ assert state['calls'].index('push') < state['calls'].index('qualify_identity')
+ assert not state['dirty']
+PY
+```
+
+Decisive output:
+
+```text
+express-resume [dry-run]: would ensure issue #999 closed, reconcile commit aaaaaaaaaaaa, and persist/push
+dry-run recovery calls=branch,status,add,commit,push,status,qualify_identity dirty=False
+wrong repository recovery REFUSED requested repository differs from the landing root repository
+wrong repository recovery calls=branch,status,add,commit,push,status,qualify_identity dirty=False
+```
+
+**Sweep and limits**
+
+Read the entire relay, plan, seeded nine-file diff, Express module and skill, both manual witness
+scripts, recovery logs and aggregate gate record. The whole-file sweep for this F4-only round
+covers Express, including its pre-existing code; no additional pre-existing defect is raised.
+The earlier whole-file sweeps of the other lane modules remain historical evidence, not a new
+sweep claimed in this turn. Graph tools are unavailable, so no project/generation/coverage claim
+is made. No Git command, gate, suite, executable fixture, real push, deletion or remote write ran.
+Only this relay file and permitted scratch were written. The plan's original rating and earlier
+fixture-stub dispositions are not reopened by this F4-only round.
+
+swept file: yes
+VERDICT: FAIL
+Basis: Normal first-closeout recovery and the final wiring boundary are supported, but the F4
+repair introduces publication during dry-run and before identity refusal. F5/F6 are excluded
+by the operator decision and do not affect this verdict. The authorized extra round is exhausted;
+STATUS is Escalated, and this turn authorizes no further automatic repair/review round.
+
+Handing off to Producer (claude-a) for parent/operator adjudication of the F4 regression and
+exhausted relay; the token handoff is not approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
