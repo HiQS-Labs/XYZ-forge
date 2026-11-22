@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -104,5 +104,105 @@ set STATUS to Approved only on PASS.
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**What this proposes**
+
+Add the existing installer check immediately before the listed lane pushes and refuse unwired
+clones. Make provisioning explicit, wire merge-cleanup's disposable landing clone, and retain
+red/green evidence without adding a suite.
+
+**How the existing system works, per this document**
+
+Hooks do not travel with clones; the installer already detects missing wiring. Express checks
+some paths, while the other listed push sites lack an executable refusal. The document says
+start-task provisioning is currently prose and merge-cleanup creates an unwired repair clone.
+
+**What it's not**
+
+No replacement hook detector, server control, new suite, or protection against deliberate manual
+bypasses. Inference: the downstream-host exception is intended to preserve cross-repo use.
+
+**Source-backed findings**
+
+- [Should] **F1 — Missing installer is not proof that the target is a downstream host.**
+  Plan lines 72–74 make absence alone sufficient to proceed, but the existing authority explicitly
+  describes Forge branches predating the hook directory (`githooks/install.sh:9`) and refuses
+  missing installers in canonical mode (`utils/py/express.py:564`). This would retain an ungated
+  path for an unwired Forge checkout whose branch lacks the installer. Specify a positive,
+  existing target/harness-context distinction for any downstream exception; missing/unknown
+  Forge installation must refuse. Do not add a second hook detector or infer host identity from
+  installer absence. Apply the same applicability rule to provisioning and verification.
+  Observed input: the plan's literal absent-`githooks/install.sh` case at
+  `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md:72`, combined with the supported old-Forge-branch
+  case documented at `githooks/install.sh:9`; no runtime reproduction claimed.
+  Affected scope: the proposed absent-installer branch at the newly guarded lane push sites.
+  Falsifier: an unwired Forge target without the installer must refuse before push; a positively
+  identified supported downstream host must retain its explicitly chosen host policy. If
+  existing context cannot distinguish them, document and choose the conservative refusal.
+
+- [Should] **F2 — Do not make Jog's policy depend on whether Express imports.**
+  Plan lines 69–71 leave two implementations conditional on import success. Express's
+  `VENDORED = False` is initialized at `utils/py/express.py:93` and updated only inside its
+  CLI `main()` at `:1603`; importing `gate_check` does not initialize that mode.
+  Choose the planned direct installer subprocess call in Jog, with F1's explicit applicability
+  decision, rather than an optional CLI-module import. Keep Express's own reuse local.
+  Observed input: a library import of `express.gate_check` for the plan's downstream host lacking
+  a root installer takes the false-mode return at `utils/py/express.py:564`, even when Express's
+  CLI would set vendored mode.
+  Affected scope: Jog's proposed reuse/fallback at plan lines 69–74.
+  Falsifier: the same target must receive the same admission decision regardless of Express's
+  import availability; a supported vendored-host case must agree with the selected host policy.
+
+- [Should] **F3 — Tie refusal evidence to the other changed push boundaries.**
+  Plan lines 85–92 exercise kickstart before/after installation and its rerun, but do not identify
+  which existing checks witness refusal at Jog, merge-cleanup, and Express closeout. An unchanged
+  `merge_cleanup.py:1048` or `express.py:1284` could therefore survive the stated manual check.
+  Name the relevant existing assertions or retained manual controls for those new decisions,
+  including a real merge-cleanup repair push after provisioning. Require nonzero refusal and
+  an unchanged origin ref when unwired, then a successful hooked push when wired; retain exact
+  revisions, commands, outputs and provenance. No new suite is needed. Also clarify that
+  "same sequence" at plan line 87 means the guarded lane command: plain `git push` remains
+  outside the implementation and cannot be expected to refuse merely because this plan lands.
+  This is a verification-plan correction, not a request for another runtime mechanism.
+
+- [Pass] **Push-site inventory and authority are grounded.** Within the named Python lane family,
+  the source search found the seven push calls already listed in the plan; no additional direct
+  call site was found. The operative installer check is `githooks/install.sh:62`–85, including
+  executable-stub and overriding-`core.hooksPath` refusal. The proposed direct calls extend this
+  authority rather than introduce a writer/detector.
+  Read-only command: `rg -n '"push", "origin"' utils/py/express.py utils/py/jog_run.py skills/1-hourly/kickstart/scripts/run_record.py skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`.
+  Exit 0; decisive output: `run_record.py:590`, `express.py:1143,1284`,
+  `merge_cleanup.py:1048,1534`, `jog_run.py:1209,2320`. Source/AST inspection of the named
+  lane directories supplemented this literal search; this is bounded source evidence, not a
+  claim about every indirect publisher in the repository.
+
+- [Pass] **Repair sequencing supports the proposed wiring and timeout.**
+  `prepare_landing_clone` deliberately leaves a merge open at
+  `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:997`, but B1 commits that merge at
+  `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:678` before returning the SHA passed to
+  `push_resolved_head` (`merge_cleanup.py:2064`, `:2072`). Installing hooks does not itself
+  execute the gate. Using the existing `PUSH_GATE_TIMEOUT_S` (`:106`) instead of the
+  180-second network default (`:105`) is appropriate for a now-hooked repair push. Preserve
+  the existing merge-attempt context at `:1045` and the function's `(False, reason)` failure
+  convention, rather than mechanically introducing an exception. Runtime success still needs
+  the disposable-clone evidence requested in F3.
+
+- [Unverified — needs clone run] No red/green, suite, or hooked push was run in this reviewer
+  worktree, and no later phase gate is assumed. The proposed kickstart refusal would reject
+  the unchanged candidate at that entry point; F3 closes the remaining evidence gap.
+  The full plan was swept, including recon, risks and non-goals. No additional pre-existing
+  defect in the plan was found beyond F1–F3. Graph project/generation and coverage could not
+  be checked because graph tools are unavailable; source reads were used instead.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The push inventory, existing authority and repair ordering support this small change.
+The missing-installer exception and optional Express import leave applicability inconsistent,
+and the verification plan must identify rejection evidence for the other new push checks.
+This is plan QA, not implementation approval.
+
+Handing off to Producer (claude-a) — revise the plan and disposition F1–F3, then return it for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
