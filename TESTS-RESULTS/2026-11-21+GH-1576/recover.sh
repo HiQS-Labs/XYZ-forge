@@ -17,7 +17,8 @@ trap 'rm -rf "$W"' EXIT
 mkdir -p "$OUT"
 git clone -q "$SRC" "$W/code" && git -C "$W/code" checkout -q "$REV" || { echo "cannot check out $REV"; exit 2; }
 REVSHA="$(git -C "$W/code" rev-parse HEAD)"
-RUN="$W/code/test/gh1576-recover-run.sh"
+RUN_NAME="gh1576-recover-run.sh"   # generated at run time; not a path that exists in the tree
+RUN="$W/code/test/$RUN_NAME"
 # The suite's setup, up to (not including) its first case.
 sed -n '1,/^echo "== refusals =="/p' "$W/code/test/gh267-express-skill.sh" | sed '$d' > "$RUN"
 export GH1576_PROV="$OUT/provenance.jsonl" GH1576_LABEL="$LABEL" GH1576_REV="$REVSHA"
