@@ -1,0 +1,123 @@
+{
+ "all_ok": true,
+ "cases": {
+  "10_leader_exit_pipe_member_still_rss_guarded": {
+   "elapsed": 0.179,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "over_cap_after_leader_exit": true,
+   "over_cap_before_leader_exit": false,
+   "rss_killed": true
+  },
+  "11_termination_in_flight_completes_before_return": {
+   "completed_before_return": true,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rss_killed": true
+  },
+  "12_multibyte_output_across_read_boundaries": {
+   "chars": 100001,
+   "expect_red_on_08fee": false,
+   "ok": true
+  },
+  "13_cancellation_mid_run_leaves_no_live_group": {
+   "expect_red_on_08fee": false,
+   "group_member_alive": false,
+   "ok": true,
+   "original_exception_preserved": true
+  },
+  "14_reader_error_is_raised_not_returned": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "raised": "[Errno 5] injected EIO"
+  },
+  "15_escaped_descendant_abandoned_with_frozen_snapshot": {
+   "capture_complete": false,
+   "elapsed": 5.423,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "snapshot_stable_after_later_output": true,
+   "stdout": "earlylate\n",
+   "timed_out": true
+  },
+  "1_pipe_holder_wall_timeout": {
+   "elapsed": 0.261,
+   "expect_red_on_08fee": true,
+   "ok": true,
+   "rc": null,
+   "timed_out": true
+  },
+  "2_pipe_holder_group_killed_promptly": {
+   "elapsed": 0.425,
+   "expect_red_on_08fee": true,
+   "holder_dead_on_return": true,
+   "ok": true,
+   "timed_out": true
+  },
+  "3_idempotence_detects_differing_prefix": {
+   "completed": true,
+   "exit_codes": [
+    0,
+    0
+   ],
+   "expect_red_on_08fee": true,
+   "hashes": [
+    "c34a67633c3d3e976f9b7118754196df514aee0ece13c34cf83176664af9a377",
+    "5bec34e4bf125fea4c30d32adac76d93b4f5c4331cfc4459c9f7cacab4044237"
+   ],
+   "ok": true,
+   "passed": false
+  },
+  "4_default_capture_is_complete": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rc": 0,
+   "stderr_len": 188890,
+   "stdout_len": 188890
+  },
+  "5_tail_mode_digest_covers_complete_output": {
+   "capture_complete": true,
+   "digest_a": "3108dec65530f087918b4de639332ce338ef4ee5b735e3745eaa4c39be6ee81b",
+   "digest_b": "bf53d3ff86a9004ef19ce509d56ff3516c5e38758db8732ff7b940c12c9edf3e",
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "tail_end": "last-line\n",
+   "tail_len": 4096,
+   "tails_equal": true,
+   "truncated": true
+  },
+  "6_timeout_keeps_sentinel_diagnostics": {
+   "expect_red_on_08fee": true,
+   "ok": true,
+   "stderr": "sentinel-err",
+   "stdout": "sentinel-out",
+   "timed_out": true
+  },
+  "7_timeout_excerpt_is_bounded_tail": {
+   "elapsed": 1.118,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "tail_end": "out-19999\n",
+   "tail_len": 4096,
+   "timed_out": true,
+   "truncated": true
+  },
+  "8_ordinary_exit_code_and_streams": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rc": 7,
+   "stderr": "error",
+   "stdout": "ok",
+   "timed_out": false
+  },
+  "9_text_mode_newline_semantics_preserved": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "stdout": "a\nb\nc\n"
+  }
+ },
+ "defect_cases_ok": true,
+ "label": "green-fa17a34b8",
+ "python": "3.14.7",
+ "source_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1465-bounded-capture-2026-11-21"
+}
