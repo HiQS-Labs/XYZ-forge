@@ -1,8 +1,8 @@
 ---
 title: express honors CHANGELOG_WRITES (no CHANGELOG append or bounds exemption unless the mode is branch)
-status: Active
+status: Complete
 created: 2026-11-20
-updated: 2026-11-20
+updated: 2026-11-22
 owner: Noel Saw
 gh_issue: 1530
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1530
