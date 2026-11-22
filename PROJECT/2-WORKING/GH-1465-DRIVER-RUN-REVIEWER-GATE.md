@@ -87,24 +87,40 @@ differing output prefixes from `metamorphic_oracle.check_idempotence` (false pas
 started a second reader pair and lost the first pair's diagnostics.
 
 Replacement, in the one owner `utils/py/proc_group.py:run_bounded` (no second runner):
-- One capture object per stream per invocation (a daemon thread reading the pipe with `os.read`,
-  appending as data arrives), shared through normal, timeout and exception paths; never a second reader pair.
+- One capture object per stream per invocation: a daemon reader thread using `os.read` on the binary
+  pipe, appending as data arrives, shared through normal, timeout and exception paths; never a second
+  reader pair. The reader owns its pipe: it closes the stream itself at EOF or error, so the owner never
+  closes a descriptor a reader may still be blocked on (no fd reuse hazard).
+- Reader failure: an `OSError` in a reader is recorded on its capture. After bounded cleanup the owner
+  raises it (an in-flight exception, such as `Cancelled`, takes precedence and is preserved), so a
+  truncated read can never return as a normal result that an oracle then compares.
 - One wall deadline spans the launcher wait and every reader join. On expiry the whole group is
-  TERM/KILLed, every join is bounded by the grace window, readers that outlive it are abandoned
-  rather than closed under a blocked read, and the text captured so far is returned.
+  TERM/KILLed, every join is bounded by `grace + 5`, and the captured text is returned. A reader that
+  outlives that window (a descendant that escaped the group) is abandoned: its capture is frozen under the
+  same lock that produces the returned snapshot (text, digest, truncated flag and completeness are taken
+  atomically), later bytes are drained and discarded, and the result reports `capture_complete=False`.
 - Default capture is the complete output, as before the tail work, so every ordinary caller
-  (oracles, ATE, fuzz, harness, Jog) keeps the full-output contract. Bounded capture is opt-in via
-  `capture_tail_bytes`, used only by the reviewer gate in `relay_drive.judge_terminal` (64 KiB). Both modes
-  report a SHA-256 of the complete stream and whether it was truncated, so a comparison never
-  depends on the tail. On timeout the excerpt is the captured tail (bounded) or the full text.
-- Non-goals: no new suite (GH-831), no packaged-file change, no change to RSS, source-drift,
-  attestation or protocol behavior. Rollback: revert the repair commit; `6c3dc3aa2` is the approved fallback.
-- Verification: recorded manual controls with red against `08fee5d0f` and green on the repaired
-  head under `TESTS-RESULTS/2026-11-21+GH-1465/`; the retained `manual-review-controls.py` mocked
-  process controls are re-expressed with real processes because the capture no longer calls `communicate`.
-
-This repair is Costly because `proc_group` is shared. Revert the repair commit if its
-controls, existing coverage or independent QA fail; no installed-harness update is in scope.
+  (`fuzz_engine`, `wave_reconcile`, `metamorphic_oracle`, `harness`, ATE `run_variations`, `domain_oracles`,
+  `claude_cli`, `jog_run`) keeps the full-output contract with the same decoding (locale encoding,
+  universal newlines, `errors="replace"`). Bounded capture is opt-in via `capture_tail_bytes`, used only
+  by the reviewer gate in `relay_drive.judge_terminal` (64 KiB). Both modes report a SHA-256 of the
+  stream bytes observed, `truncated`, and `capture_complete`, so a comparison never depends on the tail.
+  On timeout the excerpt is the captured tail (bounded) or the full text.
+- RSS watcher: it is told to stop before cleanup and re-checks that flag before killing; its join is
+  bounded by `grace + 5`, which still covers any legitimate in-flight TERM/KILL sequence (itself bounded by
+  `grace`), so the existing "termination finishes before return" guarantee holds without an unbounded wait.
+- Non-goals: no new suite (GH-831), no packaged-file change, no change to source-drift, attestation
+  or protocol behavior. Rollback: revert the repair commit; `6c3dc3aa2` is the approved fallback.
+- Verification (manual, recorded under `TESTS-RESULTS/2026-11-21+GH-1465/`, red on `08fee5d0f` and green on the repaired
+  head, with `provenance.jsonl`): (1) `sh -c 'sleep 1.5 & exit 0'`, timeout .15/grace .05 returns
+  `timed_out=True` in under 1.0 s, and a 6 s holder is dead on return; (2) the real
+  `metamorphic_oracle.check_idempotence` on output with differing prefixes and an identical >64 KiB suffix
+  reports `passed=False`; (3) both pre-timeout stdout and stderr sentinels survive cleanup; plus compatibility
+  observations: complete default capture of two simultaneous 20k-line streams, multibyte output across read
+  boundaries, newline translation, ordinary exit codes, tail-mode digest/truncation/timeout excerpt,
+  reader-error propagation, cancellation mid-run leaving no live group, and the RSS lifecycle controls
+  (leader exit with a pipe holder, termination in flight) re-expressed with real processes because the
+  capture no longer calls `communicate`.
 
 ## Limits
 - Applies only when a gate command is configured; an unarmed relay is unchanged.

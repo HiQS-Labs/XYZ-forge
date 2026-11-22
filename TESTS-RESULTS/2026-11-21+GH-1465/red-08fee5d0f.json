@@ -1,0 +1,81 @@
+{
+ "all_ok": false,
+ "cases": {
+  "10_leader_exit_pipe_member_still_rss_guarded": {
+   "elapsed": 0.107,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rss_killed": true
+  },
+  "11_termination_in_flight_completes_before_return": {
+   "completed_before_return": true,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rss_killed": true
+  },
+  "1_pipe_holder_wall_timeout": {
+   "elapsed": 1.513,
+   "expect_red_on_08fee": true,
+   "ok": false,
+   "rc": 0,
+   "timed_out": false
+  },
+  "2_pipe_holder_group_killed_promptly": {
+   "elapsed": 6.013,
+   "expect_red_on_08fee": true,
+   "holder_dead_on_return": true,
+   "ok": false,
+   "timed_out": false
+  },
+  "3_idempotence_detects_differing_prefix": {
+   "expect_red_on_08fee": true,
+   "hashes": [
+    "8f28667b7671f818264b25c386a16560a4596f89abfd9167355e587298e4c7d0",
+    "8f28667b7671f818264b25c386a16560a4596f89abfd9167355e587298e4c7d0"
+   ],
+   "ok": false,
+   "passed": true
+  },
+  "4_default_capture_is_complete": {
+   "expect_red_on_08fee": false,
+   "ok": false,
+   "rc": 0,
+   "stderr_len": 65536,
+   "stdout_len": 65536
+  },
+  "5_tail_mode_keeps_digest_of_complete_output": {
+   "expect_red_on_08fee": false,
+   "ok": false,
+   "unsupported": "run_bounded() got an unexpected keyword argument 'capture_tail_bytes'"
+  },
+  "6_timeout_keeps_sentinel_diagnostics": {
+   "expect_red_on_08fee": true,
+   "ok": false,
+   "stderr": "",
+   "stdout": "",
+   "timed_out": true
+  },
+  "7_timeout_excerpt_is_bounded_tail": {
+   "expect_red_on_08fee": true,
+   "ok": false,
+   "unsupported": "run_bounded() got an unexpected keyword argument 'capture_tail_bytes'"
+  },
+  "8_ordinary_exit_code_and_streams": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rc": 7,
+   "stderr": "error",
+   "stdout": "ok",
+   "timed_out": false
+  },
+  "9_text_mode_newline_semantics_preserved": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "stdout": "a\nb\nc\n"
+  }
+ },
+ "defect_cases_ok": false,
+ "label": "red-08fee5d0f",
+ "python": "3.14.7",
+ "source_root": "/Users/noelsaw/qa-clones/roots/08fee5d0f"
+}
