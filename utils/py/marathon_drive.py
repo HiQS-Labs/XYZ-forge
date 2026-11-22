@@ -1001,11 +1001,11 @@ GATE_TIERS = {
     "full": {"wall_s": 1800, "cpu_s": 1200},  # ~1.9x the worst observed 957s wall / 532.5s CPU
 }
 GATE_DEFAULT_TIER = "full"
+GATE_RSS_MB_DEFAULT = 8192
 # RSS is deliberately NOT tiered and NOT changed. Measured on the crash host (Darwin 24.6, arm64):
 # setrlimit(RLIMIT_AS) and setrlimit(RLIMIT_DATA) are both REFUSED, even soft-only, so the
 # process-group RSS poll is the only layer standing between a runaway test and this host. Retuning
 # it alongside the CPU/wall tiers would confound two changes at once.
-GATE_RSS_MB_DEFAULT = 8192
 
 
 def _gate_tier():
@@ -1048,33 +1048,11 @@ GATE_RSS_UNAVAILABLE_WARNING = ("gate-guard: WARNING: RSS watchdog unavailable �
 def _gate_group_rss_mb(pgid):
     """Summed RSS of a gate process group as (mb, None), or (None, reason) when it was not read.
 
-    GH-773: this used to return -1 on an exception and 0 on an empty or refused listing, and the
-    caller folded both into "peak 0MB" with the cap unable to fire. `ps-failed` means the probe
-    itself did not work (a sandbox raises PermissionError at exec); `group-missing` means `ps`
-    worked but listed no row for the group, which the caller must tell apart from a gate that has
-    just exited."""
-    try:
-        res = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
-                             timeout=10)
-    except (OSError, subprocess.SubprocessError):
-        return None, "ps-failed"
-    if res.returncode != 0 or not res.stdout.strip():
-        return None, "ps-failed"
-    total_kb = 0
-    matched = False
-    for line in res.stdout.splitlines():
-        parts = line.split()
-        if len(parts) != 2:
-            continue
-        try:
-            if int(parts[0]) == pgid:
-                total_kb += int(parts[1])
-                matched = True
-        except ValueError:
-            continue
-    if not matched:
-        return None, "group-missing"
-    return total_kb // 1024, None
+    GH-773: delegates to proc_group.group_rss_mb (lazy-imported so minimal fixtures without
+    proc_group.py can still load marathon_drive.py) while passing this module's subprocess.run
+    so seam mocks against driver.subprocess.run continue to intercept the probe."""
+    from proc_group import group_rss_mb
+    return group_rss_mb(pgid, run=subprocess.run)
 
 
 def _gate_rss_summary(peak_mb, readable, unreadable):
@@ -2377,7 +2355,7 @@ relay-file: {rel_relay}
         "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
         "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_ALLOW_PLAN_OUTSIDE_WORKING",
         "MARATHON_BUILDER",
-        "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
+        "MARATHON_LANE_NS", "MARATHON_REVIEWER", "MARATHON_REVIEWER_GATE_CMD", "RELAY_AGENT",
         "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         # GH-505/GH-509: the driver's per-turn role / pinned-revision / artifact-digest exports.
         "RELAY_ROLE", "RELAY_REVIEWED_HEAD", "RELAY_ARTIFACT_SHA256",
@@ -3199,8 +3177,11 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete
    input — a row, a value, a `file:line` — that fails under the current code (GH-681). Every
    `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,
-   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder
-   may disposition a request lacking these as `Declined — unproven generalization`.
+   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure.
+   A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it.
+   This includes earlier [Nit] findings; only a newly raised [Nit] on an Approved verdict remains optional.
+   The falsifier names the fixture or data and its expected result.
+   The Builder may disposition a request lacking these as `Declined — unproven generalization`.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to {args.builder} —
    {args.builder}, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the

@@ -117,6 +117,7 @@ HARNESS_ENV = {
         "own default.",
     ),
     "MARATHON_REVIEWER": (SCRUB, "Same reasoning as MARATHON_BUILDER, for the reviewer lane."),
+    "MARATHON_REVIEWER_GATE_CMD": (SCRUB, "Arms the outer relay's gate; inherited by a gate that spawns relays, it recursively runs that same gate."),
     "CLAUDE_AGENT": (SCRUB, "Turn shims dispatch only when the token's actor matches; suites set this per-invocation."),
     "CODEX_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "AGY_AGENT": (SCRUB, "See CLAUDE_AGENT."),
