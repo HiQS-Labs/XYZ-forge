@@ -54,7 +54,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed change `3dc703600..HEAD` on `fix/XYZ-forge-gh1576-prepush-hook-check-2026-11-21`:
+- Artifact under review: `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md` (the plan) and the committed change
+  `3dc703600..HEAD` (`git diff 3dc703600..HEAD`) on `fix/XYZ-forge-gh1576-prepush-hook-check-2026-11-21`:
   `skills/1-hourly/kickstart/scripts/run_record.py`, `utils/py/jog_run.py`, `utils/py/express.py`,
   `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`, the skill text in
   `skills/1-hourly/start-task/SKILL.md`, `skills/1-hourly/kickstart/SKILL.md`,
