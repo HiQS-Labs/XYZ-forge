@@ -1,0 +1,296 @@
+diff --git a/skills/1-hourly/kickstart/SKILL.md b/skills/1-hourly/kickstart/SKILL.md
+index 2aa65001a..6e8d7b5da 100644
+--- a/skills/1-hourly/kickstart/SKILL.md
++++ b/skills/1-hourly/kickstart/SKILL.md
+@@ -255,6 +255,8 @@ contract rather than ad-hoc regexes or unlocked appends.
+   - `checkpoint --record <path> --clone <dir> --primary <dir> --branch <branch> --dest <relpath> [--push]` —
+     commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
+     non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
++    `--push` first runs the clone's `bash githooks/install.sh --check` and refuses to push when the
++    pre-push gate is not installed (GH-1576); run `bash githooks/install.sh` in the clone, then retry.
+ 
+ ### Authoritative Amendment Enforcement (KS-06, U2/U11/U12)
+ - **Single Authoritative Channel:** The run record is the sole authoritative channel for
+diff --git a/skills/1-hourly/kickstart/scripts/run_record.py b/skills/1-hourly/kickstart/scripts/run_record.py
+index 8e43f4582..d2a786c34 100755
+--- a/skills/1-hourly/kickstart/scripts/run_record.py
++++ b/skills/1-hourly/kickstart/scripts/run_record.py
+@@ -424,6 +424,24 @@ def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProc
+     return proc
+ 
+ 
++def _require_gate_wired(clone_root: Path) -> None:
++    """GH-1576: refuse to push from a clone whose pre-push gate is not installed.
++
++    The authority is the clone's own `githooks/install.sh --check`. A missing installer is not
++    proof of a downstream host, so it refuses too; never fall back to --no-verify.
++    """
++    installer = clone_root / "githooks" / "install.sh"
++    if not installer.is_file():
++        raise ValueError("refusing push: githooks/install.sh is missing, so this clone's pre-push gate "
++                         "cannot be proven (GH-1576)")
++    chk = subprocess.run(["bash", str(installer), "--check"], cwd=clone_root,
++                         capture_output=True, text=True)
++    if chk.returncode != 0:
++        raise ValueError("refusing push: this clone's pre-push gate is not installed; run "
++                         "`bash githooks/install.sh` in it, then retry (GH-1576): "
++                         + (chk.stderr or chk.stdout).strip())
++
++
+ def _git_common_dir(path: Path) -> Path | None:
+     proc = _git(path, "rev-parse", "--git-common-dir", check=False)
+     if proc.returncode != 0:
+@@ -587,6 +605,7 @@ def checkpoint_record(
+         if remote_sha == head_sha:
+             push_status = "up-to-date"
+         else:
++            _require_gate_wired(clone_root)
+             _git(clone_root, "push", "origin", f"HEAD:refs/heads/{branch}")
+             pushed = True
+             push_status = "pushed"
+diff --git a/skills/1-hourly/start-task/SKILL.md b/skills/1-hourly/start-task/SKILL.md
+index a3f352da0..2d75d8f79 100644
+--- a/skills/1-hourly/start-task/SKILL.md
++++ b/skills/1-hourly/start-task/SKILL.md
+@@ -96,7 +96,9 @@ Then begin work.
+ 3. **Provision isolated work and register intake before implementation.** Create
+    a fresh **full clone from the canonical remote**, verify origin and base SHA,
+    and create the task branch under repo policy. In XYZ Forge the branch is cut
+-   off `origin/development`, with the per-clone git hooks installed and checked.
++   off `origin/development`. Provisioning runs `bash githooks/install.sh` and then
++   `bash githooks/install.sh --check` in the new clone before any other work (hooks do not
++   travel with a clone, GH-549); a failing check stops the task there (GH-1576).
+    Preserve the primary checkout and other sessions.
+    **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
+    tracking issue first, so the number is known before anything is named:
+@@ -287,7 +289,8 @@ Then begin work.
+    Include both sides of renames and deletions; a changed script, test, DB, or other
+    non-doc path must follow its classified tier rather than being called docs-only.
+    When the route requires the full gate, run `ci-local.sh --fast` on the final approved commit and then push: the pre-push hook runs the full `./validate.sh` suite, and that is the one full-gate run (GH-1518). Do not also run full `ci-local.sh` or `./validate.sh` before the push; that runs the same suite twice on the same commit.
+-   That hand-off holds only when both of these are true: `bash githooks/install.sh --check` passes (an unwired clone pushes with no hook at all), and this push is the branch's first, so the hook classifies the whole PR diff against the integration base. The hook classifies only the pushed range; once the branch is on the remote, a docs-only final push routes `docs` and the full suite never runs. If either is false, run full `./validate.sh` once on the final approved commit before pushing. Its receipt (`utils/py/gate_receipt.py`) lets the hook reuse that run instead of repeating it.
++   **Every push, first or later, is preceded immediately by `bash githooks/install.sh --check` (GH-1576).** An unwired clone pushes with no hook at all, so a nonzero exit stops the push: run `bash githooks/install.sh`, re-check, and only then push. Never use `--no-verify` or `XYZ_SKIP_PREPUSH` to get past it. The kickstart, jog, express and merge-cleanup push steps run the same check themselves and refuse.
++   That hand-off holds only when both of these are true: that check passes, and this push is the branch's first, so the hook classifies the whole PR diff against the integration base. The hook classifies only the pushed range; once the branch is on the remote, a docs-only final push routes `docs` and the full suite never runs. If either is false, run full `./validate.sh` once on the final approved commit before pushing. Its receipt (`utils/py/gate_receipt.py`) lets the hook reuse that run instead of repeating it.
+    In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
+    never a valued task clone or linked worktree. Verify its repository identity
+    before and after the run; drift invalidates its evidence. Retain required
+@@ -330,7 +333,7 @@ Then begin work.
+    and continue independent groups.
+ 
+ 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
+-   and accidental files, push through the repository's required gate, and open the
++   and accidental files, run `bash githooks/install.sh --check` and push through the repository's required gate (a failing check means no push), and open the
+    PR against its active integration branch (`development` in XYZ Forge). Reuse
+    an existing PR for the branch. If a network interruption occurs during PR creation,
+    query `gh pr list --head <branch>` to verify whether the PR was registered before
+diff --git a/skills/2-daily/express/SKILL.md b/skills/2-daily/express/SKILL.md
+index 12d655be8..0477e0a4d 100644
+--- a/skills/2-daily/express/SKILL.md
++++ b/skills/2-daily/express/SKILL.md
+@@ -134,6 +134,7 @@ python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh
+ set -euo pipefail
+ SHA=<SHA>; N=<N>; SUITE=test/<existing-suite>.sh; BASE=<base-branch>   # development in XYZ Forge
+ git checkout "$SHA"
++bash githooks/install.sh && bash githooks/install.sh --check                                      # 0. a fresh clone has no hook: wire and prove it (GH-1576)
+ git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
+ LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
+ snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
+@@ -144,11 +145,14 @@ AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "
+ git checkout "$BASE" && git diff-index --quiet HEAD --                                           # 5. same helper, actual rc
+ REC=$(python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
+ cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6. retain the run beside the receipt
+-git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin "$BASE"
++git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)"
++bash githooks/install.sh --check                                                                 # 6b. no push from an unwired clone; never --no-verify (GH-1576)
++git push origin "$BASE"
+ python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
+ ```
+ 
+-In a vendored host (GH-1169) the recipe differs in four places: set `REPO=<owner>/<name>` (the host's slug; express's
++In a vendored host (GH-1169) the recipe differs in five places: omit the two `githooks/install.sh` lines (steps 0 and 6b;
++the host owns its hook policy, as `gate_check` does), set `REPO=<owner>/<name>` (the host's slug; express's
+ default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
+ instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
+ `.xyz/utils/py` in step 5, and resume with
+@@ -167,7 +171,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
+ 0. **Tree of execution** — task branch based on `origin/<base>` (the resolved base) with $\le 2$
+    local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches
+    refuse with `task-clone`), no scratch paths, and `bash githooks/install.sh --check`
+-   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549).
++   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549). The closeout
++   push re-proves it immediately before pushing (GH-1576).
+    Express never commits over peer work (GH-527). Hand-edits to ledger files or
+    generated views are refused; only the driver's verbs may write them.
+ 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless
+diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+index 1cc1df9e4..06e604d80 100644
+--- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
++++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+@@ -961,6 +961,27 @@ def origin_url(repo_path: Path) -> Optional[str]:
+     return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
+ 
+ 
++def gate_unwired_reason(clone: Path, install: bool = False) -> str:
++    """GH-1576: '' when the clone's pre-push gate is installed, else why a push must not happen.
++
++    The authority is the clone's own `githooks/install.sh --check`. With install=True (only for a
++    clone this tool just made) `bash githooks/install.sh` runs first. A missing installer is not
++    proof of a downstream host, so it refuses too; never fall back to --no-verify.
++    """
++    installer = Path(clone) / "githooks" / "install.sh"
++    if not installer.is_file():
++        return "githooks/install.sh is missing, so this clone's pre-push gate cannot be proven (GH-1576)"
++    if install:
++        done = subprocess.run(["bash", str(installer)], cwd=str(clone), capture_output=True, text=True)
++        if done.returncode != 0:
++            return f"githooks/install.sh failed in the clone: {(done.stderr or done.stdout).strip()[-300:]}"
++    chk = subprocess.run(["bash", str(installer), "--check"], cwd=str(clone), capture_output=True, text=True)
++    if chk.returncode != 0:
++        return ("this clone's pre-push gate is not installed; run `bash githooks/install.sh` in it "
++                f"(GH-1576): {(chk.stderr or chk.stdout).strip()[-300:]}")
++    return ""
++
++
+ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
+                           workdir: Path) -> Dict[str, Any]:
+     """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
+@@ -983,6 +1004,11 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
+         return {"clone": None, "merge_rc": None, "error": f"git clone failed: {r.stderr.strip()[:300]}"}
+     for k, v in (("user.name", "merge-cleanup"), ("user.email", "merge-cleanup@local")):
+         run_git(clone, ["config", k, v])
++    # GH-1576: this clone is made here, so wiring its pre-push gate is this tool's job; a repair
++    # push from it must never run ungated.
++    unwired = gate_unwired_reason(clone, install=True)
++    if unwired:
++        return {"clone": clone, "merge_rc": None, "error": f"landing clone gate wiring failed: {unwired}"}
+     r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch]),
+                     f"PR #{pr['number']} fetch")
+     if r.returncode != 0:
+@@ -1045,7 +1071,11 @@ def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo:
+     env["XYZ_ATTEMPT_CONTEXT"] = json.dumps({
+         "kind": "merge-repair", "record": str(attempt_record.record_path(
+             primary_repo, origin_url(primary_repo) or "", pr["number"]))})
+-    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"], env=env)
++    unwired = gate_unwired_reason(clone)
++    if unwired:
++        return False, f"push refused before pushing: {unwired}"
++    # GH-1576: the clone's hook now runs on this push, so it gets the gate-length bound.
++    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"], timeout=PUSH_GATE_TIMEOUT_S, env=env)
+     if r.returncode != 0:
+         return False, f"push refused: {r.stderr.strip()[-400:]}"
+     return True, f"pushed {sha[:10]} to {pr['headRefName']}"
+@@ -1531,6 +1561,10 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
+         log_err(f"{label}: cannot prove nonempty local/remote publication heads")
+         return False
+     if local.stdout.strip() != remote.stdout.strip():
++        unwired = gate_unwired_reason(repo_path)
++        if unwired:
++            log_err(f"{label}: refusing to push post-merge writes: {unwired}")
++            return False
+         pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
+         if pushed.returncode != 0:
+             log_err(f"{label}: could not push post-merge writes: {pushed.stderr.strip()}")
+diff --git a/test/gh280-jog-marathon-adapter.sh b/test/gh280-jog-marathon-adapter.sh
+index 12b5c3b9d..2c487ee07 100644
+--- a/test/gh280-jog-marathon-adapter.sh
++++ b/test/gh280-jog-marathon-adapter.sh
+@@ -163,6 +163,10 @@ setup_fixture() {
+   mkdir -p "$root/src" "$root/test" "$root/PROJECT/2-WORKING"
+   printf 'module.exports = 1\n' > "$root/src/feature.js"
+   printf '#!/usr/bin/env bash\nexit 0\n' > "$root/test/fixture-gate.sh"
++  # GH-1576: jog's receipt/checkpoint pushes refuse a clone whose `githooks/install.sh --check`
++  # does not pass. This fixture has no real hook, so it ships an installer that reports "wired".
++  mkdir -p "$root/githooks"
++  printf '#!/usr/bin/env bash\nexit 0\n' > "$root/githooks/install.sh"
+   write_capture_doc "$root/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+   if [ -z "$prefix" ]; then
+     printf '.tick/\n.xyz/\n__pycache__/\n' > "$root/.gitignore"
+diff --git a/test/gh436-merge-cleanup.py b/test/gh436-merge-cleanup.py
+index cd824ff4e..a2c27ca4e 100644
+--- a/test/gh436-merge-cleanup.py
++++ b/test/gh436-merge-cleanup.py
+@@ -37,6 +37,10 @@ from scan_clones import (
+     DEFAULT_NEVER_DELETE
+ )
+ import merge_cleanup
++# GH-1576: merge-cleanup refuses to push from a clone whose `githooks/install.sh --check` fails. This
++# suite's fixtures are bare repos with no hook and mock the pushes, so the wiring probe is stubbed
++# for the whole module; the refusal itself is witnessed by TESTS-RESULTS/2026-11-21+GH-1576/.
++merge_cleanup.gate_unwired_reason = lambda clone, install=False: ""
+ import scan_clones
+ from merge_cleanup import prune_dangling_skill_symlinks
+ from toposort_prs import (
+diff --git a/utils/py/express.py b/utils/py/express.py
+index 83e38b811..60b847b1f 100644
+--- a/utils/py/express.py
++++ b/utils/py/express.py
+@@ -536,7 +536,9 @@ RECOVERY_RECIPE = (
+     "OUTSIDE the tree, runs `%s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
+     "Only then, from clean %s: python3 -c 'import sys; sys.path.insert(0,\"%s\"); import express; "
+     "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>, base=\"%s\"))'; commit receipt + recovery-run.log under "
+-    "TESTS-RESULTS/*+GH-%d-express/, push to %s, re-run resume --base %s."
++    "TESTS-RESULTS/*+GH-%d-express/, run `bash githooks/install.sh --check` immediately before pushing (the recipe "
++    "installs the hook first in this fresh clone; never --no-verify; a vendored host omits both githooks lines), "
++    "push to %s, re-run resume --base %s."
+ )
+ 
+ 
+@@ -1281,6 +1283,12 @@ def persist_closeout(root, message, extra_paths=()):
+         die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
+     git(root, "add", "--", *paths)
+     git(root, "commit", "-m", message)
++    # GH-1576: this push bypasses pre-push by lane design, so the wiring is proven immediately
++    # before it, with the same check the preflight uses.
++    wired, detail = gate_check(root)
++    if not wired:
++        die("refusing closeout push: `bash githooks/install.sh --check` did not prove the canonical "
++            "gate stub; run `bash githooks/install.sh` first (GH-1576): %s" % detail)
+     git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
+     return True
+ 
+diff --git a/utils/py/jog_run.py b/utils/py/jog_run.py
+index 3e4b76474..cd53085be 100755
+--- a/utils/py/jog_run.py
++++ b/utils/py/jog_run.py
+@@ -1145,6 +1145,26 @@ def _git(root, *args, env=None, input=None):
+     return proc.stdout
+ 
+ 
++def _require_gate_wired(clone):
++    """GH-1576: refuse to push from a clone whose pre-push gate is not installed.
++
++    The authority is the clone's own `githooks/install.sh --check`. A missing installer is not
++    proof of a downstream host: only the harness's own vendored layout (`is_vendored()`) leaves
++    the hook policy to the host, as express does. Never fall back to --no-verify.
++    """
++    installer = os.path.join(clone, "githooks", "install.sh")
++    if not os.path.isfile(installer):
++        if is_vendored():
++            return
++        raise ContractError("refusing push: githooks/install.sh is missing, so this clone's pre-push "
++                            "gate cannot be proven (GH-1576)")
++    chk = subprocess.run(["bash", installer, "--check"], cwd=clone, capture_output=True, text=True)
++    if chk.returncode:
++        raise ContractError("refusing push: this clone's pre-push gate is not installed; run "
++                            "`bash githooks/install.sh` in it, then retry (GH-1576): "
++                            + (chk.stderr or chk.stdout).strip())
++
++
+ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, push=True):
+     """Publish exact terminal evidence on the existing lane; never touch its ledger."""
+     from gate_receipt import check_receipt
+@@ -1206,6 +1226,7 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
+             if staged != set(paths):
+                 raise ContractError("receipt publication has unrelated staged changes")
+             _git(target, "commit", "-m", f"jog: publish {execution} approved execution receipts")
++        _require_gate_wired(target)
+         _git(target, "push", "origin", f"HEAD:refs/heads/{branch}")
+     return rel
+ 
+@@ -2317,6 +2338,7 @@ class JogCheckpoint:
+                          "refs/heads/development").decode().split()[0]
+         if published != commit:
+             # Normal push: never bypass the clone's configured gate or force a ref.
++            _require_gate_wired(pub)
+             _git(pub, "push", "origin", commit + ":refs/heads/development")
+ 
+     def _app(self, *args):

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -254,5 +254,39 @@ and final gate evidence is outstanding. Whole-file/diff review also remains inco
 gate or future push is assumed.
 
 Handing off to Producer (claude-a) — disposition F1–F3, complete the evidence, and return for review.
+
+### Producer · Round 1 · claude-a
+
+Repair round 1 of 2. Code head after repair: see `git log` (implementation `7a0eb79e7`; evidence
+commits since touch only `TESTS-RESULTS/2026-11-21+GH-1576/`). The reviewer ran without git, so the full
+code diff `3dc703600..HEAD` for `skills/ utils/ test/` is committed as
+`relay-system/2026-11-21/gh1576-final-qa-code.diff` (20 KB) for a whole-diff read.
+
+- **F1 — Implemented.** `skills/2-daily/express/SKILL.md` recovery recipe now runs
+  `bash githooks/install.sh && bash githooks/install.sh --check` right after `git checkout "$SHA"` (step 0)
+  and `bash githooks/install.sh --check` immediately before `git push origin "$BASE"` (step 6b, under
+  `set -euo pipefail`); the vendored-host paragraph says to omit both githooks lines (host owns its hook
+  policy, as `gate_check` does). `RECOVERY_RECIPE` in `utils/py/express.py` (the text `resume` prints)
+  carries the same instruction. Falsifier run: `check.sh` extracts the recipe's own lines verbatim from
+  the SKILL.md at each revision and runs them in a fresh clone. Base: pushes from the unwired clone, origin
+  ref moves. Candidate with wiring lost after the install step: stops rc 1 before the push, ref unchanged;
+  candidate on a fresh clone: installs, pushes, hook invoked.
+- **F2 — Implemented.** `publish_jog_receipt(..., push=True)` is now driven for real (only
+  `_validate_marathon_result` and `gate_receipt.check_receipt` are stubbed): base pushes, candidate unwired
+  refuses with the ref unchanged, candidate wired pushes with the hook invoked. Vendored control added:
+  installer missing + `XYZ_VENDORED=1` is allowed (host policy kept); installer missing without it
+  refuses. The gh280 fixture stub is present in both layouts, as noted; the vendored branch is witnessed
+  by the manual control, not by gh280.
+- **F3 — Implemented.** `TESTS-RESULTS/2026-11-21+GH-1576/full-gate.log`: `./validate.sh` from a disposable
+  full clone at `881028ce6af1e93cfc735ff0f176dc0b51c4b932`, mypy 1.14.1 on PATH, exit 0, 1310 s,
+  `passed: 408 / 408`, clone identity (HEAD, porcelain count, origin, local-config hash) identical before and
+  after. The clone has been deleted. `real-gate.log`'s blank `rc=` is now marked unavailable with the
+  reason. `focused-suites.log`: the focused suites ran at the implementation revision before the repair
+  (code unchanged by the repair except the express recipe text); the full gate above is the
+  revision-bound run that includes them.
+- Evidence re-recorded cleanly (40 rows: red 3dc703600 vs green 7a0eb79e7); README table and limits updated.
+  An interrupted earlier run (disk full) was discarded, not committed.
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
