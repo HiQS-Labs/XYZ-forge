@@ -29,6 +29,8 @@ the group stays a valid kill target even after the leader exits.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import io
 import os
 import signal
 import subprocess
@@ -81,6 +83,68 @@ class BoundedResult:
     wall_seconds: float
     rss_killed: bool = False
     peak_rss_mb: Optional[int] = None
+    # GH-1465: SHA-256 of the stream bytes observed (complete output unless `truncated`), whether
+    # capture_tail_bytes cut the text to a tail, and whether the reader reached EOF (False when a
+    # descendant that escaped the group still held the pipe at the end of the cleanup window).
+    stdout_sha256: Optional[str] = None
+    stderr_sha256: Optional[str] = None
+    truncated: bool = False
+    capture_complete: bool = True
+
+
+_CHUNK = 65536
+
+
+class _Capture:
+    """One pipe, one reader thread, one state for a whole run_bounded invocation (GH-1465).
+
+    Output is appended as it arrives, so a timeout still returns what was emitted. The reader owns
+    its pipe and closes it at EOF or error, so the owner never closes a descriptor a reader may be
+    blocked on. `freeze` takes text, digest and flags atomically; after it, later bytes are drained
+    and discarded.
+    """
+
+    def __init__(self, stream, tail_bytes: Optional[int]):
+        self._stream, self._limit = stream, tail_bytes
+        self._lock = threading.Lock()
+        self._buf, self._sha = bytearray(), hashlib.sha256()
+        self._truncated = self._frozen = self._eof = False
+        self.error: Optional[OSError] = None
+        self.thread = threading.Thread(target=self._pump, daemon=True)
+        self.thread.start()
+
+    def _pump(self) -> None:
+        try:
+            fd = self._stream.fileno()
+            while True:
+                chunk = os.read(fd, _CHUNK)
+                if not chunk:
+                    break
+                with self._lock:
+                    if self._frozen:
+                        continue
+                    self._sha.update(chunk)
+                    self._buf += chunk
+                    if self._limit is not None and len(self._buf) > self._limit:
+                        del self._buf[:-self._limit]
+                        self._truncated = True
+            with self._lock:
+                self._eof = True
+        except (OSError, ValueError) as exc:
+            self.error = exc if isinstance(exc, OSError) else OSError(str(exc))
+        finally:
+            try:
+                self._stream.close()
+            except OSError:
+                pass
+
+    def freeze(self) -> Tuple[str, str, bool, bool]:
+        """(text, sha256, truncated, complete) — decoded as text-mode Popen did (locale, universal newlines, replace)."""
+        with self._lock:
+            self._frozen = True
+            raw, digest, truncated, complete = bytes(self._buf), self._sha.hexdigest(), self._truncated, self._eof
+        text = io.TextIOWrapper(io.BytesIO(raw), errors="replace").read()
+        return text, digest, truncated, complete
 
 
 def group_rss_mb(pgid: int, *, run=subprocess.run) -> Tuple[Optional[int], Optional[str]]:
@@ -144,108 +208,104 @@ def run_bounded(
     grace: float = 5.0,
     max_rss_mb: Optional[int] = None,
     rss_poll_s: float = 1.0,
+    capture_tail_bytes: Optional[int] = None,
 ) -> BoundedResult:
     """Run argv in its own process group under a wall-clock ceiling (and optional group-RSS cap).
+
+    One deadline covers the launcher wait AND the draining of its pipes: a group member that keeps a
+    pipe open past `timeout` is killed with the group, and every join afterwards is bounded by
+    `grace + 5`. Output is the complete stdout/stderr unless `capture_tail_bytes` asks for only the last
+    N bytes of each stream (the reviewer gate's diagnostic excerpt); the SHA-256 and `truncated` on the
+    result still describe the whole stream. A reader failure is raised, never returned as output.
 
     Spawn errors (FileNotFoundError, OSError, ValueError) propagate to the caller —
     they mean the command could not be launched at all.
     """
+    if capture_tail_bytes is not None and capture_tail_bytes < 1:
+        raise ValueError("capture_tail_bytes must be a positive byte count")
     t0 = time.monotonic()
     proc = subprocess.Popen(
         argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        stdin=subprocess.DEVNULL, text=True, errors="replace", start_new_session=True,
+        stdin=subprocess.DEVNULL, start_new_session=True,
     )
+    deadline = None if timeout is None else time.monotonic() + timeout
+    cleanup_window = grace + 5
     rss_killed = False
     peak_rss_mb: Optional[int] = None
     rss_stop = threading.Event()
     rss_thread: Optional[threading.Thread] = None
+    captures: list = []
 
-    def _communicate_tail(wait_timeout: Optional[float]) -> Tuple[str, str]:
-        if getattr(proc, "stdout", None) is None or getattr(proc, "stderr", None) is None:
-            return proc.communicate(timeout=wait_timeout)
-        tails = {"stdout": "", "stderr": ""}
+    def _join_captures(limit: Optional[float]) -> bool:
+        """Join every reader until the absolute monotonic `limit` (None: no limit); True when all finished."""
+        for capture in captures:
+            capture.thread.join(None if limit is None else max(0.0, limit - time.monotonic()))
+        return not any(capture.thread.is_alive() for capture in captures)
 
-        def _read_tail(name: str, stream) -> None:
-            tail = ""
-            while True:
-                chunk = stream.read(8192)
-                if not chunk:
-                    break
-                tail = (tail + chunk)[-65536:]
-            tails[name] = tail
+    def _stop_watcher() -> None:
+        # Bounded by grace + 5, which still covers an in-flight TERM/KILL sequence (itself bounded by grace).
+        rss_stop.set()
+        if rss_thread is not None:
+            rss_thread.join(cleanup_window)
 
-        readers = [
-            threading.Thread(target=_read_tail, args=("stdout", proc.stdout), daemon=True),
-            threading.Thread(target=_read_tail, args=("stderr", proc.stderr), daemon=True),
-        ]
-        for reader in readers:
-            reader.start()
-        try:
-            proc.wait(timeout=wait_timeout)
-        except BaseException:
-            for reader in readers:
-                reader.join(timeout=0.1)
-            raise
-        for reader in readers:
-            reader.join()
-        return tails["stdout"], tails["stderr"]
-
-    if max_rss_mb is not None and max_rss_mb > 0:
-        poll_interval = max(0.05, float(rss_poll_s))
-
-        def _watch_rss() -> None:
-            nonlocal rss_killed, peak_rss_mb
-            while not rss_stop.is_set():
-                # The launcher may exit while a group member still holds an output pipe.
-                rss_mb, reason = group_rss_mb(proc.pid)
-                if reason == "group-missing":
+    def _watch_rss() -> None:
+        nonlocal rss_killed, peak_rss_mb
+        while not rss_stop.is_set():
+            # The launcher may exit while a group member still holds an output pipe.
+            rss_mb, reason = group_rss_mb(proc.pid)
+            if reason == "group-missing":
+                return
+            if rss_mb is not None:
+                peak_rss_mb = rss_mb if peak_rss_mb is None else max(peak_rss_mb, rss_mb)
+                if rss_mb >= max_rss_mb and not rss_stop.is_set():
+                    rss_killed = True
+                    kill_existing(proc.pid, grace=grace)
                     return
-                if rss_mb is not None:
-                    peak_rss_mb = rss_mb if peak_rss_mb is None else max(peak_rss_mb, rss_mb)
-                    if rss_mb >= max_rss_mb:
-                        rss_killed = True
-                        kill_existing(proc.pid, grace=grace)
-                        return
-                if rss_stop.wait(poll_interval):
-                    return
+            if rss_stop.wait(poll_interval):
+                return
 
-        rss_thread = threading.Thread(target=_watch_rss, daemon=True)
-        rss_thread.start()
     try:
+        for stream in (proc.stdout, proc.stderr):
+            captures.append(_Capture(stream, capture_tail_bytes))
+        if max_rss_mb is not None and max_rss_mb > 0:
+            poll_interval = max(0.05, float(rss_poll_s))
+            rss_thread = threading.Thread(target=_watch_rss, daemon=True)
+            rss_thread.start()
+        timed_out = False
         try:
-            out, err = _communicate_tail(timeout)
-            if rss_thread is not None:
-                rss_stop.set()
-                # A TERM/KILL sequence already in progress must finish before we return.
-                rss_thread.join()
-            return BoundedResult(proc.returncode, out or "", err or "", False, proc.pid,
-                                 time.monotonic() - t0, rss_killed=rss_killed,
-                                 peak_rss_mb=peak_rss_mb)
+            proc.wait(timeout=None if deadline is None else max(0.0, deadline - time.monotonic()))
         except subprocess.TimeoutExpired:
-            if rss_thread is not None:
-                rss_stop.set()
+            timed_out = True
+        if not timed_out:
+            timed_out = not _join_captures(deadline)
+        if timed_out:
+            rss_stop.set()
             kill_existing(proc.pid, grace=grace)
             try:
-                out, err = _communicate_tail(grace + 5)
+                proc.wait(timeout=cleanup_window)
             except subprocess.TimeoutExpired:
-                out, err = "", ""
-                proc.stdout.close()
-                proc.stderr.close()
-            if rss_thread is not None:
-                rss_thread.join()
-            return BoundedResult(None, out or "", err or "", True, proc.pid,
-                                 time.monotonic() - t0, rss_killed=rss_killed,
-                                 peak_rss_mb=peak_rss_mb)
+                pass
+            _join_captures(time.monotonic() + cleanup_window)
+        _stop_watcher()
+        (out, out_sha, out_cut, out_done), (err, err_sha, err_cut, err_done) = (c.freeze() for c in captures)
+        for capture in captures:
+            if capture.error is not None:
+                raise capture.error
+        return BoundedResult(None if timed_out else proc.returncode, out, err, timed_out, proc.pid,
+                             time.monotonic() - t0, rss_killed=rss_killed, peak_rss_mb=peak_rss_mb,
+                             stdout_sha256=out_sha, stderr_sha256=err_sha, truncated=out_cut or err_cut,
+                             capture_complete=out_done and err_done)
     except BaseException:
         rss_stop.set()
-        kill_existing(proc.pid, grace=grace)
         try:
-            proc.wait(timeout=grace + 5)
+            kill_existing(proc.pid, grace=grace)
+            try:
+                proc.wait(timeout=cleanup_window)
+            except subprocess.TimeoutExpired:
+                pass
         finally:
-            proc.stdout.close()
-            proc.stderr.close()
-            if rss_thread is not None:
-                rss_thread.join()
+            _join_captures(time.monotonic() + cleanup_window)
+            _stop_watcher()
         raise
 
 

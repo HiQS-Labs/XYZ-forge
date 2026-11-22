@@ -928,7 +928,8 @@ def main():
                     rss_cap = GATE_RSS_MB_DEFAULT
             try:
                 res = run_bounded(["/bin/bash", "-c", reviewer_gate], cwd=gate_cwd, timeout=DRIVER_GATE_TIMEOUT_S,
-                                  env=dict(gate_env(), PYTHONDONTWRITEBYTECODE="1"), max_rss_mb=rss_cap)
+                                  env=dict(gate_env(), PYTHONDONTWRITEBYTECODE="1"), max_rss_mb=rss_cap,
+                                  capture_tail_bytes=65536)  # GH-1465: the log shows only the last lines
                 rss_killed, peak_rss_mb = res.rss_killed, res.peak_rss_mb
                 gate_exit = TIMEOUT_RC if res.timed_out else (RSS_KILL_RC if rss_killed else res.rc)
                 gate_out = res.stdout + res.stderr
