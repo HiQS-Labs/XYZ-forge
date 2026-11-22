@@ -241,6 +241,21 @@ Evidence: `TESTS-RESULTS/2026-11-12+GH-1443/`.
 
 Merge-cleanup names base and greedy conflict hubs, closes hard dependencies, and folds the remaining queue again. A complete clean-first forecast prints exact pass lists and hub/clean counts; unresolved or unknown folds retain group advice or withhold it. Execution comparison recognizes an exact pass while a whole-queue choice is an override. Landing flags and gates stay unchanged. The skill distinguishes batch sync from per-branch B1 repairs and documents checkout scoping with the existing `--prefix`. The dry run also warns, read-only, when a listed PR maps to an open Jog row while the Jog primary is unpinned, and the forecast names stacked members (branches sharing commits not on the base) as a blind spot. Evidence: `TESTS-RESULTS/2026-11-14+GH-1470/`.
 
+## 2026-11-14 — GH-1466: `xyz-vendor.sh --ledger-only` vendors just the ledger
+
+A host repo can now vendor only the governance half of the harness: `xyz-vendor.sh <host> --ledger-only`
+copies an allow-list (`LEDGER_MANIFEST`) of the RELEASES CLI and its connectors, post-merge reconcile and
+the planner step it runs, merge-resolve and the views it regenerates, and PDDA. That is 52 files instead of
+about 1,760, with no skills, relay, marathon runtime, tick or tests. A missing manifest source and a missing
+Python module both stop the vendor before the swap. `VERSION` records `tier=ledger`, and the tier now
+survives a flagless re-vendor, which `xyz-sync update` is; before this, `releases.db` turned every host back
+into Tier 2. Four readers were fixed so they don't treat a ledger install as a broken full one:
+`xyz-sync check` skips the relay guard probe for it, `hq_xyz_lookup` retains registry location and ambiguity checks while declining driven-lane capability (the host never reads as Tier A: Tier B when HQ detects PDDA on the host, otherwise Tier C), and `releases jog` refuses with a message instead of a
+`ModuleNotFoundError`. Two path fixes help any vendored PDDA copy: `pdda-lib.sh` now resolves a vendored
+copy's root to the host (it used to scan `.xyz/`), and both `pdda.sh releases-current` and the reconcile PDDA
+gate fall back to the vendored writer and script. Evidence: `TESTS-RESULTS/2026-11-14+GH-1466/`.
+
+
 ## 2026-11-13 — GH-1455: the one shebang-less tracked script gets its shebang
 
 `ci-local.sh` failed its `shellcheck tracked scripts` step on `TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh` (SC2148, no shebang), the same class as `fuzz-loop.sh` in #121. Added `#!/usr/bin/env bash`; the repo's own scan over all 656 tracked `.sh` files now passes. The GH-1452 gate summary said hosted CI was green so the two disagreed; that was wrong (the hosted shellcheck steps are skipped on a docs-only route), and the note is corrected. Running shellcheck on changed scripts at pre-push is paused and documented in `PARKED/2026-11-13-pre-push-shellcheck.md`. Evidence: `TESTS-RESULTS/2026-11-13+GH-1455/`.

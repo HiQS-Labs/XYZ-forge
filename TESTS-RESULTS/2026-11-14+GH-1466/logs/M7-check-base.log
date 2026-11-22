@@ -1,0 +1,5 @@
+DRIFT <work>/repos/ledger-m1/.xyz (source_commit drifted)
+  recorded: tick_version=0.2.0 source_commit=af858405d51de67dd09e4cd2d004e58d8a86bfc9
+  current:  tick_version=0.2.0 source_commit=unknown
+SAFETY GUARD MISSING <work>/repos/ledger-m1/.xyz (relay-target-root-containment)
+  inspected installed copy directly; source_commit=af858405d51de67dd09e4cd2d004e58d8a86bfc9 does not establish guard coverage

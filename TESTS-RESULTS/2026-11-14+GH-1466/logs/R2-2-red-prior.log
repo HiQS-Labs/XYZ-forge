@@ -1,0 +1,5 @@
+dotgit_wt_is_file=True
+wave-reconcile: Starting wave reconciliation (dry_run=True, root=<work>/r22/wt)
+wave-reconcile: ERROR — Could not acquire reconciler lock at <work>/r22/wt/.git/wave-reconcile.lock: [Errno 20] Not a directory: '<work>/r22/wt/.git/wave-reconcile.lock'
+wave-reconcile: Rolling back all uncommitted mutations...
+wt_rc=8

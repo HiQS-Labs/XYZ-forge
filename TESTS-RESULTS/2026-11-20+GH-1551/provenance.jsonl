@@ -1,0 +1,12 @@
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/manual-check.md", "bytes": 3537, "sha256": "499b035efabb58a9aaa07f8bb2e5c1da06c3d627e034a4783a545c17f786a2f8"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code.md", "bytes": 1871, "sha256": "6c0dc78d89b094707c19f564755b75dc0de7d620203cce3a0ebd51548cefb40f"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/ks07-skill.patch", "bytes": 1936, "sha256": "8dfa370a1f97962575f12318c9d89a3382685a6bf111265c9a1dd87b8549e7b0"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/launch-event.json", "bytes": 315, "sha256": "8803e4a14d8fd5f8940440320257e8c4aea16c25f26d528210c9162148d37f9a"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/native-bg-host-capability-probe.json", "bytes": 2965, "sha256": "6e414a83ba534768ea6e70776972fa32563e3646d9fcd7ced36dd1c2ef38756c"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/native-launch-and-wakeup-receipt.json", "bytes": 3268, "sha256": "af10ada11c1f7950063615ed81d45015d9b30b41ac669892f888a0cb33f71182"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/outer-launch.py", "bytes": 4304, "sha256": "bec9e55bd3cd4458ab6522640194266c7eed1e473d1862f77b620a17e09cbc3d"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/outer-receipt.json", "bytes": 1544, "sha256": "85207d8c6f1e316528003a524276309f026f6cde73e87637926bce5b38f06c5e"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/outer.rc", "bytes": 2, "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/pdda-run.log", "bytes": 29131, "sha256": "91af57e2f2799ab4f6f38f28e6d2883c8b62a90f4695e8a92fc3d03d4a84ae50"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1551/outputs/host-bg-600s-claude-code-task-output.txt", "bytes": 81, "sha256": "ff410536fd4ad8653628dca203fc6481d7cf56f177dec23635f7dda7846903aa"}

@@ -2443,7 +2443,7 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
 def run_validation_gate(repo_root):
     """Run pdda doc-health verification gate."""
     log("Running PDDA doc-hygiene gate...")
-    gate_cmd = ["bash", "utils/pdda-local-checks.sh"] if os.path.exists(os.path.join(repo_root, "utils", "pdda-local-checks.sh")) else ["bash", "utils/pdda/pdda.sh"]
+    gate_cmd = ["bash", "utils/pdda-local-checks.sh"] if os.path.exists(os.path.join(repo_root, "utils", "pdda-local-checks.sh")) else ["bash", harness_tool(repo_root, "utils/pdda/pdda.sh")]
     r = subprocess.run(
         gate_cmd,
         cwd=repo_root,
@@ -2781,7 +2781,7 @@ def main():
             sys.exit(re_err.code)
         return
 
-    lock_file = os.path.join(repo_root, ".git", "wave-reconcile.lock")
+    lock_file = str(reconciler_git_dir(repo_root) / "wave-reconcile.lock")
     journal = RollbackJournal(repo_root=repo_root)
     baseline = None
 

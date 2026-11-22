@@ -1,0 +1,5 @@
+releases.db detected at target root — enabling Tier 2 RELEASES overlay
+registry: updated <work>/reg.tsv
+vendored harness -> <work>/repos/ledger-m5b/.xyz
+merge-cleanup batch sweeps: declare this repo's qualification command in .merge-cleanup.json (merge-cleanup SKILL.md, Project merge policy)
+RELEASES add-on included: run 'releases init' to enable (see RELEASES-DB-FAQS.md)
