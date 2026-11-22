@@ -1,18 +1,19 @@
-== full gate: ./validate.sh in disposable full clone (task rev 881028ce6af1e93cfc735ff0f176dc0b51c4b932)
+== full gate: ./validate.sh in disposable full clone (task rev 543968a2ba6e276ea6618d810d698ac81a0f4d17)
 -- identity before
-HEAD=881028ce6af1e93cfc735ff0f176dc0b51c4b932
+HEAD=543968a2ba6e276ea6618d810d698ac81a0f4d17
 status=[0]
 origin=https://github.com/HiQS-Labs/XYZ-forge.git
 localcfg=5f549f51edc85476
 -- mypy: mypy 1.14.1 (compiled: no)
--- ./validate.sh exit=0 seconds=1310
+-- ./validate.sh exit=0 seconds=1359
+passed: 408 / 408
   + sentinel-overlay.sh
   + gh273-marathon-root-audit-python-shape.sh
   + gh132-review-xyz-skill.sh
   + relay-uncited-findings.sh
-  + gh312-vendor-preserves-state.sh
   + gh197-vendor-tier-split.sh
   + wave-reconcile.sh
+  + gh312-vendor-preserves-state.sh
   + gh693-lessons-learned-advisory.sh
   + gh306-registry-bidirectional.sh
   + gh298-ate-gen4-ci-smoke.sh
@@ -24,18 +25,18 @@ localcfg=5f549f51edc85476
   + gh393-deepseek-readiness.sh
   + gh591-prepush-commit-boundary.sh
   + gh396-find-harness-roots.sh
-  + relay-self-sufficiency.sh
-  + gh589-skill-viewer.sh
   + gh-gen4-phase3-fuzz-engine.sh
+  + gh589-skill-viewer.sh
   + gh589-consult-no-tick.sh
+  + relay-self-sufficiency.sh
   + python:test_python_layer.py
   + clone-identity-invariant
   + gamma-poison-staleness-probe
 -- identity after
-HEAD=881028ce6af1e93cfc735ff0f176dc0b51c4b932
+HEAD=543968a2ba6e276ea6618d810d698ac81a0f4d17
 status=[0]
 origin=https://github.com/HiQS-Labs/XYZ-forge.git
 localcfg=5f549f51edc85476
--- command: ./validate.sh (PATH has mypy 1.14.1 venv; XYZ_ATTEMPT_CONTEXT = the task's booked manual attempt)
--- the 25 lines above are the tail of validate.sh output; full output was not retained
--- validate.sh summary line: passed: 408 / 408
+-- command: ./validate.sh (PATH has the mypy 1.14.1 venv; XYZ_ATTEMPT_CONTEXT = the task's booked manual attempt)
+-- the lines above are the summary and the tail of validate.sh output; full output was not retained
+-- supersedes the earlier run at 881028ce6 (408/408, 1310 s), which predates the closeout fix at 438cb57eb

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -535,5 +535,37 @@ unverified pending disposable-clone evidence; no future gate is assumed.
 
 Handing off to Producer (claude-a) — disposition F4–F6, retain focused evidence for any repairs,
 and return for the final configured review round.
+
+### Producer · Round 2 · claude-a
+
+Repair round 2 of 2 (the last). Code head `438cb57eb`; evidence head `543968a2b`. The updated
+`relay-system/2026-11-21/gh1576-final-qa-code.diff` is regenerated for this head.
+
+- **F4 — Implemented.** `utils/py/express.py` `persist_closeout` now runs `gate_check` before `git add`/`commit`
+  (nothing between that check and the push can unwire a clone), so a refusal leaves the closeout dirty and
+  uncommitted, and the retry after `bash githooks/install.sh` takes the same path with the same `extra_paths`.
+  Your probe's stranded-commit state cannot arise. Witness (real run, not an in-memory probe): `check.sh`
+  scenario "express:1284 closeout, refuse then retry": base pushes at once; candidate refuses (committed=False,
+  tree-dirty=True, origin unchanged), then after the installer the retry publishes the same transaction.
+  The other lane sites are recoverable by rerun (kickstart: the branch commit exists, the next call goes
+  to the push; merge-cleanup: clean tree, local != remote, goes to the push).
+- **F5 — Declined (out of scope: pre-existing, unrelated subsystem), filed as #1578.** The defect is real in
+  source and not caused by this change: the scratch-prune keep rule has never looked at publication. Any fix
+  changes what GH-1475 retains; a detached HEAD in a landing clone is the PR head, which is also absent from
+  remote-tracking refs, so the obvious test makes old holders immortal. That is a retention-policy decision
+  for the owners, not a hook-wiring change. The new refusal at `push_resolved_head` does not make this path
+  newly reachable: a failed validation or push already returned false and retained the holder before.
+- **F6 — Declined (out of scope: pre-existing, unrelated subsystem), filed as #1579.** The lock-initialization
+  race predates this change and sits in jog's supervisor lock. The suggested fix (conservative by default)
+  stops reclaiming a lock left by a crash between `mkdir` and the pid write, which is a recovery-policy
+  decision. Nothing in this change touches `acquire`.
+- **F5/F6 note for the parent:** the task brief says never to defer a finding on gate/hook surfaces. I read
+  F5/F6 as outside that surface (cleanup retention and a lock race, not hook wiring or the push gate) and
+  declined them with issues rather than widening the PR; this is reversible if the parent disagrees.
+- Evidence: 42 rows (red `3dc703600` vs green `438cb57eb`), README updated; `full-gate.log`: `./validate.sh` from a
+  disposable full clone at `543968a2ba6e276ea6618d810d698ac81a0f4d17`, mypy 1.14.1, exit 0, 1359 s,
+  `passed: 408 / 408`, clone identity equal before and after; the clone is deleted.
+
+Handing off to Reviewer (codex) for Round 3 (final configured round).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

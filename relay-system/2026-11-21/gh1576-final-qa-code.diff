@@ -220,7 +220,7 @@ index cd824ff4e..a2c27ca4e 100644
  from merge_cleanup import prune_dangling_skill_symlinks
  from toposort_prs import (
 diff --git a/utils/py/express.py b/utils/py/express.py
-index 83e38b811..60b847b1f 100644
+index 83e38b811..8e0bd2ecd 100644
 --- a/utils/py/express.py
 +++ b/utils/py/express.py
 @@ -536,7 +536,9 @@ RECOVERY_RECIPE = (
@@ -234,19 +234,24 @@ index 83e38b811..60b847b1f 100644
  )
  
  
-@@ -1281,6 +1283,12 @@ def persist_closeout(root, message, extra_paths=()):
+@@ -1279,6 +1281,17 @@ def persist_closeout(root, message, extra_paths=()):
+     disallowed = [p for p in paths if not (is_allowed_closeout_path(p) or p in extra)]
+     if disallowed:
          die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
-     git(root, "add", "--", *paths)
-     git(root, "commit", "-m", message)
-+    # GH-1576: this push bypasses pre-push by lane design, so the wiring is proven immediately
-+    # before it, with the same check the preflight uses.
++    # GH-1576: this push bypasses pre-push by lane design, so the wiring is proven with the same
++    # check the preflight uses. It runs BEFORE the commit: nothing between here and the push can
++    # unwire the clone, and a refusal then leaves the closeout exactly as it was (still dirty, not
++    # committed), so the retry after `bash githooks/install.sh` takes the same path with the same
++    # `extra_paths`. Checking after the commit would strand the receipt as an unpublished commit
++    # that neither a retry (empty commit) nor `resume` (unexpected dirt) accepts.
 +    wired, detail = gate_check(root)
 +    if not wired:
 +        die("refusing closeout push: `bash githooks/install.sh --check` did not prove the canonical "
-+            "gate stub; run `bash githooks/install.sh` first (GH-1576): %s" % detail)
++            "gate stub; run `bash githooks/install.sh` first, then retry (nothing was committed) "
++            "(GH-1576): %s" % detail)
+     git(root, "add", "--", *paths)
+     git(root, "commit", "-m", message)
      git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
-     return True
- 
 diff --git a/utils/py/jog_run.py b/utils/py/jog_run.py
 index 3e4b76474..cd53085be 100755
 --- a/utils/py/jog_run.py
