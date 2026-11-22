@@ -13,7 +13,7 @@ from the same unwired clones with no hook at all.
 
 ```
 bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh red   3dc703600 <task-clone> <this-dir>
-bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 7a0eb79e7 <task-clone> <this-dir>
+bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 438cb57eb <task-clone> <this-dir>
 ```
 
 `check.sh` makes a disposable local bare origin, runs the code under test from its own scratch clone
@@ -37,6 +37,7 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
 | jog `_require_gate_wired` guard | no guard exists | refused; refused when the installer is missing | allowed; installer missing + vendored layout (`XYZ_VENDORED=1`) keeps the host's policy (allowed) |
 | express recovery recipe (`SKILL.md`, its own lines extracted verbatim and run in a fresh clone) | pushed from an unwired clone, no hook | wiring lost after the recipe's install step: stops (rc 1) before the push, ref unchanged | recipe on a fresh clone installs the hook, then pushes, hook invoked |
 | express closeout push | pushed, no hook | refused (exit 4), ref unchanged | pushed (see limit 2) |
+| express closeout: refuse, install, retry with the same `extra_paths` (plan QA F4) | pushed at once | first call refused with nothing committed and the receipt still dirty, origin unchanged | retry after `githooks/install.sh` publishes the same transaction |
 
 ## Limits, stated plainly
 

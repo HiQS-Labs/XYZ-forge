@@ -239,11 +239,12 @@ h0, o0 = head(), oref()
 try: first = "pushed" if ex.persist_closeout(root, "chore: gh1576 e3", extra_paths=(rel,)) else "no-op"
 except SystemExit: first = "refused"
 committed = head() != h0
+o1 = oref()   # origin right after the FIRST call
 dirty = bool(subprocess.run(["git", "-C", root, "status", "--porcelain"], capture_output=True, text=True).stdout.strip())
 subprocess.run(["bash", "githooks/install.sh"], cwd=root, capture_output=True)
 try: second = "pushed" if ex.persist_closeout(root, "chore: gh1576 e3", extra_paths=(rel,)) else "no-op"
 except SystemExit as e: second = "refused-%s" % e.code
-print("RESULT=first-%s,retry-%s DETAIL=after first call: committed=%s tree-dirty=%s origin-moved=%s; retry origin-moved=%s" % (first, second, committed, dirty, o0 != oref() if first != "pushed" else "n/a", o0 != oref()))
+print("RESULT=first-%s,retry-%s DETAIL=after first call: committed=%s tree-dirty=%s origin-moved=%s; after retry origin-moved=%s" % (first, second, committed, dirty, o0 != o1, o0 != oref()))
 PY
 )"
   after="$(oref development)"
