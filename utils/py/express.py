@@ -136,6 +136,16 @@ def _relay_attest():
     return relay_attest
 
 
+def changelog_on_branch(root):
+    """GH-1530: only CHANGELOG_WRITES=branch lets a branch (and so express) write CHANGELOG.md;
+    the mode resolves via wave_reconcile (env, then .pdda-mode, default off) — one parser."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import wave_reconcile
+    return wave_reconcile.read_changelog_writes_mode(root) == "branch"
+
+
 def find_valid_skill_attestation(root, skill_paths):
     """Find and validate an Approved relay-drive/attest@1 record covering the skill changes.
 
@@ -627,7 +637,7 @@ def core_paths(root, issue, paths):
 
 def is_doc_path(root, issue, p):
     """Only express-owned paperwork for this issue is outside size bounds."""
-    if p == "CHANGELOG.md" or p == capture_doc_path(root, issue):
+    if (p == "CHANGELOG.md" and changelog_on_branch(root)) or p == capture_doc_path(root, issue):
         return True
     if p.startswith("relay-system/") and p.endswith(".md"):
         # Match dated review transcripts (relay-system/YYYY-MM-DD/*.md), not root docs
@@ -757,7 +767,7 @@ def cmd_check(args, expect_driver=frozenset()):
         if p.startswith("scratch/") or p.startswith("temp/") or p.endswith((".bak", ".orig", ".rej")):
             refuse(root, "scratch", "%s is scratch/editor output — commit-worthy paths only" % p, issue=args.issue)
 
-    # Step 1 — bounds. Only this issue's capture doc and CHANGELOG never count.
+    # Step 1 — bounds. Only this issue's capture doc (and CHANGELOG under CHANGELOG_WRITES=branch) never count.
     if len(core) > args.max_files:
         refuse(root, "too-many-files",
                "%d core files > bound %d — route to the normal PR lane" % (len(core), args.max_files),
@@ -851,8 +861,10 @@ def cmd_docs(args):
 
     slug = args.slug or slugify(meta["title"])
     doc = os.path.join(root, "PROJECT", "2-WORKING", "GH-%d-%s.md" % (args.issue, slug))
+    write_changelog = changelog_on_branch(root)  # GH-1530
+    cl_note = " (+ CHANGELOG entry)" if write_changelog else ""
     if getattr(args, "dry_run", False):
-        print("express-docs [dry-run]: would write capture doc %s (+ CHANGELOG entry)" % os.path.relpath(doc, root))
+        print("express-docs [dry-run]: would write capture doc %s%s" % (os.path.relpath(doc, root), cl_note))
         return dict(doc=os.path.relpath(doc, root))
     if os.path.isfile(doc):
         refuse(root, "doc-exists", "%s already exists — express does not overwrite capture docs" % doc, issue=args.issue)
@@ -902,8 +914,8 @@ goal: >
 
 ## Lessons Learned (For Future Agents)
 
-- Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
-  CHANGELOG entry moved as one motion; consult the .tick express-fired event for the
+- Landed via the /express fast lane (GH-267): the fix, its suite and this doc moved as
+  one motion (plus the CHANGELOG entry when CHANGELOG_WRITES=branch); consult the .tick express-fired event for the
   run's receipts. Operator-supplied summary: {sm}
 """.format(n=args.issue, t=meta["title"], d=today, src=meta["url"], suite=args.suite, sm=args.summary or "(none)",
            kind="documentation update" if docs_only else "hotfix", doc_type="documentation" if docs_only else "bugfix",
@@ -911,7 +923,11 @@ goal: >
     with open(doc, "w", encoding="utf-8") as f:
         f.write(body)
 
-    # CHANGELOG — newest-first under a fresh dated Unreleased section.
+    # CHANGELOG — newest-first under a fresh dated Unreleased section; only under
+    # CHANGELOG_WRITES=branch (off/landing: express does not append; the post-landing synthesis skips direct commit landings, GH-1487).
+    if not write_changelog:
+        print("express-docs: born complete -> %s" % os.path.relpath(doc, root))
+        return dict(doc=os.path.relpath(doc, root))
     cl = os.path.join(root, "CHANGELOG.md")
     bullet = ("- **GH-%d: %s.** (express %s, GH-267 lane; "
               "existing suite %s as the landing gate.)\n" % (args.issue, meta["title"],
@@ -941,7 +957,7 @@ goal: >
     with open(cl, "w", encoding="utf-8") as f:
         f.write(cbody)
 
-    print("express-docs: born complete -> %s (+ CHANGELOG entry)" % os.path.relpath(doc, root))
+    print("express-docs: born complete -> %s%s" % (os.path.relpath(doc, root), cl_note))
     return dict(doc=os.path.relpath(doc, root))
 
 
@@ -1117,8 +1133,8 @@ def cmd_land(args):
 
     # Step 8 — commit the one-motion change set (explicit pathspecs, never -A).
     git(root, "add", "--", *sorted(after))
-    msg = ("%s(GH-%d): %s [express]\n\nExpress lane (GH-267): update + suite + born-complete doc + "
-           "CHANGELOG in one motion.\n\nCloses #%d\n" %
+    msg = ("%s(GH-%d): %s [express]\n\nExpress lane (GH-267): update + suite + born-complete doc "
+           "(+ CHANGELOG when CHANGELOG_WRITES=branch) in one motion.\n\nCloses #%d\n" %
            ("docs" if getattr(args, "docs_only", False) else "fix", args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
     sha = git(root, "rev-parse", "HEAD").stdout.strip()
@@ -1280,13 +1296,15 @@ def capture_doc_path(root, issue):
 
 def expect_driver_paths(root, issue):
     """Driver-written outputs express may already have produced for this issue:
-    the capture doc (if born), the lane's CHANGELOG entry, and any adopted
+    the capture doc (if born), the lane's CHANGELOG entry (CHANGELOG_WRITES=branch only), and any adopted
     releases/roadmap projections. `run` computes this in-process before calling
     `cmd_land`; a standalone `land` invocation (SKILL.md's documented four-step
     form: check / docs / ledger / land, each its own process) has no other way
     to learn what an earlier standalone `docs`/`ledger` step wrote, so `cmd_land`
     falls back to recomputing the same set itself (GH-278 review finding)."""
-    paths = {"CHANGELOG.md"} | driver_projection_paths(root)
+    paths = driver_projection_paths(root)
+    if changelog_on_branch(root):
+        paths.add("CHANGELOG.md")
     doc = capture_doc_path(root, issue)
     if doc:
         paths.add(doc)
@@ -1540,7 +1558,7 @@ def main():
     common(p)
     p.set_defaults(fn=cmd_check)
 
-    p = sub.add_parser("docs", help="step 5: born-complete capture doc + CHANGELOG entry")
+    p = sub.add_parser("docs", help="step 5: born-complete capture doc (+ CHANGELOG entry only when CHANGELOG_WRITES=branch)")
     common(p)
     p.add_argument("--slug")
     p.add_argument("--summary")
