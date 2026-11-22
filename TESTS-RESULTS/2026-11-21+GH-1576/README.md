@@ -13,7 +13,7 @@ from the same unwired clones with no hook at all.
 
 ```
 bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh red   3dc703600 <task-clone> <this-dir>
-bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 438cb57eb <task-clone> <this-dir>
+bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 802cf98e9 <task-clone> <this-dir>
 ```
 
 `check.sh` makes a disposable local bare origin, runs the code under test from its own scratch clone
@@ -38,6 +38,7 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
 | express recovery recipe (`SKILL.md`, its own lines extracted verbatim and run in a fresh clone) | pushed from an unwired clone, no hook | wiring lost after the recipe's install step: stops (rc 1) before the push, ref unchanged | recipe on a fresh clone installs the hook, then pushes, hook invoked |
 | express closeout push | pushed, no hook | refused (exit 4), ref unchanged | pushed (see limit 2) |
 | express closeout: refuse, install, retry with the same `extra_paths` (plan QA F4) | pushed at once | first call refused with nothing committed and the receipt still dirty, origin unchanged | retry after `githooks/install.sh` publishes the same transaction |
+| express closeout refused, then the documented `resume` (plan QA F4, round 4; `recover.sh`, real `closeout()` and real `resume` in the gh267 hermetic fixture) | at `c541204bc`: closeout stopped with the stub gone, tree left dirty and uncommitted; after `githooks/install.sh` `resume` rc 4 ("working tree is not clean"), receipt uncommitted, docs not moved | at `802cf98e9`: an extra unrelated dirty file still makes `resume` refuse (rc 4, HEAD unmoved) | `resume` rc 0: the retained closeout is published (receipt committed and not regenerated, still 1 line), origin in sync, issue closed, manifest shipped, doc moved, tree clean |
 
 ## Limits, stated plainly
 
@@ -55,5 +56,11 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
 5. In the recipe's "lost wiring" green row the hook count is 1, not 0: the recipe line that deletes the stub
    runs `git rev-parse --git-path hooks/pre-push`, and `GIT_TRACE` prints that command. No hook ran: the push was
    never attempted and the origin ref did not move.
-6. `focused-suites.log`: the existing suites for the changed files (no new tests); `full-gate.log` (when
+6. `recover.sh` reuses the setup of `test/gh267-express-skill.sh` from the revision under test (fake `gh`, local bare
+   remote, the real driver); the closeout refusal is produced by running the real `closeout()` with the stub removed.
+   `resume` accepts only the closeout transaction that `persist_closeout` refused before committing (allowlisted
+   ledger paths plus this issue's valid receipt for this commit and suite, on the base branch). A refusal at the
+   second persistence (reconcile, receipt already committed) is a different, unwitnessed state; the second wiring
+   check immediately before the push is covered by reading, not by fault injection.
+7. `focused-suites.log`: the existing suites for the changed files (no new tests); `full-gate.log` (when
    present): `./validate.sh` from a disposable full clone at the stated revision.

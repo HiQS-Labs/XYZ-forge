@@ -1,0 +1,9 @@
+initialized /tmp/gh267-express.btvyYQ/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.btvyYQ/repo/releases.sql
+added roadmap entry rmi-01M8277RS39JJ4MTCB4GBXZ1PF for GH-999
+added roadmap entry rmi-01M8277RS8B1DJ5XV7VAXFQ95Z for GH-998
+added roadmap entry rmi-01M8277RSEE6GYB4230QT8TCM8 for GH-997
+fixture ready
+== GH-1576 F4: closeout refused by the wiring check, recovered through resume ==
+  [closeout with the stub gone (install --check rc=1)] result=CLOSEOUT=exit-4 origin b4c8b84bf79a60db141a59f9462e0561212be56b -> b4c8b84bf79a60db141a59f9462e0561212be56b :: dirty=[ M LEADERBOARD.html; M LEADERBOARD.md; M RELEASES-PREVIEW.html; M releases.db; M releases.sql;?? TESTS-RESULTS/;] local-commits-ahead-of-origin=0 receipt-lines=1
+  [resume with an unrelated dirty file (hook repaired)] result=rc=4 origin b4c8b84bf79a60db141a59f9462e0561212be56b -> b4c8b84bf79a60db141a59f9462e0561212be56b :: head-moved=no; working tree is not clean on development — stash or discard before resuming: M LEADERBOARD.html;  M LEADERBOARD.md;  M RELEASES-PREVIEW.html
+  [resume after the hook repair (documented recovery)] result=rc=0 origin b4c8b84bf79a60db141a59f9462e0561212be56b -> 05cfa2a38464ba3eeb206325bfbdcbd307190afc :: tree-dirty-lines=0 receipt-committed=1 receipt-lines=1(was 1, not regenerated) origin-in-sync=yes issue-closed=1 manifest=shipped doc=moved; 
