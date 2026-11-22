@@ -1,0 +1,5 @@
+# control 4: env branch
+# env CHANGELOG_WRITES='branch' .pdda-mode=None
+# CHANGELOG.md changed=True (expected True); capture doc written=True; is_doc_path(CHANGELOG.md)=True
+# stdout: express-docs: born complete -> PROJECT/2-WORKING/GH-1530-demo.md (+ CHANGELOG entry)
+# status: PASS

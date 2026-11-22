@@ -1,0 +1,18 @@
+  PASS: A: vendored + missing path exits 0
+  PASS: A: skip line names the suite, the path and the vendored SHA
+  PASS: A: suite body did not run
+  PASS: A: nothing on stderr for a witnessed skip
+  PASS: B: not vendored + missing path exits 2 (refusal, never a skip)
+  PASS: B: refusal names the suite and the missing path on stderr
+  PASS: B: no skip line printed
+  PASS: C: path present → helper silent, suite body runs
+  PASS: empty path argument refuses (exit 2)
+  PASS: D: xyz-vendor.sh vendored this checkout into the consumer
+  PASS: D: .xyz/VERSION carries source_commit=
+  PASS: D: githooks/ is not vendored (decision: skip, never vendor forge-only infrastructure)
+  PASS: D: .xyz/test/gh267-express-skill.sh exits 0 with a witnessed skip
+  PASS: D: gh267-express-skill.sh no longer touches a missing forge path
+  PASS: D: .xyz/test/sentinel-overlay.sh exits 0 with a witnessed skip
+  PASS: D: sentinel-overlay.sh no longer touches a missing forge path
+  PASS: forge run of sentinel-overlay.sh does not skip (paths present)
+gh708-vendored-suite-skips: 17 pass, 0 fail
