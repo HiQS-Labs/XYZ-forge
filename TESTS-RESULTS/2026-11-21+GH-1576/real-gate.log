@@ -1,0 +1,4 @@
+== real gate run (no XYZ_SKIP_PREPUSH): kickstart checkpoint --push from a wired clone, rev 23d59943548e2d491458ccef06dd9efc0c29b2b5
+run_record: git push origin HEAD:refs/heads/gh1576-real failed (rc=1): gate-attempt: REFUSED — task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start
+error: failed to push some refs to '/tmp/claude-501/gh1576-realgate.TDTGLh/origin.git'
+rc= seconds=1 hook-invocations=2 origin-gh1576-real=none

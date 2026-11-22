@@ -37,6 +37,10 @@ from scan_clones import (
     DEFAULT_NEVER_DELETE
 )
 import merge_cleanup
+# GH-1576: merge-cleanup refuses to push from a clone whose `githooks/install.sh --check` fails. This
+# suite's fixtures are bare repos with no hook and mock the pushes, so the wiring probe is stubbed
+# for the whole module; the refusal itself is witnessed by TESTS-RESULTS/2026-11-21+GH-1576/.
+merge_cleanup.gate_unwired_reason = lambda clone, install=False: ""
 import scan_clones
 from merge_cleanup import prune_dangling_skill_symlinks
 from toposort_prs import (
