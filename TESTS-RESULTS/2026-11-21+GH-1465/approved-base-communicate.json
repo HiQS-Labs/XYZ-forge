@@ -2,10 +2,12 @@
  "all_ok": false,
  "cases": {
   "10_leader_exit_pipe_member_still_rss_guarded": {
-   "elapsed": 0.106,
+   "elapsed": 3.012,
    "expect_red_on_08fee": false,
-   "ok": true,
-   "rss_killed": true
+   "ok": false,
+   "over_cap_after_leader_exit": false,
+   "over_cap_before_leader_exit": false,
+   "rss_killed": false
   },
   "11_termination_in_flight_completes_before_return": {
    "completed_before_return": true,
@@ -13,25 +15,52 @@
    "ok": true,
    "rss_killed": true
   },
+  "12_multibyte_output_across_read_boundaries": {
+   "chars": 100001,
+   "expect_red_on_08fee": false,
+   "ok": true
+  },
+  "13_cancellation_mid_run_leaves_no_live_group": {
+   "expect_red_on_08fee": false,
+   "group_member_alive": false,
+   "ok": true,
+   "original_exception_preserved": true
+  },
+  "14_reader_error_is_raised_not_returned": {
+   "expect_red_on_08fee": false,
+   "ok": false,
+   "returned_rc": 0,
+   "stdout": "data"
+  },
+  "15_escaped_descendant_abandoned_with_frozen_snapshot": {
+   "error": "AttributeError: 'BoundedResult' object has no attribute 'stdout_sha256'",
+   "expect_red_on_08fee": false,
+   "ok": false
+  },
   "1_pipe_holder_wall_timeout": {
-   "elapsed": 0.264,
+   "elapsed": 0.256,
    "expect_red_on_08fee": true,
    "ok": true,
    "rc": null,
    "timed_out": true
   },
   "2_pipe_holder_group_killed_promptly": {
-   "elapsed": 0.412,
+   "elapsed": 0.304,
    "expect_red_on_08fee": true,
    "holder_dead_on_return": true,
    "ok": true,
    "timed_out": true
   },
   "3_idempotence_detects_differing_prefix": {
+   "completed": true,
+   "exit_codes": [
+    0,
+    0
+   ],
    "expect_red_on_08fee": true,
    "hashes": [
-    "1c8cac87800e192814693b2d6c688c9b171f1f06db7601bfd12cde85bb9936e9",
-    "2741aa5bdc948eaacc45ddb3d211b7c31f71ae88e3cb00668f36e459d5644a5a"
+    "ed6e063fa872b432d08befadc3755dc8ceb69bb6ac1c2fa0661854fd7d842530",
+    "6e227a103a2db9fb99aaa93f51ebb7cc54348a54114e58fbd88cad7fad91cd75"
    ],
    "ok": true,
    "passed": false
@@ -43,7 +72,7 @@
    "stderr_len": 188890,
    "stdout_len": 188890
   },
-  "5_tail_mode_keeps_digest_of_complete_output": {
+  "5_tail_mode_digest_covers_complete_output": {
    "expect_red_on_08fee": false,
    "ok": false,
    "unsupported": "run_bounded() got an unexpected keyword argument 'capture_tail_bytes'"
@@ -56,7 +85,7 @@
    "timed_out": true
   },
   "7_timeout_excerpt_is_bounded_tail": {
-   "expect_red_on_08fee": true,
+   "expect_red_on_08fee": false,
    "ok": false,
    "unsupported": "run_bounded() got an unexpected keyword argument 'capture_tail_bytes'"
   },
@@ -74,7 +103,7 @@
    "stdout": "a\nb\nc\n"
   }
  },
- "defect_cases_ok": false,
+ "defect_cases_ok": true,
  "label": "approved-base-communicate",
  "python": "3.14.7",
  "source_root": "/Users/noelsaw/qa-clones/roots/6c3dc3aa2"

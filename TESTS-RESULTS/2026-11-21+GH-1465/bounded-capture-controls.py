@@ -34,6 +34,13 @@ def case(name, expect_red=False):
     return deco
 
 
+def exited(pid):
+    """True once pid is gone or only a zombie (a launcher not yet reaped has still exited)."""
+    import subprocess
+    out = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True).stdout.strip()
+    return out == "" or out.startswith("Z")
+
+
 def alive(pid):
     try:
         os.kill(pid, 0)
@@ -69,7 +76,10 @@ def _():
 def _():
     res = mo.check_idempotence([PY, "-c", 'import os; print(os.getpid()); print("x"*70000)'],
                                repetitions=2, timeout=5, cwd=tempfile.gettempdir())
-    return dict(passed=res["passed"], hashes=res["stdout_hashes"], ok=res["passed"] is False)
+    h = res["stdout_hashes"]
+    return dict(passed=res["passed"], completed=res["completed"], exit_codes=res["exit_codes"], hashes=h,
+                ok=res["passed"] is False and res["completed"] and res["exit_codes"] == [0, 0]
+                and len(set(h)) == 2)
 
 
 @case("4_default_capture_is_complete")
@@ -82,15 +92,20 @@ def _():
                 ok=r.stdout == exp_out and r.stderr == exp_err and r.rc == 0)
 
 
-@case("5_tail_mode_keeps_digest_of_complete_output")
+@case("5_tail_mode_digest_covers_complete_output")
 def _():
-    prog = 'import os; print(os.getpid()); print("x"*70000); print("last-line")'
-    a = pg.run_bounded([PY, "-c", prog], timeout=10, capture_tail_bytes=4096)
-    b = pg.run_bounded([PY, "-c", prog], timeout=10, capture_tail_bytes=4096)
-    return dict(tails_equal=a.stdout == b.stdout, digests_differ=a.stdout_sha256 != b.stdout_sha256,
-                truncated=a.truncated, tail_len=len(a.stdout), tail_end=a.stdout[-10:],
-                ok=a.truncated and len(a.stdout) <= 4096 and a.stdout.endswith("last-line\n")
-                and a.stdout_sha256 != b.stdout_sha256 and a.stdout == b.stdout)
+    import hashlib
+    def prog(tag):
+        return f'print("{tag}"); print("x"*70000); print("last-line")'
+    a = pg.run_bounded([PY, "-c", prog("P1")], timeout=10, capture_tail_bytes=4096)
+    b = pg.run_bounded([PY, "-c", prog("P2")], timeout=10, capture_tail_bytes=4096)
+    want = lambda tag: hashlib.sha256((tag + "\n" + "x" * 70000 + "\nlast-line\n").encode()).hexdigest()
+    return dict(tails_equal=a.stdout == b.stdout, digest_a=a.stdout_sha256, digest_b=b.stdout_sha256,
+                truncated=a.truncated, capture_complete=a.capture_complete, tail_len=len(a.stdout),
+                tail_end=a.stdout[-10:],
+                ok=a.truncated and a.capture_complete and len(a.stdout) <= 4096
+                and a.stdout.endswith("last-line\n") and a.stdout == b.stdout
+                and a.stdout_sha256 == want("P1") and b.stdout_sha256 == want("P2"))
 
 
 @case("6_timeout_keeps_sentinel_diagnostics", expect_red=True)
@@ -101,7 +116,7 @@ def _():
                 ok=r.timed_out and r.stdout == "sentinel-out" and r.stderr == "sentinel-err")
 
 
-@case("7_timeout_excerpt_is_bounded_tail", expect_red=True)
+@case("7_timeout_excerpt_is_bounded_tail")
 def _():
     prog = ("import sys,time\nfor i in range(20000): print('out-%d'%i)\n"
             "sys.stdout.flush(); time.sleep(5)\n")
@@ -128,11 +143,27 @@ def _():
 
 @case("10_leader_exit_pipe_member_still_rss_guarded")
 def _():
-    with patch.object(pg, "group_rss_mb", return_value=(100, None)):
-        t = time.monotonic()
-        r = pg.run_bounded(["/bin/sh", "-c", "sleep 3 & exit 0"], timeout=10, max_rss_mb=1, rss_poll_s=.05)
-        el = time.monotonic() - t
-    return dict(rss_killed=r.rss_killed, elapsed=round(el, 3), ok=r.rss_killed and el < 2.0)
+    with tempfile.TemporaryDirectory() as d:
+        pidfile = pathlib.Path(d) / "leader.pid"
+        seen = {"over_cap_after_leader_exit": False, "over_cap_before_leader_exit": False}
+
+        def rss(pgid, **_):
+            try:
+                leader = int(pidfile.read_text())
+            except (OSError, ValueError):
+                return 0, None  # launcher not started yet: under the cap
+            if not exited(leader):
+                return 0, None  # launcher still running: under the cap
+            seen["over_cap_after_leader_exit"] = True  # only a post-exit sample is ever over the cap
+            return 100, None
+
+        with patch.object(pg, "group_rss_mb", side_effect=rss):
+            t = time.monotonic()
+            r = pg.run_bounded(["/bin/sh", "-c", f"sleep 3 & echo $$ > {pidfile}; exit 0"], timeout=10,
+                               max_rss_mb=1, rss_poll_s=.05)
+            el = time.monotonic() - t
+    return dict(rss_killed=r.rss_killed, elapsed=round(el, 3), **seen,
+                ok=r.rss_killed and el < 2.0 and seen["over_cap_after_leader_exit"])
 
 
 @case("11_termination_in_flight_completes_before_return")
@@ -152,6 +183,74 @@ def _():
     done.wait(3)
     return dict(rss_killed=r.rss_killed, completed_before_return=before_return, ok=r.rss_killed and before_return)
 
+
+
+@case("12_multibyte_output_across_read_boundaries")
+def _():
+    r = pg.run_bounded([PY, "-c", "import sys; sys.stdout.buffer.write('\u00e9'.encode()*100001)"], timeout=10)
+    return dict(chars=len(r.stdout), ok=r.stdout == "\u00e9" * 100001)
+
+
+@case("13_cancellation_mid_run_leaves_no_live_group")
+def _():
+    with tempfile.TemporaryDirectory() as d:
+        pidfile = pathlib.Path(d) / "holder.pid"
+
+        class Stop(Exception):
+            pass
+
+        def boom(*_):
+            raise Stop()
+
+        old = signal.signal(signal.SIGALRM, boom)
+        signal.setitimer(signal.ITIMER_REAL, .5)
+        raised = False
+        try:
+            pg.run_bounded(["/bin/sh", "-c", f"sleep 30 & echo $! > {pidfile}; sleep 30"], timeout=20, grace=.2)
+        except Stop:
+            raised = True
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, old)
+        time.sleep(.2)
+        pid = int(pidfile.read_text())
+        live = alive(pid)
+        if live:
+            os.kill(pid, signal.SIGKILL)
+    return dict(original_exception_preserved=raised, group_member_alive=live, ok=raised and not live)
+
+
+@case("14_reader_error_is_raised_not_returned")
+def _():
+    real = os.read
+
+    def failing(fd, n):
+        if n == getattr(pg, "_CHUNK", -1):
+            raise OSError(5, "injected EIO")
+        return real(fd, n)
+
+    with patch.object(pg.os, "read", side_effect=failing):
+        try:
+            r = pg.run_bounded(["/bin/sh", "-c", "printf data; exit 0"], timeout=5)
+            return dict(returned_rc=r.rc, stdout=r.stdout, ok=False)
+        except OSError as exc:
+            return dict(raised=str(exc), ok="injected EIO" in str(exc))
+
+
+@case("15_escaped_descendant_abandoned_with_frozen_snapshot")
+def _():
+    # A descendant in its own session survives killpg and keeps the pipes open past grace + 5.
+    holder = ("import os,time\nos.setsid()\nprint('late', flush=True)\ntime.sleep(8)\nprint('later', flush=True)\n")
+    cmd = ["/bin/sh", "-c", f"printf early; {PY} -c \"{holder}\" & exit 0"]
+    t = time.monotonic()
+    r = pg.run_bounded(cmd, timeout=.3, grace=.1)
+    el = time.monotonic() - t
+    first = (r.stdout, r.stdout_sha256, r.capture_complete)
+    time.sleep(5)  # let the escapee emit more after the snapshot was taken
+    stable = (r.stdout, r.stdout_sha256, r.capture_complete) == first
+    return dict(timed_out=r.timed_out, elapsed=round(el, 3), stdout=r.stdout, capture_complete=r.capture_complete,
+                snapshot_stable_after_later_output=stable,
+                ok=r.timed_out and el < 7.5 and r.capture_complete is False and stable and "later" not in r.stdout)
 
 summary = dict(label=label, source_root=str(root), python=sys.version.split()[0],
                all_ok=all(c["ok"] for c in cases.values()),
