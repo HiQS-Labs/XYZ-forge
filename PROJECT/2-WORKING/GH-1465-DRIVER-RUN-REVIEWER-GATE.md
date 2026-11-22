@@ -81,7 +81,7 @@ Any subsequent review repair requires its own classified gate and independent QA
 
 `6c3dc3aa2` kept `proc.communicate`, which bounds the wall clock across pipe-holding children but
 buffers all gate output. `131a8a31d`/`08fee5d0f` swapped in a global tail reader and independent QA
-found three defects (`/private/tmp/ks-sol-qa1467-08fee.md`): the post-exit `reader.join` had no
+found three defects (kickstart run-2 QA receipt for `08fee5d0f`): the post-exit `reader.join` had no
 deadline so a surviving pipe holder escaped the wall timeout; the unconditional 64 KiB tail hid
 differing output prefixes from `metamorphic_oracle.check_idempotence` (false pass); and a timeout
 started a second reader pair and lost the first pair's diagnostics.
