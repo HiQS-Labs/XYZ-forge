@@ -309,4 +309,13 @@ cannot satisfy. Runtime delivery remains subject to the planned clone checks and
 
 Relay closed (Approved), no further turn needed. Producer may proceed to implementation.
 
+
+### Attestation · relay-drive — 2026-11-22T02:40:32Z
+task: RELAY-gh1576-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: ca8931f16b519b3cd7451246cd161a2b04284f34
+added-range: 17201+5597
+added-sha256: 22badce58dc0c8a6d5f2417a1035bdafc7a4f44d02f9f513b475748ea8163ca0
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
