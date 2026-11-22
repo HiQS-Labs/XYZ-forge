@@ -13,6 +13,7 @@
 set -uo pipefail
 LABEL="$1"; REV="$2"; SRC="$3"; OUT="$4"
 W="$(mktemp -d "${TMPDIR:-/tmp}/gh1576-$LABEL.XXXXXX")"
+trap 'rm -rf "$W"' EXIT   # the scratch clones are large; keep none after the run
 mkdir -p "$OUT"
 LOG="$OUT/$LABEL.log"; PROV="$OUT/provenance.jsonl"; : > "$LOG"
 say() { printf '%s\n' "$*" | tee -a "$LOG"; }
@@ -189,7 +190,7 @@ rr() { # name mode(wired|lost) scenario
 import sys
 lines = [l for l in open(sys.argv[1]).read().splitlines()
          if "githooks/install.sh" in l and l.startswith("bash ") or l.startswith("git add TESTS-RESULTS") or l.startswith('git push origin "$BASE"')]
-out = ["set -euo pipefail", "SHA=$(git rev-parse HEAD); N=1576; BASE=development", "mkdir -p TESTS-RESULTS/gh1576-recipe; echo recipe > TESTS-RESULTS/gh1576-recipe/r.md"]
+out = ["set -euo pipefail", "SHA=$(git rev-parse HEAD); N=1576; BASE=development", "mkdir -p TESTS-RESULTS/gh1576-recipe; echo \"recipe $$ $RANDOM\" > TESTS-RESULTS/gh1576-recipe/r.md"]
 first = True
 for l in lines:
     out.append(l)
@@ -203,7 +204,7 @@ PY
   record "express recovery recipe (SKILL.md)" "$3" "rc=$rc" "$(printf '%s' "$out" | tail -2 | tr '\n' ' ' | cut -c1-200)" "$before" "$after" "$(chk "$W/$n")" "$(hookran "$t")"
 }
 rr rr1 lost "recipe, wiring lost after its install step"
-rr rr2 wired "recipe on a fresh clone (XYZ_SKIP_PREPUSH=1: stub invoked, not a gate result)"
+rr rr2 wired "recipe on a fresh clone, no sabotage (XYZ_SKIP_PREPUSH=1: a hook run is a stub invocation, not a gate result)"
 
 # ---- express closeout push (:1284) ---------------------------------------------------------
 ex() { # name wired? -> run persist_closeout from an express clone

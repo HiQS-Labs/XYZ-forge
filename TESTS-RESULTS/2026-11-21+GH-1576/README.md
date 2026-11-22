@@ -13,7 +13,7 @@ from the same unwired clones with no hook at all.
 
 ```
 bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh red   3dc703600 <task-clone> <this-dir>
-bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 23d599435 <task-clone> <this-dir>
+bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 7a0eb79e7 <task-clone> <this-dir>
 ```
 
 `check.sh` makes a disposable local bare origin, runs the code under test from its own scratch clone
@@ -33,7 +33,9 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
 | merge-cleanup `push_resolved_head` | pushed, no hook | `ok=False`, ref unchanged | clone from `prepare_landing_clone` is wired by the tool, pushes, hook invoked (red: same clone unwired, pushed with no hook) |
 | merge-cleanup post-merge writes push | pushed, no hook | `ok=False`, ref unchanged | pushes, hook invoked |
 | jog `JogCheckpoint._push` (publication clone) | pushed, no hook | refused, ref unchanged | pushed, hook invoked |
-| jog `_require_gate_wired` guard (also used by `publish_jog_receipt`) | no guard exists | refused; refused when installer missing | allowed |
+| jog `publish_jog_receipt(..., push=True)` (real call; only the Marathon-result and gate-receipt validators are stubbed) | pushed, no hook | refused, ref unchanged | pushed, hook invoked |
+| jog `_require_gate_wired` guard | no guard exists | refused; refused when the installer is missing | allowed; installer missing + vendored layout (`XYZ_VENDORED=1`) keeps the host's policy (allowed) |
+| express recovery recipe (`SKILL.md`, its own lines extracted verbatim and run in a fresh clone) | pushed from an unwired clone, no hook | wiring lost after the recipe's install step: stops (rc 1) before the push, ref unchanged | recipe on a fresh clone installs the hook, then pushes, hook invoked |
 | express closeout push | pushed, no hook | refused (exit 4), ref unchanged | pushed (see limit 2) |
 
 ## Limits, stated plainly
@@ -45,7 +47,12 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
    this task's own push instead.
 2. Express's own landing push sets `XYZ_SKIP_PREPUSH=1` by lane design, so its wired control is
    wiring evidence only, as the plan said.
-3. `publish_jog_receipt` (`jog_run.py:1209`) is covered at guard level only: it needs a full approved
-   receipt bundle, and it calls the same `_require_gate_wired` as `_push`, which is driven for real.
+3. The `publish_jog_receipt` witness stubs `_validate_marathon_result` and `gate_receipt.check_receipt`
+   (a full approved Marathon result is out of scope here); staging, the evidence commit, the guard and the
+   push are the real code.
 4. Plain `git push` typed by hand is outside this change and unchanged.
-5. `focused-suites.log`: the existing suites for the changed files (no new tests).
+5. In the recipe's "lost wiring" green row the hook count is 1, not 0: the recipe line that deletes the stub
+   runs `git rev-parse --git-path hooks/pre-push`, and `GIT_TRACE` prints that command. No hook ran: the push was
+   never attempted and the origin ref did not move.
+6. `focused-suites.log`: the existing suites for the changed files (no new tests); `full-gate.log` (when
+   present): `./validate.sh` from a disposable full clone at the stated revision.
