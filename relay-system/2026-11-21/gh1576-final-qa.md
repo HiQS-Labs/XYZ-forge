@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -288,5 +288,252 @@ code diff `3dc703600..HEAD` for `skills/ utils/ test/` is committed as
   An interrupted earlier run (disk full) was discarded, not committed.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+**What this proposes**
+
+Make the existing lane push steps refuse a clone whose installer check fails. Provision the
+merge-cleanup landing clone through that same installer, retaining the existing vendored policy.
+
+**How the existing system works, per this document**
+
+Hooks are clone-local and do not travel with a clone. The existing installer owns detection;
+the proposed callers consume its result using their existing failure conventions.
+
+**What it's not**
+
+No second detector, writer, push wrapper or suite. Inference: refusal must leave an intelligible,
+safe recovery path; the whole-file review also includes pre-existing defects, as Setup requires.
+
+**Prior findings and acceptance evidence**
+
+- [Pass] **F1 addressed.** Express's recovery recipe now installs/checks at
+  `skills/2-daily/express/SKILL.md:137` and checks immediately before push at `:149`–150;
+  the vendored exception is explicit at `:154`–159. Emitted guidance matches at
+  `utils/py/express.py:539`–541. The manual witness extracts the recipe's relevant lines
+  (`TESTS-RESULTS/2026-11-21+GH-1576/check.sh:189`–202); provenance rows `:17`/`:37`
+  discriminate lost wiring, and `:38` records fresh-clone installation and publication.
+  This is a witness of the extracted publication steps, not the entire recovery procedure.
+- [Pass] **F2 addressed.** `check.sh:156`–181 now calls `publish_jog_receipt` with its staging,
+  commit, guard and push intact; the two validator stubs are disclosed at `:171`–172 and README
+  `:50`–52. Provenance `:15`/`:35` records base publication versus candidate refusal with unchanged
+  origin; `:36` records wired publication. The absent-installer vendored control is present at
+  provenance `:32`. It exercises the existing `is_vendored()` policy, including its environment
+  override; it does not independently prove a physical vendored installation.
+- [Pass] **F3's missing completed gate is addressed by retained evidence.**
+  `full-gate.log:1`–8 and `:34`–41 record revision
+  `881028ce6af1e93cfc735ff0f176dc0b51c4b932`, `./validate.sh`, exit 0, 1310 seconds,
+  `passed: 408 / 408`, and equal before/after HEAD, clean status, origin and local-config hash.
+  This is a producer-recorded local gate result, not a gate rerun by this reviewer or hosted
+  qualification. Only the tail/summary was retained (`:40`); focused-suite lines remain separately
+  unversioned, and the JSONL has boundary scenarios rather than gate rows. The full-gate record
+  supplies the revision-bound aggregate result. The unavailable real-hook exit status is now
+  honestly marked in `real-gate.log:4`. No future push or later gate is counted here.
+- [Pass] **The named push boundaries consume the existing check.** Guard/push pairs remain at
+  `run_record.py:608`–609, `jog_run.py:1229`–1230 and `:2341`–2342,
+  `merge_cleanup.py:1074`–1078 and `:1564`–1568, and `express.py:1288`–1292
+  (full paths in Setup). Express's existing landing check remains at `express.py:1111`.
+  Start-task provisioning and push instructions are at its `SKILL.md:99`–102, `:292`, `:336`.
+  No additional unguarded push in these lane files was found. The three direct helpers delegate
+  to the installer; Express reuses `gate_check`. `merge_cleanup.py:1009` is the new provisioning
+  call, and `:1078` uses the existing gate-length timeout rather than the network timeout.
+- [Pass] **Evidence distinguishes the defect and keeps its limits visible.** The data-only probe
+  below found seven red unwired publications with moved origin refs and seven green refusals
+  with unchanged refs. The origin reader is the bare remote (`check.sh:26`, `:66`–68).
+  Wired rows use the explicitly disclosed bypass (README `:43`–49); they prove hook invocation,
+  not gate passage. Fixture stubs at `test/gh280-jog-marathon-adapter.sh:166`–169 and
+  `test/gh436-merge-cleanup.py:40`–43 preserve fixture isolation; they are not refusal evidence.
+  `check.sh:2` and README `:15`–16 identify a retained manual artifact, and the seeded diff adds
+  no suite or registry entry. The plan's `62/58/50/72` remains a reasonable judgment for the
+  stated incident and small call-site change, not a measured score.
+
+**Findings requiring disposition**
+
+- [Should] **F4 — Explain or repair recovery after Express commits and then refuses the push.**
+  `utils/py/express.py:1285` commits before the new refusal at `:1288`–1291. The message only
+  says to install the hook. The documented `resume` path calls persistence without the original
+  receipt exemption (`:1518` versus `:1208`–1210), while `change_paths:574`–593 includes
+  unpublished commits. It consequently rejects the retained receipt as unexpected dirt. Retrying
+  persistence with the original exemption instead hits an empty commit before checking/pushing.
+  The pure extracted-function probe below demonstrates both decisions. A narrowly documented,
+  checked publication of the retained closeout commit followed by resume is an adequate fix;
+  no generic retry subsystem is requested. The analogous network-failure limitation pre-exists,
+  but this change introduces this deterministic refusal path.
+  Observed input: the first ship closeout with an allowed receipt path and a failing hook check;
+  the commit succeeds, the push is refused, then the hook is repaired with the receipt still
+  ahead of origin. Probe outputs are quoted below.
+  Affected scope: recovery of this already-committed, unpublished Express closeout transaction.
+  Falsifier: the documented recovery, applied to that state in a disposable full clone, publishes
+  the retained transaction through a passing wiring check and completes resume without relaxing
+  unrelated-path checks or repeating the suite unnecessarily. Full recovery is
+  [Unverified — needs clone run]; the in-memory decision probe is not an end-to-end run.
+
+- [Should] **F5 — Pre-existing scratch pruning can discard an unpublished repair commit.**
+  `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2096`–2115 retains the repair clone after
+  validation/push refusal, including the newly added unwired refusal. Its committed repair can
+  have a clean working tree. Later, `_scratch_keep_reason:219`–244 checks handles, dirt, stashes
+  and worktrees but never publication/reachability of HEAD or local refs; `_remove_own_scratch:261`
+  deletes a clone it accepts. `prune_retained_scratch:301`–338 eventually applies that deletion
+  to old retained holders beyond the configured count. Preserve unique local repair state through
+  the existing cleanup safety machinery before deleting such a holder; do not add a second
+  cleanup system. This is a source-backed whole-file finding, not a claim that deletion was run.
+  Observed input: the caller-produced retained holder containing a resolved, committed B1 repair
+  whose push returned false at `:2106`–2115; clean status, no stash/extra worktree, verified inactive
+  handles, older than one hour and outside the newest retained count.
+  Affected scope: tool-shaped retained scratch clones containing unpublished commits, including
+  detached repair HEADs; ordinary fully recoverable simulations need not be retained forever.
+  Falsifier: an eligible retained holder with an unpublished detached repair HEAD survives the
+  real pruning path, while an otherwise identical fully recoverable idle holder can be pruned.
+  [Unverified — needs clone run]: no deletion or executable fixture was run in this reviewer turn.
+
+- [Should] **F6 — Pre-existing Jog lock acquisition can reclaim a lock still being initialized.**
+  `utils/py/jog_run.py:1556` creates the directory before `:1599` writes the PID. With the default
+  `conservative=False`, a second acquisition in that interval bypasses the unknown-owner refusal
+  at `:1568`, removes the first lock at `:1591`, and acquires its replacement. Both callers then
+  believe they own the lock. Plain run and retry callers use that default (`:2787`, `:868`, `:1087`).
+  The in-memory interleaving probe below produces two acquired owners; the existing conservative
+  branch refuses the second owner. Use the existing unknown/initializing-owner refusal at these
+  entry points, retaining the deliberate stale-owner recovery policy without a new lock mechanism.
+  Observed input: an existing lock directory whose first owner has returned from mkdir but has
+  not written `pid`; the second caller uses the class's default constructor.
+  Affected scope: simultaneous acquisition by the nonconservative Jog entry points, not paths
+  already using conservative mode or locks with a readable live PID.
+  Falsifier: under this same interleaving, at most one caller acquires; a proven dead-owner case
+  still follows the supported recovery policy. The probe measures the exact acquisition code
+  with fake OS operations, not live concurrent processes.
+
+**Probe receipts (scratch is not durable evidence)**
+
+The following data-only command exited 0. Decisive output was
+`red unwired boundaries= 7 origin refs moved= 7`,
+`green unwired boundaries= 7 origin refs moved= 0`, and
+`seeded diff postimage hashes match all 9 source/skill/fixture files`.
+No Git command was used; blob hashes are computed directly from file bytes.
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+import json, hashlib, re
+from pathlib import Path
+p=Path('TESTS-RESULTS/2026-11-21+GH-1576')
+rows=[json.loads(s) for s in (p/'provenance.jsonl').read_text().splitlines()]
+assert len(rows)==40 and all(all(str(v).strip() for v in r.values()) for r in rows)
+for label in ('red','green'):
+ r=[x for x in rows if x['label']==label and ('unwired' in x['scenario'] or 'wiring lost' in x['scenario']) and x['origin_before']!='n/a']
+ assert len(r)==7 and all(x['install_check_rc']=='1' for x in r)
+ moved=sum(x['origin_before']!=x['origin_after'] for x in r)
+ assert moved==(7 if label=='red' else 0)
+ print(label,'unwired boundaries=',len(r),'origin refs moved=',moved)
+for block in Path('relay-system/2026-11-21/gh1576-final-qa-code.diff').read_text().split('diff --git ')[1:]:
+ path=block.splitlines()[0].split(' b/',1)[1]
+ expected=re.search(r'index [a-f0-9]+\.\.([a-f0-9]+)',block).group(1)
+ data=Path(path).read_bytes()
+ actual=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+ assert actual.startswith(expected)
+print('seeded diff postimage hashes match all 9 source/skill/fixture files')
+PY
+```
+
+F4 command: `python3 - <<'PY'` with this body, run with `PYTHONDONTWRITEBYTECODE=1` and
+`TMPDIR="$PWD/.relay-scratch/tmp"`; exit 0. It loads only three exact AST function definitions,
+with fake dependencies (no module import, Git/subprocess execution or filesystem mutation).
+
+```python
+import ast
+from types import SimpleNamespace
+parsed=ast.parse(open('utils/py/express.py',encoding='utf-8').read())
+names={'change_paths','persist_closeout','is_allowed_closeout_path'}
+nodes=[n for n in parsed.body if isinstance(n,ast.FunctionDef) and n.name in names]
+ns={'BASE':'development','CLOSEOUT_ALLOWLIST_FILES':{'releases.db'},'CLOSEOUT_ALLOWLIST_PREFIXES':()}
+exec(compile(ast.Module(body=nodes,type_ignores=[]),'<exact-express-functions>','exec'),ns)
+class Refused(Exception): pass
+s={'path':'TESTS-RESULTS/2026-11-21+GH-1576-express/provenance.jsonl','dirty':True,'ahead':False,'wired':False,'calls':[]}
+def die(msg): raise Refused(msg)
+def git(root,*args,**kw):
+ s['calls'].append(args[0])
+ if args[0]=='rev-parse': out='remote-sha'
+ elif args[0]=='diff': out=s['path']+'\n' if s['ahead'] else ''
+ elif args[0]=='status': out='?? '+s['path']+'\n' if s['dirty'] else ''
+ elif args[0]=='commit':
+  if not s['dirty']: die('git commit failed: nothing to commit, working tree clean')
+  s.update(dirty=False,ahead=True); out=''
+ elif args[0]=='push': s['ahead']=False; out=''
+ else: out=''
+ return SimpleNamespace(returncode=0,stdout=out,stderr='')
+def gate(root):
+ s['calls'].append('gate_check'); return s['wired'],'probe absent hook'
+ns.update(git=git,die=die,gate_check=gate)
+def run(label,extra):
+ s['calls']=[]
+ try: print(label,'RETURN',ns['persist_closeout']('/fake','closeout',extra))
+ except Refused as e: print(label,'REFUSED',str(e))
+ print('dirty=%s ahead=%s calls=%s'%(s['dirty'],s['ahead'],','.join(s['calls'])))
+run('initial ship with absent hook',(s['path'],))
+s['wired']=True
+run('retry after hook repair, same extra_paths',(s['path'],))
+run('resume persistence after hook repair, default extra_paths',())
+s.update(path='releases.db',dirty=True,ahead=False,wired=True)
+run('fresh wired allowlisted control',())
+```
+
+Decisive output: initial refusal leaves `dirty=False ahead=True`; retry says
+`git commit failed: nothing to commit, working tree clean` with calls ending `add,commit`;
+resume persistence says `refusing closeout persistence over unexpected dirty path(s):
+TESTS-RESULTS/2026-11-21+GH-1576-express/provenance.jsonl`; the fresh wired control returns
+`True`, `dirty=False ahead=False`, calls ending `gate_check,push`.
+
+F6 command: `python3 - <<'PY'` with the following body under the same environment; exit 0.
+Decisive output: `second conservative= False first acquired= True second acquired= True lock removals= 1`;
+control: `second conservative= True first acquired= True second acquired= False lock removals= 0`.
+
+```python
+import ast, io, os, sys
+from pathlib import Path
+from types import SimpleNamespace
+source=Path('utils/py/jog_run.py').read_text()
+node=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef) and n.name=='JogSupervisorLock')
+class Refused(Exception): pass
+state={'exists':False,'nested':False,'removed':0}
+fake=SimpleNamespace(path=SimpleNamespace(join=os.path.join,isfile=lambda p:False),environ={},getpid=lambda:123)
+ns={'os':fake,'sys':sys,'shutil':SimpleNamespace(),'ContractError':Refused,'driver_lock_path':lambda r:('/fake/relay-driver.lock','probe'),'open':lambda *a,**k:io.StringIO()}
+exec(compile(ast.Module(body=[node],type_ignores=[]),'<exact-lock>','exec'),ns)
+def remove(p): state['exists']=False; state['removed']+=1
+def mkdir(p):
+ if state['exists']: raise FileExistsError(p)
+ state['exists']=True
+ if not state['nested']:
+  state['nested']=True
+  try: b.acquire()
+  except Refused: pass
+fake.mkdir=mkdir; ns['shutil'].rmtree=remove
+for conservative in (False,True):
+ state.update(exists=False,nested=False,removed=0)
+ a=ns['JogSupervisorLock']('/fake'); b=ns['JogSupervisorLock']('/fake',conservative=conservative)
+ a.acquire()
+ print('second conservative=',conservative,'first acquired=',a.acquired,'second acquired=',b.acquired,'lock removals=',state['removed'])
+ assert a.acquired and b.acquired == (not conservative)
+```
+
+**Sweep and limits**
+
+The parent read the whole plan, seeded diff, evidence script/records, run-record module and both
+start-task/kickstart skills. Read-only recon lanes read every line of Jog and its adapter fixture,
+merge-cleanup and its fixture, and Express and its skill; the parent adjudicated their findings
+against the exact source. F5/F6 are the pre-existing defects found in that sweep; no additional
+pre-existing defect is asserted. The ambient vendored-policy observation is not raised as a
+change request: this plan explicitly preserves the existing predicate rather than hardening
+environment configuration. Graph tools were unavailable (no project/generation/coverage claim).
+No Git command, suite, gate, executable fixture, real push, deletion or server operation ran.
+Only this relay file and exempt scratch were written. The seeded diff postimages match the nine
+reviewed files; independent Git-history verification was outside the no-Git turn boundary.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The original guard/evidence gaps are addressed, but Express refusal recovery and two
+whole-file safety defects require disposition. Runtime deletion/recovery claims remain explicitly
+unverified pending disposable-clone evidence; no future gate is assumed.
+
+Handing off to Producer (claude-a) — disposition F4–F6, retain focused evidence for any repairs,
+and return for the final configured review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
