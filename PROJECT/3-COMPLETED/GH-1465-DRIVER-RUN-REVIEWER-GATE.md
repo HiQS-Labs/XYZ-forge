@@ -1,8 +1,8 @@
 ---
 title: relay-drive runs the configured reviewer gate itself; finding-continuity rule in the reviewer protocol
-status: Active
+status: Complete
 created: 2026-11-14
-updated: 2026-11-20
+updated: 2026-11-22
 owner: Noel Saw
 gh_issue: 1465
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1465
