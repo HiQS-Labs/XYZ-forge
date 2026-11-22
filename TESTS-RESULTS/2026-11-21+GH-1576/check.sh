@@ -126,8 +126,9 @@ try: g(sys.argv[2]); print("RESULT=allowed DETAIL=guard returned")
 except jog_run.ContractError as e: print("RESULT=refused DETAIL=" + " ".join(str(e).split())[:160])
 PY
 }
-for pair in "j1:unwired clone" "j2:wired clone" "j3:installer missing"; do
-  n="${pair%%:*}"; line="$(jog "$W/$n" 2>&1 | tail -1)"
+newclone j4; rm -f "$W/j4/githooks/install.sh"
+for pair in "j1:unwired clone" "j2:wired clone" "j3:installer missing" "j4:installer missing, vendored layout (XYZ_VENDORED=1) keeps the host's own policy"; do
+  n="${pair%%:*}"; if [ "$n" = j4 ]; then line="$(XYZ_VENDORED=1 jog "$W/$n" 2>&1 | tail -1)"; else line="$(jog "$W/$n" 2>&1 | tail -1)"; fi
   record "jog:1209,2320 guard" "${pair#*:}" "$(printf '%s' "$line" | sed -n 's/RESULT=\([^ ]*\).*/\1/p')" "$(printf '%s' "$line" | sed -n 's/.*DETAIL=//p')" n/a n/a "$(chk "$W/$n")" n/a
 done
 
@@ -150,6 +151,59 @@ PY
 }
 jp jp1 no "unwired publication clone"
 jp jp2 yes "wired publication clone (XYZ_SKIP_PREPUSH=1: stub invoked, not a gate result)"
+
+# jog `publish_jog_receipt(..., push=True)` (:1229) driven for real. Only the two validators that
+# need a full Marathon result and a gate receipt are stubbed; the staging, commit, guard and push are the real code.
+jr() { # name wired?
+  local n="$1" t="$W/trace-$1.log" before after line b="gh1576-$1"
+  newclone "$n"; git -C "$W/$n" checkout -q -b "$b"; [ "$2" = yes ] && (cd "$W/$n" && bash githooks/install.sh >/dev/null 2>&1)
+  before="$(oref "$b")"
+  line="$(env GIT_TRACE="$t" XYZ_SKIP_PREPUSH=1 python3 - "$CODE/utils/py" "$W/$n" "$b" <<'PY' 2>&1 | tail -1
+import json, subprocess, sys, tempfile
+sys.path.insert(0, sys.argv[1]); import jog_run, gate_receipt
+target, branch = sys.argv[2], sys.argv[3]
+head = subprocess.run(["git", "-C", target, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+receipt = {"issue": 1576, "execution_id": "exec-gh1576", "outcome": "approved", "gate": {"result": "green"},
+           "head_sha": head, "head_branch": branch, "base_branch": "development",
+           "generated_at": "2026-11-21T00:00:00Z", "timestamps": {"finished_at": "2026-11-21T00:00:00Z"}, "pr": {"number": 7}}
+rp = tempfile.mktemp(suffix=".json"); open(rp, "w").write(json.dumps(receipt))
+jog_run._validate_marathon_result = lambda d: d
+gate_receipt.check_receipt = lambda t, sha: (True, {"result": "green"})
+try: rel = jog_run.publish_jog_receipt(target, receipt, rp, base_ref="development"); print("RESULT=pushed DETAIL=" + rel)
+except jog_run.ContractError as e: print("RESULT=refused DETAIL=" + " ".join(str(e).split())[:160])
+PY
+)"
+  after="$(oref "$b")"
+  record "jog:1229 publish_jog_receipt" "$3" "$(printf '%s' "$line" | sed -n 's/RESULT=\([^ ]*\).*/\1/p')" "$(printf '%s' "$line" | sed -n 's/.*DETAIL=//p')" "$before" "$after" "$(chk "$W/$n")" "$(hookran "$t")"
+}
+jr jr1 no "unwired target clone"
+jr jr2 yes "wired target clone (XYZ_SKIP_PREPUSH=1: stub invoked, not a gate result)"
+
+# express recovery recipe (SKILL.md): the recipe's own provisioning/check/push lines, extracted verbatim from the
+# SKILL.md at this revision and run in a fresh unwired clone. "lost wiring" removes the stub right after the recipe's
+# install line, so the check before the push must stop the recipe (set -e) with the origin ref unchanged.
+rr() { # name mode(wired|lost) scenario
+  local n="$1" t="$W/trace-$1.log" before after rc out
+  newclone "$n"; git -C "$W/$n" checkout -q development
+  python3 - "$CODE/skills/2-daily/express/SKILL.md" "$W/$n/recipe.sh" "$2" <<'PY'
+import sys
+lines = [l for l in open(sys.argv[1]).read().splitlines()
+         if "githooks/install.sh" in l and l.startswith("bash ") or l.startswith("git add TESTS-RESULTS") or l.startswith('git push origin "$BASE"')]
+out = ["set -euo pipefail", "SHA=$(git rev-parse HEAD); N=1576; BASE=development", "mkdir -p TESTS-RESULTS/gh1576-recipe; echo recipe > TESTS-RESULTS/gh1576-recipe/r.md"]
+first = True
+for l in lines:
+    out.append(l)
+    if first and "githooks/install.sh" in l and sys.argv[3] == "lost":
+        out.append("rm -f \"$(git rev-parse --git-path hooks/pre-push)\"   # witness: wiring lost after the recipe's install step"); first = False
+open(sys.argv[2], "w").write("\n".join(out) + "\n")
+PY
+  before="$(oref development)"
+  out="$(cd "$W/$n" && git config user.name w && git config user.email w@w && env GIT_TRACE="$t" XYZ_SKIP_PREPUSH=1 bash recipe.sh 2>&1)"; rc=$?
+  after="$(oref development)"
+  record "express recovery recipe (SKILL.md)" "$3" "rc=$rc" "$(printf '%s' "$out" | tail -2 | tr '\n' ' ' | cut -c1-200)" "$before" "$after" "$(chk "$W/$n")" "$(hookran "$t")"
+}
+rr rr1 lost "recipe, wiring lost after its install step"
+rr rr2 wired "recipe on a fresh clone (XYZ_SKIP_PREPUSH=1: stub invoked, not a gate result)"
 
 # ---- express closeout push (:1284) ---------------------------------------------------------
 ex() { # name wired? -> run persist_closeout from an express clone

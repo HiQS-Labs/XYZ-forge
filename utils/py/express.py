@@ -536,7 +536,9 @@ RECOVERY_RECIPE = (
     "OUTSIDE the tree, runs `%s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
     "Only then, from clean %s: python3 -c 'import sys; sys.path.insert(0,\"%s\"); import express; "
     "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>, base=\"%s\"))'; commit receipt + recovery-run.log under "
-    "TESTS-RESULTS/*+GH-%d-express/, push to %s, re-run resume --base %s."
+    "TESTS-RESULTS/*+GH-%d-express/, run `bash githooks/install.sh --check` immediately before pushing (the recipe "
+    "installs the hook first in this fresh clone; never --no-verify; a vendored host omits both githooks lines), "
+    "push to %s, re-run resume --base %s."
 )
 
 
