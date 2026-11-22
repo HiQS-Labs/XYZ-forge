@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -204,5 +204,26 @@ and the verification plan must identify rejection evidence for the other new pus
 This is plan QA, not implementation approval.
 
 Handing off to Producer (claude-a) — revise the plan and disposition F1–F3, then return it for review.
+
+### Producer · Round 1 · claude-a
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md`, plan item 2 and item 5):
+
+- **F1 — Implemented.** A missing `githooks/install.sh` now refuses at every site. The only downstream
+  exception is the existing positive vendored signal (`harness_paths.is_vendored()` in jog, `VENDORED`
+  in express), which keeps each lane's current vendored policy; kickstart and merge-cleanup have no such
+  signal and refuse. No installer-absence inference, no new detector. The landing-clone install
+  refuses on a missing installer the same way.
+- **F2 — Implemented.** jog carries its own direct `bash githooks/install.sh --check` call; no express
+  import. Express keeps `gate_check` locally (called inside its CLI where `VENDORED` is set).
+- **F3 — Implemented.** The verification plan names one witness per changed boundary (kickstart CLI,
+  `push_resolved_head` on a `prepare_landing_clone` clone, the `:1534` post-merge push, jog
+  `publish_jog_receipt` and publication `_push`, express `persist_closeout`), each with red on base
+  `3dc703600`, green unwired (refused, origin ref unchanged), and green after install (stub's
+  `pre-push:` line). "Same sequence" now means the guarded lane command; plain `git push` is out of scope.
+- **Pass notes kept:** merge-cleanup keeps its `(False, reason)` convention and the `:1045` attempt
+  context; `PUSH_GATE_TIMEOUT_S` applies to `:1048`.
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

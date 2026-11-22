@@ -2,7 +2,7 @@
 gh_issue: 1576
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1576
 title: "start-task: refuse to push from a clone with no pre-push hook installed, so no push skips the gate"
-status: Working — plan drafted; awaiting Codex plan QA
+status: Working — plan revised after Codex plan QA round 1 (F1-F3); awaiting round 2
 created: 2026-11-21
 updated: 2026-11-21
 owner: Claude (start-task sub-agent)
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake registered (row rated 62/58/50/72), recon of every push step done, plan drafted. | Codex plan QA, then build, red/green manual check, final QA, PR. |
+| Intake registered (row rated 62/58/50/72), recon done, plan revised for Codex round 1 (F1-F3 accepted). | Codex plan QA round 2, then build, red/green manual check, final QA, PR. |
 
 ## Problem
 
@@ -64,14 +64,23 @@ Authority stays `bash githooks/install.sh --check`. No new script, no new subsys
    Kickstart children, jog and merge-cleanup repair clones reuse this step; add a one-line pointer to
    `kickstart/SKILL.md` and `express/SKILL.md` (express already refuses; its text records `:1284`).
 2. **Python push sites** each run the clone's own `bash githooks/install.sh --check` immediately before
-   the push and refuse (raise the file's existing error type; no push) on nonzero:
+   the push and refuse on nonzero, in each file's existing failure convention (kickstart `ValueError`,
+   jog `ContractError`, merge-cleanup `(False, reason)` / logged `False`; no push, no exception type
+   introduced):
    `run_record.py:590`, `jog_run.py:1209`, `jog_run.py:2320` (pub clone), `merge_cleanup.py:1048` and
-   `:1534`, and `express.py:1284` (reuse its `gate_check`). `jog_run.py` imports `gate_check`'s
-   logic only if `express` imports cleanly; otherwise it carries the same 5-line call (no shared
-   module is created for it).
-   Rule when `githooks/install.sh` is absent from the clone (vendored host with no Forge installer):
-   the check is not applicable, so the push proceeds with one stderr line saying so (express keeps
-   its own vendored rule).
+   `:1534`, and `express.py:1284` (reuse its `gate_check`, called inside express's CLI where
+   `VENDORED` is already set). `jog_run.py` does not import express (`VENDORED` is only set in
+   express's CLI `main()`, so an import would change the decision); it carries its own direct
+   `bash githooks/install.sh --check` call. No shared module is created.
+   **Applicability (plan QA F1):** a missing `githooks/install.sh` is never proof of a downstream
+   host (`install.sh:9` describes Forge branches predating the hook directory). So a missing
+   installer **refuses** at every site, same as express's canonical mode (`express.py:564`). The one
+   positive downstream signal the code already has is the harness layout (`harness_paths.is_vendored()`
+   in jog, `VENDORED` in express): a vendored host owns its own hooks, so those two lanes keep
+   their existing vendored policy and skip this check; no new host detector is added. kickstart and
+   merge-cleanup have no vendored signal in their code, so they refuse conservatively. The same rule
+   applies to provisioning: the landing-clone install (item 3) refuses on a missing installer
+   rather than skipping.
 3. **merge-cleanup provisioning**: `prepare_landing_clone` runs `bash githooks/install.sh` after the
    clone (it creates this clone, so it owns wiring it); without it every repair push would now refuse.
    The repair push then runs the stub's gate, so `:1048` uses `PUSH_GATE_TIMEOUT_S` like `:1534`
@@ -81,15 +90,28 @@ Authority stays `bash githooks/install.sh --check`. No new script, no new subsys
    (`gh436-merge-cleanup`, `gh280-jog-marathon-adapter`, the express suite `gh267`, `gh544`,
    `gh4`) plus the route's full gate.
 5. **Manual red/green** under `TESTS-RESULTS/2026-11-21+GH-1576/` with `provenance.jsonl`, in a
-   disposable full clone with a local bare origin:
-   - Red (unchanged code, base `3dc703600`): unwired clone pushes via kickstart `checkpoint --push`
-     and via a plain `git push`; no gate receipt appears; push succeeds.
-   - Green (changed code), main path: same sequence refuses before the push (remote unchanged), `rc`
-     nonzero, message names `bash githooks/install.sh`.
-   - Green, adjacent path: after `bash githooks/install.sh` the same push runs the stub (the hook's
-     output appears; with `XYZ_SKIP_PREPUSH`-free env the gate runs or classifies docs). Also a
-     rerun of an already-pushed head (up-to-date) is unaffected, and the empty/absent-installer case
-     proceeds with the stderr note.
+   disposable full clone with a local bare origin. "Same sequence" means the guarded lane command
+   at each changed push site (a hand-typed `git push` is outside this change and is not expected to
+   refuse). One witness per changed boundary (plan QA F3), each recorded with exact revision,
+   command, exit code, output and the origin ref before and after:
+
+   | Boundary | Witness (manual control, existing entry point) |
+   |---|---|
+   | kickstart `run_record.py:590` | `run_record.py checkpoint --push` on the sample record `TESTS-RESULTS/2026-11-19+kickstart-a6590cb2/run-record.md` |
+   | merge-cleanup `:1048` | `push_resolved_head` driven from a one-off `python3 -` call (refresh_pr stubbed to an open PR), on a clone made by `prepare_landing_clone` — real provisioning, then a real repair push |
+   | merge-cleanup `:1534` | the post-merge-writes function around `:1534`, called on an unwired and a wired clone |
+   | jog `:1209`, `:2320` | `publish_jog_receipt(..., push=True)` and the publication `_push` driven the same way on an unwired clone |
+   | express `:1284` | `persist_closeout` on an unwired clone |
+
+   For each: **Red** (base `3dc703600` code): the unwired clone's push succeeds, the origin ref moves,
+   `bash githooks/install.sh --check` exits 1, no `pre-push:` line is printed. **Green** (changed
+   code), unwired: nonzero/refused, message names `bash githooks/install.sh`, origin ref unchanged.
+   **Green, adjacent**: after `bash githooks/install.sh` the same command pushes and the output
+   carries the stub's `pre-push:` line (the hook ran); a rerun of an already-pushed head is
+   unaffected; a clone with `githooks/install.sh` deleted refuses (F1 falsifier); a vendored-layout
+   jog/express run keeps its own policy. Where a boundary's one-off harness proves too costly, the
+   change to that boundary is reduced to the same one call and the cost is recorded, never skipped
+   silently. The existing suites named in item 4 also run; they are not the witness for new refusal.
 
 ## Preflight bet check
 
