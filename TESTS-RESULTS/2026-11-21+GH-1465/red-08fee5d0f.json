@@ -2,7 +2,7 @@
  "all_ok": false,
  "cases": {
   "10_leader_exit_pipe_member_still_rss_guarded": {
-   "elapsed": 0.165,
+   "elapsed": 0.183,
    "expect_red_on_08fee": false,
    "ok": true,
    "over_cap_after_leader_exit": true,
@@ -37,15 +37,20 @@
    "expect_red_on_08fee": false,
    "ok": false
   },
+  "16_cancellation_freezes_abandoned_capture": {
+   "error": "AttributeError: module 'proc_group' has no attribute '_Capture'",
+   "expect_red_on_08fee": false,
+   "ok": false
+  },
   "1_pipe_holder_wall_timeout": {
-   "elapsed": 1.517,
+   "elapsed": 1.506,
    "expect_red_on_08fee": true,
    "ok": false,
    "rc": 0,
    "timed_out": false
   },
   "2_pipe_holder_group_killed_promptly": {
-   "elapsed": 6.01,
+   "elapsed": 6.021,
    "expect_red_on_08fee": true,
    "holder_dead_on_return": true,
    "ok": false,

@@ -4,21 +4,32 @@ sys.dont_write_bytecode=True
 sys.path.insert(0,str(pathlib.Path(sys.argv[1])/'utils/py'))
 import proc_group as pg, gate_env, relay_attest as ra
 
-# GH-1465 run-2 repair: run_bounded no longer calls communicate, so these two process-lifetime
-# controls use real child processes (a launcher that exits while a group member holds the pipes, and a
-# termination sequence that is still in flight when the output closes) instead of a Popen double.
-with patch.object(pg, 'group_rss_mb', return_value=(100, None)):
-    leader = pg.run_bounded(['/bin/sh', '-c', 'sleep 3 & exit 0'], timeout=10, max_rss_mb=1, rss_poll_s=.05)
+class Fake:
+    pid=987654321
+    returncode=0
+    def __init__(self,poll_value,communicate):
+        self.poll_value=poll_value
+        self.communicate=communicate
+    def poll(self): return self.poll_value
 
-done = threading.Event()
-real_kill = pg.kill_existing
-def terminate(*a, **k):
-    real_kill(*a, **k)
+closed=threading.Event()
+f=Fake(0,lambda **kw: (closed.wait(.3) and '' or '', ''))
+with patch.object(pg.subprocess,'Popen',return_value=f), patch.object(pg,'group_rss_mb',return_value=(100,None)), patch.object(pg,'kill_existing',side_effect=lambda *a,**k:closed.set()):
+    leader=pg.run_bounded(['mock-leader-exited'],timeout=1,max_rss_mb=1,rss_poll_s=.05)
+
+started=threading.Event()
+done=threading.Event()
+def terminate(*a,**k):
+    started.set()
     time.sleep(1.2)
     done.set()
-with patch.object(pg, 'group_rss_mb', return_value=(100, None)), patch.object(pg, 'kill_existing', side_effect=terminate):
-    termination = pg.run_bounded(['/bin/sh', '-c', 'sleep 5'], timeout=10, max_rss_mb=1, rss_poll_s=.05)
-    completed_before_return = done.is_set()
+def communicate(**kw):
+    assert started.wait(1)
+    return '', ''
+f=Fake(None,communicate)
+with patch.object(pg.subprocess,'Popen',return_value=f), patch.object(pg,'group_rss_mb',return_value=(100,None)), patch.object(pg,'kill_existing',side_effect=terminate):
+    termination=pg.run_bounded(['mock-termination-in-flight'],timeout=2,max_rss_mb=1,rss_poll_s=.05)
+    completed_before_return=done.is_set()
 done.wait(2)
 record=dict(attested_at='now',task='GH-1465',reviewer='codex',status='Approved',reviewed_head='a'*40,added_start=0,added_len=1,added_sha256='b'*64,gate_cmd='python -m pytest tests/test_verified.py',gate_exit=0,gate_cmd_format='json')
 trailer=ra.trailer_text(record).encode()

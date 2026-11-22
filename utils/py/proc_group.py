@@ -305,6 +305,8 @@ def run_bounded(
                 pass
         finally:
             _join_captures(time.monotonic() + cleanup_window)
+            for capture in captures:
+                capture.freeze()  # a reader that outlived cleanup must not keep growing a buffer nobody reads
             _stop_watcher()
         raise
 

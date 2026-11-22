@@ -2,7 +2,7 @@
  "all_ok": false,
  "cases": {
   "10_leader_exit_pipe_member_still_rss_guarded": {
-   "elapsed": 0.176,
+   "elapsed": 0.172,
    "expect_red_on_08fee": false,
    "ok": true,
    "over_cap_after_leader_exit": true,
@@ -37,15 +37,20 @@
    "expect_red_on_08fee": false,
    "ok": false
   },
+  "16_cancellation_freezes_abandoned_capture": {
+   "error": "AttributeError: module 'proc_group' has no attribute '_Capture'",
+   "expect_red_on_08fee": false,
+   "ok": false
+  },
   "1_pipe_holder_wall_timeout": {
-   "elapsed": 0.153,
+   "elapsed": 0.264,
    "expect_red_on_08fee": true,
    "ok": true,
    "rc": null,
    "timed_out": true
   },
   "2_pipe_holder_group_killed_promptly": {
-   "elapsed": 0.303,
+   "elapsed": 0.414,
    "expect_red_on_08fee": true,
    "holder_dead_on_return": true,
    "ok": true,
@@ -59,8 +64,8 @@
    ],
    "expect_red_on_08fee": true,
    "hashes": [
-    "58acf6336c231b45bdb70a918c0f03e0ee72339db4bdd344c77e4b4a55dc39c3",
-    "8602a9df122aa22524781b0a046195556ce3ccb05a671e5f967ea753a707a7ad"
+    "a2dcfc9f15ad23cfda62d8daaa614b177522685eb7840b2d5726481a64033a5e",
+    "8d12fd5e672d77c792641fab5ac15e03c7d7cdb32644a3a16e00c585c4645562"
    ],
    "ok": true,
    "passed": false

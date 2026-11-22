@@ -252,6 +252,43 @@ def _():
                 snapshot_stable_after_later_output=stable,
                 ok=r.timed_out and el < 7.5 and r.capture_complete is False and stable and "later" not in r.stdout)
 
+
+@case("16_cancellation_freezes_abandoned_capture")
+def _():
+    made = []
+    orig = pg._Capture
+
+    class Rec(orig):
+        def __init__(self, *a, **k):
+            super().__init__(*a, **k)
+            made.append(self)
+
+    class Stop(Exception):
+        pass
+
+    def boom(*_):
+        raise Stop()
+
+    flood = ("import os,sys,time\nos.setsid()\nend=time.time()+12\n"
+             "while time.time()<end:\n sys.stdout.write('x'*1000+'\\n'); sys.stdout.flush(); time.sleep(.001)\n")
+    cmd = ["/bin/sh", "-c", f"{PY} -c \"{flood}\" & sleep 30"]
+    old = signal.signal(signal.SIGALRM, boom)
+    signal.setitimer(signal.ITIMER_REAL, .5)
+    raised = False
+    with patch.object(pg, "_Capture", Rec):
+        try:
+            pg.run_bounded(cmd, timeout=20, grace=.1)
+        except Stop:
+            raised = True
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, old)
+    first = len(made[0]._buf)
+    time.sleep(1.5)
+    second = len(made[0]._buf)
+    return dict(original_exception_preserved=raised, bytes_after_return=first, bytes_1p5s_later=second,
+                ok=raised and first > 0 and first == second)
+
 summary = dict(label=label, source_root=str(root), python=sys.version.split()[0],
                all_ok=all(c["ok"] for c in cases.values()),
                defect_cases_ok=all(c["ok"] for c in cases.values() if c["expect_red_on_08fee"]),
