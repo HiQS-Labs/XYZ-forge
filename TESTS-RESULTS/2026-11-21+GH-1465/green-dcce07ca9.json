@@ -2,7 +2,7 @@
  "all_ok": true,
  "cases": {
   "10_leader_exit_pipe_member_still_rss_guarded": {
-   "elapsed": 0.179,
+   "elapsed": 0.176,
    "expect_red_on_08fee": false,
    "ok": true,
    "over_cap_after_leader_exit": true,
@@ -33,22 +33,29 @@
   },
   "15_escaped_descendant_abandoned_with_frozen_snapshot": {
    "capture_complete": false,
-   "elapsed": 5.423,
+   "elapsed": 5.412,
    "expect_red_on_08fee": false,
    "ok": true,
    "snapshot_stable_after_later_output": true,
    "stdout": "earlylate\n",
    "timed_out": true
   },
+  "16_cancellation_freezes_abandoned_capture": {
+   "bytes_1p5s_later": 3623620,
+   "bytes_after_return": 3623620,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "original_exception_preserved": true
+  },
   "1_pipe_holder_wall_timeout": {
-   "elapsed": 0.261,
+   "elapsed": 0.259,
    "expect_red_on_08fee": true,
    "ok": true,
    "rc": null,
    "timed_out": true
   },
   "2_pipe_holder_group_killed_promptly": {
-   "elapsed": 0.425,
+   "elapsed": 0.412,
    "expect_red_on_08fee": true,
    "holder_dead_on_return": true,
    "ok": true,
@@ -62,8 +69,8 @@
    ],
    "expect_red_on_08fee": true,
    "hashes": [
-    "c34a67633c3d3e976f9b7118754196df514aee0ece13c34cf83176664af9a377",
-    "5bec34e4bf125fea4c30d32adac76d93b4f5c4331cfc4459c9f7cacab4044237"
+    "095162f967fecfa1f7ccea602883599a3c8dd8a9855bae15eeac9c3855d3c8f9",
+    "43c51fce668879551360f442f88e0689871d332b1b56e23f5281336f8ecc4c3e"
    ],
    "ok": true,
    "passed": false
@@ -117,7 +124,7 @@
   }
  },
  "defect_cases_ok": true,
- "label": "green-fa17a34b8",
+ "label": "green-dcce07ca9",
  "python": "3.14.7",
  "source_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1465-bounded-capture-2026-11-21"
 }
