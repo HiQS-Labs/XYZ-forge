@@ -167,7 +167,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 0. **Tree of execution** — task branch based on `origin/<base>` (the resolved base) with $\le 2$
    local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches
    refuse with `task-clone`), no scratch paths, and `bash githooks/install.sh --check`
-   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549).
+   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549). The closeout
+   push re-proves it immediately before pushing (GH-1576).
    Express never commits over peer work (GH-527). Hand-edits to ledger files or
    generated views are refused; only the driver's verbs may write them.
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless

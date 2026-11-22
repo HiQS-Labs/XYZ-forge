@@ -1281,6 +1281,12 @@ def persist_closeout(root, message, extra_paths=()):
         die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
     git(root, "add", "--", *paths)
     git(root, "commit", "-m", message)
+    # GH-1576: this push bypasses pre-push by lane design, so the wiring is proven immediately
+    # before it, with the same check the preflight uses.
+    wired, detail = gate_check(root)
+    if not wired:
+        die("refusing closeout push: `bash githooks/install.sh --check` did not prove the canonical "
+            "gate stub; run `bash githooks/install.sh` first (GH-1576): %s" % detail)
     git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
     return True
 

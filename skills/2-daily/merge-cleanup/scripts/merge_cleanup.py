@@ -961,6 +961,27 @@ def origin_url(repo_path: Path) -> Optional[str]:
     return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
 
 
+def gate_unwired_reason(clone: Path, install: bool = False) -> str:
+    """GH-1576: '' when the clone's pre-push gate is installed, else why a push must not happen.
+
+    The authority is the clone's own `githooks/install.sh --check`. With install=True (only for a
+    clone this tool just made) `bash githooks/install.sh` runs first. A missing installer is not
+    proof of a downstream host, so it refuses too; never fall back to --no-verify.
+    """
+    installer = Path(clone) / "githooks" / "install.sh"
+    if not installer.is_file():
+        return "githooks/install.sh is missing, so this clone's pre-push gate cannot be proven (GH-1576)"
+    if install:
+        done = subprocess.run(["bash", str(installer)], cwd=str(clone), capture_output=True, text=True)
+        if done.returncode != 0:
+            return f"githooks/install.sh failed in the clone: {(done.stderr or done.stdout).strip()[-300:]}"
+    chk = subprocess.run(["bash", str(installer), "--check"], cwd=str(clone), capture_output=True, text=True)
+    if chk.returncode != 0:
+        return ("this clone's pre-push gate is not installed; run `bash githooks/install.sh` in it "
+                f"(GH-1576): {(chk.stderr or chk.stdout).strip()[-300:]}")
+    return ""
+
+
 def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
                           workdir: Path) -> Dict[str, Any]:
     """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
@@ -983,6 +1004,11 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
         return {"clone": None, "merge_rc": None, "error": f"git clone failed: {r.stderr.strip()[:300]}"}
     for k, v in (("user.name", "merge-cleanup"), ("user.email", "merge-cleanup@local")):
         run_git(clone, ["config", k, v])
+    # GH-1576: this clone is made here, so wiring its pre-push gate is this tool's job; a repair
+    # push from it must never run ungated.
+    unwired = gate_unwired_reason(clone, install=True)
+    if unwired:
+        return {"clone": clone, "merge_rc": None, "error": f"landing clone gate wiring failed: {unwired}"}
     r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch]),
                     f"PR #{pr['number']} fetch")
     if r.returncode != 0:
@@ -1045,7 +1071,11 @@ def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo: 
     env["XYZ_ATTEMPT_CONTEXT"] = json.dumps({
         "kind": "merge-repair", "record": str(attempt_record.record_path(
             primary_repo, origin_url(primary_repo) or "", pr["number"]))})
-    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"], env=env)
+    unwired = gate_unwired_reason(clone)
+    if unwired:
+        return False, f"push refused before pushing: {unwired}"
+    # GH-1576: the clone's hook now runs on this push, so it gets the gate-length bound.
+    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"], timeout=PUSH_GATE_TIMEOUT_S, env=env)
     if r.returncode != 0:
         return False, f"push refused: {r.stderr.strip()[-400:]}"
     return True, f"pushed {sha[:10]} to {pr['headRefName']}"
@@ -1531,6 +1561,10 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
         log_err(f"{label}: cannot prove nonempty local/remote publication heads")
         return False
     if local.stdout.strip() != remote.stdout.strip():
+        unwired = gate_unwired_reason(repo_path)
+        if unwired:
+            log_err(f"{label}: refusing to push post-merge writes: {unwired}")
+            return False
         pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
         if pushed.returncode != 0:
             log_err(f"{label}: could not push post-merge writes: {pushed.stderr.strip()}")
