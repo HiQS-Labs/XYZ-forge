@@ -118,8 +118,8 @@ Replacement, in the one owner `utils/py/proc_group.py:run_bounded` (no second ru
   reports `passed=False`; (3) both pre-timeout stdout and stderr sentinels survive cleanup; plus compatibility
   observations: complete default capture of two simultaneous 20k-line streams, multibyte output across read
   boundaries, newline translation, ordinary exit codes, tail-mode digest/truncation/timeout excerpt,
-  reader-error propagation, cancellation mid-run leaving no live group, and the RSS lifecycle controls
-  (leader exit with a pipe holder, termination in flight) re-expressed with real processes because the
+  reader-error propagation, cancellation mid-run leaving no live group, an escaped descendant that holds the pipes past `grace + 5` (bounded return, `capture_complete=False`, text and digest unchanged after later output), digests checked against independently computed SHA-256 of known bytes, and the RSS lifecycle controls
+  (over-cap sample withheld until the launcher has exited; termination in flight) re-expressed with real processes because the
   capture no longer calls `communicate`.
 
 ## Limits

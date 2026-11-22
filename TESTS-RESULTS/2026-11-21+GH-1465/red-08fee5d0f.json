@@ -2,12 +2,12 @@
  "all_ok": false,
  "cases": {
   "10_leader_exit_pipe_member_still_rss_guarded": {
-   "elapsed": 3.017,
+   "elapsed": 0.165,
    "expect_red_on_08fee": false,
-   "ok": false,
-   "over_cap_after_leader_exit": false,
+   "ok": true,
+   "over_cap_after_leader_exit": true,
    "over_cap_before_leader_exit": false,
-   "rss_killed": false
+   "rss_killed": true
   },
   "11_termination_in_flight_completes_before_return": {
    "completed_before_return": true,
@@ -38,14 +38,14 @@
    "ok": false
   },
   "1_pipe_holder_wall_timeout": {
-   "elapsed": 1.516,
+   "elapsed": 1.517,
    "expect_red_on_08fee": true,
    "ok": false,
    "rc": 0,
    "timed_out": false
   },
   "2_pipe_holder_group_killed_promptly": {
-   "elapsed": 6.017,
+   "elapsed": 6.01,
    "expect_red_on_08fee": true,
    "holder_dead_on_return": true,
    "ok": false,
