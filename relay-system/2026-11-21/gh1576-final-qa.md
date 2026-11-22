@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -760,5 +760,47 @@ not Approved, and no further automatic repair/review round is authorized by this
 
 Handing off to Producer (claude-a) for parent/operator adjudication of the exhausted relay and
 the recorded findings; do not treat the token handoff as approval or start another automatic round.
+
+### Producer · Round 3 · claude-a
+
+**Operator scope decision (recorded on #1576, comment
+https://github.com/HiQS-Labs/XYZ-forge/issues/1576#issuecomment-7083354655, "Operator decision 2026-11-22").**
+One extra repair + final-QA round (this round 4) is authorized, limited to F4. F5 (#1578) and F6 (#1579) are
+pre-existing defects not caused by this change (the round-3 reviewer agrees on causality); by operator
+scope decision they are tracked in those issues and are out of scope for this PR. **Do not count F5/F6
+against this head.** Their round-2/round-3 text stays as written.
+
+**F4 repair (code head `802cf98e9`, evidence head `6c69cbf3f`; the code diff `3dc703600..HEAD` is regenerated in
+`relay-system/2026-11-21/gh1576-final-qa-code.diff`).**
+- *Final-boundary check restored.* `utils/py/express.py` `persist_closeout` now runs `require_gate_wired`
+  twice: once early (before `git add`/`commit`, so a wiring refusal leaves the closeout dirty and uncommitted),
+  and once immediately before `git push origin BASE`. Both use the existing `gate_check`.
+- *Recovery through the documented `resume`.* `cmd_resume` no longer rejects the retained closeout as plain dirt:
+  `resume_pending_closeout` accepts a dirty tree only when the branch is the base branch, this issue's valid
+  receipt for this commit and suite is among the dirty paths (`find_receipt`), and every other dirty path is on
+  the closeout allowlist (`is_allowed_closeout_path`). It then publishes that transaction through
+  `persist_closeout` (same wiring checks, allowlist and push). Any other dirt, branch or missing receipt returns
+  the dirt unchanged, so the original clean-tree refusal stands. The receipt is not regenerated and the suite
+  is not rerun. `skills/2-daily/express/SKILL.md` documents it next to the `resume` command.
+- *End-to-end acceptance (your falsifier), `TESTS-RESULTS/2026-11-21+GH-1576/recover.sh`, rows tagged
+  "express resume of a refused closeout (end-to-end)" in `provenance.jsonl`, logs `recover-red.log` /
+  `recover-green.log`.* It reuses the hermetic fixture of `test/gh267-express-skill.sh` (fake `gh`, local bare
+  remote, the real driver), lands a fix, runs the REAL `closeout()` with the pre-push stub removed (refused,
+  exit 4, tree dirty and uncommitted, 1 receipt line), repairs the wiring, then runs the documented
+  `express.py resume`. Red at `c541204bc`: `resume` rc 4 ("working tree is not clean"), receipt uncommitted,
+  doc not moved. Green at `802cf98e9`: with an extra unrelated dirty file `resume` still refuses (rc 4, HEAD
+  unmoved); without it `resume` rc 0: receipt committed and still 1 line (not regenerated), tree clean,
+  origin in sync with local, issue closed, manifest shipped, doc moved to 3-COMPLETED.
+- *Existing suite:* `test/gh267-express-skill.sh` 128/128 at the repaired code (the resume rejection cases at
+  its lines 718-725 still pass).
+- *Gate:* `full-gate.log`, `./validate.sh` from a disposable full clone at
+  `6c69cbf3f9dd9cee7e833d38c9ed2f4751daa908`, mypy 1.14.1, exit 0, 1339 s, `passed: 408 / 408`, clone identity
+  equal before and after, clone deleted. An earlier run at `472f02947` was red 407/408 (`path-integrity.sh`
+  flagged a runtime path literal in `recover.sh`); fixed and the recorded rows re-run.
+- *Limits, stated:* a refusal at the second persistence (reconcile, receipt already committed) is a
+  different state and is not witnessed; the check immediately before the push is covered by reading, not by
+  fault injection; `attempt-finish` has no aborted-duplicate outcome (handled in the handback, not here).
+
+Handing off to Reviewer (codex) for Round 4 (extra round, F4 only).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
