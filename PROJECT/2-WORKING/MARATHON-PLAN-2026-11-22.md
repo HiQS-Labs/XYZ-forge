@@ -204,6 +204,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
 - #1050 marathon memory telemetry: no false low-swap warning on hosts with no swap — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
+- #1577 Hosted wave-reconcile lane needs attention — `needs-doc`
 - #1576 start-task: refuse to push from a clone with no pre-push hook installed, so no push skips the gate — `needs-doc`
 - #1575 Follow-up to PR #1574: express SKILL.md manual-entry wording and the 🆕 marker in the GH-1530 ledger row — `needs-doc`
 - #1569 build_queue --daily-goals admits #N references from prose, not just checklist items — `needs-doc`
@@ -344,7 +345,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #792 gen4_campaign.make_sandbox deletes the existing clone before checking it is disjoint from the source repo — `needs-doc`
 - #786 merge-cleanup: file one GH issue per PR merge batch (feeds rebalanceOS sync, Focus 5, Flightdeck) — `needs-doc`
 - #785 merge-cleanup: a hold-labelled or closed predecessor does not block its hard dependents — `needs-doc`
-- #777 Umbrella: Adopt rebalanceOS #257 Retrospective Lessons & Starter Kit into XYZ Forge (PRS, PDDA, Skills, Governance) — `needs-doc`
 
 ## How to fire a lane
 
