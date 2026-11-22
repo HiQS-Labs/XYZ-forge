@@ -72,12 +72,36 @@ and any in-flight TERM/KILL sequence finishes before return. The existing enviro
 registry and marathon mirror scrub the outer reviewer-gate command from gate children.
 New attestation command metadata is JSON-quoted; legacy records keep their old format.
 The driver checks the existing source-comparison contract before and after the gate,
-allowing transcript-only commits and refusing source drift. Gate stdout and stderr are
-drained incrementally into separate 65,536-character tails rather than buffered in full.
-Earlier Nit findings obey
+allowing transcript-only commits and refusing source drift. Earlier Nit findings obey
 the verbatim continuity rule; only newly raised Nits may accompany an Approved verdict.
 The full gate passed on `6c3dc3aa2` in 935 seconds; independent final-head QA also passed.
 Any subsequent review repair requires its own classified gate and independent QA; promotion remains separate.
+
+### Bounded gate output capture (run-2 follow-up, 2026-11-21)
+
+`6c3dc3aa2` kept `proc.communicate`, which bounds the wall clock across pipe-holding children but
+buffers all gate output. `131a8a31d`/`08fee5d0f` swapped in a global tail reader and independent QA
+found three defects (`/private/tmp/ks-sol-qa1467-08fee.md`): the post-exit `reader.join` had no
+deadline so a surviving pipe holder escaped the wall timeout; the unconditional 64 KiB tail hid
+differing output prefixes from `metamorphic_oracle.check_idempotence` (false pass); and a timeout
+started a second reader pair and lost the first pair's diagnostics.
+
+Replacement, in the one owner `utils/py/proc_group.py:run_bounded` (no second runner):
+- One capture object per stream per invocation (a daemon thread reading the pipe with `os.read`,
+  appending as data arrives), shared through normal, timeout and exception paths; never a second reader pair.
+- One wall deadline spans the launcher wait and every reader join. On expiry the whole group is
+  TERM/KILLed, every join is bounded by the grace window, readers that outlive it are abandoned
+  rather than closed under a blocked read, and the text captured so far is returned.
+- Default capture is the complete output, as before the tail work, so every ordinary caller
+  (oracles, ATE, fuzz, harness, Jog) keeps the full-output contract. Bounded capture is opt-in via
+  `capture_tail_bytes`, used only by the reviewer gate in `relay_drive.judge_terminal` (64 KiB). Both modes
+  report a SHA-256 of the complete stream and whether it was truncated, so a comparison never
+  depends on the tail. On timeout the excerpt is the captured tail (bounded) or the full text.
+- Non-goals: no new suite (GH-831), no packaged-file change, no change to RSS, source-drift,
+  attestation or protocol behavior. Rollback: revert the repair commit; `6c3dc3aa2` is the approved fallback.
+- Verification: recorded manual controls with red against `08fee5d0f` and green on the repaired
+  head under `TESTS-RESULTS/2026-11-21+GH-1465/`; the retained `manual-review-controls.py` mocked
+  process controls are re-expressed with real processes because the capture no longer calls `communicate`.
 
 This repair is Costly because `proc_group` is shared. Revert the repair commit if its
 controls, existing coverage or independent QA fail; no installed-harness update is in scope.
