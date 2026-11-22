@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -225,5 +225,88 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md`,
   context; `PUSH_GATE_TIMEOUT_S` applies to `:1048`.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+**What this proposes**
+
+Extend the existing installer check to the unguarded lane push boundaries and wire the disposable
+repair clone during provisioning. Keep each lane's failure convention and retain red/green
+controls at every changed boundary, without a new subsystem or suite.
+
+**How the existing system works, per this document**
+
+Hooks are per-clone metadata, and `install.sh --check` already detects missing wiring. Express
+checks its main landing path; the other listed paths need refusal checks. Jog and Express have
+existing vendored-layout context for host-owned hook policy.
+
+**What it's not**
+
+This does not replace the hook detector, change the gate, police hand-typed pushes, or add server
+controls. Inference: preserving existing vendored policy means preserving Express's actual
+`gate_check` decision order, including checking a root installer when one exists.
+
+**Source-backed findings**
+
+- [Pass] **F1/F2 resolved at plan level; existing authority remains the owner.** Plan
+  `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md:66`–83 now specifies direct installer calls,
+  canonical missing-installer refusal, and local reuse of Express's `gate_check`, with no optional
+  Express import in Jog. This addresses the old-branch case documented at `githooks/install.sh:9`.
+  Express's actual policy is at `utils/py/express.py:551`–567: the vendored exception applies when
+  the installer is absent; a present installer still runs `--check`. Read the plan's "keep their
+  existing vendored policy" literally, not as permission to add an unconditional Express skip.
+  The existing layout resolver is `utils/py/harness_paths.py:62`–77.
+
+- [Pass] **Push inventory remains grounded in the named lane family.** The seven direct push
+  calls match the plan table at `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md:45`–49; six need
+  the proposed new check and Express's main path already checks at `utils/py/express.py:1109`.
+  Read-only command: `rg -n '"push", "origin"' utils/py/express.py utils/py/jog_run.py skills/1-hourly/kickstart/scripts/run_record.py skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`.
+  Exit 0; decisive output: `express.py:1143,1284`, `jog_run.py:1209,2320`,
+  `run_record.py:590`, `merge_cleanup.py:1048,1534`. No additional direct push site was found
+  in this bounded source check; this is not an exhaustive claim about indirect repository-wide
+  publishers. Start-task's prose enforcement gap remains visible at
+  `skills/1-hourly/start-task/SKILL.md:290` and is covered by plan item 1.
+
+- [Pass] **Repair provisioning and timeout fit the current ordering.**
+  `merge_cleanup.py:997` leaves the merge open, but `ledger_merge.py:678` commits it before
+  returning the repaired SHA. The later `push_resolved_head` at `merge_cleanup.py:1031` therefore
+  does not push a merge-in-progress working tree. Installing the hook during clone provisioning
+  does not run the gate. Plan item 3 uses the existing `PUSH_GATE_TIMEOUT_S`
+  (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:106`) for the newly hooked repair push;
+  retain its attempt context at `:1045` and `(False, reason)` convention at `:1049`–1051.
+
+- [Pass] **F3 now identifies rejection at each changed boundary.** Plan
+  `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md:98`–114 names the entry points, base red,
+  changed unwired refusal with unchanged origin ref, wired push, and adjacent cases. An unfixed
+  call site would still move the origin ref in the unwired control and fail acceptance. The
+  required exact revision, command, exit status and before/after origin refs at `:95`–96 make
+  this a discriminating verification plan. The cost-recording clause at `:112`–114 cannot turn
+  an unexecuted witness into a pass; it remains unverified at final QA.
+
+- [Nit] **Keep hook invocation distinct from gate success in the eventual receipts.** The
+  planned `pre-push:` marker at plan `:109`–110 demonstrates hook invocation, but Express
+  intentionally uses `XYZ_SKIP_PREPUSH=1` at `utils/py/express.py:1284`; the corresponding line
+  is `pre-push: SKIPPED ... nothing was verified` (`githooks/pre-push:86`). Label that Express
+  control as wiring/refusal evidence, retaining its existing lane-suite evidence separately.
+  This does not require changing Express's established gate policy.
+
+- [Pass] **Scope and verification machinery are proportionate.** Plan `:58`, `:89`–96 and
+  `:121`–126 reuse the installer, existing suites and retained manual evidence. That matches
+  `AGENTS.md:166`–173 without introducing a wrapper, detector, or new test suite. The whole plan,
+  including recon, risks, non-goals and rating, was swept; no additional pre-existing plan defect
+  was found. F1–F3 are dispositioned sufficiently for implementation.
+
+- [Unverified — needs clone run] No runtime red/green, suite or hooked push was executed here.
+  Approval is for the plan only; implementation and final evidence remain outstanding. No later
+  phase gate is assumed. Graph tools are unavailable in this session, so project/generation and
+  index coverage could not be checked; this review relies on the bounded source reads above.
+
+swept file: yes
+VERDICT: PASS
+Basis: The revised plan addresses all three prior findings, covers the named push boundaries,
+reuses the existing authority, and specifies rejection evidence that an unchanged candidate
+cannot satisfy. Runtime delivery remains subject to the planned clone checks and final QA.
+
+Relay closed (Approved), no further turn needed. Producer may proceed to implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
