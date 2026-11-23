@@ -6,19 +6,21 @@ prints MATCH or MISMATCH; the script exits 0 either way, so read the totals.
 
 | Run | Tree | Result | Evidence |
 |---|---|---|---|
-| RED | origin/development 81eefac61 (pristine export) | MATCH=14 MISMATCH=19 | `outputs/red.txt` |
-| RED (final-QA r1 repairs F1-F4) | fc26f01b9, the tree before them | MATCH=22 MISMATCH=11 | `outputs/prerepair-r1.txt` |
-| RED (final-QA r2 repairs F5-F7 + audit) | b3b62735b, the tree before them | MATCH=26 MISMATCH=7 (D2n D2p D2q D2r D2t D2u D2v) | `outputs/prerepair-r2.txt` |
-| GREEN | changed head ccfd53eea | MATCH=33 MISMATCH=0 | `outputs/green.txt` |
-| RED CONTROL (cd rule) | green tree with the cd-context guard and subshell restore removed | MATCH=30 MISMATCH=3 (D2g, D2h, D2i) | `outputs/mutant-unconditional-cd.txt` |
+| RED | origin/development 81eefac61 (pristine export) | MATCH=15 MISMATCH=21 | `outputs/red.txt` |
+| RED (final-QA r1 repairs F1-F4) | fc26f01b9, the tree before them | MATCH=22 MISMATCH=14 | `outputs/prerepair-r1.txt` |
+| RED (final-QA r2 repairs F5-F7 + audit) | b3b62735b, the tree before them | MATCH=26 MISMATCH=10 | `outputs/prerepair-r2.txt` |
+| RED (round-4 F8 repair) | 5f51d28c8, the tree before it | MATCH=33 MISMATCH=3 (D2w, D2x, D2y) | `outputs/prerepair-r3.txt` |
+| GREEN | changed head 940d58499 | MATCH=36 MISMATCH=0 | `outputs/green.txt` |
+| RED CONTROL (cd rule) | green tree with the cd-context guard and subshell restore removed | MATCH=33 MISMATCH=3 (D2g, D2h, D2i) | `outputs/mutant-unconditional-cd.txt` |
 | Adjacent path | all 129 in-repo Preflight Contract docs, base vs changed | 128 identical; GH-269 rc 6 -> 4 (intended, F4) | `outputs/corpus-sweep.txt` |
-| Existing suites | 17 shell suites + `test_python_layer.py` in a disposable full clone (identity bracket in the file) | all rc=0, pytest 21 passed | `outputs/existing-suites.txt` |
+| Existing suites | 17 shell suites + `test_python_layer.py` in a disposable full clone, identity bracket before/after unchanged | all rc=0, pytest 21 passed | `outputs/existing-suites.txt` |
 
 What each defect read on the unchanged source (red.txt):
 - D1a `grep_present '^ENABLE_X=1$'` on a mid-file line: STALE (exit 4), should be ready. D1b `grep_absent '^alembic check'` with the fix on its own line: ready, should be STALE.
 - D2b the #1140 gate (`bash -n … && uv lock --check`, `uv` absent): ready (exit 0), should be NOT-READY (exit 5). D2d/D2e: a missing script in a later command, or after `cd src`: ready.
 - D2k/D2l/D4a (final QA r1): a `-c` after the script hid a missing script; an attached `>/dev/null` made a real script look missing; a removed unwanted path read `blocked`.
 - D2n/D2p/D2r (final QA r2): an assignment-prefixed `cd` left the old directory certain; a heredoc body was run as commands; `bash -s arg` read the argument as a script. Audit cases D2t-D2v: `[[ a && b ]]`, an unquoted glob operand and process substitution are skipped, not asserted missing.
+- D2w/D2x/D2y (round 4, F8): `true && if [[ -f a && -f b ]]; then …; fi` was split at the `&&` inside `[[ ]]` and refused with `command '-f' not found`; a missing command inside the same block must still be found.
 - D3 an issue with criteria under `## Done when`: `acceptance: unknown [cause: no-issue-section]`, ready, no gap line and no `readiness.acceptance_gaps` key.
 
 Observation recorded against the task framing: the acceptance check was not literally silent on the base (it printed
