@@ -49,6 +49,30 @@
    expect : exit 0, output matches /verdict +: ready/
    observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #206 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
 
+── [MATCH] D2j F1 'false && cd src && true || bash -n config.txt': the cd never ran, so config.txt is the ROOT file -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #210 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MISMATCH] D2k F2 'true && bash src/absent.sh -c': -c is the script's own argument, the script is missing -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*absent\.sh/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #211 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2l F3 'true && bash -n src/ok.sh>/dev/null': attached redirect is not part of the filename -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #212 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MISMATCH] D2m F3 'true && bash -n src/absent.sh>/dev/null': missing script behind an attached redirect -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*absent\.sh/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #213 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MISMATCH] D4a F4 path_present on an unwanted path that is already gone -> landed (STALE, exit 4), not blocked
+   expect : exit 4, output matches /verdict +: STALE/
+   observed: exit 6;   candidate   : blocked|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #214 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : BLOCKED (exit 6)|
+
+── [MATCH] D4b path_present on an unwanted path that is still there -> unfixed, ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #215 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
 ── [MISMATCH] D3 text: issue criteria under '## Done when', no '## Acceptance' -> gap line names 'Done when'; exit unchanged (0)
    expect : exit 0, output matches /gap +: .*#301.*Done when/
    observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: no-issue-section] — issue #301 has no '## Acceptance' section — nothing to copy from|  readiness   : ready=1|  verdict     : ready (exit 0)|
@@ -73,4 +97,4 @@
    expect : exit 0, valid nonempty JSON, readiness.acceptance_gaps (has:capture doc)
    observed: exit 0; readiness has no acceptance_gaps key; keys=['acceptance_fidelity', 'acceptance_inline', 'frozen_artifacts', 'issue_state', 'next_action', 'ready', 'source_url', 'unscoped_index_only']
 
-# totals: MATCH=7 MISMATCH=11
+# totals: MATCH=10 MISMATCH=14

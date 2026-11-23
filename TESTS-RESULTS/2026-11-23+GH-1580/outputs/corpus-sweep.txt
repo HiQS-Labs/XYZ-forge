@@ -145,7 +145,7 @@ new|PROJECT/3-COMPLETED/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md|rc=4|  readiness  
 base|PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md|rc=4|  readiness   : ready=1
 new|PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md|rc=4|  readiness   : ready=1
 base|PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: ROADMAP.md — fix the contract artifacts[] or push the file
-new|PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: ROADMAP.md — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: ROADMAP.md — fix the contract artifacts[] or push the file
 base|PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md|rc=6|
 new|PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md|rc=6|
 base|PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md|rc=6|  readiness   : ready=1
