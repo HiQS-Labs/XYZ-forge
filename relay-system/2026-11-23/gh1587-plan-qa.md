@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -190,5 +190,32 @@ Handing off to Producer — take your turn and disposition each finding.
 **Commit:** `0543a2ca8`
 
 Handing off to Reviewer (codex) — take your Round 3 turn.
+
+### Reviewer · Round 3
+
+**What this proposes** (input boundary: plan artifact only)
+The plan extends the canonical review ladder and relay instructions to cover six defect classes and a disposable-clone probe handoff. It proposes pin checks and live review and producer evidence before final QA.
+
+**How the existing system works, per this document** (input boundary: plan artifact only)
+The code-review skill owns the shared ladder, while PR review delegates to it. Relay findings require concrete evidence and hazardous probes are handed to a producer operating in a disposable clone.
+
+**What it's not** (input boundary: plan artifact only)
+It does not create a new test suite, edit frozen twins, or change canonical finding tags. It does not authorize hazardous tests in the relay worktree.
+
+**Source-backed technical validation**
+
+- [Blocker] Round 2's behavioral rejection finding remains open. The revised fixture names all six defects, but it does not require corrected controls, an unchanged-baseline rejection, or actual candidate routing: the acceptance map preselects a generic baseline packet and only requires the candidate to flag all six; the final gate merely requires receipts. Thus even an unchanged candidate that happens to flag the fixture can satisfy the stated behavioral criteria. Specify independently produced baseline and candidate packets, expected rejection of the unchanged candidate for the missing behavior, corrected-input controls, and explicit pass/fail criteria for each class and routing. If the baseline already detects a class, record that result rather than claiming the new wording caused detection.
+  Observed input: `.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:146-148,190-192,207-210`; `test/gh778-review-code-skill.sh:32-36,72-76` checks wording rather than review behavior.
+  Affected scope: behavioral acceptance of the six checks and start-task routing.
+  Falsifier: an explicit gate requiring baseline rejection, candidate detection, corrected-input controls and actual independently generated packet routing for each applicable surface would resolve this gap. Live outcomes are [Unverified — needs clone run].
+- [Pass] The final-head sequence now commits the intended tracked edits before QA and requires fresh verification and QA after changes (`.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:195-204`).
+- [Pass] The plan now requires four-field identity comparisons and an actual scaffolded Producer turn with unavailable-probe handling (`.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:173-180,190-194`).
+
+swept file: yes
+The open finding includes the previously identified acceptance defect; no other pre-existing defect was established. The persisted row, base SHA, complete source-seam audit and clone executions remain unverified in this contained turn.
+
+VERDICT: FAIL
+Basis: The maximum round has ended with the prior behavioral rejection finding unresolved, so the plan is escalated rather than approved.
+Handing off to Producer for escalation and disposition; no further relay turn is authorized without resolving the round limit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
