@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -87,5 +87,27 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The whole new skill was swept; its plain-GitHub gate remains internally contradictory, and retained evidence omits two promised manual outputs. This is a documentation review, not a new execution of the clone gates.
+swept file: yes
+
+- [Should] **F1 — Make the plain-GitHub gate explicit.** `skills/2-daily/laser-focus/SKILL.md:86-88` says *all three* conditions must hold and requires status `draft` or `active`; `:101-103` instead offers an **open** milestone/tracker but never states that this satisfies condition 1. The spec's §3 explicitly says “the gate passes on represented + confirmed.” State that backend-specific equivalence directly and restrict the release-status requirement to release ledgers. Preserve the mandatory gate and other two conditions.
+  Observed input: The concrete rule pair at `:87-88` and `:101-102`: an operator-confirmed `<T>` represented by an open GitHub tracker, with no release ledger and no flagged contradictions. Its status is `open`, so the literal universal condition fails despite the intended plain-GitHub route.
+  Affected scope: Step 1b for repos whose declared ledger is a GitHub milestone or tracker; release-ledger status checks stay intact.
+  Falsifier: A paper walkthrough showing the existing text explicitly maps `open` to the eligible condition would invalidate this finding. After the fix, confirmed open tracker/milestone passes, absent or closed tracker stops, and declining creation stops without triage. No new test file is requested.
+  Probe: `python3` read-only line inspection of `skills/2-daily/laser-focus/SKILL.md` (exit 0) printed `:86: **Gate.** Triage starts only when all three hold`, `:87-88: ... eligible status (draft or active, never shipped)` and `:101: ... an open milestone or tracker issue`. This is a textual contradiction, not a claim of an observed live-agent run.
+
+- [Should] **F2 — Retain the promised Step 1c and printed-body paper receipts, or explicitly disposition their omission.** The working plan G-07 requires a dry-run checklist summing to 100; G-10 requires a printed body with the marker on line 1; G-15 includes both. `TESTS-RESULTS/2026-11-23+GH-1585/DOGFOOD-READONLY.md` contains Steps 0–1b and a hypothetical Steps 2–3 table only. Its `provenance.jsonl` has no Step 1c or printed-body receipt. Supply redacted, clearly hypothetical paper outputs and truthful provenance (no actual issue creation), or record an explicit scoped deferral rather than claiming these checks completed. A structural assertion alone is not the requested checklist/body exercise.
+  Probe: `python3` reading the seven files in `TESTS-RESULTS/2026-11-23+GH-1585/` (exit 0) reported all nonempty, then `DOGFOOD contains Step 1c: False`, `DOGFOOD contains G-01: False`, `DOGFOOD contains laser-focus body marker: False`; full receipt inspection likewise found neither output.
+
+- [Pass] The central frame/gate safeguards are present: `skills/2-daily/laser-focus/SKILL.md:66-68` forbids triage or writes before frame answers; `:89-95` requires operator-approved dispositions, prohibits invented dates, and treats `next` as scheduling evidence; `:107-109` ends a declined alignment run. The full skill sweep found no additional actionable pre-existing defect beyond F1; this does not certify unrelated surrounding files as fully swept.
+- [Pass] Retained focused results include both positive and negative controls: `TESTS-RESULTS/2026-11-23+GH-1585/releases-skill.log` ends “40 pass, 0 fail”; `red-releases-skill.log` ends “39 pass, 1 fail”; `path-integrity.log` ends “3 pass, 0 fail”; `red-path-integrity.log` reports the intentionally broken `worth-it-NOPE` link. `provenance.jsonl` records rc 0/1 and a disposable gate clone for these runs. These are inspected historical receipts, not reviewer reruns or proof of a final-SHA gate.
+- [Unverified — needs clone run] No `validate.sh`, `test/*.sh`, pytest, or executable fixture ran in this worktree. Final-commit pre-push/full-gate qualification remains outside this review; no later gate is assumed. The abbreviated dogfood digest is a reported equality, not independently reproducible hash proof here.
+- Scope/evidence: Read issue #1585 and its first consult-dispositions comment through the connected GitHub reader after `gh issue view 1585 --repo HiQS-Labs/XYZ-forge --comments` exited 1 (“error connecting to api.github.com”). Inspected the named repoints, index row, roadmap row, working plan, existing assertion, and retained logs. No git command ran; no source/artifact was changed. The review is bounded to inspected content; it does not independently establish untouched history or the complete base-to-HEAD file set.
+
+Handing off to Producer (claude-a) — disposition F1 and F2, then return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
