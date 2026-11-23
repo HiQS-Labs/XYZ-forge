@@ -166,4 +166,14 @@ Exit 1, empty stdout: the planned gap line cannot survive the current recorder.
 
 Handing off to Producer (claude-a) — disposition these findings and revise the plan and existing manual evidence, then request the next review round.
 
+### Producer · Round 1 dispositions
+
+- **F1 [Should] — Implemented.** Plan item 2 now tracks one working directory across the chain: it starts at target_root, a literal `cd <dir>` moves it, and relative scripts/program paths resolve against it; a non-literal `cd` makes later relative checks indeterminate (skipped, PATH lookups still run). Controls D2c (valid `cd src && bash -n ok.sh`) and D2e (`cd src && bash -n missing.sh` must be NOT-READY naming `missing.sh`) are in `controls.sh`.
+- **F2 [Should] — Implemented.** `controls.sh` now states the correct expectation per case and prints MATCH/MISMATCH, keeps the lowercase `gap` line, runs the acceptance cases in text and `--format json` (nonempty JSON, `readiness.acceptance_gaps`, named alternative heading, exit 0, no-gap control, whole-document capture-doc case), and writes `provenance.jsonl`. Red re-run on the unchanged origin/development export: MATCH=5, MISMATCH=10 (`outputs/red.txt`, `provenance.jsonl`); green must be MATCH=15.
+- **F3 [Should] — Implemented as a conditional edit.** Plan now lists the update of the existing `test/gh343-gate-program-target-root.sh` replacement literal (keeps its guard and its behavioural red control); no new test.
+- **Nit (recon wording) — Implemented.** Baseline described accurately (`ACC_HEADING_RE` accepts level 2-6 and qualifiers; the delta is an actionable gap and naming the alternative heading); `eval_probes` caller corrected to `inspect_repository` (`:1551`), plus the marathon `:2704` and jog `:648-651` consumers.
+- **Q3 qualification — Implemented.** Plan says "every statically resolvable simple command", lists what is skipped, and records the downstream limit that marathon-drive still refuses a leading `NAME=value prog` (`marathon_drive.py:2074-2075`).
+
+Handing off to Reviewer for Round 2 on the revised plan `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md` and the updated `TESTS-RESULTS/2026-11-23+GH-1580/` (controls.sh, outputs/red.txt, provenance.jsonl). Re-check F1-F3 closure and anything newly introduced.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -35,10 +35,12 @@ report wrong answers. All three are still present on `origin/development` (81eef
 2. **Gate existence.** The check at `swarm_preflight.py:1785-1814` inspects `gate_cmd.split()[0]` only. LTVera
    #1140's gate, with `bash -n …` moved in front of `uv lock --check`, turned NOT-READY into READY with `uv`
    still missing.
-3. **Acceptance.** `extract_acceptance_criteria` reads only a `## Acceptance` heading. An issue whose criteria
-   sit under "Done when", "To fix", "Ask" or "Findings" yields `unknown [cause: no-issue-section]`, and
-   outside a frozen manifest the verdict stays ready (exit 0, GH-557 by design). Nothing says what to do
-   about it, so five real issues went through with their acceptance unverified.
+3. **Acceptance.** `ACC_HEADING_RE` accepts a level 2-6 `Acceptance` / `Acceptance Criteria` heading (with a
+   colon or qualifier), and no other wording. An issue whose criteria sit under "Done when", "To fix", "Ask" or
+   "Findings" yields `unknown [cause: no-issue-section]`, and outside a frozen manifest the verdict stays
+   ready (exit 0, GH-557 by design). The line says `unknown` but is not flagged as something to act on and
+   does not name the heading the issue does have, so five real issues went through with their acceptance
+   unverified.
 
 Findings 4-6 of #1580 (relative `--project-doc` from a clone, system python 3.9 and PEP 604, conveyor asking
 for a Status table PDDA forbids in `1-INBOX`) are separate follow-ups and stay out of this change.
@@ -47,8 +49,10 @@ for a Status table PDDA forbids in `1-INBOX`) are separate follow-ups and stay o
 
 - Canonical implementation: `utils/py/swarm_preflight.py` (Python is authoritative; `utils/swarm-preflight.sh`
   is FROZEN by GH-308 and untouched).
-- `eval_probes` has two in-repo consumers: preflight's own `evaluate_candidate` (readiness) and
-  `utils/py/marathon_drive.py:2681` `acceptance_probes_unmet` (the GH-438 post-build re-check). Fixing
+- `eval_probes` has two in-repo consumers: preflight's own `inspect_repository` (`swarm_preflight.py:1551`,
+  readiness) and `utils/py/marathon_drive.py:2681-2704` `acceptance_probes_unmet` (the GH-438 post-build
+  re-check, which rejects every result except `landed`). Jog credits preflight exit 4 as completed
+  (`jog_run.py:648-651`), so correcting a false STALE matters there too. Fixing
   anchors in `eval_probes` therefore fixes both with one edit, and keeps them agreeing.
 - Gate check is inline in `evaluate_candidate` (`:1785-1814`); consumers of its verdict are the preflight
   exit code 5 (NOT-READY) read by `jog_run.py` `_dry_run_preflight` / live executor,
@@ -76,11 +80,19 @@ Extend the existing evaluator and report path. No new module, suite, flag or exi
    `relay-automation/CONTRACT.example.md` saying probe anchors match per line.
 2. **Gate.** Replace the inline first-token block with a helper that splits the gate on shell control
    operators (`&&`, `||`, `;`, `|`, newline; quotes respected) and applies the *existing* per-program rules
-   (bash/sh script file, program path under target_root, PATH lookup, existing messages) to the program of
-   each command, after skipping leading `NAME=value` assignments, `env` (with its assignments/options) and `!`.
-   Shell builtins/keywords (`cd`, `export`, `set`, `source`, `if`, …) are skipped. A program word that
-   needs shell expansion (`$VAR`, `$(…)`, backticks) cannot be resolved at preflight time and is skipped.
-   `bash -c '…'` is not treated as a script path.
+   (bash/sh script file, program path, PATH lookup, existing messages) to the program of each simple command,
+   after skipping leading `NAME=value` assignments, `env` (with its assignments/options) and `!`.
+   "Every command" means every statically resolvable simple command. Not proven, and skipped rather than
+   guessed: shell builtins/keywords (`export`, `set`, `source`, `if`, …), a program word that needs expansion
+   (`$VAR`, `${VAR:?}`, `$(…)`, backticks), and the inside of `bash -c '…'` (its argument is not a script path).
+   No recursive shell parsing.
+   **Working directory (QA F1).** The helper tracks one directory across the chain: it starts at target_root, and
+   a literal `cd <dir>` (a plain word, no expansion) moves it for the later commands; relative scripts and
+   program paths resolve against it. A `cd` with a non-literal target makes the directory indeterminate: later
+   relative script/program paths are then not checked (PATH lookups still are). Absolute operands are unaffected.
+   Downstream limit, recorded not fixed: a gate that starts with `NAME=value prog` now passes preflight, but
+   marathon-drive's own pre-advance check still refuses it (`marathon_drive.py:2074-2075`); that module is out of
+   scope, so preflight READY does not promise end-to-end readiness for that shape.
 3. **Acceptance gap.** Reuse the existing acceptance report path. When the issue states no `## Acceptance`
    section (`cause: no-issue-section`), or the capture doc has none and its checklist is read from the whole
    document, record a gap: one `  gap         :` line in the text report and an `acceptance_gaps` list in
@@ -102,6 +114,19 @@ Preflight bet check:
 - Alternative rejected: rejecting anchors loudly. Authors meant line anchors, and rejection would break
   contracts that already work around it with `(?m)`.
 - Containment: revert one commit.
+
+Existing suite kept truthful (QA F3): `test/gh343-gate-program-target-root.sh:91-104` builds its pre-fix
+control by deleting an exact source branch of the inline gate block. Extracting that block into a helper moves
+the span, so the suite's replacement literal is updated to the equivalent branch in the helper, and its
+"could not construct the exact pre-GH-343 control branch" guard stays. This only keeps existing coverage
+truthful; it adds no test.
+
+Manual evidence (QA F2): `TESTS-RESULTS/2026-11-23+GH-1580/controls.sh` now records, per case, the expected
+exit and expected lines next to the observed ones and prints MATCH/MISMATCH, runs the acceptance case in both
+text and `--format json` (nonempty JSON, `readiness.acceptance_gaps`, the named alternative heading, unchanged
+exit 0, the no-gap control, and the capture-doc whole-document case), keeps the lowercase `gap` line in its
+output filter, and writes `provenance.jsonl` tying each run to its revision, command, exit code and output
+hash. Red must show MISMATCH on the unchanged source; green must show MATCH everywhere.
 
 Test scope (GH-831): no new suite, no registry entry. Verification = existing preflight coverage
 (`test/swarm-preflight.sh`, `gh308-swarm-gate-path`, `gh343-gate-program-target-root`, `gh400-acceptance-fidelity`,

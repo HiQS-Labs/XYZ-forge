@@ -3,14 +3,18 @@
 # defects found by BinoidCBD/LTVera-Pandas#1205 through the REAL preflight entry point, against a
 # throwaway fixture repo, with `gh` stubbed and `uv` absent from PATH (the #1140 condition).
 #
-#   usage: controls.sh <xyz-root> <label>
-#     <xyz-root>  a tree holding utils/py/swarm_preflight.py (red: pristine origin/development
-#                 export; green: the changed head)
-#     <label>     red | green — names the output file only
+#   usage: controls.sh <xyz-root> <label> <source-commit>
+#     <xyz-root>       a tree holding utils/py/swarm_preflight.py (red: a pristine origin/development
+#                      export; green: the changed head)
+#     <label>          red | green — names the output file and the provenance role
+#     <source-commit>  the commit that tree corresponds to, recorded in provenance.jsonl
 #
-# Output: outputs/<label>.txt next to this script. Exit code is always 0; read the verdicts.
+# Every case states the TRUE expectation (what a correct preflight does) and prints MATCH or
+# MISMATCH against what the run under test did. Red must MISMATCH on the unchanged source; green must
+# MATCH everywhere. The script itself always exits 0; read the MATCH/MISMATCH column and the totals.
+# Output: outputs/<label>.txt next to this script; one line is appended to provenance.jsonl.
 set -uo pipefail
-XYZ_ROOT_UNDER_TEST="${1:?xyz-root}"; LABEL="${2:?label}"
+XYZ_ROOT_UNDER_TEST="${1:?xyz-root}"; LABEL="${2:?label}"; SRC_COMMIT="${3:?source-commit}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PY="$XYZ_ROOT_UNDER_TEST/utils/py/swarm_preflight.py"
 [ -f "$PY" ] || { echo "missing $PY" >&2; exit 1; }
@@ -18,7 +22,8 @@ PYTHON="$(command -v python3)"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh1580.XXXXXX")"; trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/bin" "$WORK/issues" "$HERE/outputs"
 OUT="$HERE/outputs/$LABEL.txt"; : >"$OUT"
-say() { printf '%s\n' "$*" | tee -a "$OUT" >/dev/null; }
+say() { printf '%s\n' "$*" >>"$OUT"; }
+MATCHES=0; MISMATCHES=0
 
 # PATH carries bash/coreutils and python3 but NOT uv (the LTVera #1140 host).
 ln -s "$PYTHON" "$WORK/bin/python3"
@@ -43,6 +48,7 @@ make_repo() {
     printf -- '---\ngh_issue: %s\nsource: https://github.com/fixture/repo/issues/%s\n' "$issue" "$issue"
     printf 'title: "GH-%s fixture"\n---\n\n# GH-%s\n\n' "$issue" "$issue"
     [ "$doc_acc" = yes ] && printf '## Acceptance\n\n- [ ] The lockfile check passes.\n\n'
+    [ "$doc_acc" = no ] && printf '## Phase 1\n\n- [ ] The lockfile check passes.\n\n'
     printf '## Swarm Preflight Contract\n\n```json\n'
     GATE="$gate" PROBES="$probes" "$PYTHON" -c '
 import json, os
@@ -59,52 +65,116 @@ print(json.dumps({"target": {"repo": ".", "ref": "main"}, "gate": os.environ["GA
   printf '%s' "$repo"
 }
 
-# run <case-label> <repo> <doc>   -> prints the verdict lines and exit code into the output file
-run() {
-  local label="$1" repo="$2" doc="$3" out rc
-  out="$(PATH="$SAFE_PATH" SWARM_PREFLIGHT_ROOT="$repo" XYZ_ROOT="$XYZ_ROOT_UNDER_TEST" \
+preflight() {  # preflight <repo> <doc> [extra args...] -> stdout+stderr; sets PF_RC
+  local repo="$1" doc="$2"; shift 2
+  PF_OUT="$(PATH="$SAFE_PATH" SWARM_PREFLIGHT_ROOT="$repo" XYZ_ROOT="$XYZ_ROOT_UNDER_TEST" \
         SWARM_PREFLIGHT_NOW="2026-11-23T00:00:00Z" SWARM_PREFLIGHT_TODAY="2026-11-23" \
-        "$PYTHON" "$PY" --target-root "$repo" --project-doc "$doc" --dry-run 2>&1)"; rc=$?
-  say "── $label"
-  say "$(grep -E '^(  (candidate|acceptance|GAP|readiness|verdict)|CONTRACT|BLOCKED|swarm-preflight:)' <<<"$out" | sed "s#$WORK#<work>#g")"
-  say "  exit=$rc"; say ""
+        "$PYTHON" "$PY" --target-root "$repo" --project-doc "$doc" --dry-run "$@" 2>&1)"; PF_RC=$?
 }
 
-say "# GH-1580 controls — label=$LABEL — swarm_preflight.py sha256=$(shasum -a 256 "$PY" | cut -c1-12)"
-say "# fixture PATH has no uv; gh is stubbed; every case is a throwaway repo"; say ""
+verdict() {  # verdict <label> <ok:0|1> <expectation> <observation>
+  local tag="MATCH"; [ "$2" = 0 ] && MATCHES=$((MATCHES+1)) || { tag="MISMATCH"; MISMATCHES=$((MISMATCHES+1)); }
+  say "── [$tag] $1"; say "   expect : $3"; say "   observed: $4"; say ""
+}
+
+# case <label> <repo> <doc> <expect-exit> <expect-regex-or-''> [<forbid-regex>]
+case_text() {
+  local label="$1" repo="$2" doc="$3" want_rc="$4" want_re="$5" forbid_re="${6:-}" ok=0 lines
+  preflight "$repo" "$doc"
+  [ "$PF_RC" = "$want_rc" ] || ok=1
+  if [ -n "$want_re" ]; then grep -Eq -- "$want_re" <<<"$PF_OUT" || ok=1; fi
+  if [ -n "$forbid_re" ]; then grep -Eq -- "$forbid_re" <<<"$PF_OUT" && ok=1; fi
+  lines="$(grep -E '^(  (candidate|acceptance|gap|GAP|readiness|verdict)|CONTRACT|BLOCKED|swarm-preflight:)' <<<"$PF_OUT" | sed "s#$WORK#<work>#g" | tr '\n' '|')"
+  verdict "$label" "$ok" "exit $want_rc${want_re:+, output matches /$want_re/}${forbid_re:+, output does NOT match /$forbid_re/}" "exit $PF_RC; $lines"
+}
+
+# json case: nonempty JSON, readiness.acceptance_gaps list must satisfy <mode>
+#   mode=has:<substring>  list is nonempty and some entry contains the substring
+#   mode=empty            key is present and the list is empty
+case_json() {
+  local label="$1" repo="$2" doc="$3" mode="$4" ok=0 obs
+  preflight "$repo" "$doc" --format json
+  obs="$(JSON_TEXT="$PF_OUT" MODE="$mode" "$PYTHON" -c '
+import json, os, sys
+txt = os.environ["JSON_TEXT"]; mode = os.environ["MODE"]
+i = txt.find("{")
+if i < 0 or not txt.strip():
+    print("empty-or-no-json"); sys.exit(1)
+try:
+    data = json.JSONDecoder().raw_decode(txt[i:])[0]
+except ValueError as e:
+    print("invalid-json: %s" % e); sys.exit(1)
+r = data.get("readiness", {})
+if "acceptance_gaps" not in r:
+    print("readiness has no acceptance_gaps key; keys=%s" % sorted(r)); sys.exit(1)
+g = r["acceptance_gaps"]
+if mode == "empty":
+    print("acceptance_gaps=%r" % (g,)); sys.exit(0 if g == [] else 1)
+sub = mode.split(":", 1)[1]
+print("acceptance_gaps=%r" % (g,)); sys.exit(0 if any(sub in str(x) for x in g) else 1)
+' 2>&1)" || ok=1
+  [ "$PF_RC" = 0 ] || ok=1
+  verdict "$label" "$ok" "exit 0, valid nonempty JSON, readiness.acceptance_gaps ($mode)" "exit $PF_RC; $obs"
+}
+
+say "# GH-1580 controls — label=$LABEL — source=$SRC_COMMIT — swarm_preflight.py sha256=$(shasum -a 256 "$PY" | cut -c1-12)"
+say "# fixture PATH has no uv; gh is stubbed; every case is a throwaway repo; expectations are the CORRECT behaviour"; say ""
 
 # ── Defect 1: probe line anchors ─────────────────────────────────────────────────────────────────
-# Truth: ENABLE_X=1 is on its OWN LINE in the middle of the file, so a grep_present for it reads
-# "unfixed" (match still present) and the lane is ready (exit 0).
+# ENABLE_X=1 is on its own mid-file line, so a grep_present for it reads "unfixed" and the lane is ready.
 CFG=$'# settings\nENABLE_X=1\nOTHER=2\n'
 R="$(make_repo anchor-present 101 true '[{"type":"grep_present","path":"config.txt","pattern":"^ENABLE_X=1$"}]' yes "$CFG")"
-run "D1a grep_present '^ENABLE_X=1\$' on a mid-file line (truth: unfixed -> ready, exit 0)" "$R" PROJECT/2-WORKING/GH-101-fixture.md
-# Truth: `alembic check` is on its own line, so a grep_absent anchored with ^ reads "landed".
+case_text "D1a grep_present '^ENABLE_X=1\$' on a mid-file line: still unfixed -> ready" "$R" PROJECT/2-WORKING/GH-101-fixture.md 0 'verdict +: ready'
+# `alembic check` is on its own line, so a grep_absent anchored with ^ reads "landed" (preflight STALE, exit 4).
 CFG2=$'alembic upgrade head\nalembic check\nexec app\n'
 R="$(make_repo anchor-absent 102 true '[{"type":"grep_absent","path":"config.txt","pattern":"^alembic check"}]' yes "$CFG2")"
-run "D1b grep_absent '^alembic check' with the fix on its own line (truth: landed, not exit 0)" "$R" PROJECT/2-WORKING/GH-102-fixture.md
+case_text "D1b grep_absent '^alembic check' with the fix on its own line: landed -> STALE" "$R" PROJECT/2-WORKING/GH-102-fixture.md 4 'verdict +: STALE'
 # Control: the same anchored pattern must NOT match a commented-out line or an embedded mention.
 CFG3=$'alembic upgrade head\n# alembic check\necho "alembic check"\n'
 R="$(make_repo anchor-comment 103 true '[{"type":"grep_absent","path":"config.txt","pattern":"^alembic check"}]' yes "$CFG3")"
-run "D1c grep_absent '^alembic check' vs comment/echo only (truth: unfixed -> ready, exit 0)" "$R" PROJECT/2-WORKING/GH-103-fixture.md
+case_text "D1c grep_absent '^alembic check' vs comment/echo only: still unfixed -> ready" "$R" PROJECT/2-WORKING/GH-103-fixture.md 0 'verdict +: ready'
 
 # ── Defect 2: only a gate's first command is existence-checked ───────────────────────────────────
 PROBE='[{"type":"path_absent","path":"NEW.txt"}]'
 R="$(make_repo gate-uv-first 201 'uv lock --check && bash -n src/ok.sh' "$PROBE" yes)"
-run "D2a gate 'uv lock --check && bash -n ...' (uv absent; first command) -> NOT-READY exit 5" "$R" PROJECT/2-WORKING/GH-201-fixture.md
+case_text "D2a 'uv lock --check && bash -n ...' (uv absent, first command) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-201-fixture.md 5 "command 'uv' not found in PATH"
 R="$(make_repo gate-uv-second 202 'bash -n src/ok.sh && uv lock --check' "$PROBE" yes)"
-run "D2b gate 'bash -n ... && uv lock --check' (uv absent; second command, the #1140 gate) -> NOT-READY exit 5" "$R" PROJECT/2-WORKING/GH-202-fixture.md
+case_text "D2b 'bash -n ... && uv lock --check' (uv absent, second command: the #1140 gate) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-202-fixture.md 5 "command 'uv' not found in PATH"
 R="$(make_repo gate-chain-ok 203 'cd src && bash -n ok.sh && env FOO=1 python3 -c pass | cat' "$PROBE" yes)"
-run "D2c gate with cd, env-prefix and a pipe, every program present -> READY exit 0 (no false block)" "$R" PROJECT/2-WORKING/GH-203-fixture.md
+case_text "D2c cd + env-prefix + pipe, every program and the cd-relative script present -> READY" "$R" PROJECT/2-WORKING/GH-203-fixture.md 0 'verdict +: ready'
 R="$(make_repo gate-script-second 204 'true && bash src/missing.sh' "$PROBE" yes)"
-run "D2d gate 'true && bash src/missing.sh' (missing script in the second command) -> NOT-READY exit 5" "$R" PROJECT/2-WORKING/GH-204-fixture.md
+case_text "D2d 'true && bash src/missing.sh' (missing script, second command) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-204-fixture.md 5 'gate script not found.*missing\.sh'
+R="$(make_repo gate-cd-missing 205 'cd src && bash -n missing.sh' "$PROBE" yes)"
+case_text "D2e 'cd src && bash -n missing.sh' (missing script in the same cd dir) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-205-fixture.md 5 'gate script not found.*missing\.sh'
+R="$(make_repo gate-skips 206 'bash -n src/ok.sh && bash -c "nonexistent_inner_cmd; true" && "${LTV_PYTHON:?set me}" -m pytest' "$PROBE" yes)"
+case_text "D2f bash -c body and an expansion-only program word are skipped, not guessed -> READY" "$R" PROJECT/2-WORKING/GH-206-fixture.md 0 'verdict +: ready'
 
-# ── Defect 3: acceptance check on an issue whose criteria sit under another heading ──────────────
+# ── Defect 3: acceptance gap ─────────────────────────────────────────────────────────────────────
 printf '## Summary\nLockfile drift.\n\n## Done when\n\n- [ ] The lockfile check passes.\n' >"$WORK/issues/301.md"
 R="$(make_repo acc-done-when 301 true "$PROBE" yes)"
-run "D3 issue lists criteria under '## Done when' (no '## Acceptance'); doc has '## Acceptance'" "$R" PROJECT/2-WORKING/GH-301-fixture.md
+case_text "D3 text: issue criteria under '## Done when', no '## Acceptance' -> gap line names 'Done when'; exit unchanged (0)" "$R" PROJECT/2-WORKING/GH-301-fixture.md 0 'gap +: .*#301.*Done when'
+case_json "D3 json: same case -> readiness.acceptance_gaps names 'Done when'" "$R" PROJECT/2-WORKING/GH-301-fixture.md 'has:Done when'
 printf '## Summary\nLockfile drift.\n\n## Acceptance\n\n- [ ] The lockfile check passes.\n' >"$WORK/issues/302.md"
 R="$(make_repo acc-present 302 true "$PROBE" yes)"
-run "D3-control issue has '## Acceptance' matching the doc verbatim -> match, no gap" "$R" PROJECT/2-WORKING/GH-302-fixture.md
+case_text "D3-control text: issue has '## Acceptance' matching the doc verbatim -> match, no gap line" "$R" PROJECT/2-WORKING/GH-302-fixture.md 0 'acceptance +: match' '^  gap +:'
+case_json "D3-control json: same case -> readiness.acceptance_gaps present and empty" "$R" PROJECT/2-WORKING/GH-302-fixture.md 'empty'
+R="$(make_repo acc-doc-whole 304 true "$PROBE" no)"   # no issue 304 in the stub: gh fails -> fetch-failed
+case_text "D3-doc text: capture doc has no '## Acceptance' (checklist read from the whole document) -> gap line names the doc" "$R" PROJECT/2-WORKING/GH-304-fixture.md 0 'gap +: .*capture doc'
+case_json "D3-doc json: same case -> readiness.acceptance_gaps names the capture doc" "$R" PROJECT/2-WORKING/GH-304-fixture.md 'has:capture doc'
 
-echo "wrote $OUT"
+say "# totals: MATCH=$MATCHES MISMATCH=$MISMATCHES"
+echo "wrote $OUT (MATCH=$MATCHES MISMATCH=$MISMATCHES)"
+
+# One provenance line per run (GH-430): revision, command, output and its hash.
+OUT_SHA="$(shasum -a 256 "$OUT" | cut -d' ' -f1)"
+LABEL="$LABEL" SRC="$SRC_COMMIT" OUTSHA="$OUT_SHA" M="$MATCHES" X="$MISMATCHES" PYV="$("$PYTHON" -c 'import sys;print(sys.version.split()[0])')" \
+  PROV_DIR="$HERE" CMD="bash controls.sh <$LABEL tree> $LABEL $SRC_COMMIT" "$PYTHON" -c '
+import json, os, datetime
+role = {"red": "RED: unchanged origin/development; MISMATCH expected on the defect cases",
+        "green": "GREEN: changed head; MATCH expected on every case"}.get(os.environ["LABEL"], os.environ["LABEL"])
+rec = {"at": datetime.datetime.now(datetime.timezone.utc).isoformat(), "command": os.environ["CMD"],
+       "exit_code": 0, "match": int(os.environ["M"]), "mismatch": int(os.environ["X"]),
+       "output": "outputs/%s.txt" % os.environ["LABEL"], "output_sha256": os.environ["OUTSHA"],
+       "python": os.environ["PYV"], "role": role, "source_commit": os.environ["SRC"]}
+open(os.path.join(os.environ.get("PROV_DIR", "."), "provenance.jsonl"), "a").write(json.dumps(rec, sort_keys=True) + "\n")
+'
