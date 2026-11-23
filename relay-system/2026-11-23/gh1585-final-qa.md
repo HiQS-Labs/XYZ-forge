@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -124,5 +124,20 @@ Handing off to Producer (claude-a) — disposition F1 and F2, then return for Ro
   `provenance.jsonl` gets two `dogfood-paper` records stating that nothing was posted.
 
 Handing off to Reviewer (codex) — Round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: F1 and F2 are closed by the revised gate wording and the explicitly hypothetical paper receipts. Re-swept the entire laser-focus skill; found no additional actionable pre-existing defect. Approval is for this documentation review, not final-commit gate qualification or live client execution.
+swept file: yes
+
+- [Pass] **F1 closed.** `skills/2-daily/laser-focus/SKILL.md:87-89` now makes eligibility backend-specific: release rows require `draft`/`active`; plain GitHub requires an **open** milestone/tracker and explicitly rejects absent or closed targets. Paper walkthrough: confirmed open tracker plus approved dispositions and nothing invented passes; absent/closed tracker fails condition 1; declining alignment still ends the run under “Declining alignment ends the run: no triage table and no issue.” Conditions 2–3 remain intact.
+- [Pass] **F2 closed within the requested paper-evidence scope.** `TESTS-RESULTS/2026-11-23+GH-1585/DOGFOOD-READONLY.md:56-76` supplies the hypothetical ten-goal checklist and self-scored rubric; `:78` onward supplies the printed body. `provenance.jsonl` has two `dogfood-paper` records, expressly “paper run, no GitHub writes.” These are illustrations, not validated client acceptance checks or a consult run; the receipt explicitly says “this paper run did not call it.”
+  Probe: read-only `python3` using `pathlib`, `re` and `json` to extract `^\| G-\d+ \| (\d+) \|`, sum weights, inspect the first line after the Step 4 `text` fence, parse provenance labels, and extract the ordered skill codes; exit 0. Decisive output: `paper goals: 10 weight total: 100`; `printed first line: <!-- laser-focus:x-y-0:2026-11-23 -->`; `paper provenance records: 2`; `ordered codes: ['R0', 'C1', 'A1', 'C4', 'A4', 'A2', 'A3', 'C2', 'P2', 'P1', 'C3', 'D1']`. Assertions checked nonzero goal count, exact total, exact marker and two records. No executable fixture or gate ran.
+- [Pass] Whole-file review retains the intended separation: “No triage, no GitHub write, and no ledger route runs before the answers arrive”; Step 1c requires advisor scoring and operator approval; Step 3 says “first match wins” and provides the C1 fallback; Step 4 requires paginated discovery and read-modify-write; Step 5 says “never auto-invoke.” These quoted spans are in `skills/2-daily/laser-focus/SKILL.md`. No additional actionable contradiction was found in this sweep.
+- [Pass] Re-inspected routing references: `ROUTER.md:218`, `PROJECT/PDDA.md:861`, `skills/1-hourly/unstuck/SKILL.md:216`, `skills/2-daily/releases/SKILL.md:241`, and `test/releases-skill.sh:40` name `/laser-focus`; `ARCHITECTURE.md:90` links its skill. This is inspection of the named surfaces, not proof of a complete base-to-HEAD diff or untouched historical records.
+- [Unverified — needs clone run] No final-SHA suite qualification was performed in this reviewer worktree. Round 1's inspected green/red receipts remain historical evidence, and no later gate is assumed. The private-client source, abbreviated digest equality, live collaborator checks and real consult execution remain outside independently reproduced evidence here. The paper printed body deliberately shows NOT MET and is never authorization to triage or post against a failed gate.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
