@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -991,5 +991,216 @@ is regenerated in `relay-system/2026-11-21/gh1576-final-qa-code.diff`).
   unwitnessed state; the check immediately before the push is covered by reading, not fault injection).
 
 Handing off to Reviewer (codex) for Round 5 (the final round, Blocker only).
+
+
+### Reviewer · Round 5 · codex
+
+**What this proposes**
+
+Finish the round-4 Blocker by separating recognition of a retained closeout from publication.
+Publish only after repository/issue identity qualification and the dry-run return, keeping
+the existing receipt matcher, dirty-path limits and both wiring checks.
+
+**How the existing system works, per this document**
+
+The first ship closeout can leave its receipt and ship outputs dirty when hook wiring refuses
+persistence. Resume must recognize that specific transaction before its ordinary dirt refusal,
+then use the existing persistence function to publish it after the operator repairs the hook.
+
+**What it's not**
+
+No new detector, writer, suite or general recovery mechanism. Inference: a read-only recognition
+step may run before qualification, but no publication may occur there.
+
+**Scope adjudication**
+
+The GitHub connector returned the operator-account comment
+[Operator decision 2026-11-23](https://github.com/HiQS-Labs/XYZ-forge/issues/1576#issuecomment-7106952216):
+“limited to the round-4 Blocker”, with the two negative controls as acceptance.
+It also returned the earlier [scope decision](https://github.com/HiQS-Labs/XYZ-forge/issues/1576#issuecomment-7083354655).
+This verdict honors that scope: F5/F6 remain tracked in #1578/#1579 and excluded, not fixed.
+Earlier findings and verdicts are preserved.
+
+**Findings**
+
+- [Pass] **The round-4 publication-ordering Blocker is resolved.**
+  Read-only recognition is at utils/py/express.py:1462–1480 and its caller at :1511.
+  It reads the existing receipt and change paths; it does not call persistence.
+  cmd_resume qualifies identity at :1522, returns from dry-run at :1528, and only then
+  calls publish_pending_closeout at :1532. That helper delegates to the original
+  persistence owner at :1489; no second writer was introduced.
+  The exact-function probe below observes zero add/commit/push for both rejected modes and
+  qualify_identity,gate_check,add,commit,gate_check,push on normal recovery.
+  The skill description at skills/2-daily/express/SKILL.md:129–135 matches this ordering.
+
+- [Pass] **The retained negative controls distinguish broken and repaired behavior.**
+  TESTS-RESULTS/2026-11-21+GH-1576/provenance.jsonl:50 and :52 record the round-4
+  code 802cf98e9 making three add/commit/push calls and moving HEAD/origin for dry-run
+  and wrong-repository recovery. Rows :54 and :55, at bf196d705, record zero such
+  calls, zero staged paths, and unchanged HEAD, tree comparison and origin; return codes
+  are 0 and 3 respectively. The data probe checks both pairs, including the actual
+  before/after origin fields. TESTS-RESULTS/2026-11-21+GH-1576/recover.sh:27 reads the
+  bare remote directly; :73–79 snapshots HEAD/tree and counts traced Git mutations around
+  the real resume CLI. These are producer-recorded disposable-clone runs, inspected here.
+
+- [Pass] **The adjacent recovery and refusal contracts remain supported.**
+  The base-branch restriction, matching receipt and existing path allowlist remain at
+  utils/py/express.py:1472–1479. Persistence still checks wiring before staging at
+  :1298 and immediately before push at :1301–1302.
+  TESTS-RESULTS/2026-11-21+GH-1576/provenance.jsonl:56 records unrelated dirt refusing
+  with rc 4 and unchanged origin; :57 records normal recovery with rc 0, a committed
+  receipt, one receipt line, a clean tree and origin equal to local HEAD.
+  The in-memory positive control also reaches publication after qualification and both checks.
+
+- [Pass] **A completed local aggregate gate is retained for the repaired code.**
+  TESTS-RESULTS/2026-11-21+GH-1576/full-gate.log:1–9 identifies
+  e7540b42f68adce497fec526d047f2bb9859c6ec, command ./validate.sh, mypy 1.14.1,
+  exit 0, 1353 seconds and “passed: 408 / 408”. Lines :35–39 match the pre-run
+  HEAD, clean-status count, origin and local-config hash. Line :41 discloses that
+  only summary/tail output was retained. This is producer local evidence, not a
+  reviewer rerun, pre-push result or hosted qualification. No later gate is assumed.
+
+**Evidence limits**
+
+The manual recovery fixture uses fake GitHub responses and stubbed manifest/reconcile effects
+(test/gh267-express-skill.sh:65–109 and :164–251); the Express closeout and resume entry points
+and local Git publication are real. The suite success fed to closeout is supplied, not a suite run
+inside this scenario (recover.sh:57). The negative tree comparison hashes porcelain plus the
+tracked diff (recover.sh:74, :79); it is not a byte-for-byte snapshot of every untracked or ignored
+file. The traced call counts are retained summaries, not raw traces; the blocker-red log retains
+the wrong-repository invocation, while the dry-run red result survives in provenance row 50.
+One receipt line before/after proves no append, not byte identity. These limits do not undermine
+the measured ordering failure and its correction, corroborated by source and the probe.
+The previously disclosed second-persistence and final-check fault-injection limits remain
+(README limit 6); they are not expanded into new work in this operator-scoped round.
+
+**Read-only probe receipt**
+
+Command: after exporting PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp" and
+creating that scratch directory, python3 "$TMPDIR/round5_probe.py", with the exact content below.
+Process exit **0**. Six exact AST function definitions execute with in-memory dependencies:
+no module import, Git process, real filesystem mutation, suite, fixture or network operation.
+Receipt lookup, commit resolution and identity outcomes are supplied inputs; this measures
+caller/persistence ordering, not those validators. The second half only parses retained data
+and compares source bytes with the seeded diff's Git-blob hashes.
+
+```python
+import ast, json, hashlib, re
+from pathlib import Path
+from types import SimpleNamespace
+names={'cmd_resume','pending_closeout_receipt','publish_pending_closeout',
+       'persist_closeout','require_gate_wired','is_allowed_closeout_path'}
+nodes=[n for n in ast.parse(Path('utils/py/express.py').read_text()).body
+       if isinstance(n,ast.FunctionDef) and n.name in names]
+assert len(nodes)==len(names)
+ns={'BASE':'development','CLOSEOUT_ALLOWLIST_FILES':{'releases.db'},
+    'CLOSEOUT_ALLOWLIST_PREFIXES':(), 'json':json}
+exec(compile(ast.Module(body=nodes,type_ignores=[]),'<exact-express-functions>','exec'),ns)
+receipt='TESTS-RESULTS/2026-11-21+GH-999-express/provenance.jsonl'
+class Refused(Exception): pass
+state={}
+def die(msg): raise Refused(msg)
+def fake_git(root,*args,**kwargs):
+    state['calls'].append(args[0])
+    if args[0]=='branch': out='development\n'
+    elif args[0]=='status': out=' M releases.db\n?? '+receipt+'\n' if state['dirty'] else ''
+    elif args[0] in ('add','commit','push'):
+        if args[0]=='commit': state['dirty']=False
+        out=''
+    else: raise AssertionError(args)
+    return SimpleNamespace(returncode=0,stdout=out,stderr='')
+def qualify(args):
+    state['calls'].append('qualify_identity')
+    if args.repo!='H/H': die('requested repository differs from the landing root repository')
+    return {'issue_url':'https://github.com/H/H/issues/999'}
+def gate(root):
+    state['calls'].append('gate_check')
+    return True,'wired'
+ns.update(git=fake_git,die=die,resolve_landing_commit=lambda *a:'a'*40,
+          normalize_suite=lambda s:s,find_receipt=lambda *a:receipt,
+          change_paths=lambda r:['releases.db',receipt] if state['dirty'] else [],
+          gate_check=gate,qualify_resume_identity=qualify,
+          find_committed_receipt=lambda *a:receipt,
+          gh=lambda *a,**k:SimpleNamespace(returncode=0,stdout='{"state":"CLOSED"}'),
+          active_release=lambda r:None,reconcile_gated=lambda *a:None,
+          write_tick=lambda *a,**k:None)
+for label,dry,repo in [('dry-run',True,'H/H'),('wrong-repo',False,'wrong/repo'),
+                       ('normal',False,'H/H')]:
+    state.update(dirty=True,calls=[])
+    args=SimpleNamespace(root='/fake',issue=999,sha='a'*40,
+                         suite='test/gh999-demo.sh',dry_run=dry,repo=repo,release=None)
+    refused=False
+    try: ns['cmd_resume'](args)
+    except Refused:
+        refused=True
+    mutations=[c for c in state['calls'] if c in ('add','commit','push')]
+    assert refused==(label=='wrong-repo')
+    if label=='normal':
+        assert mutations==['add','commit','push'] and not state['dirty']
+        assert state['calls'].index('qualify_identity') < state['calls'].index('add')
+        assert state['calls'][state['calls'].index('push')-1]=='gate_check'
+        assert state['calls'].count('gate_check')==2
+    else:
+        assert mutations==[] and state['dirty']
+    print(label,'mutations='+str(len(mutations)),'dirty='+str(state['dirty']),
+          'calls='+','.join(state['calls']))
+
+rows=[json.loads(s) for s in Path('TESTS-RESULTS/2026-11-21+GH-1576/provenance.jsonl').read_text().splitlines()]
+assert len(rows)==57 and all(all(str(v).strip() for v in r.values()) for r in rows)
+for label,rev,mut,unchanged in [('blocker-red','802cf98e9',3,'NO'),('green','bf196d705',0,'yes')]:
+    picked=[r for r in rows if r['label']==label and r['code_rev'].startswith(rev)
+            and r['scenario'].startswith('negative control:')]
+    assert len(picked)==2
+    for r in picked:
+        assert r['result']==('rc=0' if '--dry-run' in r['scenario'] else 'rc=3')
+        for part in [f'mutating-git-calls(add/commit/push)={mut}','staged-paths=0',
+                     f'head-unchanged={unchanged}',f'tree-unchanged={unchanged}',
+                     f'origin-unchanged={unchanged}']:
+            assert part in r['detail']
+        assert (r['origin_before']==r['origin_after'])==(mut==0)
+    print(label,'negative rows=2 mutations='+str(mut)+' each origin unchanged='+str(mut==0))
+assert rows[55]['result']=='rc=4' and rows[55]['origin_before']==rows[55]['origin_after']
+assert rows[56]['result']=='rc=0' and rows[56]['origin_before']!=rows[56]['origin_after']
+blocks=Path('relay-system/2026-11-21/gh1576-final-qa-code.diff').read_text().split('diff --git ')[1:]
+assert len(blocks)==9
+for block in blocks:
+    path=block.splitlines()[0].split(' b/',1)[1]
+    expected=re.search(r'index [a-f0-9]+\.\.([a-f0-9]+)',block).group(1)
+    data=Path(path).read_bytes()
+    assert hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest().startswith(expected),path
+print('seeded diff postimage hashes match all 9 files; retained rows=57')
+```
+
+Decisive output:
+
+```text
+dry-run mutations=0 dirty=True calls=branch,status,qualify_identity
+wrong-repo mutations=0 dirty=True calls=branch,status,qualify_identity
+normal mutations=3 dirty=False calls=branch,status,qualify_identity,gate_check,add,commit,gate_check,push,status
+blocker-red negative rows=2 mutations=3 each origin unchanged=False
+green negative rows=2 mutations=0 each origin unchanged=True
+seeded diff postimage hashes match all 9 files; retained rows=57
+```
+
+**Sweep and verdict**
+
+Read the entire relay and plan, the seeded nine-file diff, every line of the Express module and
+skill, the recovery witness and its fixture setup, retained recovery rows/logs and aggregate
+gate record. This round's whole-file sweep is Express, including pre-existing code, within the
+operator's Blocker-only scope; no additional substantiated pre-existing defect is raised.
+Earlier whole-file sweeps of other lane modules remain historical evidence, not a new sweep
+claimed here. The seeded diff postimages match all nine source/skill/fixture files; independent
+Git-history verification is outside the no-Git turn boundary. Graph tools are unavailable, so
+no project/generation/coverage claim is made. No Git command, gate, suite, executable fixture,
+real push, deletion or remote write ran. Only the relay file and permitted scratch were written.
+
+swept file: yes
+VERDICT: PASS
+Basis: The round-4 Blocker is corrected in source and supported by discriminating retained
+negative controls, a normal-recovery control, an independent exact-function ordering probe,
+and a completed local gate record. Approval is within the verified operator scope; F5/F6 stay  [Unverified — no citation]
+excluded. This is final-QA approval, not a claim of publication or hosted qualification.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
