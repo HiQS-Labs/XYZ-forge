@@ -1,5 +1,5 @@
 diff --git a/githooks/pre-push b/githooks/pre-push
-index fa19ee0df..5320fc603 100755
+index fa19ee0df..0ebffb811 100755
 --- a/githooks/pre-push
 +++ b/githooks/pre-push
 @@ -71,7 +71,7 @@ while read -r _lref _lsha _rref _rsha; do
@@ -30,7 +30,7 @@ index fa19ee0df..5320fc603 100755
  
  # GH-487: resolve each pushed ref pair to the range that classifies it. An existing remote ref
  # uses its own SHA (the update range, exactly as before). A first push of a new branch has no
-@@ -121,64 +133,147 @@ fi
+@@ -121,64 +133,152 @@ fi
  _base_pairs=()
  _base_note=""
  _push_remote="${1:-}"
@@ -102,7 +102,8 @@ index fa19ee0df..5320fc603 100755
 +#   rc 0  narrow: _own_base = the single best common ancestor of the verified integration tip and local_sha.
 +#   rc 1  not applicable: keep today's update range. (Destination is development/main/not a branch; the range holds no merge
 +#         at all — a linear or fast-forward import; or, with the integration tip proven fresh, every merge is history the tip
-+#         already holds, or the merge-base is already in the remote branch so nothing new entered.)
++#         already holds, or every own merge takes only history the tip holds and the merge-base is already in the remote
++#         branch so nothing new entered.)
 +#   rc 2  REJECTED candidate: the range holds a merge but it cannot be proven an integration-only refresh (the live tip is
 +#         unverifiable or the tracking ref is stale or rewound, ambiguous merge-base, a non-first parent not on the tip, or no
 +#         local integration tracking ref to test against). The update range can read docs while the final tree carries code
@@ -138,16 +139,20 @@ index fa19ee0df..5320fc603 100755
 +  mbs="$(git merge-base --all "$tip" "$local_sha" 2>/dev/null)" || return 2
 +  [ "$(printf '%s\n' "$mbs" | grep -c .)" -eq 1 ] || return 2
 +  [ "$mbs" != "$local_sha" ] || return 2
-+  git merge-base --is-ancestor "$mbs" "$remote_sha" 2>/dev/null && return 1
 +  # Every non-first parent of every own merge must already be on the tip; first parents are unconstrained because the
 +  # final-tree diff covers them. Commit ancestry cannot say which branch name a merge used: a side commit already on the tip
-+  # counts as integration content, and the final-tree diff still sees any difference.
++  # counts as integration content, and the final-tree diff still sees any difference. This rejection comes BEFORE the
++  # ancestor exemption below: a merge of a side branch the tip does not hold is never integration-only, even when the
++  # integration tip is already in the remote branch and the update range alone would read docs.
 +  while read -r m first rest; do
 +    [ -n "$m" ] || continue
 +    for q in $rest; do
 +      git merge-base --is-ancestor "$q" "$tip" 2>/dev/null || return 2
 +    done
 +  done <<<"$merges"
++  # Every own merge takes only integration history in. If the integration merge-base is already in the remote branch,
++  # nothing new entered with this push: keep today's update range.
++  git merge-base --is-ancestor "$mbs" "$remote_sha" 2>/dev/null && return 1
 +  _own_base="$mbs"
 +  return 0
 +}
@@ -224,7 +229,7 @@ index fa19ee0df..5320fc603 100755
      case "$remote_sha" in
        ''|0000000000000000000000000000000000000000)
          for cand in "development:$_adv_dev" "main:$_adv_main"; do
-@@ -209,9 +304,15 @@ pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push
+@@ -209,9 +309,15 @@ pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push
          git cat-file -e "${remote_sha}^{commit}" 2>/dev/null || return 1
          git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null || return 1
          base="$remote_sha"
@@ -240,7 +245,7 @@ index fa19ee0df..5320fc603 100755
    done
    return 0
  }
-@@ -259,12 +360,25 @@ if [ "$_base_ok" -ne 1 ] && [ -n "$_base_note" ]; then
+@@ -259,12 +365,25 @@ if [ "$_base_ok" -ne 1 ] && [ -n "$_base_note" ]; then
    printf '%s\n' "$_base_note" >&2
  fi
  _cls=""
