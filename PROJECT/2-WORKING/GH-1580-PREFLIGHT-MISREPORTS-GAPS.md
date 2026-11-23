@@ -2,7 +2,7 @@
 gh_issue: 1580
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1580
 title: "swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings"
-status: "In Progress (round 4: F8 repaired, awaiting final QA)"
+status: "Parked (final QA round 4 FAIL on F9; operator decision on #1580)"
 created: 2026-11-23
 updated: 2026-11-23
 owner: Claude (start-task sub-agent)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Built the three fixes; red/green and existing suites recorded; final Codex QA r1-r3 FAIL, F1-F7 repaired; operator approved one extra round for F8; F8 repaired and re-verified (green 36/0, suites, 129-contract replay, identity bracket). | Final Codex QA round 4. If it approves: push (full gate runs in the background via the pre-push hook), open the PR, do not land it. If it fails: #1580 parks. |
+| Built the three fixes; red/green, existing suites, 129-contract replay and a complete identity bracket recorded; final Codex QA r1-r4: F1-F8 repaired and closed. | **Parked** (operator decision on #1580: round 4 failing parks the issue). Round 4 FAIL on F9: a quoted `"]]"` inside `[[ … ]]` ends the expression early (false NOT-READY); recipe in `relay-system/2026-11-23/gh1580-final-qa-r4.md`. A new operator decision is needed before F9 is repaired, final QA is re-run, and the branch is pushed. |
 
 ## Observed problem
 

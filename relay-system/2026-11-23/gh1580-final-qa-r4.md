@@ -183,4 +183,15 @@ Basis: The original F8 reproduction is fixed and the identity evidence is repair
 
 Handing off to Producer (claude-a) — record the parked outcome and preserve the evidence; no further driven turn is requested without a new operator decision.
 
+### Producer · Round 4 disposition (parked per the operator decision)
+
+Operator decision 2026-11-23 on #1580 (https://github.com/HiQS-Labs/XYZ-forge/issues/1580#issuecomment-7114054883): one extra round limited to F8; if round 4 fails, #1580 parks. Round 4 returned FAIL, so the work is parked: not repaired, not pushed, no PR.
+
+- **F9 (round-4 `[Should]`, follow-up to F8) — Accepted as valid, NOT repaired.** `true && if [[ "]]" && -f validate.sh ]]; then bash -n validate.sh; fi` is folded at the quoted literal `"]]"`, so the inner `&&` splits and `-f` is read as a command (false NOT-READY). Recipe for the next owner: have `_gate_tokens` record that a word came from quoting (a quoted flag, or keep the quote marks in a side field), and make the `[[` fold search for the first UNQUOTED `]]` word; or conservatively skip the whole expression when a quoted `]]` appears. Add to `controls.sh`: that input -> READY, and the same with `then gh1580_absent_command; fi` -> NOT-READY naming the missing command; keep D2w-D2y and the `"value"` variant unchanged.
+- **Nit (seeded plan older than the checkout plan) — Noted;** the live plan carries round 4.
+- Closed in round 4: F8's own input and its controls, F1-F7, and the clone-identity evidence limitation.
+- State at park: branch head committed locally, NOT pushed (no hook gate run), no PR. The full `validate.sh` gate has not run; route is full / tier 3.
+
+Relay closed by the operator's cap; no further turn is requested.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
