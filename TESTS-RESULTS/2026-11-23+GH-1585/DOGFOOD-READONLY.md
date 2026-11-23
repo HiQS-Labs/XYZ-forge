@@ -52,3 +52,49 @@ Worked examples (from the skill text, run on paper): `A4` / `D1`·`C3`·`P1` / `
 1. The frame lock surfaced a real target ambiguity (`vX.Y` vs. `vX.Y.1`) that no single source resolves. This is the case the mandatory first question exists for.
 2. A non-decider's dissent from a recorded decision has no explicit row. It reaches `C1` through the "nothing falls through" rule, which gives the right outcome (ask the decider; change nothing), but naming the case in `C1` would make it explicit.
 3. `releases next` would name an empty-version row. This supports "scheduling evidence only".
+
+## Step 1c — dry run (hypothetical, paper only; redacted)
+
+This assumes the operator answered "yes" to the breakdown, with scope source = the five `vX.Y` issues.
+Goals are placeholders, with the weights and checks a real run would carry. Nothing was posted.
+
+| ID | Wt | Goal (observable done) | Source | Owner | check: → expected · fails if |
+|---|---|---|---|---|---|
+| G-01 | 15 | Navigation shows the agreed items for launch | PR-A | live assignee | PR-A merged into the integration branch → `state=MERGED` · fails if open or closed-unmerged |
+| G-02 | 15 | Overview shows the recommended-next-steps row | issue-F | live assignee | linked PR merged · fails if none merged |
+| G-03 | 10 | The View idea preview opens read-only | issue-H step 2 | live assignee | linked PR merged · fails otherwise |
+| G-04 | 10 | Campaigns surface the first recommended action | issue-G | live assignee | linked PR merged · fails otherwise |
+| G-05 | 10 | Standalone recommendations page kept, link hidden | issue-E | live assignee | the flag is off in the merged code · fails if the page is removed |
+| G-06 | 10 | UI redesign intake items for `vX.Y` delivered | issue-I | owner: none (live) | checklist items closed · fails on any open item |
+| G-07 | 10 | Email set A approved for send | PR-B decision | PO (decider) | decision comment exists and is not superseded · fails if superseded |
+| G-08 | 10 | Launch gate: production deploy of the integration tip | operator frame | operator | deploy tag equals the tip · fails if they differ |
+| G-09 | 5 | Acceptance notes recorded for the PO decisions | PR-A/PR-B | operator | notes linked in the triage issue · fails if missing |
+| G-10 | 5 | Known gaps listed as non-goals or `T+1` | frame | operator | the non-goals list is non-empty and cites sources · fails if empty |
+
+Sum of weights = 100 (15+15+10+10+10+10+10+10+5+5). Non-goals: the new sale layout recipe (→ `T+1`); how-to recipe iteration (→ `T+2+`).
+
+Self-scored rubric: R1 pass (all five scope issues map); R2 pass; R3 pass; R4 pass (each check has an expected result and a fail condition); R5 pass; R6 pass (10 goals, max/min weight = 3×); R7 pass (one owner stated as `none (live)`); R8 pass. In a real run the consult QA would follow (Step 1c); this paper run did not call it.
+
+## Step 4 — printed body (hypothetical; nothing posted)
+
+```text
+<!-- laser-focus:x-y-0:2026-11-23 -->
+Last updated 2026-11-23T12:00-08:00 · run R-001 · Ledger gate: NOT MET (target absent; 7 rows pending evidence) · Done-list: 10 goals
+Counts: aligned 3 · deferred 1 · parked 0 · needs-decision 1 · record-only 2
+
+## Frame
+T = X.Y.0 · deadline: <operator> · freeze: strict · scope source: 5 vX.Y issues · date tz America/Los_Angeles
+
+## Ledger gate
+NOT MET — route: /releases plan X.Y.0 (tracking issue: <operator's tracker>). Run stopped before triage.
+
+## Done-list (G-01…G-10, weights total 100)
+...
+
+## Triage
+| id | quote | state | code | bucket | claimed_severity | goal | last_verified | check | revisit_when |
+...
+```
+
+Marker on line 1: yes. Title it would carry: `Laser Focus - version X.Y.0 triage 2026-11-23`.
+Because the gate is NOT MET, a real run would print this body in chat and stop; the triage table would not be posted.

@@ -84,8 +84,9 @@ declared ledger and classify each finding:
 - **Unavailable:** a source that couldn't be read. Name it.
 
 **Gate.** Triage starts only when all three hold:
-1. **Target represented:** `<T>` exists in the declared ledger with an eligible status (`draft` or
-   `active`, never `shipped`), spelled as the operator confirmed.
+1. **Target represented**, spelled as the operator confirmed. What counts depends on the declared ledger:
+   - **Release ledger** (`releases.db`): a `<T>` row with an eligible status (`draft` or `active`, never `shipped`).
+   - **Plain GitHub:** an **open** milestone or tracker issue for `<T>`. A closed one, or none, does not pass.
 2. **Every flagged row has a disposition:** either cleaned through a confirmed `/releases clean <version>`, or
    kept with a reason the operator supplied or explicitly approved (for example, a parallel release).
 3. **Nothing invented:** no field is written to make the gate pass. A target date comes only from an
