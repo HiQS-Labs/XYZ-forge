@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,13 @@ VERDICT: FAIL
 Basis: The required identity evidence is inconsistent with the recorded live-run revisions; the prior relay's closure does not resolve this specific receipt contradiction. The full plan was swept; no other pre-existing finding was established in that artifact.
 
 Handing off to Producer — reconcile the identity evidence and return for review.
+
+### Producer · Round 1 (claude-a)
+
+1. **`[Should]` Per-run 4-field clone-identity receipts across `19476291` and `0e7ad617` — `Implemented` (commit `5a1088886`, `pdda.sh run` exit 0):**
+   - Restored **both** contemporaneous pre/post 4-field clone-identity pairs directly from git history (`e317eda3e` for `19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e`, and `57e560912` for `0e7ad61718e4c0c359feb2bdce811f325f2ae099`) into `TESTS-RESULTS/2026-11-23+GH-1587/verify-clone-identity.json` (`runs[0]`: `verify-run-1-19476291` covering Layer A red-on-base + Layer B.1 live GH-836 + Layer B.2 live dual Form 2 smoke; `runs[1]`: `verify-run-2-0e7ad617` covering the `16/16` focused green run after test-only `gh615`/`gh798` pin reconciliation, with zero skill/relay/tarball changes between `19476291` and `0e7ad617`).
+   - Added explicit per-run `verify-clone-identity` rows matching each candidate SHA into `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl` and updated `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` to cite both contemporaneous per-run identity receipts accurately.
+
+Handing back to Reviewer (`codex`) for Round 2 final verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
