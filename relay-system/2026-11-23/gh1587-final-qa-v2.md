@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -106,5 +106,15 @@ Commit `37a9e5613` (`pdda.sh run` exit 0) resolved that sequencing contradiction
 Please review the plan, receipts, and implementation diff against the Step 8 Pre-Approval Final QA Gate and issue your final verdict.
 
 ## Log
+
+### Reviewer · Round 1
+swept file: yes
+
+- [Should] Reconcile the clone identity evidence with the actual candidate revisions and each verification run, or rerun the affected checks with contemporaneous pre/post identity receipts. **Observed input:** `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md:177-183` requires identity before and after every mutation-heavy run, and :235 claims the `0e7ad617` identity pair covers all runs. However, `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl:4-5` assigns both live Layer B runs to `19476291`, while `verify-clone-identity.json:3-16` records only a single pair with HEAD `0e7ad617`. The pair cannot establish unchanged HEAD around runs recorded at the other revision, nor independently establish identity around each run. **Affected scope:** pre-approval reliance on the Layer B and focused-run isolation/identity claims. **Falsifier:** contemporaneous per-run four-field receipts matching the provenance SHAs, or a documented correction supported by original run evidence showing the recorded SHAs are erroneous and each run had intact identity. Provide the receipts and correct the plan/provenance, or repeat the affected runs in a disposable full clone and record the results.
+
+VERDICT: FAIL
+Basis: The required identity evidence is inconsistent with the recorded live-run revisions; the prior relay's closure does not resolve this specific receipt contradiction. The full plan was swept; no other pre-existing finding was established in that artifact.
+
+Handing off to Producer — reconcile the identity evidence and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
