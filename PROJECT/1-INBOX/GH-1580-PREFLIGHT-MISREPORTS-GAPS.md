@@ -35,8 +35,8 @@ report wrong answers. All three are still present on `origin/development` (81eef
 2. **Gate existence.** The check at `swarm_preflight.py:1785-1814` inspects `gate_cmd.split()[0]` only. LTVera
    #1140's gate, with `bash -n …` moved in front of `uv lock --check`, turned NOT-READY into READY with `uv`
    still missing.
-3. **Acceptance.** `ACC_HEADING_RE` accepts a level 2-6 `Acceptance` / `Acceptance Criteria` heading (with a
-   colon or qualifier), and no other wording. An issue whose criteria sit under "Done when", "To fix", "Ask" or
+3. **Acceptance.** `ACC_HEADING_RE` accepts a level 2-6 `Acceptance`, `Suggested Acceptance` or
+   `Acceptance Criteria` heading (with a colon or qualifier), and no other wording. An issue whose criteria sit under "Done when", "To fix", "Ask" or
    "Findings" yields `unknown [cause: no-issue-section]`, and outside a frozen manifest the verdict stays
    ready (exit 0, GH-557 by design). The line says `unknown` but is not flagged as something to act on and
    does not name the heading the issue does have, so five real issues went through with their acceptance
@@ -86,10 +86,15 @@ Extend the existing evaluator and report path. No new module, suite, flag or exi
    guessed: shell builtins/keywords (`export`, `set`, `source`, `if`, …), a program word that needs expansion
    (`$VAR`, `${VAR:?}`, `$(…)`, backticks), and the inside of `bash -c '…'` (its argument is not a script path).
    No recursive shell parsing.
-   **Working directory (QA F1).** The helper tracks one directory across the chain: it starts at target_root, and
-   a literal `cd <dir>` (a plain word, no expansion) moves it for the later commands; relative scripts and
-   program paths resolve against it. A `cd` with a non-literal target makes the directory indeterminate: later
-   relative script/program paths are then not checked (PATH lookups still are). Absolute operands are unaffected.
+   **Working directory (QA F1, narrowed in r2).** The helper tracks one directory (starting at target_root) and
+   moves it only for a `cd <literal-existing-dir>` that provably ran in the main shell: the literal is a plain word
+   (no expansion, `~`, glob, `-`), the directory exists, the `cd` is not a pipeline stage or backgrounded (`|`,
+   `&`), and it is not followed by `||`. Subshells `( … )` restore the directory when they close. A `cd` that was
+   reached through `&&` is only certain inside that `&&` run: when the run ends at `;` or a newline the directory
+   becomes indeterminate. Anything else (`true || cd x`, `cd x | cat`, `cd x || exit`, non-literal targets) makes the
+   directory indeterminate. While it is indeterminate, relative script and program-path checks are skipped (PATH
+   lookups still run); absolute operands are unaffected. Straight-line `cd src && bash -n ok.sh` is checked
+   against `src/`.
    Downstream limit, recorded not fixed: a gate that starts with `NAME=value prog` now passes preflight, but
    marathon-drive's own pre-advance check still refuses it (`marathon_drive.py:2074-2075`); that module is out of
    scope, so preflight READY does not promise end-to-end readiness for that shape.

@@ -146,6 +146,12 @@ R="$(make_repo gate-script-second 204 'true && bash src/missing.sh' "$PROBE" yes
 case_text "D2d 'true && bash src/missing.sh' (missing script, second command) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-204-fixture.md 5 'gate script not found.*missing\.sh'
 R="$(make_repo gate-cd-missing 205 'cd src && bash -n missing.sh' "$PROBE" yes)"
 case_text "D2e 'cd src && bash -n missing.sh' (missing script in the same cd dir) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-205-fixture.md 5 'gate script not found.*missing\.sh'
+R="$(make_repo gate-cd-or 207 'true || cd src; bash -n src/ok.sh' "$PROBE" yes)"
+case_text "D2g 'true || cd src; bash -n src/ok.sh': the cd may not have run, so no relative check -> READY (QA r2 F1)" "$R" PROJECT/2-WORKING/GH-207-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-cd-pipe 208 'cd src | cat; bash -n src/ok.sh' "$PROBE" yes)"
+case_text "D2h 'cd src | cat; bash -n src/ok.sh': cd ran in a pipeline child, parent dir unchanged -> READY (QA r2 F1)" "$R" PROJECT/2-WORKING/GH-208-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-cd-subshell 209 '(cd src && true); bash -n src/ok.sh' "$PROBE" yes)"
+case_text "D2i '(cd src && true); bash -n src/ok.sh': subshell cd does not leak -> READY (QA r2 F1)" "$R" PROJECT/2-WORKING/GH-209-fixture.md 0 'verdict +: ready'
 R="$(make_repo gate-skips 206 'bash -n src/ok.sh && bash -c "nonexistent_inner_cmd; true" && "${LTV_PYTHON:?set me}" -m pytest' "$PROBE" yes)"
 case_text "D2f bash -c body and an expansion-only program word are skipped, not guessed -> READY" "$R" PROJECT/2-WORKING/GH-206-fixture.md 0 'verdict +: ready'
 

@@ -33,6 +33,18 @@
    expect : exit 5, output matches /gate script not found.*missing\.sh/
    observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #205 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
 
+── [MATCH] D2g 'true || cd src; bash -n src/ok.sh': the cd may not have run, so no relative check -> READY (QA r2 F1)
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #207 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2h 'cd src | cat; bash -n src/ok.sh': cd ran in a pipeline child, parent dir unchanged -> READY (QA r2 F1)
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #208 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MISMATCH] D2i '(cd src && true); bash -n src/ok.sh': subshell cd does not leak -> READY (QA r2 F1)
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #209 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command '(cd' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
 ── [MATCH] D2f bash -c body and an expansion-only program word are skipped, not guessed -> READY
    expect : exit 0, output matches /verdict +: ready/
    observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #206 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
@@ -61,4 +73,4 @@
    expect : exit 0, valid nonempty JSON, readiness.acceptance_gaps (has:capture doc)
    observed: exit 0; readiness has no acceptance_gaps key; keys=['acceptance_fidelity', 'acceptance_inline', 'frozen_artifacts', 'issue_state', 'next_action', 'ready', 'source_url', 'unscoped_index_only']
 
-# totals: MATCH=5 MISMATCH=10
+# totals: MATCH=7 MISMATCH=11

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -230,5 +230,13 @@ PYPROBE
 **Basis:** F2 and F3 are resolved for a plan review. F1's new unconditional directory tracking would introduce false missing-path reports in explicitly supported shell forms, and the earlier wording nit remains partly open. Narrow the directory rule and retain its positive controls before building. No later gate is assumed.
 
 Handing off to Producer (claude-a) — revise the bounded directory rule and its manual controls, finish the carried wording correction, then open Round 3 for review.
+
+### Producer · Round 2 dispositions
+
+- **F1 [Should] — Implemented (observed input accepted).** The directory rule is narrowed (plan item 2, "Working directory"): a literal `cd` moves the tracked directory only when it provably ran in the main shell (existing literal dir; not a pipeline stage, not backgrounded, not followed by `||`); subshells restore the directory on `)`; a `cd` reached through `&&` is certain only inside that `&&` run and becomes indeterminate at the next `;`/newline; every other case (`true || cd x`, `cd x | cat`, `cd x || exit`, non-literal) makes the directory indeterminate, and while indeterminate relative script/program-path checks are skipped (PATH lookups still run). Controls added in `controls.sh`: D2g `true || cd src; bash -n src/ok.sh`, D2h `cd src | cat; bash -n src/ok.sh`, D2i `(cd src && true); bash -n src/ok.sh`, all expecting READY; D2c/D2e unchanged. Red re-run on the unchanged base: MATCH=7, MISMATCH=11 (D2i also exposes the existing first-word defect: the leading `(cd` token is looked up on PATH and falsely refused).
+- **Nit (Suggested Acceptance) — Implemented.** The plan now names `Suggested Acceptance` among the headings `ACC_HEADING_RE` already accepts.
+- **F2, F3, Q-passes:** closed by the Reviewer in r2; no change.
+
+Handing off to Reviewer for Round 3 (final under the cap of 3): re-check F1 against the narrowed rule, the nit, and anything new in `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md` and `TESTS-RESULTS/2026-11-23+GH-1580/`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
