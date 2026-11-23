@@ -103,11 +103,23 @@
 
 ── [MISMATCH] D2u audit: an unquoted glob operand is not asserted missing -> READY
    expect : exit 0, output matches /verdict +: ready/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #223 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.WtYa4j/gate-glob: src/*.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #223 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.vL7CLM/gate-glob: src/*.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MATCH] D2v audit: process substitution bodies are not commands of the gate -> READY
    expect : exit 0, output matches /verdict +: ready/
    observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #224 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2w F8 'true && if [[ -f a && -f b ]]; then bash -n src/ok.sh; fi': the && inside [[ ]] after a control prefix is not a separator -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #225 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MISMATCH] D2x F8 a missing command inside the same if-block is still found -> NOT-READY
+   expect : exit 5, output matches /command 'gh1580_absent_command' not found in PATH/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #226 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MISMATCH] D2y F8 '! [[ a && b ]]' after if is one expression too -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #227 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command 'if' not found in PATH|  verdict     : NOT-READY (exit 5)|
 
 ── [MISMATCH] D3 text: issue criteria under '## Done when', no '## Acceptance' -> gap line names 'Done when'; exit unchanged (0)
    expect : exit 0, output matches /gap +: .*#301.*Done when/
@@ -133,4 +145,4 @@
    expect : exit 0, valid nonempty JSON, readiness.acceptance_gaps (has:capture doc)
    observed: exit 0; readiness has no acceptance_gaps key; keys=['acceptance_fidelity', 'acceptance_inline', 'frozen_artifacts', 'issue_state', 'next_action', 'ready', 'source_url', 'unscoped_index_only']
 
-# totals: MATCH=14 MISMATCH=19
+# totals: MATCH=15 MISMATCH=21
