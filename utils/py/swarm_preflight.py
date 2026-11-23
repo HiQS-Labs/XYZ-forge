@@ -559,28 +559,39 @@ def gate_scoping_caveat(gate_cmd: str) -> str:
 # `bash -n x.sh && uv lock --check` read READY with `uv` missing because only `gate.split()[0]` was
 # looked at. This is a deliberately SMALL static check, not a shell interpreter: it covers every
 # statically resolvable simple command of the gate (words split on `&&` `||` `|` `&` `;` newline and
-# `( )`, quotes respected) and skips what it cannot prove — builtins/keywords, program words that need
-# expansion (`$VAR`, `$(…)`, backticks, `~`), and the inside of `bash -c '…'`. READY is therefore not
-# proof that arbitrary shell code runs. Known downstream limit: marathon-drive's own pre-advance check
-# still refuses a gate that BEGINS with `NAME=value prog` (marathon_drive.py), which this check accepts.
+# `( )`, quotes respected) and SKIPS what it cannot prove: builtins/keywords, program words that need
+# expansion (`$VAR`, `$(…)`, backticks, `~`, globs, braces), the inside of `bash -c '…'` and `bash -s`,
+# heredoc bodies, `[[ … ]]` and `(( … ))`, and shell functions defined in the gate. Where the directory a
+# command runs in is not provable, relative script/program paths are skipped (PATH lookups still run).
+# READY is therefore not proof that arbitrary shell code runs. Known downstream limit: marathon-drive's own
+# pre-advance check still refuses a gate that BEGINS with `NAME=value prog` (marathon_drive.py), which this
+# check accepts.
 _GATE_OP_RE = re.compile(r'&&|\|\||\|&|;;|[;&|()]')
-# A redirection at a word start: `>f` `2>f` `&>f` `<f` `<<EOF` `2>&1` `>&2`. The `&N` forms name no target word.
-_GATE_REDIR_RE = re.compile(r'(?:[0-9]+|&)?(?:>>|>|<<<|<<|<>|<)(&(?:[0-9]+-?|-))?')
+# A redirection at a word start: `>f` `2>f` `&>f` `<f` `<<EOF` `<<-EOF` `2>&1` `>&2`. `&N` names no target word.
+_GATE_REDIR_RE = re.compile(r'(?:[0-9]+|&)?(?:>>|>|<<<|<<-?|<>|<)(&(?:[0-9]+-?|-))?')
 # Words whose command follows them (`if prog`, `then prog`, `! prog`): skipped, then the program is read.
 _GATE_PREFIX_WORDS = frozenset({"if", "then", "else", "elif", "while", "until", "do", "!", "{", "time"})
+# Control-flow words: a `cd` under or after one may not run, so the directory becomes unknown.
+_GATE_CONTROL_WORDS = frozenset({"if", "then", "else", "elif", "while", "until", "do", "{", "}", "for", "case",
+                                 "select", "function", "fi", "done", "esac"})
 # Builtins/keywords with no PATH entry that mean nothing to existence: the whole command is skipped.
 _GATE_SHELL_WORDS = frozenset({
     "cd", "export", "set", "unset", "source", ".", ":", "exit", "return", "eval", "exec", "trap", "umask",
     "shift", "wait", "read", "ulimit", "alias", "local", "declare", "readonly", "builtin", "command",
-    "type", "let", "pushd", "popd", "hash", "getopts", "break", "continue", "fi", "done", "esac", "}",
-    "for", "case", "in", "function", "select", "[[", "]]"})
+    "type", "let", "pushd", "popd", "hash", "getopts", "break", "continue", "[[", "]]", "(("}
+    | _GATE_CONTROL_WORDS)
+# Commands that may change the working directory in ways this check does not model.
+_GATE_CWD_UNSURE = frozenset({"pushd", "popd", "eval", "source", ".", "exec", "command", "builtin"})
 _GATE_ASSIGN_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*=')
+Tok = tuple[str, str, bool]
 
-def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
+def _gate_tokens(cmd: str) -> list[Tok] | None:
     """('op', text, False) / ('word', unquoted text, needs_expansion) / ('redir', text, takes_next_word);
-    None if quotes do not balance. Unquoted `<` `>` end a word, so `validate.sh>/dev/null` is the script
-    `validate.sh` plus a redirection, never a file named `validate.sh>/dev/null`."""
-    out: list[tuple[str, str, bool]] = []
+    None if quotes or a heredoc do not balance. Unquoted `<` `>` end a word, so `validate.sh>/dev/null`
+    is the script `validate.sh` plus a redirection, never a file named `validate.sh>/dev/null`."""
+    out: list[Tok] = []
+    pending: list[tuple[str, bool]] = []     # heredoc delimiters whose bodies start after the next newline
+    want_delim = ""                          # "<<" / "<<-" just seen: the next word is the delimiter
     i, n = 0, len(cmd)
     while i < n:
         ch = cmd[i]
@@ -590,11 +601,28 @@ def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
             i += 2
         elif ch == "\n":
             out.append(("op", "\n", False)); i += 1
+            for delim, dash in pending:          # skip heredoc bodies up to their delimiter line
+                while True:
+                    if i >= n: return None
+                    j = cmd.find("\n", i)
+                    line, i = (cmd[i:], n) if j < 0 else (cmd[i:j], j + 1)
+                    if (line.lstrip("\t") if dash else line) == delim: break
+            pending = []
         elif ch == "#":
             j = cmd.find("\n", i)
             i = n if j < 0 else j
+        elif ch in "<>" and cmd[i + 1:i + 2] == "(":      # process substitution `<(cmd)`: one skipped word
+            depth, j = 0, i + 1
+            while j < n:
+                depth += (cmd[j] == "(") - (cmd[j] == ")")
+                j += 1
+                if depth == 0: break
+            if depth: return None
+            out.append(("word", cmd[i:j], True)); i = j
         elif (rm := _GATE_REDIR_RE.match(cmd, i)):
             out.append(("redir", rm.group(), rm.group(1) is None)); i = rm.end()
+            if re.search(r'<<-?$', rm.group()) and not rm.group().endswith("<<<"):
+                want_delim = "<<-" if rm.group().endswith("<<-") else "<<"
         elif (om := _GATE_OP_RE.match(cmd, i)):
             out.append(("op", om.group(), False)); i = om.end()
         else:
@@ -604,7 +632,9 @@ def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
                 c = cmd[i]
                 if c in ";|()&<>":
                     break
-                if c == "\\" and i + 1 < n:
+                if c == "\\" and cmd[i + 1:i + 2] == "\n":
+                    i += 2
+                elif c == "\\" and i + 1 < n:
                     buf.append(cmd[i + 1]); i += 2
                 elif c == "'":
                     j = cmd.find("'", i + 1)
@@ -631,12 +661,32 @@ def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
                     if depth: return None
                     dyn = True; buf.append(cmd[i:j]); i = j
                 else:
-                    dyn = dyn or c == "$" or (c == "~" and not buf)
+                    dyn = dyn or c in "$*?[{" or (c == "~" and not buf)
                     buf.append(c); i += 1
-            out.append(("word", "".join(buf), dyn))
-    return out
+            word = "".join(buf)
+            if want_delim:
+                pending.append((word, want_delim == "<<-")); want_delim = ""
+            out.append(("word", word, dyn))
+    if pending: return None
+    # `[[ a && b ]]` and `(( a > b ))` hold operators that are not command separators: fold each into one skipped word.
+    folded: list[Tok] = []
+    k = 0
+    while k < len(out):
+        kind, text, dyn = out[k]
+        at_cmd = not folded or folded[-1][0] == "op"
+        if at_cmd and kind == "word" and text == "[[":
+            e = next((m for m in range(k + 1, len(out)) if out[m][0] == "word" and out[m][1] == "]]"), None)
+            if e is None: return None
+            folded.append(("word", "[[", True)); k = e + 1; continue
+        if at_cmd and kind == "op" and text == "(" and out[k + 1:k + 2] == [("op", "(", False)]:
+            e = next((m for m in range(k + 2, len(out) - 1) if out[m][1] == ")" and out[m + 1][1] == ")"), None)
+            if e is not None:
+                folded.append(("word", "((", True)); k = e + 2; continue
+        folded.append(out[k]); k += 1
+    return folded
 
-def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: str, first: bool) -> str:
+def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: str, first: bool,
+                      funcs: frozenset[str] = frozenset()) -> str:
     """The existing per-program rules (bash/sh script file, program path, PATH lookup) for ONE simple
     command; `words` is its (text, needs_expansion) list and `cwd` the directory it runs in, or None
     when that is not known (relative script/program paths are then not judged). '' = nothing wrong."""
@@ -657,13 +707,13 @@ def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: s
     if i >= len(words):
         return ""
     g0, g0_dyn = words[i]
-    if g0_dyn or g0 in _GATE_SHELL_WORDS:
+    if g0_dyn or g0 in _GATE_SHELL_WORDS or g0 in funcs:
         return ""
     def resolve(rel: str) -> str | None:
         if os.path.isabs(rel): return rel
         return os.path.join(cwd, rel) if cwd is not None else None
     if g0 in ("bash", "sh"):
-        # Interpreter options end at the first operand: a `-c` AFTER the script is the script's own argument.
+        # Interpreter options end at the first operand: a `-c`/`-s` AFTER the script is the script's own argument.
         args, j, script = words[i + 1:], 0, None
         while j < len(args):
             a = args[j][0]
@@ -671,8 +721,8 @@ def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: s
                 script = args[j + 1] if j + 1 < len(args) else None
                 break
             if a[:1] in "-+" and len(a) > 1:
-                if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', a):
-                    return ""   # `bash -c '…'`: the argument is a command, not a script path
+                if re.fullmatch(r'-[A-Za-z]*[cs][A-Za-z]*', a):
+                    return ""   # `bash -c '…'` / `bash -s`: a command string or stdin, not a script path
                 j += 2 if a in ("-o", "+o", "-O", "+O", "--rcfile", "--init-file") else 1
                 continue
             script = args[j]
@@ -702,16 +752,22 @@ def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: s
 
 def gate_command_gap(gate_cmd: str, target_root: str) -> str:
     """First reason a gate's commands cannot run, or '' (GH-1580). Every statically resolvable simple
-    command is checked, in order, against the directory it runs in: literal `cd <existing dir>` moves
+    command is checked, in order, against the directory it runs in: a literal `cd <existing dir>` moves
     the tracked directory only when it provably ran in the main shell (not a pipeline stage, not
-    backgrounded, not followed by `||`); a subshell restores it on `)`; a cd reached through `&&` is
-    only certain inside that `&&` run; anything else makes the directory unknown, and relative
-    script/program paths are then skipped (PATH lookups still run)."""
+    backgrounded, not followed by `||`, not under control flow); a subshell restores it on `)`; a cd
+    reached through `&&` is only certain inside that `&&` run; anything else (including `pushd`, `eval`,
+    `source`, `command cd`) makes the directory unknown, and relative script/program paths are then
+    skipped (PATH lookups still run)."""
     toks = _gate_tokens(gate_cmd)
-    if toks is None:                                   # unbalanced quotes: `bash -n -c` catches it downstream
+    if toks is None:                                   # unbalanced quotes/heredoc: `bash -n -c` catches it downstream
         toks = [("word", w, False) for w in gate_cmd.split()]
+    funcs = frozenset(
+        [t[1] for k, t in enumerate(toks[:-2]) if t[0] == "word" and toks[k + 1][:2] == ("op", "(")
+         and toks[k + 2][:2] == ("op", ")")]
+        + [toks[k + 1][1] for k, t in enumerate(toks[:-1]) if t[:2] == ("word", "function") and toks[k + 1][0] == "word"])
     cwd: str | None = target_root
     cond = False                                       # cwd depends on a cd reached through `&&`
+    structured = False                                 # a control-flow word was seen: a later cd may not have run
     stack: list[tuple[str | None, bool]] = []
     words: list[tuple[str, bool]] = []
     prev_op, first, skip_word = "", True, False
@@ -726,10 +782,15 @@ def gate_command_gap(gate_cmd: str, target_root: str) -> str:
                 words.append((text, dyn))
             continue
         if words:
-            if words[0][0] == "cd" and not words[0][1]:
-                target = next((w for w in words[1:] if not (w[0].startswith("-") and w[0] != "-")), None)
+            lead = 0                 # skip `NAME=value` and control prefixes to reach the command word
+            while lead < len(words) and (_GATE_ASSIGN_RE.match(words[lead][0]) or words[lead][0] in _GATE_PREFIX_WORDS):
+                lead += 1
+            structured = structured or any(w[0] in _GATE_CONTROL_WORDS for w in words[:lead + 1])
+            head = words[lead] if lead < len(words) else ("", False)
+            if head[0] == "cd" and not head[1]:
+                target = next((w for w in words[lead + 1:] if not (w[0].startswith("-") and w[0] != "-")), None)
                 new = None
-                if (target and not target[1] and target[0] not in ("-", "") and not any(c in target[0] for c in "*?[~")
+                if (target and not target[1] and target[0] not in ("-", "") and not structured
                         and prev_op in ("", ";", "\n", "(", "&&") and text in ("&&", ";", "\n", ")")
                         and cwd is not None):
                     cand = target[0] if os.path.isabs(target[0]) else os.path.join(cwd, target[0])
@@ -737,8 +798,10 @@ def gate_command_gap(gate_cmd: str, target_root: str) -> str:
                         new = os.path.normpath(cand)
                 cond = cond or (new is not None and prev_op == "&&")
                 cwd = new
+            elif head[0] in _GATE_CWD_UNSURE:
+                cwd, cond = None, False
             else:
-                gap = _gate_program_gap(words, cwd, prev_op, first)
+                gap = _gate_program_gap(words, cwd, prev_op, first, funcs)
                 if gap:
                     return gap
             first = False

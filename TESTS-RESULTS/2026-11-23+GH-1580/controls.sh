@@ -169,6 +169,26 @@ case_text "D4a F4 path_present on an unwanted path that is already gone -> lande
 R="$(make_repo path-present-here 215 true '[{"type":"path_present","path":"config.txt"}]' yes "x")"
 case_text "D4b path_present on an unwanted path that is still there -> unfixed, ready" "$R" PROJECT/2-WORKING/GH-215-fixture.md 0 'verdict +: ready'
 
+# ── Final QA r2 repairs (F5-F7) and the same-class audit ─────────────────────────────────────────
+R="$(make_repo gate-assign-cd 216 'true && FOO=1 cd src && bash -n ok.sh' "$PROBE" yes)"
+case_text "D2n F5 'true && FOO=1 cd src && bash -n ok.sh': assignment-prefixed cd moves the tracked dir -> READY" "$R" PROJECT/2-WORKING/GH-216-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-assign-cd-missing 217 'true && FOO=1 cd src && bash -n missing.sh' "$PROBE" yes)"
+case_text "D2o F5 'true && FOO=1 cd src && bash -n missing.sh': the missing script is still found under src -> NOT-READY" "$R" PROJECT/2-WORKING/GH-217-fixture.md 5 'gate script not found.*missing\.sh'
+R="$(make_repo gate-heredoc 218 $'cat <<EOF\nhello\nEOF\nbash -n src/ok.sh' "$PROBE" yes)"
+case_text "D2p F6 heredoc body 'hello' is data, not a command; the script after it exists -> READY" "$R" PROJECT/2-WORKING/GH-218-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-heredoc-missing 219 $'cat <<EOF\nhello\nEOF\nbash -n src/missing.sh' "$PROBE" yes)"
+case_text "D2q F6 a missing script AFTER a heredoc is still found -> NOT-READY" "$R" PROJECT/2-WORKING/GH-219-fixture.md 5 'gate script not found.*missing\.sh'
+R="$(make_repo gate-bash-s 220 'true && bash -s ignored-arg </dev/null' "$PROBE" yes)"
+case_text "D2r F7 'true && bash -s ignored-arg </dev/null': a positional argument, not a script -> READY" "$R" PROJECT/2-WORKING/GH-220-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-script-dash-s 221 'true && bash src/absent.sh -s' "$PROBE" yes)"
+case_text "D2s F7 'true && bash src/absent.sh -s': -s after the script is its own argument, script missing -> NOT-READY" "$R" PROJECT/2-WORKING/GH-221-fixture.md 5 'gate script not found.*absent\.sh'
+R="$(make_repo gate-dbracket 222 '[[ -f src/ok.sh && -d src ]] && bash -n src/ok.sh' "$PROBE" yes)"
+case_text "D2t audit: '[[ -f a && -d b ]] && bash -n …' does not split on the && inside [[ ]] -> READY" "$R" PROJECT/2-WORKING/GH-222-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-glob 223 'bash -n src/*.sh' "$PROBE" yes)"
+case_text "D2u audit: an unquoted glob operand is not asserted missing -> READY" "$R" PROJECT/2-WORKING/GH-223-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-procsub 224 'diff <(echo a) <(echo b) && bash -n src/ok.sh' "$PROBE" yes)"
+case_text "D2v audit: process substitution bodies are not commands of the gate -> READY" "$R" PROJECT/2-WORKING/GH-224-fixture.md 0 'verdict +: ready'
+
 # ── Defect 3: acceptance gap ─────────────────────────────────────────────────────────────────────
 printf '## Summary\nLockfile drift.\n\n## Done when\n\n- [ ] The lockfile check passes.\n' >"$WORK/issues/301.md"
 R="$(make_repo acc-done-when 301 true "$PROBE" yes)"
