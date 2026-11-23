@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -78,5 +78,34 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+The plan adds six review checks and a two-form relay finding protocol. It tests prose with deterministic pins and exercises the relay handoff in a disposable clone.
+
+**How the existing system works, per this document**
+Reviewers currently need concrete observed input and worktree containment limits runtime probes. The plan describes existing skill ladders, relay prompts, a generated package, and existing pin suites that must remain aligned.
+
+**What it's not**
+It does not propose an LLM behavioral benchmark for skill prose or new test suites. It does not authorize weakening worktree containment or changing finding tag syntax.
+
+**Source-backed technical validation**
+
+- [Should] Specify an executable red-on-base setup. The plan says to run updated suites against copies in `$TMPDIR` (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:188-190), but the current suites derive their target roots from their own locations: `test/gh681-reviewer-probe-rules.sh:23-26`, `test/gh778-review-code-skill.sh:6-8`, and `test/gh616-start-task-commensurate-envelope.sh:4-5,16`. Merely creating base copies does not make these suites read them; a candidate-green run could be mistaken for the intended red control. Specify a disposable complete base tree with candidate test changes overlaid, or a supported explicit target injection, and require the expected new pin failures rather than any nonzero exit.
+  Observed input: Phase 2 step 2's `14cb8a60d` target copies in `$TMPDIR`, while the suite paths above resolve under their own repository root.
+  Affected scope: all three updated pin suites' red-on-base evidence.
+  Falsifier: demonstrate a documented invocation of each updated suite which reads the unchanged base copies, rejects the intended missing new clauses, and passes against candidate files.
+- [Should] Add the first-push condition and fallback to the final gate. The plan unconditionally expects the hook to run the full gate (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:184,206-207), but `skills/1-hourly/start-task/SKILL.md:291-293` says that holds only for a wired first push; a later docs-only pushed range can route docs. Check the remote branch and actual hook route immediately before push; if not first push or full route is not assured, run the full final-head gate once in the disposable full clone and use its receipt as the documented workflow requires.
+  Observed input: a previously published branch with a docs-only final pushed range, explicitly described in `skills/1-hourly/start-task/SKILL.md:293`.
+  Affected scope: final approved commit verification when the planned push is not the first branch push.
+  Falsifier: show the actual final push is the first push with a wired hook routing the complete change to the full gate, or show a qualifying final-head full-gate receipt.
+- [Pass] The prose verification boundary is explicit: .relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:145-151 separates deterministic pins from live relay smoke and disclaims prose behavioral proof; `test/gh681-reviewer-probe-rules.sh:17-20` makes the same distinction. Keep this separation.
+- [Pass] The plan retains final-head re-review, four identity fields, the persisted rating admission check, GH-831/GH-308 and merge-parent rollback (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:67-72,176-183,203-205,219-225; `WORKTREE-SAFETY.md:504-505`). Preserve these controls while correcting the findings.
+
+swept file: yes
+Pre-existing defects: the red-control setup and unconditional push-gate assumption above are the material issues found in the whole plan; no additional pre-existing defects identified in this sweep. Suite execution and live relay behavior are [Unverified — needs clone run], as required by containment.
+VERDICT: FAIL
+Basis: The proposed red controls do not specify how base inputs reach the suites, and the final full-gate assumption omits the documented later-push case. Handing off to Producer to repair both and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
