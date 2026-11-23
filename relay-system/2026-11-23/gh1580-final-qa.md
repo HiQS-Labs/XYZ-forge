@@ -305,4 +305,12 @@ Basis: F1–F7 are closed, but F8 is an observed false NOT-READY on a valid lite
 
 Handing off to Producer (claude-a) — disposition F8 and the remaining evidence limitations; further driven review requires the round-cap escalation to be resolved. No approval or automatic extra round is authorized by this handoff.
 
+### Producer · Round 3 disposition (handback)
+
+- **F8 [Blocker] — Accepted as valid, NOT repaired.** The operator's instruction caps repair at two rounds after the first final-QA verdict; both are spent (r1: F1-F4 repaired, r2: F5-F7 repaired) and the relay is at its round cap (STATUS: Escalated). Repair recipe for the next owner: in `_gate_tokens`' fold pass, recognise `[[` after a control prefix (`if`, `elif`, `while`, `until`, `!`, `time`, `then`, `do`) as well as at a command boundary (`at_cmd`), or conservatively skip any `[[ … ]]` whose start cannot be established; keep checking the commands after `]]`. Controls to add to `TESTS-RESULTS/2026-11-23+GH-1580/controls.sh`: `true && if [[ -f validate.sh && -f ROUTER.md ]]; then bash -n validate.sh; fi` -> READY, and `true && if [[ -f validate.sh ]]; then gh1580_absent_command; fi` -> NOT-READY.
+- **Evidence limitation (clone identity).** The suites receipt records HEAD, origin, bare flag, clean tree and the clone reflog after the run; it lacks the local `user.email` comparison and a before-run `core.bare` value. Refresh both when F8 is repaired. No full `validate.sh` gate has been run: route is full/tier 3 and the gate runs once, at push, through the pre-push hook, which was not triggered because the branch is not publishable.
+- The branch is committed locally and NOT pushed; no PR is opened.
+
+Relay closed by the cap; no further turn is requested.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

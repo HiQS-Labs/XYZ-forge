@@ -2,7 +2,7 @@
 gh_issue: 1580
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1580
 title: "swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings"
-status: "In Progress (plan QA approved r3; building)"
+status: "Blocked (final QA r3 FAIL: F8 open; repair budget spent)"
 created: 2026-11-23
 updated: 2026-11-23
 owner: Claude (start-task sub-agent)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Recon, red replay on `origin/development` 81eefac61, and Codex plan QA (Approved in round 3; `relay-system/2026-11-23/gh1580-plan-qa.md`). | Build the three fixes in `utils/py/swarm_preflight.py`, green replay, existing suites, final QA, ready PR. |
+| Built the three fixes; red/green and existing suites recorded; final Codex QA ran 3 rounds (r1 F1-F4, r2 F5-F7 repaired). | **Blocked:** round 3 FAIL on F8 (`[[ … ]]` after a control prefix is split at its inner `&&`, a false NOT-READY); repair budget exhausted, relay escalated. Next owner repairs F8 (recipe in the relay thread), refreshes evidence and the clone-identity bracket, reruns final QA, then pushes. |
 
 ## Observed problem
 
