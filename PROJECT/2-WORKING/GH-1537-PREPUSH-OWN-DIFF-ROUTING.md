@@ -25,7 +25,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA ended at the 3-round cap (r1-r3 FAIL; the r3 residual was fixed in the plan afterwards, not re-reviewed). Hook built. Final Codex QA (gpt-6-astra, high): r1 FAIL, r2 FAIL, r3 PASS. Manual red/green (20 scenarios x base/candidate, 9 red rows on base) and a real PR #1526 replay (base full, candidate docs) in `TESTS-RESULTS/2026-11-23+GH-1537/`; six existing suites green with a complete clone-identity bracket. | PR ready; awaiting merge. Landing still gets its own full gate (unchanged). |
+| Plan QA ended at the 3-round cap (r1-r3 FAIL; the r3 residual was fixed in the plan afterwards, not re-reviewed). Hook built. Final Codex QA (gpt-6-astra, high): r1 FAIL, r2 FAIL, r3 PASS. Manual red/green (21 scenarios x base/candidate, 10 red rows on base) and a real PR #1526 replay (base full, candidate docs) in `TESTS-RESULTS/2026-11-23+GH-1537/`; six existing suites green with a complete clone-identity bracket. | PR ready; awaiting merge. One extra round (operator decision on #1537, 2026-11-23) fixed CodeRabbit's Major: the non-first-parent rejection now precedes the ancestor exemption. Landing still gets its own full gate (unchanged). |
 
 ## Problem
 
@@ -83,12 +83,16 @@ Extend `githooks/pre-push` only; reuse its integration-tip freshness proof and t
      tracking tip that already contains the merge must not exclude it before the live check), or `mbs` (the merge-base of the verified
      tip and `local_sha`) is ambiguous, unresolvable or equals `local_sha`;
    - rc 1: with the tip proven fresh, no merge remains after excluding what the tip already holds (`rev-list --merges --parents
-     remote..local ^tip` is empty), or `mbs` is already an ancestor of `remote_sha` (nothing new entered, so an ordinary README-only
-     follow-up after an already-pushed merge, or a merge of the branch's own sub-branch, keeps its update range);
-   - rc 2: a non-first parent of an own merge is not an ancestor of the tip (a merge of something not on development: the issue's
-     "merge from another branch" control). First parents are not constrained: the final-tree diff covers them. Commit ancestry cannot
-     say which branch name a merge used: a merge of a side commit already on the tip counts as integration content (it is on
-     development, and the final-tree diff still sees any difference);
+     remote..local ^tip` is empty);
+   - rc 2 (PR #1584 CodeRabbit Major, operator decision on #1537 2026-11-23): a non-first parent of an own merge is not an ancestor of
+     the tip (a merge of something not on development: the issue's "merge from another branch" control). This rejection comes BEFORE the
+     next rc 1, so a side-branch merge never keeps the update range, even when the integration tip is already in the remote branch.
+     First parents are not constrained: the final-tree diff covers them. Commit ancestry cannot say which branch name a merge used: a
+     merge of a side commit already on the tip counts as integration content (it is on development, and the final-tree diff still sees
+     any difference);
+   - rc 1: every non-first parent of every own merge is on the tip AND `mbs` is already an ancestor of `remote_sha` (nothing new entered,
+     so a merge that only re-takes history the remote branch already holds keeps its update range). A merge of the branch's own
+     sub-branch is NOT in this bullet: its non-first parent is not on the tip, so it is rc 2 above;
    - otherwise rc 0 with `mbs`.
    The point of rc 2 is that an `ours`/evil merge whose update range reads docs must not slip to docs just because freshness failed
    or the tracking hint is old.
@@ -129,7 +133,8 @@ does), real `git push` through the installed stub; `provenance.jsonl` records ba
   code edit (evil merge) routes `full`; an "ours" merge that keeps the old source while development changed it and edits a README routes
   `full` (the update range alone would read docs: Codex r1 F1), and the same "ours" merge with a STALE tracking ref also routes `full`
   (r2 F6, red on base); a merge of another branch's commit not on the tip routes `full`, including a docs-only other branch that
-  brought newer development (red on base); a merge of a side commit already on the tip narrows (stated policy); a fast-forward/linear
+  brought newer development (red on base) and a README-only side-branch merge pushed after the integration tip is already in the remote
+  branch (`side_merge_after_integration`, red at `9c18e49f0`: docs); a merge of a side commit already on the tip narrows (stated policy); a fast-forward/linear
   import `R -> D -> L` keeps today's route (F2); stale tracking ref routes `full`; first push unchanged; a push to `main` routes `full`; a two-ref push with one code ref routes
   `full`; a two-ref push whose second diff fails routes `full` (F3, red on base); a docs-only conflict resolution routes `docs`.
 - Existing suites: `gh544`, `gh591`, `gh35`, `gh4`, plus the full gate on the final commit.

@@ -201,7 +201,8 @@ pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push 
 #   rc 0  narrow: _own_base = the single best common ancestor of the verified integration tip and local_sha.
 #   rc 1  not applicable: keep today's update range. (Destination is development/main/not a branch; the range holds no merge
 #         at all — a linear or fast-forward import; or, with the integration tip proven fresh, every merge is history the tip
-#         already holds, or the merge-base is already in the remote branch so nothing new entered.)
+#         already holds, or every own merge takes only history the tip holds and the merge-base is already in the remote
+#         branch so nothing new entered.)
 #   rc 2  REJECTED candidate: the range holds a merge but it cannot be proven an integration-only refresh (the live tip is
 #         unverifiable or the tracking ref is stale or rewound, ambiguous merge-base, a non-first parent not on the tip, or no
 #         local integration tracking ref to test against). The update range can read docs while the final tree carries code
@@ -237,16 +238,20 @@ own_diff_base() {  # <local_sha> <remote_sha> <remote ref>
   mbs="$(git merge-base --all "$tip" "$local_sha" 2>/dev/null)" || return 2
   [ "$(printf '%s\n' "$mbs" | grep -c .)" -eq 1 ] || return 2
   [ "$mbs" != "$local_sha" ] || return 2
-  git merge-base --is-ancestor "$mbs" "$remote_sha" 2>/dev/null && return 1
   # Every non-first parent of every own merge must already be on the tip; first parents are unconstrained because the
   # final-tree diff covers them. Commit ancestry cannot say which branch name a merge used: a side commit already on the tip
-  # counts as integration content, and the final-tree diff still sees any difference.
+  # counts as integration content, and the final-tree diff still sees any difference. This rejection comes BEFORE the
+  # ancestor exemption below: a merge of a side branch the tip does not hold is never integration-only, even when the
+  # integration tip is already in the remote branch and the update range alone would read docs.
   while read -r m first rest; do
     [ -n "$m" ] || continue
     for q in $rest; do
       git merge-base --is-ancestor "$q" "$tip" 2>/dev/null || return 2
     done
   done <<<"$merges"
+  # Every own merge takes only integration history in. If the integration merge-base is already in the remote branch,
+  # nothing new entered with this push: keep today's update range.
+  git merge-base --is-ancestor "$mbs" "$remote_sha" 2>/dev/null && return 1
   _own_base="$mbs"
   return 0
 }

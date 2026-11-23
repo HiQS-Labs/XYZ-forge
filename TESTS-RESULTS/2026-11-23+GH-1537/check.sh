@@ -118,6 +118,11 @@ sc_side_tip_on_integration() {  # stated policy: a side commit already on develo
                           ( cd "$FX/x" && G checkout -q -b side origin/development 2>/dev/null && printf 'echo side\n' > utils/side.sh && G add -A && G commit -qm "side code" && XYZ_SKIP_PREPUSH=1 G push -q origin side 2>/dev/null
                             G checkout -q -B development origin/development && G merge -q --no-ff --no-edit side && XYZ_SKIP_PREPUSH=1 G push -q origin development 2>/dev/null )
                           wmerge origin/side; PUSHOUT="$(wpush origin st-pr)"; WANT=docs; }
+sc_side_merge_after_integration() {  # CodeRabbit Major on PR #1584: README-only side-branch merge pushed AFTER the integration tip is already in the remote branch
+                          first sa-pr docs/guide.md; adv_dev utils/foo.sh "echo dev-code"; wmerge origin/development
+                          XYZ_SKIP_PREPUSH=1 wpush -q origin sa-pr >/dev/null
+                          ( cd "$FX/x" && G checkout -q -b side-readme origin/development 2>/dev/null && printf 'side readme\n' >> README.md && G add -A && G commit -qm "side README" && XYZ_SKIP_PREPUSH=1 G push -q origin side-readme 2>/dev/null )
+                          wmerge origin/side-readme; PUSHOUT="$(wpush origin sa-pr)"; WANT=full; }
 sc_ff_import_no_merge() {  # Codex r1 F2: R -> D -> L with no merge commit; update range carries D's code
                           ( cd "$FX/w" && G push -q origin development:refs/heads/ff-pr 2>/dev/null ); adv_dev utils/foo.sh "echo dev-code"
                           ( cd "$FX/w" && G fetch -q origin && G checkout -q -B ff-pr origin/development && wcommit docs/guide.md "docs on top" )
@@ -163,7 +168,7 @@ sc_first_push_docs()    { ( cd "$FX/w" && G checkout -q -b first-pr && wcommit d
 sc_first_push_code()    { ( cd "$FX/w" && G checkout -q -b firstc-pr && wcommit utils/bar.sh "echo branch-code" ); PUSHOUT="$(wpush -u origin firstc-pr)"; WANT=full; }
 sc_linear_docs()        { first lin-pr docs/guide.md; ( cd "$FX/w" && wcommit docs/guide.md "two" ); PUSHOUT="$(wpush origin lin-pr)"; WANT=docs; }
 
-SCENARIOS="merge_only_docs conflict_docs_only side_tip_on_integration code_branch_merge evil_merge_code ours_merge_drops_dev_code other_branch_merge other_branch_docs_only ff_import_no_merge stale_base stale_ours_merge stale_before_merge_ours rewound_tip_ours followup_after_merge push_to_main two_refs_code two_refs_partial_failure first_push_docs first_push_code linear_docs"
+SCENARIOS="merge_only_docs conflict_docs_only side_tip_on_integration code_branch_merge evil_merge_code ours_merge_drops_dev_code other_branch_merge other_branch_docs_only side_merge_after_integration ff_import_no_merge stale_base stale_ours_merge stale_before_merge_ours rewound_tip_ours followup_after_merge push_to_main two_refs_code two_refs_partial_failure first_push_docs first_push_code linear_docs"
 bad=0; red=0
 printf '%-28s %-5s %-5s %-5s %s\n' scenario want base cand verdict
 for s in $SCENARIOS; do

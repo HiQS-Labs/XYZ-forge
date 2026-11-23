@@ -7,6 +7,7 @@ evil_merge_code              full  full  full  ok
 ours_merge_drops_dev_code    full  docs  full  ok (RED on base: docs)
 other_branch_merge           full  full  full  ok 
 other_branch_docs_only       full  docs  full  ok (RED on base: docs)
+side_merge_after_integration full  docs  full  ok (RED on base: docs)
 pre-push: running the full gate before this push reaches the remote (GH-544).
 pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
 pre-push:   validate.sh: PARALLEL mode — stub
@@ -29,4 +30,4 @@ two_refs_partial_failure     full  docs  full  ok (RED on base: docs)
 first_push_docs              docs  docs  docs  ok 
 first_push_code              full  full  full  ok 
 linear_docs                  docs  docs  docs  ok 
-candidate mismatches: 0   rows red on base: 9
+candidate mismatches: 0   rows red on base: 10
