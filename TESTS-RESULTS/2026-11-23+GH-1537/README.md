@@ -19,7 +19,7 @@ recorded in `provenance.jsonl` (`repo_head`, hook sha256 prefix per row).
 3. Existing suites (`gh544-pre-push-gate`, `gh591-prepush-commit-boundary`, `gh35-test-tiers`, `gh4-ungated-clone-warning`, `ci-route`,
    `ci-workflow`) via `run-focused.sh` in a disposable full clone of the task clone with the pinned venv (mypy 1.14.1): one
    `suites-provenance.jsonl` row per suite (command, tested commit, hook sha256, exit status, python/mypy/bash versions, log pointer)
-   plus the clone's identity (HEAD, origin URL, bare flag) before and after. `focused-suites.log`, `suites-provenance.jsonl`.
+   plus the clone's identity bracket before and after (`HEAD`, `core.bare`, `git remote -v` fetch/push mappings, local `user.email`, unset recorded as `<unset>`; AGENTS.md / WORKTREE-SAFETY.md). `focused-suites.log`, `suites-provenance.jsonl`.
 
 ## Result (candidate mismatches: 0; rows red on base: 9)
 

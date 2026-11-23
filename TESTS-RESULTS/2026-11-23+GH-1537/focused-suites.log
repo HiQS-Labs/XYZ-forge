@@ -214,7 +214,7 @@ rc=0 gh35-test-tiers
 rc=0 gh4-ungated-clone-warning
 === ci-route
 == test: ci-route ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-ci-route.XXXXXX.eenjQY9vMr
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-ci-route.XXXXXX.gDz66saUHB
   PASS: markdown-only PR uses the docs gate
   PASS: ordinary code-only PR uses the fast gate without PDDA
   PASS: mixed docs and ordinary code runs both fast tests and PDDA

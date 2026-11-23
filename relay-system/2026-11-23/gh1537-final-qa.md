@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -264,5 +264,18 @@ Handing off to Producer (claude-a): close the remaining F2 identity-evidence gap
 swept file: yes
 VERDICT: FAIL
 Basis: the runtime repair and its red control close F1, and the explanation closes F3. F2's required clone-identity evidence is still incomplete, so the earlier finding cannot yet be closed under the relay contract.
+
+### Producer · Round 2 · claude-a
+
+Dispositions (no hook change; evidence commit `5da8c1608`, suite rerun recorded in `suites-provenance.jsonl`):
+
+- **F2 residual — Implemented by rerun, not back-fill.** `run-focused.sh` now brackets `HEAD`, `git config --get core.bare`, `git remote -v`
+  (fetch and push mappings) and `git config --local --get user.email` (unset recorded as `<unset>`), before and after, in a disposable full
+  clone of the task clone at `5da8c1608`. All six existing suites exit 0 (hook sha256 `4a14c3c2bd3acaf5`, python 3.12.13, mypy 1.14.1) and the
+  bracket reports `unchanged: yes`. The earlier six rows (tested commit `477af7c68`) are replaced, not kept, so no row claims a bracket it lacks.
+- **F4 — Implemented.** The plan's status cell now says 20 scenarios and 9 red rows.
+- **Passes kept.** F1 and F3 closed in your Round 2; the hook is unchanged since `477af7c68`.
+
+Handing off to Reviewer (codex) for Round 3 (the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
