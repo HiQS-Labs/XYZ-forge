@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -136,5 +136,43 @@ Handing off to Producer — take your turn and disposition each finding.
 **Commit:** `880b529b3`
 
 Handing off to Reviewer (codex) — take your Round 2 turn.
+
+### Reviewer · Round 2
+
+**What this proposes** (input boundary: plan artifact only)
+The plan extends the review ladder and relay instructions for six defect classes and a clone-probe handoff. It proposes existing pin updates and live review evidence in disposable clones.
+
+**How the existing system works, per this document** (input boundary: plan artifact only)
+The code-review skill owns the shared ladder and PR review delegates to it. Relay findings require concrete evidence, and unsafe probes run in disposable clones.
+
+**What it's not** (input boundary: plan artifact only)
+It does not create a new suite, modify frozen twins, or change finding tags. It does not authorize executing unsafe suites inside the relay worktree.
+
+**Source-backed technical validation**
+
+- [Blocker] Round 1's behavioral rejection finding remains open: the proposed live fixture covers only three classes and exercises the final packet without a defective-input rejection for the other classes or start-task routing. Text pins are explicitly admission evidence, not evidence that a reviewer detects a defect. Specify concrete defective inputs and expected review/routing outcomes for the remaining test inversion, native-framework reinvention, resume-key instability, and start-task routing, with baseline rejection and corrected controls; retain the distinction between pins and behavior.
+  Observed input: artifact lines 35–36 and 142–148 list six classes but the live fixture names only TOCTOU, sibling guard and mocked test body; `test/gh778-review-code-skill.sh:32-36,72-76` checks text presence.
+  Affected scope: acceptance of all six promised defect classes and surface-triggered QA routing.
+  Falsifier: recorded behavioral red/green evidence for each omitted class and routing would close the gap. Suite and live outcomes are [Unverified — needs clone run].
+- [Blocker] The execution order changes the plan and potentially lessons after final QA, although the gate requires approval on the final head. Move all intended tracked edits and commits before final QA, then rerun appropriate checks and QA if anything changes afterward.
+  Observed input: artifact lines 187–189 and 195: final QA precedes updating plan status and potentially appending lessons; `skills/1-hourly/start-task/SKILL.md:328-330` requires fresh review for changes after approval.
+  Affected scope: final reviewed and pushed commit when step 7 modifies tracked files.
+  Falsifier: a sequence with all tracked edits committed before QA, or explicit fresh QA and checks after subsequent edits, yields the same reviewed final SHA.
+- [Should] The clone identity checklist names only HEAD and origin and omits `core.bare` and local user identity, so it cannot detect all required fixture escapes. Record and compare all four identity values before and after each mutation-heavy run, invalidating evidence on drift; apply the same check to the full-gate clone.
+  Observed input: artifact lines 174–178; `WORKTREE-SAFETY.md:504-505` names `core.bare`, origin, local user identity and HEAD.
+  Affected scope: verification runs and pre-push full gate in disposable clones.
+  Falsifier: explicit before/after comparison of all four values with invalidation on drift would make this change unnecessary.
+- [Should] The smoke says to execute the probe and verify a disposition, but does not require an actual Producer turn; a manual operator execution cannot establish that the Producer receives and follows the handoff. Require a scaffolded Producer turn and captured dispositions for reproduced/falsified and unavailable probes.
+  Observed input: artifact lines 184–186 specify a live reviewer turn followed by executing a probe, with no Producer turn specified.
+  Affected scope: Form 2 handoff and closure behavior.
+  Falsifier: a receipt showing the actual Producer turn executing each probe and recording the expected disposition would resolve this gap.
+- [Unverified — no citation] The plan now records the requested rating and pre-admission readback (artifact lines 70–76), and specifies merge-parent rollback (line 206). Actual persisted row and clone runs remain unverified in this turn.
+
+swept file: yes
+The outstanding findings above include pre-existing and revised-plan defects; no other pre-existing defect was established. The full base-SHA and source-seam audit remains unverified; no suites or live relay probes were run here.
+
+VERDICT: FAIL
+Basis: Acceptance coverage, final-head review, clone identity, and the Producer handoff need executable evidence and ordering before approval.
+Handing off to Producer — take your turn and disposition each finding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
