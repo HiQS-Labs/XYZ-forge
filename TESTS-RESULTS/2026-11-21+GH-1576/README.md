@@ -13,7 +13,7 @@ from the same unwired clones with no hook at all.
 
 ```
 bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh red   3dc703600 <task-clone> <this-dir>
-bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 802cf98e9 <task-clone> <this-dir>
+bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 802cf98e9   # boundary rows; recover.sh rows: see below <task-clone> <this-dir>
 ```
 
 `check.sh` makes a disposable local bare origin, runs the code under test from its own scratch clone
@@ -39,6 +39,7 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
 | express closeout push | pushed, no hook | refused (exit 4), ref unchanged | pushed (see limit 2) |
 | express closeout: refuse, install, retry with the same `extra_paths` (plan QA F4) | pushed at once | first call refused with nothing committed and the receipt still dirty, origin unchanged | retry after `githooks/install.sh` publishes the same transaction |
 | express closeout refused, then the documented `resume` (plan QA F4, round 4; `recover.sh`, real `closeout()` and real `resume` in the gh267 hermetic fixture) | at `c541204bc`: closeout stopped with the stub gone, tree left dirty and uncommitted; after `githooks/install.sh` `resume` rc 4 ("working tree is not clean"), receipt uncommitted, docs not moved | at `802cf98e9`: an extra unrelated dirty file still makes `resume` refuse (rc 4, HEAD unmoved) | `resume` rc 0: the retained closeout is published (receipt committed and not regenerated, still 1 line), origin in sync, issue closed, manifest shipped, doc moved, tree clean |
+| round-5 negative controls on the retained closeout (plan QA round-4 Blocker): `resume --dry-run`, and `resume --repo wrong/repo` | label `blocker-red`, code `802cf98e9` (round 4): both PUBLISH before qualification (3 add/commit/push calls, HEAD and origin move) | at `bf196d705`: both make 0 add/commit/push, 0 staged paths, tree, HEAD and origin unchanged (`--dry-run` rc 0 and reports it would publish; wrong repo rc 3 `resume-identity`) | the normal `resume` (the row above) still returns rc 0 at `bf196d705` |
 
 ## Limits, stated plainly
 
@@ -53,7 +54,11 @@ boundary, scenario, result, detail, origin refs, check rc, hook invocations).
    (a full approved Marathon result is out of scope here); staging, the evidence commit, the guard and the
    push are the real code.
 4. Plain `git push` typed by hand is outside this change and unchanged.
-5. In the recipe's "lost wiring" green row the hook count is 1, not 0: the recipe line that deletes the stub
+5. `recover.sh` rows: label `red` = `c541204bc` (before the recovery existed), `blocker-red` = `802cf98e9` (the round-4
+   code with the ordering defect; only the two negative controls are run there, one invocation each, via
+   `GH1576_NEG_ONLY=dry|repo`), `green` = the head under review. Mutating git calls are counted from `GIT_TRACE`
+   (`built-in: git add|commit|push`).
+5b. In the recipe's "lost wiring" green row the hook count is 1, not 0: the recipe line that deletes the stub
    runs `git rev-parse --git-path hooks/pre-push`, and `GIT_TRACE` prints that command. No hook ran: the push was
    never attempted and the origin ref did not move.
 6. `recover.sh` reuses the setup of `test/gh267-express-skill.sh` from the revision under test (fake `gh`, local bare
