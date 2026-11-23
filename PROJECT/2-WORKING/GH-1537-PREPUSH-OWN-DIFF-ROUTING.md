@@ -25,7 +25,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA ended at the 3-round cap (r1-r3 FAIL; the r3 residual was fixed in the plan afterwards, not re-reviewed). Hook built; manual red/green (20 scenarios x base/candidate, 9 red rows on base) and a real PR #1526 replay (base full, candidate docs) recorded in `TESTS-RESULTS/2026-11-23+GH-1537/`; existing suites green. | Final Codex QA (the r3 residual is a mandatory question), full gate on the final commit, PR. |
+| Plan QA ended at the 3-round cap (r1-r3 FAIL; the r3 residual was fixed in the plan afterwards, not re-reviewed). Hook built. Final Codex QA (gpt-6-astra, high): r1 FAIL, r2 FAIL, r3 PASS. Manual red/green (20 scenarios x base/candidate, 9 red rows on base) and a real PR #1526 replay (base full, candidate docs) in `TESTS-RESULTS/2026-11-23+GH-1537/`; six existing suites green with a complete clone-identity bracket. | PR ready; awaiting merge. Landing still gets its own full gate (unchanged). |
 
 ## Problem
 
@@ -152,4 +152,9 @@ one-file hook change on an existing proof.
 
 ## Lessons Learned
 
-(to be filled at handoff)
+- A tracking-ref hint cannot be allowed to *exclude* evidence (here: merges) before the live check proves it fresh. Plan QA r2 and r3 and
+  final QA r1 each found a different way a stale or rewound tip let an "ours" merge read docs; the fix was one ordering rule (merge
+  discovery, then live tip, then exclusion). Evidence: `TESTS-RESULTS/2026-11-23+GH-1537/provenance.jsonl` rows `stale_ours_merge`,
+  `stale_before_merge_ours`, `rewound_tip_ours` (base docs, candidate full).
+- `LESSONS-LEARNED.md`: **NO_ENTRY**. The effect rests on one author's controls plus one reviewer's reasoning in a single change; every
+  edit verdict is `confounded` until a landed run shows it.
