@@ -1,4 +1,4 @@
-# GH-1580 controls — label=mutant — source=b3b62735b + local mutation (unconditional cd tracking) — swarm_preflight.py sha256=d75bfd271cd9
+# GH-1580 controls — label=mutant — source=ccfd53eea + local mutation (unconditional cd tracking) — swarm_preflight.py sha256=d4eca4530e16
 # fixture PATH has no uv; gh is stubbed; every case is a throwaway repo; expectations are the CORRECT behaviour
 
 ── [MATCH] D1a grep_present '^ENABLE_X=1$' on a mid-file line: still unfixed -> ready
@@ -27,23 +27,23 @@
 
 ── [MATCH] D2d 'true && bash src/missing.sh' (missing script, second command) -> NOT-READY
    expect : exit 5, output matches /gate script not found.*missing\.sh/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #204 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-script-second: src/missing.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #204 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-script-second: src/missing.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MATCH] D2e 'cd src && bash -n missing.sh' (missing script in the same cd dir) -> NOT-READY
    expect : exit 5, output matches /gate script not found.*missing\.sh/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #205 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-cd-missing/src: missing.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #205 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-cd-missing/src: missing.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MISMATCH] D2g 'true || cd src; bash -n src/ok.sh': the cd may not have run, so no relative check -> READY (QA r2 F1)
    expect : exit 0, output matches /verdict +: ready/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #207 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-cd-or/src: src/ok.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #207 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-cd-or/src: src/ok.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MISMATCH] D2h 'cd src | cat; bash -n src/ok.sh': cd ran in a pipeline child, parent dir unchanged -> READY (QA r2 F1)
    expect : exit 0, output matches /verdict +: ready/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #208 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-cd-pipe/src: src/ok.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #208 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-cd-pipe/src: src/ok.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MISMATCH] D2i '(cd src && true); bash -n src/ok.sh': subshell cd does not leak -> READY (QA r2 F1)
    expect : exit 0, output matches /verdict +: ready/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #209 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-cd-subshell/src: src/ok.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #209 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-cd-subshell/src: src/ok.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MATCH] D2f bash -c body and an expansion-only program word are skipped, not guessed -> READY
    expect : exit 0, output matches /verdict +: ready/
@@ -55,7 +55,7 @@
 
 ── [MATCH] D2k F2 'true && bash src/absent.sh -c': -c is the script's own argument, the script is missing -> NOT-READY
    expect : exit 5, output matches /gate script not found.*absent\.sh/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #211 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-script-dash-c: src/absent.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #211 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-script-dash-c: src/absent.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MATCH] D2l F3 'true && bash -n src/ok.sh>/dev/null': attached redirect is not part of the filename -> READY
    expect : exit 0, output matches /verdict +: ready/
@@ -63,7 +63,7 @@
 
 ── [MATCH] D2m F3 'true && bash -n src/absent.sh>/dev/null': missing script behind an attached redirect -> NOT-READY
    expect : exit 5, output matches /gate script not found.*absent\.sh/
-   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #213 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.uFRMLF/gate-redir-missing: src/absent.sh|  verdict     : NOT-READY (exit 5)|
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #213 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-redir-missing: src/absent.sh|  verdict     : NOT-READY (exit 5)|
 
 ── [MATCH] D4a F4 path_present on an unwanted path that is already gone -> landed (STALE, exit 4), not blocked
    expect : exit 4, output matches /verdict +: STALE/
@@ -72,6 +72,42 @@
 ── [MATCH] D4b path_present on an unwanted path that is still there -> unfixed, ready
    expect : exit 0, output matches /verdict +: ready/
    observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #215 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2n F5 'true && FOO=1 cd src && bash -n ok.sh': assignment-prefixed cd moves the tracked dir -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #216 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2o F5 'true && FOO=1 cd src && bash -n missing.sh': the missing script is still found under src -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*missing\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #217 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-assign-cd-missing/src: missing.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2p F6 heredoc body 'hello' is data, not a command; the script after it exists -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #218 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2q F6 a missing script AFTER a heredoc is still found -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*missing\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #219 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-heredoc-missing: src/missing.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2r F7 'true && bash -s ignored-arg </dev/null': a positional argument, not a script -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #220 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2s F7 'true && bash src/absent.sh -s': -s after the script is its own argument, script missing -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*absent\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #221 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.BeSsw3/gate-script-dash-s: src/absent.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2t audit: '[[ -f a && -d b ]] && bash -n …' does not split on the && inside [[ ]] -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #222 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2u audit: an unquoted glob operand is not asserted missing -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #223 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2v audit: process substitution bodies are not commands of the gate -> READY
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #224 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
 
 ── [MATCH] D3 text: issue criteria under '## Done when', no '## Acceptance' -> gap line names 'Done when'; exit unchanged (0)
    expect : exit 0, output matches /gap +: .*#301.*Done when/
@@ -95,6 +131,6 @@
 
 ── [MATCH] D3-doc json: same case -> readiness.acceptance_gaps names the capture doc
    expect : exit 0, valid nonempty JSON, readiness.acceptance_gaps (has:capture doc)
-   observed: exit 0; acceptance_gaps=["capture doc /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1580.uFRMLF/acc-doc-whole/PROJECT/2-WORKING/GH-304-fixture.md has no '## Acceptance' section; the packet's checklist is read from the whole document"]
+   observed: exit 0; acceptance_gaps=["capture doc /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1580.BeSsw3/acc-doc-whole/PROJECT/2-WORKING/GH-304-fixture.md has no '## Acceptance' section; the packet's checklist is read from the whole document"]
 
-# totals: MATCH=21 MISMATCH=3
+# totals: MATCH=30 MISMATCH=3
