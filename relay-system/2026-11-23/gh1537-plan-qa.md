@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -290,5 +290,63 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTIN
   stub gate ran, with non-empty captures and hook identity.
 
 Handing off to Reviewer (codex) for Round 3 (the cap).
+
+### Reviewer · Round 3
+
+**What this proposes**
+
+The plan gives `own_diff_base` three outcomes: narrow, not applicable, or rejected candidate. Rejected candidates force the whole push to full; accepted candidates use the final-tree diff and accept only docs (plan `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:73-98`).
+
+**How the existing system works, per this document**
+
+Existing branches use the remote-to-local update range, so merging development introduces development's changed paths into classification. First pushes already use a live-verified integration base; the proposal shares that probe (plan `:45-51`, `:69-72`).
+
+**What it's not**
+
+This reviews the plan, not a delivered implementation. It does not add own-diff tier-2 routing, new receipt reuse, a new suite, or a landing-gate change (plan `:16-21`). The paraphrase preceded this turn's hook inspection.
+
+**Findings and dispositions**
+
+- **[Pass] The specific Round 2 F6 input is addressed.** With tracking D, advertised T, and merge `(R,D)->M`, plan `:82-90` now returns rc 2 and propagates a whole-push full veto. The three-outcome contract is an appropriate small correction. Its runtime implementation remains **[Unverified — needs clone run]**. The earlier candidate-detection return still leaves the closely related case below uncovered, so F6's general freshness concern is not fully closed.
+
+- **[Should] F6 residual — a tracking ref older than the merged commit bypasses candidate rejection altogether.** Plan `:80-81` treats a merge-base already ancestral to the remote feature as proof that no integration history entered. That inference uses an unverified tracking tip. Concrete history: B has `src/example.js=0`; remote feature R descends from B and adds README; development D also descends from B and changes source to 1; M has parents `(R,D)`, retains source 0 and edits README. Set tracking development to B and advertised development to D (D is locally available through a local development branch or a fetch that did not update this tracking ref). The own-merge set contains M, but `merge-base(B,M)=B` is an ancestor of R. Thus `:80` returns rc 1 before either the non-first-parent test or live probe. With one pushed feature ref there are zero narrowed/rejected pairs; `R..M` contains only README and routes docs. Against verified D, the final tree differs in source and should take full. This is a stale integration refresh with an evil-merge resolution, within the expressly required controls at `:123-127`.
+  Observed input: plan `:77-84`, specifically the unconditional rc 1 for `mbs` ancestral to `remote_sha`; values `remote_sha=R`, `local_sha=M`, tracking tip B, advertised tip D and parent edges `R<-B`, `D<-B`, `M<-(R,D)` as above. The real classifier outputs docs for the resulting update paths and full for the verified final-tree paths (probe below).
+  Affected scope: pushes containing a new own merge where the stale integration hint is at or behind the remote feature's ancestry, despite the merge importing a newer integration commit. Ordinary linear follow-ups after an already-pushed merge need no additional probe.
+  Falsifier: in the existing disposable-clone manual procedure, this exact tracking-B/advertised-D old-source merge must select full and invoke/refuse through a red full stub with no reusable receipt. A fresh docs merge retaining D's source must still select docs; a README-only follow-up after the merge is already pushed must remain docs without probing. End-to-end outcomes are **[Unverified — needs clone run]**, not claimed executed Git failures.
+  Fix: do not let the ancestral-merge-base shortcut override evidence of a newly introduced own merge whose parents cannot be explained by the local integration hint. Evaluate the relevant merge-parent rejection before that shortcut, or otherwise conservatively retain rc 2 for this concrete shape. Reuse the existing helper and full-veto contract; no new mechanism is needed. Add this specific stale-before-the-merged-commit variant to the manual stale-plus-ours control. Also align `:113`'s remaining “every failure path already equals today's route” sentence with the explicitly changed veto behavior at `:134-139`.
+
+  Narrow classifier probe, command `python3 -` after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`, exit **0**:
+  ```python
+  import subprocess
+  for label, paths in [('stale-before-merge-update', 'README.md\n'),
+                       ('verified-integration-final-tree', 'src/example.js\nREADME.md\n')]:  [Unverified — no citation]
+      p = subprocess.run(['bash', 'utils/ci-route.sh', 'push'],
+                         input=paths, text=True, capture_output=True)
+      assert p.returncode == 0 and p.stdout, (p.returncode, p.stderr)
+      print(label, 'exit='+str(p.returncode),
+            '/'.join(x for x in p.stdout.splitlines()
+                     if x.startswith(('route=', 'tier='))))
+  ```
+  Decisive output:
+  ```text
+  stale-before-merge-update exit=0 route=docs/tier=1
+  verified-integration-final-tree exit=0 route=full/tier=3
+  ```
+
+- **[Pass] F1-F5 remain addressed at plan level.** The non-doc final-tree veto is explicit at plan `:93-98`; linear imports are excluded and integrated side-parent provenance is stated honestly at `:78-86`; classifier failure discards stdout at `:97-98`. Hook `githooks/pre-push:41`, `:224-228`, `:263` corroborates why preserving status closes the pre-existing partial-path issue. The pair inventory at plan `:66-68` matches all readers in the fully read hook: `:127-132`, `:179-180`, `:302-306`, plus the unchanged two-field `_base_pairs` at `:224-228` and `:286-288`. The no-CHANGELOG decision at plan `:99-100` follows `PROJECT/PDDA.md:1064-1068` and `.pdda-mode`'s lack of an override.
+
+**Remaining source-backed answers**
+
+- **[Pass] Admitted final-tree classification and conservative parent handling remain sound within the path policy.** Plan `:82-98` tests every non-first parent, including octopus parents; a development-first merge whose feature parent is not integrated is conservatively rejected. A divergent rebase still fails hook `:209-210`. A branch with an older already-pushed integration merge can qualify when a new merge advances its integration base; an ordinary follow-up has no new own merge and needs no probe. `--no-renames` at hook `:227` preserves deletion/rename paths; mode/gitlink changes are classified by their paths under `utils/ci-route.sh:63-70`, `:324-356`, `:452-477`. These are source-reasoned edge cases, not executed Git fixtures. F6 concerns the early return before this final-tree protection applies.
+- **[Pass] Probe sharing and multi-ref aggregation have the right design boundaries.** Plan `:69-72` keeps the success/failure cache and notes in the parent shell. The extraction must preserve the push-URL probe, nonzero-status rejection, absent-tip rejection and first-push returns at hook `:136-205`. Plan `:89-98` unions chosen ranges and vetoes the whole push for a rejected ref or failed classification. Destination exclusions apply per ref (`:77`); they disable the new optimization, while existing update-range policy remains, including the harmless no-op integration-ref control at `test/gh544-pre-push-gate.sh:438-456`. No additional `_real_ref_pairs` reader was found in the hook.
+- **[Pass] The intended delivery rejection is discriminating, but has not run.** Plan `:117-129` requires base full/candidate docs for the same refresh and asserts nonempty captures, exact hook identity and the gate actually invoked. An unchanged candidate cannot meet that contrast. The red full/green docs stub pattern is present at `test/gh544-pre-push-gate.sh:88-100`, `:138-152`. The revised controls cover the prior findings, but the stale-plus-ours setup must also instantiate the earlier tracking tip above. Existing suites and manual provenance respect `AGENTS.md:166-172`; no new suite is warranted. No later gate is presumed to run or pass.
+
+Scope and limits: swept the entire 149-line plan and 353-line hook; inspected classifier push/docs/full behavior and gh544 fixture-driving/freshness controls. No additional substantiated pre-existing hook defect was found beyond F3. Graph tools were unavailable, so project/generation and coverage could not be checked; direct source was used. No git command, executable fixture, test suite or gate was run. The only executed behavioral probe was the read-only path classifier above. The proposed edit remains local to the hook, with shared push-routing blast radius; the material failure mode is a docs decision that loses the required integration-resolution veto.
+
+Handing off to Producer (claude-a) with STATUS: Escalated: the round cap is reached. Resolve the residual F6 candidate-detection case through the supervising workflow; no automatic fourth round is authorized here.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The three-outcome contract fixes the previously specified stale-D/advertised-T case, but the earlier ancestral-merge-base shortcut still routes a stale-B/advertised-D evil merge as docs. Plan approval remains withheld; implementation and end-to-end controls are unverified.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
