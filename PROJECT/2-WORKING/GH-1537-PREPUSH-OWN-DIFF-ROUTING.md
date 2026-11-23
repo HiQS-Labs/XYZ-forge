@@ -70,22 +70,26 @@ Extend `githooks/pre-push` only; reuse its integration-tip freshness proof and t
    the first-push path share one freshness proof (no second copy). It sets globals (`_adv_dev`, `_adv_main`, a state flag that
    caches success AND failure, and `_base_note`), so it and `own_diff_base` are called directly in the parent shell, never
    inside `$(...)` (a command substitution would lose the cache, Codex plan QA r1).
-3. **Add `own_diff_base <local> <remote> <rref>`** with THREE outcomes (Codex r1 F1, r2 F6): rc 0 = narrow (sets the global
-   `_own_base`); rc 1 = **not applicable**, the pair keeps today's update-range base; rc 2 = **rejected candidate**, which forces
-   the full gate for the whole push. A push becomes a *candidate* only when integration history entered with it AND the branch made
-   a merge of its own, both checked locally with no network:
-   - not applicable (rc 1): destination is not `refs/heads/*` or is `development`/`main`; no local integration tracking ref
-     (`refs/remotes/<remote>/development`, then `main`); no merge of the branch's own (`git rev-list --merges --parents
-     remote..local ^tip` is empty: a linear or fast-forward import such as `R -> D -> L` keeps its route, "linear push unchanged");
-     or the merge-base `mbs` is already an ancestor of `remote_sha` (nothing new entered, so an ordinary README-only update after an
-     already-pushed merge keeps docs with no probe);
-   - candidate, then rc 2 when ANY of: `mbs` is ambiguous, unresolvable or equals `local_sha`; a non-first parent of an own merge is
-     not an ancestor of the tip (a merge of something not on development: the issue's "merge from another branch" control); the live
-     probe is unverifiable; or the tracking ref differs from the advertised tip (stale). First parents are not constrained: the
-     final-tree diff covers them. Commit ancestry cannot say which branch name a merge used: a merge of a side commit already on the
-     tip counts as an integration merge (its content is on development, and the final-tree diff still sees any difference);
-   - otherwise rc 0 with `mbs`, the single best common ancestor of the verified tip and `local_sha`.
-   The point of rc 2 is that an `ours`/evil merge whose update range reads docs must not slip to docs just because freshness failed.
+3. **Add `own_diff_base <local> <remote> <rref>`** with THREE outcomes (Codex r1 F1, r2 F6, r3 F6-residual): rc 0 = narrow (sets
+   the global `_own_base`); rc 1 = **not applicable**, the pair keeps today's update-range base; rc 2 = **rejected candidate**, which
+   forces the full gate for the whole push. The presence of a merge of the branch's own is what makes a push a candidate, and the
+   LIVE tip is consulted before any local-ancestry shortcut, because a stale local tracking ref cannot be trusted to say whether
+   integration history entered (r3: tracking tip B, advertised D, merge `(R,D)->M` that keeps B's source). In order:
+   - rc 1 (not applicable): destination is not `refs/heads/*` or is `development`/`main`; or no merge of the branch's own exists
+     (`git rev-list --merges --parents remote..local ^tip` is empty: a linear or fast-forward import such as `R -> D -> L` keeps its
+     route, "linear push unchanged"; this check is local, so ordinary pushes spend no network round trip). With no local integration
+     tracking ref at all the `^tip` exclusion is unavailable: any merge in `remote..local` is then a rejected candidate (rc 2), none is rc 1;
+   - rc 2: the live probe is unverifiable, or the tracking ref differs from the advertised tip (stale), or `mbs` (the merge-base of
+     the verified tip and `local_sha`) is ambiguous, unresolvable or equals `local_sha`;
+   - rc 1: `mbs` is already an ancestor of `remote_sha` (the tip is verified fresh and nothing new entered, so an ordinary README-only
+     follow-up after an already-pushed merge, or a merge of the branch's own sub-branch, keeps its update range);
+   - rc 2: a non-first parent of an own merge is not an ancestor of the tip (a merge of something not on development: the issue's
+     "merge from another branch" control). First parents are not constrained: the final-tree diff covers them. Commit ancestry cannot
+     say which branch name a merge used: a merge of a side commit already on the tip counts as integration content (it is on
+     development, and the final-tree diff still sees any difference);
+   - otherwise rc 0 with `mbs`.
+   The point of rc 2 is that an `ours`/evil merge whose update range reads docs must not slip to docs just because freshness failed
+   or the tracking hint is old.
 4. **Route.** `resolve_base_pairs` also records, per pair, `local|ownbase` (or the update base when not narrowed), counts the
    narrowed pairs and the rejected candidates. Any rejected candidate takes the full gate for the whole push without classifying.
    Otherwise the top level classifies the own pairs when any pair narrowed:
@@ -110,7 +114,7 @@ stated scope (an integration merge); it does not prove branch provenance and no 
   tier-2 narrowing, any change to landing gates, any new suite.
 - *Alternatives rejected:* (a) classify `merge-base..local` for every existing-branch push (also narrows non-merge pushes and
   non-docs routes, a wider bet than approved); (b) treat any merge as safe (misses evil merges and other-branch merges).
-- *Rollback:* revert the hook edit; the change is local to one file and every failure path already equals today's route.
+- *Rollback:* revert the hook edit; the change is local to one file and the rejected-candidate full veto and the classifier-status check are the only deliberate additions to the old routes.
 
 ## Verification (manual, `TESTS-RESULTS/2026-11-23+GH-1537/`, no new suite)
 

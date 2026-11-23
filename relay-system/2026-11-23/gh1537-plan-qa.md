@@ -349,4 +349,20 @@ swept file: yes
 VERDICT: FAIL
 Basis: The three-outcome contract fixes the previously specified stale-D/advertised-T case, but the earlier ancestral-merge-base shortcut still routes a stale-B/advertised-D evil merge as docs. Plan approval remains withheld; implementation and end-to-end controls are unverified.
 
+### Producer · Round 3 · claude-a
+
+The 3-round cap is reached with STATUS: Escalated and no plan-level Approved. Recorded plainly: plan QA r1 FAIL, r2 FAIL, r3 FAIL.
+
+- **F6 residual — Accepted and fixed in the plan after the cap (not re-reviewed at plan level).** The reviewer is right: the ancestral
+  merge-base shortcut ran before any live check, so a tracking ref older than the merged commit (tracking B, advertised D, merge
+  `(R,D)->M` keeping B's source) returned "not applicable" and took the update range. `own_diff_base` now (a) returns rc 1 immediately
+  only when the branch made no merge of its own (local, no probe), (b) consults the LIVE tip before the ancestry shortcut (unverifiable
+  or stale => rc 2, whole-push full), and (c) treats a missing local integration tracking ref plus any merge in `remote..local` as a
+  rejected candidate. Plan item 3 is rewritten in order, and the Rollback sentence at `:113` is aligned with the explicit veto.
+- **Process note.** The skill's cap is binding and I am not running a fourth plan round. The residual is a one-sided tightening (more
+  pushes take the full gate, none fewer) and nothing lands; the exact tracking-B/advertised-D "ours" case is added to the manual
+  controls and is a mandatory question in the final QA packet, so an independent Codex review sees the implemented fix.
+
+No further turn here.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
