@@ -126,6 +126,13 @@ python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --s
 # (read from HEAD, never the working tree) against it and never runs a suite or writes evidence
 # (GH-592). With no committed valid receipt it refuses BEFORE closing the issue or shipping and
 # prints the recovery recipe below.
+# GH-1576: if the closeout stopped with `gate-unwired` (the clone's pre-push stub was missing when it
+# came to commit and push), nothing was committed: the ledger ship, projections and this landing's
+# receipt are still dirty on the base branch. Run `bash githooks/install.sh`, then this same `resume`
+# command. After the repository/issue identity check (never under `--dry-run`, which only reports it
+# would publish), it publishes exactly that retained transaction (allowlisted closeout paths plus this
+# issue's valid receipt for this commit and suite) through the wiring check, never reruns the suite,
+# and then continues. Any other dirty path, another branch, or no matching receipt still refuses.
 python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh [--sha <SHA>] [--base <branch>]
 
 # Recovery recipe when resume refuses. Run in a FRESH disposable full clone. Every inspection fails
@@ -134,6 +141,7 @@ python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh 
 set -euo pipefail
 SHA=<SHA>; N=<N>; SUITE=test/<existing-suite>.sh; BASE=<base-branch>   # development in XYZ Forge
 git checkout "$SHA"
+bash githooks/install.sh && bash githooks/install.sh --check                                      # 0. a fresh clone has no hook: wire and prove it (GH-1576)
 git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
 LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
 snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
@@ -144,11 +152,14 @@ AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "
 git checkout "$BASE" && git diff-index --quiet HEAD --                                           # 5. same helper, actual rc
 REC=$(python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
 cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6. retain the run beside the receipt
-git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin "$BASE"
+git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)"
+bash githooks/install.sh --check                                                                 # 6b. no push from an unwired clone; never --no-verify (GH-1576)
+git push origin "$BASE"
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
 ```
 
-In a vendored host (GH-1169) the recipe differs in four places: set `REPO=<owner>/<name>` (the host's slug; express's
+In a vendored host (GH-1169) the recipe differs in five places: omit the two `githooks/install.sh` lines (steps 0 and 6b;
+the host owns its hook policy, as `gate_check` does), set `REPO=<owner>/<name>` (the host's slug; express's
 default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
 instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
 `.xyz/utils/py` in step 5, and resume with
@@ -167,7 +178,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 0. **Tree of execution** — task branch based on `origin/<base>` (the resolved base) with $\le 2$
    local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches
    refuse with `task-clone`), no scratch paths, and `bash githooks/install.sh --check`
-   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549).
+   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549). The closeout
+   push re-proves it immediately before pushing (GH-1576).
    Express never commits over peer work (GH-527). Hand-edits to ledger files or
    generated views are refused; only the driver's verbs may write them.
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless

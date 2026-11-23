@@ -1,0 +1,8 @@
+initialized /tmp/gh267-express.fsfn80/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.fsfn80/repo/releases.sql
+added roadmap entry rmi-01M84KD70TZPZX07TV3ZVVGGB1 for GH-999
+added roadmap entry rmi-01M84KD71156RDNTZZ3GEXK208 for GH-998
+added roadmap entry rmi-01M84KD719G1ESC4RRDGYKYZHD for GH-997
+fixture ready
+== GH-1576 F4: closeout refused by the wiring check, recovered through resume ==
+  [closeout with the stub gone (install --check rc=1)] result=CLOSEOUT=exit-4 origin 5c3e846ef25dd5707206eae02026b7aa2cde091f -> 5c3e846ef25dd5707206eae02026b7aa2cde091f :: dirty=[ M LEADERBOARD.html; M LEADERBOARD.md; M RELEASES-PREVIEW.html; M releases.db; M releases.sql;?? TESTS-RESULTS/;] local-commits-ahead-of-origin=0 receipt-lines=1
+  [negative control: resume --repo wrong/repo with the retained closeout pending] result=rc=3 origin 5c3e846ef25dd5707206eae02026b7aa2cde091f -> b932cc35f5fe35d9a8f4013e9e0f352e1721d76a :: mutating-git-calls(add/commit/push)=3 staged-paths=0 head-unchanged=NO tree-unchanged=NO origin-unchanged=NO; express-refused: rule=resume-identity — requested repository differs from the landing root repository
