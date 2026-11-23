@@ -1,0 +1,71 @@
+# GH-1576 manual red/green check (not a suite, GH-831)
+
+Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1576. Plan: `PROJECT/2-WORKING/GH-1576-PREPUSH-HOOK-CHECK.md`.
+
+## What this shows
+
+Every start-task-family push step now runs `bash githooks/install.sh --check` immediately before
+pushing and refuses (no push, origin unchanged) when the clone's pre-push stub is not installed.
+Merge-cleanup's own landing clone is wired at provisioning. Base revision `3dc703600` (red) pushes
+from the same unwired clones with no hook at all.
+
+## How it was run
+
+```
+bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh red   3dc703600 <task-clone> <this-dir>
+bash TESTS-RESULTS/2026-11-21+GH-1576/check.sh green 802cf98e9   # boundary rows; recover.sh rows: see below <task-clone> <this-dir>
+```
+
+`check.sh` makes a disposable local bare origin, runs the code under test from its own scratch clone
+at the given revision, and drives each changed boundary from fresh clones that never ran
+`githooks/install.sh`. Per scenario it records the origin ref before and after, the result,
+`install.sh --check` (exit 1 = unwired, 0 = wired, 127 = installer missing), and the number of
+`hooks/pre-push` lines in `GIT_TRACE` (2 per hook invocation; 0 = no hook ran). Output:
+`red.log`, `green.log`, and one JSON line per scenario in `provenance.jsonl` (label, code revision,
+boundary, scenario, result, detail, origin refs, check rc, hook invocations).
+
+## Result (see `provenance.jsonl` for exact values)
+
+| Boundary | Red, unwired clone | Green, unwired clone | Green, after install |
+|---|---|---|---|
+| kickstart `run_record.py` `checkpoint --push` | pushed, ref moved, no hook | rc 1, refused, ref unchanged | pushed, hook invoked; rerun at same head is a no-op |
+| kickstart, `githooks/install.sh` missing | pushed | rc 1, refused | n/a |
+| merge-cleanup `push_resolved_head` | pushed, no hook | `ok=False`, ref unchanged | clone from `prepare_landing_clone` is wired by the tool, pushes, hook invoked (red: same clone unwired, pushed with no hook) |
+| merge-cleanup post-merge writes push | pushed, no hook | `ok=False`, ref unchanged | pushes, hook invoked |
+| jog `JogCheckpoint._push` (publication clone) | pushed, no hook | refused, ref unchanged | pushed, hook invoked |
+| jog `publish_jog_receipt(..., push=True)` (real call; only the Marathon-result and gate-receipt validators are stubbed) | pushed, no hook | refused, ref unchanged | pushed, hook invoked |
+| jog `_require_gate_wired` guard | no guard exists | refused; refused when the installer is missing | allowed; installer missing + vendored layout (`XYZ_VENDORED=1`) keeps the host's policy (allowed) |
+| express recovery recipe (`SKILL.md`, its own lines extracted verbatim and run in a fresh clone) | pushed from an unwired clone, no hook | wiring lost after the recipe's install step: stops (rc 1) before the push, ref unchanged | recipe on a fresh clone installs the hook, then pushes, hook invoked |
+| express closeout push | pushed, no hook | refused (exit 4), ref unchanged | pushed (see limit 2) |
+| express closeout: refuse, install, retry with the same `extra_paths` (plan QA F4) | pushed at once | first call refused with nothing committed and the receipt still dirty, origin unchanged | retry after `githooks/install.sh` publishes the same transaction |
+| express closeout refused, then the documented `resume` (plan QA F4, round 4; `recover.sh`, real `closeout()` and real `resume` in the gh267 hermetic fixture) | at `c541204bc`: closeout stopped with the stub gone, tree left dirty and uncommitted; after `githooks/install.sh` `resume` rc 4 ("working tree is not clean"), receipt uncommitted, docs not moved | at `802cf98e9`: an extra unrelated dirty file still makes `resume` refuse (rc 4, HEAD unmoved) | `resume` rc 0: the retained closeout is published (receipt committed and not regenerated, still 1 line), origin in sync, issue closed, manifest shipped, doc moved, tree clean |
+| round-5 negative controls on the retained closeout (plan QA round-4 Blocker): `resume --dry-run`, and `resume --repo wrong/repo` | label `blocker-red`, code `802cf98e9` (round 4): both PUBLISH before qualification (3 add/commit/push calls, HEAD and origin move) | at `bf196d705`: both make 0 add/commit/push, 0 staged paths, tree, HEAD and origin unchanged (`--dry-run` rc 0 and reports it would publish; wrong repo rc 3 `resume-identity`) | the normal `resume` (the row above) still returns rc 0 at `bf196d705` |
+
+## Limits, stated plainly
+
+1. Runs that say "hook invoked" set `XYZ_SKIP_PREPUSH=1`, so they prove the stub was run by git, not
+   that a gate passed. `real-gate.log` is one run without it: kickstart `checkpoint --push` from a
+   wired clone. The real hook ran and refused the push (`gate-attempt: REFUSED — task qualification
+   has no attempt reservation`), so the hook is live and enforcing; a full-gate pass is exercised by
+   this task's own push instead.
+2. Express's own landing push sets `XYZ_SKIP_PREPUSH=1` by lane design, so its wired control is
+   wiring evidence only, as the plan said.
+3. The `publish_jog_receipt` witness stubs `_validate_marathon_result` and `gate_receipt.check_receipt`
+   (a full approved Marathon result is out of scope here); staging, the evidence commit, the guard and the
+   push are the real code.
+4. Plain `git push` typed by hand is outside this change and unchanged.
+5. `recover.sh` rows: label `red` = `c541204bc` (before the recovery existed), `blocker-red` = `802cf98e9` (the round-4
+   code with the ordering defect; only the two negative controls are run there, one invocation each, via
+   `GH1576_NEG_ONLY=dry|repo`), `green` = the head under review. Mutating git calls are counted from `GIT_TRACE`
+   (`built-in: git add|commit|push`).
+5b. In the recipe's "lost wiring" green row the hook count is 1, not 0: the recipe line that deletes the stub
+   runs `git rev-parse --git-path hooks/pre-push`, and `GIT_TRACE` prints that command. No hook ran: the push was
+   never attempted and the origin ref did not move.
+6. `recover.sh` reuses the setup of `test/gh267-express-skill.sh` from the revision under test (fake `gh`, local bare
+   remote, the real driver); the closeout refusal is produced by running the real `closeout()` with the stub removed.
+   `resume` accepts only the closeout transaction that `persist_closeout` refused before committing (allowlisted
+   ledger paths plus this issue's valid receipt for this commit and suite, on the base branch). A refusal at the
+   second persistence (reconcile, receipt already committed) is a different, unwitnessed state; the second wiring
+   check immediately before the push is covered by reading, not by fault injection.
+7. `focused-suites.log`: the existing suites for the changed files (no new tests); `full-gate.log` (when
+   present): `./validate.sh` from a disposable full clone at the stated revision.

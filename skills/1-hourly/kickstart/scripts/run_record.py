@@ -424,6 +424,24 @@ def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProc
     return proc
 
 
+def _require_gate_wired(clone_root: Path) -> None:
+    """GH-1576: refuse to push from a clone whose pre-push gate is not installed.
+
+    The authority is the clone's own `githooks/install.sh --check`. A missing installer is not
+    proof of a downstream host, so it refuses too; never fall back to --no-verify.
+    """
+    installer = clone_root / "githooks" / "install.sh"
+    if not installer.is_file():
+        raise ValueError("refusing push: githooks/install.sh is missing, so this clone's pre-push gate "
+                         "cannot be proven (GH-1576)")
+    chk = subprocess.run(["bash", str(installer), "--check"], cwd=clone_root,
+                         capture_output=True, text=True)
+    if chk.returncode != 0:
+        raise ValueError("refusing push: this clone's pre-push gate is not installed; run "
+                         "`bash githooks/install.sh` in it, then retry (GH-1576): "
+                         + (chk.stderr or chk.stdout).strip())
+
+
 def _git_common_dir(path: Path) -> Path | None:
     proc = _git(path, "rev-parse", "--git-common-dir", check=False)
     if proc.returncode != 0:
@@ -587,6 +605,7 @@ def checkpoint_record(
         if remote_sha == head_sha:
             push_status = "up-to-date"
         else:
+            _require_gate_wired(clone_root)
             _git(clone_root, "push", "origin", f"HEAD:refs/heads/{branch}")
             pushed = True
             push_status = "pushed"

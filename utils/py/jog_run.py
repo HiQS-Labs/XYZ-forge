@@ -1145,6 +1145,26 @@ def _git(root, *args, env=None, input=None):
     return proc.stdout
 
 
+def _require_gate_wired(clone):
+    """GH-1576: refuse to push from a clone whose pre-push gate is not installed.
+
+    The authority is the clone's own `githooks/install.sh --check`. A missing installer is not
+    proof of a downstream host: only the harness's own vendored layout (`is_vendored()`) leaves
+    the hook policy to the host, as express does. Never fall back to --no-verify.
+    """
+    installer = os.path.join(clone, "githooks", "install.sh")
+    if not os.path.isfile(installer):
+        if is_vendored():
+            return
+        raise ContractError("refusing push: githooks/install.sh is missing, so this clone's pre-push "
+                            "gate cannot be proven (GH-1576)")
+    chk = subprocess.run(["bash", installer, "--check"], cwd=clone, capture_output=True, text=True)
+    if chk.returncode:
+        raise ContractError("refusing push: this clone's pre-push gate is not installed; run "
+                            "`bash githooks/install.sh` in it, then retry (GH-1576): "
+                            + (chk.stderr or chk.stdout).strip())
+
+
 def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, push=True):
     """Publish exact terminal evidence on the existing lane; never touch its ledger."""
     from gate_receipt import check_receipt
@@ -1206,6 +1226,7 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
             if staged != set(paths):
                 raise ContractError("receipt publication has unrelated staged changes")
             _git(target, "commit", "-m", f"jog: publish {execution} approved execution receipts")
+        _require_gate_wired(target)
         _git(target, "push", "origin", f"HEAD:refs/heads/{branch}")
     return rel
 
@@ -2317,6 +2338,7 @@ class JogCheckpoint:
                          "refs/heads/development").decode().split()[0]
         if published != commit:
             # Normal push: never bypass the clone's configured gate or force a ref.
+            _require_gate_wired(pub)
             _git(pub, "push", "origin", commit + ":refs/heads/development")
 
     def _app(self, *args):

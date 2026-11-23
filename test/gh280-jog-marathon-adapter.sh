@@ -163,6 +163,10 @@ setup_fixture() {
   mkdir -p "$root/src" "$root/test" "$root/PROJECT/2-WORKING"
   printf 'module.exports = 1\n' > "$root/src/feature.js"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$root/test/fixture-gate.sh"
+  # GH-1576: jog's receipt/checkpoint pushes refuse a clone whose `githooks/install.sh --check`
+  # does not pass. This fixture has no real hook, so it ships an installer that reports "wired".
+  mkdir -p "$root/githooks"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$root/githooks/install.sh"
   write_capture_doc "$root/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
   if [ -z "$prefix" ]; then
     printf '.tick/\n.xyz/\n__pycache__/\n' > "$root/.gitignore"

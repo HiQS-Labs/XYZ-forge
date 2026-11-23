@@ -96,7 +96,9 @@ Then begin work.
 3. **Provision isolated work and register intake before implementation.** Create
    a fresh **full clone from the canonical remote**, verify origin and base SHA,
    and create the task branch under repo policy. In XYZ Forge the branch is cut
-   off `origin/development`, with the per-clone git hooks installed and checked.
+   off `origin/development`. Provisioning runs `bash githooks/install.sh` and then
+   `bash githooks/install.sh --check` in the new clone before any other work (hooks do not
+   travel with a clone, GH-549); a failing check stops the task there (GH-1576).
    Preserve the primary checkout and other sessions.
    **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
    tracking issue first, so the number is known before anything is named:
@@ -287,7 +289,8 @@ Then begin work.
    Include both sides of renames and deletions; a changed script, test, DB, or other
    non-doc path must follow its classified tier rather than being called docs-only.
    When the route requires the full gate, run `ci-local.sh --fast` on the final approved commit and then push: the pre-push hook runs the full `./validate.sh` suite, and that is the one full-gate run (GH-1518). Do not also run full `ci-local.sh` or `./validate.sh` before the push; that runs the same suite twice on the same commit.
-   That hand-off holds only when both of these are true: `bash githooks/install.sh --check` passes (an unwired clone pushes with no hook at all), and this push is the branch's first, so the hook classifies the whole PR diff against the integration base. The hook classifies only the pushed range; once the branch is on the remote, a docs-only final push routes `docs` and the full suite never runs. If either is false, run full `./validate.sh` once on the final approved commit before pushing. Its receipt (`utils/py/gate_receipt.py`) lets the hook reuse that run instead of repeating it.
+   **Every push, first or later, is preceded immediately by `bash githooks/install.sh --check` (GH-1576).** An unwired clone pushes with no hook at all, so a nonzero exit stops the push: run `bash githooks/install.sh`, re-check, and only then push. Never use `--no-verify` or `XYZ_SKIP_PREPUSH` to get past it. The kickstart, jog, express and merge-cleanup push steps run the same check themselves and refuse.
+   That hand-off holds only when both of these are true: that check passes, and this push is the branch's first, so the hook classifies the whole PR diff against the integration base. The hook classifies only the pushed range; once the branch is on the remote, a docs-only final push routes `docs` and the full suite never runs. If either is false, run full `./validate.sh` once on the final approved commit before pushing. Its receipt (`utils/py/gate_receipt.py`) lets the hook reuse that run instead of repeating it.
    In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
    never a valued task clone or linked worktree. Verify its repository identity
    before and after the run; drift invalidates its evidence. Retain required
@@ -330,7 +333,7 @@ Then begin work.
    and continue independent groups.
 
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
-   and accidental files, push through the repository's required gate, and open the
+   and accidental files, run `bash githooks/install.sh --check` and push through the repository's required gate (a failing check means no push), and open the
    PR against its active integration branch (`development` in XYZ Forge). Reuse
    an existing PR for the branch. If a network interruption occurs during PR creation,
    query `gh pr list --head <branch>` to verify whether the PR was registered before

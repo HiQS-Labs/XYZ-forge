@@ -255,6 +255,8 @@ contract rather than ad-hoc regexes or unlocked appends.
   - `checkpoint --record <path> --clone <dir> --primary <dir> --branch <branch> --dest <relpath> [--push]` —
     commits (and optionally pushes without force) a redacted snapshot to a clean, dedicated
     non-integration branch clone confined against `--primary`, `LANDING_CLONE`, and symlink escapes.
+    `--push` first runs the clone's `bash githooks/install.sh --check` and refuses to push when the
+    pre-push gate is not installed (GH-1576); run `bash githooks/install.sh` in the clone, then retry.
 
 ### Authoritative Amendment Enforcement (KS-06, U2/U11/U12)
 - **Single Authoritative Channel:** The run record is the sole authoritative channel for

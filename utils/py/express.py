@@ -536,7 +536,9 @@ RECOVERY_RECIPE = (
     "OUTSIDE the tree, runs `%s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
     "Only then, from clean %s: python3 -c 'import sys; sys.path.insert(0,\"%s\"); import express; "
     "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>, base=\"%s\"))'; commit receipt + recovery-run.log under "
-    "TESTS-RESULTS/*+GH-%d-express/, push to %s, re-run resume --base %s."
+    "TESTS-RESULTS/*+GH-%d-express/, run `bash githooks/install.sh --check` immediately before pushing (the recipe "
+    "installs the hook first in this fresh clone; never --no-verify; a vendored host omits both githooks lines), "
+    "push to %s, re-run resume --base %s."
 )
 
 
@@ -1267,6 +1269,15 @@ def is_allowed_closeout_path(p):
     return False
 
 
+def require_gate_wired(root, what):
+    """GH-1576: refuse (die) unless `bash githooks/install.sh --check` proves the canonical stub.
+    Express pushes with XYZ_SKIP_PREPUSH=1 by lane design, so this is the wiring proof for its pushes."""
+    wired, detail = gate_check(root)
+    if not wired:
+        die("refusing %s: `bash githooks/install.sh --check` did not prove the canonical gate stub; "
+            "run `bash githooks/install.sh` first (GH-1576): %s" % (what, detail))
+
+
 def persist_closeout(root, message, extra_paths=()):
     """Persist one cleanly delimited closeout transaction. `extra_paths` grants
     exactly the named files (the landing's receipt) for this one transaction;
@@ -1279,8 +1290,15 @@ def persist_closeout(root, message, extra_paths=()):
     disallowed = [p for p in paths if not (is_allowed_closeout_path(p) or p in extra)]
     if disallowed:
         die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
+    # GH-1576: checked twice. The early check refuses BEFORE anything is committed, so a clone that
+    # is unwired at this point leaves the closeout dirty and uncommitted, and `resume` (which
+    # publishes exactly this retained transaction, see resume_pending_closeout) recovers it after
+    # `bash githooks/install.sh`. The check immediately before the push is the one that guarantees
+    # the push itself never goes out from an unwired clone.
+    require_gate_wired(root, "closeout persistence")
     git(root, "add", "--", *paths)
     git(root, "commit", "-m", message)
+    require_gate_wired(root, "closeout push")
     git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
     return True
 
@@ -1441,6 +1459,39 @@ def qualify_resume_identity(args):
         refuse(args.root, "resume-identity", str(exc), issue=args.issue, dry_run=dry)
 
 
+def pending_closeout_receipt(root, issue, sha, suite, branch):
+    """GH-1576 (F4): read-only. The repo-relative receipt path when the dirty tree is exactly this
+    issue's retained, uncommitted ship closeout, else None. Nothing is staged, committed or pushed.
+
+    `persist_closeout` refuses an unwired clone BEFORE committing, which leaves the closeout the
+    driver already produced (ledger ship, projections, this commit's receipt) dirty on the base
+    branch. After `bash githooks/install.sh` the documented recovery is this same `resume`. The state
+    qualifies only when the branch is the base branch, this issue's valid receipt for this commit and
+    suite is among the dirty paths (`find_receipt`), and every other dirty path is on the closeout
+    allowlist; anything else keeps resume's clean-tree refusal."""
+    if branch != BASE:
+        return None
+    receipt = find_receipt(root, sha, issue, suite)
+    if not receipt:
+        return None
+    paths = change_paths(root)
+    if receipt not in paths or any(p != receipt and not is_allowed_closeout_path(p) for p in paths):
+        return None
+    return receipt
+
+
+def publish_pending_closeout(root, issue, sha, receipt):
+    """GH-1576 (F4): publish the retained closeout found by `pending_closeout_receipt`. Called by
+    `cmd_resume` only AFTER identity qualification and the --dry-run return, so a preview or a
+    request for another repository never reaches `persist_closeout`. Publication is the original
+    closeout's own `persist_closeout` (both wiring checks, allowlist, push); the receipt is not
+    regenerated and the suite is not rerun. Returns the porcelain that is still dirty ('' = clean)."""
+    persist_closeout(root, "chore(releases): express ship GH-%d (commit %s)" % (issue, sha[:12]),
+                     extra_paths=(receipt,))
+    print("express-resume: published the retained closeout for commit %s (receipt %s)" % (sha[:12], receipt))
+    return git(root, "status", "--porcelain=v1", check=False).stdout.strip()
+
+
 def cmd_resume(args):
     """Recover/resume an interrupted express run: ensure issue is closed, complete reconciliation,
     and persist/push remaining artifacts."""
@@ -1450,21 +1501,38 @@ def cmd_resume(args):
     # 1. Check working tree cleanliness before doing ANY operations (regardless of branch)
     cur_branch = git(root, "branch", "--show-current", check=False).stdout.strip()
     dirty = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
+    sha = suite = pending = None
     if dirty:
-        die("working tree is not clean on %s — stash or discard before resuming: %s" %
-            (cur_branch, dirty.replace("\n", "; ")))
+        # GH-1576 (F4): the one dirty tree resume accepts is this issue's own closeout transaction,
+        # left uncommitted when the wiring check refused it. Only recognised here (read-only);
+        # it is published below, after identity qualification and the --dry-run return.
+        sha = resolve_landing_commit(root, issue, args.sha)
+        suite = normalize_suite(args.suite)
+        pending = pending_closeout_receipt(root, issue, sha, suite, cur_branch)
+        if not pending:
+            die("working tree is not clean on %s — stash or discard before resuming: %s" %
+                (cur_branch, dirty.replace("\n", "; ")))
 
     # 2. Resolve and validate the landing commit identity and reachability
-    sha = resolve_landing_commit(root, issue, args.sha)
-    suite = normalize_suite(args.suite)
+    sha = sha or resolve_landing_commit(root, issue, args.sha)
+    suite = suite or normalize_suite(args.suite)
 
     # Before preview, checkout, close, ship or reconcile: a number-only receipt
     # cannot transfer landing authority to another repository. No new start.
     owned_row = qualify_resume_identity(args)
 
     if getattr(args, "dry_run", False):
+        if pending:
+            print("express-resume [dry-run]: would publish the retained closeout (receipt %s)" % pending)
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
         return dict(issue=issue, sha=sha)
+
+    # GH-1576 (F4): the retained closeout is published only now, past qualification and the preview.
+    if pending:
+        left = publish_pending_closeout(root, issue, sha, pending)
+        if left:
+            die("working tree is not clean on %s after publishing the retained closeout: %s" %
+                (cur_branch, left.replace("\n", "; ")))
 
     # 3. Switch to a clean base-branch checkout if on another branch
     if cur_branch != BASE:
