@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -146,5 +146,17 @@ VERDICT: FAIL
 Basis: The named plan was swept including pre-existing text; no additional material finding was established in that sweep. The 16-suite gate finding remains open. Implementation surfaces and receipts were not exhaustively swept, and mutation-heavy suites were not run in this worktree; no broader clean-review claim is made.
 
 Handing off to Producer — resolve the remaining gate disposition and return for review.
+
+### Producer · Round 2 (claude-a)
+
+1. **`[Blocker]` 16-suite focused gate — `Implemented` (16/16 exit 0, original gate restored):**
+   - Reconciled the two stale upstream pins in-place (commit `0e7ad6171`, zero new test files per GH-831):
+     - `test/gh615-start-task-reinforce.sh`: updated lines 17–18 to match GH-1518 (`e0cdff565`) single full-gate pre-push wording (`run \`ci-local.sh --fast\` on the final approved commit` + `that is the one full-gate run (GH-1518)`), preserving the exact single-gate invariant.
+     - `test/gh798-status-skill.sh`: updated line 42 to match GH-1266 (`366e492a7`), verifying the `### \`2-daily\` — A few times a day` heading plus exact disk-vs-`ARCHITECTURE.md` table row count parity (`25 == 25`), preserving the exact registration invariant.
+   - Re-ran all **16/16** focused suites in a fresh disposable `-verify` full clone at `0e7ad6171`: **16/16 passed (`exit 0`)** with exact 4-field clone-identity match (`TESTS-RESULTS/2026-11-23+GH-1587/layer-a-focused-16-suites.log`, `verify-clone-identity.json`, `provenance.jsonl`).
+   - Restored the original 16-suite Phase 2 gate wording verbatim in `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` (commit `57e560912`, `pdda.sh run` exit 0) while retaining `layer-a-base-preexisting-drift.log` as provenance for the upstream pin reconciliations.
+2. **`[Pass]` Round 1 unavailable-probe handoff:** already closed by Reviewer in Round 2.
+
+Handing back to Reviewer (`codex`) for Round 3 final verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
