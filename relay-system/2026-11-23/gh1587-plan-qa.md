@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -119,5 +119,22 @@ Pre-existing defects in the artifact are the findings above; no other pre-existi
 VERDICT: FAIL
 Basis: The execution location, rejection evidence, and unresolved clone-probe closure must be made concrete before this plan is executable or approvable.
 Handing off to Producer — take your turn and disposition each finding.
+
+### Round 1 · Producer · claude-a · 2026-11-23
+
+**Decisions on proposals:**
+- **[Blocker] 1 (Focused tests & push gate clone location):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Phase 1 step 7 & Phase 2 Clone safety boundary / steps 1–4). Removed all `test/*.sh` runs from Phase 1 in the task clone; moved all 16 focused `test/*.sh` runs, red-on-base pin checks, live GH-836 self-sufficiency, and smoke tests into the separate disposable full clone `../XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23-verify` with canonical origin URL and before/after identity checks. Clarified that the task clone itself is a fresh standalone disposable full clone (not primary, not a linked worktree), so running the single pre-push `./validate.sh` gate on `git push` satisfies both `AGENTS.md` (disposable full clone) and `start-task/SKILL.md:291` (GH-1518: do not run `./validate.sh` twice on the same commit).
+- **[Blocker] 2 (Observed Rejection table & admission pins vs behavioral detection):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Acceptance Map, Target Seams #10, and Phase 2 steps 2 & 4). Split the Acceptance Map cleanly into Layer A (Deterministic Admission Pins: extended existing `test/gh681-reviewer-probe-rules.sh`, `test/gh778-review-code-skill.sh`, and `test/gh616-start-task-commensurate-envelope.sh` in-place under GH-831 with negative-control mutations, verified RED on unchanged `14cb8a60d` files and GREEN on candidate) and Layer B (Behavioral Evidence: live GH-836 self-sufficiency + `new-relay.sh`-scaffolded Codex review on a reconstructed defective Python fixture covering TOCTOU race, missing sibling auth guard, and mocked-out test body).
+- **[Should] 3 (Form 2 severity, pending status, and Producer clone-probe closure including errored/unavailable probes):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` new section "Form 1 vs Form 2 Severity & Closure Rules (GH-681 + GH-564)" + Phase 2 step 4). Defined default `[Should]` severity for unexecuted Form 2 traces, allowed `[Blocker]` via Form 2 only when the static `file:line` trace proves an unconditional invariant breach, marked all Form 2 findings pending verification until the Producer executes `Clone probe:` in a disposable clone, specified all three closure outcomes (Reproduced → fix + before/after output; Falsified → `Declined — falsified by clone probe: <cmd → exit + output>`; Errored/Unavailable → stays OPEN as `[Unverified — clone probe failed/unavailable]` and blocks `STATUS: Approved`), and added both Producer execution and errored/unavailable-probe verification to Phase 2 step 4.
+- **[Should] 4 (Record persisted roadmap rating & admission check):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Status table, "Persisted Roadmap Registration & Rating" section, and Phase 1 preamble). Recorded `rmi-01M859AVNYRXE06BH6A6QH6F5E` (`pri=85 / sev=80 / appeal=50 [neutral] / effort=70`, `ovr=null`, `doc_path: PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md`) and explicit pre-write readback + `--accepted-start` check.
+- **[Nit] Rollback merge-commit parent flag (from footer):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Rollback section: added `git revert -m 1 <merge-sha>` for merge commits).
+
+**Did:** Revised `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` in commit `880b529b3` to resolve all 4 findings plus the rollback merge-parent note.
+
+**Re-review this:** Re-read `.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md` in full and confirm all Round 1 findings are closed cleanly before Round 2 verdict.
+
+**Commit:** `880b529b3`
+
+Handing off to Reviewer (codex) — take your Round 2 turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
