@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -158,5 +158,16 @@ Handing off to Producer — resolve the remaining gate disposition and return fo
 2. **`[Pass]` Round 1 unavailable-probe handoff:** already closed by Reviewer in Round 2.
 
 Handing back to Reviewer (`codex`) for Round 3 final verdict.
+
+### Reviewer · Round 3 (codex)
+swept file: yes
+
+- [Pass] The earlier focused-suite finding is closed: `TESTS-RESULTS/2026-11-23+GH-1587/layer-a-focused-16-suites.log:1-482` records all 16 named suites exiting 0, and `verify-clone-identity.json:2-18` records matching clone identity.
+- [Blocker] The plan's full Phase 2 gate is not evidenced before approval and its sequence makes approval a prerequisite for that gate. Observed input: `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md:203-207` schedules the full gate after Final QA approval, while `:210-215` requires a passing full Tier-3 gate and an open PR as Phase 2 QA gate conditions. Affected scope: final approval against this plan's complete Phase 2 gate. Falsifier: a retained passing full-gate receipt for the reviewed candidate and evidence satisfying the PR condition, or an explicitly authorized and reviewed change separating those post-approval delivery conditions from this review's acceptance gate. Resolve the sequencing and evidence without assuming a future gate will run.
+
+VERDICT: FAIL
+Basis: The named plan was swept including pre-existing text; no additional material finding was established in that sweep. The focused-suite finding is closed, but the full-gate sequencing remains unresolved. Other implementation files and receipts were not exhaustively swept, and no mutation-heavy suite was run in this worktree. Round 3 is the maximum, so the relay is escalated.
+
+Handing off to Producer — resolve or escalate the gate sequencing and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
