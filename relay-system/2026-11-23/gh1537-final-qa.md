@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -113,5 +113,70 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis; set STATUS to Appr
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**Block approval:** the specific plan-r3 stale-before-merge case is fixed, but another stale-tip shortcut remains. The retained focused-suite evidence also lacks its required provenance. This is a review of the implementation and supplied receipts, not a newly executed full gate.
+
+- **[Should] F1 — an excluded merge can bypass live freshness verification.** `githooks/pre-push:223-224` subtracts the unverified tracking tip, then returns rc 1 on an empty merge set, before `:226-228` probes the live destination. This contradicts the freshness claim at `:205` and plan item 3 (`PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:75-77`). A backward rewrite of development can therefore erase the candidate veto. Concrete graph: B has `src/example.js=0`; R descends from B and adds README; D descends from B and changes source to 1; M has parents `(R,D)`, retains source 0 and changes README. Development temporarily contains M, the tracking ref is M, then the destination rewinds development to D without a fetch. Push feature R→M. `R..M ^M` has no commits, so the helper returns 1 without checking that advertised D differs from tracking M. The caller uses R→M (README only); against verified D the final tree also changes source. This is the empty-exclusion variant explicitly requested in Setup question 1, not the ordinary merge-free follow-up.
+  Observed input: `githooks/pre-push:223-224`, with `local_sha=M`, `remote_sha=R`, `dest=refs/heads/docs-pr`, `refs/remotes/origin/development=M`, advertised development D, and the concrete parents/tree values above. The existing classifier returns docs for README alone and full when `src/example.js` is included (probe below). The Git DAG/hook outcome is source-reasoned, **[Unverified — needs clone run]**, not an asserted executed push failure.
+  Affected scope: a newly pushed merge reachable from an unverified local integration tip, when that tracking tip no longer represents the push destination. Genuinely merge-free update ranges need no additional network request.
+  Falsifier: add this exact tracking-M/advertised-D shape to the existing disposable-clone manual check; with no reusable receipt it must select/invoke full, while the fresh normal docs merge still invokes docs and the demonstrated linear/docs follow-up cases keep their routes. If the current hook already does that, retain its nonempty push output and explain which condition prevents `:224` returning 1.
+  Fix: do not treat exclusion by an unverified tip as proof that a newly pushed merge needs no freshness check. Preserve the no-new-merge fast path; validate the hint or retain the existing rc-2 veto for the concrete excluded-merge case. Reuse the helper/cache, revise the matching plan instruction at `:78-81`, and record the red/green control in the existing evidence procedure; no new suite or provenance subsystem is needed.
+
+- **[Should] F2 — the evidence ledger does not support all claimed runs.** `TESTS-RESULTS/2026-11-23+GH-1537/provenance.jsonl:1-40` contains only 38 scenario rows and two replay rows: zero focused-suite records, and no scenario push exit statuses. `check.sh:173-174` never records those statuses, contrary to plan `:121-122`. `focused-suites.log:125`, `:128`, `:203`, `:213`, `:300`, and `:366` do record six successful suite exits, but do not identify the tested commit/hook or environment; consequently README `:19-21`'s candidate-commit, pinned-venv and identical-base-failure claims cannot be established from that log plus provenance. The 38 hook hashes do match the seeded candidate, so this is a specific attribution gap, not rejection of the routing table.
+  Fix: retain provenance for the cited focused runs (actual command, tested SHA/hook identity, exit status, environment and log pointer), plus the required pre/post clone-identity evidence; recover the original records if available, otherwise rerun in a disposable full clone. Capture each manual push's status alongside route and gate invocation, without confusing the intentionally broken-object control's push failure with routing failure. Retain evidence for the earlier base/candidate environment-fault assertion or remove that unsupported assertion. Do not invent missing run metadata. These are evidence changes, not a requested runtime behavior change.
+
+- **[Nit] F3 — align the explanatory contract.** `githooks/pre-push:121` still says “Every doubt keeps today's update range,” although `:301` and `:362-364` implement the deliberate full veto. Replace that sentence with the three-outcome distinction already documented at `:196-204`. Plan item 4 and its verification at `:96`/`:124` promise a line naming the merge-base; the actual message at hook `:367` names the concept but prints no base identifier. Either include the base information or narrow that prose promise. The substantive plan order/routing/Risks otherwise match `:214-243`, `:348-372` and the deliberate non-doc/stale full veto; F1 is a flaw shared by plan and implementation.
+
+- **[Pass] The particular plan-r3 residual is addressed.** For tracking B / advertised D / merge `(R,D)->M`, M survives `^B`, so hook `:226-228` rejects before the ancestral-base shortcut at `:232`; `:301` and `:362-364` preserve the full veto. The executed producer control is defined at `check.sh:134-139` and retained at `provenance.jsonl:23-24` (base docs, candidate full, both gate invocations recorded). A missing local tracking ref with a successfully enumerated merge returns 2 at hook `:218-221`. Octopus non-first parents are each checked at `:236-240`; a development-first merge with an unintegrated feature second parent is conservatively rejected there. These last edge cases are source checks, not newly executed fixtures.
+
+- **[Pass] Accepted own-diff classification retains the required boundaries.** Hook `:229-243` supplies the unique integration merge-base; `:305-306` appends one aligned pair to both arrays; `:355-357` classifies the chosen union and discards stdout on any failed diff. `:319` retains `--no-renames`, so deleted/renamed source paths remain visible; `:365-370` accepts only docs and overrides tier 2 otherwise. The partial-second-diff red control is at `check.sh:151-155` and `provenance.jsonl:31-32`. This closes the pre-existing status-masking defect identified in plan QA. This claim is about admitted candidates; F1 prevents claiming global soundness.
+
+- **[Pass] Untouched behavior and scope remain bounded in the supplied diff.** `gh1537-final-qa-code.diff` changes one hook, extracts the existing push-URL/nonzero-status/absent-tip checks into `githooks/pre-push:146-194`, and preserves first-push base selection at `:269-292`. Ordinary merge-free pushes exit the helper before the probe; development/main destinations exit at `:210`. That destination exclusion preserves existing update-range policy; it does not newly force every docs-only integration push full. Tier-2 execution and exact-commit receipt reuse remain at `:337-345` and `:407-426`; the extra destination field leaves the receipt's `${_pair%%|*}` reader intact. The new whole-array expansions at `:355` require `_own_n>0`, which follows an appended pair, so no new empty-array expansion under `set -u` was found. No new classifier, registry entry or test suite appears in the supplied implementation diff. No additional substantiated pre-existing hook defect was found in the whole-file sweep.
+
+- **[Pass] The retained routing comparison rejects the unchanged candidate, and the replay is qualified evidence.** `check.sh:177-183` requires candidate routes and actual gate markers to agree; eight base rows disagree with the same expected routes (`red-green-table.log`, final line). Probe below finds eight base mismatches, zero candidate mismatches, and candidate hook hash `9c5a332d52c0acda` matching every candidate receipt. The replay log `replay/replay.log:1-12` records the two own-diff paths, 33 update paths, and actual full/docs stub markers. `replay.sh:14-44` pins a local mirror, overlays current support files, stubs admission/gates and directly invokes the hook with historical ref input; it is not a live production push or proof of gate-body correctness. README `:10-12` and `:46-50` disclose the isolation/stubs; F2 covers its unsupported run-attribution claims. The ordinary controls (a)-(d) and the named evil-merge/partial-diff controls have rows; the F1 rewritten-tip variant is absent.
+
+Read-only probe command (after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`), exit **0**:
+
+```bash
+python3 - <<'PYPROBE'
+from pathlib import Path
+import hashlib,json,subprocess
+rows=[json.loads(x) for x in Path('TESTS-RESULTS/2026-11-23+GH-1537/provenance.jsonl').read_text().splitlines()]
+assert len(rows)==40
+print('hook',hashlib.sha256(Path('githooks/pre-push').read_bytes()).hexdigest()[:16])
+print('candidate_hashes',sorted({r['hook_sha256'] for r in rows if r['variant']=='cand'}))
+print('scenario_exits',sum('exit' in r for r in rows if 'scenario' in r))
+print('suite_records',sum('scenario' not in r and 'replay' not in r for r in rows))
+for v in ['base','cand']:
+ print(v,'mismatches',sum(r['route']!=r['want'] for r in rows if 'scenario' in r and r['variant']==v))
+for paths in ['README.md\n','README.md\nsrc/example.js\n']:
+ p=subprocess.run(['/bin/bash','utils/ci-route.sh','push'],input=paths,text=True,capture_output=True)
+ assert p.returncode==0 and p.stdout,(p.returncode,p.stderr)
+ print(repr(paths),'exit',p.returncode,'/'.join(s for s in p.stdout.splitlines() if s.startswith(('route=','tier='))))
+PYPROBE
+```
+
+Decisive output:
+
+```text
+hook 9c5a332d52c0acda
+candidate_hashes ['9c5a332d52c0acda']
+scenario_exits 0
+suite_records 0
+base mismatches 8
+cand mismatches 0
+'README.md\n' exit 0 route=docs/tier=1
+'README.md\nsrc/example.js\n' exit 0 route=full/tier=3
+```
+
+Also ran `/bin/bash -n githooks/pre-push`: exit **0**, no diagnostics. Inspected the complete hook, plan, implementation diff and manual evidence scripts, plus the retained logs and relevant classifier paths. Graph tools were unavailable; no graph generation or coverage claim is made. No git command, executable fixture, test suite or full gate was run in this reviewer worktree. No later gate is assumed to run or pass. The only tracked edit is this relay file.
+
+Handing off to Producer (claude-a): address F1-F3 and return the revised implementation and evidence for Round 2.
+
+swept file: yes
+VERDICT: FAIL
+Basis: the exact prior F6 input is closed, but a stale tracking tip that contains the new merge still bypasses the live check and can select docs for the old-source resolution. Focused-run attribution and promised push statuses are also missing from provenance. Approval remains withheld pending the concrete correction and retained evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
