@@ -7,7 +7,7 @@ update-range path count (remote..local): 33
 [base] pre-push:   validate.sh: stub
 [base] stub full gate ran
 [base] pre-push: full gate GREEN in 0s — pushing.
-[cand] pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base is docs-only.
+[cand] pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base (6c90ed1e2) is docs-only.
 [cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
 [cand] stub documentation gate ran
 [cand] SUMMARY [pdda-local-check-completed-status] errors=0 warns=33 info=0
@@ -16,5 +16,5 @@ update-range path count (remote..local): 33
 [cand] INFO [pdda-local-check-roadmap-section-duplicates] ROADMAP.md ROADMAP.md not found; nothing to check
 [cand] SUMMARY [pdda-local-check-roadmap-section-duplicates] errors=0 warns=0 info=1
 [cand] SUMMARY [pdda-local-check-release-milestone] errors=0 warns=0 info=0
-[cand] pre-push: documentation gate GREEN in 17s — pushing.
+[cand] pre-push: documentation gate GREEN in 15s — pushing.
 [both] (33 WARN lines from the real pdda-local-checks run on historical docs omitted; they are warn-only)
