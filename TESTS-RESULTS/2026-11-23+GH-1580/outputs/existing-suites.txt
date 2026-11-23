@@ -1,0 +1,23 @@
+# identity bracket (disposable full clone, per WORKTREE-SAFETY.md)
+before: created by 'git clone --no-local' of the task clone at HEAD=d0c0aded8fe2ee05be8cc192b5171bdaa4127d8c; origin reset to https://github.com/HiQS-Labs/XYZ-forge.git
+after:  HEAD=d0c0aded8fe2ee05be8cc192b5171bdaa4127d8c origin=https://github.com/HiQS-Labs/XYZ-forge.git core.bare=false porcelain_lines=0; reflog has the single clone entry (HEAD never moved)
+
+0 21s test/swarm-preflight.sh
+0 1s test/gh308-swarm-gate-path.sh
+0 3s test/gh343-gate-program-target-root.sh
+0 2s test/gh400-acceptance-fidelity.sh
+0 1s test/gh400-source-url.sh
+0 4s test/gh425-source-url-slug.sh
+0 3s test/gh557-unknown-blocks-manifest.sh
+0 12s test/gh438-acceptance-recheck.sh
+0 2s test/gh291-contract-goldens.sh
+0 185s test/gh280-jog-marathon-adapter.sh
+0 2s test/gh418-issue-state-frozen.sh
+0 5s test/gh399-packet-acceptance-continuation.sh
+0 2s test/gh467-index-only-lane-blocked.sh
+0 14s test/gh642-consumer-fruit.sh
+0 5s test/marathon-plan.sh
+0 1s test/gh322-unknown-arg-rejection.sh
+0 4s test/path-integrity.sh
+pytest rc=0 ============================= 21 passed in 28.05s ==============================
+DONE
