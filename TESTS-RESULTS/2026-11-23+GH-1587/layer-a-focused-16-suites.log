@@ -125,17 +125,17 @@ gh681-reviewer-probe-rules: all cases passed
   PASS: mut3c (no GH-1587 step 8 Clone probe execution): properly rejected
   PASS: mut4 (empty fixture): properly rejected
   gh616-start-task-commensurate-envelope: 9 pass, 0 fail
-=== test/gh615-start-task-reinforce.sh (exit=1) ===
+=== test/gh615-start-task-reinforce.sh (exit=0) ===
 == test: gh615-start-task-reinforce ==
   PASS: size non-empty guard (39813 bytes)
-  FAIL: positive control failed
-  FAIL: unmodified control failed
+  PASS: positive in-tree control
+  PASS: unmodified fixture control
   PASS: mut1 (test non-scope): properly rejected
   PASS: mut2 (ponytail rail): properly rejected
   PASS: mut3 (tiered verification): properly rejected
   PASS: mut4 (anti-thrashing): properly rejected
   PASS: mut5 (empty fixture): properly rejected
-  gh615-start-task-reinforce: 6 pass, 2 fail
+  gh615-start-task-reinforce: 8 pass, 0 fail
 === test/gh609-sdlc-agent-gaps.sh (exit=0) ===
 == test: gh609-sdlc-agent-gaps ==
   PASS: File size non-empty guard: skills/2-daily/workhorse/SKILL.md (34616 bytes)
@@ -279,9 +279,9 @@ STDERR:
 new-relay: wrote <TMPDIR> (NEXT: Reviewer, reviewer=rev)
 jog: merge refused: token RELAY-gh7-jog-drive unreadable (tick info failed) (GH-505) — parking GH-7
 jog: merge failed (gh exit 1):  — parking GH-7
-jog: merge refused: candidate c8a1bd7987c2 changes non-transcript content after reviewed head d1de1a9ff476 (candidate-drifted-from-reviewed-head) — parking GH-7
+jog: merge refused: candidate 98db3b5e0e91 changes non-transcript content after reviewed head 10c153962811 (candidate-drifted-from-reviewed-head) — parking GH-7
 jog: merge refused: no valid reviewer attestation for this task (GH-505) — parking GH-7
-jog: auto-merge refused/failed: merge refused: candidate c8a1bd7987c2 changes non-transcript content after reviewed head d1de1a9ff476 (candidate-drifted-from-reviewed-head)
+jog: auto-merge refused/failed: merge refused: candidate 98db3b5e0e91 changes non-transcript content after reviewed head 10c153962811 (candidate-drifted-from-reviewed-head)
 jog: auto-merge refused/failed: merge failed (gh exit 1): 
 jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)
 jog: --reviewer must differ from --builder (both are 'rev')
@@ -351,9 +351,9 @@ test-turn: committed builder turn (file-scoped, no push)
   gh91-relay-scratch: 22 pass, 0 fail
 STDERR:
 test-turn: OFF-ALLOWLIST change: stray.txt — reverting
-test-turn: pre-revert copy of stray.txt saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.COjLlq/repo/.tick/orphan-backups/20261123T231732Z-61602
+test-turn: pre-revert copy of stray.txt saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.Wh9Xaw/repo/.tick/orphan-backups/20261123T233327Z-69393
 test-turn: OFF-ALLOWLIST change: .relay-scratch2/out.json — reverting
-test-turn: pre-revert copy of .relay-scratch2/out.json saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.COjLlq/repo/.tick/orphan-backups/20261123T231732Z-61602
+test-turn: pre-revert copy of .relay-scratch2/out.json saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.Wh9Xaw/repo/.tick/orphan-backups/20261123T233327Z-69393
 === test/new-relay.sh (exit=0) ===
 == test: new-relay ==
   workdir: <TMPDIR>
@@ -479,7 +479,7 @@ test-turn: pre-revert copy of .relay-scratch2/out.json saved under <HOME>/.t3/us
   PASS: agent-chorus: the 13 payload paths shipped, no legacy TSV
   PASS: agent-chorus: published child passes --check
 gh589-xyz-mini-sync: 39 passed, 0 failed
-=== test/gh798-status-skill.sh (exit=1) ===
+=== test/gh798-status-skill.sh (exit=0) ===
 == test: gh798-status-skill ==
   workdir: <TMPDIR>
 == test: gh798-status-skill ==
@@ -499,5 +499,9 @@ gh589-xyz-mini-sync: 39 passed, 0 failed
   PASS: review-code-xyz has helper adherence check
   PASS: review-code-xyz has parallel subsystem trap
   PASS: ARCHITECTURE.md has where-are-we-at link
-STDERR:
-FAIL: 2-daily count does not match disk (25)
+  PASS: ARCHITECTURE.md 2-daily count matches disk (25)
+  PASS: installer refuses live foreign link
+  PASS: installer replaces dangling link
+  PASS: negative control 8a: mutation successfully detected missing recital
+  PASS: negative control 8b: mutation successfully detected missing Lane E
+  gh798-status-skill: 21 pass, 0 fail

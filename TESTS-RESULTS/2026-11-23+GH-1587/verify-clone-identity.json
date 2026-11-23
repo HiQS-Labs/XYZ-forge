@@ -1,19 +1,19 @@
 {
   "clone": "disposable -verify full clone",
-  "candidate_sha": "19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e",
+  "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
   "pre_run": {
     "core.bare": "false",
     "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
     "user.name": "Noel Saw",
     "user.email": "56978803+noelsaw1@users.noreply.github.com",
-    "HEAD": "19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e"
+    "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
   },
   "post_run": {
     "core.bare": "false",
     "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
     "user.name": "Noel Saw",
     "user.email": "56978803+noelsaw1@users.noreply.github.com",
-    "HEAD": "19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e"
+    "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
   },
   "match": true
 }
