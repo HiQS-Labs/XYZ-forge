@@ -207,12 +207,17 @@ Ordered Phase 2 steps (**all tracked edits are committed BEFORE Final Codex Rela
    - Record 4-field pre-push clone identity in the task clone, verify `bash githooks/install.sh --check`, check `git ls-remote --heads origin fix/XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` and `git diff --no-renames --name-only "$(git merge-base origin/development HEAD)" HEAD | bash utils/ci-route.sh push` (confirming first-push full Tier-3 routing; if not first push or not full Tier-3, execute full `./validate.sh` once on the final approved SHA inside `-verify` first), run `bash utils/ci-local.sh --fast`, and push `fix/XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` to `origin`. Verify 4-field post-push clone identity matches pre-push identity.
    - Open ready PR against `development`, call `link_pull_request`, post the idempotent closeout comment on `#1587`, and retire both the task clone and `-verify` clone via `merge-cleanup --retire-published-pr`.
 
-### Phase 2 QA Gate
+### Phase 2 QA Gate (Sequenced per `skills/1-hourly/start-task/SKILL.md` Steps 8–9 / GH-1518)
+
+**Step 8 Pre-Approval Final QA Gate (verified before Final Codex QA `Approved`):**
 - All 16 focused pinned test suites pass (`exit 0`) in `-verify` clone, with recorded red-on-base rejection of unchanged `14cb8a60d` files and intact 4-field clone identity before/after.
 - Live `test/relay-self-sufficiency.sh` passes (non-skipped) and is recorded in `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl`.
 - Live `new-relay.sh`-scaffolded Reviewer + Producer dual `Clone probe:` smoke receipt (Reviewer-issued working TOCTOU probe reproduced & fixed + Reviewer-issued unavailable `acme-pay-cli` probe kept OPEN as `[Unverified — clone probe failed/unavailable]` refusing `STATUS: Approved`) recorded in `TESTS-RESULTS/2026-11-23+GH-1587/`.
-- All tracked edits (`TESTS-RESULTS/`, `LESSONS-LEARNED.md` decision, plan status) committed **before** Final Codex Relay QA reaches `Approved` on the final head SHA.
-- Full Tier-3 `./validate.sh` passes on the final approved SHA (via verified first-push wired pre-push hook, or via fallback `-verify` clone full-gate receipt if not a first-push full route), with 4-field clone identity verified before/after, and PR is open against `development`.
+- All tracked edits (`TESTS-RESULTS/`, `LESSONS-LEARNED.md` `NO_ENTRY` decision, plan status) committed **before** Final Codex Relay QA reaches `Approved` on the final head SHA.
+
+**Step 9 Post-Approval Delivery Gate (executed strictly AFTER Final Codex QA `Approved`, with zero code/doc/plan edits, per `skills/1-hourly/start-task/SKILL.md` Step 9 & GH-1518):**
+- Wired first-push pre-push hook (`bash githooks/install.sh --check`, empty `git ls-remote`, `ci-route.sh push` → full Tier-3), `bash utils/ci-local.sh --fast`, and `git push` running the single full Tier-3 `./validate.sh` on the final approved SHA (or fallback `-verify` full `./validate.sh` if not a first-push full route), with 4-field clone identity verified before/after.
+- Ready PR opened against `development`, linked via `link_pull_request`, idempotent `#1587` closeout comment updated, and both clones retired via `merge-cleanup --retire-published-pr`.
 
 ---
 
