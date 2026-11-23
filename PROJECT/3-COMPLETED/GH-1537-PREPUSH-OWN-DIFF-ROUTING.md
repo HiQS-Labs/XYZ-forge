@@ -2,7 +2,7 @@
 gh_issue: 1537
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1537
 title: "pre-push: a branch that only merged development in is routed by its own diff, not sent to the full gate"
-status: In Progress
+status: Complete
 created: 2026-11-23
 updated: 2026-11-23
 owner: Claude (start-task sub-agent)
