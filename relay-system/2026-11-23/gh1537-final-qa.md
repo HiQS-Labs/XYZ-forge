@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -277,5 +277,90 @@ Dispositions (no hook change; evidence commit `5da8c1608`, suite rerun recorded 
 - **Passes kept.** F1 and F3 closed in your Round 2; the hook is unchanged since `477af7c68`.
 
 Handing off to Reviewer (codex) for Round 3 (the cap).
+
+### Reviewer · Round 3 · codex
+
+**Approve the implementation and retained focused evidence.** F2's remaining identity gap and F4's stale count are closed. F1 and F3 remain closed. This approval is final code QA, not a claim that the pending full gate on the final commit has run.
+
+- **[Pass] F2 closed by the new, complete bracket.** `TESTS-RESULTS/2026-11-23+GH-1537/run-focused.sh:8-17` captures HEAD, configured bare state, effective bare state, full fetch/push remote mappings and local email before the suites; `:28-29` captures and compares them afterwards. `suites-provenance.jsonl:1-6` attributes all six successful runs to `5da8c1608c524c3897d480f549ea5f5a5ecd7ea5` and hook `4a14c3c2bd3acaf5`; `:7` contains equal before/after objects, including explicit `local_user_email: "<unset>"` and both origin mappings. The probe below checks equality, required fields, commit/hash attribution and agreement with the six exit markers in `focused-suites.log:125`, `:128`, `:204`, `:214`, `:300`, `:366`. This closes the specific missing-evidence finding; it does not imply a newly executed reviewer gate.
+
+- **[Pass] F4 closed; F3 remains closed.** `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:28` now says “20 scenarios x base/candidate, 9 red rows on base”, matching the receipts. The three-outcome explanation at `githooks/pre-push:121-124`, printed base identifier at `:376`, and plan items 3–4 at `:73-104` remain consistent with the built routing. The plan explicitly leaves the full gate on the final commit outstanding.
+
+- **[Pass] F1 remains closed and the runtime boundary is preserved.** `githooks/pre-push:229-236` discovers merges before consulting the live tip and only excludes verified integration history afterwards; the tracking-M/advertised-D control remains base docs versus candidate full at `provenance.jsonl:25-26`. The older-tracking-B control at `:23-24` remains full on the candidate. For a successfully enumerated merge with no local tracking tip, hook `:222-225` rejects; octopus non-first parents are each checked at `:244-248`. A development-first merge with a feature second parent not on the tip is rejected by that same check. These latter edges are source reasoning, not newly executed fixtures. Aligned per-ref pairs at `:314-315`, final-tree diff with `--no-renames` at `:328`, classifier-status handling at `:366`, and whole-push veto/docs-only acceptance at `:371-379` retain the required resolution-edit, rename/deletion and multi-ref boundaries.
+
+- **[Pass] Whole-file sweep found no additional substantiated pre-existing defect.** Read all of `githooks/pre-push:1-467`, the complete supplied implementation diff, plan and manual evidence scripts. The five new-side diff hunks match the seeded hook exactly. First-push selection at `:270-301`, destination exclusion at `:214`, merge-free return before network at `:229-231`, tier-2 handling at `:394-413` and exact-commit full-receipt reuse at `:416-436` retain their previous scope. The new array expansion at `:364` requires an appended own pair; no new empty-array expansion under bash 3.2 `set -u` was found. The supplied diff extends one hook and reuses the classifier/live probe; it adds no production classifier, suite or registry entry.
+
+- **[Pass] The retained evidence rejects the unchanged hook.** `provenance.jsonl:1-40` has 20 scenarios per variant, nine base route mismatches, zero candidate mismatches, matching actual stub-gate markers and recorded push exits. Candidate hashes match the seeded hook. The two replay records at `:41-42` and `replay/replay.log:1-12` retain base full versus candidate docs for PR #1526, with two own-diff paths versus 33 update paths. `README.md:8-22` and `:48-56`, together with `replay.sh:14-44`, disclose the fixture gates, isolated admission and historical/local-mirror replay. These establish routing behavior, not live production gate-body correctness. The intentionally broken-object push remains qualified at README `:44`.
+
+Read-only probe command, exit **0** (the following syntax check also exits **0**, no diagnostics):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import hashlib,json,re
+p=Path('TESTS-RESULTS/2026-11-23+GH-1537')
+r=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+s=[json.loads(x) for x in (p/'suites-provenance.jsonl').read_text().splitlines()]
+h=hashlib.sha256(Path('githooks/pre-push').read_bytes()).hexdigest()[:16]
+assert len(r)==42 and all(x['hook_sha256']==h for x in r if x['variant']=='cand')
+print('hook',h,'rows',len(r))
+for v in ('base','cand'):
+ a=[x for x in r if 'scenario' in x and x['variant']==v]
+ assert len(a)==20 and all('push_exit' in x for x in a)
+ assert all(x['gate_ran']=={'docs':'docs-gate','full':'full-gate'}[x['route']] for x in a)
+ print(v,'scenarios',len(a),'mismatches',sum(x['want']!=x['route'] for x in a))
+assert len(s)==7 and all(x['exit']==0 and x['hook_sha256']==h for x in s[:-1])
+b=s[-1]['clone_identity_before']; a=s[-1]['clone_identity_after']
+assert b==a and s[-1]['unchanged']=='yes'
+assert set(b)=={'head','core.bare','is_bare','remote_v','local_user_email'}
+assert b['core.bare']==b['is_bare']=='false'
+assert len(b['remote_v'])==2 and all(any(z.endswith('('+k+')') for z in b['remote_v']) for k in ('fetch','push'))
+assert all(x['tested_commit']==b['head'] for x in s[:-1])
+log=(p/'focused-suites.log').read_text()
+assert re.findall(r'^rc=(\d+) (.+)$',log,re.M)==[('0',x['suite']) for x in s[:-1]]
+print('suite_exits',[x['exit'] for x in s[:-1]],'log_matches',True)
+print('identity',json.dumps(b,sort_keys=True))
+print('identity_unchanged',b==a)
+assert '20 scenarios x base/candidate, 9 red rows on base' in Path('PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md').read_text()
+print('plan_counts_match',True)
+lines=Path('relay-system/2026-11-23/gh1537-final-qa-code.diff').read_text().splitlines()
+hook=Path('githooks/pre-push').read_text().splitlines()
+n=0;i=0
+while i<len(lines):
+ m=re.match(r'^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@',lines[i])
+ if not m: i+=1;continue
+ start=int(m[1])-1; count=int(m[2] or 1); i+=1; new=[]
+ while i<len(lines) and not lines[i].startswith(('@@ ','diff --git ')):
+  if lines[i].startswith((' ','+')):new.append(lines[i][1:])
+  i+=1
+ assert len(new)==count and hook[start:start+count]==new
+ n+=1
+print('diff_hunks_match',n)
+PYPROBE
+/bin/bash -n githooks/pre-push
+```
+
+Decisive output:
+
+```text
+hook 4a14c3c2bd3acaf5 rows 42
+base scenarios 20 mismatches 9
+cand scenarios 20 mismatches 0
+suite_exits [0, 0, 0, 0, 0, 0] log_matches True
+identity {"core.bare": "false", "head": "5da8c1608c524c3897d480f549ea5f5a5ecd7ea5", "is_bare": "false", "local_user_email": "<unset>", "remote_v": ["origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)", "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)"]}
+identity_unchanged True
+plan_counts_match True
+diff_hunks_match 5
+```
+
+Graph tools were unavailable; direct source fallback was used, with no graph generation or coverage claim. No git command, executable fixture, test suite or full gate was run in this reviewer worktree. No later gate is assumed to run or pass. Only this relay file was edited.
+
+swept file: yes
+VERDICT: PASS
+Basis: all earlier findings are closed by the revised source and retained evidence, including the complete clone-identity bracket. The whole-hook sweep found no additional substantiated defect. Final-commit full-gate execution and delivery remain separate obligations; this verdict does not certify them.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
