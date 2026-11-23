@@ -48,6 +48,8 @@ for needle in \
   "quote the command, exit status and decisive output" \
   "Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures" \
   "[Unverified — needs clone run]" \
+  "Form 2 finding" \
+  "Clone probe:" \
   "hand the token off with done and set STATUS: Approved"; do
   has "$rev" "$needle" \
     && pass "case 1: reviewer prompt carries: $needle" \
@@ -77,7 +79,7 @@ done
 # --- Case 4: the scaffold carries the generalization rule ---------------------------------------
 scaffold="$(bash "$ROOT/relay-automation/new-relay.sh" --title "gh681 probe" --reviewer codex --producer claude-a --print 2>/dev/null || true)"
 [ -n "$scaffold" ] || scaffold="$(sed -n '/TAKE YOUR TURN/,/^## Log/p' "$ROOT/relay-automation/new-relay.sh")"
-for needle in "Observed input:" "Affected scope:" "Falsifier:" "Declined — unproven generalization" "must cite an observed failure"; do
+for needle in "Observed input:" "Affected scope:" "Falsifier:" "Clone probe:" "Declined — unproven generalization" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]" "must cite an observed failure"; do
   has "$scaffold" "$needle" \
     && pass "case 4: scaffold carries: $needle" \
     || fail "case 4: scaffold lacks: $needle"
@@ -95,6 +97,24 @@ for f in skills/1-hourly/relay-xyz/SKILL.md skills/1-hourly/relay/SKILL.md utils
   grep -qF "Declined — unproven generalization" "$ROOT/$f" \
     && pass "case 6: $f carries the generalization rule" \
     || fail "case 6: $f lost the generalization rule (GH-681 codified it in two-plus places)"
+  for needle in "Clone probe:" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]"; do
+    grep -qF -- "$needle" "$ROOT/$f" \
+      && pass "case 6: $f carries GH-1587 Form 2 rule: $needle" \
+      || fail "case 6: $f lost GH-1587 Form 2 rule: $needle"
+  done
+done
+
+# Negative control (GH-1587): mutating away Clone probe: or unavailable-probe keep-open must fail detection
+_gh1587_mut="$WORK/gh1587_scaffold_mut.txt"
+printf '%s
+' "$scaffold" >"$_gh1587_mut"
+sed -i.bak '/Clone probe:/d; /Declined — falsified by clone probe/d; /clone probe failed\/unavailable/d' "$_gh1587_mut"
+for needle in "Clone probe:" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]"; do
+  if grep -qF -- "$needle" "$_gh1587_mut"; then
+    fail "case 6 negative control: mutation failed to strip $needle"
+  else
+    pass "case 6 negative control: mutation stripped $needle and failed pin"
+  fi
 done
 grep -qF "MAY run narrow, non-mutating probes" "$ROOT/skills/1-hourly/relay-xyz/SKILL.md" \
   && pass "case 6: skills/1-hourly/relay-xyz/SKILL.md carries the probe allowance" \

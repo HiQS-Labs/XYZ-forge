@@ -26,6 +26,10 @@ check_start_task_commensurate_contract() {
   grep -q "operational envelope in the review packet" "$t" || return 1
   grep -q "repository's own stated threat model" "$t" || return 1
   grep -q "Frame the final review packet with the same commensurate operational envelope" "$t" || return 1
+  grep -qF "Surface-triggered QA questions" "$t" || return 1
+  grep -qF "Clone probe:" "$t" || return 1
+  grep -qF "Declined — falsified by clone probe" "$t" || return 1
+  grep -qF "[Unverified — clone probe failed/unavailable]" "$t" || return 1
   return 0
 }
 
@@ -45,6 +49,8 @@ run_mutation() {
 run_mutation "mut1 (no commensurate mantra)" "$TARGET" "$WORK/m1.md" "sed -i.bak '/Commensurate Complexity Mantra/d' '$WORK/m1.md'"
 run_mutation "mut2 (no step 6 review envelope)" "$TARGET" "$WORK/m2.md" "sed -i.bak '/operational envelope in the review packet/d' '$WORK/m2.md'"
 run_mutation "mut3 (no step 8 review envelope)" "$TARGET" "$WORK/m3.md" "sed -i.bak '/Frame the final review packet/d' '$WORK/m3.md'"
+run_mutation "mut3b (no GH-1587 surface-triggered QA questions)" "$TARGET" "$WORK/m3b.md" "sed -i.bak '/Surface-triggered QA questions/d' '$WORK/m3b.md'"
+run_mutation "mut3c (no GH-1587 step 8 Clone probe execution)" "$TARGET" "$WORK/m3c.md" "sed -i.bak '/Clone probe:/d' '$WORK/m3c.md'"
 
 touch "$WORK/empty.md"
 if ! check_start_task_commensurate_contract "$WORK/empty.md"; then pass "mut4 (empty fixture): properly rejected"; else fail "empty fixture passed"; fi

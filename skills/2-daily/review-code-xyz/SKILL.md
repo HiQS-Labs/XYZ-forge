@@ -115,10 +115,10 @@ Run the five recon lanes across the touched symbols:
 | Lane | Focus | Review Inquiry & Verification |
 |---|---|---|
 | **Lane A. Entry & Call Paths** | Callers & Dispatch | Trace callers of all modified functions. Did call signatures, parameter defaults, or return types change? Are callers in other modules updated? Check CLI shims, hook registries, plugin dispatch, and event handlers. |
-| **Lane B. State & Data Flow** | Readers & Writers | What state is mutated? Verify the single-writer invariant. Are SQLite locks, file descriptors, transactions, or cache layers handled? Does this introduce competing write paths or dirty reads? **Step N+1:** verify whether an active reader, background reconciler, or UI consumer exists for any state or status being written. |
-| **Lane C. Contracts & Boundaries** | APIs & Protocols | Do changes alter public APIs, CLI flags, JSON schemas, environment variables, or error codes? Check consumers across sibling modules or external repositories. **Step N+1:** verify whether arguments passed into engines/solvers act as constraints or generators to prevent entity duplication. |
+| **Lane B. State & Data Flow** | Readers & Writers | What state is mutated? Verify the single-writer invariant. Are SQLite locks, file descriptors, transactions, or cache layers handled? Does this introduce competing write paths or dirty reads? On surfaces touching locks, DB reads, external I/O, or cache invalidation, check for **TOCTOU interleaving** across lock release / state read / external call boundaries (reproduce via a small throwaway interleaving probe in a disposable clone). **Step N+1:** verify whether an active reader, background reconciler, or UI consumer exists for any state or status being written. |
+| **Lane C. Contracts & Boundaries** | APIs & Protocols | Do changes alter public APIs, CLI flags, JSON schemas, environment variables, or error codes? Check consumers across sibling modules or external repositories, verify **sibling-endpoint guard parity** across related routes/commands (auth, tenant, rate-limit, idempotency guards), and flag **substring/mock-only tests of external dialects or runtimes** (SQL/DDL, browser, CLI) that never validate against a real parser or runtime. **Step N+1:** verify whether arguments passed into engines/solvers act as constraints or generators to prevent entity duplication. |
 | **Lane D. Build, Failure & Tests** | Errors & Coverage | How does this code fail? Trace timeouts, process exits, broken pipes, signal handling (`SIGINT`/`SIGTERM`), and missing input files. What existing test suites cover this seam? **Step N+1:** simulate temporal retry and lease recovery on failure to prevent infinite stuck retry loops. |
-| **Lane E. Centralized Helpers & DRY** | Helpers & Anti-Reinvention | Does this change reinvent functionality that already exists in centralized helpers (e.g. `utils/py/`, canonical CLI shims, standard libraries)? Does it construct a parallel subsystem instead of extending existing modules (violating `GUIDING-PRINCIPLES.md` North Star)? Check for copy-pasted blocks or duplicate helper definitions across the diff. |
+| **Lane E. Centralized Helpers & DRY** | Helpers & Anti-Reinvention | Does this change reinvent functionality that already exists in centralized helpers (e.g. `utils/py/`, canonical CLI shims, standard libraries) or duplicate **native framework/runtime capabilities** of the repo's installed framework or runtime? Does it construct a parallel subsystem instead of extending existing modules (violating `GUIDING-PRINCIPLES.md` North Star)? Check for copy-pasted blocks or duplicate helper definitions across the diff. |
 
 ### Lane E: Centralized Helpers & Anti-Redundancy (DRY) Audit
 
@@ -126,9 +126,9 @@ The North Star (`GUIDING-PRINCIPLES.md`) requires: *durable, reversible, DRY; ex
 A diff that works but reinvents existing wheels introduces long-term tech debt, bugs, performance overhead, and maintenance drag.
 
 Reviewers must audit three anti-redundancy checks:
-1. **Centralized Helper Adherence:**
-   - Did the diff implement custom logic (e.g. subprocess execution, lock management, path/root resolution, JSON parsing, git mutation guards, or date formatting) where a canonical helper already exists in `utils/py/`, `src/`, or shared runtime modules?
-   - Bypassing an established helper in favor of an ad-hoc inline solution is a `[Blocker]`.
+1. **Centralized Helper & Native Framework Adherence:**
+   - Did the diff implement custom logic (e.g. subprocess execution, lock management, path/root resolution, JSON parsing, git mutation guards, or date formatting) where a canonical helper already exists in `utils/py/`, `src/`, or shared runtime modules, or add a custom wrapper layer duplicating **native framework/runtime capabilities** already provided by the repo's installed framework or runtime?
+   - Bypassing an established helper or native framework capability in favor of an ad-hoc inline layer is a `[Blocker]`.
 2. **Parallel Subsystem / Reinvention Trap:**
    - Does the change build parallel shadow machinery instead of extending established subsystems (e.g. custom telemetry logging instead of `.tick` events, custom runner loops instead of the existing driver)?
    - Standing up a parallel subsystem is an architectural violation and a mandatory `[Blocker]`.
@@ -147,7 +147,7 @@ Reviewers must trace past transparent delegation (forwarding helpers, retry deco
 - **Consumer Behavior & Progress (Lane B):** Verify at `file:line` that deployed consumers not only exist, but actually select the newly written state/value and advance it toward a terminal state or bounded timeout/recovery path (a UI badge or display-only reader alone does not prove progress). Introducing a stranded or unadvancing non-terminal state without a progress owner is a `[Blocker]`. Justified terminal/audit-only writes must be noted as such.
 - **The Retry Hop (Lane D):** Verify at `file:line` how the enclosing caller and temporal retry mechanism behave when an exception is raised or claim held. Introducing an infinite stuck retry loop (e.g. continuous unresolvable retries without backoff/dead-letter) is a `[Blocker]`.
 - **Parameter Role Contract (Lane C):** Verify at `file:line` whether arguments passed into existing engines/solvers act as constraints (filtering) or generators (creating candidates). Passing entities under the assumption of constraint when the callee acts as a generator creates duplicate entities and is a `[Blocker]`.
-- **Rollout Coexistence & Rollback (Lane C):** When persisted formats, status values, or external contracts change, verify backward/forward coexistence across versions and rollback feasibility per SWE migration policy. Introducing breaking schema/state without a stated coexistence or rollback boundary is a `[Blocker]`.
+- **Rollout Coexistence & Rollback (Lane C):** When persisted formats, status values, or external contracts change, verify backward/forward coexistence across versions and rollback feasibility per SWE migration policy, including **warm-state deploy, IAM, and service-account upgrade transitions** (existing rows, live traffic, and live SA bindings during rollout, not only fresh-install assumptions). Introducing breaking schema/state or deploy-identity transitions without a stated coexistence or rollback boundary is a `[Blocker]`.
 
 #### 2. Deep Mode Review (`/review-code-xyz --deep`)
 When review is invoked with `--deep` or for complex cross-service architectural changes, expand review to transitive call chains ($N+2, N+3$), programmatic dataset validation (e.g. running verification scripts over JSON/CSV catalogs), and distributed failure matrices (worker crash / clock skew). Reserve deep mode for broader transitive analysis, not for finishing an ordinary check hidden behind one wrapper.
@@ -188,12 +188,15 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
    - Run the test suite: **Did the test turn RED?**
    - If the test still passes when the fix is broken, the test is decorative and reports confidence
      it never earned. This is a mandatory `[Blocker]`.
+   - **Bounded Mutation Scope (3–5 high-leverage mutations):** Focus mutations on (1) the core fix/refusal branch, (2) any touched lock or safety guard, and (3) any touched wiring/lifespan registration — bounded to 3–5 surgical mutations rather than exhaustive fuzzing.
+   - **Test-Honesty Body Audit (mandatory):** Inspect the body of every new or changed test to confirm it exercises the real seam named in its title rather than mocking or stubbing away the behavior under test; a mocked-out test body is a `[Blocker]`.
    - In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), where no existing suite
      covers the fix, a manual red control recorded under `TESTS-RESULTS/` satisfies this mantra. It mutates
      the fix and records the failing result.
-4. **Mantra 4 — Cross-reference breadcrumbs:**
+4. **Mantra 4 — Cross-reference breadcrumbs & Historical-Invariant Test-Inversion Check:**
    - Walk recent `CHANGELOG.md` entries and git history. Does this fix repeat a previously failed
      pattern or reopen a settled architectural decision?
+   - Inspect every modified, weakened, or deleted existing test in the diff: silently inverting or weakening a previously asserted historical invariant without explicit issue/requirement authorization is a `[Blocker]`.
 
 ### 2. Testing Features (Acceptance Criteria & Boundary Invariants)
 
@@ -210,7 +213,7 @@ When reviewing a new feature or enhancement:
 3. **Negative Controls & Boundary Stress:**
    - Test invalid CLI arguments, malformed configuration files, and nonexistent paths.
    - Test concurrency and lock contention (e.g. parallel runs of `./validate.sh` or concurrent database access).
-   - Test idempotency: does running the feature twice in succession produce identical, safe results without duplicate records or side effects?
+   - Test idempotency and **multi-invocation resume-key stability**: does running the feature twice in succession produce identical, safe results without duplicate records or side effects, and do time- or state-derived resume keys, cursors, and watermarks stay deterministic across sequential invocations rather than resetting on wall-clock timestamps?
 
 ---
 
@@ -350,7 +353,7 @@ Every `/review-code-xyz` report follows this structure:
 
 ### 🔬 Meticulous Testing & Verification Evidence
 - **Ground Truth Repro:** Verified regression test `test/gh123_regression.py` fails without fix.
-- **Mutation Falsification:** Mutated guard at `src/core.py:88`; verified test went **RED** (exit code 1).
+- **Mutation Falsification:** Ran 3–5 bounded high-leverage mutations (e.g. core guard at `src/core.py:88`, lock/wiring seam if touched) + Test-Honesty body audit; verified tests went **RED** (exit code 1) and exercise real seams.
 - **Negative Controls:** Tested empty input and invalid flags; verified appropriate errors.
 - **Reversible Adaptations Executed:** [Detail any `Easy` autonomous fixes applied during review].
 

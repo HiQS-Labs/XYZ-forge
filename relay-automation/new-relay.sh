@@ -94,17 +94,30 @@ ROUND: 1 / $ROUND_CAP
      final QA relay generalized one late-error observation into "or a later invalid identity", the
      Producer implemented it, the same seat \`[Pass]\`ed it next round, and one historical NULL-URL
      ledger row then blanked every issue). Every \`[Blocker]\` or \`[Should]\` requesting a behaviour
-     change MUST carry three lines: \`Observed input:\` (the failing input you saw), \`Affected scope:\`
-     (the input predicate the change would govern), \`Falsifier:\` (the fixture or data that would show
-     the change unnecessary or wrong, and its expected result).
-     A \`[Blocker]\` must cite an observed failure.
+     change MUST carry \`Observed input:\`, \`Affected scope:\` (the input predicate the change would govern),
+     and \`Falsifier:\` (the fixture or data that would show the change unnecessary or wrong, and its expected
+     result). \`Observed input:\` accepts two strict, non-speculative forms:
+     (1) **Form 1 (observed failure or artifact contradiction):** a failing probe/gate output, or a concrete
+     \`fileA:line\` vs \`fileB:line\` contradiction (e.g. IAM SA mismatch, inverted test, sibling guard omission);
+     (2) **Form 2 (unrunnable runtime hazard trace):** permitted ONLY when reproduction requires an external
+     service, multi-process concurrency, or a browser/container runtime forbidden in the relay worktree —
+     must supply a hop-by-hop \`file:line\` trace plus an exact \`Clone probe:\` command/script for the Producer's
+     disposable full clone. Default severity for an unexecuted Form 2 hazard is \`[Should]\`.
+     A \`[Blocker]\` must cite an observed failure (Form 1), or a Form 2 static \`file:line\` trace proving an
+     unconditional invariant breach; in either severity a Form 2 finding stays pending probe verification until
+     the Producer runs \`Clone probe:\` in a disposable full clone.
      A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it.
      This includes earlier [Nit] findings; only a newly raised [Nit] with VERDICT: PASS on STATUS: Approved remains optional.
      This is a protocol rule, not a mechanical check —
-     the Producer may disposition a request lacking these as \`Declined — unproven generalization\`.
+     the Producer may disposition a request lacking Form 1 evidence and lacking a complete Form 2 trace + \`Clone probe:\` as \`Declined — unproven generalization\`.
    - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
-     including \`Declined — unproven generalization\` for a behaviour-change request that carries no
-     \`Observed input:\` / \`Affected scope:\` / \`Falsifier:\`), make the change, then add new work.
+     including \`Declined — unproven generalization\` for a behaviour-change request lacking Form 1 evidence and
+     lacking a complete Form 2 trace + \`Observed input:\` / \`Affected scope:\` / \`Falsifier:\` / \`Clone probe:\`).
+     For every Form 2 \`Clone probe:\` finding, execute the probe in a disposable full clone and record one of
+     three outcomes: (a) Reproduced → fix and paste failing-before / passing-after probe output; (b) Falsified
+     → \`Declined — falsified by clone probe: <cmd → exit + output>\`; (c) Errored or environment unavailable →
+     keep the finding OPEN (\`[Unverified — clone probe failed/unavailable]\`, blocking \`STATUS: Approved\` until
+     the probe runs cleanly or the relay escalates/parks). Make approved changes, then add new work.
 4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
    Reviewer headings may be \`### Reviewer · Round N\`, \`### Round N · Reviewer · <agent>\`, \`### Reviewer (<agent>)\` (optionally followed by \`— rN\`), or \`### Reviewer — Round N\` (optionally followed by \`(<agent>)\`); follow the heading with a non-empty review body.
 5. **Update the header:** flip \`NEXT\`; set \`STATUS\` (\`Approved\` closes — Reviewer only; else \`Open\`);
