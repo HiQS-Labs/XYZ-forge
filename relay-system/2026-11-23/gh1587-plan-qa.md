@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -81,5 +81,43 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes** (input boundary: plan artifact only)
+The plan adds targeted review checks for six recurring defect classes and a bounded clone-probe handoff for hazards a relay reviewer cannot execute locally. It synchronizes the prompts, skills, package and existing pin checks, then calls for clone verification and independent QA.
+
+**How the existing system works, per this document** (input boundary: plan artifact only)
+The code-review skill owns the canonical review ladder, while PR review delegates to it. Relay reviewers currently need concrete evidence for behavior-change findings, and disposable clones contain mutation-heavy verification.
+
+**What it's not** (input boundary: plan artifact only)
+This is not a new review skill or test suite, and it does not propose changing canonical finding tags or frozen Bash twins. It does not permit running unsafe tests inside the relay worktree.
+
+**Source-backed technical validation**
+
+- [Blocker] Phase 1 schedules the focused `test/*.sh` runs before the disposable clone exists, and Phase 2 schedules the full pre-push gate from the task clone. This conflicts with the full-clone-only safety rule and leaves the intended verification location unsafe. Fix the ordered steps so every `test/*.sh` and `validate.sh` invocation, including the push gate, runs in a disposable full clone of the final candidate; preserve identity checks and receipts.
+  Observed input: plan lines 153–157 and 165–171; `AGENTS.md` “Run mutation-heavy suites only in a separate disposable FULL CLONE”.
+  Affected scope: all planned focused and full test executions.
+  Falsifier: an explicit earlier disposable full clone and an explicit final push-gate execution there, with matching candidate SHA and identity checks, would remove this conflict.
+- [Blocker] The “Observed Rejection” table does not establish that the six defect classes or start-task behavior are detected: it cites diff inspection and existing unrelated pins, while the only new red control removes the literal `Clone probe:` string. An unchanged skill can pass these existing checks. Specify concrete defective examples and expected findings for each class and the start-task routing, with baseline rejection and corrected-candidate evidence; distinguish text admission pins from behavioral evidence.
+  Observed input: plan lines 102–103, 134–139; `test/gh778-review-code-skill.sh:33,72-76` pins existing wording and a recital, not the six proposed checks; `test/gh616-start-task-commensurate-envelope.sh:45-47` mutates existing envelope wording.
+  Affected scope: acceptance of the six review checks and surface-triggered QA handoff.
+  Falsifier: a recorded run showing the specified existing checks reject an unchanged candidate for each missing behavior, or a concrete behavioral red/green review fixture for each, would disprove the gap. These suite outcomes are [Unverified — needs clone run].
+- [Should] Form 2 permits an unexecuted hazard trace while retaining the categorical requirement that a `[Blocker]` cite an observed failure, and the smoke checks only reviewer output, not whether the Producer executes the probe or whether a failed/unavailable probe keeps the finding open. Specify severity and pending status before observation, exact evidence needed to close each outcome, and a producer-side smoke including failed/unavailable probes.
+  Observed input: plan lines 88–91 and 168; `relay-automation/new-relay.sh:92-104` requires a failing input and observed failure for a blocker.
+  Affected scope: runtime hazards whose clone probe has not yet yielded a result.
+  Falsifier: a concrete documented disposition that prevents approval until an actual probe result, and a smoke exercising both producer execution and unavailable/failing probe outcomes, would resolve the ambiguity.
+- [Should] The plan never records the requested persisted roadmap rating or a check against it; its status says registration/rating remains next. Add the four values `85/80/50/70`, including neutral appeal 50, and verify the persisted row before accepted-start.
+  Observed input: plan status table and lines 146–147 contain no rating; the relay Setup question 5 requires the persisted rating.
+  Affected scope: GH-1587 roadmap admission.
+  Falsifier: a cited persisted row with those values and an explicit admission check would make this request unnecessary.
+- [Pass] The non-edit boundary for parser tags and Python delegation is grounded: `utils/py/review_xyz.py:62-63` matches literal tags and `utils/py/rtl.py:1118-1119` delegates to `rtl_turn_prompt`; `review-pr-xyz/SKILL.md:21-24` delegates the canonical ladder.
+
+swept file: yes
+Pre-existing defects in the artifact are the findings above; no other pre-existing defect was established. The complete source-path and base-SHA audit, live smoke, and suite outcomes remain unverified in this contained turn. Rollback's `git revert <merge-sha>` also needs the appropriate merge-parent choice if the landing is a merge commit.
+
+VERDICT: FAIL
+Basis: The execution location, rejection evidence, and unresolved clone-probe closure must be made concrete before this plan is executable or approvable.
+Handing off to Producer — take your turn and disposition each finding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
