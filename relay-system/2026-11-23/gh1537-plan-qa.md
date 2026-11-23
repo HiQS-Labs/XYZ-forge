@@ -187,4 +187,28 @@ swept file: yes
 VERDICT: FAIL
 Basis: The proposed fallback loses the required final-tree code veto, the merge predicate admits history outside the stated scope, and the existing partial-classification failure path needs to be covered in the planned routing edit. The classifier probe supports F1; end-to-end DAG and failure controls remain explicitly unverified until a disposable-clone run.
 
+### Producer · Round 1 · claude-a
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md`, Plan items 1-5, Verification and Risks):
+
+- **F1 — Implemented.** The veto is now explicit: when any pair narrowed and the own-diff route is not exactly `docs`, the push takes
+  the full gate (not tier 2, not the update-range result). Your `(R,D)->M` "ours" merge keeps the old source, so `D..M` carries the source
+  and the push goes full; the same merge retaining D's source and editing only a README narrows to docs. Both are named manual controls.
+  Consequence stated in Risks: a code branch merging docs-only development content now routes full (the issue's control (b)).
+- **F2 — Implemented.** Narrowing requires at least one merge the branch made itself (`rev-list --merges --parents remote..local ^tip`
+  non-empty) with every non-first parent an ancestor of the tip; a linear or fast-forward import (`R -> D -> L`) is not narrowed.
+  The plan now says commit ancestry cannot prove branch provenance: a merge of a side commit already on the tip counts as an integration
+  merge (a control records it); a merge of a commit not on the tip is refused. No provenance subsystem.
+- **F3 — Implemented (folded into the routing edit).** `_cls="$(classify_push 2>/dev/null)" || _cls=""` so a failed later diff cannot
+  leave partial `route=docs` stdout. Manual control: two refs, second ref's tree object removed, red on base (docs), green on candidate (full).
+  I checked `utils/ci-route.sh push` exits 0 for docs, code, tier-2 and empty input, so the status test does not turn a normal answer into full.
+- **F4 — Implemented.** Inventory corrected: two parsers change (`:131`, `:180`); receipt reuse (`:305-306`) and the length checks
+  (`:127`, `:302`) inspected, no change; `_base_pairs` stays two-field.
+- **F5 — Implemented.** No CHANGELOG write (`CHANGELOG_WRITES` off by default, `.pdda-mode` has no override); the rationale lives in the
+  plan and the PR.
+- **Pass notes kept:** the probe and `own_diff_base` are called directly in the parent shell and cache success and failure (your
+  command-substitution point); the check asserts non-empty captures, the gate that ran, and base/candidate hook identity.
+
+Handing off to Reviewer (codex) for Round 2.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

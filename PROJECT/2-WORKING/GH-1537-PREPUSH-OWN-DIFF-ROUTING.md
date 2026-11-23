@@ -63,28 +63,41 @@ the final landing still gets a full gate.
 
 Extend `githooks/pre-push` only; reuse its integration-tip freshness proof and the existing classifier.
 
-1. **Carry the destination ref.** `_real_ref_pairs` entries become `lsha|rsha|rref` (the loop at `:68` already reads `_rref`);
-   the two readers (`:131`, `:180`) are adjusted. No other reader exists.
-2. **Extract the live-tip probe.** Move the `ls-remote` block (`:136-177`) into `probe_integration_tips`, cached per push,
-   so the new path and the first-push path share one freshness proof (no second copy).
-3. **Add `own_diff_base <local> <remote> <rref>`.** It prints the merge-base and returns 0 only when ALL hold; any doubt returns 1
-   and the caller keeps the update-range base (today's behaviour):
+1. **Carry the destination ref.** `_real_ref_pairs` entries become `lsha|rsha|rref` (the loop at `:68` already reads `_rref`).
+   Two parsers change (`:131`, `:180`). Receipt reuse (`:305-306`, `${_pair%%|*}`) and the length checks (`:127`, `:302`) were
+   inspected and need no change. `_base_pairs` stays a two-field `local|base` contract (`:224-227`, `:286-288`).
+2. **Extract the live-tip probe.** Move the `ls-remote` block (`:136-177`) into `probe_integration_tips`, so the new path and
+   the first-push path share one freshness proof (no second copy). It sets globals (`_adv_dev`, `_adv_main`, a state flag that
+   caches success AND failure, and `_base_note`), so it and `own_diff_base` are called directly in the parent shell, never
+   inside `$(...)` (a command substitution would lose the cache, Codex plan QA r1).
+3. **Add `own_diff_base <local> <remote> <rref>`**, which sets the global `_own_base` and returns 0 only when ALL hold; any doubt
+   returns 1 and the pair keeps today's update-range base:
    - destination is `refs/heads/*` and not `development`/`main`;
    - the first local integration tracking ref (`refs/remotes/<remote>/development`, then `main`) has a single best common
      ancestor `mbs` with `local_sha`, `mbs != local_sha`, and `mbs` is NOT already an ancestor of `remote_sha`
      (integration history entered with this push; otherwise there is nothing to narrow and no network round trip is spent);
    - the tracking ref equals the tip the remote advertises right now (shared probe; stale means full);
-   - every merge commit the branch made itself (`git rev-list --merges --parents remote..local ^tip`) has every non-first
-     parent as an ancestor of that tip. A merge from another branch fails here.
-4. **Route.** `resolve_base_pairs` also records, per pair, `local|ownbase` (or the update base when not narrowed). The top level classifies
-   the own pairs first; the narrowed result is used only when it is exactly `route=docs`. Any other route re-classifies the update
-   range, so tier 2 and full routing are unchanged. It prints one line naming the merge-base when it narrows.
-5. **Docs.** Update the hook's header comment; one `CHANGELOG.md` entry (a gate-narrowing is a recorded bet) naming the unchanged
-   landing gate and the code-PR limitation.
+   - **at least one** merge commit the branch made itself exists (`git rev-list --merges --parents remote..local ^tip` is
+     non-empty), and every such merge has ALL its non-first parents as ancestors of that tip. First parents are not constrained:
+     the final-tree diff covers them. A fast-forward or linear import of integration history has no such merge and is not
+     narrowed ("linear push unchanged"). Commit ancestry cannot say which branch name a merge used: a merge of a side commit
+     that is already on the integration tip counts as an integration merge (its content is already on development, and the
+     final-tree diff still sees any difference). A merge of a commit NOT on the tip is refused.
+4. **Route.** `resolve_base_pairs` also records, per pair, `local|ownbase` (or the update base when not narrowed) and counts the
+   narrowed pairs. The top level classifies the own pairs when any pair narrowed:
+   - own route is exactly `docs` -> the docs route, and one line names the merge-base;
+   - own route is anything else -> **the full gate** (an explicit veto: not tier 2, and NOT the update-range result), because the
+     final tree carries code (own commits, a hand-resolved conflict, or an "ours"/evil merge that discards development's code and
+     leaves the update range looking docs-only). This is the issue's control (b): a code branch with development merged in routes
+     `full`.
+   - **Classifier status is a prerequisite for every route** (Codex r1 F3, pre-existing at `:263`): `_cls="$(classify_push 2>/dev/null)"
+     || _cls=""`, so a failed diff in a later ref pair cannot leave partial stdout that reads as `route=docs`.
+5. **Docs.** Update the hook's header comment. No `CHANGELOG.md` write: `CHANGELOG_WRITES` is off by default
+   (`PROJECT/PDDA.md` CHANGELOG section; `.pdda-mode` has no override), so the rationale lives in this plan and the PR.
 
 Soundness argument: the classified range is the final-tree diff `mbs..local_sha`, so a hand-resolved conflict, an evil merge, or any
-code the branch carries appears as a path whether or not history looks like a clean merge. The merge-parent check only keeps the
-operator's stated scope (a merge of another branch is refused regardless of content).
+code the branch carries appears as a path whether or not history looks like a clean merge. The merge-parent rule keeps the operator's
+stated scope (an integration merge); it does not prove branch provenance and no provenance subsystem is added.
 
 ## Preflight bet check
 
@@ -101,15 +114,21 @@ Fixture repo with a bare origin, the real hook and classifier, a stub `validate.
 does), real `git push` through the installed stub; `provenance.jsonl` records base and candidate SHAs and exit codes.
 - Red (base `5964566ef`): docs branch pushed, development advances with code, development merged in, refresh push routes `full`.
 - Green (candidate): the same push routes `docs`, naming the merge-base.
-- Controls (candidate): code on the branch plus a merge routes `full`; a merge with a hand-resolved code edit (evil merge) routes `full`;
-  a merge from another branch routes `full`; stale tracking ref routes `full`; first push unchanged; push to `development` unchanged;
-  linear push unchanged.
+- Controls (candidate; each asserts the route AND that the stub gate or docs gate really ran, with non-empty captures and base/candidate
+  hook identity in `provenance.jsonl`): code on the branch plus a merge of development code routes `full`; a merge with a hand-resolved
+  code edit (evil merge) routes `full`; an "ours" merge that keeps the old source while development changed it and edits a README routes
+  `full` (the update range alone would read docs: Codex r1 F1); a merge of another branch's commit not on the tip routes `full`; a merge
+  of a side commit already on the tip narrows (stated policy); a fast-forward/linear import `R -> D -> L` keeps today's route (F2);
+  stale tracking ref routes `full`; first push unchanged; a push to `main` routes `full`; a two-ref push with one code ref routes
+  `full`; a two-ref push whose second diff fails routes `full` (F3, red on base); a docs-only conflict resolution routes `docs`.
 - Existing suites: `gh544`, `gh591`, `gh35`, `gh4`, plus the full gate on the final commit.
 
 ## Risks
 
 - A bug in the narrowing under-gates a code push. Mitigations: docs-only acceptance, final-tree diff, fail-closed on every doubt, red controls above.
-- Operator-visible limit: a code PR's refresh still routes full by design; the saving is for docs PRs.
+- Operator-visible limits: a code PR's refresh still routes full by design (the saving is for docs PRs). In the narrow case where
+  a code branch merges development whose new content is docs-only, the update range alone would have routed docs and the veto now
+  routes full; this follows the issue's own control (b) and costs one gate that the branch's code arguably always owed.
 
 ## Task rating (2026-11-23)
 
