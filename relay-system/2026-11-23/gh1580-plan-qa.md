@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -238,5 +238,65 @@ Handing off to Producer (claude-a) — revise the bounded directory rule and its
 - **F2, F3, Q-passes:** closed by the Reviewer in r2; no change.
 
 Handing off to Reviewer for Round 3 (final under the cap of 3): re-check F1 against the narrowed rule, the nit, and anything new in `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md` and `TESTS-RESULTS/2026-11-23+GH-1580/`.
+
+### Reviewer · Round 3
+
+**What this proposes (document-only paraphrase; stated).** The plan makes probe anchors match per line, checks statically resolvable simple commands throughout compound gates, and reports missing acceptance sections in text and JSON. Directory tracking now distinguishes straightforward chains from uncertain execution contexts, with retained positive and negative controls.
+
+**How the existing system works, per this document (stated).** Python owns preflight, and marathon reuses its probe evaluator after builds while retaining a separate pre-advance gate check. Preflight checks only the first gate word today. Missing issue acceptance remains advisory outside frozen manifests, and the manual red recording exposes all three defects.
+
+**What it's not (stated; inference labelled).** This approves a plan, not an implemented fix or a green regression run. Synonym interpretation, arbitrary shell evaluation, the Bash twin and marathon's separate gate check remain excluded. I infer that unsupported or uncertain shell contexts must remain conservative skips, consistent with the explicit static-check boundary.
+
+**Technical review — source-backed.**
+
+swept file: yes
+
+Swept the entire revised plan, all of `utils/py/swarm_preflight.py` and the contract example; read the manual recorder and retained evidence, and inspected the named consumer and suite paths. MCP graph tools are unavailable, so project/generation and index coverage could not be checked; evidence is direct source and bounded searches. No Git commands, suites, executable fixtures or preflight CLI were run. The pre-existing first-word, quoting, anchor and acceptance-reporting defects relevant to this plan remain in scope; no additional pre-existing defect requiring expansion of this three-defect plan was established. This is not an exhaustive audit of other modules.
+
+- **[Pass] F1 closed at plan time; Q3.** Plan `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md:89-97` now requires justified execution context before moving the tracked directory, skips relative checks when uncertain, and restores the parent context after a subshell. This addresses the concrete conditional/pipeline counterexamples without requiring a shell interpreter. D2c/D2e retain the valid/missing script pair (`TESTS-RESULTS/2026-11-23+GH-1580/controls.sh:143-148`); D2g/D2h/D2i cover skipped, pipeline and subshell directory changes (`:149-154`). The shell-only receipt below confirms those parent-directory semantics, not an unbuilt helper. Preserve these controls during implementation.
+
+- **[Pass] Carried wording nit closed; Q1.** The plan now explicitly names “Suggested Acceptance” (`plan:38-40`), matching `ACC_HEADING_RE` at `utils/py/swarm_preflight.py:566-567`. Its corrected caller map names `inspect_repository` (`plan:50-54`; actual call `swarm_preflight.py:1551`). The other diagnoses remain grounded: both regex calls lack multiline mode (`:271,276`), gate inspection selects the first split word (`:1785-1788`), and missing issue sections return structural unknown (`:981-984`) with blocking restricted to manifest membership (`:1754-1762`).
+
+- **[Pass] Q2 — multiline matching is sufficient for the specified anchor defect.** Both regex branches must use the planned shared behavior (`plan:77-80`). The narrow regex receipt below shows both supplied mid-file patterns changing from no match to match with `re.M`; inline `(?m)` is compatible. Marathon consumes the same evaluator and rejects results other than landed (`utils/py/marathon_drive.py:2697-2704`); Jog credits exit 4 as completion (`utils/py/jog_run.py:648-651`). No worsening active probe was established in the bounded active-doc search; the visible anchored example still uses `kind` rather than `type` (`PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:185-186`). Whole-file anchoring remains expressible with `\A` and `\Z`.
+
+- **[Pass] Q3/Q6 — the scanner boundary is adequate for the demonstrated shapes.** Quotes must survive tokenization, including the multiline quoted Python gate at `PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md:130`. Assignments, `env VAR=1 prog`, simple chains/pipes and literal directory changes are addressed at `plan:81-97`; expansion words and `bash -c` contents are explicitly unproven, with D2f at `controls.sh:155-156`. The original flat-cd approach would reject valid conditional/pipeline gates; the revised uncertainty rule removes that claim. Marathon's assignment-prefix incompatibility is accurately disclosed at `plan:98-100` against `marathon_drive.py:2074-2075`. Keep the helper bounded to these semantics; READY is not proof that arbitrary shell code can run.
+
+- **[Pass] Q4 — explicit advisory gaps satisfy the selected issue option.** Reporting rather than interpreting alternate headings preserves GH-557's nonmember exit-zero control (`test/gh557-unknown-blocks-manifest.sh:173-183`). Existing readiness normalization and text reporting are the right extension points (`swarm_preflight.py:396-416,1941-1958`), including whole-document capture checklists from `:783-816`. The inspected consumers do not enforce an exact readiness-key set: GH-291 pins invocation/result artifacts (`test/gh291-contract-goldens.sh:4-8,100-125`), Jog loads the invocation (`jog_run.py:661-663`), and marathon-plan classifies exit codes (`utils/py/_marathon_plan.py:1308-1328`). Runtime compatibility remains [Unverified — needs clone run].
+
+- **[Pass] F2 remains closed; Q5 has observed rejection for every defect.** D1a/D1b reject unchanged anchor behavior (`outputs/red.txt:4-10`); D2b/D2d/D2e reject unchanged later-program/script checks (`:20-34`); D3 rejects absent text/JSON gaps, including the capture-doc case (`:52-74`). Paths here are beneath `TESTS-RESULTS/2026-11-23+GH-1580/`. The observed total is now `MATCH=7 MISMATCH=11` (`:76`), consistent with the three added directory controls. The recorder intentionally exits zero (`controls.sh:12-14`); delivery requires MATCH everywhere (`plan:129-134`), not merely that exit code. The receipt below matches the retained output to `provenance.jsonl:1` and the inspected source to the log's source-hash prefix. The claimed Git revision was not independently queried. Green replay is [Unverified — needs clone run], appropriately still required before delivery.
+
+- **[Pass] F3 remains closed; Q6.** The plan explicitly preserves GH-343's source-mutation construction guard and behavioral red control (`plan:123-127`; `test/gh343-gate-program-target-root.sh:91-109`). It extends existing evaluator/report paths, declares no new module/suite/registry entry, and names existing coverage (`plan:75,136-140`). The acceptance list is satisfiable within this bounded plan. Verification of the built helper and all callers remains outstanding; this approval does not discharge it.
+
+**Narrow probe receipt.** The following command exited 0. Decisive output: `red_output_hash_matches= True`, `seed_source_hash= cb543213bd4e`, `counts= 7 11`; all four shell checks reported `exit=0 stderr=''`; both regex patterns reported `baseline= False multiline= True`. It executes only shell builtins/cat and Python standard-library checks, not repository fixtures.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import hashlib, json, re, subprocess
+d=Path('TESTS-RESULTS/2026-11-23+GH-1580')
+r=json.loads((d/'provenance.jsonl').read_text())
+raw=(d/r['output']).read_bytes()
+assert raw
+print('red_output_hash_matches=', hashlib.sha256(raw).hexdigest()==r['output_sha256'])
+print('seed_source_hash=', hashlib.sha256(Path('utils/py/swarm_preflight.py').read_bytes()).hexdigest()[:12])
+print('counts=', raw.decode().count('[MATCH]'), raw.decode().count('[MISMATCH]'))
+for cmd in ['true || cd test; test -f utils/swarm-preflight.sh',
+            'cd test | cat; test -f utils/swarm-preflight.sh',
+            '(cd test && true); test -f utils/swarm-preflight.sh',
+            'cd test && test -f gh343-gate-program-target-root.sh']:
+    p=subprocess.run(['/bin/bash','-c',cmd],capture_output=True,text=True)
+    print(repr(cmd), 'exit='+str(p.returncode), 'stderr='+repr(p.stderr))
+for pattern,text in [('^ENABLE_X=1$', '# settings\nENABLE_X=1\nOTHER=2\n'), ('^alembic check','alembic upgrade head\nalembic check\nexec app\n')]:
+    print(repr(pattern),'baseline=',bool(re.search(pattern,text)),'multiline=',bool(re.search(pattern,text,re.M)))
+PYPROBE
+```
+
+**VERDICT: PASS**
+
+**Basis:** All carried findings are closed for plan approval. The proposed change is grounded, bounded and falsifiable, with discriminating baseline evidence and explicit implementation-time verification. No implementation success or later automatic gate is assumed.
+
+Relay closed (Approved), no further turn needed. Producer may proceed to implementation and disposable-clone verification under the existing task authorization.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
