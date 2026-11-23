@@ -181,12 +181,12 @@ Ordered implementation steps (executed only after Codex Plan QA `Approved`, pers
   3. `git config --get user.name` and `git config --get user.email` (unchanged)
   4. `git rev-parse HEAD` (unchanged)
   Any drift invalidates that run's evidence and stops execution until repaired.
-- The task clone `../XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` itself is ALSO a fresh standalone disposable full clone (never the primary clone, never a linked worktree). Per `start-task/SKILL.md:291` (GH-1518), after Final Codex QA approves the final commit, we run `bash utils/ci-local.sh --fast`, verify `bash githooks/install.sh --check`, and run `git push` from this standalone task clone so the pre-push hook executes the **single** full Tier-3 `./validate.sh` run on the final approved commit.
+- The task clone `../XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` itself is ALSO a fresh standalone disposable full clone (never the primary clone, never a linked worktree). Per `start-task/SKILL.md:291-293` (GH-1518), before pushing we check `git ls-remote --heads origin fix/XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` and `bash utils/ci-route.sh` to verify this is a **first push** with a wired hook (`bash githooks/install.sh --check`) routing the full branch diff to Tier-3 `./validate.sh`. When first-push full-gate routing is confirmed, `ci-local.sh --fast` + `git push` executes the single full `./validate.sh` run; if the branch was already pushed earlier or the push range would not route to full Tier-3, run full `./validate.sh` once on the final approved SHA inside `-verify` and record its qualifying receipt before pushing.
 
 Ordered Phase 2 steps (**all tracked edits are committed BEFORE Final Codex Relay QA**):
 1. Create disposable full clone `../XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23-verify` at the Phase 1 candidate SHA with canonical origin `https://github.com/HiQS-Labs/XYZ-forge.git`. Record 4-field pre-run clone identity.
-2. **Layer A — Red-on-base vs Green-on-candidate pin verification (in `-verify` clone):**
-   - Run the updated pin tests (`test/gh681-reviewer-probe-rules.sh`, `test/gh778-review-code-skill.sh`, `test/gh616-start-task-commensurate-envelope.sh`) against `14cb8a60d` copies of the target files in `$TMPDIR` to confirm **RED** rejection of unchanged files.
+2. **Layer A — Executable Red-on-base vs Green-on-candidate pin verification (in `-verify` clone):**
+   - Because `test/gh681-reviewer-probe-rules.sh:23-26`, `test/gh778-review-code-skill.sh:6-8`, and `test/gh616-start-task-commensurate-envelope.sh:4-5,16` resolve their targets relative to their own repo root, create a temporary complete base checkout at `14cb8a60d` in `$TMPDIR/base-red-check` (`git clone --no-hardlinks` from `-verify` + `git checkout --detach 14cb8a60d`), overlay ONLY the three updated test scripts onto `$TMPDIR/base-red-check/test/`, run each suite inside `$TMPDIR/base-red-check`, and assert that each suite exits non-zero **specifically on the newly added GH-1587 pin assertions** (capturing the failing assertion lines, never accepting an unrelated error), then delete `$TMPDIR/base-red-check`.
    - Run all 16 focused pinned test suites (`gh681`, `relay-pkg-freshness`, `gh778`, `gh617`, `gh616`, `gh615`, `gh609`, `gh397`, `gh505`, `gh268`, `gh91`, `new-relay`, `debug-mantra`, `gh308`, `gh589`, `gh798`) against the candidate SHA to confirm **GREEN** (`exit 0`).
 3. **Layer B.1 — Live GH-836 self-sufficiency check (in `-verify` clone):**
    - Run `RELAY_SELF_SUFFICIENCY_SKIP=0 CODEX_FLAGS="-s workspace-write -c approval_policy=never -m gpt-6.1-terra" CODEX_MODEL="gpt-6.1-terra" bash test/relay-self-sufficiency.sh` and confirm non-skipped `PASS`.
@@ -204,7 +204,7 @@ Ordered Phase 2 steps (**all tracked edits are committed BEFORE Final Codex Rela
    - Run Final Codex Relay QA on the committed final candidate (implementation, plan, acceptance map, and `TESTS-RESULTS/2026-11-23+GH-1587/` receipts) until `Approved`.
    - If Final QA raises any finding requiring a code/doc edit, apply the edit, re-run affected verification in `-verify`, commit, and re-run Final QA so the approved revision matches the exact final head SHA (never reuse stale approval after an edit).
 7. **Push, PR, Closeout & Retirement (zero code/doc/plan edits after approval):**
-   - Record 4-field pre-push clone identity in the task clone, run `bash utils/ci-local.sh --fast`, verify `bash githooks/install.sh --check`, and push `fix/XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` to `origin` (pre-push hook runs the single full Tier-3 `./validate.sh` on the final approved commit). Verify 4-field post-push clone identity matches pre-push identity.
+   - Record 4-field pre-push clone identity in the task clone, verify `bash githooks/install.sh --check`, check `git ls-remote --heads origin fix/XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` and `bash utils/ci-route.sh` (confirming first-push full Tier-3 routing; if not first push or not full Tier-3, execute full `./validate.sh` once on the final approved SHA inside `-verify` first), run `bash utils/ci-local.sh --fast`, and push `fix/XYZ-forge-gh1587-qa-review-blind-spots-2026-11-23` to `origin`. Verify 4-field post-push clone identity matches pre-push identity.
    - Open ready PR against `development`, call `link_pull_request`, post the idempotent closeout comment on `#1587`, and retire both the task clone and `-verify` clone via `merge-cleanup --retire-published-pr`.
 
 ### Phase 2 QA Gate
@@ -212,7 +212,7 @@ Ordered Phase 2 steps (**all tracked edits are committed BEFORE Final Codex Rela
 - Live `test/relay-self-sufficiency.sh` passes (non-skipped) and is recorded in `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl`.
 - Live `new-relay.sh`-scaffolded Reviewer + Producer `Clone probe:` smoke receipt (working probe + errored/unavailable probe keep-open + unproven generalization) recorded in `TESTS-RESULTS/2026-11-23+GH-1587/`.
 - All tracked edits (`TESTS-RESULTS/`, `LESSONS-LEARNED.md` decision, plan status) committed **before** Final Codex Relay QA reaches `Approved` on the final head SHA.
-- Pre-push hook full Tier-3 `./validate.sh` passes on the final approved SHA (with 4-field clone identity verified before/after) and PR is open against `development`.
+- Full Tier-3 `./validate.sh` passes on the final approved SHA (via verified first-push wired pre-push hook, or via fallback `-verify` clone full-gate receipt if not a first-push full route), with 4-field clone identity verified before/after, and PR is open against `development`.
 
 ---
 
