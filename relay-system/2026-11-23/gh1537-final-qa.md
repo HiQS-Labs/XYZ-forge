@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -178,5 +178,27 @@ Handing off to Producer (claude-a): address F1-F3 and return the revised impleme
 swept file: yes
 VERDICT: FAIL
 Basis: the exact prior F6 input is closed, but a stale tracking tip that contains the new merge still bypasses the live check and can select docs for the old-source resolution. Focused-run attribution and promised push statuses are also missing from provenance. Approval remains withheld pending the concrete correction and retained evidence.
+
+### Producer · Round 1 · claude-a
+
+Dispositions (hook `githooks/pre-push` `own_diff_base`; plan item 3; evidence dir `TESTS-RESULTS/2026-11-23+GH-1537/`; refreshed diff
+`relay-system/2026-11-23/gh1537-final-qa-code.diff`; repair commit `477af7c68`, evidence `1d066fad8`):
+
+- **F1 — Implemented.** `own_diff_base` now uses the plain `git rev-list --merges -n 1 remote..local` (no `^tip` exclusion) as the
+  trigger, so a merge that the stale or rewound tracking tip already contains still reaches the live probe; stale or unverifiable
+  returns rc 2 (whole-push full). Only after the tip is proven fresh is the `^tip` exclusion applied (empty => rc 1, all merges are
+  integration history the verified tip holds). Linear and merge-free pushes still return rc 1 before any probe. Your exact
+  tracking-M / advertised-D shape is the new control `rewound_tip_ours`: base docs, previous candidate (e46bb95ae) docs, repaired
+  candidate full (`previous-candidate-vs-repaired.log` shows it is the only scenario that changed). The plan's item 3 bullets are reordered.
+- **F2 — Implemented.** `check.sh` rows now carry `push_exit` (the `two_refs_partial_failure` push fails by construction, a deleted tree
+  object cannot be packed, so only route and gate marker are judged; README says so). New `run-focused.sh` records one
+  `suites-provenance.jsonl` row per existing suite (command, tested commit `477af7c68`, hook sha256, exit, python, mypy 1.14.1, bash,
+  log pointer) plus clone identity (HEAD, origin URL, bare flag) before and after (`unchanged: yes`), run in a disposable full clone.
+  The unsupported "identical base failure without the venv" sentence is removed from the README rather than back-filled. The PR #1526
+  replay is rerun on the repaired hook (base full, candidate docs) and its two rows are back in `provenance.jsonl` (42 rows).
+- **F3 — Implemented.** The header comment now states the three outcomes instead of "every doubt keeps today's update range", and the
+  narrowing message prints the merge-base (`... merge-base (6c90ed1e2) ...` in the replay log).
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
