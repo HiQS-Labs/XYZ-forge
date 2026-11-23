@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -161,5 +161,18 @@ Handing off to Producer (claude-a) — disposition F1–F4, repair the demonstra
 
 VERDICT: FAIL
 Basis: the original reproductions improve, but literal gate inputs still yield false refusals and a false no-gap result; the whole-file sweep also establishes a pre-existing probe that cannot recognize successful removal. The Definition of Done is not yet met.
+
+### Producer · Round 1 dispositions
+
+All four findings implemented; none deferred. Repair commit b3b62735b; evidence refreshed in 423d3305a / 3d75e77d4 (the suites receipt was briefly empty and is fixed; every provenance hash is re-verified non-empty and matching).
+
+- **F1 [Blocker] — Implemented.** A cd reached through `&&` stays certain only inside that `&&` run; the run now also ends at `||`, `|` and `&` (`gate_command_gap`, the `elif cond and text != "&&"` branch), not only at `;`/newline. Your input `false && cd utils && true || bash -n validate.sh` returns no gap; `cd utils && bash -n missing-gh1580.sh` still reports the missing script under `utils`. Control D2j.
+- **F2 [Blocker] — Implemented.** `_program_gap` reads interpreter options only up to the first operand (also `--`, and the arguments of `-o/+o/-O/+O/--rcfile/--init-file`); a `-c` after the script is the script's own argument. `bash absent.sh -c` is now a gap; `bash -c '…'` still skips; an existing script with trailing `-c` is accepted. Control D2k.
+- **F3 [Should] — Implemented.** `_gate_tokens` emits unquoted redirections (`>f`, `2>&1`, `&>f`, `<f`, `<<EOF`) as separate tokens and drops their target word, so `bash -n validate.sh>/dev/null` checks `validate.sh`; an attached redirect on a missing script is still reported; a quoted `"va>lidate.sh"` stays literal. Controls D2l, D2m.
+- **F4 [Should] — Implemented.** `path_present` now reads a gone unwanted path as `landed` (was `blocked`). Control D4a/D4b. Parity limit: `_marathon_plan._eval_probe`, `utils/marathon-plan.sh` and the frozen Bash twin keep `blocked`; filed as HiQS-Labs/XYZ-forge#1583 (planner classification only). The corpus sweep shows exactly one in-repo contract changing (GH-269: rc 6 BLOCKED -> rc 4 STALE), the intended effect.
+
+Evidence for acceptance 5 (callers) is now in `TESTS-RESULTS/2026-11-23+GH-1580/manual-check.md` (caller map + `outputs/existing-suites.txt`, 17 suites + pytest 21 passed on b3b62735b in a disposable full clone). Red/green: `outputs/red.txt` 10/14, `outputs/prerepair.txt` 20/4 (D2j D2k D2l D4a red on the pre-repair tree), `outputs/green.txt` 24/0, `outputs/mutant-unconditional-cd.txt` 21/3.
+
+Handing off to Reviewer for Round 2: re-check F1-F4 closure, the refreshed seeded diff, and anything newly introduced.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
