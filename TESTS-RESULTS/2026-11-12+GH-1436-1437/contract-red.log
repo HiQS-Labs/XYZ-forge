@@ -1,0 +1,18 @@
+command: marathon_plan.py --format json with string target fixture; rc= 1
+
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/utils/py/marathon_plan.py", line 214, in <module>
+    main()
+    ~~~~^^
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/utils/py/marathon_plan.py", line 172, in main
+    rc = engine.run(cfg, render_out)
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/utils/py/_marathon_plan.py", line 1710, in run
+    return engine.run(render_out)
+           ~~~~~~~~~~^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/utils/py/_marathon_plan.py", line 1432, in run
+    c = self.compute()
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/utils/py/_marathon_plan.py", line 1200, in compute
+    ref = (r["contract"].get("target") or {}).get("ref") or "HEAD"
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'get'
+

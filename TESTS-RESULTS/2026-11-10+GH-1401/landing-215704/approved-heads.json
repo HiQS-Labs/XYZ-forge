@@ -1,0 +1,8 @@
+{
+  "1404": {
+    "head": "8e05d8bc74a6eb985084ad4114e8c0f2e52f497c",
+    "authorization": "operator merge-cleanup and three new repair rounds each",
+    "independent_review": "0377d05da9b9a2f6139855c5addd31faec4c0c75 Opus medium Approved; source bytes unchanged",
+    "remaining_predicates": "none: normal final docs PASS67.272s and exact-head hosted smoke SUCCESS42920701866"
+  }
+}

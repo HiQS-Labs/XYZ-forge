@@ -1,0 +1,17 @@
+From https://github.com/HiQS-Labs/XYZ-forge
+ * branch                development -> FETCH_HEAD
+   2743ca7d2..f3ff5e9d8  development -> origin/development
+Already on 'development'
+Switched to branch 'marathon/gh-1160-local-reconcile-startup-2026-11-08'
+Merge made by the 'ort' strategy.
+ releases.db  | Bin 1728512 -> 1736704 bytes
+ releases.sql |  38 +++++++++++++++++++++++++++++++++++---
+ 2 files changed, 35 insertions(+), 3 deletions(-)
+{"branch": "development", "preserved_ancestor": "e15ea3aa88fb0830759741bf2d70f71f13842ff7", "merged_head": "1276bb4d52494545fbe1130f27d19a2533826fa9", "primary_snapshot": "f3ff5e9d8c2527a19b661377c5bebbaff4e51924"}
+Merge made by the 'ort' strategy.
+ releases.db  | Bin 1728512 -> 1736704 bytes
+ releases.sql |  38 +++++++++++++++++++++++++++++++++++---
+ 2 files changed, 35 insertions(+), 3 deletions(-)
+{"branch": "marathon/gh-1160-local-reconcile-startup-2026-11-08", "preserved_ancestor": "93164d488b8150b6a7c84df576fe8c6cd019e7d4", "merged_head": "c23b66bd0a31023873351365d9f2ab846a6e51a3", "primary_snapshot": "f3ff5e9d8c2527a19b661377c5bebbaff4e51924"}
+EXECUTION_ROOT_VALID /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner
+ATTEMPT_FILES_UNCHANGED {"/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.tick/attempts/gh-1160-local-reconcile-startup": "df3b19c1d6ac8ea7f8d796cf7e44a142bd7e8d880eda149bd105eb73e34cf85e"}

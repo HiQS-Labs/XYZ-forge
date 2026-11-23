@@ -1,0 +1,2 @@
+PRE-CHANGE BUCKET C LINE:
+1. Mergeability UNKNOWN or behind: #1501 Sample behind PR. Refresh their state, then land them as one merge-cleanup batch (the fold/aggregate policy applies to 3+ PRs). Reconcile once at the end.

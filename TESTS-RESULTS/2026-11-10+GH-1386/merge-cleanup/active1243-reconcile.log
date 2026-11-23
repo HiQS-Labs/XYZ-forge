@@ -1,0 +1,22 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/Users/noelsaw/Documents/GitHub/XYZ-forge)
+wave-reconcile: Processing PR #1406...
+wave-reconcile:   PR #1406 closes []; references [1243, 1386, 1402]
+wave-reconcile:   Issue #1243 referenced without a closing keyword and OPEN — recording merge evidence only
+TRANSITION ["doc", "merge-evidence", "PR #1406", "GH-1243-CONSULT-ANSWER-PAYLOAD.md"]
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> leaderboard.sh
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-141 (PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md)
+wave-reconcile:     - GH-216 (PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md)
+wave-reconcile:     - GH-255 (PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md)
+wave-reconcile:     - GH-275 (PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md)
+wave-reconcile:     - GH-423 (PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md)
+wave-reconcile:     - GH-492 (PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md)
+wave-reconcile:     - GH-1075 (PROJECT/2-WORKING/GH-1075-BATCH-RESUME-STALE-FILES.md)
+wave-reconcile:     - GH-1087 (PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md)
+wave-reconcile: Running PDDA doc-hygiene gate...
+wave-reconcile: Wave reconciliation completed successfully! ✅

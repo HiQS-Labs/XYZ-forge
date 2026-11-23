@@ -1,0 +1,40 @@
+test_noop_publication_already_remote_skips_push (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_already_remote_skips_push) ... merge-cleanup: ERROR — PR #1390: could not push post-merge writes: unneeded push invoked
+FAIL
+test_noop_publication_empty_refs_fail_closed (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_empty_refs_fail_closed) ... FAIL
+test_noop_publication_fetch_failure_never_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_fetch_failure_never_pushes) ... merge-cleanup: ERROR — PR #1390: could not verify pushed integration head: offline
+FAIL
+test_noop_publication_unpublished_commit_still_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_unpublished_commit_still_pushes) ... ok
+
+======================================================================
+FAIL: test_noop_publication_already_remote_skips_push (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_already_remote_skips_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/test/gh436-merge-cleanup.py", line 1036, in test_noop_publication_already_remote_skips_push
+    self.assertTrue(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_noop_publication_empty_refs_fail_closed (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_empty_refs_fail_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/test/gh436-merge-cleanup.py", line 1075, in test_noop_publication_empty_refs_fail_closed
+    self.assertFalse(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_noop_publication_fetch_failure_never_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_fetch_failure_never_pushes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/test/gh436-merge-cleanup.py", line 1064, in test_noop_publication_fetch_failure_never_pushes
+    self.assertFalse(any(x[0] == "push" for x in calls))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.295s
+
+FAILED (failures=3)
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development

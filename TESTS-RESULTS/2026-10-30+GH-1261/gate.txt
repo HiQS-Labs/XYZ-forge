@@ -1,0 +1,4 @@
+./validate.sh (route=full) on 7bc1742d in the verify clone: rc=0 in 894s, passed: 409 / 409
+rc=0 secs=894
+id-before: 7bc1742dff339e3ce0df183751c4c6743fa4c925 https://github.com/HiQS-Labs/XYZ-forge.git        0
+id-after:  7bc1742dff339e3ce0df183751c4c6743fa4c925 https://github.com/HiQS-Labs/XYZ-forge.git        0

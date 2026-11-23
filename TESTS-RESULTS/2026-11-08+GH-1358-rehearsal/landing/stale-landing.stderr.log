@@ -1,0 +1,3 @@
+merge-cleanup: ERROR — REFUSING to merge: the --prs selection no longer matches the dry run:
+merge-cleanup: ERROR —   - #1372 head moved 624f52c8c4 -> 8ef5dcc060
+merge-cleanup: ERROR — Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.

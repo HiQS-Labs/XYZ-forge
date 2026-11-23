@@ -1,0 +1,47 @@
+=== POSITIVE CONTROL 1: --reconcile-pr, --resume, --prs CLI Help/Argument Contract ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --help
+EXIT: 0
+DECISIVE OUTPUT:
+                          [--exclude EXCLUDE] [--prs N[@SHA][,...]]
+                          [--show-merge-policy] [--scan-only] [--prs-only]
+                          [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+                          [--allow-unready-primary] [--execute] [--resume]
+                          teardown (never a PR filter; use --prs)
+    --prs N[@SHA][,...]   Allowlist of PRs to land (required for a merging
+    --prs-only            Only list and sequence open PRs
+    --reconcile-pr RECONCILE_PR
+    --resume              Continue a previous run: consult each PR's attempt
+
+=== POSITIVE CONTROL 2A: Real CLI Dry Run Reaching pin_selection (L2778) With Matching Full-SHA Pin ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@37cd84e670595e7bece28c378d16bed6acf2405d --prs-only
+EXIT: 0
+DECISIVE OUTPUT:
+  merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+  merge-cleanup: --prs pinned for --execute (/private<tmp-dir>/disp-repo/.tick/merge-cleanup/example-ks08-fixture/selection-development.json): #1539 @ 37cd84e670
+  merge-cleanup: Pinned for --execute: --prs 1539@37cd84e670595e7bece28c378d16bed6acf2405d
+  | 1 | [#1539](https://github.com/example/ks08-fixture/pull/1539) | Fixture KS-08 pinned PR | `feat/ks08-fixture` | `development` | no | PASS | MERGEABLE | 0 |
+
+=== NEGATIVE CONTROL 2B: Real CLI --execute Reaching verify_selection (L2571) Refuses Mismatched Full-SHA Pin ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp-clone> --root <tmp> --prs 1539@0000000000000000000000000000000000000000 --resume --execute --allow-unready-primary
+EXIT: 2
+DECISIVE OUTPUT:
+  merge-cleanup: ERROR — REFUSING to merge: the --prs selection no longer matches the dry run:
+  merge-cleanup: ERROR —   - #1539 head moved 0000000000 -> 37cd84e670
+  merge-cleanup: ERROR — Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.
+
+=== PAIRED CONTROL 2C: verify_selection (L667) Direct Match vs Mismatch Proof ===
+EXIT: 0
+DECISIVE OUTPUT:
+  VERIFY_MATCH_RESULT: {1539: '37cd84e670595e7bece28c378d16bed6acf2405d'}
+  VERIFY_MISMATCH_RESULT: None
+  
+  merge-cleanup: ERROR — REFUSING to merge: the --prs selection no longer matches the dry run:
+  merge-cleanup: ERROR —   - #1539 head moved 0000000000 -> 37cd84e670
+  merge-cleanup: ERROR — Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.
+
+=== POSITIVE CONTROL 3: --reconcile-pr Argument Type Enforcement ===
+CMD: python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <disp-clone> --reconcile-pr not-an-int
+EXIT: 2
+DECISIVE OUTPUT: merge_cleanup.py: error: argument --reconcile-pr: invalid int value: 'not-an-int'
+
+BOUNDARY PROOF: Disposable full clone git status = (clean, zero working-tree/external mutations; isolated HOME + read-only fake gh shim; pin snapshot contained inside <tmp-dir>)

@@ -1,0 +1,5 @@
+# Checked primary state after owned gate termination
+
+PrimaryHEAD andliveorigin/development both67adb8775eff8091b98e4100b9f556463a50cd60; core.barefalse, originexpectedGitHub, localuser.emailunsetasbefore, gitstatusporcelainempty. No primaryvalidate/prepush processremainedinobservedprocessinventory. Registeredpeerworktreesremainlisted; missinghistoricalt3-59b86d54wasnotrecreated.
+
+Thesechecksestablishselectedtracked/config/mainrefstate, not everyref/object/ignoredartifactunchanged. No preincidentcompleteall-ref/ignoredsnapshot exists. Primarygatefullstdoutwasnotretainedbytheexistingfailed-pusherrorpath; incidentstderr/ancestrymanifestandcallerfailurearepreserved. No full-pass orblanketno-data-lossclaim. Onlyownedroot55756/descendants22receivedTERM; separate1384PG59606untouchedandnormalgatepassed558s.

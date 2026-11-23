@@ -1,0 +1,9 @@
+sha=030db02d277d40ede69f5644b211337c047d67ce + staged evidence
+--- releases_app.py check
+check: clean (0 failures, 10 warning(s))
+--- pdda.sh run
+PDDA run complete: no errors, 39 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+--- gh308 frozen-twin --check --staged
+gh308 guard: no frozen Bash twin changed
+gh308 guard: no new Bash under utils/ or relay-automation/
+rc=0

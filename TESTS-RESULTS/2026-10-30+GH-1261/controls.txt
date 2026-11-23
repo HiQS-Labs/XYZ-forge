@@ -1,0 +1,19 @@
+CONTROL list-fails-N1 | rc=2 state.db=absent | factory-primitive: open issue list failed: Command '['gh', 'issue', 'list', '--s
+CONTROL n0-rc | rc=0
+CONTROL n0-list-calls | 0
+CONTROL parity-base | [418, 1201, 1204, 216, 223, 446, 478, 1205, 670, 722]
+CONTROL parity-n0   | [418, 1201, 1204, 216, 223, 446, 478, 1205, 670, 722]
+CONTROL parity | identical
+CONTROL bare-one-match | ([{'path': 'utils/marathon-plan.sh', 'source': 't:L1'}], [])
+CONTROL bare-two-match | ([], [{'name': 'marathon-plan.sh', 'source': 't:L1', 'matches': 2}])
+CONTROL xyz-in-listing | [{'path': 'utils/py/harness.py', 'source': 't:L1'}]
+CONTROL xyz-not-in-listing | []
+CONTROL red-no-index-216 | []
+CONTROL cap-removed | 26 paths; PDDA kept=True
+CONTROL cap-collision | #1201 wave 2 vs rival #201 wave 1 (must differ)
+CONTROL dep-prereq-held | dependent #1258 wave=None held=['unplaceable: unmet dependency, collision or zone cap']; prereq #1252 wave=None
+CONTROL dep-prereq-pending | dependent #1258 wave=None held=['unplaceable: unmet dependency, collision or zone cap']; prereq #1252 wave=None
+CONTROL dep-prereq-admitted | dependent #1258 wave=7 held=[]; prereq #1252 wave=2
+CONTROL red-dep-admitted-only-lookup | dependent #1258 wave=7 (packed = bug shown)
+CONTROL verify-intact | accepted
+CONTROL verify-drop-unresolved | refused: plan-draft brief missing keys: unresolved_names

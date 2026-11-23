@@ -1,0 +1,21 @@
+### GREEN r2 @ a4836f6c
+host ignores relay-system/logs? no
+== M1 budget-stop (fake CLI exit 1) ==
+shim exit: 5
+claude-turn: claude -p failed (exit 1): error_max_budget_usd: Reached maximum budget ($0.50)
+json log after turn: PRESENT
+stderr sibling: PRESENT
+tick cost rows for M1-BUDGET: 1
+{"schema_version":"0.2.0","ts":"2026-11-12T03:27:31.674Z","type":"cost.tokens","task":"M1-BUDGET","agent":"claude-builder","tokens_in":40120,"tokens_out":3500,"tokens_total":43620,"tool":"claude"}
+== M1 success (fake CLI exit 0) ==
+shim exit: 0
+tick cost rows for M1-OK: 1
+== M2 role defaults (argv of the CLI) ==
+builder: --max-turns 40 --max-budget-usd 3.00
+reviewer: --max-turns 12 --max-budget-usd 1.00
+reviewer+CLAUDE_MAX_BUDGET=1.25: --max-turns 12 --max-budget-usd 1.25
+builder+CLAUDE_MAX_BUDGET=1.25,TURNS=7: --max-turns 7 --max-budget-usd 1.25
+== ESCALATION builder_diag parse on the M1 log ==
+is_error=True, subtype=error_max_budget_usd, errors=['Reached maximum budget ($0.50)'], total_cost_usd=0.5104
+host git status after all turns:
+?? relay-system/

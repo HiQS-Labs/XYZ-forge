@@ -1,0 +1,11 @@
+{
+  "acceptance_rule": "inconclusive.json invalidates outcome.json; parent must reject calibration",
+  "completed_commands": 0,
+  "invalidates": [
+    "outcome.json"
+  ],
+  "outcome": "inconclusive",
+  "reason": "HOME/TMPDIR must start empty",
+  "retry": false,
+  "termination": "no active direct child"
+}

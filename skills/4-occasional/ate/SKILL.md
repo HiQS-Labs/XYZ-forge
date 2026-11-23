@@ -1,216 +1,115 @@
 ---
 name: ate
-description: "ATE (Automated Testing Environment): drive long-running (2-3hr+) unattended variation-test suites against the Aider, OpenRouter, and GLM 5.2 pipeline using a local Gemma model in LM Studio as the worker, with periodic frontier-model check-ins for drift control, ending in a single triaged GitHub issue. Use this whenever the user wants to \"run variation tests overnight/for hours\", \"debug a bunch of small Aider bugs\", \"test Aider flag combinations\", \"fuzz the Aider harness\", mentions LM Studio + Gemma as a local test driver, wants test failures rolled up into one GH issue triaged by severity, or invokes ATE by name. Also trigger if the user asks to set up a check-in loop between a local model and a frontier model for a long-running task."
+description: "Choose and supervise XYZ Forge ATE variation, adaptive pairwise or mutational fuzzing tools. Use for ATE, CLI flag grids, local-model classification, or bounded exploratory campaigns; use defect-campaign for Radar-selected discovery."
 ---
 
-# ATE — Automated Testing Environment (generic bounded-variation matrix runner)
+# ATE / fuzzing — entry points and limits
 
-The skill interface lives here; its implementation is bundled under
-[`utils/ate/`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/ate).
+This map describes current `development` (source checked at `7eeae804`, 2026-10-21),
+not a promise about released tag `0.9.0`. Pin the checkout used for a run and inspect its CLI.
+Historical Gen 3/4 plans, module-header promises and example-grid comments are not acceptance evidence.
+For Radar-selected discovery, follow [defect-campaign](../defect-campaign/SKILL.md): bounded approval,
+semantic replay and accountable disposition; synthesis, healing and automatic filing stay off.
+That workflow does not authorize new CI cases or remediation.
 
-ATE walks a declared grid of command variations unattended for hours, logs every result as
-structured JSON, and a frontier model (you, Claude) checks in every ~5 minutes to catch
-drift/looping. The full cycle — run, capture, document, file — is chained end to end: when the
-run ends (time limit, abort, or safety cap), `run_variations.py` automatically hands off to
-`compile_issue.py`, which opens **one** GitHub issue titled
-`ATE - [test-name] yyyy-mm-dd` containing every finding from that run as a single
-checklist, ranked by severity (critical first). No manual second step required
-as long as `--gh-repo` was passed.
+## Choose an entry point
 
-For Radar-selected defect discovery, use
-[defect-campaign](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/4-occasional/defect-campaign/SKILL.md)
-for suitability, bounded approval and replay/disposition requirements. In that mode,
-synthesis/healing and automatic filing stay off; this skill's older filing flow does
-not authorize new CI cases or remediation.
+Paths below are relative to the full Forge checkout; `utils/py/` tools have separate CLIs.
 
-## Architecture (linear)
+| Entry point | Input / purpose | Output / boundary |
+|---|---|---|
+| `utils/ate/scripts/run_variations.py` | Variation YAML: `model`, `message`, `variation_keys` naming top-level value lists, argv-list `command_template`; absent custom keys, uses Aider `edit_formats/map_tokens/auto_commits` | Cycled Cartesian grid; `error_log.jsonl`, `control.json`; optional issue rollup |
+| `utils/py/adaptive_ate.py` | Different YAML/JSON schema: `flags` mapping to lists, `conflicts` mappings, `requires: [{if: {...}, then: {...}}]`, `command` string containing `{flags}` | `generate` / `coverage` / `run` / `classify`; pairwise coverage and Tier-1 telemetry; optional anomaly command |
+| `utils/py/fuzz_engine.py` | Target string with `{mutant}`, base argv, seed and corpus | `plan` / `fuzz` / `replay`; output-signature feedback, not code coverage |
+| `utils/py/domain_oracles.py` | Explicit command, work root and applicable host/receipt/recovery inputs | Observations: zero-state, containment, idempotence, crash-recovery; not an OS sandbox |
+| `utils/py/gen4_campaign.py` | `--mode run`, approved duration/mutation bounds and disposable full clone; optional target-list JSON | Batches, telemetry, campaign report, candidate clusters; synthesis defaults ON (`--no-synth` disables it) |
+| `utils/py/repro_builder.py` / `repro_synth.py` | Single failure record / Gen 4 telemetry JSONL | Candidate repro scripts / signature-cluster synthesis and minimization; human semantic verification still required |
+| `utils/py/self_healer.py` | Explicit sandbox root, generator command and regression command | Opt-in candidate content/diff handoff; no autonomous full-suite-qualified repair guarantee |
 
-1. **Gemma (LM Studio, local)** — worker. Cycles through the variation grid
-   (repeating from the top once it reaches the end), runs
-   `aider --model openrouter/z-ai/glm-5.2 ...` as a subprocess, classifies the result.
-2. **error_log.jsonl** — the single source of truth. Append-only. Every variation
-   writes one line here regardless of pass/fail.
-3. **control.json** — the only channel Claude writes to. Gemma polls it before each
-   iteration. `{"action": "continue"}` / `{"action": "abort", "reason": "..."}`.
-   `run_variations.py` resets this to `continue` at the start of every run, so a
-   stale abort from a previous run in the same directory can't kill a fresh one.
-4. **Claude (you)** — supervisor. Every ~5 min, run `checkin.py`, read the summary,
-   decide continue/abort, write `control.json` if aborting.
-5. **compile_issue.py** — chained automatically: `run_variations.py` calls it the
-   moment the run stops (time limit, abort, or safety cap), passing `--gh-repo`
-   through. It groups `error_log.jsonl` by severity/signature into one unified,
-   severity-ranked checklist and opens a single GitHub issue titled
-   `ATE - [test-name] yyyy-mm-dd` via `gh issue create`. Can still be run standalone
-   for a manual rollup (e.g. after a crash that killed `run_variations.py` before
-   it could chain).
+Legacy/offline tools are separate: `utils/fuzzing/fuzz-loop.sh` enumerates fixed synthetic scripts;
+`active_explorer.py`, `metamorphic_oracle.py` and `differential_oracle.py` expose older probe/oracle
+interfaces. `calibrate_tier1.py` is an offline labelled-benchmark tool, not a runtime supervisor.
+`checkin.py` summarizes logs and can request abort; `compile_issue.py` renders/files a rollup.
 
-## Quick start (do this first)
+## Full-checkout variation example
+
+Do not use the standalone installation recipe: `utils/ate/install.sh` copies `utils/ate/`,
+but `run_variations.py` imports sibling `utils/py/proc_group.py`, which is not copied.
+Keep the full checkout. All three `{harness_root}` templates (`variations.tool-density.yaml`,
+`variations.tool-calling.yaml`, `variations.turn-shims.yaml`) resolve that placeholder from the
+script's location; copying the runner changes that root and does not bundle their targets.
 
 ```bash
-# 1. Install
-bash utils/ate/install.sh           # copies the interface + implementation to ~/.claude/skills/
-
-# 2. In LM Studio: load a Gemma 4 model (31B Dense recommended), start the
-#    Local Server (Developer tab -> Start Server). Default: http://localhost:1234/v1
-#    Note the exact model identifier shown in LM Studio's server log/model list.
-
-# 3. Set OpenRouter key for the Aider side of the pipeline being tested
-export OPENROUTER_API_KEY="sk-or-v1-..."
-
-# 4. Point run_variations.py at a scratch git repo (never your real repo).
-#    error_log.jsonl and control.json land in this directory by default —
-#    run checkin.py from here too, or pass --log/--control explicitly.
-cd ~/scratch/aider-test-repo && git init -q
-
-# 5. Kick off the run (defaults to 3 hours, edit variations.yaml first).
-#    --gh-repo is what turns on the automatic issue filing at the end — omit it
-#    to just get error_log.jsonl with no GitHub side effect. Requires
-#    `gh auth status` to already be logged in.
-python3 ~/.claude/skills/ate/scripts/run_variations.py \
-  --repo . \
-  --variations ~/.claude/skills/ate/variations.example.yaml \
-  --lmstudio-model "gemma-4-31b-instruct" \
-  --gh-repo OWNER/REPO \
-  --test-name "aider-flag-fuzz" \
-  --minutes 180 &
+# From the full Forge checkout; use an ABSOLUTE path to a disposable scratch git repo.
+# The scratch repo must contain only expendable data. Inspect/edit the grid before running.
+python3 utils/ate/scripts/run_variations.py \
+  --repo /absolute/path/to/disposable-scratch \
+  --variations utils/ate/variations.example.yaml --minutes 5
+# In a separately scheduled/manual supervisor (there is no implicit check-in loop):
+python3 utils/ate/scripts/checkin.py --log error_log.jsonl --control control.json --tail 20
+# To request abort before the next iteration:
+python3 utils/ate/scripts/checkin.py --control control.json --abort "reason"
 ```
 
-Then, on your (Claude's) side, every ~5 minutes:
+The Aider preset needs its target CLI/provider configuration; these are instructions, not an install.
+Add an exact `--lmstudio-model` identifier to use local-model classification (default endpoint
+`http://localhost:1234/v1`). Without it, or with `--mock-classifier`, only exit 0 passes and
+`expects_edits` is ignored. With a model, `expects_edits: false` changes the diagnostic no-edit
+prompt, not an expected-exit-code list. The turn-shim grid's comment about exit-2 usage passing
+is an intended CLI contract, not runner behavior: exit 2 is still classified as failure by the
+exit-code classifier and is nonzero-error evidence in the diagnostic model prompt. Triage it.
+The tool-density/calling templates are diagnostic targets; review their edit expectation too.
 
-```bash
-python3 ~/.claude/skills/ate/scripts/checkin.py --tail 20
-```
+Every variation hard-resets and cleans `--repo`, including uncommitted/ignored files (with log/control
+name exclusions); it can auto-create a base commit. The harness repo is refused; repos with remotes
+require `--allow-destructive-reset`. These guards do not make valuable scratch contents safe.
+The runner resets stale control to `continue` at startup, polls before iterations, and stops at the
+time budget or roughly 20 grid passes (cap checked after execution). Per-variation timeout defaults
+to 180 seconds with bounded process-group cleanup; the budget is not a strict total wall-clock cap.
+Check-ins require an actual supervising session/scheduler. `checkin.py` has no cross-call memory.
 
-Read the printed summary. If it looks healthy, do nothing (Gemma keeps polling
-`control.json`, sees no abort, continues). If you see drift (see "What counts as
-drift" below), abort the run — `checkin.py --abort "reason"` does this for you in
-one call. There is no "redirect" action; the only control signals are `continue`
-and `abort`.
+## Exit and filing contracts
 
-When the run ends (time limit, abort, or the iteration safety cap of 20 full
-passes over the grid — see "Notes / gotchas"), `run_variations.py` automatically
-chains into `compile_issue.py` and opens one GitHub issue titled
-`ATE - [aider-flag-fuzz] 2026-07-09` (using today's date and the `--test-name`
-you passed, or the `variations.yaml` filename's stem if you didn't pass one) with
-every finding from the run as a single severity-ranked checklist. Nothing further
-to run by hand. If you need the standalone/manual form (e.g. `run_variations.py`
-itself crashed before it could chain, or `--gh-repo` was omitted):
-
-```bash
-python3 ~/.claude/skills/ate/scripts/compile_issue.py \
-  --log error_log.jsonl --repo OWNER/REPO --test-name "aider-flag-fuzz"
-```
-
-## Exit codes (#142)
-
-Both scripts in the filing chain exit with a contract a wrapper, CI job, or supervising agent
-can branch on. Before #142 every terminal state exited 0 — including a failed `gh issue create`
-— so a multi-hour run's final step could fail invisibly.
-
-| Code | Meaning |
+| Runner result | Meaning |
 |---|---|
-| `0` | Issue filed, or `--dry-run` body rendered. |
-| `3` | No records in the log — nothing to file. Distinct from filed so callers can tell "done its job" from "did nothing". |
-| `1` | `gh issue create` failed. `issue_body.md` is preserved in the working directory for manual filing. |
-| `2` | `run_variations.py` only: repo guard refused the run (`--repo` is the harness itself, or carries a remote without `--allow-destructive-reset`). |
+| `0` without `--gh-repo` | At least one variation attempted and normal loop end; findings may exist |
+| `2` | Repo guard refusal, empty grid or no attempted variation (also CLI usage errors) |
+| `127` | Caught harness spawn failure; failure record written, no filing handoff |
+| `128 + signal` | Cancellation via signal handler; KeyboardInterrupt during harness launch returns 130; filing may not occur |
+| Filing result with `--gh-repo` | Normal loop end propagates `compile_issue.py`: 0 filed/dry-run rendered, 3 empty log, 1 filing failure |
 
-`run_variations.py` propagates `compile_issue.py`'s code when `--gh-repo` is set: the run's exit
-code IS the filing outcome. Supervisors: treat `0` and `3` as healthy ends, `1`/`2` as needing
-attention, and abort-drift separately via `checkin.py`. The `gh issue create` call is capped at
-120s (`ATE_GH_TIMEOUT_S` overrides); a hang, a missing `gh`, or a launch failure all land in
-exit `1` with `issue_body.md` preserved — no traceback, no indefinite hold on the run's completion.
+A child killed by a signal is recorded with a negative subprocess return code; a timeout has
+`exit_code: null` and a high/timeout classification. These are findings, not the runner's final
+exit status. Other uncaught errors can terminate the runner; the table is not an exhaustive error taxonomy.
+Filing is opt-in via `--gh-repo OWNER/REPO`; `--dry-run-issue` only renders. The issue compiler's
+`gh` call is bounded (120s default, `ATE_GH_TIMEOUT_S` override), preserving `issue_body.md` on failure.
+Omit filing for discovery workflows that require review before external writes.
 
-## Targets beyond Aider (#141 Phase 5)
+## Gen 4 interpretation and safety
 
-The engine is target-agnostic: any grid with a `command_template` (argv-list form — values are
-substituted per-token, never through a shell string) runs against any CLI. Aider is one preset,
-not the subject.
+Seeded planning requires the same source, argv, seed, corpus snapshot/order and environment;
+subprocess timing, host state and models can still change outcomes. `fuzz()` constructs its whole
+plan before execution: feedback updates the corpus for later batches/invocations, not current
+parent selection. Twin comparison checks exit code and normalized stderr digest, not stdout,
+side effects or semantic equivalence. Pairwise coverage/reduction depends on the grid and constraints.
+Shipped calibration records 50 pass / 24 fail inputs, 9 anomalies, FN=0/FP=0 on that benchmark;
+it is not a general false-negative or performance guarantee (`utils/ate/tier1-calibration.json`).
 
-- **Classifier oracle decoupling (`expects_edits`)** — the stock Aider grid expects the tree to
-  change, so exit-0-with-no-edit classifies `fail/no_edit`. A grid that only probes (usage
-  surfaces, read-only diagnostics) declares `expects_edits: false`, and exit-0-no-edit is a
-  PASS. The #146 Gemma soak recorded 17 false HIGH `no_edit` verdicts before this key existed —
-  do not run a non-edit grid without it.
-- **Rollup labels are neutral by default** — `bug`, nothing else. The Aider preset opts back in
-  via `issue_labels: [bug, aider-pipeline]` in its grid; any grid or `--issue-label` overrides.
-  A turn-shim soak must never file Aider-labelled issues.
-- **Declared non-Aider grids shipped here:** `variations.tool-density.yaml` /
-  `variations.tool-calling.yaml` (script_runner benchmarks) and `variations.turn-shims.yaml`
-  (turn-shim CLI-contract usage soak — read its header for the safe execution profile before
-  wiring it to a runner; it is diagnostic, `expects_edits: false`, and must run against stubs or
-  a disposable clone if extended past the usage surface).
+Campaign defaults contain nine targets, deliberately excluding `validate.sh`; this is not a full-suite
+campaign. `--no-synth` is valid; `--synth` is not. Campaign `--tier2-cmd` is accepted but unwired;
+adaptive ATE's separate `--tier2-cmd` runs an anomaly command. Bounded registered Gen 4 self-tests
+can run in hosted validation; exploratory multi-hour campaigns require separate approval.
+Campaign replay accepts matching stderr digest OR exit code; synthesis may fall back to exit-code-only
+verification. Clustering uses stderr digest without target identity: clusters can combine unrelated
+failures. Generated scripts pass while their failure predicate reproduces; review and invert the
+appropriate assertion when fixing a defect. They are not automatically committed regression coverage.
 
-## What counts as drift (abort triggers)
-
-- 3+ consecutive iterations with the **same** `likely_cause` signature — Gemma is
-  stuck re-testing the same bug instead of moving to the next variation
-- Gemma marks something `pass` but the raw Aider stdout/stderr in the same record
-  contains a traceback or non-zero exit code — classification is unreliable, stop
-  and inspect
-- No new lines appended to `error_log.jsonl` for 2+ check-in cycles — the worker
-  has hung (check the LM Studio server and the `aider` subprocess). `checkin.py`
-  has no memory of previous invocations, so use its printed
-  `log_last_modified_seconds_ago` field and compare it against what you saw last
-  check-in rather than relying on the tool to flag this automatically.
-- Wall-clock time on a single variation exceeds `--per-variation-timeout` (default
-  180s) — treat as a hang, not a slow test; `run_variations.py` kills it and logs
-  it as `severity: high, category: timeout` automatically
-
-## variations.yaml format
-
-Grid of Aider flags to combine (see `variations.example.yaml`). Each combination
-becomes one subprocess call. Keep the task `message` short and deterministic (a
-fixed small task like "add a docstring to foo()") so failures are attributable to
-the *pipeline* (Aider/OpenRouter/GLM plumbing), not to task ambiguity.
-
-```yaml
-model: openrouter/z-ai/glm-5.2
-edit_formats: [diff, whole, udiff]
-map_tokens: [0, 1024, 4096]
-auto_commits: [true, false]
-message: "Add a one-line docstring to the function `foo` in sample.py"
-per_variation_timeout_seconds: 180
-```
-
-## Severity rubric (used by compile_issue.py to rank the unified checklist)
-
-| Severity | Definition |
-|---|---|
-| critical | Aider process crashes, non-zero exit with traceback, or corrupts the git working tree |
-| high | Wrong/no edit applied, OpenRouter auth or routing failure, timeout/hang |
-| medium | Edit applied but malformed (bad diff format, partial file write) |
-| low | Cosmetic — extra output noise, formatting drift, slow-but-succeeded |
-
-## Files in this skill
-
-- `scripts/run_variations.py` — the Gemma-driven worker loop (long-running); chains
-  into `compile_issue.py` automatically when it stops, if `--gh-repo` was passed
-- `scripts/checkin.py` — Claude-side supervisor: summarize + optionally abort
-- `scripts/compile_issue.py` — rolls up `error_log.jsonl` into one GH issue titled
-  `ATE - [test-name] yyyy-mm-dd`; runs standalone too, for a manual rollup
-- `variations.example.yaml` — starter grid, copy and edit per pipeline under test
-- [`utils/ate/install.sh`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/ate/install.sh) — copies the interface and implementation to `~/.claude/skills/`
-
-## Notes / gotchas
-
-- LM Studio's OpenAI-compatible endpoint ignores auth — no API key needed locally,
-  but you must pass the exact model name LM Studio reports (`/v1/models` will list it).
-- Aider's OpenRouter model string needs the `openrouter/` prefix on top of the
-  OpenRouter slug itself: `openrouter/z-ai/glm-5.2` — the bare slug alone will fail.
-- Gemma 4's training cutoff is Jan 2025 — if Aider's CLI flags have changed since,
-  Gemma may generate stale flag names. `run_variations.py` only ever calls flags
-  from `variations.yaml` (never lets Gemma invent flags), which sidesteps this.
-- **Run everything against a disposable scratch repo.** `run_variations.py` does a
-  destructive `git reset --hard` + `git clean -fdx` before *every* variation (so each
-  variation starts from the same pristine state and results are comparable across the
-  grid). This permanently deletes uncommitted and ignored files in `--repo`. Two guards
-  refuse the obvious footguns before anything runs (GH-195): it hard-refuses `--repo`
-  pointed at the harness clone itself, and refuses a `--repo` that has a git remote (i.e.
-  looks like a real checkout) unless you pass `--allow-destructive-reset`. A fresh
-  `git init` scratch repo has no remote, so the Quick start above needs no extra flag —
-  and a `git init` with no commits yet no longer crashes (the script auto-creates a base
-  commit to rewind to).
-- The grid is cycled, not walked once — `run_variations.py` loops back to the
-  start after the last combination and only stops on the time budget, an abort,
-  or an iteration safety cap of `len(combos) * 20` (a backstop against a runaway
-  `--minutes` value).
+Domain oracles observe selected state; bounded `lsof` checks can skip on missing tools/errors.
+Campaigns record host violations after batches rather than immediately aborting. Time checks occur
+between batches; replay/synthesis/healing add postprocessing time. Exit 0 requires no recorded host
+violations and valid telemetry, not zero findings, zero sandbox contamination or semantic correctness.
+Keep campaigns in disposable full clones with independent supervision and explicit stop/cleanup plans.
+The opt-in campaign repair handoff targets `validate.sh` with regression command
+`bash validate.sh --print-mode` (runs no suite); `self_healer.py` uses ordinary open/write for apply
+and rollback, not atomic `os.replace`. It requires separate qualification before accepting any repair;
+path checks and an emitted diff do not prove full containment, successful handoff or full-gate attestation.

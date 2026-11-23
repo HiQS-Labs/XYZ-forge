@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1216,
+  "execution_id": "gh1216-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1216-aider-openrouter-profile-2026-11-08",
+  "pr_number": 1373,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "5d7c7365b32057489bbcbbc56b46f66107c4bab45effb572a486be44eff624f3",
+    "gate-receipt.json": "0efd303ed3cf13a883e6355c92ca6cf0b1b64d3a1806714958b874a48f49d96b",
+    "provenance.jsonl": "4dd764386e45650708e13912783c854767f5365248af36361163f0ee7ad462fd"
+  }
+}

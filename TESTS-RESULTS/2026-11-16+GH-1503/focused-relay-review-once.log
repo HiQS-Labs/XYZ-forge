@@ -1,0 +1,12 @@
+== test: relay-review-once ==
+  workdir: <scratch>/tick-relay-review-once.XXXXXX.pLboSEK8WV
+  PASS: changes-requested single review exits 5 (not the stall's 3)
+  PASS: changes-requested NOT reported as no-progress
+  PASS: approved single review exits 0
+  PASS: a true stall still exits 3 under --review-once
+  PASS: by-design Escalated still exits 4 under --review-once
+  PASS: GH-245: relay-file append with token left claimed exits 5, not stall 3
+  PASS: GH-245: token-only move with no relay-file change exits 3, not success 5
+  PASS: GH-720: substantive Reviewer (agent) block exits 5, not stall 3
+  PASS: GH-720: relay-file move without a reviewer block still exits 3
+  relay-review-once: 9 pass, 0 fail

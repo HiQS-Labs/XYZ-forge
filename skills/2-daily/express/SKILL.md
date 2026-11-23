@@ -4,7 +4,7 @@ description: >-
   Fast lane for explicit /express requests: critical, risk-bounded code hotfixes
   with an existing covering suite, or small documentation text/image updates
   with --docs-only and the existing PDDA docs suite. Uses a fresh gated task
-  clone off origin/development, bounded changes, an open issue, the releases
+  clone off origin/<base>, bounded changes, an open issue, the releases
   ledger, born-complete docs, commit-bound verification, fast-forward direct
   landing and reconciliation. Uses risk-based review for skill
   documentation and changes to execution authority; current driver admission stays narrower. No new suites or gate runners.
@@ -15,7 +15,7 @@ description: >-
 # /express — bounded hotfix and documentation fast lane
 
 One motion: the update, its existing verifier, the ledger writes, the
-born-complete capture doc, the CHANGELOG entry, the landing, and the
+born-complete capture doc, the CHANGELOG entry (only under `CHANGELOG_WRITES=branch`), the landing, and the
 reconciliation — all before the operator's coffee cools. The guardrails are the
 skill; the speed is a side effect.
 
@@ -24,13 +24,13 @@ skill; the speed is a side effect.
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Express Discipline:**
-> 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/development` ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
-> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite (GH-831).
-> 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
+> 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/<base>` (the resolved integration branch; `development` in XYZ Forge) ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
+> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite in this lane; an uncovered fix goes through `/start-task` under the host repo's own test policy (XYZ-forge: GH-831).
+> 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion only when `CHANGELOG_WRITES=branch` (default `off` leaves `CHANGELOG.md` untouched).
 > 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute the selected existing suite green, prove tree identity, and re-snapshot tree to prevent drift.
-> 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
+> 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/<base>` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
 >
-> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to the integration branch, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
 
 Then begin work.
 
@@ -62,6 +62,14 @@ runtime coverage. The full runtime suite is not required merely because text or 
 Before running, check content accuracy, relative links and image rendering as applicable, and put
 the concrete results in `--summary`. Do not claim a render or visual check that did not run.
 
+**Vendored hosts (GH-1169).** In a repo that uses the harness from a gitignored `.xyz/`, run
+`python3 .xyz/utils/py/express.py --root . … --repo <owner>/<name>`. The docs lane then runs the host's own
+PDDA install, `utils/pdda/pdda.sh run`, under `PDDA_MODE=full` (as in XYZ Forge; a host's `observe` mode never
+fails), and the receipt records `bash utils/pdda/pdda.sh run`. Gate wiring accepts the host's own pre-push hook,
+or reports that the host has none (the landing push bypasses pre-push by lane design). Harness tools come from
+`.xyz/`. Pass `--release` when the host's `releases next` is stale. Code hotfixes still need a `validate.sh` TESTS
+registry and refuse `suite-unregistered` without one.
+
 Judge documentation by the effect of the proposed change, not merely its filename or whether
 an agent reads it. Editorial wording, links, images and bounded documentation-only skill changes
 may use the lightweight hotfix path when explicitly requested and appropriately reviewed. Inspect
@@ -76,13 +84,15 @@ Keep the existing operator-tunable file/insertion bounds, issue traceability, cu
 repository identity checks, concurrency protection and safe fast-forward publication. Generated
 artifacts still use their canonical writers. No filename-based exemption bypasses those controls.
 
-**Current driver compatibility:** `express.py --docs-only` currently has a narrower path allowlist
-and rejects `SKILL.md`; its landing pushes also set `XYZ_SKIP_PREPUSH=1`. This policy wording does
-not change those executable checks or authorize ignoring them. When a requested docs hotfix cannot
-meet the driver's admission or the operator's required normal-hook publication, report the exact
-mismatch before executable changes. Until the driver supports these paths, manual hotfix
-handling requires explicit operator authorization for that exact change and procedure. Do not relabel
-a skill as a code hotfix merely to evade documentation admission, or silently skip a gate.
+**Driver support for skill documentation (GH-1348):** `express.py --docs-only` admits non-execution-authority
+`skills/**/SKILL.md` edits from a fresh task clone off `origin/<base>` when backed by a validated
+`relay-drive/attest@1` approval receipt (`.git/relay-attest/*.json`) proving independent cross-model
+review of `HEAD`. The skill edits must already be committed to the task branch and clean versus `HEAD`
+(uncommitted or post-review working-tree modifications refuse with `rule=skill-unattested`). Changes to
+execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`,
+`marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables,
+or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only` and must
+follow the code-hotfix lane (if a covering suite exists) or the normal PR lane.
 
 ## Procedure
 
@@ -90,7 +100,7 @@ Normally run the driver; it enforces the order. Do not hand-perform its steps wi
 explicit, scoped operator override. For a separately authorized manual documentation hotfix,
 record the precise scope and driver mismatch, independently review the diff, retain canonical
 ledger writers and current-head documentation evidence, and publish through the installed normal
-pre-push hook. Recheck repository identity, ownership and the exact remote development tip at
+pre-push hook. Recheck repository identity, ownership and the exact remote base-branch tip at
 publication; a concurrent update means fetch/reconcile/revalidate, never force push. This exception
 is not standing bypass authority and does not change express.py or its default push behavior.
 
@@ -106,19 +116,32 @@ python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --s
 # Inspect what would happen without modifying disk, DB, or git state:
 python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --summary "<one line>" --dry-run
 
+# Integration branch (GH-1144): express lands on the base it resolves once per run — `--base <branch>`,
+# else origin/HEAD, else GitHub's default branch, else it refuses `base-unresolved`. In XYZ Forge that is
+# `development`; below, "development" means that resolved base. Pass the same `--base` to every step and
+# to `resume` when origin/HEAD is not set.
+
 # Recover/resume an interrupted express run (e.g. dropped network or post-push closeout fault).
 # --suite names the registered suite the landing ran: resume validates the COMMITTED receipt
 # (read from HEAD, never the working tree) against it and never runs a suite or writes evidence
 # (GH-592). With no committed valid receipt it refuses BEFORE closing the issue or shipping and
 # prints the recovery recipe below.
-python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh [--sha <SHA>]
+# GH-1576: if the closeout stopped with `gate-unwired` (the clone's pre-push stub was missing when it
+# came to commit and push), nothing was committed: the ledger ship, projections and this landing's
+# receipt are still dirty on the base branch. Run `bash githooks/install.sh`, then this same `resume`
+# command. After the repository/issue identity check (never under `--dry-run`, which only reports it
+# would publish), it publishes exactly that retained transaction (allowlisted closeout paths plus this
+# issue's valid receipt for this commit and suite) through the wiring check, never reruns the suite,
+# and then continues. Any other dirty path, another branch, or no matching receipt still refuses.
+python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh [--sha <SHA>] [--base <branch>]
 
 # Recovery recipe when resume refuses. Run in a FRESH disposable full clone. Every inspection fails
 # closed: `set -euo pipefail` is active (not a comment), cleanliness is asserted with git's own exit
 # codes (never by an empty-stdout test), and snap() aborts on the first failing command.
 set -euo pipefail
-SHA=<SHA>; N=<N>; SUITE=test/<existing-suite>.sh
+SHA=<SHA>; N=<N>; SUITE=test/<existing-suite>.sh; BASE=<base-branch>   # development in XYZ Forge
 git checkout "$SHA"
+bash githooks/install.sh && bash githooks/install.sh --check                                      # 0. a fresh clone has no hook: wire and prove it (GH-1576)
 git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
 LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
 snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
@@ -126,12 +149,21 @@ BEFORE=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' 
 set +e; bash "$SUITE" >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"                     # 3. record rc at once
 AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$AFTER" >>"$LOG"
 [ "$BEFORE" = "$AFTER" ] || { echo "VOID: identity drifted during the suite — no receipt"; exit 1; }  # 4.
-git checkout development && git diff-index --quiet HEAD --                                       # 5. same helper, actual rc
-python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC))"
-cp "$LOG" TESTS-RESULTS/*+GH-"$N"-express/recovery-run.log                                       # 6. retain the run
-git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin development
-python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA"                    # 7.
+git checkout "$BASE" && git diff-index --quiet HEAD --                                           # 5. same helper, actual rc
+REC=$(python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
+cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6. retain the run beside the receipt
+git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)"
+bash githooks/install.sh --check                                                                 # 6b. no push from an unwired clone; never --no-verify (GH-1576)
+git push origin "$BASE"
+python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
 ```
+
+In a vendored host (GH-1169) the recipe differs in five places: omit the two `githooks/install.sh` lines (steps 0 and 6b;
+the host owns its hook policy, as `gate_check` does), set `REPO=<owner>/<name>` (the host's slug; express's
+default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
+instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
+`.xyz/utils/py` in step 5, and resume with
+`python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE" --repo "$REPO"`.
 
 Before landing, `cmd_land` qualifies the change, resolves the exact owned full issue
 URL, and invokes `roadmap update --gid OWNED_ROW --accepted-start` (schema009 must
@@ -143,19 +175,20 @@ one effective start; receipt-based `resume` never starts work after landing.
 
 What each phase asserts (all refusals and fired runs write `.tick/express/*` — a sibling of tick's coordination log, never inside it (GH-694) — and mirror to `~/.config/xyz/events/`):
 
-0. **Tree of execution** — task branch based on origin/development with $\le 2$
+0. **Tree of execution** — task branch based on `origin/<base>` (the resolved base) with $\le 2$
    local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches
    refuse with `task-clone`), no scratch paths, and `bash githooks/install.sh --check`
-   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549).
+   proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549). The closeout
+   push re-proves it immediately before pushing (GH-1576).
    Express never commits over peer work (GH-527). Hand-edits to ledger files or
    generated views are refused; only the driver's verbs may write them.
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
-   paperwork (`CHANGELOG.md` and the current issue's capture doc resolved by
-   `capture_doc_path(root, issue)`) is exempt. Every other `PROJECT/**` path and
-   operator .md edit (README, governance, skills) COUNTS (a gateless merge never
-   rewrites policy unbounded).
+   paperwork (`CHANGELOG.md` only under `CHANGELOG_WRITES=branch`, the current issue's capture doc resolved by
+   `capture_doc_path(root, issue)`, and review transcripts under `relay-system/*.md`)
+   is exempt. Every other `PROJECT/**` path and operator .md edit (README, governance, skills)
+   COUNTS (a gateless merge never rewrites policy unbounded).
    Defaults are operator-tunable via `--max-files` / `--max-insertions`; the
    refusals are never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any
@@ -165,12 +198,18 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    may already be landed; run the preflight probes instead of re-doing it.
 4. **Suite** — code hotfixes name an existing covering suite registered in
    `validate.sh` TESTS; `--docs-only` selects the existing PDDA docs suite above. Do not
-   add a new suite to get one (GH-831: no new tests); an uncovered code fix goes through `/start-task`.
+   add a new suite to get one; an uncovered code fix goes through `/start-task` under the host repo's own
+   test policy (in XYZ-forge: `AGENTS.md` *No new tests*, GH-831).
 5. **Docs born complete** — capture doc scaffolded in `2-WORKING` with Status,
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
    present from birth (highly recommended — since GH-693 the reconciler warns
    rather than refuses promotion when it is missing; fill it in anyway),
-   plus the CHANGELOG entry appended in the same motion.
+   plus the CHANGELOG entry appended in the same motion only when `CHANGELOG_WRITES=branch`
+   (resolved by `wave_reconcile.read_changelog_writes_mode`: env, then `.pdda-mode`, default
+   `off`; GH-1487/GH-1530). Under `off`/`landing` express leaves `CHANGELOG.md` untouched. The
+   post-landing changelog synthesis (`wave_reconcile`) runs only under `landing` and skips direct
+   commit landings, which is how express lands, so an express landing is not guaranteed a
+   synthesized entry; add one by hand if the change needs it.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
    adopted release/leaderboard projections refresh
@@ -183,15 +222,15 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    duplicate of Step 7, which ran only the fix's registered suite. The receipt
    written in Step 9 says exactly that (`gate: express-suite`).
 8. **Land** — one commit of exactly the qualified paths with `Closes #N`, then
-   `git push origin HEAD:development`. A concurrent update refuses as a normal
+   `git push origin HEAD:<base>`. A concurrent update refuses as a normal
    non-fast-forward; there is no force push and no PR. The closeout switches to clean,
-   current `development` (ship/reconcile state never rides the task branch).
+   current `<base>` (ship/reconcile state never rides the task branch).
 9. **Receipt, then ship with evidence** (GH-592) — from clean, current
-   `development`, the driver writes `TESTS-RESULTS/<date>+GH-<N>-express/provenance.jsonl`
+   `<base>`, the driver writes `TESTS-RESULTS/<date>+GH-<N>-express/provenance.jsonl`
    (`commit` = the landing sha, `command` = the suite, the real `rc`,
    `gate: express-suite`) and then `manifest ship --gid <rel> --evidence "<sha>;
    registered suite <suite> green (express-suite, not the full gate); receipt <path>;
-   direct development push"`. Ship precedes the issue close below, so the
+   direct <base> push"`. Ship precedes the issue close below, so the
    GH-205 shape (an issue closed while its manifest item is still dialed_in)
    can only arise if the ship persist itself fails — which exits non-zero with
    an `express-reconcile-failed` receipt and is what `resume` recovers.
@@ -199,8 +238,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
     default branch; the driver verifies and closes explicitly if GitHub has not.
 11. **Persist, reconcile cleanly, persist — fail closed.** The landing is
     three pushes total: (1) the hotfix land push (step 8), then from
-    `development`, (2) the ship outputs are committed and pushed, and only
-    then (3) `wave_reconcile.py --commit <sha> --gate` runs from the clean tree —
+    `<base>`, (2) the ship outputs are committed and pushed, and only
+    then (3) `wave_reconcile.py --commit <sha> --base <base> --gate` runs from the clean tree —
     `--gate` proves the receipt from step 9 is attributable to this landing (it
     proves attribution, not test success) and its stdout is printed; its
     outputs form the third commit and push. The ship commit (2) carries exactly

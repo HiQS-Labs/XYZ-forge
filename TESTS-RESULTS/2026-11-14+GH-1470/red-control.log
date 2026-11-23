@@ -1,0 +1,25 @@
+test_h1_two_hubs_and_clean_members_recommend_passes (__main__.Manual.test_h1_two_hubs_and_clean_members_recommend_passes) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 4.531s
+
+OK
+Landing forecast (GH-1452, advisory; origin/development @ bd85f98d5e):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #1 | conflict | conflict | releases.db, releases.sql | — | 0 | medium |
+| #2 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #3 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #4 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | medium |
+| #5 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #6 | conflict | conditional (not simulated after #1: conflict) | CHANGELOG.md | — | 0 | medium |
+| #7 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+| #8 | clean | conditional (not simulated after #1: conflict) | — | — | 0 | low |
+Members #1 and #3 conflict with each other on: CHANGELOG.md
+Members #4 and #6 conflict with each other on: CHANGELOG.md
+PRs a B1 repair would defer in the run that repairs them: 2
+Recommendation: group — 4 of 8 PRs conflict (#1, #3, #4, #6); each landing rewrites the shared ledger, so the rest conflict again
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which defers that PR in the run that repairs it
+EVIDENCE H1 red control (base commit): {"order": [1, 2, 3, 4, 5, 6, 7, 8], "reason": "4 of 8 PRs conflict (#1, #3, #4, #6); each landing rewrites the shared ledger, so the rest conflict again", "recommendation": "group", "seq": {"1": "conflict", "2": "conditional", "3": "conditional", "4": "conditional", "5": "conditional", "6": "conditional", "7": "conditional", "8": "conditional"}}

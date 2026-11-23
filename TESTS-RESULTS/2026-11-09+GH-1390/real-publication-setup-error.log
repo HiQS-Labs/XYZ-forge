@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/1390-real-publication.py", line 4, in <module>
+    work=Path(tempfile.mkdtemp(prefix='gh1390-real-publication-',dir=g/'temp'));remote=work/'remote.git';writer=work/'writer';marker=work/'prepush-count'
+              ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/tempfile.py", line 381, in mkdtemp
+    _os.mkdir(file, 0o700)
+    ~~~~~~~~~^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/temp/gh1390-real-publication-y328k4na'

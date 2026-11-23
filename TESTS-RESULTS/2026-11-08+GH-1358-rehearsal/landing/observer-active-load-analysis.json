@@ -1,0 +1,46 @@
+{
+  "observations": 125,
+  "first": "2026-11-08T18:27:33.954522+00:00",
+  "last": "2026-11-08T18:58:33.634486+00:00",
+  "statuses": {
+    "OBSERVATION_GAP": 1,
+    "LANDING_WITHIN_DEADLINE": 21,
+    "ACTIVE_WITHIN_DEADLINE": 68,
+    "RECENT_COMPLETION": 18,
+    "SCHEDULE_SILENCE": 2,
+    "OWNED_SUPERVISOR_ABSENT": 15
+  },
+  "gap_records": [
+    {
+      "observed_at": "2026-11-08T18:27:33.954522+00:00",
+      "gap_s": 22534.7
+    }
+  ],
+  "maximum_gap_after_initial_sample_s": 15.1,
+  "limit": "awake/on-resume observations only; initial gap is retained pause, false owned-retry alarms before predicate repair remain visible; not whole-window qualification",
+  "last_owned_retry_sample": {
+    "observed_at": "2026-11-08T18:58:33.634486+00:00",
+    "observer_pid": 42824,
+    "silence_threshold_s": 120,
+    "observation_interval_s": 15,
+    "active_pass_limit_s": 10800,
+    "host_loss_coverage": false,
+    "authority": "observe only; no work-state writes or recovery",
+    "owned_retry_alive": true,
+    "phase": "running",
+    "checkpoint": null,
+    "journal_age_s": 322.5,
+    "supervisor_pid": 1992,
+    "owned_supervisor_alive": true,
+    "runner_head": "c6cc2d6d7a3dddf313f08954b842f8136fc294f0",
+    "committed_head_changed": false,
+    "driver_heartbeat": null,
+    "observation_gap_s": 15.1,
+    "coverage_status": "CONTIGUOUS",
+    "operating_envelope": "awake-host only; no offhost/sleep-time detection",
+    "alarm": false,
+    "status": "ACTIVE_WITHIN_DEADLINE",
+    "alert_transition": false,
+    "recovery_transition": false
+  }
+}

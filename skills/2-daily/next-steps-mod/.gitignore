@@ -1,0 +1,3 @@
+# Written by the Claude Code engine beside a loaded mod (the API's .d.ts files and a tsconfig);
+# generated per build, never hand-edited, and kept out of both this repo and the deployed copy.
+.claude-plugin/types/

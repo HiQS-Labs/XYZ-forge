@@ -1,0 +1,13 @@
+before: refs=46605784fc32 fetch_head=1795129834 objects=count: 179 size: 7940 in-pack: 78502 packs: 1 size-pack: 98555 prune-packable: 0 garbage: 0 size-garbage: 0 
+after:  refs=46605784fc32 fetch_head=1795129834 objects=count: 179 size: 7940 in-pack: 78502 packs: 1 size-pack: 98555 prune-packable: 0 garbage: 0 size-garbage: 0 
+git argv seen (unique verbs):
+   5 config
+   5 remote
+fetch/merge-tree calls: 0
+
+red control: same shim, pr_minder.py --json WITHOUT --no-conflict-files (the pre-fix argv):
+fetch/merge-tree calls: 21
+fetch -q origin development
+fetch -q origin pull/1391/head
+merge-tree --write-tree --name-only origin/development 02db037f189f0469ea985c1d6cd4a09aa9b50d78
+fetch -q origin development

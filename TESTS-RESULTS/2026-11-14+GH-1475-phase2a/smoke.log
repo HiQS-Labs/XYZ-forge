@@ -1,0 +1,25 @@
+# Smoke — tested code: task clone at 3eb65e64f44a; primary: disposable full clone of HiQS-Labs/XYZ-forge at 363c4855d2 (https://github.com/HiQS-Labs/XYZ-forge.git); GIT_CONFIG_GLOBAL holds credentials only; TMPDIR=<smoke-tmp> seeded with 5 merge-cleanup-* folders dated 2026-11-14 01:00
+## main path: real dry run --prs 1471,1467,1413
+rc=3
+merge-cleanup: Pinned for --execute: --prs 1413@b23aa0e43752095a5fb07418c6c7eb58c8260712,1467@fd547544652d3cfb59ddb9353c06852eae13d5c5,1471@5fe66783dd42c07bb27862a1ce971240ffd7b2a0
+merge-cleanup: WARNING — PRE-FLIGHT: TMPDIR is <smoke>/tmp; a harness may delete a per-turn temp dir mid-run. Prefer TMPDIR=/tmp
+merge-cleanup: PR #1413: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #1467: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: [DRY RUN] PR #1467: B1 would repair this ledger conflict (B1 would keep the theirs side and replay 0 roadmap change(s) through the writer, then run the resolver); --execute repairs it, waits for the new head's checks and re-pins
+merge-cleanup: PR #1471: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: [DRY RUN] PR #1471: B1 would repair this ledger conflict (B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver); --execute repairs it, waits for the new head's checks and re-pins
+merge-cleanup: Landing clones retained for inspection under <smoke>/tmp/merge-cleanup-qeeo_e4h
+merge-cleanup: Scratch pruning: removed 2 old retained clone folder(s) under <smoke>/tmp
+merge-cleanup-* left in smoke TMPDIR: 4
+## adjacent: rerun the same dry run (second invocation)
+rc=3
+merge-cleanup: [DRY RUN] PR #1467: B1 would repair this ledger conflict (B1 would keep the theirs side and replay 0 roadmap change(s) through the writer, then run the resolver); --execute repairs it, waits for the new head's checks and re-pins
+merge-cleanup: [DRY RUN] PR #1471: B1 would repair this ledger conflict (B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver); --execute repairs it, waits for the new head's checks and re-pins
+merge-cleanup: Landing clones retained for inspection under <smoke>/tmp/merge-cleanup-sed7pbx0
+merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under <smoke>/tmp
+merge-cleanup-* left in smoke TMPDIR: 4
+## adjacent: --show-merge-policy with qualification.wait_for_checks (uncommitted policy file in the disposable clone)
+{"preserve_commit_history": false, "strategy": "squash", "source": "<repos>/XYZ-forge-gh1475-merge-cleanup-remediation-2026-11-14-verify/.merge-cleanup.json", "qualification": {"full_suite": "promotion", "wait_for_checks": ["validate"]}}
+rc=0
+merge-cleanup: ERROR — <repos>/XYZ-forge-gh1475-merge-cleanup-remediation-2026-11-14-verify/.merge-cleanup.json: qualification.wait_for_checks must be a non-empty list of check names
+rc=2 (empty list refused)

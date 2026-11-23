@@ -1,0 +1,5 @@
+== test: gh371-interrupt-snapshot ==
+  workdir: <scratch>/tick-gh371-interrupt-snapshot.XXXXXX.84Hg3injEi
+  PASS: the interrupted phase contains a tree snapshot section
+  PASS: the untracked main-tree edit is preserved in porcelain form
+gh371-interrupt-snapshot: 2 pass, 0 fail

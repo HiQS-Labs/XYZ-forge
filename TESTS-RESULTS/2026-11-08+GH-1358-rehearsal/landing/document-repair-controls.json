@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-08T18:02:24.392088+00:00",
+  "mode": "agent-assisted additive publication/landing repair; no builder attempt",
+  "pr1372_head": "8ef5dcc060571d622f9675e3ce7bcf8a183fa621",
+  "pr1373_prepared_head": "3a7b3d8aa09f5129ca1c976320c7438ed785caa8",
+  "checks": {
+    "GH-1295-INJECTED-TEXT-IN-BRIEFS.md": {
+      "old_missing_red": 128,
+      "new_canonical_equal": true,
+      "no_inbox_duplicate": true
+    },
+    "GH-1160-LOCAL-RECONCILE-STARTUP.md": {
+      "old_missing_red": 128,
+      "new_canonical_equal": true,
+      "no_inbox_duplicate": true
+    }
+  }
+}

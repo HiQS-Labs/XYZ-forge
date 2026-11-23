@@ -1,0 +1,8 @@
+base-red-control                   rc=0 reason=-                    gate_run=(absent) trailer=-
+fix-armed-no-declaration           rc=4 reason=unverified-approval  gate_run=(no record) trailer=-
+fix-armed-gate-no                  rc=4 reason=unverified-approval  gate_run=(no record) trailer=-
+fix-armed-yes-exit1                rc=4 reason=unverified-approval  gate_run=(no record) trailer=-
+fix-armed-yes-exit124              rc=4 reason=unverified-approval  gate_run=(no record) trailer=-
+fix-armed-yes-no-exit              rc=4 reason=unverified-approval  gate_run=(no record) trailer=-
+fix-armed-yes-exit0                rc=0 reason=-                    gate_run=yes trailer=gate-run: yes
+fix-unarmed-generic                rc=0 reason=-                    gate_run=undeclared trailer=gate-run: undeclared

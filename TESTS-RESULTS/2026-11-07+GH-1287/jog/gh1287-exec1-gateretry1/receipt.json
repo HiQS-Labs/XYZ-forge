@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1287,
+  "execution_id": "gh1287-exec1-gateretry1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1287-fuzz-novelty-signature-2026-11-07",
+  "pr_number": null,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "f6b5ed915682637ab342387d830ba0ff0264d91ca1e600f3c9ec26a2cb1adeaf",
+    "gate-receipt.json": "8a08ac93c1c12ee63a1730c174bc94888b814965ddb7e5cf1a8daa21517b03d4",
+    "provenance.jsonl": "495176e8ff0489661e0004bb79a141ec74986e180a9ef5b5ccd39aa266bdc100"
+  }
+}

@@ -125,7 +125,7 @@ pass=0; fail=0
 # report AND the plan doc it writes (the report lists flags only; lanes, ranks and wave
 # order live in PROJECT/2-WORKING/MARATHON-PLAN-<today>.md), and judge the CONTENT.
 planner_rc=0
-planner_out="$(QUEUE_PLAN_ROOT="$FX" bash "$ROOT/utils/marathon-plan.sh" 2>&1)" || planner_rc=$?
+planner_out="$(QUEUE_PLAN_ROOT="$FX" bash "$ROOT/utils/marathon-plan.sh" --write 2>&1)" || planner_rc=$?
 plan_doc="$(cat "$FX"/PROJECT/2-WORKING/MARATHON-PLAN-*.md 2>/dev/null || true)"
 
 assert_in() {  # <label> <needle> <haystack>

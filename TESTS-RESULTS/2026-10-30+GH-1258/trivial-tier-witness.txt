@@ -1,0 +1,5 @@
+# Trivial-tier witness (Step 2): request = "fix the typo \"recieve\" in skills/README.md line 12"
+before: 7 status entries; HEAD e305cbf3
+Step 2 decision: trivial — a one-word doc fix (ROUTER.md issue-first exemption: typo), obvious, local, reversible, no design decision.
+idea: issue-first exemption (typo, one-word doc fix); nothing filed — commit the fix directly
+after:  7 status entries; HEAD e305cbf3; gh issue list count unchanged (no gh call made)

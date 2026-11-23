@@ -1,0 +1,7 @@
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/manual-check.md", "bytes": 3520, "sha256": "8068f521e62a8e1fcce28d12425c74e3f8a3dde0f18084c15f9c590026ce080b"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/outputs/ci-route.txt", "bytes": 138, "sha256": "8fb79b1887719d5d65853fdbc4ca8464b68c55884b989c8f266752f1acbab4f1"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/outputs/code-and-docs.patch", "bytes": 13709, "sha256": "a303791abd24678a6931f8d2ea200e756250c1e7c448ecbd6341c90266d91120"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/outputs/controls-green.txt", "bytes": 25245, "sha256": "5f94e3c2c189803c26d47e914ef54194fa0a0504053a13e08fcc4a5ff4633908"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/outputs/mypy.txt", "bytes": 42, "sha256": "5d4b6d285b77932e3d08212c3b4974d0a803f98ec60408ac6ccf6a063fa6c19e"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/outputs/pdda-run.log", "bytes": 28982, "sha256": "ca75f48dd0163cd18ee5acac2815b04c47516917aa33f38ba958667fdb590f0a"}
+{"path": "TESTS-RESULTS/2026-11-20+GH-1558/outputs/pre-change-red.txt", "bytes": 3200, "sha256": "6b5338ba8f4fbb63eca961c52f9af55ff47e2b9145ba2555d8063f315666d751"}

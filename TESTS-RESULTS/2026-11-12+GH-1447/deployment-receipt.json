@@ -1,0 +1,97 @@
+{
+  "source_commit": "4cf70d70d82a7af630b7a7d9c08919e0107f4fc6",
+  "skills": {
+    "start-task": {
+      "digest": "89e31647f17cc8436efe74ad5889a58f9ef3fdb47adbaf19d998f79fafbe5c81",
+      "receipt_commit": "4cf70d70d82a7af630b7a7d9c08919e0107f4fc6",
+      "whole_folder_parity": true
+    },
+    "flywheel": {
+      "digest": "43e3e4e44b99148d5a09b039a93e7d44b36ded33983c377d037e6b80f33c0918",
+      "receipt_commit": "4cf70d70d82a7af630b7a7d9c08919e0107f4fc6",
+      "whole_folder_parity": true
+    }
+  },
+  "links": [
+    {
+      "skill": "flywheel",
+      "consumer_root": "~/.agents/skills",
+      "read_through": true
+    },
+    {
+      "skill": "start-task",
+      "consumer_root": "~/.agents/skills",
+      "read_through": true
+    },
+    {
+      "skill": "flywheel",
+      "consumer_root": "~/.claude/skills",
+      "read_through": true
+    },
+    {
+      "skill": "start-task",
+      "consumer_root": "~/.claude/skills",
+      "read_through": true
+    },
+    {
+      "skill": "flywheel",
+      "consumer_root": "~/.gemini/config/skills",
+      "read_through": true
+    },
+    {
+      "skill": "start-task",
+      "consumer_root": "~/.gemini/config/skills",
+      "read_through": true
+    },
+    {
+      "skill": "flywheel",
+      "consumer_root": "~/.grok-bot/skills",
+      "read_through": true
+    },
+    {
+      "skill": "start-task",
+      "consumer_root": "~/.grok-bot/skills",
+      "read_through": true
+    },
+    {
+      "skill": "flywheel",
+      "consumer_root": "~/.kimi-code/skills",
+      "read_through": true
+    },
+    {
+      "skill": "start-task",
+      "consumer_root": "~/.kimi-code/skills",
+      "read_through": true
+    },
+    {
+      "skill": "flywheel",
+      "consumer_root": "~/.zcode/skills",
+      "read_through": true
+    },
+    {
+      "skill": "start-task",
+      "consumer_root": "~/.zcode/skills",
+      "read_through": true
+    }
+  ],
+  "pulse_commits": [
+    "abbb0e4ea",
+    "2c8b2afd0"
+  ],
+  "remote_distribution": {
+    "verified": true,
+    "remote_sha": "d5596580d8bbf3c3c159e136ebd6968b5a3b8b7d",
+    "payloads": [
+      {
+        "name": "start-task",
+        "files_verified": 1
+      },
+      {
+        "name": "flywheel",
+        "files_verified": 1
+      }
+    ],
+    "method": "normal fetch and each payload file byte comparison; no history mutation by this session"
+  },
+  "app_discovery": "unverified; Grok Mac staging only"
+}

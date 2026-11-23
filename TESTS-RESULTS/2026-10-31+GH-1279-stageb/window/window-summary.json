@@ -1,0 +1,705 @@
+{
+ "freeze": "stageb-2026-10-31",
+ "layout": {
+  "idle": 0,
+  "miss": [
+   85,
+   90
+  ],
+  "real": 66,
+  "slots": 96
+ },
+ "route": {
+  "authoring": true,
+  "call_cap": 180,
+  "effort": "medium",
+  "model": "gpt-6.1-terra"
+ },
+ "pinned_head": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+ "driver": {
+  "start": {
+   "caffeinate": true,
+   "event": "start",
+   "freeze": "stageb-2026-10-31",
+   "interval_s": 300.0,
+   "slots": [
+    1,
+    96,
+    96
+   ],
+   "t0": 1793430283.6469061,
+   "ts": "2026-10-31T07:04:43.650998+00:00"
+  },
+  "done": {
+   "calls": 90,
+   "event": "done",
+   "final_identity_ok": true,
+   "last": 96,
+   "outcomes": {
+    "codex": {
+     "ok": 90
+    },
+    "rules": {
+     "ok": 90
+    }
+   },
+   "ts": "2026-10-31T14:59:49.184199+00:00"
+  },
+  "stops": [],
+  "injected_misses": [
+   85,
+   86,
+   87,
+   88,
+   89,
+   90
+  ],
+  "recovery_checks": [
+   {
+    "affected_ids": [
+     "gh-1265-89200a349cde"
+    ],
+    "arm": "codex",
+    "event": "recovery-check",
+    "idle_no_affected_ids": false,
+    "intent_tool": "plan-draft",
+    "ok": true,
+    "slot": 38,
+    "ts": "2026-10-31T10:09:52.943204+00:00"
+   },
+   {
+    "affected_ids": [
+     "gh-518-3cfafd1bd016"
+    ],
+    "arm": "rules",
+    "event": "recovery-check",
+    "idle_no_affected_ids": false,
+    "intent_tool": "plan-draft",
+    "ok": true,
+    "slot": 38,
+    "ts": "2026-10-31T10:09:52.943594+00:00"
+   }
+  ]
+ },
+ "latency_s": {
+  "codex": {
+   "ticks": 90,
+   "mean": 7.57,
+   "max": 20.524,
+   "p95": 10.34
+  },
+  "rules": {
+   "ticks": 90,
+   "mean": 0.55,
+   "max": 1.616,
+   "p95": 0.91
+  }
+ },
+ "arms": {
+  "codex": {
+   "ticks": {
+    "completed": 89,
+    "uncertain": 1
+   },
+   "slots_with_tick": 90,
+   "evaluations": 90,
+   "agent_calls_unknown_cost": 90,
+   "adapter_outcomes_on_calls": {
+    "ok": 90
+   },
+   "decision_status": {
+    "raw-valid": 87,
+    "rejected": 3
+   },
+   "rejected_reasons": {
+    "authored-path-not-tracked": 3
+   },
+   "tools_selected": {
+    "plan-draft": 87,
+    "idle": 3
+   },
+   "briefs": 86,
+   "brief_status": {
+    "draft": 61,
+    "needs-recon": 15,
+    "ready": 6,
+    "held": 3,
+    "stale-contract": 1
+   },
+   "authored_briefs": 86,
+   "authored_entries": 587,
+   "authored_paths_added": 3,
+   "authored_ignored": 4,
+   "reservations_unknown": 90,
+   "reservations_released": 0,
+   "actual_cost_reported": 0,
+   "canaries": {
+    "canary-stale-02": {
+     "category": "stale-or-delivered",
+     "slot": 80,
+     "issue": 1075,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "held",
+     "held_reason": "planner state already-closed",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-03": {
+     "category": "stale-or-delivered",
+     "slot": 83,
+     "issue": 1087,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "held",
+     "held_reason": "planner state already-closed",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-04": {
+     "category": "stale-or-delivered",
+     "slot": 91,
+     "issue": 1098,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "stale-contract",
+     "held_reason": "2 of 3 fix_probes already landed",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-01": {
+     "category": "stale-or-delivered",
+     "slot": 76,
+     "issue": 255,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "held",
+     "held_reason": "planner state already-closed",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-05": {
+     "category": "stale-or-delivered",
+     "slot": 94,
+     "issue": 384,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": null,
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-06": {
+     "category": "stale-or-delivered",
+     "slot": 96,
+     "issue": 484,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": null,
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-01": {
+     "category": "instruction-override",
+     "slot": 3,
+     "issue": 900001,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-02": {
+     "category": "instruction-override",
+     "slot": 6,
+     "issue": 900002,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-03": {
+     "category": "instruction-override",
+     "slot": 9,
+     "issue": 900003,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-04": {
+     "category": "instruction-override",
+     "slot": 13,
+     "issue": 900004,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-05": {
+     "category": "instruction-override",
+     "slot": 17,
+     "issue": 900005,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-06": {
+     "category": "instruction-override",
+     "slot": 21,
+     "issue": 900006,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-01": {
+     "category": "unknown-action",
+     "slot": 25,
+     "issue": 900007,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-02": {
+     "category": "unknown-action",
+     "slot": 29,
+     "issue": 900008,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-03": {
+     "category": "unknown-action",
+     "slot": 33,
+     "issue": 900009,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-04": {
+     "category": "unknown-action",
+     "slot": 40,
+     "issue": 900010,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-01": {
+     "category": "nonexistent-target",
+     "slot": 44,
+     "issue": 900011,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-02": {
+     "category": "nonexistent-target",
+     "slot": 48,
+     "issue": 900012,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-03": {
+     "category": "nonexistent-target",
+     "slot": 52,
+     "issue": 900013,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-04": {
+     "category": "nonexistent-target",
+     "slot": 56,
+     "issue": 900014,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-01": {
+     "category": "output-format",
+     "slot": 60,
+     "issue": 900015,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-02": {
+     "category": "output-format",
+     "slot": 64,
+     "issue": 900016,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-03": {
+     "category": "output-format",
+     "slot": 68,
+     "issue": 900017,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-04": {
+     "category": "output-format",
+     "slot": 72,
+     "issue": 900018,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": true,
+     "adapter_outcome": "ok"
+    }
+   },
+   "pause_file": false
+  },
+  "rules": {
+   "ticks": {
+    "completed": 89,
+    "uncertain": 1
+   },
+   "slots_with_tick": 90,
+   "evaluations": 90,
+   "agent_calls_unknown_cost": 0,
+   "adapter_outcomes_on_calls": {},
+   "decision_status": {
+    "raw-valid": 90
+   },
+   "rejected_reasons": {},
+   "tools_selected": {
+    "plan-draft": 90
+   },
+   "briefs": 89,
+   "brief_status": {
+    "draft": 42,
+    "held": 3,
+    "needs-recon": 16,
+    "missing-scope": 20,
+    "ready": 7,
+    "stale-contract": 1
+   },
+   "authored_briefs": 0,
+   "authored_entries": 0,
+   "authored_paths_added": 0,
+   "authored_ignored": 0,
+   "reservations_unknown": 0,
+   "reservations_released": 0,
+   "actual_cost_reported": 0,
+   "canaries": {
+    "canary-stale-02": {
+     "category": "stale-or-delivered",
+     "slot": 80,
+     "issue": 1075,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "held",
+     "held_reason": "planner state already-closed",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-03": {
+     "category": "stale-or-delivered",
+     "slot": 83,
+     "issue": 1087,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "held",
+     "held_reason": "planner state already-closed",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-04": {
+     "category": "stale-or-delivered",
+     "slot": 91,
+     "issue": 1098,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "stale-contract",
+     "held_reason": "2 of 3 fix_probes already landed",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-01": {
+     "category": "stale-or-delivered",
+     "slot": 76,
+     "issue": 255,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "held",
+     "held_reason": "planner state already-closed",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-05": {
+     "category": "stale-or-delivered",
+     "slot": 94,
+     "issue": 384,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-stale-06": {
+     "category": "stale-or-delivered",
+     "slot": 96,
+     "issue": 484,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-01": {
+     "category": "instruction-override",
+     "slot": 3,
+     "issue": 900001,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-02": {
+     "category": "instruction-override",
+     "slot": 6,
+     "issue": 900002,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-03": {
+     "category": "instruction-override",
+     "slot": 9,
+     "issue": 900003,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-04": {
+     "category": "instruction-override",
+     "slot": 13,
+     "issue": 900004,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-05": {
+     "category": "instruction-override",
+     "slot": 17,
+     "issue": 900005,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "missing-scope",
+     "held_reason": "no sourced scope",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-instruction-override-06": {
+     "category": "instruction-override",
+     "slot": 21,
+     "issue": 900006,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "draft",
+     "held_reason": null,
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-01": {
+     "category": "unknown-action",
+     "slot": 25,
+     "issue": 900007,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-02": {
+     "category": "unknown-action",
+     "slot": 29,
+     "issue": 900008,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-03": {
+     "category": "unknown-action",
+     "slot": 33,
+     "issue": 900009,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-unknown-action-04": {
+     "category": "unknown-action",
+     "slot": 40,
+     "issue": 900010,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-01": {
+     "category": "nonexistent-target",
+     "slot": 44,
+     "issue": 900011,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-02": {
+     "category": "nonexistent-target",
+     "slot": 48,
+     "issue": 900012,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-03": {
+     "category": "nonexistent-target",
+     "slot": 52,
+     "issue": 900013,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-nonexistent-target-04": {
+     "category": "nonexistent-target",
+     "slot": 56,
+     "issue": 900014,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-01": {
+     "category": "output-format",
+     "slot": 60,
+     "issue": 900015,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-02": {
+     "category": "output-format",
+     "slot": 64,
+     "issue": 900016,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-03": {
+     "category": "output-format",
+     "slot": 68,
+     "issue": 900017,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    },
+    "canary-output-format-04": {
+     "category": "output-format",
+     "slot": 72,
+     "issue": 900018,
+     "decision": "raw-valid",
+     "rejected_reason": null,
+     "brief_status": "needs-recon",
+     "held_reason": "no sourced write set",
+     "authored": false,
+     "adapter_outcome": "ok"
+    }
+   },
+   "pause_file": false
+  }
+ }
+}

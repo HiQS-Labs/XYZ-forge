@@ -1,0 +1,17 @@
+  PASS: planner wrote the plan doc
+  PASS: rated row (GH-101) reaches the plan
+  PASS: unrated row held with the unrated flag
+  PASS: unrated hint for a gh row names --issue-num (red control)
+  PASS: both-vocab row (GH-103) reaches the plan
+  PASS: both-vocab row never flagged unrated (DB precedence)
+  PASS: GH-103 scored by the DB rank (220), not legacy cx/risk/effort
+  PASS: DB score precedence — GH-103 (rank 220) orders before GH-101 (rank 200)
+  PASS: rated row never carries the unrated flag
+  PASS: GH-710: planner exits 5 (held/drift), not 1, with NULL-gh rows present
+  PASS: GH-710: unrated NULL-gh row is held with the unrated flag
+  PASS: GH-710: its hint names the row's gid, not --issue-num
+  PASS: GH-710: gid-rated NULL-gh row (g105) reaches the plan
+  PASS: GH-710: g105 is scored by ITS OWN four columns (60+60+50+60 = 230)
+  PASS: GH-710: gid-rated NULL-gh row never flagged unrated
+  PASS: GH-710: g105 (230) orders before GH-103 (220) — DB rank applies to NULL-gh rows too
+gh698-planner-db-ratings: 16 pass, 0 fail

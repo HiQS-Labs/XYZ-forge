@@ -1,0 +1,15 @@
+{
+ "id": 22,
+ "global_id": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+ "gh_number": 416,
+ "position": 1,
+ "status": "parked",
+ "attempt_count": 2,
+ "lease_pid": null,
+ "failure_reason": "cold-start: dispatched Marathon execution has no valid result receipt \u2014 inspect manually before any refire",
+ "created_at": "2026-10-26T03:05:31Z",
+ "updated_at": "2026-10-26T03:24:45Z",
+ "title": "four documentation trues-ups",
+ "doc_path": "PROJECT/2-WORKING/GH-416-DOC-TRUES-UP-BATCH.md",
+ "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/416"
+}

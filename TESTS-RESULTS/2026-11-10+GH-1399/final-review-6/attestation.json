@@ -1,0 +1,19 @@
+{
+  "added_len": 3848,
+  "added_sha256": "a71db45eaf391d67277bc8633047ea031849cc9a55af3e9243fb5ed778c6d9be",
+  "added_start": 38051,
+  "artifact_sha256": null,
+  "attested_at": "2026-11-11T17:11:18Z",
+  "driver_pid": 42365,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10/relay-system/2026-11-10/gh1399-final.codex.md",
+  "relay_file_rel": "relay-system/2026-11-10/gh1399-final.codex.md",
+  "reviewed_head": "28da1ddb59f2654cd8b3117f21957226ca511187",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10",
+  "task": "GH1399-FINAL-20261110-R6",
+  "trailer_sha256": "8fdb653a99bac039dd6ccc4f28bd00615acd08e1f99687fc4e002de84d6613f9",
+  "transcript_repo": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1399-attempt-entry-gate-2026-11-10"
+}

@@ -1,0 +1,39 @@
+case=disallowed-decision
+started_at=2026-10-29T03:07:54.952096+00:00
+repo=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28
+run_root=temp/factory-primitive/evidence/checkpoint1/disallowed-decision
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/disallowed-decision init --daily-cap 1 --max-call-cost 0
+exit_code=0
+stdout:
+{"instance":"/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28/temp/factory-primitive/evidence/checkpoint1/disallowed-decision/instances/C","status":"initialized"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/disallowed-decision tick --slot 1 --fault disallowed-decision
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_001"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/disallowed-decision status
+exit_code=0
+stdout:
+{
+  "paused": false,
+  "pending": 27,
+  "quarantined": 0,
+  "spent_or_reserved": 0,
+  "ticks": {
+    "completed": 1
+  },
+  "unknown_cost": false
+}
+
+stderr:
+
+query=SELECT status,rejected_reason FROM decisions
+[{"rejected_reason": "tool-or-args-not-allowlisted", "status": "rejected"}]
+finished_at=2026-10-29T03:07:55.105561+00:00
+verdict=PASS
+detail=unsafe decision classified rejected; safe idle executed

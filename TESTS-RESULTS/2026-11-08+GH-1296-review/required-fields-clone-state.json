@@ -1,0 +1,14 @@
+{
+  "head": "a1a0b6875d46135d0de8b43c18a1cb813793824d",
+  "core.bare": false,
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "tracked_and_untracked_status": "clean",
+  "local_user_email": "unset",
+  "fixture": "/tmp/gh1296-required-fields-gate-20261108",
+  "gate_process": "exited rc=0",
+  "other_gate_observed": {
+    "pid": 15582,
+    "cwd": "/Users/noelsaw/Documents/GitHub/XYZ-forge-pr1024-gate-sol"
+  },
+  "slot": "1324 released; unrelated gate still observed"
+}

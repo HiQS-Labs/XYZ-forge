@@ -1,0 +1,21 @@
+GH-1409 full qualifying gate (ci-local.sh) — disposable full clone, tested head 2fc09f198
+Duration 47m37s. EXIT=1. Clone identity (HEAD, bare=false, origin, clean status) unchanged before/after.
+
+ci-local summary: prerequisites, bash syntax, node syntax, settings JSON, PDDA deterministic gate,
+npm ci + acorn-extract, clone-identity invariant: PASS.
+FAILED: shellcheck tracked scripts — only finding SC2148 in TESTS-RESULTS/2026-11-04+GH-1344/pdda_fn.sh,
+  a file already on development and untouched by this branch (pre-existing).
+FAILED: validate.sh suite — 4 suites: gh251-validate-pytest-skip.sh, skills-army-hq.sh, xyz-vendor.sh,
+  python:test_python_layer.py.
+
+Discrimination (same verify clone and environment, XYZ_NO_VENDOR_REMINDER removed):
+  rev                     gh251  skills-army-hq  xyz-vendor  test_python_layer
+  base 089eac1b           0      0               0 (98/0)    1 (test_a1 /var symlink refused)
+  branch 2fc09f198        0      0               0 (98/0)    1 (identical failure)
+  branch, HOME=realpath   -      -               -           0 (21 passed)
+
+Cause: harness setup, not this change. HOME was sandboxed with mktemp -d under /var/folders, and
+skills-army-hq refuses a symlinked ancestor (/var) — this broke test_python_layer, skills-army-hq and
+gh251's nested validate.sh. XYZ_NO_VENDOR_REMINDER=1 silenced the hook xyz-vendor.sh asserts on.
+This branch changes .github/workflows/ci.yml plus docs/ledger rows; none of these suites read ci.yml.
+The push runs the full pre-push gate again in a corrected environment.

@@ -59,8 +59,10 @@ hq_rebalance_lookup(){
   printf 'REBAL_REPOS=%s\n'  "$repos"
 }
 
-# hq_xyz_lookup <repo> [<slug_hint>] -> XYZ_PATH / XYZ_INSTALL / XYZ_TICK / XYZ_COMMIT for the LIVE
-# install whose coord basename matches <repo>. GH-132 hardening:
+# hq_xyz_lookup <repo> [<slug_hint>] -> XYZ_PATH / XYZ_INSTALL / XYZ_TICK / XYZ_COMMIT for a LIVE
+# driven-lane install whose coord basename matches <repo>, or XYZ_REG_PATH / XYZ_INSTALL / XYZ_TIER=ledger
+# for a ledger-only install (retains registry location and ambiguity/dedup without Tier A capability).
+# GH-132 hardening:
 #   * Blocker 2 — a registry row whose coord no longer exists on disk is NOT a usable install; skip it
 #     (so a stale row can't arm Tier A / `fire` at a dead path).
 #   * Blocker 1 — on a basename COLLISION among live installs, disambiguate by full `owner/repo` slug
@@ -129,10 +131,19 @@ hq_xyz_lookup(){
   fi
 
   if [ -n "$chosen" ]; then
-    printf 'XYZ_PATH=%s\n'    "$(printf '%s' "$chosen" | cut -f2)"
-    printf 'XYZ_INSTALL=%s\n' "$(printf '%s' "$chosen" | cut -f1)"
-    printf 'XYZ_TICK=%s\n'    "$(printf '%s' "$chosen" | cut -f3)"
-    printf 'XYZ_COMMIT=%s\n'  "$(printf '%s' "$chosen" | cut -f4)"
+    local c_install c_coord
+    c_install="$(printf '%s' "$chosen" | cut -f1)"
+    c_coord="$(printf '%s' "$chosen" | cut -f2)"
+    if grep -qx 'tier=ledger' "$c_install/VERSION" 2>/dev/null; then
+      printf 'XYZ_REG_PATH=%s\n' "$c_coord"
+      printf 'XYZ_INSTALL=%s\n'  "$c_install"
+      printf 'XYZ_TIER=ledger\n'
+    else
+      printf 'XYZ_PATH=%s\n'     "$c_coord"
+      printf 'XYZ_INSTALL=%s\n'  "$c_install"
+      printf 'XYZ_TICK=%s\n'     "$(printf '%s' "$chosen" | cut -f3)"
+      printf 'XYZ_COMMIT=%s\n'   "$(printf '%s' "$chosen" | cut -f4)"
+    fi
     return 0
   fi
 
@@ -253,6 +264,7 @@ hq_repo_resolve(){
     return 0
   fi
   xyz_path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_PATH=//p')"   # already existence-filtered
+  [ -n "$xyz_path" ] || xyz_path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_REG_PATH=//p')"
   if [ -n "$xyz_path" ]; then src="xyz-registry"; path="$xyz_path"
   else path="$(hq_fs_find "$repo")"; [ -n "$path" ] && src="filesystem"; fi
   pdda="$(hq_pdda_lookup "$repo")"
@@ -407,23 +419,24 @@ hq_issue_title(){
 
 # hq_render_capture <issue_num> <source_url> <title> <created> <doc_type> <project> <repo> <request>
 #                    [<complexity>] [<risk>] [<effort>] [<phases>]
-#                    [<why>] [<key_concepts_pipe>] [<non_goals_pipe>] [<related_pipe>]
+#                    [<why>] [<key_concepts_pipe>] [<non_goals_pipe>] [<related_pipe>] [<goal>]
 # Emits a PDDA-compliant 1-INBOX capture doc: the full skeleton shape (frontmatter ratings/non_goals/
 # related/goal + Key Concepts/Idea/Why/Phase-0-checklist/QA-checklist body) that GH-161-164's real
 # docs use — not the older thin Request/Notes template. GH-164 Phase 1, item 1.
 #
-# The 8 trailing params are OPTIONAL and default to a generic TODO-stub value when omitted, so a bare
+# The 9 trailing params are OPTIONAL and default to a generic TODO-stub value when omitted, so a bare
 # `hq park <project> <request>` (no synthesis input) still renders a valid, promotable skeleton — the
 # same "cold operator, zero flags" contract as before this change. A synthesis front end (e.g. the
 # `/idea` skill) fills them in by exporting HQ_PARK_WHY / HQ_PARK_KEY_CONCEPTS / HQ_PARK_NON_GOALS /
-# HQ_PARK_RELATED / HQ_PARK_COMPLEXITY / HQ_PARK_RISK / HQ_PARK_EFFORT / HQ_PARK_PHASES before calling
+# HQ_PARK_RELATED / HQ_PARK_COMPLEXITY / HQ_PARK_RISK / HQ_PARK_EFFORT / HQ_PARK_PHASES / HQ_PARK_GOAL
+# before calling
 # `hq park --create` (cmd_park reads these and passes them through positionally) — env vars, not new
 # CLI flags, matching this repo's existing passthrough convention (MARATHON_ROOT, CODEX_LOG, etc.) and
 # keeping the bare invocation's argument count unchanged.
 hq_render_capture(){
   local num="$1" src="$2" title="$3" created="$4" dtype="$5" project="$6" repo="$7" request="$8"
   local complexity="${9:-}" risk="${10:-}" effort="${11:-}" phases="${12:-}"
-  local why="${13:-}" key_concepts="${14:-}" non_goals="${15:-}" related="${16:-}"
+  local why="${13:-}" key_concepts="${14:-}" non_goals="${15:-}" related="${16:-}" goal="${17:-}"
   local title_dq; title_dq="$(hq_yaml_dq "$title")"   # GH-132: keep the YAML scalar valid
 
   # Ratings: a generic provisional starting point when not supplied. Always ratings_provisional —
@@ -434,7 +447,7 @@ hq_render_capture(){
   [ -n "$effort" ]     || effort=2
   [ -n "$phases" ]     || phases=1
 
-  local kc_body ng_body rel_body
+  local kc_body ng_body rel_body goal_body
   if [ -n "$key_concepts" ]; then
     kc_body="$(printf '%s' "$key_concepts" | tr '|' '\n' | sed 's/^[[:space:]]*/- /')"
   else
@@ -449,6 +462,11 @@ hq_render_capture(){
     rel_body="$(printf '%s' "$related" | tr '|' '\n' | sed 's/^[[:space:]]*/  - /')"
   else
     rel_body="  - TODO: related files/docs, if any."
+  fi
+  if [ -n "$goal" ]; then
+    goal_body="$(printf '%s' "$goal" | sed 's/^/  /')"
+  else
+    goal_body="  TODO: one-paragraph statement of what \"done\" looks like for this idea."
   fi
   local why_body="${why:-TODO: why this matters now -- what prompted it, what breaks or slows without it.}"
 
@@ -471,7 +489,7 @@ $ng_body
 related:
 $rel_body
 goal: >
-  TODO: one-paragraph statement of what "done" looks like for this idea.
+$goal_body
 ---
 
 ## Key concepts

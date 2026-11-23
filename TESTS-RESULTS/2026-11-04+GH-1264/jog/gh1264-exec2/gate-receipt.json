@@ -1,0 +1,11 @@
+{
+  "sha": "d02b9daa5772cb43c056de65806fb750b340b6bf",
+  "gate": "ci-local.sh",
+  "mode": "sequential",
+  "exit_code": 0,
+  "passed": null,
+  "total": null,
+  "duration_s": null,
+  "timestamp": "2026-11-04T04:55:41.829275+00:00",
+  "host": "Darwin 24.6.0"
+}

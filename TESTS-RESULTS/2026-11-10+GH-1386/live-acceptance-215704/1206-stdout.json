@@ -1,0 +1,166 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-10T22:07:41Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1206-packaging-drift"
+  },
+  "provenance": {
+    "source_docs": [
+      "$TARGET/PROJECT/3-COMPLETED/GH-1206-PACKAGING-DRIFT.md"
+    ],
+    "issues": [],
+    "target_root": "$TARGET",
+    "branch": "development",
+    "commit": "089eac1b995cb701c7becff1c4e2b638e815df45",
+    "suggested_branch": "marathon/gh-1206-packaging-drift-2026-11-10",
+    "branch_ready": false,
+    "skip_branch_prompt": true
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash validate.sh --auto development",
+    "round_cap": 1,
+    "fix_probes": [
+      {
+        "type": "grep_present",
+        "path": "package.json",
+        "pattern": "xyz-3-agents-swarm"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1206/manual.md"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+      }
+    ],
+    "artifacts": [
+      "package.json",
+      "package-lock.json",
+      "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+    ],
+    "remediation": {
+      "source": "issue#1206",
+      "criteria": "Correct package identity, missing main, Node baseline and intentional package contents without publishing, installing, version bump or new tests."
+    },
+    "lanes": {
+      "agy_safe": [
+        "package.json",
+        "package-lock.json",
+        "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+        "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+      ],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "089eac1b995cb701c7becff1c4e2b638e815df45",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "stale",
+    "probes": [
+      {
+        "type": "grep_present",
+        "path": "package.json",
+        "verdict": "landed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+        "verdict": "landed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl",
+        "verdict": "landed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "CLOSED",
+      "closed_at": "2026-11-10T08:32:39Z",
+      "detail": "issue #1206 is CLOSED since 2026-11-10T08:32:39Z"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "6 issue criteria reconciled: 2 deviation(s) declared and accounted for",
+      "issue": "1206",
+      "dropped": [],
+      "added": [],
+      "declared": 2
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1206 (https://github.com/HiQS-Labs/XYZ-forge/issues/1206)",
+      "issue": "1206",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1206",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 8,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "test/xyz-vendor.sh",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [
+      "package.json",
+      "package-lock.json",
+      "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl"
+    ],
+    "effective_artifacts": [
+      "package.json",
+      "package-lock.json",
+      "TESTS-RESULTS/2026-11-10+GH-1206/manual.md",
+      "TESTS-RESULTS/2026-11-10+GH-1206/provenance.jsonl",
+      "test/xyz-vendor.sh",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/xyz-vendor.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/xyz-vendor.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

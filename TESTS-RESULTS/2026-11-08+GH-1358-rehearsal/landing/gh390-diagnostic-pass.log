@@ -1,0 +1,611 @@
+++ dirname test/gh390-gate-guard.sh
++ source test/_setup.sh gh390-gate-guard
+++ set -u
+++ set -o pipefail
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RELAY_WORKTREE_ISOLATION
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset ALLOW_PATHS
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RELAY_ARTIFACT_FILE
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RELAY_FILE
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RELAY_TASK
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RELAY_AGENT
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset AIDER_AGENT
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset AIDER_FLAGS
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset AIDER_MODEL
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RELAY_PEER
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RTL_ARTIFACT
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RTL_LOG
+++ for _var in RELAY_WORKTREE_ISOLATION ALLOW_PATHS RELAY_ARTIFACT_FILE RELAY_FILE RELAY_TASK RELAY_AGENT AIDER_AGENT AIDER_FLAGS AIDER_MODEL RELAY_PEER RTL_ARTIFACT RTL_LOG RTL_TRACE
+++ unset RTL_TRACE
+++ export XYZ_HARNESS_LOGGING=0
+++ XYZ_HARNESS_LOGGING=0
+++ export XYZ_DEVICE_CONFIG_PATH=/dev/null
+++ XYZ_DEVICE_CONFIG_PATH=/dev/null
+++ TEST_NAME=gh390-gate-guard
+++++ dirname test/_setup.sh
++++ cd test
++++ pwd
+++ HERE=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/test
++++ cd /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/test/..
++++ pwd
+++ TICK=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ export TICK
+++ ATTEST_STUB=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/test/lib/attest-stub.sh
+++ export ATTEST_STUB
++++ mktemp -d -t tick-gh390-gate-guard.XXXXXX
+++ WORK=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
+++++ dirname test/_setup.sh
++++ cd test
++++ pwd
+++ . /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/test/lib/fixture-guard.sh
++++ FIXTURE_GUARD_ROOT=
++++ FIXTURE_GUARD_RESOLVED=
+++ fixture_guard_init /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
+++ local w=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
+++ '[' -n /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN ']'
+++ '[' -d /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN ']'
+++ FIXTURE_GUARD_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
++++ cd /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
++++ pwd -P
+++ FIXTURE_GUARD_RESOLVED=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
+++ export WORK
+++ trap '_rc=$?; rm -rf "$WORK"; if [ "${TEST_SOFT_FAIL:-0}" = "1" ] && [ "${FAIL:-0}" -gt 0 ]; then exit 1; fi; exit "$_rc"' EXIT
+++ REMOTE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/remote.git
+++ A=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-a
+++ B=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-b
+++ export REMOTE A B
+++ git init -q --bare -b main /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/remote.git
+++ SEED=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed
+++ git init -q /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed config user.email seed@t
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed config user.name seed
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed commit -q --allow-empty -m init
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed branch -M main
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed remote add origin /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/remote.git
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed push -q -u origin main
+++ rm -rf /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/.seed
+++ git clone -q /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/remote.git /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-a
+++ git clone -q /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/remote.git /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-b
+++ for d in '"$A"' '"$B"'
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-a config user.email agent-a@t
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-a config user.name agent-a
+++ for d in '"$A"' '"$B"'
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-b config user.email agent-b@t
+++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-b config user.name agent-b
+++ export TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-a
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/agent-a
+++ export MARATHON_ALLOW_TRUNK_COMMIT=1
+++ MARATHON_ALLOW_TRUNK_COMMIT=1
+++ _CODEX_STUB=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/_default-codex-stub
+++ cat
+++ chmod +x /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/_default-codex-stub
+++ export CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/_default-codex-stub
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/_default-codex-stub
+++ PASS=0
+++ FAIL=0
+++ echo '== test: gh390-gate-guard =='
+== test: gh390-gate-guard ==
+++ echo '  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN'
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
++ export TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
++++ dirname test/gh390-gate-guard.sh
+++ cd test/..
+++ pwd
++ ROOT_REPO=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc
++ DRIVER=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh
++ ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
++ mkdir -p /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
++ git init -q /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target config user.email gh390@t
++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target config user.name gh390
++ printf '.tick/\n'
++ printf '#!/usr/bin/env bash\nexit 0\n'
++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target add .gitignore validate.sh
++ git -C /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target commit -q -m init
++ STUB_RD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
++ cat
++ chmod +x /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
++ STUB_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
++ printf '#!/usr/bin/env bash\nexit 0\n'
++ chmod +x /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
++ BRIEF=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md
++ printf '## Do a thing\nBody.\n'
++ HOG=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py
++ cat
++ MOCK_HOG=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/gh382-magicmock-while-true.py
++ cat
+++ python3 - /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/utils/py/marathon_drive.py
++ out='four attribution shapes + inverted negative control observed'
++ rc=0
++ '[' 0 -eq 0 ']'
++ pass 'all CPU signal/Bash attribution shapes are covered through the module-level seam'
++ echo '  PASS: all CPU signal/Bash attribution shapes are covered through the module-level seam'
+  PASS: all CPU signal/Bash attribution shapes are covered through the module-level seam
++ PASS=1
+++ run_driver --phase-id p1 --pre-advance-cmd /usr/bin/true
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p1 --pre-advance-cmd /usr/bin/true
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p1/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P1-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: /usr/bin/true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 2MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p1-184206.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-complete boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase p1 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: ≥0 tokens, 0s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=0
++ '[' 0 -eq 0 ']'
++ pass 'an honest gate still passes under the guard (exit 0)'
++ echo '  PASS: an honest gate still passes under the guard (exit 0)'
+  PASS: an honest gate still passes under the guard (exit 0)
++ PASS=2
++ case "$out" in
++ pass 'peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)'
++ echo '  PASS: peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)'
+  PASS: peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)
++ PASS=3
++ start=2
+++ MARATHON_GATE_RSS_MB=256
+++ run_driver --phase-id p2 --pre-advance-cmd 'python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p2 --pre-advance-cmd '\''python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p2/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P2-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p2-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py
+marathon-drive: gate-guard: KILLING gate process group (pgid 22818) — gate group RSS 398MB >= cap 256MB
+marathon-drive: gate-guard: gate exit 108 after 2s — peak group RSS 398MB (tier full; caps: RSS 256MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate KILLED by the resource guard (exit 108) — escalating
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p2-184209.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p2-escalated boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p2/ESCALATION.md (reason: gate-killed)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/2 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 2s
+per done-task: ≥0 tokens, 1s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=5
++ elapsed=3
++ '[' 5 -eq 5 ']'
++ pass 'a runaway allocator halts the phase (exit 5) instead of the host'
++ echo '  PASS: a runaway allocator halts the phase (exit 5) instead of the host'
+  PASS: a runaway allocator halts the phase (exit 5) instead of the host
++ PASS=4
++ case "$out" in
++ pass 'layer 3 killed the gate'\''s whole process group'
++ echo '  PASS: layer 3 killed the gate'\''s whole process group'
+  PASS: layer 3 killed the gate's whole process group
++ PASS=5
+++ esc_reason p2
+++ sed -n 's/^reason: //p' /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p2/ESCALATION.md
++ '[' gate-killed = gate-killed ']'
++ pass 'ESCALATION.md records reason: gate-killed (distinct from a red gate)'
++ echo '  PASS: ESCALATION.md records reason: gate-killed (distinct from a red gate)'
+  PASS: ESCALATION.md records reason: gate-killed (distinct from a red gate)
++ PASS=6
++ '[' 3 -lt 30 ']'
++ pass 'the kill landed promptly (3s), well before the hog'\''s own 1 GB ceiling'
++ echo '  PASS: the kill landed promptly (3s), well before the hog'\''s own 1 GB ceiling'
+  PASS: the kill landed promptly (3s), well before the hog's own 1 GB ceiling
++ PASS=7
++ start=5
+++ MARATHON_GATE_WALL_S=3
+++ MARATHON_GATE_CPU_S=0
+++ run_driver --phase-id p3 --pre-advance-cmd 'sleep 60'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p3 --pre-advance-cmd '\''sleep 60'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p3/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P3-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p3-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: sleep 60
+marathon-drive: gate-guard: KILLING gate process group (pgid 25017) — wall clock 3s >= cap 3s
+marathon-drive: gate-guard: gate exit 108 after 3s — peak group RSS 1MB (tier full; caps: RSS 8192MB, wall 3s, CPU 0s)
+marathon-drive: pre-advance gate KILLED by the resource guard (exit 108) — escalating
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p3-184213.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p3-escalated boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p3/ESCALATION.md (reason: gate-killed)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/3 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 5s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=5
++ elapsed=4
++ '[' 5 -eq 5 ']'
++ '[' 4 -lt 40 ']'
++ pass 'a hanging gate is killed at the wall-clock cap (4s, exit 5)'
++ echo '  PASS: a hanging gate is killed at the wall-clock cap (4s, exit 5)'
+  PASS: a hanging gate is killed at the wall-clock cap (4s, exit 5)
++ PASS=8
++ case "$out" in
++ pass 'the kill reason names the wall-clock cap'
++ echo '  PASS: the kill reason names the wall-clock cap'
+  PASS: the kill reason names the wall-clock cap
++ PASS=9
++ start=9
+++ MARATHON_GATE_CPU_S=2
+++ MARATHON_GATE_WALL_S=120
+++ MARATHON_GATE_RSS_MB=0
+++ run_driver --phase-id p4 --pre-advance-cmd 'python3 -c "while True: pass"'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p4 --pre-advance-cmd '\''python3 -c "while True: pass"'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p4/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P4-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p4-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: python3 -c "while True: pass"
+/bin/bash: line 1: 26435 Cputime limit exceeded: 24  python3 -c "while True: pass"
+marathon-drive: gate-guard: gate exceeded the 2s CPU cap (SIGXCPU)
+marathon-drive: gate-guard: gate exit 108 after 2s — peak group RSS 17MB (tier full; caps: RSS 0MB, wall 120s, CPU 2s)
+marathon-drive: pre-advance gate KILLED by the resource guard (exit 108) — escalating
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p4-184216.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p4-escalated boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p4/ESCALATION.md (reason: gate-killed)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/4 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 9s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=5
++ elapsed=3
++ '[' 5 -eq 5 ']'
++ '[' 3 -lt 60 ']'
++ pass 'a CPU spin is killed by the kernel-enforced cap (3s, exit 5)'
++ echo '  PASS: a CPU spin is killed by the kernel-enforced cap (3s, exit 5)'
+  PASS: a CPU spin is killed by the kernel-enforced cap (3s, exit 5)
++ PASS=10
+++ esc_reason p4
+++ sed -n 's/^reason: //p' /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p4/ESCALATION.md
++ '[' gate-killed = gate-killed ']'
++ pass 'a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect'
++ echo '  PASS: a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect'
+  PASS: a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect
++ PASS=11
++ start=12
+++ MARATHON_GATE_RSS_MB=96
+++ run_driver --phase-id p7 --pre-advance-cmd 'python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/gh382-magicmock-while-true.py'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p7 --pre-advance-cmd '\''python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/gh382-magicmock-while-true.py'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p7/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P7-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p7-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/gh382-magicmock-while-true.py
+fixture safety ceiling reached before the guard fired
+marathon-drive: gate-guard: KILLING gate process group (pgid 28413) — gate group RSS 496MB >= cap 96MB
+marathon-drive: gate-guard: gate exit 108 after 1s — peak group RSS 496MB (tier full; caps: RSS 96MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate KILLED by the resource guard (exit 108) — escalating
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p7-184218.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p7-escalated boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p7/ESCALATION.md (reason: gate-killed)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/5 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 12s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=5
++ elapsed=2
++ '[' 5 -eq 5 ']'
+++ esc_reason p7
+++ sed -n 's/^reason: //p' /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p7/ESCALATION.md
++ '[' gate-killed = gate-killed ']'
++ pass 'GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed'
++ echo '  PASS: GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed'
+  PASS: GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed
++ PASS=12
++ case "$out" in
++ pass 'GH-382 baseline records group kill and distinct guard exit (108, 2s)'
++ echo '  PASS: GH-382 baseline records group kill and distinct guard exit (108, 2s)'
+  PASS: GH-382 baseline records group kill and distinct guard exit (108, 2s)
++ PASS=13
+++ run_driver --phase-id p5 --pre-advance-cmd /usr/bin/false
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p5 --pre-advance-cmd /usr/bin/false
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p5/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P5-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p5-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: /usr/bin/false
+marathon-drive: gate-guard: gate exit 1 after 1s — peak group RSS 2MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p5-184220.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p5-escalated boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: escalation written: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p5/ESCALATION.md (reason: pre-advance-failed)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/6 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 14s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=5
++ '[' 5 -eq 5 ']'
++ pass 'a red gate still halts the phase (exit 5)'
++ echo '  PASS: a red gate still halts the phase (exit 5)'
+  PASS: a red gate still halts the phase (exit 5)
++ PASS=14
+++ esc_reason p5
+++ sed -n 's/^reason: //p' /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p5/ESCALATION.md
++ '[' pre-advance-failed = pre-advance-failed ']'
++ pass 'a red gate keeps reason pre-advance-failed — the guard does not relabel real failures'
++ echo '  PASS: a red gate keeps reason pre-advance-failed — the guard does not relabel real failures'
+  PASS: a red gate keeps reason pre-advance-failed — the guard does not relabel real failures
++ PASS=15
+++ MARATHON_GATE_GUARD=0
+++ MARATHON_GATE_RSS_MB=256
+++ run_driver --phase-id p6 --pre-advance-cmd 'python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p6 --pre-advance-cmd '\''python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p6/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P6-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p6-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: python3 /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/hog.py
+marathon-drive: gate-guard: disabled via MARATHON_GATE_GUARD=0 — running the gate unguarded
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p6-184226.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p6-complete boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase p6 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/7 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 16s
+per done-task: ≥0 tokens, 2s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=0
++ '[' 0 -eq 0 ']'
++ pass 'MARATHON_GATE_GUARD=0 restores the unguarded gate (the hog completes, exit 0)'
++ echo '  PASS: MARATHON_GATE_GUARD=0 restores the unguarded gate (the hog completes, exit 0)'
+  PASS: MARATHON_GATE_GUARD=0 restores the unguarded gate (the hog completes, exit 0)
++ PASS=16
++ case "$out" in
++ pass 'no kill occurred with the guard disabled'
++ echo '  PASS: no kill occurred with the guard disabled'
+  PASS: no kill occurred with the guard disabled
++ PASS=17
+++ python3 - /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/utils/py/marathon_drive.py
++ out='ps outcomes and summary forms classified'
++ rc=0
++ '[' 0 -eq 0 ']'
++ pass 'GH-773: ps outcomes and every summary form are classified through the module seam'
++ echo '  PASS: GH-773: ps outcomes and every summary form are classified through the module seam'
+  PASS: GH-773: ps outcomes and every summary form are classified through the module seam
++ PASS=18
++ DENY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/deny-ps-bin
++ mkdir -p /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/deny-ps-bin
++ printf '#!/bin/sh\necho "ps: Operation not permitted" >&2\nexit 1\n'
++ chmod +x /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/deny-ps-bin/ps
+++ PATH=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/deny-ps-bin:/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+++ run_driver --phase-id p8 --pre-advance-cmd 'sleep 3'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p8 --pre-advance-cmd '\''sleep 3'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p8/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P8-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p8-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: sleep 3
+marathon-drive: gate-guard: WARNING: RSS watchdog unavailable — cannot read process-group memory; continuing without RSS enforcement
+marathon-drive: gate-guard: gate exit 0 after 3s — peak group RSS unknown (no readable samples; 3 unreadable samples) (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p8-184230.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p8-complete boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase p8 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/8 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 22s
+per done-task: ≥0 tokens, 3s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=0
+++ grep -c 'RSS watchdog unavailable'
++ warns=1
++ '[' 0 -eq 0 ']'
++ pass 'GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)'
++ echo '  PASS: GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)'
+  PASS: GH-773: a denied ps leaves an honest gate passing (fail-open, exit 0)
++ PASS=19
++ '[' 1 -eq 1 ']'
++ pass 'GH-773: the RSS-unavailable warning is logged exactly once across several polls'
++ echo '  PASS: GH-773: the RSS-unavailable warning is logged exactly once across several polls'
+  PASS: GH-773: the RSS-unavailable warning is logged exactly once across several polls
++ PASS=20
++ case "$out" in
++ pass 'GH-773: the summary reports the peak as unknown'
++ echo '  PASS: GH-773: the summary reports the peak as unknown'
+  PASS: GH-773: the summary reports the peak as unknown
++ PASS=21
++ grep -Eq 'peak group RSS [0-9]+MB'
++ pass 'GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run'
++ echo '  PASS: GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run'
+  PASS: GH-773: no numeric peak (the old fake 0MB) is printed for an unmeasured run
++ PASS=22
+++ run_driver --phase-id p9 --pre-advance-cmd 'sleep 3'
++ out='++ MARATHON_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ MARATHON_RELAY_DRIVE=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/relay-drive.sh
+++ MARATHON_AGENT_CMD=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/noop-agent
+++ TICK_REPO_ROOT=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target
+++ TICK_BIN=/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/bin/tick
+++ CLAUDE_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ AGY_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ CODEX_BIN=/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/stub-bin
+++ bash /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/relay-automation/marathon-drive.sh --phases-dir /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases --phase-brief /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/brief.md --reviewer agy --builder claude --phase-id p9 --pre-advance-cmd '\''sleep 3'\''
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/phases/p9/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P9-TURN → claude
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p9-start boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay approved — running pre-advance gate: sleep 3
+marathon-drive: gate-guard: gate exit 0 after 3s — peak group RSS 3MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN/target/relay-system/2026-11-08/marathon-p9-184234.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase p9-complete boundary — compressor=833MB, swap_free=1023MB
+marathon-drive: phase p9 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/9 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 26s
+per done-task: ≥0 tokens, 3s wall-clock
+memory: compressor peak: 833MB, swap free min: 1023MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified'
++ rc=0
++ '[' 0 -eq 0 ']'
++ grep -Eq 'peak group RSS [0-9]+MB'
++ grep -q 'RSS watchdog unavailable'
++ pass 'GH-773 control: a working ps still yields a numeric peak and no warning'
++ echo '  PASS: GH-773 control: a working ps still yields a numeric peak and no warning'
+  PASS: GH-773 control: a working ps still yields a numeric peak and no warning
++ PASS=23
++ echo '  gh390-gate-guard: 23 pass, 0 fail'
+  gh390-gate-guard: 23 pass, 0 fail
++ exit 0
++ _rc=0
++ rm -rf /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.ZM4mNxX6VN
++ '[' 0 = 1 ']'
++ exit 0

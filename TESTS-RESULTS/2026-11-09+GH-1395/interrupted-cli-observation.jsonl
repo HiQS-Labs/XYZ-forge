@@ -1,0 +1,54 @@
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/5"], "duration_seconds": 0.389, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/5", "--json", "state,stateReason"], "duration_seconds": 0.426, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/17"], "duration_seconds": 0.467, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/17", "--json", "state,stateReason"], "duration_seconds": 0.468, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/28"], "duration_seconds": 0.339, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/28", "--json", "state,stateReason"], "duration_seconds": 0.408, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/32"], "duration_seconds": 0.474, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/32", "--json", "state,stateReason"], "duration_seconds": 0.468, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/61"], "duration_seconds": 0.355, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/61", "--json", "state,stateReason"], "duration_seconds": 0.47, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/67"], "duration_seconds": 0.337, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/67", "--json", "state,stateReason"], "duration_seconds": 0.361, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/75"], "duration_seconds": 0.366, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/75", "--json", "state,stateReason"], "duration_seconds": 0.399, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/141"], "duration_seconds": 0.394, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/141", "--json", "state,stateReason"], "duration_seconds": 0.538, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/201"], "duration_seconds": 0.424, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/201", "--json", "state,stateReason"], "duration_seconds": 0.472, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/216"], "duration_seconds": 0.468, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/216", "--json", "state,stateReason"], "duration_seconds": 0.352, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/223"], "duration_seconds": 0.409, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/223", "--json", "state,stateReason"], "duration_seconds": 0.486, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/254"], "duration_seconds": 0.453, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/254", "--json", "state,stateReason"], "duration_seconds": 0.518, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/255"], "duration_seconds": 0.481, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/255", "--json", "state,stateReason"], "duration_seconds": 0.495, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/256"], "duration_seconds": 0.444, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/256", "--json", "state,stateReason"], "duration_seconds": 0.524, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/259"], "duration_seconds": 0.411, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/259", "--json", "state,stateReason"], "duration_seconds": 0.48, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/275"], "duration_seconds": 0.504, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/275", "--json", "state,stateReason"], "duration_seconds": 0.527, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/299"], "duration_seconds": 0.51, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/299", "--json", "state,stateReason"], "duration_seconds": 0.419, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/341"], "duration_seconds": 0.482, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/341", "--json", "state,stateReason"], "duration_seconds": 0.522, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/345"], "duration_seconds": 0.461, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/345", "--json", "state,stateReason"], "duration_seconds": 0.576, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/346"], "duration_seconds": 0.396, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/346", "--json", "state,stateReason"], "duration_seconds": 0.497, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/355"], "duration_seconds": 0.5, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/355", "--json", "state,stateReason"], "duration_seconds": 0.561, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/384"], "duration_seconds": 0.414, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/384", "--json", "state,stateReason"], "duration_seconds": 0.574, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/399"], "duration_seconds": 0.408, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/399", "--json", "state,stateReason"], "duration_seconds": 0.443, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/402"], "duration_seconds": 0.443, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/402", "--json", "state,stateReason"], "duration_seconds": 0.405, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/406"], "duration_seconds": 0.387, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/406", "--json", "state,stateReason"], "duration_seconds": 0.442, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/423"], "duration_seconds": 0.334, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/423", "--json", "state,stateReason"], "duration_seconds": 0.373, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "native", "args": ["api", "repos/HiQS-Labs/XYZ-forge/issues/443"], "duration_seconds": 0.469, "exit": 0, "measurement": "CLI invocation, not HTTP count"}
+{"seam": "closure", "args": ["issue", "view", "https://github.com/HiQS-Labs/XYZ-forge/issues/443", "--json", "state,stateReason"], "duration_seconds": 0.562, "exit": 0, "measurement": "CLI invocation, not HTTP count"}

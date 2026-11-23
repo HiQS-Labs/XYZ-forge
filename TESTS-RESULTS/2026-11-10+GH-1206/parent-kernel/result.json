@@ -1,0 +1,16 @@
+{
+  "command": "npm run test:unit",
+  "rc": 0,
+  "elapsed": 0.7009530067443848,
+  "before": {
+    "head": "a6024d0c3031fdc6607b8a987fe6ef8bbeab87fb",
+    "origin": "/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/final-landing-strategy",
+    "bare": "false"
+  },
+  "after": {
+    "head": "a6024d0c3031fdc6607b8a987fe6ef8bbeab87fb",
+    "origin": "/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/final-landing-strategy",
+    "bare": "false"
+  },
+  "identity_unchanged": true
+}

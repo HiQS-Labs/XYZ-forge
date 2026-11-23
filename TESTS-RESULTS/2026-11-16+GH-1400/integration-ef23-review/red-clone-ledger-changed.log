@@ -1,0 +1,13 @@
+$ /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/utils/py/releases_app.py --root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-clone-ledger-changed/primary jog run --target-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-clone-ledger-changed/execution --checkpoint-root /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-clone-ledger-changed/publication --builder codex --reviewer agy --max-tasks 2 --supervise-until 1794890629
+rc=0
+jog: execution clone aligned at 59e603fef70dfc49e0f30c115bf0527cc0a635be; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/integration-ef23-review/red-clone-ledger-changed/primary/.tick/jog/jog-01M7KX07GRP1KVZFWM7E8ZXRJQ/gh901-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: execution changed clone releases artifacts; preserve clone for inspection
+jog: published primary checkpoint a6fc4d0dec371134ee0624648a6fb149c643e942
+Switched to a new branch 'fixture-901-gh901-exec1'

@@ -1,0 +1,38 @@
+{
+ "contract_sha256": "f0ebb3b0c6bb19d1352813893840bbd32eebeb3135a95d85ebbbaf1755337407",
+ "launch_epoch": 1793413213.87072,
+ "discovery_deadline": 1793413513.87072,
+ "total_deadline": 1793413513.87072,
+ "watcher_stop_epoch": 1793413513.87072,
+ "gen4_pid": 72680,
+ "started": "2026-10-30T19:20:13-0700",
+ "discovery_processes_ended_epoch": 1793413220.484763,
+ "stop_reason": "CANARY VIOLATION: ['flag_present']",
+ "elapsed_s": 7.9,
+ "gen4_rc": -15,
+ "events": 10,
+ "gated_events": 3,
+ "streak_at_stop": 4,
+ "quiet_batches_at_stop": 0,
+ "counts": {
+  "usage": 6,
+  "pass": 4
+ },
+ "per_target": {
+  "fp-help": {
+   "usage": 6,
+   "pass": 4
+  }
+ },
+ "signatures": [
+  "fp-help|0|pass|",
+  "fp-help|2|usage|harness.py factory-primitive: error: argument command: invalid choice: P (choose from P, P, P, P, P, P)",
+  "fp-help|2|usage|harness.py factory-primitive: error: the following arguments are required: command"
+ ],
+ "candidates": [],
+ "swept_pids": [],
+ "survivors_after_sweep": [],
+ "canaries_moved": [
+  "flag_present"
+ ]
+}

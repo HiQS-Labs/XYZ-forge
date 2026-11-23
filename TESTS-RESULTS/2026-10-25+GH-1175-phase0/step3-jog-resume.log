@@ -1,0 +1,3 @@
+START 2026-10-26T03:25:14Z
+jog: resume GH-416: latest execution gh416-exec1 is 'cold-start-paused' — nothing to reconcile; use jog retry-gate / retry-build / land
+EXIT 0 2026-10-26T03:25:14Z

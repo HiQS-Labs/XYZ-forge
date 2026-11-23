@@ -1,0 +1,12 @@
+{
+  "A": {
+    "advisor": "codex",
+    "answer_file": "answer-A.md",
+    "file": "live1243-cited.codex.md"
+  },
+  "B": {
+    "advisor": "agy",
+    "answer_file": "answer-B.md",
+    "file": "live1243-cited.agy.md"
+  }
+}

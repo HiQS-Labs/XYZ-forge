@@ -1,0 +1,36 @@
+[
+  {
+    "issue": 1243,
+    "rc": 4,
+    "elapsed": 5.683075904846191,
+    "command": [
+      "bash",
+      "$TARGET/utils/swarm-preflight.sh",
+      "--project-doc",
+      "PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md",
+      "--target-root",
+      "$TARGET",
+      "--out",
+      "$TARGET/temp/live1386/1243",
+      "--format",
+      "json"
+    ]
+  },
+  {
+    "issue": 1206,
+    "rc": 4,
+    "elapsed": 2.8906490802764893,
+    "command": [
+      "bash",
+      "$TARGET/utils/swarm-preflight.sh",
+      "--project-doc",
+      "PROJECT/3-COMPLETED/GH-1206-PACKAGING-DRIFT.md",
+      "--target-root",
+      "$TARGET",
+      "--out",
+      "$TARGET/temp/live1386/1206",
+      "--format",
+      "json"
+    ]
+  }
+]

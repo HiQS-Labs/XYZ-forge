@@ -1,0 +1,18 @@
+jog: skipped GH-1344 (status: parked)
+ 
+jog: published primary checkpoint 51968f9728d7ecfb5f761c321e962c299fc57fc3
+PASS checkpoint mutation 1344
+jog: skipped GH-1345 (status: parked)
+ 
+jog: published primary checkpoint e2875ecc59704d30708af229afc4788e8bfa5b6c
+PASS checkpoint mutation 1345
+added roadmap entry rmi-01M6X2V8F435JYTM4CDS9H0J2E for GH-1358 ((rated 75/35/50/65))
+ 
+PASS rejected push retained: git push origin 92810cfcaa120a02238a03f7c250d70957cadfbb:refs/heads/development failed: To /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-t7uhm2hs/remote.git
+ ! [remote rejected]   92810cfcaa120a02238a03f7c250d70957cadfbb -> development (pre-receive hook declined)
+error: failed to push some refs to '/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-t7uhm2hs/remote.git'
+jog: published primary checkpoint 92810cfcaa120a02238a03f7c250d70957cadfbb
+PASS recovery publishes existing commit without dispatch
+PASS foreign dirt refusal: checkpoint refuses unrelated changes: ['?? foreign-control.txt']
+PASS extra publication commit refused: publication clone contains commits beyond this checkpoint
+PASS remote unchanged; all controls passed

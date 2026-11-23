@@ -1,0 +1,22 @@
+T0=1793412427 D=1793413627 END=1793414227
+controls start 1793412427
+controls end 1793412459 rc=
+controls rerun start 1793412475
+controls rerun end 1793412507
+trackB start 1793412553
+trackB end 1793412553
+trackB start 1793412558
+trackB end 1793412569
+trackB rerun start 1793412594
+trackB rerun end 1793412605
+trackB rerun2 start 1793412632
+trackB rerun2 end 1793412643
+trackA start 1793412651 wall=971
+trackA end 1793412733 rc=0
+long launch 1793413507 2026-10-31T02:25:07Z
+watcher pid 36309 caffeinate pid 36311
+long end 1793418009 rc=0
+phase3 start 1793418113
+phase3 end 1793418164 rc=0
+phase3b start 1793418211
+phase3b end 1793418214

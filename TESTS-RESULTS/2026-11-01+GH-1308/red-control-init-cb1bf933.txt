@@ -1,0 +1,2 @@
+factory-primitive: canary canary-stale-05: issue #384 is not in the expected frozen state (held-delivered)
+rc=2

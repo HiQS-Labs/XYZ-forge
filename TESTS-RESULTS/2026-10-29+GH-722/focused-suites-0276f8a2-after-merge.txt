@@ -1,0 +1,12 @@
+commit 0276f8a2 (task branch after merging origin/development b81f4205); bash test/<suite> in disposable full clone XYZ-forge-gh722-merge-cleanup-safe-roots-parent-2026-10-29-gate (gh436 imports gh534 phase A/B/C), run unsandboxed per the GH-177 guard, toolchain PATH ~/.cache/xyz-forge-test-venv/bin:/opt/homebrew/bin; gate clone HEAD 0276f8a2 and tree clean before and after.
+== gh674-merge-cleanup-hosted-lookup.sh
+Ran 6 tests in 0.027s
+OK
+== gh645-merge-cleanup-xyz-tools.sh
+Ran 8 tests in 0.057s
+OK
+== gh436-merge-cleanup.sh
+Ran 201 tests in 222.811s
+OK
+(the "fast-forward to origin/development FAILED: boom" line in the gh436 log is the suite's own injected-failure fixture)
+Same counts as focused-suites-0518aeb4.txt (201 / 8 / 6): the merge with development did not change the focused result. The full pre-push gate runs at push time on the final commit.

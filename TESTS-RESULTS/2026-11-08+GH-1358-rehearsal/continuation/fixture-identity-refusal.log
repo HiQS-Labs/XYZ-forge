@@ -1,0 +1,15 @@
+refused: rule=accepted-start-identity: roadmap row does not have qualified owned issue identity
+Traceback (most recent call last):
+  File "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54/temp/gh1358/requeue-control.py", line 15, in <module>
+    mutate(['roadmap','update','--gid','rmi-01M69MGMVMADQJZ91K2H53YHV9','--accepted-start'],['jog','add','1295'])
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54/temp/gh1358/requeue-control.py", line 12, in mutate
+    for cmd in commands:cli(*cmd)
+                        ~~~^^^^^^
+  File "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54/temp/gh1358/requeue-control.py", line 7, in cli
+    def cli(*args):subprocess.run([sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(root),*args],check=True)
+                   ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python', '/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54/utils/py/releases_app.py', '--root', '/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary', 'roadmap', 'update', '--gid', 'rmi-01M69MGMVMADQJZ91K2H53YHV9', '--accepted-start']' returned non-zero exit status 3.

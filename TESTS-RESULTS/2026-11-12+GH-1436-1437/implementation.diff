@@ -1,0 +1,345 @@
+diff --git a/README.md b/README.md
+index 7c566493..81aee989 100644
+--- a/README.md
++++ b/README.md
+@@ -282,6 +282,11 @@ replace a live link it does not own (GH-678), so running one there is a no-op wi
+ 
+ ---
+ 
++The gate toolchain requires **Python >=3.10** with `PyYAML`, `pytest`, and `requests`.
++If the gate reports an environment fault, use the prepared gate-toolchain venv:
++`PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh` (retain your gate arguments).
++The gate does not install Python or create this venv automatically.
++
+ ## Hardware sizing for unattended runs
+ 
+ **Recommended minimum: 16 GB RAM** for the serial `marathon.sh --plan` route. That covers one builder
+diff --git a/test/gh251-validate-pytest-skip.sh b/test/gh251-validate-pytest-skip.sh
+index 32835c01..9a24d4d1 100755
+--- a/test/gh251-validate-pytest-skip.sh
++++ b/test/gh251-validate-pytest-skip.sh
+@@ -1,6 +1,5 @@
+ #!/usr/bin/env bash
+-# GH-251: validate.sh reports python:test_python_layer.py as SKIPPED when pytest is absent,
+-# and keeps genuine pytest failures in FAILED.
++# GH-251 / GH-1437: healthy Python reaches pytest; absent dependencies fail before suites.
+ source "$(dirname "$0")/_setup.sh" gh251-validate-pytest-skip
+ 
+ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+@@ -55,33 +54,13 @@ exec "$REAL_PY" "\$@"
+ PYSH
+ chmod +x "$FAKE_BIN/python3"
+ 
+-out="$(PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1 || true)"
+-case "$out" in
+-  *"SKIPPED: python:test_python_layer.py (pytest not importable — install it to cover utils/py/)"*)
+-    pass "absent pytest outputs the documented named SKIPPED line"
+-    ;;
+-  *)
+-    fail "absent pytest did not output the expected SKIPPED line: $out"
+-    ;;
+-esac
+-
+-case "$out" in
+-  *"QUARANTINED"*"python:test_python_layer.py"*)
+-    pass "absent pytest is tracked in the SKIPPED summary list"
+-    ;;
+-  *)
+-    fail "absent pytest was not listed in summary SKIPPED list: $out"
+-    ;;
+-esac
+-
+-case "$out" in
+-  *"- python:test_python_layer.py"*)
+-    fail "absent pytest should not be listed under failed: $out"
+-    ;;
+-  *)
+-    pass "absent pytest does not land in FAILED"
+-    ;;
+-esac
++out="$(PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1)"; rc=$?
++[ "$rc" -eq 3 ] && [ -n "$out" ] \
++  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($FAKE_BIN/python3) version" \
++  && printf '%s' "$out" | grep -Fq 'missing modules: pytest' \
++  && ! printf '%s' "$out" | grep -Fq 'Running python3 -m pytest' \
++  && pass "absent pytest is an environment refusal before suite execution" \
++  || fail "absent pytest did not fail early (exit $rc): $out"
+ 
+ # GH-732: a different interpreter without PyYAML must name itself and the repair PATH.
+ YAML_BIN="$WORK/no-yaml"; mkdir -p "$YAML_BIN"
+@@ -94,9 +73,10 @@ exec "$REAL_PY" "\$@"
+ PYSH
+ chmod +x "$YAML_BIN/python3"
+ out="$(PATH="$YAML_BIN:$PATH" bash "$VAL" --print-mode 2>&1)"; rc=$?
+-[ "$rc" -eq 0 ] && [ -n "$out" ] \
+-  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) cannot import yaml" \
+-  && printf '%s' "$out" | grep -Fq '~/.cache/xyz-forge-test-venv/bin first on PATH' \
++[ "$rc" -eq 3 ] && [ -n "$out" ] \
++  && printf '%s' "$out" | grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) version" \
++  && printf '%s' "$out" | grep -Fq 'missing modules: yaml' \
++  && printf '%s' "$out" | grep -Fq 'PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh' \
+   && printf '%s' "$out" | grep -Fq 'NOT promotion evidence (GH-732)' \
+   && pass "missing yaml names the interpreter, repair PATH, and evidence limit" \
+   || fail "missing yaml diagnostic regressed (exit $rc): $out"
+diff --git a/utils/hq/hq.sh b/utils/hq/hq.sh
+index 3cef149c..24d5be7c 100755
+--- a/utils/hq/hq.sh
++++ b/utils/hq/hq.sh
+@@ -322,6 +322,24 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
+     echo 'hq park: title carries rating grammar ("rated N/N/N/N" / "ovr N"); roadmap add would read it as the row'\''s score. Move the example into the body and rate with: releases roadmap rate --issue-num N --rated P/S/A/E' >&2
+     return 2
+   fi
++  # Validate supplied contracts before issue creation or capture writes; no probe execution.
++  if ! python3 - "$HERE/../py" "$request" <<'PYCONTRACT'
++import json, re, sys
++sys.path.insert(0, sys.argv[1])
++match = re.search(r"^#{1,6}[ \t]+[^\n]*preflight[ \t]+contract[^\n]*\n(.*?)(?=^#{1,6}[ \t]|\Z)", sys.argv[2], re.I | re.M | re.S)
++if match:
++    block = re.search(r"^```json\s*\n(.*?)^```\s*$", match[1], re.I | re.M | re.S)
++    if block:
++        from swarm_preflight import contract_shape_error
++        try:
++            error = contract_shape_error(json.loads(block[1]))
++        except ValueError:
++            error = "invalid JSON contract"
++        if error:
++            sys.exit("hq park: malformed-contract: " + error)
++PYCONTRACT
++  then return 1; fi
++
+   created="$(date +%F)"
+   oslug="$(hq_target_slug "$path")"
+ 
+diff --git a/utils/py/_marathon_plan.py b/utils/py/_marathon_plan.py
+index a63e66c9..9c54aad0 100644
+--- a/utils/py/_marathon_plan.py
++++ b/utils/py/_marathon_plan.py
+@@ -32,6 +32,7 @@ from pathlib import Path
+ 
+ from router_audit import parse_pdda_mode
+ from releases_app import roadmap_render
++from swarm_preflight import contract_shape_error
+ 
+ # Ledger sections we sequence from vs. only reference.
+ SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"]
+@@ -169,9 +170,10 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None
+         engine = Engine(cfg)
+ 
+     contract = None
++    contract_error = None
+     if doc_rel and (repo_root / doc_rel).is_file():
+-        contract = engine._extract_contract(str(repo_root / doc_rel))
+-    if not contract and body:
++        contract, contract_error = engine._extract_contract(str(repo_root / doc_rel))
++    if not contract and not contract_error and body:
+         lines = body.splitlines()
+         h = next((j for j, l in enumerate(lines) if re.match(r"^#{1,6}\s+.*preflight\s+contract", l, re.I)), -1)
+         if h >= 0:
+@@ -181,9 +183,13 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None
+                 if end >= 0:
+                     try:
+                         contract = json.loads("\n".join(lines[start:end]))
++                        contract_error = contract_shape_error(contract)
+                     except ValueError:
+                         contract = None
+ 
++    if contract_error:
++        contract = None
++
+     from releases_app import parse_prs_proposal
+     proposal = parse_prs_proposal(body)
+     if not proposal and doc_text:
+@@ -207,7 +213,9 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None
+         zone_inferred = z["inferred"]
+ 
+     doc_exists = bool(doc_rel and (repo_root / doc_rel).is_file())
+-    if not doc_exists:
++    if contract_error:
++        state = "needs-contract"
++    elif not doc_exists:
+         state = "needs-doc"
+     elif not proposal:
+         state = "unrated"
+@@ -224,7 +232,7 @@ def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None
+         "gh": issue, "gid": None, "docRel": doc_rel, "docExists": doc_exists,
+         "slug": slug, "ratings": {"complexity": None, "risk": None, "effort": None},
+         "rated": bool(proposal), "ratingsExempt": False,
+-        "contract": contract, "zone": zone, "zoneInferred": zone_inferred,
++        "contract": contract, "contractError": contract_error, "zone": zone, "zoneInferred": zone_inferred,
+         "writeset": writeset, "zoneRule": zone_rule,
+         "deps": deps, "goGated": False,
+         "suggestedBranch": suggested_branch,
+@@ -446,7 +454,7 @@ class Engine:
+     def _extract_contract(self, doc):
+         raw = self._read_file_safe(doc)
+         if raw is None:
+-            return None
++            return None, None
+         lines = re.split(r"\r?\n", raw)
+         h = -1
+         for j, l in enumerate(lines):
+@@ -454,7 +462,7 @@ class Engine:
+                 h = j
+                 break
+         if h < 0:
+-            return None
++            return None, None
+         start = -1
+         for j in range(h + 1, len(lines)):
+             if re.match(r"^```json\s*$", lines[j], re.I):
+@@ -463,18 +471,20 @@ class Engine:
+             if re.match(r"^#{1,6}\s+", lines[j]):
+                 break
+         if start < 0:
+-            return None
++            return None, None
+         end = -1
+         for j in range(start, len(lines)):
+             if re.match(r"^```\s*$", lines[j]):
+                 end = j
+                 break
+         if end < 0:
+-            return None
++            return None, None
+         try:
+-            return json.loads("\n".join(lines[start:end]))
++            contract = json.loads("\n".join(lines[start:end]))
++            error = contract_shape_error(contract)
++            return (None if error else contract), error
+         except ValueError:
+-            return None
++            return None, "invalid JSON contract"
+ 
+     def _eval_probe(self, p):
+         def at(rel):
+@@ -1125,14 +1135,14 @@ class Engine:
+                 # ignored) — the two scales must not coexist in one score.
+                 rated = True
+             ratings_exempt = str(fm.get("ratings_exempt", "")).lower() == "true"
+-            contract = self._extract_contract(doc_abs) if doc_exists else None
++            contract, contract_error = self._extract_contract(doc_abs) if doc_exists else (None, None)
+             z = self._zone_of(contract, item)
+             suggested_branch = "marathon/%s-%s" % (slug, self.TODAY)
+             records.append({
+                 "title": item["title"], "section": item["section"], "emoji": item["status"],
+                 "raw": item["raw"], "gh": gh, "gid": gid, "docRel": doc_rel, "docExists": doc_exists,
+                 "slug": slug, "ratings": ratings, "rated": rated, "ratingsExempt": ratings_exempt,
+-                "contract": contract, "zone": z["zone"], "zoneInferred": z["inferred"],
++                "contract": contract, "contractError": contract_error, "zone": z["zone"], "zoneInferred": z["inferred"],
+                 "writeset": z["writeset"], "zoneRule": z["zoneRule"],
+                 "deps": self._deps_of(item), "goGated": self._is_go_gated(item),
+                 "suggestedBranch": suggested_branch,
+@@ -1158,6 +1168,13 @@ class Engine:
+ 
+         # ── per-item validation signals ────────────────────────────────────────
+         for r in deduped:
++            if r.get("contractError"):
++                r["state"] = "needs-contract"
++                r["flags"].append("malformed-contract")
++                self._flag("warn", "needs-contract", r,
++                           "malformed-contract: " + r["contractError"],
++                           "correct the Preflight Contract shape before execution")
++                continue
+             if r["gh"] is None and not r["docRel"]:
+                 r["state"] = "note-only"
+                 self._flag("info", "note-only", r,
+diff --git a/utils/py/swarm_preflight.py b/utils/py/swarm_preflight.py
+index a2fa71de..a9d0a29f 100644
+--- a/utils/py/swarm_preflight.py
++++ b/utils/py/swarm_preflight.py
+@@ -51,6 +51,41 @@ def log(msg):
+ def emit(msg):
+     print(msg)
+ 
++def contract_shape_error(obj):
++    """Validate present contract shapes without requiring an execution-ready contract."""
++    if not isinstance(obj, dict):
++        return "contract must be an object"
++    if "target" in obj:
++        if not isinstance(obj["target"], dict):
++            return "target must be an object"
++        for key in ("repo", "ref"):
++            if key in obj["target"] and not isinstance(obj["target"][key], str):
++                return "target.%s must be a string" % key
++    if "fix_probes" in obj:
++        if not isinstance(obj["fix_probes"], list):
++            return "fix_probes must be an array of objects"
++        for probe in obj["fix_probes"]:
++            if not isinstance(probe, dict):
++                return "fix_probes entries must be objects"
++            for key in ("type", "path", "pattern", "command"):
++                if key in probe and not isinstance(probe[key], str):
++                    return "fix_probes.%s must be a string" % key
++    for key in ("artifacts", "artifacts_new"):
++        if key == "artifacts_new" and obj.get(key) is None:
++            continue
++        if key in obj and (not isinstance(obj[key], list)
++                           or any(not isinstance(path, str) or not path for path in obj[key])):
++            return "%s must be an array of non-empty strings" % key
++    if obj.get("lanes") is not None:
++        if not isinstance(obj["lanes"], dict):
++            return "lanes must be an object"
++        for key in ("agy_safe", "orchestrator_only", "index_only"):
++            if key in obj["lanes"] and (not isinstance(obj["lanes"][key], list)
++                    or any(not isinstance(path, str) or not path for path in obj["lanes"][key])):
++                return "lanes.%s must be an array of non-empty strings" % key
++    return None
++
++
+ def extract_contract(doc_path):
+     with open(doc_path, 'r') as f:
+         lines = f.read().splitlines()
+@@ -93,6 +128,11 @@ def extract_contract(doc_path):
+         eprint(f"invalid JSON contract in {doc_path}: {e}")
+         sys.exit(3)
+         
++    shape_error = contract_shape_error(obj)
++    if shape_error:
++        eprint(f"contract in {doc_path}: {shape_error}")
++        sys.exit(3)
++
+     def get(p, o):
+         for k in p.split('.'):
+             if o is None: return None
+@@ -176,7 +216,7 @@ def merge_contracts(contracts):
+         "round_cap": base.get("round_cap"),
+         "fix_probes": list(base.get("fix_probes", [])),
+         "artifacts": list(base.get("artifacts", [])),
+-        "artifacts_new": list(base.get("artifacts_new", [])),
++        "artifacts_new": list(base.get("artifacts_new") or []),
+         "remediation": base.get("remediation"),
+         "lanes": merged_lanes
+     }
+@@ -195,7 +235,7 @@ def merge_contracts(contracts):
+         out["fix_probes"].extend(c.get("fix_probes", []))
+         for a in c.get("artifacts", []):
+             if a not in out["artifacts"]: out["artifacts"].append(a)
+-        for a in c.get("artifacts_new", []):
++        for a in c.get("artifacts_new") or []:
+             if a not in out["artifacts_new"]: out["artifacts_new"].append(a)
+             
+     return out
+diff --git a/validate.sh b/validate.sh
+index 5b29375e..40876cdb 100755
+--- a/validate.sh
++++ b/validate.sh
+@@ -1030,9 +1030,16 @@ if command -v php >/dev/null 2>&1; then
+     echo "ENVIRONMENT FAULT: php present but unusable (${_php_error%%$'\n'*}) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)"
+   fi
+ fi
+-if ! python3 -c "import yaml" >/dev/null 2>&1; then
+-  XYZ_ENV_FAULTS="${XYZ_ENV_FAULTS:+$XYZ_ENV_FAULTS,}yaml"
+-  echo "ENVIRONMENT FAULT: python3 ($(command -v python3)) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)"
++_python_version="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null)"
++_python_missing=""
++for _python_module in yaml pytest requests; do
++  if ! python3 -c "import $_python_module" >/dev/null 2>&1; then
++    _python_missing="${_python_missing:+$_python_missing,}$_python_module"
++  fi
++done
++if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1 || [ -n "$_python_missing" ]; then
++  echo "ENVIRONMENT FAULT: python3 ($(command -v python3 || echo unavailable)) version ${_python_version:-unavailable}; missing modules: ${_python_missing:-none}; requires Python >=3.10 with yaml/pytest/requests — rerun with PATH=\"\$HOME/.cache/xyz-forge-test-venv/bin:\$PATH\" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)"
++  exit 3
+ fi
+ export XYZ_ENV_FAULTS
+ # GH-732 environment faults END

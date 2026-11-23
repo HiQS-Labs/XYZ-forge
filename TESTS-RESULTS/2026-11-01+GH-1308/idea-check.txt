@@ -1,0 +1,7 @@
+HQ_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge
+unprefixed releases_app from foreign repo rc=2 (red control)
+prefixed releases_app rc=0
+prefixed prior_art_recon --help rc=0
+prefixed swarm-preflight --help rc=0
+idea: project did not resolve — stop
+empty-TARGET guard rc=1

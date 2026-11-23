@@ -1,0 +1,34 @@
+[
+  {
+    "max_tasks": 0,
+    "simulate": false,
+    "executor": "marathon",
+    "same_root": false,
+    "exit": 2,
+    "traceback": false
+  },
+  {
+    "max_tasks": 2,
+    "simulate": true,
+    "executor": "marathon",
+    "same_root": false,
+    "exit": 2,
+    "traceback": false
+  },
+  {
+    "max_tasks": 2,
+    "simulate": false,
+    "executor": "relay",
+    "same_root": false,
+    "exit": 2,
+    "traceback": false
+  },
+  {
+    "max_tasks": 2,
+    "simulate": false,
+    "executor": "marathon",
+    "same_root": true,
+    "exit": 2,
+    "traceback": false
+  }
+]

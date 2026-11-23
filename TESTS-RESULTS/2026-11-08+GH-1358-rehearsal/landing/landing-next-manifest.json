@@ -1,0 +1,21 @@
+{
+  "frozen_at": "2026-11-08T18:23:33.155079+00:00",
+  "deadline": "2026-11-08T19:06:18Z",
+  "primary": "3b8c46fd8966c7ac59328f3c95865d2fb98c7671",
+  "runner": "aee318d031605e314058d832c95a062204d1315f",
+  "approved_pr": 1373,
+  "approved_head": "d8a9167c24b47f55663f4d3bf718e455f287a4aa",
+  "next_issue": 1254,
+  "prior_jog_row": null,
+  "admission": "agent-assisted; no normal no-row discovery claim",
+  "worker_wall_s": 900,
+  "worker_idle_s": 900,
+  "gate_wall_s": 1800,
+  "lane_max_attempts": 2,
+  "automatic_retry": false,
+  "relay_base": 5,
+  "relay_hard_max": 10,
+  "clock_plan_QA": "Approved",
+  "configuration_QA": "conditional correction verified ready4/4",
+  "no_phase_B": true
+}

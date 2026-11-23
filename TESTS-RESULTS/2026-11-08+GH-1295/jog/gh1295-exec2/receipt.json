@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1295,
+  "execution_id": "gh1295-exec2",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1295-injected-text-in-briefs-2026-11-08",
+  "pr_number": 1371,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "7eb3fcac1b20225e31cebb9595acda2e5e617c2b9b24edb081cb6fbf47cac3e6",
+    "gate-receipt.json": "19bed626e8822b6a8d5414e1a327c54017210edfacba78791003fbb7e4d88a75",
+    "provenance.jsonl": "335427ab93680ac122eea52f01b6d64a3a3a99cef5de3274e9e2c50697e95a75"
+  }
+}

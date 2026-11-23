@@ -1,0 +1,296 @@
+{
+  "result": "PASS",
+  "source_head": "1c3caed88173693bf9119b1b23cfc5525dd12dc4",
+  "boundary": "Actual Jog CLI and ledger; local bare fetch mirror; captured GitHub reads; issue writes recorded locally only",
+  "cases": [
+    {
+      "case": "baseline refuses actual PR1361 tail",
+      "rc": 2,
+      "stdout": "",
+      "stderr": "jog: refusing to land GH-1287: head SHA b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0 not preserved: unapproved nonledger tail commit: 50b60b19901254a6da50ef550ee4a6283c9d9bcf\n",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      }
+    },
+    {
+      "case": "unmerged PR",
+      "rc": 2,
+      "stdout": "",
+      "stderr": "jog: refusing to land GH-1287: failed verification: state MERGED\n",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      }
+    },
+    {
+      "case": "wrong base",
+      "rc": 2,
+      "stdout": "",
+      "stderr": "jog: refusing to land GH-1287: failed verification: base development\n",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      }
+    },
+    {
+      "case": "wrong fetched head",
+      "rc": 2,
+      "stdout": "",
+      "stderr": "jog: refusing to land GH-1287: head SHA differs from the fetched PR head\n",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      }
+    },
+    {
+      "case": "unreachable merge",
+      "rc": 2,
+      "stdout": "",
+      "stderr": "jog: refusing to land GH-1287: merge commit 00000000 not reachable from refs/remotes/origin/development\n",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      }
+    },
+    {
+      "case": "tampered committed gate",
+      "rc": 2,
+      "stdout": "",
+      "stderr": "jog: refusing to land GH-1287: missing or changed committed evidence: TESTS-RESULTS/2026-11-07+GH-1287/jog/gh1287-exec1-gateretry1/gate-receipt.json\n",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      }
+    },
+    {
+      "case": "candidate completes actual historical PR1361",
+      "rc": 0,
+      "stdout": "jog: GH-1287 landed from committed receipt \u2014 PR #1361, 4a82bb8f; publish owned post-merge writes before continuing\n",
+      "stderr": "",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "awaiting-landing (no PR yet \u2014 open one from the receipt's branches: head=marathon/gh-1287-fuzz-novelty-signature-2026-11-07; base=unknown)"
+          ]
+        ],
+        "counts": [
+          2651,
+          1325
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "completed",
+            "landed via PR #1361 (merged 4a82bb8f)"
+          ]
+        ],
+        "counts": [
+          2652,
+          1326
+        ]
+      }
+    },
+    {
+      "case": "repeat closeout adds no transitions or evidence changes",
+      "rc": 0,
+      "stdout": "jog: GH-1287 landed from committed receipt \u2014 PR #1361, 4a82bb8f; publish owned post-merge writes before continuing\n",
+      "stderr": "",
+      "before": {
+        "queue": [
+          [
+            "completed",
+            "landed via PR #1361 (merged 4a82bb8f)"
+          ]
+        ],
+        "counts": [
+          2652,
+          1326
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "completed",
+            "landed via PR #1361 (merged 4a82bb8f)"
+          ]
+        ],
+        "counts": [
+          2652,
+          1326
+        ]
+      }
+    },
+    {
+      "case": "non-ancestor historical receipt can complete parked queue",
+      "rc": 0,
+      "stdout": "jog: GH-1287 landed from committed receipt \u2014 PR #1361, 4a82bb8f; publish owned post-merge writes before continuing\n",
+      "stderr": "",
+      "before": {
+        "queue": [
+          [
+            "parked",
+            "manual non-ancestor fixture"
+          ]
+        ],
+        "counts": [
+          2653,
+          1327
+        ]
+      },
+      "after": {
+        "queue": [
+          [
+            "completed",
+            "landed via PR #1361 (merged 4a82bb8f)"
+          ]
+        ],
+        "counts": [
+          2654,
+          1328
+        ]
+      }
+    }
+  ],
+  "historical_landing": {
+    "issue": 1287,
+    "queue_gid": "jog-01M6W3M997K04BP4GBE9PQZN0T",
+    "execution_id": "gh1287-exec1-gateretry1",
+    "pr_number": 1361,
+    "merged_sha": "4a82bb8fe9bbc2590d1ef6e58c555bbad58bdecc",
+    "approved_head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+    "landed_head_sha": "50b60b19901254a6da50ef550ee4a6283c9d9bcf",
+    "reviewed_head_sha": "99aa9e262701d9b0947c6ac49289cd9e5200ac9d",
+    "reviewed_candidate_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+    "tested_head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+    "completion_policy": "merged-pr",
+    "hosted_reconcile": null,
+    "local_reconcile": {
+      "doc_path": "PROJECT/2-WORKING/GH-1287-FUZZ-NOVELTY-SIGNATURE.md",
+      "pr_number": 1361
+    }
+  },
+  "nonancestor_fixture_sha": "67416b6d9cedcfc4537bb65d5e55d3697bb9a7ac"
+}

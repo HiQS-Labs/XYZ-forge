@@ -50,7 +50,7 @@ run_qp() {
   local root="$1"; shift
   QUEUE_PLAN_ROOT="$root" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
     QUEUE_PLAN_GH_STATE_FILE="$root/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$root/.branches" \
-    bash "$QP" "$@"
+    bash "$QP" --write "$@"   # GH-446: a bare run no longer writes; these cases assert on the written doc
 }
 
 # run_qp_py <root> [args...] — explicitly the Python lane.
@@ -58,7 +58,7 @@ run_qp_py() {
   local root="$1"; shift
   QUEUE_PLAN_ROOT="$root" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
     QUEUE_PLAN_GH_STATE_FILE="$root/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$root/.branches" \
-    XYZ_PYTHON=1 bash "$QP" "$@"
+    XYZ_PYTHON=1 bash "$QP" --write "$@"
 }
 
 # run_qp_sh <root> [args...] — explicitly the BASH/node engine.
@@ -79,7 +79,7 @@ run_qp_sh() {
   local root="$1"; shift
   QUEUE_PLAN_ROOT="$root" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
     QUEUE_PLAN_GH_STATE_FILE="$root/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$root/.branches" \
-    XYZ_PYTHON=0 bash "$QP" "$@"
+    XYZ_PYTHON=0 bash "$QP" --write "$@"
 }
 
 # wave_of <queue-doc> <issue-number> → wave number containing #N (empty if not waved)
@@ -713,7 +713,7 @@ else
     # The dry-run report does not carry the banner, so compare the RENDERED doc, which does.
     QUEUE_PLAN_ROOT="$T" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
       QUEUE_PLAN_GH_STATE_FILE="$T/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$T/.branches" \
-      XYZ_PYTHON=0 bash "$MUT" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+      XYZ_PYTHON=0 bash "$MUT" --write --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
     if cmp -s "$T/shell.md" "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"; then
       fail "T: mutating the Bash engine changed NOTHING — the parity comparison is not cross-lane [GH-348]"
     else

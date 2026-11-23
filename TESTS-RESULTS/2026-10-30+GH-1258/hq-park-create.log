@@ -1,0 +1,6 @@
+HQ park · Tier B — creating intake in XYZ-forge …
+  ✓ issue:   https://github.com/HiQS-Labs/XYZ-forge/issues/1263
+  ✓ capture: PROJECT/1-INBOX/GH-1263-HQ-PARK-RATING-GRAMMAR.md
+  ✓ DB: pointer added via releases CLI
+  ✓ pdda:    capture doc passes the target frontmatter check
+  (files written but NOT committed — review, then commit in the target repo)

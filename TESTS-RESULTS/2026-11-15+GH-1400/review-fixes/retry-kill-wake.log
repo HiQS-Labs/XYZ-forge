@@ -1,0 +1,14 @@
+jog: GH-901 held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json'
+jog: execution clone aligned at f33b68b6fd4f89a843cb2b9765db40ca0d1dd338; other branches and untracked files retained
+
+============================================================
+jog: processing GH-902 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CVCHBNM9S71ZSAEA1C8/gh902-exec1/preflight)
+jog: dispatching marathon-drive (controlled worker)
+jog: GH-902 published awaiting approval; continuing independent pending work.
+jog: no pending tasks; held outcomes remain below.
+jog: GH-901 parked: supervision held: marathon result unreadable at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1400-supervision-composition-2026-11-15-verify/temp/gh1400-manual/review-fixes/retry-kill/primary/.tick/jog/jog-01M7G04CMTW2PJJKGTME5XJW40/gh901-exec1/gate-retry-1/marathon-result.json'
+jog: GH-902 parked: awaiting-landing (PR #902: https://example.invalid/pr/902)
+jog: reclaiming stale relay-driver.lock (holder pid 90488 not running).
+Switched to a new branch 'fixture-902'

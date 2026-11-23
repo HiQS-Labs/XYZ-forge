@@ -1,0 +1,21 @@
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.OFhUEB)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.OFhUEB) changed-files=0
+rtl: GH-654 allowlist: [utils/py/harness.py, test/gh174-harness-registry.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+agy-turn: idle-blocker attribution: blocker=lock — the process tree held a .lock file open (e.g. a git index or harness driver lock) — it was waiting on a lock held by someone else, not working.
+agy-turn: agy -p exceeded 900s wall-clock cap — killed [timeout-idle-unknown]
+agy-turn: timeout attribution: no CPU or file growth was observed and no established connection was visible; without a positive in-flight signal the cause remains unknown [cpu=0.01s/s, samples=16029, worktree-progress=no]

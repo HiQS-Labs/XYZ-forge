@@ -157,10 +157,8 @@ def lanes(xyz_root: str) -> Dict[str, Dict[str, Any]]:
     src = _route_agent_source(xyz_root)
     out: Dict[str, Dict[str, Any]] = {}
     for lane, agent_var in re.findall(
-        # GH-368: AGY_AGENT accumulates same-lane actors with a join rather than a bare
-        # assignment.  The derivation intentionally keys on the env slot, not that assignment's
-        # right-hand side, so routing can evolve without growing a curated lane allowlist here.
-        r"agent_id\.startswith\(\s*[\"']([a-z0-9_]+)[\"']\s*\)\s*:\s*os\.environ\[\s*[\"']([A-Z0-9_]+)[\"']\s*\]",
+        # GH-1419: derive provider slots from the route owner, not a second lane list.
+        r"agent_id\.startswith\(\s*[\"']([a-z0-9_]+)[\"']\s*\)\s*:\s*slot\s*=\s*[\"']([A-Z0-9_]+)[\"']",
         src,
     ):
         prefix = agent_var[: -len("_AGENT")] if agent_var.endswith("_AGENT") else agent_var
@@ -393,11 +391,17 @@ def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
         return ("", 1)
 
     spec = lane_map[harness]
+    model = res["model"]
+    # GH-1216: Aider needs the LiteLLM gateway prefix at dispatch time. Keep the
+    # stored profile/JSON and explicit tier-1 paths exactly as the operator wrote them.
+    if (res["tier"] == 2 and harness == "aider" and res["gateway"] == "openrouter"
+            and not model.startswith("openrouter/")):
+        model = "openrouter/" + model
     lines = [
         f"# resolve-profile: {res['query']!r} -> tier {res['tier']}"
         + (f" (profile {res['profile']!r})" if res["profile"] else ""),
         f"export {spec['agent_var']}={_sh_quote(harness)}",
-        f"export {spec['model_var']}={_sh_quote(res['model'])}",
+        f"export {spec['model_var']}={_sh_quote(model)}",
     ]
 
     # The gateway. Omitted for a self-routed harness on purpose: exporting the harness's own name

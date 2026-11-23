@@ -1,0 +1,44 @@
+{
+  "bad": "b78df4b93049498b19dd47fe6a90d006f9c42700",
+  "config": {
+    "deadline_epoch": 1793557615.343033,
+    "helper_sha256": "4250cb90eff905f851b5cc6d18f3b7c7932f68058e0470846eaedb8f5657d753",
+    "protocol_sha256": "2dff5b6d5505b182cd4ed51e32a2be87c24534382deea3b9aea066a1bfb9370f",
+    "python": "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+    "root": "<ATTEMPT02_ROOT>"
+  },
+  "environment": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "HOME": "<ATTEMPT02_ROOT>/home",
+    "LC_ALL": "C",
+    "PATH": "/usr/bin:/bin",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TMPDIR": "<ATTEMPT02_ROOT>/tmp",
+    "TZ": "UTC"
+  },
+  "git_path": "/Library/Developer/CommandLineTools/usr/bin/git",
+  "git_sha256": "a73bf622a2e470d5d57a4b1d5aef1e8680e67278018d4858a2f93825b7d595c7",
+  "good": "47deab48b8c749d699c6b6c77c38dfdaa5682025",
+  "issue": 1314,
+  "python": "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+  "python_version": "3.9.6 (default, Aug 25 2026, 21:26:21) \n[Clang 21.0.0 (clang-2100.3.34.2)]",
+  "sources_and_fixtures_sha256": {
+    "bad": {
+      "utils/py/factory_primitive/prompts/evaluator.v1.md": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+      "utils/py/factory_primitive/scenarios/soak-v1.jsonl": "bed30bb1ac9ffe5f6ff5283b21b84eb2eb8630402ba78f13152157736963bf70",
+      "utils/py/factory_primitive/scenarios/soak-v1.manifest.json": "63a2a7a61ecee67b7335fd5fd6abf8acbec8f441241d36586512bf7bb2bd7147",
+      "utils/py/harness.py": "c21d6a2a3584b13624cac89ffced9b937a35396cf51f8f8f8375411c57bdb28a",
+      "utils/py/proc_group.py": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+      "utils/py/releases_app.py": "b2bf3db0d294aa558fe19ab36ab65a84c0c227138285663f778e94c60de59bc2"
+    },
+    "good": {
+      "utils/py/factory_primitive/prompts/evaluator.v1.md": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+      "utils/py/factory_primitive/scenarios/soak-v1.jsonl": "bed30bb1ac9ffe5f6ff5283b21b84eb2eb8630402ba78f13152157736963bf70",
+      "utils/py/factory_primitive/scenarios/soak-v1.manifest.json": "63a2a7a61ecee67b7335fd5fd6abf8acbec8f441241d36586512bf7bb2bd7147",
+      "utils/py/harness.py": "040507f04e97add11ac3beb3071791b9bcdf4bb61b4e79b4760b785da72f6114",
+      "utils/py/proc_group.py": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+      "utils/py/releases_app.py": "b2bf3db0d294aa558fe19ab36ab65a84c0c227138285663f778e94c60de59bc2"
+    }
+  },
+  "sqlite_version": "3.54.0"
+}

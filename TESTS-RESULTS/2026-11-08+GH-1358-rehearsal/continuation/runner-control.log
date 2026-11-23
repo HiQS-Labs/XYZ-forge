@@ -1,0 +1,20 @@
+Cloning into '/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-runner-control-4nx0y17q'...
+done.
+
+============================================================
+jog: processing GH-1358 (attempt 4) at position 1
+============================================================
+jog: stopping queue execution on task failure.
+PASS scheduled task starts prepared development; durable lane ('control-lane-1', '02c0340064c81d1ee8539d859306288ef1ca5b70')
+
+============================================================
+jog: processing GH-1358 (attempt 5) at position 1
+============================================================
+jog: stopping queue execution on task failure.
+PASS scheduled task starts prepared development; durable lane ('control-lane-2', '0a77a559e63affa8317359a6d57abea0a8cbf8b8')
+PASS refusal before lease: dirty ContractError
+jog: another driver is active in this repo (pid 24808, lock: .git/relay-driver.lock).
+jog: Concurrent runs in the same clone are unsafe (GH-42 / GH-354).
+PASS refusal before lease: busy SystemExit
+PASS refusal before lease: detached ContractError
+PASS retained-journal recovery makes no switch or dispatch; source fixture only

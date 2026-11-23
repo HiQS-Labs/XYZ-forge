@@ -1,0 +1,8 @@
+[19:21:45] sandbox clone at /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-v5/clone (repo /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30)
+[19:21:46] sandbox baseline: clean tree at b476a874d610
+[19:21:56] round 1 fp-help: 25 mutants {'pass': 8, 'fail': 17, 'anomaly': 0} cex=0 parity=0 corpus=3 total=25
+[19:22:05] round 2 fp-genman: CONTAMINATION — ['?? " "']; resetting sandbox
+[19:22:06] round 2 fp-genman: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=12 total=50
+[19:22:16] round 3 fp-status: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=0 corpus=10 total=75
+[19:22:26] round 4 fp-init: 25 mutants {'pass': 3, 'fail': 18, 'anomaly': 4} cex=4 parity=0 corpus=14 total=100
+[19:22:27] report -> /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-v5/campaign-report.json

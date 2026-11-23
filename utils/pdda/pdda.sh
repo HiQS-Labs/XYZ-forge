@@ -358,6 +358,18 @@ check_roadmap_coverage() {
     [ "$releases_mode" -eq 0 ] && [ -f "$PDDA_ROADMAP" ] && grep -Fq "$1" "$PDDA_ROADMAP" && return 0
     [ -n "$db_doc_paths" ] && grep -Fq "$1" <<<"$db_doc_paths" && return 0
     [ -n "$db_raw_texts" ] && grep -Fq "$1" <<<"$db_raw_texts" && return 0
+    # doc_path is a cache: compare the issue identity after lifecycle moves/renames.
+    local issue cached resolved
+    issue="$(_pdda_doc_issue_number "$PDDA_REPO_ROOT/$1")"
+    if [ -n "$issue" ]; then
+      resolved="$(_pdda_find_doc_for_issue "$issue")" || return 1
+      [ "$resolved" = "$PDDA_REPO_ROOT/$1" ] || return 1
+      if [ "$db_ledger_ready" -eq 1 ] && sqlite3 -readonly "$PDDA_REPO_ROOT/releases.db" \
+          "SELECT 1 FROM roadmap_items WHERE gh_number=$issue LIMIT 1" | grep -qx 1; then return 0; fi
+      while IFS= read -r cached; do
+        case "$(basename "$cached")" in GH-"$issue"-*.md|GH-"$issue".md) return 0 ;; esac
+      done < <(printf '%s\n' "$db_doc_paths"; [ ! -f "$PDDA_ROADMAP" ] || grep -oE 'PROJECT/[^ )]+\.md' "$PDDA_ROADMAP")
+    fi
     return 1
   }
 
@@ -379,6 +391,21 @@ check_roadmap_coverage() {
     if pdda_roadmap_covers "$rel"; then
       continue
     fi
+    # GH-1332: Jog promotes a 1-INBOX doc on an execution branch without writing the ledger
+    # (one writer); wave_reconcile repoints the row when the issue is reconciled closed (a merge
+    # that leaves the issue open only records evidence). Until then the moved doc is covered by its
+    # 1-INBOX pointer, provided the 1-INBOX file is really gone (a move, not a copy). Matching is the
+    # same fixed-string test as above, so this shows a move happened, not that Jog made it.
+    case "$rel" in
+      PROJECT/2-WORKING/*)
+        inbox_rel="PROJECT/1-INBOX/${rel#PROJECT/2-WORKING/}"
+        if [ ! -e "$PDDA_REPO_ROOT/$inbox_rel" ] && pdda_roadmap_covers "$inbox_rel"; then
+          pdda_record_finding info "$CHECK_NAME" "$file" 1 \
+            "promoted in flight: the ledger still points at $inbox_rel until wave_reconcile closes the issue" "skip"
+          continue
+        fi
+        ;;
+    esac
 
     pdda_record_finding error "$CHECK_NAME" "$file" 1 \
       "active working doc has no pointer in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
@@ -398,10 +425,18 @@ check_roadmap_coverage() {
       continue
     fi
 
-    pdda_record_finding error "$CHECK_NAME" "$file" 1 \
-      "captured GH issue doc is not parked in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
-      "add-roadmap-queue"
-    rc=1
+    # GH-1340 / GH-1345 decision 6: unstarted inbox captures do not require a roadmap ledger row at filing.
+    # The row is created when work starts (pickup), while active 2-WORKING docs still require a pointer.
+    if [ "$releases_mode" -eq 1 ] || [ ! -f "$PDDA_ROADMAP" ]; then
+      pdda_record_finding info "$CHECK_NAME" "$file" 1 \
+        "unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) ($rel)" \
+        "deferred-pickup"
+    else
+      pdda_record_finding error "$CHECK_NAME" "$file" 1 \
+        "captured GH issue doc is not parked in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
+        "add-roadmap-queue"
+      rc=1
+    fi
   done < <(pdda_list_inbox_issue_docs)
 
   pdda_emit_summary "$CHECK_NAME" "$rc"
@@ -420,9 +455,36 @@ _pdda_cl_epoch() {  # YYYY-MM-DD -> epoch seconds (portable BSD/GNU); prints not
   fi
 }
 
+pdda_changelog_writes_mode() {
+  local mode=""
+  if [ -n "${CHANGELOG_WRITES+x}" ]; then
+    mode="$(printf '%s' "$CHANGELOG_WRITES" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')"
+    case "$mode" in
+      landing|branch|off) printf '%s\n' "$mode" ;;
+      *) printf 'off\n' ;;
+    esac
+    return 0
+  fi
+  if [ -f "$PDDA_REPO_ROOT/.pdda-mode" ]; then
+    mode="$(grep -E '^[[:space:]]*CHANGELOG_WRITES[[:space:]]*=' "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | sed -E 's/^[[:space:]]*CHANGELOG_WRITES[[:space:]]*=[[:space:]]*([^[:space:]#]+).*/\1/' || true)"
+  fi
+  mode="$(printf '%s' "$mode" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]')"
+  case "$mode" in
+    landing|branch|off) printf '%s\n' "$mode" ;;
+    *) printf 'off\n' ;;
+  esac
+}
+
 check_changelog() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-changelog" rc=0
+  local writes_mode
+  writes_mode="$(pdda_changelog_writes_mode)"
+  if [ "${PDDA_IN_RUN:-0}" = "1" ] && { [ "$writes_mode" = "off" ] || [ "$writes_mode" = "landing" ]; }; then
+    pdda_record_finding info "$CHECK_NAME" "${PDDA_CHANGELOG:-$PDDA_REPO_ROOT/CHANGELOG.md}" 0       "CHANGELOG_WRITES=$writes_mode — aggregate freshness warnings skipped (reconciler/off mode)" "skip"
+    pdda_emit_summary "$CHECK_NAME" "$rc"
+    return "$(pdda_gated_exit "$rc")"
+  fi
   local PDDA_CHANGELOG="${PDDA_CHANGELOG:-$PDDA_REPO_ROOT/CHANGELOG.md}"
   local PDDA_CHANGELOG_STALE_DAYS="${PDDA_CHANGELOG_STALE_DAYS:-0}"
   local cl_line cl_date commit_date cl_epoch commit_epoch gap_days
@@ -557,6 +619,9 @@ _pdda_doc_issue_number() {
   local file="$1" num base
   num="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
   case "$num" in \"*\") num="${num#\"}"; num="${num%\"}" ;; \'*\') num="${num#\'}"; num="${num%\'}" ;; esac
+  num="$(printf '%s' "$num" | tr '[:upper:]' '[:lower:]')"
+  case "$num" in none|null|false|n/a|no|'~') return 0 ;; esac
+  case "$num" in https://github.com/*/*/issues/*) num="${num%/}"; num="${num##*/}" ;; gh-*) num="${num#gh-}" ;; esac
   num="${num#\#}"
   if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; return; fi
   base="$(basename "$file")"
@@ -564,6 +629,67 @@ _pdda_doc_issue_number() {
     GH-[0-9]*) num="${base#GH-}"; num="${num%.md}"; num="${num%%-*}"   # strip .md first so a bare GH-<n>.md (no description) still resolves
       if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; fi ;;
   esac
+}
+
+# Build one map for all cached-pointer checks. Match the Python lifecycle resolver's
+# identity/tie-break policy without importing Forge modules into standalone PDDA installs.
+_pdda_doc_map() {
+  # Ledger hints come from the sqlite3 CLI (read-only, as the other ledger reads here do), so the
+  # map adds no direct connect site (GH-777). An unreadable ledger still fails the map.
+  local _db _hints=""
+  _db="$(dirname "$(dirname "$PDDA_WORKING_DIR")")/releases.db"
+  if [ -s "$_db" ]; then
+    command -v sqlite3 >/dev/null 2>&1 || { printf 'pdda: sqlite3 unavailable for the issue-doc map\n' >&2; return 1; }
+    _hints="$(sqlite3 -readonly -separator $'\t' "$_db" "SELECT gh_number, doc_path FROM roadmap_items")" || return 1
+  fi
+  PDDA_DOC_MAP_HINTS="$_hints" python3 -B - "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR" <<'PYMAP'
+import os, re, sys
+from pathlib import Path
+hints = {}
+for row in os.environ.get("PDDA_DOC_MAP_HINTS", "").splitlines():
+    number, _, cached = row.partition("\t")
+    if number.strip() and cached:
+        hints.setdefault(int(number), set()).add(Path(cached).name)
+candidates = {}
+for directory in sys.argv[1:]:
+    for path in sorted(Path(directory).glob("*.md")):
+        if path.name.startswith(("recon-", "MARATHON-PLAN-")):
+            continue
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        declared = ""
+        if lines and lines[0].strip() == "---":
+            for line in lines[1:]:
+                if line.strip() == "---":
+                    break
+                key, sep, value = line.partition(":")
+                if sep and key.strip().lower() == "gh_issue":
+                    declared = value.strip().strip("\"'").lower()
+                    break
+        if declared in ("none", "null", "false", "n/a", "no", "~"):
+            continue
+        match = re.fullmatch(r"(?:#|GH-)?(\d+)", declared, re.I)
+        if not match:
+            match = re.fullmatch(r"https://github\.com/[^/]+/[^/]+/issues/(\d+)/?", declared, re.I)
+        if not match:
+            match = re.match(r"^(?:GH-)?(\d+)(?:-|\.md$)", path.name, re.I)
+        if match:
+            candidates.setdefault(int(match[1]), []).append(path)
+for number, paths in candidates.items():
+    primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
+    preferred = [p for p in primary if p.parent == primary[0].parent] if primary else paths
+    if primary and len(preferred) > 1:
+        named = [p for p in preferred if p.name in hints.get(number, set())]
+        if len(named) == 1:
+            preferred = named
+    path = preferred[0] if len(preferred) == 1 else "AMBIGUOUS"
+    print(f"{number}\t{path}")
+PYMAP
+}
+
+_pdda_find_doc_for_issue() {
+  local num="$1" doc_map
+  doc_map="${PDDA_ISSUE_DOC_MAP:-$(_pdda_doc_map)}"
+  printf '%s\n' "$doc_map" | awk -F '\t' -v n="$num" '$1 == n && $2 != "AMBIGUOUS" {print $2; found=1; exit} END {if (!found) exit 1}'
 }
 
 # Leading alphabetic word of a doc's status (lowercased): "Active — Phase 0 complete" -> "active";
@@ -623,7 +749,7 @@ check_issue_doc_sync() {
       target="$PDDA_COMPLETED_DIR/$(basename "$file")"
       rel_target="$(pdda_relpath "$target")"
       pdda_record_finding warn "$CHECK_NAME" "$file" 1 \
-        "issue #$num is CLOSED but the doc is still in 2-WORKING — recommend: git mv $(pdda_relpath "$file") $rel_target" \
+        "issue #$num is CLOSED but the doc is still in an active folder — recommend: git mv $(pdda_relpath "$file") $rel_target" \
         "move-to-completed"
       continue                            # closed-issue drift dominates; skip the (b) test
     fi
@@ -643,7 +769,7 @@ check_issue_doc_sync() {
         "doc status declares it is ready to close but issue #$num is still OPEN — recommend: git mv to 3-COMPLETED, then gh issue close $num" \
         "reconcile-status"
     fi
-  done < <(pdda_list_working_docs)
+  done < <(pdda_list_working_docs; for file in "$PDDA_INBOX_DIR/"*.md; do [ ! -f "$file" ] || printf '%s\n' "$file"; done)
 
   # --- (2) completed plans: PROJECT/3-COMPLETED ----------------------------------------------------
   # A doc that reached 3-COMPLETED IS the operator's assertion that the work is done — recorded in a
@@ -696,6 +822,26 @@ check_issue_doc_sync() {
         fi
       done <<< "$roadmap_rows"
     fi
+  fi
+
+  if [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
+    local cached resolved PDDA_ISSUE_DOC_MAP
+    PDDA_ISSUE_DOC_MAP="$(_pdda_doc_map)"
+    while IFS=$'\t' read -r num cached; do
+      [ -n "$num" ] || continue
+      if printf '%s\n' "$PDDA_ISSUE_DOC_MAP" | awk -F '\t' -v n="$num" '$1 == n && $2 == "AMBIGUOUS" {found=1} END {exit !found}'; then
+        pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+          "issue #$num has ambiguous identity documents — review duplicate issue documents" "ambiguous-doc-path"
+        continue
+      fi
+      resolved="$(_pdda_find_doc_for_issue "$num")" || continue
+      if [ "$cached" != "$(pdda_relpath "$resolved")" ]; then
+        pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+          "issue #$num cached doc_path '$cached' differs from $(pdda_relpath "$resolved") — run: issue-doc-sync --fix" \
+          "repoint-doc-path"
+      fi
+    done < <(sqlite3 -readonly -separator $'\t' "$PDDA_REPO_ROOT/releases.db" \
+      "SELECT gh_number, COALESCE(doc_path,'') FROM roadmap_items WHERE gh_number IS NOT NULL" 2>/dev/null)
   fi
 
   pdda_emit_summary "$CHECK_NAME" "$rc"
@@ -854,9 +1000,12 @@ cmd_releases_current() {
       printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
       return 0
     fi
-  elif [ -f "$PDDA_REPO_ROOT/releases.db" ] && [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ]; then
+  elif [ -f "$PDDA_REPO_ROOT/releases.db" ] && { [ -f "$PDDA_REPO_ROOT/utils/py/releases_app.py" ] || [ -f "$HERE/../py/releases_app.py" ]; }; then
+    # Host-owned writer first; else the sibling copy beside this script (a vendored .xyz/, GH-1466).
+    local writer="$PDDA_REPO_ROOT/utils/py/releases_app.py"
+    [ -f "$writer" ] || writer="$HERE/../py/releases_app.py"
     printf 'PDDA releases-current — releases.db active releases (GH-568):\n'
-    python3 "$PDDA_REPO_ROOT/utils/py/releases_app.py" list || true
+    python3 "$writer" --root "$PDDA_REPO_ROOT" list || true
     return 0
   elif [ -f "$PDDA_REPO_ROOT/RELEASES.md" ]; then
     RELEASES_FILE_EFF="$PDDA_REPO_ROOT/RELEASES.md"
@@ -893,6 +1042,9 @@ cmd_releases_current() {
 # default set because many installs carry one at the repo root beside AGENTS.md; a repo without one
 # (like this one) just has it silently skipped. Override the set via PDDA_GOVERNANCE_DOCS
 # (space-separated, repo-relative) and the index doc via PDDA_GOVERNANCE_INDEX (default ROUTER.md).
+# GH-1508: a repo EXTENDS the default set (never replaces it) with a committed `.pdda-mode` line
+# `PDDA_GOVERNANCE_DOCS_EXTRA=docs/a.md SOP.md` (space-separated, repo-relative; last line wins).
+# `.pdda-mode` is a create-only seed, so install and sync keep it. PDDA_GOVERNANCE_DOCS still replaces all.
 PDDA_GOVERNANCE_DOCS_DEFAULT="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md PROJECT/PDDA.md utils/pdda/PDDA-INSTALL.md"
 PDDA_GOVERNANCE_INDEX_DEFAULT="ROUTER.md"
 
@@ -1280,7 +1432,13 @@ _pdda_check_comment_references() {
 check_governance() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-governance" rc=0
-  local docs="${PDDA_GOVERNANCE_DOCS:-$PDDA_GOVERNANCE_DOCS_DEFAULT}"
+  local docs="${PDDA_GOVERNANCE_DOCS:-}" gov_extra=""
+  if [ -z "$docs" ]; then
+    docs="$PDDA_GOVERNANCE_DOCS_DEFAULT"
+    [ -f "$PDDA_REPO_ROOT/.pdda-mode" ] && gov_extra="$(sed -nE 's/^[[:space:]]*PDDA_GOVERNANCE_DOCS_EXTRA[[:space:]]*=[[:space:]]*([^#]*).*/\1/p' \
+      "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null | tail -n1 | tr -d '\r"'"'"'')"   # CRLF and quotes stripped
+    [ -n "$gov_extra" ] && docs="$docs $gov_extra"
+  fi
   local index_doc="${PDDA_GOVERNANCE_INDEX:-$PDDA_GOVERNANCE_INDEX_DEFAULT}"
   local shipped_docs="${PDDA_GOV_SHIPPED_DOCS:-$PDDA_GOV_SHIPPED_DOCS_DEFAULT}"
   local ref_exempt="${PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS:-$PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT}"
@@ -1599,6 +1757,7 @@ pdda-check-marathon-qa:check_marathon_qa
 cmd_run() {
   local EXIT_CODE=0 FAILED="" entry label fn MODE_NOTE
   local timing_on=0 t_start t_end
+  local PDDA_IN_RUN=1
 
   case "$PDDA_MODE" in
     observe) MODE_NOTE="observe (report-only; never blocks)" ;;
@@ -1760,7 +1919,7 @@ Commands:
   roadmap-coverage   nothing active goes MISSING from ROADMAP.md
   changelog          end-of-iteration changelog nudge (warn-only)
   stale              flag stale working docs (flag-only; never moves)
-  issue-doc-sync     flag 2-WORKING/GH-*.md docs drifted from their GitHub issue state (warn-only)
+  issue-doc-sync     report drift; --fix files COMPLETED/NOT_PLANNED docs; --census JSON reports delivered-but-open
   releases           validate RELEASES.md — the release-planning ledger (warn-only nudge)
   releases-current   read-only roll-up: active releases from releases.db (or legacy RELEASES.md) (rough, unvalidated)
   governance         repo-root governance-doc (ROUTER/AGENTS/CLAUDE/...) cross-reference + doc/code drift
@@ -1788,7 +1947,13 @@ case "$cmd" in
   roadmap-coverage) check_roadmap_coverage; exit "$?" ;;
   changelog)        check_changelog; exit "$?" ;;
   stale)            check_stale; exit "$?" ;;
-  issue-doc-sync)   check_issue_doc_sync; exit "$?" ;;
+  issue-doc-sync)
+    if [ "$#" -gt 0 ]; then
+      python3 -B "$HERE/../py/wave_reconcile.py" --root "$PDDA_REPO_ROOT" --issue-doc-sweep "$@"
+    else
+      check_issue_doc_sync
+    fi
+    exit "$?" ;;
   releases)         check_releases; exit "$?" ;;
   releases-current) cmd_releases_current; exit "$?" ;;
   governance)       check_governance; exit "$?" ;;

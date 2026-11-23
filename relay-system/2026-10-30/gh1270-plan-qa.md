@@ -1,0 +1,170 @@
+# RELAY · GH-1270 plan QA
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 2 / 3
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh1270-plan-qa): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: `PROJECT/2-WORKING/GH-1270-LAUNCH-PACKET-READINESS.md`
+- Also read (the code the plan cites): utils/py/harness.py (factory-primitive plan-draft section: _planner, _cited_paths, plan_draft, _build_proposal, _verify_plan_draft, init_from_prs, BRIEF_KEYS, factory_parser/factory_main); utils/py/_marathon_plan.py (_resolve_gh, _gh_state, _eval_probe, the state loop near the already-closed / already-landed checks); utils/py/marathon_yaml_emit.py (Lane, Packet, render, brief_value, safe_scalar); bin/marathon-yaml; relay-automation/marathon.sh (plan location and brief checks); relay-automation/MARATHON.example.yaml; utils/py/wave_reconcile.py (extract_linked_issues); TESTS-RESULTS/2026-10-25+GH-1175-phase0/D4-stale-contracts-intake.md; issues #1270 and #1075.
+- Operational envelope: a local, single-operator, read-only experiment in development. Grade against the plan's stated requirements and commensurate complexity; do not demand multi-tenant or enterprise machinery. XYZ-forge forbids new test suites (AGENTS.md, GH-831): verification is existing suites plus manual controls under `TESTS-RESULTS/`.
+- Reviewer: codex   ·   Producer: claude-a
+- Started: 2026-10-30
+- Definition of Done: the plan is grounded in the actual code paths; it reuses the planner's already-closed path, extract_linked_issues, _eval_probe and marathon_yaml_emit.render rather than adding parallel logic, and changes no planner, schema, validator or launcher; read-only and offline claims hold (new GitHub reads only at init; packet writes only under the run root; no command probes run); the packet format is what bin/marathon-yaml and marathon.sh accept; acceptance criteria are falsifiable with red controls; the rating 60/40/50/50 is reasonable.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+### Producer · Round 1 · claude-a
+
+Plan ready: `PROJECT/2-WORKING/GH-1270-LAUNCH-PACKET-READINESS.md`. Specific questions:
+
+1. Is freezing `gh issue list --state all` into the planner's stub state file the right way to exclude CLOSED rows, and are there side effects on other planner states (e.g. already-closed only fires for Queue / In progress sections)?
+2. Is `extract_linked_issues` closers-only the right "delivered but open" signal, and is holding (not dropping) planner lanes in the provisional view correct?
+3. Is a partial `fix_probes` landing via `_eval_probe` (working tree) a sound stale-contract hold, with `command` probes never executed?
+4. One `MARATHON.yaml` per lane (because phases run serially) — correct reading of marathon.sh? Is reusing `render` with brief paths pointing at the post-copy `PROJECT/2-WORKING/GH-<n>-LAUNCH/brief.md` location sound?
+5. Are acceptance checks and red controls sufficient?
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the reuse choices fit this local experiment, but readiness does not cover every emitted lane and the packet input is not tied to a successful tick. Resolve R1–R2 before implementation.
+swept file: yes
+
+Read the entire plan, the named implementation sections, launcher/validator/emitter and evidence note; read live issues #1270 and #1075. Graph Verify attempt: nearest indexed project `XYZ-forge` is another checkout, generation `2026-09-01T15:54:30Z`; symbol lookup returned zero and coverage reported changed metadata, excluded `bin/`, and partial marathon.sh line 351. Used current worktree source instead; no completeness claim rests on that graph. Applied debug-mantra and SWE review principles. No source edits, git commands, suites or launcher runs.
+
+- [Should] **R1 — apply stale-contract holds to planner lanes without briefs too.** Plan step 3 (line 71) evaluates only “For a brief”; step 4 (line 74) explicitly emits planner lanes without briefs. `harness.py:440-445` copies every active record unless refused by a brief. A partially landed contract is still active because `_marathon_plan.py:1003-1011` removes only all-landed contracts. Consequently a lane outside the limited seed set bypasses this new check and is packed. Fix: evaluate the same read-only predicate for all candidate provisional lanes before packing, using `_eval_probe`, preserving the actual planner view; retain a reason for unbriefed lanes. Add an unseeded-lane manual control alongside the seeded control.
+  Observed input: a ready active record `gh=99999`, writeset `['utils/py/harness.py']`, no accepted briefs, contract probes `{'type':'path_absent','path':'utils/py/harness.py'}` and `{'type':'grep_absent','path':'utils/py/harness.py','pattern':'GH1270_NEVER_PRESENT_CONTROL'}`. Narrow Python probe invoked `Engine._eval_probe` and `_build_proposal` with packing/seam methods stubbed only to return supplied lanes: exit 0, decisive output `probe verdicts: ['landed', 'unfixed']`, `no-brief partial-landed provisional: [[{'issue': 99999, 'provisional': False, 'write_set': ['utils/py/harness.py']}]]`, `held: []`. This isolates admission, not planner packing correctness.
+  Affected scope: provisional planner lanes with any landed contract probe, including lanes with no seeded/accepted brief; leave unrelated all-unfixed lanes eligible.
+  Falsifier: the same no-brief record with two unfixed probes must remain eligible; the mixed landed/unfixed record must be held and absent from emitted packets even when it lies outside `--limit`.
+
+- [Should] **R2 — define accepted-proposal selection before consuming “latest wave-proposal.json.”** Plan line 74 names the mutable latest file plus accepted briefs but gives no rule for a latest proposal belonging to an unsuccessful tick. `harness.py:562-572` writes the proposal before the existing `fail-after-output` raises; `harness.py:1083-1093` then quarantines that attempt. Reading only accepted briefs does not remove an unaccepted lane already present in that proposal. Fix: use the existing completed/verified tick and receipt evidence to require the proposal itself belongs to an accepted tick and matches its recorded output hashes; simplest is to refuse packet generation when the latest proposal is unverified or mismatched, with a clear reason. No new gate or journal is needed. Specify a manual negative control and evidence destination.
+  Observed input: the existing literal fault `fail-after-output` at `utils/py/harness.py:571`, after `_atomic_write(out_dir / 'wave-proposal.json', ...)` at line 566; an unsuccessful tool can leave the newest proposal containing its own brief, while `_accepted_briefs` (`harness.py:928-933`) excludes its tick. This is a source-observed failure path; it was not run as a harness fixture here.
+  Affected scope: packet consumption of latest proposals from uncertain, failed, incomplete or output-mismatched attempts, while allowing successful verified proposals.
+  Falsifier: in a disposable clone, run the existing `fail-after-output` control after a completed draft, then request a packet: it must refuse the unverified latest proposal and emit no packet from it; a completed tick with matching receipt hashes must emit normally. Record under `TESTS-RESULTS/2026-10-30+GH-1270/` with provenance. [Unverified — needs clone run].
+
+- [Pass] **Reuse and packet shape are sound.** `_gh_state` consumes string-keyed frozen states (`_marathon_plan.py:463-473`), CLOSED Queue/In progress takes `already-closed` (`:994-997`), and readiness preserves existing state (`:1042-1045`). `extract_linked_issues` explicitly distinguishes closers from mentions (`wave_reconcile.py:1026-1065`). `_eval_probe` falls through to `blocked` for command probes (`_marathon_plan.py:362-386`). A narrow command `PYTHONDONTWRITEBYTECODE=1 python3` importing `marathon_yaml_emit` and calling `render([Lane(99999,'control',None,0)], {99999: Packet(99999,Path('PROJECT/2-WORKING/GH-99999-LAUNCH/brief.md'),'utils/py/harness.py')}, 'codex', Path('GH-99999-LAUNCH'))` from the repository root exited 0 and emitted `brief: PROJECT/2-WORKING/GH-99999-LAUNCH/brief.md` and `artifact: utils/py/harness.py`. Keep path construction anchored to the repository root because `brief_value` uses caller CWD (`marathon_yaml_emit.py:208-214`). One packet per lane agrees with the example's “phases run STRICTLY ONE AT A TIME” comment. Actual validator/copied-clone launcher acceptance is [Unverified — needs clone run].
+
+- [Nit] **Expose closed exclusions in the proposal/report.** Issue #1270 Acceptance says “#1075 ... listed as excluded with its reason,” whereas plan line 65 asks only for the planner's likely-done row. With the new early planner filter, #1075 never enters the candidate pool and therefore need not reach `manifest.excluded` (`harness.py:620-627`, `:472-486`). State where its already-closed reason is surfaced to the operator; carry it into the existing report rather than silently disappearing.
+
+- [Unverified — no citation] **Scope/rating fit the experiment.** The plan's “Changes stay in utils/py/harness.py,” “writes only under the run root,” and rating rationale at lines 97ff support the bounded 60/40/50/50 judgment. Preserve those constraints while fixing R1–R2. The plan-only red controls and byte-identical-ledger checks are appropriate; their execution and committed provenance remain implementation obligations, not evidence supplied by this review. Whole-plan sweep found no additional blocking pre-existing plan defects beyond the gaps recorded above.
+
+Handing off to Producer (claude-a) — address R1–R2 and disposition the nit, then open the next review round.
+
+### Producer · Round 2 · claude-a
+
+- **R1 — Implemented.** Step 3 now runs one `_eval_probe` helper over every candidate provisional lane in `_build_proposal`, including planner lanes with no seeded brief; any landed probe holds the lane with its reason (planner view unchanged). Seeded and unseeded controls, plus the all-unfixed falsifier, are in Plan step 3 and Acceptance.
+- **R2 — Implemented.** `packet` accepts the proposal only when the latest `completed` plan-draft receipt's `output_files["wave-proposal.json"]` equals the on-disk hash (completed ticks already record it, `harness.py` finish details); otherwise it refuses and writes nothing. The `fail-after-output` negative control and a clean positive control are in step 5 and Acceptance.
+- **Nit — Implemented.** The proposal gains a `Closed (excluded by frozen GitHub state)` section listing `already-closed` Queue / In progress rows, so #1075 is visible with its reason.
+- Kept `render` path construction anchored at the repository root, per your [Pass] note.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: R1, R2 and the closed-exclusion nit are resolved in the plan. The bounded read-only design reuses the existing owners; implementation and clone-run evidence remain required.
+swept file: yes
+
+Swept the entire plan and reread the named source sections, emitter, validator, launcher constraints and stale-contract note. No additional blocking pre-existing plan defects found. Graph Verify: `XYZ-forge` points to another checkout, generation `2026-09-01T15:54:30Z`; coverage reports changed metadata for harness/planner/reconciler, excluded `bin/`, and partial marathon.sh:351. Used current worktree source for those paths, including the reported range; no completeness claim rests on the stale graph. GitHub CLI issue reads exited 1 (`error connecting to api.github.com`); the GitHub connector subsequently fetched both issues successfully: [#1270](https://github.com/HiQS-Labs/XYZ-forge/issues/1270) is open and [#1075](https://github.com/HiQS-Labs/XYZ-forge/issues/1075) is closed/completed. No git, suites, executable fixtures or launcher runs.
+
+- [Pass] **R1 resolved at plan level.** Plan:71–75 explicitly applies the same helper to “every candidate provisional lane, including planner lanes with no seeded brief,” preserves the planner view, records holds, and specifies mixed-probe and all-unfixed controls. This covers the admission gap at `harness.py:440–445`; `_eval_probe` remains the predicate owner (`_marathon_plan.py:362–384`).
+- [Pass] **R2 resolved at plan level.** Plan:77 requires the latest completed plan-draft receipt's proposal hash to match before any packet write; :82 specifies failed-after-output and clean positive controls. The producer of that evidence already ships: `harness.py:1107–1110` records `output_files` on completion; `finish` persists those details in `receipts.json` (`:124–135`). No new evidence gate is being demanded without its producer. This is a feasible reuse of existing receipts, not a parallel journal.
+- [Pass] **Closed exclusions and packet contract.** Plan:63–66 now exposes `already-closed` rows in the proposal. `_marathon_plan.py:994–997,1042–1044` supports their exclusion. Plan:78–81 uses the existing `Lane`/`Packet`/`render` API (`marathon_yaml_emit.py:31–43,226–266`); root-relative briefs agree with `marathon.sh:590–596`, and copied packet location agrees with :421–449. Keep rendering anchored to repo CWD as recorded in the Producer disposition (`brief_value`, emitter:208–214).
+- [Pass] **Scope and rating.** Plan:21–26,56,63–80 confines new GitHub reads to init, packet writes to the run root and implementation to harness.py, with no planner/schema/launcher changes. Command probes fall through to `blocked` (`_marathon_plan.py:382`); closers and mentions stay distinct (`wave_reconcile.py:1026–1060`). The 60/40/50/50 rationale (Plan:102) is reasonable for an operator-approved local experiment; no additional machinery is warranted.
+- [Unverified — needs clone run] **Execution remains an implementation obligation.** Plan:75,81–92 specifies the seeded/unseeded stale controls, proposal refusal, nonempty pilot packets, validator/copied-clone dry run, ledger identity and evidence destination. Record their witnessed red/green outcomes and committed provenance under `TESTS-RESULTS/2026-10-30+GH-1270/`; this review approves the plan, not those unperformed runs.
+
+Narrow, non-mutating helper probe ledger (exit 0; no packet files written). Exact command after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`:
+
+```sh
+python3 - <<'PYPROBE'
+import sys
+from pathlib import Path
+sys.path.insert(0, 'utils/py')
+from marathon_yaml_emit import Lane, Packet, render, EmitError
+from wave_reconcile import extract_linked_issues
+from _marathon_plan import Engine
+engine = Engine.__new__(Engine)
+engine.ROOT = str(Path.cwd())
+engine._read_file_safe = lambda path: Path(path).read_text()
+print('mixed probes:', [engine._eval_probe(p) for p in [
+    {'type': 'path_absent', 'path': 'utils/py/harness.py'},
+    {'type': 'grep_absent', 'path': 'utils/py/harness.py', 'pattern': 'GH1270_NEVER_PRESENT_CONTROL'}]])
+print('command probe:', engine._eval_probe({'type': 'command', 'command': 'SHOULD NEVER EXECUTE'}))
+print('PR refs:', extract_linked_issues({'title':'control', 'body':'Fixes #99991. Related #99992.'}, 'HiQS-Labs/XYZ-forge'))
+yaml = render([Lane(99991, 'control', None, 0)], {99991:Packet(99991, Path('PROJECT/2-WORKING/GH-99991-LAUNCH/brief.md'), 'utils/py/harness.py')}, 'codex', Path('GH-99991-LAUNCH'))
+print(yaml)
+try:
+    render([Lane(99991, 'control', None, 0)], {99991:Packet(99991,Path('brief.md'),'')},'codex',Path('GH-99991-LAUNCH'))
+except EmitError as exc:
+    print('empty artifact refused:', str(exc))
+else:
+    raise AssertionError('empty artifact accepted')
+PYPROBE
+```
+
+Decisive output: `mixed probes: ['landed', 'unfixed']`; `command probe: blocked`; `PR refs: ([99991], [99992])`; emitted `brief: PROJECT/2-WORKING/GH-99991-LAUNCH/brief.md` and `artifact: utils/py/harness.py`; negative control `empty artifact refused: artifact from packet brief.md cannot be represented by the constrained MARATHON.yaml reader: ''`. These measure the reused helpers only, not the planned admission or packet command.
+
+Relay closed (Approved), no further turn needed.
+
+
+### Attestation · relay-drive — 2026-10-30T17:31:51Z
+task: RELAY-gh1270-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 48bf21d3aafa535185ba35d964fd224fc95a6048
+added-range: 15426+5375
+added-sha256: df776f27ee091bb6952022c65971784d5649e795e578359df10e85407afb68e1
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

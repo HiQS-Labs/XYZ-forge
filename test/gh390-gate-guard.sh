@@ -72,12 +72,16 @@ HOG_EOF
 MOCK_HOG="$WORK/gh382-magicmock-while-true.py"
 cat > "$MOCK_HOG" << 'MOCK_HOG_EOF'
 from unittest.mock import MagicMock
+import time
 
 page = MagicMock()
 calls = 0
 while True:
     page()
     calls += 1
+    # Allow one-second RSS polling to observe growth before the safety ceiling.
+    if calls % 1_000 == 0:
+        time.sleep(0.01)
     if calls >= 500_000:
         raise SystemExit("fixture safety ceiling reached before the guard fired")
 MOCK_HOG_EOF

@@ -1,0 +1,13 @@
+{
+ "controls": {
+  "QA-88217eb238": "invented-file",
+  "QA-17783046d5": "unsupported-scope",
+  "QA-480b68bddb": "criteria-artifact-mismatch",
+  "QA-1f69f40680": "missing-verification",
+  "QA-aececf8b8c": "prohibited-new-test",
+  "QA-ba160b7212": "stale-marked-ready",
+  "QA-bef8640848": "collision-a",
+  "QA-70d4cb2bfe": "collision-b"
+ },
+ "seed_note": "controls are flawed by construction; an APPROVE is a false approval"
+}

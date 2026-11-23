@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-11-08T12:11:59.259271+00:00",
+  "observer_pid": 26689,
+  "silence_threshold_s": 120,
+  "observation_interval_s": 15,
+  "active_pass_limit_s": 10800,
+  "host_loss_coverage": false,
+  "authority": "observe only; no work-state writes or recovery",
+  "phase": "published",
+  "checkpoint": "661d08cad249b7815aac21269fb581a18eaaea09",
+  "journal_age_s": 68.1,
+  "supervisor_pid": null,
+  "owned_supervisor_alive": false,
+  "runner_head": "c50b7616fbe5fabc56705e7894dc9a6cf5b13d6d",
+  "committed_head_changed": false,
+  "driver_heartbeat": null,
+  "alarm": false,
+  "status": "RECENT_COMPLETION",
+  "alert_transition": false,
+  "recovery_transition": false
+}

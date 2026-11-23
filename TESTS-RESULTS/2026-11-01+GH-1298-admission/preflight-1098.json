@@ -1,0 +1,202 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-02T02:57:44Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1098-shift-phase3"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-admission-2026-11-01/PROJECT/2-WORKING/GH-1098-SHIFT-PHASE3.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-admission-2026-11-01",
+    "branch": "docs/XYZ-forge-gh1298-admission-census-2026-11-01",
+    "commit": "aba591006af268e2ae6c16cbca0aebb94c101a73",
+    "suggested_branch": "marathon/gh-1098-shift-phase3-2026-11-02",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash ci-local.sh",
+    "fix_probes": [
+      {
+        "type": "grep_present",
+        "path": "utils/py/jog_run.py",
+        "pattern": "preflight_py = os.path.join\\(home, \"utils\", \"py\", \"swarm_preflight.py\"\\)\\n    if not os.path.isfile\\(preflight_py\\):",
+        "note": "pre-fix: preflight resolved only from harness_home (A1); landed when the root-first resolution replaces it"
+      },
+      {
+        "type": "grep_absent",
+        "path": "utils/py/jog_run.py",
+        "pattern": "RELAY_TURN_IDLE_S",
+        "note": "landed when jog sets the idle bound for dispatched lanes (A3)"
+      },
+      {
+        "type": "grep_absent",
+        "path": "utils/py/swarm_preflight.py",
+        "pattern": "validate.sh --auto",
+        "note": "landed when preflight routes the default full gate (A4)"
+      }
+    ],
+    "artifacts": [
+      "utils/py/jog_run.py",
+      "utils/py/swarm_preflight.py"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#1098",
+      "criteria": "A1 preflight resolved from root with SWARM_PREFLIGHT_ROOT; A2 promoted docs carry updated/owner/goal; A3 dispatched env sets RELAY_TURN_IDLE_S to the wall cap unless exported; A4 default full gate rewritten to bash validate.sh --auto <ref> and recorded in the packet."
+    },
+    "lanes": {
+      "agy_safe": [
+        "utils/py/jog_run.py",
+        "utils/py/swarm_preflight.py"
+      ],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "aba591006af268e2ae6c16cbca0aebb94c101a73",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ambiguous",
+    "probes": [
+      {
+        "type": "grep_present",
+        "path": "utils/py/jog_run.py",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "grep_absent",
+        "path": "utils/py/jog_run.py",
+        "verdict": "landed"
+      },
+      {
+        "type": "grep_absent",
+        "path": "utils/py/swarm_preflight.py",
+        "verdict": "landed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1098 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-issue-section",
+      "detail": "issue #1098 has no '## Acceptance' section \u2014 nothing to copy from",
+      "issue": "1098",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1098 (https://github.com/HiQS-Labs/XYZ-forge/issues/1098)",
+      "issue": "1098",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1098",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 0,
+      "scope": "whole-document",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [
+      "utils/py/jog_run.py",
+      "utils/py/swarm_preflight.py"
+    ],
+    "effective_artifacts": [
+      "utils/py/jog_run.py",
+      "utils/py/swarm_preflight.py",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

@@ -105,6 +105,18 @@ new defect, known rediscovery, expected refusal, flaky/inconclusive observation,
 Promptly surface critical/high impact for review; defer lower severity unless selected. Link
 back to the Radar tracking context or existing results issue within authorized destinations;
 otherwise return the proposed backlink/update for approval. Do not silently file duplicates.
+Optionally, for a `new defect` or `faulty oracle` disposition backed by a semantic replay,
+draft a candidate `LESSONS-LEARNED.md` entry (`## <short title>` with `- **cue**:` = the shape
+of the cluster [target + violated invariant], `- **lesson**:` = the checkable operation naming
+the component, `- **evidence**:` = the semantic replay result + the repo-relative
+`TESTS-RESULTS/` path, `- **confidence**:`, `- **area**:` = the target's subsystem
+[`relay | marathon | pdda | gate | skills | releases`], `- **source**:`, `- **date**:`, and
+optional `- **superseded-by**:`) or state `NO_ENTRY`, staying strictly inside this skill's
+approval boundary (propose the draft for approval; do not write `LESSONS-LEARNED.md` without it):
+- **Admission:** refuse an entry whose `cue`, `lesson` or `evidence` is empty. Adoption or a merge alone is not evidence. Writing `NO_ENTRY` is a valid outcome.
+- **Edit verdicts:** before drafting, write one row per changed component: `helped` / `hurt` / `no observed effect` / `confounded`. Use `confounded` when several things changed at once or a single run is the only support. A lesson resting only on `confounded` rows is refused.
+- **Public evidence:** use repo-relative paths to committed `TESTS-RESULTS/` receipts, stable IDs, or public issue/PR/commit links. Never paste DB narratives, transcripts, credentials, hostnames or absolute paths.
+- **ATE/fuzz evidence (Phase 6a):** it counts only after semantic replay, and the cited record must show the predicate and the clean/failing controls. A raw cluster, or a replay matched only by digest or exit code, is `confounded`.
 
 A report may contain zero defects. State exercised, excluded and unresolved coverage and
 budgets actually used; a clean bounded run never proves an entire bug class eradicated.

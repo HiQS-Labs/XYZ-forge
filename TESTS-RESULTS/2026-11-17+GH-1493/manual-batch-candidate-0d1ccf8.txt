@@ -1,0 +1,9 @@
+PRESERVED <work>/XYZ-forge-gh9-x-2026-11-17-gate: checkout origin (<work>/XYZ-forge-gh9-x-2026-11-17) differs from the protected primary (https://github.com/HiQS-Labs/XYZ-forge.git); a -gate/-verify helper must keep the canonical origin — clone the task clone, then: git -C <helper> remote set-url origin https://github.com/HiQS-Labs/XYZ-forge.git
+PRESERVED <work>/other-repo-clone: checkout origin (https://github.com/other/repo.git) differs from the protected primary (https://github.com/HiQS-Labs/XYZ-forge.git); a -gate/-verify helper must keep the canonical origin — clone the task clone, then: git -C <helper> remote set-url origin https://github.com/HiQS-Labs/XYZ-forge.git
+PRESERVED <work>/not-a-git-dir: not a Git checkout
+[table <work>/XYZ-forge-gh9-x-2026-11-17]
+EXIT 1
+CALL inspect <work>/XYZ-forge-gh9-x-2026-11-17 9
+CALL refresh <work>/XYZ-forge-gh9-x-2026-11-17 9
+CALL teardown <work>/XYZ-forge-gh9-x-2026-11-17 True
+CALLS 3

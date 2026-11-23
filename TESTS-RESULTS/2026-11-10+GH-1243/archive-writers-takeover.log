@@ -1,0 +1,11 @@
+== test: archive-writers ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-archive-writers.XXXXXX.JTxvbtzEwE
+  PASS: consult, XYZ_ARCHIVE_ROOT unset → $ROOT/relay-system/<date>/ (regression-safe)
+  PASS: consult, XYZ_ARCHIVE_ROOT set → $archive/relay-system/<slug>/<date>/ (namespaced)
+  PASS: consult, explicit --out wins and skips the archive redirect
+  PASS: consult, set-but-invalid XYZ_ARCHIVE_ROOT → hard fail, no fallback into the target repo
+  PASS: consult.sh: sources + calls rtl_transcript_root, no hardcoded default, resolver rc not masked
+  PASS: marathon-drive.sh: sources + calls rtl_transcript_root, no hardcoded default, resolver rc not masked
+  PASS: relay-drive.sh: sources + calls rtl_transcript_root, no hardcoded default, resolver rc not masked
+  PASS: swarm-preflight.sh: sources + calls rtl_transcript_root, no hardcoded default, resolver rc not masked
+== archive-writers: 8 passed, 0 failed ==

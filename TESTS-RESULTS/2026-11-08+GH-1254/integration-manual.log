@@ -1,0 +1,1 @@
+{"passed": 21, "comparison": {"without": {"scenario_sha256": "202d5c33419c1c5afb02a01b292047ee4fe757a27cfcf2d42812fcefd26307cf", "calls": 3, "modeled_cost": 0.03, "consumed": 3}, "with": {"scenario_sha256": "202d5c33419c1c5afb02a01b292047ee4fe757a27cfcf2d42812fcefd26307cf", "calls": 1, "modeled_cost": 0.01, "consumed": 3}}}

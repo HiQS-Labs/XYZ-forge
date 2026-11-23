@@ -1,0 +1,10 @@
+diff --git a/README.md b/README.md
+index 61cbb466c..c5dd9af96 100644
+--- a/README.md
++++ b/README.md
+@@ -322,3 +322,5 @@ Separately licensed third-party skill bundles retain their own terms; see [worth
+ 
+ AGPL-3.0-only. A commercial license is available — see
+ [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md).
++
++<!-- GH1399 isolated qualification accounting baseline probe. -->

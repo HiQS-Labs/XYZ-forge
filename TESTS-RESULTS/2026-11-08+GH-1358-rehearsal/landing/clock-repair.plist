@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>CODEX_REASONING_EFFORT</key>
+		<string>low</string>
+		<key>LANE_MAX_ATTEMPTS</key>
+		<string>2</string>
+		<key>MARATHON_GATE_WALL_S</key>
+		<string>900</string>
+		<key>PATH</key>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<key>PYTHONUNBUFFERED</key>
+		<string>1</string>
+		<key>RELAY_TURN_IDLE_S</key>
+		<string>900</string>
+		<key>RELAY_TURN_TIMEOUT_S</key>
+		<string>900</string>
+	</dict>
+	<key>Label</key>
+	<string>com.xyz-forge.gh1358-live-checkpoint</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python</string>
+		<string>-c</string>
+		<string>import argparse,datetime,json,os,sys
+from pathlib import Path
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge')
+source=Path('/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54')
+base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg')
+assert (datetime.datetime.fromisoformat('2026-11-08T19:06:18+00:00')-datetime.datetime.now(datetime.timezone.utc)).total_seconds()&gt;=900
+sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogSupervisorLock,JogCheckpoint,_jog_retry_build_locked
+lock=JogSupervisorLock(str(primary));lock.acquire()
+try:
+ checkpoint=JogCheckpoint(str(primary),str(base/'publisher'))
+ if not checkpoint.begin():raise SystemExit('checkpoint recovered only; no dispatch')
+ args=argparse.Namespace(builder='codex',reviewer='agy',auto_merge=False,target_root=str(base/'runner'))
+ try:rc=_jog_retry_build_locked(str(primary),1254,args)
+ finally:checkpoint.finish()
+finally:lock.release()
+raise SystemExit(rc)
+</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/clock-repair.stderr.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/clock-repair.stdout.log</string>
+	<key>WorkingDirectory</key>
+	<string>/Users/noelsaw/Documents/GitHub/XYZ-forge</string>
+</dict>
+</plist>

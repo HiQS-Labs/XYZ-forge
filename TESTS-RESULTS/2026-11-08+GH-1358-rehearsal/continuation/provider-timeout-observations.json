@@ -1,0 +1,10 @@
+{
+  "source_path": "/Users/noelsaw/.gemini/antigravity-cli/log/cli-20261108_003547.log",
+  "source_sha256": "7b53743196f88ec59b41a46b4afa4248fa71a4d5dd530b7a47a8a35d62321305",
+  "selected_lines": [
+    "I1108 00:49:12.899919    5924 runner.go:453] Monitor severe_internal_risks_agy SKIPPED",
+    "I1108 00:50:17.729262    6130 runner.go:845] Monitor sir_flash_lite FINISHED: triggered=false, reason=\"The agent is running a local Python script to test a regular expression for sanitizing untrusted input against canary test files and markdown documents. This is a routine local test and debugging activity.\", duration=2.0575485s",
+    "I1108 00:50:49.453867      85 server.go:3978] Got signal terminated, shutting down"
+  ],
+  "interpretation": "local command evaluation near wall cap; lock deadlock not established; no patch produced"
+}

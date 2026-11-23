@@ -1,0 +1,17 @@
+swarm-preflight · project-doc · slug=gh-1160-local-reconcile-startup
+  target-root : /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner (development @ cce502786)
+  branch      : suggested=marathon/gh-1160-local-reconcile-startup-2026-11-08 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=2 behind=1 dirty=0
+  ref-probed  : development @ cce502786 (checkout matches)
+  candidate   : ready
+  inlined-acc : 2 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1160 (https://github.com/HiQS-Labs/XYZ-forge/issues/1160)
+  acceptance  : diverged — 1 issue criterion(a) missing from the doc with no declared deviation; 1 doc criterion(a) absent from the issue with no declared deviation
+  issue-state : OPEN — issue #1160 is OPEN
+    MISSING FROM DOC (issue says): `pdda.sh run` is clean.
+    NOT IN ISSUE  (doc says)     : pdda.sh run is clean.
+  readiness   : ready=0 — next: acceptance criteria diverge from issue #1160 — 1 issue criterion(a) missing from the doc with no declared deviation; 1 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <text> — reason: <why>'
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : NOT-READY (exit 5)
+
+No packet written — candidate is not preflight-ready (NOT-READY).

@@ -1,0 +1,14 @@
+case=instance-path-guard
+started_at=2026-10-29T04:06:50.511586+00:00
+repo=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28
+run_root=temp/factory-primitive/evidence/checkpoint2/instance-path-guard
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/instance-path-guard init --instance ../escape
+exit_code=2
+stdout:
+
+stderr:
+factory-primitive: instance must be a simple name without path separators
+
+finished_at=2026-10-29T04:06:50.541293+00:00
+verdict=PASS
+detail=path-like instance name rejected before initialization

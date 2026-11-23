@@ -158,6 +158,13 @@ if a[:2] == ["pr", "merge"]:
     finally:
         shutil.rmtree(w, ignore_errors=True)
     sys.exit(0)
+if a[:2] == ["pr", "checks"]:  # GH-1226: st["checks"][N] = [{"name":..,"bucket":..}]; absent = none required
+    checks = st.get("checks", {}).get(a[2])
+    if checks is None:
+        print(f"no required checks reported on the '{st['base']}' branch", file=sys.stderr); sys.exit(1)
+    print(json.dumps(checks))
+    buckets = {c["bucket"] for c in checks}
+    sys.exit(1 if buckets & {"fail", "cancel"} else 8 if "pending" in buckets else 0)
 print("stub: unknown " + " ".join(a), file=sys.stderr); sys.exit(9)
 '''
 
@@ -220,8 +227,36 @@ class LedgerFixture(unittest.TestCase):
         self.save()
         return head
 
+    def pin(self, prs=None, branch="development"):
+        """GH-1226: stand in for the dry run — pin the open PRs (or `prs`) at their current heads."""
+        open_prs = {int(n): p for n, p in self.st["prs"].items() if p["state"] == "OPEN"}
+        nums = sorted(open_prs) if prs is None else list(prs)
+        heads = {str(n): _git(self.probe, "ls-remote", str(self.origin), "refs/heads/" + open_prs[n]["headRefName"]).stdout.split()[0]
+                 for n in nums if n in open_prs}
+        path = merge_cleanup.selection_path(self.primary.resolve(), merge_cleanup.origin_url(self.primary) or "", branch)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"integration": branch, "prs": heads}))
+        return nums
+
+    def assert_repinned(self, n):
+        """GH-1475 (P2.1): a B1-repaired head lands in the run that pushed it, once its checks pass
+        on that exact commit; the run re-pins it instead of deferring it to a second dry run."""
+        self.assertNotIn(f"PR #{n}: DEFERRED — head", self.err)
+        pr = self.load()["prs"][str(n)]
+        self.assertEqual(pr["state"], "MERGED", self.err)
+        path = merge_cleanup.selection_path(self.primary.resolve(), merge_cleanup.origin_url(self.primary) or "",
+                                            "development")
+        self.assertEqual(json.loads(path.read_text())["prs"][str(n)], pr["headRefOid"],
+                         "the published selection must pin the repaired head that merged")
+
     def run_main(self, execute=True, extra=()):
-        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.tmp / "no-roots")] + list(extra)
+        extra = list(extra)
+        self.load()
+        if (execute and "--prs" not in extra and not {"--teardown-only", "--scan-only", "--prs-only"} & set(extra)):
+            nums = self.pin()
+            if nums:
+                extra += ["--prs", ",".join(map(str, nums))]
+        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.tmp / "no-roots")] + extra
         if execute:
             argv.append("--execute")
         err = io.StringIO()
@@ -389,7 +424,8 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
         self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2", rated="60/40/50/70"))
         rc = self.run_main()
-        self.assertEqual(rc, 4)  # GH-1064: landed, QA pending (no sweep verdict yet); Phase 6 still ran
+        self.assert_repinned(2)  # GH-1475 (P2.1): PR 2's repaired head is re-pinned in the same run
+        self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending (no sweep verdict yet); Phase 6 still ran
         st = self.load()
         self.assertEqual({p["state"] for p in st["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
@@ -439,19 +475,20 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.assertTrue(1 <= len(polls) < merge_cleanup.MERGEABLE_POLL_ATTEMPTS, sleeps)
         self.assertIn("waiting 15s for GitHub to decide", out.getvalue())
 
-    def test_exclude_pr_number_drops_it_from_the_queue(self):
-        # GH-736: `--exclude <N>` (SKILL.md example 6) removes PR N from the queue; before the
-        # fix it filtered checkouts only and PR N was still merged.
-        self.branch("feat/a", 1, lambda r: park(r, 200, "excluded"))
+    def test_unlisted_pr_is_never_sequenced(self):
+        # GH-1226 (was GH-736's --exclude): --prs is an allowlist pinned by the dry run. PR 1 is
+        # open but unlisted, so it is never sequenced or merged; PR 2 lands at its pinned head.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "unlisted"))
         self.branch("feat/b", 2, lambda r: park(r, 201, "kept"))
+        self.pin([2])
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            rc = self.run_main(extra=("--exclude", "1"))
+            rc = self.run_main(extra=("--prs", "2"))
         self.assertEqual(rc, 0, self.err)
         st = self.load()
         self.assertEqual(st["prs"]["1"]["state"], "OPEN")
         self.assertEqual(st["prs"]["2"]["state"], "MERGED")
-        self.assertIn("PR #1: excluded by --exclude", out.getvalue())
+        self.assertIn("PR #1: not in --prs; not sequenced", out.getvalue())
 
     def _error_after_first_read(self, msg):
         """GH-736: the first land-loop read is real (UNKNOWN via force_mergeable); every read after

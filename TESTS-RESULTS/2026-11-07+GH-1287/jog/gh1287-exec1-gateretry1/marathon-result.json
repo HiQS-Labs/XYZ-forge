@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1287-exec1-gateretry1",
+  "generated_at": "2026-11-07T23:27:12Z",
+  "outcome": "approved",
+  "reason": "already-satisfied",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1287",
+  "phase": "gh-1287-fuzz-novelty-signature",
+  "lane": "gh-1287-fuzz-novelty-signature",
+  "token": "MARATHON-GH-1287-FUZZ-NOVELTY-SIGNATURE-TURN",
+  "attempt": {
+    "count": null,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1356-1287-runner-20261107",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": null,
+  "head_branch": "marathon/gh-1287-fuzz-novelty-signature-2026-11-07",
+  "head_sha": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+  "reviewed_candidate": "b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0",
+  "reviewed_head": "99aa9e262701d9b0947c6ac49289cd9e5200ac9d",
+  "added_sha256": "0fe0d091b579b9acab59a5380b88946c74dba453ce5b24691aeb6b9178d69f2e",
+  "attest_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1356-1287-runner-20261107/.git/relay-attest/MARATHON-GH-1287-FUZZ-NOVELTY-SIGNATURE-TURN.json",
+  "branch_redirect": false,
+  "gate": {
+    "cmd": "python3 -m pytest test/test_python_layer.py",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1356-1287-runner-20261107/.xyz/receipts/b39b9a2fe55c4a8509456d9171a5ec539d4f2cf0.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-07T23:27:01Z",
+    "finished_at": "2026-11-07T23:27:12Z"
+  }
+}

@@ -1,0 +1,23 @@
+== test: gh322-unknown-arg-rejection ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh322-unknown-arg-rejection.XXXXXX.6V4bTbDdd4
+  PASS: marathon-drive: Python lane rejects an unknown flag (exit 2)
+  PASS: marathon-drive: both lanes exit 2 on an unknown flag
+  PASS: marathon-drive: Python lane names the offending flag
+  PASS: marathon-drive: Bash lane names the offending flag
+  PASS: marathon-drive: both lanes emit an identical diagnostic line
+  PASS: relay-drive: Python lane rejects an unknown flag (exit 2)
+  PASS: relay-drive: both lanes exit 2 on an unknown flag
+  PASS: relay-drive: Python lane names the offending flag
+  PASS: relay-drive: Bash lane names the offending flag
+  PASS: relay-drive: both lanes emit an identical diagnostic line
+  PASS: swarm-preflight: Python lane rejects an unknown flag (exit 2)
+  PASS: swarm-preflight: both lanes exit 2 on an unknown flag
+  PASS: swarm-preflight: Python lane names the offending flag
+  PASS: swarm-preflight: Bash lane names the offending flag
+  PASS: swarm-preflight: both lanes emit an identical diagnostic line
+  PASS: swarm-preflight: Python lane prints usage before the diagnostic, not after
+  PASS: --log-github is a recognised flag on the Python lane (GH-284 P2 ported)
+  PASS: no stale 'use the Bash twin' workaround is advertised for --log-github
+  PASS: --log-github alone falls through to the ordinary required-argument error
+  PASS: --help still exits 0 on the Python lane
+  gh322-unknown-arg-rejection: 20 pass, 0 fail

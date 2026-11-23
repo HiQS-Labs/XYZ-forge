@@ -1,0 +1,37 @@
+PASS: red-control-0: pre-fix planner_core.py rejects --mode ledger with exit 2 (rc=2)
+PASS: run1: --mode ledger --publish-ledger exits 0 (daily ledger comment on #200: created comment on #200 (started:2026-11-14T01:49:35Z)
+daily ledger (gh-only): 2 carryover, 3 assigned, 1 reviews, 1 remediations, 3 collision(s), 0 coverage gap(s) → /Users/noelsaw/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-Pjj82b/gh1459-smoke-hglsuxzm/repo/temp/planner/DAILY-LEDGER-2026-11-13.md)
+PASS: run1: writes daily-ledger JSON and MD artifacts
+PASS: AC1: selects min(number) #200 as canonical today_ledger over #201
+PASS: AC1: records both #200 and #201 in today_duplicates
+PASS: AC1: paginates 100-row mixed page to select 2026-11-12 (ignoring backfilled 2026-10-01 and non-ledger #260) and canonical #100 from page 2
+PASS: AC1/AC2: cross-device carryover retains open #102 from laptop-a on studio-b and rejects forged #998 & quoted line-2 #997
+PASS: AC1: carryover retains open PR #56
+PASS: AC1: closed #101 and merged PR #55 move to completed_since_last_ledger
+PASS: AC2: earliest_starter is bob (08:00Z from duplicate #201), rejecting mallory's forged 07:00Z marker on #200
+PASS: AC2: bob's verified claims (#999, #102) have provenance verified-ledger-claim
+PASS: AC2: forged marker (#998) and quoted line-2 marker (#997) excluded from verified-ledger-claim
+PASS: AC2: clean tracked git worktree (feat/gh-996-clean, 0 dirty, 0 ahead) surfaces as local-device-only
+PASS: AC2: read-only tick claims --json surfaces gh-995 as local-device-only
+PASS: AC2: collisions flagged for #102 (bob's verified claim), #995 (tick claim), and #996 (clean linked worktree)
+PASS: AC3: surfaces PR #58 requesting noelsaw1's review
+PASS: AC3: flags PR #56 with isResolved==false thread and excludes PR #57 with only isResolved==true threads
+PASS: AC3: first same-day --publish-ledger creates comment on canonical #200
+PASS: AC3: second same-day run PATCHes existing comment and preserves original started timestamp
+PASS: AC3 red control: first-time POST with --operator != auth_login exits 3
+PASS: AC3 red control: PATCH against forged comment (comment.user.login != auth_login) exits 3
+PASS: AC3 control: len(prs) >= 300 marks coverage['open PRs'] as truncated
+PASS: AC1 red control (disc_fail): exits 3 on --publish-ledger without creating a duplicate issue
+PASS: AC1 red control (disc_trunc): exits 3 on --publish-ledger without creating a duplicate issue
+PASS: AC2 red control: corrupt .tick/events causes tick claims coverage to report 'failed' (no parallel Python replay)
+PASS: AC4: plain git repo without .xyz/ or releases.db auto-detects gh-only
+PASS: AC4: repo with .xyz/ and no releases.db auto-detects vendored and skips releases.db
+PASS: AC4: XYZ_DAILY_LEDGER_MODE overrides auto detection
+PASS: AC4: --repo-mode CLI flag overrides XYZ_DAILY_LEDGER_MODE env
+PASS: AC5: daily-planner/SKILL.md and weekly-planner/SKILL.md contain all required Daily Work Ledger sections
+PASS: AC5 red control: removing '## Daily Work Ledger' causes the doc probe to fail
+PASS: AC2/AC3 round-trip publish->parse: Alice's published digest comment yields only Alice's active claims (issues=[101], prs=[55]), excluding Bob's GH-999, review PR #888, and ledger links #1459/#1450
+PASS: AC2 red control: multi-section digest without fenced active-claims block fails closed (issues=[], prs=[]) instead of scraping peer checkouts or ledger links
+PASS: AC3 red control: GraphQL errors array marks PR review threads coverage as 'failed' (GraphQL errors present: unavailable)
+PASS: AC3 red control: null GraphQL pullRequest/reviewThreads node marks PR review threads coverage as 'failed' (GraphQL pullRequest/reviewThreads node missing or null for PR(s): [56])
+== GH-1459 SMOKE SUMMARY: 35 PASS / 0 FAIL ==

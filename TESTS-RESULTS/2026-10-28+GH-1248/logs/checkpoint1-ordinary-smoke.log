@@ -1,0 +1,58 @@
+case=ordinary-smoke
+started_at=2026-10-29T03:07:54.421272+00:00
+repo=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28
+run_root=temp/factory-primitive/evidence/checkpoint1/ordinary-smoke
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/ordinary-smoke init --daily-cap 1 --max-call-cost 0
+exit_code=0
+stdout:
+{"instance":"/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28/temp/factory-primitive/evidence/checkpoint1/ordinary-smoke/instances/C","status":"initialized"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/ordinary-smoke tick --slot 1
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_001"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/ordinary-smoke tick --slot 2
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_002"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/ordinary-smoke tick --slot 3
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_003"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/ordinary-smoke tick --slot 4
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_004"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/ordinary-smoke status
+exit_code=0
+stdout:
+{
+  "paused": false,
+  "pending": 23,
+  "quarantined": 0,
+  "spent_or_reserved": 0,
+  "ticks": {
+    "completed": 4
+  },
+  "unknown_cost": false
+}
+
+stderr:
+
+finished_at=2026-10-29T03:07:54.810676+00:00
+verdict=PASS
+detail=four actions completed; 23 later-slot canaries remain pending

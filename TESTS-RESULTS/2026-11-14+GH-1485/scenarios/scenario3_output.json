@@ -1,0 +1,9 @@
+{
+  "test": "Control 3: Catalyst Separation",
+  "primary_failure_raw": "cannot lock ref (concurrency/git state)",
+  "primary_plane": "Concurrency / State",
+  "amplifying_symptom_raw": "No space left on device (storage plane, retained clones)",
+  "catalyst_plane": "System / Resource",
+  "planes_separated": true,
+  "verdict": "PASS"
+}

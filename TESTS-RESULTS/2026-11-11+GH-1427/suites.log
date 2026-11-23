@@ -1,0 +1,7 @@
+Focused existing suites, disposable -verify full clone, commit e9ff76adc (all rc=0):
+claude-turn 37/0 · gh432-failed-turn-persist 12/0 · worktree-isolation 33/0 · gh379-claude-builder-diagnosis rc0 ·
+gh642-consumer-fruit 62/0 · gh372-escalation-log-tail 3/0 · gh380-claude-trust rc0 · gh610-claude-subscription rc0 ·
+relay-turn-trace 22/0 · gh91-relay-scratch 22/0 · gh113-headless-scratch 27/0 · gh2-orphan-backup-repro 12/0 ·
+rtl-orphan-backup 8/0 · gh386-turn-budget-honesty 10/0 · relay-pkg-freshness 3/0
+gh308-frozen-twin-guard --check --base origin/development: no frozen Bash twin changed; no new Bash under utils/ or relay-automation/
+Re-run after a4836f6c6 (modelUsage fallback): claude-turn 37/0 · gh432-failed-turn-persist 12/0 · gh642-consumer-fruit 62/0

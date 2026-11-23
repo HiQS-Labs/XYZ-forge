@@ -1,0 +1,28 @@
+# Smoke — tested code: task clone at fb38cc5db2a4 (merge_cleanup.py, wave_reconcile.py); primary: disposable full clone of HiQS-Labs/XYZ-forge on development 5967bde2; global git config isolated to credentials only (the machine's Jog primary pin names the maintained checkout)
+
+## Main path: real dry run --prs 1471
+log streamed live: 65 lines within 10 s while running (P1.2)
+## main path: dry run --prs 1471 (live log, PRE-FLIGHT, workdir)
+rc=0
+merge-cleanup: Pinned for --execute: --prs 1471@5fe66783dd42c07bb27862a1ce971240ffd7b2a0
+merge-cleanup: Landing clones retained for inspection under /tmp/merge-cleanup-3sogv65t
+## adjacent: rerun the same dry run (second invocation)
+rc=0
+merge-cleanup: Landing clones retained for inspection under /tmp/merge-cleanup-t7bsn3ba
+merge-cleanup-* dirs in /tmp before=36 after=38
+## adjacent: --reconcile-pr 1444 dry run (merged PR, no writes) and --record-sweep with no batch
+rc=0
+merge-cleanup: [DRY RUN] Would run wave_reconcile.py --pr 1444 locally
+rc=2
+merge-cleanup: ERROR — no merge batch with QA pending for <repos>/XYZ-forge-gh1475-merge-cleanup-remediation-2026-11-14-verify on 'development'
+
+PR #1471 (and every other open PR: 1467, 1460, 1417, 1413) is CONFLICTING, so the dry run takes the B1 path: "B1 stopped — [DRY RUN] B1 would keep the theirs side..." sets keep_workdir and returns 0. P1.3 correctly keeps that workdir. This is the pre-existing P2.8 behaviour (dry run stops at the first ledger hub) and means conflicting dry runs still retain clones until P2.3/P2.8. A clean-path removal is witnessed by manual-check P1.3 on the real _land_prs_loop.
+
+## Main path with forced PRE-FLIGHT conditions (stub pmset/pgrep on PATH, nested TMPDIR)
+merge-cleanup: WARNING — PRE-FLIGHT: running on battery; use wall power and caffeinate for an unattended batch
+merge-cleanup: WARNING — PRE-FLIGHT: TMPDIR is <scratch>/harness-turn-C3Ps; a harness may delete a per-turn temp dir mid-run. Prefer TMPDIR=/tmp
+merge-cleanup: WARNING — PRE-FLIGHT: another merge_cleanup.py --execute is running (pid 424242); run one landing batch per machine
+merge-cleanup: Landing clones retained for inspection under <scratch>/harness-turn-C3Ps/merge-cleanup-__gthbra
+(disk warning silent: 24 GB free >= 20 GB threshold)
+
+Verdict: pass — live log, pin, PRE-FLIGHT block, keep-flag retention, dry-run --reconcile-pr writes nothing, --record-sweep without a batch exits 2 as before.

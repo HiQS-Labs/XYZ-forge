@@ -1,0 +1,22 @@
+[
+  {
+    "case": "actual-owned",
+    "matched": true,
+    "expected": true
+  },
+  {
+    "case": "wrong-primary",
+    "matched": false,
+    "expected": false
+  },
+  {
+    "case": "no-checkpoint",
+    "matched": false,
+    "expected": false
+  },
+  {
+    "case": "unknown-verb",
+    "matched": false,
+    "expected": false
+  }
+]

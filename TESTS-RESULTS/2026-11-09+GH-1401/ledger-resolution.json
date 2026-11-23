@@ -1,0 +1,20 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 0f6c272602",
+  "log": [
+    "classification: keep=theirs generation ours/theirs=(2505, 2505) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-1401: rc=0 ",
+    "roadmap rate GH-1401 80/65/85/65: rc=0 ",
+    "roadmap update GH-1401 (section/marker): rc=0 ",
+    "roadmap accepted-start GH-1401 (rmi-01M71YE95F88RX3PSRRA1Q5D83): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "0f6c2726020b1c331fda78f6074afe49f34e8f44",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}

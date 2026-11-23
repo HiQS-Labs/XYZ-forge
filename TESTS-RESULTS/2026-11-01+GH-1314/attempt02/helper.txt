@@ -1,0 +1,375 @@
+#!/usr/bin/env python3
+"""GH-1314 manual historical calibration; ephemeral evidence, not a CI runner."""
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import signal
+import sqlite3
+import stat
+import subprocess
+import sys
+import time
+
+BAD = "b78df4b93049498b19dd47fe6a90d006f9c42700"
+GOOD = "47deab48b8c749d699c6b6c77c38dfdaa5682025"
+GIT = "/Library/Developer/CommandLineTools/usr/bin/git"
+HARNESS = "utils/py/harness.py"
+SCENARIO = "utils/py/factory_primitive/scenarios/soak-v1.jsonl"
+MANIFEST = "utils/py/factory_primitive/scenarios/soak-v1.manifest.json"
+PROMPT = "utils/py/factory_primitive/prompts/evaluator.v1.md"
+FIXTURES = {
+    SCENARIO: "77bb7f7ba7fea8603f41a510c3212ea4063dbd2c",
+    MANIFEST: "f7e3ca47ab66d1d7fcfde4b31728742b3153e95f",
+    PROMPT: "8f2d9f6073cefdbdc8317c7d4635ca2b53e444d9",
+}
+BLOBS = {"bad": "38d183aa4ae12bb28f527b2c4f6e3cbf0b47989a",
+         "good": "6db76a3b6bbd876755e8f719a97e2231868687a9"}
+root = evidence = active = None
+owned = {"PROTOCOL.md", "helper.txt"}
+records = []
+deadline_epoch = deadline_mono = float("inf")
+
+def fail(reason):
+    raise RuntimeError(reason)
+
+def sha(data):
+    return hashlib.sha256(data).hexdigest()
+
+def remaining():
+    return min(deadline_epoch - time.time(), deadline_mono - time.monotonic())
+
+def time_left(reserve=3):
+    if remaining() <= reserve:
+        fail("absolute deadline/reserve exhausted")
+
+def interrupted(signum, frame):
+    fail(f"supervisor interrupted by signal {signum}")
+
+def group_exists(pgid):
+    try:
+        os.killpg(pgid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+
+def terminate(proc):
+    # This helper starts every child in its own group. Never target other groups.
+    if group_exists(proc.pid):
+        os.killpg(proc.pid, signal.SIGKILL)
+    proc.wait(timeout=1)
+    if group_exists(proc.pid):
+        fail("uncertain surviving owned process group")
+
+def run(argv, cwd, cap):
+    global active
+    time_left(4)
+    start = time.monotonic()
+    active = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              start_new_session=True)
+    proc = active
+    timeout = False
+    try:
+        out, err = proc.communicate(timeout=min(cap, remaining() - 3))
+    except subprocess.TimeoutExpired:
+        timeout = True
+        terminate(proc)
+        out, err = proc.communicate(timeout=1)
+    survivor = group_exists(proc.pid)
+    if survivor:
+        terminate(proc)
+    active = None
+    return {"argv": argv, "cwd": str(cwd), "pid": proc.pid,
+            "rc": proc.returncode, "timed_out": timeout,
+            "surviving_group_observed": survivor,
+            "duration_s": time.monotonic() - start,
+            "stdout": out, "stderr": err}
+
+def git(clone, *args):
+    result = run([GIT, "-c", "core.hooksPath=/dev/null",
+                  "-C", str(clone), *args], root, 10)
+    if (result["rc"] or result["timed_out"] or result["stderr"]
+            or result["surviving_group_observed"]):
+        fail("Git precondition observation failed")
+    return result["stdout"].decode().strip()
+
+def inventory(directory):
+    result = {}
+    def visit(path, rel):
+        time_left()
+        item = path.lstat()
+        mode = stat.S_IMODE(item.st_mode)
+        if stat.S_ISLNK(item.st_mode):
+            result[rel] = ["symlink", mode, os.readlink(path)]
+        elif stat.S_ISDIR(item.st_mode):
+            result[rel] = ["directory", mode]
+            for child in sorted(path.iterdir(), key=lambda p: p.name):
+                visit(child, f"{rel}/{child.name}" if rel else child.name)
+        elif stat.S_ISREG(item.st_mode):
+            data = path.read_bytes()
+            time_left()
+            result[rel] = ["file", mode, len(data), sha(data)]
+        else:
+            fail(f"unsupported file type: {rel}")
+    visit(directory, "")
+    time_left()
+    return result
+
+def observe():
+    return {name: inventory(root / name)
+            for name in ("bad", "good", "home", "tmp", "evidence")}
+
+def put(name, data):
+    if name in owned:
+        fail("refusing evidence overwrite")
+    with (evidence / name).open("xb") as stream:
+        stream.write(data)
+    owned.add(name)
+
+def put_json(name, data):
+    put(name, (json.dumps(data, sort_keys=True, indent=2) + "\n").encode())
+
+def check_evidence(snapshot):
+    if set(snapshot) != {"", *owned}:
+        fail("unexpected/missing evidence path")
+    if any(snapshot[name][0] != "file" for name in owned):
+        fail("evidence is not a regular file")
+
+def compare(before, after, label, rel):
+    for name in ("home", "tmp", "good" if label == "bad" else "bad"):
+        if before[name] != after[name]:
+            fail(f"unexpected changes in {name}")
+    ancestors = {"temp", "temp/factory-primitive", rel,
+                 rel + "/instances", rel + "/instances/C"}
+    prefix = rel + "/instances/C/"
+    allowed = {"state.db", "state.db-wal", "state.db-shm", "canary.txt",
+               "config.json", "telemetry", "telemetry/events.jsonl"}
+    left, right = before[label], after[label]
+    for name in set(left) | set(right):
+        if left.get(name) == right.get(name):
+            continue
+        if (name in ancestors and name not in left
+                and right.get(name, [None])[0] == "directory"):
+            continue
+        if name.startswith(prefix) and name[len(prefix):] in allowed:
+            expected_type = "directory" if name[len(prefix):] == "telemetry" else "file"
+            if right.get(name, [None])[0] != expected_type:
+                fail("runtime entry deleted, linked or has wrong type")
+            continue
+        fail(f"unexpected candidate change: {label}/{name}")
+    check_evidence(after["evidence"])
+    for name, value in before["evidence"].items():
+        if after["evidence"].get(name) != value:
+            fail("retained evidence changed")
+
+def obj(data):
+    if not data:
+        fail("required JSON is empty")
+    value = json.loads(data.decode())
+    if not isinstance(value, dict):
+        fail("expected JSON object")
+    return value
+
+def classify(label, step, result, run_root):
+    if result["timed_out"] or result["surviving_group_observed"]:
+        fail("timeout or surviving group")
+    out, err, rc = result["stdout"], result["stderr"], result["rc"]
+    instance = run_root / "instances/C"
+    db = instance / "state.db"
+    # lstat each existing runtime component before any following read/is_file.
+    runtime = root / label / "temp"
+    for path in (runtime, runtime / "factory-primitive", run_root,
+                 run_root / "instances", instance, instance / "telemetry"):
+        if path.exists() or path.is_symlink():
+            if not stat.S_ISDIR(path.lstat().st_mode):
+                fail("runtime directory is linked or has wrong type")
+    for name in ("state.db", "state.db-wal", "state.db-shm", "canary.txt",
+                 "config.json", "telemetry/events.jsonl"):
+        path = instance / name
+        if path.exists() or path.is_symlink():
+            if not stat.S_ISREG(path.lstat().st_mode):
+                fail("runtime file is linked or has wrong type")
+    if label == "bad" and step == "status":
+        value = obj(out)
+        if (rc != 0 or err or value.get("pending") != 0
+                or value.get("ticks") != {} or "last_receipt" not in value
+                or value["last_receipt"] is not None or not db.is_file()):
+            fail("bad status disagrees with frozen matrix")
+    elif label == "bad":
+        expected = b"factory-primitive: instance already initialized; use a new run root\n"
+        if rc != 2 or out or err != expected or not db.is_file():
+            fail("bad init disagrees with frozen matrix")
+        if any((instance / name).exists() for name in
+               ("canary.txt", "config.json", "telemetry")):
+            fail("refused init created success artifacts")
+    elif step == "status":
+        expected = b"factory-primitive: instance not initialized; run init first\n"
+        if rc != 2 or out or err != expected or run_root.exists():
+            fail("good status disagrees with frozen matrix")
+    else:
+        value = obj(out)
+        if (rc != 0 or err or value.get("status") != "initialized"
+                or value.get("instance") != str(instance) or not db.is_file()):
+            fail("good init disagrees with frozen matrix")
+        if (instance / "canary.txt").read_bytes() != b"do-not-modify\n":
+            fail("invalid canary")
+        config = obj((instance / "config.json").read_bytes())
+        clone = root / label
+        expected = {"daily_cap": 1, "max_call_cost": 0,
+                    "scenario_sha256": baseline[label][SCENARIO],
+                    "prompt_sha256": baseline[label][PROMPT],
+                    "scenario_path": str(clone / SCENARIO),
+                    "manifest_path": str(clone / MANIFEST)}
+        if any(config.get(key) != value for key, value in expected.items()):
+            fail("invalid init configuration")
+        events = (instance / "telemetry/events.jsonl").read_bytes()
+        if not events:
+            fail("empty init telemetry")
+        decoded = [obj(line) for line in events.splitlines()]
+        if not any(e.get("stage") == "init" and e.get("status") == "ok"
+                   and e.get("items", 0) > 0 for e in decoded):
+            fail("missing nonempty init/ok record")
+
+try:
+    config = obj(Path(sys.argv[1]).read_bytes())
+    wall, mono = time.time(), time.monotonic()
+    deadline_epoch = float(config["deadline_epoch"])
+    budget = deadline_epoch - wall
+    if not math.isfinite(budget) or not 4 < budget <= 600:
+        fail("invalid absolute deadline")
+    deadline_mono = mono + budget
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGALRM):
+        signal.signal(sig, interrupted)
+    signal.setitimer(signal.ITIMER_REAL, budget - 3)
+    requested = Path(config["root"])
+    root = requested.resolve(strict=True)
+    if not requested.is_absolute() or requested != root:
+        fail("root must be absolute and resolved")
+    if not root.name.startswith("gh1284-calibration."):
+        fail("unexpected exclusively owned root name")
+    names = ("bad", "good", "home", "tmp", "evidence")
+    if set(root.iterdir()) != {root / name for name in names}:
+        fail("unexpected root layout")
+    for name in names:
+        path = root / name
+        if path.is_symlink() or not path.is_dir():
+            fail("invalid owned directory")
+    evidence = root / "evidence"
+    if list((root / "home").iterdir()) or list((root / "tmp").iterdir()):
+        fail("HOME/TMPDIR must start empty")
+    python = str(Path(config["python"]).resolve(strict=True))
+    if (not Path(config["python"]).is_absolute()
+            or Path(sys.executable).resolve() != Path(python)):
+        fail("helper and candidate must use the same absolute Python")
+    for path in (Path(__file__), evidence / "helper.txt"):
+        if sha(path.read_bytes()) != config["helper_sha256"]:
+            fail("helper differs from approved hash")
+    if sha((evidence / "PROTOCOL.md").read_bytes()) != config["protocol_sha256"]:
+        fail("protocol differs from approved hash")
+    check_evidence(inventory(evidence))
+    env = {"HOME": str(root / "home"), "TMPDIR": str(root / "tmp"),
+           "PATH": "/usr/bin:/bin", "LC_ALL": "C", "TZ": "UTC",
+           "PYTHONDONTWRITEBYTECODE": "1", "GIT_OPTIONAL_LOCKS": "0"}
+    baseline = {}
+    for label, revision in (("bad", BAD), ("good", GOOD)):
+        clone = root / label
+        if not (clone / ".git").is_dir() or (clone / ".git").is_symlink():
+            fail("candidate is not a standalone clone")
+        if git(clone, "rev-parse", "HEAD") != revision:
+            fail("candidate HEAD mismatch")
+        if git(clone, "status", "--porcelain", "--untracked-files=all"):
+            fail("candidate is not clean")
+        common = Path(git(clone, "rev-parse", "--path-format=absolute", "--git-common-dir"))
+        if common.resolve() != clone / ".git":
+            fail("candidate Git storage is shared")
+        if git(clone, "rev-parse", f"{revision}:{HARNESS}") != BLOBS[label]:
+            fail("harness blob mismatch")
+        baseline[label] = {}
+        for path, blob in FIXTURES.items():
+            if git(clone, "rev-parse", f"{revision}:{path}") != blob:
+                fail("fixture blob mismatch")
+        for path in (*FIXTURES, HARNESS, "utils/py/proc_group.py", "utils/py/releases_app.py"):
+            baseline[label][path] = sha((clone / path).read_bytes())
+    put_json("identity.json", {"issue": 1314, "bad": BAD, "good": GOOD,
+             "sources_and_fixtures_sha256": baseline, "config": config,
+             "environment": env, "python": python, "python_version": sys.version,
+             "sqlite_version": sqlite3.sqlite_version, "git_path": GIT,
+             "git_sha256": sha(Path(GIT).read_bytes())})
+    for number, labels in ((1, ("bad", "good")), (2, ("good", "bad"))):
+        if number == 2:
+            time_left(240)
+        for label in labels:
+            clone = root / label
+            for path, expected in baseline[label].items():
+                if sha((clone / path).read_bytes()) != expected:
+                    fail("source/fixture drift before sequence")
+            rel = f"temp/factory-primitive/calibration-r{number}"
+            run_root = clone / rel
+            if run_root.resolve() != run_root:
+                fail("runtime path contains a symlink")
+            if run_root.exists() or run_root.is_symlink():
+                fail("replay root is not absent")
+            for step in ("status", "init"):
+                prefix = f"r{number}-{label}-{step}"
+                before = observe()
+                check_evidence(before["evidence"])
+                put_json(prefix + "-before.json", before)
+                argv = [python, "-B", HARNESS, "factory-primitive", "--run-root",
+                        str(run_root), step, "--instance", "C"]
+                if step == "init":
+                    argv += ["--scenario", str(clone / SCENARIO), "--manifest",
+                             str(clone / MANIFEST), "--daily-cap", "1", "--max-call-cost", "0"]
+                result = run(argv, clone, 30)
+                put(prefix + ".stdout", result["stdout"])
+                put(prefix + ".stderr", result["stderr"])
+                record = {key: value for key, value in result.items()
+                          if key not in ("stdout", "stderr")}
+                record["case"] = prefix
+                for stream in ("stdout", "stderr"):
+                    record[stream] = {"bytes": len(result[stream]), "sha256": sha(result[stream])}
+                records.append(record)
+                put_json(prefix + "-command.json", record)
+                after = observe()
+                try:
+                    compare(before, after, label, rel)
+                    if ((label == "good" and step == "status")
+                            or (label == "bad" and step == "init")):
+                        if before[label] != after[label]:
+                            fail("read/refusal step changed candidate state")
+                finally:
+                    put_json(prefix + "-after.json", after)
+                classify(label, step, result, run_root)
+                time_left()
+    if len(records) != 8:
+        fail("incomplete command matrix")
+    time_left()
+    put("provenance.jsonl", b"".join((json.dumps(record, sort_keys=True) + "\n").encode()
+                                     for record in records))
+    time_left()
+    put_json("outcome.json", {"outcome": "calibrated", "commands": 8,
+             "scope": "historical GH-1284 status/init only", "model_spend": 0,
+             "parent_acceptance": "pending independent raw-evidence review"})
+    time_left()
+    signal.setitimer(signal.ITIMER_REAL, 0)
+except BaseException as exc:
+    signal.setitimer(signal.ITIMER_REAL, 0)
+    termination = "no active direct child"
+    if active is not None:
+        try:
+            terminate(active)
+            termination = "owned process group terminated"
+        except BaseException as shutdown:
+            termination = f"uncertain: {shutdown}"
+    report = {"outcome": "inconclusive", "reason": str(exc), "termination": termination,
+              "completed_commands": len(records), "retry": False,
+              "invalidates": ["outcome.json"],
+              "acceptance_rule": "inconclusive.json invalidates outcome.json; parent must reject calibration"}
+    if evidence is not None:
+        try:
+            put_json("inconclusive.json", report)
+        except BaseException:
+            pass
+    print(json.dumps(report), file=sys.stderr)
+    sys.exit(2)

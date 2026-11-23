@@ -1,0 +1,19 @@
+{
+  "added_len": 6403,
+  "added_sha256": "418a3e229bb8b3bf5cf6ab323b9f974d61291e7f03ad6e69c67196f3a70af166",
+  "added_start": 8511,
+  "artifact_sha256": "365a5d234e3bd0d93e896bce8ca10f6cffb6b19e4fc9b127392834c1df5c023f",
+  "attested_at": "2026-10-21T04:11:33Z",
+  "driver_pid": 36374,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/Codex/2026-10-20/task-6/xyz-ate-docs/relay-system/2026-10-21/gh1174-final.codex.md",
+  "relay_file_rel": "relay-system/2026-10-21/gh1174-final.codex.md",
+  "reviewed_head": "84ff0d4040eaa371d34672dec978cd6d796dd484",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/Codex/2026-10-20/task-6/xyz-ate-docs",
+  "task": "RELAY-gh1174-final",
+  "trailer_sha256": "fd35bc039f73424e8b0de8a1e8b9947e1f4e6b43e95722ca8090195b9b6e1441",
+  "transcript_repo": "/Users/noelsaw/Documents/Codex/2026-10-20/task-6/xyz-ate-docs"
+}

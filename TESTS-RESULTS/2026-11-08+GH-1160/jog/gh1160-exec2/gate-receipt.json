@@ -1,0 +1,11 @@
+{
+  "sha": "8eb0934c81bd822394b386181de7674fcdb75b59",
+  "gate": "bash utils/pdda/pdda.sh run",
+  "mode": "marathon",
+  "exit_code": 0,
+  "passed": null,
+  "total": null,
+  "duration_s": null,
+  "timestamp": "2026-11-08T10:33:57.150397+00:00",
+  "host": "Darwin 27.0.0"
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1171-exec1",
+  "generated_at": "2026-11-11T06:25:18Z",
+  "outcome": "escalated",
+  "reason": "relay-failed-before-gate",
+  "exit_code": 5,
+  "approval_preserved": false,
+  "issue": "1171",
+  "phase": "gh-1171-branch-artifact-preflight",
+  "lane": "gh-1171-branch-artifact-preflight",
+  "token": "MARATHON-GH-1171-BRANCH-ARTIFACT-PREFLIGHT-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-7f312279/temp/gh1386-runner-20261111",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1171-branch-artifact-preflight-2026-11-10",
+  "head_sha": "ae942d0f7e31423cbee7d4a30693f3a2f4b441bd",
+  "reviewed_candidate": null,
+  "reviewed_head": null,
+  "added_sha256": null,
+  "attest_path": null,
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/gh376-relay-drive-lock-parity.sh",
+    "result": "not-run",
+    "exit": null,
+    "receipt_path": null
+  },
+  "acceptance": null,
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Open",
+  "timestamps": {
+    "started_at": "2026-11-11T06:23:05Z",
+    "finished_at": "2026-11-11T06:25:18Z"
+  }
+}

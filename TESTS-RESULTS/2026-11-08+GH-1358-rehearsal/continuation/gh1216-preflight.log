@@ -1,0 +1,15 @@
+swarm-preflight · project-doc · slug=gh-1216-aider-openrouter-profile
+  target-root : /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner (development @ e15ea3aa8)
+  branch      : suggested=marathon/gh-1216-aider-openrouter-profile-2026-11-08 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=6 behind=4 dirty=0
+  ref-probed  : development @ e15ea3aa8 (checkout matches)
+  candidate   : ready
+  inlined-acc : 3 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1216 (https://github.com/HiQS-Labs/XYZ-forge/issues/1216)
+  acceptance  : match — 3/3 criteria copied verbatim from issue #1216
+  issue-state : OPEN — issue #1216 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+Packet written: temp/gh1358/gh1216-preflight

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1436-contract-environment-2026-11-12-gate/temp/manual_hq.py", line 13, in <module>
+    assert r.returncode==1 and 'malformed-contract' in r.stderr,(r.returncode,r.stdout,r.stderr)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (1, "HQ park · Tier B — creating intake in beta-app …\n  ✓ issue:   https://github.com/testorg/beta-app/issues/777\n  ✓ capture: PROJECT/1-INBOX/GH-777-SHAPE-CHECK.md\n  ✓ ROADMAP: pointer added (after '### … queue' heading)\n  (files written but NOT committed — review, then commit in the target repo)\n", '  ✗ pdda:    target frontmatter check FAILED on the capture doc — intake is incomplete\n  hq park: capture doc is not PDDA-valid — fix the frontmatter before promoting.\n')

@@ -1,0 +1,7 @@
+base=f369773b:utils/py/_marathon_plan.py candidate=030db02d277d40ede69f5644b211337c047d67ce:utils/py/_marathon_plan.py root=~/Documents/GH Repos/XYZ-forge-gh1257-backlog-wave-pilot-2026-10-29-verify (ledger as committed)
+mode1 [--dry-run] rc base=4 cand=4 bytes=29673 sha256=f104aa7a65d884c8 IDENTICAL
+mode2 [--dry-run --format json] rc base=4 cand=4 bytes=34294 sha256=f957f4eb4e6bfeee IDENTICAL
+mode3 [--dry-run --policy derisk-first] rc base=4 cand=4 bytes=29680 sha256=84a7adda26549a7e IDENTICAL
+mode4 [--check] rc base=1 cand=1 bytes=29744 sha256=43f0cb101ddcbc1c IDENTICAL
+mode5 [--dry-run --format json --policy derisk-first] rc base=4 cand=4 bytes=34294 sha256=f957f4eb4e6bfeee IDENTICAL
+write-mode rendered doc rc base=4 cand=4 sha256=991e4b41b50bd987 IDENTICAL

@@ -1,0 +1,43 @@
+# usage: python3 p13b.py <scripts-dir> <label>
+# P1.3 discriminating controls: (clean=True, keep=True) via a draft refusal at repaired-head push,
+# plus containment refusals of _remove_own_scratch with a non-destructive rmtree observer.
+import sys, os, io, contextlib, argparse, tempfile, subprocess, shutil
+from pathlib import Path
+scripts, label = sys.argv[1], sys.argv[2]
+sys.path.insert(0, scripts)
+import merge_cleanup as mc
+primary = Path("/tmp/gh1475-manual/p11-new/primary")
+for rec in primary.glob(".tick/merge-cleanup/*/pr-1.json"): rec.unlink()  # fresh repair budget per run
+tmp = tempfile.mkdtemp(prefix=f"p13b-{label}-", dir="/tmp/gh1475-manual")
+os.environ["TMPDIR"] = tmp; tempfile.tempdir = None
+mc.refresh_pr = lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "CONFLICTING", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": "development", "labels": [], "mergeCommit": None, "isDraft": False}
+def prep(pr, primary, branch, wd):
+    c = Path(wd) / "pr-1-clone"; c.mkdir(exist_ok=True); (c / "B1-RESULT").write_text("repaired head kept for the operator")
+    return {"clone": c, "merge_rc": 1, "error": ""}
+mc.prepare_landing_clone = prep
+mc.resolve_ledger_conflict = lambda *a, **k: {"resolved": True, "handoff": False, "commit": "c" * 40, "reason": "", "conflict_set": [], "log": []}
+mc.validate_head_in_second_clone = lambda *a, **k: (True, "")
+mc.push_resolved_head = lambda *a, **k: (False, mc.DRAFT_REFUSAL)
+args = argparse.Namespace(integration_branch="development", strategy=None, resume=False, prs=[1], _pins={1: "a" * 40})
+out = io.StringIO()
+with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+    try: rc = mc._land_prs_loop([{"number": 1, "headRefName": "feat/x", "baseRefName": "development", "title": "t", "labels": []}], primary, args, dry_run=False)
+    except Exception as e: rc = f"raised {type(e).__name__}: {e}"
+left = [d for d in os.listdir(tmp) if d.startswith("merge-cleanup-")]
+kept = [str(p.relative_to(tmp)) for p in Path(tmp).glob("merge-cleanup-*/pr-1-clone/B1-RESULT")]
+decisive = [l for l in out.getvalue().splitlines() if "draft" in l.lower() or "Landing clones" in l]
+print(f"{label} clean+keep (draft refusal after B1): rc={rc} workdir_left={len(left)} B1-RESULT kept={bool(kept)}")
+for l in decisive: print(f"{label}   {l.replace(tmp, '<tmp>')}")
+# containment refusals: rmtree replaced by an observer
+calls = []
+mc.shutil.rmtree = lambda p, *a, **k: calls.append(str(p))
+root = Path(tempfile.gettempdir()).resolve()
+real = Path(tempfile.mkdtemp(prefix="merge-cleanup-", dir=str(root)))
+link = root / "merge-cleanup-symlink"; link.symlink_to(real)
+outside = Path(tempfile.mkdtemp(prefix="merge-cleanup-", dir="/tmp/gh1475-manual"))
+wrong = Path(tempfile.mkdtemp(prefix="other-", dir=str(root)))
+for name, p in (("symlink", link), ("outside temp root", outside), ("wrong prefix", wrong), ("valid", real)):
+    calls.clear()
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        r = mc._remove_own_scratch(p, "merge-cleanup-") if hasattr(mc, "_remove_own_scratch") else None
+    print(f"{label} containment {name}: returned={r} rmtree_called={bool(calls)}")

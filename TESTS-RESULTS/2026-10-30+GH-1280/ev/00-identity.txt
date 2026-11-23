@@ -1,0 +1,11 @@
+== identity 2026-10-31T02:06:16Z
+noel’s Mac Studio
+Mac13,1
+Python 3.14.7
+-rwxr-xr-x  1 root  wheel  102560 Aug 16  2025 /usr/bin/sandbox-exec
+https://github.com/HiQS-Labs/XYZ-forge.git
+623ba2c729259c1148d0b4e3fd9735ce4c53784d
+false
+       0
+processes:
+none

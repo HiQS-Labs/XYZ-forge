@@ -1,0 +1,37 @@
+{
+ "contract_sha256": "6a39669d6699cb588e8420c0fe2d0958023f6d29b76834959897c28ecbdc01a5",
+ "launch_epoch": 1793413230.135642,
+ "discovery_deadline": 1793413305.135642,
+ "total_deadline": 1793413350.135642,
+ "watcher_stop_epoch": 1793413275.135642,
+ "gen4_pid": 76625,
+ "started": "2026-10-30T19:20:30-0700",
+ "discovery_processes_ended_epoch": 1793413277.464406,
+ "stop_reason": "discovery deadline reserve reached (wall 75s, reserve 30s)",
+ "elapsed_s": 56.6,
+ "gen4_rc": -15,
+ "events": 5,
+ "gated_events": 0,
+ "streak_at_stop": 3,
+ "quiet_batches_at_stop": 0,
+ "counts": {
+  "usage": 2,
+  "pass": 3
+ },
+ "per_target": {
+  "fp-help": {
+   "usage": 2,
+   "pass": 3
+  }
+ },
+ "signatures": [
+  "fp-help|0|pass|",
+  "fp-help|2|usage|harness.py factory-primitive: error: argument command: invalid choice: P (choose from P, P, P, P, P, P)"
+ ],
+ "candidates": [],
+ "swept_pids": [
+  83214
+ ],
+ "survivors_after_sweep": [],
+ "canaries_moved": []
+}

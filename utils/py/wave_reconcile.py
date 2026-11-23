@@ -62,8 +62,10 @@ class ReconcilerLock:
 
     def __enter__(self):
         try:
-            self.fd = open(self.lock_path, "w")
+            self.fd = open(self.lock_path, "a+")
             fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.fd.seek(0)
+            self.fd.truncate()
             self.fd.write(f"pid={os.getpid()}\ntime={datetime.now().isoformat()}\n")
             self.fd.flush()
             return self
@@ -297,12 +299,27 @@ def check_current_branch(repo_root, expected_branch="development", skip_branch_c
         )
 
 
+_REF_LOCK_RE = re.compile(r"cannot lock ref|unable to create .*\.lock|unable to update local ref", re.I)
+
+
 def pull_upstream(repo_root, branch="development"):
-    """Fast-forward pull from origin."""
-    cmd = ["git", "-C", repo_root, "pull", "--ff-only", "origin", branch]
-    r = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    if r.returncode != 0:
-        die(f"git pull --ff-only failed: {r.stderr}")
+    """Fast-forward from origin. GH-1475 (F5): fetch, then merge the remote-tracking ref, not
+    `git pull` (which merges the shared FETCH_HEAD a concurrent fetch can rewrite). A ref lock held
+    by a concurrent fetch in the primary is retried briefly; any other error stops as before."""
+    for attempt, wait in enumerate((1, 2, None)):
+        # Explicit refspec: a clone whose fetch mapping excludes <branch> would not update origin/<branch>.
+        r = subprocess.run(["git", "-C", repo_root, "fetch", "origin",
+                            f"+{branch}:refs/remotes/origin/{branch}"],
+                           capture_output=True, text=True, check=False)
+        if r.returncode == 0:
+            r = subprocess.run(["git", "-C", repo_root, "merge", "--ff-only", f"origin/{branch}"],
+                               capture_output=True, text=True, check=False)
+            if r.returncode == 0:
+                return
+        if wait is None or not _REF_LOCK_RE.search(r.stderr or ""):
+            die(f"git fetch + merge --ff-only origin/{branch} failed: {r.stderr}")
+        log(f"git ref lock held by another process; retry {attempt + 2}/3 in {wait}s")
+        time.sleep(wait)
 
 
 def fetch_issue_state(repo_root, issue_num, offline_manifest=None):
@@ -405,7 +422,7 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         die(f"Failed parsing gh pr view JSON for PR #{pr_id}: {e}", code=4)
 
 
-def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
+def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None, base="development"):
     """Return direct-commit landing metadata in the reconciler's internal shape."""
     if offline_manifest:
         for entry in offline_manifest.get("commits", []):
@@ -415,7 +432,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
                     "number": str(entry.get("sha", commit_id))[:12],
                     "title": message.splitlines()[0] if message else f"commit {commit_id}",
                     "state": "MERGED", "mergedAt": entry.get("committedAt"),
-                    "baseRefName": "development", "body": message,
+                    "baseRefName": base, "body": message,
                     "url": entry.get("url", ""), "artifactKind": "commit",
                     "sha": entry.get("sha", commit_id),
                     "mergeCommit": {"oid": entry.get("sha", commit_id)},
@@ -430,11 +447,11 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
         die(f"Commit {commit_id} cannot be resolved locally", code=4)
     sha = resolved.stdout.strip()
     reachable = subprocess.run(
-        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, "development"],
+        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, base],
         capture_output=True, text=True, check=False,
     )
     if reachable.returncode != 0:
-        die(f"Commit {sha} is not reachable from local development", code=4)
+        die(f"Commit {sha} is not reachable from local {base}", code=4)
     shown = subprocess.run(
         ["git", "-C", repo_root, "show", "-s", "--format=%cI%x00%B", sha],
         capture_output=True, text=True, check=False,
@@ -446,7 +463,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
     slug = github_slug_from_origin(repo_root)
     return {
         "number": sha[:12], "title": message.splitlines()[0], "state": "MERGED",
-        "mergedAt": committed_at, "baseRefName": "development", "body": message,
+        "mergedAt": committed_at, "baseRefName": base, "body": message,
         "url": f"https://github.com/{slug}/commit/{sha}" if slug else "",
         "artifactKind": "commit", "sha": sha, "mergeCommit": {"oid": sha},
     }
@@ -1067,19 +1084,156 @@ def extract_linked_issues(pr_meta, repo_slug=None):
 RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX")
 
 
-def find_active_doc_for_issue(repo_root, issue_num):
-    """Find an issue's doc across the reconciled PROJECT folders (2-WORKING first)."""
-    for folder in RECONCILE_FOLDERS:
-        working_dir = os.path.join(repo_root, "PROJECT", folder)
-        if not os.path.isdir(working_dir):
-            continue
-        for fname in sorted(os.listdir(working_dir)):
-            if not fname.endswith(".md"):
+def doc_issue_number(path):
+    """Read supported issue identities, preserving explicit no-issue opt-outs."""
+    declared = str(parse_doc_frontmatter(path).get("gh_issue", "")).strip()
+    if declared.lower() in ("none", "null", "false", "n/a", "no", "~"):
+        return None
+    match = re.fullmatch(r"(?:#|GH-)?(\d+)", declared, re.I)
+    if not match:
+        match = re.fullmatch(r"https://github\.com/[^/]+/[^/]+/issues/(\d+)/?", declared, re.I)
+    if not match:
+        match = re.match(r"^(?:GH-)?(\d+)(?:-|\.md$)", Path(path).name, re.I)
+    return int(match[1]) if match else None
+
+
+def issue_doc_index(directories):
+    """Index once; primary issue docs outrank supporting recon/phase documents.
+
+    Lifecycle directory order breaks ties between primary documents. Unnamed
+    identity documents are usable only when unique; ambiguous ones stay unresolved.
+    """
+    directories = [Path(d) for d in directories]
+    # The cache may choose among existing primary identities, never invent a path.
+    hints = {}
+    if directories:
+        for row in ledger_rows(directories[0].parent.parent,
+                               "SELECT gh_number, doc_path FROM roadmap_items"):
+            if row["gh_number"] is not None and row["doc_path"]:
+                hints.setdefault(int(row["gh_number"]), set()).add(Path(row["doc_path"]).name)
+    candidates = {}
+    for directory in directories:
+        for path in sorted(Path(directory).glob("*.md")):
+            if path.name.startswith(("recon-", "MARATHON-PLAN-")):
                 continue
-            # Match GH-123-*.md or 123-*.md
-            if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
-                return os.path.join(working_dir, fname)
-    return None
+            number = doc_issue_number(path)
+            if number is not None:
+                candidates.setdefault(number, []).append(path)
+    result = {}
+    for number, paths in candidates.items():
+        primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
+        preferred = [p for p in primary if p.parent == primary[0].parent] if primary else paths
+        if primary and len(preferred) > 1:
+            named = [p for p in preferred if p.name in hints.get(number, set())]
+            if len(named) == 1:
+                preferred = named
+        result[number] = preferred[0] if len(preferred) == 1 else None
+    return result
+
+
+def find_issue_doc(repo_root, issue_num, folders=None):
+    """Resolve lifecycle identity; cached basenames only disambiguate primary docs."""
+    folders = folders if folders is not None else ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC")
+    path = issue_doc_index(Path(repo_root, "PROJECT", f) for f in folders).get(int(issue_num))
+    return str(path) if path else None
+
+
+
+def find_active_doc_for_issue(repo_root, issue_num):
+    """Lifecycle writers may only mutate active documents."""
+    return find_issue_doc(repo_root, issue_num, RECONCILE_FOLDERS)
+
+
+def reconciler_git_dir(repo_root):
+    dotgit = Path(repo_root, ".git")
+    gitdir = dotgit
+    if dotgit.is_file():
+        gitdir = (Path(repo_root) / dotgit.read_text().strip().removeprefix("gitdir: ")).resolve()
+        common = gitdir / "commondir"
+        if common.is_file():
+            gitdir = (gitdir / common.read_text().strip()).resolve()
+    return gitdir
+
+
+def sweep_issue_docs(repo_root, apply=False, census=None):
+    journal = RollbackJournal(repo_root)
+    # Use the same common git directory lock as the normal reconciler.
+    gitdir = reconciler_git_dir(repo_root)
+    try:
+        with ReconcilerLock(str(gitdir / "wave-reconcile.lock")):
+            _sweep_issue_docs(repo_root, apply, census, journal)
+    except Exception:
+        if apply and journal.changed():
+            journal.rollback()
+        raise
+    finally:
+        journal.cleanup()
+
+
+def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
+    """File closed docs and refresh existing pointers; never create rows or close issues.
+
+    A census is harness.py's recorded manifest (its delivered map is report-only).
+    Unknown reasons and destination collisions are reported without moving the doc.
+    """
+    from releases_app import resolve_roadmap_identity, read_issue_closure_state
+    slug = github_slug_from_origin(repo_root)
+    if not slug:
+        die("Cannot qualify completion sweep against the root repository", code=6)
+    rows = ledger_rows(repo_root, "SELECT * FROM roadmap_items")
+    repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
+    owned = [r for r in rows if (identity := resolve_roadmap_identity(r, repos, slug))["identity_valid"]
+             and identity["repo"] == slug]
+    documents = issue_doc_index(Path(repo_root, "PROJECT", f) for f in
+                                ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"))
+    delivered = {}
+    if census is True:
+        log("No census manifest supplied; delivered-but-open report has no candidates")
+    if census and census is not True:
+        data = json.loads(Path(census).read_text(encoding="utf-8"))
+        delivered = data.get("delivered") if isinstance(data, dict) else None
+        if not isinstance(delivered, dict) or any(not str(n).isdigit() for n in delivered):
+            die("Census delivered map must be an object")
+    for number in sorted(set(documents) | {int(n) for n in delivered}):
+        source = documents.get(number)
+        archived = source is not None and source.parent.name in ("3-COMPLETED", "4-MISC")
+        # Archived pointers are a local cache repair; section state belongs to reconciliation.
+        issue = None
+        if not archived or str(number) in delivered:
+            try:
+                issue = read_issue_closure_state(repo_root, f"https://github.com/{slug}/issues/{number}")
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+                die(f"Issue #{number} state unavailable: {exc}")
+        if issue and issue["state"] == "OPEN" and str(number) in delivered:
+            log(f"delivered-but-open: GH-{number} PRs {delivered[str(number)]}; report only")
+        if source is None:
+            if number in documents:
+                log(f"SKIPPED GH-{number}: ambiguous issue documents")
+            continue
+        destination = source
+        terminal_section = None
+        if issue and issue["state"] == "CLOSED":
+            folder = {"COMPLETED": "3-COMPLETED", "NOT_PLANNED": "4-MISC"}.get(issue.get("stateReason"))
+            if not folder:
+                log(f"SKIPPED GH-{number}: unknown closure reason {issue.get('stateReason')!r}")
+            else:
+                if not archived:
+                    destination = Path(repo_root, "PROJECT", folder, source.name)
+                terminal_section = "Completed" if folder == "3-COMPLETED" else "Deferred · vision"
+        if source != destination:
+            if destination.exists():
+                log(f"SKIPPED GH-{number}: destination already exists")
+                continue
+            log(f"{'move' if apply else 'would move'}: {source.relative_to(repo_root)} -> {destination.relative_to(repo_root)}")
+            validate_and_update_doc(str(source), {}, is_merged=terminal_section == "Completed",
+                                    dry_run=not apply, journal=journal)
+        relative = str(destination.relative_to(repo_root))
+        for row in owned:
+            if row["gh_number"] == number and row["doc_path"] != relative:
+                # repoint updates path references while preserving shipping badges, ratings and section.
+                ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
+                                        "--doc-path", relative], dry_run=not apply, journal=journal)
+
 
 
 def parse_doc_frontmatter(doc_path):
@@ -1222,13 +1376,13 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
         new_status = "Declined"
         dest_folder = "4-MISC"
 
-    # Update frontmatter status and updated date
-    new_content = re.sub(
-        r"^status:\s*.*$", f"status: {new_status}", content, flags=re.MULTILINE | re.IGNORECASE
-    )
-    new_content = re.sub(
-        r"^updated:\s*.*$", f"updated: {ship_date}", new_content, flags=re.MULTILINE | re.IGNORECASE
-    )
+    # Update only the YAML frontmatter, never status examples in the body.
+    match = re.match(r"\A---[^\S\n]*\n(.*?)^---[^\S\n]*(?:\n|$)", content, re.M | re.S)
+    new_content = content
+    if match:
+        frontmatter = re.sub(r"^status:[^\n]*$", f"status: {new_status}", match[1], flags=re.M | re.I)
+        frontmatter = re.sub(r"^updated:[^\n]*$", f"updated: {ship_date}", frontmatter, flags=re.M | re.I)
+        new_content = content[:match.start(1)] + frontmatter + content[match.end(1):]
 
     dest_dir = os.path.join(os.path.dirname(os.path.dirname(doc_path)), dest_folder)
     dest_path = os.path.join(dest_dir, os.path.basename(doc_path))
@@ -1512,6 +1666,31 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
     return sorted(found, key=int)
 
 
+def repoint_moved_doc_rows(repo_root, moved_docs, repo_slug, dry_run=False, journal=None):
+    """GH-1178: repoint every owned row still naming a doc this run moved.
+
+    Docs are found by filename, so when several issues share one doc only the issue it is named
+    after gets the destination from update_roadmap_entry. Runs after the landing loop: whichever
+    order the issues came in, every move is known by then. moved_docs maps source relpath to
+    (destination relpath, owning issue); the owning row was already repointed, which a dry-run
+    cannot show in the ledger, so it is skipped here rather than previewed twice."""
+    if not moved_docs:
+        return
+    marks = ",".join("?" * len(moved_docs))
+    rows = [row for row in ledger_rows(repo_root, f"SELECT * FROM roadmap_items WHERE doc_path IN ({marks})",
+                                       tuple(moved_docs))
+            if row["gh_number"] != moved_docs[row["doc_path"]][1]]
+    if not rows:
+        return
+    from releases_app import resolve_roadmap_identity
+    repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
+    for row in rows:
+        identity = resolve_roadmap_identity(row, repos, repo_slug)
+        if identity["identity_valid"] and identity["repo"] == repo_slug:
+            ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
+                         "--doc-path", moved_docs[row["doc_path"]][0]], dry_run, journal)
+
+
 def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None, repo_slug=None):
     """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
@@ -1667,6 +1846,7 @@ def marathon_plan_findings(output, returncode):
     held_types = {
         "unrated", "needs-doc", "needs-contract", "note-only",
         "not-ready", "blocked", "blocked-dep",
+        "preflight-error", "unplaceable",  # GH-1251: planner fail-closed held states
     }
     relevant_types = drift_types if returncode == 4 else held_types
     findings = []
@@ -1752,6 +1932,338 @@ def handle_marathon_plan_result(result, reconciled_issues):
         log(f"    - {describe_finding(finding)}")
 
 
+def read_changelog_writes_mode(repo_root):
+    """GH-1487: Read CHANGELOG_WRITES mode.
+
+    Precedence:
+    1. CHANGELOG_WRITES env var (if set).
+    2. .pdda-mode setting (if present).
+    3. Default: 'off'.
+    Allowed values: 'off', 'landing', 'branch'. Invalid values log warning and fall back to 'off'.
+    """
+    val = os.environ.get("CHANGELOG_WRITES")
+    if val is not None:
+        v = val.strip().lower()
+        if v in ("off", "landing", "branch"):
+            return v
+        print(f"wave-reconcile: WARNING — invalid CHANGELOG_WRITES env value '{val}'; falling back to 'off'")
+        return "off"
+
+    pdda_mode = os.path.join(repo_root, ".pdda-mode")
+    val = None
+    if os.path.exists(pdda_mode):
+        try:
+            with open(pdda_mode, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    m = re.match(r"^CHANGELOG_WRITES\s*=\s*([^#\s]+)", line)
+                    if m:
+                        val = m.group(1).strip().lower()
+        except Exception:
+            pass
+
+    if val:
+        if val in ("off", "landing", "branch"):
+            return val
+        print(f"wave-reconcile: WARNING — invalid CHANGELOG_WRITES in .pdda-mode '{val}'; falling back to 'off'")
+        return "off"
+
+    return "off"
+
+
+def read_changelog_cutover(repo_root):
+    """GH-1487: Read durable cutover boundary timestamp for CHANGELOG_WRITES=landing.
+
+    Precedence:
+    1. CHANGELOG_CUTOVER env var (if set).
+    2. .pdda-mode setting CHANGELOG_CUTOVER=<ISO-8601>.
+    3. First commit introducing CHANGELOG_WRITES=landing in .pdda-mode via git log -S.
+    4. If none, fail closed (code 6). Never falls back to a moving clock or workflow activation.
+    """
+    raw = os.environ.get("CHANGELOG_CUTOVER")
+    if not raw:
+        pdda_mode = os.path.join(repo_root, ".pdda-mode")
+        if os.path.exists(pdda_mode):
+            try:
+                with open(pdda_mode, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if line.startswith("CHANGELOG_CUTOVER="):
+                            raw = line.split("=", 1)[1].strip()
+            except Exception:
+                pass
+
+    if not raw:
+        # Check git history for the first commit introducing CHANGELOG_WRITES=landing
+        try:
+            res = subprocess.run(
+                ["git", "log", "-S", "CHANGELOG_WRITES=landing", "--reverse", "--format=%cI", "--", ".pdda-mode"],
+                cwd=repo_root, capture_output=True, text=True, check=False
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                raw = res.stdout.strip().splitlines()[0]
+        except Exception:
+            pass
+
+    if not raw:
+        die("CHANGELOG_WRITES=landing requires explicit CHANGELOG_CUTOVER=<ISO-8601> when adoption history cannot be established from git", code=6)
+
+    try:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except Exception as exc:
+        die(f"Invalid CHANGELOG_CUTOVER timestamp '{raw}'; must be valid ISO-8601: {exc}", code=6)
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def changelog_entry_exists(repo_root, pr_number, merge_sha):
+    """GH-1487: Test if the candidate PR entry already exists in CHANGELOG.md.
+
+    Checks literal equality to `<!-- pr:{pr_number} merge:{merge_sha} -->` at the
+    first non-blank line of the section starting with `(GH-{pr_number})` or `GH-{pr_number}`.
+    """
+    path = os.path.join(repo_root, "CHANGELOG.md")
+    if not os.path.exists(path):
+        return False
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
+    except Exception:
+        return False
+
+    expected_marker = f"<!-- pr:{pr_number} merge:{merge_sha} -->"
+    if expected_marker not in content:
+        return False
+
+    starts = list(re.finditer(r"(?m)^## ", content))
+    for i, match in enumerate(starts):
+        end = starts[i + 1].start() if i + 1 < len(starts) else len(content)
+        block = content[match.start():end]
+        heading, _, body = block.partition("\n")
+        if f"GH-{pr_number}" in heading:
+            body_lines = [l.strip() for l in body.splitlines() if l.strip()]
+            if body_lines and body_lines[0] == expected_marker:
+                return True
+    return False
+
+
+def format_changelog_entry(pr_meta):
+    """GH-1487: Synthesize a sanitized, dated changelog entry block from PR metadata."""
+    number = int(pr_meta["number"])
+    sha = (pr_meta.get("mergeCommit") or {}).get("oid", "")
+    merged_at = pr_meta.get("mergedAt") or datetime.now(timezone.utc).isoformat()
+    try:
+        dt = datetime.fromisoformat(merged_at.replace("Z", "+00:00")).astimezone(timezone.utc)
+        date_str = dt.strftime("%Y-%m-%d")
+    except Exception:
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Sanitize title
+    raw_title = pr_meta.get("title") or f"PR #{number}"
+    clean_title = re.sub(r"<[^>]+>", "", raw_title)
+    clean_title = clean_title.replace("`", "").replace("~", "-").replace("\r", " ").replace("\n", " ")
+    for ch in ("<", ">", "=", "|"):
+        clean_title = clean_title.replace(ch, "")
+    clean_title = re.sub(r"\s+", " ", clean_title).strip()
+    if not clean_title:
+        clean_title = f"PR #{number}"
+
+    # Extract body under ## Changelog
+    body = pr_meta.get("body") or ""
+    changelog_body = ""
+    match = re.search(r"(?im)^##\s+Changelog\s*$", body)
+    if match:
+        rest = body[match.end():]
+        end_match = re.search(r"(?m)^##\s+", rest)
+        section = rest[:end_match.start()] if end_match else rest
+        changelog_body = section.strip()
+
+    marker_line = f"<!-- pr:{number} merge:{sha} -->"
+
+    if not changelog_body:
+        entry_body = f"changelog: fallback-title\n{clean_title}."
+    else:
+        # Sanitize body
+        # 1. Strip all HTML comments
+        s = re.sub(r"<!--[\s\S]*?-->", "", changelog_body)
+        s = s.replace("<!--", "")
+        # 2. Strip conflict markers (<{7}|={7}|>{7}|\|{7})
+        s = re.sub(r"(?m)^[ \t]*(?:<{7}|={7}|>{7}|\|{7})(?: |$).*\n?", "", s)
+        # 3. Strip raw HTML tags
+        s = re.sub(r"<[^>]+>", "", s)
+        # 4. Neutralize residual less-than characters (e.g. 'x < 5') so B1 does not see any '<'
+        s = s.replace("<", "&lt;")
+        # 5. Neutralize code fences for B1 safety: replace line-leading triple backticks/tildes with 4 spaces
+        lines = []
+        in_fence = False
+        for line in s.splitlines():
+            stripped = line.lstrip()
+            if stripped.startswith("```") or stripped.startswith("~~~"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                lines.append("    " + line)
+            else:
+                # Down-level headings
+                if stripped.startswith("#"):
+                    heading_text = stripped.lstrip("#").strip()
+                    lines.append(f"- **{heading_text}**")
+                else:
+                    lines.append(line)
+        cleaned_text = "\n".join(lines).strip()
+        if not cleaned_text:
+            entry_body = f"changelog: fallback-title\n{clean_title}."
+        else:
+            entry_body = cleaned_text
+
+    return f"## {date_str} — {clean_title} (GH-{number})\n\n{marker_line}\n{entry_body}\n\n"
+
+
+def changelog_catchup_candidates(repo_root, repo_slug, cutover_dt, offline_manifest=None):
+    """GH-1487: Discover merged development PRs merged on/after cutover_dt that lack entries in CHANGELOG.md."""
+    if offline_manifest and "prs" in offline_manifest:
+        prs_list = []
+        for p in offline_manifest.get("prs", []):
+            if isinstance(p, dict):
+                prs_list.append(p)
+    else:
+        result = subprocess.run(
+            ['gh', 'api', '--paginate', '--slurp',
+             f'repos/{repo_slug}/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100'],
+            cwd=repo_root, capture_output=True, text=True, check=False)
+        if result.returncode:
+            print(f"wave-reconcile: WARNING — changelog catch-up candidate query failed: {result.stderr}")
+            return []
+        try:
+            pages = json.loads(result.stdout)
+            prs_list = [pr for page in pages for pr in page if isinstance(pr, dict)]
+        except Exception as e:
+            print(f"wave-reconcile: WARNING — failed parsing changelog recovery response: {e}")
+            return []
+
+    candidates = []
+    for pr in prs_list:
+        # Offline manifests use the gh CLI's camelCase shape (mergedAt, baseRefName, mergeCommit);
+        # the REST query returns merged_at / base.ref / merge_commit_sha. Accept both.
+        merged = pr.get("merged_at") or pr.get("mergedAt")
+        if not merged:
+            continue
+        try:
+            merged_dt = datetime.fromisoformat(merged.replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if merged_dt.tzinfo is None:
+            merged_dt = merged_dt.replace(tzinfo=timezone.utc)
+        if merged_dt < cutover_dt:
+            continue
+        if ((pr.get("base") or {}).get("ref") or pr.get("baseRefName")) != "development":
+            continue
+        num = pr.get("number")
+        sha = pr.get("merge_commit_sha") or ((pr.get("mergeCommit") or {}).get("oid"))
+        if type(num) is not int or num <= 0 or not re.fullmatch(r"[0-9a-f]{40}", sha or ""):
+            continue
+        if changelog_entry_exists(repo_root, num, sha):
+            continue
+        meta = dict(
+            number=num,
+            title=pr.get("title") or "",
+            body=pr.get("body") or "",
+            state="MERGED",
+            mergedAt=merged,
+            baseRefName="development",
+            mergeCommit={"oid": sha},
+            url=pr.get("html_url") or "",
+            headRefOid=(pr.get("head") or {}).get("sha"),
+            commits=[]
+        )
+        candidates.append(meta)
+    return candidates
+
+
+def reconcile_changelog(repo_root, landing_items, metadata, repo_slug, catch_up=False, dry_run=False, journal=None, offline_manifest=None):
+    """GH-1487: Post-landing changelog reconciliation.
+
+    When CHANGELOG_WRITES=landing, synthesizes dated changelog entries from merged PR descriptions
+    and prepends them to CHANGELOG.md after the preamble. Idempotent via literal marker lines.
+    """
+    mode = read_changelog_writes_mode(repo_root)
+    if mode != "landing":
+        return
+
+    cutover_dt = read_changelog_cutover(repo_root)
+
+    candidates = {}
+    for kind, val in landing_items:
+        if kind != "pr":
+            continue
+        meta = metadata.get(("pr", str(val)))
+        if not meta or meta.get("state") != "MERGED" or meta.get("baseRefName") != "development":
+            continue
+        sha = (meta.get("mergeCommit") or {}).get("oid", "")
+        if not re.fullmatch(r"[0-9a-f]{40}", sha):
+            continue
+        if not changelog_entry_exists(repo_root, meta["number"], sha):
+            candidates[meta["number"]] = meta
+
+    if catch_up:
+        caught_up = changelog_catchup_candidates(repo_root, repo_slug, cutover_dt, offline_manifest=offline_manifest)
+        for meta in caught_up:
+            if meta["number"] not in candidates:
+                candidates[meta["number"]] = meta
+
+    if not candidates:
+        log("Changelog: no new entries to write (up to date)")
+        return
+
+    # Sort descending by UTC mergedAt, tie-broken by PR number descending
+    def candidate_sort_key(m):
+        ts = m.get("mergedAt") or ""
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except Exception:
+            dt = datetime.min.replace(tzinfo=timezone.utc)
+        return (dt, m.get("number") or 0)
+
+    sorted_candidates = sorted(candidates.values(), key=candidate_sort_key, reverse=True)
+    new_blocks = [format_changelog_entry(m) for m in sorted_candidates]
+
+    changelog_path = os.path.join(repo_root, "CHANGELOG.md")
+    snapshot_ledger_artifacts(repo_root, dry_run=dry_run, journal=journal)
+
+    existing_text = ""
+    if os.path.exists(changelog_path):
+        try:
+            with open(changelog_path, "r", encoding="utf-8", errors="replace") as f:
+                existing_text = f.read()
+        except Exception as e:
+            die(f"Failed reading CHANGELOG.md for reconciliation: {e}", code=6)
+
+    first = re.search(r"(?m)^## ", existing_text)
+    if first:
+        preamble, history = existing_text[:first.start()], existing_text[first.start():]
+    else:
+        preamble = existing_text.rstrip() + ("\n\n" if existing_text.strip() else "# Changelog\n\n")
+        history = ""
+
+    new_content = preamble + "".join(new_blocks) + history
+
+    if dry_run:
+        log(f"Dry-run: would prepend {len(sorted_candidates)} entry/entries to CHANGELOG.md")
+    else:
+        try:
+            with open(changelog_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            log(f"wave-reconcile: prepended {len(sorted_candidates)} changelog entry/entries to CHANGELOG.md")
+        except Exception as e:
+            die(f"Failed writing updated CHANGELOG.md: {e}", code=6)
+
+
 def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
     """GH-424: capture the ledger and generated views BEFORE the first write.
 
@@ -1764,6 +2276,7 @@ def snapshot_ledger_artifacts(repo_root, dry_run=False, journal=None):
         "releases.db", "releases.sql",
         "RELEASES-PREVIEW.html",
         "LEADERBOARD.html", "LEADERBOARD.md",
+        "CHANGELOG.md",
         os.path.join(".tick", "marathon-plan.fingerprint"),
     ):
         path = os.path.abspath(os.path.join(repo_root, name))
@@ -1844,6 +2357,8 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     if dry_run:
         sync_cmd.append("--dry-run")
         plan_cmd.append("--dry-run")
+    else:
+        plan_cmd.append("--write")  # GH-446: the planner only writes its dated plan doc when asked
 
     steps = [
         ("releases roadmap sync", sync_cmd),
@@ -1928,7 +2443,7 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
 def run_validation_gate(repo_root):
     """Run pdda doc-health verification gate."""
     log("Running PDDA doc-hygiene gate...")
-    gate_cmd = ["bash", "utils/pdda-local-checks.sh"] if os.path.exists(os.path.join(repo_root, "utils", "pdda-local-checks.sh")) else ["bash", "utils/pdda/pdda.sh"]
+    gate_cmd = ["bash", "utils/pdda-local-checks.sh"] if os.path.exists(os.path.join(repo_root, "utils", "pdda-local-checks.sh")) else ["bash", harness_tool(repo_root, "utils/pdda/pdda.sh")]
     r = subprocess.run(
         gate_cmd,
         cwd=repo_root,
@@ -2036,25 +2551,9 @@ def run_pre_merge(repo_root, args):
     errors = []
 
     for issue_num in closers:
-        working_dir = os.path.join(repo_root, "PROJECT", "2-WORKING")
-        matches = []
-        if os.path.isdir(working_dir):
-            for fname in sorted(os.listdir(working_dir)):
-                if fname.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
-                    matches.append(os.path.join(working_dir, fname))
-        if len(matches) > 1:
-            errors.append(f"Ambiguous active doc match for issue #{issue_num}: {', '.join(os.path.basename(m) for m in matches)}")
-        elif len(matches) == 1:
-            target_docs.add(matches[0])
-        else:
-            completed_dir = os.path.join(repo_root, "PROJECT", "3-COMPLETED")
-            comp_matches = [
-                os.path.join(completed_dir, f)
-                for f in sorted(os.listdir(completed_dir))
-                if f.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", f, re.IGNORECASE)
-            ] if os.path.isdir(completed_dir) else []
-            if comp_matches:
-                target_docs.add(comp_matches[0])
+        doc_path = find_issue_doc(repo_root, issue_num)
+        if doc_path and Path(doc_path).parent.name in ("2-WORKING", "3-COMPLETED"):
+            target_docs.add(doc_path)
 
     for d in diff_docs:
         if os.path.isfile(d):
@@ -2103,6 +2602,42 @@ def run_pre_merge(repo_root, args):
     sys.exit(0)
 
 
+
+def reconcile_delivered_issue(repo_root, issue_num, pr_number, base="development", dry_run=False):
+    """Finish one already-verified Jog delivery without re-running a whole wave.
+
+    The surrounding merge-cleanup batch owns uncommitted reconciliation writes. Snapshot
+    that state, use the normal reconciler lock and writers, and never pull over the batch.
+    A reference alone is insufficient: this path requires a positively CLOSED issue.
+    """
+    journal = RollbackJournal(repo_root)
+    try:
+        with ReconcilerLock(str(reconciler_git_dir(repo_root) / "wave-reconcile.lock")):
+            slug = github_slug_from_origin(repo_root)
+            meta = fetch_pr_metadata(repo_root, str(pr_number))
+            closers, mentions = extract_linked_issues(meta, repo_slug=slug)
+            if (not slug or meta.get("state") != "MERGED" or meta.get("baseRefName") != base
+                    or issue_num not in closers + mentions
+                    or fetch_issue_state(repo_root, issue_num) != "CLOSED"):
+                die("Jog delivery closeout requires a merged PR referencing the CLOSED issue", code=6)
+            doc = find_active_doc_for_issue(repo_root, issue_num)
+            if doc:
+                doc, ship_date = validate_and_update_doc(doc, meta, dry_run=dry_run, journal=journal)
+            else:
+                doc = find_issue_doc(repo_root, issue_num)
+                ship_date = (meta.get("mergedAt") or datetime.now().isoformat())[:10]
+            ship_manifest_items(repo_root, issue_num, meta, slug, dry_run, journal)
+            update_roadmap_entry(repo_root, issue_num, landing_label(meta), ship_date,
+                                 dry_run=dry_run, journal=journal,
+                                 doc_path=os.path.relpath(doc, repo_root) if doc else None,
+                                 repo_slug=slug)
+    except BaseException:
+        if not dry_run and journal.changed():
+            journal.rollback()
+        raise
+    finally:
+        journal.cleanup()
+
 def main():
     parser = argparse.ArgumentParser(
         description="wave_reconcile.py — Canonical Post-Merge Wave & Marathon Lifecycle Reconciler"
@@ -2141,7 +2676,13 @@ def main():
     parser.add_argument(
         "--skip-pull",
         action="store_true",
-        help="Skip git pull --ff-only origin development (for testing/isolated clones)",
+        help="Skip git pull --ff-only origin <base> (for testing/isolated clones)",
+    )
+    parser.add_argument(
+        "--base",
+        default="development",
+        help="Integration branch for direct --commit landings (GH-1144; express passes its resolved base). "
+             "PR, catch-up and qualification flows are development-only and keep this default.",
     )
     parser.add_argument(
         "--skip-branch-check",
@@ -2189,7 +2730,30 @@ def main():
                              "run qualifies them); an explicit --pr/--commit without a receipt fails closed. "
                              "Requires --catch-up --qualify.")
 
+    parser.add_argument("--delivered-issue", type=int,
+                        help="Jog post-proof closeout: reconcile one CLOSED issue referenced by the merged PR")
+    parser.add_argument("--issue-doc-sweep", action="store_true", help="Preview completion filing and cached pointer repair")
+    parser.add_argument("--fix", action="store_true", help="Apply issue-doc sweep moves and existing-row repoints")
+    parser.add_argument("--census", nargs="?", const=True, help="Recorded harness census whose delivered map is reported, never closed")
     args = parser.parse_args()
+    if args.delivered_issue and (not args.pr or len(args.pr) != 1 or args.marathon or args.manifest
+                                 or args.catch_up or args.commit or args.pre_merge
+                                 or args.issue_doc_sweep or args.force_promote or args.offline):
+        parser.error("--delivered-issue requires a single live --pr post-merge reconciliation")
+    if args.issue_doc_sweep:
+        if args.pr or args.catch_up or args.commit or args.pre_merge or args.delivered_issue or args.marathon or args.manifest:
+            parser.error("--issue-doc-sweep cannot be combined with reconciliation modes")
+        try:
+            sweep_issue_docs(os.path.abspath(args.root) if args.root else resolve_repo_root(),
+                             apply=args.fix and not args.dry_run, census=args.census)
+        except ReconcileError as exc:
+            sys.exit(exc.code)
+        except (ValueError, OSError, KeyError) as exc:
+            log_err(str(exc))
+            sys.exit(2)
+        return
+    if args.fix or args.census:
+        parser.error("--fix and --census require --issue-doc-sweep")
     if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
         parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
     if args.promotion and not (args.catch_up and args.qualify):
@@ -2199,6 +2763,17 @@ def main():
 
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
 
+    if args.delivered_issue:
+        try:
+            reconcile_delivered_issue(repo_root, args.delivered_issue, args.pr[0], args.base,
+                                      dry_run=args.dry_run)
+        except ReconcileError as exc:
+            sys.exit(exc.code)
+        except (ValueError, OSError, KeyError) as exc:
+            log_err(str(exc))
+            sys.exit(2)
+        return
+
     if args.pre_merge:
         try:
             run_pre_merge(repo_root, args)
@@ -2206,7 +2781,7 @@ def main():
             sys.exit(re_err.code)
         return
 
-    lock_file = os.path.join(repo_root, ".git", "wave-reconcile.lock")
+    lock_file = str(reconciler_git_dir(repo_root) / "wave-reconcile.lock")
     journal = RollbackJournal(repo_root=repo_root)
     baseline = None
 
@@ -2217,7 +2792,7 @@ def main():
         # Preflight phase
         log(f"Starting wave reconciliation (dry_run={args.dry_run}, root={repo_root})")
         baseline = check_porcelain_cleanliness(repo_root, allow_dirty=(args.allow_dirty or args.dry_run))
-        check_current_branch(repo_root, skip_branch_check=args.skip_branch_check)
+        check_current_branch(repo_root, expected_branch=args.base, skip_branch_check=args.skip_branch_check)
 
         repo_slug = github_slug_from_origin(repo_root)
         has_workflow = os.path.isfile(os.path.join(repo_root, ".github", "workflows", "wave-reconcile.yml"))
@@ -2226,7 +2801,7 @@ def main():
                 check_hosted_reconciler_in_flight(repo_root, repo_slug=repo_slug, force=args.force_local_reconcile)
 
         if not args.skip_pull and not args.dry_run and not args.offline:
-            pull_upstream(repo_root)
+            pull_upstream(repo_root, branch=args.base)
 
         offline_manifest = None
         if args.offline:
@@ -2300,13 +2875,17 @@ def main():
                     for issue in extract_linked_issues(meta, repo_slug)[0]:
                         if issue not in issue_owners or rank > issue_owners[issue][0]:
                             issue_owners[issue] = (rank, key)
+            moved_docs = {}  # GH-1178: source relpath -> (destination relpath, owning issue)
             for landing_kind, landing_id in landing_items:
                 if (landing_kind, landing_id) in metadata:
                     pr_meta = metadata[(landing_kind, landing_id)]
                 elif landing_kind == "commit":
-                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
+                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest, base=args.base)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
+                # GH-1487: keep what this loop fetched so reconcile_changelog (after the loop) sees a plain
+                # `--pr N` landing; owner ranks above were computed before the loop and are unaffected.
+                metadata.setdefault((landing_kind, landing_id), pr_meta)
                 landing = landing_label(pr_meta)
                 log(f"Processing {landing}...")
                 state = pr_meta.get("state", "").upper()
@@ -2316,9 +2895,9 @@ def main():
                     log(f"  {landing} state is '{state}' (unmerged/declined) -> routing to 4-MISC/")
 
                 base_ref = pr_meta.get("baseRefName", "")
-                if base_ref and base_ref != "development":
+                if base_ref and base_ref != args.base:
                     die(
-                        f"{landing} target base is '{base_ref}', not 'development'.",
+                        f"{landing} target base is '{base_ref}', not '{args.base}'.",
                         code=4,
                     )
 
@@ -2378,6 +2957,9 @@ def main():
                             doc_path, pr_meta, is_merged=is_merged, dry_run=args.dry_run, journal=journal
                         )
                         log(f"  Moved -> {os.path.basename(dest_path)} (destination: {os.path.basename(os.path.dirname(dest_path))})")
+                        if dest_path != doc_path:
+                            moved_docs[os.path.relpath(doc_path, repo_root)] = (
+                                os.path.relpath(dest_path, repo_root), issue_num)
                         updated = update_roadmap_entry(
                             repo_root,
                             issue_num,
@@ -2438,8 +3020,12 @@ def main():
                         log(f"  Issue #{issue_num} referenced without a closing keyword and OPEN — recording merge evidence only")
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
 
+            repoint_moved_doc_rows(repo_root, moved_docs, repo_slug, dry_run=args.dry_run, journal=journal)
+
             # Global roadmap cleanups
             fix_mangled_roadmap_entries(repo_root, dry_run=args.dry_run, journal=journal)
+
+            reconcile_changelog(repo_root, landing_items, metadata, repo_slug, catch_up=args.catch_up, dry_run=args.dry_run, journal=journal, offline_manifest=offline_manifest)
 
             # GH-421: skip downstream regeneration only when there was genuinely nothing to
             # act on this run (catch-up mode found no new PRs, and no --pr/--marathon target

@@ -1,0 +1,33 @@
+[
+  {
+    "name": "marathon-plan",
+    "cmd": [
+      "bash",
+      "test/marathon-plan.sh"
+    ],
+    "rc": 1,
+    "seconds": 2.2784934043884277
+  },
+  {
+    "name": "gh418",
+    "cmd": [
+      "bash",
+      "test/gh418-planner-ledger-source.sh"
+    ],
+    "rc": 1,
+    "seconds": 0.05953097343444824
+  },
+  {
+    "name": "frozen-twin",
+    "cmd": [
+      "bash",
+      "test/gh308-frozen-twin-guard.sh",
+      "--check",
+      "--base",
+      "origin/development",
+      "--allow-exceptions"
+    ],
+    "rc": 0,
+    "seconds": 0.18028712272644043
+  }
+]

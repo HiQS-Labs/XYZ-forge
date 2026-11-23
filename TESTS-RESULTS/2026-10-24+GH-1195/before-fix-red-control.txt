@@ -1,0 +1,9 @@
+== resolver with login env
+repo_root()        = /Users/noelsaw/Documents/GH Repos/XYZ-forge
+anchor on own file = /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1195-planner-root-leak-2026-10-24
+== red control: hide this clone's releases.db; engine should fail if it reads THIS clone
+rc=4
+wrote PROJECT/2-WORKING/MARATHON-PLAN-2026-10-24.md
+json.decoder.JSONDecodeError: Extra data: line 2 column 1 (char 305)
+
+[exited with code 0]

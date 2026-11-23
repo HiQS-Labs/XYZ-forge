@@ -1,0 +1,20 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=<work>/ledger-m10-noplanner)
+wave-reconcile: Processing PR #5291...
+wave-reconcile:   PR #5291 closes [4291]; references []
+wave-reconcile:   Found active doc: GH-4291-LEDGER.md
+TRANSITION ["doc", "move", "GH-4291-LEDGER.md", "3-COMPLETED", "2026-11-14"]
+wave-reconcile:   Moved -> GH-4291-LEDGER.md (destination: 3-COMPLETED)
+TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M7DPXY72QDXMS9FE9AE5FWCT", "--doc-path", "PROJECT/3-COMPLETED/GH-4291-LEDGER.md"]
+TRANSITION ["roadmap", "update", "--gid", "rmi-01M7DPXY72QDXMS9FE9AE5FWCT", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-4291 · ledger host fixture** ✅ **SHIPPED 2026-11-14 (PR #5291)** — (rated 60/60/50/60)"]
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> export_timeline.py --preview
+wave-reconcile:   -> leaderboard.sh
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile: ERROR — Subprocess 'marathon-plan.sh' failed with exit 127:
+bash: utils/marathon-plan.sh: No such file or directory
+
+
+wave-reconcile: Rolling back all uncommitted mutations...

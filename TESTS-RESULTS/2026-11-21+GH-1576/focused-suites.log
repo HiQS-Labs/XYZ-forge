@@ -1,0 +1,10 @@
+test/gh267-express-skill.sh rc=0 seconds=38 :: gh267-express-skill: pass=128 fail=0
+test/gh280-jog-marathon-adapter.sh rc=1 seconds=63 ::   FAIL: G4 row: parked|approved receipt not published: refusing push: githooks/install.sh is missing, so this clone's pr
+test/gh645-merge-cleanup-xyz-tools.sh rc=0 seconds=0 :: OK
+test/gh674-merge-cleanup-hosted-lookup.sh rc=0 seconds=1 :: merge-cleanup: ✅ Hosted wave-reconcile run #62901 succeeded for mmmmmmmmmm
+test/gh544-pre-push-gate.sh rc=0 seconds=17 ::   gh544-pre-push-gate: 103 pass, 0 fail
+test/gh4-ungated-clone-warning.sh rc=0 seconds=11 ::   gh4-ungated-clone-warning: 6 pass, 0 fail
+test/gh436-merge-cleanup.py rc=1 seconds=219 :: ================== 35 failed, 192 passed in 219.59s (0:03:39) ==================
+--- after fixtures were wired for the new refusal (test/gh280 fixture ships a "wired" installer stub; test/gh436 stubs the wiring probe, its pushes are mocked) ---
+test/gh280-jog-marathon-adapter.sh rc=0 seconds=158 :: gh280-jog-marathon-adapter: 227 pass, 0 fail
+test/gh436-merge-cleanup.py rc=0 seconds=294 :: 227 passed

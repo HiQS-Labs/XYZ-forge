@@ -1,0 +1,47 @@
+[
+  {
+    "source": "TESTS-RESULTS/2026-11-09+GH-1386-twohour/batch.log.gz",
+    "source_sha256": "e0eb602ab65e2aecfd5131b528dfb9ea52788513517a51973784a096b2e73ea0",
+    "stage": "LEDGER_GATE",
+    "green": true,
+    "http_403_reported": false,
+    "request_count": null,
+    "diagnostic_count": 14
+  },
+  {
+    "source": "TESTS-RESULTS/2026-11-09+GH-1386-twohour/resume.log.gz",
+    "source_sha256": "02d84b88d93328c2663918d0c309973a6ec6c94fce4296cd7aabd060dce2193a",
+    "stage": "LEDGER_GATE",
+    "green": false,
+    "http_403_reported": true,
+    "request_count": null,
+    "diagnostic_count": 10
+  },
+  {
+    "source": "TESTS-RESULTS/2026-11-09+GH-1390/landing.log.gz",
+    "source_sha256": "5cfca7526f5b928604a3c1b822b7b3fbd04184a485e9c85263ea89af8b7c2999",
+    "stage": "LEDGER_GATE",
+    "green": true,
+    "http_403_reported": false,
+    "request_count": null,
+    "diagnostic_count": 14
+  },
+  {
+    "source": "TESTS-RESULTS/2026-11-09+GH-1390/quota-refusal.log.gz",
+    "source_sha256": "3d4e5516f5388fb5c8f52e1ba983f0b0db704fa81fbad1aead43d8040fda4e23",
+    "stage": "LEDGER_GATE",
+    "green": false,
+    "http_403_reported": true,
+    "request_count": null,
+    "diagnostic_count": 10
+  },
+  {
+    "source": "temp/a1388-20261109-run.log",
+    "source_sha256": "113a51c6c7d7dd6267a8add9cb8620d755f2ff0a9e5aa485f683d264c6d4b151",
+    "stage": "LEDGER_GATE",
+    "green": true,
+    "http_403_reported": false,
+    "request_count": null,
+    "diagnostic_count": 14
+  }
+]

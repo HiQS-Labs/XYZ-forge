@@ -1,0 +1,4 @@
+pre-push full gate (validate.sh, scope full) on 859131aa0 — task clone, test venv on PATH (first attempt refused with ENVIRONMENT FAULT: system python3 3.14 lacked yaml/pytest/requests)
+passed: 408 / 408
+pre-push: full gate GREEN in 653s — pushing.
+push rc=0 656s

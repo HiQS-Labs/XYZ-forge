@@ -1,0 +1,31 @@
+REPAIR_SLOT 0 attempt 1/2 reserved (caller, rung ponytail, head fa594ece8a)
+warning: Cannot merge binary files: releases.db (HEAD vs. origin/development)
+Auto-merging releases.db
+CONFLICT (content): Merge conflict in releases.db
+Auto-merging releases.sql
+CONFLICT (content): Merge conflict in releases.sql
+Auto-merging skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+Auto-merging test/gh436-merge-cleanup.py
+Automatic merge failed; fix conflicts and then commit the result.
+ 
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 2666b771c4",
+  "log": [
+    "classification: keep=theirs generation ours/theirs=(2449, 2451) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-1381: rc=0 ",
+    "roadmap rate GH-1381 95/90/50/90: rc=0 ",
+    "roadmap update GH-1381 (section/marker): rc=0 ",
+    "roadmap accepted-start GH-1381 (rmi-01M6YX2RK98XRZE9E38Z904KW2): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "2666b771c47d99eef1c84adcf9c02ecdce7a5387",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}
+SECOND_CLONE_LEDGER True clean in a second clone

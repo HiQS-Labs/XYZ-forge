@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "<stdin>", line 23, in <module>
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "<HOME>/Documents/GitHub/XYZ-forge-gh1327-final-push-gate-2026-11-09/utils/py/_marathon_plan.py", line 121, in <module>
+    def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None = None,
+TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'

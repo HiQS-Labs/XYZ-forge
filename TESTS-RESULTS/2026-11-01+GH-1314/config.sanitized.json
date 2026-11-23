@@ -1,0 +1,7 @@
+{
+  "root": "<CALIBRATION_ROOT>",
+  "python": "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+  "deadline_epoch": 1793556273.936942,
+  "helper_sha256": "e5f697d48d2d0ad5699b84a8991e9ffbc57a8b1d91cfc43ec49bd3cbd59db02b",
+  "protocol_sha256": "a960c0f9d9600a2e960d42534966403391a9f1a183ad3b2d80e6c60654df36ef"
+}

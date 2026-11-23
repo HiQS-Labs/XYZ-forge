@@ -1,0 +1,45 @@
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M6Y67FAWQFFXC8VQZ1J7HRNH",
+  "executions": [
+    {
+      "execution_id": "gh1254-exec1",
+      "mode": "run",
+      "started_at": "2026-11-08T18:32:56Z",
+      "status": "projected-failed",
+      "packet_dir": "gh1254-exec1/preflight",
+      "result_path": "gh1254-exec1/preflight/marathon-result.json",
+      "drive_exit": 5,
+      "outcome": "escalated",
+      "reason": "pre-advance-failed",
+      "projected_reason": "marathon escalated: pre-advance-failed (exit 5) [gh1254-exec1; result: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec1/preflight/marathon-result.json]",
+      "gate_retries": [
+        {
+          "execution_id": "gh1254-exec1-gateretry1",
+          "attempt": 1,
+          "status": "escalated",
+          "result_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec1/gate-retry-1/marathon-result.json"
+        },
+        {
+          "execution_id": "gh1254-exec1-gateretry2",
+          "attempt": 2,
+          "status": "escalated",
+          "result_path": "/Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec1/gate-retry-2/marathon-result.json"
+        }
+      ]
+    },
+    {
+      "execution_id": "gh1254-exec2",
+      "mode": "retry-build",
+      "started_at": "2026-11-08T18:45:58Z",
+      "status": "projected-failed",
+      "packet_dir": "gh1254-exec2/preflight",
+      "result_path": "gh1254-exec2/preflight/marathon-result.json",
+      "drive_exit": 5,
+      "outcome": "escalated",
+      "reason": "pre-advance-failed",
+      "projected_reason": "marathon escalated: pre-advance-failed (exit 5) [gh1254-exec2; result: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/preflight/marathon-result.json]"
+    }
+  ],
+  "gh_number": 1254
+}

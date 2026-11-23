@@ -1,0 +1,79 @@
+## snap 3-before-kill at 2026-10-26T03:22:37Z
+### jog list --all (head)
+{
+ "id": 22,
+ "global_id": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+ "gh_number": 416,
+ "position": 1,
+ "status": "running",
+ "attempt_count": 2,
+ "lease_pid": 30105,
+ "failure_reason": null,
+ "created_at": "2026-10-26T03:05:31Z",
+ "updated_at": "2026-10-26T03:22:13Z",
+ "title": "four documentation trues-ups",
+ "doc_path": "PROJECT/2-WORKING/GH-416-DOC-TRUES-UP-BATCH.md",
+ "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/416"
+}
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge
+#### .tick/jog state files
+-- /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/jog/jog-01M5V2Q6CK5GW0B5V25KFQQ1XE/state.json
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+  "executions": [
+    {
+      "execution_id": "gh416-exec1",
+      "mode": "run",
+      "started_at": "2026-10-26T03:22:13Z",
+      "status": "dispatched",
+      "packet_dir": "gh416-exec1/preflight",
+      "result_path": "gh416-exec1/preflight/marathon-result.json"
+    }
+  ],
+  "gh_number": 416
+}
+
+#### driver-heartbeat.json
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/driver-heartbeat.json: No such file or directory
+
+#### rtl_driver_heartbeat_status
+finished (rc=1)
+#### driver lock
+total 8
+drwxr-xr-x@  3 noelsaw  staff   96 Oct 25 20:22 .
+drwxr-xr-x@ 19 noelsaw  staff  608 Oct 25 20:22 ..
+-rw-r--r--@  1 noelsaw  staff    6 Oct 25 20:22 pid
+
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0
+#### .tick/jog state files
+#### driver-heartbeat.json
+{"phase_id": "gh-416-doc-trues-up-batch", "pid": 32725, "plan": "packet", "relay_task": "MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN", "started_utc": "2026-10-26T03:22:19Z", "updated_utc": "2026-10-26T03:22:19Z"}
+
+#### rtl_driver_heartbeat_status
+running (rc=0)
+#### driver lock
+total 8
+drwxr-xr-x@  3 noelsaw  staff   96 Oct 25 20:22 .
+drwxr-xr-x@ 17 noelsaw  staff  544 Oct 25 20:22 ..
+-rw-r--r--@  1 noelsaw  staff    6 Oct 25 20:22 pid
+
+### processes
+30101 74561       00:25 /bin/zsh -c source /Users/noelsaw/.claude/shell-snapshots/snapshot-zsh-1792983100817-qo0zlk.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \builtin unalias -- 'unsetenv'; \builtin 
+30105 30101       00:25 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python utils/py/releases_app.py jog run --target-root /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-
+32725 30105       00:20 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/utils/py/marathon_drive.py --phase-brief
+33466 32725       00:18 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/utils/py/relay_drive.py --relay-file /Us
+33550 33466       00:17 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/utils/py/agy-turn.py
+35205 67871       00:13 bash -c vp_run_one "$1" pool _ codex-turn.sh
+35213 35205       00:13 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/codex-turn.sh
+35417 33550       00:13 agy --dangerously-skip-permissions --print-timeout 900s -p SCRATCH DISCIPLINE (hard requirement, GH-113): every probe script, test file, or temporary output you create must be written under $TMPDIR or the repo's .relay-scratch
+35916 67871       00:12 bash -c vp_run_one "$1" pool _ agy-turn.sh
+35925 35916       00:12 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/agy-turn.sh
+40243 67990       00:03 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/gh280-jog-marathon-adapter.sh
+40244 40243       00:03 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFRkkq7j/ro
+40569 40244       00:02 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFR
+40699 35925       00:02 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/utils/py/agy-turn
+40995 40569       00:01 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFR
+41045 40995       00:01 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.S1wFR
+67919 67871       01:33 bash -c vp_run_one "$1" pool _ gh280-jog-marathon-adapter.sh
+67990 67919       01:33 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/gh280-jog-marathon-adapter.sh

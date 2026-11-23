@@ -1,0 +1,4 @@
+pre-push: docs-only update — running the documentation gate, not validate.sh.
+pre-push: documentation gate GREEN in 70s — pushing.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   04ef15c0..811d5823  HEAD -> development

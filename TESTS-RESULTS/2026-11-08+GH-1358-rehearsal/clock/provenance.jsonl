@@ -1,0 +1,3 @@
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/README.md", "sha256": "b8d019caddb75affb0ed6aff836a244e3d055574c61706a0bf4dec50b5665789", "kind": "manual old-code decision controls; controlled inputs"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py", "sha256": "acdcf3109d82a32a8177fc874ae28fe97556e9bfbb7b047e25810363524c159b", "kind": "manual old-code decision controls; controlled inputs"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/old-red.json", "sha256": "960a3ef08b37b793b3a8471ccd0eecc3b173b76a54d7ea2a97d7f9a86c049db5", "kind": "manual old-code decision controls; controlled inputs"}

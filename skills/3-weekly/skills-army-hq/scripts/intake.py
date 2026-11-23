@@ -536,10 +536,12 @@ def action_apply(root, action):
             os.close(fd)
     elif kind == "retire-directory":
         parent = location(action["root"])
-        path = parent / "skills-sync-trinity"
+        path = parent / safe_name(action["name"])
         stage = location(root / ".staging" / action["op"])
         old = stage / "retired"
-        if not path.exists() and not path.is_symlink():
+        if path.is_symlink() or not path.exists():
+            # Already moved, or replaced by the owned link of a migration that finished (GH-1309):
+            # the staged copy is the proof, never the app entry.
             require(digest(old) == action["before"], "Missing retired directory and backup staging")
             return
         require(digest(path) == action["before"], "Legacy directory changed; preserved")
@@ -565,7 +567,11 @@ def validate_receipt(root, receipt):
         if kind in ("payload", "retire-directory"):
             require(re.fullmatch(r"[a-f0-9]{32}", action.get("op", "")), "Invalid staged operation")
             name = safe_name(action["name"])
-            require(kind != "retire-directory" or name == "skills-sync-trinity", "Invalid retirement")
+            if kind == "retire-directory":
+                require(name == "skills-sync-trinity" or name in receipt["state"]["skills"], "Invalid retirement")
+                retired = location(action["root"])
+                require(retired != root and not within(retired, root) and not within(root, retired),
+                        "Retirement root overlaps collection")
             for key in ("before", "after"):
                 value = action.get(key)
                 require(value is None or isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value),
@@ -794,10 +800,18 @@ def main(argv=None):
                 require(not within(source, root) and not within(root, source) and source != root, "Source/collection overlap")
                 require(name not in found or args.command == "update", f"Skill already exists: {name}; use update")
                 before = found.get(name, {}).get("digest")
-                if before == record["digest"]:
+                held = state["skills"].get(name, {})
+                receipt_only = before == record["digest"]
+                if receipt_only and held.get("source") == record["source"] and held.get("digest") == before:
                     print(f"Unchanged: {name}"); return 0
                 details = {"name": name, "source": str(source), "before": before, "after": record["digest"], "commit": record["commit"]}
-                if apply:
+                if receipt_only:
+                    # GH-1306: identical bytes but no (or another) recorded source; record provenance, copy nothing.
+                    details["receipt_only"] = True
+                    if not apply:
+                        print(f"skills-army-hq: will RECORD source {source} @ {record['commit'][:12]} for {name} "
+                              "(payload already identical; nothing copied)", file=sys.stderr)
+                elif apply:
                     if before:
                         details["backup"] = archive(root, root / name)
                     actions.append(stage_payload(root, source, before, record["digest"], name, ignored))
@@ -844,7 +858,7 @@ def main(argv=None):
             print(json.dumps({"operation": args.command, "apply": apply, **details}, indent=2))
             if apply:
                 transact(root, state, config, actions, args.command, details)
-                if args.command in ("add", "update", "remove"):
+                if args.command in ("add", "update", "remove") and not details.get("receipt_only"):
                     origin = f" from {Path(details['source']).name}@{details['commit'][:12]}" if details.get("commit") else ""
                     if owned_paths and regular_bytes(root / "README.md") != regular_bytes(root / "skills-army-hq" / "README.md"):
                         owned_paths = ()

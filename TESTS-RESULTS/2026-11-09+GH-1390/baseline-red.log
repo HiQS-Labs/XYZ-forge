@@ -1,0 +1,68 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-noop-controls-2026-11-09
+configfile: pytest.ini
+collected 227 items / 223 deselected / 4 selected
+
+test/gh436-merge-cleanup.py FFF.                                         [100%]
+
+=================================== FAILURES ===================================
+_ TestMergeCleanupOrchestration.test_noop_publication_already_remote_skips_push _
+
+self = <gh436-merge-cleanup.TestMergeCleanupOrchestration testMethod=test_noop_publication_already_remote_skips_push>
+
+    def test_noop_publication_already_remote_skips_push(self):
+        self._noop_publication_repo()
+        calls = []
+        def network(repo, cmd, **kw):
+            calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, 0 if cmd[0] == "fetch" else 1, "", "unneeded push invoked")
+        with mock.patch.object(merge_cleanup, "_net_git", side_effect=network):
+>           self.assertTrue(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+E           AssertionError: False is not true
+
+test/gh436-merge-cleanup.py:1034: AssertionError
+----------------------------- Captured stderr call -----------------------------
+merge-cleanup: ERROR — PR #1390: could not push post-merge writes: unneeded push invoked
+__ TestMergeCleanupOrchestration.test_noop_publication_empty_refs_fail_closed __
+
+self = <gh436-merge-cleanup.TestMergeCleanupOrchestration testMethod=test_noop_publication_empty_refs_fail_closed>
+
+    def test_noop_publication_empty_refs_fail_closed(self):
+        self._noop_publication_repo()
+        original = merge_cleanup.run_git
+        def git(repo, cmd, **kw):
+            if cmd[0] == "rev-parse":
+                return subprocess.CompletedProcess(cmd, 0, "", "")
+            return original(repo, cmd, **kw)
+        with mock.patch.object(merge_cleanup, "run_git", side_effect=git), \
+             mock.patch.object(merge_cleanup, "_net_git", return_value=subprocess.CompletedProcess([], 0, "", "")):
+>           self.assertFalse(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+E           AssertionError: True is not false
+
+test/gh436-merge-cleanup.py:1073: AssertionError
+----------------------------- Captured stdout call -----------------------------
+merge-cleanup: ✅ PR #1390 committed; primary is clean at origin/development
+_ TestMergeCleanupOrchestration.test_noop_publication_fetch_failure_never_pushes _
+
+self = <gh436-merge-cleanup.TestMergeCleanupOrchestration testMethod=test_noop_publication_fetch_failure_never_pushes>
+
+    def test_noop_publication_fetch_failure_never_pushes(self):
+        self._noop_publication_repo()
+        calls = []
+        def network(repo, cmd, **kw):
+            calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, 1 if cmd[0] == "fetch" else 0, "", "offline")
+        with mock.patch.object(merge_cleanup, "_net_git", side_effect=network):
+            self.assertFalse(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+>       self.assertFalse(any(x[0] == "push" for x in calls))
+E       AssertionError: True is not false
+
+test/gh436-merge-cleanup.py:1062: AssertionError
+----------------------------- Captured stderr call -----------------------------
+merge-cleanup: ERROR — PR #1390: could not verify pushed integration head: offline
+=========================== short test summary info ============================
+FAILED test/gh436-merge-cleanup.py::TestMergeCleanupOrchestration::test_noop_publication_already_remote_skips_push
+FAILED test/gh436-merge-cleanup.py::TestMergeCleanupOrchestration::test_noop_publication_empty_refs_fail_closed
+FAILED test/gh436-merge-cleanup.py::TestMergeCleanupOrchestration::test_noop_publication_fetch_failure_never_pushes
+================= 3 failed, 1 passed, 223 deselected in 0.42s ==================

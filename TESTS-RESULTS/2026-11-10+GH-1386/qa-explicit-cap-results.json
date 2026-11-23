@@ -1,0 +1,149 @@
+[
+  {
+    "case": "cap1-review",
+    "turns": [
+      "codex",
+      "agy"
+    ],
+    "error": null,
+    "pass": true
+  },
+  {
+    "case": "cap2-limit",
+    "turns": [
+      "codex",
+      "agy",
+      "codex",
+      "agy"
+    ],
+    "error": null,
+    "pass": true
+  },
+  {
+    "case": "repeat-builder",
+    "turns": [
+      "codex"
+    ],
+    "error": "explicit-cap-invalid-handoff",
+    "pass": true
+  },
+  {
+    "case": "unknown-initial",
+    "turns": [],
+    "error": "explicit-cap-invalid-role",
+    "pass": true
+  },
+  {
+    "case": "unknown-handoff",
+    "turns": [
+      "codex"
+    ],
+    "error": "explicit-cap-invalid-handoff",
+    "pass": true
+  },
+  {
+    "case": "prior/default repeated-builder red",
+    "turns": [
+      "codex",
+      "codex"
+    ],
+    "desired_bound_violated": true
+  },
+  {
+    "case": "timeout/repeated-recovery",
+    "explicit_cap": null,
+    "calls": [
+      {
+        "review_once": false
+      },
+      {
+        "review_once": false
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "timeout/repeated-recovery",
+    "explicit_cap": 1,
+    "calls": [
+      {
+        "review_once": true
+      },
+      {
+        "review_once": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "timeout/repeated-recovery",
+    "explicit_cap": 2,
+    "calls": [
+      {
+        "review_once": true
+      },
+      {
+        "review_once": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "review-once-identity",
+    "actor": "codex",
+    "blocked": true,
+    "pass": true
+  },
+  {
+    "case": "review-once-identity",
+    "actor": "rogue",
+    "blocked": true,
+    "pass": true
+  },
+  {
+    "case": "review-once-identity",
+    "actor": "agy",
+    "blocked": false,
+    "pass": true
+  },
+  {
+    "case": "producer-cap-forwarding",
+    "cap": null,
+    "pass": true
+  },
+  {
+    "case": "producer-cap-forwarding",
+    "cap": 1,
+    "pass": true
+  },
+  {
+    "case": "producer-cap-forwarding",
+    "cap": 2,
+    "pass": true
+  },
+  {
+    "case": "review-once-rejection",
+    "exit": 5,
+    "pass": true
+  },
+  {
+    "case": "invalid-cap",
+    "cap": 0,
+    "rejected": true
+  },
+  {
+    "case": "invalid-cap",
+    "cap": -1,
+    "rejected": true
+  },
+  {
+    "case": "invalid-cap",
+    "cap": true,
+    "rejected": true
+  },
+  {
+    "case": "invalid-cap",
+    "cap": "2",
+    "rejected": true
+  }
+]

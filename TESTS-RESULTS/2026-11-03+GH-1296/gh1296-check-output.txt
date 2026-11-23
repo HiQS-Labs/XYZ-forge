@@ -1,0 +1,4 @@
+1265 (ready) -> []
+1265 moved artifact path -> ["artifact path not found at target.ref: skills/consult/SKILL.md"]
+670 (artifacts_new) -> []
+no contract -> ["no Preflight Contract (the capture doc has none, or there is no capture doc)"]

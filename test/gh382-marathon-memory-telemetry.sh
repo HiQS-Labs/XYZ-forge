@@ -113,13 +113,8 @@ grep -q "agy: 64MB peak RSS" <<<"$(printf '%s\n' "$analysis")" \
   || fail "tick analyze missing agy peak RSS"
 
 # --- (3) Acceptance criterion 3: Low swap warning in output ---
-# The sampler is Darwin-only by construction: marathon_drive._phase_memory_sample guards the whole
-# swap read with `if sys.platform == "darwin"`, and the fixture below feeds it macOS
-# `sysctl vm.swapusage` output. On any other platform that branch never runs, no warning is emitted,
-# and this assertion failed for a reason that said nothing about the host — the Linux box it was
-# failing on had 8GB of free swap. Skip where the feature does not exist rather than asserting it
-# everywhere. (Implementing the sampler for Linux via /proc/meminfo is tracked separately; until
-# then an unattended Linux marathon genuinely gets no low-swap warning.)
+# These fixtures feed macOS sysctl output, so exercise them only on Darwin.
+# Linux samples /proc/meminfo instead.
 skip() { echo "  SKIP: $*"; }
 if [ "$(python3 -c 'import sys; print(sys.platform)')" = "darwin" ]; then
   low_swap_out="$(python3 -c "
@@ -136,8 +131,27 @@ marathon_drive._phase_memory_sample('test-low-swap')
   grep -q "warn: host free swap is critically low (512MB < 1024MB)" <<<"$(printf '%s\n' "$low_swap_out")" \
     && pass "GH-382: low-swap warning logged when free swap is below threshold" \
     || fail "low-swap warning missing when free swap is low"
+
+  no_swap_out="$(python3 -c "
+import sys
+sys.path.insert(0, '$ROOT_REPO/utils/py')
+import marathon_drive
+class FakeRes:
+    stdout = 'total = 0.00M used = 0.00M free = 0.00M (encrypted)'
+marathon_drive.subprocess.run = lambda *a, **kw: FakeRes()
+sample = marathon_drive._phase_memory_sample('test-no-swap')
+assert sample['swap_free_mb'] is None, sample
+print('no-swap sample verified')
+")" || fail "no-swap sample did not omit free swap"
+  if ! grep -q 'no-swap sample verified' <<<"$no_swap_out"; then
+    fail "no-swap probe produced no verification output"
+  elif grep -qE 'critically low|swap_free=' <<<"$no_swap_out"; then
+    fail "no configured swap produced a warning or swap_free telemetry"
+  else
+    pass "GH-1050: no configured swap omits low-swap warning and swap_free telemetry"
+  fi
 else
-  skip "GH-382: low-swap warning is darwin-only (sampler guarded by sys.platform == 'darwin')"
+  skip "GH-382/GH-1050: sysctl swap fixtures require darwin"
 fi
 
 # --- (4) Acceptance criterion 4: Negative controls ---

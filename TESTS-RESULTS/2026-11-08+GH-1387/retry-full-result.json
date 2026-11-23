@@ -1,0 +1,10 @@
+{
+  "command": "git push origin HEAD:refs/heads/t3/preserve-attempt-history",
+  "sha": "dc02fa19a6ea1e118377d8ae51da452bf6ad90d0",
+  "started_at": "2026-11-09T00:05:12.460066+00:00",
+  "elapsed_seconds": 538.0614318847656,
+  "exit": 0,
+  "identity_unchanged": true,
+  "cap_seconds": 1800,
+  "environment": "normal auto width; overrides unset"
+}

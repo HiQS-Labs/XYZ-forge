@@ -1,0 +1,34 @@
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.IGH9D2)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.IGH9D2) changed-files=1
+rtl: GH-654 off-lane candidate: marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+rtl: GH-654 allowlist: [utils/py/harness.py, test/gh174-harness-registry.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.imv4w9)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.imv4w9) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.imv4w9) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.imv4w9) changed-files=0
+rtl: GH-654 off-lane candidate: marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+rtl: GH-654 allowlist: [utils/py/harness.py, test/gh174-harness-registry.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+Cloning into '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc'...
+pre-push: no fresh merge-base with origin's integration branch (tracking ref stale or absent — fetch and retry, or take the full gate).
+remote: 
+remote: Create a pull request for 'marathon/gh-1295-injected-text-in-briefs-2026-11-08' on GitHub by visiting:        
+remote:      https://github.com/HiQS-Labs/XYZ-forge/pull/new/marathon/gh-1295-injected-text-in-briefs-2026-11-08        
+remote: 
+To https://github.com/HiQS-Labs/XYZ-forge.git
+ * [new branch]        HEAD -> marathon/gh-1295-injected-text-in-briefs-2026-11-08
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+relay-turn: ⚠️  NOTICE: tracking ref origin/development is 3 commits ahead. Consider rebasing between phases.
+codex-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.lM9J4i)
+rtl: GH-654 off-lane candidate: marathon-system/gh-1160-local-reconcile-startup/RELAY.md
+rtl: GH-654 allowlist: [AGENTS.md, test/gh527-destructive-git-guard.sh, test/gh649-pdda-migration.sh, test/hq.sh, test/pdda-install-startup-docs.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1160-local-reconcile-startup/RELAY.md
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+relay-turn: ⚠️  NOTICE: tracking ref origin/development is 3 commits ahead. Consider rebasing between phases.
+agy-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.wA4VWK)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.wA4VWK) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.wA4VWK) changed-files=1
+rtl: GH-654 off-lane candidate: marathon-system/gh-1160-local-reconcile-startup/RELAY.md
+rtl: GH-654 allowlist: [AGENTS.md, test/gh527-destructive-git-guard.sh, test/gh649-pdda-migration.sh, test/hq.sh, test/pdda-install-startup-docs.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1160-local-reconcile-startup/RELAY.md
+awk: can't open file /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/PROJECT/1-INBOX/GH-1160-LOCAL-RECONCILE-STARTUP.md
+ source line number 7

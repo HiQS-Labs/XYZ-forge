@@ -1,0 +1,3 @@
+PASS issue-body invalid JSON green: attributed
+PASS Completed state completed-ref drift retained
+PASS Deferred · vision state deferred drift retained

@@ -1,0 +1,9 @@
+START 2026-10-26T03:05:56Z
+
+============================================================
+jog: processing GH-416 (attempt 1) at position 1
+============================================================
+jog: promoting 1-INBOX contract for GH-416 to 2-WORKING...
+jog: contract promotion failed: unreviewed-probe-contract (no valid probes in unattended mode)
+jog: queue complete (0 pending tasks).
+EXIT 0 2026-10-26T03:05:56Z

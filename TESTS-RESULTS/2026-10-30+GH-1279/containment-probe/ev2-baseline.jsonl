@@ -1,0 +1,9 @@
+{"type":"thread.started","thread_id":"01a18f79-e338-7c30-a33b-2fd7182aec02"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I’ll run the exact command and return its output in the requested JSON.\n"}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'echo TOOLPROBE && ls /etc/hosts'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'echo TOOLPROBE && ls /etc/hosts'","aggregated_output":"TOOLPROBE\n/etc/hosts\n","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"/bin/zsh -lc 'echo TOOLPROBE && ls /etc/hosts .'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"/bin/zsh -lc 'echo TOOLPROBE && ls /etc/hosts .'","aggregated_output":"TOOLPROBE\n/etc/hosts\n\n.:\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"{\"tool\":\"idle\",\"args\":{},\"reason\":\"TOOLPROBE\\n/etc/hosts\\n\\n.:\\n\",\"confidence\":1}"}}
+{"type":"turn.completed","usage":{"input_tokens":71219,"cached_input_tokens":59264,"cache_write_input_tokens":0,"output_tokens":188,"reasoning_output_tokens":46}}

@@ -1,0 +1,42 @@
+import pathlib,sys,subprocess,json
+base=pathlib.Path(pathlib.Path('temp/gh1358/control-root').read_text());root=base/'primary';pub=base/'publisher'
+sys.path.insert(0,str(root/'utils/py'))
+from jog_run import JogCheckpoint,ContractError,JogSupervisorLock
+
+def cli(*args):
+ p=subprocess.run([sys.executable,str(root/'utils/py/releases_app.py'),'--root',str(root),*args],capture_output=True,text=True)
+ print(p.stdout,p.stderr);assert p.returncode==0,p.returncode
+
+def git(path,*args):return subprocess.check_output(['git','-C',str(path),*args],text=True,stderr=subprocess.STDOUT).strip()
+lock=JogSupervisorLock(str(root));lock.acquire()
+try:
+ for n in (1344,1345):
+  c=JogCheckpoint(str(root),str(pub));assert c.begin()
+  cli('jog','skip',str(n),'--reason','isolated publication control; preserve original attempts')
+  c.finish()
+  assert not git(root,'status','--porcelain')
+  assert git(root,'rev-parse','HEAD')==git(base/'remote.git','rev-parse','development')
+  print('PASS checkpoint mutation',n)
+ c=JogCheckpoint(str(root),str(pub));assert c.begin()
+ cli('roadmap','pickup','--issue-num','1358','--rated','75/35/50/65')
+ hook=base/'remote.git/hooks/pre-receive';hook.write_text('#!/bin/sh\nexit 1\n');hook.chmod(0o755)
+ try:c.finish();raise AssertionError('rejected push unexpectedly passed')
+ except ContractError as e: print('PASS rejected push retained:',e)
+ before=git(root,'rev-parse','HEAD');hook.unlink()
+ c=JogCheckpoint(str(root),str(pub));assert c.begin() is False
+ assert git(root,'rev-parse','HEAD')==before
+ assert git(base/'remote.git','rev-parse','development')==before
+ print('PASS recovery publishes existing commit without dispatch')
+ foreign=root/'foreign-control.txt';foreign.write_text('peer work')
+ try:JogCheckpoint(str(root),str(pub)).begin();raise AssertionError('foreign dirt accepted')
+ except ContractError as e:print('PASS foreign dirt refusal:',e)
+ foreign.unlink()
+ c=JogCheckpoint(str(root),str(pub));assert c.begin()
+ extra=pub/'extra-control.txt';extra.write_text('unrelated published clone commit')
+ git(pub,'add','extra-control.txt');git(pub,'commit','-m','unrelated control')
+ before=git(base/'remote.git','rev-parse','development')
+ try:c.finish();raise AssertionError('extra commit accepted')
+ except ContractError as e: print('PASS extra publication commit refused:',e)
+ assert git(base/'remote.git','rev-parse','development')==before
+ print('PASS remote unchanged; all controls passed')
+finally:lock.release()

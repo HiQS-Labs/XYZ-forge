@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-08T20:32:11.880430+00:00",
+  "jobs": [
+    {
+      "label": "com.xyz-forge.gh1358-live-checkpoint",
+      "loaded": false,
+      "disabled_setting": [
+        "\"com.xyz-forge.gh1358-live-checkpoint\" => disabled"
+      ]
+    },
+    {
+      "label": "com.xyz-forge.gh1358-local-observer",
+      "loaded": false,
+      "disabled_setting": [
+        "\"com.xyz-forge.gh1358-local-observer\" => disabled"
+      ]
+    }
+  ],
+  "old_supervisor_absent": true,
+  "attempt_sha256": "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2",
+  "attempts": 2,
+  "old_timeout_sha256": "9997616be15806c692a2d5ad8cda8786294fed352652d13741106637b0fb32db",
+  "old_timeout_unchanged": true,
+  "cleanup": "unloaded only inactive disabled owned job; no live process killed"
+}

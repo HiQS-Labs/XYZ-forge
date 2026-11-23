@@ -1,0 +1,24 @@
+merge-final-execute.log: merge-cleanup: Merge batch issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1408
+merge-final-execute.log: merge-cleanup: ✅ PR #1327 is MERGED as 4ce5d1ea89
+merge-final-execute.log: merge-cleanup: ✅ local wave_reconcile for PR #1327 passed
+merge-final-execute.log: merge-cleanup: Intermediate PR #1327 in batch: deferring pdda issue-doc-sync to batch finalization
+merge-final-execute.log: merge-cleanup: ✅ PR #1327 committed; primary is clean at origin/development
+merge-final-execute.log: merge-cleanup: ✅ PR #1402 is MERGED as ee25d4bd3c
+merge-final-execute.log: merge-cleanup: ✅ local wave_reconcile for PR #1402 passed
+merge-final-execute.log: merge-cleanup: Intermediate PR #1402 in batch: deferring pdda issue-doc-sync to batch finalization
+merge-final-execute.log: merge-cleanup: ✅ PR #1402 committed; primary is clean at origin/development
+merge-final-execute.log: merge-cleanup: ERROR — Failed to merge PR #1405: X Pull request HiQS-Labs/XYZ-forge#1405 is not mergeable: the merge commit cannot be cleanly created.
+1405-final-execute.log: merge-cleanup: ✅ PR #1405 is MERGED as 44849e3f6b
+1405-final-execute.log: merge-cleanup: ✅ local wave_reconcile for PR #1405 passed
+1405-final-execute.log: merge-cleanup: ✅ pdda issue-doc-sync clean
+1405-final-execute.log: merge-cleanup: warn: Jog row GH-1206 is mapped to PR #1405 but the merged tree has no committed receipt bundle; not a Jog delivery — row left as-is
+1405-final-execute.log: merge-cleanup: ✅ PR #1405 committed; primary is clean at origin/development
+1405-final-execute.log: merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://github.com/HiQS-Labs/XYZ-forge/issues/1408)
+1405-final-execute.log: merge-cleanup:   sweep: gh workflow run wave-reconcile.yml --ref development  # full registry, hosted, once before promotion (#1131); no local full rerun
+1406-final-execute.log: merge-cleanup: ✅ PR #1406 is MERGED as 6a0766b97f
+1406-final-execute.log: merge-cleanup: ✅ local wave_reconcile for PR #1406 passed
+1406-final-execute.log: merge-cleanup: ✅ pdda issue-doc-sync clean
+1406-final-execute.log: merge-cleanup: warn: Jog row GH-1243 is mapped to PR #1406 but the merged tree has no committed receipt bundle; not a Jog delivery — row left as-is
+1406-final-execute.log: merge-cleanup: ✅ PR #1406 committed; primary is clean at origin/development
+1406-final-execute.log: merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://github.com/HiQS-Labs/XYZ-forge/issues/1408)
+1406-final-execute.log: merge-cleanup:   sweep: gh workflow run wave-reconcile.yml --ref development  # full registry, hosted, once before promotion (#1131); no local full rerun

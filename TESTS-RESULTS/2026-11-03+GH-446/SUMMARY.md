@@ -1,0 +1,30 @@
+# GH-446: marathon-plan writes its dated plan doc only when asked
+
+- **Change:** a bare `marathon-plan.sh` / `marathon_plan.py` run now prints the report and writes nothing. `--write` saves `PROJECT/2-WORKING/MARATHON-PLAN-<today>.md`. `--dry-run` and `--check` are unchanged. Edited: `utils/py/marathon_plan.py` (authoritative), the frozen Bash twin `utils/marathon-plan.sh` (same contract, `Frozen-twin-exception` trailer on the commit), and the reconciler's live step in `utils/py/wave_reconcile.py`, which now passes `--write` so its committed plan docs are unchanged.
+- **Manual check (before/after, no new test, GH-831):** `gh446-check-output.txt`. Same repo state, `QUEUE_PLAN_QUEUE_DIR` pointed at a throwaway directory so the repo was never written.
+
+| Run | Code | Plan file written |
+|---|---|---|
+| bare | before (`origin/development`) | **YES** (the bug) |
+| bare | after | no |
+| `--write` | before | n/a (rc 2, unknown argument) |
+| `--write` | after | YES |
+| `--dry-run` | after | no |
+| `--check` | after | no (rc 1: nothing to compare in the throwaway dir) |
+| `--bogus` | after | no (rc 2) |
+
+- **Existing suites, disposable clone, unsandboxed (GH-177):** with the change but no test edits, the main planner suite (`marathon-plan`) failed 39 of 72 and `gh418-planner-ledger-source` failed, because both ran the planner bare and asserted on the written doc (on `origin/development`: 70 passed, 0 failed, 2 skipped, and pass). The test helpers (`run_qp`, `run_qp_py`, `run_qp_sh`) and gh418's `plan()` now pass `--write`. After that: `marathon-plan` 70 passed / 0 failed / 2 skipped (same as base), `gh418` pass, `gh362` 9/0, `gh308` 38/0. Earlier, unchanged: `gh421` OK, `gh454` OK, `gh202` 40/0, `gh168` 7/0, `gh232` 13/0, `gh358` 8/0, `gh429` 15/0.
+- **Not done / limits:** the issue's third ask (exit 2 on an empty invocation) was not taken: a bare run still prints the report, which is the useful "look at the plan" behaviour. Callers outside this repo that run the planner bare and expect the file (none found in this repo's skills, scripts or docs; `~/.claude` skills were not fully audited) must add `--write`. The check ran against one repo state.
+
+## Takeover readiness correction
+Independent Codex source review atcf799f0 confirmed originalneed remains on development1c2bd89e and found existing directmutatedBashinvocation omitted--write, potentially comparing stalePythonoutput. Added--write to that existing invocation only; no new suite/machinery. Existing suite70pass/0fail/2explicitlegacy-render skips, mutation detected. Normal exact-composition push gate pending.
+
+FreshcompositionQA atf9ec80fb foundexisting10daysconsumer explicitlyexpectsplanfileafterbare--deep. Correctedcommandto--write--deep; earlierclaimnoin-reposkillcallerswasincomplete. Secondordinaryreadinessrepair; priorhistory/capsretained. Afterlandingrefresh10days throughSkillsArmyexistingcollectionsoitsdeployedconsumerkeepswriting; source-onlychangecannotupdateglobalcopy.
+
+## Operator-authorized continuation
+
+The operator authorized continuing PR1327 beyond its two preserved readiness repairs. One additional bounded repair episode corrects the remaining start-marathon secondary-route instruction to use explicit `--write`, and updates the Python CLI docstring. Earlier no-in-repo-caller claims were incomplete: reconcile, 10days and start-marathon all require the write contract. Existing manual bare/write/dry/check evidence and historical review findings remain intact. Final focused verification, independent recheck and normal full publication gate are still pending; no new suite or gate is added. This is a source correction only; deployed Skills Army copies require a separately authorized refresh after landing.
+
+Focused continuation verification under Python3.13.15: planner70passed/0failed/2legacy-render skips; GH418 passed; frozen-twin range guard passed. Initial ApplePython3.9.6 attempt failed on existing engine union annotations and lacked runtime imports; logs are retained, not counted as passing. A clone-local3.13 verification environment supplies requests/PyYAML/pytest. The optional live-backlog smoke exceeded120seconds before output and is not used as success evidence; retained deterministic before/after CLI controls and repeated focused suites cover the write contract. Final source OpusRound2 Approved at0b597d7b7, attested exit0. Final full publication gate remains pending.
+
+Final source review round3/3 Approved the existing gh698 fixture correction. Fresh normal full publication qualification then passed on `2d04ff9b35b67ef8d3447a2bd1f7ceca543eaad8` in538.397s (536s hook), canonical identity unchanged and no bypass. The earlier refused fullgate remains preserved separately. Evidence-only finalhead has its normal documentation push; exact final hosted smoke remains required. This completes the existing operator-authorized third repair episode without resetting historical attempts.

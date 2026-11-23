@@ -1,0 +1,2 @@
+merge-cleanup: ERROR — Published retirement refused: Refusing: path is not strictly within SAFE_ROOTS (/Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-gh809-jsonl-line-reader-2026-10-24)
+exit=2

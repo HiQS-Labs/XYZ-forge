@@ -1,0 +1,46 @@
+  PASS: --json emits the payload to stdout and writes no files
+  PASS: the release renders exactly ONE marathon group
+  PASS: the group holds only the two LINKED items — not every card on the release
+  PASS: the non-member renders as a SIBLING beside the box (the #109 defect, inverted)
+  PASS: the cut item is a sibling too, and still rendered rather than dropped
+  PASS: the shipped item carries marker=done and section=done
+  PASS: itemsTotal counts dialed_in + shipped and EXCLUDES the cut row (4, not 5)
+  PASS: the baseline captured at activation is emitted with its provenance
+  PASS: growth is NEGATIVE when more was cut than added — a real, meaningful number, not an error
+  PASS: a release with no baseline emits null, never a placeholder zero
+  PASS: a rated card carries all four axes under their PUBLIC names (no rating_ prefix leaks)
+  PASS: calc is the equal-weighted SUM of the four axes (90+85+70+60 = 305)
+  PASS: effectiveScore falls back to calc when there is no override
+  PASS: sev >= 80 flags the card hot (one constant, not a threshold system)
+  PASS: an override REPLACES calc for ranking while the honest axes stay underneath
+  PASS: an UNRATED card carries no metrics key at all — no placeholder, no 0/400 noise
+  PASS: a rated DETOUR is scored too (detours reparse the markdown; the index is handed to them)
+  PASS: the ranking is ordered by effectiveScore, override first, with no ties
+  PASS: BOTH metric loops (card renderer and what's-next strip) carry appeal and effort
+  PASS: the footer legend reads 100 = strongest — legend and data never disagree in a committed artifact
+  PASS: the release node renders the baseline/growth pair
+  PASS: --preview bakes a self-contained page with the payload inline
+  PASS: the exporter wrote no DB bytes (opened read-only; the page never writes back)
+  PASS: the ledger still checks clean after every projection
+  PASS: leaderboard.sh renders LEADERBOARD.md from the exporter's JSON
+  PASS: the file carries the releases-app generation marker
+  PASS: the file announces itself as generated (never hand-edited)
+  PASS: the script's ranking matches the pinned --json ordering EXACTLY (one scorer, proven)
+  PASS: the highest-scoring task is called out by name, override included
+  PASS: a rated DETOUR ranks too — not just manifest cards
+  PASS: regeneration is idempotent — a second run is byte-identical
+  PASS: --check passes when the committed copy is in sync
+  PASS: --check FAILS on drift (a stale checked-in copy is a review signal)
+  PASS: --leaderboard bakes a self-contained page from the SAME template
+  PASS: the payload carries view=leaderboard — one template, two baked artifacts
+  PASS: both artifacts share ONE renderer bundle (no second copy of the design system)
+  PASS: the cross-link lives in .top, which never collapses
+  PASS: and NOT in #fbar, which disappears with the header caret
+  PASS: the leaderboard view hides #fbar rather than shipping an inert search box
+  PASS: fixture holds codename-only rows (version IS NULL in the ledger)
+  PASS: --json succeeds on a ledger with NULL-version releases
+  PASS: --preview bakes (the crash refresh_preview's warn-only path used to hide)
+  PASS: --leaderboard bakes on the same ledger
+  PASS: codename-only releases carry stable, unique, non-empty ids
+  PASS: the id derives from the codename, lowercased with spaces dashed (c-night-owl)
+== gh103-timeline-exporter: 45 passed, 0 failed ==

@@ -1,0 +1,6 @@
+Command: python3 test/gh436-merge-cleanup.py
+Commit: 5d1d69c32f553dd7ca71aa91975986a98f9906fe
+Result: exit 0; disposable full clone, same HEAD and origin, clean before and after.
+Ran 227 tests in 228.722s
+OK
+Failure-path ERROR/FAILED text inside suite output is expected fixture behavior.

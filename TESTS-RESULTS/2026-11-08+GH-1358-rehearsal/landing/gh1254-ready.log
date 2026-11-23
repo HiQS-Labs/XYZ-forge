@@ -1,0 +1,15 @@
+swarm-preflight · gh-bundle · slug=gh-1254-outer-loop-borrow-decl
+  target-root : /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner (development @ aee318d03)
+  branch      : suggested=marathon/gh-1254-outer-loop-borrow-decl-2026-11-08 branch_ready=false skip_branch_prompt=false
+  freshness   : fetch_ok=1 upstream=origin/development ahead=1 behind=0 dirty=0
+  ref-probed  : development @ aee318d03 (checkout matches)
+  candidate   : ready
+  inlined-acc : 4 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1254 (https://github.com/HiQS-Labs/XYZ-forge/issues/1254)
+  acceptance  : match — 4/4 criteria copied verbatim from issue #1254
+  issue-state : OPEN — issue #1254 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+Packet written: temp/gh1358-clock-preflight

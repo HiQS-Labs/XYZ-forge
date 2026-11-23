@@ -1,0 +1,14 @@
+== test: agy-turn ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-agy-turn.XXXXXX.sJM0tuvZMe
+  PASS: pty default: turn exits 0 with a stub that REQUIRES a TTY on stdin
+  PASS: pty default: the child saw a real tty on stdin (isatty true)
+  PASS: pty default: no 'could not open TTY' error anywhere in the turn's output
+  PASS: idle stall (pipe mode): watchdog kills at exit 7
+  PASS: idle stall: stderr attribution block names blocker=tty
+  PASS: idle stall: the transcript carries the same attribution block
+  PASS: blocker probe: an open .lock file attributes blocker=lock
+  PASS: blocker probe: an open TCP socket attributes blocker=network
+  PASS: blocker probe: no tty error + empty table attributes blocker=unknown
+  PASS: blocker probe: the transcript's own TTY error outranks open sockets (tty first)
+
+gh114-headless-tty: 10 passed, 0 failed

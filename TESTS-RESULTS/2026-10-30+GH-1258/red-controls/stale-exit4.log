@@ -1,0 +1,15 @@
+swarm-preflight · project-doc · slug=gh-1263-stale
+  target-root : <repos>/XYZ-forge (development @ e305cbf36)
+  branch      : suggested=marathon/gh-1263-stale-2026-10-30 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=1
+  ref-probed  : development @ e305cbf36 (checkout matches)
+  candidate   : stale
+  inlined-acc : 4 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1263 (https://github.com/HiQS-Labs/XYZ-forge/issues/1263)
+  acceptance  : match — 4/4 criteria copied verbatim from issue #1263
+  issue-state : OPEN — issue #1263 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : STALE (exit 4)
+
+No packet written — candidate is not preflight-ready (STALE).

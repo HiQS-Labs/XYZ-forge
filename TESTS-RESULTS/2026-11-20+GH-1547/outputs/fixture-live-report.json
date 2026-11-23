@@ -1,0 +1,157 @@
+{
+  "attempts": {
+    "landing_clone": "<TMP>/landing-pinned",
+    "note": null,
+    "scanned_records": 4,
+    "stale_attempts": [
+      {
+        "attempt_index": 0,
+        "head_matches_attempt": true,
+        "head_sha": "aaaa1111bbbb2222",
+        "pr": 1539,
+        "record_path": ".tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1539.json",
+        "remote_head_sha": "aaaa1111bbbb2222",
+        "remote_merge_commit": "9999000011112222",
+        "remote_state": "MERGED",
+        "repair_count": 1,
+        "rung": "B1",
+        "started": "2026-11-20T11:30:00Z"
+      },
+      {
+        "attempt_index": 0,
+        "head_matches_attempt": true,
+        "head_sha": "bbbb2222cccc3333",
+        "pr": 1540,
+        "record_path": ".tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1540.json",
+        "remote_head_sha": "bbbb2222cccc3333",
+        "remote_merge_commit": null,
+        "remote_state": "OPEN",
+        "repair_count": 1,
+        "rung": "B1",
+        "started": "2026-11-20T11:40:00Z"
+      },
+      {
+        "attempt_index": 0,
+        "head_matches_attempt": false,
+        "head_sha": "cccc3333dddd4444",
+        "pr": 1541,
+        "record_path": ".tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1541.json",
+        "remote_head_sha": "ffffffff00000000",
+        "remote_merge_commit": null,
+        "remote_state": "OPEN",
+        "repair_count": 1,
+        "rung": "B1",
+        "started": "2026-11-20T11:40:00Z"
+      },
+      {
+        "attempt_index": 0,
+        "head_matches_attempt": null,
+        "head_sha": "dddd4444eeee5555",
+        "pr": 1542,
+        "record_path": ".tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1542.json",
+        "remote_head_sha": null,
+        "remote_merge_commit": null,
+        "remote_state": "unknown",
+        "repair_count": 1,
+        "rung": "B1",
+        "started": "2026-11-20T11:40:00Z"
+      }
+    ]
+  },
+  "current_item": "KS-04 kickstart_status.py",
+  "final_qa": {
+    "development_head": "0edbab45d60f9b7d92e4d2b616743d3874b526d5",
+    "final_qa_sha": "0edbab45d6",
+    "final_qa_verdict": "green",
+    "later_landings": [],
+    "reason": "canonical green final-QA matches caller-verified development head with no later landings",
+    "status": "fresh"
+  },
+  "interventions": [],
+  "items_done": [
+    {
+      "line": 9,
+      "text": "- KS-15 (#1543): MERGED PR #1544 (merge 8c44d86bbd, reconciled 0edbab45d6) 2026-11-20T08:18Z"
+    }
+  ],
+  "landing_clone_mismatch_warning": null,
+  "landing_clone_pinned": "<TMP>/landing-pinned",
+  "liveness": {
+    "advisory": null,
+    "newest_log": "log-30s.log",
+    "newest_log_age_seconds": 30.0,
+    "ownership": {
+      "children": "unknown",
+      "lock": "unknown",
+      "owner": "live",
+      "owner_pid": null,
+      "owner_pid_live": null,
+      "sessions": "unknown"
+    },
+    "quiet_seconds": 120,
+    "stale_seconds": 600,
+    "state": "waiting"
+  },
+  "prs": {
+    "error": null,
+    "items": [
+      {
+        "blockers": [
+          "draft",
+          "held: Review authority limit"
+        ],
+        "merge_ready": false,
+        "pr": 1024,
+        "rung": 2,
+        "title": "held draft"
+      },
+      {
+        "blockers": [],
+        "merge_ready": true,
+        "pr": 1546,
+        "rung": 0,
+        "title": "KS-03 clean"
+      },
+      {
+        "blockers": [
+          "behind (drift=2)"
+        ],
+        "merge_ready": false,
+        "pr": 1549,
+        "rung": 0,
+        "title": "KS-02 behind"
+      }
+    ],
+    "note": "derived PR hygiene summary only; not a merge-readiness approval engine"
+  },
+  "record_errors": [
+    "line 6: OPERATOR_AMENDMENT OA-1 must cite an operator turn/comment/decision"
+  ],
+  "record_valid": false,
+  "record_version": 1,
+  "schema": 1,
+  "stop_reason": {
+    "attribution": "none",
+    "source": null,
+    "stop_reason": "none",
+    "unattributed_shared_file_present": false
+  },
+  "unapplied_amendments": [
+    {
+      "id": "PN-1",
+      "kind": "PARENT_NOTE",
+      "line_no": 7,
+      "state": "pending",
+      "text": "check PR 1546 before landing",
+      "ts": "2026-11-20T07:00Z"
+    },
+    {
+      "id": "OA-1",
+      "kind": "OPERATOR_AMENDMENT",
+      "legacy_unparsed": true,
+      "line": 6,
+      "state": "unapplied",
+      "text": "2026-11-20T06:48Z legacy line without turn citation"
+    }
+  ]
+}

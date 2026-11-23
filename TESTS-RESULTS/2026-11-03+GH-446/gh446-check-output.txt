@@ -1,0 +1,8 @@
+# GH-446 before/after (QUEUE_PLAN_QUEUE_DIR points at a throwaway dir; repo untouched)
+before-bare                        rc=4  plan file written: YES
+before-write                       rc=2  plan file written: no
+after-bare                         rc=4  plan file written: no
+after-write                        rc=4  plan file written: YES
+after-dry-run                      rc=4  plan file written: no
+after-check                        rc=1  plan file written: no
+after-bogus                        rc=2  plan file written: no

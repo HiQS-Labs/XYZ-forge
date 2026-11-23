@@ -1,0 +1,18 @@
+FAIL prepare-two-arms-parity :: ected frozen state (held-delivered)\n', 'codex': 'factory-primitive: canary canary-stale-05: issue #384 is not in the expected frozen state (held-delivered)\n'}
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1294-delivered-issues-scheduled-2026-10-31-verify/TESTS-RESULTS/2026-10-31+GH-1279-stageb/stageb_controls.py", line 345, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1294-delivered-issues-scheduled-2026-10-31-verify/TESTS-RESULTS/2026-10-31+GH-1279-stageb/stageb_controls.py", line 333, in main
+    prepared = parity_controls()
+  File "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1294-delivered-issues-scheduled-2026-10-31-verify/TESTS-RESULTS/2026-10-31+GH-1279-stageb/stageb_controls.py", line 141, in parity_controls
+    freeze = json.loads((RUNS / f"{name}-freeze.json").read_text())
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 787, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1294-delivered-issues-scheduled-2026-10-31-verify/temp/factory-primitive/sb-ctl-parity-freeze.json'
+baseline exit 1

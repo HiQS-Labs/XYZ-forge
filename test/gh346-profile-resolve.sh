@@ -313,5 +313,37 @@ grep -q "is NOT on PATH" <<<"$out_ghost" \
   && pass "R3: a profile whose harness CLI is missing warns at resolution time" \
   || fail "R3: resolved to an unrunnable harness with no warning"
 
+# GH-1216: adapt only named Aider/OpenRouter exports; stored JSON stays raw.
+cat > "$WORK/aider.json" <<'JSON'
+{ "profiles": {
+  "bare": { "harness": "aider", "gateway": "openrouter", "model": "qwen/qwen3.8-max" },
+  "prefixed": { "harness": "aider", "gateway": "openrouter", "model": "openrouter/qwen/qwen3.8-max" },
+  "other": { "harness": "aider", "gateway": "openai", "model": "qwen/qwen3.8-max" }
+} }
+JSON
+for name in bare prefixed; do
+  out="$(run "$WORK/aider.json" "$name" --env 2>/dev/null)"
+  if [ "$(printf '%s\n' "$out" | grep '^export AIDER_MODEL=')" = "export AIDER_MODEL='openrouter/qwen/qwen3.8-max'" ]; then
+    pass "GH-1216: $name Aider/OpenRouter profile has one gateway prefix"
+  else
+    fail "GH-1216: $name Aider/OpenRouter export: $out"
+  fi
+done
+out="$(run "$WORK/aider.json" other --env 2>/dev/null)"
+case "$out" in *"export AIDER_MODEL='qwen/qwen3.8-max'"*) pass "GH-1216: other gateway unchanged" ;;
+  *) fail "GH-1216: other gateway changed: $out" ;; esac
+out="$(run "$WORK/aider.json" bare --json 2>/dev/null)"
+if printf '%s' "$out" | python3 -c 'import json,sys; r=json.load(sys.stdin); assert r["tier"] == 2 and r["model"] == "qwen/qwen3.8-max"'; then
+  pass "GH-1216: JSON retains the raw profile model"
+else
+  fail "GH-1216: raw JSON model changed or resolution failed"
+fi
+# Use an empty environment so another lane cannot preempt the explicit Aider path.
+override="$(env -i PATH="$PATH" XYZ_DEVICE_CONFIG_PATH="$WORK/aider.json" \
+  AIDER_AGENT=aider AIDER_MODEL=qwen/manual AIDER_GATEWAY=openrouter \
+  bash "$R" bare --env 2>/dev/null)"
+case "$override" in *"export AIDER_MODEL='qwen/manual'"*) pass "GH-1216: tier-1 Aider model unchanged" ;;
+  *) fail "GH-1216: tier-1 override changed: $override" ;; esac
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]

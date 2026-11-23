@@ -1,0 +1,23 @@
+base-declared-yes-gate-red     rc=0 reason=-                   record=gate_run:yes,gate_exit:(absent),gate_cmd:(absent) trailer=- residue=
+fix-declared-yes-gate-red      rc=4 reason=unverified-approval record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `bash gate.sh 1` (cwd <scratch>/repo-fix-declared-yes-gate-red, reviewed e4e7534a0a0d) exit 1
+      | gate ran in repo-fix-declared-yes-gate-red RELAY_ROLE=scrubbed
+fix-clean-builder-gate-red     rc=4 reason=gate-failed         record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `bash gate.sh 1` (cwd <scratch>/repo-fix-clean-builder-gate-red, reviewed 418b1c476e14) exit 1
+      | gate ran in repo-fix-clean-builder-gate-red RELAY_ROLE=scrubbed
+fix-undeclared-gate-green      rc=0 reason=-                   record=gate_run:undeclared,gate_exit:0,gate_cmd:bash gate.sh 0 trailer=driver-gate: exit 0 — bash gate.sh 0 residue=
+    relay-drive: driver-run gate `bash gate.sh 0` (cwd <scratch>/repo-fix-undeclared-gate-green, reviewed b8fd11363178) exit 0
+    load: ok
+fix-gate-green-leaves-file     rc=0 reason=-                   record=gate_run:undeclared,gate_exit:0,gate_cmd:touch gate-residue.txt trailer=driver-gate: exit 0 — touch gate-residue.txt residue=?? gate-residue.txt 
+    relay-drive: driver-run gate `touch gate-residue.txt` (cwd <scratch>/repo-fix-gate-green-leaves-file, reviewed 8bb91a244ea3) exit 0
+    load: ok
+fix-gate-not-runnable          rc=4 reason=unverified-approval record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `./no-such-gate` (cwd <scratch>/repo-fix-gate-not-runnable, reviewed 7e3705c47265) exit 127
+      | /bin/bash: ./no-such-gate: No such file or directory
+fix-unarmed-generic            rc=0 reason=-                   record=gate_run:undeclared,gate_exit:(absent),gate_cmd:(absent) trailer=- residue=
+    load: ok
+fix-gate-rss-cap               rc=4 reason=unverified-approval record=(none) trailer=- residue= M relay.md 
+    relay-drive: driver-run gate `python3 hog.py` (cwd <scratch>/repo-fix-gate-rss-cap, reviewed 3e92fa7c4776) exit 108 — killed: group RSS 261MB >= cap 128MB
+fix-gate-rss-escape            rc=0 reason=-                   record=gate_run:undeclared,gate_exit:0,gate_cmd:python3 hog.py trailer=driver-gate: exit 0 — python3 hog.py residue=
+    relay-drive: driver-run gate `python3 hog.py` (cwd <scratch>/repo-fix-gate-rss-escape, reviewed 8527d559324b) exit 0
+    load: ok

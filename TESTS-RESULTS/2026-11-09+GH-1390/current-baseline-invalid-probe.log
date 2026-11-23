@@ -1,0 +1,47 @@
+test_noop_publication_already_remote_skips_push (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_already_remote_skips_push) ... merge-cleanup: ERROR — PR #1390: could not push post-merge writes: fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+FAIL
+test_noop_publication_empty_refs_fail_closed (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_empty_refs_fail_closed) ... merge-cleanup: ERROR — PR #1390: could not push post-merge writes: fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+ok
+test_noop_publication_fetch_failure_never_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_fetch_failure_never_pushes) ... merge-cleanup: ERROR — PR #1390: could not push post-merge writes: fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+ok
+test_noop_publication_unpublished_commit_still_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_unpublished_commit_still_pushes) ... merge-cleanup: ERROR — PR #1390: could not push post-merge writes: fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+FAIL
+
+======================================================================
+FAIL: test_noop_publication_already_remote_skips_push (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_already_remote_skips_push)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/test/gh436-merge-cleanup.py", line 1036, in test_noop_publication_already_remote_skips_push
+    self.assertTrue(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_noop_publication_unpublished_commit_still_pushes (gh436_controls.TestMergeCleanupOrchestration.test_noop_publication_unpublished_commit_still_pushes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1390-qualification-gate-2026-11-09/test/gh436-merge-cleanup.py", line 1053, in test_noop_publication_unpublished_commit_still_pushes
+    self.assertTrue(merge_cleanup.commit_and_push_phase5_writes(1390, self.primary, "development"))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.327s
+
+FAILED (failures=2)

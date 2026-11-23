@@ -1,0 +1,48 @@
+case=crash-act
+started_at=2026-10-29T04:06:48.936239+00:00
+repo=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28
+run_root=temp/factory-primitive/evidence/checkpoint2/crash-act
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/crash-act init --daily-cap 1 --max-call-cost 0
+exit_code=0
+stdout:
+{"instance":"/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28/temp/factory-primitive/evidence/checkpoint2/crash-act/instances/C","status":"initialized"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/crash-act tick --slot 1 --fault crash-act
+exit_code=70
+stdout:
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/crash-act tick --slot 2
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_002"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/crash-act status
+exit_code=0
+stdout:
+{
+  "paused": false,
+  "pending": 25,
+  "quarantined": 1,
+  "spent_or_reserved": 0,
+  "ticks": {
+    "completed": 1,
+    "uncertain": 1
+  },
+  "unknown_cost": false
+}
+
+stderr:
+
+query=SELECT tick_id,status FROM receipts ORDER BY tick_id
+[{"status": "uncertain", "tick_id": "slot_001"}, {"status": "completed", "tick_id": "slot_002"}]
+query=SELECT tick_id,tool,status FROM tool_runs NATURAL JOIN intents
+[{"status": "ok", "tick_id": "slot_002", "tool": "summarize"}]
+finished_at=2026-10-29T04:06:49.104676+00:00
+verdict=PASS
+detail=uncertain recorded; one item quarantined; no ambiguous retry

@@ -1,0 +1,14 @@
+### red control (base 1f5b0508): unscoped lines
+skills/2-daily/express/SKILL.md:28:> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotf
+skills/2-daily/express/SKILL.md:173:   add a new suite to get one (GH-831: no new tests); an uncovered code fix goes through `/start-task`.
+skills/4-occasional/ci-suite-audit/SKILL.md:342:> Under the repository test freeze, no new test files may be added. When modifying or extend
+### head: same patterns (expect none)
+exit=1 (1 = no match)
+### head: scoped replacements
+skills/4-occasional/ci-suite-audit/SKILL.md:342:> Where the repository forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), no new test files may 
+skills/2-daily/express/SKILL.md:28:> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an exis
+skills/2-daily/express/SKILL.md:173:   add a new suite to get one; an uncovered code fix goes through `/start-task` under the host repo's own
+### route
+route=docs
+tier=1
+tier_reason=docs-only

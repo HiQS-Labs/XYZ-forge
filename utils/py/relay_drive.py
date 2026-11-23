@@ -7,6 +7,10 @@ import re
 import shutil
 import pathlib
 import json
+import secrets
+import select
+import tempfile
+import threading
 from contextlib import contextmanager
 
 # GH-376: resolve the driver lock through the ONE shared resolver rather than reimplementing it.
@@ -14,13 +18,123 @@ from contextlib import contextmanager
 # module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
 # the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rtl import driver_lock_path  # noqa: E402  GH-376: the shared lock resolver, called not copied
+from rtl import driver_lock_path, archive_lane_attempts, lane_attempt_reserve, lane_attempt_finish, ATTEMPT_CONTEXT_ENV  # noqa: E402  GH-376: the shared lock resolver, called not copied
 from rtl import (resolve_turn_root, rtl_default_log, checkout_snapshot,
                  restore_checkout_after_timeout)  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: the ONE writer of relay-drive/attest@1
 
+try:
+    from harness import is_provider_quota_error  # noqa: E402
+except Exception:
+    _FALLBACK_QUOTA_RE = re.compile(
+        r"(?:\b429\b|too many requests|rate.?limit|usage.?limit|insufficient_quota|\bquota\b)",
+        re.I,
+    )
+
+    def is_provider_quota_error(text: str) -> bool:
+        return bool(_FALLBACK_QUOTA_RE.search(text or ""))
+
+
+def _atomic_write_text(dest_path: str, payload: str) -> None:
+    parent = os.path.dirname(os.path.abspath(dest_path))
+    os.makedirs(parent, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(prefix=".tmp-", dir=parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(payload)
+        os.replace(tmp_path, dest_path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
+def _sanitize_token_id(raw: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]", "_", (raw or "").strip()).strip("._-")
+    return cleaned or "run"
+
+
+def _read_head_tail(file_path: str, cap: int = 16384) -> str:
+    try:
+        size = os.path.getsize(file_path)
+        with open(file_path, "rb") as f:
+            if size <= cap * 2:
+                data = f.read()
+            else:
+                head = f.read(cap)
+                f.seek(max(0, size - cap))
+                tail = f.read(cap)
+                data = head + b"\n" + tail
+        return data.decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+class _StderrTee:
+    """Forward shim stderr live to sys.stderr while keeping bounded head+tail bytes for this turn.
+
+    Uses select()+os.read() so finish() drains buffered bytes and exits promptly even if an orphaned
+    grandchild still holds the pipe's write end open after the shim exits.
+    """
+
+    def __init__(self, stream, cap: int = 16384):
+        self._stream = stream
+        self._fd = stream.fileno()
+        self._cap = cap
+        self._head = bytearray()
+        self._tail = bytearray()
+        self._stop = threading.Event()
+        self._eof = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _append(self, chunk: bytes) -> None:
+        try:
+            sys.stderr.buffer.write(chunk)
+            sys.stderr.buffer.flush()
+        except Exception:
+            pass
+        if len(self._head) < self._cap:
+            need = self._cap - len(self._head)
+            self._head.extend(chunk[:need])
+        self._tail.extend(chunk)
+        if len(self._tail) > self._cap:
+            del self._tail[:-self._cap]
+
+    def _run(self) -> None:
+        try:
+            while True:
+                ready, _, _ = select.select([self._fd], [], [], 0.05)
+                if ready:
+                    chunk = os.read(self._fd, 4096)
+                    if not chunk:
+                        self._eof.set()
+                        break
+                    self._append(chunk)
+                elif self._stop.is_set():
+                    break
+        except Exception:
+            pass
+
+    def finish(self, timeout_s: float = 2.0) -> str:
+        # Wait briefly for natural EOF, then signal stop so orphaned grandchildren cannot hang the driver.
+        self._eof.wait(timeout=min(timeout_s, 0.35))
+        self._stop.set()
+        self._thread.join(timeout=timeout_s)
+        try:
+            self._stream.close()
+        except Exception:
+            pass
+        combined = bytes(self._head) + b"\n" + bytes(self._tail)
+        return combined.decode("utf-8", errors="replace")
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+# GH-1465: wall-clock cap on the driver-run reviewer gate; matches the turn shims' 900s default.
+DRIVER_GATE_TIMEOUT_S = 900
 
 def get_env(key, default=None):
     return os.environ.get(key, default)
@@ -55,6 +169,7 @@ def main():
     parser.add_argument("--agent-cmd", dest="agent_cmd")
     parser.add_argument("--relay-task", dest="relay_task", default="RELAY-TURN")
     parser.add_argument("--round-cap", dest="round_cap", type=int, default=6)
+    parser.add_argument("--strict-role-handoff", action="store_true")
     parser.add_argument("--target-root", dest="target_root")
     parser.add_argument("--consult-verify", dest="consult_verify", action="store_true")
     parser.add_argument("--artifact-file", dest="artifact_file")
@@ -66,6 +181,8 @@ def main():
     # terminal STATUS counts only when this driver watched the --reviewer's turn write it.
     parser.add_argument("--reviewer", dest="reviewer")
     parser.add_argument("--builder", dest="builder")
+    parser.add_argument("--invocation-id", dest="invocation_id", default=get_env("RELAY_INVOCATION_ID"))
+    parser.add_argument("--stop-receipt", dest="stop_receipt", default=get_env("RELAY_STOP_RECEIPT"))
     parser.add_argument("--help", action="store_true")
     
     args, unknown = parser.parse_known_args()
@@ -127,6 +244,36 @@ def main():
     # location; the shim receives this exact path via its normal <AGENT>_LOG override.
     incident_file = os.path.join(root_dir, ".relay-scratch", "last-turn-incident.json")
 
+    invocation_id = (args.invocation_id or "").strip() or f"{args.relay_task}-{os.getpid()}-{int(time.time() * 1000)}"
+    stop_receipt_path = (args.stop_receipt or "").strip() or os.path.join(
+        root_dir, ".relay-scratch", "stop-reasons", f"{_sanitize_token_id(invocation_id)}.json"
+    )
+
+    def write_stop_receipt(reason_str: str, exit_code: int, update_legacy_file: bool = True) -> None:
+        record = {
+            "schema": 1,
+            "invocation_id": invocation_id,
+            "relay_task": args.relay_task,
+            "reason": reason_str,
+            "stop_reason": reason_str,
+            "exit_code": int(exit_code),
+            "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+        try:
+            _atomic_write_text(stop_receipt_path, json.dumps(record, indent=2, sort_keys=True) + "\n")
+        except OSError as exc:
+            eprint(f"relay-drive: WARNING could not write stop receipt {stop_receipt_path}: {exc}")
+        if update_legacy_file:
+            reason_file = os.path.join(root_dir, ".relay-scratch", "escalation-reason")
+            try:
+                _atomic_write_text(reason_file, reason_str)
+            except OSError:
+                pass
+        eprint(
+            f"relay-drive: stop-reason={reason_str} invocation_id={invocation_id} "
+            f"exit_code={int(exit_code)} receipt={stop_receipt_path}"
+        )
+
     def write_turn_incident(main_tree, turn_worktree, turn_log, actor):
         try:
             os.makedirs(os.path.dirname(incident_file), exist_ok=True)
@@ -142,8 +289,15 @@ def main():
             # Incident evidence is best-effort: recording trouble must not change a driven turn.
             pass
 
-    def prepare_turn_log(actor):
-        """Resolve the actual shim log once, then pass that exact path to the shim (GH-372)."""
+    def prepare_turn_log(actor, turn_round):
+        """Allocate a fresh per-turn log for driver-owned runs (GH-1548 / KS-05).
+
+        Returns (turn_log_path, child_env_overrides, is_fresh_per_turn).
+        - If the caller explicitly set <ENV>_LOG, preserve it unchanged and mark is_fresh_per_turn=False
+          so classification never scans an externally reused file.
+        - Otherwise allocate a unique, guaranteed-new per-turn log path and supply it ONLY via the
+          child Popen environment (never mutating os.environ).
+        """
         shims = (
             ("claude", "CLAUDE", "claude-turn"),
             ("codex", "CODEX", "codex-turn"),
@@ -153,17 +307,26 @@ def main():
             ("smallcode", "SMALLCODE", "smallcode-turn"),
             ("commandcode", "COMMANDCODE", "commandcode-turn"),
             ("deepseek", "DEEPSEEK", "deepseek-turn"),
+            ("kimi", "KIMI", "kimi-turn"),
         )
         for prefix, env_prefix, tool_name in shims:
             if actor.startswith(prefix):
                 log_key = f"{env_prefix}_LOG"
-                if get_env(log_key):
-                    return get_env(log_key)
+                caller_log = get_env(log_key)
+                if caller_log:
+                    return caller_log, {}, False
                 turn_root = resolve_turn_root(get_env(f"{env_prefix}_TURN_ROOT"), root_dir)
-                turn_log = rtl_default_log(turn_root, tool_name, args.relay_task)
-                os.environ[log_key] = turn_log
-                return turn_log
-        return ""
+                base_dir = os.path.dirname(rtl_default_log(turn_root, tool_name, args.relay_task))
+                safe_task = _sanitize_token_id(args.relay_task)
+                safe_inv = _sanitize_token_id(invocation_id)
+                for _ in range(16):
+                    nonce = secrets.token_hex(4)
+                    cand = os.path.join(base_dir, f"{tool_name}-{safe_task}-{safe_inv}-r{turn_round}-{nonce}.log")
+                    if not os.path.exists(cand):
+                        return cand, {log_key: cand}, True
+                fallback = rtl_default_log(turn_root, tool_name, args.relay_task)
+                return fallback, {log_key: fallback}, not os.path.exists(fallback)
+        return "", {}, False
 
     # GH-331 (mirrors relay-drive.sh GH-152): auto-surface the `tick analyze` cost block at end-of-run
     # so a driven run stops needing a manual `tick analyze` pull to see what it cost. This lived only in
@@ -243,51 +406,54 @@ def main():
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 
-    def lane_attempt_gate(root, raw, force):
-        if get_env("LANE_ATTEMPT_COUNTED"): return 0
-        if not raw: return 0
-        
-        max_attempts = get_env("LANE_MAX_ATTEMPTS", "2")
-        try: max_attempts = int(max_attempts)
-        except ValueError: max_attempts = 2
-
-        key = _lane_key(raw)
-        attempts_dir = os.path.join(root, ".tick", "attempts")
-        os.makedirs(attempts_dir, exist_ok=True)
-        attempts_file = os.path.join(attempts_dir, key)
-
-        count = 0
-        if os.path.isfile(attempts_file):
+    def target_repo():
+        repo = get_env("RELAY_TARGET_ROOT")
+        if not repo:
             try:
-                with open(attempts_file, "r") as f:
-                    count = len(f.readlines())
+                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
             except Exception:
-                pass
-        
-        if force:
-            eprint(f"lane-attempt-cap: --force override — lane {key} at {count} attempt(s) (cap {max_attempts}), proceeding.")
-        elif count >= max_attempts:
-            eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
-            eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
-            sys.exit(8)
+                repo = root_dir
+        return repo or root_dir
 
-        # append fire
-        ts = "fire"
+
+    def lane_attempt_gate(root, raw, force):
+        if get_env("LANE_ATTEMPT_COUNTED"):
+            from gate_receipt import attempt_admission
+            try:
+                proof = attempt_admission(target_repo())
+            except Exception as exc:
+                die(f"nested counted build has invalid accounting: {exc}")
+            if proof.get("state") not in ("active", "in_progress") or proof.get("archived") or proof.get("attestation"):
+                die("nested counted build requires an active canonical reservation")
+            return 0
+        if not raw:
+            return 0
         try:
-            ts = subprocess.check_output(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
-        except:
-            pass
-        with open(attempts_file, "a") as f:
-            f.write(f"{ts} fire\n")
+            cap = int(get_env("LANE_MAX_ATTEMPTS", "2"))
+        except ValueError:
+            cap = 2
+        count, context = lane_attempt_reserve(
+            root, raw, target_repo(), cap=cap, force=force,
+            check_only=False)
+        if count >= cap and context is None and not force:
+            eprint(f"lane-attempt-cap: lane {_lane_key(raw)} PARKED after {count} attempt(s) (cap {cap}) — no relay token seeded.")
+            write_stop_receipt("lane-attempt-cap", 8, update_legacy_file=False)
+            sys.exit(8)
+        if force and context is not None:
+            eprint(f"lane-attempt-cap: --force override — lane {_lane_key(raw)} at {count - 1} attempt(s) (cap {cap}), proceeding.")
         return 0
 
     def lane_attempt_reset(root, raw):
         if get_env("LANE_ATTEMPT_COUNTED"): return
         if not raw: return
         attempts_file = os.path.join(root, ".tick", "attempts", _lane_key(raw))
-        if os.path.exists(attempts_file):
-            try: os.remove(attempts_file)
-            except: pass
+        try:
+            archive = archive_lane_attempts(attempts_file)
+        except (OSError, ValueError) as exc:
+            die(f"cannot preserve lane attempts {attempts_file}: {exc}")
+        if archive:
+            eprint(f"lane-attempt history preserved: {archive}")
+        return archive
 
     # #129/#136: resolve TICK_REPO_ROOT ONCE, here, silently. The lane-attempt gate just below
     # is the first consumer — with the env unset on a vendored-.xyz drive it used to count
@@ -306,10 +472,6 @@ def main():
         except RuntimeError:
             tick_repo_root = root_dir
         os.environ["TICK_REPO_ROOT"] = tick_repo_root
-
-    # check lane attempt
-    if not args.dry_run and not args.review_once:
-        lane_attempt_gate(tick_repo_root, args.relay_task, args.force)
 
     if "RELAY_WORKTREE_ISOLATION" not in os.environ:
         os.environ["RELAY_WORKTREE_ISOLATION"] = "1"
@@ -367,9 +529,7 @@ def main():
     def file_status():
         try:
             with open(relay_file, 'r') as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        return line.split(":", 1)[1].strip()
+                return relay_attest.header_field(f.read(), "STATUS")
         except: pass
         return ""
 
@@ -537,6 +697,7 @@ def main():
             if is_running:
                 eprint(f"relay-drive: another driver is active in this repo (pid {holder}, lock: {lock_label}).")
                 eprint("relay-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).")
+                write_stop_receipt("driver-lock-active", 1, update_legacy_file=False)
                 sys.exit(1)
             
             eprint(f"relay-drive: reclaiming stale relay-driver.lock (holder pid {holder or 'none'} not running).")
@@ -545,6 +706,7 @@ def main():
                 os.mkdir(lock_dir)
             except:
                 eprint("relay-drive: could not acquire relay-driver.lock after reclaiming a stale one.")
+                write_stop_receipt("driver-lock-acquire-failed", 1, update_legacy_file=False)
                 sys.exit(1)
         
         with open(os.path.join(lock_dir, "pid"), 'w') as f:
@@ -575,6 +737,11 @@ def main():
     # bug reports against the dead half).
     if self_resolved:
         eprint(f"relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to {tick_repo_root} (#129)")
+
+    # check lane attempt — only once the driver lock is held: a refused contender must not
+    # reserve (and thereby supersede) the running invocation's attempt. Still before dispatch.
+    if not args.dry_run and not args.review_once:
+        lane_attempt_gate(tick_repo_root, args.relay_task, args.force)
 
     def get_head_commit():
         repo = get_env("RELAY_TARGET_ROOT")
@@ -630,14 +797,14 @@ def main():
         except Exception:
             return 0
 
-    def write_escalation_reason(reason_str):
-        reason_file = os.path.join(root_dir, ".relay-scratch", "escalation-reason")
-        os.makedirs(os.path.dirname(reason_file), exist_ok=True)
-        with open(reason_file, "w") as f:
-            f.write(reason_str)
+    _pending_exit_code: list[int | None] = [None]
+
+    def write_escalation_reason(reason_str, exit_code=None):
+        code = exit_code if exit_code is not None else (_pending_exit_code[0] if _pending_exit_code[0] is not None else 4)
+        write_stop_receipt(reason_str, code, update_legacy_file=True)
 
     def exit_escalate(reason_str):
-        write_escalation_reason(reason_str)
+        write_stop_receipt(reason_str, 4, update_legacy_file=True)
         sys.exit(4)
 
     # ---- GH-505 / GH-509: driver-attested terminal status -------------------------------------
@@ -647,14 +814,6 @@ def main():
     # exit never depends on the on-disk record, which consumers validate separately.
     attested = {}
 
-    def target_repo():
-        repo = get_env("RELAY_TARGET_ROOT")
-        if not repo:
-            try:
-                repo = subprocess.check_output(["git", "-C", os.path.dirname(os.path.abspath(relay_file)), "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
-            except Exception:
-                repo = root_dir
-        return repo or root_dir
 
     def transcript_repo():
         try:
@@ -682,13 +841,10 @@ def main():
 
     def restore_status_line(prev_status):
         with open(relay_file, "r", encoding="utf-8", errors="surrogateescape") as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            if line.startswith("STATUS:"):
-                lines[i] = f"STATUS: {prev_status}\n"
-                break
+            text = f.read()
+        text, _n = relay_attest.set_header_field(text, "STATUS", prev_status)
         with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
-            f.writelines(lines)
+            f.write(text)
 
     def judge_terminal(ns, role, pre, shim_ok=True):
         """Judge the turn the driver just watched. Returns a verdict tuple; the CALLER picks the exit
@@ -717,16 +873,84 @@ def main():
             post_raw = f.read()
         post_canon = relay_attest.canonical_bytes(post_raw)
         pre["canon"] = relay_attest.canonical_prefix(pre["raw"], post_raw)
+        added_start = len(pre["canon"])
         if not post_canon.startswith(pre["canon"]):
+            separator_end = relay_attest.separator_prefix_end(pre["raw"], post_raw)
+            if separator_end is not None:
+                added_start = separator_end
+                eprint("relay-drive: WARNING — harmless blank separators changed in review history; raw transcript retained")
+            else:
+                added_start = None
+        if added_start is None:
             pre_c = pre["canon"]
             i = next((k for k in range(min(len(pre_c), len(post_canon))) if pre_c[k] != post_canon[k]), min(len(pre_c), len(post_canon)))
             eprint(f"relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte {i}):")
             eprint(f"  before: {pre_c[max(0, i-60):i+60]!r}")
             eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
             return ("refused", "review-body-rewritten")
-        added = post_canon[len(pre["canon"]):]
+        added = post_canon[added_start:]
+        # A reviewer block whose own last verdict line says the review failed cannot close the relay
+        # as Approved. Only an explicit failing word refuses; a block with no verdict line is judged
+        # by the other checks, as before.
+        own_verdict = relay_attest.last_verdict(added)
+        if ns == "Approved" and relay_attest.verdict_contradicts_approval(own_verdict):
+            eprint(f"relay-drive: STATUS {ns} but the reviewer's own last verdict line in this turn reads "
+                   f"'{own_verdict}' — an approval over a failing verdict is refused")
+            return ("refused", "approved-over-fail")
         if not added.strip():
             return ("refused", "empty-approval")
+        # GH-1428: marathon arms this only when the phase gate is one the reviewer may run.
+        # GH-1465: the driver runs that gate ITSELF on an Approved and judges by its exit code; the
+        # reviewer's `gate run:` line is still recorded but no longer decides anything. It runs in the
+        # target checkout (the reviewed revision, where the later pre-advance gate also runs), in its
+        # own process group, with the harness env scrubbed. No turn follows a terminal verdict, so
+        # nothing the gate leaves behind can trip a turn's containment.
+        gate_run = relay_attest.declared_gate_run(added)
+        reviewer_gate = get_env("MARATHON_REVIEWER_GATE_CMD", "")
+        gate_exit = None
+        if reviewer_gate:
+            from gate_env import gate_env
+            from proc_group import GATE_RSS_MB_DEFAULT, RSS_KILL_RC, TIMEOUT_RC, run_bounded
+            gate_cwd, gate_out, rss_killed, peak_rss_mb = target_repo(), "", False, None
+            source_record = dict(reviewed_head=pre["reviewed_head"],
+                                 relay_file_rel=relay_attest.repo_relative(relay_file, gate_cwd))
+            source_ok, source_why = relay_attest.source_matches(source_record, get_head_commit(), gate_cwd)
+            if not source_ok:
+                eprint(f"relay-drive: driver-run gate refused source drift: {source_why}")
+                return ("refused", "gate-failed")
+            rss_cap = None
+            if (get_env("MARATHON_GATE_GUARD", "1") or "1").strip() != "0":
+                raw_rss = (get_env("MARATHON_GATE_RSS_MB") or "").strip()
+                try:
+                    rss_cap = int(raw_rss) if raw_rss else GATE_RSS_MB_DEFAULT
+                except ValueError:
+                    eprint(f"relay-drive: MARATHON_GATE_RSS_MB={raw_rss!r} is not an integer — falling back to {GATE_RSS_MB_DEFAULT}")
+                    rss_cap = GATE_RSS_MB_DEFAULT
+            try:
+                res = run_bounded(["/bin/bash", "-c", reviewer_gate], cwd=gate_cwd, timeout=DRIVER_GATE_TIMEOUT_S,
+                                  env=dict(gate_env(), PYTHONDONTWRITEBYTECODE="1"), max_rss_mb=rss_cap,
+                                  capture_tail_bytes=65536)  # GH-1465: the log shows only the last lines
+                rss_killed, peak_rss_mb = res.rss_killed, res.peak_rss_mb
+                gate_exit = TIMEOUT_RC if res.timed_out else (RSS_KILL_RC if rss_killed else res.rc)
+                gate_out = res.stdout + res.stderr
+            except (OSError, ValueError) as e:
+                gate_exit, gate_out = 127, f"could not launch: {e}"
+            source_ok, source_why = relay_attest.source_matches(source_record, get_head_commit(), gate_cwd)
+            if not source_ok:
+                eprint(f"relay-drive: driver-run gate refused source drift: {source_why}")
+                return ("refused", "gate-failed")
+            eprint(f"relay-drive: driver-run gate `{reviewer_gate}` (cwd {gate_cwd}, reviewed "
+                   f"{pre['reviewed_head'][:12]}) exit {gate_exit}"
+                   + (f" — timed out after {DRIVER_GATE_TIMEOUT_S}s" if gate_exit == TIMEOUT_RC else "")
+                   + (f" — killed: group RSS {peak_rss_mb}MB >= cap {rss_cap}MB" if rss_killed else ""))
+            if gate_exit != 0:
+                eprint("\n".join("  | " + ln for ln in gate_out.splitlines()[-20:]))
+                if relay_attest.builder_declared_unverified(post_canon[:added_start]):
+                    eprint("relay-drive: the builder's latest block declares unverified work and the gate is not green. "
+                           "A Codex builder can verify for itself with CODEX_FLAGS='-s workspace-write -c approval_policy=never "
+                           "-c sandbox_workspace_write.network_access=true' (relay-automation/README.md, GH-1428)")
+                    return ("refused", "unverified-approval")
+                return ("refused", "gate-failed")
         tstat, tactor = token_state()
         if tstat != "done":
             return ("refused", "close-mismatch" if tactor else "token-state")
@@ -743,19 +967,40 @@ def main():
             "isolated": pre["isolated"],
             "reviewed_head": pre["reviewed_head"],
             "artifact_sha256": pre["artifact_sha256"],
-            "added_start": len(pre["canon"]),
+            "added_start": added_start,
             "added_len": len(added),
             "added_sha256": relay_attest.sha256(added),
             "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "driver_pid": os.getpid(),
         }
+        # GH-1220: optional phase config identity passed by marathon-drive (no CLI flag, no schema bump).
+        cfg_sha = get_env("MARATHON_CONFIG_SHA256", "")
+        if cfg_sha:
+            record["config_sha256"] = cfg_sha
+        record["gate_run"] = gate_run  # GH-1428: whether the reviewer declared a green gate run
+        if gate_exit is not None:  # GH-1465: the gate the driver itself ran, and its exit code
+            record["gate_cmd"], record["gate_exit"] = reviewer_gate, gate_exit
+            record["gate_cmd_format"] = "json"
         trailer = relay_attest.trailer_text(record)
         record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
         relay_attest.append_before_marker(relay_file, trailer)
         if not commit_relay_file(f"relay-drive: attest {args.relay_task} approved by {actor} (reviewed {pre['reviewed_head'][:12]})"):
             return ("refused", "attest-publish-failed")
         try:
+            raw_context = os.environ.get(ATTEMPT_CONTEXT_ENV)
+            # A reviewer-only (--review-once) approval binds the inherited reservation too:
+            # without the attestation link the archived row never becomes admissible.
+            if raw_context and json.loads(raw_context).get("kind") == "lane":
+                from gate_receipt import attempt_admission
+                attempt_admission(trepo)
+                context = json.loads(raw_context)
+                context["attestation"] = str(relay_attest.path_for(args.relay_task, trepo))
+                record["attempt_context"] = context
+                os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
             path = relay_attest.write(record)
+            if record.get("attempt_context"):
+                lane_attempt_finish(record["attempt_context"], "active",
+                                    pre["reviewed_head"], attestation=str(path))
         except Exception as e:
             eprint(f"relay-drive: attestation record write FAILED: {e}")
             return ("refused", "attest-publish-failed")
@@ -834,6 +1079,8 @@ def main():
         # (rtl_is_reviewer_turn) uses the driver's knowledge instead of bytes a builder can rewrite.
         # The reviewed revision is pinned: the shim cuts its worktree at RELAY_REVIEWED_HEAD, so a
         # concurrent parent commit during the turn cannot change what the reviewer read.
+        if args.strict_role_handoff and (not args.builder or not args.reviewer or args.builder == args.reviewer or actor not in (args.builder, args.reviewer)):
+            exit_escalate("explicit-cap-invalid-role")
         role = "reviewer" if actor == args.reviewer else "builder"
         if args.review_once and args.reviewer and role != "reviewer":
             die(f"--review-once dispatches '{actor}' but --reviewer is '{args.reviewer}' (review-once-actor-mismatch)")
@@ -881,7 +1128,7 @@ def main():
 
         known_worktrees = progress_worktrees()
         turn_worktree = ""
-        turn_log = prepare_turn_log(actor)
+        turn_log, turn_env_overrides, turn_log_is_fresh = prepare_turn_log(actor, round_idx)
         write_turn_incident(progress_main_tree, turn_worktree, turn_log, actor)
         try:
             progress_interval_s = max(1.0, float(get_env("RELAY_PROGRESS_INTERVAL_S", "60")))
@@ -898,10 +1145,13 @@ def main():
             print(f"relay-drive: checkout snapshot unavailable at {progress_main_tree}: "
                   f"{detail}; timeout checkout recovery will require manual inspection",
                   file=sys.stderr)
+        turn_env = os.environ.copy()
+        turn_env.update(turn_env_overrides)
         if os.access(args.agent_cmd, os.X_OK):
-            proc = subprocess.Popen([args.agent_cmd], start_new_session=True)
+            proc = subprocess.Popen([args.agent_cmd], env=turn_env, stderr=subprocess.PIPE, start_new_session=True)
         else:
-            proc = subprocess.Popen(args.agent_cmd, shell=True, executable="/bin/bash", start_new_session=True)
+            proc = subprocess.Popen(args.agent_cmd, shell=True, executable="/bin/bash", env=turn_env, stderr=subprocess.PIPE, start_new_session=True)
+        stderr_tee = _StderrTee(proc.stderr) if proc.stderr is not None else None
         while proc.poll() is None:
             try:
                 out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True, timeout=5).stdout
@@ -934,13 +1184,14 @@ def main():
                     )
                     if status.returncode == 0:
                         changed_count = len(status.stdout.splitlines())
-                        eprint(f"relay-drive: GH-370 progress ({sample_kind}: {sample_root}) changed-files={changed_count}")
+                        eprint(f"relay-drive: GH-370 worktree state ({sample_kind}: {sample_root}) changed-files={changed_count}")
                 except Exception:
                     pass
                 last_progress_at = now
             time.sleep(0.1)
 
         res_code = proc.returncode
+        turn_stderr_text = stderr_tee.finish(timeout_s=2.0) if stderr_tee is not None else ""
         if get_env("RELAY_WORKTREE_ISOLATION", "1") != "0" and not turn_worktree:
             rtl_candidates = [p for p in progress_worktrees() - known_worktrees
                               if os.path.basename(p).startswith("rtl-wt.")]
@@ -954,14 +1205,32 @@ def main():
                 subprocess.run([tick_bin, "cost", args.relay_task, "--agent", actor, "--peak-rss-mb", str(peak_turn_rss_mb)], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception:
                 pass
+        turn_fail_reason = "turn-error"
+        _pending_exit_code[0] = None
+        if res_code:
+            # GH-1548 (KS-05 / U13): classify 429/quota exhaustion as provider-quota, distinct from
+            # cap-stalled and turn-error. Scan only this turn's exclusive stderr pipe plus its fresh
+            # per-turn log (never a caller-reused <ENV>_LOG). Computed outside `if res_code != 0:` so
+            # AST-extracted boundary tests (gh648-l7-checkout-aftermath.sh) keep their minimal namespace.
+            evidence = turn_stderr_text
+            if turn_log and turn_log_is_fresh:
+                evidence = evidence + "\n" + _read_head_tail(turn_log)
+            if is_provider_quota_error(evidence):
+                turn_fail_reason = "provider-quota"
+            _pending_exit_code[0] = res_code
+
         if res_code != 0:
             # GH-505 F3: a failed turn is NEVER attested — whatever its role — but a terminal STATUS it
             # left behind is still reverted, and the shim's own code (5/6/7) is preserved.
             verdict = judge_terminal(file_status(), role, pre_turn, shim_ok=False)
             if verdict[0] == "forged":
-                write_escalation_reason(("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed")
+                fail_reason = ("forged-terminal" if role != "reviewer" else "failed-turn-terminal") if verdict[1] else "revert-commit-failed"
+            else:
+                fail_reason = locals().get("turn_fail_reason", "turn-error")
+            eprint(f"relay-drive: the {actor} turn itself failed (shim exit {res_code}, reason={fail_reason}) — this is a failed turn, not a review handback")
             if res_code == 7:
                 restore_checkout_after_timeout(progress_main_tree, checkout_before)
+            write_escalation_reason(fail_reason)
             sys.exit(res_code)
 
         round_idx += 1
@@ -1044,10 +1313,12 @@ def main():
                 # exit code alone lets a genuinely failed review read as still open.
                 with open(relay_file, 'r') as f:
                     content = f.read()
-                content, n_subs = re.subn(r'^STATUS:\s*.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
+                # Bold/backtick tolerant, like relay_attest.header_field (the reader of this line).
+                content, n_subs = re.subn(r'^[`*]*STATUS[`*]*:.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
                 if n_subs == 0:
                     eprint(f"relay-drive: no STATUS: line in {relay_file} -- the escalation write did not land.")
                     eprint("relay-drive: refusing to report an escalation that was never written (GH-204).")
+                    write_stop_receipt("consult-escalation-write-failed", 1, update_legacy_file=True)
                     sys.exit(1)
                 with open(relay_file, 'w') as f:
                     f.write(content)
@@ -1055,6 +1326,7 @@ def main():
                     if 'STATUS: Escalated' not in f.read():
                         eprint(f"relay-drive: escalation write did not persist to {relay_file}.")
                         eprint("relay-drive: refusing to report an escalation that is not on disk (GH-204).")
+                        write_stop_receipt("consult-escalation-write-failed", 1, update_legacy_file=True)
                         sys.exit(1)
                 
                 try:
@@ -1092,6 +1364,9 @@ def main():
         if verdict[0] == "attested":
             ns = file_status()   # the trailer was appended; re-read so the signatures below see it
 
+        if args.strict_role_handoff and not terminal_status(ns) and (nactor == actor or nactor not in (args.builder, args.reviewer)):
+            exit_escalate("explicit-cap-invalid-handoff")
+
         if args.review_once:
             if terminal_status(ns):
                 if not attested:
@@ -1111,17 +1386,21 @@ def main():
                 if review_blocks_added(rf_text_before, rf_text_after) > 0:
                     print(f"relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: {ns}); non-approval handback, not a stall")
                     xyz_relay_emit("orange")
+                    write_stop_receipt("review-handback", 5, update_legacy_file=True)  # exit 5 is also a failed turn's code
                     sys.exit(5)
                 eprint("relay-drive: review-once — the relay file moved but the reviewer appended NO review block: a zero-output turn is not review coverage (GH-397) — genuine stall")
                 xyz_relay_emit("red")
+                write_stop_receipt("zero-output-stall", 3, update_legacy_file=True)
                 sys.exit(3)
             eprint(f"relay-drive: review-once — reviewer took no action (relay file unchanged, NEXT unchanged, STATUS still {ns}, token {ntstatus}:{nactor}) — genuine stall")
             xyz_relay_emit("red")
+            write_stop_receipt("no-action-stall", 3, update_legacy_file=True)
             sys.exit(3)
             
         if not terminal_status(ns) and f"{ntstatus}:{nactor}" == prev:
             eprint(f"relay-drive: no progress after {actor} turn (token still {prev}) — escalating")
             xyz_relay_emit("red")
+            write_stop_receipt("no-progress", 3, update_legacy_file=True)
             sys.exit(3)
             
         head_after = get_head_commit()
@@ -1146,6 +1425,7 @@ def main():
     if terminal_status(s) and not actor:
         if not attested:
             exit_unattested(s, "post-loop")
+        lane_attempt_reset(tick_repo_root, args.relay_task)
         print(f"relay-drive: relay terminated (STATUS: {s}, attested by {attested['reviewer']})")
         xyz_relay_emit("green")
         sys.exit(0)

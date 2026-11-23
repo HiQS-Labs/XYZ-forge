@@ -1,0 +1,4 @@
+Cloning into '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-uxra5laa'...
+pre-push: no fresh merge-base with origin's integration branch (tracking ref stale or absent — fetch and retry, or take the full gate).
+/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-uxra5laa/test/lib/runner-envelope.sh: line 120: 87157 Done                    printf '%s\n' ${POOL[@]+"${POOL[@]}"}
+     87160 Terminated: 15          | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$1" pool' _ {}

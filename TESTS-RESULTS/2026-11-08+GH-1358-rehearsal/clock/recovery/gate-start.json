@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-08T20:17:06.960928+00:00",
+  "candidate": "8d541d012cee48dbf453f3a638aeaf62617ebf42",
+  "attempt_lines": [
+    "2026-11-08T18:33:00Z fire",
+    "2026-11-08T18:46:02Z fire"
+  ],
+  "attempt_sha256": "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2",
+  "gate_clone": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-77h4mabm",
+  "satisfied_lane_skip_observed": true,
+  "host_gate_inventory_before_push": [],
+  "full_gate": "running, no pass claim"
+}
