@@ -23,7 +23,7 @@ related: [releases, daily-planner, weekly-planner, sanity-check, unstuck, standu
 
 | What was just completed | What's next |
 |---|---|
-| Skill, index row and `/finish-line` repoints written. Focused suites green, with red controls witnessed. Read-only dogfood retained (redacted) under `TESTS-RESULTS/2026-11-23+GH-1585/`. | Final Codex relay QA on the diff; then the ready PR. |
+| Final Codex relay QA Approved in round 2 (`relay-system/2026-11-23/gh1585-final-qa.md`, attested). Focused suites green at the final head. | PR review and merge (operator); then the post-merge dogfood (a live triage issue) once the operator says go. |
 
 ## Problem
 
