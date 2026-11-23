@@ -37,7 +37,7 @@ contains "cleanup route is documented" "$SKILL" "/releases clean"
 contains "planning route is documented" "$SKILL" "/releases plan"
 contains "publication route is documented" "$SKILL" "/releases publish"
 contains "Radar handoff is conditional" "$SKILL" 'Offer `/radar`'
-contains "Finish Line handoff is conditional" "$SKILL" 'Offer `/finish-line`'
+contains "Laser Focus handoff is conditional" "$SKILL" 'Offer `/laser-focus`'
 contains "closed-only PRs are rejected as shipment evidence" "$SKILL" "closed-but-unmerged PR"
 contains "closed-unmerged PRs are still inspected" "$SKILL" "merged and closed-unmerged PRs"
 contains "description warning caps at four sentences" "$SKILL" "exceeds four sentences"

@@ -6,7 +6,7 @@ description: >-
   two ledgers (ROADMAP + RELEASES DB), then emits a ranked list capped at 7 items plus a capped
   strategic read. Use when the operator says "/standup", "what's open", "what did I leave hanging",
   "where are we", "what should I do next", or is closing out a long working session. Not for
-  long-window defect analysis (that is /radar), not for closing one branch (/finish-line), not for
+  long-window defect analysis (that is /radar), not for landing a branch and retiring its checkout (/merge-cleanup), not for
   cutting one task's drip (/rabbit-hole), and it never executes the work it recommends.
 ---
 

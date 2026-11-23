@@ -1,0 +1,9 @@
+== test: path-integrity ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-path-integrity.XXXXXX.Cqi207V5Zb
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  PASS: all referenced relay/script/doc paths resolve (scanned 652 scripts + curated docs)
+Traceback (most recent call last):
+  File "<stdin>", line 26, in <module>
+AssertionError: broken skill links:
+skills/2-daily/laser-focus/SKILL.md: https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/3-weekly/worth-it-NOPE/SKILL.md
+  FAIL: broken skill Markdown link — update it after relocating a skill

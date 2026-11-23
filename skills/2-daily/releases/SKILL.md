@@ -1,6 +1,6 @@
 ---
 name: releases
-description: Read, synthesize, diagnose, clean, author, and publish the releases.db planning ledger (or legacy RELEASES.md where retained) through one routed workflow. Use for /releases; release status or health checks; stale-plan review against merged PRs, commits, and CHANGELOG entries; disciplined release creation or updates; ledger cleanup; historical anchors or backfill; publishing a planned GitHub Release; or deciding whether Radar or Finish Line is the better follow-up. Default invocation is read-only and every write or publication requires a preview and confirmation.
+description: Read, synthesize, diagnose, clean, author, and publish the releases.db planning ledger (or legacy RELEASES.md where retained) through one routed workflow. Use for /releases; release status or health checks; stale-plan review against merged PRs, commits, and CHANGELOG entries; disciplined release creation or updates; ledger cleanup; historical anchors or backfill; publishing a planned GitHub Release; or deciding whether Radar or Laser Focus is the better follow-up. Default invocation is read-only and every write or publication requires a preview and confirmation.
 ---
 
 # /releases — one release-planning router
@@ -238,9 +238,9 @@ Offer at most one goal-matched follow-up; do not append generic reminders.
 - Offer `/radar` when the question is whether recent work, recurring defects, and release themes are
   strategically aligned. State that Radar is broader than this ledger check and owns its own report
   workflow. Never copy Radar's analysis into this skill or invoke it automatically.
-- Offer `/finish-line` when the operator has selected a release checkpoint and wants a frozen,
-  shortest safe path to ship it. State that Finish Line owns the done-list and parking workflow.
-  Never invoke it automatically.
+- Offer `/laser-focus` when the operator has selected a release target and wants new client or PO
+  input placed against it (align now, defer, park or decide). State that Laser Focus owns the frozen
+  done-list and parking workflow. Never invoke it automatically.
 - Stay within `/releases` when the task is ledger synthesis, cleanup, authoring, or publication.
 
 ## Guardrails

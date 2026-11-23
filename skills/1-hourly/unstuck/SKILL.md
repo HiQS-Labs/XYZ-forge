@@ -213,7 +213,7 @@ still apply. `/unstuck` is a blocking interrupt, not an escape from the parent w
 - Start a complex problem from scratch with `/workhorse`.
 - Minimize an implementation that is otherwise moving with `/ponytail`.
 - Diagnose an unknown failure with `/debug-mantra`.
-- Park scope creep and close a chapter with `/finish-line`.
+- Park scope creep against a confirmed release target with `/laser-focus`.
 - Interrupt a live process whose activity no longer advances its goal with `/unstuck`.
 
 The shortest path back to the plan is the product.

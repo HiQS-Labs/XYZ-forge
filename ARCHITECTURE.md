@@ -87,6 +87,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [flywheel](skills/2-daily/flywheel/SKILL.md) | Drive real work through existing intake, Jog, review, recovery and landing skills with bounded autonomous repair and explicit continuation. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
+| [laser-focus](skills/2-daily/laser-focus/SKILL.md) | Lock the release target (mandatory ledger gate), optionally freeze a consult-checked 100% goal list, then place client/PO input: align now, defer, park or decide. |
 | [merge-cleanup](skills/2-daily/merge-cleanup/SKILL.md) | Land open PRs in dependency order, reconcile, and tear down clones/worktrees that are proven landed. |
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
 | [pr-minder](skills/2-daily/pr-minder/SKILL.md) | One manual remediation pass over open PRs on an author-activity age ladder (nudge, repair, decide, retire); never merges or closes. |
