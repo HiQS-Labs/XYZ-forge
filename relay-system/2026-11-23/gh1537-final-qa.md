@@ -363,4 +363,13 @@ Basis: all earlier findings are closed by the revised source and retained eviden
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-23T18:50:12Z
+task: RELAY-gh1537-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: bd6b63a1ec9abb94b64dd9363a6c79b30dd5866d
+added-range: 33647+7631
+added-sha256: 3b7a6b7560e2aff24d5cdaa52a36784284f9bde328c3bb3fdb2f85d0a52e1274
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
