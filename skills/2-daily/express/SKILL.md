@@ -129,7 +129,8 @@ python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --s
 # GH-1576: if the closeout stopped with `gate-unwired` (the clone's pre-push stub was missing when it
 # came to commit and push), nothing was committed: the ledger ship, projections and this landing's
 # receipt are still dirty on the base branch. Run `bash githooks/install.sh`, then this same `resume`
-# command. It publishes exactly that retained transaction (allowlisted closeout paths plus this
+# command. After the repository/issue identity check (never under `--dry-run`, which only reports it
+# would publish), it publishes exactly that retained transaction (allowlisted closeout paths plus this
 # issue's valid receipt for this commit and suite) through the wiring check, never reruns the suite,
 # and then continues. Any other dirty path, another branch, or no matching receipt still refuses.
 python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh [--sha <SHA>] [--base <branch>]

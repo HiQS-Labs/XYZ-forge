@@ -64,8 +64,26 @@ AHEAD="$(git -C "$FX" rev-list --count origin/development..HEAD)"
 RECEIPT_N="$(cat "$FX"/TESTS-RESULTS/*+GH-999-express/provenance.jsonl 2>/dev/null | wc -l | tr -d ' ')"
 rec "closeout with the stub gone (install --check rc=$CHK)" "$CO" "dirty=[$DIRTY] local-commits-ahead-of-origin=$AHEAD receipt-lines=$RECEIPT_N" "$O0" "$(remote_dev)"
 
-# Negative control: the repaired clone, but an unrelated file is also dirty -> resume must still refuse.
+# The wiring is repaired. Round-5 negative controls: with the retained closeout still pending, neither a
+# preview nor a request for another repository may add, commit or push; tree, HEAD, origin and index stay put.
 (cd "$FX" && bash githooks/install.sh) >/dev/null 2>&1
+neg() { # name scenario resume-args...
+  local name="$1" what="$2"; shift 2
+  local H S O X T="$WORK/trace-$name.log"; : > "$T"
+  H="$(git -C "$FX" rev-parse HEAD)"; O="$(remote_dev)"
+  S="$({ git -C "$FX" status --porcelain; git -C "$FX" diff; } | shasum | cut -c1-16)"
+  env GIT_TRACE="$T" python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh "$@" >"$WORK/$name.out" 2>"$WORK/$name.err"; local RC=$?
+  local MUT STAGED
+  MUT="$(grep -cE 'built-in: git (add|commit|push)' "$T")"
+  STAGED="$(git -C "$FX" diff --cached --name-only | wc -l | tr -d ' ')"
+  rec "$what" "rc=$RC" "mutating-git-calls(add/commit/push)=$MUT staged-paths=$STAGED head-unchanged=$([ "$(git -C "$FX" rev-parse HEAD)" = "$H" ] && echo yes || echo NO) tree-unchanged=$([ "$({ git -C "$FX" status --porcelain; git -C "$FX" diff; } | shasum | cut -c1-16)" = "$S" ] && echo yes || echo NO) origin-unchanged=$([ "$(remote_dev)" = "$O" ] && echo yes || echo NO); $(cat "$WORK/$name.out" "$WORK/$name.err" | tail -1 | cut -c1-110)" "$O" "$(remote_dev)"
+}
+if [ "${GH1576_NEG_ONLY:-}" = dry ]; then neg negdry "negative control: resume --dry-run with the retained closeout pending"  --dry-run; exit 0; fi
+if [ "${GH1576_NEG_ONLY:-}" = repo ]; then neg negrepo "negative control: resume --repo wrong/repo with the retained closeout pending" --repo wrong/repo; exit 0; fi
+neg negdry "negative control: resume --dry-run with the retained closeout pending"  --dry-run
+neg negrepo "negative control: resume --repo wrong/repo with the retained closeout pending" --repo wrong/repo
+
+# Negative control: the repaired clone, but an unrelated file is also dirty -> resume must still refuse.
 touch "$FX/unrelated-1576.txt"
 H1="$(git -C "$FX" rev-parse HEAD)"
 python3 "$DRIVER" --root "$FX" resume --issue 999 --suite test/gh999-demo.sh >"$WORK/resume-neg.log" 2>"$ERR"; NRC=$?
