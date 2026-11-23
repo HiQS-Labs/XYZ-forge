@@ -158,4 +158,13 @@ Basis: The earlier per-stage identity evidence gap is resolved, and the recorded
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-23T23:53:01Z
+task: RELAY-gh1587-final-qa-v2
+reviewer: codex
+status: Approved
+reviewed-head: 6d50778154061afa264a620f69a20c27fba6f24e
+added-range: 17149+1233
+added-sha256: 08afc40e94c344da37359d94c5de782d487aae8fb8a4c01dd22766e9e80f4235
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
