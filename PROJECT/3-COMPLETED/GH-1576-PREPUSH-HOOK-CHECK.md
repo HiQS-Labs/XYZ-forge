@@ -2,9 +2,9 @@
 gh_issue: 1576
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1576
 title: "start-task: refuse to push from a clone with no pre-push hook installed, so no push skips the gate"
-status: Working — plan revised after Codex plan QA round 1 (F1-F3); awaiting round 2
+status: Complete
 created: 2026-11-21
-updated: 2026-11-21
+updated: 2026-11-23
 owner: Claude (start-task sub-agent)
 goal: "No start-task-family push leaves a clone whose pre-push stub is not installed; the check is `githooks/install.sh --check`, run immediately before the push."
 branch: fix/XYZ-forge-gh1576-prepush-hook-check-2026-11-21
