@@ -1,0 +1,42 @@
+== test: releases-skill ==
+  PASS: plural skill exists
+  PASS: singular repo folder is retired
+  PASS: frontmatter name is plural
+  PASS: default route is read-only
+  PASS: cleanup route is documented
+  PASS: planning route is documented
+  PASS: publication route is documented
+  PASS: Radar handoff is conditional
+  PASS: Laser Focus handoff is conditional
+  PASS: closed-only PRs are rejected as shipment evidence
+  PASS: closed-unmerged PRs are still inspected
+  PASS: description warning caps at four sentences
+  PASS: manifest count triggers review rather than rejection
+  PASS: Codex mutation is forbidden
+  PASS: backend detection is a preflight step
+  PASS: app-managed mutations name the CLI implementation
+  PASS: direct edits are refused in app-managed repos
+  PASS: clean route delegates via releases update
+  PASS: plan route delegates via releases add
+  PASS: publish write-back delegates via releases ship
+  PASS: anchor route delegates as a command pair
+  PASS: legacy repos keep the direct-edit path
+  PASS: app-managed preflight runs the consistency check
+  PASS: preflight names the next reader
+  PASS: preflight names the detail reader
+  PASS: the retired preview is not offered as a whole-ledger read surface
+  PASS: the doc says where the whole-ledger view went instead
+  PASS: command preview replaces the patch preview, confirmation unchanged
+  PASS: router doc names the plural front door
+  PASS: PDDA contract names one consolidated skill
+  PASS: canonical routing docs contain no legacy release skill
+  PASS: installer parses
+  PASS: installer is Claude-only
+  PASS: installer succeeds with legacy symlinks
+  PASS: installer creates plural Claude symlink
+  PASS: plural symlink targets the repo-owned skill
+  PASS: installer retires both legacy aliases
+  PASS: idempotent rerun still retires a resurrected legacy alias
+  PASS: real legacy directory is refused
+  PASS: refusal leaves the destination untouched
+  releases-skill: 40 pass, 0 fail

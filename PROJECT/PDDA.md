@@ -857,8 +857,8 @@ One repo-owned skill operates on this file: `/releases`. It is a read-first rout
 the ledger, checks evidence-backed contradictions against `CHANGELOG.md`, reachable commits, merged
 PRs, and GitHub Releases when available, then enters cleanup, author/update, historical-anchor, or
 publish subroutines only on an explicit operator request. Every mutation and public release is
-previewed and confirmation-gated. Its strategic-drift handoff is `/radar`; its frozen path-to-ship
-handoff is `/finish-line`. It recommends either only when that distinct goal matches and never
+previewed and confirmation-gated. Its strategic-drift handoff is `/radar`; its client/PO scope-triage
+handoff is `/laser-focus`. It recommends either only when that distinct goal matches and never
 duplicates or auto-invokes their workflows.
 
 Invocation is operator-triggered by design. The initial synthesis may report contradictions in an
