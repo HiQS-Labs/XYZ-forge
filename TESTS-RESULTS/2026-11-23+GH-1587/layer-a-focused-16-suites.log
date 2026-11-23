@@ -279,9 +279,9 @@ STDERR:
 new-relay: wrote <TMPDIR> (NEXT: Reviewer, reviewer=rev)
 jog: merge refused: token RELAY-gh7-jog-drive unreadable (tick info failed) (GH-505) — parking GH-7
 jog: merge failed (gh exit 1):  — parking GH-7
-jog: merge refused: candidate 98db3b5e0e91 changes non-transcript content after reviewed head 10c153962811 (candidate-drifted-from-reviewed-head) — parking GH-7
+jog: merge refused: candidate 380aaf1dac21 changes non-transcript content after reviewed head 575451292bd5 (candidate-drifted-from-reviewed-head) — parking GH-7
 jog: merge refused: no valid reviewer attestation for this task (GH-505) — parking GH-7
-jog: auto-merge refused/failed: merge refused: candidate 98db3b5e0e91 changes non-transcript content after reviewed head 10c153962811 (candidate-drifted-from-reviewed-head)
+jog: auto-merge refused/failed: merge refused: candidate 380aaf1dac21 changes non-transcript content after reviewed head 575451292bd5 (candidate-drifted-from-reviewed-head)
 jog: auto-merge refused/failed: merge failed (gh exit 1): 
 jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)
 jog: --reviewer must differ from --builder (both are 'rev')
@@ -351,9 +351,9 @@ test-turn: committed builder turn (file-scoped, no push)
   gh91-relay-scratch: 22 pass, 0 fail
 STDERR:
 test-turn: OFF-ALLOWLIST change: stray.txt — reverting
-test-turn: pre-revert copy of stray.txt saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.Wh9Xaw/repo/.tick/orphan-backups/20261123T233327Z-69393
+test-turn: pre-revert copy of stray.txt saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.9pJieS/repo/.tick/orphan-backups/20261123T234557Z-82479
 test-turn: OFF-ALLOWLIST change: .relay-scratch2/out.json — reverting
-test-turn: pre-revert copy of .relay-scratch2/out.json saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.Wh9Xaw/repo/.tick/orphan-backups/20261123T233327Z-69393
+test-turn: pre-revert copy of .relay-scratch2/out.json saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.9pJieS/repo/.tick/orphan-backups/20261123T234557Z-82479
 === test/new-relay.sh (exit=0) ===
 == test: new-relay ==
   workdir: <TMPDIR>

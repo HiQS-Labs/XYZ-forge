@@ -98,19 +98,15 @@ class InventoryService:
         with self._lock:
             if self.stock < qty:
                 return False
-        # Lock released before external I/O: concurrent callers both pass the stock check.
         if charge_fn is None:
             urllib.request.urlopen("https://payments.internal.example/charge", timeout=1)
         else:
             charge_fn(qty)
         with self._lock:
-            # Unconditional decrement without re-checking stock -> negative inventory (oversell).
             self.stock -= qty
             return True
 
     def settle_via_external_cli(self, order_id: str, amount_cents: int) -> bool:
-        # External vendor binary `acme-pay-cli` is not installed in the relay worktree.
-        # Bug: ignores non-zero exit code and omits timeout, always returning True.
         subprocess.run(["acme-pay-cli", "settle", "--order", order_id, "--cents", str(amount_cents)])
         return True
 ```
@@ -133,66 +129,80 @@ class InventoryService:
 
 ### Reviewer · Round 1
 swept file: yes
+VERDICT: FAIL
+Basis: Both runtime hazards below need disposable-clone verification; neither is approved on the assumption of a later gate. The artifact was swept in full; no additional findings are asserted.
 
-- [Should] Pending clone probe verification: reserve stock atomically before charging, with a defined rollback on payment failure. **Observed input:** two concurrent `reserve_and_charge(1, charge_fn)` calls with stock 1 both pass the check at `.relay-artifacts/toctou_inventory.py:20-22`, leave the lock at :23, enter payment at :27, then independently decrement under the lock at :28-31. **Affected scope:** concurrent reservations whose combined quantities exceed available stock. **Falsifier:** the probe finishes with at most one charge and success, and nonnegative stock. **Clone probe:** run in a disposable full clone (exit 1 demonstrates oversell; exit 2 means inconclusive):
-
+- [Should] Reserve stock atomically before charging, with a defined rollback on charge failure.
+  Observed input: Two concurrent calls with `stock=1`, `qty=1`: `.relay-artifacts/toctou_inventory.py:20`–`:22` check under the lock; `:23`–`:26` charge after releasing it; `:27`–`:29` subtract after reacquiring it. Both calls can pass the check before either subtracts. This Form 2 trace is pending clone probe verification.
+  Affected scope: Concurrent reservations whose combined quantities exceed available stock.
+  Falsifier: The following probe returns exactly one success, one charge, and stock zero without a deadlock; that would disprove the proposed oversell for this interleaving.
+  Clone probe: In a disposable full clone containing the artifact, run:
   ```sh
   PYTHONDONTWRITEBYTECODE=1 python3 - <<'PYPROBE'
   import importlib.util, threading
+  from concurrent.futures import ThreadPoolExecutor
   spec = importlib.util.spec_from_file_location('inventory', '.relay-artifacts/toctou_inventory.py')
-  mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-  svc = mod.InventoryService(1); entered = threading.Barrier(2); results = []; charges = []
+  m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+  svc = m.InventoryService(1); barrier = threading.Barrier(2); charges = []
   def charge(q):
       charges.append(q)
-      try: entered.wait(timeout=2)
+      try: barrier.wait(timeout=2)
       except threading.BrokenBarrierError: pass
-  def run(): results.append(svc.reserve_and_charge(1, charge))
-  threads = [threading.Thread(target=run, daemon=True) for _ in range(2)]
-  for t in threads: t.start()
-  for t in threads: t.join(5)
-  print('results=', results, 'charges=', charges, 'stock=', svc.stock, 'alive=', [t.is_alive() for t in threads])
-  if any(t.is_alive() for t in threads): raise SystemExit(2)
-  raise SystemExit(1 if svc.stock < 0 or len(charges) > 1 else 0)
+  with ThreadPoolExecutor(max_workers=2) as pool:
+      results = list(pool.map(lambda _: svc.reserve_and_charge(1, charge), range(2)))
+  print('results=', results, 'charges=', charges, 'stock=', svc.stock)
+  assert sorted(results) == [False, True] and len(charges) == 1 and svc.stock == 0
   PYPROBE
   ```
 
-- [Should] Pending clone probe verification: propagate failed settlement and bound the subprocess wait. **Observed input:** `settle_via_external_cli` forwards order and amount to `acme-pay-cli` at `.relay-artifacts/toctou_inventory.py:33-36`; `subprocess.run` has neither timeout nor return-code check, and :37 returns `True` after any completed process, including a nonzero exit. **Affected scope:** CLI settlements that exit nonzero or fail to terminate. **Falsifier:** a controlled rejected settlement returns a failure to the caller and a controlled stalled CLI returns within the chosen timeout. **Clone probe:** only with an explicitly authorized isolated vendor sandbox where the invalid order cannot write to a remote server; otherwise record `[Unverified — clone probe failed/unavailable]`. This invokes the vendor CLI directly and compares its rejection with the service; exit 2 means unavailable/inconclusive. A hang is bounded by the outer subprocess timeout.
-
+- [Should] Check the settlement command's exit status and bound its runtime; report failure instead of returning success on nonzero exit or timeout.
+  Observed input: For a vendor settlement invocation, `.relay-artifacts/toctou_inventory.py:31`–`:32` starts `acme-pay-cli` without `check` or `timeout`; `:33` returns `True` regardless of a completed process's return code. A hung process also leaves the caller waiting. This Form 2 trace is pending clone probe verification.
+  Affected scope: Vendor settlement processes that fail or do not finish promptly.
+  Falsifier: A controlled vendor invocation exits nonzero and the service reports failure within the chosen timeout; a controlled hanging invocation also returns failure within that bound.
+  Clone probe: Only run against a verified isolated vendor test environment where these invalid test arguments cannot write to a remote server; otherwise record unavailable and keep open. In the disposable full clone run the following; it directly invokes the real vendor CLI and then exercises the wrapper. An absent CLI, unexpected zero exit, or timeout is an unavailable/errored probe, not a falsification. Establish a controlled hanging vendor invocation separately to verify the timeout fix.  [Unverified — no citation]
   ```sh
   PYTHONDONTWRITEBYTECODE=1 python3 - <<'PYPROBE'
-  import importlib.util, shutil, subprocess, sys
-  exe = shutil.which('acme-pay-cli')
-  if not exe: print('UNAVAILABLE: acme-pay-cli'); raise SystemExit(2)
-  args = [exe, 'settle', '--order', '', '--cents', '-1']
-  try: direct = subprocess.run(args, capture_output=True, text=True, timeout=10)
-  except subprocess.TimeoutExpired: print('UNAVAILABLE: direct CLI timed out'); raise SystemExit(2)
+  import importlib.util, subprocess, sys
+  args = ['acme-pay-cli', 'settle', '--order', 'gh1587-invalid-probe', '--cents', '-1']
+  try:
+      direct = subprocess.run(args, capture_output=True, text=True, timeout=5)
+  except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+      print('UNAVAILABLE:', exc); sys.exit(2)
   print('direct rc=', direct.returncode, 'stdout=', repr(direct.stdout), 'stderr=', repr(direct.stderr))
-  if direct.returncode == 0: print('INCONCLUSIVE: invalid input was accepted'); raise SystemExit(2)
-  code = "import importlib.util; s=importlib.util.spec_from_file_location('i','.relay-artifacts/toctou_inventory.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print('service result=',m.InventoryService(1).settle_via_external_cli('',-1))"
-  try: service = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, timeout=15)
-  except subprocess.TimeoutExpired: print('service timed out'); raise SystemExit(1)
-  print('service rc=', service.returncode, 'stdout=', repr(service.stdout), 'stderr=', repr(service.stderr))
-  raise SystemExit(1 if service.returncode == 0 and 'service result= True' in service.stdout else 0)
+  if direct.returncode == 0:
+      print('UNAVAILABLE: invalid settlement unexpectedly succeeded'); sys.exit(2)
+  code = '''import importlib.util, subprocess
+spec = importlib.util.spec_from_file_location('inventory', '.relay-artifacts/toctou_inventory.py')
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+try:
+    result = m.InventoryService(1).settle_via_external_cli('gh1587-invalid-probe', -1)
+except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+    print('wrapper reported failure:', type(exc).__name__)
+else:
+    print('wrapper result=', result)
+    assert result is False, 'nonzero vendor exit reported as success'
+'''
+  try:
+      wrapper = subprocess.run([sys.executable, '-c', code], timeout=10)
+  except subprocess.TimeoutExpired:
+      print('UNAVAILABLE: wrapper timed out'); sys.exit(2)
+  sys.exit(wrapper.returncode)
   PYPROBE
   ```
-  The rejection probe does not itself establish timeout behavior; use an authorized controlled stalled vendor endpoint to falsify that separate path, or keep it open.
 
-VERDICT: FAIL
-Basis: Both requested runtime hazards remain pending disposable-clone verification; the acceptance criteria are unfilled, and neither hazard is approved on an assumed later gate. No additional pre-existing findings were established in the whole-file sweep.
-
-Handing off to Producer — run and disposition both clone probes, then address reproduced findings or keep unavailable probes open.
+Handing off to Producer — execute the clone probes and disposition both findings.
 
 ### Producer · Round 1 (claude-a)
 
 1. **Reviewer Finding 1 (`reserve_and_charge` TOCTOU lock release — `Implemented`):**
    - Executed Reviewer's exact `Clone probe:` #1 in disposable clone workspace before fix:
-     - `exit=1` · stdout: `results= [True, True] charges= [1, 1] stock= -1 alive= [False, False]` (oversell confirmed: two charges, `stock=-1`).
-   - Applied atomic reservation under `self._lock` with stock rollback on charge failure, then re-executed Reviewer's exact `Clone probe:` #1:
-     - `exit=0` · stdout: `results= [False, True] charges= [1] stock= 0 alive= [False, False]` (single charge, `stock=0`).
+     - `exit=1` · stdout: `results= [True, True] charges= [1, 1] stock= -1`
+   - Applied atomic reservation under `self._lock` with rollback on charge failure, then re-executed Reviewer's exact `Clone probe:` #1:
+     - `exit=0` · stdout: `results= [True, False] charges= [1] stock= 0`
    - Disposition: **Implemented** (verified with before/after disposable-clone probe output).
 2. **Reviewer Finding 2 (`settle_via_external_cli` external `acme-pay-cli` subprocess — `[Unverified — clone probe failed/unavailable]`):**
    - Executed Reviewer's exact `Clone probe:` #2 in disposable clone workspace:
-     - `exit=2` · stdout: `UNAVAILABLE: acme-pay-cli`
+     - `exit=2` · stdout: `UNAVAILABLE: [Errno 2] No such file or directory: 'acme-pay-cli'`
    - Disposition: **`[Unverified — clone probe failed/unavailable]`** — Finding 2 remains **OPEN**; refusing `STATUS: Approved` (`STATUS: Open` preserved) until the probe runs in an authorized environment with `acme-pay-cli` available.
 
 STATUS remains `Open` (not `Approved`) because Reviewer Finding 2 is still OPEN as `[Unverified — clone probe failed/unavailable]`.
