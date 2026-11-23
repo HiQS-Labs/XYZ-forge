@@ -189,6 +189,14 @@ case_text "D2u audit: an unquoted glob operand is not asserted missing -> READY"
 R="$(make_repo gate-procsub 224 'diff <(echo a) <(echo b) && bash -n src/ok.sh' "$PROBE" yes)"
 case_text "D2v audit: process substitution bodies are not commands of the gate -> READY" "$R" PROJECT/2-WORKING/GH-224-fixture.md 0 'verdict +: ready'
 
+# ── Final QA r3 repair (F8, operator decision 2026-11-23 on #1580) ──────────────────────────────
+R="$(make_repo gate-if-dbracket 225 'true && if [[ -f src/ok.sh && -f config.txt ]]; then bash -n src/ok.sh; fi' "$PROBE" yes "x")"
+case_text "D2w F8 'true && if [[ -f a && -f b ]]; then bash -n src/ok.sh; fi': the && inside [[ ]] after a control prefix is not a separator -> READY" "$R" PROJECT/2-WORKING/GH-225-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-if-dbracket-missing 226 'true && if [[ -f src/ok.sh && -f config.txt ]]; then gh1580_absent_command; fi' "$PROBE" yes "x")"
+case_text "D2x F8 a missing command inside the same if-block is still found -> NOT-READY" "$R" PROJECT/2-WORKING/GH-226-fixture.md 5 "command 'gh1580_absent_command' not found in PATH"
+R="$(make_repo gate-while-bang-dbracket 227 'if ! [[ -f nope.txt && -f nope2.txt ]]; then bash -n src/ok.sh; fi' "$PROBE" yes)"
+case_text "D2y F8 '! [[ a && b ]]' after if is one expression too -> READY" "$R" PROJECT/2-WORKING/GH-227-fixture.md 0 'verdict +: ready'
+
 # ── Defect 3: acceptance gap ─────────────────────────────────────────────────────────────────────
 printf '## Summary\nLockfile drift.\n\n## Done when\n\n- [ ] The lockfile check passes.\n' >"$WORK/issues/301.md"
 R="$(make_repo acc-done-when 301 true "$PROBE" yes)"

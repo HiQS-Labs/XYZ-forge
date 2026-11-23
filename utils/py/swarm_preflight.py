@@ -673,7 +673,12 @@ def _gate_tokens(cmd: str) -> list[Tok] | None:
     k = 0
     while k < len(out):
         kind, text, dyn = out[k]
-        at_cmd = not folded or folded[-1][0] == "op"
+        # A command position: after an operator, or after control prefixes only (`if [[ … ]]`, `! [[ … ]]`).
+        tail: list[Tok] = []
+        for prior in reversed(folded):
+            if prior[0] == "op": break
+            tail.append(prior)
+        at_cmd = all(t[0] == "word" and t[1] in _GATE_PREFIX_WORDS for t in tail)
         if at_cmd and kind == "word" and text == "[[":
             e = next((m for m in range(k + 1, len(out)) if out[m][0] == "word" and out[m][1] == "]]"), None)
             if e is None: return None
