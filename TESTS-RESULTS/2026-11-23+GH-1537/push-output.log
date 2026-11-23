@@ -1,0 +1,290 @@
+[merge_only_docs/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[merge_only_docs/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[merge_only_docs/base] pre-push:   validate.sh: PARALLEL mode — stub
+[merge_only_docs/base] stub full gate ran
+[merge_only_docs/base] pre-push: full gate GREEN in 0s — pushing.
+[merge_only_docs/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.7rM8vO/o.git
+[merge_only_docs/base]    a93c6a9..5a3f824  docs-pr -> docs-pr
+[merge_only_docs/cand] pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base (9d1ef7564) is docs-only.
+[merge_only_docs/cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[merge_only_docs/cand] stub documentation gate ran
+[merge_only_docs/cand] pre-push: documentation gate GREEN in 1s — pushing.
+[merge_only_docs/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.WrFIeG/o.git
+[merge_only_docs/cand]    c489ec1..23f7368  docs-pr -> docs-pr
+[conflict_docs_only/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[conflict_docs_only/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[conflict_docs_only/base] pre-push:   validate.sh: PARALLEL mode — stub
+[conflict_docs_only/base] stub full gate ran
+[conflict_docs_only/base] pre-push: full gate GREEN in 0s — pushing.
+[conflict_docs_only/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.nb3jtm/o.git
+[conflict_docs_only/base]    df2e109..b6f14fa  conf-pr -> conf-pr
+[conflict_docs_only/cand] pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base (0166e1dff) is docs-only.
+[conflict_docs_only/cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[conflict_docs_only/cand] stub documentation gate ran
+[conflict_docs_only/cand] pre-push: documentation gate GREEN in 0s — pushing.
+[conflict_docs_only/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.Ld8UEn/o.git
+[conflict_docs_only/cand]    9c0f157..0805ba0  conf-pr -> conf-pr
+[side_tip_on_integration/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[side_tip_on_integration/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[side_tip_on_integration/base] pre-push:   validate.sh: PARALLEL mode — stub
+[side_tip_on_integration/base] stub full gate ran
+[side_tip_on_integration/base] pre-push: full gate GREEN in 0s — pushing.
+[side_tip_on_integration/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.zuI8O2/o.git
+[side_tip_on_integration/base]    3fed927..5bada29  st-pr -> st-pr
+[side_tip_on_integration/cand] pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base (7d4e231e8) is docs-only.
+[side_tip_on_integration/cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[side_tip_on_integration/cand] stub documentation gate ran
+[side_tip_on_integration/cand] pre-push: documentation gate GREEN in 0s — pushing.
+[side_tip_on_integration/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.HAxCKg/o.git
+[side_tip_on_integration/cand]    717989f..50ce388  st-pr -> st-pr
+[code_branch_merge/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[code_branch_merge/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[code_branch_merge/base] pre-push:   validate.sh: PARALLEL mode — stub
+[code_branch_merge/base] stub full gate ran
+[code_branch_merge/base] pre-push: full gate GREEN in 0s — pushing.
+[code_branch_merge/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.If6uU8/o.git
+[code_branch_merge/base]    9d42012..df39630  code-pr -> code-pr
+[code_branch_merge/cand] pre-push: GH-1537 — only integration history was merged in, but the branch's own final tree is not docs-only (route=fast) — taking the full gate.
+[code_branch_merge/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[code_branch_merge/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[code_branch_merge/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[code_branch_merge/cand] stub full gate ran
+[code_branch_merge/cand] pre-push: full gate GREEN in 1s — pushing.
+[code_branch_merge/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.Vr7R3v/o.git
+[code_branch_merge/cand]    3c0a32b..8058155  code-pr -> code-pr
+[evil_merge_code/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[evil_merge_code/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[evil_merge_code/base] pre-push:   validate.sh: PARALLEL mode — stub
+[evil_merge_code/base] stub full gate ran
+[evil_merge_code/base] pre-push: full gate GREEN in 1s — pushing.
+[evil_merge_code/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.TaguJO/o.git
+[evil_merge_code/base]    583b1ea..f209966  evil-pr -> evil-pr
+[evil_merge_code/cand] pre-push: GH-1537 — only integration history was merged in, but the branch's own final tree is not docs-only (route=fast) — taking the full gate.
+[evil_merge_code/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[evil_merge_code/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[evil_merge_code/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[evil_merge_code/cand] stub full gate ran
+[evil_merge_code/cand] pre-push: full gate GREEN in 1s — pushing.
+[evil_merge_code/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.BDzvqh/o.git
+[evil_merge_code/cand]    48622c6..3d8dca0  evil-pr -> evil-pr
+[ours_merge_drops_dev_code/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[ours_merge_drops_dev_code/base] stub documentation gate ran
+[ours_merge_drops_dev_code/base] pre-push: documentation gate GREEN in 0s — pushing.
+[ours_merge_drops_dev_code/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.5mLnwk/o.git
+[ours_merge_drops_dev_code/base]    499d997..7970dd1  ours-pr -> ours-pr
+[ours_merge_drops_dev_code/cand] pre-push: GH-1537 — only integration history was merged in, but the branch's own final tree is not docs-only (route=fast) — taking the full gate.
+[ours_merge_drops_dev_code/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[ours_merge_drops_dev_code/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[ours_merge_drops_dev_code/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[ours_merge_drops_dev_code/cand] stub full gate ran
+[ours_merge_drops_dev_code/cand] pre-push: full gate GREEN in 0s — pushing.
+[ours_merge_drops_dev_code/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.tePuza/o.git
+[ours_merge_drops_dev_code/cand]    7ba4c47..b9c2272  ours-pr -> ours-pr
+[other_branch_merge/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[other_branch_merge/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[other_branch_merge/base] pre-push:   validate.sh: PARALLEL mode — stub
+[other_branch_merge/base] stub full gate ran
+[other_branch_merge/base] pre-push: full gate GREEN in 0s — pushing.
+[other_branch_merge/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.E9Rxq6/o.git
+[other_branch_merge/base]    6aca1eb..b82daa6  om-pr -> om-pr
+[other_branch_merge/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[other_branch_merge/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[other_branch_merge/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[other_branch_merge/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[other_branch_merge/cand] stub full gate ran
+[other_branch_merge/cand] pre-push: full gate GREEN in 0s — pushing.
+[other_branch_merge/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.YpeXEJ/o.git
+[other_branch_merge/cand]    684b4de..cc0d39c  om-pr -> om-pr
+[other_branch_docs_only/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[other_branch_docs_only/base] stub documentation gate ran
+[other_branch_docs_only/base] pre-push: documentation gate GREEN in 0s — pushing.
+[other_branch_docs_only/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.prcfA3/o.git
+[other_branch_docs_only/base]    4db0997..1e656c2  od-pr -> od-pr
+[other_branch_docs_only/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[other_branch_docs_only/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[other_branch_docs_only/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[other_branch_docs_only/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[other_branch_docs_only/cand] stub full gate ran
+[other_branch_docs_only/cand] pre-push: full gate GREEN in 0s — pushing.
+[other_branch_docs_only/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.fPDajo/o.git
+[other_branch_docs_only/cand]    c74f8fc..6238ef6  od-pr -> od-pr
+[side_merge_after_integration/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[side_merge_after_integration/base] stub documentation gate ran
+[side_merge_after_integration/base] pre-push: documentation gate GREEN in 0s — pushing.
+[side_merge_after_integration/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.h524O3/o.git
+[side_merge_after_integration/base]    d0b422d..6c2f49a  sa-pr -> sa-pr
+[side_merge_after_integration/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[side_merge_after_integration/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[side_merge_after_integration/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[side_merge_after_integration/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[side_merge_after_integration/cand] stub full gate ran
+[side_merge_after_integration/cand] pre-push: full gate GREEN in 0s — pushing.
+[side_merge_after_integration/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.NyP2in/o.git
+[side_merge_after_integration/cand]    b9fa571..160de5a  sa-pr -> sa-pr
+[ff_import_no_merge/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[ff_import_no_merge/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[ff_import_no_merge/base] pre-push:   validate.sh: PARALLEL mode — stub
+[ff_import_no_merge/base] stub full gate ran
+[ff_import_no_merge/base] pre-push: full gate GREEN in 0s — pushing.
+[ff_import_no_merge/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.UFukg4/o.git
+[ff_import_no_merge/base]    5d3ecf3..684d740  ff-pr -> ff-pr
+[ff_import_no_merge/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[ff_import_no_merge/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[ff_import_no_merge/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[ff_import_no_merge/cand] stub full gate ran
+[ff_import_no_merge/cand] pre-push: full gate GREEN in 0s — pushing.
+[ff_import_no_merge/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.5wLbrK/o.git
+[ff_import_no_merge/cand]    f20e827..efd1349  ff-pr -> ff-pr
+[stale_base/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[stale_base/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[stale_base/base] pre-push:   validate.sh: PARALLEL mode — stub
+[stale_base/base] stub full gate ran
+[stale_base/base] pre-push: full gate GREEN in 0s — pushing.
+[stale_base/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.0eWC9J/o.git
+[stale_base/base]    22017c6..8e4e036  stale-pr -> stale-pr
+[stale_base/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[stale_base/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[stale_base/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[stale_base/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[stale_base/cand] stub full gate ran
+[stale_base/cand] pre-push: full gate GREEN in 0s — pushing.
+[stale_base/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.55NvOv/o.git
+[stale_base/cand]    fa492c0..ecad362  stale-pr -> stale-pr
+[stale_ours_merge/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[stale_ours_merge/base] stub documentation gate ran
+[stale_ours_merge/base] pre-push: documentation gate GREEN in 0s — pushing.
+[stale_ours_merge/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.BFyR6K/o.git
+[stale_ours_merge/base]    29f0d37..42806bd  so-pr -> so-pr
+[stale_ours_merge/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[stale_ours_merge/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[stale_ours_merge/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[stale_ours_merge/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[stale_ours_merge/cand] stub full gate ran
+[stale_ours_merge/cand] pre-push: full gate GREEN in 0s — pushing.
+[stale_ours_merge/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.kgNAht/o.git
+[stale_ours_merge/cand]    d0bc32d..8bc0658  so-pr -> so-pr
+[stale_before_merge_ours/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[stale_before_merge_ours/base] stub documentation gate ran
+[stale_before_merge_ours/base] pre-push: documentation gate GREEN in 0s — pushing.
+[stale_before_merge_ours/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.DICTz6/o.git
+[stale_before_merge_ours/base]    d6d958d..fa118cb  sb-pr -> sb-pr
+[stale_before_merge_ours/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[stale_before_merge_ours/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[stale_before_merge_ours/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[stale_before_merge_ours/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[stale_before_merge_ours/cand] stub full gate ran
+[stale_before_merge_ours/cand] pre-push: full gate GREEN in 0s — pushing.
+[stale_before_merge_ours/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.agtjTw/o.git
+[stale_before_merge_ours/cand]    24ca0b0..95d52d2  sb-pr -> sb-pr
+[rewound_tip_ours/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[rewound_tip_ours/base] stub documentation gate ran
+[rewound_tip_ours/base] pre-push: documentation gate GREEN in 0s — pushing.
+[rewound_tip_ours/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.rlXlvc/o.git
+[rewound_tip_ours/base]    4577654..679e3b7  rw-pr -> rw-pr
+[rewound_tip_ours/cand] pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate.
+[rewound_tip_ours/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[rewound_tip_ours/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[rewound_tip_ours/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[rewound_tip_ours/cand] stub full gate ran
+[rewound_tip_ours/cand] pre-push: full gate GREEN in 1s — pushing.
+[rewound_tip_ours/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.i9Ki9j/o.git
+[rewound_tip_ours/cand]    96da8de..832864a  rw-pr -> rw-pr
+[followup_after_merge/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[followup_after_merge/base] stub documentation gate ran
+[followup_after_merge/base] pre-push: documentation gate GREEN in 0s — pushing.
+[followup_after_merge/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.CTf43o/o.git
+[followup_after_merge/base]    5aeb2ab..e2b9f8a  fu-pr -> fu-pr
+[followup_after_merge/cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[followup_after_merge/cand] stub documentation gate ran
+[followup_after_merge/cand] pre-push: documentation gate GREEN in 0s — pushing.
+[followup_after_merge/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.6VCmcO/o.git
+[followup_after_merge/cand]    8516562..a53ed5c  fu-pr -> fu-pr
+[push_to_main/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[push_to_main/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[push_to_main/base] pre-push:   validate.sh: PARALLEL mode — stub
+[push_to_main/base] stub full gate ran
+[push_to_main/base] pre-push: full gate GREEN in 0s — pushing.
+[push_to_main/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.3byCKr/o.git
+[push_to_main/base]    a306da1..75a6c6d  main-pr -> main
+[push_to_main/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[push_to_main/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[push_to_main/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[push_to_main/cand] stub full gate ran
+[push_to_main/cand] pre-push: full gate GREEN in 0s — pushing.
+[push_to_main/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.Tqzwf2/o.git
+[push_to_main/cand]    3b662fb..7153e12  main-pr -> main
+[two_refs_code/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[two_refs_code/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[two_refs_code/base] pre-push:   validate.sh: PARALLEL mode — stub
+[two_refs_code/base] stub full gate ran
+[two_refs_code/base] pre-push: full gate GREEN in 0s — pushing.
+[two_refs_code/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.Ep3MlB/o.git
+[two_refs_code/base]    6695223..0b2a12d  two-pr -> two-pr
+[two_refs_code/base]  * [new branch]      twoc-pr -> twoc-pr
+[two_refs_code/cand] pre-push: GH-1537 — only integration history was merged in, but the branch's own final tree is not docs-only (route=fast) — taking the full gate.
+[two_refs_code/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[two_refs_code/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[two_refs_code/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[two_refs_code/cand] stub full gate ran
+[two_refs_code/cand] pre-push: full gate GREEN in 0s — pushing.
+[two_refs_code/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.wleYAQ/o.git
+[two_refs_code/cand]    d207262..7cfaf04  two-pr -> two-pr
+[two_refs_code/cand]  * [new branch]      twoc-pr -> twoc-pr
+[two_refs_partial_failure/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[two_refs_partial_failure/base] stub documentation gate ran
+[two_refs_partial_failure/base] pre-push: documentation gate GREEN in 0s — pushing.
+[two_refs_partial_failure/base] fatal: bad tree object 508c24986dae2a1c2c919c7370f29466a3ee5594
+[two_refs_partial_failure/base] error: remote unpack failed: eof before pack header was fully read
+[two_refs_partial_failure/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.NrCae0/o.git
+[two_refs_partial_failure/base]  ! [remote rejected] p1 -> p1 (unpacker error)
+[two_refs_partial_failure/base]  ! [remote rejected] p2 -> p2 (unpacker error)
+[two_refs_partial_failure/base] error: failed to push some refs to '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.NrCae0/o.git'
+[two_refs_partial_failure/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[two_refs_partial_failure/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[two_refs_partial_failure/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[two_refs_partial_failure/cand] stub full gate ran
+[two_refs_partial_failure/cand] pre-push: full gate GREEN in 0s — pushing.
+[two_refs_partial_failure/cand] fatal: bad tree object 2cdfceb2b0c5adf3f408f6920e673a8366f192bf
+[two_refs_partial_failure/cand] error: remote unpack failed: eof before pack header was fully read
+[two_refs_partial_failure/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.RdN4om/o.git
+[two_refs_partial_failure/cand]  ! [remote rejected] p1 -> p1 (unpacker error)
+[two_refs_partial_failure/cand]  ! [remote rejected] p2 -> p2 (unpacker error)
+[two_refs_partial_failure/cand] error: failed to push some refs to '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.RdN4om/o.git'
+[first_push_docs/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[first_push_docs/base] stub documentation gate ran
+[first_push_docs/base] pre-push: documentation gate GREEN in 0s — pushing.
+[first_push_docs/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.79zipu/o.git
+[first_push_docs/base]  * [new branch]      first-pr -> first-pr
+[first_push_docs/base] branch 'first-pr' set up to track 'origin/first-pr'.
+[first_push_docs/cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[first_push_docs/cand] stub documentation gate ran
+[first_push_docs/cand] pre-push: documentation gate GREEN in 0s — pushing.
+[first_push_docs/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.sUyQaU/o.git
+[first_push_docs/cand]  * [new branch]      first-pr -> first-pr
+[first_push_docs/cand] branch 'first-pr' set up to track 'origin/first-pr'.
+[first_push_code/base] pre-push: running the full gate before this push reaches the remote (GH-544).
+[first_push_code/base] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[first_push_code/base] pre-push:   validate.sh: PARALLEL mode — stub
+[first_push_code/base] stub full gate ran
+[first_push_code/base] pre-push: full gate GREEN in 0s — pushing.
+[first_push_code/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.vFspkf/o.git
+[first_push_code/base]  * [new branch]      firstc-pr -> firstc-pr
+[first_push_code/base] branch 'firstc-pr' set up to track 'origin/firstc-pr'.
+[first_push_code/cand] pre-push: running the full gate before this push reaches the remote (GH-544).
+[first_push_code/cand] pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+[first_push_code/cand] pre-push:   validate.sh: PARALLEL mode — stub
+[first_push_code/cand] stub full gate ran
+[first_push_code/cand] pre-push: full gate GREEN in 0s — pushing.
+[first_push_code/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.iQslNb/o.git
+[first_push_code/cand]  * [new branch]      firstc-pr -> firstc-pr
+[first_push_code/cand] branch 'firstc-pr' set up to track 'origin/firstc-pr'.
+[linear_docs/base] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[linear_docs/base] stub documentation gate ran
+[linear_docs/base] pre-push: documentation gate GREEN in 1s — pushing.
+[linear_docs/base] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.CqOppH/o.git
+[linear_docs/base]    71509a9..e378c91  lin-pr -> lin-pr
+[linear_docs/cand] pre-push: docs-only update — running the documentation gate, not validate.sh.
+[linear_docs/cand] stub documentation gate ran
+[linear_docs/cand] pre-push: documentation gate GREEN in 0s — pushing.
+[linear_docs/cand] To /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1537-check.HVThhw/fx.7Cy29J/o.git
+[linear_docs/cand]    31c63ad..57de041  lin-pr -> lin-pr

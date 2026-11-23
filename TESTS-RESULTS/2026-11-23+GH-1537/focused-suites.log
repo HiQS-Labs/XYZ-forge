@@ -1,0 +1,366 @@
+=== gh544-pre-push-gate
+== test: gh544-pre-push-gate ==
+  PASS: a red gate refuses the push (exit 1)
+  PASS:   and says the push was REFUSED
+  PASS:   and names the escape hatch rather than leaving you stuck
+  PASS:   and does not excuse the red merely because hosted CI exists
+  PASS: a green gate allows the push (exit 0)
+  PASS:   and reports the wall-clock it cost
+  PASS:   and announced the mode before running
+  PASS: a docs-only push is allowed even when validate.sh is red
+  PASS:   and runs the deterministic documentation gate
+  PASS:   and does NOT run validate.sh
+  PASS: a red documentation gate still refuses the docs-only push
+  PASS:   and names the documentation gate failure
+  PASS: a code change remains on the full gate
+  PASS:   and does NOT take the documentation route
+  PASS: an hq push with NO runnable suite falls back to the FULL gate
+  PASS:   and validate.sh was NOT asked for a narrow --paths-file run
+  PASS: an hq push with its suite present runs the tier 2 gate
+  PASS:   and validate.sh received the paths file (the hook's only narrow invocation)
+  PASS:   and the gate really ran
+  PASS: a RED tier 2 gate still refuses the utility push (exit 1)
+  PASS:   and names the tier 2 gate in the refusal
+  PASS: the FIRST push of a new branch with a verifiable base runs the tier 2 gate (GH-487)
+  PASS:   and validate.sh received the paths file (the shared narrow invocation)
+  PASS:   and the narrow gate really ran
+  PASS: a new branch with NO origin/development base evidence falls back to the full gate (GH-487)
+  PASS: a new branch with NO common ancestor to the integration branch fails closed to full (GH-487)
+  PASS: a base equal to the pushed SHA (empty range) fails closed to full (GH-487)
+  PASS: a push by URL has no configured remote name and takes the full gate (GH-487)
+  PASS:   and says WHY instead of leaving the slowness unexplained
+  PASS: a MIXED new-branch + integration-ref push still selects the narrow gate (GH-487)
+  PASS:   and validate.sh received the paths file
+  PASS: an EMPTY stdin still announces the full gate (nothing narrow can run on no input, GH-487)
+  PASS: a BACKWARD-rewritten integration branch fails closed to full (GH-487 round 1)
+  PASS: a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)
+  PASS: a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)
+  PASS:   and names the offline bypass levers (GH-496)
+error: unknown option `push'
+usage: git ls-remote [--branches] [--tags] [--refs] [--upload-pack=<exec>]
+                     [-q | --quiet] [--exit-code] [--get-url] [--sort=<key>]
+                     [--symref] [<repository> [<patterns>...]]
+
+    -q, --[no-]quiet      do not print remote URL
+    --[no-]upload-pack <exec>
+                          path of git-upload-pack on the remote host
+    -t, --[no-]tags       limit to tags
+    -b, --[no-]branches   limit to branches
+    --[no-]refs           do not show peeled tags
+    --[no-]get-url        take url.<base>.insteadOf into account
+    --[no-]sort <key>     field name to sort on
+    --[no-]exit-code      exit with exit code 2 if no matching refs are found
+    --[no-]symref         show underlying ref in addition to the object pointed by it
+    -o, --[no-]server-option <server-specific>
+                          option to transmit
+
+  PASS: a pushurl that disagrees with the fetch url fails closed to full (GH-487 CodeRabbit #2)
+  PASS: a NO-OP integration ref in a mixed push contributes no paths and keeps the narrow gate (GH-487 pin)
+  PASS: an AMBIGUOUS base (multiple best common ancestors) fails closed to full (GH-487 round 1)
+  PASS: XYZ_SKIP_PREPUSH=1 lets a RED tree through (exit 0)
+  PASS:   and says loudly that nothing was verified
+  PASS: a delete-only push skips the gate even when it is red (exit 0)
+  PASS:   and says why
+  PASS:   and did NOT run the gate
+  PASS: a MIXED delete+real push is still gated (exit 1)
+  PASS: --check reports NOT INSTALLED on a fresh clone (exit 1)
+  PASS:   and warns the clone will push WITHOUT the gate
+  PASS: install succeeds (exit 0)
+  PASS:   and writes the stub into the git hooks dir, not the tree
+  PASS:   and the stub is identifiable as ours
+  PASS:   and core.hooksPath is left UNSET (it would override the stub)
+  PASS: --check now reports INSTALLED (exit 0)
+  PASS: install is idempotent (exit 0 on a second run)
+  PASS: install CLEARS a legacy core.hooksPath=githooks (exit 0)
+  PASS:   and says why it cleared it (GH-549)
+  PASS:   leaving core.hooksPath unset
+  PASS:   and did NOT overwrite the in-tree hook it delegates to
+  PASS: --check FAILS when a foreign core.hooksPath overrides the stub (exit 1)
+  PASS:   and says the stub will not run
+  PASS: install REFUSES to clobber a different core.hooksPath (exit 4)
+  PASS:   and names the path it refused to overwrite
+  PASS: --uninstall leaves a foreign pre-push hook alone
+  PASS:   and says so
+  PASS: install REFUSES to overwrite a foreign pre-push hook (exit 4)
+  PASS: --uninstall removes OUR stub (exit 0)
+  PASS: REAL push on a branch WITH githooks/ is refused by the red gate
+  PASS:   and it was the IN-TREE hook that ran (not the fallback)
+  PASS: THE PIN: REAL push on a branch with NO githooks/ still runs the gate
+  PASS:   and is REFUSED, not silently allowed
+  PASS:   and announces that it fell back rather than looking normal
+  PASS: NEGATIVE CONTROL: the pre-fix core.hooksPath wiring pushes UNGATED and silent
+  PASS: XYZ_SKIP_PREPUSH=1 works on the fallback path too
+  PASS:   and still announces that nothing was verified
+  PASS: a delete-only push is not gated on the fallback path
+  PASS: a linked worktree resolves to the SAME hooks dir as its parent clone
+  PASS:   and a push FROM that worktree is gated too
+  PASS: a branch with NEITHER gate refuses the push
+  PASS:   and says a gate that cannot run is not one that passed
+  PASS: ci.yml has the restored push: trigger
+  PASS: ci.yml has the restored pull_request: trigger
+  PASS: ci.yml still exists with its jobs intact
+  PASS: the GH-509 Phase 4 cost reasoning is PRESERVED for re-arm
+  PASS: the file states that the public-repo bridge has ended
+  PASS: the macOS job still has NO workflow_dispatch of its own
+  PASS: zero configured checks does NOT refuse the merge (prose fallback)
+  PASS:   and says it is merging WITHOUT CI rather than staying silent
+  PASS:   and names GH-544 so the reason is findable
+  PASS: an empty --json bucket is accepted as no-checks even if the PROSE changes
+  PASS:   and says which signal it used
+  PASS: a NON-empty --json bucket with a failure still refuses (exit 4)
+  PASS: a genuine check FAILURE still refuses the merge (exit 4)
+  PASS:   and says checks are not green
+  PASS:   and echoes gh's own output so the failure is visible
+  PASS: passing checks proceed silently (exit 0)
+  PASS:   and do NOT claim CI was absent
+  PASS: empty repo path is REFUSED by mkremote (exit 2), not silently applied to $PWD
+  PASS:   and the caller's real clone keeps its origin
+  PASS: empty repo path is REFUSED by realpush (exit 2) — `cd ""` would push the caller's repo
+  PASS: empty repo path is REFUSED by drive (exit 2)
+  PASS: a REAL repo path outside $WORK is REFUSED (exit 2) — the guard is containment, not a null check
+  PASS:   and that real repo's origin is still untouched
+  PASS: CONTROL: a legitimate fixture under $WORK is still admitted (exit 0)
+  PASS:   and it really did get its bare origin
+  gh544-pre-push-gate: 103 pass, 0 fail
+rc=0 gh544-pre-push-gate
+=== gh591-prepush-commit-boundary
+{"first_push_receipt_in_tree": false, "second_push_receipt_in_tree": true, "result": "pass"}
+rc=0 gh591-prepush-commit-boundary
+=== gh35-test-tiers
+== test: gh35-test-tiers ==
+  PASS: auto-detected default width is <= 4 (got 4-wide; was cores-2 up to 8 pre-GH-35)
+  PASS:   and the reason names the balanced default and the escape hatch
+  PASS:   and announces nice on the workers
+  PASS: --throttle pins 2 workers
+  PASS:   and names quiet-CPU + nice in the reason
+  PASS: --quiet-cpu is the documented alias of --throttle
+  PASS: --burst restores the full-core width (>= balanced default)
+  PASS:   and says so in the reason
+  PASS: XYZ_VALIDATE_THROTTLE=1 selects the 2-worker quiet mode
+  PASS:   and names the env var as the reason
+  PASS: XYZ_VALIDATE_MAX_JOBS=3 pins 3 workers
+  PASS: a width lever beats a throttle lever in the environment
+  PASS: an explicit flag beats the ambient throttle env (flag > env, GH-544 contract)
+  PASS: --max-parallel N is the documented alias of --parallel N
+  PASS: a throttle flag still overrides XYZ_VALIDATE_PARALLEL=0
+  PASS: a malformed XYZ_VALIDATE_MAX_JOBS is refused (exit 2)
+  PASS:   and names the variable
+  PASS: a malformed XYZ_VALIDATE_THROTTLE is refused (exit 2)
+  PASS: --throttle + --burst is a conflict (exit 2), not a silent last-wins
+  PASS: --parallel + --sequential is a conflict (exit 2)
+  PASS: --tier 9 is refused (exit 2)
+  PASS: --tier 2 respects the low-core sequential fallback
+  PASS: --tier 2 defaults to the throttled 2-worker pool on an eligible host
+  PASS:   and a tier below 3 disclaims promotion evidence in its own header
+  PASS: --tier 1 print-mode names tier 1 and disclaims promotion evidence
+  PASS: --subsystem hq selects tier 2 and names the subsystem
+  PASS: an unknown subsystem is refused (exit 2)
+  PASS: --tier 2 --subsystem hq (the ROUTER.md example) works (rc=0)
+  PASS: a CONTRADICTING --tier 1 --subsystem hq is refused (exit 2)
+  PASS:   and the error says which tier the selector chose
+  PASS: every registered suite is in validate.sh's TESTS array (drift: 'none')
+  PASS: a registered suite missing from test/ fails the listing loudly (exit 2)
+  PASS:   and names the ghost suite
+  PASS: tier 1 runs the docs gate and exits green
+  PASS:   and really ran the PDDA stub
+  PASS:   and ran NO test suite (no 'Running <suite>' banner)
+  PASS:   and disclaims promotion evidence
+  PASS: a RED docs gate fails tier 1 (exit 1)
+  PASS:   and says the documentation gate is RED
+  PASS: tier 2 runs the classified subsystem suite and exits green
+  PASS:   and really ran the hq stub (marker written by the suite itself)
+  PASS:   and ran the identity bracket (tier 2 still runs fixtures)
+  PASS:   and disclaims promotion evidence in the tier-2 banner
+  PASS:   and the GH-15 summary tallies (no INTERNAL ERROR)
+  PASS:   and the static syntax check ran on the changed file
+  PASS: the suite worker ran 10 below its caller (caller nice=0, worker nice=10, wanted 10)
+  PASS: a RED subsystem suite fails tier 2 (exit 1)
+  PASS: --paths-file with an unmapped path refuses (exit 2, fail-closed)
+  PASS:   and says which tier it classified as
+  PASS: a subsystem with no runnable suites on disk refuses the narrow gate (exit 2)
+  PASS:   and the classifier said why: no runnable tests, failing closed
+  PASS: a deleted path in the tier-2 list is skipped, not 127'd (exit 0)
+  PASS: a changed file with broken bash syntax fails tier 2 (exit 1)
+  PASS: docs + subsystem runs the pdda stub in-band (exit 0) and the hq stub in the pool
+  PASS: a RED docs gate fails the mixed tier-2 run (exit 1)
+  PASS: --auto classifies a docs-only over-upstream diff as tier 1
+  PASS: --auto classifies an hq-only diff as tier 2
+  PASS: --auto with an unusable range fails closed to tier 3 (zero-path branch or explicit refusal)
+  PASS: pre-push hands the push's paths to validate.sh --paths-file (GH-35 dispatch)
+  PASS:   and only after the classifier explicitly said tier=2
+  PASS: validate.sh --tier 2 exits 2 on a non-tier-2 path list (the hook's fail-closed partner)
+  PASS: GH-45: a linked worktree is REFUSED before anything runs (exit 2)
+  PASS:   and the message names the real consequence (core.bare)
+  PASS:   and names the rest (origin repointed, remote refs deleted, development overwritten)
+  PASS:   and names the explicit override
+  PASS:   and NOTHING ran — no docs gate, no suite banners
+  PASS: GH-45: the override runs the gate AND announces itself (exit 0)
+  PASS: GH-45 CONTROL: the normal checkout of the SAME repo still runs the gate (exit 0)
+  PASS:   and says nothing about worktrees (silent pass-through)
+  PASS: GH-45: ci-local.sh refuses from a linked worktree too (exit 2)
+  PASS:   with the same consequence message and override
+  PASS: GH-45: an absolute-path invocation whose HERE is the worktree is still refused (exit 2)
+  gh35-test-tiers: 72 pass, 0 fail
+rc=0 gh35-test-tiers
+=== gh4-ungated-clone-warning
+== test: gh4-ungated-clone-warning ==
+  PASS: ungated clone: --print-mode still exits 0 (non-fatal)
+  PASS: ungated clone: warning names the missing gate
+  PASS: ungated clone: warning names the one-command fix
+  PASS: ungated clone: validate.sh states it is continuing anyway (non-fatal, in-band)
+  PASS: gated clone: --print-mode exits 0
+  PASS: gated clone: no ungated-clone warning — silent when properly wired
+  gh4-ungated-clone-warning: 6 pass, 0 fail
+rc=0 gh4-ungated-clone-warning
+=== ci-route
+== test: ci-route ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-ci-route.XXXXXX.1bkxU4jE5g
+  PASS: markdown-only PR uses the docs gate
+  PASS: ordinary code-only PR uses the fast gate without PDDA
+  PASS: mixed docs and ordinary code runs both fast tests and PDDA
+  PASS: Tick/event changes require the full pre-merge gate
+  PASS: relay containment changes require the full pre-merge gate
+  PASS: Python-authoritative twin changes require the full pre-merge gate
+  PASS: worktree safety test changes require the full pre-merge gate
+  PASS: CI workflow changes require the full pre-merge gate
+  PASS: PDDA implementation changes run the PDDA subsystem gate (GH-35)
+  PASS: releases DB and dump files are docs surfaces (GH-831 D4; the releases gate before, GH-496)
+  PASS: wave_reconcile changes run the PDDA subsystem gate (GH-496)
+  PASS: a deleted regression test fails closed into the full gate
+  PASS: a push with no usable range fails closed into the full gate
+  PASS: scheduled runs remain the full fallback boundary
+  PASS: fast routes include a directly matching changed-area test
+  PASS: an empty PR diff fails closed into the full gate
+  PASS: unknown events fail loudly
+  PASS: docs-only push uses the docs gate (was blanket full)
+  PASS: text documentation uses the docs gate
+  PASS: AgentChorus skill instructions use the docs gate
+  PASS: a relay-system .txt sidecar alone uses the docs gate
+  PASS: a relay-system transcript plus its .txt sidecar both use the docs gate
+  PASS: ordinary code-only push uses the fast gate
+  PASS: a push touching the kernel still fails closed to full
+  PASS: a push touching relay containment still fails closed to full
+  PASS: workflow_dispatch stays unconditionally full even for a docs-only path list
+  PASS: control: plain --name-only reports ONE path for a rename (the source is invisible)
+  PASS: a renamed regression test selects full (--no-renames surfaces the removal)
+  PASS: an ordinary test edit is not forced to full (the rename rule is not a blanket)
+  PASS: docs-only changes are tier 1
+  PASS: text and markdown anywhere are docs (GH-35 widened)
+  PASS: HQ utility changes are tier 2
+  PASS: releases subsystem (incl. the one non-twin utils/py file) is tier 2
+  PASS: releases DB and dump files are tier 1 (GH-831 D4; tier 2 before, GH-496)
+  PASS: the other data dumps are tier 1 too (GH-831 D4)
+  PASS: non-core skill code is tier 1 (GH-831 D4)
+  PASS: core skill code stays off the docs gate (GH-831 D4: merge-cleanup)
+  PASS: a ledger dump beside core fails closed to tier 3 (GH-831 D4)
+  PASS: releases utilities are tier 2 (GH-496)
+  PASS: wave_reconcile is tier 2 under PDDA (GH-496)
+  PASS: telemetry is tier 2
+  PASS: ATE + fuzzing are tier 2
+  PASS: swe-diagram is tier 2
+  PASS: agent-chorus skill code is tier 2 (GH-35 subsystem 7)
+  PASS: agent-chorus SKILL.md stays docs (explanatory markdown)
+  PASS: kernel changes are tier 3
+  PASS: authoritative Python twins are tier 3
+  PASS: relay-xyz skill surface is tier 3
+  PASS: an UNMAPPED code path is tier 3 even though route=fast
+  PASS: an ordinary test EDIT is tier 3 (the contract's own evidence)
+  PASS: a test-like path outside test/ and outside a subsystem dir is unmapped
+  PASS: mixed docs + subsystem is tier 2 with PDDA still on
+  PASS: mixed subsystem + kernel fails closed to tier 3
+  PASS: scheduled runs stay tier 3
+  PASS: a registered skill + its code + its dedicated tests is tier 2 (GH-487)
+  PASS: a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)
+  PASS: shared Python test integration still escalates beside skill code (GH-487)
+  PASS: a TESTS-RESULTS receipt alone uses the docs gate (GH-487)
+  PASS: a TESTS-RESULTS receipt alone is tier 1 (GH-487)
+  PASS: a receipt beside subsystem code keeps the subsystem gate (GH-487)
+  PASS: a deleted dedicated suite fails closed into the full gate (GH-487)
+  PASS: subsystems listing names hq and its suites
+  PASS: an unknown subsystem fails loudly (exit 2)
+  PASS: subsystems hq lists its 13 suites
+  PASS: subsystems releases lists its 24 suites (GH-496; +gh549-work-events; +gh567-roadmap-dashboard; +gh568-releases-md-retired; +gh646-status-label)
+  PASS: subsystems pdda lists its 15 suites (GH-649 adds migration, changelog and installer checks)
+  PASS: subsystems skills-army-hq lists its two dedicated suites plus GH-831's three gh589 suites (GH-487/GH-620)
+  PASS: subsystems small lists its 72 suites, without gh436 (GH-831; GH-836 D1)
+  PASS: append-only test addition in validate.sh routes to fast and extracts changed test
+  PASS: append-only test addition in validate.sh beside subsystem code + dedicated test preserves tier 2
+  PASS: non-append code addition in validate.sh fails closed to route=full tier=3
+  PASS: deletion in validate.sh fails closed to route=full tier=3
+  PASS: syntax error in validate.sh fails closed to route=full tier=3
+  PASS: top-level addition outside TESTS array fails closed to route=full tier=3
+  PASS: multi-commit push with earlier runner edit fails closed to route=full tier=3 across full range
+  PASS: invalid explicit CI_BASE fails closed to route=full tier=3
+  PASS: all-zeros explicit CI_BASE fails closed to route=full tier=3
+  PASS: missing validate.sh on disk fails closed to route=full tier=3
+  PASS: non-git directory diff failure fails closed to route=full tier=3
+  PASS: in-array comment deletion while adding suite fails closed to route=full tier=3
+  PASS: forced git diff failure (rc > 1) with working git show fails closed to route=full tier=3
+  ci-route: 81 pass, 0 fail
+rc=0 ci-route
+=== ci-workflow
+== test: ci-workflow ==
+  workflow: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1537-prepush-own-diff-2026-11-23-verify/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  PASS: the boundary cap (120m) fits the suite: >= wave-reconcile's 120m for the same sequential run
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 0
+  skipped: 0
+rc=0 ci-workflow

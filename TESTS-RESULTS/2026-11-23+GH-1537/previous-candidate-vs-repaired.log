@@ -1,0 +1,21 @@
+previous candidate (hook e46bb95ae, sha256 prefix 9c5a332d52c0acda) vs repaired candidate (sha256 prefix 4a14c3c2bd3acaf5), same fixtures:
+merge_only_docs              want=docs previous=docs repaired=docs
+conflict_docs_only           want=docs previous=docs repaired=docs
+side_tip_on_integration      want=docs previous=docs repaired=docs
+code_branch_merge            want=full previous=full repaired=full
+evil_merge_code              want=full previous=full repaired=full
+ours_merge_drops_dev_code    want=full previous=full repaired=full
+other_branch_merge           want=full previous=full repaired=full
+other_branch_docs_only       want=full previous=full repaired=full
+ff_import_no_merge           want=full previous=full repaired=full
+stale_base                   want=full previous=full repaired=full
+stale_ours_merge             want=full previous=full repaired=full
+stale_before_merge_ours      want=full previous=full repaired=full
+rewound_tip_ours             want=full previous=docs repaired=full  <-- differs
+followup_after_merge         want=docs previous=docs repaired=docs
+push_to_main                 want=full previous=full repaired=full
+two_refs_code                want=full previous=full repaired=full
+two_refs_partial_failure     want=full previous=full repaired=full
+first_push_docs              want=docs previous=docs repaired=docs
+first_push_code              want=full previous=full repaired=full
+linear_docs                  want=docs previous=docs repaired=docs
