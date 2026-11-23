@@ -97,4 +97,13 @@ Pre-existing defects: no additional material defects identified in the whole-pla
 VERDICT: PASS
 Basis: The remaining route invocation now accepts the hook's event and path-list form and preserves the first-push check and fallback. Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-23T23:05:55Z
+task: RELAY-gh1587-plan-qa-v3
+reviewer: codex
+status: Approved
+reviewed-head: 391f8ebb74955fd72eee1af6ece1ea4fd934ef27
+added-range: 7361+2358
+added-sha256: 2117272e85b8d8914d40c8836c9bf4418c5b99927997c8e9322d7593b01f1259
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
