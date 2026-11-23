@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-21.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -956,5 +956,40 @@ STATUS is Escalated, and this turn authorizes no further automatic repair/review
 
 Handing off to Producer (claude-a) for parent/operator adjudication of the F4 regression and
 exhausted relay; the token handoff is not approval.
+
+### Producer · Round 4 · claude-a
+
+**Operator scope decision (recorded on #1576, comment
+https://github.com/HiQS-Labs/XYZ-forge/issues/1576#issuecomment-7106952216, "Operator decision 2026-11-23").**
+One final repair + final-QA round (this round 5) is authorized, limited to the round-4 Blocker. Acceptance:
+two recorded negative controls (`resume --dry-run`; `resume` with a wrong `--repo`) show zero add/commit/push, with
+tree, HEAD and origin unchanged. If round 5 fails, #1576 parks. F5/F6 remain out of scope (#1578, #1579) by the
+earlier decision (comment https://github.com/HiQS-Labs/XYZ-forge/issues/1576#issuecomment-7083354655): do not
+count them against this head.
+
+**Round-4 Blocker - Implemented** (code head `bf196d705`; evidence head `e7540b42f`; the code diff `3dc703600..HEAD`
+is regenerated in `relay-system/2026-11-21/gh1576-final-qa-code.diff`).
+- `utils/py/express.py`: `resume_pending_closeout` is split. `pending_closeout_receipt` is READ-ONLY (branch is the
+  base branch, this issue's valid receipt for this commit and suite is among the dirty paths, every other dirty path
+  on the closeout allowlist; else None and the original clean-tree refusal stands). `publish_pending_closeout` (the
+  only caller of `persist_closeout` on this path) now runs in `cmd_resume` strictly AFTER `qualify_resume_identity`
+  and AFTER the `--dry-run` return; a dry run only prints that it would publish. Both wiring checks in
+  `persist_closeout` and the dirty-path limits are unchanged; `skills/2-daily/express/SKILL.md` says the same.
+- Negative controls (`TESTS-RESULTS/2026-11-21+GH-1576/recover.sh`, rows tagged "express resume of a refused
+  closeout (end-to-end)", the real `closeout()` and the real `resume` CLI in the gh267 hermetic fixture, mutating
+  git calls counted from `GIT_TRACE`): at `802cf98e9` (round-4 code, label `blocker-red`) both `resume --dry-run`
+  and `resume --repo wrong/repo` publish (3 add/commit/push calls, HEAD and origin move), which reproduces your
+  probe; at `bf196d705` both make 0 add/commit/push calls with 0 staged paths and tree, HEAD and origin unchanged
+  (`--dry-run` rc 0, wrong repo rc 3 `resume-identity`). The normal `resume` after the hook repair still returns
+  rc 0 (receipt committed and not regenerated, origin in sync, issue closed, manifest shipped, doc moved), and
+  the unrelated-dirty-file control still refuses (rc 4, HEAD unmoved). The earlier red/green rows are kept.
+- Existing suite: `test/gh267-express-skill.sh` 128/128 at the repaired code.
+- Gate: `full-gate.log`, `./validate.sh` from a disposable full clone at
+  `e7540b42f68adce497fec526d047f2bb9859c6ec`, mypy 1.14.1, exit 0, 1353 s, `passed: 408 / 408`, clone identity equal
+  before and after, clone deleted.
+- Limits, stated: the same ones as round 4 (a refusal at the second, reconcile persistence is a different,
+  unwitnessed state; the check immediately before the push is covered by reading, not fault injection).
+
+Handing off to Reviewer (codex) for Round 5 (the final round, Blocker only).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

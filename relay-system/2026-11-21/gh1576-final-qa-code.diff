@@ -83,23 +83,24 @@ index a3f352da0..2d75d8f79 100644
     an existing PR for the branch. If a network interruption occurs during PR creation,
     query `gh pr list --head <branch>` to verify whether the PR was registered before
 diff --git a/skills/2-daily/express/SKILL.md b/skills/2-daily/express/SKILL.md
-index 12d655be8..87df64b97 100644
+index 12d655be8..77a39252f 100644
 --- a/skills/2-daily/express/SKILL.md
 +++ b/skills/2-daily/express/SKILL.md
-@@ -126,6 +126,12 @@ python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --s
+@@ -126,6 +126,13 @@ python3 utils/py/express.py run --issue <N> --suite test/<existing-suite>.sh --s
  # (read from HEAD, never the working tree) against it and never runs a suite or writes evidence
  # (GH-592). With no committed valid receipt it refuses BEFORE closing the issue or shipping and
  # prints the recovery recipe below.
 +# GH-1576: if the closeout stopped with `gate-unwired` (the clone's pre-push stub was missing when it
 +# came to commit and push), nothing was committed: the ledger ship, projections and this landing's
 +# receipt are still dirty on the base branch. Run `bash githooks/install.sh`, then this same `resume`
-+# command. It publishes exactly that retained transaction (allowlisted closeout paths plus this
++# command. After the repository/issue identity check (never under `--dry-run`, which only reports it
++# would publish), it publishes exactly that retained transaction (allowlisted closeout paths plus this
 +# issue's valid receipt for this commit and suite) through the wiring check, never reruns the suite,
 +# and then continues. Any other dirty path, another branch, or no matching receipt still refuses.
  python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh [--sha <SHA>] [--base <branch>]
  
  # Recovery recipe when resume refuses. Run in a FRESH disposable full clone. Every inspection fails
-@@ -134,6 +140,7 @@ python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh
+@@ -134,6 +141,7 @@ python3 utils/py/express.py resume --issue <N> --suite test/<existing-suite>.sh
  set -euo pipefail
  SHA=<SHA>; N=<N>; SUITE=test/<existing-suite>.sh; BASE=<base-branch>   # development in XYZ Forge
  git checkout "$SHA"
@@ -107,7 +108,7 @@ index 12d655be8..87df64b97 100644
  git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
  LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
  snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
-@@ -144,11 +151,14 @@ AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "
+@@ -144,11 +152,14 @@ AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "
  git checkout "$BASE" && git diff-index --quiet HEAD --                                           # 5. same helper, actual rc
  REC=$(python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
  cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6. retain the run beside the receipt
@@ -124,7 +125,7 @@ index 12d655be8..87df64b97 100644
  default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
  instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
  `.xyz/utils/py` in step 5, and resume with
-@@ -167,7 +177,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
+@@ -167,7 +178,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
  0. **Tree of execution** — task branch based on `origin/<base>` (the resolved base) with $\le 2$
     local commits (GH-516; $> 2$ refuses with `too-many-commits`; diverged branches
     refuse with `task-clone`), no scratch paths, and `bash githooks/install.sh --check`
@@ -233,7 +234,7 @@ index cd824ff4e..a2c27ca4e 100644
  from merge_cleanup import prune_dangling_skill_symlinks
  from toposort_prs import (
 diff --git a/utils/py/express.py b/utils/py/express.py
-index 83e38b811..c5d2f160e 100644
+index 83e38b811..789481188 100644
 --- a/utils/py/express.py
 +++ b/utils/py/express.py
 @@ -536,7 +536,9 @@ RECOVERY_RECIPE = (
@@ -279,30 +280,37 @@ index 83e38b811..c5d2f160e 100644
      git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
      return True
  
-@@ -1441,6 +1459,32 @@ def qualify_resume_identity(args):
+@@ -1441,6 +1459,39 @@ def qualify_resume_identity(args):
          refuse(args.root, "resume-identity", str(exc), issue=args.issue, dry_run=dry)
  
  
-+def resume_pending_closeout(root, issue, sha, suite, branch, dirty):
-+    """GH-1576 (F4): publish a retained, uncommitted ship closeout and return the porcelain that is
-+    still dirty ('' when the tree is now clean).
++def pending_closeout_receipt(root, issue, sha, suite, branch):
++    """GH-1576 (F4): read-only. The repo-relative receipt path when the dirty tree is exactly this
++    issue's retained, uncommitted ship closeout, else None. Nothing is staged, committed or pushed.
 +
 +    `persist_closeout` refuses an unwired clone BEFORE committing, which leaves the closeout the
 +    driver already produced (ledger ship, projections, this commit's receipt) dirty on the base
-+    branch. After `bash githooks/install.sh` the documented recovery is this same `resume`. It
-+    accepts that state only when every dirty path is on the closeout allowlist or is this issue's
-+    own valid receipt for this commit and suite, and the receipt is among them; the receipt is not
-+    regenerated and the suite is not rerun. Any other dirt, branch or receipt returns `dirty`
-+    unchanged, so the caller's clean-tree refusal stands. Publication goes through
-+    `persist_closeout`, i.e. the same wiring checks, allowlist and push as the original closeout."""
++    branch. After `bash githooks/install.sh` the documented recovery is this same `resume`. The state
++    qualifies only when the branch is the base branch, this issue's valid receipt for this commit and
++    suite is among the dirty paths (`find_receipt`), and every other dirty path is on the closeout
++    allowlist; anything else keeps resume's clean-tree refusal."""
 +    if branch != BASE:
-+        return dirty
++        return None
 +    receipt = find_receipt(root, sha, issue, suite)
 +    if not receipt:
-+        return dirty
++        return None
 +    paths = change_paths(root)
 +    if receipt not in paths or any(p != receipt and not is_allowed_closeout_path(p) for p in paths):
-+        return dirty
++        return None
++    return receipt
++
++
++def publish_pending_closeout(root, issue, sha, receipt):
++    """GH-1576 (F4): publish the retained closeout found by `pending_closeout_receipt`. Called by
++    `cmd_resume` only AFTER identity qualification and the --dry-run return, so a preview or a
++    request for another repository never reaches `persist_closeout`. Publication is the original
++    closeout's own `persist_closeout` (both wiring checks, allowlist, push); the receipt is not
++    regenerated and the suite is not rerun. Returns the porcelain that is still dirty ('' = clean)."""
 +    persist_closeout(root, "chore(releases): express ship GH-%d (commit %s)" % (issue, sha[:12]),
 +                     extra_paths=(receipt,))
 +    print("express-resume: published the retained closeout for commit %s (receipt %s)" % (sha[:12], receipt))
@@ -312,20 +320,21 @@ index 83e38b811..c5d2f160e 100644
  def cmd_resume(args):
      """Recover/resume an interrupted express run: ensure issue is closed, complete reconciliation,
      and persist/push remaining artifacts."""
-@@ -1450,13 +1494,20 @@ def cmd_resume(args):
+@@ -1450,22 +1501,39 @@ def cmd_resume(args):
      # 1. Check working tree cleanliness before doing ANY operations (regardless of branch)
      cur_branch = git(root, "branch", "--show-current", check=False).stdout.strip()
      dirty = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
-+    sha = suite = None
++    sha = suite = pending = None
      if dirty:
 -        die("working tree is not clean on %s — stash or discard before resuming: %s" %
 -            (cur_branch, dirty.replace("\n", "; ")))
 +        # GH-1576 (F4): the one dirty tree resume accepts is this issue's own closeout transaction,
-+        # left uncommitted when the wiring check refused it. Anything else refuses as before.
++        # left uncommitted when the wiring check refused it. Only recognised here (read-only);
++        # it is published below, after identity qualification and the --dry-run return.
 +        sha = resolve_landing_commit(root, issue, args.sha)
 +        suite = normalize_suite(args.suite)
-+        dirty = resume_pending_closeout(root, issue, sha, suite, cur_branch, dirty)
-+        if dirty:
++        pending = pending_closeout_receipt(root, issue, sha, suite, cur_branch)
++        if not pending:
 +            die("working tree is not clean on %s — stash or discard before resuming: %s" %
 +                (cur_branch, dirty.replace("\n", "; ")))
  
@@ -337,6 +346,24 @@ index 83e38b811..c5d2f160e 100644
  
      # Before preview, checkout, close, ship or reconcile: a number-only receipt
      # cannot transfer landing authority to another repository. No new start.
+     owned_row = qualify_resume_identity(args)
+ 
+     if getattr(args, "dry_run", False):
++        if pending:
++            print("express-resume [dry-run]: would publish the retained closeout (receipt %s)" % pending)
+         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
+         return dict(issue=issue, sha=sha)
+ 
++    # GH-1576 (F4): the retained closeout is published only now, past qualification and the preview.
++    if pending:
++        left = publish_pending_closeout(root, issue, sha, pending)
++        if left:
++            die("working tree is not clean on %s after publishing the retained closeout: %s" %
++                (cur_branch, left.replace("\n", "; ")))
++
+     # 3. Switch to a clean base-branch checkout if on another branch
+     if cur_branch != BASE:
+         git(root, "checkout", "-q", BASE)
 diff --git a/utils/py/jog_run.py b/utils/py/jog_run.py
 index 3e4b76474..cd53085be 100755
 --- a/utils/py/jog_run.py
