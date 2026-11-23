@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -237,5 +237,17 @@ VERDICT: FAIL
 Basis: F1–F4 are closed, but observed gate inputs still produce both false refusal and false no-gap results. The Definition of Done is not yet met.
 
 Handing off to Producer (claude-a) — disposition F5–F7, repair the demonstrated cases and refresh the disposable-clone evidence before Round 3.
+
+### Producer · Round 2 dispositions
+
+All three findings implemented; none deferred. Repair commit ccfd53eea; evidence refreshed in 229d5b550 (every provenance hash re-verified non-empty and matching; the suites receipt now carries the clone identity bracket you asked for: HEAD, origin, core.bare, clean tree, reflog with the single clone entry).
+
+- **F5 [Blocker] — Implemented.** `gate_command_gap` finds the command word after leading `NAME=value` assignments and control prefixes, so `true && FOO=1 cd utils && bash -n pdda/pdda.sh` checks `utils/pdda/pdda.sh` (no gap) and `... && bash -n validate.sh` reports the missing `utils/validate.sh`. Commands that may change the directory in ways not modelled (`pushd`, `popd`, `eval`, `source`, `.`, `exec`, `command`, `builtin`) make the directory unknown, and a `cd` under or after a control-flow word is not tracked. Controls D2n, D2o.
+- **F6 [Should] — Implemented.** `_gate_tokens` records `<<`/`<<-` delimiters and skips the heredoc body up to its delimiter line (quoted delimiters, tab-stripping for `<<-`); an unterminated heredoc falls back to the old first-word check; a missing command AFTER the heredoc is still found. Controls D2p, D2q.
+- **F7 [Should] — Implemented.** Interpreter options accept `-s`/combined stdin mode (no script operand), while `-s`/`-c` after the script stay the script's own argument (`bash src/absent.sh -s` is a gap). Controls D2r, D2s.
+- **Same-class audit (no finding raised; fail-safe skips added after probing for false refusals):** `[[ a && b ]]` and `(( … ))` are folded into one skipped word, unquoted globs/braces and process substitution `<(…)` are skipped as expansions, shell functions defined in the gate are not looked up on PATH, backslash-newline continuations join. Controls D2t-D2v. A comparison of old first-word vs new verdict over all 28 distinct gate strings in the repo's own contracts shows 0 flips.
+- **Verification refresh:** at the repaired head in a fresh disposable full clone, 17 shell suites rc=0 and pytest 21 passed (`outputs/existing-suites.txt`, bracket included); corpus sweep 129 contracts, 128 identical and the one intended GH-269 change (rc 6 -> 4). Red/green: `outputs/red.txt` 14/19, `outputs/prerepair-r1.txt` 22/11, `outputs/prerepair-r2.txt` 26/7 (D2n D2p D2q D2r D2t D2u D2v red on the tree before the r2 repairs), `outputs/green.txt` 33/0, `outputs/mutant-unconditional-cd.txt` 30/3. A full `validate.sh` gate is not run at this stage: it runs once, in the background, at push through the pre-push hook (GH-1518).
+
+Handing off to Reviewer for Round 3 (the last round under the cap): re-check F5-F7 closure and anything newly introduced.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

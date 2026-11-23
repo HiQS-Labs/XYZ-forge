@@ -117,6 +117,14 @@ Final QA round 1 repairs (all four applied, none deferred; preflight is a gate s
   acceptance re-check can never accept. Parity limit recorded: `_marathon_plan._eval_probe`, `utils/marathon-plan.sh`
   and the frozen Bash twin keep the old `blocked` for a gone path (planner classification only); filed as a follow-up.
 
+Final QA round 2 repairs (none deferred): F5 an assignment-prefixed `cd` (`FOO=1 cd src`) moves the tracked
+directory like a bare `cd`; `pushd`/`popd`/`eval`/`source`/`command`/`builtin` make it unknown, and a `cd` under or after
+control flow (`if`, `for`, `{ }`, …) is not tracked. F6 heredoc bodies (`<<EOF`, `<<-EOF`, quoted delimiters) are data and
+are skipped up to their delimiter line (an unterminated heredoc falls back to the old first-word check). F7 `bash -s` (stdin
+mode) takes no script operand, while a `-s`/`-c` after the script is the script's own argument. Same-class audit, fail-safe
+skips instead of assertions: `[[ … && … ]]`, `(( … ))`, unquoted globs/braces, process substitution `<(…)`, shell functions
+defined in the gate, and a backslash-newline continuation.
+
 Non-goals: new exit codes or blocking on the gap (GH-557 control stays exit 0); accepting synonym headings
 as criteria (it would change which lanes block, a decision for its own issue); a shell parser; the Bash twin;
 `githooks/`; findings 4-6; the marathon-drive pre-advance gate, which keeps its own first-token check.
