@@ -299,4 +299,13 @@ PYPROBE
 
 Relay closed (Approved), no further turn needed. Producer may proceed to implementation and disposable-clone verification under the existing task authorization.
 
+
+### Attestation · relay-drive — 2026-11-23T17:18:55Z
+task: RELAY-gh1580-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: a3e04b8b3519b370574b0347efe058c43f01e04f
+added-range: 35961+8943
+added-sha256: e949351543cbc8d5e8b41597265cf85346a91f1ae42de28a73e049a128b38158
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
