@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -210,5 +210,67 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTIN
   command-substitution point); the check asserts non-empty captures, the gate that ran, and base/candidate hook identity.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2
+
+**What this proposes**
+
+The revised plan uses the final-tree diff for qualifying integration refreshes and gives every non-doc result an explicit full-gate veto. It now requires a nonempty qualifying merge set and discards classifier output when classification fails (plan `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:73-94`).
+
+**How the existing system works, per this document**
+
+Existing remote branches are classified from remote to local, which includes paths imported by a development merge. First pushes already resolve a merge-base against a live-verified integration tip; the proposed extraction shares that freshness proof (plan `:45-51`, `:69-72`).
+
+**What it's not**
+
+This is approval of a plan, not delivery verification. It adds neither code-branch receipt reuse nor own-diff tier-2 routing and does not change the final landing gate (plan `:16-21`). These paraphrases were given before opening source in this turn.
+
+**Findings and prior dispositions**
+
+- **[Pass] F1's eligible-refresh veto is addressed in the plan.** Plan `:86-94` explicitly sends a non-doc own result to full rather than tier 2 or the update result, and `:119-120` names the exact old-source/README counterexample from round 1. The fresh-tip version of F1 is closed for plan review. The refusal boundary below remains a separate uncovered path to the same outcome; implementation is still **[Unverified — needs clone run]**.
+
+- **[Pass] F2 is addressed with an explicit ancestry policy.** Plan `:80-85` requires a nonempty merge set, leaves a purely linear `R -> D -> L` update on its previous route, and acknowledges that a side commit already included in the tip counts as integrated content. This closes the earlier unsupported claim that ancestry proves branch provenance. A non-integrated side parent prevents narrowing. The controls at `:120-121` distinguish those two histories; their execution is **[Unverified — needs clone run]**.
+
+- **[Pass] F3 is addressed at the correct status boundary.** The proposed assignment at plan `:93-94` discards stdout on failure. With `set -uo pipefail` at `githooks/pre-push:41` and the failing diff return at `:227`, that preserves the pipeline failure currently masked at `:263`. Plan `:123` retains the partial-two-ref failure control. For an actual push with a missing tree, Git may reject object transfer even on the old hook, so the decisive comparison is the selected route and stub invocation, as required by plan `:117-118`, not the push exit code alone. Runtime closure remains **[Unverified — needs clone run]**; the plan request is satisfied.
+
+- **[Pass] F4 and F5 are closed.** Plan `:66-68` now includes the two changed parsers, receipt-prefix reader and length checks, and keeps `_base_pairs` separate. Direct inspection agrees: producers/readers are `githooks/pre-push:74`, `:127-132`, `:179-180`, `:302-306`; `_base_pairs` feeds classification at `:224-228` and tier 2 at `:286-288`. Plan `:95-96` removes the branch CHANGELOG write, matching `PROJECT/PDDA.md:1064-1068` and the absence of an override in `.pdda-mode`.
+
+- **[Should] F6 — a rejected refresh can still erase the final-tree veto.** Plan `:73-74` says **any** doubt returns 1 and keeps the update-range base, while `:87` applies the veto only when at least one pair narrowed. That does not implement `:79`'s “stale means full” or the stale control at `:122`. Reuse F1's concrete history: B has `src/example.js=0`; remote feature R adds README; development D changes source to 1; M has parents `(R,D)`, retains source 0 and changes README. Now advance the advertised development to T (a child of D) without fetching, so the local tracking ref is D. The candidate merge-base D is not ancestral to R, but the freshness comparison fails. The specified helper returns 1, zero pairs narrow, and `R..M` contributes only README, selecting docs. This is a stale integration refresh containing the very evil-merge resolution the plan promises to gate.
+  Observed input: the return-to-update instruction at plan `:73-74`, equality check at `:79`, and narrowed-count conditional at `:86-89`, with the concrete `(R,D)->M`, tracking D / advertised T values above. The real classifier returns docs for `README.md` and full for `src/example.js` plus README (probe below).
+  Affected scope: an otherwise identifiable integration-refresh candidate that reaches freshness verification but is rejected there; this does not include ordinary pushes whose integration base was already ancestral to the remote feature.
+  Falsifier: with a red full-gate stub and no reusable receipt, the stale `(R,D)->M` old-source case must invoke full/refuse, while the fresh pure-doc merge retaining D's source must invoke docs/succeed. An ordinary README-only update after an already-pushed merge must retain docs without a network probe. If the proposed flow already distinguishes these outcomes, specify where the rejected-candidate state survives the return at `:74`.
+  Fix: distinguish “not applicable; preserve update routing” from “candidate refresh rejected; force full” in the existing helper/caller contract, propagate that veto across the push, and add this stale-plus-ours input to the existing manual procedure. Reconcile the blanket fallback wording at `:74` and `:109` with that distinction. No new subsystem or suite is needed. The DAG/hook outcome is source reasoning, **[Unverified — needs clone run]**, not a claimed executed push failure.
+
+  Narrow classifier probe, command `python3 -` after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`, exit **0**:
+  ```python
+  import subprocess
+  for label, paths in [('rejected-refresh-update', 'README.md\n'),
+                       ('evil-merge-final-tree', 'src/example.js\nREADME.md\n')]:
+      p = subprocess.run(['bash', 'utils/ci-route.sh', 'push'],
+                         input=paths, text=True, capture_output=True)
+      assert p.returncode == 0 and p.stdout, (p.returncode, p.stderr)
+      print(label, 'exit='+str(p.returncode),
+            '/'.join(x for x in p.stdout.splitlines()
+                     if x.startswith(('route=', 'tier='))))
+  ```
+  Decisive output:
+  ```text
+  rejected-refresh-update exit=0 route=docs/tier=1
+  evil-merge-final-tree exit=0 route=full/tier=3
+  ```
+
+**Remaining source-backed answers**
+
+- **[Pass] The final-tree rule is sound within the existing path policy when the refresh is admitted.** Plan `:76-92` and `githooks/pre-push:227` use a tree diff, not a list of merge commits' changed paths. Octopus merges qualify only if all non-first parents pass; a development-first merge with an unintegrated feature second parent is conservatively refused. A conventional divergent rebase fails the unchanged ancestor prerequisite at hook `:209-210`. An already-pushed older integration base skips the new probe when still the merge-base; a newer integration merge can qualify. Renames and deletions retain both paths through `--no-renames`; mode and gitlink changes contribute paths, classified by `utils/ci-route.sh:63-70` and `:324-356`. This is path-based policy, not a guarantee about arbitrary executable contents under docs paths. These ancestry/type edge cases were reasoned from source, not run as Git fixtures.
+- **[Pass] Probe extraction and per-ref storage remain appropriately small.** Plan `:69-72` calls the cached probe directly in the parent shell and caches both outcomes. Preserve the push-URL resolution, nonzero-exit rejection, absent-tip rejection and first-push returns/notes at hook `:136-177` and `:184-205`. `_real_ref_pairs` has no additional reader in the fully read hook beyond the inventory above. A mixed push unions paths at `:224-228`; the original two-field bases remain for tier 2. Destination exclusions are per ref; a no-op development ref remains harmless, as explicitly pinned by `test/gh544-pre-push-gate.sh:438-456`.
+- **[Pass] The delivery check can reject an unchanged candidate.** Plan `:115-118` requires the same refresh to select full on base and docs on candidate, with nonempty captures, hook identity and gate-invocation assertions. Existing red-validation/green-documentation stubs at `test/gh544-pre-push-gate.sh:88-100` and `:138-152` provide a real rejecting control. F6 adds the missing combination that prevents the veto from disappearing when freshness fails. Existing suites and retained manual provenance, without a new suite, match `AGENTS.md:166-172`. No later gate is presumed to run or pass.
+
+Scope and limits: swept the entire 141-line plan and 353-line hook again; inspected the classifier's push/docs/full path and gh544's fixture-driving/freshness controls. Graph discovery tools were unavailable, so no project/generation or coverage claim is made; direct source reads are the fallback. No git command, executable fixture, test suite or gate was run. No additional substantiated pre-existing hook defect was found beyond F3 from round 1. The plan remains a one-file hook extension with shared push-routing blast radius; the consequential risk is accepting docs after losing an integration-refresh veto.
+
+Handing off to Producer (claude-a): resolve F6 in the plan and return for Round 3.
+
+swept file: yes
+VERDICT: FAIL
+Basis: F1-F5 are addressed for plan review, but the explicit fallback for a stale candidate still permits the old-source/README evil merge to take docs. The plan needs a distinct full-gate result for that rejected refresh before approval; delivery controls remain unexecuted here.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
