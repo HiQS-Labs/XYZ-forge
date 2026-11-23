@@ -70,21 +70,25 @@ Extend `githooks/pre-push` only; reuse its integration-tip freshness proof and t
    the first-push path share one freshness proof (no second copy). It sets globals (`_adv_dev`, `_adv_main`, a state flag that
    caches success AND failure, and `_base_note`), so it and `own_diff_base` are called directly in the parent shell, never
    inside `$(...)` (a command substitution would lose the cache, Codex plan QA r1).
-3. **Add `own_diff_base <local> <remote> <rref>`**, which sets the global `_own_base` and returns 0 only when ALL hold; any doubt
-   returns 1 and the pair keeps today's update-range base:
-   - destination is `refs/heads/*` and not `development`/`main`;
-   - the first local integration tracking ref (`refs/remotes/<remote>/development`, then `main`) has a single best common
-     ancestor `mbs` with `local_sha`, `mbs != local_sha`, and `mbs` is NOT already an ancestor of `remote_sha`
-     (integration history entered with this push; otherwise there is nothing to narrow and no network round trip is spent);
-   - the tracking ref equals the tip the remote advertises right now (shared probe; stale means full);
-   - **at least one** merge commit the branch made itself exists (`git rev-list --merges --parents remote..local ^tip` is
-     non-empty), and every such merge has ALL its non-first parents as ancestors of that tip. First parents are not constrained:
-     the final-tree diff covers them. A fast-forward or linear import of integration history has no such merge and is not
-     narrowed ("linear push unchanged"). Commit ancestry cannot say which branch name a merge used: a merge of a side commit
-     that is already on the integration tip counts as an integration merge (its content is already on development, and the
-     final-tree diff still sees any difference). A merge of a commit NOT on the tip is refused.
-4. **Route.** `resolve_base_pairs` also records, per pair, `local|ownbase` (or the update base when not narrowed) and counts the
-   narrowed pairs. The top level classifies the own pairs when any pair narrowed:
+3. **Add `own_diff_base <local> <remote> <rref>`** with THREE outcomes (Codex r1 F1, r2 F6): rc 0 = narrow (sets the global
+   `_own_base`); rc 1 = **not applicable**, the pair keeps today's update-range base; rc 2 = **rejected candidate**, which forces
+   the full gate for the whole push. A push becomes a *candidate* only when integration history entered with it AND the branch made
+   a merge of its own, both checked locally with no network:
+   - not applicable (rc 1): destination is not `refs/heads/*` or is `development`/`main`; no local integration tracking ref
+     (`refs/remotes/<remote>/development`, then `main`); no merge of the branch's own (`git rev-list --merges --parents
+     remote..local ^tip` is empty: a linear or fast-forward import such as `R -> D -> L` keeps its route, "linear push unchanged");
+     or the merge-base `mbs` is already an ancestor of `remote_sha` (nothing new entered, so an ordinary README-only update after an
+     already-pushed merge keeps docs with no probe);
+   - candidate, then rc 2 when ANY of: `mbs` is ambiguous, unresolvable or equals `local_sha`; a non-first parent of an own merge is
+     not an ancestor of the tip (a merge of something not on development: the issue's "merge from another branch" control); the live
+     probe is unverifiable; or the tracking ref differs from the advertised tip (stale). First parents are not constrained: the
+     final-tree diff covers them. Commit ancestry cannot say which branch name a merge used: a merge of a side commit already on the
+     tip counts as an integration merge (its content is on development, and the final-tree diff still sees any difference);
+   - otherwise rc 0 with `mbs`, the single best common ancestor of the verified tip and `local_sha`.
+   The point of rc 2 is that an `ours`/evil merge whose update range reads docs must not slip to docs just because freshness failed.
+4. **Route.** `resolve_base_pairs` also records, per pair, `local|ownbase` (or the update base when not narrowed), counts the
+   narrowed pairs and the rejected candidates. Any rejected candidate takes the full gate for the whole push without classifying.
+   Otherwise the top level classifies the own pairs when any pair narrowed:
    - own route is exactly `docs` -> the docs route, and one line names the merge-base;
    - own route is anything else -> **the full gate** (an explicit veto: not tier 2, and NOT the update-range result), because the
      final tree carries code (own commits, a hand-resolved conflict, or an "ours"/evil merge that discards development's code and
@@ -117,9 +121,10 @@ does), real `git push` through the installed stub; `provenance.jsonl` records ba
 - Controls (candidate; each asserts the route AND that the stub gate or docs gate really ran, with non-empty captures and base/candidate
   hook identity in `provenance.jsonl`): code on the branch plus a merge of development code routes `full`; a merge with a hand-resolved
   code edit (evil merge) routes `full`; an "ours" merge that keeps the old source while development changed it and edits a README routes
-  `full` (the update range alone would read docs: Codex r1 F1); a merge of another branch's commit not on the tip routes `full`; a merge
-  of a side commit already on the tip narrows (stated policy); a fast-forward/linear import `R -> D -> L` keeps today's route (F2);
-  stale tracking ref routes `full`; first push unchanged; a push to `main` routes `full`; a two-ref push with one code ref routes
+  `full` (the update range alone would read docs: Codex r1 F1), and the same "ours" merge with a STALE tracking ref also routes `full`
+  (r2 F6, red on base); a merge of another branch's commit not on the tip routes `full`, including a docs-only other branch that
+  brought newer development (red on base); a merge of a side commit already on the tip narrows (stated policy); a fast-forward/linear
+  import `R -> D -> L` keeps today's route (F2); stale tracking ref routes `full`; first push unchanged; a push to `main` routes `full`; a two-ref push with one code ref routes
   `full`; a two-ref push whose second diff fails routes `full` (F3, red on base); a docs-only conflict resolution routes `docs`.
 - Existing suites: `gh544`, `gh591`, `gh35`, `gh4`, plus the full gate on the final commit.
 
@@ -128,7 +133,10 @@ does), real `git push` through the installed stub; `provenance.jsonl` records ba
 - A bug in the narrowing under-gates a code push. Mitigations: docs-only acceptance, final-tree diff, fail-closed on every doubt, red controls above.
 - Operator-visible limits: a code PR's refresh still routes full by design (the saving is for docs PRs). In the narrow case where
   a code branch merges development whose new content is docs-only, the update range alone would have routed docs and the veto now
-  routes full; this follows the issue's own control (b) and costs one gate that the branch's code arguably always owed.
+  routes full; this follows the issue's own control (b) and costs one gate that the branch's code arguably always owed. The same holds
+  for a rejected candidate (stale tracking ref, unverifiable probe, a merge of something not on development): the update range
+  alone could read docs, so the push takes the full gate (issue controls (c) and (d)). Offline, a merge refresh therefore needs the
+  full gate or the documented bypass; linear pushes and pushes with no merge of their own are untouched.
 
 ## Task rating (2026-11-23)
 

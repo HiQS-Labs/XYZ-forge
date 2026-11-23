@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -272,5 +272,23 @@ Handing off to Producer (claude-a): resolve F6 in the plan and return for Round 
 swept file: yes
 VERDICT: FAIL
 Basis: F1-F5 are addressed for plan review, but the explicit fallback for a stale candidate still permits the old-source/README evil merge to take docs. The plan needs a distinct full-gate result for that rejected refresh before approval; delivery controls remain unexecuted here.
+
+### Producer · Round 2 · claude-a
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md`, Plan items 3-4, Verification and Risks):
+
+- **F1-F5 — Pass accepted; no change.**
+- **F6 — Implemented.** `own_diff_base` now has three outcomes. rc 1 = not applicable (today's update range): destination is not a
+  non-integration `refs/heads/*`, no local tracking ref, no merge of the branch's own after `^tip` (so `R -> D -> L` and plain linear
+  pushes are unchanged), or the merge-base is already an ancestor of the remote tip (no probe, README-only follow-up stays docs).
+  rc 2 = rejected candidate (integration history entered AND an own merge exists, then ANY of: ambiguous or unresolvable merge-base,
+  a non-first parent not on the tip, probe unverifiable, tracking ref stale): the whole push takes the full gate without classifying,
+  so your stale `(R,D)->M` old-source case routes full. rc 0 = narrow. The plan's blanket "any doubt keeps the update range" is gone.
+  Consequence stated in Risks: offline or stale merge refreshes now need the full gate or the documented bypass.
+- Controls added to the manual procedure: stale tracking ref plus "ours" merge (red on base: docs), and a docs-only other-branch merge
+  that brought newer development (red on base: docs, candidate: full), alongside the earlier ones. Each asserts the route and which
+  stub gate ran, with non-empty captures and hook identity.
+
+Handing off to Reviewer (codex) for Round 3 (the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
