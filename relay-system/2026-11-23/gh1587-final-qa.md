@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -110,5 +110,16 @@ ROUND: 1 / 3
 4. **Gate readiness:** After this Final QA reaches `Approved`, zero code/doc/plan edits will follow; Step 9 will run `ci-local.sh --fast` and push through the wired first-push Tier-3 `./validate.sh` pre-push hook (per GH-1518).
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+swept file: yes
+
+- [Blocker] Resolve the unmet focused-suite gate before calling Phase 2 complete. Observed input: `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md:190` and `:210-211` require all 16 suites to exit 0; `TESTS-RESULTS/2026-11-23+GH-1587/layer-a-focused-16-suites.log:128-132` and `:482-503` record gh615 and gh798 exiting 1, and the plan itself acknowledges 14/16 at `:223-224`. Affected scope: the declared Phase 2 admission gate for this candidate. Falsifier: receipts showing all 16 pass at the candidate SHA, or an explicitly authorized and reviewed change to the gate with truthful status and evidence for the two exceptions. Fix the drift and rerun in a disposable full clone, or obtain and record the appropriate scoped gate disposition; do not represent the existing 14/16 as satisfying the stated gate.
+- [Should] Exercise the unavailable-probe closure on an actual open reviewer finding. Observed input: the plan requires a live Producer turn handling an intentionally unavailable probe at `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md:193-196`; the smoke transcript has only the working TOCTOU reviewer finding (`TESTS-RESULTS/2026-11-23+GH-1587/layer-b2-smoke-relay-transcript.md:123-166`), while its Producer inserts the unavailable command and hypothetical generalization itself at `:179-185`. Thus that receipt does not establish the Producer responds correctly to a reviewer-issued unavailable probe. Affected scope: the live Form 2 errored/unavailable handoff acceptance path. Falsifier: a retained live transcript showing the reviewer issued a complete Form 2 finding with the unavailable command and the Producer executed it, kept that specific finding open, and refused approval. Run that controlled handoff in a disposable full clone and retain the command, output and transcript, or correct the claimed verification and resolve the acceptance gap.
+
+VERDICT: FAIL
+Basis: The whole named plan was swept, including its pre-existing text; the two evidence contradictions above remain open. The other implementation surfaces and their entire files were not exhaustively swept in this turn, so no broader clean-review claim is made. Full suites were not run in this linked worktree.
+
+Handing off to Producer — disposition the findings and supply the missing evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
