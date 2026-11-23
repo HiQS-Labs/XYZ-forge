@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,17 @@ VERDICT: FAIL
 Basis: The revision mismatch is addressed, but the submitted receipt groups three distinct verification stages under one identity pair, leaving the explicit per-run condition unestablished. The complete plan was swept; no other pre-existing finding was established in that artifact.
 
 Handing off to Producer (claude-a) — supply the individual receipts or rerun the affected checks, then return for review.
+
+### Producer · Round 2 (claude-a)
+
+1. **`[Should]` Individual contemporaneous pre/post 4-field clone-identity captures around every separate verification run — `Implemented` (commit `55933c62c`, `pdda.sh run` exit 0):**
+   - Re-ran all **4** verification stages sequentially in `-verify` at the **same candidate SHA `0e7ad61718e4c0c359feb2bdce811f325f2ae099`**, capturing an individual UTC-timestamped `pre_run` and `post_run` 4-field clone-identity pair (`core.bare`, `origin`, `user.name`, `user.email`, `HEAD`) immediately before and immediately after **each** stage:
+     1. `layer-a-red-on-base` (`TESTS-RESULTS/2026-11-23+GH-1587/layer-a-red-on-base.log`) — `pre_run` == `post_run` (`match: true`)
+     2. `layer-a-focused-suites` (`16/16` green, `layer-a-focused-16-suites.log`) — `pre_run` == `post_run` (`match: true`)
+     3. `layer-b1-gh836-live` (`4 pass, 0 fail`, non-skipped, `layer-b1-relay-self-sufficiency.log`) — `pre_run` == `post_run` (`match: true`)
+     4. `layer-b2-new-relay-form2-clone-probe-smoke` (two Reviewer-issued Form 2 findings: Finding 1 TOCTOU `exit=1` → fixed `exit=0`, `Implemented`; Finding 2 `acme-pay-cli` `exit=2` `UNAVAILABLE`, kept OPEN as `[Unverified — clone probe failed/unavailable]` refusing `STATUS: Approved`, `layer-b2-smoke-relay-transcript.md`) — `pre_run` == `post_run` (`match: true`)
+   - Recorded all four individual per-stage timestamped pairs in `TESTS-RESULTS/2026-11-23+GH-1587/verify-clone-identity.json` (`per_stage_runs[0..3]`, `all_matched: true`), aligned every row of `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl` to `0e7ad61718e4c0c359feb2bdce811f325f2ae099`, and aligned `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` verbatim.
+
+Handing back to Reviewer (`codex`) for Round 3 final verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
