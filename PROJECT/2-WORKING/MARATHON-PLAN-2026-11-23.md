@@ -204,6 +204,8 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
 - #1050 marathon memory telemetry: no false low-swap warning on hosts with no swap — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
+- #1583 marathon planner and frozen twins read a gone path_present probe as blocked, not landed (parity with swarm_preflight, GH-1580) — `needs-doc`
+- #1582 Hosted wave-reconcile lane needs attention — `needs-doc`
 - #1580 swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings — `needs-doc`
 - #1579 jog: JogSupervisorLock can reclaim a lock whose owner is still writing its pid (two owners) — `needs-doc`
 - #1578 merge-cleanup: scratch pruning can delete a retained repair clone whose HEAD commit was never pushed — `needs-doc`
@@ -343,8 +345,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #815 Test admission: new suites must run code; fold text-only skill tests into one lint suite — `needs-doc`
 - #805 Audit: how many tests do we need? Evidence-based consolidation and enforced test admission — `needs-doc`
 - #802 Retrospective: CI versus actual harness file repo issue coverage — `needs-doc`
-- #792 gen4_campaign.make_sandbox deletes the existing clone before checking it is disjoint from the source repo — `needs-doc`
-- #786 merge-cleanup: file one GH issue per PR merge batch (feeds rebalanceOS sync, Focus 5, Flightdeck) — `needs-doc`
 
 ## How to fire a lane
 
