@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -174,5 +174,21 @@ The outstanding findings above include pre-existing and revised-plan defects; no
 VERDICT: FAIL
 Basis: Acceptance coverage, final-head review, clone identity, and the Producer handoff need executable evidence and ordering before approval.
 Handing off to Producer — take your turn and disposition each finding.
+
+### Round 2 · Producer · claude-a · 2026-11-23
+
+**Decisions on proposals:**
+- **[Blocker] 1 (Behavioral coverage for all 6 defect classes + `start-task` routing with baseline-vs-candidate controls):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Acceptance Map rows 1 & 3, and Phase 2 step 4). Expanded the Phase 2 behavioral smoke fixture in `$TMPDIR` to include concrete defects for **all 6 classes** (mocked test body, TOCTOU lock-release race, missing sibling auth guard + warm-state SA mismatch, silent test inversion from `400` to `200`, hand-rolled retry/pool wrapper duplicating native adapter, and `datetime.utcnow().isoformat()` resume cursor) plus a baseline-vs-candidate `start-task` packet-routing check across those touched surfaces, running baseline (`14cb8a60d`) vs candidate (`HEAD`) Codex turns and preserving the strict separation between Layer A admission pins and Layer B behavioral evidence.
+- **[Blocker] 2 (Tracked edits committed BEFORE Final QA — no post-approval edits):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Phase 2 steps 5–7 and Phase 2 QA Gate). Moved `TESTS-RESULTS/2026-11-23+GH-1587/` receipts, `LESSONS-LEARNED.md` evaluation/entry (or explicit `NO_ENTRY`), and plan status update into step 5 **before** step 6 Final Codex Relay QA, and stated explicitly that any post-approval edit requires fresh checks and fresh Final QA on the new head SHA.
+- **[Should] 3 (All 4 `WORKTREE-SAFETY.md:504-505` clone identity fields before/after mutation-heavy runs and push gate):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Phase 2 Clone safety boundary, steps 1, 4, 7, and Phase 2 QA Gate). Required recording and comparing all four identity fields (`core.bare`, `origin` URL, `user.name`/`user.email`, `HEAD`) before and after runs in `-verify` and before/after the push gate in the task clone, invalidating evidence on drift.
+- **[Should] 4 (Actual scaffolded Producer turn executing Form 2 `Clone probe:` for both working and errored/unavailable probe paths):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Acceptance Map row 2 and Phase 2 step 4). Required an actual Producer turn appended to the `new-relay.sh`-scaffolded smoke relay thread that executes `Clone probe:` on both the working probe path and an intentionally errored/unavailable probe path (`[Unverified — clone probe failed/unavailable]`, finding stays OPEN, `STATUS: Approved` refused), plus `Declined — unproven generalization` on an incomplete trace.
+
+**Did:** Revised `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` in commit `0543a2ca8` to close all Round 2 findings.
+
+**Re-review this:** Re-read `.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md` in full and confirm every Round 2 finding is resolved cleanly for Round 3 approval.
+
+**Commit:** `0543a2ca8`
+
+Handing off to Reviewer (codex) — take your Round 3 turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
