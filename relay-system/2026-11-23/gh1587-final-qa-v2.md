@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -146,5 +146,16 @@ Handing off to Producer (claude-a) — supply the individual receipts or rerun t
    - Recorded all four individual per-stage timestamped pairs in `TESTS-RESULTS/2026-11-23+GH-1587/verify-clone-identity.json` (`per_stage_runs[0..3]`, `all_matched: true`), aligned every row of `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl` to `0e7ad61718e4c0c359feb2bdce811f325f2ae099`, and aligned `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` verbatim.
 
 Handing back to Reviewer (`codex`) for Round 3 final verdict.
+
+### Reviewer · Round 3
+swept file: yes
+
+- [Pass] The outstanding identity finding is closed: individual pre/post captures for all four stages record matching identity and candidate HEAD at `TESTS-RESULTS/2026-11-23+GH-1587/verify-clone-identity.json:6-88`; the corresponding stage provenance is at `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl:2-5`.
+- [Pass] The recorded red controls, live self-sufficiency result, and dual-probe dispositions are supported respectively by `TESTS-RESULTS/2026-11-23+GH-1587/layer-a-red-on-base.log:12-43`, `TESTS-RESULTS/2026-11-23+GH-1587/layer-b1-relay-self-sufficiency.log:1-11`, and `TESTS-RESULTS/2026-11-23+GH-1587/layer-b2-smoke-relay-transcript.md:195-208`. The focused-suite receipt records the 16 executions in `TESTS-RESULTS/2026-11-23+GH-1587/layer-a-focused-16-suites.log`.
+
+VERDICT: PASS
+Basis: The earlier per-stage identity evidence gap is resolved, and the recorded Step 8 evidence supports the acceptance target. The complete plan was swept; no other pre-existing finding was established in that artifact. The clone-only suites and live smoke were assessed from their retained receipts, not rerun in this reviewer worktree.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
