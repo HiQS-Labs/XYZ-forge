@@ -2,7 +2,7 @@
 gh_issue: 1580
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1580
 title: "swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings"
-status: "Blocked (final QA r3 FAIL: F8 open; repair budget spent)"
+status: "In Progress (round 4: F8 repaired, awaiting final QA)"
 created: 2026-11-23
 updated: 2026-11-23
 owner: Claude (start-task sub-agent)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Built the three fixes; red/green and existing suites recorded; final Codex QA ran 3 rounds (r1 F1-F4, r2 F5-F7 repaired). | **Blocked:** round 3 FAIL on F8 (`[[ … ]]` after a control prefix is split at its inner `&&`, a false NOT-READY); repair budget exhausted, relay escalated. Next owner repairs F8 (recipe in the relay thread), refreshes evidence and the clone-identity bracket, reruns final QA, then pushes. |
+| Built the three fixes; red/green and existing suites recorded; final Codex QA r1-r3 FAIL, F1-F7 repaired; operator approved one extra round for F8; F8 repaired and re-verified (green 36/0, suites, 129-contract replay, identity bracket). | Final Codex QA round 4. If it approves: push (full gate runs in the background via the pre-push hook), open the PR, do not land it. If it fails: #1580 parks. |
 
 ## Observed problem
 
@@ -124,6 +124,11 @@ are skipped up to their delimiter line (an unterminated heredoc falls back to th
 mode) takes no script operand, while a `-s`/`-c` after the script is the script's own argument. Same-class audit, fail-safe
 skips instead of assertions: `[[ … && … ]]`, `(( … ))`, unquoted globs/braces, process substitution `<(…)`, shell functions
 defined in the gate, and a backslash-newline continuation.
+
+Round 4 (one extra round, limited to F8; operator decision 2026-11-23 on #1580, comment 7114054883): F8 a `[[ … && … ]]` that
+follows control prefixes (`if`, `elif`, `while`, `until`, `!`, `time`, `then`, `do`) is one expression, exactly like one at a command
+boundary; the commands after `]]` are still checked. The clone-identity record now carries `core.bare`, origin, HEAD and the local
+`user.name`/`user.email` before and after the suites.
 
 Non-goals: new exit codes or blocking on the gap (GH-557 control stays exit 0); accepting synonym headings
 as criteria (it would change which lanes block, a decision for its own issue); a shell parser; the Bash twin;
