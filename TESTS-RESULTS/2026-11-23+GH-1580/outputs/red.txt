@@ -1,0 +1,66 @@
+# GH-1580 controls — label=red — swarm_preflight.py sha256=cb543213bd4e
+# fixture PATH has no uv; gh is stubbed; every case is a throwaway repo
+
+── D1a grep_present '^ENABLE_X=1$' on a mid-file line (truth: unfixed -> ready, exit 0)
+  candidate   : stale
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #101 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=1
+  verdict     : STALE (exit 4)
+  exit=4
+
+── D1b grep_absent '^alembic check' with the fix on its own line (truth: landed, not exit 0)
+  candidate   : ready
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #102 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
+── D1c grep_absent '^alembic check' vs comment/echo only (truth: unfixed -> ready, exit 0)
+  candidate   : ready
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #103 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
+── D2a gate 'uv lock --check && bash -n ...' (uv absent; first command) -> NOT-READY exit 5
+  candidate   : ready
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #201 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=0 — next: command 'uv' not found in PATH
+  verdict     : NOT-READY (exit 5)
+  exit=5
+
+── D2b gate 'bash -n ... && uv lock --check' (uv absent; second command, the #1140 gate) -> NOT-READY exit 5
+  candidate   : ready
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #202 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
+── D2c gate with cd, env-prefix and a pipe, every program present -> READY exit 0 (no false block)
+  candidate   : ready
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #203 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
+── D2d gate 'true && bash src/missing.sh' (missing script in the second command) -> NOT-READY exit 5
+  candidate   : ready
+  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #204 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
+── D3 issue lists criteria under '## Done when' (no '## Acceptance'); doc has '## Acceptance'
+  candidate   : ready
+  acceptance  : unknown [cause: no-issue-section] — issue #301 has no '## Acceptance' section — nothing to copy from
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
+── D3-control issue has '## Acceptance' matching the doc verbatim -> match, no gap
+  candidate   : ready
+  acceptance  : match — 1/1 criteria copied verbatim from issue #302
+  readiness   : ready=1
+  verdict     : ready (exit 0)
+  exit=0
+
