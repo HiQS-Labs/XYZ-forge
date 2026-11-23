@@ -1203,4 +1203,13 @@ excluded. This is final-QA approval, not a claim of publication or hosted qualif
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-23T16:49:03Z
+task: RELAY-gh1576-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ab2463dcad799f93b3e41078989ce6d77137d10f
+added-range: 69601+12329
+added-sha256: a64f2aeda3cc5947330daa082f5a458712ed636239385a23317c97407bd27702
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
