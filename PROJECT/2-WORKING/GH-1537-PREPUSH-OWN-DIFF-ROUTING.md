@@ -75,13 +75,15 @@ Extend `githooks/pre-push` only; reuse its integration-tip freshness proof and t
    forces the full gate for the whole push. The presence of a merge of the branch's own is what makes a push a candidate, and the
    LIVE tip is consulted before any local-ancestry shortcut, because a stale local tracking ref cannot be trusted to say whether
    integration history entered (r3: tracking tip B, advertised D, merge `(R,D)->M` that keeps B's source). In order:
-   - rc 1 (not applicable): destination is not `refs/heads/*` or is `development`/`main`; or no merge of the branch's own exists
-     (`git rev-list --merges --parents remote..local ^tip` is empty: a linear or fast-forward import such as `R -> D -> L` keeps its
-     route, "linear push unchanged"; this check is local, so ordinary pushes spend no network round trip). With no local integration
-     tracking ref at all the `^tip` exclusion is unavailable: any merge in `remote..local` is then a rejected candidate (rc 2), none is rc 1;
-   - rc 2: the live probe is unverifiable, or the tracking ref differs from the advertised tip (stale), or `mbs` (the merge-base of
-     the verified tip and `local_sha`) is ambiguous, unresolvable or equals `local_sha`;
-   - rc 1: `mbs` is already an ancestor of `remote_sha` (the tip is verified fresh and nothing new entered, so an ordinary README-only
+   - rc 1 (not applicable): destination is not `refs/heads/*` or is `development`/`main`; or the pushed range holds **no merge at all**
+     (`git rev-list --merges -n 1 remote..local` is empty: a linear or fast-forward import such as `R -> D -> L` keeps its route,
+     "linear push unchanged"; this check is local, so ordinary pushes spend no network round trip). With no local integration
+     tracking ref at all, any merge in `remote..local` is a rejected candidate (rc 2), none is rc 1;
+   - rc 2: the live probe is unverifiable, or the tracking ref differs from the advertised tip (stale, or rewound: final QA r1 F1, a
+     tracking tip that already contains the merge must not exclude it before the live check), or `mbs` (the merge-base of the verified
+     tip and `local_sha`) is ambiguous, unresolvable or equals `local_sha`;
+   - rc 1: with the tip proven fresh, no merge remains after excluding what the tip already holds (`rev-list --merges --parents
+     remote..local ^tip` is empty), or `mbs` is already an ancestor of `remote_sha` (nothing new entered, so an ordinary README-only
      follow-up after an already-pushed merge, or a merge of the branch's own sub-branch, keeps its update range);
    - rc 2: a non-first parent of an own merge is not an ancestor of the tip (a merge of something not on development: the issue's
      "merge from another branch" control). First parents are not constrained: the final-tree diff covers them. Commit ancestry cannot

@@ -87,7 +87,7 @@ adv_dev() {  # <path> <line>: move origin/development behind w's back (from clon
   ( cd "$FX/x" && G checkout -q development && G pull -q origin development 2>/dev/null; printf '%s\n' "$2" >> "$1"; G add -A; G commit -qm "dev: $1"; XYZ_SKIP_PREPUSH=1 G push -q origin development 2>/dev/null )
 }
 wcommit() { ( cd "$FX/w" && printf '%s\n' "$2" >> "$1" && G add -A && G commit -qm "w: $1" ); }
-wpush()   { ( cd "$FX/w" && G push "$@" 2>&1 ); }   # real git push -> installed stub -> hook under test
+wpush()   { local rc; ( cd "$FX/w" && G push "$@" 2>&1 ); rc=$?; printf '%s' "$rc" > "$FX/.push_rc"; return "$rc"; }   # real git push -> installed stub -> hook under test; exit status kept for provenance
 wmerge()  { ( cd "$FX/w" && G fetch -q origin && G merge -q --no-edit "$1" ); }
 first()   { ( cd "$FX/w" && G checkout -q -b "$1" && wcommit "$2" "branch edit" ) && XYZ_SKIP_PREPUSH=1 wpush -q -u origin "$1" >/dev/null; }
 
@@ -137,6 +137,12 @@ sc_stale_before_merge_ours() {  # Codex r3 F6 residual: tracking tip B is OLDER 
                             printf 'readme edit in the merge\n' >> README.md; G add -A && G commit -qm "ours merge + README edit"
                             G update-ref refs/remotes/origin/development "$B" )
                           PUSHOUT="$(wpush origin sb-pr)"; WANT=full; }
+sc_rewound_tip_ours()   {  # Codex final QA r1 F1: the tracking tip CONTAINS the new merge M but advertised development was rewound to D
+                          first rw-pr docs/guide.md; adv_dev utils/foo.sh "echo dev-code"
+                          ( cd "$FX/w" && G fetch -q origin && G merge -q --no-commit -s ours origin/development >/dev/null 2>&1
+                            printf 'readme edit in the merge\n' >> README.md; G add -A && G commit -qm "ours merge + README edit"
+                            G update-ref refs/remotes/origin/development "$(G rev-parse HEAD)" )
+                          PUSHOUT="$(wpush origin rw-pr)"; WANT=full; }
 sc_followup_after_merge() {  # README-only follow-up after the merge is already on the remote: stays docs, no probe needed
                           first fu-pr docs/guide.md; adv_dev utils/foo.sh "echo dev-code"; wmerge origin/development
                           XYZ_SKIP_PREPUSH=1 wpush -q origin fu-pr >/dev/null; ( cd "$FX/w" && wcommit README.md "follow-up" )
@@ -157,7 +163,7 @@ sc_first_push_docs()    { ( cd "$FX/w" && G checkout -q -b first-pr && wcommit d
 sc_first_push_code()    { ( cd "$FX/w" && G checkout -q -b firstc-pr && wcommit utils/bar.sh "echo branch-code" ); PUSHOUT="$(wpush -u origin firstc-pr)"; WANT=full; }
 sc_linear_docs()        { first lin-pr docs/guide.md; ( cd "$FX/w" && wcommit docs/guide.md "two" ); PUSHOUT="$(wpush origin lin-pr)"; WANT=docs; }
 
-SCENARIOS="merge_only_docs conflict_docs_only side_tip_on_integration code_branch_merge evil_merge_code ours_merge_drops_dev_code other_branch_merge other_branch_docs_only ff_import_no_merge stale_base stale_ours_merge stale_before_merge_ours followup_after_merge push_to_main two_refs_code two_refs_partial_failure first_push_docs first_push_code linear_docs"
+SCENARIOS="merge_only_docs conflict_docs_only side_tip_on_integration code_branch_merge evil_merge_code ours_merge_drops_dev_code other_branch_merge other_branch_docs_only ff_import_no_merge stale_base stale_ours_merge stale_before_merge_ours rewound_tip_ours followup_after_merge push_to_main two_refs_code two_refs_partial_failure first_push_docs first_push_code linear_docs"
 bad=0; red=0
 printf '%-28s %-5s %-5s %-5s %s\n' scenario want base cand verdict
 for s in $SCENARIOS; do
@@ -166,12 +172,12 @@ for s in $SCENARIOS; do
     mkfx "$hook"
     PUSHOUT=""; WANT=""
     "sc_$s"
-    r="$(route_of "$PUSHOUT")"; g="$(gate_ran "$PUSHOUT")"
+    r="$(route_of "$PUSHOUT")"; g="$(gate_ran "$PUSHOUT")"; prc="$(cat "$FX/.push_rc" 2>/dev/null || echo na)"
     [ -n "$PUSHOUT" ] || { r=empty-capture; }
     eval "R_$variant=\$r; G_$variant=\$g"
     printf '%s\n' "$PUSHOUT" | sed "s|^|[$s/$variant] |" >> "$OUT/push-output.log"
-    printf '{"scenario":"%s","variant":"%s","hook_sha256":"%s","repo_head":"%s","want":"%s","route":"%s","gate_ran":"%s"}\n' \
-      "$s" "$variant" "$(shasum -a 256 "$hook" | cut -c1-16)" "$REPO_HEAD" "$WANT" "$r" "$g" >> "$PROV"
+    printf '{"scenario":"%s","variant":"%s","hook_sha256":"%s","repo_head":"%s","want":"%s","route":"%s","gate_ran":"%s","push_exit":"%s"}\n' \
+      "$s" "$variant" "$(shasum -a 256 "$hook" | cut -c1-16)" "$REPO_HEAD" "$WANT" "$r" "$g" "$prc" >> "$PROV"
   done
   verdict="ok"
   [ "$R_cand" = "$WANT" ] || { verdict="CANDIDATE WRONG"; bad=$((bad+1)); }

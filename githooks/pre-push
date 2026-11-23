@@ -118,7 +118,10 @@ fi
 # is judged by the branch's FINAL-TREE diff against the integration merge-base, so a hand-resolved
 # conflict or an evil merge counts as the branch's own change. That result is used only when it is
 # exactly route=docs; anything else takes the FULL gate (never tier 2, never the update-range answer,
-# which can read docs while the final tree carries code). Every doubt keeps today's update range.
+# which can read docs while the final tree carries code). own_diff_base() below has three outcomes:
+# narrow, not applicable (today's update range: no merge in the range, or nothing integration-related
+# entered), and a REJECTED candidate (a merge that cannot be proven integration-only, or a stale or
+# unverifiable tip), which takes the full gate for the whole push.
 
 # GH-487: resolve each pushed ref pair to the range that classifies it. An existing remote ref
 # uses its own SHA (the update range, exactly as before). A first push of a new branch has no
@@ -136,6 +139,7 @@ _own_pairs=()
 _own_n=0
 _own_veto=0
 _own_base=""
+_own_note=""
 _adv_dev=""
 _adv_main=""
 _tips_state=0   # 0 not probed, 1 verified fresh evidence, 2 unverifiable (failure is cached too)
@@ -195,14 +199,14 @@ pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push 
 
 # GH-1537: may this REFRESH push of an existing branch be judged by its own final-tree diff? Three outcomes:
 #   rc 0  narrow: _own_base = the single best common ancestor of the verified integration tip and local_sha.
-#   rc 1  not applicable: keep today's update range. (Destination is development/main/not a branch; the branch made no merge
-#         of its own — a linear or fast-forward import; or, with the integration tip proven fresh, the merge-base is already
-#         in the remote branch so nothing new entered.)
-#   rc 2  REJECTED candidate: the branch made a merge of its own but it cannot be proven an integration-only refresh (the live
-#         tip is unverifiable or the tracking ref is stale, ambiguous merge-base, a non-first parent not on the tip, or no
+#   rc 1  not applicable: keep today's update range. (Destination is development/main/not a branch; the range holds no merge
+#         at all — a linear or fast-forward import; or, with the integration tip proven fresh, every merge is history the tip
+#         already holds, or the merge-base is already in the remote branch so nothing new entered.)
+#   rc 2  REJECTED candidate: the range holds a merge but it cannot be proven an integration-only refresh (the live tip is
+#         unverifiable or the tracking ref is stale or rewound, ambiguous merge-base, a non-first parent not on the tip, or no
 #         local integration tracking ref to test against). The update range can read docs while the final tree carries code
 #         (an "ours" merge), so the caller takes the full gate. Never narrows a push to development or main.
-# The LIVE tip is consulted before any local-ancestry shortcut: a stale tracking ref cannot say whether integration entered.
+# The LIVE tip is consulted before any local-ancestry shortcut or exclusion: a stale tracking ref cannot say whether integration entered.
 own_diff_base() {  # <local_sha> <remote_sha> <remote ref>
   local local_sha="$1" remote_sha="$2" dest="$3" name tip="" mbs adv merges m first rest q
   _own_base=""
@@ -220,12 +224,16 @@ own_diff_base() {  # <local_sha> <remote_sha> <remote ref>
     [ -z "$(git rev-list --merges -n 1 "$remote_sha..$local_sha" 2>/dev/null)" ] && return 1
     return 2
   fi
-  merges="$(git rev-list --merges --parents "$remote_sha..$local_sha" "^$tip" 2>/dev/null)" || return 2
-  [ -n "$merges" ] || return 1
-  # A merge of the branch's own exists from here on.
+  # Any merge in the pushed range makes this a candidate, and the LIVE tip is consulted BEFORE the tracking ref is trusted to
+  # exclude anything: a merge that the (possibly stale or rewound) tracking tip already contains is not proof of integration.
+  merges="$(git rev-list --merges -n 1 "$remote_sha..$local_sha" 2>/dev/null)" || return 2
+  [ -n "$merges" ] || return 1   # no merge: linear or fast-forward import, no network round trip
   probe_integration_tips || return 2
   case "$name" in development) adv="$_adv_dev" ;; *) adv="$_adv_main" ;; esac
   [ "$adv" = "$tip" ] || return 2   # stale tracking ref: "behind" and "rewritten under us" look alike
+  # Fresh tip: the merges that matter are the branch's own, i.e. those the verified tip does not already contain.
+  merges="$(git rev-list --merges --parents "$remote_sha..$local_sha" "^$tip" 2>/dev/null)" || return 2
+  [ -n "$merges" ] || return 1   # every merge is integration history the verified tip already holds
   mbs="$(git merge-base --all "$tip" "$local_sha" 2>/dev/null)" || return 2
   [ "$(printf '%s\n' "$mbs" | grep -c .)" -eq 1 ] || return 2
   [ "$mbs" != "$local_sha" ] || return 2
@@ -248,6 +256,7 @@ resolve_base_pairs() {
   _own_pairs=()
   _own_n=0
   _own_veto=0
+  _own_note=""
   _base_note=""
   [ "${#_real_ref_pairs[@]}" -gt 0 ] || { _base_note="pre-push: no ref pairs to classify — running the full gate."; return 1; }
   local pair local_sha remote_sha dest_ref cand base adv mbs own _rs
@@ -297,7 +306,7 @@ resolve_base_pairs() {
         base="$remote_sha"
         own_diff_base "$local_sha" "$remote_sha" "$dest_ref"
         case $? in
-          0) own="$_own_base"; _own_n=$((_own_n + 1)) ;;
+          0) own="$_own_base"; _own_n=$((_own_n + 1)); _own_note="$_own_note ${own:0:9}" ;;
           2) _own_veto=$((_own_veto + 1)) ;;
         esac
         ;;
@@ -364,7 +373,7 @@ if [ "$_own_veto" -gt 0 ]; then
   _route="full"; _tier=""; _t2tests=""
 elif [ "$_own_n" -gt 0 ]; then
   if [ "$_route" = "docs" ]; then
-    echo "pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base is docs-only."
+    echo "pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base (${_own_note# }) is docs-only."
   else
     echo "pre-push: GH-1537 — only integration history was merged in, but the branch's own final tree is not docs-only (route=${_route:-unclassified}) — taking the full gate." >&2
     _route="full"; _tier=""; _t2tests=""

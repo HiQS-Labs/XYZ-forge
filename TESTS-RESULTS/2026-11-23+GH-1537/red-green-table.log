@@ -11,16 +11,17 @@ pre-push: running the full gate before this push reaches the remote (GH-544).
 pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
 pre-push:   validate.sh: PARALLEL mode — stub
 stub full gate ran
-pre-push: full gate GREEN in 1s — pushing.
+pre-push: full gate GREEN in 0s — pushing.
 pre-push: running the full gate before this push reaches the remote (GH-544).
 pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
 pre-push:   validate.sh: PARALLEL mode — stub
 stub full gate ran
-pre-push: full gate GREEN in 1s — pushing.
+pre-push: full gate GREEN in 0s — pushing.
 ff_import_no_merge           full  full  full  ok 
 stale_base                   full  full  full  ok 
 stale_ours_merge             full  docs  full  ok (RED on base: docs)
 stale_before_merge_ours      full  docs  full  ok (RED on base: docs)
+rewound_tip_ours             full  docs  full  ok (RED on base: docs)
 followup_after_merge         docs  docs  docs  ok 
 push_to_main                 full  full  full  ok 
 two_refs_code                full  full  full  ok 
@@ -28,4 +29,4 @@ two_refs_partial_failure     full  docs  full  ok (RED on base: docs)
 first_push_docs              docs  docs  docs  ok 
 first_push_code              full  full  full  ok 
 linear_docs                  docs  docs  docs  ok 
-candidate mismatches: 0   rows red on base: 8
+candidate mismatches: 0   rows red on base: 9
