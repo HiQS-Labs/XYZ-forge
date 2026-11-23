@@ -174,4 +174,13 @@ Basis: the requested ordering defect is fixed; the new retained real-push contro
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-23T21:51:19Z
+task: RELAY-gh1537-final-qa-r4
+reviewer: codex
+status: Approved
+reviewed-head: 9a85a2b28e0a3cb24e35bdfcb025157f4c4bdf4a
+added-range: 10211+7944
+added-sha256: c75242f3d20cb3577e4e8051d7f3e565302d546cb1895b8c437488b4f7a065e0
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
