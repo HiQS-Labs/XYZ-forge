@@ -25,7 +25,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA ended at the 3-round cap (r1-r3 FAIL; the r3 residual was fixed in the plan afterwards, not re-reviewed). Hook built; manual red/green (19 scenarios x base/candidate, 8 red rows on base) and a real PR #1526 replay (base full, candidate docs) recorded in `TESTS-RESULTS/2026-11-23+GH-1537/`; existing suites green. | Final Codex QA (the r3 residual is a mandatory question), full gate on the final commit, PR. |
+| Plan QA ended at the 3-round cap (r1-r3 FAIL; the r3 residual was fixed in the plan afterwards, not re-reviewed). Hook built; manual red/green (20 scenarios x base/candidate, 9 red rows on base) and a real PR #1526 replay (base full, candidate docs) recorded in `TESTS-RESULTS/2026-11-23+GH-1537/`; existing suites green. | Final Codex QA (the r3 residual is a mandatory question), full gate on the final commit, PR. |
 
 ## Problem
 

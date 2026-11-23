@@ -5,9 +5,13 @@
 set -u
 OUT="${1:?out dir}"; mkdir -p "$OUT"
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT" || exit 2
-ident() {  # repository identity (WORKTREE-SAFETY.md bracket): HEAD, origin URL, bare flag
-  printf '{"head":"%s","origin":"%s","bare":"%s"}' "$(git rev-parse HEAD)" "$(git remote get-url origin 2>/dev/null)" \
-    "$(git rev-parse --is-bare-repository)"
+ident() {  # AGENTS.md bracket: HEAD, core.bare, `git remote -v`, local user.email (an unset email is recorded as "<unset>")
+  python3 - "$(git rev-parse HEAD)" "$(git config --get core.bare 2>/dev/null || echo '<unset>')" \
+    "$(git remote -v)" "$(git config --local --get user.email 2>/dev/null || echo '<unset>')" "$(git rev-parse --is-bare-repository)" <<'PY'
+import json,sys
+head,corebare,remotes,email,isbare=sys.argv[1:6]
+print(json.dumps({"head":head,"core.bare":corebare,"is_bare":isbare,"remote_v":remotes.splitlines(),"local_user_email":email},sort_keys=True))
+PY
 }
 PROV="$OUT/suites-provenance.jsonl"; LOG="$OUT/focused-suites.log"; : > "$PROV"; : > "$LOG"
 PRE="$(ident)"
