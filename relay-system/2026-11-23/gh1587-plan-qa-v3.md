@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -74,5 +74,27 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+
+**What this proposes**
+The plan adds six surface-triggered review checks and a documented clone-probe handoff for hazards that cannot be reproduced in the relay worktree. It updates existing prompts, skills, and pin suites, then verifies them in a disposable clone before final QA and delivery.
+
+**How the existing system works, per this document**
+Reviewers must ground behavior-change findings in concrete evidence, while worktree containment restricts mutation-heavy tests. Existing skill and relay instructions share review responsibilities, and existing suites pin prose and exercise relay behavior.
+
+**What it's not**
+This is not a new review skill, new test suite, or relaxation of worktree containment. The deterministic prose pins are not evidence that an LLM reliably detects all six defect classes.
+
+**Source-backed technical validation**
+
+- [Pass] The earlier route-check finding is addressed: the plan now supplies `push` and a `--no-renames` merge-base-to-head path stream, with a fallback when first-push Tier-3 routing is not established (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:184,207; githooks/pre-push:325-334). Retain the fallback and verify the actual push conditions.
+- [Pass] A representative classifier probe, `printf '%s\n' test/gh681-reviewer-probe-rules.sh | bash utils/ci-route.sh push`, exited 0 and printed `route=fast` and `tier=3` with `tier_reason=test change — the routing contract's own evidence stays on the full gate`. The route and tier are distinct outputs (utils/ci-route.sh:5-12); check tier 3 rather than assuming the route field says full.
+- [Pass] The earlier red-control repair remains specified as a complete base checkout overlaid with the three candidate suites and expected new assertion failures (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:188-190). Preserve that targeted evidence.
+
+swept file: yes
+Pre-existing defects: no additional material defects identified in the whole-plan sweep. Actual branch-diff classification, suite execution, and live relay behavior are [Unverified — needs clone run]; this review did not run git or mutation-heavy gates.
+VERDICT: PASS
+Basis: The remaining route invocation now accepts the hook's event and path-list form and preserves the first-push check and fallback. Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
