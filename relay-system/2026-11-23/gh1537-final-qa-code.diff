@@ -1,0 +1,261 @@
+diff --git a/githooks/pre-push b/githooks/pre-push
+index fa19ee0df..54ddf8c7d 100755
+--- a/githooks/pre-push
++++ b/githooks/pre-push
+@@ -71,7 +71,7 @@ while read -r _lref _lsha _rref _rsha; do
+   case "$_lsha" in
+     *[!0]*)
+       _all_deletes=0
+-      _real_ref_pairs+=("$_lsha|${_rsha:-}")
++      _real_ref_pairs+=("$_lsha|${_rsha:-}|${_rref:-}")
+       _attempt_ref_pairs+=("$_lref|$_lsha|$_rref")
+       ;;
+   esac
+@@ -110,6 +110,15 @@ fi
+ # ls-remote), because a stale ref cannot tell "behind" from "the branch was rewritten under us",
+ # and only the first direction is safe. Stale, ambiguous (multiple best common ancestors),
+ # unverifiable, or empty-range evidence all fall back to the full gate with a named reason.
++#
++# GH-1537: a REFRESH push of an existing branch that merged the integration branch in would otherwise
++# drag every path development changed into the update range and pay the full gate for a docs-only
++# branch. Such a push (at least one merge of its own, every non-first parent already on the verified
++# integration tip, tracking ref proven fresh by the same live probe, destination not development/main)
++# is judged by the branch's FINAL-TREE diff against the integration merge-base, so a hand-resolved
++# conflict or an evil merge counts as the branch's own change. That result is used only when it is
++# exactly route=docs; anything else takes the FULL gate (never tier 2, never the update-range answer,
++# which can read docs while the final tree carries code). Every doubt keeps today's update range.
+ 
+ # GH-487: resolve each pushed ref pair to the range that classifies it. An existing remote ref
+ # uses its own SHA (the update range, exactly as before). A first push of a new branch has no
+@@ -121,64 +130,141 @@ fi
+ _base_pairs=()
+ _base_note=""
+ _push_remote="${1:-}"
++# GH-1537: own-diff pairs (`local|base`, parallel to _base_pairs; the update base where a pair did not narrow),
++# how many narrowed, and the cached live integration-tip probe (one round trip per push).
++_own_pairs=()
++_own_n=0
++_own_veto=0
++_own_base=""
++_adv_dev=""
++_adv_main=""
++_tips_state=0   # 0 not probed, 1 verified fresh evidence, 2 unverifiable (failure is cached too)
++
++# Probe the LIVE push destination for the integration tips (shared by the first-push base below and the GH-1537
++# own-diff routing). Call it directly in the parent shell, never inside $(...): the cache and notes are globals.
++# rc 0 = _adv_dev/_adv_main hold what the remote advertises right now; rc 1 = unverifiable (_base_note says why).
++probe_integration_tips() {
++  [ "$_tips_state" -eq 0 ] || { [ "$_tips_state" -eq 1 ]; return; }
++  _tips_state=2
++  local _probe_target _adv_out _sha _ref
++  case "$_push_remote" in
++    ''|*://*|*@*:*)
++      _base_note="pre-push: remote '${_push_remote:-<none>}' is not a configured remote name (a URL push?) — no verifiable integration base, running the full gate."
++      return 1
++      ;;
++  esac
++  # Freshness is proven against the PUSH destination (CodeRabbit #2 on PR #488): a remote may
++  # carry a separate pushurl, and `git ls-remote <name>` resolves the FETCH url — which would
++  # attest a server the push never touches. Resolve the push URL explicitly and probe that.
++  _probe_target="$(git remote get-url --push "$_push_remote" 2>/dev/null)" || _probe_target=""
++  [ -n "$_probe_target" ] || {
++    _base_note="pre-push: cannot resolve a push URL for '$_push_remote' — running the full gate."
++    return 1
++  }
++  # One round trip for both candidates, wall-clock bounded so a wedged connection costs seconds,
++  # not minutes: the HTTP low-speed settings do not bind SSH, so a portable perl alarm wraps the
++  # probe (a missing perl degrades to the HTTP bound only, never to an unbounded hang policy
++  # change). The probe's EXIT STATUS is authoritative (round 3 review): a nonzero ls-remote that
++  # emitted partial refs (one ref advertised, then the connection died) must fail closed, because
++  # partial output is indistinguishable from a complete answer unless the status says so.
++  _adv_out=""
++  if command -v perl >/dev/null 2>&1; then
++    _probe_cmd=(perl -e 'alarm shift; exec @ARGV' "${XYZ_PREPUSH_PROBE_TIMEOUT_S:-30}" git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
++  else
++    _probe_cmd=(git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
++  fi
++  if ! _adv_out="$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 "${_probe_cmd[@]}" 2>/dev/null)"; then
++    _base_note="pre-push: could not verify the integration tip on '$_push_remote' via its push URL (git ls-remote failed or timed out) — running the full gate.
++pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push --no-verify')"
++    return 1
++  fi
++  while read -r _sha _ref; do
++    [ -n "${_sha:-}" ] || continue
++    case "$_ref" in
++      refs/heads/development) _adv_dev="$_sha" ;;
++      refs/heads/main)        _adv_main="$_sha" ;;
++    esac
++  done <<<"$_adv_out"
++  if [ -z "$_adv_dev" ] && [ -z "$_adv_main" ]; then
++    _base_note="pre-push: no integration branch advertised on '$_push_remote' (neither development nor main) — running the full gate."
++    return 1
++  fi
++  _tips_state=1
++  return 0
++}
++
++# GH-1537: may this REFRESH push of an existing branch be judged by its own final-tree diff? Three outcomes:
++#   rc 0  narrow: _own_base = the single best common ancestor of the verified integration tip and local_sha.
++#   rc 1  not applicable: keep today's update range. (Destination is development/main/not a branch; the branch made no merge
++#         of its own — a linear or fast-forward import; or, with the integration tip proven fresh, the merge-base is already
++#         in the remote branch so nothing new entered.)
++#   rc 2  REJECTED candidate: the branch made a merge of its own but it cannot be proven an integration-only refresh (the live
++#         tip is unverifiable or the tracking ref is stale, ambiguous merge-base, a non-first parent not on the tip, or no
++#         local integration tracking ref to test against). The update range can read docs while the final tree carries code
++#         (an "ours" merge), so the caller takes the full gate. Never narrows a push to development or main.
++# The LIVE tip is consulted before any local-ancestry shortcut: a stale tracking ref cannot say whether integration entered.
++own_diff_base() {  # <local_sha> <remote_sha> <remote ref>
++  local local_sha="$1" remote_sha="$2" dest="$3" name tip="" mbs adv merges m first rest q
++  _own_base=""
++  case "$dest" in
++    refs/heads/development|refs/heads/main) return 1 ;;
++    refs/heads/*) ;;
++    *) return 1 ;;
++  esac
++  for name in development main; do
++    tip="$(git rev-parse --verify --quiet "refs/remotes/$_push_remote/$name^{commit}" 2>/dev/null)" && break
++    tip=""
++  done
++  if [ -z "$tip" ]; then
++    # Nothing local to exclude the integration history with: any merge in the range is unexplained.
++    [ -z "$(git rev-list --merges -n 1 "$remote_sha..$local_sha" 2>/dev/null)" ] && return 1
++    return 2
++  fi
++  merges="$(git rev-list --merges --parents "$remote_sha..$local_sha" "^$tip" 2>/dev/null)" || return 2
++  [ -n "$merges" ] || return 1
++  # A merge of the branch's own exists from here on.
++  probe_integration_tips || return 2
++  case "$name" in development) adv="$_adv_dev" ;; *) adv="$_adv_main" ;; esac
++  [ "$adv" = "$tip" ] || return 2   # stale tracking ref: "behind" and "rewritten under us" look alike
++  mbs="$(git merge-base --all "$tip" "$local_sha" 2>/dev/null)" || return 2
++  [ "$(printf '%s\n' "$mbs" | grep -c .)" -eq 1 ] || return 2
++  [ "$mbs" != "$local_sha" ] || return 2
++  git merge-base --is-ancestor "$mbs" "$remote_sha" 2>/dev/null && return 1
++  # Every non-first parent of every own merge must already be on the tip; first parents are unconstrained because the
++  # final-tree diff covers them. Commit ancestry cannot say which branch name a merge used: a side commit already on the tip
++  # counts as integration content, and the final-tree diff still sees any difference.
++  while read -r m first rest; do
++    [ -n "$m" ] || continue
++    for q in $rest; do
++      git merge-base --is-ancestor "$q" "$tip" 2>/dev/null || return 2
++    done
++  done <<<"$merges"
++  _own_base="$mbs"
++  return 0
++}
++
+ resolve_base_pairs() {
+   _base_pairs=()
++  _own_pairs=()
++  _own_n=0
++  _own_veto=0
+   _base_note=""
+   [ "${#_real_ref_pairs[@]}" -gt 0 ] || { _base_note="pre-push: no ref pairs to classify — running the full gate."; return 1; }
+-  local pair local_sha remote_sha cand base adv mbs
+-  local _adv_dev="" _adv_main="" _lsremote_needed=0
++  local pair local_sha remote_sha dest_ref cand base adv mbs own _rs
++  local _lsremote_needed=0
+   for pair in "${_real_ref_pairs[@]}"; do
+-    case "${pair#*|}" in
++    _rs="${pair#*|}"; _rs="${_rs%%|*}"
++    case "$_rs" in
+       ''|0000000000000000000000000000000000000000) _lsremote_needed=1 ;;
+     esac
+   done
+   if [ "$_lsremote_needed" -eq 1 ]; then
+-    case "$_push_remote" in
+-      ''|*://*|*@*:*)
+-        _base_note="pre-push: remote '${_push_remote:-<none>}' is not a configured remote name (a URL push?) — no verifiable integration base, running the full gate."
+-        return 1
+-        ;;
+-    esac
+-    # Freshness is proven against the PUSH destination (CodeRabbit #2 on PR #488): a remote may
+-    # carry a separate pushurl, and `git ls-remote <name>` resolves the FETCH url — which would
+-    # attest a server the push never touches. Resolve the push URL explicitly and probe that.
+-    _probe_target="$(git remote get-url --push "$_push_remote" 2>/dev/null)" || _probe_target=""
+-    [ -n "$_probe_target" ] || {
+-      _base_note="pre-push: cannot resolve a push URL for '$_push_remote' — running the full gate."
+-      return 1
+-    }
+-    # One round trip for both candidates, wall-clock bounded so a wedged connection costs seconds,
+-    # not minutes: the HTTP low-speed settings do not bind SSH, so a portable perl alarm wraps the
+-    # probe (a missing perl degrades to the HTTP bound only, never to an unbounded hang policy
+-    # change). The probe's EXIT STATUS is authoritative (round 3 review): a nonzero ls-remote that
+-    # emitted partial refs (one ref advertised, then the connection died) must fail closed, because
+-    # partial output is indistinguishable from a complete answer unless the status says so.
+-    _adv_out=""
+-    if command -v perl >/dev/null 2>&1; then
+-      _probe_cmd=(perl -e 'alarm shift; exec @ARGV' "${XYZ_PREPUSH_PROBE_TIMEOUT_S:-30}" git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
+-    else
+-      _probe_cmd=(git ls-remote "$_probe_target" refs/heads/development refs/heads/main)
+-    fi
+-    if ! _adv_out="$(GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30 "${_probe_cmd[@]}" 2>/dev/null)"; then
+-      _base_note="pre-push: could not verify the integration tip on '$_push_remote' via its push URL (git ls-remote failed or timed out) — running the full gate.
+-pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push --no-verify')"
+-      return 1
+-    fi
+-    while read -r _sha _ref; do
+-      [ -n "${_sha:-}" ] || continue
+-      case "$_ref" in
+-        refs/heads/development) _adv_dev="$_sha" ;;
+-        refs/heads/main)        _adv_main="$_sha" ;;
+-      esac
+-    done <<<"$_adv_out"
+-    if [ -z "$_adv_dev" ] && [ -z "$_adv_main" ]; then
+-      _base_note="pre-push: no integration branch advertised on '$_push_remote' (neither development nor main) — running the full gate."
+-      return 1
+-    fi
++    probe_integration_tips || return 1
+   fi
+   for pair in "${_real_ref_pairs[@]}"; do
+-    IFS='|' read -r local_sha remote_sha <<<"$pair"
++    IFS='|' read -r local_sha remote_sha dest_ref <<<"$pair"
+     base=""
++    own=""
+     case "$remote_sha" in
+       ''|0000000000000000000000000000000000000000)
+         for cand in "development:$_adv_dev" "main:$_adv_main"; do
+@@ -209,9 +295,15 @@ pre-push:   (if offline, bypass with 'XYZ_SKIP_PREPUSH=1 git push' or 'git push
+         git cat-file -e "${remote_sha}^{commit}" 2>/dev/null || return 1
+         git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null || return 1
+         base="$remote_sha"
++        own_diff_base "$local_sha" "$remote_sha" "$dest_ref"
++        case $? in
++          0) own="$_own_base"; _own_n=$((_own_n + 1)) ;;
++          2) _own_veto=$((_own_veto + 1)) ;;
++        esac
+         ;;
+     esac
+     _base_pairs+=("$local_sha|$base")
++    _own_pairs+=("$local_sha|${own:-$base}")
+   done
+   return 0
+ }
+@@ -259,12 +351,25 @@ if [ "$_base_ok" -ne 1 ] && [ -n "$_base_note" ]; then
+   printf '%s\n' "$_base_note" >&2
+ fi
+ _cls=""
+-if [ "$_base_ok" -eq 1 ]; then
+-  _cls="$(classify_push 2>/dev/null || true)"
++if [ "$_base_ok" -eq 1 ] && [ "$_own_veto" -eq 0 ]; then
++  [ "$_own_n" -eq 0 ] || _base_pairs=("${_own_pairs[@]}")   # GH-1537: judge the narrowed pairs by their own final-tree diff
++  # Classifier STATUS gates every route: a failed diff in a later ref pair must not leave partial stdout that reads docs.
++  _cls="$(classify_push 2>/dev/null)" || _cls=""
+ fi
+ _route="$(printf '%s\n' "$_cls" | sed -n 's/^route=//p')"
+ _tier="$(printf '%s\n' "$_cls" | sed -n 's/^tier=//p')"
+ _t2tests="$(printf '%s\n' "$_cls" | sed -n 's/^tier2_tests=//p')"
++if [ "$_own_veto" -gt 0 ]; then
++  echo "pre-push: GH-1537 — development was merged in but this cannot be proven an integration-only refresh (merge of something not on the verified integration tip, or its tip is stale/unverifiable) — taking the full gate." >&2
++  _route="full"; _tier=""; _t2tests=""
++elif [ "$_own_n" -gt 0 ]; then
++  if [ "$_route" = "docs" ]; then
++    echo "pre-push: GH-1537 — only integration history was merged in; the branch's own diff against its integration merge-base is docs-only."
++  else
++    echo "pre-push: GH-1537 — only integration history was merged in, but the branch's own final tree is not docs-only (route=${_route:-unclassified}) — taking the full gate." >&2
++    _route="full"; _tier=""; _t2tests=""
++  fi
++fi
+ _gate_name="full validation"
+ _start=$SECONDS
+ _paths_file=""
