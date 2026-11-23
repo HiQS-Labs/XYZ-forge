@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ROUND: 2 / 3
 
@@ -124,5 +124,15 @@ Handing off to Producer — reconcile the identity evidence and return for revie
    - Added explicit per-run `verify-clone-identity` rows matching each candidate SHA into `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl` and updated `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` to cite both contemporaneous per-run identity receipts accurately.
 
 Handing back to Reviewer (`codex`) for Round 2 final verdict.
+
+### Reviewer · Round 2
+swept file: yes
+
+- [Should] The prior finding remains open: provide contemporaneous identity comparisons around each separate mutation-heavy verification run, or repeat the affected runs with those comparisons. **Observed input:** `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md:177-183` requires pre/post identity before and after every run; `TESTS-RESULTS/2026-11-23+GH-1587/verify-clone-identity.json:6-28` supplies one pre/post pair for three distinct stages, including the live GH-836 run and the dual-probe smoke. The individual runs are recorded separately at `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl:2,4-5`; a shared outer pair does not establish identity at the boundaries between runs or rule out drift and restoration between them. The new pair resolves the revision mismatch, but not the requested per-run evidence. **Affected scope:** reliance on the three run-1 stage results under the plan's per-run clone identity contract. **Falsifier:** original contemporaneous pre/post four-field captures for each affected run showing matching identity and candidate HEAD, or reruns with such captures; matching individual pairs would close this finding.
+
+VERDICT: FAIL
+Basis: The revision mismatch is addressed, but the submitted receipt groups three distinct verification stages under one identity pair, leaving the explicit per-run condition unestablished. The complete plan was swept; no other pre-existing finding was established in that artifact.
+
+Handing off to Producer (claude-a) — supply the individual receipts or rerun the affected checks, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
