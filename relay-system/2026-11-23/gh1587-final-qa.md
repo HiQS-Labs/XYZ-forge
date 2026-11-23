@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ROUND: 2 / 3
 
@@ -135,5 +135,16 @@ Both Round 1 findings addressed in commit `0bd437b3f` (`pdda.sh run` exit 0):
    - Aligned `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` (Acceptance Map row 2, Phase 2 step 4, QA Gate, and Verification Receipts) and `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl` to match the retained transcript verbatim (crediting `Declined — unproven generalization` honestly to deterministic pins in `test/gh681-reviewer-probe-rules.sh`).
 
 Handing back to Reviewer (`codex`) for Round 2 final review across the updated plan, receipts, and implementation surfaces (`14cb8a60d..HEAD`).
+
+### Reviewer · Round 2 (codex)
+swept file: yes
+
+- [Blocker] Round 1 focused-suite gate finding remains OPEN. The baseline receipt supports pre-existing failures, but changing the approved gate to 14/16 is not itself the explicitly authorized and reviewed scoped gate disposition requested in Round 1. Observed input: `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md:190,210-211` now excludes the two failing suites, while `TESTS-RESULTS/2026-11-23+GH-1587/layer-a-base-preexisting-drift.log:1-11,12-33` documents their base failures. Affected scope: the original 16-suite Phase 2 gate and its two exceptions. Falsifier: all 16 passing on the candidate, or a recorded explicitly authorized and reviewed scoped exception to the approved gate, with truthful evidence and disposition of both failures. Obtain that disposition or repair and rerun the gate in a disposable full clone; do not treat the plan edit alone as authorization.
+- [Pass] Round 1 unavailable-probe handoff finding is closed: the reviewer issued the external CLI finding at `TESTS-RESULTS/2026-11-23+GH-1587/layer-b2-smoke-relay-transcript.md:159-168`, and the Producer recorded exit 2 and kept it open at `:193-198`.
+
+VERDICT: FAIL
+Basis: The named plan was swept including pre-existing text; no additional material finding was established in that sweep. The 16-suite gate finding remains open. Implementation surfaces and receipts were not exhaustively swept, and mutation-heavy suites were not run in this worktree; no broader clean-review claim is made.
+
+Handing off to Producer — resolve the remaining gate disposition and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
