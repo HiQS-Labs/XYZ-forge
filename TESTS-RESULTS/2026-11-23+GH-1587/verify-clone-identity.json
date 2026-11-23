@@ -1,19 +1,56 @@
 {
+  "schema": "gh1587-clone-identity@2",
   "clone": "disposable -verify full clone",
-  "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
-  "pre_run": {
-    "core.bare": "false",
-    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
-    "user.name": "Noel Saw",
-    "user.email": "56978803+noelsaw1@users.noreply.github.com",
-    "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
-  },
-  "post_run": {
-    "core.bare": "false",
-    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
-    "user.name": "Noel Saw",
-    "user.email": "56978803+noelsaw1@users.noreply.github.com",
-    "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
-  },
-  "match": true
+  "runs": [
+    {
+      "run_id": "verify-run-1-19476291",
+      "candidate_sha": "19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e",
+      "stages_covered": [
+        "layer-a-red-on-base",
+        "layer-b1-gh836-live",
+        "layer-b2-new-relay-form2-clone-probe-smoke"
+      ],
+      "original_receipt_commit": "e317eda3e",
+      "pre_run": {
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e"
+      },
+      "post_run": {
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e"
+      },
+      "match": true
+    },
+    {
+      "run_id": "verify-run-2-0e7ad617",
+      "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
+      "stages_covered": [
+        "layer-a-focused-suites (16/16 green after gh615/gh798 test-only reconciliation)"
+      ],
+      "original_receipt_commit": "57e560912",
+      "diff_from_run_1_note": "git diff --stat 19476291..0e7ad617 touched only test/gh615-start-task-reinforce.sh, test/gh798-status-skill.sh, plan/receipts/relay docs; zero skill, relay-automation, or relay-pkg.tar.gz changes",
+      "pre_run": {
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "post_run": {
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "match": true
+    }
+  ],
+  "all_matched": true
 }
