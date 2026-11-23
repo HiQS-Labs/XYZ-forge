@@ -155,6 +155,20 @@ case_text "D2i '(cd src && true); bash -n src/ok.sh': subshell cd does not leak 
 R="$(make_repo gate-skips 206 'bash -n src/ok.sh && bash -c "nonexistent_inner_cmd; true" && "${LTV_PYTHON:?set me}" -m pytest' "$PROBE" yes)"
 case_text "D2f bash -c body and an expansion-only program word are skipped, not guessed -> READY" "$R" PROJECT/2-WORKING/GH-206-fixture.md 0 'verdict +: ready'
 
+# ── Final QA r1 repairs (F1-F4) ──────────────────────────────────────────────────────────────────
+R="$(make_repo gate-cd-and-or 210 'false && cd src && true || bash -n config.txt' "$PROBE" yes "echo x")"
+case_text "D2j F1 'false && cd src && true || bash -n config.txt': the cd never ran, so config.txt is the ROOT file -> READY" "$R" PROJECT/2-WORKING/GH-210-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-script-dash-c 211 'true && bash src/absent.sh -c' "$PROBE" yes)"
+case_text "D2k F2 'true && bash src/absent.sh -c': -c is the script's own argument, the script is missing -> NOT-READY" "$R" PROJECT/2-WORKING/GH-211-fixture.md 5 'gate script not found.*absent\.sh'
+R="$(make_repo gate-redir-ok 212 'true && bash -n src/ok.sh>/dev/null' "$PROBE" yes)"
+case_text "D2l F3 'true && bash -n src/ok.sh>/dev/null': attached redirect is not part of the filename -> READY" "$R" PROJECT/2-WORKING/GH-212-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-redir-missing 213 'true && bash -n src/absent.sh>/dev/null' "$PROBE" yes)"
+case_text "D2m F3 'true && bash -n src/absent.sh>/dev/null': missing script behind an attached redirect -> NOT-READY" "$R" PROJECT/2-WORKING/GH-213-fixture.md 5 'gate script not found.*absent\.sh'
+R="$(make_repo path-present-gone 214 true '[{"type":"path_present","path":"GONE.txt"}]' yes)"
+case_text "D4a F4 path_present on an unwanted path that is already gone -> landed (STALE, exit 4), not blocked" "$R" PROJECT/2-WORKING/GH-214-fixture.md 4 'verdict +: STALE'
+R="$(make_repo path-present-here 215 true '[{"type":"path_present","path":"config.txt"}]' yes "x")"
+case_text "D4b path_present on an unwanted path that is still there -> unfixed, ready" "$R" PROJECT/2-WORKING/GH-215-fixture.md 0 'verdict +: ready'
+
 # ── Defect 3: acceptance gap ─────────────────────────────────────────────────────────────────────
 printf '## Summary\nLockfile drift.\n\n## Done when\n\n- [ ] The lockfile check passes.\n' >"$WORK/issues/301.md"
 R="$(make_repo acc-done-when 301 true "$PROBE" yes)"

@@ -105,6 +105,18 @@ Extend the existing evaluator and report path. No new module, suite, flag or exi
    "Ask", "Findings"), the gap names it so the fix is one step. Verdict and exit code do not change:
    GH-557 deliberately keeps this advisory outside a frozen manifest.
 
+Final QA round 1 repairs (all four applied, none deferred; preflight is a gate surface):
+- F1: a cd reached through `&&` is certain only inside that `&&` run, which now also ends at `||`, `|` and `&`
+  (it ended only at `;`/newline), so `false && cd utils && true || bash -n validate.sh` checks the root file.
+- F2: interpreter options end at the first operand; a `-c` after the script is the script's own argument
+  (`bash absent.sh -c` is checked; `bash -c '…'` still skips). `-o x`, `-O x`, `--rcfile x` and `--` are read.
+- F3: unquoted redirections (`>f`, `2>&1`, `&>f`, `<f`, `<<EOF`) are separate tokens, so
+  `bash -n validate.sh>/dev/null` checks `validate.sh`; quoted `>` stays literal.
+- F4 (same evaluator, found by the whole-file sweep): `path_present` detects an UNWANTED path
+  (CONTRACT.example.md), so its absence now reads `landed`; it read `blocked`, which marathon's landed-only
+  acceptance re-check can never accept. Parity limit recorded: `_marathon_plan._eval_probe`, `utils/marathon-plan.sh`
+  and the frozen Bash twin keep the old `blocked` for a gone path (planner classification only); filed as a follow-up.
+
 Non-goals: new exit codes or blocking on the gap (GH-557 control stays exit 0); accepting synonym headings
 as criteria (it would change which lanes block, a decision for its own issue); a shell parser; the Bash twin;
 `githooks/`; findings 4-6; the marathon-drive pre-advance gate, which keeps its own first-token check.

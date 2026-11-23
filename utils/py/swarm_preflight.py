@@ -265,7 +265,10 @@ def eval_probes(root: str, c: dict[str, Any]) -> tuple[list[dict[str, Any]], int
             if ptype == "path_absent":
                 if os.path.exists(target_path): verdict = "landed"
             elif ptype == "path_present":
-                if not os.path.exists(target_path): verdict = "blocked"
+                # GH-1580 (final QA F4): the probe detects an UNWANTED path (CONTRACT.example.md), so
+                # its absence is the fix having landed. It read `blocked` before, which marathon's
+                # landed-only acceptance re-check can never accept: a completed removal failed forever.
+                if not os.path.exists(target_path): verdict = "landed"
             elif ptype == "grep_present":
                 if not os.path.exists(target_path):
                     verdict = "blocked"
@@ -561,6 +564,8 @@ def gate_scoping_caveat(gate_cmd: str) -> str:
 # proof that arbitrary shell code runs. Known downstream limit: marathon-drive's own pre-advance check
 # still refuses a gate that BEGINS with `NAME=value prog` (marathon_drive.py), which this check accepts.
 _GATE_OP_RE = re.compile(r'&&|\|\||\|&|;;|[;&|()]')
+# A redirection at a word start: `>f` `2>f` `&>f` `<f` `<<EOF` `2>&1` `>&2`. The `&N` forms name no target word.
+_GATE_REDIR_RE = re.compile(r'(?:[0-9]+|&)?(?:>>|>|<<<|<<|<>|<)(&(?:[0-9]+-?|-))?')
 # Words whose command follows them (`if prog`, `then prog`, `! prog`): skipped, then the program is read.
 _GATE_PREFIX_WORDS = frozenset({"if", "then", "else", "elif", "while", "until", "do", "!", "{", "time"})
 # Builtins/keywords with no PATH entry that mean nothing to existence: the whole command is skipped.
@@ -572,7 +577,9 @@ _GATE_SHELL_WORDS = frozenset({
 _GATE_ASSIGN_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*=')
 
 def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
-    """('op', text, False) / ('word', unquoted text, needs_expansion); None if quotes do not balance."""
+    """('op', text, False) / ('word', unquoted text, needs_expansion) / ('redir', text, takes_next_word);
+    None if quotes do not balance. Unquoted `<` `>` end a word, so `validate.sh>/dev/null` is the script
+    `validate.sh` plus a redirection, never a file named `validate.sh>/dev/null`."""
     out: list[tuple[str, str, bool]] = []
     i, n = 0, len(cmd)
     while i < n:
@@ -586,16 +593,16 @@ def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
         elif ch == "#":
             j = cmd.find("\n", i)
             i = n if j < 0 else j
-        elif not (ch == "&" and cmd[i + 1:i + 2] == ">") and _GATE_OP_RE.match(cmd, i):
-            m = _GATE_OP_RE.match(cmd, i)
-            assert m is not None
-            out.append(("op", m.group(), False)); i = m.end()
+        elif (rm := _GATE_REDIR_RE.match(cmd, i)):
+            out.append(("redir", rm.group(), rm.group(1) is None)); i = rm.end()
+        elif (om := _GATE_OP_RE.match(cmd, i)):
+            out.append(("op", om.group(), False)); i = om.end()
         else:
             buf: list[str] = []
             dyn = False
             while i < n and cmd[i] not in " \t\r\n":
                 c = cmd[i]
-                if c in ";|()" or (c == "&" and cmd[i - 1] not in "<>" and cmd[i + 1:i + 2] != ">"):
+                if c in ";|()&<>":
                     break
                 if c == "\\" and i + 1 < n:
                     buf.append(cmd[i + 1]); i += 2
@@ -656,10 +663,20 @@ def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: s
         if os.path.isabs(rel): return rel
         return os.path.join(cwd, rel) if cwd is not None else None
     if g0 in ("bash", "sh"):
-        args = words[i + 1:]
-        if any(re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', a[0]) for a in args if a[0].startswith("-")):
-            return ""   # `bash -c '…'`: the argument is a command, not a script path
-        script = next((a for a in args if not a[0].startswith("-")), None)
+        # Interpreter options end at the first operand: a `-c` AFTER the script is the script's own argument.
+        args, j, script = words[i + 1:], 0, None
+        while j < len(args):
+            a = args[j][0]
+            if a == "--":
+                script = args[j + 1] if j + 1 < len(args) else None
+                break
+            if a[:1] in "-+" and len(a) > 1:
+                if re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', a):
+                    return ""   # `bash -c '…'`: the argument is a command, not a script path
+                j += 2 if a in ("-o", "+o", "-O", "+O", "--rcfile", "--init-file") else 1
+                continue
+            script = args[j]
+            break
         if script is None:
             # A bare `bash` as the first command is the old "<none>" refusal; later in a pipe it reads stdin.
             return "" if (not first or prev_op == "|") else (
@@ -697,10 +714,16 @@ def gate_command_gap(gate_cmd: str, target_root: str) -> str:
     cond = False                                       # cwd depends on a cd reached through `&&`
     stack: list[tuple[str | None, bool]] = []
     words: list[tuple[str, bool]] = []
-    prev_op, first = "", True
+    prev_op, first, skip_word = "", True, False
     for kind, text, dyn in toks + [("op", "\n", False)]:
+        if kind == "redir":
+            skip_word = dyn          # `> file`: the next word is the target, not a command word
+            continue
         if kind == "word":
-            words.append((text, dyn))
+            if skip_word:
+                skip_word = False
+            else:
+                words.append((text, dyn))
             continue
         if words:
             if words[0][0] == "cd" and not words[0][1]:
@@ -724,8 +747,8 @@ def gate_command_gap(gate_cmd: str, target_root: str) -> str:
             stack.append((cwd, cond))
         elif text == ")" and stack:
             cwd, cond = stack.pop()
-        elif text in (";", "\n", ";;") and cond:
-            cwd, cond = None, False
+        elif cond and text != "&&":
+            cwd, cond = None, False    # the guaranteed `&&` run ended (`;`, newline, `||`, `|`, `&`)
         prev_op = text
     return ""
 
