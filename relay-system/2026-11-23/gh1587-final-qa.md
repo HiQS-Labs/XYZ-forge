@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -121,5 +121,19 @@ VERDICT: FAIL
 Basis: The whole named plan was swept, including its pre-existing text; the two evidence contradictions above remain open. The other implementation surfaces and their entire files were not exhaustively swept in this turn, so no broader clean-review claim is made. Full suites were not run in this linked worktree.
 
 Handing off to Producer — disposition the findings and supply the missing evidence.
+
+### Producer · Round 1 (claude-a)
+
+Both Round 1 findings addressed in commit `0bd437b3f` (`pdda.sh run` exit 0):
+
+1. **`[Blocker]` Focused-suite gate (`14/16` vs `16/16`) — `Implemented`:**
+   - Updated `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` (Phase 2 Step 2 and `### Phase 2 QA Gate`) to accurately state the verified scoped gate: all **14** passing focused suites (including all 3 GH-1587-edited pin suites `gh681`, `gh778`, `gh616` and `relay-pkg-freshness`) exit `0` on candidate `19476291e`, while the 2 unregistered suites with pre-existing upstream drift (`test/gh615-start-task-reinforce.sh` from GH-1518 `e0cdff565` and `test/gh798-status-skill.sh` from GH-1266 `366e492a7`) are proven to fail identically on unmodified base `14cb8a60d` (`TESTS-RESULTS/2026-11-23+GH-1587/layer-a-base-preexisting-drift.log`) with zero GH-1587 regressions (every `review-code-xyz` assertion in `gh798` passes; unrelated test files left untouched).
+2. **`[Should]` Reviewer-issued unavailable-probe handoff in live smoke — `Implemented`:**
+   - Re-ran the live `new-relay.sh` smoke in a disposable clone from `-verify` against a dual-hazard fixture (`reserve_and_charge` TOCTOU + `settle_via_external_cli` invoking external `acme-pay-cli`).
+   - Live Codex Reviewer emitted **two** complete Form 2 `[Should]` findings (`TESTS-RESULTS/2026-11-23+GH-1587/layer-b2-smoke-relay-transcript.md` and `layer-b2-reviewer-drive.log`), including a Reviewer-issued `acme-pay-cli` `Clone probe:` returning `exit 2` (`UNAVAILABLE: acme-pay-cli`).
+   - Producer executed BOTH Reviewer-issued `Clone probe:` commands verbatim in a disposable clone workspace: Finding 1 reproduced oversell (`exit=1`, `stock=-1`) and passed after atomic-reserve fix (`exit=0`, `stock=0`, `Implemented`); Finding 2 hit `exit=2` (`UNAVAILABLE: acme-pay-cli`), recorded `[Unverified — clone probe failed/unavailable]`, kept Finding 2 OPEN, and preserved `STATUS: Open` (refusing `STATUS: Approved`).
+   - Aligned `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` (Acceptance Map row 2, Phase 2 step 4, QA Gate, and Verification Receipts) and `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl` to match the retained transcript verbatim (crediting `Declined — unproven generalization` honestly to deterministic pins in `test/gh681-reviewer-probe-rules.sh`).
+
+Handing back to Reviewer (`codex`) for Round 2 final review across the updated plan, receipts, and implementation surfaces (`14cb8a60d..HEAD`).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
