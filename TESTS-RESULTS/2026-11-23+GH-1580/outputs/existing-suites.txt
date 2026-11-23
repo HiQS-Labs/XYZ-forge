@@ -1,0 +1,19 @@
+0 21s test/swarm-preflight.sh
+0 1s test/gh308-swarm-gate-path.sh
+0 3s test/gh343-gate-program-target-root.sh
+0 2s test/gh400-acceptance-fidelity.sh
+0 1s test/gh400-source-url.sh
+0 4s test/gh425-source-url-slug.sh
+0 3s test/gh557-unknown-blocks-manifest.sh
+0 11s test/gh438-acceptance-recheck.sh
+0 3s test/gh291-contract-goldens.sh
+0 191s test/gh280-jog-marathon-adapter.sh
+0 2s test/gh418-issue-state-frozen.sh
+0 7s test/gh399-packet-acceptance-continuation.sh
+0 3s test/gh467-index-only-lane-blocked.sh
+0 16s test/gh642-consumer-fruit.sh
+0 6s test/marathon-plan.sh
+0 2s test/gh322-unknown-arg-rejection.sh
+0 4s test/path-integrity.sh
+pytest rc=0 ============================= 21 passed in 30.99s ==============================
+DONE
