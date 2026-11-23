@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -118,5 +118,73 @@ set STATUS to Approved only on PASS.
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+The plan narrows existing feature-branch refresh pushes to the branch's final-tree diff against a merge-base with a live-verified integration tip. It accepts that alternative only for `route=docs`, reuses the existing classifier, and otherwise returns to update-range routing.
+
+**How the existing system works, per this document**
+
+Existing branches use remote-SHA-to-local-SHA paths, so merging development imports development's changed paths into classification. First pushes already use a merge-base with a live-verified integration tip; the proposed helper shares that freshness proof.  [Unverified — no citation]
+
+**What it's not**
+
+It does not provide code-branch receipt reuse, own-diff tier-2 routing, or a replacement landing gate. These paraphrases were written before opening source; the checks below followed.
+
+**Findings — changes required before plan approval**
+
+- **[Should] F1 — the fallback can erase the final-tree code veto.** Plan `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:79-87` promises that conflict-resolution/evil-merge code counts, but explicitly reclassifies the update range after any non-doc own result. Consider common base B with `src/example.js=0`; pushed docs branch R adds README; development D changes the source to 1; merge M has parents `(R,D)`, retains source 0 (an ours/evil merge), and edits README. The merge-parent and freshness checks pass; `D..M` contains source plus README, but `R..M` contains README only. The stated algorithm therefore selects docs despite its own full result. This also defeats the required evil-merge control if that control only adds a new code path visible in both ranges.
+  Observed input: the fallback specified at plan lines 79-81; classifier inputs `src/example.js\nREADME.md\n` and `README.md\n` produce respectively `route=full, tier=3` and `route=docs, tier=1` (probe below).
+  Affected scope: otherwise eligible integration refreshes whose final tree differs in code from the integration base while their update range does not expose that difference.
+  Falsifier: in a disposable clone, the `(R,D)->M` example must run/refuse through a red full-gate stub; the same merge retaining D's source and changing only README must take docs. If the proposed algorithm already does this, provide the transcript and explain the path that overrides line 81.
+  Fix: specify a retained full-gate veto for this case instead of losing the non-doc final-tree result, and reconcile that rule with the blanket promise that fallback routing is unchanged. Add this precise case to the existing manual evidence procedure, not a new suite.
+
+  Narrow classifier probe (no git, hook, gate, or fixture execution), exit **0**:
+  ```python
+  import subprocess
+  for label, paths in [("own-final-tree", "src/example.js\nREADME.md\n"),
+                       ("update-range", "README.md\n")]:
+      p = subprocess.run(["bash", "utils/ci-route.sh", "push"],
+                         input=paths, text=True, capture_output=True)
+      print(label, "exit="+str(p.returncode))
+      print("\n".join(x for x in p.stdout.splitlines()
+                      if x.startswith(("route=", "tier="))))
+      assert p.returncode == 0 and p.stdout
+  ```
+  Decisive output: `own-final-tree exit=0 / route=full / tier=3`; `update-range exit=0 / route=docs / tier=1`. Invoked with `python3 -` after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`. The Git DAG example is source reasoning, **[Unverified — needs clone run]** end to end.
+
+- **[Should] F2 — the ancestry predicate does not establish the claimed merge-only scope.** Plan lines 73-78 do not require any merge in the selected range. For linear `R -> D -> L`, where remote feature is R, fresh development is D (adds source), and L adds README, `mbs=D` is not an ancestor of R and the merge-parent loop is empty. Own classification becomes docs although the previous update range includes code. This contradicts “linear push unchanged” at line 106 and the rejected broader alternative at lines 94-95. Also, “A merge from another branch fails here” is too strong: a side-branch parent X already reachable from current development T satisfies the ancestor test even if the feature merged X rather than development. Commit ancestry does not retain the branch name used in a merge.
+  Observed input: the universal non-first-parent condition at plan lines 77-78, with no nonempty-merge requirement; the explicit linear-push control at line 106.
+  Affected scope: fast-forward updates that import integration history without a merge, and side-parent ancestry already included in the advertised integration tip.
+  Falsifier: the `R -> D -> L` update must keep its original full route, while the ordinary `(R,D)->M` docs refresh must narrow; a docs merge of side tip X reachable from T must satisfy the explicitly chosen other-branch policy. These DAG cases remain **[Unverified — needs clone run]**.
+  Fix: state an actual qualifying integration-merge requirement and the precise conservative parent shape admitted. Explicitly address the already-integrated side-tip case rather than promising that ancestry proves branch provenance; no new branch-provenance subsystem is warranted. Include these distinguishing inputs in the manual controls.
+
+- **[Should] F3 — preserve classifier failure status in the routing change; the existing hook can accept partial paths.** Whole-file sweep found `githooks/pre-push:227` returning failure from a diff, while `:228` still lets the classifier consume earlier paths and `:263` masks the pipeline failure with `|| true`. `:265` and `:271` then accept its stdout. For a mixed push, one readable README diff followed by an unreadable tree can therefore emit `route=docs` from an incomplete union. This is pre-existing, not evidence that the proposed helper has already been implemented incorrectly.
+  Observed input: `_cls="$(classify_push 2>/dev/null || true)"` at `githooks/pre-push:263`, following the per-pair diff pipeline at `:224-228`.
+  Affected scope: classification where at least one diff emits docs paths and another diff fails (for example, commit ancestry exists but a required tree object is unavailable).
+  Falsifier: an existing-suite/manual disposable-clone case with a successful first docs range and failing second diff must refuse narrow routing despite classifier stdout saying docs; all-readable docs ranges must still narrow. Runtime reproduction is **[Unverified — needs clone run]**.
+  Fix: make successful classification status a prerequisite for accepting either own or update results, discarding partial stdout on failure. Fold this into the already-planned top-level routing edit and manual per-ref check.
+
+- **[Nit] F4 — correct the consumer inventory.** Plan line 67 says “No other reader exists,” but `githooks/pre-push:305-306` reads `_real_ref_pairs` for exact-commit receipt reuse. Its `${_pair%%|*}` extraction remains safe with a third field, and length checks at `:127`/`:302` are also unaffected. Update the inventory to say two parsers require changes and receipt reuse was inspected and needs none. `_base_pairs` readers at `:224-227`/`:286-288` remain two-field readers and must keep their separate contract.
+
+- **[Nit] F5 — make the CHANGELOG step respect the active policy.** A gate-narrowing bet merits a durable rationale, already present in the plan, but line 82 unconditionally schedules a branch CHANGELOG edit. `PROJECT/PDDA.md:1064-1068` disables those for off/unset/landing and allows them only for branch mode; `.pdda-mode` contains no override. State that the changelog follows resolved `CHANGELOG_WRITES`, with the rationale carried in the plan/PR when branch writes are disabled.
+
+**Remaining source-backed answers**
+
+- **[Pass] Reuse and final-tree basis are appropriately small.** The existing owner is `githooks/pre-push:124-228`; the docs decision is already centralized in `utils/ci-route.sh:63-70` and `:452-477`. `--no-renames` at hook `:227` exposes both sides of a rename, including deleted tests. Mode and gitlink changes produce changed paths; the existing path policy, not file contents or type, decides their route. The claim “any code” must be understood within that policy (for example, `docs/*` is explicitly a docs surface at classifier `:65`). F1 concerns losing a code result the classifier actually recognizes, not redefining that policy.
+- **[Pass] Freshness extraction has the right source owner.** Hook `:145` probes the push URL; `:158-165` bounds the probe and rejects partial output on nonzero exit; `:174-177` rejects absent advertised tips; `:192-205` handles equality, ambiguity and empty bases. Preserve those returns and `_base_note` diagnostics. Cache success AND failure in the parent shell: a helper called solely inside `ownbase="$(own_diff_base ...)"` cannot persist its cache/global notes to later pairs. First-push behavior remains a delivery check, not something proven by this plan review; existing controls cover pushurl disagreement, partial probe failure, ambiguous bases and mixed refs (`test/gh544-pre-push-gate.sh:375-480`).
+- **[Pass] The integration-entry test avoids the normal probe.** Under plan `:73-75`, a docs commit after an already-pushed development merge has the same integration merge-base already ancestral to remote and skips narrowing/network. A genuinely newer integration merge can qualify. A conventional divergent rebase still fails the existing remote-ancestor check (`githooks/pre-push:209-210`), which must run before narrowing. Octopus merges pass the proposed predicate only when every extra parent is ancestral to the tip; first-parent-development merges with an unintegrated feature as second parent conservatively fail it. Those are ancestry conclusions, not executed Git controls; F2 asks the plan to make the admitted shape explicit.
+- **[Pass] Per-ref aggregation and the original fallback ranges should remain separate.** Hook `:224-228` classifies the union; tier 2 independently reads `_base_pairs` at `:286-288`, and receipt reuse checks every SHA at `:305-319`. Carrying destination refs allows per-ref refusal of the new exception for development/main without prohibiting their existing docs routes. Mixed refs need the F3 failure check; a no-op integration ref must remain harmless, as pinned at `test/gh544-pre-push-gate.sh:438-456`.
+- **[Pass] The proposed base/candidate contrast can reject an unchanged candidate.** Plan `:102-103` requires the same refresh to change from full to docs; an unchanged candidate cannot satisfy that pair. Make this a checked outcome, not just two exit-0 logs: require nonempty captures, route/gate-invocation assertions and candidate/base identity in provenance. Use the existing red full-stub / green docs-stub pattern (`test/gh544-pre-push-gate.sh:139-155`) so the base really refuses and candidate succeeds. F1-F3 identify the additional discriminating inputs missing from the named controls. Existing suites plus retained manual evidence comply with `AGENTS.md:166-172`; no new suite or runner is needed.
+
+Scope and limits: read the entire plan and all 353 lines of the hook, the classifier's push/docs/full logic, fixture-driving and freshness sections of gh544, and the no-new-tests policy. Graph tools were unavailable; source reads were the fallback. No git command, fixture, test suite or gate was run. The whole-file sweep found F3; no other demonstrated pre-existing defect is claimed. This is a plan review, not delivery approval or an assumption that a later gate will run. Reversibility: **Easy** for the eventual one-file hook edit (revert that edit), with shared push-routing blast radius and under-gating as the failure signal.
+
+Handing off to Producer (claude-a): disposition F1-F5, revise the plan, and return for round 2.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The proposed fallback loses the required final-tree code veto, the merge predicate admits history outside the stated scope, and the existing partial-classification failure path needs to be covered in the planned routing edit. The classifier probe supports F1; end-to-end DAG and failure controls remain explicitly unverified until a disposable-clone run.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
