@@ -337,6 +337,12 @@ def trailer_text(record):
     # GH-1428: same pattern for the reviewer's gate-run declaration.
     if record.get("gate_run"):
         cfg_line += f"gate-run: {record['gate_run']}\n"
+    # GH-1465: the gate relay-drive ran itself before attesting, when one was configured.
+    if record.get("gate_cmd"):
+        # Quote new commands as data: newlines stay on one line, and words in filenames
+        # (e.g. test_verified.py) cannot be rewritten as uncited reviewer claims.
+        cmd = json.dumps(record['gate_cmd']) if record.get("gate_cmd_format") == "json" else record['gate_cmd']
+        cfg_line += f"driver-gate: exit {record.get('gate_exit')} — {cmd}\n"
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"
@@ -414,6 +420,8 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None, any_re
             return None, "attestation record field config_sha256 is not a non-empty string"
     if "gate_run" in rec and rec["gate_run"] not in GATE_RUN_VALUES:
         return None, "attestation record field gate_run is not one of " + "/".join(GATE_RUN_VALUES)
+    if "gate_cmd_format" in rec and rec["gate_cmd_format"] != "json":
+        return None, "attestation gate command format is not json"
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:
@@ -475,6 +483,14 @@ def _candidate_ok(record, candidate_sha, target_repo):
         return False, "review ran without worktree isolation; its input was not a pinned revision"
     if record.get("artifact_sha256"):
         return False, "review was of a seeded artifact, not the target tree; transcript-only attestation"
+    return source_matches(record, candidate_sha, target_repo)
+
+
+def source_matches(record, candidate_sha, target_repo):
+    """Compare source revisions, allowing the same transcript-only changes as candidate_ok.
+
+    This checks source identity only; candidate_ok also enforces review eligibility.
+    """
     reviewed = record["reviewed_head"]
     if not candidate_sha:
         return False, "no candidate revision"

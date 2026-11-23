@@ -1,0 +1,115 @@
+{
+ "all_ok": false,
+ "cases": {
+  "10_leader_exit_pipe_member_still_rss_guarded": {
+   "elapsed": 0.172,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "over_cap_after_leader_exit": true,
+   "over_cap_before_leader_exit": false,
+   "rss_killed": true
+  },
+  "11_termination_in_flight_completes_before_return": {
+   "completed_before_return": true,
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rss_killed": true
+  },
+  "12_multibyte_output_across_read_boundaries": {
+   "chars": 100001,
+   "expect_red_on_08fee": false,
+   "ok": true
+  },
+  "13_cancellation_mid_run_leaves_no_live_group": {
+   "expect_red_on_08fee": false,
+   "group_member_alive": false,
+   "ok": true,
+   "original_exception_preserved": true
+  },
+  "14_reader_error_is_raised_not_returned": {
+   "expect_red_on_08fee": false,
+   "ok": false,
+   "returned_rc": 0,
+   "stdout": "data"
+  },
+  "15_escaped_descendant_abandoned_with_frozen_snapshot": {
+   "error": "AttributeError: 'BoundedResult' object has no attribute 'stdout_sha256'",
+   "expect_red_on_08fee": false,
+   "ok": false
+  },
+  "16_cancellation_freezes_abandoned_capture": {
+   "error": "AttributeError: module 'proc_group' has no attribute '_Capture'",
+   "expect_red_on_08fee": false,
+   "ok": false
+  },
+  "1_pipe_holder_wall_timeout": {
+   "elapsed": 0.264,
+   "expect_red_on_08fee": true,
+   "ok": true,
+   "rc": null,
+   "timed_out": true
+  },
+  "2_pipe_holder_group_killed_promptly": {
+   "elapsed": 0.414,
+   "expect_red_on_08fee": true,
+   "holder_dead_on_return": true,
+   "ok": true,
+   "timed_out": true
+  },
+  "3_idempotence_detects_differing_prefix": {
+   "completed": true,
+   "exit_codes": [
+    0,
+    0
+   ],
+   "expect_red_on_08fee": true,
+   "hashes": [
+    "a2dcfc9f15ad23cfda62d8daaa614b177522685eb7840b2d5726481a64033a5e",
+    "8d12fd5e672d77c792641fab5ac15e03c7d7cdb32644a3a16e00c585c4645562"
+   ],
+   "ok": true,
+   "passed": false
+  },
+  "4_default_capture_is_complete": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rc": 0,
+   "stderr_len": 188890,
+   "stdout_len": 188890
+  },
+  "5_tail_mode_digest_covers_complete_output": {
+   "expect_red_on_08fee": false,
+   "ok": false,
+   "unsupported": "run_bounded() got an unexpected keyword argument 'capture_tail_bytes'"
+  },
+  "6_timeout_keeps_sentinel_diagnostics": {
+   "expect_red_on_08fee": true,
+   "ok": true,
+   "stderr": "sentinel-err",
+   "stdout": "sentinel-out",
+   "timed_out": true
+  },
+  "7_timeout_excerpt_is_bounded_tail": {
+   "expect_red_on_08fee": false,
+   "ok": false,
+   "unsupported": "run_bounded() got an unexpected keyword argument 'capture_tail_bytes'"
+  },
+  "8_ordinary_exit_code_and_streams": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "rc": 7,
+   "stderr": "error",
+   "stdout": "ok",
+   "timed_out": false
+  },
+  "9_text_mode_newline_semantics_preserved": {
+   "expect_red_on_08fee": false,
+   "ok": true,
+   "stdout": "a\nb\nc\n"
+  }
+ },
+ "defect_cases_ok": true,
+ "label": "approved-base-communicate",
+ "python": "3.14.7",
+ "source_root": "/Users/noelsaw/qa-clones/roots/6c3dc3aa2"
+}
