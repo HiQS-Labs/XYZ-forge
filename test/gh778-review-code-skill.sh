@@ -48,7 +48,9 @@ done
 # --- 6. ARCHITECTURE.md registration ---
 grep -q "\[review-code-xyz\](skills/2-daily/review-code-xyz/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-code-xyz link" || fail "missing ARCHITECTURE.md link"
 n_daily="$(find "$REPO/skills/2-daily" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
-grep -q "### \`2-daily\` — A few times a day ($n_daily)" "$ARCH_FILE" && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk ($n_daily)"
+# GH-1266 (366e492a7) dropped manual counts from tier headings; verify heading + table row parity against disk.
+n_arch_daily="$(grep -cE "\]\(skills/2-daily/[^)]+/SKILL\.md\)" "$ARCH_FILE" || true)"
+grep -q "### \`2-daily\` — A few times a day" "$ARCH_FILE" && [ "$n_arch_daily" -eq "$n_daily" ] && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk (arch=$n_arch_daily disk=$n_daily)"
 
 # --- 7. Installer gh678 compliance (in sandbox) ---
 H="$WORK/home"; A="$H/apps"

@@ -126,7 +126,7 @@ The North Star (`GUIDING-PRINCIPLES.md`) requires: *durable, reversible, DRY; ex
 A diff that works but reinvents existing wheels introduces long-term tech debt, bugs, performance overhead, and maintenance drag.
 
 Reviewers must audit three anti-redundancy checks:
-1. **Centralized Helper & Native Framework Adherence:**
+1. **Centralized Helper Adherence:**
    - Did the diff implement custom logic (e.g. subprocess execution, lock management, path/root resolution, JSON parsing, git mutation guards, or date formatting) where a canonical helper already exists in `utils/py/`, `src/`, or shared runtime modules, or add a custom wrapper layer duplicating **native framework/runtime capabilities** already provided by the repo's installed framework or runtime?
    - Bypassing an established helper or native framework capability in favor of an ad-hoc inline layer is a `[Blocker]`.
 2. **Parallel Subsystem / Reinvention Trap:**
