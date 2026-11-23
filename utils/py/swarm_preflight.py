@@ -248,6 +248,9 @@ def merge_contracts(contracts: list[dict[str, Any]]) -> dict[str, Any]:
     return out
 
 def eval_probes(root: str, c: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int, int]:
+    # GH-1580: grep probe patterns are matched with re.M, so `^` and `$` anchor to a LINE (what an
+    # author writing them means), not to the whole file. Without it a `^…$` grep_present read as
+    # landed and a `^`-anchored grep_absent read as unfixed forever. Whole-file anchors: `\A`, `\Z`.
     probes_res: list[dict[str, Any]] = []
     counts = {"landed": 0, "unfixed": 0, "blocked": 0}
     
@@ -268,12 +271,12 @@ def eval_probes(root: str, c: dict[str, Any]) -> tuple[list[dict[str, Any]], int
                     verdict = "blocked"
                 else:
                     with open(target_path, 'r') as f:
-                        if not re.search(p.get("pattern", ""), f.read()):
+                        if not re.search(p.get("pattern", ""), f.read(), re.M):
                             verdict = "landed"
             elif ptype == "grep_absent":
                 if os.path.exists(target_path):
                     with open(target_path, 'r') as f:
-                        if re.search(p.get("pattern", ""), f.read()):
+                        if re.search(p.get("pattern", ""), f.read(), re.M):
                             verdict = "landed"
             elif ptype == "command":
                 cmd = p.get("cmd")
@@ -406,6 +409,8 @@ def normalize(e: dict[str, Any]) -> dict[str, Any]:
             # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
             # substantiate must be visibly absent rather than quietly assumed.
             "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"},
+            # GH-1580: a missing acceptance section is a named gap here, not just an `unknown` status.
+            "acceptance_gaps": e.get("SP_ACC_GAPS") or [],
             # GH-400 criterion 2: recorded on every run so "the doc cited its issue" is auditable
             # after the fact rather than assumed from a green verdict.
             "source_url": e.get("SP_SRC_URL") or {"status": "unknown", "detail": "not evaluated"},
@@ -545,6 +550,183 @@ def gate_scoping_caveat(gate_cmd: str) -> str:
             "passthrough args). Pre-green the full suite, or independently verify the filter "
             "genuinely scopes, before firing this lane."
         )
+    return ""
+
+# ── GH-1580: every command in a gate must resolve, not only the first ─────────────────────────────
+# `bash -n x.sh && uv lock --check` read READY with `uv` missing because only `gate.split()[0]` was
+# looked at. This is a deliberately SMALL static check, not a shell interpreter: it covers every
+# statically resolvable simple command of the gate (words split on `&&` `||` `|` `&` `;` newline and
+# `( )`, quotes respected) and skips what it cannot prove — builtins/keywords, program words that need
+# expansion (`$VAR`, `$(…)`, backticks, `~`), and the inside of `bash -c '…'`. READY is therefore not
+# proof that arbitrary shell code runs. Known downstream limit: marathon-drive's own pre-advance check
+# still refuses a gate that BEGINS with `NAME=value prog` (marathon_drive.py), which this check accepts.
+_GATE_OP_RE = re.compile(r'&&|\|\||\|&|;;|[;&|()]')
+# Words whose command follows them (`if prog`, `then prog`, `! prog`): skipped, then the program is read.
+_GATE_PREFIX_WORDS = frozenset({"if", "then", "else", "elif", "while", "until", "do", "!", "{", "time"})
+# Builtins/keywords with no PATH entry that mean nothing to existence: the whole command is skipped.
+_GATE_SHELL_WORDS = frozenset({
+    "cd", "export", "set", "unset", "source", ".", ":", "exit", "return", "eval", "exec", "trap", "umask",
+    "shift", "wait", "read", "ulimit", "alias", "local", "declare", "readonly", "builtin", "command",
+    "type", "let", "pushd", "popd", "hash", "getopts", "break", "continue", "fi", "done", "esac", "}",
+    "for", "case", "in", "function", "select", "[[", "]]"})
+_GATE_ASSIGN_RE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*=')
+
+def _gate_tokens(cmd: str) -> list[tuple[str, str, bool]] | None:
+    """('op', text, False) / ('word', unquoted text, needs_expansion); None if quotes do not balance."""
+    out: list[tuple[str, str, bool]] = []
+    i, n = 0, len(cmd)
+    while i < n:
+        ch = cmd[i]
+        if ch in " \t\r":
+            i += 1
+        elif ch == "\\" and cmd[i + 1:i + 2] == "\n":
+            i += 2
+        elif ch == "\n":
+            out.append(("op", "\n", False)); i += 1
+        elif ch == "#":
+            j = cmd.find("\n", i)
+            i = n if j < 0 else j
+        elif not (ch == "&" and cmd[i + 1:i + 2] == ">") and _GATE_OP_RE.match(cmd, i):
+            m = _GATE_OP_RE.match(cmd, i)
+            assert m is not None
+            out.append(("op", m.group(), False)); i = m.end()
+        else:
+            buf: list[str] = []
+            dyn = False
+            while i < n and cmd[i] not in " \t\r\n":
+                c = cmd[i]
+                if c in ";|()" or (c == "&" and cmd[i - 1] not in "<>" and cmd[i + 1:i + 2] != ">"):
+                    break
+                if c == "\\" and i + 1 < n:
+                    buf.append(cmd[i + 1]); i += 2
+                elif c == "'":
+                    j = cmd.find("'", i + 1)
+                    if j < 0: return None
+                    buf.append(cmd[i + 1:j]); i = j + 1
+                elif c == '"':
+                    j = i + 1
+                    while j < n and cmd[j] != '"':
+                        j += 2 if cmd[j] == "\\" else 1
+                    if j >= n: return None
+                    inner = cmd[i + 1:j]
+                    dyn = dyn or "$" in inner or "`" in inner
+                    buf.append(inner); i = j + 1
+                elif c == "`":
+                    j = cmd.find("`", i + 1)
+                    if j < 0: return None
+                    dyn = True; buf.append(cmd[i:j + 1]); i = j + 1
+                elif c == "$" and cmd[i + 1:i + 2] == "(":
+                    depth, j = 0, i + 1
+                    while j < n:
+                        depth += (cmd[j] == "(") - (cmd[j] == ")")
+                        j += 1
+                        if depth == 0: break
+                    if depth: return None
+                    dyn = True; buf.append(cmd[i:j]); i = j
+                else:
+                    dyn = dyn or c == "$" or (c == "~" and not buf)
+                    buf.append(c); i += 1
+            out.append(("word", "".join(buf), dyn))
+    return out
+
+def _gate_program_gap(words: list[tuple[str, bool]], cwd: str | None, prev_op: str, first: bool) -> str:
+    """The existing per-program rules (bash/sh script file, program path, PATH lookup) for ONE simple
+    command; `words` is its (text, needs_expansion) list and `cwd` the directory it runs in, or None
+    when that is not known (relative script/program paths are then not judged). '' = nothing wrong."""
+    i = 0
+    while i < len(words):
+        text, dyn = words[i]
+        if _GATE_ASSIGN_RE.match(text):
+            i += 1
+        elif text in _GATE_PREFIX_WORDS:
+            i += 1
+        elif text == "env":
+            i += 1
+            while i < len(words) and (words[i][0].startswith("-") or _GATE_ASSIGN_RE.match(words[i][0])):
+                if words[i][0] in ("-C", "--chdir", "-S", "--split-string"): return ""  # alters cwd/argv
+                i += 2 if words[i][0] in ("-u", "--unset") else 1
+        else:
+            break
+    if i >= len(words):
+        return ""
+    g0, g0_dyn = words[i]
+    if g0_dyn or g0 in _GATE_SHELL_WORDS:
+        return ""
+    def resolve(rel: str) -> str | None:
+        if os.path.isabs(rel): return rel
+        return os.path.join(cwd, rel) if cwd is not None else None
+    if g0 in ("bash", "sh"):
+        args = words[i + 1:]
+        if any(re.fullmatch(r'-[A-Za-z]*c[A-Za-z]*', a[0]) for a in args if a[0].startswith("-")):
+            return ""   # `bash -c '…'`: the argument is a command, not a script path
+        script = next((a for a in args if not a[0].startswith("-")), None)
+        if script is None:
+            # A bare `bash` as the first command is the old "<none>" refusal; later in a pipe it reads stdin.
+            return "" if (not first or prev_op == "|") else (
+                f"gate script not found under target_root {cwd}: <none>")
+        if script[1]: return ""
+        script_path = resolve(script[0])
+        if script_path is not None and not os.path.isfile(script_path):
+            return f"gate script not found under target_root {cwd}: {script[0]}"
+        return ""
+    # GH-308 port: any non-bash/sh gate program must resolve on PATH (swarm-preflight.sh:774).
+    if os.path.sep in g0 or (os.path.altsep and os.path.altsep in g0):
+        # A direct program path is executed with cwd=target_root by marathon-drive.  Checking it
+        # with shutil.which() instead makes a target-relative path depend on the operator's cwd.
+        program_path = resolve(g0)
+        if program_path is None:
+            return ""
+        if not os.path.isfile(program_path):
+            return f"gate program not found under target_root {cwd}: {g0}"
+        if not os.access(program_path, os.X_OK):
+            return f"gate program is not executable under target_root {cwd}: {g0}"
+        return ""
+    return "" if shutil.which(g0) else f"command '{g0}' not found in PATH"
+
+def gate_command_gap(gate_cmd: str, target_root: str) -> str:
+    """First reason a gate's commands cannot run, or '' (GH-1580). Every statically resolvable simple
+    command is checked, in order, against the directory it runs in: literal `cd <existing dir>` moves
+    the tracked directory only when it provably ran in the main shell (not a pipeline stage, not
+    backgrounded, not followed by `||`); a subshell restores it on `)`; a cd reached through `&&` is
+    only certain inside that `&&` run; anything else makes the directory unknown, and relative
+    script/program paths are then skipped (PATH lookups still run)."""
+    toks = _gate_tokens(gate_cmd)
+    if toks is None:                                   # unbalanced quotes: `bash -n -c` catches it downstream
+        toks = [("word", w, False) for w in gate_cmd.split()]
+    cwd: str | None = target_root
+    cond = False                                       # cwd depends on a cd reached through `&&`
+    stack: list[tuple[str | None, bool]] = []
+    words: list[tuple[str, bool]] = []
+    prev_op, first = "", True
+    for kind, text, dyn in toks + [("op", "\n", False)]:
+        if kind == "word":
+            words.append((text, dyn))
+            continue
+        if words:
+            if words[0][0] == "cd" and not words[0][1]:
+                target = next((w for w in words[1:] if not (w[0].startswith("-") and w[0] != "-")), None)
+                new = None
+                if (target and not target[1] and target[0] not in ("-", "") and not any(c in target[0] for c in "*?[~")
+                        and prev_op in ("", ";", "\n", "(", "&&") and text in ("&&", ";", "\n", ")")
+                        and cwd is not None):
+                    cand = target[0] if os.path.isabs(target[0]) else os.path.join(cwd, target[0])
+                    if os.path.isdir(cand):
+                        new = os.path.normpath(cand)
+                cond = cond or (new is not None and prev_op == "&&")
+                cwd = new
+            else:
+                gap = _gate_program_gap(words, cwd, prev_op, first)
+                if gap:
+                    return gap
+            first = False
+        words = []
+        if text == "(":
+            stack.append((cwd, cond))
+        elif text == ")" and stack:
+            cwd, cond = stack.pop()
+        elif text in (";", "\n", ";;") and cond:
+            cwd, cond = None, False
+        prev_op = text
     return ""
 
 # ── GH-400: acceptance fidelity ───────────────────────────────────────────────────────────────────
@@ -1056,6 +1238,31 @@ def check_acceptance_fidelity(
     res["problems"] = problems
     return res
 
+# GH-1580: headings that carry an issue's criteria in practice but that `ACC_HEADING_RE` does not read.
+ACC_ALT_HEADING_RE = re.compile(r'^#{1,6}[ \t]*(?:done[ \t]+when|to[ \t]+fix|ask|findings)\b.*$',
+                                re.IGNORECASE | re.MULTILINE)
+
+def acceptance_gaps(fid: dict[str, Any], issue_body: str | None, acc_mode: str, doc_path: str) -> list[str]:
+    """Missing acceptance sections, reported as gaps instead of passing as an unremarked `unknown`.
+
+    Advisory by design (GH-557): this never changes readiness or an exit code; a frozen manifest
+    member is still the only case that blocks. Naming the heading the issue DOES have makes the
+    remedy one step, without teaching preflight to read it as criteria.
+    """
+    gaps: list[str] = []
+    if fid.get("status") == "unknown" and fid.get("cause") == "no-issue-section":
+        msg = (f"issue #{fid.get('issue')} has no '## Acceptance' section, so the capture doc's "
+               "criteria are unverified against it")
+        alt = list(dict.fromkeys(m.group(0).strip() for m in ACC_ALT_HEADING_RE.finditer(issue_body or "")))
+        if alt:
+            msg += (f"; it keeps criteria under {', '.join(repr(h) for h in alt)}, which preflight does not "
+                    "read — put them under '## Acceptance'")
+        gaps.append(msg)
+    if acc_mode != "acceptance-section":
+        gaps.append(f"capture doc {doc_path} has no '## Acceptance' section; the packet's checklist is "
+                    "read from the whole document")
+    return gaps
+
 def acceptance_fidelity_report(res: dict[str, Any]) -> list[str]:
     """Multi-line operator-facing explanation of a divergence."""
     out: list[str] = []
@@ -1318,6 +1525,7 @@ class CandidateEvaluation:
     acc_mode: str
     acc_dropped: int
     acc_lost: list[str]
+    acc_gaps: list[str]
     acc_manifest_releases: list[str] | None
     manifest_note: str
     gh39_lane_note: str
@@ -1725,6 +1933,7 @@ def evaluate_candidate(
         _acc_doc_text = ""
     acc_items, acc_mode, acc_dropped = collect_inline_checklist(_acc_doc_text)
     acc_lost = verify_inlined_acceptance(render_inline_checklist(acc_items, acc_dropped, primary_doc), acc_items)
+    acc_gaps = acceptance_gaps(acc_fidelity, issue_state.get("body"), acc_mode, primary_doc)
     if ready == 1 and acc_lost:
         ready, ready_next = 0, (
             f"the packet's acceptance block would not be a lossless copy of {primary_doc} — "
@@ -1783,35 +1992,10 @@ def evaluate_candidate(
             "offline case in which it is safe to skip.")
 
     if ready == 1 and gate_cmd:
-        gate_parts = gate_cmd.split()
-        if gate_parts:
-            g0 = gate_parts[0]
-            if g0 in ["bash", "sh"]:
-                script = ""
-                for t in gate_parts[1:]:
-                    if not t.startswith("-"):
-                        script = t
-                        break
-                script_path = os.path.join(target_root, script) if script else ""
-                if not script or not os.path.isfile(script_path):
-                    ready, ready_next = 0, (
-                        f"gate script not found under target_root {target_root}: {script or '<none>'}")
-            # GH-308 port: any non-bash/sh gate program must resolve on PATH (swarm-preflight.sh:774).
-            # Python exempted node/npm/python3, so a contract whose gate runner (e.g. `npm test`) is NOT
-            # installed was emitted as marathon-ready (exit 0) instead of refused NOT-READY (exit 5) on
-            # the live lane. `elif` mirrors the Bash structure (a bash/sh gate is not also PATH-checked).
-            elif os.path.sep in g0 or (os.path.altsep and os.path.altsep in g0):
-                # A direct program path is executed with cwd=target_root by marathon-drive.  Checking it
-                # with shutil.which() instead makes a target-relative path depend on the operator's cwd.
-                program_path = os.path.join(target_root, g0)
-                if not os.path.isfile(program_path):
-                    ready, ready_next = 0, (
-                        f"gate program not found under target_root {target_root}: {g0}")
-                elif not os.access(program_path, os.X_OK):
-                    ready, ready_next = 0, (
-                        f"gate program is not executable under target_root {target_root}: {g0}")
-            elif not shutil.which(g0):
-                ready, ready_next = 0, f"command '{g0}' not found in PATH"
+        # GH-1580: every statically resolvable command of the gate is checked, not only the first.
+        gate_gap = gate_command_gap(gate_cmd, target_root)
+        if gate_gap:
+            ready, ready_next = 0, gate_gap
 
     has_codex = "present" if shutil.which("codex") else "missing"
     has_agy = "present" if shutil.which("agy") else "missing"
@@ -1838,6 +2022,7 @@ def evaluate_candidate(
         acc_mode=acc_mode,
         acc_dropped=acc_dropped,
         acc_lost=acc_lost,
+        acc_gaps=acc_gaps,
         acc_manifest_releases=acc_manifest_releases,
         manifest_note=manifest_note,
         gh39_lane_note=gh39_lane_note,
@@ -1885,6 +2070,7 @@ def normalize_candidate(
         "SP_ISSUE_STATE": {k: evaluation.issue_state[k] for k in ("status", "closed_at", "detail")},
         "SP_FROZEN_ARTIFACTS": repository.frozen_artifacts,
         "SP_ACC_FIDELITY": evaluation.acc_fidelity,
+        "SP_ACC_GAPS": evaluation.acc_gaps,
         "SP_SRC_URL": evaluation.src_url,
         "SP_ACC_INLINE": {"criteria": len(evaluation.acc_items), "scope": evaluation.acc_mode,
                           "over_cap": evaluation.acc_dropped, "lossless": not evaluation.acc_lost},
@@ -1942,6 +2128,8 @@ def report_candidate(
         # criteria at all used to print the same word and mean different things.
         _acc_cause = f" [cause: {evaluation.acc_fidelity['cause']}]" if evaluation.acc_fidelity.get("cause") else ""
         emit(f"  acceptance  : {evaluation.acc_fidelity['status']}{_acc_cause} — {evaluation.acc_fidelity['detail']}")
+        for _gap in evaluation.acc_gaps:
+            emit(f"  gap         : {_gap}")
         if evaluation.acc_manifest_releases:
             emit(f"  manifest    : issue #{evaluation.acc_fidelity['issue']} is a FROZEN MANIFEST member ({', '.join(evaluation.acc_manifest_releases)})")
         elif evaluation.acc_fidelity.get("cause") == "no-issue-section":

@@ -22,6 +22,7 @@ Per-field annotations:
                - path_present: The unwanted file is present (it should be removed by the fix).
                - grep_present: The bug evidence (string/regex) is still in the file.
                - grep_absent: The fix marker has not yet landed in the file.
+               Patterns are regexes matched per line (`re.M`): `^` and `$` anchor to a line, and `\A`/`\Z` to the whole file (GH-1580).
                - command: A command whose exit code indicates the bug is still present.
 
                WARNING: Inverting the polarity (for example, probing for the fix rather than the
