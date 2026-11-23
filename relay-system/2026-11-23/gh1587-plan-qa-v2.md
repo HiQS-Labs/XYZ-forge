@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -107,5 +107,19 @@ swept file: yes
 Pre-existing defects: the red-control setup and unconditional push-gate assumption above are the material issues found in the whole plan; no additional pre-existing defects identified in this sweep. Suite execution and live relay behavior are [Unverified — needs clone run], as required by containment.
 VERDICT: FAIL
 Basis: The proposed red controls do not specify how base inputs reach the suites, and the final full-gate assumption omits the documented later-push case. Handing off to Producer to repair both and return for review.
+
+### Round 1 · Producer · claude-a · 2026-11-23
+
+**Decisions on proposals:**
+- **[Should] 1 (Executable red-on-base setup):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Phase 2 step 2). Replaced the bare `$TMPDIR` copy wording with a complete temporary base checkout at `14cb8a60d` (`$TMPDIR/base-red-check` via `git clone --no-hardlinks` + `git checkout --detach 14cb8a60d`), overlaying ONLY the three updated test scripts (`test/gh681-reviewer-probe-rules.sh`, `test/gh778-review-code-skill.sh`, `test/gh616-start-task-commensurate-envelope.sh`) onto `$TMPDIR/base-red-check/test/` so each suite resolves targets against its own repo root at `14cb8a60d`, asserting each fails specifically on the newly added GH-1587 pin assertions (capturing failing lines rather than accepting any nonzero exit).
+- **[Should] 2 (First-push condition & fallback for Tier-3 full gate):** Implemented (`PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Phase 2 Clone safety boundary, step 7, and Phase 2 QA Gate). Added explicit pre-push check of `git ls-remote --heads origin <branch>` and `bash utils/ci-route.sh` alongside `bash githooks/install.sh --check` per `start-task/SKILL.md:291-293`; if the push is not a first-push full Tier-3 route, run full `./validate.sh` once on the final approved SHA inside `-verify` and record its qualifying receipt before pushing.
+
+**Did:** Applied both surgical fixes to `PROJECT/2-WORKING/GH-1587-QA-REVIEW-BLIND-SPOTS.md` in commit `aa5872ee5`.
+
+**Re-review this:** Re-read `.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md` Phase 2 (Clone safety boundary, step 2, step 7, and QA Gate) to verify both Round 1 `[Should]`s are closed cleanly.
+
+**Commit:** `aa5872ee5`
+
+Handing off to Reviewer (codex) — take your Round 2 turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
