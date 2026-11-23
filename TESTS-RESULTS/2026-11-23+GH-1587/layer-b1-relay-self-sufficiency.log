@@ -1,0 +1,11 @@
+=== test/relay-self-sufficiency.sh (exit=0) ===
+== test: relay-self-sufficiency ==
+  workdir: <TMPDIR>
+  agent:   agy (agy)
+  (live API call — requires network + credentials; ~10-60s)
+  PASS: (C) shim exit 0 — no off-allowlist edits, no agent failure
+  PASS: (A) agent claimed token + wrote relay file (commit observed, token moved from claude-a)
+  PASS: (B1) VERDICT: field present and valid
+  PASS: (B2) Basis: field present and non-empty
+
+  relay-self-sufficiency: 4 pass, 0 fail

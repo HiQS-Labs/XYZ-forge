@@ -1,0 +1,33 @@
+=== UNMODIFIED BASE 14cb8a60d: test/gh615-start-task-reinforce.sh (exit=1) ===
+== test: gh615-start-task-reinforce ==
+  PASS: size non-empty guard (38848 bytes)
+  FAIL: positive control failed
+  FAIL: unmodified control failed
+  PASS: mut1 (test non-scope): properly rejected
+  PASS: mut2 (ponytail rail): properly rejected
+  PASS: mut3 (tiered verification): properly rejected
+  PASS: mut4 (anti-thrashing): properly rejected
+  PASS: mut5 (empty fixture): properly rejected
+  gh615-start-task-reinforce: 6 pass, 2 fail
+=== UNMODIFIED BASE 14cb8a60d: test/gh798-status-skill.sh (exit=1) ===
+== test: gh798-status-skill ==
+  workdir: <TMPDIR>
+== test: gh798-status-skill ==
+  PASS: skills/2-daily/where-are-we-at/SKILL.md exists
+  PASS: skills/2-daily/where-are-we-at/install.sh exists
+  PASS: install.sh is executable
+  PASS: frontmatter has name: where-are-we-at
+  PASS: frontmatter has description
+  PASS: recital block present
+  PASS: /recon integrated
+  PASS: /debug-mantra integrated
+  PASS: /merge-cleanup integrated
+  PASS: hypothesis-zero doc rule present
+  PASS: multi-checkout discovery rule present
+  PASS: gap matrix schema present
+  PASS: review-code-xyz has Lane E DRY
+  PASS: review-code-xyz has helper adherence check
+  PASS: review-code-xyz has parallel subsystem trap
+  PASS: ARCHITECTURE.md has where-are-we-at link
+
+  FAIL: 2-daily count does not match disk (25)

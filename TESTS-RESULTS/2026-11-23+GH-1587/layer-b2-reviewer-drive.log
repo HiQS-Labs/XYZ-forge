@@ -1,0 +1,23 @@
+=== relay-drive.sh --review-once (exit=5) ===
+STDOUT:
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: Open); non-approval handback, not a stall
+
+STDERR:
+relay-drive: GH-370 worktree state (main tree fallback: <SMOKE_TMP>/repo) changed-files=0
+codex-turn: worktree isolation ON (<HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/rtl-wt.m6yw3g)
+rtl: GH-654 off-lane candidate: .relay-artifacts/toctou_inventory.py
+rtl: GH-654 allowlist: [] relay_file: <SMOKE_TMP>/repo/relay-system/2026-11-23/gh1587-smoke-clone-probe.md
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token RELAY-gh1587-smoke-clone-probe left as-is (set RELAY_PEER for auto-handoff)
+relay-drive: stop-reason=review-handback invocation_id=RELAY-gh1587-smoke-clone-probe-7577-1795476039810 exit_code=5 receipt=<SMOKE_TMP>/repo/.relay-scratch/stop-reasons/RELAY-gh1587-smoke-clone-probe-7577-1795476039810.json
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 49s
+per done-task: n/a (0 tasks done)
+  turn peak RSS: codex: 423MB peak RSS
+
+

@@ -1,0 +1,503 @@
+=== test/gh681-reviewer-probe-rules.sh (exit=0) ===
+== test: gh681-reviewer-probe-rules ==
+  workdir: <TMPDIR>
+  PASS: case 1: reviewer prompt carries: You are the REVIEWER this turn
+  PASS: case 1: reviewer prompt carries: MAY run narrow, non-mutating probes
+  PASS: case 1: reviewer prompt carries: .relay-scratch/
+  PASS: case 1: reviewer prompt carries: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  PASS: case 1: reviewer prompt carries: quote the command, exit status and decisive output
+  PASS: case 1: reviewer prompt carries: Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures
+  PASS: case 1: reviewer prompt carries: [Unverified — needs clone run]
+  PASS: case 1: reviewer prompt carries: Form 2 finding
+  PASS: case 1: reviewer prompt carries: Clone probe:
+  PASS: case 1: reviewer prompt carries: hand the token off with done and set STATUS: Approved
+  PASS: case 2: reviewer prompt no longer says: or run any artifact
+  PASS: case 2: reviewer prompt no longer says: verify ONLY with the specific test
+  PASS: case 3: producer prompt keeps its own verification clause
+  PASS: case 3: producer prompt does not carry: You are the REVIEWER this turn
+  PASS: case 3: producer prompt does not carry: MAY run narrow, non-mutating probes
+  PASS: case 4: scaffold carries: Observed input:
+  PASS: case 4: scaffold carries: Affected scope:
+  PASS: case 4: scaffold carries: Falsifier:
+  PASS: case 4: scaffold carries: Clone probe:
+  PASS: case 4: scaffold carries: Declined — unproven generalization
+  PASS: case 4: scaffold carries: Declined — falsified by clone probe
+  PASS: case 4: scaffold carries: [Unverified — clone probe failed/unavailable]
+  PASS: case 4: scaffold carries: must cite an observed failure
+  PASS: case 5: rtl_scratch_relocate still refuses .pytest_cache (a probe that leaves it fails the turn)
+  PASS: case 6: skills/1-hourly/relay-xyz/SKILL.md carries the generalization rule
+  PASS: case 6: skills/1-hourly/relay-xyz/SKILL.md carries GH-1587 Form 2 rule: Clone probe:
+  PASS: case 6: skills/1-hourly/relay-xyz/SKILL.md carries GH-1587 Form 2 rule: Declined — falsified by clone probe
+  PASS: case 6: skills/1-hourly/relay-xyz/SKILL.md carries GH-1587 Form 2 rule: [Unverified — clone probe failed/unavailable]
+  PASS: case 6: skills/1-hourly/relay/SKILL.md carries the generalization rule
+  PASS: case 6: skills/1-hourly/relay/SKILL.md carries GH-1587 Form 2 rule: Clone probe:
+  PASS: case 6: skills/1-hourly/relay/SKILL.md carries GH-1587 Form 2 rule: Declined — falsified by clone probe
+  PASS: case 6: skills/1-hourly/relay/SKILL.md carries GH-1587 Form 2 rule: [Unverified — clone probe failed/unavailable]
+  PASS: case 6: utils/py/marathon_drive.py carries the generalization rule
+  PASS: case 6: utils/py/marathon_drive.py carries GH-1587 Form 2 rule: Clone probe:
+  PASS: case 6: utils/py/marathon_drive.py carries GH-1587 Form 2 rule: Declined — falsified by clone probe
+  PASS: case 6: utils/py/marathon_drive.py carries GH-1587 Form 2 rule: [Unverified — clone probe failed/unavailable]
+  PASS: case 6 negative control: mutation stripped Clone probe: and failed pin
+  PASS: case 6 negative control: mutation stripped Declined — falsified by clone probe and failed pin
+  PASS: case 6 negative control: mutation stripped [Unverified — clone probe failed/unavailable] and failed pin
+  PASS: case 6: skills/1-hourly/relay-xyz/SKILL.md carries the probe allowance
+  PASS: case 7: reviewer worktree begins with .relay-scratch/ pre-created
+  PASS: case 7: a probe that writes only under .relay-scratch/ is not off-lane
+  PASS: case 7: a probe that leaves .pytest_cache/ in the worktree is off-lane (residue still fails the turn)
+  PASS: case 8: apply_reviewer_turn_env injects PYTHONDONTWRITEBYTECODE and TMPDIR for reviewer turns only
+gh681-reviewer-probe-rules: all cases passed
+=== test/relay-pkg-freshness.sh (exit=0) ===
+== test: relay-pkg-freshness ==
+  workdir: <TMPDIR>
+  PASS: relay-pkg.tar.gz present
+  PASS: tarball exposes 18 packaged paths
+  PASS: every packaged file matches its live source
+  relay-pkg-freshness: 3 pass, 0 fail
+=== test/gh778-review-code-skill.sh (exit=0) ===
+== test: gh778-review-code-skill ==
+  workdir: <TMPDIR>
+== test: gh778-review-code-skill ==
+  PASS: skills/2-daily/review-code-xyz/SKILL.md exists
+  PASS: skills/2-daily/review-code-xyz/install.sh exists
+  PASS: install.sh is executable
+  PASS: old review-code folder is gone (GH-1060)
+  PASS: frontmatter has name: review-code-xyz
+  PASS: frontmatter has description
+  PASS: recital block present
+  PASS: /recon integrated
+  PASS: /debug-mantra integrated
+  PASS: /workhorse integrated
+  PASS: /unstuck integrated
+  PASS: PR targets hand off to review-pr-xyz
+  PASS: mutation check rule present
+  PASS: empty input guard rule present
+  PASS: symptom-fix trap audit present
+  PASS: reversibility matrix present
+  PASS: GH-1587 pin present in review-code-xyz: TOCTOU interleaving
+  PASS: GH-1587 pin present in review-code-xyz: sibling-endpoint guard parity
+  PASS: GH-1587 pin present in review-code-xyz: warm-state deploy, IAM, and service-account upgrade transitions
+  PASS: GH-1587 pin present in review-code-xyz: native framework/runtime capabilities
+  PASS: GH-1587 pin present in review-code-xyz: Bounded Mutation Scope (3–5 high-leverage mutations)
+  PASS: GH-1587 pin present in review-code-xyz: Test-Honesty Body Audit
+  PASS: GH-1587 pin present in review-code-xyz: Historical-Invariant Test-Inversion Check
+  PASS: GH-1587 pin present in review-code-xyz: multi-invocation resume-key stability
+  PASS: GH-1587 pin present in review-pr-xyz: Test-invariance / historical-invariant claim
+  PASS: finding category \[Blocker\] present
+  PASS: finding category \[Should\] present
+  PASS: finding category \[Nit\] present
+  PASS: finding category \[Pass\] present
+  PASS: ARCHITECTURE.md has review-code-xyz link
+  PASS: ARCHITECTURE.md 2-daily count matches disk (25)
+  PASS: installer refuses live foreign link
+  PASS: installer replaces dangling link
+  PASS: negative control: mutation successfully detected missing recital
+  PASS: negative control: mutation stripped TOCTOU interleaving
+  PASS: negative control: mutation stripped sibling-endpoint guard parity
+  PASS: negative control: mutation stripped warm-state deploy, IAM, and service-account upgrade transitions
+  PASS: negative control: mutation stripped native framework/runtime capabilities
+  PASS: negative control: mutation stripped Bounded Mutation Scope (3–5 high-leverage mutations)
+  PASS: negative control: mutation stripped Test-Honesty Body Audit
+  PASS: negative control: mutation stripped Historical-Invariant Test-Inversion Check
+  PASS: negative control: mutation stripped multi-invocation resume-key stability
+  PASS: negative control: mutation stripped review-pr-xyz test-invariance row
+  gh778-review-code-skill: 43 pass, 0 fail
+=== test/gh617-relay-xyz-commensurate-review.sh (exit=0) ===
+== test: gh617-relay-xyz-commensurate-review ==
+  PASS: size non-empty guard (56429 bytes)
+  PASS: positive in-tree control
+  PASS: unmodified fixture control
+  PASS: mut1 (no commensurate standard heading): properly rejected
+  PASS: mut2 (no commensurate machinery clause): properly rejected
+  PASS: mut3 (no operational envelope clause): properly rejected
+  PASS: mut4 (no challenge complexity clause): properly rejected
+  PASS: mut5 (no template operational envelope): properly rejected
+  PASS: mut6 (empty fixture): properly rejected
+  gh617-relay-xyz-commensurate-review: 9 pass, 0 fail
+=== test/gh616-start-task-commensurate-envelope.sh (exit=0) ===
+== test: gh616-start-task-commensurate-envelope ==
+  PASS: size non-empty guard (39813 bytes)
+  PASS: positive in-tree control
+  PASS: unmodified fixture control
+  PASS: mut1 (no commensurate mantra): properly rejected
+  PASS: mut2 (no step 6 review envelope): properly rejected
+  PASS: mut3 (no step 8 review envelope): properly rejected
+  PASS: mut3b (no GH-1587 surface-triggered QA questions): properly rejected
+  PASS: mut3c (no GH-1587 step 8 Clone probe execution): properly rejected
+  PASS: mut4 (empty fixture): properly rejected
+  gh616-start-task-commensurate-envelope: 9 pass, 0 fail
+=== test/gh615-start-task-reinforce.sh (exit=1) ===
+== test: gh615-start-task-reinforce ==
+  PASS: size non-empty guard (39813 bytes)
+  FAIL: positive control failed
+  FAIL: unmodified control failed
+  PASS: mut1 (test non-scope): properly rejected
+  PASS: mut2 (ponytail rail): properly rejected
+  PASS: mut3 (tiered verification): properly rejected
+  PASS: mut4 (anti-thrashing): properly rejected
+  PASS: mut5 (empty fixture): properly rejected
+  gh615-start-task-reinforce: 6 pass, 2 fail
+=== test/gh609-sdlc-agent-gaps.sh (exit=0) ===
+== test: gh609-sdlc-agent-gaps ==
+  PASS: File size non-empty guard: skills/2-daily/workhorse/SKILL.md (34616 bytes)
+  PASS: File size non-empty guard: skills/1-hourly/start-task/SKILL.md (39813 bytes)
+  PASS: File size non-empty guard: skills/1-hourly/swe/SKILL.md (14569 bytes)
+  PASS: File size non-empty guard: skills/1-hourly/recon/SKILL.md (17252 bytes)
+  PASS: File size non-empty guard: skills/4-occasional/ci-optimize/SKILL.md (17376 bytes)
+  PASS: File size non-empty guard: skills/2-daily/ci-debug/SKILL.md (11294 bytes)
+  PASS: workhorse: satisfies unified contract (durable identity, 4-state recovery, local/remote fence, preservation split, semantic verification)
+  PASS: start-task: satisfies unified contract (resume reconciliation against remote PR and live HEAD, transport drop handling)
+  PASS: swe: satisfies unified contract (conditional online migration, ordering/convergence, safe fallback, retirement guards)
+  PASS: recon: satisfies unified contract (Lane B readers/writers, Lane C async queues/delayed consumers, Lane D tripwires/rollback)
+  PASS: ci-optimize: satisfies unified contract (Principle 13 bounded stress + active quarantine with UTC expiry, Principle 14 workload performance fences)
+  PASS: ci-debug: satisfies unified contract (strictly ordered 4-tier containment ladder preserving worktree safety)
+  PASS: unmodified fixture control: workhorse validator accepts unmodified copy
+  PASS: unmodified fixture control: start-task validator accepts unmodified copy
+  PASS: unmodified fixture control: swe validator accepts unmodified copy
+  PASS: unmodified fixture control: recon validator accepts unmodified copy
+  PASS: unmodified fixture control: ci-optimize validator accepts unmodified copy
+  PASS: unmodified fixture control: ci-debug validator accepts unmodified copy
+  PASS: negative control 1 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 2 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 3 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 4 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 5 (workhorse): mutated fixture properly rejected (reported RED)
+  PASS: negative control 6 (start-task): mutated fixture properly rejected (reported RED)
+  PASS: negative control 7 (swe): mutated fixture properly rejected (reported RED)
+  PASS: negative control 8 (swe): mutated fixture properly rejected (reported RED)
+  PASS: negative control 9 (recon): mutated fixture properly rejected (reported RED)
+  PASS: negative control 10 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 11 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 12 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 13 (ci-optimize): mutated fixture properly rejected (reported RED)
+  PASS: negative control 14 (ci-debug): mutated fixture properly rejected (reported RED)
+  PASS: negative control 15: empty fixture (0 bytes) properly rejected by contract checker
+  gh609-sdlc-agent-gaps: 33 pass, 0 fail
+=== test/gh397-reviewer-turn-role.sh (exit=0) ===
+== test: gh397-reviewer-turn-role ==
+  workdir: <TMPDIR>
+  PASS: marathon reviewer turn is recognized as a REVIEWER turn
+  PASS: marathon builder turn is not a reviewer turn
+  PASS: reviewer stays scoped even when the builder never flipped NEXT (fails CLOSED)
+  PASS: plain relay thread with NEXT: Reviewer is still a reviewer turn
+  PASS: plain relay thread with NEXT: Producer is not a reviewer turn
+  PASS: with no acting agent, the NEXT: header still decides (hand-run turns keep working)
+  PASS: builder==reviewer lane falls back to the NEXT: header rather than guessing
+  PASS: reviewer prompt carries the REVIEWER scope note
+  PASS: reviewer prompt drops the artifact from the editable set
+  PASS: rtl_init records the reviewer turn (allowlist scoped to the relay file only)
+  PASS: reviewer allowlist holds the relay file and nothing else
+STDERR:
+relay-turn: REVIEWER turn — scoping allowlist to the relay file only (ignoring ALLOW_PATHS=src/thing.py)
+=== test/gh505-relay-attest.sh (exit=0) ===
+== test: gh505-relay-attest ==
+  workdir: <TMPDIR>
+== test: gh505-relay-attest ==
+  PASS: A: the stub builder turn really ran through codex-turn
+  PASS: A: builder-written Approved → driver exits 4
+  PASS: A: escalation reason is forged-terminal
+  PASS: A: STATUS restored on disk
+  PASS: A: STATUS restored in HEAD (revert committed)
+  PASS: A: revert commit is the driver's
+  PASS: A: no attestation trailer
+  PASS: A: no record written
+  PASS: A2: failed turn keeps the shim's exit 5 (not 4)
+  PASS: A2: reason still names the forgery
+  PASS: A2: forged STATUS reverted in HEAD on the failure path
+  PASS: A2: no record
+  PASS: A3: failed reviewer turn keeps the shim's exit 5
+  PASS: A3: reason is failed-turn-terminal
+  PASS: A3: the failed turn's Approved reverted in HEAD
+  PASS: A3: no trailer, no record
+  PASS: B: reviewer approval → driver exits 0
+  PASS: B: attestation trailer appended
+  PASS: B: reviewed-head = HEAD before dispatch
+  PASS: B: the isolated worktree was cut at the pinned revision
+  PASS: B: reviewed-head is the parent of the shim's commit
+  PASS: B: record loads for reviewer rev; digest = sha256(exactly the appended bytes)
+  PASS: B1: reviewer following generated append-above-marker instruction is attested
+  PASS: B1: exactly one trailing marker remains
+  PASS: B1: marker remains the final line
+  PASS: B4: approval still attested (the reviewer read the pinned revision)
+  PASS: B4: reviewed-head is the PRE-dispatch revision, not the peer commit
+  PASS: B4: control — HEAD had already moved when the shim started
+  PASS: B4: worktree cut at the pin even though HEAD moved before the cut
+  PASS: B4: candidate_ok REFUSES the HEAD that carries the peer's source change
+  PASS: B5: harness's uncited-claim downgrade does not read as a body rewrite; approval attested
+  PASS: B5: the downgrade really happened (control)
+  PASS: B5: record still loads after the downgrade
+  PASS: B6: appended citation changes the harness's judgement of an OLD line without reading as a rewrite
+  PASS: B6: control — the old claim stayed un-stamped (the awk saw the new citation)
+  PASS: B7: CRLF relay file attested
+  PASS: B7: record loads on the CRLF file
+  PASS: C: pre-approved file → unattested-terminal (exit 4)
+  PASS: C: no turn dispatched
+  PASS: D1: STATUS-only approval → empty-approval
+  PASS: D3: rewritten body → review-body-rewritten
+  PASS: D3: no record
+  PASS: D4: STATUS Approved over the reviewer's own VERDICT: FAIL → approved-over-fail (exit 4)
+  PASS: D4: no record
+  PASS: D5: STATUS Approved with VERDICT: PASS is still attested (exit 0)
+  PASS: D6: bold **STATUS:** Approved is read as Approved and attested (exit 0)
+  PASS: D6: control — the fixture really carries the bold form
+  PASS: D6: the Python reader and the Bash reader (marathon-recover) both read Approved from the bold line
+  PASS: E2: no --reviewer → warned at startup; the approval is refused as forged (no reviewer can exist)
+  PASS: E2: no record
+  PASS: E3: builder == reviewer → exit 2
+  PASS: S1: RELAY_WORKTREE_ISOLATION=false refused before dispatch
+  PASS: S1: no turn dispatched
+  PASS: K1: the shim closes the token for a terminal reviewer turn; approval attested
+  PASS: K2: bare agent-cmd leaves the token claimed → close-mismatch, not attested
+  PASS: K2: no record
+  PASS: L: fixture approval attested
+  PASS: L: reader refuses wrong reviewer / edited STATUS / edited review text / truncated record
+  PASS: N3: neighbouring source drift refused; relay-only and ESCALATION.md-only changes pass
+  PASS: F: RELAY_ROLE=reviewer outranks a directive that calls the agent builder
+  PASS: F: RELAY_ROLE=builder outranks a directive that calls the agent reviewer
+  PASS: F2: without RELAY_DRIVER_LOCKED the directive still decides
+  PASS: F: same answer through the rtl.py bridge (allowlist narrows to the relay file for a reviewer)
+  PASS: G: both prompts render non-empty
+  PASS: G: builder prompt does not invite STATUS: Approved
+  PASS: G: reviewer prompt carries the approval instruction
+
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] 
+[jog] Task GH-7 completed drive pass.
+Confirm merge into development and advance to next item? [Y/n] jog: task GH-7 passed; auto-merging into development...
+jog: task GH-7 passed; auto-merging into development...
+  PASS: I/J: jog landing parks on merge failure, missing PR, drifted candidate; merges with --match-head-commit; no driver override
+  PASS: RED CONTROL A: base driver (a6441b9b) exits 0 on a BUILDER-written Approved
+  PASS: RED CONTROL C: base driver exits 0 on a pre-approved file after 0 turns
+STDERR:
+new-relay: wrote <TMPDIR> (NEXT: Reviewer, reviewer=rev)
+jog: merge refused: token RELAY-gh7-jog-drive unreadable (tick info failed) (GH-505) — parking GH-7
+jog: merge failed (gh exit 1):  — parking GH-7
+jog: merge refused: candidate c8a1bd7987c2 changes non-transcript content after reviewed head d1de1a9ff476 (candidate-drifted-from-reviewed-head) — parking GH-7
+jog: merge refused: no valid reviewer attestation for this task (GH-505) — parking GH-7
+jog: auto-merge refused/failed: merge refused: candidate c8a1bd7987c2 changes non-transcript content after reviewed head d1de1a9ff476 (candidate-drifted-from-reviewed-head)
+jog: auto-merge refused/failed: merge failed (gh exit 1): 
+jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)
+jog: --reviewer must differ from --builder (both are 'rev')
+=== test/gh268-relay-cue-and-target-checks.sh (exit=0) ===
+== test: gh268-relay-cue-and-target-checks ==
+  workdir: <TMPDIR>
+  PASS: new-relay template carries the hand-off cue
+  PASS: new-relay cue says EVERY turn (the reported defect was first-turn-only)
+  PASS: new-relay cue names the words to say to the other window
+  PASS: marathon relay template carries the hand-off cue
+  PASS: the cue appears in both the builder and reviewer blocks
+  PASS: new-relay template tells the reviewer to sweep the whole file
+  PASS: marathon relay template tells the reviewer to sweep the whole file
+  PASS: the prompt states pre-existing defects are in scope
+  PASS: new-relay requires an explicit 'swept file: yes/no' declaration
+  PASS: marathon template requires the same declaration
+  PASS: target-checks.sh exists and is executable
+  PASS: detect exits 3 when the target has no checks
+  PASS: the no-checks message says an empty gate is not a pass
+  PASS: detect exits 0 when the target has checks
+  PASS: a PHP target is gated on php -l (the report's own example)
+  PASS: a wpcs composer dep asks for the WordPress ruleset by name
+  PASS: a real PHP syntax error FAILS the gate (exit 1)
+  PASS: clean PHP passes the gate (exit 0)
+  PASS: broken php is a named environment fault, not a clean-PHP failure
+  PASS: a run where every check was skipped exits 3, not 0
+  PASS: all-skipped says plainly that nothing was gated
+  PASS: --strict makes an uninstalled tool a failure
+  PASS: marathon_drive wires target-checks.sh for a --target-root with no validate.sh
+  PASS: a --target-root with its own validate.sh is gated on the TARGET's copy
+  PASS: the harness validate.sh is not used against a foreign target
+  PASS: a project-local vendor/bin tool is RUN, not skipped as 'not installed'
+  PASS: no false 'not installed' skip when the tool is project-local
+  PASS: a --target-root with no validate.sh falls back to target-checks.sh
+  PASS: the auto-wired gate is --strict (a missing detected tool fails it)
+  PASS: a run with skipped checks is labelled PARTIAL GATE or NO GATE, not a clean pass
+  PASS: php-lint's command is not mangled by tool-path substitution
+  PASS: a project-local non-leading tool is reached via PATH, not string splicing
+  PASS: the resulting command is executable (not command-not-found)
+  PASS: php-lint passes -r so an empty match cannot hang the lane on GNU xargs
+  PASS: php-lint sets pipefail so a failing find cannot be masked
+  gh268-relay-cue-and-target-checks: 35 pass, 0 fail
+=== test/gh91-relay-scratch.sh (exit=0) ===
+PASS: rtl_check: a scratch write is NOT a violation
+  PASS: rtl_check: the scratch dir is DISCARDED from ROOT (not committed, not lingering)
+  PASS: rtl_check: the legitimate lane edit is untouched
+  PASS: rtl_check: the collapsed '.relay-scratch/' status form is exempted and discarded too
+  PASS: CONTROL: a stray file OUTSIDE .relay-scratch still violates (exit-6 path intact)
+  PASS: CONTROL: the stray file is reverted as before
+  PASS: CONTROL: '.relay-scratch2' (lookalike prefix) is NOT exempt
+  PASS: rtl_worktree_begin: the scratch dir EXISTS in the worktree (affordance, not prose)
+  PASS: rtl_worktree_end: probe output in .relay-scratch is NOT off-lane
+  PASS: rtl_worktree_end: the lane edit still copies back
+  PASS: rtl_worktree_end: scratch is NEVER copied back to ROOT
+  PASS: CONTROL: a stray write in the worktree still goes off-lane
+  PASS: CONTROL: off-lane turns copy NOTHING back (lane edit withheld)
+  PASS: rtl_turn_prompt: the prompt TELLS the builder where scratch goes
+  PASS: rtl_turn_prompt: and says what happens to it (never copied back)
+  PASS: rtl_turn_prompt: the template renders EXACTLY once (no printf recycling)
+  PASS: rtl_turn_prompt: the scratch note appears exactly once
+  PASS: rtl_turn_prompt: the note lands in its own slot at the end of the template
+  PASS: INTEGRATION precondition: the ignore rule really hides scratch from porcelain
+test-turn: committed builder turn (file-scoped, no push)
+  PASS: rtl_enforce: the turn PASSES with ignored scratch present (exit 0, not 6)
+  PASS: rtl_enforce: ignored scratch is STILL discarded (unconditional sweep)
+  PASS: rtl_enforce: the lane edit was committed file-scoped; nothing lingers but .tick/ (exempt coordination state)
+  gh91-relay-scratch: 22 pass, 0 fail
+STDERR:
+test-turn: OFF-ALLOWLIST change: stray.txt — reverting
+test-turn: pre-revert copy of stray.txt saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.COjLlq/repo/.tick/orphan-backups/20261123T231732Z-61602
+test-turn: OFF-ALLOWLIST change: .relay-scratch2/out.json — reverting
+test-turn: pre-revert copy of .relay-scratch2/out.json saved under <HOME>/.t3/userdata/antigravity-tmp/ac0a3dfd6ddd/run-7wlgo8/gh91-relay-scratch.COjLlq/repo/.tick/orphan-backups/20261123T231732Z-61602
+=== test/new-relay.sh (exit=0) ===
+== test: new-relay ==
+  workdir: <TMPDIR>
+  PASS: emits NEXT: Reviewer
+  PASS: emits STATUS: Open
+  PASS: emits the TAKE YOUR TURN block
+  PASS: references the read-only seed path
+  PASS: names the reviewer
+  PASS: emits a Log section
+  PASS: derives slug + dated default path
+  PASS: writes the thread file
+  PASS: embed fence (4 backticks) exceeds the inner 3-backtick run
+  PASS: artifact body is embedded
+  PASS: Setup marks the artifact embedded
+  PASS: fence scales past a 5-backtick run (6 >= 6)
+  PASS: errors without --title
+  PASS: errors on --embed without --artifact-file
+  PASS: scaffolded thread passes real validator
+  PASS: scaffolded thread passes real validator with PARKED verdict
+  PASS: scaffolded thread passes real validator with FAIL verdict
+  new-relay: 17 pass, 0 fail
+=== test/debug-mantra.sh (exit=0) ===
+== test: debug-mantra ==
+  workdir: <TMPDIR>
+  PASS: relay-automation/DEBUG-MANTRA.md exists
+  PASS: DEBUG-MANTRA.md carries all four discipline steps
+  PASS: first fire: dry-run emits a render
+  PASS: first fire: relay file has no debug-mantra note
+  PASS: first fire: phase brief still rendered normally
+  PASS: first fire: dry-run wrote nothing to disk (GH-401)
+  PASS: one prior attempt: debug-mantra note appears
+  PASS: note references the DEBUG-MANTRA.md file by name
+  PASS: GH-410: the rendered note carries no absolute repo root
+  PASS: note states the prior-attempt count (1)
+  PASS: peek never mutated .tick/attempts/p1 (still 1 line — read-only)
+  PASS: with ESCALATION.md: debug-mantra note appears
+  PASS: note cites the last recorded ESCALATION.md reason (pre-advance-failed)
+  PASS: two prior attempts: note states count (2)
+  PASS: debug_mantra_prior_attempts defined
+  PASS: debug_mantra_note defined
+  PASS: GH-162 helpers stay outside the GH-45 byte-identical mirror block
+== debug-mantra: 17 passed, 0 failed ==
+=== test/gh308-frozen-twin-guard.sh (exit=0) ===
+== test: gh308-frozen-twin-guard ==
+  PASS: relay-automation/agy-turn.sh is frozen in favor of utils/py/agy-turn.py
+  PASS: relay-automation/aider-turn.sh is frozen in favor of utils/py/aider-turn.py
+  PASS: relay-automation/claude-turn.sh is frozen in favor of utils/py/claude-turn.py
+  PASS: relay-automation/codex-turn.sh is frozen in favor of utils/py/codex-turn.py
+  PASS: relay-automation/pi-turn.sh is frozen in favor of utils/py/pi-turn.py
+  PASS: relay-automation/poll.sh is frozen in favor of utils/py/poll.py
+  PASS: relay-automation/relay-loop.sh is frozen in favor of utils/py/relay_loop.py
+  PASS: relay-automation/relay-drive.sh is frozen in favor of utils/py/relay_drive.py
+  PASS: relay-automation/consult.sh is frozen in favor of utils/py/consult.py
+  PASS: relay-automation/marathon-drive.sh is frozen in favor of utils/py/marathon_drive.py
+  PASS: utils/swarm-preflight.sh is frozen in favor of utils/py/swarm_preflight.py
+  PASS: utils/marathon-plan.sh is frozen in favor of utils/py/marathon_plan.py
+  PASS: marathon-plan is frozen — the GH-308 exception is retired (GH-362)
+  PASS: relay-turn-lib remains the shared Bash dependency, not a twin
+  PASS: range guard blocks a committed frozen-twin edit in a throwaway repo
+  PASS: range guard permits a commit that does not touch a frozen twin
+  PASS: a declared exception for one twin does NOT excuse an undeclared edit to another
+  PASS: the failure names the uncovered file explicitly
+  PASS: fixture reproduces the defect: the old range-scoped rule would have allowed this PR
+  PASS: exceptions covering every edited twin still pass
+  PASS: a single trailer may name several twins
+  PASS: a trailer naming a non-twin path fails and names the bad token
+  PASS: the legacy path-less trailer no longer excuses anything
+  PASS: a trailer with no reason text is rejected
+  PASS: file names inside the reason text are not parsed as coverage claims
+  PASS: strict mode still blocks every frozen-twin edit, declared or not
+  PASS: --allow-exceptions --staged is rejected as a usage error (exit 2)
+  PASS: a range touching no frozen twin passes under --allow-exceptions
+  PASS: the commit that establishes a freeze is not itself a freeze violation [GH-362]
+  PASS: a post-freeze edit in the same range is still blocked [GH-362]
+  PASS: a legacy path-less trailer in the freeze commit does not fail the run [GH-362]
+  PASS: an indented continuation line is folded onto its trailer [GH-362]
+  PASS: a new .sh under utils/ is blocked and named [GH-551]
+  PASS: a declared New-bash-exception covers the added file [GH-551]
+  PASS: a declared exception does not excuse an unnamed second addition [GH-551]
+  PASS: a new .sh outside the guarded trees passes without a trailer [GH-551]
+  PASS: strict mode blocks a new .sh, declared or not [GH-551]
+  PASS: editing an existing non-twin .sh is not treated as an addition [GH-551]
+  gh308-frozen-twin-guard: 38 pass, 0 fail
+=== test/gh589-xyz-mini-sync.sh (exit=0) ===
+== test: gh589-xyz-mini-sync ==
+  PASS: preview exits 0 and writes nothing
+  PASS: 2. missing manifest source → exit 2, no push
+  PASS: secret in a shipped file → exit 4, nothing written
+  PASS: red control: scan disabled → the same plant passes preview
+  PASS: first publication --push exits 0
+  PASS: remote main == local HEAD
+  PASS: skill set is exactly the twelve expected
+  PASS: 6. viewer names == skills on disk
+  PASS: 5. debug-mantra ships without issues/419 or SOP.md
+  PASS: LICENSE byte-identical
+  PASS: LICENSE-COMMERCIAL.md byte-identical
+  PASS: install.sh keeps its executable bit
+  PASS: agent-chorus standalone pipeline did not ship
+  PASS: 1. second run: exit 0, no new commit, remote unchanged
+  PASS: check: matching detached child → exit 0
+  PASS: check: one changed managed byte → exit 1 naming the path
+  PASS: check: a lost executable bit → exit 1
+  PASS: check + --apply → exit 2, child untouched
+  PASS: check: matching + drifting targets → exit 1, one summary line each
+  PASS: adapted: child bytes kept, forge drift not shipped
+  PASS: adapted: child-added install.sh kept and recorded in MANIFEST.txt
+  PASS: adapted: forge addition under an established entry is not shipped
+  PASS: adapted: entry without an exact ORIGIN row → exit 2 (a Notes mention documents nothing)
+  PASS: adapted: ORIGIN row with the wrong kind → exit 2
+  PASS: stale ORIGIN 'adapted' row for a managed entry → exit 2, mini bytes intact
+  PASS: uncommitted ORIGIN edit + --allow-dirty → exit 2
+  PASS: adapted: a child deletion is recorded, never re-created from forge bytes
+  PASS: adapted: a child re-addition is recorded on the next publication
+  PASS: adapted: dropping the whole entry deletes it, child-only files included
+  PASS: adapted: a re-added entry is seeded fresh from forge bytes
+  PASS: 3. unlisted skill never ships
+  PASS: dropped entry is deleted from mini
+  PASS: seeded TODO.md and unrelated NOTES.local survive
+  PASS: ownership guard: unpublished existing file → exit 2, bytes intact
+  PASS: print-manifest: `all` (deduplicated) lists every profile once
+  PASS: --dest with two targets → exit 2
+  PASS: multi-target: refused first target does not stop the next; worst exit wins
+  PASS: agent-chorus: the 13 payload paths shipped, no legacy TSV
+  PASS: agent-chorus: published child passes --check
+gh589-xyz-mini-sync: 39 passed, 0 failed
+=== test/gh798-status-skill.sh (exit=1) ===
+== test: gh798-status-skill ==
+  workdir: <TMPDIR>
+== test: gh798-status-skill ==
+  PASS: skills/2-daily/where-are-we-at/SKILL.md exists
+  PASS: skills/2-daily/where-are-we-at/install.sh exists
+  PASS: install.sh is executable
+  PASS: frontmatter has name: where-are-we-at
+  PASS: frontmatter has description
+  PASS: recital block present
+  PASS: /recon integrated
+  PASS: /debug-mantra integrated
+  PASS: /merge-cleanup integrated
+  PASS: hypothesis-zero doc rule present
+  PASS: multi-checkout discovery rule present
+  PASS: gap matrix schema present
+  PASS: review-code-xyz has Lane E DRY
+  PASS: review-code-xyz has helper adherence check
+  PASS: review-code-xyz has parallel subsystem trap
+  PASS: ARCHITECTURE.md has where-are-we-at link
+STDERR:
+FAIL: 2-daily count does not match disk (25)

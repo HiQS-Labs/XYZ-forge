@@ -31,7 +31,7 @@ Prior Plan QA transcript (escalated on behavioral-vs-prose scope): `relay-system
 
 | What was just completed | What's next |
 |---|---|
-| Operator authorized **Option 1 (Ponytail / GH-681 precedent)** after `gh1587-plan-qa.md` escalated on skill-prose behavioral A/B scope: scoped the 6 skill-prose rules and `start-task` prompt-packet guidance explicitly to Layer A deterministic red-on-base / green-on-candidate pin suites (`test/gh778-review-code-skill.sh`, `test/gh616-start-task-commensurate-envelope.sh`, `test/gh681-reviewer-probe-rules.sh`, per `test/gh681-reviewer-probe-rules.sh:17`), while keeping Layer B live execution strictly on GH-836 `test/relay-self-sufficiency.sh` and one `new-relay.sh`-scaffolded Form 2 `Clone probe:` Reviewer+Producer relay turn (working + errored/unavailable probe paths). | Complete fresh Codex Plan QA (`relay-system/2026-11-23/gh1587-plan-qa-v2.md`), re-verify persisted row `rmi-01M859AVNYRXE06BH6A6QH6F5E` (`rated 85/80/50/70`) and admit via `--accepted-start`, then execute Phases 1–2. |
+| Plan QA approved & attested (`relay-system/2026-11-23/gh1587-plan-qa-v3.md`), roadmap row `rmi-01M859AVNYRXE06BH6A6QH6F5E` admitted via `--accepted-start`, Phase 1 edits + `relay-pkg.tar.gz` committed (`4e6ac3e6d`, `19476291e`), and Phase 2 disposable-clone verification completed with committed receipts in `TESTS-RESULTS/2026-11-23+GH-1587/` (Layer A red-on-base & green-on-candidate, Layer B.1 live GH-836 `4 pass, 0 fail`, Layer B.2 live `new-relay.sh` Form 2 `Clone probe:` Reviewer+Producer smoke, exact 4-field clone-identity match, and `LESSONS-LEARNED.md`: `NO_ENTRY`). | Run Final Codex Relay QA (`relay-system/2026-11-23/gh1587-final-qa.md`) until `Approved` on the final head SHA, then run `ci-local.sh --fast`, push through the wired first-push Tier-3 `./validate.sh` pre-push hook, open the ready PR against `development`, update the `#1587` closeout comment, and retire both clones via `merge-cleanup --retire-published-pr`. |
 
 ## Quad Concepts
 
@@ -213,6 +213,34 @@ Ordered Phase 2 steps (**all tracked edits are committed BEFORE Final Codex Rela
 - Live `new-relay.sh`-scaffolded Reviewer + Producer `Clone probe:` smoke receipt (working probe + errored/unavailable probe keep-open + unproven generalization) recorded in `TESTS-RESULTS/2026-11-23+GH-1587/`.
 - All tracked edits (`TESTS-RESULTS/`, `LESSONS-LEARNED.md` decision, plan status) committed **before** Final Codex Relay QA reaches `Approved` on the final head SHA.
 - Full Tier-3 `./validate.sh` passes on the final approved SHA (via verified first-push wired pre-push hook, or via fallback `-verify` clone full-gate receipt if not a first-push full route), with 4-field clone identity verified before/after, and PR is open against `development`.
+
+---
+
+### Phase 2 Verification Receipts (`TESTS-RESULTS/2026-11-23+GH-1587/`)
+
+- **Layer A — Red-on-Base (`14cb8a60d`) vs Green-on-Candidate (`19476291e`):**
+  - All 3 updated pin suites (`test/gh681-reviewer-probe-rules.sh`, `test/gh778-review-code-skill.sh`, `test/gh616-start-task-commensurate-envelope.sh`) exited `1` on base `14cb8a60d` specifically on the new GH-1587 pin assertions (`TESTS-RESULTS/2026-11-23+GH-1587/layer-a-red-on-base.log`) and exited `0` on candidate `19476291e` (`TESTS-RESULTS/2026-11-23+GH-1587/layer-a-focused-16-suites.log`).
+  - `14/16` focused suites exited `0` on candidate `19476291e` (including `relay-pkg-freshness.sh`, `gh681`, `gh778`, `gh616`, `gh617`, `gh609`, `gh397`, `gh505`, `gh268`, `gh91`, `new-relay`, `debug-mantra`, `gh308`, `gh589`).
+  - The 2 remaining unregistered suites (`test/gh615-start-task-reinforce.sh` and `test/gh798-status-skill.sh`) fail identically on unmodified base `14cb8a60d` (`TESTS-RESULTS/2026-11-23+GH-1587/layer-a-base-preexisting-drift.log`) due to prior upstream commits — GH-1518 (`e0cdff565`) for `gh615` and GH-1266 (`366e492a7`, manual heading count removal in `ARCHITECTURE.md`) for `gh798` — while every `review-code-xyz` assertion in `gh798` (`Lane E DRY`, `helper adherence check`, `parallel subsystem trap`) passes. In `test/gh778-review-code-skill.sh` (one of GH-1587's 3 edited pin suites), line 51 was reconciled to verify the GH-1266 heading plus exact disk-vs-table row count parity (`25 == 25`) so the full suite including sections 7–8 executes and passes.
+- **Layer B.1 — Live GH-836 Self-Sufficiency (`TESTS-RESULTS/2026-11-23+GH-1587/layer-b1-relay-self-sufficiency.log`):**
+  - `RELAY_SELF_SUFFICIENCY_SKIP=0 bash test/relay-self-sufficiency.sh` ran live (`agy`) and exited `0` (`4 pass, 0 fail`, non-skipped).
+- **Layer B.2 — Live `new-relay.sh` Form 2 `Clone probe:` Reviewer + Producer Smoke (`TESTS-RESULTS/2026-11-23+GH-1587/layer-b2-smoke-relay-transcript.md`):**
+  - Live Codex (`gpt-6.1-terra`) Reviewer turn emitted `[Should]`, `Observed input: Form 2, pending clone probe`, `Affected scope:`, `Falsifier:`, and a runnable two-thread Python `Clone probe:` without running concurrency inside the relay worktree.
+  - Producer turn executed Codex's exact `Clone probe:` in a disposable clone workspace before fix (`exit=1`, `results=[True, True] charges=[1, 1] stock=-1`) and after atomic-reserve fix (`exit=0`, `results=[False, True] charges=[1] stock=0`), verified the `Declined — falsified by clone probe:` and `Declined — unproven generalization` closure paths, and executed an unavailable probe (`exit=127`) keeping the finding OPEN as `[Unverified — clone probe failed/unavailable]` and refusing `STATUS: Approved` (`STATUS: Open`).
+- **4-Field Clone Identity (`TESTS-RESULTS/2026-11-23+GH-1587/verify-clone-identity.json`):** Exact match before and after all `-verify` runs (`core.bare=false`, canonical `origin`, `user.name`/`user.email`, `HEAD=19476291ef3e0f4a3f5ecf20b2745e4829c7fd1e`).
+- **Provenance Index:** `TESTS-RESULTS/2026-11-23+GH-1587/provenance.jsonl`.
+
+### `LESSONS-LEARNED.md` Disposition: `NO_ENTRY`
+
+Per `LESSONS-LEARNED.md` writer & admission rules (*"Use `confounded` when several things changed at once or a single run is the only support. A lesson resting only on `confounded` rows is refused. Writing `NO_ENTRY` is a valid outcome."*):
+
+| Changed Component | Edit Verdict | Basis |
+|---|---|---|
+| `skills/2-daily/review-code-xyz/SKILL.md` & `review-pr-xyz/SKILL.md` | `confounded` | Prose rules pinned deterministically (Layer A); no multi-run production review attribution yet. |
+| `relay-automation/relay-turn-lib.sh`, `new-relay.sh`, `utils/py/marathon_drive.py`, `relay/SKILL.md`, `relay-xyz/SKILL.md`, `relay-pkg.tar.gz` | `confounded` | Multiple coupled prompt files updated together; verified by single live smoke run (`layer-b2-smoke-relay-transcript.md`) + live GH-836 run. |
+| `skills/1-hourly/start-task/SKILL.md` | `confounded` | Prose update pinned deterministically (`gh616`); coupled with relay prompt changes in one run. |
+
+All changed components are `confounded` under the admission rubric; therefore `LESSONS-LEARNED.md` is intentionally unchanged (**`NO_ENTRY`**).
 
 ---
 
