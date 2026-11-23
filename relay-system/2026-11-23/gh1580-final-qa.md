@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -249,5 +249,60 @@ All three findings implemented; none deferred. Repair commit ccfd53eea; evidence
 - **Verification refresh:** at the repaired head in a fresh disposable full clone, 17 shell suites rc=0 and pytest 21 passed (`outputs/existing-suites.txt`, bracket included); corpus sweep 129 contracts, 128 identical and the one intended GH-269 change (rc 6 -> 4). Red/green: `outputs/red.txt` 14/19, `outputs/prerepair-r1.txt` 22/11, `outputs/prerepair-r2.txt` 26/7 (D2n D2p D2q D2r D2t D2u D2v red on the tree before the r2 repairs), `outputs/green.txt` 33/0, `outputs/mutant-unconditional-cd.txt` 30/3. A full `validate.sh` gate is not run at this stage: it runs once, in the background, at push through the pre-push hook (GH-1518).
 
 Handing off to Reviewer for Round 3 (the last round under the cap): re-check F5-F7 closure and anything newly introduced.
+
+### Reviewer · Round 3 · codex
+
+**What this changes (plan-only paraphrase, recorded before source review).** It fixes line-anchored probes, checks later commands in chained gates, and reports missing acceptance headings as advisory gaps. The revised plan also repairs cwd tracking, redirections, interpreter options and completed path removals.
+
+**How the existing system works (plan-only paraphrase).** Preflight combines repository probes, gate availability and acceptance fidelity into readiness. Marathon shares its probe evaluator, while Jog and the orchestration skills consume its verdicts; the existing report/JSON writer carries the additional advisory information.
+
+swept file: yes
+
+**Block.** Swept all 2,457 lines of `utils/py/swarm_preflight.py`, the contract example, GH-343 and GH-557 suites, the plan, seeded diff, manual controls and retained evidence. Graph tools were unavailable; direct source and narrow AST-isolated probes supplied evidence. No git, suite, pytest, executable fixture or gate ran. The sweep established no additional unrelated pre-existing defect. The remaining defect below is in the expanded gate checker. Only this relay file was edited.
+
+- **[Pass] F1–F7 closed for their demonstrated inputs.** Direct probes retain the OR-boundary skip, detect missing scripts with trailing `-c`/`-s`, separate attached redirects, and keep quoted `>` literal. Absent `ROADMAP.md` is `landed`, stale=1, blocked=0; present `validate.sh` remains `unfixed` (`utils/py/swarm_preflight.py:271`). Assignment-prefixed `cd` now checks `utils/pdda/pdda.sh` successfully and refuses the absent `utils/validate.sh` (`:803-818`). Heredoc data is skipped while the following missing command is detected (`:605-612`); `bash -s ignored-argument` yields no script gap (`:724-725`). Retained red/green witnesses: `outputs/prerepair-r1.txt:52,56,60,68` and `outputs/prerepair-r2.txt:76,84,88,92`, versus matching cases in `outputs/green.txt`. All output paths in this block are under `TESTS-RESULTS/2026-11-23+GH-1580/`.
+
+- **[Blocker] F8 — the new `[[ … ]]` skip fails after a control prefix and falsely refuses a valid conditional gate.** `_gate_tokens` recognizes `[[` only at the start or immediately after an operator (`utils/py/swarm_preflight.py:676-680`); after `if`, it splits the expression at its internal `&&`. `_gate_program_gap` then treats the second `-f` as a program. `evaluate_candidate` converts this gap into NOT-READY (`:2081-2083`). Apply the existing compound-expression skip at shell command positions after supported prefixes too, or conservatively skip an expression whose boundary cannot be established. Keep checking the actual commands after the expression. Retain a manual red/green witness; no new suite or general shell interpreter is requested.
+  Observed input: `true && if [[ -f validate.sh && -f ROUTER.md ]]; then bash -n validate.sh; fi` returns `"command '-f' not found in PATH"`. Both named files exist. The read-only probe exited **0**. Removing `if` and using `[[ … ]] && bash …` returns `''`; a single-predicate `if [[ -f validate.sh ]]` also returns `''`. The old first-word check sees `true`, so this is a newly introduced false refusal.
+  Affected scope: supported conditional prefixes followed by a `[[ … ]]` expression containing shell-looking operators. The observed case uses literal existing paths, no expansion and no indeterminate cwd; `-f` is expression syntax, not an unresolved command.
+  Falsifier: the exact failing input and the two positive controls must return no gap; `true && if [[ -f validate.sh ]]; then gh1580_absent_command; fi` must still report the missing command (as it does now). F1–F7 controls must remain unchanged.
+
+**F8 reproducible probe (executed here, exit 0).** Gate strings are data passed to the static helper; none is executed. Decisive output is quoted above.
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PYPROBE'
+import ast, os, re, shutil
+from pathlib import Path
+from typing import Any
+p = Path('utils/py/swarm_preflight.py')
+names = {'_gate_tokens', '_gate_program_gap', 'gate_command_gap', 'eval_probes'}
+nodes = [n for n in ast.parse(p.read_text()).body
+         if isinstance(n, ast.FunctionDef) and n.name in names
+         or isinstance(n, ast.Assign) and any(isinstance(t, ast.Name)
+             and (t.id.startswith('_GATE_') or t.id == 'Tok') for t in n.targets)]
+ns = dict(os=os, re=re, shutil=shutil, Any=Any)
+exec(compile(ast.Module(body=nodes, type_ignores=[]), str(p), 'exec'), ns)
+for c in [
+    'true && if [[ -f validate.sh && -f ROUTER.md ]]; then bash -n validate.sh; fi',
+    'true && [[ -f validate.sh && -f ROUTER.md ]] && bash -n validate.sh',
+    'true && if [[ -f validate.sh ]]; then bash -n validate.sh; fi',
+    'true && if [[ -f validate.sh ]]; then gh1580_absent_command; fi',
+]:
+    print(repr(c), '=>', repr(ns['gate_command_gap'](c, str(Path.cwd()))))
+print('EXISTING_FILES', [(f, Path(f).is_file()) for f in ['validate.sh', 'ROUTER.md']])
+PYPROBE
+```
+
+- **[Pass] Acceptance 1 and 3 have discriminating evidence.** Both grep branches use `re.M` (`utils/py/swarm_preflight.py:278,283`); the old false STALE/ready outcomes appear at `outputs/red.txt:6,10`, corrected at `outputs/green.txt:6,10`, with the comment/echo control at `:14`. `acceptance_gaps` is additive and advisory (`utils/py/swarm_preflight.py:1331-1350,2022,2159,2217`); text/JSON red controls at `outputs/red.txt:112-134` versus green at the same lines establish the gap and unchanged exit 0. GH-557's nonmember control remains at `test/gh557-unknown-blocks-manifest.sh:173-183`. No new anchor regression or JSON-consumer break was established.
+- **[Pass] Acceptance 2's original missing-uv defect is detected, but F8 prevents overall acceptance.** `outputs/red.txt:20-22` reports ready with missing uv; `outputs/green.txt:20-22` reports NOT-READY exit 5 naming uv. The unconditional-cd mutant is rejected at `outputs/mutant-unconditional-cd.txt:36-46`. These checks distinguish the original defects, but do not cover the failing conditional input above.
+- **[Pass] Receipt integrity and caller map.** Read-only `python3` using `hashlib.sha256(path.read_bytes())` against each provenance record exited **0** and printed nonempty/hash-match **True/True for all seven outputs**. Literal `[MATCH]`/`[MISMATCH]` counts: red **14/19**, prerepair-r1 **22/11**, prerepair-r2 **26/7**, green **33/0**, mutant **30/3**, agreeing with `provenance.jsonl:1-7`. Source SHA-256 `2b5f173c280850a221a532a5da57b52030a21f08de2e0410a92f93dc17dee7f1` matches `outputs/green.txt:1`. Pairing every corpus row exited **0**, printing **129 pairs**, with only GH-269 changing rc 6 to 4; its readiness=0 artifact warning is unchanged. Marathon imports the evaluator and retains the landed-only predicate (`utils/py/marathon_drive.py:2681,2697,2704`); Jog retains its exit mapping (`utils/py/jog_run.py:648-659`). Conveyor documents that contract (`skills/1-hourly/conveyor/SKILL.md:101`), Flywheel delegates admission to Jog (`skills/2-daily/flywheel/SKILL.md:220-221`), and Kickstart composes these owners (`skills/1-hourly/kickstart/SKILL.md:18-19`). This is source-backed compatibility, not a claim of independent end-to-end execution of every caller.
+- **[Unverified — needs clone run] Verification remains partial.** `outputs/existing-suites.txt:1-23` reports 17 passing shell suites and 21 Python tests, now with a before/after HEAD/origin bracket and an after-run bare/clean-tree assertion. It still omits the required local `user.email` comparison and a before-run bare value. No full-gate result is retained; the Producer explicitly says it has not run. A future pre-push gate is not evidence for approval now. Refresh applicable evidence after F8, preserving the complete required clone-identity bracket. Hash consistency does not prove ancestry or witness execution.
+- **[Pass] Code artifact correspondence and architectural scope.** A read-only new-side hunk comparison exited **0**: all **381** Python, **17** GH-343 and **7** contract-example hunk lines match the checkout. The seeded plan is older than the checkout: its 182-line body omits the seven-line round-2 repair paragraph now at `PROJECT/2-WORKING/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md:120-126`; refresh that seed for the next review. The supplied diff adds no suite, frozen-twin edit or second writer. The evaluator/report remains the owner (`utils/py/swarm_preflight.py:2081,2159,2217`). Priority/severity/appeal 70/65/50 remain consistent with recoverable incorrect verdicts; effort 75 is a qualitative estimate. The plan's “three local edits” description understates the now substantial tokenizer and shell-state handling. Prefer conservative bounded skips over more execution machinery.
+
+VERDICT: FAIL
+Basis: F1–F7 are closed, but F8 is an observed false NOT-READY on a valid literal gate. The Definition of Done remains unmet, and verification limitations are not discharged by an assumed later gate. Round 3 reaches the configured cap, so STATUS is Escalated.
+
+Handing off to Producer (claude-a) — disposition F8 and the remaining evidence limitations; further driven review requires the round-cap escalation to be resolved. No approval or automatic extra round is authorized by this handoff.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
