@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -95,5 +95,75 @@ Every `[Blocker]`/`[Should]` that asks for a behaviour change needs `Observed in
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes (document-only paraphrase; stated).** The plan changes preflight to evaluate regex anchors per line, check programs throughout compound gate commands, and explicitly report missing acceptance sections in text and JSON. It keeps acceptance gaps advisory outside frozen manifests and records red/green evidence through existing coverage and manual controls.
+
+**How the existing system works, per this document (stated).** Python owns preflight, and marathon reuses its probe evaluator after builds. Gate readiness currently checks only the first command word, while acceptance fidelity recognizes only `## Acceptance`; missing issue criteria stay advisory outside a frozen manifest. The document says these three behaviors have been replayed on the development base.
+
+**What it's not (stated; inference labelled).** This does not implement synonym-heading criteria, change exit codes, modify the frozen Bash twin, or repair marathon's separate pre-advance gate check. I infer the proposed gate helper is a conservative static check, not a promise to interpret arbitrary shell programs.
+
+**Technical review — source-backed.**
+
+swept file: yes
+
+Swept the entire plan, all 2,183 lines of `utils/py/swarm_preflight.py`, and the contract example; inspected the named consumer and existing-suite paths. Graph tools were unavailable, so evidence is direct source, targeted searches and narrow probes. No suites, executable fixtures, preflight CLI, or Git commands were run. Pre-existing limitations relevant to this change are identified below; this is not an exhaustive audit of other modules.
+
+- **[Should] F1 — Account for `cd` before reusing target-root script resolution (Q3/Q6).** The plan at `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md:77-83` skips `cd` but applies the existing target-root rules to every later command. Its own D2c (`TESTS-RESULTS/2026-11-23+GH-1580/controls.sh:97`) changes directory to `src` before `bash -n ok.sh`; `ok.sh` exists only in `src` (`:40`). Reapplying `swarm_preflight.py:1795` against the original root falsely rejects that valid gate. Fix the plan to resolve relative scripts/programs against a known literal `cd` destination in a simple sequential chain; when the execution directory is indeterminate, describe the conservative limitation instead of claiming the path is absent. Retain D2c and a missing-script control in the same directory. No general shell interpreter is needed.
+  Observed input: `cd src && bash -n ok.sh && env FOO=1 python3 -c pass | cat`, with only `src/ok.sh` present (controls.sh:40,97). The source-block probe below demonstrates the same failure with an existing repository script.
+  Affected scope: relative script/program operands after a directory-changing command; absolute operands and ordinary target-root commands retain their rules.
+  Falsifier: D2c returns READY while a missing relative script after the same `cd src` returns NOT-READY naming that script. A flat target-root resolver cannot satisfy both.
+
+- **[Should] F2 — Make acceptance-gap delivery observable in the manual evidence (Q5/Q6).** `controls.sh:69` retains uppercase `GAP`, but the plan at `:86` specifies lowercase `gap`; the filter probe below drops that exact proposed line. `controls.sh:65-70` never requests JSON, and `:11` explicitly says its exit code is always zero. D3 records the same successful exit expected after the fix (`outputs/red.txt:53-58`), so an unchanged candidate can be called green unless the missing output is separately judged. Amend the verification plan and existing manual recorder to retain the actual gap line and parse nonempty JSON, checking `readiness.acceptance_gaps`, the alternative heading, unchanged exit, and the no-gap control; include the planned capture-doc whole-document case. A comparison in the existing evidence directory suffices; no new suite or gate. Record the unchanged source failing those expectations and the changed head passing. Supply the promised `provenance.jsonl` with revision/command/result attribution: it is absent from the seeded evidence directory, so the base-SHA provenance is currently an assertion rather than a tied receipt.
+  Observed input: planned text `  gap         : issue #301: Done when; add Acceptance` is discarded by controls.sh:69; D3 invokes only text mode and records exit 0 before and after the proposed behavior.
+  Affected scope: retained manual GH-1580 red/green evidence, particularly the acceptance-gap output contract; runtime exit semantics stay unchanged.
+  Falsifier: the completed manual comparison rejects unchanged source for missing text/JSON gaps, while changed source passes D3 and the canonical-heading no-gap control; empty/invalid JSON fails the comparison.
+
+- **[Should] F3 — Allow the necessary existing GH-343 control update (Q6).** Moving the inline gate block into a helper changes the exact source span `test/gh343-gate-program-target-root.sh:91-104` uses to build its pre-fix control. It raises `could not construct the exact pre-GH-343 control branch` when that literal is absent. The plan promises the suite remains green but describes one Python file and one doc sentence (`plan:101,106-110`). Add a conditional edit of this existing suite's source replacement to the build scope, preserving its behavioral red control and checking the replacement actually occurred. This is keeping existing coverage truthful, not adding a test.
+  Observed input: the literal `old` block at test/gh343-gate-program-target-root.sh:91-101 includes the inline indentation, comment and target-root branch scheduled for extraction.
+  Affected scope: GH-343's existing pre-fix mutation construction if extraction changes that source span.
+  Falsifier: the suite still constructs its intended mutation and observes the foreign-CWD rejection at :106-109 on the new implementation without an edit; then no suite edit is needed. Execution is [Unverified — needs clone run].
+
+- **[Pass] Q1/Q2 — The anchor defect and shared fix are grounded.** Both regex calls omit multiline mode (`swarm_preflight.py:271,276`); `re.M` on both is sufficient for the specified line-anchor behavior and preserves inline `(?m)`. Preflight actually calls the evaluator from `inspect_repository` at `:1551`, not directly from `evaluate_candidate`; marathon calls it at `marathon_drive.py:2697` and rejects every result except `landed` at `:2704`. Jog credits exit 4 as completed (`jog_run.py:648-651`), so correcting false STALE matters. No concrete worsening contract was found in the inspected active-doc search: the visible `^  push:` example uses `kind`, not `type` (`PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:185-186`). Whole-file authors can use `\A`/`\Z`; no compatibility subsystem is justified by the inspected evidence.
+
+- **[Pass] Q1/Q4 — Advisory gap reporting is a faithful, bounded option.** Missing issue sections return `unknown/no-issue-section` (`swarm_preflight.py:981-984`); frozen-manifest membership makes that cause block (`:1754-1762`). Nonmember exit zero is pinned by `test/gh557-unknown-blocks-manifest.sh:173-183`. Naming alternative headings without interpreting them preserves that policy. A readiness key is additive on the inspected paths: GH-291 goldens cover invocation/result artifacts, not run-candidate readiness (`test/gh291-contract-goldens.sh:4-8,100-125`); Jog loads `marathon-invocation.json` (`jog_run.py:661-663`); marathon-plan classifies return codes (`_marathon_plan.py:1308-1328`). Clone regression execution remains outstanding.
+
+- **[Nit] Q1 — Tighten the recon language.** “Only a `## Acceptance` heading” and “Nothing says what to do” (`plan:38-41`) overstate the baseline: `ACC_HEADING_RE` accepts levels 2–6, Suggested Acceptance, Acceptance Criteria, colons and qualifiers (`swarm_preflight.py:562-568`), and the packet already says to establish criteria on the issue (`:2037-2045`). Describe the delta as explicit actionable text/JSON gaps and alternative-heading hints, preserving existing accepted variants. Correct the direct probe caller noted above. This is a plan wording correction, not a request to change heading semantics.
+
+- **[Pass] Q3 — Keep the scanner bounded and qualify its promises.** Respecting quotes protects quoted newlines/compound arguments, skipping expansion-dependent words avoids bogus PATH failures, and exempting the argument of `bash -c` from script-file checking addresses the existing misclassification at `swarm_preflight.py:1791-1798`. Simple `&&`/pipe commands and `env FOO=1 prog` fit the proposed scanner once F1 is handled. The skip list is a reasonable conservative boundary, but “every command” must mean statically resolvable simple commands: `if missing_prog; then ...`, `bash -c 'missing_prog'`, `${VAR:?}` and substitutions are not proven by skipping their outer word. Do not recursively parse arbitrary shell. Also, a leading `NAME=value prog` may become acceptable to preflight under this plan but remains rejected by unchanged marathon at `marathon_drive.py:2074-2075`; record that downstream limitation instead of promising end-to-end readiness for it. No change to that excluded module is requested.
+
+- **[Pass] Q5 — Anchor and later-command red cases discriminate at plan time.** D1a expects READY/0 but records STALE/4 (`controls.sh:79-81`, `outputs/red.txt:4-9`); D1b expects landed but records ready/0 (`controls.sh:83-85`, `red.txt:11-16`); D1c guards against comment/echo matches (`red.txt:18-23`). D2b/D2d must become NOT-READY/5 naming the missing program/script but currently record ready/0 (`controls.sh:95-100`, `red.txt:32-51`); D2a already observes the missing-uv refusal (`red.txt:25-30`). These are admission/evaluator controls, not evidence of a delivered build. D3 must reject absent gap output in the delivery comparison, not reject an exploratory lane at runtime; F2 supplies that missing observation. `shasum -a 256 utils/py/swarm_preflight.py` exited 0 with `cb543213bd4e4d9e63ef5680c11bcf74d6a23b641fa38f72418789b44f5f2136`, matching red.txt:1's prefix; that ties inspected source bytes to the log, but not the claimed Git revision without provenance.
+
+**Narrow probe receipts (no fixture or gate executed).** This command applied the exact existing gate-check AST block to two directory contexts; Python exited 0. It demonstrates the proposed flat reuse problem, not an implemented helper result:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, os, pathlib, shutil
+source=pathlib.Path('utils/py/swarm_preflight.py').read_text()
+f=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='evaluate_candidate')
+block=next(n for n in f.body if isinstance(n,ast.If) and n.lineno==1785)
+code=compile(ast.Module(body=[block],type_ignores=[]),'<gate block>','exec')
+for root in [pathlib.Path.cwd(),pathlib.Path.cwd()/'test']:
+    ns=dict(ready=1,ready_next='',gate_cmd='bash gh308-swarm-gate-path.sh',target_root=str(root),os=os,shutil=shutil)
+    exec(code,ns)
+    print(root.name, ns['ready'],ns['ready_next'].replace(str(pathlib.Path.cwd()),'<repo>'))
+PY
+```
+
+Output: `rtl-wt.boPrFH 0 gate script not found under target_root <repo>: gh308-swarm-gate-path.sh`, then `test 1`.
+
+```sh
+printf '%s\n' '  gap         : issue #301: Done when; add Acceptance' | grep -E '^(  (candidate|acceptance|GAP|readiness|verdict)|CONTRACT|BLOCKED|swarm-preflight:)'
+```
+
+Exit 1, empty stdout: the planned gap line cannot survive the current recorder.
+
+**VERDICT: FAIL**
+
+**Basis:** The core direction is surgical and uses the right existing paths, but the gate algorithm contradicts its positive `cd` control, acceptance evidence discards the new signal, and the source-text mutation suite needs an explicit preservation step. Revise F1–F3 and the recon wording before building. Existing suites and full CLI/consumer flows remain [Unverified — needs clone run]; no later gate is assumed.
+
+Handing off to Producer (claude-a) — disposition these findings and revise the plan and existing manual evidence, then request the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
