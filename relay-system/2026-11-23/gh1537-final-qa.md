@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -200,5 +200,69 @@ Dispositions (hook `githooks/pre-push` `own_diff_base`; plan item 3; evidence di
   narrowing message prints the merge-base (`... merge-base (6c90ed1e2) ...` in the replay log).
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+**Block approval on the remaining F2 evidence gap only.** F1's routing defect and F3's explanatory contract are closed. The repaired hook matches the retained candidate hash, with zero candidate routing mismatches and nine base red controls. No further substantiated runtime defect was found in the whole-hook sweep. This is source and retained-evidence review, not a newly executed gate.
+
+- **[Should] F2 — attribution repaired; required clone-identity bracket still incomplete.** `TESTS-RESULTS/2026-11-23+GH-1537/suites-provenance.jsonl:1` through `:6` now attribute six successful suites to commit `477af7c6847c630fd45dc18cf1be4eb46dcec14a`, hook `4a14c3c2bd3acaf5`, and the reported Python/mypy/bash versions. All 40 scenario rows now include push status; the unsupported earlier environment-fault assertion is removed. However, `run-focused.sh:8-10` captures only HEAD, one origin fetch URL and the bare flag; `suites-provenance.jsonl:7` therefore cannot establish the pre/post local user identity or full remote mapping required by `AGENTS.md:297-298`. `WORKTREE-SAFETY.md:504-506` explicitly includes local user identity in the corruption check. The probe below confirms both records contain only `head`, `origin`, `bare`. This is missing evidence, **not an allegation that this clone actually drifted**. The purpose of the existing bracket is to distinguish a valid suite result from a fixture escaping into its host clone; matching HEAD alone cannot do that.
+  Observed input: the exact before/after JSON objects quoted below, produced by `run-focused.sh:8-10` and retained at `suites-provenance.jsonl:7`.
+  Affected scope: acceptance of these mutation-heavy focused-suite results under the repository's existing clone-identity rule; no hook behavior change is requested.
+  Falsifier: contemporaneous pre/post records from this run showing unchanged local `user.email` (including an explicit unset result if applicable) and fetch/push remote mappings would close the gap without another run.
+  Fix: recover those actual records if available. Otherwise retain a complete bracket with a disposable-clone run covering these suites; this can be folded into the already-planned full gate rather than duplicating unrelated work. Use the existing identity mechanism or complete this manual evidence script, not a new guard/runner subsystem. Do not back-fill historical values from the clone's current config. F2 remains open only for this residual; the hashes, commands, suite exits and manual-push status attribution are now supported.
+
+- **[Pass] F1 closed by source and the retained discriminating control.** `githooks/pre-push:229-233` checks for any merge before the live probe and rejects a tracking/live mismatch before `:235` applies `^tip`. Thus tracking M / advertised D reaches rc 2 even though the tracking tip contains M. `check.sh:140-145` constructs precisely that local graph state; `provenance.jsonl:25-26` records base docs/docs-gate/exit 0 versus repaired full/full-gate/exit 0. `previous-candidate-vs-repaired.log:14` records the previous candidate's docs result for this same scenario. The older-tracking-B case remains covered at `provenance.jsonl:23-24`. With no local tip, a successfully enumerated merge is rejected at hook `:222-225`; after a verified fresh tip, an empty excluded set legitimately returns rc 1 at `:235-236`. Every octopus non-first parent is checked at `:244-248`, and a development-first merge whose feature second parent is not on the tip is rejected there. These last edge checks are source reasoning, not newly executed fixtures.
+
+- **[Pass] F3 closed; the admitted route remains bounded.** The header at `githooks/pre-push:113-124` now distinguishes narrowing, non-applicability and rejection. Hook `:309` accumulates the base identifiers and `:376` prints them; `replay/replay.log:10` records `(6c90ed1e2)`. Plan item 3 at `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:78-92` now places freshness before exclusion. Hook `:314-315` keeps one aligned pair per ref, `:328` preserves `--no-renames`, and `:366` discards partial classifier stdout on failure. The whole-push veto and docs-only acceptance remain at `:371-379`; the partial-diff evidence at `provenance.jsonl:33-34` correctly records nonzero push exits while demonstrating full-gate selection in the repaired candidate. An accepted own-diff candidate is classified against its final tree, so resolution edits, code removals and renamed source paths remain visible.
+
+- **[Pass] Whole-hook sweep and scope.** Reviewed `githooks/pre-push:1-467`, the complete supplied diff, plan, manual evidence scripts and retained logs. The five new-side diff hunks match the seeded hook exactly (read-only Python comparison, exit 0). First-push base selection at `:270-301` retains the extracted probe's push-destination and status checks; ordinary merge-free pushes return before the network call at `:229-231`; development/main destinations are excluded at `:214`. Tier-2 execution at `:394-413` and exact-commit receipt reuse at `:416-436` remain unchanged. New whole-array expansion at `:364` requires a successfully appended own pair, so no new empty-array expansion under bash 3.2 `set -u` was found. No new classifier, suite registration or production subsystem appears in the supplied one-hook diff. No additional substantiated pre-existing defect was found. This does not certify the pending full gate.
+
+- **[Pass] Routing and replay evidence are discriminating and appropriately qualified.** `check.sh:175-184` captures nonempty push output, the invoked stub gate and push status. The probe below confirms 20 scenarios per variant, nine base mismatches, zero candidate mismatches, and candidate receipts matching the seeded hook. Only `two_refs_partial_failure` has a nonzero push status (1 for both variants), consistent with README `:44`. The six log markers at `focused-suites.log:125`, `:128`, `:204`, `:214`, `:300`, `:366` agree with the suite receipts; F2 limits their clone-integrity attestation. Replay isolation remains explicit at `replay.sh:14-36` and README `:48-56`: historical commits, pinned local mirror, overlaid support files, stubbed admission/gates. The full/docs markers at `replay/replay.log:8` and `:12` demonstrate routing, not gate-body correctness or a new production push.
+
+- **[Nit] F4 — refresh the plan's status count.** `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:28` still reports 19 scenarios and eight red rows; the retained revised evidence and README now report 20 and nine. Update that status cell when recording the evidence repair. The substantive routing order, docs-only policy and full-veto tradeoff match the implementation.
+
+Read-only evidence probe, exit **0** (no git, test suite or fixture executed):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import hashlib,json
+p=Path('TESTS-RESULTS/2026-11-23+GH-1537')
+r=[json.loads(s) for s in (p/'provenance.jsonl').read_text().splitlines()]
+s=[json.loads(x) for x in (p/'suites-provenance.jsonl').read_text().splitlines()]
+h=hashlib.sha256(Path('githooks/pre-push').read_bytes()).hexdigest()[:16]
+assert len(r)==42 and all(x['hook_sha256']==h for x in r if x['variant']=='cand')
+print('hook',h,'rows',len(r))
+for v in ('base','cand'):
+ a=[x for x in r if 'scenario' in x and x['variant']==v]
+ print(v,'scenarios',len(a),'mismatches',sum(x['want']!=x['route'] for x in a),'missing_push_exit',sum('push_exit' not in x for x in a))
+assert len(s)==7 and all(x['exit']==0 and x['hook_sha256']==h for x in s[:-1])
+print('focused_suite_exits',[x['exit'] for x in s[:-1]])
+print('identity_before',s[-1]['clone_identity_before'])
+print('identity_after',s[-1]['clone_identity_after'])
+PYPROBE
+/bin/bash -n githooks/pre-push
+```
+
+Decisive output (the bash syntax check also exits **0**, with no diagnostics):
+
+```text
+hook 4a14c3c2bd3acaf5 rows 42
+base scenarios 20 mismatches 9 missing_push_exit 0
+cand scenarios 20 mismatches 0 missing_push_exit 0
+focused_suite_exits [0, 0, 0, 0, 0, 0]
+identity_before {'head': '477af7c6847c630fd45dc18cf1be4eb46dcec14a', 'origin': 'https://github.com/HiQS-Labs/XYZ-forge.git', 'bare': 'false'}
+identity_after {'head': '477af7c6847c630fd45dc18cf1be4eb46dcec14a', 'origin': 'https://github.com/HiQS-Labs/XYZ-forge.git', 'bare': 'false'}
+```
+
+Graph tools were unavailable; source fallback was used and no graph generation/coverage claim is made. No git command, executable fixture, test suite or full gate was run in this reviewer worktree, and no later gate is assumed to pass. Only this relay file was edited.
+
+Handing off to Producer (claude-a): close the remaining F2 identity-evidence gap and refresh F4's status count; no further hook change is requested.
+
+swept file: yes
+VERDICT: FAIL
+Basis: the runtime repair and its red control close F1, and the explanation closes F3. F2's required clone-identity evidence is still incomplete, so the earlier finding cannot yet be closed under the relay contract.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
