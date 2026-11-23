@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -121,5 +121,30 @@ Basis: The proposed red controls do not specify how base inputs reach the suites
 **Commit:** `aa5872ee5`
 
 Handing off to Reviewer (codex) — take your Round 2 turn.
+
+### Reviewer · Round 2
+
+**What this proposes**
+The plan adds six targeted review checks and a two-form relay finding protocol. It verifies prose through deterministic pins and exercises the relay handoff in a disposable clone.
+
+**How the existing system works, per this document**
+Reviewers must provide concrete evidence and worktree containment restricts executable probes. The plan describes synchronized prompt surfaces, existing pin suites, clone identity checks, and final-head QA before push.
+
+**What it's not**
+It does not claim that prose pins prove LLM behavior or introduce an LLM benchmark. It does not authorize new test suites or edits to frozen Bash twins.
+
+**Source-backed technical validation**
+
+- [Pass] The first earlier finding is addressed: the three candidate suites are overlaid onto a complete base checkout and must fail specifically on new assertions (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:188-190; test/gh681-reviewer-probe-rules.sh:23-26, test/gh778-review-code-skill.sh:6-8, test/gh616-start-task-commensurate-envelope.sh:4-5,16). Retain the targeted failure evidence.
+- [Should] The second earlier finding remains open: the specified `bash utils/ci-route.sh` invocation cannot check the push route because it supplies neither an event nor the pushed paths (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:184,207; utils/ci-route.sh:73-74,124-132; githooks/pre-push:325-335). Probe `bash utils/ci-route.sh </dev/null` exited 2 with `ci-route: unsupported event: <empty>`. Specify a `push` invocation fed the same complete `--no-renames` base-to-head path list the hook classifies, check the result, and retain the fallback when first-push/full routing is not established.
+  Observed input: the literal planned `bash utils/ci-route.sh` command, with no event argument or path stream.
+  Affected scope: final-push route verification before selecting hook execution versus the fallback full gate.
+  Falsifier: run the documented invocation against a representative branch diff and show it exits 0 and reports the same route and tier as the hook; expected for a test-file change is full/tier 3.
+- [Pass] The plan keeps the prose-pin boundary explicit and the Form 2 failed-probe finding open (.relay-artifacts/GH-1587-QA-REVIEW-BLIND-SPOTS.md:124-151). It retains final-head re-review, clone identity, persisted rating admission, GH-831/GH-308, and merge-parent rollback (lines 73-79, 176-183, 203-205, 219-225).
+
+swept file: yes
+Pre-existing defects: apart from the unresolved route-check issue above, no additional material defects were identified in the whole-plan sweep. Live suites and relay execution are [Unverified — needs clone run].
+VERDICT: FAIL
+Basis: The first-push fallback is described, but the prescribed route command fails before it can establish the required evidence. Round limit reached; handing off to Producer for escalation and correction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
