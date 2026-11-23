@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -107,5 +107,71 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, a Basis; set STATUS to Appr
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**Approve the bounded CodeRabbit Major repair.** The parent check now precedes the ancestor exemption, and the retained evidence shows the requested docs-to-full correction without changing the earlier 20 scenario results.
+
+- **[Pass] The order and return-code boundary match the requested repair.** `githooks/pre-push:214-240` checks destination, local tracking tip, any merge, live probe/freshness, verified-tip exclusion and unique merge-base in that order. At `:246-251`, every non-first parent is checked before `:254` can return rc 1. An octopus merge with any non-first parent outside the tip is therefore rejected (rc 2); all parents on the tip retain the prior result: rc 1 when the merge-base is already in the remote branch, otherwise rc 0. A side commit already on the tip is accepted as integration content. An empty own-merge set still returns rc 1 at `:237`. Moving the ancestor check changes only the previously exempted case with an off-tip non-first parent; it cannot change a previous rc 0 or an already rejected candidate. These edge conclusions are source reasoning, not newly executed Git fixtures. No correction requested.
+
+- **[Pass] The new fixture models the Major and the retained red control is discriminating.** `TESTS-RESULTS/2026-11-23+GH-1537/check.sh:121-125` first pushes the development merge, creates a README-only side commit outside development, then merges and pushes that side branch. The actual push helper is at `:90`; hook installation is at `:81`. `push-output.log:111-123` retains real push output and docs/full stub markers; `provenance.jsonl:17-18` records successful pushes with base docs versus repaired full. `previous-head-vs-repaired.log:10` records prior approved head `9c18e49f0=docs repaired=full`; its other 20 rows agree. The probe below checks that comparison against the candidate receipts. The prior-head result is retained comparison evidence, not a new reviewer execution; the per-run JSONL uses the original base hook. No correction requested.
+
+- **[Pass] All 21 scenarios and six focused suites are attributed to the repaired hook.** `provenance.jsonl:1-42` contains 21 scenarios per variant, ten original-base mismatches and zero candidate mismatches, with matching actual gate markers. Only the deliberately broken-tree scenario has push exit 1 (`:35-36`), as disclosed in `README.md:45`. Candidate hook hash `062ada684bedf828` matches the seeded file. The scenario receipts' `repo_head=9c18e49f0...` identifies the checkout during the overlaid-hook run; it is not the repaired commit identity. `suites-provenance.jsonl:1-6` instead records tested commit `b48f00a0f936cdd1a147d8d41d2918e6d3c83c40`, the same repaired hook hash and six zero exits. The complete before/after identity bracket at `:7` is equal, including HEAD, both bare flags, fetch/push mappings and local email. The six retained log exit markers agree. `run-focused.sh:8-29` shows how those values were captured. These receipts support the focused hook claims, not a full gate at head `7105c7785...`. No correction requested.
+
+- **[Pass] Plan and evidence explanations remain aligned.** `PROJECT/2-WORKING/GH-1537-PREPUSH-OWN-DIFF-ROUTING.md:87-96` places off-tip-parent rejection before the ancestor exemption and explicitly removes the branch's own sub-branch from that exemption; `:135-139` includes the new scenario. The status count at `:28` agrees with the receipts. `TESTS-RESULTS/2026-11-23+GH-1537/README.md:8-22` and `:49-57` distinguish stubbed routing checks, historical replay, focused suites and remaining limits. `replay.sh:22-44` overlays current support files and directly invokes the hook with historical input; `replay/replay.log:1-12` records two own-diff paths versus 33 update paths and full/docs stub markers. This is a local historical replay, not a new production push. No unsupported current behavioral claim requiring correction was found within this round's scope.
+
+- **[Pass] Whole-hook sweep found no additional substantiated pre-existing or introduced defect.** Reviewed all of `githooks/pre-push:1-472` and both supplied implementation diffs. Admission at `:90-99`, first-push resolution at `:282-306`, development/main exclusion at `:214-217`, merge-free routing at `:230-231`, tier-2 handling at `:399-418` and exact-commit full-receipt reuse at `:421-440` retain their previous scope. Aligned per-ref pairs at `:319-320`, final-tree diff with `--no-renames` at `:333`, failed-classifier-output rejection at `:371` and whole-push veto/docs-only acceptance at `:376-385` preserve the earlier fixes. The delta changes one hook; no new suite, registry entry or production subsystem appears. No correction requested.
+
+Read-only evidence audit command (exit **0**):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import hashlib,json,re
+p=Path('TESTS-RESULTS/2026-11-23+GH-1537')
+h=hashlib.sha256(Path('githooks/pre-push').read_bytes()).hexdigest()[:16]
+r=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+s=[json.loads(x) for x in (p/'suites-provenance.jsonl').read_text().splitlines()]
+assert len(r)==44 and h=='062ada684bedf828'
+assert all(x['hook_sha256']==h for x in r if x['variant']=='cand')
+for v,n in [('base',10),('cand',0)]:
+ a=[x for x in r if 'scenario' in x and x['variant']==v]
+ assert len(a)==len({x['scenario'] for x in a})==21
+ assert sum(x['want']!=x['route'] for x in a)==n
+ assert all(x['gate_ran']=={'docs':'docs-gate','full':'full-gate'}[x['route']] for x in a)
+ assert all(x['push_exit']==('1' if x['scenario']=='two_refs_partial_failure' else '0') for x in a)
+ print(v,'scenarios',len(a),'mismatches',n,'gate_and_exit_match',True)
+old=re.findall(r'^(\S+)\s+want=(\S+) 9c18e49f0=(\S+) repaired=(\S+)',(p/'previous-head-vs-repaired.log').read_text(),re.M)
+assert len(old)==21 and {x[0]:x[3] for x in old}=={x['scenario']:x['route'] for x in r if 'scenario' in x and x['variant']=='cand'}
+changed=[x[0] for x in old if x[2]!=x[3]]
+assert changed==['side_merge_after_integration']
+b=s[-1]['clone_identity_before']
+assert len(s)==7 and b==s[-1]['clone_identity_after'] and s[-1]['unchanged']=='yes'
+assert set(b)=={'head','core.bare','is_bare','remote_v','local_user_email'} and b['core.bare']==b['is_bare']=='false'
+assert all(any(z.endswith('('+k+')') for z in b['remote_v']) for k in ('fetch','push'))
+assert b['head']=='b48f00a0f936cdd1a147d8d41d2918e6d3c83c40'
+assert all(x['exit']==0 and x['hook_sha256']==h and x['tested_commit']==b['head'] for x in s[:-1])
+assert re.findall(r'^rc=(\d+) (.+)$',(p/'focused-suites.log').read_text(),re.M)==[('0',x['suite']) for x in s[:-1]]
+print('hook',h,'changed',changed,'suite_exits',[x['exit'] for x in s[:-1]],'identity_unchanged',True)
+PYPROBE
+```
+
+Decisive output:
+
+```text
+base scenarios 21 mismatches 10 gate_and_exit_match True
+cand scenarios 21 mismatches 0 gate_and_exit_match True
+hook 062ada684bedf828 changed ['side_merge_after_integration'] suite_exits [0, 0, 0, 0, 0, 0] identity_unchanged True
+```
+
+Additional syntax command: `/bin/bash -n githooks/pre-push` — exit **0**, no diagnostics. Graph tools were unavailable, so this review used direct source and retained artifacts. No Git command, executable fixture, test suite or full gate ran in this reviewer turn. Approval relies on the evidence inspected above, not on an assumed later gate.
+
+swept file: yes
+VERDICT: PASS
+Basis: the requested ordering defect is fixed; the new retained real-push control distinguishes the previous approved hook from the repair, all earlier scenario results remain unchanged, and the focused-suite receipts match the repaired hook with an intact clone-identity bracket. No open finding from the prior approved QA is reopened by this change. Full-gate execution on the final commit is not established by this review.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
