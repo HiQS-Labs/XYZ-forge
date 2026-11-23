@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -175,5 +175,60 @@ Handing off to Producer (claude-a) — disposition these findings and revise the
 - **Q3 qualification — Implemented.** Plan says "every statically resolvable simple command", lists what is skipped, and records the downstream limit that marathon-drive still refuses a leading `NAME=value prog` (`marathon_drive.py:2074-2075`).
 
 Handing off to Reviewer for Round 2 on the revised plan `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md` and the updated `TESTS-RESULTS/2026-11-23+GH-1580/` (controls.sh, outputs/red.txt, provenance.jsonl). Re-check F1-F3 closure and anything newly introduced.
+
+### Reviewer · Round 2
+
+**What this proposes (document-only paraphrase; stated).** The plan makes regex anchors operate per line, checks statically resolvable commands throughout compound gates, and reports acceptance gaps in text and JSON without changing exit policy. It now tracks literal directory changes and explicitly preserves the existing GH-343 mutation control and red/green evidence.
+
+**How the existing system works, per this document (stated).** Preflight and marathon share the probe evaluator, while marathon also has a separate gate check. Preflight currently checks the first gate word only and leaves missing issue acceptance advisory outside frozen manifests. The document says the revised manual recorder exposes the baseline failures and ties them to provenance.
+
+**What it's not (stated; inference labelled).** This is a plan review, not evidence that fixes are implemented. It excludes synonym interpretation, arbitrary shell evaluation, the Bash twin and marathon's separate pre-advance check. I infer that conservative skipping should prevent a static uncertainty from becoming a false NOT-READY.
+
+**Technical review — source-backed.**
+
+swept file: yes
+
+Swept the whole revised plan, `utils/py/swarm_preflight.py` and the contract example; read the revised manual recorder and retained output, and inspected the named consumer/suite paths. MCP graph tools are not available in this turn, so project/generation and index coverage could not be checked; evidence is direct source and bounded searches. No Git commands, suites, executable fixtures or preflight CLI were run. The pre-existing first-word, quote and acceptance limitations remain covered by this plan; I found no additional pre-existing defect within these three requirements requiring a separate fix. This is not an exhaustive audit of other modules.
+
+- **[Should] F1 remains open — limit directory tracking to a known execution context (Q3/Q6).** The added D2c/D2e pair is the right control for a straightforward `cd src && ...` chain (`TESTS-RESULTS/2026-11-23+GH-1580/controls.sh:143-148`). But the revised plan splits `||` and pipelines at `PROJECT/1-INBOX/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md:81-92` and says any literal `cd` moves its single directory for later commands. That is false for a skipped conditional or a pipeline child. For example, checking `bash -n utils/swarm-preflight.sh` after `true || cd test;` or `cd test | cat;` must use the repository root, not `test/`. The narrow receipt below observes the real shell context and missing proposed path; the predicted helper rejection is an inference from the written algorithm, not a claim that a helper already exists. Constrain literal tracking to straightforward sequential contexts where it is justified; when control flow or a pipeline makes the directory uncertain, conservatively skip dependent relative-path checks (or preserve the known parent context where trivial). Add these positive cases to the existing manual recorder while retaining D2e's missing-script rejection. No shell interpreter or new suite is needed.
+  Observed input: `true || cd test; test -f utils/swarm-preflight.sh` and `cd test | cat; test -f utils/swarm-preflight.sh` both exit 0; `test/utils/swarm-preflight.sh` does not exist. The proposed unconditional literal-cd rule would check that absent path for a subsequent relative script.
+  Affected scope: relative script/program checks after conditional or pipeline directory changes; ordinary `cd src && bash -n ...`, absolute paths and ordinary PATH checks keep their existing scope.
+  Falsifier: the built helper accepts both corresponding gates ending in `bash -n utils/swarm-preflight.sh`, and D2c stays READY while D2e stays NOT-READY naming `missing.sh`. A justified context rule already achieving these results would close this finding.
+
+- **[Pass] F2 closed at plan time; Q5 now has discriminating evidence for all three defects.** The recorder retains lowercase `gap` (`controls.sh:87`), checks text and decoded JSON (`:94-117,153-163`), and records provenance (`:168-179`). Retained `outputs/red.txt:4-10` rejects unchanged anchors; `:20-34` rejects unchanged later-command checks; `:40-62` rejects absent gap text/JSON, including the whole-document capture case. The successful baseline controls and final `MATCH=5 MISMATCH=10` are visible at `:12-18,24-26,36-38,48-50,64`. The delivery criterion is all expected observations matching, not the recorder's deliberately zero exit (`controls.sh:12-14`; plan `:129`). `provenance.jsonl:1` now attributes the run; the receipt below verifies its output hash and the seeded source hash. Green execution remains [Unverified — needs clone run], as expected before implementation. This does not certify the supplied Git revision independently.
+
+- **[Pass] F3 closed at plan time (Q6).** Plan `:118-122` explicitly permits updating the existing source mutation and preserving its construction guard. That matches `test/gh343-gate-program-target-root.sh:91-109`; clone execution must still witness its intended foreign-CWD rejection. No new suite or registry entry is planned (`plan:131-135`).
+
+- **[Nit] Earlier recon wording finding is only partly closed (Q1).** The caller and level/qualifier corrections are present (`plan:38-41,50-54`), but “and no other wording” still omits **Suggested Acceptance**, accepted by `(?:suggested\s+)?` at `utils/py/swarm_preflight.py:567`. Name that existing variant in the sentence, or remove the exhaustive wording. This is the remaining part of the previous nit, not a new heading feature request.
+
+- **[Pass] Q1/Q2 — baseline diagnosis and multiline fix remain grounded.** `swarm_preflight.py:271,276` lack multiline mode; `:1786-1788` selects only the first gate word; `:981-984,1754-1762` explains advisory unknown outside manifest membership. Apply `re.M` to both regex cases as planned (`plan:77-80`). Marathon calls that same evaluator and accepts only `landed` (`marathon_drive.py:2697-2704`); Jog credits exit 4 as completed (`jog_run.py:648-651`). No concrete worsening active probe was found in the bounded active-doc search; the visible `^  push:` example still uses `kind` (`PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:185-186`). Existing inline `(?m)` remains compatible; whole-file anchors can use `\A`/`\Z`.
+
+- **[Pass] Q3 — the stated lexical boundary is proportionate, subject to F1.** Plan `:81-95` explicitly covers assignments, `env`, quotes/quoted newlines, simple chains and pipes, while excluding expansion-dependent program words and `bash -c` contents. D2f retains the latter boundary (`controls.sh:149-150`). Preserving quote boundaries is necessary for real multiline quoted commands such as `PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md:130`. The separate assignment rejection is accurately recorded from `marathon_drive.py:2074-2075`. These skips are conservative limits, not proof that arbitrary shell bodies are runnable; no recursive parser is warranted.
+
+- **[Pass] Q4/Q6 — additive advisory gap reporting stays on the existing path.** The issue's “report a gap … or accept synonyms” option is satisfied by explicit reporting without interpreting synonyms (`plan:96-105`). GH-557's nonmember exit-0 control remains binding (`test/gh557-unknown-blocks-manifest.sh:173-183`). `normalize` already owns readiness (`swarm_preflight.py:396-416`), and `report_candidate` owns the text report (`:1941-1958`). GH-291 pins invocation/result shapes (`test/gh291-contract-goldens.sh:4-8,100-125`), Jog consumes the invocation artifact (`jog_run.py:661-663`), and marathon-plan classifies exit codes (`_marathon_plan.py:1308-1328`); no inspected consumer requires rejecting an added readiness key. Full caller regressions remain [Unverified — needs clone run]. Apart from F1 and the carried wording nit, the plan is surgical and DRY.
+
+**Narrow probe receipt.** Command below exited 0; no files were written and no repository script was executed. Decisive output: both shell commands `exit=0 stdout='' stderr=''`; `planned_flat_cd_path_exists= False`; `red_output_hash_matches= True`; `seed_source_hash= cb543213bd4e`.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import hashlib,json,subprocess
+root=Path.cwd()
+for chain in ['true || cd test; test -f utils/swarm-preflight.sh', 'cd test | cat; test -f utils/swarm-preflight.sh']:
+    p=subprocess.run(['/bin/bash','-c',chain],capture_output=True,text=True)
+    print(repr(chain),'exit='+str(p.returncode),'stdout='+repr(p.stdout),'stderr='+repr(p.stderr))
+print('planned_flat_cd_path_exists=',(root/'test'/'utils/swarm-preflight.sh').is_file())
+d=Path('TESTS-RESULTS/2026-11-23+GH-1580'); r=json.loads((d/'provenance.jsonl').read_text())
+print('red_output_hash_matches=',hashlib.sha256((d/r['output']).read_bytes()).hexdigest()==r['output_sha256'])
+print('seed_source_hash=',hashlib.sha256(Path('utils/py/swarm_preflight.py').read_bytes()).hexdigest()[:12])
+PYPROBE
+```
+
+**VERDICT: FAIL**
+
+**Basis:** F2 and F3 are resolved for a plan review. F1's new unconditional directory tracking would introduce false missing-path reports in explicitly supported shell forms, and the earlier wording nit remains partly open. Narrow the directory rule and retain its positive controls before building. No later gate is assumed.
+
+Handing off to Producer (claude-a) — revise the bounded directory rule and its manual controls, finish the carried wording correction, then open Round 3 for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
