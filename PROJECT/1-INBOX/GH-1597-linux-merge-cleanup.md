@@ -78,7 +78,7 @@ In `skills/2-daily/merge-cleanup/scripts/scan_clones.py` (`inspect_open_handles`
 - If a line is `Output information may be incomplete.` following an unrelated warning, it is tolerated as companion text. A standalone incomplete-output disclaimer without an preceding unrelated warning is treated as an unclassified error and fails closed.
 - If any warning path is related to the checkout, OR if there is an unclassified non-warning error line on stderr, fail closed:
   `{"verified": False, "active": False, "details": f"lsof enumeration incomplete: {line}", "holders": []}`.
-- Deletion safety invariant: Filtering unrelated stderr does NOT bypass handle parsing. If stdout reports open file handles or an active process whose CWD is the checkout root, `inspect_open_handles` MUST return `{"verified": True, "active": True, ...}`, and pruning (`merge_cleanup.py:_prune_retained_workdirs`) MUST refuse to remove it.
+- Deletion safety invariant: Filtering unrelated stderr does NOT bypass handle parsing. If stdout reports open file handles or an active process whose CWD is the checkout root, `inspect_open_handles` MUST return `{"verified": True, "active": True, ...}`, and scratch pruning (`merge_cleanup.py:_remove_own_scratch` / `prune_retained_scratch`) MUST refuse to remove it.
 
 ### Seam 2: `merge_cleanup.py` Early Version Preflight Placed Before Consumers
 In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` & `ledger_merge.py`:
@@ -109,7 +109,7 @@ All verification controls and regression runs will execute deterministically in 
 1. **AC-1 (lsof unrelated warning + idle directory):**
    `inspect_open_handles` on an idle directory in a disposable full clone with simulated `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/abc/merged\n Output information may be incomplete.` on stderr returns `verified: True, active: False`.
 2. **AC-2 (lsof unrelated warning + root-CWD holder process):**
-   In a disposable full clone with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning (`_prune_retained_workdirs`) refuses removal.
+   In a disposable full clone with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning (`_remove_own_scratch` / `prune_retained_scratch`) refuses removal.
 3. **AC-3 (lsof related warning fails closed):**
    `inspect_open_handles` with a warning mentioning a path equal to, inside, or containing the checkout path (including canonical symlink aliases, e.g. `lsof: WARNING: can't opendir(/path/to/repo/sealed)`) returns `verified: False, active: False` with `lsof enumeration incomplete`.
 4. **AC-4 (lsof standalone incomplete disclaimer & unclassified errors fail closed):**
