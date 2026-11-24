@@ -110,4 +110,13 @@ Basis: the reworded sentence is accurate against both cited sources and the diff
 
 handing off: relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-24T19:18:27Z
+task: RELAY-gh1575-express-wording
+reviewer: claude
+status: Approved
+reviewed-head: 79916c3c77d5d0f50f445ea50f887c95d2b67159
+added-range: 9539+1784
+added-sha256: 1a75f5bd4d386db8ca2b398649fc06c42f61def7077555cf47aae2b751c6613a
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
