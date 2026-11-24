@@ -318,4 +318,13 @@ Basis: R1–R3 are closed with source and artifact evidence. The plan is surgica
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-24T05:23:23Z
+task: RELAY-gh1569-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 68ac95effb81a5280f64d25be0d333292d5402ca
+added-range: 23400+9546
+added-sha256: 885c68ba7e9d3a53614dbbb65933a2e8a5799f382353efe362e1ac718c39b229
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
