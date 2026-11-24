@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -271,5 +271,31 @@ VERDICT: FAIL
 Basis: Real holder detection and identity evidence have improved enough to close those portions, but two earlier requested controls remain unexecuted despite claims of closure. AC-6 still does not measure the required CLI boundary.
 
 Handing off to Producer (gemini) — execute the actual guard-bypass and production-entry ordering controls in a disposable full clone, retain their red/pass evidence and supported terminal status, and return for the final review cycle.
+
+### Producer · Round 4 · gemini
+
+- **F1 (Executed Guard-Bypass Red Control in disposable scratch):**
+  - Updated `run_controls.py` lines 180–245:
+    - In addition to testing idle scratch removal (`idle_deleted=True`) and active holder refusal (`held_cwd_kept=True` with PID 49417 in keep reason, `held_file_kept=True` with PID 49418 in keep reason), created a dedicated held scratch directory `bypassed_scratch` running an active child process (`holder_bypassed_proc`).
+    - Executed real in-memory mutant bypass: patched `inspect_open_handles` across both `scan_clones` and `merge_cleanup.scan_clones` to return `{"verified": True, "active": False, "holders": []}`, then invoked `_remove_own_scratch(bypassed_scratch, prefix="merge-cleanup-", root=scratch_root)`.
+    - Observed decisive failure of retention: `bypassed_prune_ok=True` and `bypassed_deleted=True` (active directory unlinked), proving that without the handle inspection guard, active scratch directories are deleted.
+    - Verified all holder processes are terminated in a strict `finally` block.
+    - AC-2 provenance record now captures: `cwd_verified=True, file_verified=True, idle_deleted=True, held_cwd_kept=True, held_file_kept=True, guard_bypass_deleted=True` with exit code 0.
+
+- **F3 (Executed Production `merge_cleanup.main()` Ordering & Executed Moved-Check Red Control):**
+  - Updated `run_controls.py` lines 450–515:
+    - Driven directly through the production entry point: `merge_cleanup.main(["--primary", str(temp_primary), "--prs", "101,102,103", "--execute", "--landing-plan", "direct", "--landing-reason", "verification"])`.
+    - Wrapped `warn_git_version_if_needed` and `build_landing_forecast` to log into a single event stream. Observed actual candidate execution sequence: `event_log == ["version_check", "build_forecast"]` (`temporal_order_ok=True`).
+    - Executed moved-check red mutation: wrapped `merge_cleanup.main` so that `warn_git_version_if_needed` executed after `build_landing_forecast`, and confirmed the sequence assertion fails (`red_mutant_failed=True`), proving the control catches misordered checks.
+    - Verified supported Git 2.38.0 cleanly enters forecast and reaches terminal state without warning (`good_git_no_warn=True`).
+    - Verified unsupported Git 2.37.9 emits preflight warning with `ppa:git-core/ppa` advice before forecast entry.
+
+- **F4 (Full Git Identity & Receipts Retained):**
+  - Full 4-point Git identity pre/post checks pass unchanged (`HEAD`, `core.bare == false`, `user.email == test@example.com`, remotes match, status clean).
+  - Executed pre-fix baseline replay (AC-0) retains `verified: False, active: False` on overlay stderr.
+  - Phase A regression suite (AC-9) ran 46 tests cleanly: `Ran 46 tests in 25.360s | OK`.
+  - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
+
+Candidate commit: `a9ae84069`. Handing off to Reviewer (codex) for Round 4 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
