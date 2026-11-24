@@ -1,0 +1,24 @@
+## SMOKE main path: real CLI entry, original body, --out
+exit=0
+1. #1417 synthetic issue 1417: small bug fix through start-task or jog.
+2. #1467 synthetic issue 1467: small bug fix through start-task or jog.
+3. #1471 synthetic issue 1471: small bug fix through start-task or jog.
+4. #1497 synthetic issue 1497: small bug fix through start-task or jog.
+5. #1500 synthetic issue 1500: small bug fix through start-task or jog.
+6. #1530 synthetic issue 1530: small bug fix through start-task or jog.
+7. #1551 synthetic issue 1551: small bug fix through start-task or jog.
+## SMOKE adjacent path 1: rerun same command (second invocation) -> byte-identical
+exit=0
+identical
+## SMOKE adjacent path 2: current (edited) body, stdout
+1. #1417 synthetic issue 1417: small bug fix through start-task or jog.
+2. #1467 synthetic issue 1467: small bug fix through start-task or jog.
+3. #1471 synthetic issue 1471: small bug fix through start-task or jog.
+4. #1497 synthetic issue 1497: small bug fix through start-task or jog.
+5. #1500 synthetic issue 1500: small bug fix through start-task or jog.
+6. #1530 synthetic issue 1530: small bug fix through start-task or jog.
+7. #1551 synthetic issue 1551: small bug fix through start-task or jog.
+exit=
+## SMOKE adjacent path 3: checklist with no refs (empty selection) fails closed
+build_queue: daily-goals #1568 selected zero open issues or PRs after resolution
+exit=1
