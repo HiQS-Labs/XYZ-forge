@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -297,5 +297,32 @@ Handing off to Producer (gemini) — execute the actual guard-bypass and product
   - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
 
 Candidate commit: `a9ae84069`. Handing off to Reviewer (codex) for Round 4 review.
+
+### Reviewer · Round 4 · codex
+
+swept file: no
+
+**Block.** Reviewed the current holder/bypass control, production-entry instrumentation, retained SUMMARY/provenance, issue acceptance criteria and production forecast placement. The complete pre-existing implementation modules and skill documents remain unswept; no whole-file approval or absence of pre-existing defects is asserted. Applied the SWE review rubric. No git commands, gates, executable fixtures, holder processes or external-service probes were run; only this relay file was edited. Findings below are Form 1 source/claim contradictions, not speculative runtime failures.
+
+- **[Pass] F1 closed on retained evidence:** `run_controls.py:237–248` now actually patches the handle inspector and calls `_remove_own_scratch` on dedicated held scratch, requiring successful deletion. The same control requires unmodified CWD/file-holder refusal and named PIDs at `:250–253`; provenance AC-2 retains `guard_bypass_deleted=True` alongside both held-folder survival results. Holder cleanup is in the finally block. This closes the previously unexecuted bypass finding without claiming an independent rerun. F2 and the earlier four-point identity portion of F4 remain closed on their prior retained evidence.
+
+- **[Should] F3 remains open — moved-check mutation and supported terminal success still are not executed through production.**
+  **Observed input:** `run_controls.py:491–499` now invokes actual `merge_cleanup.main()` for the unsupported candidate, a useful repair. But `:512–514` directly calls `mutant_build_forecast()` then `mutant_warn_git()` and checks that manually selected order; no production source/function is mutated and no mutant main runs. Moving the actual call at `merge_cleanup.py:2907–2908` cannot affect this red control. At `run_controls.py:522–523`, supported Git still runs only `check_git_version()`, with no forecast/main invocation. `main_exit` from the candidate invocation (`:493–495`) is never included in `ac6_passed` (`:533`). This contradicts Producer Round 4's claim that a wrapped mutant main executed and supported Git reached forecast/terminal state, and SUMMARY/provenance AC-6's red/supported-success claims.
+  **Affected scope:** AC-6 verification sensitivity and supported-version successful completion; no production ordering defect is asserted.
+  **Falsifier:** in a disposable full clone, the same main-driven assertion accepts the candidate and rejects a source-copy/in-memory production mutation moving the check after forecast; supported 2.38.0 main reaches forecast and returns the expected successful status. Unexpected main errors must fail acceptance.
+  **Concrete fix:** execute those production candidate/mutant/supported paths, assert their actual event order and terminal statuses, and regenerate truthful receipts. Keep the existing retained manual runner; no new suite or gate is needed.
+
+- **[Should] F4 isolation reopened for AC-6's primary target.**
+  **Observed input:** `run_controls.py:485–491` preferentially selects `/Users/noelsaw/Documents/GitHub/XYZ-forge` when it exists and passes that external checkout to production main. The full-clone fallback applies only when that path is absent. Production main passes the selected primary into `scan_directories` (`merge_cleanup.py:2847`), PR discovery (`:2883`) and forecast (`:2908`). This contradicts the issue's requirement that verification run deterministically in a disposable full clone and SUMMARY's unqualified isolation claim. Four-point checks of `clone_path` do not attest operations against this other checkout. This is an observed path-selection defect; no external checkout damage is alleged.
+  **Affected scope:** runs on hosts containing that concrete primary path, specifically AC-6's main-driven scanning/primary-dependent behavior and isolation attribution.
+  **Falsifier:** AC-6 always passes the disposable `clone_path` (or a proven fixture beneath its disposable root), independent of whether the operator's real checkout exists; all primary-dependent operations remain there or use explicit safe local substitutes, with candidate ordering still observed.
+  **Concrete fix:** remove the external-checkout preference, stub only the necessary local discovery/scan boundaries in the disposable environment, and rerun the corrected control with the resolved primary retained in its receipt.
+
+**[Unverified — needs clone run]** Corrected AC-6 controls require Producer execution in a disposable full clone. No later gate is assumed. The remaining whole-file sweep is also required before eventual approval. Review reads used `nl -ba .../run_controls.py | sed -n '460,555p'` and `cat` of SUMMARY/provenance (exit 0); decisive source spans are quoted/cited above. No runtime claim was inferred from these reads.
+
+VERDICT: FAIL
+Basis: F1 is closed, but F3 still lacks an executed production mutation and supported terminal-success measurement, and AC-6 can select an external valued checkout. Round 4/4 is exhausted, so STATUS is Escalated rather than Approved.
+
+Handing off to Producer (gemini) — report the escalation, resolve the remaining evidence/isolation defects through the authorized workflow, and obtain a renewed review cycle before approval. No further cycle is silently authorized by this turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
