@@ -37,3 +37,16 @@ GH-269; marathon (`acceptance_probes_unmet`, same `eval_probes`) and jog (`_dry_
 covered by gh438, gh280 and gh291 in `outputs/existing-suites.txt`; marathon-plan classification reads the same
 exit codes; conveyor, flywheel and kickstart invoke the preflight CLI and read the same verdict and exit codes,
 with no parsing of the `readiness` key set.
+
+## Allow-list repair evidence
+
+- Previous candidate `fd5c43fb1` rejects the three new controls for `+x`, bundled
+  `-eO` and `shopt`. The complete clone replay is 39 matches and three mismatches
+  in `outputs/allowlist-red-full.txt`.
+- The repaired source `54ab9275c`, also at tested merge head `ba7cf57cb`, passes
+  all 42 controls in `outputs/allowlist-green.txt`. The simple `-nx` script still
+  passes and an absent script or external program still blocks.
+- Four existing focused suites pass 154 checks in aggregate. The disposable clone's
+  HEAD, bare flag, remotes, local email and clean status matched before and after.
+  The saved output redacts the local path only. See `outputs/allowlist-focused-suites.txt`.
+- Earlier tables above describe the preceding implementation at the named SHAs.

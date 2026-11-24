@@ -2,7 +2,7 @@
 gh_issue: 1580
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1580
 title: "swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings"
-status: "Blocked (final QA FAIL: F1 bash +x/-eO options, F2 shopt; awaiting parent decision)"
+status: "In Progress (single allow-list repair verified, final QA pending)"
 created: 2026-11-23
 updated: 2026-11-24
 owner: Claude (start-task sub-agent)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Parser-free plain-gate rewrite built and verified (green 36/0, suites, 129-contract replay, 0-flip guard, identity bracket). Single final Codex QA round: **FAIL**, two Blockers (F1 `+x` / `-eO` bash options read as the script, F2 `shopt` builtin refused). | **Stopped per the operator instruction** (no repair, no push, no PR). The parent decides: repair F1/F2 (small edits to `_GATE_NOT_PLAIN` / `_gate_segment_is_plain`), re-run evidence and a further QA round, then push. Detail in `relay-system/2026-11-24/gh1580-final-qa-plain.md`. |
+| Reproduced the three false refusals on the previous candidate. The allow-list repair passes 42 CLI controls and 154 checks in four existing suites. | One independent final QA round for the gate change. If it fails, remove the gate extension and qualify the remaining fixes. |
 
 ## Observed problem
 
@@ -69,7 +69,9 @@ Extend the existing evaluator and report path. No new module, suite, flag or exi
    returns the commands to existence-check and whether the gate is PLAIN: one line after strip, only plain word
    characters (`[\w./=:,@%+-]` and blanks) with `&&` as the sole operator, every segment non-empty, no segment
    that starts with an assignment, `env`, `cd` or a shell keyword/builtin whose existence PATH cannot answer
-   (short list), and no `bash`/`sh` segment using `-c`/`-s`/`-o` (or `--rcfile`) before its script.
+   (as reported by the gate runner's Bash), and a `bash`/`sh` script may be preceded
+   only by the allow-listed no-argument short flags. The discovery call runs fixed
+   text in a clean environment.
    - A plain gate: every segment goes through the existing base per-program rules (bash/sh script file under
      target_root, program path, `shutil.which`), with the base messages byte-identical. The base block is kept
      verbatim and looped over the segments, so the GH-343 suite needs no edit.

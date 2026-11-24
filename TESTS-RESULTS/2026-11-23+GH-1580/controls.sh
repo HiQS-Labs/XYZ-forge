@@ -200,6 +200,20 @@ case_nonplain "D2f9 F9 'true && if [[ \"]]\" && -f src/ok.sh ]]; then bash -n sr
 R="$(make_repo gate-assign-first 230 'FOO=1 true && bash -n src/ok.sh' "$PROBE" yes)"
 case_text "D2aa not plain, first token 'FOO=1' not found: unchanged from base (NOT-READY exit 5), gap line still printed" "$R" PROJECT/2-WORKING/GH-230-fixture.md 5 "command 'FOO=1' not found in PATH" '' "$NONPLAIN_GAP"
 
+# Single allow-list repair: unusual shell flags and shell builtins retain first-command behavior.
+R="$(make_repo gate-bash-plus 231 'true && bash +x -n src/ok.sh' "$PROBE" yes)"
+case_nonplain "D2ab bash +x before the script -> READY + gap" "$R" PROJECT/2-WORKING/GH-231-fixture.md
+R="$(make_repo gate-bash-bundled 232 'true && bash -eO extglob src/ok.sh' "$PROBE" yes)"
+case_nonplain "D2ac bash -eO before the script -> READY + gap" "$R" PROJECT/2-WORKING/GH-232-fixture.md
+R="$(make_repo gate-shopt 233 'true && shopt -s nullglob' "$PROBE" yes)"
+case_nonplain "D2ad shopt builtin -> READY + gap" "$R" PROJECT/2-WORKING/GH-233-fixture.md
+R="$(make_repo gate-bash-simple-flags 234 'true && bash -nx src/ok.sh' "$PROBE" yes)"
+case_plain_ok "D2ae bash -nx with a present script -> READY without a gate gap" "$R" PROJECT/2-WORKING/GH-234-fixture.md
+R="$(make_repo gate-bash-missing 235 'true && bash -n src/missing.sh' "$PROBE" yes)"
+case_text "D2af bash -n with an absent script -> NOT-READY" "$R" PROJECT/2-WORKING/GH-235-fixture.md 5 'gate script not found.*missing\.sh'
+R="$(make_repo gate-missing-external 236 'true && gh1580_missing_command' "$PROBE" yes)"
+case_text "D2ag absent external command -> NOT-READY" "$R" PROJECT/2-WORKING/GH-236-fixture.md 5 "command 'gh1580_missing_command' not found in PATH"
+
 # ── Final-QA r1 repair F4 (path_present) ─────────────────────────────────────────────────────────
 R="$(make_repo path-present-gone 214 true '[{"type":"path_present","path":"GONE.txt"}]' yes)"
 case_text "D4a F4 path_present on an unwanted path that is already gone -> landed (STALE, exit 4), not blocked" "$R" PROJECT/2-WORKING/GH-214-fixture.md 4 'verdict +: STALE'

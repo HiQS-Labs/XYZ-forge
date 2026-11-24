@@ -1,0 +1,172 @@
+# GH-1580 controls — label=allowlist-red-full — source=fd5c43fb1f7c47cbd3408af68caddb45cb46aed3 — swarm_preflight.py sha256=0429ec687482
+# fixture PATH has no uv; gh is stubbed; every case is a throwaway repo; expectations are the CORRECT behaviour
+
+── [MATCH] D1a grep_present '^ENABLE_X=1$' on a mid-file line: still unfixed -> ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #101 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D1b grep_absent '^alembic check' with the fix on its own line: landed -> STALE
+   expect : exit 4, output matches /verdict +: STALE/
+   observed: exit 4;   candidate   : stale|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #102 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : STALE (exit 4)|
+
+── [MATCH] D1c grep_absent '^alembic check' vs comment/echo only: still unfixed -> ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #103 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2a plain 'uv lock --check && bash -n ...' (uv absent, first command) -> NOT-READY
+   expect : exit 5, output matches /command 'uv' not found in PATH/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #201 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command 'uv' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2b plain 'bash -n ... && uv lock --check' (uv absent, second command: the #1140 gate) -> NOT-READY
+   expect : exit 5, output matches /command 'uv' not found in PATH/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #202 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command 'uv' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2d plain 'true && bash src/missing.sh' (missing script, second command) -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*missing\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #204 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.4HWmtK/gate-script-second: src/missing.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2k plain 'true && bash src/absent.sh -c': -c after the script is its own argument, script missing -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*absent\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #211 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.4HWmtK/gate-script-dash-c: src/absent.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2s plain 'true && bash src/absent.sh -s': -s after the script is its own argument, script missing -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*absent\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #221 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.4HWmtK/gate-script-dash-s: src/absent.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2z plain gate, every command resolves -> READY and NO non-plain gap line
+   expect : exit 0, output matches /verdict +: ready/, output does NOT match /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #228 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2c cd + env-prefix + pipe -> not plain: READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #203 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2e 'true && cd src && bash -n missing.sh': a cd gate is not plain, the later script is NOT checked -> READY + gap (accepted trade-off)
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #205 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2e json: the same gate carries the gap in readiness.gaps
+   expect : exit 0, valid nonempty JSON, readiness.gaps (has:not a plain)
+   observed: exit 0; gaps=['gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)']
+
+── [MATCH] D2f bash -c body and an expansion word -> not plain: READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #206 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2g F1 'true || cd src; bash -n src/ok.sh' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #207 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2h F1 'true && cd src | cat; bash -n src/ok.sh' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #208 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2j F1 'false && cd src && true || bash -n config.txt' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #210 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2l F3 'true && bash -n src/ok.sh>/dev/null' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #212 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2m F3 'true && bash -n src/absent.sh>/dev/null': not plain, later script NOT checked -> READY + gap (accepted trade-off)
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #213 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2n F5 'true && FOO=1 cd src && bash -n ok.sh' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #216 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2o F5 'true && FOO=1 cd src && bash -n missing.sh': not plain, later script NOT checked -> READY + gap (accepted trade-off)
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #217 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2p F6 heredoc body is data, not a command -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #218 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2q F6 a missing script after a heredoc: not plain, NOT checked -> READY + gap (accepted trade-off)
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #219 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2r F7 'true && bash -s ignored-arg </dev/null' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #220 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2v audit: process substitution -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #224 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2w F8 'true && if [[ -f a && -f b ]]; then bash -n src/ok.sh; fi' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #225 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2x F8 a missing command in an if-block: not plain, NOT checked -> READY + gap (accepted trade-off)
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #226 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2f9 F9 'true && if [[ "]]" && -f src/ok.sh ]]; then bash -n src/ok.sh; fi' -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #229 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2aa not plain, first token 'FOO=1' not found: unchanged from base (NOT-READY exit 5), gap line still printed
+   expect : exit 5, output matches /command 'FOO=1' not found in PATH/, output matches /^  gap +: gate is not a plain/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #230 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : gate is not a plain `&&` list; only its first command was checked (commands after it, if any, were not)|  readiness   : ready=0 — next: command 'FOO=1' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
+── [MISMATCH] D2ab bash +x before the script -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #231 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.4HWmtK/gate-bash-plus: +x|  verdict     : NOT-READY (exit 5)|
+
+── [MISMATCH] D2ac bash -eO before the script -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #232 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.4HWmtK/gate-bash-bundled: extglob|  verdict     : NOT-READY (exit 5)|
+
+── [MISMATCH] D2ad shopt builtin -> READY + gap
+   expect : exit 0, output matches /verdict +: ready/, output matches /^  gap +: gate is not a plain/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #233 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command 'shopt' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2ae bash -nx with a present script -> READY without a gate gap
+   expect : exit 0, output matches /verdict +: ready/, output does NOT match /^  gap +: gate is not a plain/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #234 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2af bash -n with an absent script -> NOT-READY
+   expect : exit 5, output matches /gate script not found.*missing\.sh/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #235 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: gate script not found under target_root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1580.4HWmtK/gate-bash-missing: src/missing.sh|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2ag absent external command -> NOT-READY
+   expect : exit 5, output matches /command 'gh1580_missing_command' not found in PATH/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #236 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command 'gh1580_missing_command' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D4a F4 path_present on an unwanted path that is already gone -> landed (STALE, exit 4), not blocked
+   expect : exit 4, output matches /verdict +: STALE/
+   observed: exit 4;   candidate   : stale|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #214 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : STALE (exit 4)|
+
+── [MATCH] D4b path_present on an unwanted path that is still there -> unfixed, ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #215 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3 text: issue criteria under '## Done when', no '## Acceptance' -> gap line names 'Done when'; exit unchanged (0)
+   expect : exit 0, output matches /gap +: .*#301.*Done when/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: no-issue-section] — issue #301 has no '## Acceptance' section — nothing to copy from|  gap         : issue #301 has no '## Acceptance' section, so the capture doc's criteria are unverified against it; it keeps criteria under '## Done when', which preflight does not read — put them under '## Acceptance'|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3 json: same case -> readiness.gaps names 'Done when'
+   expect : exit 0, valid nonempty JSON, readiness.gaps (has:Done when)
+   observed: exit 0; gaps=["issue #301 has no '## Acceptance' section, so the capture doc's criteria are unverified against it; it keeps criteria under '## Done when', which preflight does not read — put them under '## Acceptance'"]
+
+── [MATCH] D3-control text: issue has '## Acceptance' matching the doc verbatim -> match, no gap line
+   expect : exit 0, output matches /acceptance +: match/, output does NOT match /^  gap +:/
+   observed: exit 0;   candidate   : ready|  acceptance  : match — 1/1 criteria copied verbatim from issue #302|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3-control json: same case -> readiness.gaps present and empty
+   expect : exit 0, valid nonempty JSON, readiness.gaps (empty)
+   observed: exit 0; gaps=[]
+
+── [MATCH] D3-doc text: capture doc has no '## Acceptance' (checklist read from the whole document) -> gap line names the doc
+   expect : exit 0, output matches /gap +: .*capture doc/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #304 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : capture doc <work>/acc-doc-whole/PROJECT/2-WORKING/GH-304-fixture.md has no '## Acceptance' section; the packet's checklist is read from the whole document|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3-doc json: same case -> readiness.gaps names the capture doc
+   expect : exit 0, valid nonempty JSON, readiness.gaps (has:capture doc)
+   observed: exit 0; gaps=["capture doc /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1580.4HWmtK/acc-doc-whole/PROJECT/2-WORKING/GH-304-fixture.md has no '## Acceptance' section; the packet's checklist is read from the whole document"]
+
+# totals: MATCH=39 MISMATCH=3
