@@ -72,8 +72,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed implementation on branch `fix/XYZ-forge-gh1569-daily-goals-parser-2026-11-24` vs `origin/development`
-  (base `2ac998d130d9b6940ab00884c4248f4672b2dabb`): `skills/1-hourly/kickstart/scripts/build_queue.py` (`CHECKBOX`, `parse_daily_goals_refs`),
+- Artifact under review: `skills/1-hourly/kickstart/scripts/build_queue.py` (`CHECKBOX`, `parse_daily_goals_refs`), the committed
+  implementation vs `origin/development` (base `2ac998d130d9b6940ab00884c4248f4672b2dabb`), together with
   `skills/1-hourly/kickstart/SKILL.md` (daily-goals bullet), the plan `PROJECT/1-INBOX/GH-1569-DAILY-GOALS-CHECKLIST-ONLY.md`
   (plan QA APPROVED round 2: `relay-system/2026-11-23/gh1569-plan-qa.md`), and the evidence `TESTS-RESULTS/2026-11-23+GH-1569/`
   (`manual-check.md`, `outputs/controls-green.txt`, `outputs/smoke.txt`, `provenance.jsonl`). `releases.db`/`releases.sql` changes are
