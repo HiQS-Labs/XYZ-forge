@@ -1,0 +1,3 @@
+regression guard: base gate block vs new gate block over every gate string in the repo's Preflight Contracts + the five LTVera capture docs in #1205's appendix
+distinct gates: 33 plain: 26 not plain: 7
+READY -> NOT-READY flips: 0
