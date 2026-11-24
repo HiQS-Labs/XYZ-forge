@@ -68,3 +68,12 @@ the removed-path fix, and explicit advisory acceptance gaps.
   failed the withdrawn change's final review.
 - The prior gate corpus transcript's line endings have been normalized to remove
   trailing whitespace. This preserves the observed verdicts and has an updated hash.
+
+### Dangling-link review finding
+
+The probe runs against a snapshot of the target ref. The control commits a dangling
+symlink to the fixture ref so it exercises a directory entry present in that snapshot.
+The previously approved head reports STALE and the repaired source reports READY.
+The replay passes 15/15 controls with the repair, including the existing absent
+and present path cases. See `outputs/dangling-ref-red.txt` and
+`outputs/dangling-ref-green.txt`.

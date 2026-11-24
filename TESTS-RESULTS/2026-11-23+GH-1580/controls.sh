@@ -151,7 +151,10 @@ R="$(make_repo path-present-here 215 true '[{"type":"path_present","path":"confi
 case_text "D4b path_present on an unwanted path that is still there -> unfixed, ready" "$R" PROJECT/2-WORKING/GH-215-fixture.md 0 'verdict +: ready'
 
 R="$(make_repo path-present-dangling 216 true '[{"type":"path_present","path":"link.txt"}]' yes)"
-ln -s "$R/missing-target" "$R/link.txt"
+ln -s missing-target "$R/link.txt"
+git -C "$R" add link.txt || exit 1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm "track dangling link" || exit 1
+git -C "$R" push -q origin main || exit 1
 case_text "D4c dangling unwanted symlink is still present -> unfixed, ready" "$R" PROJECT/2-WORKING/GH-216-fixture.md 0 'verdict +: ready'
 
 # ── Defect 3: acceptance gap ─────────────────────────────────────────────────────────────────────
