@@ -28,7 +28,7 @@ goal: >
   Resolve Linux/Ubuntu compatibility gaps in merge-cleanup and Skills Army HQ:
   1. Filter unrelated lsof filesystem warnings (such as Docker overlay2 mounts) while failing closed for paths inside or containing the checkout.
   2. Document the supported Linux path for Skills Army HQ (requiring intake.py init before add).
-  3. Implement preflight checks and actionable guidance for minimum git (>= 2.38.0) and gh (>= 2.18.0) versions.
+  3. Implement preflight checks and actionable guidance for minimum git (>= 2.38.0) and gh (>= 2.18.0) versions placed before their consumer operations.
 updated: 2026-11-24
 ---
 
@@ -68,26 +68,26 @@ Running `merge-cleanup` on Linux hosts (e.g. Ubuntu 22.04 LTS with Docker runnin
 
 ## 2. Technical Architecture & Surgical Design
 
-### Seam 1: `scan_clones.py` lsof Stderr Classification
+### Seam 1: `scan_clones.py` lsof Stderr Classification & Deletion Guard Preservation
 In `skills/2-daily/merge-cleanup/scripts/scan_clones.py` (`inspect_open_handles`):
 - Parse each line of `proc.stderr`.
 - Identify filesystem warnings: `lsof: WARNING: can't stat() <fstype> file system <path>` (and secondary disclaimer `Output information may be incomplete.`), as well as path warnings like `can't stat(<path>)` / `can't opendir(<path>)`.
 - Test if the warned path is related to `repo_path` or `resolved_repo`:
   - Related if `warn_path == repo_path`, `warn_path == resolved_repo`, `_within(warn_path, repo_path)`, `_within(warn_path, resolved_repo)`, `_within(repo_path, warn_path)`, or `_within(resolved_repo, warn_path)`.
 - If a warning refers to an unrelated path (e.g. Docker overlay2 mount outside the checkout), it is safely filtered out.
+- If a line is `Output information may be incomplete.` following an unrelated warning, it is tolerated as companion text. A standalone incomplete-output disclaimer without an preceding unrelated warning is treated as an unclassified error and fails closed.
 - If any warning path is related to the checkout, OR if there is an unclassified non-warning error line on stderr, fail closed:
   `{"verified": False, "active": False, "details": f"lsof enumeration incomplete: {line}", "holders": []}`.
+- Deletion safety invariant: Filtering unrelated stderr does NOT bypass handle parsing. If stdout reports open file handles or an active process whose CWD is the checkout root, `inspect_open_handles` MUST return `{"verified": True, "active": True, ...}`, and pruning (`merge_cleanup.py:_prune_retained_workdirs`) MUST refuse to remove it.
 
-### Seam 2: `merge_cleanup.py` Tool Version Preflight & Friendly Errors
+### Seam 2: `merge_cleanup.py` Early Version Preflight Placed Before Consumers
 In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` & `ledger_merge.py`:
-- In `merge_cleanup.py`: Add `tool_version_preflight()` called during `preflight_warnings()`.
-  - Checks `git` version against minimum `2.38.0`. If older, outputs:
-    `PRE-FLIGHT: git version X.Y.Z is below the required 2.38.0 minimum for landing forecast (git merge-tree --write-tree); upgrade git (e.g. ppa:git-core/ppa on Ubuntu/Debian).`
-  - Checks `gh` version against minimum `2.18.0`. If older, outputs:
-    `PRE-FLIGHT: gh version X.Y.Z is below the required 2.18.0 minimum for PR discovery (headRefOid field); upgrade gh (e.g. https://cli.github.com on Ubuntu/Debian).`
-- In `ledger_merge.py` (`merge_tree`): When `git merge-tree` exits non-zero with `usage: git merge-tree <base-tree>` or syntax refusal, return:
+- **Placement before consumer operations:**
+  - `check_gh_version()`: Run before Phase 4 PR discovery (`fetch_open_prs_with_retry()`). If `gh` is older than `2.18.0`, log clear error and actionable guidance (`gh 2.18+ required for 'headRefOid' field; on Ubuntu/Debian install from https://cli.github.com or release .deb`) before failing discovery.
+  - `check_git_version()`: Run before Phase 4 landing forecast (`landing_forecast()`). If `git` is older than `2.38.0`, emit warning naming `git 2.38+ required for 'git merge-tree --write-tree'; on Ubuntu/Debian upgrade via ppa:git-core/ppa`.
+  - Also include tool version checks in `preflight_warnings()` for preview/unattended runs.
+- In `ledger_merge.py` (`_merge_tree`): When `git merge-tree` exits non-zero with `usage: git merge-tree <base-tree>` or syntax refusal, return:
   `merge-tree failed: git merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)`
-- In `merge_cleanup.py` (`fetch_open_prs_with_retry`): If error contains `Unknown JSON field: "headRefOid"`, annotate with recommendation to upgrade to `gh 2.18+`.
 
 ### Seam 3: Skills Army HQ & Merge-Cleanup Documentation
 - `skills/3-weekly/skills-army-hq/README.md` & `SKILL.md`: Document Linux POSIX support. Clarify that `intake.py init` must be run first to establish the collection (or adopt an existing Pulse collection) before `add`.
@@ -95,22 +95,26 @@ In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` & `ledger_merge.py`:
 
 ---
 
-## 3. Falsifiable Acceptance Criteria
+## 3. Falsifiable Acceptance Criteria & Execution Controls
 
-1. **AC-1 (lsof unrelated warning tolerance):**
+All verification controls will execute deterministically in `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py` (zero test sprawl under `test/`, strictly complying with GH-831), with results captured in `SUMMARY.md` and `provenance.jsonl`:
+
+1. **AC-1 (lsof unrelated warning + idle directory):**
    `inspect_open_handles` on an idle directory with simulated `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/abc/merged\n Output information may be incomplete.` on stderr returns `verified: True, active: False`.
-2. **AC-2 (lsof related warning fails closed):**
-   `inspect_open_handles` with simulated warning mentioning a subdirectory within the checkout (e.g. `lsof: WARNING: can't opendir(/path/to/repo/sealed)`) returns `verified: False, active: False` with `lsof enumeration incomplete`.
-3. **AC-3 (lsof unclassified error fails closed):**
-   `inspect_open_handles` with an unrecognized stderr string returns `verified: False, active: False`.
-4. **AC-4 (merge-cleanup git version preflight):**
-   When `git --version` reports `2.34.1`, `preflight_warnings()` emits a clear warning naming `git 2.38+` requirement and recommendation.
-5. **AC-5 (merge-cleanup gh version preflight):**
-   When `gh --version` reports `2.4.0`, `preflight_warnings()` emits a clear warning naming `gh 2.18+` requirement and recommendation.
-6. **AC-6 (merge-tree error diagnosis):**
-   `merge_tree` simulation on git with legacy syntax output surfaces the actionable upgrade recommendation.
-7. **AC-7 (Skills Army HQ Linux documentation):**
-   Documentation clearly notes Linux setup and `init` requirement.
-8. **AC-8 (Zero regression):**
-   Existing `test/gh534_phase_a_tests.py` suite continues to pass 46/46 tests cleanly.
+2. **AC-2 (lsof unrelated warning + root-CWD holder process):**
+   In a disposable checkout with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning refuses removal.
+3. **AC-3 (lsof related warning fails closed):**
+   `inspect_open_handles` with a warning mentioning a path equal to, inside, or containing the checkout path (including canonical symlink aliases, e.g. `lsof: WARNING: can't opendir(/path/to/repo/sealed)`) returns `verified: False, active: False` with `lsof enumeration incomplete`.
+4. **AC-4 (lsof standalone incomplete disclaimer & unclassified errors fail closed):**
+   `inspect_open_handles` with a standalone `Output information may be incomplete.` (without prior warning) or an unrecognized stderr line returns `verified: False, active: False`.
+5. **AC-5 (gh version check before discovery):**
+   CLI execution with a stubbed `gh` reporting version 2.4.0 (below 2.18.0) fails with a clear message naming `gh 2.18+` and the upgrade path before discovery returns. A stub reporting 2.18.0 succeeds without warning.
+6. **AC-6 (git version check before forecast):**
+   CLI execution with a stubbed `git` reporting version 2.34.1 (or 2.37.9, below 2.38.0) emits the Git 2.38+ recommendation before running `landing_forecast`. A stub reporting 2.38.0 passes without warning.
+7. **AC-7 (_merge_tree diagnostic output):**
+   `_merge_tree` simulation on git returning legacy usage syntax returns `merge-tree failed: git merge-tree --write-tree requires git 2.38+...`.
+8. **AC-8 (Skills Army HQ Linux documentation):**
+   Documentation in `skills-army-hq/README.md` and `SKILL.md` explicitly states POSIX/Linux support and specifies running `intake.py init` prior to `add`.
+9. **AC-9 (Regression verification):**
+   Existing suite `test/gh534_phase_a_tests.py` runs and passes 46/46 tests cleanly.
 

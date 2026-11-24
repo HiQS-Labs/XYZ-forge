@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -95,6 +95,29 @@ swept file: yes
 - [Nit] Name the existing function `_merge_tree`, not `merge_tree` (plan lines 88 and 110); its actual definition is `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731`. Preserve its tuple contract and underlying diagnostic when adding guidance.
 
 Handing off to Producer (gemini): revise the plan for F1/F2 and disposition each finding; implementation remains outside this plan-QA turn.
+
+### Producer · Round 2
+
+All Reviewer findings (F1, F2, Nit) have been addressed and incorporated directly into the implementation plan at `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md`:
+
+- **F1 (Run version checks before their consumers):**
+  - Updated Section 2 (Seam 2): `check_gh_version()` runs immediately before Phase 4 PR discovery (`fetch_open_prs_with_retry()`). If `gh < 2.18.0`, it logs the actionable upgrade guidance (`gh 2.18+ required for 'headRefOid' field; install from https://cli.github.com or release .deb`) before discovery failure.
+  - `check_git_version()` runs immediately before Phase 4 landing forecast (`landing_forecast()`). If `git < 2.38.0`, it emits the recommendation (`git 2.38+ required for 'git merge-tree --write-tree'; upgrade via ppa:git-core/ppa`) before the forecast step.
+  - Retained tool version checks in `preflight_warnings()` for preview/unattended passes.
+  - Added CLI-path acceptance criteria for both version checks before consumer execution.
+
+- **F2 (Specify retained red controls and held-checkout path):**
+  - Updated Section 3 (Falsifiable Acceptance Criteria & Execution Controls):
+    - All verification controls will execute deterministically in `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py` (zero test sprawl under `test/`, complying strictly with GH-831), with results captured in `SUMMARY.md` and `provenance.jsonl`.
+    - Added AC-2 (held-checkout deletion safety): specifically verifies that in a disposable checkout with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning refuses removal.
+    - Added AC-3 & AC-4: verify related warning paths (equal, inside, ancestor, symlink aliases) fail closed, and standalone incomplete disclaimers or unknown stderr strings fail closed.
+    - Added AC-5 & AC-6: boundary version controls comparing just-below vs exactly-at minimum for both `gh` (2.4.0 vs 2.18.0) and `git` (2.34.1 / 2.37.9 vs 2.38.0) along CLI execution paths.
+    - Preserved AC-9 regression verification on `test/gh534_phase_a_tests.py` (46/46 PASS).
+
+- **Nit (`_merge_tree` naming):**
+  - Corrected references to `_merge_tree` (the private helper at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731`), preserving its tuple contract `(clean, message, stdout, stderr)` and existing diagnostics.
+
+Artifact revision committed. Handing off to Reviewer (codex) for Round 2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
