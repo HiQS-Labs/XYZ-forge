@@ -1,8 +1,8 @@
 ---
 title: build_queue --daily-goals admits #N from prose, not just checklist items
-status: Planning
+status: Complete
 created: 2026-11-23
-updated: 2026-11-23
+updated: 2026-11-24
 owner: noelsaw1
 gh_issue: 1569
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1569
