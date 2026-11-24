@@ -32,6 +32,7 @@ Read-only reproduction on `305ebc303` (`parse_daily_goals_refs(body, "me/repo", 
 | ``- [ ] `#10` then #11`` (backticked local lead) | `[10]` | `[10]` |
 | ``- [ ] `me/repo#10` then #11`` (backticked same-repo qualified lead) | `[11]` | `[10]` |
 | ``- [x] `o/r#9` #10`` then ``- [ ] #7`` | `[7]` | `[7]` |
+| ``- [ ] #7``, a fenced block containing a backticked foreign reference, then ``- [ ] #99`` | `[7, 99]` | `[7, 99]` (a fenced-out reference must never become a lead) |
 | ``prose `o/r#9` and #10 #11`` (no task list) | `[10, 11]` | `[10, 11]` |
 
 Effect: a run scoped by `--daily-goals` can queue, and under the standing owner grant merge or close, an issue the
@@ -43,7 +44,7 @@ operator never listed. The queue rules fail closed elsewhere, so this is the one
 - Lead choice: first `ATOMIC_REF` match (line 98) on an unchecked `CHECKBOX` line (97), `parse_daily_goals_refs:273-276`.
 - `_sanitize_body` is also the U15 hold-evidence sanitizer (line 187), so it must not change.
 - Not a frozen twin; no suite under `test/` covers `build_queue.py`. Prior art: GH-1569 / PR #1589 (`TESTS-RESULTS/2026-11-23+GH-1569/`).
-- Doc consumer: `skills/1-hourly/kickstart/SKILL.md` line 306 describes the lead rule.
+- Doc consumer: `skills/1-hourly/kickstart/SKILL.md` line 305 describes the lead rule.
 
 ## Plan
 
@@ -51,9 +52,10 @@ Smallest change, one file plus one doc line:
 
 1. Add `FOREIGN_REF_BACKTICK` next to `REF_BACKTICK` (lines 96-99): ``re.compile(r"`([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+)`")``.
 2. In `parse_daily_goals_refs`, only when the body has a task list, recompute `lines` from
-   `_sanitize_body(FOREIGN_REF_BACKTICK.sub(r"\1", body or ""))`, so a backticked foreign reference stays visible and
-   wins as the lead. The no-task-list path is not touched (byte-identical).
-3. Adjust the `SKILL.md` line 306 sentence to say a backticked foreign lead also admits nothing.
+   `_sanitize_body(FOREIGN_REF_BACKTICK.sub(r"\1", FENCED_CODE.sub("", body or "")))`, so a backticked foreign
+   reference stays visible and wins as the lead. Fenced blocks are removed FIRST, because unwrapping before that would
+   turn a fenced-out reference into a live item (counterexample in the table). The no-task-list path is not touched (byte-identical).
+3. Adjust the `SKILL.md` line 305 sentence to say a backticked foreign lead also admits nothing.
 4. Record a manual red/green on the table above under `TESTS-RESULTS/2026-11-24+GH-1590/` with `provenance.jsonl`.
 
 ## Non-goals
@@ -71,7 +73,7 @@ one CodeRabbit Minor on #1589 (2026-11-23); no other reports, trend unknown.
 
 - [ ] ``- [ ] `other/repo#9` then #10`` admits no reference.
 - [ ] A backticked local lead (``- [ ] `#10` then #11``) still admits only `#10`, and a backticked same-repo qualified lead admits only that number.
-- [ ] A bare foreign lead and a checked `[x]` line keep their current results.
+- [ ] A bare foreign lead, a checked `[x]` line and a fenced block holding a backticked foreign reference keep their current results.
 - [ ] A body with no task list returns exactly what it returns today.
 - [ ] Manual red and green controls on the table above are retained under `TESTS-RESULTS/2026-11-24+GH-1590/` with provenance, and no test file or suite is added.
 

@@ -1,0 +1,13 @@
+# Unchanged-candidate rejection (base 305ebc303d7cee1553570200963b5aac39fd4195) 2026-11-24T19:36:49Z
+$ #1590 command probe (exit 0 = bug still present = unfixed)
+exit=0
+$ #1583 grep_present probe (match = bug present = unfixed)
+exit=0
+$ prototype of the REVISED #1590 fix, in-process only (no file written)
+'- [ ] `other/repo#9` then #10'                                now [10] fixed [] OK
+'- [ ] `#10` then #11'                                         now [10] fixed [10] OK
+'- [ ] `me/repo#10` then #11'                                  now [11] fixed [10] OK
+'- [ ] other/repo#9 then #10'                                  now [] fixed [] OK
+'- [ ] #7\n```\n`other/repo#9`\n```\n- [ ] #99'                now [7, 99] fixed [7, 99] OK
+'- [x] `o/r#9` #10\n- [ ] #7'                                  now [7] fixed [7] OK
+'prose `o/r#9` and #10 #11'                                    now [10, 11] fixed [10, 11] OK
