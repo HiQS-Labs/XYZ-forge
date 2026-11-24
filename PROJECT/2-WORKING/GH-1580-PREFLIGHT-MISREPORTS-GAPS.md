@@ -98,3 +98,7 @@ a wrong readiness) is #1426 and this one, so the trend is unknown rather than ri
 ## Red/green evidence
 
 `TESTS-RESULTS/2026-11-23+GH-1580/` (`controls.sh`, `outputs/*.txt`, `provenance.jsonl`, `manual-check.md`).
+
+## Merge evidence
+
+- PR #1593 merged 2026-11-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
