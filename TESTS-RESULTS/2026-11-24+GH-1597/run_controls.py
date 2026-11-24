@@ -73,6 +73,7 @@ def main():
     subprocess.run(["git", "-C", str(clone_path), "config", "user.name", "Test User"], check=True)
     subprocess.run(["git", "-C", str(clone_path), "config", "user.email", "test@example.com"], check=True)
 
+
     # Pre-execution clone identity verification (F4)
     res_head_b = subprocess.run(["git", "-C", str(clone_path), "rev-parse", "HEAD"], capture_output=True, text=True)
     res_bare_b = subprocess.run(["git", "-C", str(clone_path), "config", "--get", "core.bare"], capture_output=True, text=True)
@@ -98,11 +99,12 @@ def main():
     sys.path.insert(0, str(scripts_dir))
     scan_clones = load_module_from_path("scan_clones", scripts_dir / "scan_clones.py")
     merge_cleanup = load_module_from_path("merge_cleanup", scripts_dir / "merge_cleanup.py")
-    ledger_merge = load_module_from_path("ledger_merge", scripts_dir / "ledger_merge.py")
+    ledger_merge = merge_cleanup.ledger_merge
 
     assert Path(scan_clones.__file__).resolve().is_relative_to(clone_path), "scan_clones must be imported from clone"
     assert Path(merge_cleanup.__file__).resolve().is_relative_to(clone_path), "merge_cleanup must be imported from clone"
     assert Path(ledger_merge.__file__).resolve().is_relative_to(clone_path), "ledger_merge must be imported from clone"
+    assert merge_cleanup.ledger_merge is ledger_merge, "production ledger_merge must be identical to runner ledger_merge"
 
     overlay_stderr = (
         "lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/c8b2520da/merged\n"
@@ -443,14 +445,15 @@ exit 0
         merge_cleanup._parse_version("git version 2.38.0") == (2, 38, 0)
     )
 
-    # 6b. Candidate production main() execution with isolation strictly at clone_path (F4)
+    # 6b. Falsifier & effective stub proof (F4):
+    # Unpatched production loader consults inherited primary pin and returns 2 on disposable clone
     orig_warn_git = merge_cleanup.warn_git_version_if_needed
     orig_build_forecast = merge_cleanup.build_landing_forecast
     orig_fetch_prs = merge_cleanup.fetch_open_prs_with_retry
     orig_pin_sel = merge_cleanup.pin_selection
     orig_land_prs = merge_cleanup.land_prs
     orig_scan_dirs = merge_cleanup.scan_directories
-    orig_harness_paths = ledger_merge.harness_paths_module
+    orig_harness_paths = merge_cleanup.ledger_merge.harness_paths_module
 
     sample_prs = [
         {"number": 101, "title": "P1", "headRefName": "f1", "headRefOid": "a"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/101"},
@@ -458,12 +461,34 @@ exit 0
         {"number": 103, "title": "P3", "headRefName": "f3", "headRefOid": "c"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/103"},
     ]
 
-    # Stubs for clean disposable full-clone isolation (F4)
-    ledger_merge.harness_paths_module = lambda repo: None
     merge_cleanup.scan_directories = lambda *a, **k: []
     merge_cleanup.fetch_open_prs_with_retry = lambda repo: sample_prs
     merge_cleanup.pin_selection = lambda *args, **kwargs: True
     merge_cleanup.land_prs = lambda *a, **k: 0
+
+    import hashlib
+    origin_url = subprocess.check_output(["git", "-C", str(clone_path), "remote", "get-url", "origin"], text=True).strip()
+    origin_ident = origin_url.rstrip("/").removesuffix(".git")
+    pin_key = "xyz.primary.repo-" + hashlib.sha256(origin_ident.encode()).hexdigest()[:24]
+    subprocess.run(["git", "-C", str(clone_path), "config", pin_key, "/tmp"], check=True)
+
+    old_argv = sys.argv
+    sys.argv = ["merge_cleanup.py", "--primary", str(clone_path), "--prs", "101,102,103"]
+    try:
+        unpatched_exit = merge_cleanup.main()
+    except SystemExit as exc:
+        unpatched_exit = exc.code
+    finally:
+        sys.argv = old_argv
+
+    unpatched_rejected = (unpatched_exit == 2)
+    subprocess.run(["git", "-C", str(clone_path), "config", "--unset", pin_key], check=True)
+
+    # Patch production's actual referenced ledger_merge module
+    stub_func = lambda repo: None
+    merge_cleanup.ledger_merge.harness_paths_module = stub_func
+    stub_installed = (merge_cleanup.ledger_merge.harness_paths_module is stub_func and
+                      ledger_merge.harness_paths_module is stub_func)
 
     candidate_event_log = []
     def candidate_warn_git(*args, **kwargs):
@@ -486,7 +511,6 @@ exit 0
     merge_cleanup._GIT_WARNED = False
 
     # Execute candidate production main() strictly on clone_path
-    old_argv = sys.argv
     sys.argv = ["merge_cleanup.py", "--primary", str(clone_path), "--prs", "101,102,103"]
     try:
         candidate_exit = merge_cleanup.main()
@@ -560,7 +584,7 @@ exit 0
                             supported_exit == 0 and warn_238 is None)
 
     # Restore originals
-    ledger_merge.harness_paths_module = orig_harness_paths
+    merge_cleanup.ledger_merge.harness_paths_module = orig_harness_paths
     merge_cleanup.scan_directories = orig_scan_dirs
     merge_cleanup.fetch_open_prs_with_retry = orig_fetch_prs
     merge_cleanup.pin_selection = orig_pin_sel
@@ -570,13 +594,14 @@ exit 0
     merge_cleanup.run_git = orig_run_git
     merge_cleanup._GIT_VERSION_CHECKED = None
 
-    ac6_passed = (boundary_parsed and candidate_order_ok and moved_check_red and good_git_terminal_ok)
+    ac6_passed = (boundary_parsed and unpatched_rejected and stub_installed and
+                  candidate_order_ok and moved_check_red and good_git_terminal_ok)
     record_receipt(
         "AC-6",
         "git version preflight temporal order before forecast verified in production main(); 2.37.9 warns, 2.38.0 clean",
-        f"merge_cleanup.main() candidate_event_log={candidate_event_log}, mutant_event_log={mutant_event_log}",
+        f"merge_cleanup.main() unpatched_rejected={unpatched_rejected}, stub_installed={stub_installed}, candidate_event_log={candidate_event_log}, mutant_event_log={mutant_event_log}",
         0 if ac6_passed else 1,
-        f"candidate_order_ok={candidate_order_ok}, moved_check_red={moved_check_red}, good_git_terminal_ok={good_git_terminal_ok}, primary={clone_path}",
+        f"unpatched_rejected={unpatched_rejected}, stub_installed={stub_installed}, candidate_order_ok={candidate_order_ok}, moved_check_red={moved_check_red}, good_git_terminal_ok={good_git_terminal_ok}, primary={clone_path}",
         ac6_passed
     )
 
