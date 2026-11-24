@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: none
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -95,5 +95,19 @@ ROUND: 1 / 3
 - Verified the wording against `PROJECT/PDDA.md` and `wave_reconcile.read_changelog_writes_mode`; a focused text assertion passed and rejected the previous wording as a red control. Searched for other exact-text pins; none found.
 - No suite or PDDA gate was run, as specified for this docs-only turn. No prior findings required disposition.
 - Handing off to Reviewer (claude) to review the whole artifact and the requested sentence.
+
+### Reviewer · Round 1 · claude
+swept file: yes
+
+VERDICT: PASS
+Basis: the reworded sentence is accurate against both cited sources and the diff is confined to that one sentence.
+
+- [Pass] Wording matches the PDDA contract. `skills/2-daily/express/SKILL.md:212-213` says a hand-written entry applies "only under `CHANGELOG_WRITES=branch`" and that under `off`/`landing` "a branch must not write `CHANGELOG.md`". `PROJECT/PDDA.md` (CHANGELOG section) agrees: `off` disables writing on PR branches, `landing` synthesizes post-landing with "PR branches do not write to `CHANGELOG.md`", and `branch` is the only mode that updates on the PR branch.
+- [Pass] Mode set matches the code. `utils/py/wave_reconcile.py:1935` `read_changelog_writes_mode` allows exactly `off`/`landing`/`branch`, with default `off`. The `off`/`landing` grouping in the sentence is complete.
+- [Pass] Scope is correct. `git diff bef7eef90 HEAD --name-only` lists only `skills/2-daily/express/SKILL.md` and this relay file. The skill diff is +2/-1, in the step-5 sentence only. There is no `releases.db`, `releases.sql`, test or script change.
+- [Pass] No contradiction elsewhere in the file. `SKILL.md:18`, `:29` and `:188` already gate the CHANGELOG entry on `CHANGELOG_WRITES=branch`, and `:209` already says `off`/`landing` leave `CHANGELOG.md` untouched. I found no pre-existing defects in the file that bear on this change.
+- [Nit] `SKILL.md:212` reads "add one by hand if the change needs it only under `CHANGELOG_WRITES=branch`;". "only" could be read as modifying "needs it". "add one by hand only under `CHANGELOG_WRITES=branch`, if the change needs it;" would be clearer. This is optional and not blocking: line 213 removes the ambiguity.
+
+handing off: relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
