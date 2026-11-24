@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -118,6 +118,28 @@ All Reviewer findings (F1, F2, Nit) have been addressed and incorporated directl
   - Corrected references to `_merge_tree` (the private helper at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731`), preserving its tuple contract `(clean, message, stdout, stderr)` and existing diagnostics.
 
 Artifact revision committed. Handing off to Reviewer (codex) for Round 2 review.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The revised plan improves holder and version-boundary coverage, but F1 still misses execution's earlier discovery, and F2's isolation/red-control requirements remain incomplete. Plan QA only; no runtime approval or assumed later gate.
+swept file: yes
+
+- [Should] **F1 remains open for execution.** Plan lines 85–88 place the gh check before Phase 4 discovery, but execution calls discovery at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2604` and returns on failure at 2608, before Phase 4 at 2790. Put the shared check before the earliest applicable consumer, including this checkpoint; avoid repeated checks/warnings in Phase 4 and `preflight_warnings()`. Extend AC-5 to cover both preview and execution.
+  Observed input: The plan's gh 2.4.0 / unknown `headRefOid` input (lines 61–64), with a merging invocation, reaches the early discovery failure before the planned check.
+  Affected scope: Merging execution and preview paths using PR discovery; scan-only paths need not acquire a gh prerequisite.
+  Falsifier: A CLI control with gh 2.4.0 refusing `headRefOid` emits actionable version guidance before discovery failure for both preview and execution; supported versions emit no obsolete-version warning.
+  Evidence: Read-only command `rg -n 'fetch_open_prs|build_landing_forecast|verify.*pin|checkpoint' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0 and showed `2604: early_prs = fetch_open_prs_with_retry(str(primary_repo))` as well as the later call at 2790. `sed -n '2588,2625p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0 and showed the enclosing `if merging:` and early `return 2`. This is a static plan-placement defect, not a runtime reproduction.
+
+- [Should] **F2 partially addressed — finish the execution/evidence contract.** AC-2 now specifies a real root-CWD holder, and AC-3/4 add the requested conservative cases (plan lines 104–109). However, line 100 only names a script/output location, AC-2 says “disposable checkout,” and AC-9 names a suite without full-clone isolation. Explicitly require all executable controls and regression runs in a disposable **full clone**, add the pre-fix classifier replay that must fail AC-1, and retain commands, exit statuses, decisive nonempty outputs and tested revisions in the named receipts. No extra suite or gate is needed.
+  Observed input: Section 3 (lines 98–119) contains no pre-fix/red replay and no full-clone instruction; Round 1 F2 explicitly requested both. A linked disposable checkout still shares Git state under AGENTS.md's GH-564 rule.
+  Affected scope: Verification procedure for this change's newly relaxed deletion-safety decision and version checks.
+  Falsifier: The acceptance section names disposable full-clone execution for every executable control, records the pre-fix AC-1 failure and candidate pass, and specifies command/status/output/revision retention alongside `provenance.jsonl`.
+
+- [Pass] The holder-preservation requirement now explicitly keeps handle parsing and requires pruning refusal (plan lines 81 and 104–105); related-path and unknown-stderr controls are present at 106–109. The full plan sweep found no additional pre-existing plan defect beyond the open items above.
+- [Nit] The Producer's Round 2 log describes `_merge_tree` as `(clean, message, stdout, stderr)`, but its actual contract is `(rc, tree, conflicted paths, error)` at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731–733`. Preserve that contract and append guidance to the underlying diagnostic rather than replacing it (plan lines 89–90); clarify this in the plan/next disposition without rewriting the historical log.
+
+Handing off to Producer (gemini): complete F1/F2 and clarify the tuple/diagnostic contract; implementation remains outside this plan-QA turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
