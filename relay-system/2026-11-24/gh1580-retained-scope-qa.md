@@ -108,4 +108,13 @@ Dropped/parked from this review: none beyond the Nits above.
 
 handing off: relay closed (Approved) for the retained scope; no further turn needed. The full gate remains a separate pending requirement.
 
+
+### Attestation · relay-drive — 2026-11-24T16:37:03Z
+task: RELAY-gh1580-retained-scope-qa
+reviewer: claude
+status: Approved
+reviewed-head: 99f48b73dd7c130d90a2317757731f27d4cfec2b
+added-range: 8504+4237
+added-sha256: b2731a7c168a89529074c54d47cc054728cc2a87f982f1ca8ddae8c3c7f436cf
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
