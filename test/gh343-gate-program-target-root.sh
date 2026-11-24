@@ -88,17 +88,16 @@ import sys
 
 path = Path(sys.argv[1])
 source = path.read_text(encoding="utf-8")
-old = '''    if os.path.sep in g0 or (os.path.altsep and os.path.altsep in g0):
-        # A direct program path is executed with cwd=target_root by marathon-drive.  Checking it
-        # with shutil.which() instead makes a target-relative path depend on the operator's cwd.
-        program_path = resolve(g0)
-        if program_path is None:
-            return ""
-        if not os.path.isfile(program_path):
-            return f"gate program not found under target_root {cwd}: {g0}"
-        if not os.access(program_path, os.X_OK):
-            return f"gate program is not executable under target_root {cwd}: {g0}"
-        return ""
+old = '''            elif os.path.sep in g0 or (os.path.altsep and os.path.altsep in g0):
+                # A direct program path is executed with cwd=target_root by marathon-drive.  Checking it
+                # with shutil.which() instead makes a target-relative path depend on the operator's cwd.
+                program_path = os.path.join(target_root, g0)
+                if not os.path.isfile(program_path):
+                    ready, ready_next = 0, (
+                        f"gate program not found under target_root {target_root}: {g0}")
+                elif not os.access(program_path, os.X_OK):
+                    ready, ready_next = 0, (
+                        f"gate program is not executable under target_root {target_root}: {g0}")
 '''
 if old not in source:
     raise SystemExit("could not construct the exact pre-GH-343 control branch")
