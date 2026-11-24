@@ -1,0 +1,21 @@
+PASS parser 3a discriminator base=[10, 1601] cand=[10]
+PASS parser 3b discriminator base=[11, 12] cand=[11]
+PASS parser 3c control (GH-N) base=[10] cand=[10]
+PASS parser 4 discriminator base=[11, 10] cand=[11]
+PASS parser 5 control no task list base=[10, 11] cand=[10, 11]
+PASS parser 6 control all checked base=[] cand=[]
+PASS parser 7 discriminator foreign lead base=[10] cand=[]
+PASS parser 7b discriminator same-repo qualified lead base=[9, 10] cand=[9]
+PASS parser 9 self lead then ref base=[10] cand=[]
+PASS parser 10 nested indent + plus + numbered + upper base=[1, 2, 3, 4, 5] cand=[1, 2, 4, 5]
+PASS parser 11 unchecked line without ref, then prose base=[7] cand=[]
+PASS parser 12 backticked lead base=[10, 11] cand=[10]
+PASS parser 13 dedupe base=[10, 11] cand=[10]
+PASS parser 14 discriminator paren nesting GH + after base=[20, 19] cand=[20]
+PASS 8 safety reader unchanged (parked_issues) base={1568} cand={1568}
+PASS 1 RED base original body admits excluded refs base queue=[1417, 1467, 1471, 1480, 1483, 1497, 1500, 1501, 1507, 1526, 1530, 1541, 1551]
+PASS 1 GREEN candidate original body = exactly 7 checklist items cand queue=[1417, 1467, 1471, 1497, 1500, 1530, 1551]
+PASS 2 CURRENT body: 7 items and output byte-identical base vs candidate 
+PASS 5 CLI no-task-list body byte-identical base vs candidate queue=[1417, 1467, 1480]
+PASS 6 CLI all-checked task list fails closed on candidate (zero selected) base_rc=0 cand_rc=build_queue: daily-goals #1568 selected zero open issues or PRs after resolution
+RESULT: ALL PASS

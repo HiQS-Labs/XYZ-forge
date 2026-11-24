@@ -302,7 +302,7 @@ When an item hits a decision point during an authorized run, the child applies t
 ### Daily-Goals Queue Scoping (`build_queue.py --daily-goals <issue>`, KS-14)
 
 When launching a run scoped to a daily-goals issue, pass `--daily-goals <issue>` (and optionally `--daily-goals-json <file>` for deterministic offline replay) to `skills/1-hourly/kickstart/scripts/build_queue.py`:
-- Scopes the execution queue to unchecked local `#N` / same-repo `owner/repo#N` items referenced in that issue (foreign-repo references like `other/repo#123` are ignored atomically; checked-off `- [x]` lines are excluded).
+- Scopes the execution queue to the items the issue names. When the body has a task list (any `- [ ]` / `- [x]` line, GH-1569), only an unchecked `- [ ]` line admits, and only its FIRST `#N` (or same-repo `owner/repo#N`): later `#N` on that line, checked `- [x]` lines and prose such as an "Out of scope: #N" sentence are not admitted. A body with no task list keeps the prose rule: every unchecked local `#N` / same-repo `owner/repo#N` is admitted. Foreign-repo references like `other/repo#123` are ignored atomically in both modes.
 - Lifts the `Daily goals*` out-of-scope filter for that single input issue (omitting it from `Not queued`) and ignores `--since-days` for referenced issues (including folded `(closes #...)` annotations).
 - Preserves all U15/KS-02 holds and safety evidence across every closing target of admitted PRs (including unselected/older targets), failing closed on missing/closed daily-goals issues, zero open selections, incomplete PR inputs, or uninspectable closing targets.
 - Default invocations without `--daily-goals` remain unchanged.
