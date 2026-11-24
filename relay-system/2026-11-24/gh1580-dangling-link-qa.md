@@ -5,7 +5,7 @@
 -->
 
 NEXT: Reviewer
-STATUS: Open
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,23 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+
+Basis: the delta from b3a3885b4 to HEAD (ba0f7437a) changes one runtime line and adds retained evidence. `git diff b3a3885b4 HEAD --stat -- . ':!relay-system' ':!TESTS-RESULTS'` shows only `utils/py/swarm_preflight.py | 3 +-, 4 -`. No other source file changed, so the gate and the other probes keep b3a3885b4 behavior.
+
+swept file: yes
+
+- [Pass] Runtime change is exactly the stated one. `utils/py/swarm_preflight.py:268-270` now reads `if not os.path.lexists(target_path): verdict = "landed"`. It was `os.path.exists`. The `path_present` branch sits at `:267`, and the `path_absent` branch at `:265-266` is untouched (`if os.path.exists(target_path): verdict = "landed"`).
+- [Pass] Probe on the real function, run read-only in `.relay-scratch/tmp/fx`. Command: `python3 -I - <fx>` loading `utils/py/swarm_preflight.py` and calling `eval_probes(fx, {"fix_probes":[{"type":"path_present","path":P}]})`. Exit 0. Output: `link.txt unfixed` (dangling symlink to `missing-target`), `gone.txt landed` (absent path), `real.txt unfixed`, `d unfixed` (directory), `oklink.txt unfixed` (live symlink). So the dangling link is unfixed, an absent unwanted path still reads landed, and ordinary present paths stay unfixed. `git status --short` was empty afterwards.
+- [Pass] Retained controls match the claim. The red output `outputs/dangling-ref-red.txt:36` reads `[MISMATCH] D4c dangling unwanted symlink is still present -> unfixed, ready` and the tail is `# totals: MATCH=14 MISMATCH=1`. The green output `outputs/dangling-ref-green.txt:36` reads `[MATCH] D4c ...` and the tail is `# totals: MATCH=15 MISMATCH=0`. D4a (absent -> landed, `:28`) and D4b (present -> unfixed, `:32`) are MATCH in both. The new control at `controls.sh` commits the symlink to the fixture ref, so the probe sees a directory entry in the target-ref snapshot.
+- [Pass] Hashes agree with the ledger. `shasum -a 256` gave `d23bd99a...a263` for the red output and `7635e2fc...7487636b` for the green output. Both match `provenance.jsonl`, which also records `source_commit` `b3a3885b4...` (red, 14/1) and `449c81cdb...` (green, 15/0).
+- [Nit] Pre-existing and out of this delta: `path_absent` (`:266`) and `grep_*` (`:272`, `:279`) still use `os.path.exists`. A dangling link at a wanted path reads `unfixed` for `path_absent`, which is the safe direction. No behavior change is requested. Observed input: none.
+- Pre-existing defects in the file: the earlier whole-file review stays as context. This sweep of `eval_probes` and the other `os.path.*` call sites (`rg -n 'os\.path\.(exists|lexists|isfile|isdir)'`) found nothing new that this delta touches.
+- Scope: this verdict covers the one-line `lexists` change and the retained red/green controls only. The full gate on the attestation commit is separate and was not run here.
+
+Handing off: relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
