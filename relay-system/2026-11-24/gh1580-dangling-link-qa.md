@@ -105,4 +105,13 @@ swept file: yes
 
 Handing off: relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-24T17:04:10Z
+task: RELAY-gh1580-dangling-link-qa
+reviewer: claude
+status: Approved
+reviewed-head: ba0f7437a7878219493bc2962ca9efa8322bbb60
+added-range: 8525+2900
+added-sha256: 9de13b7d0df4d24640fda9b2dd977290a713858ef8068014bc829b7f9edd6f54
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
