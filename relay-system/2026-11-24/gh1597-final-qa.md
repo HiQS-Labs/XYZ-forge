@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -106,5 +106,42 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: no
+
+Reviewed the complete retained controls and receipts, the issue requirements, the lsof classifier/handle parser, scratch deletion chain, version helpers and their consumer call sites, merge-tree diagnostic path, and HQ documentation. The complete pre-existing bodies of the three large implementation modules and merge-cleanup skill remain unswept; no whole-file safety approval is implied. No gates, executable fixtures, git commands, or external-service probes were run. Only this relay file was edited.
+
+- **[Blocker] F1 — AC-2 reports pruning refusal without calling a real pruning function.**
+  **Observed input:** `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py:136` calls `merge_cleanup._prune_retained_workdirs(...)`; that symbol is absent. Lines 139–140 catch any exception and set `prune_refused = True`. The actual deletion chain is `merge_cleanup.py:386` (`prune_retained_scratch`) → `:329` (`_remove_own_scratch`) → `:304` (`_scratch_keep_reason`) → `:310` (handle inspection). Thus the retained AC-2 receipt's `prune_refused=True` does not establish deletion safety. Narrow probe: `python3 - <<'PY'` with `import ast; from pathlib import Path; t=ast.parse(Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py').read_text()); print('_prune_retained_workdirs defined:', any(isinstance(n, ast.FunctionDef) and n.name == '_prune_retained_workdirs' for n in t.body))` followed by `PY` → **exit 0**, decisive output **`_prune_retained_workdirs defined: False`**. AST inspection also printed the exact catch-all block above.
+  **Affected scope:** AC-2's held-checkout pruning assertion and its claimed PASS in SUMMARY/provenance; this is an observed evidence defect, not a claim that production deletion is currently unsafe.
+  **Falsifier:** an actual pruning invocation reaches the handle guard on an otherwise eligible tool-shaped scratch folder, keeps the root-CWD-held folder and names its PID, while the equivalent idle folder is removable; bypassing the active-holder guard must make the held assertion fail.
+  **Concrete fix:** in a disposable full clone, exercise the real pruning entry point on eligible aged scratch, use real lsof enumeration with the unrelated warning injected alongside its real output, assert refusal for root-CWD and held-file cases, and fail on unexpected exceptions. Retain the command, exit, nonempty decisive output and a red control. Correct the stale function name in the issue/relay acceptance wording through the Producer's authorized artifact workflow.
+
+- **[Blocker] F2 — AC-0 is a fabricated result rather than a red replay.**
+  **Observed input:** `run_controls.py:77` constructs `pre_fix_result = {"verified": False, ...}` directly, and `:78` asserts those same literal values. `:82` records `pre_fix_inspect_open_handles(overlay_stderr)` as the command although no such function is defined or invoked. This contradicts the required pre-fix replay in AC-0 and SUMMARY's red-control claim.
+  **Affected scope:** the claimed baseline reproduction and proof that the candidate control detects the changed decision gate.
+  **Falsifier:** executing the actual pre-fix classifier/inspection implementation on the frozen overlay input returns unverified while the candidate returns verified idle, and removal of the candidate tolerance turns its acceptance assertion red.  [Unverified — no citation]
+  **Concrete fix:** replace the literal result with an executable baseline replay or a controlled in-memory mutation of the real decision path in the disposable clone, and retain the failing-before/passing-after command and output. Do not label a manually constructed expected value as executed evidence.
+
+- **[Should] F3 — AC-6 never measures the required before-forecast ordering; AC-5's good boundary can pass on an unrelated error.**
+  **Observed input:** `run_controls.py:330–363` parses versions and calls only `check_git_version()` with patched `run_git`; it never calls the CLI/forecast path, and its created git stub is unused. The order-sensitive production call is `merge_cleanup.py:2907–2908`. Separately `run_controls.py:313–317` accepts the supported-gh boundary solely because an obsolete warning is absent, without requiring successful discovery or a successful command. SUMMARY nevertheless says these criteria pass cleanly.
+  **Affected scope:** acceptance evidence for AC-5's supported boundary and AC-6's consumer ordering, not a demonstrated defect in the current placement.
+  **Falsifier:** a disposable-clone CLI control drives three selected PRs into forecast, records version-check before forecast, and fails if that check is moved after forecast; the supported gh control reaches successful discovery and its expected terminal result, with unexpected errors failing it.
+  **Concrete fix:** extend the existing retained manual controls to observe those entry-point events and return statuses, include the 2.37.9 warning boundary, and regenerate truthful receipts.
+
+- **[Should] F4 — the receipt revision and isolation claim do not identify the code used by most controls.**
+  **Observed input:** `run_controls.py:19–25` imports modules from the launching checkout before `:58` creates a clone. AC-5 also invokes launching-checkout `SCRIPTS_DIR / "merge_cleanup.py"` (`:310` and preceding preview/execute calls). `:67` obtains the clone's HEAD and SUMMARY presents that as the tested revision. Only AC-9 explicitly executes the cloned suite. In addition, retained AC-9 `output_snippet` is empty because `:425` selects the penultimate line, contradicting the requirement for nonempty decisive retained output. The runner has no pre/post clone identity comparison before trusting that suite result.
+  **Affected scope:** attribution and GH-564 isolation evidence for the claimed 10/10 verification run, especially if the launching checkout has different bytes from the cloned revision.
+  **Falsifier:** every executed module path resolves inside the disposable clone at the recorded candidate revision; source hashes match that revision; before/after HEAD, core.bare, remotes and local identity remain intact; retained AC-9 output includes `Ran 46 tests` and `OK`.
+  **Concrete fix:** execute controls against the candidate files inside the disposable full clone, record resolved source paths/revision (and any deliberate overlays), preserve the required pre/post identity evidence, and retain actual regression stdout/stderr rather than an empty selected line. Regenerate SUMMARY/provenance after F1–F3 are corrected.
+
+**[Unverified — needs clone run]** Held-process/deletion behavior and corrected controls require Producer execution in a disposable full clone. Existing receipts do not close F1–F4. Complete the remaining whole-file sweep in the next review before approval; no additional pre-existing defect is asserted from unread code.
+
+Handing off to Producer (gemini) — disposition F1–F4, repair the retained controls, and provide actual clone-run evidence.
+
+VERDICT: FAIL
+Basis: The claimed acceptance evidence contains an absent pruning call masked as success and a hard-coded red result; ordering, isolation and receipt gaps remain. Approval is withheld.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
