@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 7 / 7
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -483,5 +483,37 @@ Basis: The prior wrong-module defect is resolved and the reviewer sweep is compl
   - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
 
 Candidate commit: `462a72db0`. Handing off to Reviewer (codex) for Round 7 review.
+
+### Reviewer · Round 7 · codex
+
+swept file: no
+
+**Block.** Reviewed the Round 7 changes, their downstream scan/fetch path, current SUMMARY/provenance and prior dispositions. The completed whole-file sweep is recorded in Reviewer Round 6; this turn does not claim a fresh whole-file sweep. Applied the SWE rubric. No git commands, gates, executable fixtures, production CLI workflows or external-service probes were run. Only this relay file was edited. Earlier closed findings retain their prior evidence; no later gate is assumed.
+
+- **[Pass] F6 closed.** `skills/2-daily/merge-cleanup/SKILL.md:229` now distinguishes tolerated unrelated warnings and companion disclaimers from related/unclassified stderr; `skills/2-daily/merge-cleanup/scripts/scan_clones.py:437–439` gives the same distinction. This closes the stale all-stderr explanation.
+
+- **[Should] F5 remains open — the new red control reintroduces the unconstrained host scan.**
+  **Observed input (Form 1 source/contract contradiction):** the three main AC-5 calls now supply explicit roots (`run_controls.py:393,403,427`), but the newly executed `res_omitted_root` call at `:434–437` supplies only `--primary` and inherits the host environment. This deliberately takes the same unconstrained production path identified in Round 6: `merge_cleanup.py:2678–2682` selects default roots; `:2847` scans them; `scan_clones.py:26–30` includes host home directories; `:1289–1306` inspects their checkouts; `:1146` calls `classify_local_refs`; `:664` fetches origin. The gh stub does not contain these Git calls. The runner therefore still contradicts SUMMARY's unqualified disposable-clone isolation claim. No actual external checkout mutation is asserted.
+  **Affected scope:** the AC-5 omitted-root red control on hosts containing eligible checkouts in default roots or same-origin sibling directories. Its display-string check at `run_controls.py:438–440` also measures printed roots rather than actual inspection boundaries; AC-5 provenance omits the containment result entirely (`:448`).
+  **Falsifier:** observe production scan/inspection arguments under a safe substitute before any real checkout inspection; explicit-root candidate paths stay beneath the disposable allocation and an omitted-root mutant trips the same containment assertion. Both paths must remain unable to inspect or fetch host checkouts, even with an outside sentinel. Retained receipts must include those observed paths and the witnessed rejection.
+  **Concrete fix:** replace this unrestricted subprocess red control with an in-process production-main probe whose scan boundary records and validates arguments before returning safe fixture results (or isolate HOME and every default/sibling root beneath the disposable allocation). Use the same containment assertion on candidate and omitted-root mutant, witness its failure safely, and retain the decisive result in SUMMARY/provenance. Keep the explicit roots on all three existing AC-5 calls. No production scanner change, new suite or gate is requested.
+  **Narrow probe:** `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with the following AST-only body, then `PY`:
+  ```python
+  import ast
+  from pathlib import Path
+  p = Path('TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py')
+  for n in ast.walk(ast.parse(p.read_text())):
+      if isinstance(n, ast.Assign) and any(isinstance(x, ast.Name) and x.id in ('res_preview', 'res_exec', 'res_good_gh', 'res_omitted_root') for x in n.targets):
+          flags = [x.value for x in n.value.args[0].elts if isinstance(x, ast.Constant) and isinstance(x.value, str)]
+          print(f'{n.targets[0].id}: line={n.lineno}, explicit_root={"--root" in flags}')
+  ```
+  **Exit 0**; decisive output: `res_preview: line=392, explicit_root=True`; `res_exec: line=402, explicit_root=True`; `res_good_gh: line=426, explicit_root=True`; **`res_omitted_root: line=434, explicit_root=False`**. Cited source reads (`nl -ba`/`sed`, `rg`) also exited 0. This is an observed invocation defect, not a reproduced external-service hazard.
+
+**[Unverified — needs clone run]** Corrected containment controls require Producer execution in a disposable full clone. Round 7/7 is exhausted; STATUS is Escalated.
+
+VERDICT: FAIL
+Basis: F6 is closed and the three main AC-5 calls are bounded, but their new red control executes the original unbounded host-scan path. F5 remains open.
+
+Handing off to Producer (gemini) — report the escalation, safely contain the red control, retain clone-run evidence and obtain a renewed review cycle before approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
