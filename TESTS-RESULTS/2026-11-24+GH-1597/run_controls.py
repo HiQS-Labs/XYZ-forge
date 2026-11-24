@@ -430,22 +430,66 @@ exit 0
     full_good = res_good_gh.stderr + res_good_gh.stdout
     good_ok = (res_good_gh.returncode == 0 and "below the required 2.18.0 minimum" not in full_good)
 
-    # F5 Red control: verify that omitting --root scans default host roots, while supplying --root restricts strictly to empty_scan_root
-    res_omitted_root = subprocess.run(
-        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path)],
-        capture_output=True, text=True, env=env_good_gh
+    # F5 Safe In-process containment probe and red control:
+    # Measures the production scan boundary arguments without executing external scans or git fetches
+    orig_policy_loader = merge_cleanup.ledger_merge.harness_paths_module
+    merge_cleanup.ledger_merge.harness_paths_module = lambda repo: None
+    observed_scan_roots = []
+    orig_scan_dirs = merge_cleanup.scan_directories
+    def record_scan_roots(roots, *args, **kwargs):
+        observed_scan_roots.extend([Path(r).resolve() for r in roots])
+        return []
+
+    merge_cleanup.scan_directories = record_scan_roots
+    orig_fetch_prs_ac5 = merge_cleanup.fetch_open_prs_with_retry
+    merge_cleanup.fetch_open_prs_with_retry = lambda repo: []
+    orig_pin_sel_ac5 = merge_cleanup.pin_selection
+    merge_cleanup.pin_selection = lambda *args, **kwargs: True
+
+    # Candidate with explicit --root: all observed scan roots are strictly beneath temp_dir
+    observed_scan_roots.clear()
+    old_argv = sys.argv
+    sys.argv = ["merge_cleanup.py", "--primary", str(clone_path), "--root", str(empty_scan_root)]
+    try:
+        merge_cleanup.main()
+    except SystemExit:
+        pass
+    finally:
+        sys.argv = old_argv
+
+    candidate_roots_contained = (
+        len(observed_scan_roots) > 0 and
+        all(r.is_relative_to(temp_dir.resolve()) for r in observed_scan_roots)
     )
-    omitted_scans_default = ("GH Repos" in (res_omitted_root.stdout + res_omitted_root.stderr))
-    bounded_scans_only_root = (str(empty_scan_root) in full_good and "GH Repos" not in full_good)
-    scan_containment_ok = (omitted_scans_default and bounded_scans_only_root)
+
+    # Mutant without --root: selects default roots containing paths outside temp_dir, tripping containment assertion
+    observed_scan_roots.clear()
+    sys.argv = ["merge_cleanup.py", "--primary", str(clone_path)]
+    try:
+        merge_cleanup.main()
+    except SystemExit:
+        pass
+    finally:
+        sys.argv = old_argv
+
+    mutant_has_outside_roots = any(not r.is_relative_to(temp_dir.resolve()) for r in observed_scan_roots)
+
+    # Restore originals
+    merge_cleanup.scan_directories = orig_scan_dirs
+    merge_cleanup.fetch_open_prs_with_retry = orig_fetch_prs_ac5
+    merge_cleanup.pin_selection = orig_pin_sel_ac5
+    merge_cleanup.ledger_merge.harness_paths_module = orig_policy_loader
+
+    scan_containment_ok = (candidate_roots_contained and mutant_has_outside_roots and
+                           str(empty_scan_root) in full_good and "GH Repos" not in full_good)
 
     ac5_passed = (preview_ok and exec_ok and good_ok and scan_containment_ok)
     record_receipt(
         "AC-5",
         "gh version preflight before discovery (preview & execution); supported 2.18.0 passes with exit 0",
-        f"merge_cleanup.py with stubbed gh 2.4.0 (preview & exec) and supported gh 2.18.0",
+        f"merge_cleanup.py with stubbed gh 2.4.0 (preview & exec) and supported gh 2.18.0; observed_roots={observed_scan_roots[:2]}",
         0 if ac5_passed else 1,
-        f"preview_ok={preview_ok}, exec_ok={exec_ok}, good_ok={good_ok} (exit={res_good_gh.returncode})",
+        f"preview_ok={preview_ok}, exec_ok={exec_ok}, good_ok={good_ok}, candidate_contained={candidate_roots_contained}, mutant_outside_roots_red={mutant_has_outside_roots}, root={empty_scan_root}",
         ac5_passed
     )
 
