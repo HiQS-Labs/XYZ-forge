@@ -33,6 +33,7 @@ Read-only reproduction on `305ebc303` (`parse_daily_goals_refs(body, "me/repo", 
 | ``- [ ] `me/repo#10` then #11`` (backticked same-repo qualified lead) | `[11]` | `[10]` |
 | ``- [x] `o/r#9` #10`` then ``- [ ] #7`` | `[7]` | `[7]` |
 | ``- [ ] #7``, a fenced block containing a backticked foreign reference, then ``- [ ] #99`` | `[7, 99]` | `[7, 99]` (a fenced-out reference must never become a lead) |
+| The exact round-1 counterexample: `- [ ] #7`, then a fence opener written as three backticks followed directly by `other/repo#9` and one backtick, then `- [ ] #99`, then the closing fence | `[7]` | `[7]` |
 | ``prose `o/r#9` and #10 #11`` (no task list) | `[10, 11]` | `[10, 11]` |
 
 Effect: a run scoped by `--daily-goals` can queue, and under the standing owner grant merge or close, an issue the
@@ -73,7 +74,7 @@ one CodeRabbit Minor on #1589 (2026-11-23); no other reports, trend unknown.
 
 - [ ] ``- [ ] `other/repo#9` then #10`` admits no reference.
 - [ ] A backticked local lead (``- [ ] `#10` then #11``) still admits only `#10`, and a backticked same-repo qualified lead admits only that number.
-- [ ] A bare foreign lead, a checked `[x]` line and a fenced block holding a backticked foreign reference keep their current results.
+- [ ] A bare foreign lead, a checked `[x]` line and a fenced block holding a backticked foreign reference (including the exact round-1 counterexample, expected `[7]`) keep their current results.
 - [ ] A body with no task list returns exactly what it returns today.
 - [ ] Manual red and green controls on the table above are retained under `TESTS-RESULTS/2026-11-24+GH-1590/` with provenance, and no test file or suite is added.
 

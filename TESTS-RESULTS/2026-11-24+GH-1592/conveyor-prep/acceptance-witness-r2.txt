@@ -1,0 +1,48 @@
+# Round-2 acceptance witness 2026-11-24T19:38:45Z — disposable clone, base 305ebc303d7cee1553570200963b5aac39fd4195 + capture docs
+## Unchanged candidate: swarm_preflight.eval_probes (the evaluator marathon_drive.acceptance_probes_unmet calls, utils/py/marathon_drive.py:2639-2699)
+GH-1590-DAILY-GOALS-BACKTICK-LEAD.md verdicts [('command', 'unfixed'), ('path_absent', 'unfixed'), ('path_absent', 'unfixed')] => acceptance REJECTED (3 unmet)
+GH-1583-PLANNER-PATH-PRESENT.md verdicts [('grep_present', 'unfixed'), ('path_absent', 'unfixed'), ('path_absent', 'unfixed')] => acceptance REJECTED (3 unmet)
+## Throwaway fixed candidate (plan applied by hand in this disposable clone only; NOT the delivered build): same evaluator
+GH-1590-DAILY-GOALS-BACKTICK-LEAD.md verdicts [('command', 'landed'), ('path_absent', 'landed'), ('path_absent', 'landed')] => acceptance ACCEPTED
+GH-1583-PLANNER-PATH-PRESENT.md verdicts [('grep_present', 'landed'), ('path_absent', 'landed'), ('path_absent', 'landed')] => acceptance ACCEPTED
+## Exact round-1 counterexample through the fixed parser
+'- [ ] #7\n```other/repo#9`\n- [ ] #99\n```' => [7] (expected [7])
+'- [ ] `other/repo#9` then #10' => [] expected []
+'- [ ] `me/repo#10` then #11' => [10] expected [10]
+'- [ ] `#10` then #11' => [10] expected [10]
+'prose `o/r#9` and #10 #11' => [10, 11] expected [10, 11]
+## Throwaway diff
+diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
+index fe69fe25..0ae1603e 100755
+--- a/skills/1-hourly/kickstart/scripts/build_queue.py
++++ b/skills/1-hourly/kickstart/scripts/build_queue.py
+@@ -97,6 +97,7 @@ REF_BACKTICK = re.compile(r"`((?:PR\s+)?#\d+)`", re.I)
+ CHECKBOX = re.compile(r"^\s*(?:[-*+]|\d+\.)\s*\[([ xX])\]")
+ ATOMIC_REF = re.compile(r"(?<![\w/-])(?:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#(\d+)\b")
+ INLINE_BACKTICK = re.compile(r"`[^`\n]*`")
++FOREIGN_REF_BACKTICK = re.compile(r"`([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+)`")
+ HELD_LINE = re.compile(r"^\s*(?:[-*]\s*)?(?:\*\*)?HELD:(?:\*\*)?", re.I | re.M)
+ BLOCKED_BY = re.compile(r"\bblocked\s+by\s+(?:PR\s+)?#(\d+)\b", re.I)
+ AFTER_ACTIVE = re.compile(
+@@ -265,6 +266,8 @@ def parse_daily_goals_refs(body: str, slug: str, self_num: int) -> list[int]:
+     clean = _sanitize_body(body or "")
+     lines = clean.splitlines()
+     tasklist = any(CHECKBOX.match(line) for line in lines)
++    if tasklist:
++        lines = _sanitize_body(FOREIGN_REF_BACKTICK.sub(r"\1", FENCED_CODE.sub("", body or ""))).splitlines()
+     seen: set[int] = set()
+     ordered: list[int] = []
+     slug_l = slug.lower()
+diff --git a/utils/py/_marathon_plan.py b/utils/py/_marathon_plan.py
+index cbcf371d..6fcfa997 100644
+--- a/utils/py/_marathon_plan.py
++++ b/utils/py/_marathon_plan.py
+@@ -495,7 +495,7 @@ class Engine:
+             if t == "path_absent":
+                 return "landed" if os.path.exists(at(p.get("path"))) else "unfixed"
+             if t == "path_present":
+-                return "blocked" if not os.path.exists(at(p.get("path"))) else "unfixed"
++                return "landed" if not os.path.lexists(at(p.get("path"))) else "unfixed"
+             if t == "grep_present":
+                 if not os.path.exists(at(p.get("path"))):
+                     return "blocked"
