@@ -68,30 +68,23 @@ Extend the existing evaluator and report path. No new module, suite, flag or exi
    The allow-list review reproduced a false refusal for `true && PYTHONPATH+=:src python3 -V`.
    The operator directed shipping the remaining fixes after that failure. The missing later
    `uv` case remains open (see the issue and final relay).
-3. **Gaps.** One advisory list, `readiness.gaps` in JSON and `  gap         :` lines in the text report. It carries
-   the acceptance gaps (the issue has no `## Acceptance
-
-- [ ] CLI controls show line-anchored grep probes follow the expected landed/unfixed semantics.
-- [ ] An unwanted path already removed is recognized as landed.
-- [ ] Missing issue/capture acceptance sections are explicit advisory gaps for non-manifest lanes.
-- [ ] The first-command gate check matches development byte for byte. Run representative legacy controls.
-- [ ] Commit-bound verification and independent review cover the reduced scope.
+3. **Gaps.** Use the existing acceptance evaluation to surface missing issue or capture
+   acceptance sections in text and JSON. Keep the non-manifest gap advisory (GH-557).
+4. **Removed path.** An absent path under a `path_present` probe has landed. Planner
+   parity is tracked separately by the existing #1583.
 
 ## Acceptance
 
-- [ ] A `^`/`$`-anchored `grep_present` or `grep_absent` probe matches per line: a mid-file line reads as present, and a comment or `echo` mention does not satisfy `^alembic check`.
-- [ ] In a plain gate (one line, plain word characters, `&&` the only operator) every command is existence-checked: `bash -n … && uv lock --check` with `uv` absent is NOT-READY (exit 5) naming `uv`, and a gate that is not plain keeps the first-command check it had before (no new refusal) and prints an advisory gap line.
-- [ ] An issue with no `## Acceptance` section is reported as a gap in the text report and in `readiness.gaps`, naming any "Done when"/"To fix"/"Ask"/"Findings" heading it has, with verdict and exit code unchanged.
-- [ ] Red on `origin/development` and green on the changed head are recorded under `TESTS-RESULTS/2026-11-23+GH-1580/` with `provenance.jsonl`, and no new test suite is added.
-- [ ] The existing preflight suites and every preflight caller (marathon, jog, conveyor, flywheel, kickstart) are verified unaffected.
+- [ ] Line-anchored grep probes match individual lines and ignore comment/echo mentions at unmatched positions.
+- [ ] A removed unwanted path reads as landed.
+- [ ] Missing acceptance sections appear as advisory text and JSON gaps, naming alternative issue headings when present.
+- [ ] The first-command gate check matches development byte for byte, with legacy cases verified through the CLI.
+- [ ] Retained red and green controls and independent review cover this reduced scope.
 
 ## Acceptance — deviations from the issue
 
-- [added] A `^`/`$`-anchored `grep_present` or `grep_absent` probe matches per line: a mid-file line reads as present, and a comment or `echo` mention does not satisfy `^alembic check`. — reason: #1580 has no acceptance checklist; these restate its three defects and R2 as machine-checkable criteria.
-- [added] In a plain gate (one line, plain word characters, `&&` the only operator) every command is existence-checked: `bash -n … && uv lock --check` with `uv` absent is NOT-READY (exit 5) naming `uv`, and a gate that is not plain keeps the first-command check it had before (no new refusal) and prints an advisory gap line. — reason: #1580 has no acceptance checklist; these restate its three defects and R2 as machine-checkable criteria.
-- [added] An issue with no `## Acceptance` section is reported as a gap in the text report and in `readiness.gaps`, naming any "Done when"/"To fix"/"Ask"/"Findings" heading it has, with verdict and exit code unchanged. — reason: #1580 has no acceptance checklist; these restate its three defects and R2 as machine-checkable criteria.
-- [added] Red on `origin/development` and green on the changed head are recorded under `TESTS-RESULTS/2026-11-23+GH-1580/` with `provenance.jsonl`, and no new test suite is added. — reason: #1580 has no acceptance checklist; these restate its three defects and R2 as machine-checkable criteria.
-- [added] The existing preflight suites and every preflight caller (marathon, jog, conveyor, flywheel, kickstart) are verified unaffected. — reason: #1580 has no acceptance checklist; these restate its three defects and R2 as machine-checkable criteria.
+- [deferred] Extend preflight to check later commands. The single authorized final review showed another false refusal after the allow-list repair. This PR leaves #1580 open for that gap and the other follow-ups.
+- [added] Treat a removed unwanted path as landed, from earlier final QA F4. The fixture in the existing controls verifies both path states.
 
 ## Rating rationale (2026-11-23)
 

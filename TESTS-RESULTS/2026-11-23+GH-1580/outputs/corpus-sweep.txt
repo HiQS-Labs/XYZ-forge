@@ -214,16 +214,16 @@ base|PROJECT/3-COMPLETED/GH-570-HQ-KNOWN-REPOS-EMPTY-DB.md|rc=4|  readiness   : 
 new|PROJECT/3-COMPLETED/GH-570-HQ-KNOWN-REPOS-EMPTY-DB.md|rc=4|  readiness   : ready=1
 base|PROJECT/3-COMPLETED/GH-594-EXPRESS-DOC-PATH-BOUNDS.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/express/SKILL.md — fix the contract artifacts[] or push the file
 new|PROJECT/3-COMPLETED/GH-594-EXPRESS-DOC-PATH-BOUNDS.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/express/SKILL.md — fix the contract artifacts[] or push the file
-base|PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
-new|PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
+base|PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
 base|PROJECT/3-COMPLETED/GH-625-AGENT-CHORUS-BRIDGE-BIND-WITHOUT-GETFQDN.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/agent-chorus/scripts/agent_chorus_bridge.py — fix the contract artifacts[] or push
 new|PROJECT/3-COMPLETED/GH-625-AGENT-CHORUS-BRIDGE-BIND-WITHOUT-GETFQDN.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/agent-chorus/scripts/agent_chorus_bridge.py — fix the contract artifacts[] or push
-base|PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
-new|PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
+base|PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
 base|PROJECT/3-COMPLETED/GH-651-GH610-SPACED-PYTHON-SHEBANG.md|rc=4|  readiness   : ready=1
 new|PROJECT/3-COMPLETED/GH-651-GH610-SPACED-PYTHON-SHEBANG.md|rc=4|  readiness   : ready=1
-base|PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
-new|PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
+base|PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
 base|PROJECT/3-COMPLETED/GH-703-RAW-TEXT-ASTERISK.md|rc=4|  readiness   : ready=1
 new|PROJECT/3-COMPLETED/GH-703-RAW-TEXT-ASTERISK.md|rc=4|  readiness   : ready=1
 base|PROJECT/3-COMPLETED/GH-707-RECONCILE-ROLLBACK-ENVELOPE.md|rc=4|  readiness   : ready=1
@@ -232,10 +232,10 @@ base|PROJECT/3-COMPLETED/GH-711-LEDGER-MERGE-GID-REMINT.md|rc=6|  readiness   : 
 new|PROJECT/3-COMPLETED/GH-711-LEDGER-MERGE-GID-REMINT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/ledger_merge.py — fix the contract artifacts[] or push the f
 base|PROJECT/3-COMPLETED/GH-720-REVIEW-ONCE-BLOCK-REGEX.md|rc=4|  readiness   : ready=1
 new|PROJECT/3-COMPLETED/GH-720-REVIEW-ONCE-BLOCK-REGEX.md|rc=4|  readiness   : ready=1
-base|PROJECT/3-COMPLETED/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
-new|PROJECT/3-COMPLETED/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
-base|PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
-new|PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the 
+base|PROJECT/3-COMPLETED/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+base|PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
 base|PROJECT/3-COMPLETED/GH-742-VENDOR-PACKAGE-JSON-ESM.md|rc=4|  readiness   : ready=1
 new|PROJECT/3-COMPLETED/GH-742-VENDOR-PACKAGE-JSON-ESM.md|rc=4|  readiness   : ready=1
 base|PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/standup/collect.sh — fix the contract artifacts[] or push the file

@@ -50,3 +50,18 @@ with no parsing of the `readiness` key set.
   HEAD, bare flag, remotes, local email and clean status matched before and after.
   The saved output redacts the local path only. See `outputs/allowlist-focused-suites.txt`.
 - Earlier tables above describe the preceding implementation at the named SHAs.
+
+## Retained scope after final QA
+
+The allow-list final review reproduced a false refusal for a later `NAME+=value`
+assignment. The gate extension was removed under the operator's fallback.
+The gate results above are historical. The delivery candidate retains line anchors,
+the removed-path fix, and explicit advisory acceptance gaps.
+
+- At development `895cec0f2`, the retained-scope CLI controls record 6 matches and
+  8 mismatches. At `c6b4959ab`, they record 14 matches and zero mismatches.
+- The first-command evaluator matches development byte for byte. The CLI keeps its
+  existing first-command and later-command outcomes, including the input that
+  failed the withdrawn change's final review.
+- The prior gate corpus transcript's line endings have been normalized to remove
+  trailing whitespace. This preserves the observed verdicts and has an updated hash.
