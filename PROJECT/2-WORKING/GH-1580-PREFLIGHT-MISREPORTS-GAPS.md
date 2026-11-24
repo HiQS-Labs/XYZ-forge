@@ -2,12 +2,12 @@
 gh_issue: 1580
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1580
 title: "swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings"
-status: "In Progress (single allow-list repair verified, final QA pending)"
+status: "In Progress (gate extension withdrawn, remaining fixes in qualification)"
 created: 2026-11-23
 updated: 2026-11-24
 owner: Claude (start-task sub-agent)
 doc_type: bugfix
-goal: "swarm_preflight reports probe, gate and acceptance gaps correctly instead of silently reading wrong."
+goal: "Correct grep probe anchors, removed-path probes and missing acceptance reporting."
 effort: 1
 complexity: 2
 risk: 2
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Reproduced the three false refusals on the previous candidate. The allow-list repair passes 42 CLI controls and 154 checks in four existing suites. | One independent final QA round for the gate change. If it fails, remove the gate extension and qualify the remaining fixes. |
+| The single allow-list repair addressed F1 and F2. Final QA reproduced a new false refusal for `NAME+=value` in a later command. The operator's fallback restores the exact development first-command check. | Qualify and publish the probe and acceptance fixes. Leave the second-command gap open on the issue. |
 
 ## Observed problem
 
@@ -64,57 +64,18 @@ Extend the existing evaluator and report path. No new module, suite, flag or exi
 
 1. **Anchors.** `re.search(pattern, text, re.M)` in both grep branches of `eval_probes`; one sentence in
    `relay-automation/CONTRACT.example.md`. Inline `(?m)` stays valid; `\A`/`\Z` anchor the whole file.
-2. **Gate: a plain-gate rule, not a parser** (operator decision 2026-11-24 on #1580, comment 7122642807; the
-   earlier shell parser was removed after four final-QA rounds kept finding new shell shapes). `gate_segments`
-   returns the commands to existence-check and whether the gate is PLAIN: one line after strip, only plain word
-   characters (`[\w./=:,@%+-]` and blanks) with `&&` as the sole operator, every segment non-empty, no segment
-   that starts with an assignment, `env`, `cd` or a shell keyword/builtin whose existence PATH cannot answer
-   (as reported by the gate runner's Bash), and a `bash`/`sh` script may be preceded
-   only by the allow-listed no-argument short flags. The discovery call runs fixed
-   text in a clean environment.
-   - A plain gate: every segment goes through the existing base per-program rules (bash/sh script file under
-     target_root, program path, `shutil.which`), with the base messages byte-identical. The base block is kept
-     verbatim and looped over the segments, so the GH-343 suite needs no edit.
-   - Any other gate: exactly the base first-command check, so no gate the base reads READY can become
-     NOT-READY, plus one advisory gap line ("gate is not a plain `&&` list; only its first command was checked").
-   - Accepted trade-off: a missing command inside a non-plain gate is a visible gap, not a refusal.
-   Downstream limit, recorded not fixed: marathon-drive's own pre-advance check is separate and still refuses a
-   gate that begins with `NAME=value prog`.
+2. **Gate scope withdrawn.** This release restores the existing first-command gate check.
+   The allow-list review reproduced a false refusal for `true && PYTHONPATH+=:src python3 -V`.
+   The operator directed shipping the remaining fixes after that failure. The missing later
+   `uv` case remains open (see the issue and final relay).
 3. **Gaps.** One advisory list, `readiness.gaps` in JSON and `  gap         :` lines in the text report. It carries
-   the acceptance gaps (the issue has no `## Acceptance` section, naming a "Done when"/"To fix"/"Ask"/"Findings"
-   heading it does have; or the capture doc has none and its checklist is read from the whole document) and the
-   non-plain gate gap. It never changes readiness or an exit code (GH-557 keeps non-manifest lanes ready).
-4. **`path_present`** (found by final QA in the same evaluator): the probe detects an UNWANTED path, so its
-   absence reads `landed`; it read `blocked`, which marathon's landed-only re-check can never accept. Parity
-   for `_marathon_plan._eval_probe`, `utils/marathon-plan.sh` and the frozen twin is #1583.
+   the acceptance gaps (the issue has no `## Acceptance
 
-Non-goals: new exit codes or blocking on a gap (GH-557 control stays exit 0); synonym headings read as criteria;
-parsing `cd`, heredocs, `[[ ]]`, quoting or redirections (a gate that uses them is not plain and keeps the base
-first-command check); the Bash twin; `githooks/`; findings 4-6; the marathon-drive pre-advance gate.
-
-Risks and rollback: a new NOT-READY can only come from a PLAIN gate whose later command genuinely does not
-resolve; the base-vs-new guard over every gate string in the repo's contracts and the #1205 appendix shows no
-other flip. The anchor change makes `$` and `^` per-line for every probe in every consumer. Rollback is a revert.
-
-Preflight bet check:
-- Outcome: preflight's verdict is true for the three cases, so the factory stops needing a human to find them.
-- Smallest bet: a ~25-line plain-gate rule plus an advisory gap; not built: a shell parser, a blocking gap,
-  synonym matching.
-- Alternative rejected: patching the parser a fifth time. Its false refusals came from modelling shell, which
-  is not needed to catch a missing program in a plain `&&` list.
-- Containment: revert one commit.
-
-Manual evidence: `TESTS-RESULTS/2026-11-23+GH-1580/controls.sh` states the CORRECT behaviour per case and prints
-MATCH or MISMATCH against it, in text and `--format json`. Non-plain gates must be READY and carry the gap
-line (the assertion fails if the line is missing); plain gates must refuse a genuinely missing command and carry
-no gap line. `provenance.jsonl` ties each run to its revision, command and output hash. Red must show MISMATCH on
-the unchanged source; green must show MATCH everywhere.
-
-Test scope (GH-831): no new suite, no registry entry, no edit to an existing suite. Verification = existing
-preflight coverage (`test/swarm-preflight.sh`, `gh308-swarm-gate-path`, `gh343-gate-program-target-root`,
-`gh400-acceptance-fidelity`, `gh557-unknown-blocks-manifest`, `gh438-acceptance-recheck`,
-`gh291-contract-goldens`, `gh280-jog-marathon-adapter`, `test_python_layer.py`) plus the recorded red/green
-manual check under `TESTS-RESULTS/2026-11-23+GH-1580/`.
+- [ ] CLI controls show line-anchored grep probes follow the expected landed/unfixed semantics.
+- [ ] An unwanted path already removed is recognized as landed.
+- [ ] Missing issue/capture acceptance sections are explicit advisory gaps for non-manifest lanes.
+- [ ] The first-command gate check matches development byte for byte. Run representative legacy controls.
+- [ ] Commit-bound verification and independent review cover the reduced scope.
 
 ## Acceptance
 

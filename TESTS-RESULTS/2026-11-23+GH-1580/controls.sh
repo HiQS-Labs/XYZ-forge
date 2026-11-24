@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# GH-1580 manual red/green controls (no new suite, GH-831). Replays the three swarm_preflight
-# defects found by BinoidCBD/LTVera-Pandas#1205 through the REAL preflight entry point, against a
+# GH-1580 manual red/green controls (no new suite, GH-831). Replays the remaining swarm_preflight
+# fixes and legacy gate controls found by BinoidCBD/LTVera-Pandas#1205 through the REAL preflight entry point, against a
 # throwaway fixture repo, with `gh` stubbed and `uv` absent from PATH (the #1140 condition).
 #
 #   usage: controls.sh <xyz-root> <label> <source-commit>
@@ -89,15 +89,6 @@ case_text() {
   verdict "$label" "$ok" "exit $want_rc${want_re:+, output matches /$want_re/}${want_re2:+, output matches /$want_re2/}${forbid_re:+, output does NOT match /$forbid_re/}" "exit $PF_RC; $lines"
 }
 
-# A gate that is not a plain `&&` list keeps the base first-command check and must carry the advisory gap line.
-NONPLAIN_GAP='^  gap +: gate is not a plain'
-case_nonplain() {  # case_nonplain <label> <repo> <doc>  -> READY (no new refusal) + the gap line
-  case_text "$1" "$2" "$3" 0 'verdict +: ready' '' "$NONPLAIN_GAP"
-}
-case_plain_ok() {  # a plain gate whose commands all resolve: READY and NO gap line
-  case_text "$1" "$2" "$3" 0 'verdict +: ready' "$NONPLAIN_GAP"
-}
-
 # json case: nonempty JSON, readiness.gaps list must satisfy <mode>
 #   mode=has:<substring>  list is nonempty and some entry contains the substring
 #   mode=empty            key is present and the list is empty
@@ -144,75 +135,14 @@ CFG3=$'alembic upgrade head\n# alembic check\necho "alembic check"\n'
 R="$(make_repo anchor-comment 103 true '[{"type":"grep_absent","path":"config.txt","pattern":"^alembic check"}]' yes "$CFG3")"
 case_text "D1c grep_absent '^alembic check' vs comment/echo only: still unfixed -> ready" "$R" PROJECT/2-WORKING/GH-103-fixture.md 0 'verdict +: ready'
 
-# ── Defect 2: only a gate's first command is existence-checked ───────────────────────────────────
-# PLAIN gate (one line, plain word characters, `&&` the only operator): EVERY command is checked.
+# The operator dropped the multi-command gate extension after final QA. Guard legacy behavior.
 PROBE='[{"type":"path_absent","path":"NEW.txt"}]'
 R="$(make_repo gate-uv-first 201 'uv lock --check && bash -n src/ok.sh' "$PROBE" yes)"
-case_text "D2a plain 'uv lock --check && bash -n ...' (uv absent, first command) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-201-fixture.md 5 "command 'uv' not found in PATH"
+case_text "D2 legacy: missing first command still blocks" "$R" PROJECT/2-WORKING/GH-201-fixture.md 5 "command 'uv' not found in PATH"
 R="$(make_repo gate-uv-second 202 'bash -n src/ok.sh && uv lock --check' "$PROBE" yes)"
-case_text "D2b plain 'bash -n ... && uv lock --check' (uv absent, second command: the #1140 gate) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-202-fixture.md 5 "command 'uv' not found in PATH"
-R="$(make_repo gate-script-second 204 'true && bash src/missing.sh' "$PROBE" yes)"
-case_text "D2d plain 'true && bash src/missing.sh' (missing script, second command) -> NOT-READY" "$R" PROJECT/2-WORKING/GH-204-fixture.md 5 'gate script not found.*missing\.sh'
-R="$(make_repo gate-script-dash-c 211 'true && bash src/absent.sh -c' "$PROBE" yes)"
-case_text "D2k plain 'true && bash src/absent.sh -c': -c after the script is its own argument, script missing -> NOT-READY" "$R" PROJECT/2-WORKING/GH-211-fixture.md 5 'gate script not found.*absent\.sh'
-R="$(make_repo gate-script-dash-s 221 'true && bash src/absent.sh -s' "$PROBE" yes)"
-case_text "D2s plain 'true && bash src/absent.sh -s': -s after the script is its own argument, script missing -> NOT-READY" "$R" PROJECT/2-WORKING/GH-221-fixture.md 5 'gate script not found.*absent\.sh'
-R="$(make_repo gate-plain-ok 228 'true && bash -n src/ok.sh && test -f config.txt' "$PROBE" yes "x")"
-case_plain_ok "D2z plain gate, every command resolves -> READY and NO non-plain gap line" "$R" PROJECT/2-WORKING/GH-228-fixture.md
-
-# NOT plain: the base first-command check is kept (no new refusal), plus an advisory gap line. These are the
-# inputs behind final-QA findings F1-F9; every one must be READY, and the gap line is asserted so it can fail.
-R="$(make_repo gate-chain 203 'true && cd src && bash -n ok.sh && env FOO=1 python3 -c pass | cat' "$PROBE" yes)"
-case_nonplain "D2c cd + env-prefix + pipe -> not plain: READY + gap" "$R" PROJECT/2-WORKING/GH-203-fixture.md
-R="$(make_repo gate-cd-missing 205 'true && cd src && bash -n missing.sh' "$PROBE" yes)"
-case_nonplain "D2e 'true && cd src && bash -n missing.sh': a cd gate is not plain, the later script is NOT checked -> READY + gap (accepted trade-off)" "$R" PROJECT/2-WORKING/GH-205-fixture.md
-case_json "D2e json: the same gate carries the gap in readiness.gaps" "$R" PROJECT/2-WORKING/GH-205-fixture.md 'has:not a plain'
-R="$(make_repo gate-skips 206 'bash -n src/ok.sh && bash -c "nonexistent_inner_cmd; true" && "${LTV_PYTHON:?set me}" -m pytest' "$PROBE" yes)"
-case_nonplain "D2f bash -c body and an expansion word -> not plain: READY + gap" "$R" PROJECT/2-WORKING/GH-206-fixture.md
-R="$(make_repo gate-cd-or 207 'true || cd src; bash -n src/ok.sh' "$PROBE" yes)"
-case_nonplain "D2g F1 'true || cd src; bash -n src/ok.sh' -> READY + gap" "$R" PROJECT/2-WORKING/GH-207-fixture.md
-R="$(make_repo gate-cd-pipe 208 'true && cd src | cat; bash -n src/ok.sh' "$PROBE" yes)"
-case_nonplain "D2h F1 'true && cd src | cat; bash -n src/ok.sh' -> READY + gap" "$R" PROJECT/2-WORKING/GH-208-fixture.md
-R="$(make_repo gate-cd-and-or 210 'false && cd src && true || bash -n config.txt' "$PROBE" yes "echo x")"
-case_nonplain "D2j F1 'false && cd src && true || bash -n config.txt' -> READY + gap" "$R" PROJECT/2-WORKING/GH-210-fixture.md
-R="$(make_repo gate-redir-ok 212 'true && bash -n src/ok.sh>/dev/null' "$PROBE" yes)"
-case_nonplain "D2l F3 'true && bash -n src/ok.sh>/dev/null' -> READY + gap" "$R" PROJECT/2-WORKING/GH-212-fixture.md
-R="$(make_repo gate-redir-missing 213 'true && bash -n src/absent.sh>/dev/null' "$PROBE" yes)"
-case_nonplain "D2m F3 'true && bash -n src/absent.sh>/dev/null': not plain, later script NOT checked -> READY + gap (accepted trade-off)" "$R" PROJECT/2-WORKING/GH-213-fixture.md
-R="$(make_repo gate-assign-cd 216 'true && FOO=1 cd src && bash -n ok.sh' "$PROBE" yes)"
-case_nonplain "D2n F5 'true && FOO=1 cd src && bash -n ok.sh' -> READY + gap" "$R" PROJECT/2-WORKING/GH-216-fixture.md
-R="$(make_repo gate-assign-cd-missing 217 'true && FOO=1 cd src && bash -n missing.sh' "$PROBE" yes)"
-case_nonplain "D2o F5 'true && FOO=1 cd src && bash -n missing.sh': not plain, later script NOT checked -> READY + gap (accepted trade-off)" "$R" PROJECT/2-WORKING/GH-217-fixture.md
-R="$(make_repo gate-heredoc 218 $'cat <<EOF\nhello\nEOF\nbash -n src/ok.sh' "$PROBE" yes)"
-case_nonplain "D2p F6 heredoc body is data, not a command -> READY + gap" "$R" PROJECT/2-WORKING/GH-218-fixture.md
-R="$(make_repo gate-heredoc-missing 219 $'cat <<EOF\nhello\nEOF\nbash -n src/missing.sh' "$PROBE" yes)"
-case_nonplain "D2q F6 a missing script after a heredoc: not plain, NOT checked -> READY + gap (accepted trade-off)" "$R" PROJECT/2-WORKING/GH-219-fixture.md
-R="$(make_repo gate-bash-s 220 'true && bash -s ignored-arg </dev/null' "$PROBE" yes)"
-case_nonplain "D2r F7 'true && bash -s ignored-arg </dev/null' -> READY + gap" "$R" PROJECT/2-WORKING/GH-220-fixture.md
-R="$(make_repo gate-procsub 224 'diff <(echo a) <(echo b) && bash -n src/ok.sh' "$PROBE" yes)"
-case_nonplain "D2v audit: process substitution -> READY + gap" "$R" PROJECT/2-WORKING/GH-224-fixture.md
-R="$(make_repo gate-if-dbracket 225 'true && if [[ -f src/ok.sh && -f config.txt ]]; then bash -n src/ok.sh; fi' "$PROBE" yes "x")"
-case_nonplain "D2w F8 'true && if [[ -f a && -f b ]]; then bash -n src/ok.sh; fi' -> READY + gap" "$R" PROJECT/2-WORKING/GH-225-fixture.md
-R="$(make_repo gate-if-dbracket-missing 226 'true && if [[ -f src/ok.sh && -f config.txt ]]; then gh1580_absent_command; fi' "$PROBE" yes "x")"
-case_nonplain "D2x F8 a missing command in an if-block: not plain, NOT checked -> READY + gap (accepted trade-off)" "$R" PROJECT/2-WORKING/GH-226-fixture.md
-R="$(make_repo gate-f9 229 'true && if [[ "]]" && -f src/ok.sh ]]; then bash -n src/ok.sh; fi' "$PROBE" yes "x")"
-case_nonplain "D2f9 F9 'true && if [[ \"]]\" && -f src/ok.sh ]]; then bash -n src/ok.sh; fi' -> READY + gap" "$R" PROJECT/2-WORKING/GH-229-fixture.md
-R="$(make_repo gate-assign-first 230 'FOO=1 true && bash -n src/ok.sh' "$PROBE" yes)"
-case_text "D2aa not plain, first token 'FOO=1' not found: unchanged from base (NOT-READY exit 5), gap line still printed" "$R" PROJECT/2-WORKING/GH-230-fixture.md 5 "command 'FOO=1' not found in PATH" '' "$NONPLAIN_GAP"
-
-# Single allow-list repair: unusual shell flags and shell builtins retain first-command behavior.
-R="$(make_repo gate-bash-plus 231 'true && bash +x -n src/ok.sh' "$PROBE" yes)"
-case_nonplain "D2ab bash +x before the script -> READY + gap" "$R" PROJECT/2-WORKING/GH-231-fixture.md
-R="$(make_repo gate-bash-bundled 232 'true && bash -eO extglob src/ok.sh' "$PROBE" yes)"
-case_nonplain "D2ac bash -eO before the script -> READY + gap" "$R" PROJECT/2-WORKING/GH-232-fixture.md
-R="$(make_repo gate-shopt 233 'true && shopt -s nullglob' "$PROBE" yes)"
-case_nonplain "D2ad shopt builtin -> READY + gap" "$R" PROJECT/2-WORKING/GH-233-fixture.md
-R="$(make_repo gate-bash-simple-flags 234 'true && bash -nx src/ok.sh' "$PROBE" yes)"
-case_plain_ok "D2ae bash -nx with a present script -> READY without a gate gap" "$R" PROJECT/2-WORKING/GH-234-fixture.md
-R="$(make_repo gate-bash-missing 235 'true && bash -n src/missing.sh' "$PROBE" yes)"
-case_text "D2af bash -n with an absent script -> NOT-READY" "$R" PROJECT/2-WORKING/GH-235-fixture.md 5 'gate script not found.*missing\.sh'
-R="$(make_repo gate-missing-external 236 'true && gh1580_missing_command' "$PROBE" yes)"
-case_text "D2ag absent external command -> NOT-READY" "$R" PROJECT/2-WORKING/GH-236-fixture.md 5 "command 'gh1580_missing_command' not found in PATH"
+case_text "D2 legacy: a later missing command preserves the existing readiness result" "$R" PROJECT/2-WORKING/GH-202-fixture.md 0 'verdict +: ready'
+R="$(make_repo gate-assignment 203 'true && PYTHONPATH+=:src python3 -V' "$PROBE" yes)"
+case_text "D2 legacy: shell append assignment in a later segment preserves readiness" "$R" PROJECT/2-WORKING/GH-203-fixture.md 0 'verdict +: ready'
 
 # ── Final-QA r1 repair F4 (path_present) ─────────────────────────────────────────────────────────
 R="$(make_repo path-present-gone 214 true '[{"type":"path_present","path":"GONE.txt"}]' yes)"

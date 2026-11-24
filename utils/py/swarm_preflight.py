@@ -412,8 +412,7 @@ def normalize(e: dict[str, Any]) -> dict[str, Any]:
             # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
             # substantiate must be visibly absent rather than quietly assumed.
             "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"},
-            # GH-1580: advisory gaps (a missing acceptance section, a gate whose later commands were not checked) —
-            # named here instead of passing as an unremarked `unknown` or a quiet READY. Never changes readiness.
+            # GH-1580: report missing acceptance sections as advisory gaps. Readiness is unchanged.
             "gaps": e.get("SP_GAPS") or [],
             # GH-400 criterion 2: recorded on every run so "the doc cited its issue" is auditable
             # after the fact rather than assumed from a green verdict.
@@ -555,57 +554,6 @@ def gate_scoping_caveat(gate_cmd: str) -> str:
             "genuinely scopes, before firing this lane."
         )
     return ""
-
-# GH-1580: extend the first-command check only for plain, independently resolvable segments.
-_PLAIN_GATE_RE = re.compile(r'[\w./=:,@%+ \t-]+')
-_SIMPLE_SHELL_FLAGS = re.compile(r'-[enuvx]+')
-_SIMPLE_BUILTINS = {"echo", "false", "printf", "pwd", "test", "true"}
-
-
-def _bash_shell_words() -> set[str]:
-    # The gate runner uses /bin/bash. Enumerate its builtins and keywords without
-    # passing gate text, running startup files, or inheriting BASH_ENV.
-    try:
-        result = subprocess.run(
-            ["/bin/bash", "--noprofile", "--norc", "-c", "compgen -b && compgen -k"],
-            cwd="/", env={"LC_ALL": "C"}, capture_output=True, text=True, check=True, timeout=2,
-        )
-    except (OSError, subprocess.SubprocessError):
-        return set()
-    return set(result.stdout.split())
-
-
-def _gate_segment_is_plain(words: list[str], shell_words: set[str]) -> bool:
-    program = words[0]
-    if program == "env" or re.match(r'[A-Za-z_]\w*=', program):
-        return False
-    if program in shell_words and (program not in _SIMPLE_BUILTINS or not shutil.which(program)):
-        return False
-    if program in ("bash", "sh"):
-        for word in words[1:]:
-            if not word.startswith(("-", "+")):
-                return True
-            if not _SIMPLE_SHELL_FLAGS.fullmatch(word):
-                return False
-        return False
-    return True
-
-
-def gate_segments(gate_cmd: str) -> tuple[list[list[str]], bool]:
-    """Select gate segments for static checks and indicate whether they cover the full gate."""
-    words = gate_cmd.split()
-    first_only = [words] if words else []
-    pieces = gate_cmd.strip().split("&&")
-    if not all(piece.strip() and _PLAIN_GATE_RE.fullmatch(piece) for piece in pieces):
-        return first_only, False
-    if len(pieces) == 1 and words[0] in _SIMPLE_BUILTINS:
-        return first_only, True
-    shell_words = _bash_shell_words()
-    parts = [piece.split() for piece in pieces]
-    if shell_words and all(_gate_segment_is_plain(part, shell_words) for part in parts):
-        return parts, True
-    return first_only, False
-
 
 # ── GH-400: acceptance fidelity ───────────────────────────────────────────────────────────────────
 # A capture doc is authored by a model summarising a GitHub issue, and preflight then inlines that
@@ -1869,12 +1817,9 @@ def evaluate_candidate(
             "This is local-only: it never needs the network, so there is no "
             "offline case in which it is safe to skip.")
 
-    gate_parts_to_check, gate_is_plain = gate_segments(gate_cmd)
     if ready == 1 and gate_cmd:
-        # GH-1580: a plain gate checks every `&&` segment with the rules below; any other gate checks its first command.
-        for gate_parts in gate_parts_to_check:
-            if not ready:
-                break
+        gate_parts = gate_cmd.split()
+        if gate_parts:
             g0 = gate_parts[0]
             if g0 in ["bash", "sh"]:
                 script = ""
@@ -1902,9 +1847,6 @@ def evaluate_candidate(
                         f"gate program is not executable under target_root {target_root}: {g0}")
             elif not shutil.which(g0):
                 ready, ready_next = 0, f"command '{g0}' not found in PATH"
-    if gate_cmd.strip() and not gate_is_plain:
-        gaps.append("gate is not a plain `&&` list; only its first command was checked "
-                    "(commands after it, if any, were not)")
 
     has_codex = "present" if shutil.which("codex") else "missing"
     has_agy = "present" if shutil.which("agy") else "missing"
