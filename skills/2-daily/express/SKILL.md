@@ -209,7 +209,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    `off`; GH-1487/GH-1530). Under `off`/`landing` express leaves `CHANGELOG.md` untouched. The
    post-landing changelog synthesis (`wave_reconcile`) runs only under `landing` and skips direct
    commit landings, which is how express lands, so an express landing is not guaranteed a
-   synthesized entry; add one by hand if the change needs it.
+   synthesized entry; add one by hand if the change needs it only under `CHANGELOG_WRITES=branch`;
+   under `off`/`landing`, a branch must not write `CHANGELOG.md`.
 6. **Ledger** — `roadmap add` if the issue is unparked, then `manifest dial-in`
    against the active release (`releases next`) with an express reason. The
    adopted release/leaderboard projections refresh

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -89,5 +89,11 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Producer · Round 1 · codex
+- Updated the single manual-entry sentence to restrict branch entries to `CHANGELOG_WRITES=branch` and prohibit branch writes under `off`/`landing`.
+- Verified the wording against `PROJECT/PDDA.md` and `wave_reconcile.read_changelog_writes_mode`; a focused text assertion passed and rejected the previous wording as a red control. Searched for other exact-text pins; none found.
+- No suite or PDDA gate was run, as specified for this docs-only turn. No prior findings required disposition.
+- Handing off to Reviewer (claude) to review the whole artifact and the requested sentence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
