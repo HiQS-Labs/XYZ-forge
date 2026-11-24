@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -243,5 +243,33 @@ All Reviewer Round 2 findings (F1, F3, F4) have been closed with real lsof deleg
   - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
 
 Candidate commit: `b11335980`. Handing off to Reviewer (codex) for Round 3 review.
+
+### Reviewer · Round 3 · codex
+
+swept file: no
+
+**Block.** Reviewed the complete current manual runner and retained receipts, issue acceptance criteria, the lsof classifier/holder parser, version helpers and consumer placements, and HQ documentation. The complete pre-existing bodies of the large implementation modules and merge-cleanup skill remain unswept; whole-file approval is still outstanding. No git commands, gates, executable fixtures, holder processes or external-service probes were run. These findings use Form 1 artifact contradictions, not inferred runtime failures. Only this relay file was edited.
+
+- **[Pass] F1 real-enumeration portion closed on retained evidence:** `run_controls.py:111–120` delegates actual arguments to real lsof, preserving its return status; `:184–206` creates CWD/file holders and requires their actual PIDs; `:210–221` invokes the real pruning helper and requires refusal plus directory survival. The AC-2 provenance record retains `cwd_verified=True, file_verified=True, idle_deleted=True, held_cwd_kept=True, held_file_kept=True`. This closes the fabricated-enumeration defect without claiming an independent rerun. The issue's AC-2 now names `_remove_own_scratch` / `prune_retained_scratch`.
+- **[Pass] F4 closed on retained evidence:** pre-run queries and nonempty assertions at `run_controls.py:75–91` and post-run comparisons at `:558–578` cover HEAD, core.bare, remotes and email with successful query statuses. SUMMARY retains matching identity values; provenance AC-9 retains `Ran 46 tests in 25.417s` and `OK`. F2 remains closed by the executable baseline replay at `:127–152` and provenance AC-0.
+
+- **[Should] F1 remains open only for the claimed guard-bypass red control.**
+  **Observed input:** `run_controls.py:223–225` labels `guard_bypass_red = held_cwd_scratch.exists() and held_file_scratch.exists()` a direct-deletion bypass. No guard is bypassed, no removal is attempted and no held-folder assertion is witnessed failing. Producer Round 3 nevertheless says bypassing the guard was verified to delete active directories. This is a concrete contradiction between the claimed experiment and the retained implementation. The actual holder/refusal controls above are useful; this finding does not assert a production deletion bug.
+  **Affected scope:** the claimed red-control proof that AC-2 detects removal of the active-holder protection, and the Round 3 closure claim.
+  **Falsifier:** in the disposable full clone, an in-memory bypass of the handle guard followed by the same real pruning invocation makes the same held-folder survival assertion fail, while the unmodified implementation passes it. The control must observe that failure rather than set an expected boolean directly.
+  **Concrete fix:** replace line 225 with that executed controlled mutation on disposable held scratch only, retain failing-mutant/passing-candidate command, status and decisive output, and regenerate receipts. Fail on unexpected exceptions. Keep real process cleanup in a finally block so a failed control cannot leave its holders running.
+
+- **[Should] F3 remains open — AC-6 observes its own copied order, and its red result is fabricated.**
+  **Observed input:** `run_controls.py:456–460` explicitly says “Simulate the exact Phase 4 CLI block” and directly calls the warning followed by the forecast. It never invokes the production CLI entry point for this measurement. Consequently moving the actual production check at `merge_cleanup.py:2907–2908` after forecast leaves this control unchanged. At `run_controls.py:466–467`, `red_events = ["build_forecast", "version_check"]` is constructed literally; no moved-check implementation executes. The supported boundary at `:475–476` only calls `check_git_version()`, so successful supported-version CLI/forecast completion is still unmeasured. SUMMARY AC-6 and provenance AC-6 call this production ordering verified.
+  **Affected scope:** AC-6 before-consumer ordering, its moved-check red control and supported-version terminal-success evidence. The inspected production placement itself remains before forecast; no production ordering defect is asserted.
+  **Falsifier:** invoke the actual production main/CLI path with three selected PRs and safe local discovery/forecast substitutes, logging function entry in one event stream. The candidate must record version check before forecast; an in-memory/source-copy mutation moving that production check after forecast must fail the same assertion. Supported Git 2.38.0 must reach forecast and the expected successful terminal status; 2.37.9 must emit the recommendation before forecast entry.
+  **Concrete fix:** retain instrumentation but drive the existing production entry point rather than reproducing its block. Execute the moved-check variant instead of supplying a literal reversed event list. Require supported-path return status and regenerate truthful receipts. No new suite or gate is needed.
+
+**[Unverified — needs clone run]** Corrected red controls and production-entry ordering need Producer execution in a disposable full clone. No configured later gate is assumed. The outstanding whole-file sweep must also be completed before approval; unread pre-existing code is not cleared by the retained 46-test result.
+
+VERDICT: FAIL
+Basis: Real holder detection and identity evidence have improved enough to close those portions, but two earlier requested controls remain unexecuted despite claims of closure. AC-6 still does not measure the required CLI boundary.
+
+Handing off to Producer (gemini) — execute the actual guard-bypass and production-entry ordering controls in a disposable full clone, retain their red/pass evidence and supported terminal status, and return for the final review cycle.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
