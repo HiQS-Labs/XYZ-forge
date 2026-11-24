@@ -37,6 +37,15 @@ When the operator speaks naturally:
 
 ---
 
+## Prerequisites & Environment Requirements
+
+- **Python**: 3.9 or newer.
+- **Git**: 2.38.0 or newer. Required for `git merge-tree --write-tree` during landing forecasts (`build_landing_forecast`). If older git (e.g. 2.34.1 on default Ubuntu 22.04 LTS) is installed, merge-cleanup will warn in preflight and error gracefully in merge simulation with an upgrade recommendation (e.g. `add-apt-repository ppa:git-core/ppa && apt update && apt install git`).
+- **GitHub CLI (`gh`)**: 2.18.0 or newer. Required for the `headRefOid` JSON field during Phase 4 PR discovery. If an older `gh` (e.g. 2.4.0 from Ubuntu universe) is installed, merge-cleanup will warn during preflight and advise installing the official release from `https://cli.github.com`.
+- **Process & Handle Monitoring (`lsof`)**: Used by `inspect_open_handles` to identify active processes holding checkout directories before any deletion. On Linux hosts (including environments running Docker with overlay filesystems), `lsof` can emit warnings about unstatable mounts outside the target checkout (e.g. `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/.../merged`). `merge-cleanup` safely classifies and filters out warnings for paths outside the repository checkout, while strictly failing closed for any warnings at, inside, or containing the checkout path. Pruning continues to enforce that checkouts with active root-CWD processes or open handles are never removed.
+
+---
+
 ## Project merge policy
 
 Before any caller-owned doc parking or executing cleanup, read the target project's policy:

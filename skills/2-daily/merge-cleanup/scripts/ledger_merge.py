@@ -733,7 +733,10 @@ def _merge_tree(clone: Path, a: str, b: str, timeout: int) -> Tuple[int, str, Se
     rc 0 = clean, 1 = conflicted, anything else = the simulation did not run (never read as clean)."""
     r = _run(["git", "merge-tree", "--write-tree", "--name-only", "--no-messages", a, b], clone, timeout)
     if r.returncode not in (0, 1):
-        return r.returncode, "", set(), (r.stderr.strip() or r.stdout.strip() or "no output")[:200]
+        err_msg = (r.stderr.strip() or r.stdout.strip() or "no output")[:200]
+        if "usage: git merge-tree" in err_msg or "unknown option" in err_msg:
+            err_msg = f"{err_msg}\ngit merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)"
+        return r.returncode, "", set(), err_msg
     lines = r.stdout.split("\n")
     tree, paths = lines[0].strip(), set()
     for line in lines[1:]:
