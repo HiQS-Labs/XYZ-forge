@@ -1,0 +1,152 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-24T19:34:12Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1583-planner-path-present"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/kickstart-clones-run3/XYZ-forge-gh1583-conveyor-prep-2026-11-24-verify/PROJECT/1-INBOX/GH-1583-PLANNER-PATH-PRESENT.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/kickstart-clones-run3/XYZ-forge-gh1583-conveyor-prep-2026-11-24-verify",
+    "branch": "docs/XYZ-forge-gh1583-conveyor-prep-2026-11-24",
+    "commit": "154e9a298f68ad475c61cd6264d2a0524fb69924",
+    "suggested_branch": "marathon/gh-1583-planner-path-present-2026-11-24",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/marathon-plan.sh",
+    "round_cap": null,
+    "fix_probes": [
+      {
+        "type": "grep_present",
+        "path": "utils/py/_marathon_plan.py",
+        "pattern": "\"blocked\" if not os\\.path\\.exists"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl"
+      }
+    ],
+    "artifacts": [
+      "utils/py/_marathon_plan.py",
+      "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+      "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+      "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl"
+    ],
+    "remediation": {
+      "source": "issue#1583",
+      "criteria": "utils/py/_marathon_plan.py evaluates an absent path_present path as landed using os.path.lexists, leaves existing files, directories and dangling links unfixed, the frozen Bash twins are unchanged, test/marathon-plan.sh passes, and manual red/green controls are retained under TESTS-RESULTS/2026-11-24+GH-1583/ with provenance and no test is added."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "305ebc303d7cee1553570200963b5aac39fd4195",
+    "checkout_matches_ref": false,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_present",
+        "path": "utils/py/_marathon_plan.py",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1583 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-issue-section",
+      "detail": "issue #1583 has no '## Acceptance' section \u2014 nothing to copy from",
+      "issue": "1583",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [
+      "issue #1583 has no '## Acceptance' section, so the capture doc's criteria are unverified against it"
+    ],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1583 (https://github.com/HiQS-Labs/XYZ-forge/issues/1583)",
+      "issue": "1583",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1583",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 4,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/_marathon_plan.py",
+      "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+      "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl",
+      "test/marathon-plan.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/_marathon_plan.py",
+      "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+      "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl",
+      "test/marathon-plan.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/marathon-plan.sh"
+    ],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [
+      "test/marathon-plan.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}
