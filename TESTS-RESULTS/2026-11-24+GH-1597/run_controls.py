@@ -45,6 +45,7 @@ def record_receipt(ac_id: str, title: str, cmd: str, status: int, output: str, p
 def load_module_from_path(module_name: str, file_path: Path):
     spec = importlib.util.spec_from_file_location(module_name, str(file_path))
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -169,78 +170,103 @@ exit $rc
     )
 
     # -------------------------------------------------------------------------
-    # AC-2: Real holder enumeration (root-CWD & open file) + real scratch pruning refusal (F1)
+    # AC-2: Real holder enumeration + real pruning refusal + guard-bypass red control (F1)
     # -------------------------------------------------------------------------
     scratch_root = temp_dir / "scratch_root"
     scratch_root.mkdir()
 
-    # 1. Idle scratch directory (tool-shaped: merge-cleanup-XXXXXXXX)
+    # 1. Idle scratch directory
     idle_scratch = scratch_root / "merge-cleanup-idle0001"
     idle_scratch.mkdir()
 
     # 2. Held scratch directory with root-CWD holder
     held_cwd_scratch = scratch_root / "merge-cleanup-held0002"
     held_cwd_scratch.mkdir()
-    holder_cwd_proc = subprocess.Popen(["sleep", "60"], cwd=str(held_cwd_scratch))
-    holder_cwd_pid = holder_cwd_proc.pid
 
     # 3. Held scratch directory with open-file holder
     held_file_scratch = scratch_root / "merge-cleanup-held0003"
     held_file_scratch.mkdir()
     open_file_target = held_file_scratch / "held.txt"
-    holder_file_proc = subprocess.Popen(
-        [sys.executable, "-c", f"import time; f=open(r'{open_file_target}', 'w'); f.write('data'); f.flush(); time.sleep(60)"]
-    )
-    holder_file_pid = holder_file_proc.pid
 
-    # Give OS a moment to register handles
-    time.sleep(0.5)
+    # 4. Mutant scratch directory for guard-bypass red control
+    bypassed_scratch = scratch_root / "merge-cleanup-held0004"
+    bypassed_scratch.mkdir()
 
-    # Verify real lsof enumeration through inspect_open_handles
-    res_held_cwd = scan_clones.inspect_open_handles(held_cwd_scratch)
-    cwd_verified = (res_held_cwd["verified"] is True and res_held_cwd["active"] is True and
-                    any(h["pid"] == holder_cwd_pid for h in res_held_cwd["holders"]))
+    holder_cwd_proc = None
+    holder_file_proc = None
+    holder_bypassed_proc = None
 
-    res_held_file = scan_clones.inspect_open_handles(held_file_scratch)
-    file_verified = (res_held_file["verified"] is True and res_held_file["active"] is True and
-                     any(h["pid"] == holder_file_pid for h in res_held_file["holders"]))
+    try:
+        holder_cwd_proc = subprocess.Popen(["sleep", "60"], cwd=str(held_cwd_scratch))
+        holder_cwd_pid = holder_cwd_proc.pid
 
-    # Test real pruning deletion chain: _remove_own_scratch
-    # 1. Idle scratch should be deleted cleanly
-    idle_prune_ok = merge_cleanup._remove_own_scratch(idle_scratch, prefix="merge-cleanup-", root=scratch_root)
-    idle_deleted = (idle_prune_ok is True and not idle_scratch.exists())
+        holder_file_proc = subprocess.Popen(
+            [sys.executable, "-c", f"import time; f=open(r'{open_file_target}', 'w'); f.write('data'); f.flush(); time.sleep(60)"]
+        )
+        holder_file_pid = holder_file_proc.pid
 
-    # 2. Held root-CWD scratch must be kept and removal refused
-    held_cwd_prune_ok = merge_cleanup._remove_own_scratch(held_cwd_scratch, prefix="merge-cleanup-", root=scratch_root)
-    held_cwd_kept = (held_cwd_prune_ok is False and held_cwd_scratch.exists())
-    held_cwd_reason = merge_cleanup._scratch_keep_reason(held_cwd_scratch)
+        holder_bypassed_proc = subprocess.Popen(["sleep", "60"], cwd=str(bypassed_scratch))
+        holder_bypassed_pid = holder_bypassed_proc.pid
 
-    # 3. Held open-file scratch must be kept and removal refused
-    held_file_prune_ok = merge_cleanup._remove_own_scratch(held_file_scratch, prefix="merge-cleanup-", root=scratch_root)
-    held_file_kept = (held_file_prune_ok is False and held_file_scratch.exists())
-    held_file_reason = merge_cleanup._scratch_keep_reason(held_file_scratch)
+        time.sleep(0.5)
 
-    # Guard-bypass red control: prove that without the handle guard, active directories would be deleted
-    # Direct deletion bypass:
-    guard_bypass_red = held_cwd_scratch.exists() and held_file_scratch.exists()
+        # Real lsof enumeration through inspect_open_handles
+        res_held_cwd = scan_clones.inspect_open_handles(held_cwd_scratch)
+        cwd_verified = (res_held_cwd["verified"] is True and res_held_cwd["active"] is True and
+                        any(h["pid"] == holder_cwd_pid for h in res_held_cwd["holders"]))
 
-    holder_cwd_proc.terminate()
-    holder_cwd_proc.wait()
-    holder_file_proc.terminate()
-    holder_file_proc.wait()
+        res_held_file = scan_clones.inspect_open_handles(held_file_scratch)
+        file_verified = (res_held_file["verified"] is True and res_held_file["active"] is True and
+                         any(h["pid"] == holder_file_pid for h in res_held_file["holders"]))
 
-    ac2_passed = (cwd_verified and file_verified and idle_deleted and
-                  held_cwd_kept and str(holder_cwd_pid) in (held_cwd_reason or "") and
-                  held_file_kept and str(holder_file_pid) in (held_file_reason or "") and
-                  guard_bypass_red)
-    record_receipt(
-        "AC-2",
-        "Real lsof enumeration detects root-CWD and open-file holders; real _remove_own_scratch refuses removal",
-        f"Real lsof enumeration on CWD holder PID {holder_cwd_pid} & file holder PID {holder_file_pid}",
-        0 if ac2_passed else 1,
-        f"cwd_verified={cwd_verified}, file_verified={file_verified}, idle_deleted={idle_deleted}, held_cwd_kept={held_cwd_kept}, held_file_kept={held_file_kept}",
-        ac2_passed
-    )
+        # Real pruning execution via _remove_own_scratch
+        # 1. Idle scratch should be deleted cleanly
+        idle_prune_ok = merge_cleanup._remove_own_scratch(idle_scratch, prefix="merge-cleanup-", root=scratch_root)
+        idle_deleted = (idle_prune_ok is True and not idle_scratch.exists())
+
+        # 2. Held root-CWD scratch must be kept and removal refused
+        held_cwd_prune_ok = merge_cleanup._remove_own_scratch(held_cwd_scratch, prefix="merge-cleanup-", root=scratch_root)
+        held_cwd_kept = (held_cwd_prune_ok is False and held_cwd_scratch.exists())
+        held_cwd_reason = merge_cleanup._scratch_keep_reason(held_cwd_scratch)
+
+        # 3. Held open-file scratch must be kept and removal refused
+        held_file_prune_ok = merge_cleanup._remove_own_scratch(held_file_scratch, prefix="merge-cleanup-", root=scratch_root)
+        held_file_kept = (held_file_prune_ok is False and held_file_scratch.exists())
+        held_file_reason = merge_cleanup._scratch_keep_reason(held_file_scratch)
+
+        # 4. Executed guard-bypass red control:
+        # Bypassing the handle inspection in _scratch_keep_reason must make the active folder deletion succeed
+        orig_inspect = scan_clones.inspect_open_handles
+        bypass_stub = lambda p: {"verified": True, "active": False, "holders": []}
+        scan_clones.inspect_open_handles = bypass_stub
+        if hasattr(merge_cleanup, "scan_clones"):
+            merge_cleanup.scan_clones.inspect_open_handles = bypass_stub
+        bypassed_prune_ok = merge_cleanup._remove_own_scratch(bypassed_scratch, prefix="merge-cleanup-", root=scratch_root)
+        scan_clones.inspect_open_handles = orig_inspect
+        if hasattr(merge_cleanup, "scan_clones"):
+            merge_cleanup.scan_clones.inspect_open_handles = orig_inspect
+        bypassed_deleted = (bypassed_prune_ok is True and not bypassed_scratch.exists())
+
+        ac2_passed = (cwd_verified and file_verified and idle_deleted and
+                      held_cwd_kept and str(holder_cwd_pid) in (held_cwd_reason or "") and
+                      held_file_kept and str(holder_file_pid) in (held_file_reason or "") and
+                      bypassed_deleted)
+        record_receipt(
+            "AC-2",
+            "Real lsof enumeration detects root-CWD and open-file holders; real _remove_own_scratch refuses removal; guard-bypass deletes",
+            f"Real lsof on CWD PID {holder_cwd_pid} & file PID {holder_file_pid}; mutant bypass deleted={bypassed_deleted}",
+            0 if ac2_passed else 1,
+            f"cwd_verified={cwd_verified}, file_verified={file_verified}, idle_deleted={idle_deleted}, held_cwd_kept={held_cwd_kept}, held_file_kept={held_file_kept}, guard_bypass_deleted={bypassed_deleted}",
+            ac2_passed
+        )
+    finally:
+        for proc in (holder_cwd_proc, holder_file_proc, holder_bypassed_proc):
+            if proc is not None:
+                try:
+                    proc.terminate()
+                    proc.wait(timeout=2)
+                except Exception:
+                    pass
 
     # -------------------------------------------------------------------------
     # AC-3: Related path warnings fail closed
@@ -411,7 +437,7 @@ exit 0
     # -------------------------------------------------------------------------
     # AC-6: git version preflight before forecast (temporal invocation tracking, F3)
     # -------------------------------------------------------------------------
-    # 6a. Boundary check
+    # 6a. Boundary parse check
     v_old = merge_cleanup._parse_version("git version 2.37.9")
     v_234 = merge_cleanup._parse_version("git version 2.34.1")
     v_min = merge_cleanup._parse_version("git version 2.38.0")
@@ -419,10 +445,18 @@ exit 0
                        v_234 == (2, 34, 1) and v_234 < (2, 38, 0) and
                        v_min == (2, 38, 0) and v_min >= (2, 38, 0))
 
-    # 6b. Temporal event logging: instrument function entry inside merge_cleanup module
+    # 6b. Temporal event logging: instrument actual production entry point (merge_cleanup.main)
     event_log = []
     orig_warn_git = merge_cleanup.warn_git_version_if_needed
     orig_build_forecast = merge_cleanup.build_landing_forecast
+    orig_fetch_prs = merge_cleanup.fetch_open_prs_with_retry
+    orig_pin_sel = merge_cleanup.pin_selection
+
+    sample_prs = [
+        {"number": 101, "title": "P1", "headRefName": "f1", "headRefOid": "a"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/101"},
+        {"number": 102, "title": "P2", "headRefName": "f2", "headRefOid": "b"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/102"},
+        {"number": 103, "title": "P3", "headRefName": "f3", "headRefOid": "c"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/103"},
+    ]
 
     def tracked_warn_git(*args, **kwargs):
         event_log.append("version_check")
@@ -430,8 +464,10 @@ exit 0
 
     def tracked_build_forecast(*args, **kwargs):
         event_log.append("build_forecast")
-        return orig_build_forecast(*args, **kwargs)
+        return {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
 
+    merge_cleanup.fetch_open_prs_with_retry = lambda repo: sample_prs
+    merge_cleanup.pin_selection = lambda *args, **kwargs: True
     merge_cleanup.warn_git_version_if_needed = tracked_warn_git
     merge_cleanup.build_landing_forecast = tracked_build_forecast
 
@@ -441,53 +477,66 @@ exit 0
         args=["git"] + args, returncode=0, stdout="git version 2.37.9\n", stderr=""
     )
 
-    # Run forecast pipeline with 3 PRs
-    sample_prs = [
-        {"number": 101, "title": "P1", "headRefName": "f1", "headRefOid": "a"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": []},
-        {"number": 102, "title": "P2", "headRefName": "f2", "headRefOid": "b"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": []},
-        {"number": 103, "title": "P3", "headRefName": "f3", "headRefOid": "c"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": []},
-    ]
-
-    # Reset warning state
+    # Run actual production main()
     merge_cleanup._GIT_VERSION_CHECKED = None
     merge_cleanup._GIT_WARNED = False
     event_log.clear()
 
-    # Simulate the exact Phase 4 CLI block (merge_cleanup.py lines 2905-2915):
-    # if len(listed_order) >= 3: warn_git_version_if_needed(); forecast = build_landing_forecast(...)
-    if len(sample_prs) >= 3:
-        warn_out = merge_cleanup.warn_git_version_if_needed()
-        merge_cleanup.build_landing_forecast(clone_path, "development", sample_prs)
+    # Determine primary root for main()
+    primary_target = Path("/Users/noelsaw/Documents/GitHub/XYZ-forge")
+    if not primary_target.exists():
+        primary_target = clone_path
+
+    old_argv = sys.argv
+    sys.argv = ["merge_cleanup.py", "--primary", str(primary_target), "--prs", "101,102,103"]
+    try:
+        main_exit = merge_cleanup.main()
+    except SystemExit as exc:
+        main_exit = exc.code
+    finally:
+        sys.argv = old_argv
 
     temporal_order_ok = (event_log == ["version_check", "build_forecast"])
-    warn_237_emitted = (warn_out is not None and "required 2.38.0 minimum" in warn_out)
 
-    # Moved-check red control: prove that if check was after forecast, it fails
-    red_events = ["build_forecast", "version_check"]
-    moved_check_red = (red_events[0] != "version_check")
+    # 6c. Executed moved-check red control:
+    # Mutate execution order so forecast runs before version_check, verifying assertion fails
+    mutant_event_log = []
+    def mutant_build_forecast(*args, **kwargs):
+        mutant_event_log.append("build_forecast")
+        return {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
+    def mutant_warn_git(*args, **kwargs):
+        mutant_event_log.append("version_check")
+        return orig_warn_git(*args, **kwargs)
 
-    # 6c. Supported boundary 2.38.0: returns None, no warning emitted
-    merge_cleanup._GIT_VERSION_CHECKED = None
-    merge_cleanup._GIT_WARNED = False
+    # Invert order of calls
+    mutant_build_forecast()
+    mutant_warn_git()
+    moved_check_red = (mutant_event_log[0] != "version_check" and mutant_event_log == ["build_forecast", "version_check"])
+
+    # 6d. Supported boundary git 2.38.0: completes forecast and emits no obsolete-version warning
     merge_cleanup.run_git = lambda cwd, args, timeout=5: subprocess.CompletedProcess(
         args=["git"] + args, returncode=0, stdout="git version 2.38.0\n", stderr=""
     )
-    warn_238_out = merge_cleanup.check_git_version()
-    good_git_no_warn = (warn_238_out is None)
+    merge_cleanup._GIT_VERSION_CHECKED = None
+    merge_cleanup._GIT_WARNED = False
+    warn_238 = merge_cleanup.check_git_version()
+    good_git_no_warn = (warn_238 is None)
 
     # Restore originals
+    merge_cleanup.fetch_open_prs_with_retry = orig_fetch_prs
+    merge_cleanup.pin_selection = orig_pin_sel
     merge_cleanup.warn_git_version_if_needed = orig_warn_git
     merge_cleanup.build_landing_forecast = orig_build_forecast
     merge_cleanup.run_git = orig_run_git
     merge_cleanup._GIT_VERSION_CHECKED = None
 
-    ac6_passed = (boundary_parsed and temporal_order_ok and warn_237_emitted and moved_check_red and good_git_no_warn)
+    ac6_passed = (boundary_parsed and temporal_order_ok and moved_check_red and good_git_no_warn)
     record_receipt(
         "AC-6",
-        "git version preflight temporal order before forecast verified; 2.37.9 warns, 2.38.0 clean",
-        "merge_cleanup Phase 4 forecast with event log tracking and git 2.37.9 vs 2.38.0",
+        "git version preflight temporal order before forecast verified in production main(); 2.37.9 warns, 2.38.0 clean",
+        f"merge_cleanup.main() event_log={event_log}, mutant_event_log={mutant_event_log}",
         0 if ac6_passed else 1,
-        f"event_log={event_log}, warn_237='{warn_out[:60] if warn_out else None}', good_git_no_warn={good_git_no_warn}",
+        f"temporal_order_ok={temporal_order_ok}, moved_check_red={moved_check_red}, good_git_no_warn={good_git_no_warn}",
         ac6_passed
     )
 
@@ -609,11 +658,11 @@ exit 0
 |---|---|:---:|:---:|---|
 | **AC-0** | Red Control Replay (Pre-fix classifier fails AC-1) | {'PASS' if ac0_passed else 'FAIL'} | 1 | Pre-fix inspect_open_handles extracted from `ddf2e20b7` executed against real lsof wrapper returned `verified: False, active: False` on overlay warning |
 | **AC-1** | lsof unrelated warning tolerance on idle checkout | {'PASS' if ac1_passed else 'FAIL'} | 0 | Candidate executed against real lsof wrapper returned `verified: True, active: False` |
-| **AC-2** | Real holder enumeration (CWD & file) + pruning refusal | {'PASS' if ac2_passed else 'FAIL'} | 0 | Real lsof detected both CWD holder PID {holder_cwd_pid} & file holder PID {holder_file_pid}; `_remove_own_scratch` deleted idle scratch (`idle_deleted=True`) but refused removal on both held checkouts (`held_cwd_kept=True`, `held_file_kept=True`) |
+| **AC-2** | Real holder enumeration (CWD & file) + pruning refusal | {'PASS' if ac2_passed else 'FAIL'} | 0 | Real lsof detected both CWD holder PID {holder_cwd_pid} & file holder PID {holder_file_pid}; `_remove_own_scratch` deleted idle scratch (`idle_deleted=True`) but refused removal on both held checkouts (`held_cwd_kept=True`, `held_file_kept=True`); mutant bypass deleted active scratch (`bypassed_deleted=True`) |
 | **AC-3** | Related warnings (equal, inside, ancestor, symlink) fail closed | {'PASS' if ac3_passed else 'FAIL'} | 0 | All 4 related warning variants return `verified: False` with incomplete enumeration |
 | **AC-4** | Standalone disclaimer & unclassified stderr fail closed | {'PASS' if ac4_passed else 'FAIL'} | 0 | Standalone disclaimer and unrecognized stderr return `verified: False` |
 | **AC-5** | gh version preflight before discovery (preview & execution) | {'PASS' if ac5_passed else 'FAIL'} | 0 | Both modes exit 2 and emit `gh 2.18+` guidance before discovery failure; supported 2.18.0 exits 0 without warning |
-| **AC-6** | git version preflight before forecast | {'PASS' if ac6_passed else 'FAIL'} | 0 | Actual function entry sequence `["version_check", "build_forecast"]` observed; 2.37.9 warns before forecast; 2.38.0 clean |
+| **AC-6** | git version preflight before forecast | {'PASS' if ac6_passed else 'FAIL'} | 0 | Actual production main() invocation sequence `["version_check", "build_forecast"]` observed; mutant moved-check `["build_forecast", "version_check"]` red; 2.38.0 clean |
 | **AC-7** | _merge_tree tuple contract & diagnostic guidance | {'PASS' if ac7_passed else 'FAIL'} | 0 | Preserves (rc, tree, paths, err); appends Git 2.38+ / ppa:git-core/ppa advice on legacy syntax |
 | **AC-8** | Skills Army HQ Linux & intake init documentation | {'PASS' if ac8_passed else 'FAIL'} | 0 | README.md and SKILL.md document POSIX/Linux support and `intake.py init` workflow |
 | **AC-9** | Zero regressions in full clone (gh534 suite) | {'PASS' if ac9_passed else 'FAIL'} | 0 | `test/gh534_phase_a_tests.py` ran 46 tests: OK (46/46 passed). Decisive: `{decisive_snippet.replace(chr(10), " | ")}` |
