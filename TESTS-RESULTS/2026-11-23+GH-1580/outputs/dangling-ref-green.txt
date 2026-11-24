@@ -1,0 +1,64 @@
+# GH-1580 controls — label=dangling-ref-green — source=449c81cdb43a64bc83caf11754a4b094547af630 — swarm_preflight.py sha256=857a3d734ab3
+# fixture PATH has no uv; gh is stubbed; every case is a throwaway repo; expectations are the CORRECT behaviour
+
+── [MATCH] D1a grep_present '^ENABLE_X=1$' on a mid-file line: still unfixed -> ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #101 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D1b grep_absent '^alembic check' with the fix on its own line: landed -> STALE
+   expect : exit 4, output matches /verdict +: STALE/
+   observed: exit 4;   candidate   : stale|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #102 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : STALE (exit 4)|
+
+── [MATCH] D1c grep_absent '^alembic check' vs comment/echo only: still unfixed -> ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #103 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2 legacy: missing first command still blocks
+   expect : exit 5, output matches /command 'uv' not found in PATH/
+   observed: exit 5;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #201 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=0 — next: command 'uv' not found in PATH|  verdict     : NOT-READY (exit 5)|
+
+── [MATCH] D2 legacy: a later missing command preserves the existing readiness result
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #202 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D2 legacy: shell append assignment in a later segment preserves readiness
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #203 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D4a F4 path_present on an unwanted path that is already gone -> landed (STALE, exit 4), not blocked
+   expect : exit 4, output matches /verdict +: STALE/
+   observed: exit 4;   candidate   : stale|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #214 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : STALE (exit 4)|
+
+── [MATCH] D4b path_present on an unwanted path that is still there -> unfixed, ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #215 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D4c dangling unwanted symlink is still present -> unfixed, ready
+   expect : exit 0, output matches /verdict +: ready/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #216 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3 text: issue criteria under '## Done when', no '## Acceptance' -> gap line names 'Done when'; exit unchanged (0)
+   expect : exit 0, output matches /gap +: .*#301.*Done when/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: no-issue-section] — issue #301 has no '## Acceptance' section — nothing to copy from|  gap         : issue #301 has no '## Acceptance' section, so the capture doc's criteria are unverified against it; it keeps criteria under '## Done when', which preflight does not read — put them under '## Acceptance'|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3 json: same case -> readiness.gaps names 'Done when'
+   expect : exit 0, valid nonempty JSON, readiness.gaps (has:Done when)
+   observed: exit 0; gaps=["issue #301 has no '## Acceptance' section, so the capture doc's criteria are unverified against it; it keeps criteria under '## Done when', which preflight does not read — put them under '## Acceptance'"]
+
+── [MATCH] D3-control text: issue has '## Acceptance' matching the doc verbatim -> match, no gap line
+   expect : exit 0, output matches /acceptance +: match/, output does NOT match /^  gap +:/
+   observed: exit 0;   candidate   : ready|  acceptance  : match — 1/1 criteria copied verbatim from issue #302|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3-control json: same case -> readiness.gaps present and empty
+   expect : exit 0, valid nonempty JSON, readiness.gaps (empty)
+   observed: exit 0; gaps=[]
+
+── [MATCH] D3-doc text: capture doc has no '## Acceptance' (checklist read from the whole document) -> gap line names the doc
+   expect : exit 0, output matches /gap +: .*capture doc/
+   observed: exit 0;   candidate   : ready|  acceptance  : unknown [cause: fetch-failed] — could not fetch issue #304 (gh missing, unauthenticated, or offline) — acceptance fidelity NOT verified|  gap         : capture doc <work>/acc-doc-whole/PROJECT/2-WORKING/GH-304-fixture.md has no '## Acceptance' section; the packet's checklist is read from the whole document|  readiness   : ready=1|  verdict     : ready (exit 0)|
+
+── [MATCH] D3-doc json: same case -> readiness.gaps names the capture doc
+   expect : exit 0, valid nonempty JSON, readiness.gaps (has:capture doc)
+   observed: exit 0; gaps=["capture doc /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//gh1580.erq4rw/acc-doc-whole/PROJECT/2-WORKING/GH-304-fixture.md has no '## Acceptance' section; the packet's checklist is read from the whole document"]
+
+# totals: MATCH=15 MISMATCH=0

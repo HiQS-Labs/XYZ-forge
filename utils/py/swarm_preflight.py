@@ -248,6 +248,9 @@ def merge_contracts(contracts: list[dict[str, Any]]) -> dict[str, Any]:
     return out
 
 def eval_probes(root: str, c: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int, int]:
+    # GH-1580: grep probe patterns are matched with re.M, so `^` and `$` anchor to a LINE (what an
+    # author writing them means), not to the whole file. Without it a `^…$` grep_present read as
+    # landed and a `^`-anchored grep_absent read as unfixed forever. Whole-file anchors: `\A`, `\Z`.
     probes_res: list[dict[str, Any]] = []
     counts = {"landed": 0, "unfixed": 0, "blocked": 0}
     
@@ -262,18 +265,20 @@ def eval_probes(root: str, c: dict[str, Any]) -> tuple[list[dict[str, Any]], int
             if ptype == "path_absent":
                 if os.path.exists(target_path): verdict = "landed"
             elif ptype == "path_present":
-                if not os.path.exists(target_path): verdict = "blocked"
+                # An unwanted path is removed only when its directory entry is gone.
+                if not os.path.lexists(target_path):
+                    verdict = "landed"
             elif ptype == "grep_present":
                 if not os.path.exists(target_path):
                     verdict = "blocked"
                 else:
                     with open(target_path, 'r') as f:
-                        if not re.search(p.get("pattern", ""), f.read()):
+                        if not re.search(p.get("pattern", ""), f.read(), re.M):
                             verdict = "landed"
             elif ptype == "grep_absent":
                 if os.path.exists(target_path):
                     with open(target_path, 'r') as f:
-                        if re.search(p.get("pattern", ""), f.read()):
+                        if re.search(p.get("pattern", ""), f.read(), re.M):
                             verdict = "landed"
             elif ptype == "command":
                 cmd = p.get("cmd")
@@ -406,6 +411,8 @@ def normalize(e: dict[str, Any]) -> dict[str, Any]:
             # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
             # substantiate must be visibly absent rather than quietly assumed.
             "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"},
+            # GH-1580: report missing acceptance sections as advisory gaps. Readiness is unchanged.
+            "gaps": e.get("SP_GAPS") or [],
             # GH-400 criterion 2: recorded on every run so "the doc cited its issue" is auditable
             # after the fact rather than assumed from a green verdict.
             "source_url": e.get("SP_SRC_URL") or {"status": "unknown", "detail": "not evaluated"},
@@ -1056,6 +1063,31 @@ def check_acceptance_fidelity(
     res["problems"] = problems
     return res
 
+# GH-1580: headings that carry an issue's criteria in practice but that `ACC_HEADING_RE` does not read.
+ACC_ALT_HEADING_RE = re.compile(r'^#{1,6}[ \t]*(?:done[ \t]+when|to[ \t]+fix|ask|findings)\b.*$',
+                                re.IGNORECASE | re.MULTILINE)
+
+def acceptance_gaps(fid: dict[str, Any], issue_body: str | None, acc_mode: str, doc_path: str) -> list[str]:
+    """Missing acceptance sections, reported as gaps instead of passing as an unremarked `unknown`.
+
+    Advisory by design (GH-557): this never changes readiness or an exit code; a frozen manifest
+    member is still the only case that blocks. Naming the heading the issue DOES have makes the
+    remedy one step, without teaching preflight to read it as criteria.
+    """
+    gaps: list[str] = []
+    if fid.get("status") == "unknown" and fid.get("cause") == "no-issue-section":
+        msg = (f"issue #{fid.get('issue')} has no '## Acceptance' section, so the capture doc's "
+               "criteria are unverified against it")
+        alt = list(dict.fromkeys(m.group(0).strip() for m in ACC_ALT_HEADING_RE.finditer(issue_body or "")))
+        if alt:
+            msg += (f"; it keeps criteria under {', '.join(repr(h) for h in alt)}, which preflight does not "
+                    "read — put them under '## Acceptance'")
+        gaps.append(msg)
+    if acc_mode != "acceptance-section":
+        gaps.append(f"capture doc {doc_path} has no '## Acceptance' section; the packet's checklist is "
+                    "read from the whole document")
+    return gaps
+
 def acceptance_fidelity_report(res: dict[str, Any]) -> list[str]:
     """Multi-line operator-facing explanation of a divergence."""
     out: list[str] = []
@@ -1318,6 +1350,7 @@ class CandidateEvaluation:
     acc_mode: str
     acc_dropped: int
     acc_lost: list[str]
+    gaps: list[str]
     acc_manifest_releases: list[str] | None
     manifest_note: str
     gh39_lane_note: str
@@ -1725,6 +1758,7 @@ def evaluate_candidate(
         _acc_doc_text = ""
     acc_items, acc_mode, acc_dropped = collect_inline_checklist(_acc_doc_text)
     acc_lost = verify_inlined_acceptance(render_inline_checklist(acc_items, acc_dropped, primary_doc), acc_items)
+    gaps = acceptance_gaps(acc_fidelity, issue_state.get("body"), acc_mode, primary_doc)
     if ready == 1 and acc_lost:
         ready, ready_next = 0, (
             f"the packet's acceptance block would not be a lossless copy of {primary_doc} — "
@@ -1838,6 +1872,7 @@ def evaluate_candidate(
         acc_mode=acc_mode,
         acc_dropped=acc_dropped,
         acc_lost=acc_lost,
+        gaps=gaps,
         acc_manifest_releases=acc_manifest_releases,
         manifest_note=manifest_note,
         gh39_lane_note=gh39_lane_note,
@@ -1885,6 +1920,7 @@ def normalize_candidate(
         "SP_ISSUE_STATE": {k: evaluation.issue_state[k] for k in ("status", "closed_at", "detail")},
         "SP_FROZEN_ARTIFACTS": repository.frozen_artifacts,
         "SP_ACC_FIDELITY": evaluation.acc_fidelity,
+        "SP_GAPS": evaluation.gaps,
         "SP_SRC_URL": evaluation.src_url,
         "SP_ACC_INLINE": {"criteria": len(evaluation.acc_items), "scope": evaluation.acc_mode,
                           "over_cap": evaluation.acc_dropped, "lossless": not evaluation.acc_lost},
@@ -1942,6 +1978,8 @@ def report_candidate(
         # criteria at all used to print the same word and mean different things.
         _acc_cause = f" [cause: {evaluation.acc_fidelity['cause']}]" if evaluation.acc_fidelity.get("cause") else ""
         emit(f"  acceptance  : {evaluation.acc_fidelity['status']}{_acc_cause} — {evaluation.acc_fidelity['detail']}")
+        for _gap in evaluation.gaps:
+            emit(f"  gap         : {_gap}")
         if evaluation.acc_manifest_releases:
             emit(f"  manifest    : issue #{evaluation.acc_fidelity['issue']} is a FROZEN MANIFEST member ({', '.join(evaluation.acc_manifest_releases)})")
         elif evaluation.acc_fidelity.get("cause") == "no-issue-section":

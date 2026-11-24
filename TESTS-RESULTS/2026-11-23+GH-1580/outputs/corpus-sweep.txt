@@ -1,0 +1,258 @@
+base|PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md|rc=0|  readiness   : ready=1
+new|PROJECT/1-INBOX/GH-1171-BRANCH-ARTIFACT-PREFLIGHT.md|rc=0|  readiness   : ready=1
+base|PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md|rc=3|
+new|PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md|rc=3|
+base|PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md|rc=0|  readiness   : ready=1
+new|PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md|rc=0|  readiness   : ready=1
+base|PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md|rc=4|  readiness   : ready=1
+new|PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1050-NO-SWAP-FALSE-LOW-SWAP-WARNING.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1243-CONSULT-ANSWER-PAYLOAD.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md|rc=0|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md|rc=0|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md|rc=6|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-1427-CLAUDE-TURN-BUILDER-CEILING.md|rc=6|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md|rc=6|  readiness   : ready=0 — next: capture doc source URL wrong-repository — source: points at repository Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (the sa
+new|PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md|rc=6|  readiness   : ready=0 — next: capture doc source URL wrong-repository — source: points at repository Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (the sa
+base|PROJECT/2-WORKING/GH-670-CLAUDE-REVIEWER.md|rc=7|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-670-CLAUDE-REVIEWER.md|rc=7|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md|rc=4|  readiness   : ready=1
+base|PROJECT/2-WORKING/GH-75-RELEASES-ROADMAP-DASHBOARD.md|rc=4|  readiness   : ready=1
+new|PROJECT/2-WORKING/GH-75-RELEASES-ROADMAP-DASHBOARD.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md|rc=6|
+new|PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md|rc=6|
+base|PROJECT/3-COMPLETED/GH-1049-DEP-DRIFT-ABSENT-SURFACE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1049-DEP-DRIFT-ABSENT-SURFACE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-105-VENDOR-RELEASES-ADDON.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-105-VENDOR-RELEASES-ADDON.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-107-RELEASES-DB-READ-SEAMS.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/10days/SKILL.md — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-107-RELEASES-DB-READ-SEAMS.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/10days/SKILL.md — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-1075-BATCH-RESUME-STALE-FILES.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1075-BATCH-RESUME-STALE-FILES.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1087-GH1051-RECORD-SPACING.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1087-GH1051-RECORD-SPACING.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1098-SHIFT-PHASE3.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1098-SHIFT-PHASE3.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-114-HEADLESS-TTY-IDLE-HANG.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-114-HEADLESS-TTY-IDLE-HANG.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1160-LOCAL-RECONCILE-STARTUP.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1160-LOCAL-RECONCILE-STARTUP.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1206-PACKAGING-DRIFT.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1206-PACKAGING-DRIFT.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1216-AIDER-OPENROUTER-PROFILE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1216-AIDER-OPENROUTER-PROFILE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1218-LESSONS-READ-BACK-EVIDENCE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1218-LESSONS-READ-BACK-EVIDENCE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1219-CONSULT-BLIND-B-RECONCILE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1219-CONSULT-BLIND-B-RECONCILE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1220-MARATHON-RESUME-REUSES-PHASE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1220-MARATHON-RESUME-REUSES-PHASE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1221-IMPROVE-LOOP-BUILD-CAN.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1221-IMPROVE-LOOP-BUILD-CAN.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1222-RELEASES-LIVE-MANIFEST-COUNT.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1222-RELEASES-LIVE-MANIFEST-COUNT.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-123-LINUX-CANARY-REMAINDER.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-123-LINUX-CANARY-REMAINDER.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1232-JOG-PROMOTION-PROBE-SCHEMA.md|rc=3|
+new|PROJECT/3-COMPLETED/GH-1232-JOG-PROMOTION-PROBE-SCHEMA.md|rc=3|
+base|PROJECT/3-COMPLETED/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1235-MERGE-CLEANUP-JOG-LAND.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1235-MERGE-CLEANUP-JOG-LAND.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1236-JOG-MARATHON-LANE-RUNS.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1236-JOG-MARATHON-LANE-RUNS.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1251-GH-522-SLICE-1.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1251-GH-522-SLICE-1.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1263-HQ-PARK-RATING-GRAMMAR.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1263-HQ-PARK-RATING-GRAMMAR.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1264-HQ-PARK-GOAL-PASSTHROUGH.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1264-HQ-PARK-GOAL-PASSTHROUGH.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1265-CONSULT-INSTALLED-KIMI-CMD.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1265-CONSULT-INSTALLED-KIMI-CMD.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1266-ARCHITECTURE-MD-SKILLS-INDEX.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1266-ARCHITECTURE-MD-SKILLS-INDEX.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1267-HQ-PARK-GH-ISSUE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1267-HQ-PARK-GH-ISSUE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1287-FUZZ-NOVELTY-SIGNATURE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1287-FUZZ-NOVELTY-SIGNATURE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1288-TICK-FAILS-UNDER-SANDBOX.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1288-TICK-FAILS-UNDER-SANDBOX.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1345-CUTOVER-ROWS-AT-PICKUP.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1345-CUTOVER-ROWS-AT-PICKUP.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md|rc=6|
+new|PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md|rc=6|
+base|PROJECT/3-COMPLETED/GH-1426-JOG-DRYRUN-TARGET-READINESS.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1426-JOG-DRYRUN-TARGET-READINESS.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1437-GATE-PYTHON-ENVIRONMENT.md|rc=6|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1437-GATE-PYTHON-ENVIRONMENT.md|rc=6|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1452-MERGE-CLEANUP-PLAN-AHEAD.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1452-MERGE-CLEANUP-PLAN-AHEAD.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-1459-DAILY-PLANNER-SHARED-DAILY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-1459-DAILY-PLANNER-SHARED-DAILY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md|rc=6|
+new|PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md|rc=6|
+base|PROJECT/3-COMPLETED/GH-1506-TIMEOUT-DIAGNOSTIC-OVERCLAIMS.md|rc=3|
+new|PROJECT/3-COMPLETED/GH-1506-TIMEOUT-DIAGNOSTIC-OVERCLAIMS.md|rc=3|
+base|PROJECT/3-COMPLETED/GH-1535-KS02-DECIDE-HOLDS.md|rc=3|
+new|PROJECT/3-COMPLETED/GH-1535-KS02-DECIDE-HOLDS.md|rc=3|
+base|PROJECT/3-COMPLETED/GH-1545-KS03-LAUNCH-AUTHORITY.md|rc=3|
+new|PROJECT/3-COMPLETED/GH-1545-KS03-LAUNCH-AUTHORITY.md|rc=3|
+base|PROJECT/3-COMPLETED/GH-168-WAVE-RECONCILE-SCOPE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-168-WAVE-RECONCILE-SCOPE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-182-HEALER-FACADE-SAFETY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: .relay-scratch/probe_telemetry.json — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: .relay-scratch/probe_telemetry.json — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-197-VENDOR-TIER-SPLIT.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/relay-xyz/SKILL.md — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-197-VENDOR-TIER-SPLIT.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/relay-xyz/SKILL.md — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-2-ORPHAN-BACKUP-RELOCATION.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-2-ORPHAN-BACKUP-RELOCATION.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-204-BSD-SED-PORTABILITY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-204-BSD-SED-PORTABILITY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-205-GATE-IDEMPOTENCY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: ROADMAP.md — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: ROADMAP.md — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md|rc=6|
+new|PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md|rc=6|
+base|PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md|rc=6|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md|rc=6|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-368-SAME-LANE-BUILDER-REVIEWER-ROUTING.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-368-SAME-LANE-BUILDER-REVIEWER-ROUTING.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-369-TURN-CAP-PROCESS-GROUP-KILL.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-369-TURN-CAP-PROCESS-GROUP-KILL.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-370-WORKTREE-PROGRESS-TELEMETRY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-370-WORKTREE-PROGRESS-TELEMETRY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-371-INTERRUPT-SNAPSHOT-UNCOMMITTED-TREE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-371-INTERRUPT-SNAPSHOT-UNCOMMITTED-TREE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-372-ESCALATION-ROOT-CAUSE-TAIL.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-372-ESCALATION-ROOT-CAUSE-TAIL.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-373-PHANTOM-GEMINI-REVIEWER-LANE.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-373-PHANTOM-GEMINI-REVIEWER-LANE.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-374-DRIFT-REGISTRY-CROSS-REPO-NOISE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-374-DRIFT-REGISTRY-CROSS-REPO-NOISE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-377-TEST-SUITE-RECALIBRATION.md|rc=3|
+new|PROJECT/3-COMPLETED/GH-377-TEST-SUITE-RECALIBRATION.md|rc=3|
+base|PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md|rc=6|
+new|PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md|rc=6|
+base|PROJECT/3-COMPLETED/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-411-TICK-LOG-FOREIGN-CWD-GUARD.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-412-TRANSIENT-CLAIM-EXIT-CODE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-413-LAUNCH-ARTIFACT-MARKER-DESTRUCTION.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-414-COMMENT-REFERENCE-CHECK.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-414-COMMENT-REFERENCE-CHECK.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-415-GUARD-HOOK-DERIVE-ENTRYPOINTS.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-416-DOC-TRUES-UP-BATCH.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-416-DOC-TRUES-UP-BATCH.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-418-MARATHON-ADOPT-RELEASES-DB.md|rc=7|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-418-MARATHON-ADOPT-RELEASES-DB.md|rc=7|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-419-MARATHON-RULE-ENFORCEMENT.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: test/gh419-marathon-rule-enforcement.sh — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-419-MARATHON-RULE-ENFORCEMENT.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: test/gh419-marathon-rule-enforcement.sh — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-421-AUTO-WAVE-RECONCILE.md|rc=7|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-421-AUTO-WAVE-RECONCILE.md|rc=7|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-424-ROADMAP-STATUS-MARKER-WRITER.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-424-ROADMAP-STATUS-MARKER-WRITER.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-425-GATE-PROVENANCE-CHECK.md|rc=7|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-425-GATE-PROVENANCE-CHECK.md|rc=7|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-454-RECONCILE-GATE-DEFECTS.md|rc=7|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-454-RECONCILE-GATE-DEFECTS.md|rc=7|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-491-ROADMAP-SECTION-VALIDATION.md|rc=7|  readiness   : ready=0 — next: artifact path not found at target.ref: utils/roadmap-dashboard.sh — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-491-ROADMAP-SECTION-VALIDATION.md|rc=7|  readiness   : ready=0 — next: artifact path not found at target.ref: utils/roadmap-dashboard.sh — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-50-SANDBOXED-GIT-HALF-APPLY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-50-SANDBOXED-GIT-HALF-APPLY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-529-RELAY-MARKER-ATTESTATION.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-529-RELAY-MARKER-ATTESTATION.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-533-RELAY-VERDICT-VOCABULARY.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-533-RELAY-VERDICT-VOCABULARY.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-554-TICK-UNKNOWN-FLAGS.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-554-TICK-UNKNOWN-FLAGS.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-555-MERGE-CLEANUP-B1-BAK.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/ledger_merge.py — fix the contract artifacts[] or push the f
+new|PROJECT/3-COMPLETED/GH-555-MERGE-CLEANUP-B1-BAK.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/ledger_merge.py — fix the contract artifacts[] or push the f
+base|PROJECT/3-COMPLETED/GH-558-GH32-SECTION-J-FLAKE.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-558-GH32-SECTION-J-FLAKE.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-567-REMOVE-ROADMAP-DASHBOARD.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-567-REMOVE-ROADMAP-DASHBOARD.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-570-HQ-KNOWN-REPOS-EMPTY-DB.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-570-HQ-KNOWN-REPOS-EMPTY-DB.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-594-EXPRESS-DOC-PATH-BOUNDS.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/express/SKILL.md — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-594-EXPRESS-DOC-PATH-BOUNDS.md|rc=4|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/express/SKILL.md — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-624-MERGE-CLEANUP-EMIT-AFTER-FF.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+base|PROJECT/3-COMPLETED/GH-625-AGENT-CHORUS-BRIDGE-BIND-WITHOUT-GETFQDN.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/agent-chorus/scripts/agent_chorus_bridge.py — fix the contract artifacts[] or push
+new|PROJECT/3-COMPLETED/GH-625-AGENT-CHORUS-BRIDGE-BIND-WITHOUT-GETFQDN.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/agent-chorus/scripts/agent_chorus_bridge.py — fix the contract artifacts[] or push
+base|PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-629-MERGE-CLEANUP-WAIT-FOR-HOSTED-RECONCILE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+base|PROJECT/3-COMPLETED/GH-651-GH610-SPACED-PYTHON-SHEBANG.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-651-GH610-SPACED-PYTHON-SHEBANG.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-674-MERGE-CLEANUP-HOSTED-LOOKUP.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+base|PROJECT/3-COMPLETED/GH-703-RAW-TEXT-ASTERISK.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-703-RAW-TEXT-ASTERISK.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-707-RECONCILE-ROLLBACK-ENVELOPE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-707-RECONCILE-ROLLBACK-ENVELOPE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-711-LEDGER-MERGE-GID-REMINT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/ledger_merge.py — fix the contract artifacts[] or push the f
+new|PROJECT/3-COMPLETED/GH-711-LEDGER-MERGE-GID-REMINT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/ledger_merge.py — fix the contract artifacts[] or push the f
+base|PROJECT/3-COMPLETED/GH-720-REVIEW-ONCE-BLOCK-REGEX.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-720-REVIEW-ONCE-BLOCK-REGEX.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+base|PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+new|PROJECT/3-COMPLETED/GH-736-MERGE-CLEANUP-EXCLUDE-UNKNOWN-STACKED.md|rc=6|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py — fix the contract artifacts[] or push the
+base|PROJECT/3-COMPLETED/GH-742-VENDOR-PACKAGE-JSON-ESM.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-742-VENDOR-PACKAGE-JSON-ESM.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/standup/collect.sh — fix the contract artifacts[] or push the file
+new|PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md|rc=5|  readiness   : ready=0 — next: artifact path not found at target.ref: skills/standup/collect.sh — fix the contract artifacts[] or push the file
+base|PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-904-EMPTY-RELEASES-LEDGER.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-904-EMPTY-RELEASES-LEDGER.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-905-RELEASES-ONLY-INSTALL.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-905-RELEASES-ONLY-INSTALL.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-906-OPTIONAL-SKILL-INSTALL.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-906-OPTIONAL-SKILL-INSTALL.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-907-VENDORED-ROUTER-HINT.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-907-VENDORED-ROUTER-HINT.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-942-SKILL-DESC-1024-LIMIT.md|rc=0|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-942-SKILL-DESC-1024-LIMIT.md|rc=0|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE.md|rc=4|  readiness   : ready=1
+base|PROJECT/3-COMPLETED/GH-976-RELAY-RECEIPT-ONLY-PROGRESS.md|rc=4|  readiness   : ready=1
+new|PROJECT/3-COMPLETED/GH-976-RELAY-RECEIPT-ONLY-PROGRESS.md|rc=4|  readiness   : ready=1

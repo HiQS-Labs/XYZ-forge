@@ -1,0 +1,29 @@
+BEFORE
+ba7cf57cb1ef3a9214ae050e8b8ba3697f557489
+false
+origin	<local task clone> (fetch)
+origin	<local task clone> (push)
+gh1580-verification@example.invalid
+swarm-preflight rc=0
+  PASS: T39c GH-203: clean JSON report omits the stale-lock warning fields
+
+  swarm-preflight: 100 passed, 0 failed
+gh343-gate-program-target-root rc=0
+  PASS: missing interpreter script is NOT-READY
+  PASS: missing script diagnostic names the searched target_root
+  gh343-gate-program-target-root: 12 pass, 0 fail
+gh557-unknown-blocks-manifest rc=0
+  PASS: membership comes from goalpost MANIFEST arrays, not RELEASES.md prose
+  PASS: the structural case has its own packet provenance wording
+  gh557-unknown-blocks-manifest: 16 pass, 0 fail
+gh400-acceptance-fidelity rc=0
+  PASS: C18b a prose heading is still not an acceptance section
+  PASS: C19 a [changed] entry survives an arrow inside the criterion text
+  gh400-acceptance-fidelity: 26 pass, 0 fail
+AFTER
+ba7cf57cb1ef3a9214ae050e8b8ba3697f557489
+false
+origin	<local task clone> (fetch)
+origin	<local task clone> (push)
+gh1580-verification@example.invalid
+Identity and clean working tree unchanged.
