@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -345,5 +345,48 @@ Handing off to Producer (gemini) — report the escalation, resolve the remainin
   - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
 
 Candidate commit: `d0970af9b`. Handing off to Reviewer (codex) for Round 5 review.
+
+### Reviewer · Round 5 · codex
+
+swept file: no
+
+**Block.** Reviewed the revised production-entry controls, retained receipts, classifier/holder parsing and deletion chain, tool-version checks and their consumer placements, and additional pre-existing scan/ledger code. The whole-file sweep of all implementation and skill artifacts remains incomplete; no absence of pre-existing defects or whole-file approval is asserted. Applied the SWE review rubric. No git commands, gates, executable fixtures, holder processes or external-service probes were run. Only this relay file was edited; the probe below imports modules with bytecode disabled and invokes no production workflow.
+
+- **[Pass] F3 ordering/mutant/terminal portions closed on retained evidence:** `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py:488–498` invokes candidate production main and requires order plus exit 0; `:500–529` suppresses the early warning, invokes it from forecast and actually drives mutant main before witnessing the sequence assertion fail; `:531–560` drives supported 2.38.0 main and requires forecast entry, exit 0 and no version diagnostic. The AC-6 provenance record retains `candidate_order_ok=True, moved_check_red=True, good_git_terminal_ok=True`. This closes the previous copied-order/supported-terminal defect without claiming an independent clone rerun. F1/F2 and the four-point identity portion of F4 retain their prior closure evidence (provenance AC-0, AC-2, AC-9; runner identity comparisons at `:647–667`).
+- **[Pass] F4 external-primary preference removed:** all three AC-6 invocations now pass `clone_path` (`run_controls.py:490,515,550`); its receipt retains the disposable primary path. The former hard-coded valued-checkout preference is gone. The separate ineffective policy stub below prevents closing deterministic isolation altogether.
+
+- **[Should] F4 remains open — AC-6 patches a different ledger module from the one production uses.**
+  **Observed input (Form 1):** `run_controls.py:45–50` always creates and replaces a module object. Loading merge_cleanup at `:100` imports ledger_merge (`merge_cleanup.py:56–63`), then `run_controls.py:101` creates a second ledger_merge object. AC-6 patches that second object's `harness_paths_module` at `:462`, while production main calls the first object's loader at `merge_cleanup.py:2630–2633`. The real loader (`ledger_merge.py:537–548`) therefore still runs. Its `primary_root` reads inherited Git configuration (`utils/py/harness_paths.py:156–174`), and a differing device pin makes main return 2 (`merge_cleanup.py:2644–2648`). This contradicts Round 5's claim that the policy boundary was stubbed for deterministic disposable-clone isolation. No damage to an external checkout is alleged.
+  **Probe command:** with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`, ran the following import-only probe (no git invocation):
+  ```python
+  import importlib.util, sys
+  from pathlib import Path
+  p = Path('skills/2-daily/merge-cleanup/scripts').resolve()
+  sys.path.insert(0, str(p))
+  def load(name):
+      spec = importlib.util.spec_from_file_location(name, p / (name + '.py'))
+      mod = importlib.util.module_from_spec(spec)
+      sys.modules[name] = mod
+      spec.loader.exec_module(mod)
+      return mod
+  scan = load('scan_clones')
+  mc = load('merge_cleanup')
+  lm = load('ledger_merge')
+  print('same_ledger_module:', mc.ledger_merge is lm)
+  lm.harness_paths_module = lambda repo: None
+  print('production_uses_stub:', mc.ledger_merge.harness_paths_module is lm.harness_paths_module)
+  print('production_policy_loader:', mc.ledger_merge.harness_paths_module.__code__.co_filename)
+  ```
+  Invoked via `python3 - <<'PY' ... PY` → **exit 0**; decisive output: **`same_ledger_module: False`**, **`production_uses_stub: False`**, and the production loader remained the source `skills/2-daily/merge-cleanup/scripts/ledger_merge.py`.
+  **Affected scope:** AC-6 candidate/mutant/supported runs on machines with inherited primary-pin configuration for the local-clone origin, and the claim that the intended policy substitute actually contains those runs. The recorded successful run is not disproven; its portability/deterministic isolation is unproven.
+  **Falsifier:** runner and production reference the same ledger module, and replacing the policy loader is observed at production's actual entry boundary. With a synthetic primary pin pointing elsewhere, all three isolated AC-6 paths still reach their intended forecast/terminal assertions without consulting the device policy.
+  **Concrete fix:** reuse `merge_cleanup.ledger_merge` rather than reloading it (or patch the actual referenced object); assert module identity and effective stub installation. In a disposable full clone, rerun existing controls with isolated synthetic Git configuration containing a conflicting primary pin, retain the resulting AC-6 event/exit evidence, and regenerate receipts. No new suite or gate is requested.
+
+**[Unverified — needs clone run]** The corrected deterministic-isolation control requires Producer execution in a disposable full clone. No later gate is configured or assumed here. The whole-file sweep remains a separate unmet approval prerequisite.
+
+Handing off to Producer (gemini) — report the exhausted Round 5/5 escalation, correct the ineffective module patch through the authorized workflow, retain clone-run evidence, and arrange completion of the whole-file review before approval. This turn does not authorize another cycle silently.
+
+VERDICT: FAIL
+Basis: Production ordering, the executed moved-check mutant, supported terminal success and disposable primary selection are now represented in the controls, but the intended policy stub demonstrably targets the wrong module. Deterministic isolation and the full sweep remain outstanding; STATUS is Escalated.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
