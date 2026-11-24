@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,84 @@ Include `swept file: yes|no`, a VERDICT (PASS/FAIL/PARKED) with Basis, and set S
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+What this changes: The plan makes probe anchors match individual lines, checks every command in a plain `&&` gate, and reports acceptance and complex-gate gaps without changing readiness. It also treats an absent unwanted path as landed.
+
+How the existing system works: Preflight combines probe results, gate existence checks, and acceptance checks into readiness and exit codes consumed by the work drivers. The existing gate check examines the first command; the proposed loop reuses that check, while non-plain gates retain its behavior. These paraphrases were written from the plan before reading source.
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: Acceptance 2 and the no-new-false-refusal requirement fail on the concrete inputs below. The simpler plain-gate policy is accepted; neither finding requests restoring the removed shell parser. This is the final permitted round, so STATUS is Escalated, not Approved. No later gate is assumed.
+
+- [Blocker] F1 — The plain classifier admits shell options the preserved script locator cannot handle. `utils/py/swarm_preflight.py:577` recognizes both `-` and `+` option prefixes, but the exclusion at line 580 misses `+x` and bundled `-eO`. The locator at lines 1864-1869 only skips `-` tokens and otherwise takes the first token as the script. **Observed input:** the read-only evaluator/report probe below (process exit 0) gives `true && bash +x -n utils/swarm-preflight.sh`: BASE-equivalent `rc=0 ready=1`, HEAD `rc=5 ready=0 'gate script not found under target_root .: +x'`; and `true && bash -eO extglob utils/swarm-preflight.sh`: BASE-equivalent `rc=0 ready=1`, HEAD `rc=5 ready=0 'gate script not found under target_root .: extglob'`. Both classify plain and emit no non-plain gap. The script exists; the reported missing tokens are shell options/option arguments, not missing scripts. **Affected scope:** a later bash/sh command in an otherwise plain list using these option forms before its script. **Fix:** conservatively classify these unsupported option forms as non-plain and retain the base first-command check plus gap; keep the per-program block intact. **Falsifier:** the same two inputs must retain exit 0 with a gap, while `true && bash -n utils/missing.sh` must still be plain and refuse the genuinely absent script. Keep `true && bash -nx utils/swarm-preflight.sh` passing without a gap. Retain those manual red/green observations with the existing evidence, not a new suite.
+
+- [Blocker] F2 — A real shell builtin is classified as a missing executable. `_GATE_NOT_PLAIN` at `utils/py/swarm_preflight.py:567` omits `shopt`; `_gate_segment_is_plain` at line 574 therefore admits it, and the new loop at line 1858 reaches `shutil.which` at line 1886. **Observed input:** the same probe gives `true && shopt -s nullglob`: BASE-equivalent `rc=0 ready=1`, HEAD `rc=5 ready=0 "command 'shopt' not found in PATH"`, plain=True, no gap. The separate non-mutating command `/bin/bash --noprofile --norc -c 'help shopt; help set'` exited 0 and printed `shopt: shopt [-pqsu] [-o long-option] optname [optname...]`; this is a shell builtin, not an absent program. **Affected scope:** otherwise plain lists containing a later `shopt` command on a host with no external executable named `shopt`. **Fix:** add `shopt` to the existing non-plain builtin exclusions, so the accepted first-command-plus-gap policy applies. **Falsifier:** this exact input must remain exit 0 with a gap; `true && gh1580_missing_command` must continue to refuse a genuinely missing external command. Record the manual red/green result in the existing evidence.
+
+- [Pass] The old per-program block is preserved: reverse-applying the seeded source hunks in memory reconstructed SHA-256 `cb543213bd4e4d9e63ef5680c11bcf74d6a23b641fa38f72418789b44f5f2136`, matching the red log's source prefix. Comparing from `g0 = gate_parts[0]` through the PATH refusal with current lines 1861-1887 returned `PER-PROGRAM BLOCK byte-identical except separator newlines` (Python probe exit 0). Its pre-existing option limitations become new false refusals when applied to later commands; F1 addresses that interaction. A separate extracted-block probe also kept whitespace/empty inputs and first-command behavior unchanged; `-o pipefail`, trailing `&&`, and `&&&` fell back with a gap, while tabs, `sh -n`, `bash -nx`, `test`, `true`, argument `a=b`, missing `./prog`, uppercase and Unicode missing command names followed the intended branch. No additional pre-existing defect was established by the whole-file sweep.
+
+- [Pass] The anchor/path changes agree with their contracts: `utils/py/swarm_preflight.py:265` through line 283 and `relay-automation/CONTRACT.example.md:20` through line 25; the retained D1a-D1c and D4a-D4b observations in `TESTS-RESULTS/2026-11-23+GH-1580/outputs/green.txt` show the intended results. Marathon imports this evaluator at `utils/py/marathon_drive.py:2681` and rejects non-landed results at line 2705; Jog maps exit 4 to completed at `utils/py/jog_run.py:648`. Acceptance gaps flow through lines 1798, 1965, 417 and 2023 of swarm_preflight; readiness decisions at lines 1825 and 1982-1987 remain independent of the gap list. The retained GH-557 coverage preserves the non-manifest advisory behavior. No additional regression was established on these paths.
+
+- [Pass] Evidence integrity and bounded claims: all six `output_sha256` values in `TESTS-RESULTS/2026-11-23+GH-1580/provenance.jsonl` matched nonempty files (Python hash probe exit 0). Current source SHA-256 is `0429ec6874821b95f6a19740b0f7b910fdc436aa7dbd45877273b2ea89e8ddf1`, matching the green source prefix. Counting result records reproduced RED 5 MATCH/31 MISMATCH, GREEN 36/0, mutant 17/19. Pairwise comparison of all 258 lines in `outputs/corpus-sweep.txt` found 129 pairs and exactly one difference, GH-269 exit 6 to 4. `outputs/existing-suites.txt:1` through line 24 records 17 shell suite exits 0, 21 pytest passes, and matching identity brackets. These are reviewed Producer receipts, not fresh suite runs by this reviewer. `controls.sh:85` through line 95 really asserts the non-plain gap line; the seeded diff adds no test suite or registry entry. The 33-string regression guard in `outputs/gate-regression-guard.txt` substantiates its sampled zero flips, not a universal no-false-refusal claim: F1/F2 are counterexamples outside that sample.
+
+Probe command for F1/F2 (no gate or fixture executed; no Git/network subprocess; all repository reads only). BASE-equivalent substitutes the original single `gate_cmd.split()` iteration into the otherwise identical per-program block. The separate in-memory reverse-diff comparison above establishes that equivalence for these gate decisions.
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import sys, os, io, contextlib
+from types import SimpleNamespace as NS
+sys.path.insert(0, 'utils/py')
+import swarm_preflight as sp
+sp.repo_slug_for = lambda *_: None
+sp.fetch_issue_details = lambda *_: dict(body=None, status='unknown', closed_at=None, detail='offline probe')
+sp.frozen_manifest_members = lambda *_: ({}, 'probe: no manifest')
+sp.subprocess.run = sp.subprocess.check_output = sp.subprocess.check_call = lambda *a, **k: (_ for _ in ()).throw(AssertionError('subprocess forbidden'))
+sel=NS(primary_doc='PROJECT/2-WORKING/GH-1580-PREFLIGHT-MISREPORTS-GAPS.md',target_root='.',source_issues=(),root='.',slug='probe',drive_cmd='unused',mode='project-doc')
+repo=NS(fetch_ok=1,blocked=0,ambig=0,stale=0,gh39_art_missing='',frozen_artifacts=[],checkout_matches_ref=1,branch='probe',commit='probe',suggested_branch='probe',branch_ready=1,upstream='',ahead=0,behind=0,dirty=0,stale_index_lock=0,ref='probe',ref_commit='probe')
+arts=dict(artifacts=['utils/py/swarm_preflight.py'],inferred_tests=[],inferred_helpers=[],fs_touching_tests=[])
+split=sp.gate_segments
+for gate in ('true && bash +x -n utils/swarm-preflight.sh','true && bash -eO extglob utils/swarm-preflight.sh','true && shopt -s nullglob'):
+    print('INPUT',gate)
+    for label in ('BASE-equivalent','HEAD'):
+        sp.gate_segments = (lambda g: ([g.split()] if g.split() else [], False)) if label=='BASE-equivalent' else split
+        merged=dict(gate=gate,target={'ref':'probe'},artifacts=arts['artifacts'])
+        ev=sp.evaluate_candidate(sel,merged,arts,[],repo)
+        out=io.StringIO()
+        with contextlib.redirect_stdout(out):
+            try: sp.report_candidate(NS(format='text'),sel,merged,repo,ev,{})
+            except SystemExit as e: rc=e.code
+            else: rc=0
+        print(label,'rc='+str(rc),'ready='+str(ev.ready),repr(ev.ready_next))
+        print(next(x.strip() for x in out.getvalue().splitlines() if 'verdict     :' in x))
+PY
+```
+
+Decisive output (probe process exit 0):
+
+```text
+INPUT true && bash +x -n utils/swarm-preflight.sh
+BASE-equivalent rc=0 ready=1 ''
+verdict     : ready (exit 0)
+HEAD rc=5 ready=0 'gate script not found under target_root .: +x'
+verdict     : NOT-READY (exit 5)
+INPUT true && bash -eO extglob utils/swarm-preflight.sh
+BASE-equivalent rc=0 ready=1 ''
+verdict     : ready (exit 0)
+HEAD rc=5 ready=0 'gate script not found under target_root .: extglob'
+verdict     : NOT-READY (exit 5)
+INPUT true && shopt -s nullglob
+BASE-equivalent rc=0 ready=1 ''
+verdict     : ready (exit 0)
+HEAD rc=5 ready=0 "command 'shopt' not found in PATH"
+verdict     : NOT-READY (exit 5)
+```
+
+Review method/limits: read the complete seeded diff, complete changed Python module and contract example, plan, named suites and retained evidence. Graph discovery found only the separate main-checkout index, generation `2026-11-23T23:18:20Z`; its coverage cannot establish this worktree's freshness, so direct local source controls this review. The graph trace call was unavailable under the approval policy; the relevant caller source was read directly. No suites, executable fixtures, full gate, Git command, server write, or source edit was performed. No Form 2 runtime hypothesis is left pending.
+
+Handing off to Producer (claude-a) — the single-round relay is Escalated; report the failed final QA and these two findings to the operator as the plan requires. Do not treat this as approval or silently open another round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
