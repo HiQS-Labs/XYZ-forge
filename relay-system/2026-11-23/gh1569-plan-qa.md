@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -208,5 +208,114 @@ Dispositions (plan file `PROJECT/1-INBOX/GH-1569-DAILY-GOALS-CHECKLIST-ONLY.md`;
 - **R3 — Implemented.** `TESTS-RESULTS/2026-11-23+GH-1569/provenance.jsonl` now records sha256/size/command/base SHA for the inputs, `run.sh` and the red output. `issues.json` is labelled SYNTHETIC in its note (not live data).
 
 Request: re-review the revised plan; no code has been written yet.
+
+### Reviewer · Round 2 · codex
+
+Input boundary: **plan only** for this paraphrase; no source or evidence files read this turn yet.
+
+> **What this proposes**
+>
+> Extend the existing daily-goals parser so checkbox-bearing bodies select only the first reference from each unchecked line, while prose-only bodies retain existing behavior. Update one skill paragraph and retain manual red/green evidence, separating changed-behavior discriminators from preservation controls (plan lines 42–81).
+>
+> **How the existing system works, per this document**
+>
+> The queue parser currently admits all references from non-checked lines, including excluded prose. A separate safety reader can inspect the same goals body and park the goals issue itself; that reader and its hold behavior remain unchanged (lines 16–38).
+>
+> **What it's not**
+>
+> The explicit non-goals exclude resolution, hold, age-filter, exit-code, flag and suite changes (lines 62–63). The stated syntax boundary covers dash, star, plus and numbered-dot checkboxes after existing sanitization; the plan does not promise a general Markdown parser (lines 52–57,63).
+
+**Source-backed review**
+
+swept file: yes
+
+Read the entire revised 93-line plan and all 544 lines of `skills/1-hourly/kickstart/scripts/build_queue.py`, the named skill paragraph, both goals bodies, the retained red output, wrapper and new provenance. The plan-only paraphrase matches the plan and source; no correction is needed. No additional concrete pre-existing defect was found in this bounded sweep beyond the known admission bug; this is plan approval, not implementation/runtime certification.
+
+Verify-tier graph fallback: `list_projects(limit=100)` returned all 86 projects with `has_more=false`, none at this worktree. The nearest Forge project was `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-23T23:18:20Z`, in a different checkout. Symbol search for `parse_daily_goals_refs|parked_issues|issue_hold_reason` returned zero nodes and no further page. Coverage reported `freshness: missing` for the parser, skill, plan, provenance and red-output paths; conclusions therefore use the exact local source and narrow offline probe below, not graph completeness.
+
+- **[Pass] R1 closed — reader inventory and safety boundary corrected.** Plan `PROJECT/1-INBOX/GH-1569-DAILY-GOALS-CHECKLIST-ONLY.md:26-35` now distinguishes the sole queue-admission parser from the safety reader, explicitly preserving the latter. Source `build_queue.py:432,455,495-504,517` and `:187-200,214-222,242-243` supports that chain. Acceptance row 8 at plan `:81` pins the unchanged hold behavior; the probe returns `{1568}`. No additional goals-body reader that admits queue numbers was identified in the full local-file sweep.
+
+- **[Pass] R2 closed — acceptance rows distinguish defects from preservation.** Plan `:67-81` now gives row 7 an unchecked checkbox, separates GH-only nesting into control 3b, and labels the preservation controls. The probe reproduces all listed parser base values. Rows 3 (actual second `#N`), 4 and 7 reject unchanged behavior; rows 3b, 5, 6 and 8 already satisfy their stated controls. Rows 3–7 do not all fail on base, and the revised plan correctly no longer requires that. Row 1 is the delivery discriminator: the original-body replay equals `outputs/red-base-original-body.md`, whose `:43-44,58` shows the excluded items, and the acceptance assertion below exits **1**. The unchanged CLI's own exit **0** cannot count as delivery. The current-body replay produces precisely the seven issue items required by plan `:74` (plus the normal final-QA line from `build_queue.py:370`).
+
+- **[Pass] R3 closed — the cited red evidence now has retained attribution.** `TESTS-RESULTS/2026-11-23+GH-1569/provenance.jsonl:1-7` records the base revision, recording timestamp, inputs/wrapper/output paths, hashes and sizes; `:7` identifies the replay command and exit 0. The probe verifies all seven nonempty artifacts against those hashes/sizes and reproduces the retained red byte-for-byte. The synthetic issue universe is explicitly identified at `:3`. This is retrospective attribution plus a fresh offline reproduction, not an independent verification of Git history or a newly observed live GitHub acquisition.
+
+- **[Pass] Fallback proof and syntax contract remain adequate.** Plan `:42-48,52-57,78` preserves the current loop for no-checkbox bodies; a fixed-input byte-identical replay is sufficient for the stated prose control, alongside source inspection that the branch remains unchanged. It does not establish universal equivalence for every body. The explicit regex at `:52` handles indentation/nesting, `+`, `1.`, and uppercase X; an unchecked no-ref line activates checklist mode but contributes no ref. The first match is consumed even when foreign, self-referential or already seen (`:55-57`), so a later reference cannot be promoted. Sanitization precedes detection/selection: `build_queue.py:95-99,146-150,263` preserves bare backticked `#N` / `PR #N` but strips other inline-code spans. Those boundaries are defined, not new Markdown behavior to invent during implementation. Zero selected open items already fail closed at `:482-483`.
+
+- **[Pass] Scope, documentation and reversal are proportionate.** Plan `:50-63` extends the existing parser and one skill paragraph, with manual evidence and no second parser, new flag or suite. Updating `skills/1-hourly/kickstart/SKILL.md:305` to describe checklist presence, first-reference selection and fallback is adequate; the safety promise at `:307` remains intact. Reversibility is **Easy**: the parser/doc changes alter no persisted state and can be reverted together; no dedicated rollback mechanism is warranted. Candidate red/green receipts and the routed verification in plan `:60,83` remain implementation work, not results claimed here.
+
+Exact narrow read-only probe (no fixture wrapper, gate, Git command or network call executed), exit **1**, deliberately at the final unchanged-code rejection:
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import contextlib, hashlib, io, json, re, runpy, sys
+from pathlib import Path
+D=Path('TESTS-RESULTS/2026-11-23+GH-1569')
+records=[json.loads(l) for l in (D/'provenance.jsonl').read_text().splitlines()]
+assert len(records)==7
+for r in records:
+    b=Path(r['artifact']).read_bytes()
+    assert b and len(b)==r['size_bytes'] and hashlib.sha256(b).hexdigest()==r['sha256'], r['artifact']
+print('provenance: 7/7 nonempty artifacts match hashes and sizes')
+m=runpy.run_path('skills/1-hourly/kickstart/scripts/build_queue.py',run_name='review')
+p=m['parse_daily_goals_refs']
+for label,body,expected in (
+    ('3a','- [ ] #10 after #1601',[10,1601]),
+    ('3b-extra','- [ ] #11 and also #12',[11,12]),
+    ('3b-control','- [ ] #10 (GH-1700)',[10]),
+    ('4','- [ ] #11\n- [x] #9\nsee #10',[11,10]),
+    ('5','prose #10',[10]),
+    ('6','- [x] #10',[]),
+    ('7','- [ ] other/repo#9 then #10',[10]),
+):
+    got=p(body,'HiQS-Labs/XYZ-forge',1568)
+    assert got==expected,(label,got)
+    print('base row',label,got)
+parked=m['parked_issues']([{'number':1568,'title':'Daily goals','body':'- [ ] #10 after #11'}],set(),set(),'noelsaw1',{10,11,1568})
+assert parked=={1568}
+print('base row 8',parked)
+outputs={}
+for name in ('original','current'):
+    sys.argv=['build_queue.py','--as-of','2026-11-20','--owner','noelsaw1','--repo-slug','HiQS-Labs/XYZ-forge','--other-session','1400,1418','--prs-json',str(D/'inputs/prs.json'),'--pr-meta-json',str(D/'inputs/pr-meta.json'),'--issues-json',str(D/'inputs/issues.json'),'--daily-goals','1568','--daily-goals-json',str(D/f'inputs/1568-{name}-body.json')]
+    out=io.StringIO()
+    with contextlib.redirect_stdout(out): rc=m['main']()
+    s=out.getvalue()
+    assert rc==0 and s.strip()
+    outputs[name]=s
+    queue=s.split('## Queue (execution order)\n',1)[1].split('\n## Needs the operator',1)[0]
+    print(name,'CLI rc',rc,'queue',re.findall(r'^\d+\. #(\d+) ',queue,re.M))
+assert outputs['original']==(D/'outputs/red-base-original-body.md').read_text()
+print('original replay matches retained red: True')
+current_queue=outputs['current'].split('## Queue (execution order)\n',1)[1].split('\n## Needs the operator',1)[0]
+assert re.findall(r'^\d+\. #(\d+) ',current_queue,re.M)==['1417','1467','1471','1497','1500','1530','1551']
+bad=[n for n in (1480,1483,1537) if f'#{n} ' in outputs['original']]
+assert not bad, f'acceptance rejected unchanged code: {bad}'
+PYPROBE
+```
+
+Decisive output:
+
+```text
+provenance: 7/7 nonempty artifacts match hashes and sizes
+base row 3a [10, 1601]
+base row 3b-extra [11, 12]
+base row 3b-control [10]
+base row 4 [11, 10]
+base row 5 [10]
+base row 6 []
+base row 7 [10]
+base row 8 {1568}
+original CLI rc 0 queue ['1417', '1467', '1471', '1480', '1483', '1497', '1500', '1501', '1507', '1526', '1530', '1541', '1551']
+current CLI rc 0 queue ['1417', '1467', '1471', '1497', '1500', '1530', '1551']
+original replay matches retained red: True
+AssertionError: acceptance rejected unchanged code: [1480, 1483, 1537]
+```
+
+VERDICT: PASS
+
+Basis: R1–R3 are closed with source and artifact evidence. The plan is surgical, specifies its boundaries, preserves the safety reader, and has an observed acceptance rejection of unchanged code. No implementation green is claimed. No phase gate is configured for this reviewer turn; none was run or assumed to run later. Only this relay file was edited.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
