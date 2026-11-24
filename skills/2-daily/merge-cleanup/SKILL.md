@@ -388,8 +388,8 @@ recovery window when warranted. Never skip qualification or claim unmeasured sav
 
 ## Drive loop — how an agent runs this skill end to end (GH-623)
 
-For a clone-retirement dry run, use `scan_clones.py --json` with the owning repo's integration branch. An inventory that only compares local SHAs to advertised remote tips is discovery only. Run the scanner's ancestry and merged-PR checks before reporting a retirement count.
-When a retirement sweep leaves a substantial set of unresolved `PRESERVE_*` rows, finish verified retirements and ask whether to run `/merge-cleanup-deep` on the remaining eligible clones. Give the operator the hold counts and estimated backup footprint. Explicit requests for deep triage already opt in.
+For a clone-retirement sweep dry run, use `scan_clones.py --json` with the owning repo's integration branch. Matching local SHAs to advertised remote tips is an inventory check. Use the scanner's ancestry and merged-PR checks for the provisional count. Phase 6 refreshes the evidence before removal.
+In an executing sweep, finish verified retirements first. When substantial `PRESERVE_*` holds remain, offer `/merge-cleanup-deep` for eligible standalone clones as defined by its intake and backup steps. Give the operator the hold counts, identify exclusions such as live sessions, and use `du` to estimate the eligible clones' size before compression. Explicit deep-triage requests already opt in.
 
 `/merge-cleanup` is a driven workflow, not a one-shot report. Follow the loop; do not stop at the
 first refusal, do not degrade the scope silently, and do not report completion over PRs that were
@@ -448,7 +448,8 @@ skipping one. The same contract as `/workhorse` applies, specialised here:
   same turn. A status question from the operator is answered briefly and the loop resumes.
 - **Ask only at a real decision.** Stop and ask for exactly one of: a PR outside the requested
   queue; `--allow-unready-primary` or any other override flag; a `PRESERVE_*` checkout the operator
-  might want removed; a semantic code conflict after the repair budget is exhausted (rung 5);
+  might want removed; opting in to `/merge-cleanup-deep` for eligible holds unless already requested;
+  a semantic code conflict after the repair budget is exhausted (rung 5);
   a Costly or One-way-door action under `AGENTS.md` (force push, deleting a branch or clone that
   holds unlanded work, rewriting integration history); or a permission-classifier block that
   survives its one verbatim retry. Before asking, finish every independent authorized step — land
