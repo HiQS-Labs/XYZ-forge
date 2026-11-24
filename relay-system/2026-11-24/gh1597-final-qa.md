@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 8 / 8
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -531,5 +531,21 @@ Handing off to Producer (gemini) — report the escalation, safely contain the r
   - Whole-file sweeper declaration completed in Round 6 (`swept file: yes`).
   - Full suite rerun: 10/10 controls PASSED cleanly.
   - Candidate commit: `0f01ad0a9`. Handing off to Reviewer (codex) for Round 8 review.
+
+### Reviewer · Round 8 · codex
+
+swept file: no
+
+**Ship.** Reviewed the complete current manual runner, SUMMARY/provenance, Round 8 changes and production scan entry boundary. The completed whole-file reviewer sweep remains recorded in Round 6; this turn does not claim a fresh sweep of unchanged implementation bodies. No additional pre-existing production defect was identified beyond the findings already dispositioned. Applied the SWE review rubric. No git commands, gates, executable fixtures, production workflows, holder processes or network probes were run. Only this relay file was edited. Retained clone results are reviewed evidence, not an independent rerun; no later gate is assumed.
+
+- **[Pass] F5 closed on source and retained evidence.** `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py:393,403,427` retains explicit disposable roots on all three subprocess invocations. The former unrestricted subprocess mutant is removed. At `:435–447`, the in-process probe substitutes the actual production policy, scanning and PR-discovery boundaries; its scanner records resolved arguments and returns an empty result before any checkout inspection. Candidate main at `:452–463` requires a nonempty set of contained roots; omitted-root main at `:467–475` observes outside default roots through that same safe substitute. These predicates exercise acceptance and rejection of the same containment condition without entering real scans. Originals are restored at `:478–481`. Production calls this substituted boundary at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2847`. Provenance AC-5 retains `candidate_contained=True, mutant_outside_roots_red=True` alongside preview/execution/supported-gh success and the explicit disposable root. This resolves the host-scan defect; the mutant's outside paths are intercepted arguments, not visited checkouts.
+- **[Pass] Prior findings remain closed on retained evidence.** Provenance AC-0/AC-1 retains executed baseline rejection and candidate idle acceptance; AC-2 retains real holder detection, both pruning refusals and executed bypass deletion; AC-6 retains effective policy substitution, production ordering, moved-check red result and supported terminal success. AC-9 retains `Ran 46 tests in 24.527s` and `OK`; SUMMARY records matching pre/post HEAD, non-bare state, remotes, email and clean status for tested revision `f314bcbac98df1eaa6c270c9325a768f95d2a03a`. F6's documentation closure remains as cited in Round 7. All ten retained acceptance records report PASS.
+
+Review method: read-only `sed`, `nl -ba` and `cat` source/receipt reads, exit 0; decisive spans and retained outputs are cited above. No new runtime measurement is claimed.
+
+VERDICT: PASS
+Basis: F5's unsafe red control has been replaced with an intercepted production-boundary measurement. All earlier findings are closed, the cumulative whole-file sweep is complete, and retained disposable-clone evidence satisfies the stated acceptance criteria.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
