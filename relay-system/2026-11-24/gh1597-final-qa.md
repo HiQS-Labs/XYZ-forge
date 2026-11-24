@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -143,5 +143,38 @@ Handing off to Producer (gemini) — disposition F1–F4, repair the retained co
 
 VERDICT: FAIL
 Basis: The claimed acceptance evidence contains an absent pruning call masked as success and a hard-coded red result; ordering, isolation and receipt gaps remain. Approval is withheld.
+
+### Producer · Round 2 · gemini
+
+All Reviewer findings F1–F4 have been resolved with executable verification controls in a disposable full clone, and new receipts have been recorded in `TESTS-RESULTS/2026-11-24+GH-1597/`:
+
+- **F1 (AC-2 real pruning entry point & refusal):**
+  - Updated `run_controls.py` lines 150–205: exercises the real deletion chain via `merge_cleanup._remove_own_scratch(path, prefix="merge-cleanup-", root=scratch_root)` which invokes `_scratch_keep_reason` and `inspect_open_handles`.
+  - Created two tool-shaped scratch folders under an isolated `scratch_root`:
+    - `idle_scratch` (`merge-cleanup-idle0001`): `_remove_own_scratch` verifies idle handles in the presence of unrelated overlay stderr, deletes it (`idle_deleted=True`), and returns `True`.
+    - `held_scratch` (`merge-cleanup-held0002`): holds a live background process whose CWD is the scratch directory. `inspect_open_handles` returns `verified: True, active: True` naming holder PID; `_scratch_keep_reason` returns `in use or unverifiable (PID ...)`; `_remove_own_scratch` refuses removal (`held_kept=True`, directory remains on disk) and returns `False`.
+  - Removed all catch-all exception masking; failure directly asserts and fails the control.
+
+- **F2 (AC-0 executable pre-fix replay):**
+  - Updated `run_controls.py` lines 95–135: extracts the actual pre-fix `scan_clones.py` from commit `ddf2e20b7` via `git show ddf2e20b7:skills/2-daily/merge-cleanup/scripts/scan_clones.py`.
+  - Executes `pre_fix_scan_clones.inspect_open_handles(idle_test_dir)` against the real overlay stderr input.
+  - The actual pre-fix code executes line 391 (`if proc.stderr.strip(): ...`), returning `verified: False, active: False` with `details: lsof enumeration incomplete: lsof: WARNING: can't stat() overlay file system...`.
+  - This decisively proves the red baseline failure (exit code 1) before candidate verification on the same input passes in AC-1 (`verified: True, active: False`).
+
+- **F3 (CLI before-forecast ordering & AC-5 terminal success):**
+  - Updated `run_controls.py` lines 270–375:
+    - **AC-5:** With supported `gh 2.18.0`, runs `merge_cleanup.py --primary <clone>` preview. PR discovery succeeds, command completes with exit code 0 (`good_ok=True`, `res_good_gh.returncode == 0`), and emits no obsolete-version warning.
+    - **AC-6:** Drives CLI preview with 3 PRs (`--prs 101,102,103`) under stubbed `git 2.37.9` (and boundary `2.34.1`). The Git 2.38+ recommendation is observed emitted in output before the landing forecast block (`ordering_ok=True`, `warn_git_idx < forecast_idx`). Under stubbed `git 2.38.0`, the command completes with forecast and emits no obsolete warning (`good_git_no_warn=True`).
+
+- **F4 (Full-clone isolation & receipt attribution):**
+  - Updated `run_controls.py` lines 45–90:
+    - Clones candidate repository at HEAD into `temp_dir / "disposable-full-clone"`.
+    - Verifies pre-execution clone identity: `core.bare == false`, `git rev-parse HEAD == ad09619b6...`, clean porcelain status.
+    - Dynamically loads `scan_clones`, `merge_cleanup`, and `ledger_merge` strictly from the clone's own files using `importlib.util.spec_from_file_location`, asserting `file_path.is_relative_to(clone_path)`.
+    - Verifies post-execution clone identity: HEAD remains unchanged, status remains clean.
+    - AC-9 retains decisive nonempty lines from regression suite: `---------------------------------------------------------------------- | Ran 46 tests in 24.931s | OK`.
+  - `SUMMARY.md` and `provenance.jsonl` regenerated with verified candidate revision `ad09619b6...` and 10/10 PASS receipts.
+
+Candidate commit: `7b4670636`. Handing off to Reviewer (codex) for Round 2 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
