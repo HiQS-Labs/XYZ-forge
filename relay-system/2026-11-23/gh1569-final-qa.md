@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -115,5 +115,89 @@ Write the verdict (PASS / FAIL) with a Basis; include a literal `swept file: yes
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**What this proposes (plan only).** With a supported task list in the sanitized daily-goals body, admit only the first atomic reference on each unchecked checklist line. Checked lines and prose contribute nothing; without a task list, preserve the existing prose behavior (plan `PROJECT/1-INBOX/GH-1569-DAILY-GOALS-CHECKLIST-ONLY.md:42-63`).
+
+**How the existing system works, per this document.** One admission parser selects numbers, then existing resolution and classification build the queue. A separate safety reader can hold the goals issue itself and PRs that close it; that reader stays unchanged (`:24-38`).
+
+**What it is not.** This adds no queue subsystem, flag, runtime writer or test suite. The input boundary is the existing sanitizer followed by the specified `-`, `*`, `+`, `N.` checkbox grammar and ATOMIC_REF, not a new general Markdown parser (`:52-63`).
+
+**Source-backed review.** Reviewed head `df505c685a7ca37aed12ba84cd1af1e1b8c6ffc9`. The source and SKILL blobs match evidence candidate `0855f773a3dba9e45410bdb25a573f73f38c15d0` and working bytes: respectively `fe69fe25d4a0f3cc5b1f889d14b2bb285aec6164` and `816d286d3f8f73ef222b728045fd74de0d32755e`. Per the turn prohibition, no Git command was executed: base source/tree came through the GitHub read connector at pinned base `2ac998d130d9b6940ab00884c4248f4672b2dabb`, compared with local committed trees and source using read-only Python. Graph tier: Verify; nearest indexed project was the primary XYZ-forge checkout, generation `2026-11-23T23:18:20Z`. Coverage reported missing freshness for these skill/plan paths, so the review used direct source fallback and makes no graph-completeness claim.
+
+swept file: yes
+
+- **[Pass] Plan and implementation agree.** `skills/1-hourly/kickstart/scripts/build_queue.py:97,259-284` detects checkbox presence after sanitization, skips checked/non-checkbox lines, and slices to the first ATOMIC_REF BEFORE foreign/self/seen filtering. Later refs cannot be promoted when the first is rejected. An unchecked no-ref line activates checklist mode but admits nothing. With no checkbox, all matches use the original filtering loop. Retained `TESTS-RESULTS/2026-11-23+GH-1569/outputs/controls-green.txt:1-14` and the independent probe below cover after-ref, second-ref, foreign/self/duplicate leads, no-ref, uppercase, nested, numbered and plus bullets. No divergence or edge-case defect requiring a fix found within the specified grammar.
+
+- **[Pass] Acceptance rejects unchanged code.** `outputs/controls-green.txt:16-19` records #1480/#1483 queued and #1537 in Needs-the-operator on base, while candidate selects exactly #1417 #1467 #1471 #1497 #1500 #1530 #1551. The independent probe below reproduced both retained original-body outputs and rejected base by its excluded numbers, not its successful CLI exit. Current-body output is byte-identical base/candidate. The prior explicit red rejection is also preserved in `relay-system/2026-11-23/gh1569-plan-qa.md`: `AssertionError: acceptance rejected unchanged code: [1480, 1483, 1537]`. Prose parity is recorded at `outputs/controls-green.txt:19`; this turn also independently replayed the prose-only body with equal exit 0/output and an all-checked body with equal zero-selection errors on both versions. Unchecked-no-ref returned the same candidate zero-selection error with no output.
+
+- **[Pass] Safety reader and ownership remain intact.** The only runtime delta is CHECKBOX plus parse_daily_goals_refs. Full base comparison leaves the other functions unchanged: selection at `build_queue.py:461-493`, safety collection/closing-target inspection at `:438,501-524`, and parked_issues/classify_prs at `:205-255,526`. Both versions return `{1568}` for `- [ ] #10 after #11` with open #11 (`outputs/controls-green.txt:15` and independent probe). I swept the complete 550-line script and complete SKILL.md and found no additional pre-existing defect to raise. Reversal is **Easy**: revert the parser and paragraph together; no state migration exists.
+
+- **[Pass] Scope stays surgical.** The complete committed-tree comparison has 29 changed paths: two skill files, one GH-1569 plan, two intended relay threads, 22 intended evidence files, and releases.db/releases.sql. No test/, gate, new flag, second parser or runtime writer was added. `outputs/controls-probe-source.txt` is explicitly retained manual evidence, and was inspected but NOT executed here because it writes retained outputs. The CLI still writes only explicit --out (`build_queue.py:541-545`) and keeps --no-conflict-files on its live PR reader (`:424-425`). Literal search command `rg -n "build_queue|CHECKED_LINE|parse_daily_goals_refs" test/` returned no matches (rg exit 1); no source-text pin was found in that scope.
+
+- **[Pass] Documentation, rating and receipts are consistent.** The SKILL.md delta is confined to `:305`; its safety promise at `:307` is unchanged. `releases.sql:1051` and the read-only SQLite query below agree on 60/45/50/90, consistent with one observed incident and a small fix (`plan:85-89`); CLI-shaped parked/rated/in_flight events are at `releases.sql:6026-6028`. Historical use of the CLI writer is producer-reported, not something DB bytes alone prove. `manual-check.md:20-22` labels the issue universe SYNTHETIC, and `:43-44` discloses the accounting-root deviation. All 21 nonempty artifact hashes/sizes in provenance.jsonl matched, including the retained probe and gate log.
+
+- **[Pass] Verification limits remain explicit.** `manual-check.md:40-44` records docs/tier-1 routing, the retained PDDA result and unavailable mypy. This review does not claim a mypy/full-suite pass. The current-body `exit=` in `outputs/smoke.txt` is blank, so it is not used as exit evidence; the independent replay below returned 0. No phase gate is configured for this reviewer turn; none was run or assumed to run later. No validate.sh, test/*.sh, pytest, executable fixture, live service or Git command was run.
+
+**Independent probe: exact command and retained source.** Command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/final_probe.py"` exited **0**. Scratch base-build_queue.txt contains the source fetched at the pinned base through the GitHub connector. Subprocess execution is replaced with an assertion, preventing Git/network subprocesses. Probe source and decisive output are embedded because scratch is discarded.
+
+```python
+import contextlib,hashlib,io,json,re,runpy,sqlite3,subprocess,sys
+from pathlib import Path
+D=Path('TESTS-RESULTS/2026-11-23+GH-1569')
+rs=[json.loads(x) for x in (D/'provenance.jsonl').read_text().splitlines()]
+for r in rs:
+ b=Path(r['artifact']).read_bytes()
+ assert b and len(b)==r['size_bytes'] and hashlib.sha256(b).hexdigest()==r['sha256']
+print('receipt hashes and sizes:',len(rs),'PASS')
+con=sqlite3.connect('file:releases.db?mode=ro&immutable=1',uri=True)
+assert con.execute('select rating_pri,rating_sev,rating_appeal,rating_effort from roadmap_items where gh_number=1569').fetchall()==[(60,45,50,90)]
+print('persisted rating: 60/45/50/90 PASS')
+mods=[runpy.run_path(p,run_name='review') for p in ('.relay-scratch/tmp/base-build_queue.txt','skills/1-hourly/kickstart/scripts/build_queue.py')]
+def forbidden(*a,**kw):raise AssertionError('unexpected subprocess')
+subprocess.run=forbidden
+cases=[('- [ ] #10 after #1601',[10]),('- [ ] #11 and #12',[11]),('- [ ] #10 (GH-1700)',[10]),('- [ ] #11\n- [x] #9\nsee #10',[11]),('prose #10 and #11',[10,11]),('- [x] #10\n- [X] #11',[]),('- [ ] other/repo#9 then #10',[]),('- [ ] HiQS-Labs/XYZ-forge#9 then #10',[9]),('- [ ] #1568 then #10',[]),('- [ ] #10\n- [ ] #10 again #11',[10]),('- [ ] write it up\nOut of scope: #7',[]),('- [ ] `#10` after #11',[10]),('- [ ] #1\n  - [ ] #2 #3\n+ [ ] #4\n1. [ ] #5\n* [X] #6',[1,2,4,5])]
+for body,want in cases:assert mods[1]['parse_daily_goals_refs'](body,'HiQS-Labs/XYZ-forge',1568)==want
+print('parser controls: 13/13 PASS')
+for m in mods:assert m['parked_issues']([{'number':1568,'title':'Daily goals','body':'- [ ] #10 after #11'}],set(),set(),'noelsaw1',{10,11,1568})=={1568}
+print('safety reader: base=candidate={1568}')
+for name in ('original','current'):
+ outputs=[]
+ for m in mods:
+  sys.argv=['build_queue.py','--as-of','2026-11-20','--owner','noelsaw1','--repo-slug','HiQS-Labs/XYZ-forge','--other-session','1400,1418','--prs-json',str(D/'inputs/prs.json'),'--pr-meta-json',str(D/'inputs/pr-meta.json'),'--issues-json',str(D/'inputs/issues.json'),'--daily-goals','1568','--daily-goals-json',str(D/f'inputs/1568-{name}-body.json')]
+  out=io.StringIO()
+  with contextlib.redirect_stdout(out):rc=m['main']()
+  assert rc==0 and out.getvalue();outputs.append(out.getvalue())
+ b,c=outputs
+ q=c.split('## Queue (execution order)\n')[1].split('\n## Needs the operator')[0]
+ assert re.findall(r'^\d+\. #(\d+) ',q,re.M)==['1417','1467','1471','1497','1500','1530','1551']
+ if name=='original':
+  assert b==(D/'outputs/red-base-original-body.md').read_text()
+  assert c==(D/'outputs/green-candidate-original-body.md').read_text()
+  bad=[n for n in (1480,1483,1537) if f'#{n} ' in b]
+  assert bad==[1480,1483,1537] and not any(f'#{n} ' in c for n in bad)
+  print('unfixed acceptance REJECTED:',bad,'candidate exactly seven: PASS')
+ else:
+  assert b==c==(D/'outputs/current-body-candidate.md').read_text()
+  print('current-body exit 0, seven items, byte parity: PASS')
+print('all probes PASS; subprocess calls=0')
+```
+
+```text
+receipt hashes and sizes: 21 PASS
+persisted rating: 60/45/50/90 PASS
+parser controls: 13/13 PASS
+safety reader: base=candidate={1568}
+unfixed acceptance REJECTED: [1480, 1483, 1537] candidate exactly seven: PASS
+current-body exit 0, seven items, byte parity: PASS
+all probes PASS; subprocess calls=0
+```
+
+VERDICT: PASS
+
+Basis: The implementation matches the approved bounded plan; the red discriminator rejects unchanged behavior, independent green/parity probes reproduce the claimed outputs, safety evidence remains intact, and receipt hashes match. No required finding remains open. Approval covers this artifact review with the disclosed unavailable mypy/full-suite checks; it does not assume a future gate. Only this relay file was edited outside disposable scratch.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
