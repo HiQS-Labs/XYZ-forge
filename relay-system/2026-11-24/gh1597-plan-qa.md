@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -74,6 +74,27 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The plan covers the three requested seams, but the proposed preflight placement cannot warn before the operations it diagnoses, and the deletion-safety verification is incomplete. This is plan QA, not runtime approval; no gates or executable fixtures were run.
+swept file: yes
+
+- [Should] **F1 — Run version checks before their consumers.** The plan at `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:83` puts the checks in `preflight_warnings()`, whose only call is inside the selected-PR dry-run branch at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2821`. PR discovery already fails and returns at lines 2789–2794, and the forecast already runs at line 2814. Move only the new version checks to a common startup point before discovery/forecast; preserve existing warning semantics. Add a CLI-path acceptance check, rather than only calling `preflight_warnings()` directly.
+  Observed input: The plan's own old-gh input (`gh 2.4.0`, unknown `headRefOid`, plan lines 61–64) exits from discovery before reaching the proposed preflight; an invocation without `--prs` never reaches that call either.
+  Affected scope: Normal merge-cleanup previews/execution that need PR discovery or landing forecast; unrelated modes may skip checks they do not need.
+  Falsifier: With a stub reporting gh 2.4.0 and refusing `headRefOid`, a normal CLI preview emits the version recommendation before its discovery failure; with old Git and three selected PRs, it emits the Git recommendation before forecast. Modern supported tools produce neither obsolete-version warning.
+
+- [Should] **F2 — Specify retained red controls and the held-checkout path.** AC-1–AC-3 (`PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:100–105`) cover only idle or incomplete results. AC-8 names one scanner suite; there is no execution/evidence procedure for the new controls, version boundaries, or preservation through pruning. Extend the existing acceptance section with disposable-full-clone verification and retained commands, exit statuses, decisive output, revision and `provenance.jsonl` under `TESTS-RESULTS/2026-11-24+GH-1597/`. Include a real process whose cwd is the checkout root while an unrelated overlay warning is present, and show pruning refuses it; use the existing coverage/manual evidence approach, with no new test suite. Include equality/ancestor and canonical alias warning paths, an unknown warning, a standalone incomplete-output disclaimer, and minimum-version/modern-version controls. This scopes proof to the changed safety decision rather than adding machinery.
+  Observed input: The concrete overlay warning in AC-1 becomes ignorable, but `inspect_open_handles` must still parse holder records (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:396–429`); the same result gates scratch deletion at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:221–226`. The cited lesson in `LESSONS-LEARNED.md`, “A deletion guard is only as good as the probe it trusts,” records an actual root-cwd holder previously being deleted despite held-file coverage.
+  Affected scope: Verification of the newly relaxed lsof stderr decision and new version decisions; not a redesign of pruning or holder detection.
+  Falsifier: In a disposable clone, unrelated-warning idle returns verified/idle, the same warning with a root-cwd holder returns active and preserves the target, related/unknown/incomplete warning controls remain unverified, and replaying the pre-fix classifier fails the idle tolerance control. Boundary version controls distinguish just-below from exactly-at minimum. Retained nonempty receipts establish each result.
+
+- [Pass] Scope stays within existing owners: the three seams at `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:71–94` reuse the scanner, cleanup preflight/error handling, and existing documentation; line 21 excludes new test files. The full artifact sweep found no additional pre-existing defect in this plan beyond F1/F2.
+- [Nit] Name the existing function `_merge_tree`, not `merge_tree` (plan lines 88 and 110); its actual definition is `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731`. Preserve its tuple contract and underlying diagnostic when adding guidance.
+
+Handing off to Producer (gemini): revise the plan for F1/F2 and disposition each finding; implementation remains outside this plan-QA turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
