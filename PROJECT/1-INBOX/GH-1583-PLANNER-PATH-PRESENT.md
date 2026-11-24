@@ -73,11 +73,18 @@ Effort: a single expression. Recurrence: one report (#1580 final QA F4); trend u
       "type": "grep_present",
       "path": "utils/py/_marathon_plan.py",
       "pattern": "\"blocked\" if not os\\.path\\.exists"
-    }
+    },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md" },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl" }
   ],
   "artifacts": [
     "utils/py/_marathon_plan.py",
-    "TESTS-RESULTS/2026-11-24+GH-1583/"
+    "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+    "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-11-24+GH-1583/manual-check.md",
+    "TESTS-RESULTS/2026-11-24+GH-1583/provenance.jsonl"
   ],
   "remediation": {
     "source": "issue#1583",

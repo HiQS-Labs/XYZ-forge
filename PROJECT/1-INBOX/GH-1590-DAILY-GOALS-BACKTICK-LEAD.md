@@ -85,12 +85,19 @@ one CodeRabbit Minor on #1589 (2026-11-23); no other reports, trend unknown.
     {
       "type": "command",
       "cmd": "env python3 -B -I -c 'import importlib.util as u,sys;s=u.spec_from_file_location(\"bq\",\"skills/1-hourly/kickstart/scripts/build_queue.py\");m=u.module_from_spec(s);s.loader.exec_module(m);sys.exit(0 if m.parse_daily_goals_refs(\"- [ ] `other/repo#9` then #10\",\"me/repo\",1)==[10] else 1)'"
-    }
+    },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-11-24+GH-1590/manual-check.md" },
+    { "type": "path_absent", "path": "TESTS-RESULTS/2026-11-24+GH-1590/provenance.jsonl" }
   ],
   "artifacts": [
     "skills/1-hourly/kickstart/scripts/build_queue.py",
     "skills/1-hourly/kickstart/SKILL.md",
-    "TESTS-RESULTS/2026-11-24+GH-1590/"
+    "TESTS-RESULTS/2026-11-24+GH-1590/manual-check.md",
+    "TESTS-RESULTS/2026-11-24+GH-1590/provenance.jsonl"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-11-24+GH-1590/manual-check.md",
+    "TESTS-RESULTS/2026-11-24+GH-1590/provenance.jsonl"
   ],
   "remediation": {
     "source": "issue#1590",
