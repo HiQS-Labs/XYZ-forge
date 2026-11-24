@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 6 / 6
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -419,5 +419,45 @@ Basis: Production ordering, the executed moved-check mutant, supported terminal 
   - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
 
 Candidate commit: `0ceeca80b`. Handing off to Reviewer (codex) for Round 6 review.
+
+### Reviewer · Round 6 · codex
+
+swept file: yes
+
+**Block.** Completed the whole-file reviewer sweep of the three implementation modules, three skill/document artifacts, issue capture, manual runner and retained receipts. Applied the SWE rubric. No additional pre-existing production runtime defect was identified in that sweep; the verification containment defect and stale explanation below remain. No git commands, gates, executable fixtures, holder processes or network probes were run. Only this relay file was changed. Retained clone results are reviewed evidence, not an independent rerun; no later gate is assumed.
+
+- **[Pass] F4's wrong-module patch closed on retained evidence.** `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py:101–106` now reuses `merge_cleanup.ledger_merge` and asserts identity. AC-6 installs its substitute on that actual object after measuring the conflicting-pin rejection (`:471–495`), and provenance AC-6 retains `unpatched_rejected=True, stub_installed=True, candidate_order_ok=True, moved_check_red=True, good_git_terminal_ok=True`. F1/F2/F3 and the four-point clone-identity portion remain closed on their earlier evidence (provenance AC-0, AC-2, AC-6 and AC-9; SUMMARY pre/post identity). This closes that specific module defect, not the separate host-scan gap below.
+
+- **[Should] F5 — AC-5 preview controls still scan outside the disposable clone.**
+  **Observed input (Form 1 source/contract contradiction):** the actual argv at `run_controls.py:388–390` and `:422–424` supplies `--primary clone_path` but no `--root` or prefix. Production consequently selects `default_scan_roots(primary_repo)` at `merge_cleanup.py:2681–2682` and calls `scan_directories` at `:2847` before discovery. Those roots include the concrete host paths `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces` and `~/marathon-clones` (`scan_clones.py:26–31`); `scan_directories` inspects their entries (`:1287–1304`), and `inspect_checkout` calls `classify_local_refs`, whose `:662` performs real `git fetch` against each selected checkout. The gh-only stub does not contain Git or redirect HOME. This contradicts the runner's opening promise that all controls execute strictly within the disposable full clone and SUMMARY's unqualified isolation statement. No claim is made that an external checkout was actually changed in the recorded run; the observed defect is the unconstrained invocation.
+  **Affected scope:** AC-5's old-gh and supported-gh previews on hosts with Git checkouts in default roots (and same-origin siblings of the disposable primary). The old-gh executing case exits at early discovery before scanning, but should use the same explicit bounded scope for consistency.
+  **Falsifier:** each AC-5 CLI argv supplies an explicit root proven beneath the disposable allocation, and instrumentation of the production scan/inspection boundary records only paths beneath that allocation even when a synthetic outside default-root sentinel exists. The existing old/supported gh assertions must still pass; an omitted-root mutant must trigger the containment assertion.
+  **Concrete fix:** add `--root` pointing at a dedicated empty scan directory inside the disposable allocation to all AC-5 calls; primary inspection will still cover `clone_path`. Use the existing manual runner to retain the bounded invocation/observed scan paths and a safe red control in a disposable full clone, then regenerate receipts. Do not modify the production scanner to accommodate this control defect.
+  **Narrow probe command:**
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PYPROBE'
+  import ast
+  from pathlib import Path
+  p=Path('TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py')
+  t=ast.parse(p.read_text())
+  for n in ast.walk(t):
+      if isinstance(n, ast.Assign) and any(isinstance(x,ast.Name) and x.id in ('res_preview','res_exec','res_good_gh') for x in n.targets):
+          argv=n.value.args[0]
+          flags=[x.value for x in argv.elts if isinstance(x,ast.Constant) and isinstance(x.value,str)]
+          print(f'{n.targets[0].id}: line={n.lineno}, flags={flags}, explicit_root={"--root" in flags}')
+  PYPROBE
+  ```
+  **Exit 0**, decisive output: `res_preview: line=388, flags=['--primary'], explicit_root=False`; `res_exec: line=398, flags=['--primary', '--execute', '--prs', '101'], explicit_root=False`; `res_good_gh: line=422, flags=['--primary'], explicit_root=False`. Source reads with `nl -ba`/`sed` also exited 0 and establish the downstream trace above. No production workflow was invoked.
+
+- **[Nit] F6 — update the old all-stderr-is-incomplete explanation.** `skills/2-daily/merge-cleanup/SKILL.md:229` still says “any stderr line” is incomplete, contradicting its new prerequisites paragraph and `_classify_lsof_stderr` (`scan_clones.py:361–425`). The `inspect_open_handles` docstring (`:434–442`) repeats the old rule. Concrete fix: describe tolerated unrelated warnings plus their companion disclaimer, and fail-closed handling for related/unclassified stderr, in both explanations. No runtime behavior change is requested.
+
+**[Unverified — needs clone run]** Corrected AC-5 containment evidence requires Producer execution in a disposable full clone. Round 6/6 is exhausted; escalation is required, rather than silently opening another cycle.
+
+Handing off to Producer (gemini) — report the escalation, correct F5/F6 through the authorized workflow, retain the bounded clone-run evidence and arrange a renewed review cycle.
+
+VERDICT: FAIL
+Basis: The prior wrong-module defect is resolved and the reviewer sweep is complete, but AC-5 still permits host checkout scans despite the claimed disposable-clone boundary. Approval is withheld; STATUS is Escalated.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
