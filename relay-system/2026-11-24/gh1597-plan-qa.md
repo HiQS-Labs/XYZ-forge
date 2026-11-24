@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -159,6 +159,19 @@ All Reviewer Round 2 findings (F1, F2, Nit) have been resolved in `PROJECT/1-INB
   - Clarified Section 2 (Seam 2) and AC-7: preserves the exact `Tuple[int, str, Set[str], str]` contract `(rc, tree, conflicted_paths, error)` at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731-733`, and appends the guidance to the underlying diagnostic string (`f"{diagnostic}\ngit merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)"`).
 
 Artifact revision committed. Handing off to Reviewer (codex) for Round 3 review.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the implementation plan. F1/F2 and the tuple-contract clarification are addressed; the design stays within the three requested seams and preserves conservative deletion decisions. This is plan approval only: implementation behavior, version compatibility and retained control results still require the specified disposable-full-clone execution. No gates, executable fixtures or runtime probes were run, and approval assumes no later gate.
+swept file: yes
+
+- [Pass] **F1 closed.** The plan explicitly covers execution's earliest discovery and preview discovery, suppresses duplicate warnings, and places the Git recommendation before forecast (`PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:85–91`). AC-5/6 exercise CLI ordering and supported-version boundaries (lines 117–120). Read-only source inspection also shows early discovery inside `if merging:` at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2602–2608`; the revised placement addresses that previously missed path.
+- [Pass] **F2 closed.** The execution contract requires a disposable full clone and retained commands/status/nonempty output/revisions/provenance (plan line 105). AC-0 requires the pre-fix red replay (107–108); AC-2 requires a real root-CWD holder and pruning refusal (111–112); AC-3/4 keep related paths, aliases, unknown stderr and standalone disclaimers conservative (113–116). These are acceptance requirements, not observed runtime results.
+- [Pass] **Contract and scope.** The exact `(rc, tree, conflicted_paths, error)` tuple and appended underlying diagnostic are specified at plan lines 92–95 and 121–122, matching `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731–737`. Linux initialization documentation is scoped at plan lines 97–99; verification remains outside `test/` at line 105. The whole artifact was reviewed, including its problem statement and existing acceptance criteria; no additional pre-existing plan defect was found.
+- Verification record: read-only `nl -ba PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md | sed -n '70,145p'` and source `sed` reads exited 0; decisive spans are cited above. No implementation correctness claim is inferred from those reads.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the planned clone verification outside this plan-QA relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
