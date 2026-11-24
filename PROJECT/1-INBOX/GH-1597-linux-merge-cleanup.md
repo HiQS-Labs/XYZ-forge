@@ -82,12 +82,17 @@ In `skills/2-daily/merge-cleanup/scripts/scan_clones.py` (`inspect_open_handles`
 
 ### Seam 2: `merge_cleanup.py` Early Version Preflight Placed Before Consumers
 In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` & `ledger_merge.py`:
-- **Placement before consumer operations:**
-  - `check_gh_version()`: Run before Phase 4 PR discovery (`fetch_open_prs_with_retry()`). If `gh` is older than `2.18.0`, log clear error and actionable guidance (`gh 2.18+ required for 'headRefOid' field; on Ubuntu/Debian install from https://cli.github.com or release .deb`) before failing discovery.
-  - `check_git_version()`: Run before Phase 4 landing forecast (`landing_forecast()`). If `git` is older than `2.38.0`, emit warning naming `git 2.38+ required for 'git merge-tree --write-tree'; on Ubuntu/Debian upgrade via ppa:git-core/ppa`.
-  - Also include tool version checks in `preflight_warnings()` for preview/unattended runs.
-- In `ledger_merge.py` (`_merge_tree`): When `git merge-tree` exits non-zero with `usage: git merge-tree <base-tree>` or syntax refusal, return:
-  `merge-tree failed: git merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)`
+- **Placement before the earliest consumer operations:**
+  - `check_gh_version()`: Run before the earliest PR discovery call in both execution and preview paths:
+    - In execution: run before `if merging:` calls `fetch_open_prs_with_retry()` at line 2604 (preventing unannotated early exit at 2608).
+    - In preview: run before Phase 4 calls `fetch_open_prs_with_retry()` at line 2790.
+    - Memoize/cache the version check result so subsequent discovery calls and `preflight_warnings()` do not emit duplicate checks or repeated warnings.
+    - If `gh` is older than `2.18.0`, log clear error and actionable guidance (`gh 2.18+ required for 'headRefOid' field; on Ubuntu/Debian install from https://cli.github.com or release .deb`) before discovery failure.
+  - `check_git_version()`: Run before Phase 4 landing forecast (`landing_forecast()`). If `git` is older than `2.38.0`, emit warning naming `git 2.38+ required for 'git merge-tree --write-tree'; on Ubuntu/Debian upgrade via ppa:git-core/ppa`. Memoize to avoid duplicate warnings in `preflight_warnings()`.
+- In `ledger_merge.py` (`_merge_tree`):
+  - Preserve the exact return contract `Tuple[int, str, Set[str], str]` representing `(rc, tree, conflicted_paths, error)`.
+  - When `git merge-tree` exits non-zero with `usage: git merge-tree <base-tree>` or syntax refusal, append actionable guidance to the underlying diagnostic string rather than discarding it:
+    `f"{diagnostic}\ngit merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)"`.
 
 ### Seam 3: Skills Army HQ & Merge-Cleanup Documentation
 - `skills/3-weekly/skills-army-hq/README.md` & `SKILL.md`: Document Linux POSIX support. Clarify that `intake.py init` must be run first to establish the collection (or adopt an existing Pulse collection) before `add`.
@@ -97,24 +102,26 @@ In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` & `ledger_merge.py`:
 
 ## 3. Falsifiable Acceptance Criteria & Execution Controls
 
-All verification controls will execute deterministically in `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py` (zero test sprawl under `test/`, strictly complying with GH-831), with results captured in `SUMMARY.md` and `provenance.jsonl`:
+All verification controls and regression runs will execute deterministically in a **disposable full clone** (not a worktree or linked checkout, strictly complying with AGENTS.md GH-564 clone isolation), driven by `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py` (zero test sprawl under `test/`, strictly complying with GH-831). Retained execution receipts covering exact commands, exit statuses, decisive nonempty outputs, tested git revisions, and `provenance.jsonl` will be captured under `TESTS-RESULTS/2026-11-24+GH-1597/` and synthesized in `SUMMARY.md`:
 
+0. **AC-0 (Red Control Replay — Pre-fix classifier failure):**
+   Replaying the pre-fix implementation of `inspect_open_handles` against simulated unrelated Docker overlay stderr (`lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/abc/merged\n Output information may be incomplete.`) decisively FAILS AC-1 (returns `verified: False, active: False` with `lsof enumeration incomplete`), proving the red baseline before candidate verification.
 1. **AC-1 (lsof unrelated warning + idle directory):**
-   `inspect_open_handles` on an idle directory with simulated `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/abc/merged\n Output information may be incomplete.` on stderr returns `verified: True, active: False`.
+   `inspect_open_handles` on an idle directory in a disposable full clone with simulated `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/abc/merged\n Output information may be incomplete.` on stderr returns `verified: True, active: False`.
 2. **AC-2 (lsof unrelated warning + root-CWD holder process):**
-   In a disposable checkout with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning refuses removal.
+   In a disposable full clone with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning (`_prune_retained_workdirs`) refuses removal.
 3. **AC-3 (lsof related warning fails closed):**
    `inspect_open_handles` with a warning mentioning a path equal to, inside, or containing the checkout path (including canonical symlink aliases, e.g. `lsof: WARNING: can't opendir(/path/to/repo/sealed)`) returns `verified: False, active: False` with `lsof enumeration incomplete`.
 4. **AC-4 (lsof standalone incomplete disclaimer & unclassified errors fail closed):**
    `inspect_open_handles` with a standalone `Output information may be incomplete.` (without prior warning) or an unrecognized stderr line returns `verified: False, active: False`.
-5. **AC-5 (gh version check before discovery):**
-   CLI execution with a stubbed `gh` reporting version 2.4.0 (below 2.18.0) fails with a clear message naming `gh 2.18+` and the upgrade path before discovery returns. A stub reporting 2.18.0 succeeds without warning.
+5. **AC-5 (gh version check before discovery in both preview and execution):**
+   CLI execution in both preview (`merge-cleanup`) and execution (`merge-cleanup --execute`) modes with a stubbed `gh` reporting version 2.4.0 (below 2.18.0) fails with a clear message naming `gh 2.18+` and the upgrade path before PR discovery returns or aborts. A stub reporting 2.18.0 succeeds without obsolete-version warning.
 6. **AC-6 (git version check before forecast):**
-   CLI execution with a stubbed `git` reporting version 2.34.1 (or 2.37.9, below 2.38.0) emits the Git 2.38+ recommendation before running `landing_forecast`. A stub reporting 2.38.0 passes without warning.
-7. **AC-7 (_merge_tree diagnostic output):**
-   `_merge_tree` simulation on git returning legacy usage syntax returns `merge-tree failed: git merge-tree --write-tree requires git 2.38+...`.
+   CLI execution with a stubbed `git` reporting version 2.34.1 or 2.37.9 (below 2.38.0) emits the `git 2.38+` recommendation before running `landing_forecast`. A stub reporting 2.38.0 passes without warning.
+7. **AC-7 (_merge_tree diagnostic output & tuple contract):**
+   `_merge_tree` simulation on git returning legacy usage syntax returns `(rc, "", set(), diagnostic)` where `diagnostic` preserves the underlying stderr and appends `git merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)`.
 8. **AC-8 (Skills Army HQ Linux documentation):**
    Documentation in `skills-army-hq/README.md` and `SKILL.md` explicitly states POSIX/Linux support and specifies running `intake.py init` prior to `add`.
-9. **AC-9 (Regression verification):**
-   Existing suite `test/gh534_phase_a_tests.py` runs and passes 46/46 tests cleanly.
+9. **AC-9 (Regression verification in full clone):**
+   Existing suite `test/gh534_phase_a_tests.py` runs inside the disposable full clone and passes 46/46 tests cleanly.
 

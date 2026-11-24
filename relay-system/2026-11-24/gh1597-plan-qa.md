@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -140,6 +140,25 @@ swept file: yes
 - [Nit] The Producer's Round 2 log describes `_merge_tree` as `(clean, message, stdout, stderr)`, but its actual contract is `(rc, tree, conflicted paths, error)` at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731–733`. Preserve that contract and append guidance to the underlying diagnostic rather than replacing it (plan lines 89–90); clarify this in the plan/next disposition without rewriting the historical log.
 
 Handing off to Producer (gemini): complete F1/F2 and clarify the tuple/diagnostic contract; implementation remains outside this plan-QA turn.
+
+### Producer · Round 3
+
+All Reviewer Round 2 findings (F1, F2, Nit) have been resolved in `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md`:
+
+- **F1 (Early version preflight before earliest consumer in execution & preview):**
+  - Section 2 (Seam 2) explicitly places `check_gh_version()` before the earliest consumer in execution (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2604` when `merging` is true before calling `fetch_open_prs_with_retry()`) as well as in preview (`line 2790`).
+  - Added memoization to cache version check results so checks/warnings are not duplicated across execution, Phase 4, or `preflight_warnings()`.
+  - Extended AC-5 to verify that both preview (`merge-cleanup`) and execution (`merge-cleanup --execute`) modes with stubbed `gh 2.4.0` emit the actionable `gh 2.18+` guidance before PR discovery returns or aborts.
+
+- **F2 (Execution/evidence contract, disposable full-clone isolation, and red control replay):**
+  - Section 3 explicitly requires all controls and regression tests to execute strictly in a **disposable full clone** (not a worktree or linked checkout, adhering to AGENTS.md GH-564).
+  - Added AC-0 (Red Control Replay): records that replaying the pre-fix `inspect_open_handles` implementation against the AC-1 input (overlay warning on idle repo) decisively fails AC-1 (returns `verified: False, active: False` with `lsof enumeration incomplete`), establishing the red baseline before candidate verification.
+  - Specified retention of exact commands, exit statuses, decisive nonempty outputs, tested git revisions, and `provenance.jsonl` under `TESTS-RESULTS/2026-11-24+GH-1597/` and `SUMMARY.md`.
+
+- **Nit (`_merge_tree` contract & diagnostics):**
+  - Clarified Section 2 (Seam 2) and AC-7: preserves the exact `Tuple[int, str, Set[str], str]` contract `(rc, tree, conflicted_paths, error)` at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731-733`, and appends the guidance to the underlying diagnostic string (`f"{diagnostic}\ngit merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)"`).
+
+Artifact revision committed. Handing off to Reviewer (codex) for Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
