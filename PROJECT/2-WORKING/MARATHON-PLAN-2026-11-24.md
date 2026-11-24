@@ -115,6 +115,9 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1075 GH-1075 · merge-cleanup batch record keeps stale per-PR file lists on resume — `already-closed`
 - #1087 GH-1087 · docs: restore spacing in the GH-1051 work record — `already-closed`
 
+### 🔧 Reconcile — undocumented partial completion
+- #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
+
 ### ⚠️ Not yet sequenceable — rate / add doc / add contract
 - #201 GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) — `needs-contract`
 - #5 GH-5 · kernel robustness: node:test unit runner — `needs-contract`
@@ -203,6 +206,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
 - #1050 marathon memory telemetry: no false low-swap warning on hosts with no swap — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
+- #1597 merge-cleanup on Ubuntu lsof overlay warnings block scratch pruning, Skills Army HQ install, old git/gh — `needs-doc`
 - #1594 start-task requires Forge-only push hook provisioning in consumer repositories — `needs-doc`
 - #1592 Daily goals 2026-11-24: Kickstart run 3 (#1541 trial) — `needs-doc`
 - #1591 GH-1576 push guard and pre-push hook can disagree on the push URL (git remote get-url --push vs the hook's second argument) — `needs-doc`
@@ -210,7 +214,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1583 marathon planner and frozen twins read a gone path_present probe as blocked, not landed (parity with swarm_preflight, GH-1580) — `needs-doc`
 - #1579 jog: JogSupervisorLock can reclaim a lock whose owner is still writing its pid (two owners) — `needs-doc`
 - #1578 merge-cleanup: scratch pruning can delete a retained repair clone whose HEAD commit was never pushed — `needs-doc`
-- #1575 Follow-up to PR #1574: express SKILL.md manual-entry wording and the 🆕 marker in the GH-1530 ledger row — `needs-doc`
 - #1568 Daily goals 2026-11-20: kickstart run 2 (#1541 trial) — `needs-doc`
 - #1567 merge-cleanup refuses .tick clones as "tick binary not found" although tick is installed: per-Mac harness config is never prompted when repos vendor .xyz — `needs-doc`
 - #1541 Arc: kickstart long-run qualification — 20 milestones (KS-01…KS-20) from run-1 lessons — `needs-doc`
