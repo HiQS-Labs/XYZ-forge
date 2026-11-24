@@ -2,7 +2,7 @@
 gh_issue: 1580
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1580
 title: "swarm_preflight misreports gaps: line anchors ignored, only a gate's first command checked, acceptance check misses real headings"
-status: "In Progress (plain-gate rewrite; one final QA round)"
+status: "Blocked (final QA FAIL: F1 bash +x/-eO options, F2 shopt; awaiting parent decision)"
 created: 2026-11-23
 updated: 2026-11-24
 owner: Claude (start-task sub-agent)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Parser-free rewrite per the operator decision of 2026-11-24 on #1580: plain-gate rule, first-command check kept for every other gate plus an advisory gap; red at the merge-base, green at the head, suites, 129-contract replay and identity bracket recorded. | One final Codex QA round. If it approves: push (the pre-push hook runs the full gate), open one PR, do not land it. If it fails: stop and report. |
+| Parser-free plain-gate rewrite built and verified (green 36/0, suites, 129-contract replay, 0-flip guard, identity bracket). Single final Codex QA round: **FAIL**, two Blockers (F1 `+x` / `-eO` bash options read as the script, F2 `shopt` builtin refused). | **Stopped per the operator instruction** (no repair, no push, no PR). The parent decides: repair F1/F2 (small edits to `_GATE_NOT_PLAIN` / `_gate_segment_is_plain`), re-run evidence and a further QA round, then push. Detail in `relay-system/2026-11-24/gh1580-final-qa-plain.md`. |
 
 ## Observed problem
 

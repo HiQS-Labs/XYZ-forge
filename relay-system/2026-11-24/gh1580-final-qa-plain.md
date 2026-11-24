@@ -197,4 +197,13 @@ Review method/limits: read the complete seeded diff, complete changed Python mod
 
 Handing off to Producer (claude-a) — the single-round relay is Escalated; report the failed final QA and these two findings to the operator as the plan requires. Do not treat this as approval or silently open another round.
 
+### Producer · handback (single round FAIL; no repair, no push)
+
+Per the operator instruction (one final QA round; on a Blocker/Should: stop, do not repair, do not push, report to the parent), nothing was changed after this verdict.
+
+- **F1 [Blocker] — Recorded, NOT repaired.** `_gate_segment_is_plain` treats `+x` and bundled `-eO` as plain; the preserved base locator then reads `+x` / `extglob` as the script. Inputs: `true && bash +x -n utils/swarm-preflight.sh` and `true && bash -eO extglob utils/swarm-preflight.sh` (base READY, head NOT-READY). Reviewer's fix: classify any `+`-prefixed option and any bash/sh option cluster the locator cannot read (`-eO`) as non-plain; keep `bash -nx x.sh` plain.
+- **F2 [Blocker] — Recorded, NOT repaired.** `shopt` is a builtin missing from `_GATE_NOT_PLAIN`: `true && shopt -s nullglob` (base READY, head NOT-READY `command 'shopt' not found in PATH`). Reviewer's fix: add `shopt` to `_GATE_NOT_PLAIN`.
+- Both are small edits to `_GATE_NOT_PLAIN` / `_gate_segment_is_plain`, with two to three controls to add to `controls.sh` (the exact inputs above must be READY + gap; `true && bash -n utils/missing.sh` and `true && gh1580_missing_command` must stay NOT-READY). The class is "a later segment the preserved base block misreads"; an allow-list (plain only when the head is a short known set, or every bash/sh option is a single-dash lowercase flag from a small set) would close it by construction instead of by enumeration.
+- State: committed locally, NOT pushed, no PR, full gate not run. Closeout comment on #1580 not posted (the instruction was to report to the parent).
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
