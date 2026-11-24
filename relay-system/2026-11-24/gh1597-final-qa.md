@@ -548,4 +548,13 @@ Basis: F5's unsafe red control has been replaced with an intercepted production-
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-24T23:37:57Z
+task: RELAY-GH1597-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 143a384013a742a099f1eb410b219feae84ad6dd
+added-range: 69520+3042
+added-sha256: 72610209b84569d21269bf07cc3f2f134a0a2ac3425e9786be75c3e2d044feed
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
