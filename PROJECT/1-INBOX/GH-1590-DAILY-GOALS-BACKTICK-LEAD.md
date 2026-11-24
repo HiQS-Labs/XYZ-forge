@@ -84,7 +84,7 @@ one CodeRabbit Minor on #1589 (2026-11-23); no other reports, trend unknown.
   "fix_probes": [
     {
       "type": "command",
-      "cmd": "python3 -B -I -c 'import importlib.util as u,sys;s=u.spec_from_file_location(\"bq\",\"skills/1-hourly/kickstart/scripts/build_queue.py\");m=u.module_from_spec(s);s.loader.exec_module(m);sys.exit(0 if m.parse_daily_goals_refs(\"- [ ] `other/repo#9` then #10\",\"me/repo\",1)==[10] else 1)'"
+      "cmd": "env python3 -B -I -c 'import importlib.util as u,sys;s=u.spec_from_file_location(\"bq\",\"skills/1-hourly/kickstart/scripts/build_queue.py\");m=u.module_from_spec(s);s.loader.exec_module(m);sys.exit(0 if m.parse_daily_goals_refs(\"- [ ] `other/repo#9` then #10\",\"me/repo\",1)==[10] else 1)'"
     }
   ],
   "artifacts": [
