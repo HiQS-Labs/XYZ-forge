@@ -388,6 +388,9 @@ recovery window when warranted. Never skip qualification or claim unmeasured sav
 
 ## Drive loop — how an agent runs this skill end to end (GH-623)
 
+For a clone-retirement dry run, use `scan_clones.py --json` with the owning repo's integration branch. An inventory that only compares local SHAs to advertised remote tips is discovery only. Run the scanner's ancestry and merged-PR checks before reporting a retirement count.
+When a retirement sweep leaves a substantial set of unresolved `PRESERVE_*` rows, finish verified retirements and ask whether to run `/merge-cleanup-deep` on the remaining eligible clones. Give the operator the hold counts and estimated backup footprint. Explicit requests for deep triage already opt in.
+
 `/merge-cleanup` is a driven workflow, not a one-shot report. Follow the loop; do not stop at the
 first refusal, do not degrade the scope silently, and do not report completion over PRs that were
 never attempted:
