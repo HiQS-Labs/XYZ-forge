@@ -1,5 +1,8 @@
 # GH-1580 manual check: swarm_preflight misreports (red/green)
 
+Current scope: see **Retained scope after final QA** below. The first-command gate
+check stays in place. Earlier plain-gate runs record the withdrawn change.
+
 No new suite (GH-831). The check replays #1205's defects through the real preflight CLI against throwaway
 fixture repos (`controls.sh`; `gh` stubbed, `uv` absent from PATH). Every case states the CORRECT behaviour and
 prints MATCH or MISMATCH; the script exits 0 either way, so read the totals.

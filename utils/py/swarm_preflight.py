@@ -265,10 +265,9 @@ def eval_probes(root: str, c: dict[str, Any]) -> tuple[list[dict[str, Any]], int
             if ptype == "path_absent":
                 if os.path.exists(target_path): verdict = "landed"
             elif ptype == "path_present":
-                # GH-1580 (final QA F4): the probe detects an UNWANTED path (CONTRACT.example.md), so
-                # its absence is the fix having landed. It read `blocked` before, which marathon's
-                # landed-only acceptance re-check can never accept: a completed removal failed forever.
-                if not os.path.exists(target_path): verdict = "landed"
+                # An unwanted path is removed only when its directory entry is gone.
+                if not os.path.lexists(target_path):
+                    verdict = "landed"
             elif ptype == "grep_present":
                 if not os.path.exists(target_path):
                     verdict = "blocked"

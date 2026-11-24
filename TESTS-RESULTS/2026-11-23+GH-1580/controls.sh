@@ -150,6 +150,10 @@ case_text "D4a F4 path_present on an unwanted path that is already gone -> lande
 R="$(make_repo path-present-here 215 true '[{"type":"path_present","path":"config.txt"}]' yes "x")"
 case_text "D4b path_present on an unwanted path that is still there -> unfixed, ready" "$R" PROJECT/2-WORKING/GH-215-fixture.md 0 'verdict +: ready'
 
+R="$(make_repo path-present-dangling 216 true '[{"type":"path_present","path":"link.txt"}]' yes)"
+ln -s "$R/missing-target" "$R/link.txt"
+case_text "D4c dangling unwanted symlink is still present -> unfixed, ready" "$R" PROJECT/2-WORKING/GH-216-fixture.md 0 'verdict +: ready'
+
 # ── Defect 3: acceptance gap ─────────────────────────────────────────────────────────────────────
 printf '## Summary\nLockfile drift.\n\n## Done when\n\n- [ ] The lockfile check passes.\n' >"$WORK/issues/301.md"
 R="$(make_repo acc-done-when 301 true "$PROBE" yes)"
