@@ -1,0 +1,232 @@
+[
+ {
+  "number": 1417,
+  "title": "synthetic issue 1417",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1467,
+  "title": "synthetic issue 1467",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1471,
+  "title": "synthetic issue 1471",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1497,
+  "title": "synthetic issue 1497",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1500,
+  "title": "synthetic issue 1500",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1530,
+  "title": "synthetic issue 1530",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1551,
+  "title": "synthetic issue 1551",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1526,
+  "title": "synthetic issue 1526",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1501,
+  "title": "synthetic issue 1501",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1507,
+  "title": "synthetic issue 1507",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1400,
+  "title": "synthetic issue 1400",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1418,
+  "title": "synthetic issue 1418",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1480,
+  "title": "synthetic issue 1480",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1481,
+  "title": "synthetic issue 1481",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1482,
+  "title": "synthetic issue 1482",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1483,
+  "title": "synthetic issue 1483",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1537,
+  "title": "synthetic issue 1537 (KS-12)",
+  "labels": [],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ },
+ {
+  "number": 1541,
+  "title": "Arc: kickstart factory outer loop",
+  "labels": [
+   {
+    "name": "bug"
+   }
+  ],
+  "body": "",
+  "createdAt": "2026-11-19T00:00:00Z",
+  "comments": [],
+  "state": "OPEN"
+ }
+]
