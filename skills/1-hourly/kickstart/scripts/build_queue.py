@@ -94,7 +94,7 @@ CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:([\w.-]+/
 TITLE_GH = re.compile(r"\bGH-(\d+)\b")
 FENCED_CODE = re.compile(r"```.*?```", re.S)
 REF_BACKTICK = re.compile(r"`((?:PR\s+)?#\d+)`", re.I)
-CHECKED_LINE = re.compile(r"^\s*(?:[-*]|\d+\.)\s*\[[xX]\]")
+CHECKBOX = re.compile(r"^\s*(?:[-*+]|\d+\.)\s*\[([ xX])\]")
 ATOMIC_REF = re.compile(r"(?<![\w/-])(?:([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+))?#(\d+)\b")
 INLINE_BACKTICK = re.compile(r"`[^`\n]*`")
 HELD_LINE = re.compile(r"^\s*(?:[-*]\s*)?(?:\*\*)?HELD:(?:\*\*)?", re.I | re.M)
@@ -257,17 +257,23 @@ def classify_prs(rows, meta, owner, other, decide, parked, slug):
 
 
 def parse_daily_goals_refs(body: str, slug: str, self_num: int) -> list[int]:
-    """Parse unchecked local #N and same-repo slug#N references atomically.
-    Foreign-repo references (other/repo#123) are consumed atomically and never fall back to #123.
+    """Select the local items a daily-goals body names (queue admission only; hold evidence is read elsewhere).
+    With a task list (any checkbox line, GH-1569) only an unchecked checkbox line admits, and only its FIRST
+    reference: later `#N` on the line are references, not items. Without one, every `#N` outside a checked line
+    is admitted as before. Foreign-repo references (other/repo#123) are consumed atomically, never as #123.
     """
     clean = _sanitize_body(body or "")
+    lines = clean.splitlines()
+    tasklist = any(CHECKBOX.match(line) for line in lines)
     seen: set[int] = set()
     ordered: list[int] = []
     slug_l = slug.lower()
-    for line in clean.splitlines():
-        if CHECKED_LINE.match(line):
+    for line in lines:
+        box = CHECKBOX.match(line)
+        if (box and box.group(1) != " ") or (tasklist and not box):
             continue
-        for m in ATOMIC_REF.finditer(line):
+        refs = list(ATOMIC_REF.finditer(line))
+        for m in refs[:1] if tasklist else refs:
             repo_qual, num_s = m.group(1), m.group(2)
             if repo_qual and repo_qual.lower() != slug_l:
                 continue
