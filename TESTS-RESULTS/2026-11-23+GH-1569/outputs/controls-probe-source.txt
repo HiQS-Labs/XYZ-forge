@@ -1,0 +1,68 @@
+# GH-1569 manual controls: base (2ac998d13) vs candidate build_queue.py. Run from repo root.
+import contextlib, io, json, re, runpy, subprocess, sys, tempfile
+from pathlib import Path
+BASE = sys.argv[1]; CAND = "skills/1-hourly/kickstart/scripts/build_queue.py"
+D = Path("TESTS-RESULTS/2026-11-23+GH-1569"); SLUG = "HiQS-Labs/XYZ-forge"
+base = runpy.run_path(BASE, run_name="base"); cand = runpy.run_path(CAND, run_name="cand")
+fails = []
+def check(label, ok, detail=""):
+    print(("PASS" if ok else "FAIL"), label, detail); 
+    if not ok: fails.append(label)
+def refs(m, body): return m["parse_daily_goals_refs"](body, SLUG, 1568)
+# parser rows: (label, kind, body, base_expected, cand_expected)
+rows = [
+ ("3a discriminator", "- [ ] #10 after #1601", [10, 1601], [10]),
+ ("3b discriminator", "- [ ] #11 and also #12", [11, 12], [11]),
+ ("3c control (GH-N)", "- [ ] #10 (GH-1700)", [10], [10]),
+ ("4 discriminator", "- [ ] #11\n- [x] #9\nsee #10", [11, 10], [11]),
+ ("5 control no task list", "prose #10 and #11", [10, 11], [10, 11]),
+ ("6 control all checked", "- [x] #10\n- [X] #11", [], []),
+ ("7 discriminator foreign lead", "- [ ] other/repo#9 then #10", [10], []),
+ ("7b discriminator same-repo qualified lead", f"- [ ] {SLUG}#9 then #10", [9, 10], [9]),
+ ("9 self lead then ref", "- [ ] #1568 then #10", [10], []),
+ ("10 nested indent + plus + numbered + upper", "- [ ] #1\n  - [ ] #2 x #3\n+ [ ] #4\n1. [ ] #5\n* [X] #6", [1, 2, 3, 4, 5], [1, 2, 4, 5]),
+ ("11 unchecked line without ref, then prose", "- [ ] write it up\nOut of scope: #7", [7], []),
+ ("12 backticked lead", "- [ ] `#10` after #11", [10, 11], [10]),
+ ("13 dedupe", "- [ ] #10\n- [ ] #10 again #11", [10, 11], [10]),
+ ("14 discriminator paren nesting GH + after", "- [ ] #20 — after #19 (GH-1500, GH-1417)", [20, 19], [20]),
+]
+for label, body, be, ce in rows:
+    gb, gc = refs(base, body), refs(cand, body)
+    check(f"parser {label}", gb == be and gc == ce, f"base={gb} cand={gc}")
+# safety reader unchanged (row 8)
+iss = [{"number": 1568, "title": "Daily goals", "body": "- [ ] #10 after #11"}]
+pb = base["parked_issues"](iss, set(), set(), "noelsaw1", {10, 11, 1568}); pc = cand["parked_issues"](iss, set(), set(), "noelsaw1", {10, 11, 1568})
+check("8 safety reader unchanged (parked_issues)", pb == pc == {1568}, f"base={pb} cand={pc}")
+# CLI replays
+def cli(m, goals_path, issues=D/"inputs/issues.json"):
+    sys.argv = ["build_queue.py", "--as-of", "2026-11-20", "--owner", "noelsaw1", "--repo-slug", SLUG, "--other-session", "1400,1418",
+        "--prs-json", str(D/"inputs/prs.json"), "--pr-meta-json", str(D/"inputs/pr-meta.json"), "--issues-json", str(issues),
+        "--daily-goals", "1568", "--daily-goals-json", str(goals_path)]
+    out = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out): rc = m["main"]()
+    except SystemExit as e: rc = e.code
+    return rc, out.getvalue()
+def queue_nums(s):
+    q = s.split("## Queue (execution order)\n", 1)[1].split("\n## Needs the operator", 1)[0]
+    return [int(x) for x in re.findall(r"^\d+\. #(\d+) ", q, re.M)]
+rb, ob = cli(base, D/"inputs/1568-original-body.json"); rc_, oc = cli(cand, D/"inputs/1568-original-body.json")
+(D/"outputs/green-candidate-original-body.md").write_text(oc)
+check("1 RED base original body admits excluded refs", rb == 0 and {1480, 1483} <= set(queue_nums(ob)) and "#1537 " in ob.split("## Needs the operator")[1], f"base queue={queue_nums(ob)}")
+want = [1417, 1467, 1471, 1497, 1500, 1530, 1551]
+check("1 GREEN candidate original body = exactly 7 checklist items", rc_ == 0 and queue_nums(oc) == want and not any(f"#{n} " in oc for n in (1480, 1483, 1537, 1541, 1526, 1501, 1507, 1400, 1418)), f"cand queue={queue_nums(oc)}")
+rb2, ob2 = cli(base, D/"inputs/1568-current-body.json"); rc2, oc2 = cli(cand, D/"inputs/1568-current-body.json")
+(D/"outputs/current-body-base.md").write_text(ob2); (D/"outputs/current-body-candidate.md").write_text(oc2)
+check("2 CURRENT body: 7 items and output byte-identical base vs candidate", rb2 == rc2 == 0 and queue_nums(oc2) == want and ob2 == oc2)
+# 5 CLI: prose-only body byte-identical
+prose = {"number": 1568, "title": "Daily goals", "body": "Today: finish #1417 and #1467. Not #1480.", "labels": [], "state": "OPEN", "comments": []}
+with tempfile.TemporaryDirectory() as td:
+    pp = Path(td)/"prose.json"; pp.write_text(json.dumps(prose))
+    r1, o1 = cli(base, pp); r2, o2 = cli(cand, pp)
+    (D/"outputs/prose-only-base.md").write_text(o1); (D/"outputs/prose-only-candidate.md").write_text(o2)
+    check("5 CLI no-task-list body byte-identical base vs candidate", r1 == r2 == 0 and o1 == o2 and queue_nums(o2) == [1417, 1467, 1480], f"queue={queue_nums(o2)}")
+    allx = dict(prose, body="- [x] #1417\n- [x] #1467\nnot #1480")
+    pp.write_text(json.dumps(allx)); r1, o1 = cli(base, pp); r2, o2 = cli(cand, pp)
+    check("6 CLI all-checked task list fails closed on candidate (zero selected)", r2 not in (0, None), f"base_rc={r1} cand_rc={r2}")
+print("RESULT:", "ALL PASS" if not fails else f"FAILED {fails}")
+sys.exit(1 if fails else 0)
