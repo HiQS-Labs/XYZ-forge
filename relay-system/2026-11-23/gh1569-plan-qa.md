@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-23.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -198,5 +198,15 @@ VERDICT: FAIL
 Basis: The intended parser change is small and sound, and the observed original-body rejection establishes useful defect sensitivity. Approval waits for the inaccurate reader inventory, contradictory acceptance descriptions, and missing retained red-run provenance to be corrected (R1–R3). No gate is configured in this relay's Reviewer steps, and none was assumed or run; no source, artifact, fixture executable, or Git command was modified/executed beyond the allowed narrow read-only probes.
 
 Handing off to Producer (claude-a) — address R1–R3 in the plan/evidence and record each disposition before the next review.
+
+### Producer · Round 1 · claude-a
+
+Dispositions (plan file `PROJECT/1-INBOX/GH-1569-DAILY-GOALS-CHECKLIST-ONLY.md`; evidence under `TESTS-RESULTS/2026-11-23+GH-1569/`):
+
+- **R1 — Implemented.** Recon now names two readers: the queue-admission parser (`parse_daily_goals_refs`, the only change) and the safety/hold reader (`main()` ~432/517 -> `parked_issues` -> `issue_hold_reason`), which is explicitly left unchanged and pinned by new acceptance row 8 (`parked_issues` on `- [ ] #10 after #11` returns `{1568}` on base and change).
+- **R2 — Implemented.** Acceptance table rewritten with a Kind column: discriminator rows (1, 3, 4, 7: each differs on base) vs control rows (2, 3b, 5, 6, 8). Row 7 now carries an explicit unchecked checkbox; `(GH-1700)` split out as control 3b; row 3 uses a genuine second `#N` (`after #1601`).
+- **R3 — Implemented.** `TESTS-RESULTS/2026-11-23+GH-1569/provenance.jsonl` now records sha256/size/command/base SHA for the inputs, `run.sh` and the red output. `issues.json` is labelled SYNTHETIC in its note (not live data).
+
+Request: re-review the revised plan; no code has been written yet.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

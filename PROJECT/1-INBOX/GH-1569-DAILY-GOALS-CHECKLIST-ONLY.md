@@ -23,10 +23,16 @@ Needs-the-operator, although the issue excluded them. Red replay:
 
 ## Recon
 
-- The daily-goals body is read in exactly one place: `parse_daily_goals_refs` (called once, `main()` ~line 455).
-  Everything else reads other issues' bodies (`issue_hold_reason`, `classify_issues` AFTER) or PR bodies
-  (`closing_refs`); none admits numbers from the daily-goals body. The goals issue is never in
-  `scoped_issues`, so its own text is not hold-scanned for selection.
+- The daily-goals body has two readers, with different jobs (plan QA R1):
+  1. **Queue-admission parser** `parse_daily_goals_refs` (called once, `main()` ~line 455): the ONLY code
+     that turns the body into selected numbers. This is the one that changes.
+  2. **Safety/hold reader**, unchanged and deliberately left alone: `main()` copies every fetched issue into
+     `safety_issues` (~432); when the goals issue is among them (it is in `issues` when created inside the
+     window, or fetched as an admitted PR's closing target ~495-504) `parked_issues` (~517 -> 214-222) runs
+     `issue_hold_reason` (187-200) on its body. A goals line like `- [ ] #10 after #11` therefore parks
+     #1568 itself (not #11), which holds a PR that closes #1568 (`classify_prs` 242-243). It admits nothing to
+     the queue. Checklist selection is NOT applied here; hold evidence stays fail-closed (SKILL.md:307).
+  Other body readers (`classify_issues` AFTER, `closing_refs`) read selected issues' / PRs' own bodies.
 - `CHECKED_LINE` (line 97) is used only by that function. `ATOMIC_REF` already consumes `owner/repo#N`
   atomically; `GH-N` text never matches (no `#`), so `(GH-…)` nesting is already inert.
 - Docs: `skills/1-hourly/kickstart/SKILL.md:302-308` (Daily-Goals Queue Scoping) describes the current rule.
@@ -58,15 +64,21 @@ new-suite; no handling of non-GitHub task syntaxes beyond `-`, `*`, `+`, `N.` bu
 
 ## Acceptance (falsifiable)
 
-| # | Input | Base | Change |
-|---|---|---|---|
-| R/G | #1568 ORIGINAL body (GraphQL `userContentEdits`, editedAt 2026-11-20T17:07:07Z) | #1480, #1483 queued; #1537 Needs-operator (red, captured) | none of the three appears anywhere; 7 checklist items + nothing from prose |
-| 2 | #1568 CURRENT body | 7 items | same 7 items (byte-identical Queue section) |
-| 3 | checklist line with `(GH-1700)` / `after #1601` / second `#N` | later refs admitted (base) | only the lead `#N` admitted |
-| 4 | `- [x] #N` and prose `#N` in a body that has a task list | prose admitted | neither admitted |
-| 5 | body with no checkbox line | prose admitted | byte-identical output to base |
-| 6 | task list where every line is `[x]` | n/a | still fails closed through the existing "selected zero" exit |
-| 7 | `other/repo#9 then #10` lead foreign | #10 admitted | line yields nothing |
+"Discriminator" rows differ between base and change (each fails on base, the observed rejection of an unfixed
+script); "control" rows are identical on both and only guard regressions. Success of the CLI (rc 0) is never
+acceptance; each row compares parsed refs / Queue text.
+
+| # | Kind | Input | Base | Change |
+|---|---|---|---|---|
+| 1 | discriminator | #1568 ORIGINAL body (GraphQL `userContentEdits`, editedAt 2026-11-20T17:07:07Z) via `--daily-goals-json` | #1480, #1483 queued; #1537 Needs-operator (captured red) | none of the three appears; Queue = exactly the 7 checklist items (#1417 #1467 #1471 #1497 #1500 #1530 #1551), no prose ref |
+| 2 | control | #1568 CURRENT body | 7 items | same 7 items; Queue section byte-identical to base |
+| 3 | discriminator | `- [ ] #10 after #1601` and `- [ ] #11 and also #12` | `[10, 1601]`, `[11, 12]` | `[10]`, `[11]` (lead only) |
+| 3b | control | `- [ ] #10 (GH-1700)` | `[10]` | `[10]` (`GH-N` has no `#`) |
+| 4 | discriminator | `- [ ] #11` + `- [x] #9` + prose line `see #10` | `[11, 10]` | `[11]` |
+| 5 | control | body with no checkbox line (`prose #10`) | `[10]` | `[10]`, full CLI output byte-identical to base |
+| 6 | control | task list whose every line is `[x]` | `[]` -> existing "selected zero" exit | same exit (fails closed) |
+| 7 | discriminator | `- [ ] other/repo#9 then #10` | `[10]` | `[]` |
+| 8 | control | safety reader: `parked_issues` on a goals issue whose body is `- [ ] #10 after #11` | `{1568}` | `{1568}` (unchanged) |
 
 `mypy --allow-untyped-defs --allow-incomplete-defs` on the script; route via `utils/ci-route.sh`.
 
