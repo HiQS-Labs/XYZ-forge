@@ -111,6 +111,7 @@ each one against ground truth, not against the diff. Start from the claim the PR
 | **Evidence claim** | "Tests pass", "verified locally", "CI green" | Re-run the named suite in the clone, or read the actual check run (`gh pr checks`). A claimed run you cannot reproduce or find is Unverifiable, not Valid. |
 | **Scope claim** | "Docs only", "no behavior change", "refactor" | Check the diff: does it touch runtime code, defaults, schemas, flags or error codes? Any behavior change under a no-behavior-change claim is a `[Blocker]`. |
 | **Root-cause claim** | "The cause was Z" | Trace it ([`/debug-mantra`](../../1-hourly/debug-mantra/SKILL.md) Mantra 2). A fix at the crash site while the bad state comes from upstream is the Symptom-Fix Trap. |
+| **Test-invariance / historical-invariant claim** | (implicit whenever existing tests are modified, weakened, or deleted) | Inspect every modified, weakened, or deleted test assertion in the PR diff: verify it does not silently invert a documented historical invariant without explicit issue/requirement authorization. Unjustified test inversion is Invalid and a `[Blocker]`. |
 
 Give every claim one verdict:
 - **Valid**: verified firsthand, evidence cited (command + result, or `file:line`).

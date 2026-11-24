@@ -1,0 +1,92 @@
+{
+  "schema": "gh1587-clone-identity@3",
+  "clone": "disposable -verify full clone",
+  "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
+  "per_stage_runs": [
+    {
+      "stage": "layer-a-red-on-base",
+      "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
+      "pre_run": {
+        "captured_at_utc": "2026-11-23T23:44:47Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "post_run": {
+        "captured_at_utc": "2026-11-23T23:44:52Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "match": true
+    },
+    {
+      "stage": "layer-a-focused-suites",
+      "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
+      "pre_run": {
+        "captured_at_utc": "2026-11-23T23:44:52Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "post_run": {
+        "captured_at_utc": "2026-11-23T23:46:42Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "match": true
+    },
+    {
+      "stage": "layer-b1-gh836-live",
+      "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
+      "pre_run": {
+        "captured_at_utc": "2026-11-23T23:46:42Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "post_run": {
+        "captured_at_utc": "2026-11-23T23:48:15Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "match": true
+    },
+    {
+      "stage": "layer-b2-new-relay-form2-clone-probe-smoke",
+      "candidate_sha": "0e7ad61718e4c0c359feb2bdce811f325f2ae099",
+      "pre_run": {
+        "captured_at_utc": "2026-11-23T23:48:15Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "post_run": {
+        "captured_at_utc": "2026-11-23T23:49:25Z",
+        "core.bare": "false",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "user.name": "Noel Saw",
+        "user.email": "56978803+noelsaw1@users.noreply.github.com",
+        "HEAD": "0e7ad61718e4c0c359feb2bdce811f325f2ae099"
+      },
+      "match": true
+    }
+  ],
+  "all_matched": true
+}

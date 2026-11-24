@@ -28,8 +28,10 @@ check_start_task_reinforce_contract() {
   grep -q "Apply tiered verification discipline" "$t" || return 1
   grep -q "run ONLY the focused target test suite" "$t" || return 1
   grep -q "Do NOT re-run full qualifying test gates between" "$t" || return 1
-  grep -q "Run the full qualifying gate" "$t" || return 1
-  grep -q "EXACTLY ONCE on the final approved" "$t" || return 1
+  # GH-1518 (e0cdff565) replaced "Run the full qualifying gate ... EXACTLY ONCE on the final approved"
+  # with ci-local.sh --fast + single full-gate pre-push hook wording.
+  grep -q "run \`ci-local.sh --fast\` on the final approved commit" "$t" || return 1
+  grep -q "that is the one full-gate run (GH-1518)" "$t" || return 1
   grep -q "the 3-round cap is a binding budget; do not" "$t" || return 1
   grep -q "extend review cycles for speculative edge cases when core acceptance criteria" "$t" || return 1
   grep -q "are green" "$t" || return 1
