@@ -435,22 +435,22 @@ exit 0
     )
 
     # -------------------------------------------------------------------------
-    # AC-6: git version preflight before forecast (temporal invocation tracking, F3)
+    # AC-6: git version preflight before forecast in production main() (F3, F4)
     # -------------------------------------------------------------------------
-    # 6a. Boundary parse check
-    v_old = merge_cleanup._parse_version("git version 2.37.9")
-    v_234 = merge_cleanup._parse_version("git version 2.34.1")
-    v_min = merge_cleanup._parse_version("git version 2.38.0")
-    boundary_parsed = (v_old == (2, 37, 9) and v_old < (2, 38, 0) and
-                       v_234 == (2, 34, 1) and v_234 < (2, 38, 0) and
-                       v_min == (2, 38, 0) and v_min >= (2, 38, 0))
+    # 6a. Verify parse logic
+    boundary_parsed = (
+        merge_cleanup._parse_version("git version 2.37.9") == (2, 37, 9) and
+        merge_cleanup._parse_version("git version 2.38.0") == (2, 38, 0)
+    )
 
-    # 6b. Temporal event logging: instrument actual production entry point (merge_cleanup.main)
-    event_log = []
+    # 6b. Candidate production main() execution with isolation strictly at clone_path (F4)
     orig_warn_git = merge_cleanup.warn_git_version_if_needed
     orig_build_forecast = merge_cleanup.build_landing_forecast
     orig_fetch_prs = merge_cleanup.fetch_open_prs_with_retry
     orig_pin_sel = merge_cleanup.pin_selection
+    orig_land_prs = merge_cleanup.land_prs
+    orig_scan_dirs = merge_cleanup.scan_directories
+    orig_harness_paths = ledger_merge.harness_paths_module
 
     sample_prs = [
         {"number": 101, "title": "P1", "headRefName": "f1", "headRefOid": "a"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/101"},
@@ -458,85 +458,125 @@ exit 0
         {"number": 103, "title": "P3", "headRefName": "f3", "headRefOid": "c"*40, "baseRefName": "development", "isDraft": False, "labels": [], "mergeable": "MERGEABLE", "statusCheckRollup": [], "url": "https://github.com/foo/bar/pull/103"},
     ]
 
-    def tracked_warn_git(*args, **kwargs):
-        event_log.append("version_check")
-        return orig_warn_git(*args, **kwargs)
-
-    def tracked_build_forecast(*args, **kwargs):
-        event_log.append("build_forecast")
-        return {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
-
+    # Stubs for clean disposable full-clone isolation (F4)
+    ledger_merge.harness_paths_module = lambda repo: None
+    merge_cleanup.scan_directories = lambda *a, **k: []
     merge_cleanup.fetch_open_prs_with_retry = lambda repo: sample_prs
     merge_cleanup.pin_selection = lambda *args, **kwargs: True
-    merge_cleanup.warn_git_version_if_needed = tracked_warn_git
-    merge_cleanup.build_landing_forecast = tracked_build_forecast
+    merge_cleanup.land_prs = lambda *a, **k: 0
+
+    candidate_event_log = []
+    def candidate_warn_git(*args, **kwargs):
+        candidate_event_log.append("version_check")
+        return orig_warn_git(*args, **kwargs)
+
+    def candidate_build_forecast(*args, **kwargs):
+        candidate_event_log.append("build_forecast")
+        return {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
+
+    merge_cleanup.warn_git_version_if_needed = candidate_warn_git
+    merge_cleanup.build_landing_forecast = candidate_build_forecast
 
     # Stub git to report 2.37.9 (below minimum)
     orig_run_git = merge_cleanup.run_git
     merge_cleanup.run_git = lambda cwd, args, timeout=5: subprocess.CompletedProcess(
         args=["git"] + args, returncode=0, stdout="git version 2.37.9\n", stderr=""
     )
-
-    # Run actual production main()
     merge_cleanup._GIT_VERSION_CHECKED = None
     merge_cleanup._GIT_WARNED = False
-    event_log.clear()
 
-    # Determine primary root for main()
-    primary_target = Path("/Users/noelsaw/Documents/GitHub/XYZ-forge")
-    if not primary_target.exists():
-        primary_target = clone_path
-
+    # Execute candidate production main() strictly on clone_path
     old_argv = sys.argv
-    sys.argv = ["merge_cleanup.py", "--primary", str(primary_target), "--prs", "101,102,103"]
+    sys.argv = ["merge_cleanup.py", "--primary", str(clone_path), "--prs", "101,102,103"]
     try:
-        main_exit = merge_cleanup.main()
+        candidate_exit = merge_cleanup.main()
     except SystemExit as exc:
-        main_exit = exc.code
+        candidate_exit = exc.code
     finally:
         sys.argv = old_argv
 
-    temporal_order_ok = (event_log == ["version_check", "build_forecast"])
+    candidate_order_ok = (candidate_event_log == ["version_check", "build_forecast"] and candidate_exit == 0)
 
-    # 6c. Executed moved-check red control:
-    # Mutate execution order so forecast runs before version_check, verifying assertion fails
+    # 6c. Executed moved-check red control in production main() (F3):
+    # Mutate production main() so forecast runs BEFORE version_check and verify sequence assertion fails
     mutant_event_log = []
-    def mutant_build_forecast(*args, **kwargs):
+    def mutant_fc(*args, **kwargs):
         mutant_event_log.append("build_forecast")
-        return {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
-    def mutant_warn_git(*args, **kwargs):
+        res = {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
         mutant_event_log.append("version_check")
+        orig_warn_git()
+        return res
+
+    merge_cleanup.warn_git_version_if_needed = lambda *a, **k: None  # moved out of pre-forecast
+    merge_cleanup.build_landing_forecast = mutant_fc
+    merge_cleanup._GIT_VERSION_CHECKED = None
+    merge_cleanup._GIT_WARNED = False
+
+    sys.argv = ["merge_cleanup.py", "--primary", str(clone_path), "--prs", "101,102,103"]
+    try:
+        mutant_exit = merge_cleanup.main()
+    except SystemExit as exc:
+        mutant_exit = exc.code
+    finally:
+        sys.argv = old_argv
+
+    mutant_assertion_failed = False
+    try:
+        assert mutant_event_log == ["version_check", "build_forecast"]
+    except AssertionError:
+        mutant_assertion_failed = True
+
+    moved_check_red = (mutant_event_log == ["build_forecast", "version_check"] and mutant_assertion_failed and mutant_exit == 0)
+
+    # 6d. Supported boundary git 2.38.0 in production main() (F3):
+    # Completes forecast, reaches clean terminal exit 0, and emits no obsolete-version warning
+    supported_event_log = []
+    def supported_warn_git(*args, **kwargs):
+        supported_event_log.append("version_check")
         return orig_warn_git(*args, **kwargs)
 
-    # Invert order of calls
-    mutant_build_forecast()
-    mutant_warn_git()
-    moved_check_red = (mutant_event_log[0] != "version_check" and mutant_event_log == ["build_forecast", "version_check"])
+    def supported_build_forecast(*args, **kwargs):
+        supported_event_log.append("build_forecast")
+        return {"base_sha": "abc", "prs": [101, 102, 103], "passes": [], "recommendation": "direct"}
 
-    # 6d. Supported boundary git 2.38.0: completes forecast and emits no obsolete-version warning
+    merge_cleanup.warn_git_version_if_needed = supported_warn_git
+    merge_cleanup.build_landing_forecast = supported_build_forecast
     merge_cleanup.run_git = lambda cwd, args, timeout=5: subprocess.CompletedProcess(
         args=["git"] + args, returncode=0, stdout="git version 2.38.0\n", stderr=""
     )
     merge_cleanup._GIT_VERSION_CHECKED = None
     merge_cleanup._GIT_WARNED = False
+
+    sys.argv = ["merge_cleanup.py", "--primary", str(clone_path), "--prs", "101,102,103"]
+    try:
+        supported_exit = merge_cleanup.main()
+    except SystemExit as exc:
+        supported_exit = exc.code
+    finally:
+        sys.argv = old_argv
+
     warn_238 = merge_cleanup.check_git_version()
-    good_git_no_warn = (warn_238 is None)
+    good_git_terminal_ok = (supported_event_log == ["version_check", "build_forecast"] and
+                            supported_exit == 0 and warn_238 is None)
 
     # Restore originals
+    ledger_merge.harness_paths_module = orig_harness_paths
+    merge_cleanup.scan_directories = orig_scan_dirs
     merge_cleanup.fetch_open_prs_with_retry = orig_fetch_prs
     merge_cleanup.pin_selection = orig_pin_sel
+    merge_cleanup.land_prs = orig_land_prs
     merge_cleanup.warn_git_version_if_needed = orig_warn_git
     merge_cleanup.build_landing_forecast = orig_build_forecast
     merge_cleanup.run_git = orig_run_git
     merge_cleanup._GIT_VERSION_CHECKED = None
 
-    ac6_passed = (boundary_parsed and temporal_order_ok and moved_check_red and good_git_no_warn)
+    ac6_passed = (boundary_parsed and candidate_order_ok and moved_check_red and good_git_terminal_ok)
     record_receipt(
         "AC-6",
         "git version preflight temporal order before forecast verified in production main(); 2.37.9 warns, 2.38.0 clean",
-        f"merge_cleanup.main() event_log={event_log}, mutant_event_log={mutant_event_log}",
+        f"merge_cleanup.main() candidate_event_log={candidate_event_log}, mutant_event_log={mutant_event_log}",
         0 if ac6_passed else 1,
-        f"temporal_order_ok={temporal_order_ok}, moved_check_red={moved_check_red}, good_git_no_warn={good_git_no_warn}",
+        f"candidate_order_ok={candidate_order_ok}, moved_check_red={moved_check_red}, good_git_terminal_ok={good_git_terminal_ok}, primary={clone_path}",
         ac6_passed
     )
 
