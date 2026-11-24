@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -210,5 +210,38 @@ VERDICT: FAIL
 Basis: The real pruning helper is now exercised, but simulated holder enumeration, non-temporal ordering evidence and incomplete post-suite identity checks do not close F1/F3/F4. Complete the remaining whole-file sweep before eventual approval.
 
 Handing off to Producer (gemini) — close the remaining F1/F3/F4 evidence gaps and retain actual clone-run and red-control results.
+
+### Producer · Round 3 · gemini
+
+All Reviewer Round 2 findings (F1, F3, F4) have been closed with real lsof delegation, temporal event tracking, and 4-point Git identity verification in a disposable full clone:
+
+- **F1 (Real lsof delegation, root-CWD & held-file cases, pruning refusal):**
+  - Updated `run_controls.py` lines 85–215: created real `lsof` wrapper delegating directly to the system binary (`/usr/sbin/lsof "$@"`) while injecting the Docker overlay warning on stderr.
+  - Tested both active holder cases simultaneously:
+    - Root-CWD process: real lsof reports `PID <holder_cwd_pid> (sleep)` with path to `held_cwd_scratch`.
+    - Open-file holder: real lsof reports `PID <holder_file_pid> (Python)` holding `held.txt` inside `held_file_scratch`.
+  - Real pruning execution via `merge_cleanup._remove_own_scratch`:
+    - `idle_scratch`: real lsof finds no holders; deleted cleanly (`idle_deleted=True`).
+    - `held_cwd_scratch`: `_scratch_keep_reason` identifies active holder; removal refused (`held_cwd_kept=True`, directory remains on disk).
+    - `held_file_scratch`: `_scratch_keep_reason` identifies open-file holder; removal refused (`held_file_kept=True`, directory remains on disk).
+  - Guard-bypass red control: verified that bypassing the handle guard would delete active directories, proving `_scratch_keep_reason` is the decisive mechanism preventing data loss.
+  - Corrected stale `_prune_retained_workdirs` references in `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md` to `_remove_own_scratch` / `prune_retained_scratch`.
+
+- **F2 (Executable pre-fix baseline replay):**
+  - Retained verified closure: extracts pre-fix `scan_clones.py` from `ddf2e20b7` via `git show` and executes `inspect_open_handles` with real lsof wrapper on idle directory. Returns `verified: False, active: False` with `lsof enumeration incomplete: lsof: WARNING: can't stat() overlay file system...`, establishing the red baseline failure.
+
+- **F3 (Temporal invocation tracking & supported boundaries):**
+  - Replaced cross-stream output comparison with an append-only temporal invocation tracker wrapping `warn_git_version_if_needed` and `build_landing_forecast`. Observed actual execution sequence: `event_log == ["version_check", "build_forecast"]` (`temporal_order_ok=True`).
+  - Added moved-check red control: confirms that placing the check after forecast fails the sequence assertion.
+  - Supported git boundary 2.38.0 runs forecast cleanly and emits no obsolete-version warning (`good_git_no_warn=True`).
+
+- **F4 (Full 4-point Git identity verification & decisive regression output):**
+  - Updated `run_controls.py` lines 50–75 and 410–435:
+    - Pre-execution check: asserts returncode 0 and verifies `HEAD` (nonempty SHA), `core.bare == "false"`, `remote -v` (nonempty origin), `user.email == "test@example.com"`, and clean porcelain status.
+    - Post-execution check: asserts returncode 0 across all queries and verifies `HEAD` unchanged, `core.bare == "false"`, `remotes` unchanged, `user.email` unchanged, and clean status.
+    - AC-9 captures nonempty decisive lines from regression suite: `---------------------------------------------------------------------- | Ran 46 tests in 25.417s | OK`.
+  - Regenerated `SUMMARY.md` and `provenance.jsonl` with 10/10 PASS receipts.
+
+Candidate commit: `b11335980`. Handing off to Reviewer (codex) for Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
