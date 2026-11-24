@@ -131,7 +131,7 @@ Every `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observ
    - `Affected scope:` input/runtime predicate governed by the change,
    - `Falsifier:` concrete fixture/outcome that would disprove the hazard,
    - `Clone probe:` exact runnable command or short script for the Producer's disposable full clone.
-   - **Severity & pending status:** Default severity for an unexecuted Form 2 hazard is `[Should]`. A `[Blocker]` must cite an observed failure (Form 1) — it may only be raised via Form 2 when the static `file:line` trace itself proves an unconditional invariant breach, and in **either** severity a Form 2 finding remains **pending probe verification** until the Producer executes `Clone probe:` in a disposable full clone.
+   - **Severity, trust boundary & pending status (Option A, post-PR #1588 review):** Default severity for an unexecuted Form 2 hazard is `[Should]`. A `[Blocker]` must cite an observed failure (Form 1); an unexecuted Form 2 hazard stays `[Should]` until a probe reproduces it, and remains **pending probe verification** until the Producer reads the probe before running it (refusing any probe that reaches the network, credentials, or paths outside the disposable clone and recording the refusal as `[Unverified — clone probe failed/unavailable]`) and executes safe `Clone probe:` commands in a disposable full clone.
 3. **Mandatory Producer closure outcomes for Form 2 (`Clone probe:`):**
    - **Reproduced:** fix the defect, paste the probe command + failing-before / passing-after output, and mark `Implemented`.
    - **Falsified:** run `Clone probe:` in a disposable full clone, confirm the falsifier holds, and disposition `Declined — falsified by clone probe: <cmd → exit + output>`.

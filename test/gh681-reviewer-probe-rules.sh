@@ -77,13 +77,37 @@ for absent in "You are the REVIEWER this turn" "MAY run narrow, non-mutating pro
 done
 
 # --- Case 4: the scaffold carries the generalization rule ---------------------------------------
+check_gh1587_form2_contract() {
+  local f="$1"
+  local needle
+  for needle in \
+    "Clone probe:" \
+    "Default severity for an unexecuted Form 2 hazard is \`[Should]\`" \
+    "network, credentials, or paths outside the disposable clone" \
+    "Declined — falsified by clone probe" \
+    "[Unverified — clone probe failed/unavailable]" \
+    "until re-run cleanly or escalated/parked"; do
+    grep -qF -- "$needle" "$f" || return 1
+  done
+  # Option A (GH-1587 / PR #1588): unexecuted Form 2 must NOT widen [Blocker] via static trace.
+  if grep -qF -- "unconditional invariant breach" "$f"; then
+    return 1
+  fi
+  return 0
+}
+
 scaffold="$(bash "$ROOT/relay-automation/new-relay.sh" --title "gh681 probe" --reviewer codex --producer claude-a --print 2>/dev/null || true)"
 [ -n "$scaffold" ] || scaffold="$(sed -n '/TAKE YOUR TURN/,/^## Log/p' "$ROOT/relay-automation/new-relay.sh")"
-for needle in "Observed input:" "Affected scope:" "Falsifier:" "Clone probe:" "Declined — unproven generalization" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]" "must cite an observed failure"; do
+_gh1587_scaffold_file="$WORK/gh1587_scaffold.txt"
+printf '%s\n' "$scaffold" >"$_gh1587_scaffold_file"
+for needle in "Observed input:" "Affected scope:" "Falsifier:" "Clone probe:" "Default severity for an unexecuted Form 2 hazard is \`[Should]\`" "network, credentials, or paths outside the disposable clone" "Declined — unproven generalization" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]" "until re-run cleanly or escalated/parked" "must cite an observed failure"; do
   has "$scaffold" "$needle" \
     && pass "case 4: scaffold carries: $needle" \
     || fail "case 4: scaffold lacks: $needle"
 done
+check_gh1587_form2_contract "$_gh1587_scaffold_file" \
+  && pass "case 4: scaffold satisfies full GH-1587 Form 2 contract" \
+  || fail "case 4: scaffold fails GH-1587 Form 2 contract"
 
 # --- Case 5: the residue backstop is unchanged --------------------------------------------------
 if rtl_scratch_relocate ".pytest_cache" "$A" "$WORK" 2>/dev/null; then
@@ -97,25 +121,40 @@ for f in skills/1-hourly/relay-xyz/SKILL.md skills/1-hourly/relay/SKILL.md utils
   grep -qF "Declined — unproven generalization" "$ROOT/$f" \
     && pass "case 6: $f carries the generalization rule" \
     || fail "case 6: $f lost the generalization rule (GH-681 codified it in two-plus places)"
-  for needle in "Clone probe:" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]"; do
-    grep -qF -- "$needle" "$ROOT/$f" \
-      && pass "case 6: $f carries GH-1587 Form 2 rule: $needle" \
-      || fail "case 6: $f lost GH-1587 Form 2 rule: $needle"
-  done
+  check_gh1587_form2_contract "$ROOT/$f" \
+    && pass "case 6: $f satisfies GH-1587 Form 2 contract" \
+    || fail "case 6: $f lost GH-1587 Form 2 contract"
 done
 
-# Negative control (GH-1587): mutating away Clone probe: or unavailable-probe keep-open must fail detection
-_gh1587_mut="$WORK/gh1587_scaffold_mut.txt"
-printf '%s
-' "$scaffold" >"$_gh1587_mut"
-sed -i.bak '/Clone probe:/d; /Declined — falsified by clone probe/d; /clone probe failed\/unavailable/d' "$_gh1587_mut"
-for needle in "Clone probe:" "Declined — falsified by clone probe" "[Unverified — clone probe failed/unavailable]"; do
-  if grep -qF -- "$needle" "$_gh1587_mut"; then
-    fail "case 6 negative control: mutation failed to strip $needle"
-  else
-    pass "case 6 negative control: mutation stripped $needle and failed pin"
+# Negative controls (GH-1587): mutate copies and re-run check_gh1587_form2_contract to prove real rejection
+run_gh1587_form2_mutation() {
+  local desc="$1" mut_py="$2"
+  local mut="$WORK/gh1587_mut_${RANDOM}_$$.txt"
+  cp "$_gh1587_scaffold_file" "$mut"
+  python3 - "$mut" "$mut_py" <<'PYMUT'
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+old, new = sys.argv[2].split("|||", 1)
+text = p.read_text()
+p.write_text(text.replace(old, new) if old else text + new)
+PYMUT
+  if cmp -s "$_gh1587_scaffold_file" "$mut"; then
+    fail "case 6 negative control ($desc): mutation made no change"
+    return
   fi
-done
+  if check_gh1587_form2_contract "$mut"; then
+    fail "case 6 negative control ($desc): contract checker unexpectedly passed"
+  else
+    pass "case 6 negative control ($desc): contract checker rejected mutation"
+  fi
+}
+
+run_gh1587_form2_mutation "drop Clone probe" "Clone probe:|||"
+run_gh1587_form2_mutation "flip Form 2 default severity to Blocker" "Default severity for an unexecuted Form 2 hazard is \`[Should]\`|||Default severity for an unexecuted Form 2 hazard is \`[Blocker]\`"
+run_gh1587_form2_mutation "drop read-probe-first trust guard" "network, credentials, or paths outside the disposable clone|||"
+run_gh1587_form2_mutation "drop unavailable-probe keep-open token" "[Unverified — clone probe failed/unavailable]|||"
+run_gh1587_form2_mutation "drop escape-hatch wording" "until re-run cleanly or escalated/parked|||"
+run_gh1587_form2_mutation "re-introduce static-trace Blocker widening" "|||\nstatic trace proving an unconditional invariant breach\n"
 grep -qF "MAY run narrow, non-mutating probes" "$ROOT/skills/1-hourly/relay-xyz/SKILL.md" \
   && pass "case 6: skills/1-hourly/relay-xyz/SKILL.md carries the probe allowance" \
   || fail "case 6: skills/1-hourly/relay-xyz/SKILL.md lost the probe allowance"

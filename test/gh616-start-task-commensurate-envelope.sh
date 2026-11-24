@@ -28,8 +28,10 @@ check_start_task_commensurate_contract() {
   grep -q "Frame the final review packet with the same commensurate operational envelope" "$t" || return 1
   grep -qF "Surface-triggered QA questions" "$t" || return 1
   grep -qF "Clone probe:" "$t" || return 1
+  grep -qF "network, credentials, or paths outside the disposable clone" "$t" || return 1
   grep -qF "Declined — falsified by clone probe" "$t" || return 1
   grep -qF "[Unverified — clone probe failed/unavailable]" "$t" || return 1
+  grep -qF "until re-run cleanly or escalated/parked" "$t" || return 1
   return 0
 }
 
@@ -51,6 +53,8 @@ run_mutation "mut2 (no step 6 review envelope)" "$TARGET" "$WORK/m2.md" "sed -i.
 run_mutation "mut3 (no step 8 review envelope)" "$TARGET" "$WORK/m3.md" "sed -i.bak '/Frame the final review packet/d' '$WORK/m3.md'"
 run_mutation "mut3b (no GH-1587 surface-triggered QA questions)" "$TARGET" "$WORK/m3b.md" "sed -i.bak '/Surface-triggered QA questions/d' '$WORK/m3b.md'"
 run_mutation "mut3c (no GH-1587 step 8 Clone probe execution)" "$TARGET" "$WORK/m3c.md" "sed -i.bak '/Clone probe:/d' '$WORK/m3c.md'"
+run_mutation "mut3d (no GH-1587 step 8 read-probe-first trust guard)" "$TARGET" "$WORK/m3d.md" "sed -i.bak '/network, credentials, or paths outside the disposable clone/d' '$WORK/m3d.md'"
+run_mutation "mut3e (no GH-1587 step 8 escape-hatch wording)" "$TARGET" "$WORK/m3e.md" "sed -i.bak '/until re-run cleanly or escalated\/parked/d' '$WORK/m3e.md'"
 
 touch "$WORK/empty.md"
 if ! check_start_task_commensurate_contract "$WORK/empty.md"; then pass "mut4 (empty fixture): properly rejected"; else fail "empty fixture passed"; fi
