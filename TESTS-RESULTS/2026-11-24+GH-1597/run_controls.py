@@ -383,10 +383,14 @@ exit 0
 """)
     gh_old_stub.chmod(0o755)
 
+    # Dedicated empty scan root to ensure strictly contained scanning within disposable clone (F5)
+    empty_scan_root = temp_dir / "empty_scan_root"
+    empty_scan_root.mkdir(exist_ok=True)
+
     # 5a. Preview mode with old gh: must fail with exit 2 and output warning BEFORE discovery error
     env_old_gh = dict(os.environ, MERGE_CLEANUP_GH_BIN=str(gh_old_stub))
     res_preview = subprocess.run(
-        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path)],
+        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path), "--root", str(empty_scan_root)],
         capture_output=True, text=True, env=env_old_gh
     )
     full_preview = res_preview.stderr + res_preview.stdout
@@ -396,7 +400,7 @@ exit 0
 
     # 5b. Execution mode with old gh: must fail with exit 2 and output warning BEFORE discovery error
     res_exec = subprocess.run(
-        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path), "--execute", "--prs", "101"],
+        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path), "--root", str(empty_scan_root), "--execute", "--prs", "101"],
         capture_output=True, text=True, env=env_old_gh
     )
     full_exec = res_exec.stderr + res_exec.stdout
@@ -420,13 +424,22 @@ exit 0
     gh_good_stub.chmod(0o755)
     env_good_gh = dict(os.environ, MERGE_CLEANUP_GH_BIN=str(gh_good_stub))
     res_good_gh = subprocess.run(
-        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path)],
+        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path), "--root", str(empty_scan_root)],
         capture_output=True, text=True, env=env_good_gh
     )
     full_good = res_good_gh.stderr + res_good_gh.stdout
     good_ok = (res_good_gh.returncode == 0 and "below the required 2.18.0 minimum" not in full_good)
 
-    ac5_passed = (preview_ok and exec_ok and good_ok)
+    # F5 Red control: verify that omitting --root scans default host roots, while supplying --root restricts strictly to empty_scan_root
+    res_omitted_root = subprocess.run(
+        [sys.executable, str(scripts_dir / "merge_cleanup.py"), "--primary", str(clone_path)],
+        capture_output=True, text=True, env=env_good_gh
+    )
+    omitted_scans_default = ("GH Repos" in (res_omitted_root.stdout + res_omitted_root.stderr))
+    bounded_scans_only_root = (str(empty_scan_root) in full_good and "GH Repos" not in full_good)
+    scan_containment_ok = (omitted_scans_default and bounded_scans_only_root)
+
+    ac5_passed = (preview_ok and exec_ok and good_ok and scan_containment_ok)
     record_receipt(
         "AC-5",
         "gh version preflight before discovery (preview & execution); supported 2.18.0 passes with exit 0",

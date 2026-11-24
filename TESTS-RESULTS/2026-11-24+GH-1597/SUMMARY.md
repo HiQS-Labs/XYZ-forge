@@ -1,15 +1,15 @@
 # Verification Controls Summary — GH-1597
 
-- **Tested Candidate Revision**: `794b38f3592c75580be85b5e101cebbbfb3ed72d`
+- **Tested Candidate Revision**: `5c74d2ee79d07951fb6bb51d30cde210c0182c84`
 - **Baseline Replay Revision**: `ddf2e20b7`
-- **Execution Date**: `2026-11-24 23:27:29Z`
+- **Execution Date**: `2026-11-24 23:32:59Z`
 - **Isolation Boundary**: Disposable full clone under `tempfile` (GH-564 compliant; zero test sprawl under `test/` per GH-831)
 - **Clone Identity Verified (Pre & Post Suite)**:
   - `core.bare`: `false` == `false` (unchanged: True)
   - `user.email`: `test@example.com` == `test@example.com` (unchanged: True)
   - `remotes`: verified matching
-  - Pre-run HEAD: `794b38f3592c75580be85b5e101cebbbfb3ed72d`
-  - Post-run HEAD: `794b38f3592c75580be85b5e101cebbbfb3ed72d` (unchanged: True)
+  - Pre-run HEAD: `5c74d2ee79d07951fb6bb51d30cde210c0182c84`
+  - Post-run HEAD: `5c74d2ee79d07951fb6bb51d30cde210c0182c84` (unchanged: True)
   - Pre/post status: clean (0 untracked, 0 dirty)
 - **Result**: 10/10 controls PASSED
 
@@ -19,13 +19,13 @@
 |---|---|:---:|:---:|---|
 | **AC-0** | Red Control Replay (Pre-fix classifier fails AC-1) | PASS | 1 | Pre-fix inspect_open_handles extracted from `ddf2e20b7` executed against real lsof wrapper returned `verified: False, active: False` on overlay warning |
 | **AC-1** | lsof unrelated warning tolerance on idle checkout | PASS | 0 | Candidate executed against real lsof wrapper returned `verified: True, active: False` |
-| **AC-2** | Real holder enumeration (CWD & file) + pruning refusal | PASS | 0 | Real lsof detected both CWD holder PID 76103 & file holder PID 76104; `_remove_own_scratch` deleted idle scratch (`idle_deleted=True`) but refused removal on both held checkouts (`held_cwd_kept=True`, `held_file_kept=True`); mutant bypass deleted active scratch (`bypassed_deleted=True`) |
+| **AC-2** | Real holder enumeration (CWD & file) + pruning refusal | PASS | 0 | Real lsof detected both CWD holder PID 81965 & file holder PID 81966; `_remove_own_scratch` deleted idle scratch (`idle_deleted=True`) but refused removal on both held checkouts (`held_cwd_kept=True`, `held_file_kept=True`); mutant bypass deleted active scratch (`bypassed_deleted=True`) |
 | **AC-3** | Related warnings (equal, inside, ancestor, symlink) fail closed | PASS | 0 | All 4 related warning variants return `verified: False` with incomplete enumeration |
 | **AC-4** | Standalone disclaimer & unclassified stderr fail closed | PASS | 0 | Standalone disclaimer and unrecognized stderr return `verified: False` |
 | **AC-5** | gh version preflight before discovery (preview & execution) | PASS | 0 | Both modes exit 2 and emit `gh 2.18+` guidance before discovery failure; supported 2.18.0 exits 0 without warning |
 | **AC-6** | git version preflight before forecast | PASS | 0 | Actual production main() invocation sequence `["version_check", "build_forecast"]` observed; mutant moved-check `["build_forecast", "version_check"]` red; 2.38.0 clean |
 | **AC-7** | _merge_tree tuple contract & diagnostic guidance | PASS | 0 | Preserves (rc, tree, paths, err); appends Git 2.38+ / ppa:git-core/ppa advice on legacy syntax |
 | **AC-8** | Skills Army HQ Linux & intake init documentation | PASS | 0 | README.md and SKILL.md document POSIX/Linux support and `intake.py init` workflow |
-| **AC-9** | Zero regressions in full clone (gh534 suite) | PASS | 0 | `test/gh534_phase_a_tests.py` ran 46 tests: OK (46/46 passed). Decisive: `---------------------------------------------------------------------- | Ran 46 tests in 25.060s | OK` |
+| **AC-9** | Zero regressions in full clone (gh534 suite) | PASS | 0 | `test/gh534_phase_a_tests.py` ran 46 tests: OK (46/46 passed). Decisive: `---------------------------------------------------------------------- | Ran 46 tests in 24.299s | OK` |
 
 Receipts captured in `provenance.jsonl`.

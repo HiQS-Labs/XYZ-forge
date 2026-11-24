@@ -434,7 +434,9 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
     from "did not finish", which is all it is used for here:
       1. absent binary / timeout / launch failure            -> incomplete
       2. not a normal exit with return code 0 or 1           -> incomplete (signal-killed etc.)
-      3. anything on stderr (`lsof: WARNING: can't opendir`) -> incomplete: the tree was not covered
+      3. stderr with related or unclassified warnings -> incomplete: the tree was not covered.
+         Benign unrelated warnings (e.g. Docker overlay2 mounts) and companion disclaimers are
+         tolerated strictly when paths are unrelated to the checkout (GH-1597).
       4. completed + empty stderr -> parse records; keep `n` paths at or within the checkout,
          drop our own PID and ancestors; matches -> ACTIVE_PROCESS, none -> verified idle.
     Returns {"verified": bool, "active": bool, "details": str, "holders": [{"pid","command","paths"}]}.
