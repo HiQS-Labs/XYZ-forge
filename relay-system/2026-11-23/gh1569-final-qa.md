@@ -200,4 +200,13 @@ Basis: The implementation matches the approved bounded plan; the red discriminat
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-24T05:35:19Z
+task: RELAY-gh1569-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: df505c685a7ca37aed12ba84cd1af1e1b8c6ffc9
+added-range: 11288+10305
+added-sha256: d9fedd63834b0642ec72f2bb2fecec1147d8e4e23aeb9a916068f5f40397a159
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
