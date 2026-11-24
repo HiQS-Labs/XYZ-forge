@@ -1,0 +1,43 @@
+=== RED-ON-BASE: test/gh681-reviewer-probe-rules.sh (exit=1) ===
+== test: gh681-reviewer-probe-rules ==
+  workdir: <TMPDIR>
+  PASS: case 1: reviewer prompt carries: You are the REVIEWER this turn
+  PASS: case 1: reviewer prompt carries: MAY run narrow, non-mutating probes
+  PASS: case 1: reviewer prompt carries: .relay-scratch/
+  PASS: case 1: reviewer prompt carries: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  PASS: case 1: reviewer prompt carries: quote the command, exit status and decisive output
+  PASS: case 1: reviewer prompt carries: Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures
+  PASS: case 1: reviewer prompt carries: [Unverified — needs clone run]
+
+  FAIL: case 1: reviewer prompt lacks: Form 2 finding
+=== RED-ON-BASE: test/gh778-review-code-skill.sh (exit=1) ===
+== test: gh778-review-code-skill ==
+  workdir: <TMPDIR>
+== test: gh778-review-code-skill ==
+  PASS: skills/2-daily/review-code-xyz/SKILL.md exists
+  PASS: skills/2-daily/review-code-xyz/install.sh exists
+  PASS: install.sh is executable
+  PASS: old review-code folder is gone (GH-1060)
+  PASS: frontmatter has name: review-code-xyz
+  PASS: frontmatter has description
+  PASS: recital block present
+  PASS: /recon integrated
+  PASS: /debug-mantra integrated
+  PASS: /workhorse integrated
+  PASS: /unstuck integrated
+  PASS: PR targets hand off to review-pr-xyz
+  PASS: mutation check rule present
+  PASS: empty input guard rule present
+  PASS: symptom-fix trap audit present
+  PASS: reversibility matrix present
+
+  FAIL: GH-1587 pin missing in review-code-xyz: TOCTOU interleaving
+=== RED-ON-BASE: test/gh616-start-task-commensurate-envelope.sh (exit=1) ===
+== test: gh616-start-task-commensurate-envelope ==
+  PASS: size non-empty guard (38848 bytes)
+  FAIL: positive control failed
+  FAIL: unmodified control failed
+  PASS: mut1 (no commensurate mantra): properly rejected
+  PASS: mut2 (no step 6 review envelope): properly rejected
+  PASS: mut3 (no step 8 review envelope): properly rejected
+  FAIL: mut3b (no GH-1587 surface-triggered QA questions): no change

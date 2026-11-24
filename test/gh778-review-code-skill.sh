@@ -34,6 +34,39 @@ grep -q "A check that cannot fail is not a check" "$SKILL_FILE" && pass "mutatio
 grep -q "An empty input passes every check" "$SKILL_FILE" && pass "empty input guard rule present" || fail "missing empty input guard rule"
 grep -q "Symptom-Fix Trap" "$SKILL_FILE" && pass "symptom-fix trap audit present" || fail "missing symptom-fix trap"
 grep -q "Reversibility Decision Matrix" "$SKILL_FILE" && pass "reversibility matrix present" || fail "missing reversibility matrix"
+PR_SKILL_FILE="$REPO/skills/2-daily/review-pr-xyz/SKILL.md"
+GH1587_REVIEW_CODE_PINS=(
+  "TOCTOU interleaving"
+  "sibling-endpoint guard parity"
+  "warm-state deploy, IAM, and service-account upgrade transitions"
+  "native framework/runtime capabilities"
+  "Bounded Mutation Scope (3–5 high-leverage mutations)"
+  "Test-Honesty Body Audit"
+  "Historical-Invariant Test-Inversion Check"
+  "multi-invocation resume-key stability"
+)
+check_gh1587_review_code_pins() {
+  local f="$1" pin
+  for pin in "${GH1587_REVIEW_CODE_PINS[@]}"; do
+    grep -qF -- "$pin" "$f" || return 1
+  done
+  return 0
+}
+check_gh1587_review_pr_pins() {
+  local f="$1"
+  grep -qF -- "Test-invariance / historical-invariant claim" "$f"
+}
+for gh1587_pin in "${GH1587_REVIEW_CODE_PINS[@]}"; do
+  grep -qF -- "$gh1587_pin" "$SKILL_FILE" \
+    && pass "GH-1587 pin present in review-code-xyz: $gh1587_pin" \
+    || fail "GH-1587 pin missing in review-code-xyz: $gh1587_pin"
+done
+check_gh1587_review_code_pins "$SKILL_FILE" \
+  && pass "GH-1587 contract checker passes on review-code-xyz" \
+  || fail "GH-1587 contract checker failed on review-code-xyz"
+check_gh1587_review_pr_pins "$PR_SKILL_FILE" \
+  && pass "GH-1587 pin present in review-pr-xyz: Test-invariance / historical-invariant claim" \
+  || fail "GH-1587 pin missing in review-pr-xyz: Test-invariance / historical-invariant claim"
 
 # --- 5. Finding categories ---
 for cat in "\[Blocker\]" "\[Should\]" "\[Nit\]" "\[Pass\]"; do
@@ -43,7 +76,9 @@ done
 # --- 6. ARCHITECTURE.md registration ---
 grep -q "\[review-code-xyz\](skills/2-daily/review-code-xyz/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-code-xyz link" || fail "missing ARCHITECTURE.md link"
 n_daily="$(find "$REPO/skills/2-daily" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
-grep -q "### \`2-daily\` — A few times a day ($n_daily)" "$ARCH_FILE" && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk ($n_daily)"
+# GH-1266 (366e492a7) dropped manual counts from tier headings; verify heading + table row parity against disk.
+n_arch_daily="$(grep -cE "\]\(skills/2-daily/[^)]+/SKILL\.md\)" "$ARCH_FILE" || true)"
+grep -q "### \`2-daily\` — A few times a day" "$ARCH_FILE" && [ "$n_arch_daily" -eq "$n_daily" ] && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk (arch=$n_arch_daily disk=$n_daily)"
 
 # --- 7. Installer gh678 compliance (in sandbox) ---
 H="$WORK/home"; A="$H/apps"
@@ -74,6 +109,30 @@ TMP_COPY="$WORK/skill_mutated.md"
 cp "$SKILL_FILE" "$TMP_COPY"
 sed -i.bak '/Review-Code Discipline:/d' "$TMP_COPY"
 grep -q "Review-Code Discipline:" "$TMP_COPY" && fail "negative control: mutation failed to delete recital" || pass "negative control: mutation successfully detected missing recital"
+for gh1587_pin in "${GH1587_REVIEW_CODE_PINS[@]}"; do
+  cp "$SKILL_FILE" "$WORK/skill_gh1587_mut.md"
+  python3 - "$WORK/skill_gh1587_mut.md" "$gh1587_pin" <<'PYMUT'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1])
+p.write_text(p.read_text().replace(sys.argv[2], ""))
+PYMUT
+  if cmp -s "$SKILL_FILE" "$WORK/skill_gh1587_mut.md"; then
+    fail "negative control: mutation made no change for $gh1587_pin"
+  elif check_gh1587_review_code_pins "$WORK/skill_gh1587_mut.md"; then
+    fail "negative control: contract checker passed despite removing $gh1587_pin"
+  else
+    pass "negative control: contract checker rejected removal of $gh1587_pin"
+  fi
+done
+cp "$PR_SKILL_FILE" "$WORK/pr_gh1587_mut.md"
+sed -i.bak '/Test-invariance \/ historical-invariant claim/d' "$WORK/pr_gh1587_mut.md"
+if cmp -s "$PR_SKILL_FILE" "$WORK/pr_gh1587_mut.md"; then
+  fail "negative control: mutation made no change for review-pr-xyz test-invariance row"
+elif check_gh1587_review_pr_pins "$WORK/pr_gh1587_mut.md"; then
+  fail "negative control: contract checker passed despite removing review-pr-xyz test-invariance row"
+else
+  pass "negative control: contract checker rejected removal of review-pr-xyz test-invariance row"
+fi
 
 echo "  gh778-review-code-skill: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

@@ -1,0 +1,22 @@
+previous head 9c18e49f0 (hook sha256 prefix 4a14c3c2bd3acaf5) vs repaired head (sha256 prefix 062ada684bedf828), same fixtures:
+merge_only_docs                want=docs 9c18e49f0=docs repaired=docs
+conflict_docs_only             want=docs 9c18e49f0=docs repaired=docs
+side_tip_on_integration        want=docs 9c18e49f0=docs repaired=docs
+code_branch_merge              want=full 9c18e49f0=full repaired=full
+evil_merge_code                want=full 9c18e49f0=full repaired=full
+ours_merge_drops_dev_code      want=full 9c18e49f0=full repaired=full
+other_branch_merge             want=full 9c18e49f0=full repaired=full
+other_branch_docs_only         want=full 9c18e49f0=full repaired=full
+side_merge_after_integration   want=full 9c18e49f0=docs repaired=full  <-- differs
+ff_import_no_merge             want=full 9c18e49f0=full repaired=full
+stale_base                     want=full 9c18e49f0=full repaired=full
+stale_ours_merge               want=full 9c18e49f0=full repaired=full
+stale_before_merge_ours        want=full 9c18e49f0=full repaired=full
+rewound_tip_ours               want=full 9c18e49f0=full repaired=full
+followup_after_merge           want=docs 9c18e49f0=docs repaired=docs
+push_to_main                   want=full 9c18e49f0=full repaired=full
+two_refs_code                  want=full 9c18e49f0=full repaired=full
+two_refs_partial_failure       want=full 9c18e49f0=full repaired=full
+first_push_docs                want=docs 9c18e49f0=docs repaired=docs
+first_push_code                want=full 9c18e49f0=full repaired=full
+linear_docs                    want=docs 9c18e49f0=docs repaired=docs
