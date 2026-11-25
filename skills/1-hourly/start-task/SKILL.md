@@ -313,10 +313,11 @@ in Step 1. Apply it during clone provisioning, final verification and every push
      After final review approval (Step 8), qualify the exact approved commit.
      When the full gate is required on the first push, run `ci-local.sh --fast`,
      then push from the disposable qualification clone in Step 9 so its installed
-     hook runs the full `./validate.sh` suite once (GH-1518). On later pushes the
-     hook classifies only the pushed range. When the final diff still requires the
-     full gate, run `./validate.sh` once on the approved commit before pushing so the
-     hook can reuse its receipt (`utils/py/gate_receipt.py`).
+     hook runs the full `./validate.sh` suite once (GH-1518). The hook decides
+     its route at push time and can fall back to the full gate (GH-1537). On a later
+     push whose final diff requires the full gate, run `./validate.sh` once on the
+     approved commit in the same clone you will push from so its hook can reuse the
+     exact-commit receipt (`utils/py/gate_receipt.py`).
    In XYZ Forge, use a **separate disposable full clone** whenever a direct gate or
    a push will run mutation-heavy suites. Verify HEAD, `core.bare`, remotes and
    local `user.email` before and after the run. Drift invalidates its evidence. Retain required
@@ -374,11 +375,11 @@ in Step 1. Apply it during clone provisioning, final verification and every push
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
    and accidental files. After final review approval, apply
    [target repository qualification](#target-repository-qualification) before pushing.
-   If the Forge hook will run mutation-heavy suites, push from the separate
-   disposable full clone with the exact approved commit, verified canonical origin
-   and the same attempt context. Install the hook there during provisioning and
-   check it immediately before pushing. Compare the clone identity before and after
-   the hook runs as in Step 7.
+   For every Forge push, use a separate disposable full clone with the exact
+   approved commit, verified canonical origin and the same attempt context. This
+   keeps a full-gate fallback isolated even when the final diff routes to docs.
+   Install the hook there during provisioning and check it immediately before
+   pushing. Compare clone identity before and after the hook runs as in Step 7.
    After required gates pass, open the ready PR against the target's integration
    branch (`development` in XYZ Forge). Reuse
    an existing PR for the branch. If a network interruption occurs during PR creation,
