@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -112,5 +112,25 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, and a `Basis:`; set `STATUS
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+- [Pass] Implementation follows the corrected plan: `skills/3-weekly/skills-army-hq/scripts/sync.py:107-117` retains upstream/branch priority and adds the development fallback; `:225-258` probes branch explicitly, suppresses the comparator on stale refs, handles divergence, and refuses enabled-target apply before reconciliation (`:452-454`). Fresh/unknown cases preserve the comparator with additive metadata (`:259-274`). Override warnings reach transaction results without changing the no-op history predicate (`:456-463`). No duplicate writer is introduced by these paths.
+- [Pass] Documentation accurately describes stale suppression and transaction-scoped receipts (`skills/3-weekly/skills-army-hq/SKILL.md:234-242`, `references/recovery.md:98-105`). PRS rating and pointer match `releases.sql:1054`; accepted-start is recorded at `releases.sql:6066`. Read-only probe `python3 -B` using `sqlite3.connect("file:releases.db?mode=ro",uri=True)` and `select gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,doc_path from roadmap_items where gh_number=1605` exited 0: `[(1605, 82, 78, 50, 88, 'PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md')]`.
+- [Should] R1 — Complete and retain the verification required by acceptance criterion 7 before approval.
+  **Observed input:** Form 1 artifact contradiction: `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md`, Acceptance Criteria item 7, requires `utils/pdda/pdda.sh run` and `releases_app.py check` as well as the focused suites. Neither appears in `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md` or its sole provenance command. The required `test/skills-army-hq.sh` is explicitly SKIPPED because pytest is unavailable. The manual matrix records PASS labels but omits the executable fixture/assertion procedure and raw decisive output requested by plan step 4; “10-case manual smoke + red-control matrix” in provenance is a description, not a reproducible command. Thus the receipt supports a reported partial verification, not all seven criteria fulfilled.
+  **Affected scope:** Final-QA evidence for GH-1605 only; no runtime behavior change requested.
+  **Falsifier:** Retained successful PDDA/releases results, the required wrapper run with dependencies available (or an explicit operator-approved scope adjustment), and a reproducible manual probe procedure with exit statuses and decisive stale/refusal/red-control output, tied to the candidate's source revision and intact disposable-clone identity, close this gap.
+  **Concrete fix:** In a disposable full clone, run `utils/pdda/pdda.sh run`, `python3 -B utils/py/releases_app.py check`, and `bash test/skills-army-hq.sh` with the existing required dependencies. Retain their command/status/output and the actual temporary smoke script or its full reproducible command plus decisive outputs under the existing GH-1605 evidence directory; update provenance hashes. No new test suite is requested. If previously executed, retain those existing results instead of rerunning unnecessarily.
+
+Receipt integrity probe: `python3 -B` reading smoke.md bytes and provenance JSON, comparing `len(b)` and `hashlib.sha256(b).hexdigest()`, then listing the evidence directory, exited 0: `receipt bytes 3782 expected 3782 hash_matches True`; directory contains only `smoke.md` and `provenance.jsonl`. This validates the receipt's integrity, not the underlying runtime assertions.
+
+Swept all of sync.py, including the pre-existing resolution, health, reconciliation, retirement and main paths; no additional pre-existing source defect established. Easy reversibility: bounded guard and docs, no schema migration. No git command, suite, executable fixture, or phase gate ran here. Consequently no independent branch-diff inventory or final-commit gate claim is made; runtime results remain Producer-reported disposable-clone evidence, with the omissions above unresolved. No later gate is assumed.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The implementation matches the approved design, but acceptance criterion 7 and the planned durable verification procedure are not fully substantiated. Approval awaits R1 evidence.
+
+Handing off to Producer (antigravity) — complete or supply the missing verification receipts, disposition R1, and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
