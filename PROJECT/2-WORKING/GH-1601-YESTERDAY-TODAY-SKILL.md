@@ -72,7 +72,7 @@ Constraints: check existing skills first (`daily-planner`, `daily`, `where-are-w
 ## Preflight bet
 
 - **Outcome sought.** The ledger refresh is repeatable and honest: every claim checked, feedback read, nothing lost, no implied approval.
-- **Smallest viable bet.** One `SKILL.md` (~130 lines) that sequences existing tools (`gh`, `git`, daily-planner discovery, `relay-xyz`/Codex for validation). Not built: scripts, templates engine, scheduler, Slack integration.
+- **Smallest viable bet.** One `SKILL.md` (~130 lines) that sequences existing tools (`gh`, `git`, daily-planner's discovery conventions, and a low-effort read-only Codex sub-agent for ledger validation; `relay-xyz` is used only for this change's own QA). Not built: scripts, templates engine, scheduler, Slack integration.
 - **Alternatives rejected (Mode before skill, GH-1299).** (a) A `--mode` of `daily-planner`: its ledger mode is per-operator claim comments over an engine; the body-refresh needs the verification and feedback ladder and a different publish rule (replace one issue body), so adding it to the engine would add code the operator ruled out. (b) A section in `todo-list` or `where-are-we-at`: neither owns a ledger issue; their triggers would blur. The operator also asked for a named skill.
 - **Rollback.** Revert the commit; the skill is not installed anywhere by this change.
 
