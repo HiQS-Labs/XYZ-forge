@@ -1,8 +1,6 @@
-== route (changed paths vs origin/development, as the pre-push hook feeds them)
-PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md
-relay-system/2026-11-25/gh1601-plan-qa.md
-releases.db
-releases.sql
+== route: the same inventory, as the pre-push hook feeds it
+pdda_needed=true
+full_required=false
 changed_tests=
 route=docs
 tier=1

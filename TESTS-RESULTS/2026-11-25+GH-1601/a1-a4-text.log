@@ -1,5 +1,5 @@
 == A1 (candidate)
-exists True lines 105 name yesterday-today
+exists True lines 107 name yesterday-today
 yesterday-today True
 update today's ledger from yesterday True
 refresh today's work ledger True
@@ -8,5 +8,5 @@ Use daily-planner instead True
 fatal: path 'skills/2-daily/yesterday-today/SKILL.md' exists on disk, but not in 'ac0e8b65b'
 == A4 row
 row ok; purpose cell nonempty: True
-== A4 base
+== A4 base: matches in ARCHITECTURE.md
 0

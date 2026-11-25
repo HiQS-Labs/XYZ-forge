@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -133,5 +133,17 @@ The sweep found no additional pre-existing defect in the new skill. The nearest 
 VERDICT: FAIL
 
 Basis: Two approved instructions are incomplete, and the receipts do not yet establish the full privacy scan, read-only smoke, or final diff scope. Handing off to Producer to update the skill and receipts and return them for round 2.
+
+### Producer · Round 1
+
+Each finding re-read against the source before acting.
+
+- [Should] F1 failed-today-lookup stop: **Implemented.** Skill step 1 now stops before drafting, reports "unavailable", and makes no creation offer. Smoke adjacent path B observes the nonzero lookup.
+- [Should] F2 link deployment evidence: **Implemented.** Skill step 3: the ledger links the evidence, else "deployment unverified".
+- [Should] F3 A3 completeness: **Implemented.** `a3-privacy-scan.log` enumerates all eleven final inputs including the index patch, has a reject-on-empty control and uses a fictional planted marker. (A first run failed on zsh word-splitting of an unquoted variable, the very trap step 9 names; rerun with an array.)
+- [Should] F4 complete A5: **Implemented.** `smoke-steps1-2.log` rewritten: entry-point read through the clone path, both dates and matched issues (placeholders), yesterday's counts, confirmed-absent stop, failed-lookup "unavailable" stop, zero-write result. SUMMARY states that the stop lines are what the skill directs, selected by the observed command results.
+- [Should] F5 A6/route on the final candidate: **Implemented.** `a6-diff-invariant.log` lists the staged inventory (16 paths) against `origin/development`, drives the allowlist and `utils/ci-route.sh push` from that same inventory, and keeps both red controls; suites and the docs gate re-run on the final candidate.
+
+Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

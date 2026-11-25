@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, clone provisioned, plan drafted; plan QA rounds 1-2 (FAIL; 6 + 3 Should) revised. | Plan QA round 3, then write the skill, index row, smoke receipt, final QA. |
+| Issue filed, clone provisioned, plan drafted; plan QA Approved at round 3 (Codex); skill, index row and evidence written; final QA round 1 findings fixed. | Final QA round 2, push, open the PR. |
 
 ## Requirements (operator brief, 2026-11-25)
 
@@ -97,12 +97,12 @@ Constraints: check existing skills first (`daily-planner`, `daily`, `where-are-w
 
 Unchanged base `ac0e8b65b` must fail each delivery assertion; each control is run and its observed output recorded.
 
-- [ ] A1 `skills/2-daily/yesterday-today/SKILL.md` exists, is nonempty, and has frontmatter `name: yesterday-today`, the three trigger phrases and the `daily-planner` boundary sentence, in at most about 130 lines. Observation: a script prints the file's existence, line count and parsed frontmatter name; on base it prints `missing`.
-- [ ] A2 Nine-point checklist: for each of the nine requirement items above, the exact line number in the skill that carries it (recorded in `SUMMARY.md`). Red control: the same checker run against a copy of the skill with one item's lines removed reports that item missing.
-- [ ] A3 Privacy scan: one `rg -n -i` command with a fixed pattern list (the example repo's name, its people's logins and names, hostnames, `@` addresses) over the named deliverables (`SKILL.md`, the plan doc, `TESTS-RESULTS/2026-11-25+GH-1601/*`, the `ARCHITECTURE.md` diff) after confirming each is nonempty. Red control: the same scan over a temp copy with one planted forbidden string reports it.
-- [ ] A4 `ARCHITECTURE.md` contains a line starting with the first cell `| [yesterday-today](skills/2-daily/yesterday-today/SKILL.md) |` followed by a nonempty purpose cell (absent on base); `test/path-integrity.sh` and `test/gh589-skill-viewer.sh` pass.
-- [ ] A5 Smoke, from the consumer entry point (the skill read through its path in this clone): steps 1-2 against a real ledger pair, read-only; then step 1 against a date with a confirmed-absent ledger, which prints the offer-to-create stop. Record resolved dates, checkbox count, the stop text and the exact read commands; show a zero-write check (`git status --porcelain` clean outside `TESTS-RESULTS/`, no `gh issue edit/create` in the command log). A failed lookup must read "unavailable", not "missing".
-- [ ] A6 Diff invariant on the nonempty candidate diff: changed paths are only `skills/2-daily/yesterday-today/SKILL.md`, `ARCHITECTURE.md`, the plan doc, `CHANGELOG.md` (only when `CHANGELOG_WRITES=branch`; this plan runs under the default, so none expected), `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`; no path under `test/` and no `validate.sh` change (GH-831). Red control: the checker rejects a diff listing a synthetic `test/new-suite.sh`.
+- [x] A1 `skills/2-daily/yesterday-today/SKILL.md` exists, is nonempty, and has frontmatter `name: yesterday-today`, the three trigger phrases and the `daily-planner` boundary sentence, in at most about 130 lines. Observation: a script prints the file's existence, line count and parsed frontmatter name; on base it prints `missing`.
+- [x] A2 Nine-point checklist: for each of the nine requirement items above, the exact line number in the skill that carries it (recorded in `SUMMARY.md`). Red control: the same checker run against a copy of the skill with one item's lines removed reports that item missing.
+- [x] A3 Privacy scan: one `rg -n -i` command with a fixed pattern list (the example repo's name, its people's logins and names, hostnames, `@` addresses) over the named deliverables (`SKILL.md`, the plan doc, `TESTS-RESULTS/2026-11-25+GH-1601/*`, the `ARCHITECTURE.md` diff) after confirming each is nonempty. Red control: the same scan over a temp copy with one planted forbidden string reports it.
+- [x] A4 `ARCHITECTURE.md` contains a line starting with the first cell `| [yesterday-today](skills/2-daily/yesterday-today/SKILL.md) |` followed by a nonempty purpose cell (absent on base); `test/path-integrity.sh` and `test/gh589-skill-viewer.sh` pass.
+- [x] A5 Smoke, from the consumer entry point (the skill read through its path in this clone): steps 1-2 against a real ledger pair, read-only; then step 1 against a date with a confirmed-absent ledger, which prints the offer-to-create stop. Record resolved dates, checkbox count, the stop text and the exact read commands; show a zero-write check (`git status --porcelain` clean outside `TESTS-RESULTS/`, no `gh issue edit/create` in the command log). A failed lookup must read "unavailable", not "missing".
+- [x] A6 Diff invariant on the nonempty candidate diff: changed paths are only `skills/2-daily/yesterday-today/SKILL.md`, `ARCHITECTURE.md`, the plan doc, `CHANGELOG.md` (only when `CHANGELOG_WRITES=branch`; this plan runs under the default, so none expected), `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`; no path under `test/` and no `validate.sh` change (GH-831). Red control: the checker rejects a diff listing a synthetic `test/new-suite.sh`.
 - [ ] A7 Delivery: final relay QA receipt committed, `provenance.jsonl` present in the evidence folder, PR base is `development`.
 
 ## Verification

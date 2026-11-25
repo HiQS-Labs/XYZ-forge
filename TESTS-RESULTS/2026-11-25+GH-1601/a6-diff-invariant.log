@@ -1,9 +1,28 @@
-== A6 candidate diff vs origin/development
-changed paths: 12 | disallowed: none
+== path inventory (staged vs origin/development)
+ARCHITECTURE.md
+PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md
+TESTS-RESULTS/2026-11-25+GH-1601/SUMMARY.md
+TESTS-RESULTS/2026-11-25+GH-1601/a1-a4-text.log
+TESTS-RESULTS/2026-11-25+GH-1601/a2-nine-points.log
+TESTS-RESULTS/2026-11-25+GH-1601/a3-privacy-scan.log
+TESTS-RESULTS/2026-11-25+GH-1601/a6-diff-invariant.log
+TESTS-RESULTS/2026-11-25+GH-1601/provenance.jsonl
+TESTS-RESULTS/2026-11-25+GH-1601/route.log
+TESTS-RESULTS/2026-11-25+GH-1601/smoke-steps1-2.log
+TESTS-RESULTS/2026-11-25+GH-1601/suites-and-gate.log
+relay-system/2026-11-25/gh1601-final-qa.md
+relay-system/2026-11-25/gh1601-plan-qa.md
+releases.db
+releases.sql
+skills/2-daily/yesterday-today/SKILL.md
+== A6 candidate
+changed paths: 16 | disallowed: none
 rc=0
-== A6 red control: synthetic test path added
-changed paths: 13 | disallowed: ['test/new-suite.sh']
-rc=1 (1 = rejected)
-== A6 empty diff
+== no test/ or validate.sh change
+0
+== red: synthetic test path
+changed paths: 17 | disallowed: ['test/new-suite.sh']
+rc=1 (1=rejected)
+== red: empty
 changed paths: 0 | disallowed: none
-rc=1 (1 = rejected)
+rc=1 (1=rejected)
