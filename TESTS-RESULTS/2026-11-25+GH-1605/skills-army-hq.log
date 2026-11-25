@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
-platform darwin -- Python 3.11.16, pytest-9.2.0, pluggy-1.7.0 -- <UV_CACHE>/builds-v0/.tmpkb3fz7/bin/python3
+platform darwin -- Python 3.11.16, pytest-9.2.0, pluggy-1.7.0 -- /Users/noelsaw/.cache/uv/builds-v0/.tmpJsLxuN/bin/python3
 cachedir: .pytest_cache
-rootdir: <REPO>
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1605-pr1608-fixes-2026-11-25
 configfile: pytest.ini
 collecting ... collected 34 items
 
@@ -41,7 +41,4 @@ test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_refuses_unprot
 test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_two_devices_and_pull_readthrough PASSED [ 97%]
 test/test_deploy_skills.py::DeploySkillsTest::test_pulse_default_root PASSED [100%]
 
-==================== 34 passed, 4 subtests passed in 11.06s ====================
-
---- STDERR ---
-Installed 5 packages in 10ms
+==================== 34 passed, 4 subtests passed in 8.28s =====================

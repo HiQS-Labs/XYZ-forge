@@ -1,6 +1,6 @@
 OK: foreign_keys pragma asserted per connection
-OK: generation trio consistent at 2951 (DB <-> dump)
-OK: receipt chain intact (3259 receipt(s), business-state digest matches, 318 merge fork(s) tolerated under the merge-rebuild receipt)
+OK: generation trio consistent at 2962 (DB <-> dump)
+OK: receipt chain intact (3273 receipt(s), business-state digest matches, 320 merge fork(s) tolerated under the merge-rebuild receipt)
 warn: rule=mig-ref-stale: MIG-F1CCB6 is 99 days old (> 7) — disposition the migration debt before the strict flip
 warn: rule=mig-ref-stale: MIG-D7D2C4 is 99 days old (> 7) — disposition the migration debt before the strict flip
 warn: rule=mig-ref-stale: MIG-D248B2 is 99 days old (> 7) — disposition the migration debt before the strict flip
