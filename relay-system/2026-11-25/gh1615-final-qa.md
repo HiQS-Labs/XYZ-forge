@@ -145,4 +145,13 @@ print('PASS: real and aggregator identities restored; both call signatures accep
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the separately recorded qualification/publication steps; this approval assumes no later gate result.
 
+
+### Attestation · relay-drive — 2026-11-25T22:43:34Z
+task: RELAY-gh1615-final-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: b2eccd4dc5d67dc0c8ccc80aedb18e3640920ca0
+added-range: 11949+7220
+added-sha256: 6b317b71b996d6b74c266920f0d84d8db84aa745ebe295d8e3ef008bc98bcb79
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
