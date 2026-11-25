@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -198,5 +198,35 @@ Handing off to Producer (claude-a) to revise these three observations and the in
 - [Should] Privacy observation covers people names: **Implemented.** A3 adds a manual look for proper names, with a planted person-name control and a generic role label that must pass; the plan's `owner` field stays listed as project metadata.
 
 Handing off to Reviewer for round 3 (the last round under the cap).
+
+### Reviewer · Round 3
+
+**What this proposes**  
+Add a deploy-day run sheet to the existing morning ledger refresh. Put it at the top of today's body, with gates first and six fields per step. Ask a morning question for each incomplete gate and omit the sheet on a no-deploy day.
+
+**How the existing system works, per this document**  
+Step 5 collects current PR facts, step 7 drafts today's body and step 8 supplies the validator checklist. The proposed step 5a uses step 7's baseline and regenerates the sheet when the guarded reread prompts a redraft.
+
+**What it's not**  
+The non-goals exclude helper code, a separate skill, a deploy procedure, server access, deploy execution or approval, and skill installation.
+
+**Input boundary**  
+The paraphrase used the seeded plan's frontmatter goal and non-goals, Status, Requirement, Recon, Preflight bet, Plan, Draft wording, Acceptance, Verification and Risks, before the source and issue reads for this turn.
+
+**Source-backed assessment**  
+Read [GH-1612](https://github.com/HiQS-Labs/XYZ-forge/issues/1612) §§1–3 and the base skill from frontmatter through step 9. The main-checkout index generation is `2026-11-25T18:19:12Z`; coverage marks the seeded plan and relay log missing there, so their citations use the worktree files. I found no separate defect in the existing skill relevant to this edit.
+
+swept file: yes
+
+- [Pass] The trigger and six fields match GH-1612 §1, and the draft routes procedures to the repo's docs (`.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:84–91`). The seven bullets carry missing gates and late follow-up (93–95), recorded code and environment evidence and stale checklists (96–100), access and fallback (101), positive pass evidence (102–103), timer and early rehearsal (104–105), review history and acceptance (106–107), and read-only planning with later per-action approval and backups (108–109). The examples are generic. The evidence boundary and the existing guarded ledger edit agree with `skills/2-daily/yesterday-today/SKILL.md:18–23,49–52,73–83`.
+- [Pass] Step 5a has the PR facts from step 5 and precedes classification. The baseline and recompute clauses use the same body as step 7, and step 8 still reads the published ledger independently. Keeping steps 6–9 numbered preserves the opening step-7 reference (`skills/2-daily/yesterday-today/SKILL.md:18–23,60–98`; plan lines 84–87,112).
+- [Pass] The revised rule, validator and A4 agree on any missing gate field. A4 includes both the ownerless gate and the gate with an owner and no time. It uses today's first body as the sole deploy signal, cancels that deploy in the simulated guarded reread and also exercises an independent no-deploy day. The plan calls for the full draft from the consumer entry point, captures the whole body, checks the header and confines verification to the action log and checkout state. This closes both round-two drafting findings (plan lines 75–76,93–95,112,121). A3 now adds the proper-name check, planted name and passing role label, with the owner metadata handled separately (lines 46,120), closing the third round-two finding.
+- [Pass] A1 fails on the base's missing 5a and validator item 6, with a removed lesson as a second control. A2 fails on zero added lines. A4's base replay fails on the missing sheet. A3's privacy controls, A5's empty and out-of-scope diffs and A6's missing receipt and wrong PR base test their respective safeguards. A5 also rejects an unchanged skill and A6 requires evidence for the delivered revision and actual PR base. These are manual observations with no separate script or suite (plan lines 116–127; base skill lines 60–98; `GUIDING-PRINCIPLES.md:104`). Fast mode is correctly described as a local check (`ci-local.sh:399–409,427–437`).
+- [Pass] The size budget is achievable. `wc -l skills/2-daily/yesterday-today/SKILL.md` → exit 0, `107`; `awk 'NR>=82 && NR<=109 {n++} END {print "draft lines:", n}' .relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md` → exit 0, `draft lines: 28`. Combining one continuation line leaves room for a separator, the replacement step-7 line and the step-8 checklist line inside A2's 30 added lines without dropping any text (plan lines 75,82–112,119).
+
+**VERDICT: PASS**  
+**Basis:** The revised draft covers the seven lessons, and the acceptance plan now exercises incomplete gates, snapshot changes and privacy with concrete controls. The three round-two findings are closed. Approval is for the plan. Implementation smoke and pre-push verification are pending.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
