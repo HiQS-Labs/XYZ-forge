@@ -1,6 +1,4 @@
-== docs gate and existing suites on commit a0e59c02db8d7974d2a836b4887ee4c3fb7c7311
-  PASS: red: empty skills dir → exit 2 (two empty inventories cannot pass)
+== docs gate and existing suites on commit 71b641f28cb388f571a3a0aa5a2458814a3095d9 (clean tree: 1 changed paths)
 gh589-skill-viewer: 8 passed, 0 failed
-  PASS: cross-folder skill Markdown links resolve
   path-integrity: 3 pass, 0 fail
 PDDA run complete: no errors, 33 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
