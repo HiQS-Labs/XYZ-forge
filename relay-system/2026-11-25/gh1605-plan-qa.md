@@ -183,4 +183,13 @@ Basis: Both earlier findings are resolved without expanding scope; the plan meet
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-25T18:47:23Z
+task: RELAY-gh1605-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: d52e2341426758704efe8ed4fe9a8e3eb156c95f
+added-range: 18633+4011
+added-sha256: b031c5161a234bc35073ad0f9fe69fca54c2eaef7cee36085a704b4173d0649f
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
