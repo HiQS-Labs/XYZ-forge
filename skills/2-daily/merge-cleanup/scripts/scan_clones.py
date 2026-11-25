@@ -473,7 +473,10 @@ def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
         if view.returncode != 0:
             result["reason"] = f"gh repo view failed: {view.stderr.strip() or 'no diagnostic'}"
             return result
-        answered = _normalize_remote(json.loads(view.stdout)["url"])
+        repo_url = json.loads(view.stdout)["url"]
+        if not isinstance(repo_url, str) or not repo_url.strip():
+            raise ValueError("repository identity is missing")
+        answered = _normalize_remote(repo_url)
         if answered != key:
             result["reason"] = f"gh answered for {answered}, origin is {key}"
             return result
@@ -497,8 +500,10 @@ def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
                 raise ValueError("merged PR entry lacks merge-commit evidence")
             mc = merge_commit.get("oid")
             head = pr.get("headRefOid")
-            if isinstance(head, str) and isinstance(mc, str) and head and mc:
-                result["by_head"][head] = {"number": pr.get("number"), "mergeCommit": mc}
+            if not all(isinstance(oid, str) and re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", oid)
+                       for oid in (head, mc)):
+                raise ValueError("merged PR entry has an invalid head or merge commit OID")
+            result["by_head"][head] = {"number": pr.get("number"), "mergeCommit": mc}
         result["truncated"] = len(prs) >= limit
         result["ok"] = True
     except (OSError, subprocess.TimeoutExpired, ValueError, KeyError, TypeError) as exc:
