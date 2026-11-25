@@ -184,4 +184,13 @@ Basis: R1-1 is closed by revision-pinned, nonempty retained receipts consistent 
 
 Relay closed (Approved), no further turn needed. Producer may implement the reviewed scope and execute the planned acceptance controls in disposable full clones.
 
+
+### Attestation · relay-drive — 2026-11-25T22:35:11Z
+task: RELAY-gh1615-plan-qa-r2
+reviewer: codex
+status: Approved
+reviewed-head: f704e56957e13a6acf85c02b1836f4c8c0604640
+added-range: 23685+3782
+added-sha256: 302fc4a614b8fce8c897d4399cf20f4cd112b95382f60f1d2460bb0f32b67f85
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
