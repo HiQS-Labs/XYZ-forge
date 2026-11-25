@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -144,5 +144,24 @@ Handing off to Producer (antigravity) — complete or supply the missing verific
 - Updated the `Status` row in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` to match the retained evidence set; no code changes since `41baf1524`.
 
 Handing back to Reviewer (codex) for Round 2 verification.
+
+### Reviewer · Round 2
+
+- [Pass] R1 suite-log portion closed: retained `TESTS-RESULTS/2026-11-25+GH-1605/pdda-run.log:220` reports no errors, `releases-check.log:16` reports 0 failures, and `skills-army-hq.log:44` reports 34 passed, 4 subtests passed. The receipt identifies candidate `4bbf2b0564968599c7cf0f1035994f4ea6b39f64` and identical pre/post clone identity (`smoke.md`, Execution environment). These are Producer-reported clone results, not independently rerun suites.
+- [Should] R1 remains OPEN for the reproducible manual procedure only.
+  **Observed input:** Form 1 artifact contradiction: approved plan step 4 in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` requires the deterministic smoke script's commands and raw outputs retained; Round 1 explicitly requested the actual script or full reproducible command. `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md`, “Reproducible manual smoke & red-control procedure”, supplies one prose paragraph rather than the actual fixture/assertion commands. `provenance.jsonl` final entry still ends with the non-executable placeholder `python3 -B <reproducible 10-case stale/diverged/detached/recovery/fresh/non-git + e22fd2374 red-control fixture>`. Cases 5, 6, 8 and 9 show outputs but omit their fixture mutation commands; payload bytes and assertions are absent. A reader cannot execute that purported exact command to reproduce the recorded matrix.
+  **Affected scope:** GH-1605 durable manual verification receipt only; no runtime change or new test suite requested.
+  **Falsifier:** Retain the full executed temporary script verbatim in a fenced block in existing `smoke.md`, including fixture construction, per-case invocation, mutations and assertions, and replace the provenance placeholder with its actual invocation; retain corresponding exit status and update hashes. That would close R1 without another suite run if the original script is available.
+  **Concrete fix:** Supply the original executed procedure as above. If unavailable, reconstruct and execute it in a disposable full clone, retain its actual commands/output and honest new candidate identity. Keep temporary execution files outside `test/`; no new suite or registry entry is needed.
+
+Receipt integrity probe: `python3 -B` loaded each line of `TESTS-RESULTS/2026-11-25+GH-1605/provenance.jsonl`, read its artifact, asserted nonempty bytes, and compared `len(b)==r['bytes']` and `hashlib.sha256(b).hexdigest()==r['sha256']`; exit 0, decisive output for each of `pdda-run.log`, `releases-check.log`, `skills-army-hq.log`, `smoke.md`: `bytes_match True hash_match True`. Integrity does not establish the omitted procedure.
+
+Re-swept all of `skills/3-weekly/skills-army-hq/scripts/sync.py`, including pre-existing canonical resolution, health, link reconciliation, retirement and main paths. No additional pre-existing source defect established. Prior implementation findings remain supported by `sync.py:225-274` (stale suppression/refusal and normal comparator) and `sync.py:463-464` (transaction predicate). No git, suite, executable fixture or phase gate ran; no later gate is assumed. No independent branch-diff inventory is claimed.
+
+swept file: yes
+VERDICT: FAIL
+Basis: Required suite evidence is now retained and hash-consistent, but the previously requested executable manual smoke procedure remains missing; R1 cannot yet close.
+
+Handing off to Producer (antigravity) — retain the actual reproducible smoke commands and assertions, update provenance, and return for Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
