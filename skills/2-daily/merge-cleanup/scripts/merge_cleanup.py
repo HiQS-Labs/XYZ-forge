@@ -90,6 +90,91 @@ def _gh(args: List[str], cwd: Path, timeout: int = 180) -> subprocess.CompletedP
     except (OSError, subprocess.TimeoutExpired) as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=str(exc))
 
+# --- GH-1597: Tool version checks (Git >= 2.38.0, GitHub CLI >= 2.18.0) ---
+_GH_VERSION_CHECKED: Optional[Tuple[bool, str]] = None
+_GH_WARNED: bool = False
+_GIT_VERSION_CHECKED: Optional[Tuple[bool, str]] = None
+_GIT_WARNED: bool = False
+
+
+def _parse_version(v_str: str) -> Optional[Tuple[int, int, int]]:
+    m = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", v_str)
+    if not m:
+        return None
+    major = int(m.group(1))
+    minor = int(m.group(2))
+    patch = int(m.group(3)) if m.group(3) else 0
+    return (major, minor, patch)
+
+
+def check_gh_version() -> Optional[str]:
+    """Checks gh version against minimum 2.18.0 (required for headRefOid field).
+    Memoized to prevent duplicate checks."""
+    global _GH_VERSION_CHECKED
+    if _GH_VERSION_CHECKED is not None:
+        ok, msg = _GH_VERSION_CHECKED
+        return msg if not ok else None
+    res = _gh(["--version"], Path("."))
+    out = res.stdout.strip() or res.stderr.strip()
+    ver = _parse_version(out)
+    if ver is None:
+        _GH_VERSION_CHECKED = (True, "")
+        return None
+    if ver < (2, 18, 0):
+        ver_str = f"{ver[0]}.{ver[1]}.{ver[2]}"
+        msg = (f"gh version {ver_str} is below the required 2.18.0 minimum for PR discovery (headRefOid field); "
+               "upgrade gh (e.g. https://cli.github.com or release .deb on Ubuntu/Debian).")
+        _GH_VERSION_CHECKED = (False, msg)
+        return msg
+    _GH_VERSION_CHECKED = (True, "")
+    return None
+
+
+def warn_gh_version_if_needed() -> Optional[str]:
+    """Emits gh version warning once if gh is below minimum 2.18.0."""
+    global _GH_WARNED
+    msg = check_gh_version()
+    if msg and not _GH_WARNED:
+        _GH_WARNED = True
+        log_err(f"PRE-FLIGHT: {msg}")
+        return msg
+    return None
+
+
+def check_git_version() -> Optional[str]:
+    """Checks git version against minimum 2.38.0 (required for git merge-tree --write-tree).
+    Memoized to prevent duplicate checks."""
+    global _GIT_VERSION_CHECKED
+    if _GIT_VERSION_CHECKED is not None:
+        ok, msg = _GIT_VERSION_CHECKED
+        return msg if not ok else None
+    res = run_git(Path("."), ["--version"], timeout=5)
+    out = res.stdout.strip() or res.stderr.strip()
+    ver = _parse_version(out)
+    if ver is None:
+        _GIT_VERSION_CHECKED = (True, "")
+        return None
+    if ver < (2, 38, 0):
+        ver_str = f"{ver[0]}.{ver[1]}.{ver[2]}"
+        msg = (f"git version {ver_str} is below the required 2.38.0 minimum for landing forecast (git merge-tree --write-tree); "
+               "upgrade git (e.g. ppa:git-core/ppa on Ubuntu/Debian).")
+        _GIT_VERSION_CHECKED = (False, msg)
+        return msg
+    _GIT_VERSION_CHECKED = (True, "")
+    return None
+
+
+def warn_git_version_if_needed() -> Optional[str]:
+    """Emits git version warning once if git is below minimum 2.38.0."""
+    global _GIT_WARNED
+    msg = check_git_version()
+    if msg and not _GIT_WARNED:
+        _GIT_WARNED = True
+        log_warn(f"PRE-FLIGHT: {msg}")
+        return msg
+    return None
+
+
 
 # --- GH-623: network resilience — bounded calls, transient-only retry, defer instead of stop ----
 # The incident run lost 3 of 7 PRs to one DNS failure and never retried anything. The contract,
@@ -1345,6 +1430,12 @@ def preflight_warnings() -> List[str]:
     if others:
         out.append(f"another merge_cleanup.py --execute is running (pid {', '.join(others)}); "
                    "run one landing batch per machine")
+    gh_msg = check_gh_version()
+    if gh_msg and not _GH_WARNED:
+        out.append(gh_msg)
+    git_msg = check_git_version()
+    if git_msg and not _GIT_WARNED:
+        out.append(git_msg)
     return out
 
 
@@ -2600,6 +2691,7 @@ def main():
     # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
     checkpoint_eligible_prs: Optional[Set[int]] = None
     if merging:
+        warn_gh_version_if_needed()
         try:
             early_prs = fetch_open_prs_with_retry(str(primary_repo))
         except FetchError as exc:
@@ -2786,6 +2878,7 @@ def main():
     # as an empty queue — an empty list and an error are different facts. Exhaustion exits 2
     # BEFORE Phase 6: rolling into teardown on a false "no PRs" would report success while the
     # queue was silently skipped.
+    warn_gh_version_if_needed()
     try:
         prs = fetch_open_prs_with_retry(str(primary_repo))
     except FetchError as exc:
@@ -2811,6 +2904,7 @@ def main():
         if not listed_problems:
             listed_order = effective_sequence(prs, set(listed_found))
             if len(listed_order) >= 3:
+                warn_git_version_if_needed()
                 forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
         args._forecast = forecast
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):

@@ -362,6 +362,70 @@ def _ancestor_pids() -> set:
     return pids
 
 
+def _classify_lsof_stderr(stderr: str, repo_path: Path, resolved_repo: Path) -> Optional[str]:
+    """Classifies lsof stderr lines (GH-1597).
+
+    Tolerates benign warnings about unstatable filesystems (e.g. Docker overlay2 mounts)
+    strictly when the warned path is unrelated to the repository checkout (neither equal,
+    within, nor an ancestor, taking canonical paths into account).
+    Tolerates companion disclaimer 'Output information may be incomplete.' only after a
+    preceding unrelated warning.
+
+    Returns None if stderr contains only tolerated unrelated warnings.
+    Returns the first problematic/unclassified line if any warning is related or unclassified
+    (failing closed so incomplete enumeration is not treated as idle).
+    """
+    saw_unrelated_warning = False
+    targets = (repo_path, resolved_repo)
+
+    for raw_line in stderr.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if line == "Output information may be incomplete.":
+            if saw_unrelated_warning:
+                continue
+            return raw_line
+
+        # Match filesystem warnings: e.g. "lsof: WARNING: can't stat() overlay file system /path"
+        m_fs = re.match(r"^lsof:\s+WARNING:\s+can't stat\(\)\s+.*?\s+file system\s+(.+)$", line)
+        # Match path warnings: e.g. "lsof: WARNING: can't stat(/path)" or "lsof: WARNING: can't opendir(/path)"
+        m_path = re.match(r"^lsof:\s+WARNING:\s+can't (?:stat|opendir)\((.+)\)", line)
+
+        warn_path_str = None
+        if m_fs:
+            warn_path_str = m_fs.group(1).strip()
+        elif m_path:
+            warn_path_str = m_path.group(1).strip()
+
+        if warn_path_str is not None:
+            warn_path = Path(warn_path_str)
+            try:
+                warn_resolved = warn_path.resolve()
+            except OSError:
+                warn_resolved = warn_path
+
+            is_related = False
+            for p in (warn_path, warn_resolved):
+                for t in targets:
+                    if p == t or _within(p, t) or _within(t, p):
+                        is_related = True
+                        break
+                if is_related:
+                    break
+
+            if is_related:
+                return raw_line
+            saw_unrelated_warning = True
+            continue
+
+        # Unclassified stderr line fails closed
+        return raw_line
+
+    return None
+
+
 def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
     """GH-534 A.4: process evidence via `lsof -F pcn +D <checkout>` — three outcomes, not two.
 
@@ -370,7 +434,9 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
     from "did not finish", which is all it is used for here:
       1. absent binary / timeout / launch failure            -> incomplete
       2. not a normal exit with return code 0 or 1           -> incomplete (signal-killed etc.)
-      3. anything on stderr (`lsof: WARNING: can't opendir`) -> incomplete: the tree was not covered
+      3. stderr with related or unclassified warnings -> incomplete: the tree was not covered.
+         Benign unrelated warnings (e.g. Docker overlay2 mounts) and companion disclaimers are
+         tolerated strictly when paths are unrelated to the checkout (GH-1597).
       4. completed + empty stderr -> parse records; keep `n` paths at or within the checkout,
          drop our own PID and ancestors; matches -> ACTIVE_PROCESS, none -> verified idle.
     Returns {"verified": bool, "active": bool, "details": str, "holders": [{"pid","command","paths"}]}.
@@ -388,17 +454,19 @@ def inspect_open_handles(repo_path: Path) -> Dict[str, Any]:
     if proc.returncode not in (0, 1):
         how = f"killed by signal {-proc.returncode}" if proc.returncode < 0 else f"exit {proc.returncode}"
         return {"verified": False, "active": False, "details": f"lsof did not complete ({how})", "holders": []}
-    if proc.stderr.strip():
-        first = proc.stderr.strip().splitlines()[0]
-        return {"verified": False, "active": False, "details": f"lsof enumeration incomplete: {first}", "holders": []}
-
-    skip = _ancestor_pids()
-    # lsof reports canonical paths (/private/var/... for a /var/... checkout on macOS); compare
-    # against both the given and the resolved checkout path.
     try:
         resolved_repo = repo_path.resolve()
     except OSError:
         resolved_repo = repo_path
+
+    if proc.stderr.strip():
+        incomplete_line = _classify_lsof_stderr(proc.stderr, repo_path, resolved_repo)
+        if incomplete_line is not None:
+            return {"verified": False, "active": False, "details": f"lsof enumeration incomplete: {incomplete_line.strip()}", "holders": []}
+
+    skip = _ancestor_pids()
+    # lsof reports canonical paths (/private/var/... for a /var/... checkout on macOS); compare
+    # against both the given and the resolved checkout path.
     holders: Dict[int, Dict[str, Any]] = {}
     pid = None
     cmd = ""

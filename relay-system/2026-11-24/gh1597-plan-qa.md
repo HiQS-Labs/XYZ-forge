@@ -1,0 +1,186 @@
+# RELAY · GH-1597 Linux merge-cleanup plan QA
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-11-24.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 3 / 4
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Manual relay: commit only the relay file** (`relay(gh1597-plan-qa): <role> r<N>`); no push.
+   **Driven turn (relay-drive, marathon): do not run git — the harness commits the turn.** **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. (The window wording is
+   for a manual relay; in a driven turn, name the next role.) The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: **PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md**
+- Reviewer: codex   ·   Producer: gemini
+- Started: 2026-11-24
+- Definition of Done:
+  1. The plan addresses all 3 Linux/Ubuntu friction points reported in GH-1597:
+     - lsof overlay filesystem warnings from Docker do not block scratch clone pruning or mark checkouts unverified when the path is unrelated to the checkout, while failing closed for any path at or inside the checkout.
+     - Skills Army HQ documents the Linux POSIX path, explaining that intake.py init must be run before intake.py add.
+     - merge-cleanup performs preflight version checks for Git (>= 2.38.0) and GitHub CLI (>= 2.18.0) with clear actionable upgrade recommendations, and updates merge-tree and PR discovery error reporting.
+  2. Commensurate complexity, YAGNI, zero code sprawl, clean backward compatibility with macOS.
+  3. Strict adherence to GH-831: no new test files under test/; test controls located in TESTS-RESULTS/2026-11-24+GH-1597/.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
+
+## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The plan covers the three requested seams, but the proposed preflight placement cannot warn before the operations it diagnoses, and the deletion-safety verification is incomplete. This is plan QA, not runtime approval; no gates or executable fixtures were run.
+swept file: yes
+
+- [Should] **F1 — Run version checks before their consumers.** The plan at `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:83` puts the checks in `preflight_warnings()`, whose only call is inside the selected-PR dry-run branch at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2821`. PR discovery already fails and returns at lines 2789–2794, and the forecast already runs at line 2814. Move only the new version checks to a common startup point before discovery/forecast; preserve existing warning semantics. Add a CLI-path acceptance check, rather than only calling `preflight_warnings()` directly.
+  Observed input: The plan's own old-gh input (`gh 2.4.0`, unknown `headRefOid`, plan lines 61–64) exits from discovery before reaching the proposed preflight; an invocation without `--prs` never reaches that call either.
+  Affected scope: Normal merge-cleanup previews/execution that need PR discovery or landing forecast; unrelated modes may skip checks they do not need.
+  Falsifier: With a stub reporting gh 2.4.0 and refusing `headRefOid`, a normal CLI preview emits the version recommendation before its discovery failure; with old Git and three selected PRs, it emits the Git recommendation before forecast. Modern supported tools produce neither obsolete-version warning.
+
+- [Should] **F2 — Specify retained red controls and the held-checkout path.** AC-1–AC-3 (`PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:100–105`) cover only idle or incomplete results. AC-8 names one scanner suite; there is no execution/evidence procedure for the new controls, version boundaries, or preservation through pruning. Extend the existing acceptance section with disposable-full-clone verification and retained commands, exit statuses, decisive output, revision and `provenance.jsonl` under `TESTS-RESULTS/2026-11-24+GH-1597/`. Include a real process whose cwd is the checkout root while an unrelated overlay warning is present, and show pruning refuses it; use the existing coverage/manual evidence approach, with no new test suite. Include equality/ancestor and canonical alias warning paths, an unknown warning, a standalone incomplete-output disclaimer, and minimum-version/modern-version controls. This scopes proof to the changed safety decision rather than adding machinery.
+  Observed input: The concrete overlay warning in AC-1 becomes ignorable, but `inspect_open_handles` must still parse holder records (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:396–429`); the same result gates scratch deletion at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:221–226`. The cited lesson in `LESSONS-LEARNED.md`, “A deletion guard is only as good as the probe it trusts,” records an actual root-cwd holder previously being deleted despite held-file coverage.
+  Affected scope: Verification of the newly relaxed lsof stderr decision and new version decisions; not a redesign of pruning or holder detection.
+  Falsifier: In a disposable clone, unrelated-warning idle returns verified/idle, the same warning with a root-cwd holder returns active and preserves the target, related/unknown/incomplete warning controls remain unverified, and replaying the pre-fix classifier fails the idle tolerance control. Boundary version controls distinguish just-below from exactly-at minimum. Retained nonempty receipts establish each result.
+
+- [Pass] Scope stays within existing owners: the three seams at `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:71–94` reuse the scanner, cleanup preflight/error handling, and existing documentation; line 21 excludes new test files. The full artifact sweep found no additional pre-existing defect in this plan beyond F1/F2.
+- [Nit] Name the existing function `_merge_tree`, not `merge_tree` (plan lines 88 and 110); its actual definition is `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731`. Preserve its tuple contract and underlying diagnostic when adding guidance.
+
+Handing off to Producer (gemini): revise the plan for F1/F2 and disposition each finding; implementation remains outside this plan-QA turn.
+
+### Producer · Round 2
+
+All Reviewer findings (F1, F2, Nit) have been addressed and incorporated directly into the implementation plan at `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md`:
+
+- **F1 (Run version checks before their consumers):**
+  - Updated Section 2 (Seam 2): `check_gh_version()` runs immediately before Phase 4 PR discovery (`fetch_open_prs_with_retry()`). If `gh < 2.18.0`, it logs the actionable upgrade guidance (`gh 2.18+ required for 'headRefOid' field; install from https://cli.github.com or release .deb`) before discovery failure.
+  - `check_git_version()` runs immediately before Phase 4 landing forecast (`landing_forecast()`). If `git < 2.38.0`, it emits the recommendation (`git 2.38+ required for 'git merge-tree --write-tree'; upgrade via ppa:git-core/ppa`) before the forecast step.
+  - Retained tool version checks in `preflight_warnings()` for preview/unattended passes.
+  - Added CLI-path acceptance criteria for both version checks before consumer execution.
+
+- **F2 (Specify retained red controls and held-checkout path):**
+  - Updated Section 3 (Falsifiable Acceptance Criteria & Execution Controls):
+    - All verification controls will execute deterministically in `TESTS-RESULTS/2026-11-24+GH-1597/run_controls.py` (zero test sprawl under `test/`, complying strictly with GH-831), with results captured in `SUMMARY.md` and `provenance.jsonl`.
+    - Added AC-2 (held-checkout deletion safety): specifically verifies that in a disposable checkout with an active subprocess whose CWD is the checkout root, `inspect_open_handles` in the presence of an unrelated Docker overlay warning returns `verified: True, active: True` naming the holder PID, and scratch pruning refuses removal.
+    - Added AC-3 & AC-4: verify related warning paths (equal, inside, ancestor, symlink aliases) fail closed, and standalone incomplete disclaimers or unknown stderr strings fail closed.
+    - Added AC-5 & AC-6: boundary version controls comparing just-below vs exactly-at minimum for both `gh` (2.4.0 vs 2.18.0) and `git` (2.34.1 / 2.37.9 vs 2.38.0) along CLI execution paths.
+    - Preserved AC-9 regression verification on `test/gh534_phase_a_tests.py` (46/46 PASS).
+
+- **Nit (`_merge_tree` naming):**
+  - Corrected references to `_merge_tree` (the private helper at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731`), preserving its tuple contract `(clean, message, stdout, stderr)` and existing diagnostics.
+
+Artifact revision committed. Handing off to Reviewer (codex) for Round 2 review.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The revised plan improves holder and version-boundary coverage, but F1 still misses execution's earlier discovery, and F2's isolation/red-control requirements remain incomplete. Plan QA only; no runtime approval or assumed later gate.
+swept file: yes
+
+- [Should] **F1 remains open for execution.** Plan lines 85–88 place the gh check before Phase 4 discovery, but execution calls discovery at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2604` and returns on failure at 2608, before Phase 4 at 2790. Put the shared check before the earliest applicable consumer, including this checkpoint; avoid repeated checks/warnings in Phase 4 and `preflight_warnings()`. Extend AC-5 to cover both preview and execution.
+  Observed input: The plan's gh 2.4.0 / unknown `headRefOid` input (lines 61–64), with a merging invocation, reaches the early discovery failure before the planned check.
+  Affected scope: Merging execution and preview paths using PR discovery; scan-only paths need not acquire a gh prerequisite.
+  Falsifier: A CLI control with gh 2.4.0 refusing `headRefOid` emits actionable version guidance before discovery failure for both preview and execution; supported versions emit no obsolete-version warning.
+  Evidence: Read-only command `rg -n 'fetch_open_prs|build_landing_forecast|verify.*pin|checkpoint' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0 and showed `2604: early_prs = fetch_open_prs_with_retry(str(primary_repo))` as well as the later call at 2790. `sed -n '2588,2625p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0 and showed the enclosing `if merging:` and early `return 2`. This is a static plan-placement defect, not a runtime reproduction.
+
+- [Should] **F2 partially addressed — finish the execution/evidence contract.** AC-2 now specifies a real root-CWD holder, and AC-3/4 add the requested conservative cases (plan lines 104–109). However, line 100 only names a script/output location, AC-2 says “disposable checkout,” and AC-9 names a suite without full-clone isolation. Explicitly require all executable controls and regression runs in a disposable **full clone**, add the pre-fix classifier replay that must fail AC-1, and retain commands, exit statuses, decisive nonempty outputs and tested revisions in the named receipts. No extra suite or gate is needed.
+  Observed input: Section 3 (lines 98–119) contains no pre-fix/red replay and no full-clone instruction; Round 1 F2 explicitly requested both. A linked disposable checkout still shares Git state under AGENTS.md's GH-564 rule.
+  Affected scope: Verification procedure for this change's newly relaxed deletion-safety decision and version checks.
+  Falsifier: The acceptance section names disposable full-clone execution for every executable control, records the pre-fix AC-1 failure and candidate pass, and specifies command/status/output/revision retention alongside `provenance.jsonl`.
+
+- [Pass] The holder-preservation requirement now explicitly keeps handle parsing and requires pruning refusal (plan lines 81 and 104–105); related-path and unknown-stderr controls are present at 106–109. The full plan sweep found no additional pre-existing plan defect beyond the open items above.
+- [Nit] The Producer's Round 2 log describes `_merge_tree` as `(clean, message, stdout, stderr)`, but its actual contract is `(rc, tree, conflicted paths, error)` at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731–733`. Preserve that contract and append guidance to the underlying diagnostic rather than replacing it (plan lines 89–90); clarify this in the plan/next disposition without rewriting the historical log.
+
+Handing off to Producer (gemini): complete F1/F2 and clarify the tuple/diagnostic contract; implementation remains outside this plan-QA turn.
+
+### Producer · Round 3
+
+All Reviewer Round 2 findings (F1, F2, Nit) have been resolved in `PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md`:
+
+- **F1 (Early version preflight before earliest consumer in execution & preview):**
+  - Section 2 (Seam 2) explicitly places `check_gh_version()` before the earliest consumer in execution (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2604` when `merging` is true before calling `fetch_open_prs_with_retry()`) as well as in preview (`line 2790`).
+  - Added memoization to cache version check results so checks/warnings are not duplicated across execution, Phase 4, or `preflight_warnings()`.
+  - Extended AC-5 to verify that both preview (`merge-cleanup`) and execution (`merge-cleanup --execute`) modes with stubbed `gh 2.4.0` emit the actionable `gh 2.18+` guidance before PR discovery returns or aborts.
+
+- **F2 (Execution/evidence contract, disposable full-clone isolation, and red control replay):**
+  - Section 3 explicitly requires all controls and regression tests to execute strictly in a **disposable full clone** (not a worktree or linked checkout, adhering to AGENTS.md GH-564).
+  - Added AC-0 (Red Control Replay): records that replaying the pre-fix `inspect_open_handles` implementation against the AC-1 input (overlay warning on idle repo) decisively fails AC-1 (returns `verified: False, active: False` with `lsof enumeration incomplete`), establishing the red baseline before candidate verification.
+  - Specified retention of exact commands, exit statuses, decisive nonempty outputs, tested git revisions, and `provenance.jsonl` under `TESTS-RESULTS/2026-11-24+GH-1597/` and `SUMMARY.md`.
+
+- **Nit (`_merge_tree` contract & diagnostics):**
+  - Clarified Section 2 (Seam 2) and AC-7: preserves the exact `Tuple[int, str, Set[str], str]` contract `(rc, tree, conflicted_paths, error)` at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731-733`, and appends the guidance to the underlying diagnostic string (`f"{diagnostic}\ngit merge-tree --write-tree requires git 2.38+ (installed git is older; upgrade git via ppa:git-core/ppa on Ubuntu/Debian)"`).
+
+Artifact revision committed. Handing off to Reviewer (codex) for Round 3 review.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the implementation plan. F1/F2 and the tuple-contract clarification are addressed; the design stays within the three requested seams and preserves conservative deletion decisions. This is plan approval only: implementation behavior, version compatibility and retained control results still require the specified disposable-full-clone execution. No gates, executable fixtures or runtime probes were run, and approval assumes no later gate.
+swept file: yes
+
+- [Pass] **F1 closed.** The plan explicitly covers execution's earliest discovery and preview discovery, suppresses duplicate warnings, and places the Git recommendation before forecast (`PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md:85–91`). AC-5/6 exercise CLI ordering and supported-version boundaries (lines 117–120). Read-only source inspection also shows early discovery inside `if merging:` at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2602–2608`; the revised placement addresses that previously missed path.
+- [Pass] **F2 closed.** The execution contract requires a disposable full clone and retained commands/status/nonempty output/revisions/provenance (plan line 105). AC-0 requires the pre-fix red replay (107–108); AC-2 requires a real root-CWD holder and pruning refusal (111–112); AC-3/4 keep related paths, aliases, unknown stderr and standalone disclaimers conservative (113–116). These are acceptance requirements, not observed runtime results.
+- [Pass] **Contract and scope.** The exact `(rc, tree, conflicted_paths, error)` tuple and appended underlying diagnostic are specified at plan lines 92–95 and 121–122, matching `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:731–737`. Linux initialization documentation is scoped at plan lines 97–99; verification remains outside `test/` at line 105. The whole artifact was reviewed, including its problem statement and existing acceptance criteria; no additional pre-existing plan defect was found.
+- Verification record: read-only `nl -ba PROJECT/1-INBOX/GH-1597-linux-merge-cleanup.md | sed -n '70,145p'` and source `sed` reads exited 0; decisive spans are cited above. No implementation correctness claim is inferred from those reads.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the planned clone verification outside this plan-QA relay.
+
+
+### Attestation · relay-drive — 2026-11-24T22:30:32Z
+task: RELAY-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 1345171a231de93a302278a8ec26fa2d5f6eeae3
+added-range: 19673+2409
+added-sha256: 4cc8f745c73dfe58c8c72828da3ea4572715db114a35849377252d0a0a533200
+gate-run: undeclared
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+

@@ -37,6 +37,15 @@ When the operator speaks naturally:
 
 ---
 
+## Prerequisites & Environment Requirements
+
+- **Python**: 3.9 or newer.
+- **Git**: 2.38.0 or newer. Required for `git merge-tree --write-tree` during landing forecasts (`build_landing_forecast`). If older git (e.g. 2.34.1 on default Ubuntu 22.04 LTS) is installed, merge-cleanup will warn in preflight and error gracefully in merge simulation with an upgrade recommendation (e.g. `add-apt-repository ppa:git-core/ppa && apt update && apt install git`).
+- **GitHub CLI (`gh`)**: 2.18.0 or newer. Required for the `headRefOid` JSON field during Phase 4 PR discovery. If an older `gh` (e.g. 2.4.0 from Ubuntu universe) is installed, merge-cleanup will warn during preflight and advise installing the official release from `https://cli.github.com`.
+- **Process & Handle Monitoring (`lsof`)**: Used by `inspect_open_handles` to identify active processes holding checkout directories before any deletion. On Linux hosts (including environments running Docker with overlay filesystems), `lsof` can emit warnings about unstatable mounts outside the target checkout (e.g. `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/.../merged`). `merge-cleanup` safely classifies and filters out warnings for paths outside the repository checkout, while strictly failing closed for any warnings at, inside, or containing the checkout path. Pruning continues to enforce that checkouts with active root-CWD processes or open handles are never removed.
+
+---
+
 ## Project merge policy
 
 Before any caller-owned doc parking or executing cleanup, read the target project's policy:
@@ -217,7 +226,7 @@ Parking preserves work for later review; it never qualifies it for integration o
 ### Phase 2: Active Process & Session Inspection
 - Checks driver locks: `.git/relay-driver.lock` (or vendored `.relay-driver.lock`) and validates holder PID liveness via `kill -0 <pid>`.
 - Checks `.tick/` active claims through the **event log fold**, never `STATE.md` (a derived snapshot): `tick claims --json` with `TICK_REPO_ROOT` pinned to the coordination root (a linked worktree's is its parent clone's). Any claimed task → `ACTIVE_TICK_CLAIM` naming task and agent; a `.tick/locks/` entry of any shape counts; `tick` missing, failing, or an events directory that is missing/unreadable → `PRESERVE_UNVERIFIED_SESSION` naming why (GH-534 A.4, `decisions/2026-09-09-tick-claims-verb.md`).
-- Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 **and** empty stderr is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or **any** stderr line (`WARNING: can't opendir`), is incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning.
+- Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 with empty stderr (or only tolerated benign warnings about unstatable unrelated filesystems such as Docker overlay2 mounts, plus companion disclaimer) is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or any related or unclassified stderr line (`WARNING: can't opendir`, `WARNING: can't stat`), fails closed as incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning (GH-1597).
 - **Activity Window Ladder (10m + 60m Recency Detection):** Inspects non-ephemeral file modification timestamps (`mtime` ignoring `.git`, `node_modules`, `.venv`, `.DS_Store`, and `*.sqlite-wal`/`*.sqlite-shm`) to classify:
   - **`ACTIVE_WRITING`** ($\le 10$m): In-progress active editing.
   - **`RECENT_IDLE`** ($10\text{m} - 60\text{m}$): Paused session, recent edits.
