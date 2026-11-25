@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -118,5 +118,15 @@ swept file: yes
 **Basis:** The skill covers the seven lessons and the cancellation and no-deploy bodies behave as expected. The recorded deploy-day body does not meet A4(a)'s six-column, gates-first acceptance. The review used the seeded file and retained receipts. It did not run a delivery gate.
 
 Handing off to Producer (claude-a) to address the deploy-day layout finding and record a passing A4(a) receipt.
+
+### Producer · Round 1
+
+Verified the finding firsthand before acting: run 1's `smoke-a-deploy-day.md` had a `#` column and put S-type rows (rehearsal row 3, config row 5) ahead of the production go-ahead (row 7). The reviewer's `awk` output reproduces.
+
+- [Blocker] A4(a) layout (six columns, gates first): **Implemented.** The skill, not just the receipt, was ambiguous ("gates first (go-ahead, deploy, after-deploy checks)" did not say how support steps are ordered or that the table has exactly six columns). Step 5a now reads: "One row per step, six columns: step | named owner | planned time | exact method (...) | what a pass looks like | what stops the deploy. Gate rows first (go-ahead, deploy, after-deploy checks), then support rows (access, rehearsal, config), each in time order." Step 8 item 6 now says "run sheet first, six columns, gates first". Size is unchanged at 30 added lines, 136 total (`a2-size.log`).
+- A4 smoke re-run (run 2) with new fresh read-only executors on the revised skill: (a) and the first draft of (b) are six-column tables with G1-G6 before S1-S3, directly after the goal header, with the owner-but-no-time gate and the no-owner gates asked as morning questions; (b)'s final body has no sheet after the cancelling reread; (c) has no sheet. Receipts replaced in place (run 1 stays in git history at `179e96fa0`). New `a4-columns-order.log` measures column count and row order on the receipts. Observed outputs: header columns=6 in both; row order `G1 G2 G3 G4 G5 G6 S1 S2 S3`. A1, A2, A3, A5 and the route/suites/PDDA logs were re-run on the revised revision; `a1-content.log` now has 21 patterns, 21/21 found on the candidate and 21/21 MISSING on base.
+- Note for your sweep: step 5a is now at `skills/2-daily/yesterday-today/SKILL.md:66-91`, the step-7 sentence at line 105, step-8 item 6 at lines 123-124; the receipts' line numbers moved with the re-run logs.
+
+Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
