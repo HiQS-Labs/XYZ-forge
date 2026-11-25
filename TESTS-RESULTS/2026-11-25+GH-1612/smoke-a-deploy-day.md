@@ -1,62 +1,73 @@
-# Smoke (a): deploy day, deploy only in today's first body (run 2, on the candidate after final QA round 1)
+# Smoke (a): deploy day, deploy only in today's first body (run 3, on skill commit `540e04421`)
 
 Executor: a fresh sub-agent with no author conclusions, read-only (4 `Read` calls: the skill, `yesterday-silent.md`, `today-deploy.md`, `pr-facts.md`; no writes, no `gh`, no network). Skill read through its path in this clone. Steps 1-5's GitHub reads were replaced by the fictional files in `inputs/`. Whole proposed body below, verbatim; nothing published.
 
-Run 1 (earlier commit `a0e59c02d`, still in git history at `179e96fa0`) used seven columns and put support rows ahead of a later gate; final QA round 1 found that, and step 5a was reworded to "six columns ... Gate rows first ... then support rows ..., each in time order". This is the re-run.
+Run history: run 1 (`179e96fa0`) used seven columns with support rows ahead of a gate (final QA round 1). Run 2 (`11eca2dd6`) fixed that but timed the head recheck at the 10:00 go-ahead, an hour before the 11:00 deploy it said it protected (final QA round 2). Step 5a now says the timer is "set for just before the deploy itself (not the earlier go-ahead)"; this is the re-run on that text.
 
-```markdown
+````markdown
 # Daily Work Ledger — 2026-11-25 (fictional example)
 
 Goal: ship Release X (official count 4 items, progress bar 50%).
 
-## Deploy-day run sheet
+> This ledger is a plan, not an approval. Nothing here records a merge, deploy or test sign-off. Any later write to a server needs the operator's explicit approval for that specific action, with backup ZIPs made and confirmed first.
 
-This sheet is a plan, not an approval. Nothing in it signs off a merge, deploy or test. Any later server write needs the operator's explicit approval for that specific action, with backup ZIPs made first and their paths reported. Deploy docs: the repo deploy docs (linked from the team's deploy checklist). The checklist is not restated here.
+## Deploy-day run sheet (plan only)
 
-Gate rows (first), then support rows, each in time order. "unset (Qn)" means the field is missing, so that step is NOT PLANNED until the morning question is answered.
+Deploy docs: the repo's deploy docs, as linked from the team's deploy checklist (link not supplied in this run; add it here). Nothing from those docs is restated below.
 
-| Step | Named owner | Planned time | Exact method (where it runs, which access) | What a pass looks like | What stops the deploy |
+Gate rows come first (go-ahead, deploy, after-deploy checks), then support rows, each in time order. A row marked NOT PLANNED is missing a field and is asked in "Morning questions" below, not carried as prose.
+
+| Step | Named owner | Planned time | Exact method (where it runs, with which access) | What a pass looks like | What stops the deploy |
 |---|---|---|---|---|---|
-| G1. Staging go-ahead | Lead 1 | 10:00 | Comment on PR #104. Timer: the go-ahead only counts at the current head, so re-read PR #104's head SHA and CI at 10:00, right before G2. | A comment from Lead 1 is present at head bbb2222. CI is green and the head is still bbb2222 at the time of the re-read. | Any open Must finding. The head is no longer bbb2222. |
-| G2. Deploy to staging | Dev A | 11:00 | Runs the repo's deploy script from the shared build machine with the deploy key. | Health page shows build bbb2222 and 3 sample orders listed (the order identifiers are not recorded here). | Health page red. G1 has not passed. |
-| G3. After-deploy check on staging | Dev C | unset (Q1) | Run the saved search query against staging. Which query and which access: unset (Q1). | unset (Q1) | unset (Q1) |
-| G4. Production go-ahead | unset (Q2) | unset (Q2). The ledger says only "this evening", with no clock time. | unset (Q2). Timer: it only counts right before the production deploy, so re-read head, CI and findings at that moment. | unset (Q2) | unset (Q2) |
-| G5. Production deploy | unset (Q3) | unset (Q3) | unset (Q3), including where it runs and with which access. | unset (Q3) | unset (Q3) |
-| G6. Late-evening after-deploy check on production | unset (Q4) | unset (Q4) | unset (Q4) | unset (Q4) | unset (Q4) |
-| S1. Access check for the staging deploy (sign-ins, VPN, Docker, free disk, deploy key loads) | Dev A (proposed; confirm in Q5) | By 09:30 (proposed, before the 10:00 go-ahead) | On the shared build machine. The fallback machine is unset (Q5). | Deploy key loads. The build machine is reachable. The free-disk figure is recorded as a number in a PR #104 comment. | Any item fails and no fallback machine is named, so G2 is not safe to start. |
-| S2. Early rehearsal of the G3 method | Dev C (proposed; confirm in Q1) | Before 11:00 (proposed) | Run the saved search query against staging as it runs now, before the deploy. | The query runs and returns the named items or count that Dev C records in a comment, so an empty result cannot read as "all on". | The query cannot run or returns nothing. G3 then stays NOT PLANNED. |
-| S3. Staging host config: set NEW_SEARCH=on | unset (Q6) | unset (Q6) | Copied from last month's checklist, so a claim, not a fact. First, someone confirms from the staging host's recorded commit that the code running there reads NEW_SEARCH. That is a host read or run and is not done from this ledger. A change on the staging host is a server write. | unset (Q6) | The running code does not support the flag. The operator has not approved this specific write. Backups are not made first. |
+| Staging go-ahead (PR #104) | Lead 1 | 10:00 | A comment on PR #104, written from Lead 1's own GitHub login | A comment from Lead 1 is present and names the current head bbb2222, and the findings list on PR #104 has been read and shows no open Must finding (today: one Should finding, accepted, see below) | Any open Must finding |
+| Deploy to staging | Dev A | 11:00 | Dev A runs the repo's deploy script from the shared build machine with the deploy key | The staging health page shows build bbb2222 and lists 3 sample orders | Health page red; also anything that fails the pre-deploy re-check row below |
+| After-deploy check on staging | Dev C | NOT PLANNED: no time | Run the saved search query against staging. NOT PLANNED: which saved query, where it runs and with which access are not stated | NOT PLANNED: no pass criterion (must name what the query has to return, such as row counts or named items, so that an empty result cannot read as "all on") | NOT PLANNED: no stop condition |
+| Production go-ahead | NOT PLANNED: nobody named | "This evening" only | NOT PLANNED: no method | NOT PLANNED | NOT PLANNED |
+| Production deploy | NOT PLANNED: item 5 says "production this evening" but the checklist has no row and no deployer | NOT PLANNED | NOT PLANNED | NOT PLANNED | NOT PLANNED |
+| Late-evening after-deploy check on production | NOT PLANNED: nobody named | Late evening (exact time NOT PLANNED) | NOT PLANNED | NOT PLANNED (must say what the check has to have seen) | NOT PLANNED |
+| Access check: sign-ins, VPN, Docker, free disk on the shared build machine, deploy key usable | Dev A (proposed, to confirm) | Early, before 10:00 (proposed) | Run on the shared build machine; fallback machine NOT NAMED (to be named in this row) | Each item seen working, written down by name (for example "deploy key listed", "free disk: N GB"), not just "no errors" | Any access item missing and no named fallback machine |
+| Rehearsal of the staging after-deploy check method | Dev C (proposed, to confirm) | Early, before 11:00 (proposed) | A dry run of the saved search query. Where it runs is to be settled with the operator, because running anything against a server needs the operator's explicit approval | The query returned the named items or counts the check will later require | Query fails or returns nothing when it should return something |
+| Pre-deploy re-check of the go-ahead (timer, set just before the 11:00 deploy, not at the 10:00 go-ahead) | Dev A (proposed, to confirm) | Just before 11:00 (proposed 10:50) | Re-read PR #104 on GitHub: head SHA, CI, Lead 1's go-ahead comment, findings list. Why the timer: the head can move after 10:00, and a go-ahead tied to an older head does not cover a newer one | Head is still bbb2222, CI green, go-ahead comment names bbb2222, no open Must finding | Head differs from bbb2222, CI not green, go-ahead names another head, or a new Must finding |
+| Production pre-deploy re-check (same timer rule, just before the production deploy) | NOT PLANNED | NOT PLANNED (set once the production deploy time exists) | Same method as the staging re-check | Same as the staging re-check, against the production candidate head | Same as the staging re-check |
+| Config change on the staging host: set NEW_SEARCH=on | NOT PLANNED: no owner | NOT PLANNED: no time, and no order against the staging deploy | NOT PLANNED: no method. This is a claim copied from last month's checklist, not a fact. It is valid only if the code running on staging supports the flag; the host's recorded commit (not supplied here, and no host read was made) would say. It is also a server write, so it needs the operator's explicit approval and backups first | NOT PLANNED | NOT PLANNED |
 
-Known review findings on included PRs (listed once):
-- PR #104 (head bbb2222): "slow query on empty filter", grade Should, accepted by Lead 1 in a PR comment. No other findings were provided for #104.
-- PR #103: no findings were provided. Whether #104 includes #103 is unknown (Q7).
+### Known review findings on included PRs
+- PR #104: "slow query on empty filter", grade Should, accepted by Lead 1 in a PR comment (listed once; no new finding found today).
+- PR #103: no known finding reported.
 
-### Morning questions (answer in a comment on this issue)
-1. G3: Dev C, what clock time is the staging after-deploy check? Which exact saved query and which access? What must a pass have seen (for example, a result count or named items, not just "no errors")? What stops the deploy? Also confirm Dev C owns the S2 rehearsal and its time.
-2. G4: Who gives the production go-ahead, at what clock time, and by what method (for example, a comment on PR #104 at the current head)?
-3. G5: Who deploys to production, at what clock time, from where, with which access? What does a pass look like, and what stops it?
-4. G6: Who does the late-evening production after-deploy check, at what time, with what method? What must a pass have seen, and what stops it?
-5. S1: Which machine is the fallback if the shared build machine or its deploy key is unavailable? Is Dev A the right owner for the access check? Who checks production access?
-6. S3: Is NEW_SEARCH=on still needed for this build? If so, who confirms from the staging host's recorded commit that the running code supports it, and when? Who asks the operator to approve the write? The flag was copied from last month's checklist.
-7. Which PRs does the PR #104 "release candidate bundle" include? In particular, does it include PR #103 (the search filter), which is still unmerged and which G3 and S3 may depend on?
+## Live state of open PRs (read at drafting time)
+- PR #103 (search filter): head aaa1111, CI green, no conflicts, not draft. Past review: Reviewer B approved at head aaa1111, which is the current head. Current review requests: not reported in the supplied facts.
+- PR #104 (release candidate bundle): head bbb2222, CI green, no conflicts, not draft. Past review: Reviewer B approved at head bbb2222, which is the current head. Current review requests: not reported in the supplied facts.
+- Trial-merge of the planned merge order: not supplied in this run, so unchecked.
+- Merged since yesterday: PR #101 and PR #102 are on the integration branch.
+
+## Feedback from people
+- Comments since local midnight and Slack: none supplied in this run, and Slack not checked.
+- Open finding: see "Known review findings" above.
 
 ## Items
 
 ### Done (verified against the integration branch)
-- [x] Item 1: fix the export button. PR #101 is on the integration branch (merged, verified). Deployment unverified (no deploy evidence read).
-- [x] Item 2: update the help page. PR #102 is on the integration branch (merged, verified). Yesterday's "approved by Reviewer B" was not re-checked against a head in this refresh. Deployment unverified.
+- [x] Item 1: fix the export button (PR #101). Merged, on the integration branch. Deployment unverified.
+- [x] Item 2: update the help page (PR #102). Merged, on the integration branch. Deployment unverified. Yesterday's "approved by Reviewer B" was not re-checked against a head in this run.
 
-### Carried
-Reviews and deploy gates first, then by person.
-- Lead 1: the G1 staging go-ahead for Item 5 (see run sheet).
-- Dev A: the G2 staging deploy and the S1 access check for Item 5 (see run sheet).
+### Carried (reviews and deploy gates first, grouped by person)
+- Lead 1:
+  - [ ] Staging go-ahead for PR #104 at 10:00 (run-sheet row 1).
+- Dev A:
+  - [ ] Deploy to staging at 11:00 (run-sheet row 2), plus the access check and pre-deploy re-check rows, owners to confirm.
+- Reviewer B:
+  - [ ] Review verdicts recorded: PR #103 at head aaa1111, PR #104 at head bbb2222 (both current heads). Re-review is needed only if either head changes.
 - Dev C:
-  - [ ] Item 4: write the release notes. No new GitHub evidence of progress was provided.
-  - The G3 after-deploy check and the S2 rehearsal for Item 5, both pending Q1.
-- [ ] Item 3: add the search filter (PR #103). The owner is not recorded in this ledger. Live state: head aaa1111, CI green, no conflicts, not draft. Reviewer B approved at head aaa1111, which is the current head. Still unmerged. Merging is not decided here.
+  - [ ] Item 4: write the release notes. No progress evidence was supplied.
+  - [ ] Staging after-deploy check (run-sheet row 3), not yet planned: time, saved query, pass criterion and stop condition are missing.
+- No named owner:
+  - [ ] Item 3: add the search filter (PR #103). Review verdict recorded at the current head, CI green, no conflicts, not draft, not merged. Work to do: a merge decision by whoever holds that role.
+  - [ ] Production go-ahead, production deploy and late-evening production check (run-sheet rows 4-6): owner, time and method are missing for all three.
+  - [ ] NEW_SEARCH=on on the staging host: owner, time and method missing, and its validity is unchecked.
 
 ### New
-- [ ] Item 5: deploy the Release X candidate (PR #104) to staging today, then to production this evening. Live state of PR #104: head bbb2222, CI green, no conflicts, not draft. Reviewer B approved at head bbb2222, which is the current head. One known finding (Should), accepted by Lead 1 (see run sheet). Nothing has been deployed. Deployment unverified. Production steps are NOT PLANNED until Q2 to Q4 are answered.
+- [ ] Item 5: deploy the Release X candidate (PR #104) to staging today, then production this evening. Planned only as far as the run sheet shows; the production half is not yet planned.
 
 ### Parked
 - None.
@@ -64,22 +75,27 @@ Reviews and deploy gates first, then by person.
 ### Dropped
 - None.
 
-## Feedback from people (changes today's work)
-- No review, issue or PR comments beyond the PR states above were provided to this refresh. The only open finding is the accepted Should on PR #104. Nothing is waiting on an unanswered question except Q1 to Q7 above.
-- Slack was not checked.
+## Morning questions (asked, not assumed)
+1. Who deploys to production this evening, and at what time?
+2. Who gives the production go-ahead, when, and by what method (for example a comment on which PR, from which login)?
+3. Who runs the late-evening production after-deploy check, at what time, by what method, and what must it have seen to count as a pass?
+4. Dev C: at what time is the staging after-deploy check, which saved query is it, where does it run and with which access, and what must it return (row counts or named items) to count as a pass?
+5. Who sets NEW_SEARCH=on on the staging host, when, and how? Is that code on staging (is PR #103 inside the PR #104 bundle, and what commit does the staging host record)? It is a server write, so it needs your explicit approval and backup ZIPs first.
+6. Which machine is the fallback if the shared build machine or the deploy key is unavailable? Does anyone need VPN, Docker or free disk checked first?
+7. Please confirm the proposed owners and times for the access check, the rehearsal, and the pre-deploy re-check (Dev A, Dev C, Dev A).
 
 ## Completion estimate
-Formula: sum of item shares x done fraction. Change log: 2026-11-24, no change. 2026-11-25, no change: PR #101 and PR #102 are verified on the integration branch, which matches the two items already counted in the 50% progress bar. No item share changed, and no linked evidence calls for one.
+Formula: sum of item shares x done fraction. Change log: 2026-11-24, no change. 2026-11-25, no change (items 1 and 2 are already counted done; no item share changed and no linked evidence supports changing one).
 
 ## SOP
 - Reviews before merges. A ledger is a plan, not an approval.
-```
+````
 
 ## Observations against A4(a)
 
-- Exactly six columns (header row has six cells), checked below by `awk` on this file: yes.
-- Gate rows G1-G6 before support rows S1-S3, each group in time order: yes.
-- One sheet, directly after the goal header, before everything else: yes.
-- The owner-but-no-time gate (G3) and the no-owner gates (G4-G6) are asked as morning questions Q1-Q4: yes.
+- One six-column sheet, the first section after the goal header (a one-line "plan, not an approval" quote sits between them): yes.
+- Gate rows (staging go-ahead, staging deploy, staging check, production go-ahead, production deploy, late-evening check) before support rows (access, rehearsal, pre-deploy re-check, production re-check, config): yes.
+- The timer: the re-check row is "set just before the 11:00 deploy, not at the 10:00 go-ahead", proposed 10:50, with the reason stated: yes (fixes the run-2 observation).
+- The owner-but-no-time gate (staging after-deploy check) and the no-owner gates are asked as morning questions 1-4: yes.
 - Goal header, estimate formula and SOP intact: yes.
-- Executor-added "proposed" owners and times for S1 and S2 are labelled "proposed; confirm" and asked (Q1, Q5), not presented as planned.
+- Executor-added owners and times for support rows are labelled "proposed, to confirm" and asked (question 7), not presented as planned.
