@@ -310,15 +310,16 @@ in Step 1. Apply it during clone provisioning, final verification and every push
      both sides of renames and deletions. A docs route uses `utils/pdda/pdda.sh run`.
      A script, test or DB change, and protected Markdown such as
      `WORKTREE-SAFETY.md` or `skills/*/merge-cleanup/SKILL.md`, follow the classified route.
+     After final review approval (Step 8), qualify the exact approved commit.
      When the full gate is required on the first push, run `ci-local.sh --fast`,
-     pass the [required hook check](#target-repository-qualification), then
-     push so the hook runs the full `./validate.sh` suite (GH-1518).
-     On later pushes the hook classifies only the pushed range. When a full gate
-     is still required, run `./validate.sh` once on the final approved commit before
-     pushing so the hook can reuse its receipt (`utils/py/gate_receipt.py`).
-   In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
-   never a valued task clone or linked worktree. Verify its repository identity
-   before and after the run; drift invalidates its evidence. Retain required
+     then push from the disposable qualification clone in Step 9 so its installed
+     hook runs the full `./validate.sh` suite once (GH-1518). On later pushes the
+     hook classifies only the pushed range. When the final diff still requires the
+     full gate, run `./validate.sh` once on the approved commit before pushing so the
+     hook can reuse its receipt (`utils/py/gate_receipt.py`).
+   In XYZ Forge, use a **separate disposable full clone** whenever a direct gate or
+   a push will run mutation-heavy suites. Verify HEAD, `core.bare`, remotes and
+   local `user.email` before and after the run. Drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
    scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
    **Smoke the change before final QA (GH-1088).** Suites prove nothing regressed;
@@ -371,8 +372,15 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    and continue independent groups.
 
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
-   and accidental files, apply [target repository qualification](#target-repository-qualification)
-   before pushing, and open the PR against its active integration branch (`development` in XYZ Forge). Reuse
+   and accidental files. After final review approval, apply
+   [target repository qualification](#target-repository-qualification) before pushing.
+   If the Forge hook will run mutation-heavy suites, push from the separate
+   disposable full clone with the exact approved commit, verified canonical origin
+   and the same attempt context. Install the hook there during provisioning and
+   check it immediately before pushing. Compare the clone identity before and after
+   the hook runs as in Step 7.
+   After required gates pass, open the ready PR against the target's integration
+   branch (`development` in XYZ Forge). Reuse
    an existing PR for the branch. If a network interruption occurs during PR creation,
    query `gh pr list --head <branch>` to verify whether the PR was registered before
    re-executing. Include the problem/result, issue mapping,
