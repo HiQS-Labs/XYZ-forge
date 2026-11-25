@@ -1,0 +1,244 @@
+#!/usr/bin/env bash
+# gh280-jog-marathon-adapter.sh — GH-280 Phase 1: Jog ↔ Marathon machine contracts.
+#
+# Exercises, with REAL Preflight → Marathon → Relay chains and deterministic agent/GitHub
+# shims (never --simulate):
+#   - swarm-preflight emits the additive swarm-preflight/marathon-invocation@1 artifact
+#   - marathon-drive --result-file emits exactly one marathon-drive/result@1 receipt per
+#     terminal exit: success, pre-dispatch refusal, builder failure, reviewer cap,
+#     gate failure, timeout, lane park, protected-branch redirect, PR-publication failure
+#   - jog_run's contract loaders reject unsupported schema versions and malformed artifacts
+#   - both installation shapes: harness at repo ROOT and vendored under .xyz/
+source "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1609-flywheel-day-1-2026-11-25-verify/test/_setup.sh" gh1609-control
+unset MARATHON_LANE_NS MARATHON_ROOT MARATHON_RELAY_DRIVE MARATHON_AGENT_CMD TICK_BIN
+REPO="/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1609-flywheel-day-1-2026-11-25-verify"
+
+# ── deterministic GitHub shim: logs every call, canned PR answers ─────────────────────────────
+# Anything not understood exits 1 — the same shape as an unauthenticated/offline gh, so
+# preflight's issue-state probe degrades to `unknown` instead of touching the network.
+STUB_BIN="$WORK/stub-bin"
+mkdir -p "$STUB_BIN"
+GH_STUB_LOG="$WORK/gh-stub-calls.log"
+export GH_STUB_LOG
+GH_STUB_PR_JSON="${GH_STUB_PR_JSON:-}"   # optional: path to a canned `gh pr list --json` array
+export GH_STUB_PR_JSON
+cat > "$STUB_BIN/gh" <<'GH_EOF'
+#!/usr/bin/env bash
+set -u
+printf '%s\n' "$*" >> "${GH_STUB_LOG:?}"
+if [ "${1:-}" = "auth" ]; then exit 0; fi
+if [ "${1:-}" = "pr" ] && [ "${2:-}" = "list" ]; then
+  for a in "$@"; do
+    if [ "$a" = "number,url,state" ]; then
+      if [ -n "${GH_STUB_PR_JSON:-}" ] && [ -s "$GH_STUB_PR_JSON" ]; then cat "$GH_STUB_PR_JSON"; else echo "[]"; fi
+      exit 0
+    fi
+  done
+  # closeout's `--json url --jq '.[0].url'` query
+  if [ -n "${GH_STUB_PR_JSON:-}" ] && [ -s "$GH_STUB_PR_JSON" ]; then
+    python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d[0]["url"] if d else "")' "$GH_STUB_PR_JSON"
+  else
+    echo ""
+  fi
+  exit 0
+fi
+if [ "${1:-}" = run ] && [ "${2:-}" = list ]; then
+  python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print(json.dumps([{"databaseId":42,"headSha":p["headRefOid"],"status":"completed","conclusion":"success"}]))' "$GH_STUB_PR_VIEW_JSON"
+  exit 0
+fi
+if [ "${1:-}" = "pr" ] && [ "${2:-}" = "view" ]; then
+  if [ -n "${GH_STUB_PR_VIEW_JSON:-}" ] && [ -s "${GH_STUB_PR_VIEW_JSON:-}" ]; then
+    cat "$GH_STUB_PR_VIEW_JSON"; exit 0
+  fi
+  exit 1
+fi
+# GH-1344: jog land reads the issue for whole-issue proof before closing it. The fixture issue's
+# Acceptance is fully checked, so the proof holds; `issue close` flips the stub to CLOSED/COMPLETED.
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "view" ] && case " $* " in *" state,stateReason,body,comments "*|*" state "*|*" state,stateReason "*) true;; *) false;; esac; then
+  if [ -f "${GH_STUB_LOG}.issue-closed" ]; then state=CLOSED reason=COMPLETED; else state=OPEN reason=null; fi
+  [ "$reason" = null ] || reason="\"$reason\""
+  printf '{"state":"%s","stateReason":%s,"body":"## Acceptance\\n- [x] fixture delivered\\n","comments":[]}\n' "$state" "$reason"
+  exit 0
+fi
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "close" ]; then : > "${GH_STUB_LOG}.issue-closed"; exit 0; fi
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "comment" ]; then exit 0; fi
+if [ "${1:-}" = "pr" ] && [ "${2:-}" = "create" ]; then
+  if [ "${GH_STUB_CREATE_FAIL:-0}" = "1" ]; then exit 1; fi
+  echo "https://example.invalid/pr/created-by-stub"
+  exit 0
+fi
+if [ "${1:-}" = "pr" ] && [ "${2:-}" = "merge" ]; then
+  if [ "${GH_STUB_MERGE_FAIL:-0}" = "1" ]; then echo "stub: merge refused" >&2; exit 1; fi
+  exit 0
+fi
+exit 1
+GH_EOF
+chmod +x "$STUB_BIN/gh"
+# Keep a GitHub identity while all fixture network IO goes to the local bare remote.
+REAL_GIT="$(command -v git)"; GH280_REAL_GIT="$REAL_GIT"; GH280_REMOTE="$REMOTE"
+export GH280_REAL_GIT GH280_REMOTE
+cat > "$STUB_BIN/git" <<'GIT_EOF'
+#!/usr/bin/env bash
+fixture_root="$PWD"; [ "${1:-}" != -C ] || fixture_root="$2"
+for command in "$@"; do
+  case "$command" in fetch|push|ls-remote)
+    transport="$GH280_REMOTE"
+    if [ "$command" = fetch ]; then
+      fixture_remote="$("$GH280_REAL_GIT" -C "$fixture_root" config --get gh280.fixtureRemote || true)"
+      [ -z "$fixture_remote" ] || transport="$fixture_remote"
+    fi
+    exec "$GH280_REAL_GIT" -c "url.$transport.insteadOf=https://github.com/example/example.git" "$@" ;;
+  esac
+done
+exec "$GH280_REAL_GIT" "$@"
+GIT_EOF
+chmod +x "$STUB_BIN/git"
+export PATH="$STUB_BIN:$PATH"
+
+CANNED_PR="$WORK/canned-pr.json"
+printf '[{"number":42,"url":"https://example.invalid/x/pr/42","state":"OPEN"}]\n' > "$CANNED_PR"
+
+# ── stub relay-drive (records argv, exits RELAY_DRIVE_EXIT) ───────────────────────────────────
+STUB_RD="$WORK/relay-drive.sh"
+cat > "$STUB_RD" << 'STUB_EOF'
+#!/usr/bin/env bash
+set -u
+printf '%s\n' "$*" > "$WORK/relay-drive-args"
+# GH-505: a success must carry the reviewer attestation the real driver publishes
+[ "${RELAY_DRIVE_EXIT:-0}" -eq 0 ] && bash "$ATTEST_STUB" "$@"
+exit "${RELAY_DRIVE_EXIT:-0}"
+STUB_EOF
+chmod +x "$STUB_RD"
+
+# exit-0 agent binaries so marathon-drive's pre-dispatch binary probe passes
+STUB_CODEX="$WORK/stub-codex"; printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_CODEX"; chmod +x "$STUB_CODEX"
+STUB_AGY="$WORK/stub-agy";     printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_AGY";     chmod +x "$STUB_AGY"
+
+GATE_PASS="$WORK/gate-pass.sh"; printf '#!/usr/bin/env bash\nexit 0\n' > "$GATE_PASS"; chmod +x "$GATE_PASS"
+GATE_FAIL="$WORK/gate-fail.sh"; printf '#!/usr/bin/env bash\nexit 1\n' > "$GATE_FAIL"; chmod +x "$GATE_FAIL"
+
+CAPTURE_DOC_NAME="GH-901-FIXTURE-LANE.md"
+write_capture_doc() {  # <path>
+  cat > "$1" <<DOC_EOF
+---
+gh_issue: 901
+source: https://github.com/example/example/issues/901
+title: "GH-280 fixture lane"
+status: "Active"
+created: 2026-08-27
+updated: 2026-08-27
+owner: test
+doc_type: bugfix
+---
+
+# GH-901 fixture lane
+
+## Acceptance
+- [ ] artifact updated and gate green
+
+## Swarm Preflight Contract
+\`\`\`json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash test/fixture-gate.sh",
+  "fix_probes": [ { "type": "path_absent", "path": "notes/landing-note.txt" } ],
+  "artifacts": [ "src/feature.js" ]
+}
+\`\`\`
+DOC_EOF
+}
+
+# ── fixture: a real git clone (origin/HEAD resolvable) with the harness installed ──────────────
+# <root> <relative harness prefix: "" for root install, ".xyz/" for vendored>
+setup_fixture() {
+  local root="$1" prefix="$2"
+  git clone -q "$REMOTE" "$root"
+  git -C "$root" config user.email gh280@test.invalid
+  git -C "$root" config user.name gh280
+  git -C "$root" remote set-url origin https://github.com/example/example.git
+  mkdir -p "$root/$prefix"
+  for d in relay-automation bin src utils; do
+    cp -R "$REPO/$d" "$root/$prefix$d"
+  done
+  mkdir -p "$root/src" "$root/test" "$root/PROJECT/2-WORKING"
+  printf 'module.exports = 1\n' > "$root/src/feature.js"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$root/test/fixture-gate.sh"
+  # GH-1576: jog's receipt/checkpoint pushes refuse a clone whose `githooks/install.sh --check`
+  # does not pass. This fixture has no real hook, so it ships an installer that reports "wired".
+  mkdir -p "$root/githooks"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$root/githooks/install.sh"
+  write_capture_doc "$root/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+  if [ -z "$prefix" ]; then
+    printf '.tick/\n.xyz/\n__pycache__/\n' > "$root/.gitignore"
+  else
+    printf '.tick/\n%s.tick/\n__pycache__/\n' "$prefix" > "$root/.gitignore"
+  fi
+  python3 "$REPO/utils/py/releases_app.py" --root "$root" init >/dev/null 2>&1
+  git -C "$root" checkout -q -b development
+  local pin
+  pin="$(PYTHONPATH="$REPO/utils/py" python3 -c 'import sys; from harness_paths import primary_config_key; print(primary_config_key(sys.argv[1]))' "$root")"
+  git -C "$root" config "$pin" "$root"
+  python3 "$REPO/utils/py/releases_app.py" --root "$root" jog add 901 >/dev/null 2>&1
+  git -C "$root" add -A >/dev/null 2>&1
+  git -C "$root" commit -q -m "fixture init" >/dev/null 2>&1
+  git -C "$root" checkout -q -B main >/dev/null 2>&1
+}
+
+trap 'printf "Fixture retained: %s\n" "$WORK"' EXIT
+FR="$WORK/root-install"; setup_fixture "$FR" ""
+if [ "${CASE_KIND:-ready}" = held ]; then
+  printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+  git -C "$FR" add PROJECT && git -C "$FR" commit -qm hold
+fi
+if [ "${CASE_KIND:-ready}" = dependency ]; then
+  printf '\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n' >> "$FR/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+  git -C "$FR" add PROJECT && git -C "$FR" commit -qm dependency
+fi
+if [ "${CASE_KIND:-ready}" = source ]; then
+  printf 'module.exports = 999\n' > "$FR/src/feature.js"
+  git -C "$FR" add src/feature.js && git -C "$FR" commit -qm source-change
+fi
+cat > "$STUB_BIN/gh" <<'EOF'
+#!/usr/bin/env bash
+if [ "${1:-}" = issue ] && [ "${2:-}" = view ]; then
+ python3 -c 'import json,os; print(json.dumps({"state":"OPEN","closedAt":None,"body":"## Acceptance\n- [ ] artifact updated and gate green\n" + ({"held":"\nHELD: owner decision required. Do not execute until owner approves the target.\n", "dependency":"\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n", "stale":"\n- [ ] additional live requirement\n"}.get(os.environ.get("CASE_KIND"), ""))}))'
+ exit 0
+fi
+if [ "${1:-}" = pr ] && [ "${2:-}" = list ]; then echo '[]'; exit 0; fi
+exit 1
+EOF
+chmod +x "$STUB_BIN/gh"
+git -C "$FR" checkout -q development
+git -C "$FR" merge -q main
+FT="$WORK/root-execution"
+git clone -q --no-local "$FR" "$FT"
+git -C "$FT" branch --no-track main origin/main
+git -C "$FT" remote set-url origin "$(git -C "$FR" remote get-url origin)"
+git -C "$FT" config gh280.fixtureRemote "$FR"
+git -C "$FT" config user.name gh280
+git -C "$FT" config user.email gh280@test.invalid
+export CASE_KIND
+if [ "${CASE_KIND:-}" = stale ]; then
+  mkdir -p "$FT/.tick/attempts"
+  printf '2026-11-24T00:00:00Z synthetic-prior-attempt\n' > "$FT/.tick/attempts/gh-901-fixture-lane"
+  cp "$FT/.tick/attempts/gh-901-fixture-lane" "$WORK/native-before"
+fi
+env -u MARATHON_ALLOW_TRUNK_COMMIT RELAY_DRIVE_EXIT=9 MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" SP_SUGGESTED_BRANCH="marathon/gh901-fixture" python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" --builder codex --reviewer agy --max-tasks 1 </dev/null
+rc=$?
+printf 'jog exit=%s\n' "$rc"
+if [ -f "$WORK/relay-drive-args" ]; then printf 'worker edge calls=1\n'; cat "$WORK/relay-drive-args"; else printf 'worker edge calls=0\n'; fi
+python3 -c 'import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print("queue:",c.execute("select global_id,status,failure_reason,attempt_count from jog_queue").fetchall())' "$FR/releases.db"
+printf 'Fixture retained: %s\n' "$WORK"
+if [ "${CASE_KIND:-}" = stale ]; then
+  cp "$FT/.tick/attempts/gh-901-fixture-lane" "$WORK/native-after-refusal"
+  cmp "$WORK/native-before" "$WORK/native-after-refusal" && printf 'native prior unchanged after refusal=yes\n'
+  gid="$(python3 -c 'import sqlite3,sys; print(sqlite3.connect(sys.argv[1]).execute("select global_id from jog_queue").fetchone()[0])' "$FR/releases.db")"
+  python3 -c 'import pathlib,sys; p=pathlib.Path(sys.argv[1]); s=p.read_text(); p.write_text(s.replace("## Swarm Preflight Contract", "- [ ] additional live requirement\n\n## Swarm Preflight Contract"))' "$FT/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+  git -C "$FT" add PROJECT && git -C "$FT" commit -qm 'refresh fixture acceptance'
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog retry 901
+  rm "$WORK/relay-drive-args" 2>/dev/null || true
+  env -u MARATHON_ALLOW_TRUNK_COMMIT RELAY_DRIVE_EXIT=9 MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" SP_SUGGESTED_BRANCH="marathon/gh901-fixture" python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" --builder codex --reviewer agy --max-tasks 1 </dev/null
+  python3 -c 'import json,sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print("refreshed row:",c.execute("select global_id,status,attempt_count from jog_queue").fetchall()); d=json.load(open(sys.argv[2])); print("history:",[(x["execution_id"],x["status"]) for x in d["executions"]])' "$FR/releases.db" "$FR/.tick/jog/$gid/state.json"
+  printf 'native history after refresh:\n'; cat "$FT/.tick/attempts/gh-901-fixture-lane"
+  [ ! -f "$WORK/relay-drive-args" ] || printf 'refresh worker edge calls=1\n'
+fi

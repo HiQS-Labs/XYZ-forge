@@ -136,3 +136,81 @@ Final QA round 2 approved (`3bbb710ab`); Small gate passed on that head with ide
 ## Merge evidence
 
 - commit b76b62b1e02c landed 2026-11-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Day 1 OL-10 admission plan — 2026-11-25 (proposed; not approved)
+
+Outcome: on the real Jog → Preflight → Marathon path, a currently reviewed and
+ready preparation may reach the worker; current human/dependency holds, changed
+acceptance, or source changed since the applicable review must park before worker
+or native attempt. Preserve queue identity, execution history and existing cap.
+This is setup/repair for #1609, not a live queue or Day 2 authorization.
+
+### Recon and bet
+
+At `b479f74e0278bf3bfaabca78200b1338f44faa8d`, Jog leases the pending row via
+`jog_acquire_lease`, promotes a capture if needed, then `run_marathon_phase`
+appends an execution, invokes target-root Preflight and parks on nonzero before
+loading its pinned Marathon invocation. Preflight `fetch_issue_details` fetches
+body/state only and `evaluate_candidate` checks acceptance fidelity and contract
+probes; it does not consume the Conveyor preparation decision. Conveyor records
+holds in the selection/capture and specifies a reviewed preparation PR, reviewed
+commit and evaluated integration SHA in its issue marker, but that prose marker
+is not a documented machine-readable attestation. Kickstart's
+`issue_hold_reason` owns the existing `status:held`, `HELD:`, `Blocked by`, and
+active `after` semantics; it is a queue-building consumer and does not sit on
+Jog's dispatch path. `accepted-start` is lifecycle state, not a reviewed-source
+witness. Existing native attempt writer in `rtl.py` owns the cap; no re-add or
+reset is a refresh.
+
+The smallest defensible bet is to extend the existing Conveyor preparation record
+and Preflight's consumer, rather than infer approval from the label or parse
+arbitrary natural language as approval. The preparation publisher needs an
+unambiguous, reviewable identity tying the exact issue, reviewed capture and
+relevant contract artifacts to the evaluated revision; the consumer must verify
+that identity and current inputs before emitting the invocation. **The exact
+representation and verification of an existing reviewed preparation remain a
+plan-QA question:** the existing marker describes values but does not specify
+machine grammar or reviewer authenticity. Do not implement a guessed format or
+claim the existing label/comment proves approval. A concrete reviewed plan must
+resolve this while preserving direct operator-authorized Jog/start-task work and
+avoiding an invented parallel readiness database or blanket mandatory Conveyor
+workflow.
+
+Blast radius: shared Preflight and Jog consumers, including vendored installs and
+existing offline behavior; a false hold stops eligible work, a false ready may
+fire held work. Treat as Costly until scoped; rollback is revert the reviewed
+change and keep affected rows parked, never erase history or re-add rows. Live
+GitHub/transport failures must have a specified honest disposition rather than
+silently granting current review. No new scheduler, suite, runner, gate, attempt
+reset or production dispatch.
+
+### Falsifiable acceptance and ordered work
+
+1. Finish source/record trace and resolve the receipt/authority and compatibility
+   contract through independent plan QA. Specify which exact source paths are
+   reviewed, current issue and dependency state, operator hold release authority,
+   stale/unknown behavior, and how a reviewed record is refreshed without changing
+   the row or its budget. No runtime changes before approval.
+2. Extend the existing preparation publisher and Preflight/Jog boundary only as
+   approved, reuse existing hold semantics and park/history writers; do not
+   duplicate a queue or persist a second independent decision store.
+3. Replay existing retained fixture controls on real entry path with worker edge
+   sentinel: ready = one call; human and dependency holds, stale acceptance and
+   *actually bound reviewed source* changed after review = zero. Include matching
+   fresh source positive control, hold release authority and unavailable/malformed
+   record controls. Prove the changed gate rejects a pre-fix counterexample.
+4. Refresh the same parked row using the supported recovery owner; compare exact
+   global ID, all old execution records and byte-preserved prior native attempts;
+   the subsequent worker fire consumes only the next existing allowance. Include
+   exhausted native cap refusal and no worker call. No cap increase or force.
+5. Record nonempty command outputs, fixture identity, exits and hashes with
+   provenance; perform main/adjacent smoke, independent final QA, classify and
+   qualify its exact approved head in a disposable full clone. Publish a ready PR
+   only if all required evidence passes; otherwise retain the explicit hold.
+
+Current red evidence is under `TESTS-RESULTS/2026-11-25+GH-1476-day1/`.
+Ready, human-held and dependency-held each reached the sentinel once, stale
+acceptance did not. The changed-source case lacks a reviewed-source binding and
+is not a complete stale-review proof. Corrected refresh retained one synthetic
+prior native line byte-for-byte and added a second on dispatch (receipt 2/2);
+the first failed refresh and invalid inherited-override runs are not passes.

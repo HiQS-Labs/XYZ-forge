@@ -1,0 +1,46 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-install/.tick/jog/jog-01M8A443B12MKWSSAWJYV8990Z/gh901-exec1/preflight)
+jog: GH-901 preflight refused: NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t
+jog: advancing halted: GH-901 parked — preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t
+jog exit=0
+worker edge calls=0
+queue: [('jog-01M8A443B12MKWSSAWJYV8990Z', 'parked', "preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t", 1)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF
+jog: reset GH-901 to pending
+marathon-drive: branch guard: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-execution was on its trunk branch 'development' — cut 'marathon/gh901-fixture' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-execution/marathon-system/gh-901-fixture-lane/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-901-FIXTURE-LANE-TURN → codex
+marathon-drive: memory-telemetry: phase gh-901-fixture-lane-start boundary — compressor=1136MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay-drive exited with unexpected code 9
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-install/.tick/jog/jog-01M8A443B12MKWSSAWJYV8990Z/gh901-exec2/preflight/marathon-result.json (outcome: refused, exit 2)
+marathon-drive: interrupted-phase record written: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-execution/marathon-system/gh-901-fixture-lane/PHASE-INTERRUPTED.md (reason: usage or configuration error)
+marathon-drive: transcript saved: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-execution/relay-system/2026-11-25/marathon-gh-901-fixture-lane-195008.md
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 1136MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+
+============================================================
+jog: processing GH-901 (attempt 2) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec2, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-install/.tick/jog/jog-01M8A443B12MKWSSAWJYV8990Z/gh901-exec2/preflight)
+jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF/root-execution/relay-automation/marathon-drive.sh)
+jog: stopping queue execution on task failure.
+refreshed row: [('jog-01M8A443B12MKWSSAWJYV8990Z', 'failed', 2)]
+history: [('gh901-exec1', 'preflight-refused'), ('gh901-exec2', 'projected-failed')]
+refresh worker edge calls=1
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Seg6OUROUF
