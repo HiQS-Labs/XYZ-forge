@@ -1,0 +1,6 @@
+smoke-a-deploy-day.md: header columns=6
+smoke-b-reread-cancels.md: header columns=6
+gate-before-support check, smoke (a): rows in order:
+| G1 | G2 | G3 | G4 | G5 | G6 | S1 | S2 | S3 
+gate-before-support check, smoke (b) first draft:
+| G1 | G2 | G3 | G4 | G5 | G6 | S1 | S2 | S3 

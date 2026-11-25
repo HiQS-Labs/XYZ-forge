@@ -1,28 +1,14 @@
-A3 privacy scan; every scanned file confirmed nonempty
-[1] fixed-pattern scan: skill + evidence folder (excluding this log's own pattern line)
-  hits: 0 files
-[2] manual proper-name look: capitalized word pairs in skill + evidence (review each)
-   1 skills/2-daily/yesterday-today/SKILL.md:29:Daily Work
-   1 skills/2-daily/yesterday-today/SKILL.md:21:Daily Work
-   1 skills/2-daily/yesterday-today/SKILL.md:10:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/smoke-c-no-deploy.md:6:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/smoke-b-reread-cancels.md:14:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/smoke-a-deploy-day.md:6:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/yesterday-silent.md:1:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/today-reread-cancelled.md:1:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/today-nodeploy.md:1:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/today-deploy.md:1:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/base-SKILL.md:29:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/base-SKILL.md:21:Daily Work
-   1 TESTS-RESULTS/2026-11-25+GH-1612/inputs/base-SKILL.md:10:Daily Work
-[3] plan file scanned separately (project metadata allowed: owner field)
+A3 privacy scan at 994ed6d8f; every scanned file confirmed nonempty
+[1] fixed-pattern scan: skill + evidence folder (this log excluded)
+  hit files: 0
+[2] manual proper-name look: capitalized word pairs (excluding the base copy); review each
+  15 Daily Work
+   6 Claude Code
+[3] plan file (project metadata allowed: owner field; this repo's own issue URL is public)
 6:owner: Noel Saw
 9:source: https://github.com/HiQS-Labs/XYZ-forge/issues/1612
-[4] relay thread, plan QA
-91:Now read the issue (https://github.com/HiQS-Labs/XYZ-forge/issues/1612) and `skills/2-daily/yesterday-today/SKILL.md`
-128:Read [GH-1612](https://github.com/HiQS-Labs/XYZ-forge/issues/1612) in full and swept the base skill from frontmatter
-217:Read [GH-1612](https://github.com/HiQS-Labs/XYZ-forge/issues/1612) §§1–3 and the base skill from frontmatter through
 controls:
   planted token+host: FOUND
   planted person name: FOUND
-  generic role labels flagged by name-pattern? no (passes)
+  generic role labels flagged? no (passes)
+  reviewed: 'Daily Work' is the ledger title convention, 'Claude Code' a tool name; no people names.
