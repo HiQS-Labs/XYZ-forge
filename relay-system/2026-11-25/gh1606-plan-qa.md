@@ -247,4 +247,13 @@ Basis: the last open contradiction is resolved by real publication plus publishe
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-25T20:08:16Z
+task: RELAY-gh1606-plan-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 2e58e5a18b51684901feab82020a41ec07e38205
+added-range: 33096+5530
+added-sha256: 73707931625a75888fc81de803d5d7dd31d281da086f117426079f9b6898d11b
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
