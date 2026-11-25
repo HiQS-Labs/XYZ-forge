@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -183,5 +183,34 @@ Basis: The skill changes resolve both instruction findings. The evidence still e
 - [Nit] SUMMARY line count 105 -> 107: **Implemented.**
 
 Handing off to Reviewer for round 3.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+**What this skill does.** It resolves the operator’s current date and the preceding working day, then checks yesterday’s ledger claims, feedback, and open PRs against GitHub. It drafts from today’s saved body, preserves the ledger’s goal and estimate, checks for intervening edits before publication, and asks one independent reviewer to inspect the published body.
+
+**What it is not.** Daily Planner retains its per-operator claim-comment workflow. The ledger update records work and evidence without granting merge, deployment, or test sign-off.
+
+**Input boundary.** Read the complete seeded `.relay-artifacts/SKILL.md` before reviewing the plan and receipts.
+
+**Step B — source-backed**
+
+Skill means `.relay-artifacts/SKILL.md`. Plan means `PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md`. Receipt filenames are relative to `TESTS-RESULTS/2026-11-25+GH-1601/`.
+
+- [Pass] The issue’s workflow and Plan requirements 1–9 (`:40–48`) are represented in the skill. R1 and F1 cover the latest working day strictly before today, title and week-link discovery, confirmed absence versus unavailable data, and stops before drafting (Skill `:25–37`). The first body read supplies both the baseline and the draft. A changed body requires a fresh draft and check or a stop, a failed read stops publication, and publication gets a read-back (Skill `:73–83`). R2 and F2 check the integration branch, review verdict/reviewer/`commit_id`, approved older heads, end-of-day comments, and linked GitHub deployment evidence (Skill `:39–52`). R3–R6 cover full feedback and Slack disclosure, live PR state and separate review requests, exhaustive classification and ordering, and preserving the goal, scope, SOPs and estimate with its formula, linked share changes and a dated row (Skill `:54–78`). R7 gives the low-effort read-only reviewer only the URLs and checklist, requires that reviewer to fetch the published body, and calls for firsthand adjudication and disclosure if review could not run (Skill `:85–98`). R8 and R9 cover access, shell and privacy traps and the four reply fields (Skill `:51–52,100–107`).
+- [Pass] The authorized issue-body edit is the only external write. The throwaway clone is local, and the instructions prohibit server writes, deployment and implied sign-off (Skill `:18–23,49–52,62–69,79–83,95`). The use split agrees with `skills/2-daily/daily-planner/SKILL.md:151–155,167–182`. The engine selects the newest existing earlier ledger and writes local reports even on discovery, so the skill reuses its conventions with direct reads (`skills/3-weekly/weekly-planner/scripts/planner_core.py:2283–2300,3299,3325–3331`). The single prompt-only skill and index row fit the scope. The viewer finds skills by glob and the catalog row is present (`skills/README.md:13,17–24`, `mini/skills/skill-viewer/scripts/list_skills.py:81–93`, `ARCHITECTURE.md:105`). The full skill sweep found no additional defect.
+- [Pass] A1, A2 and A4. `a1-a4-text.log:1–12` records the candidate and the absent base skill and catalog row. `a2-nine-points.log:2–14` records the map and four missed patterns when the validator lines are removed. Base lacks the file that the A2 checker inspects. The existing suites may pass on base, and the catalog assertion distinguishes it. `cmp .relay-artifacts/SKILL.md skills/2-daily/yesterday-today/SKILL.md && wc -l .relay-artifacts/SKILL.md` exited 0 and printed `107 .relay-artifacts/SKILL.md`. `SUMMARY.md:7` now agrees.
+- [Pass] A3 and F3. The main pass lists the skill, plan, evidence and index patch, and the separate self-scan covers the content of the privacy receipt. The appended result contains only the command label and no-hit status. The same detector records no hits on the deliverables and catches the fictional marker. The empty-input control rejects before scanning, the same prerequisite the missing base skill fails (`a3-privacy-scan.log:1–21`, `a1-a4-text.log:7–8`, `provenance.jsonl:3`). This is Producer evidence for the private detector.
+- [Should] A5 / F4 remains open for the confirmed-absence smoke. **Observed input:** Plan `:104` requires the exact read commands. `smoke-steps1-2.log:19–26` shows the title query scoped to `<example-repo>`, then `gh issue view <T> --json body` with neither a repository selector nor a recorded repository context. Its footer covers November 23–27, while the simulated date is December 31. The command ledger at `:33` omits that second view altogether. A read-only probe of the receipt reproduced the omission: `python3 -c 'from pathlib import Path; import re; s=Path("TESTS-RESULTS/2026-11-25+GH-1601/smoke-steps1-2.log").read_text(); a=re.findall(r"^\$ gh issue (\w+)", s, re.M); b=re.search(r"^gh subcommands run: (.*?) \(", s, re.M)[1].split(", "); print(a, b); raise SystemExit(a != b)'` → exit 1, `['list', 'list', 'view', 'list', 'view', 'list'] ['list', 'list', 'view', 'list', 'list']`. **Affected scope:** the empty-title path whose offer relies on a second discovery check against the same example repo. **Falsifier:** a reconciled, redacted transcript records the actual example-repo selector or effective context for the footer read, shows the applicable week’s links or establishes why that path is inapplicable, then shows the emitted stop and a command ledger covering both views. The main path and failed-lookup path are evidenced at `:2–17,28–31`; unchanged base cannot load their consumer entry point (`a1-a4-text.log:7–8`). The stop text is from the Producer’s decision snippet as disclosed in `SUMMARY.md:19`, rather than an end-to-end agent run.
+- [Pass] A4 suite provenance / F5. `suites-and-gate.log:1–6` reports a clean tested commit `6d7f5d13322d1bb943da92fde71490386e8a2723`, viewer 8/0, path integrity 3/0, and PDDA no errors with 34 warnings. `provenance.jsonl:4` names the same revision. Computing SHA-1 of the Git blob byte form (ASCII `blob <length>`, NUL, then file bytes) for the seed and catalog exited 0 and returned `82583abaa4796d32aefb151fae89c6fdc92ce7fe` and `6547c5adfe895408862960749cc87bb009a55d0b`, matching the tested artifact and index. The later-path constraint is a Producer attestation at `:6`; no final-tip suite rerun was observed here.
+- [Pass] A6 and route. The supplied 16-path list contains the skill, catalog and delivery bookkeeping, with no test, script or registry change (`a6-diff-invariant.log:1–17`). Red controls reject the synthetic test path and the empty/base diff (`:24–29`). `route.log:1–9` records docs tier 1. The inventory is Producer evidence against `origin/development`. [Nit] The candidate section includes a failed scratch-script invocation immediately before its passing observation (`a6-diff-invariant.log:18–21`); label the successful invocation as a retry so the two outcomes are attributable.
+- [Pass] A7 has the provenance file and independent plan approval (`provenance.jsonl:1–7`, `relay-system/2026-11-25/gh1601-plan-qa.md:243–250`). An unchanged base cannot contain the task-specific delivery receipts. Final approval, its harness-committed receipt, and the PR against `development` are outstanding (Plan `:94,106`).
+
+The nearest graph is the main Forge checkout, generation `2026-11-23T23:18:20Z`. Coverage reported the seed, new skill, plan and evidence missing from that index, so the artifact and receipt checks use direct worktree reads. No reviewer phase gate is specified. The live smoke and existing suites were reviewed from receipts and were not re-run in this worktree.
+
+VERDICT: FAIL
+
+Basis: The skill and the revised privacy and suite receipts resolve the other earlier findings. The confirmed-absence smoke still gives conflicting accounts of the required footer read (`smoke-steps1-2.log:19–26,33`). Round 3 is the cap. Escalated and handing off to Producer (claude-a) to reconcile the A5 receipt before requesting approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
