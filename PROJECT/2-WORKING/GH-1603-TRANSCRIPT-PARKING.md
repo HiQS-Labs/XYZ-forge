@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Reproduced the dry-run reporting gap on the original revision. | Independent plan QA, implementation and qualification. |
+| Codex approved the plan in round 2. Implemented and passed the disposable-repository red/green matrix. | Final Codex QA and full-gate qualification. |
 
 ## Quad Concepts
 
@@ -50,3 +50,8 @@ Adding only another Phase 0 paragraph leaves tail truncation, audit ambiguity an
 - Real throwaway bare upstream, diverged checkout, same-tip linked branch, one dirty path and one stash. Fake only GitHub responses with the existing CLI seam. Base dry run prints 1 local commit near the top, 2 unlanded refs, no behind count, and a final warning without details. Compare labeled dirty, stash, ahead and behind counts with the primary audit row. Confirm that the distinct ref count can be two with complete proof, two with incomplete proof after a failed merged-PR lookup, or unknown after a failed top-level query. Require every blocker (including a separate operation-marker variant) and all readiness counts in the last 20 lines of normal, scan-only, and PR-only previews, and after discovery and selection errors with unchanged exit status. Advance the bare origin without fetching in the fixture to check the audit does not rewrite the Phase 0 snapshot.
 - Base neither flags the committed foreign transcript nor provides a publish precheck. Require a refused precheck and Phase 0 advice for fixture private and lookup failure, a public-positive control, and a same-repo transcript plus ordinary docs control. Exercise separate staged and untracked artifacts, same-tip worktrees with different index content, a removed intermediate commit and a rename across the transcript boundary. Reject unknown target identity, unreadable evidence and a mismatched lookup result. Require unchanged refs, status, index and FETCH_HEAD. In the caller procedure skip publication on refusal and confirm no remote temp ref exists. On a passing candidate advance the temp ref after inspection and confirm the creation-only push in the fixture still publishes the inspected OID.
 - A fast-forward-ready primary without local work has no additional warning or footer. Confirm stash/behind-only do not block. Record observed red/green and run existing merge-cleanup and Codex harness suites in disposal isolation. No new tests under GH-831.
+
+## Verification
+
+- [Manual check and red controls](../../TESTS-RESULTS/2026-11-25+GH-1603/manual-check.md).
+- Integrating the latest development tip touched only generated ledger conflicts. The existing semantic resolver replayed the issue rating and accepted start through the writer, and the attempt admission still covers the task branch.
