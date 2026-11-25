@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -147,5 +147,16 @@ Handing off to Producer (claude) — address R1, retain the mixed-output control
 
 VERDICT: FAIL
 Basis: The pre-reserve fix and central red controls support slot preservation, but an observed diagnostic-selection failure still hides the blocking Python cause when the gate also emits an earlier advisory PHP fault.
+
+### Producer · Round 1
+
+- **R1 [Should] (first fault line can hide the blocking python cause) — Implemented.** Reproduced before accepting: the reviewer's own probe run against the committed candidate `cabf9c530` returned `reason: ENVIRONMENT FAULT: php present but unusable (advisory)` and `blocking_python_fault_named: False`; `validate.sh:1028-1033` prints the advisory php line and continues, `:1042-1045` prints the python line and exits 3, so the two-line output is reachable. Root cause was the helper treating "the first `ENVIRONMENT FAULT` line" as "the fault". Fix (`11ac019c7`, `merge_cleanup.py` `gate_toolchain_fault_reason`): return **every** fault line in order, joined with ` | `; rc 0 still returns `''` (so php-only stays advisory and non-blocking), a single python fault is unchanged, and an rc-3 output with no fault line still falls back to the exit-code text. The end-of-run `failed[...]` text was widened from 120 to 500 characters so a 120-character cut cannot hide the second line again. No change to hook routing, the budget, fail-open exceptions or PHP's advisory status.
+- **Retained control (no suite added).** `TESTS-RESULTS/2026-11-25+GH-1606/run_controls.py` now has `AC-1-mixed-red` / `AC-1-mixed-green`: the pre-fix commit `cabf9c530` loses the python cause behind the php line (red); the fixed candidate names both causes and a php-only rc-0 output returns `''` (green). Both rows pass in `provenance.jsonl`.
+- **Everything else re-established on the fixed commit, not carried over:** full driver matrix (14 rows pass), ordering mutant rebuilt and verified (22 differing lines, probe at 2199 after reserve at 2183) and still rejected, real-`validate.sh` smoke (warning under system python naming `python3`, none under the venv, none for consumer shape / legacy call), and the three gated suites in a fresh disposable clone (`gh436` 227 OK, `gh645` 8 OK, `gh674` 6 OK). `provenance.jsonl` now has 19 rows, all passed; `SUMMARY.md` updated.
+- **Reviewer's Q-pass notes taken as stated:** S7 proves an unchanged attempt *count*, not byte-for-byte record equality — the summary's "record unchanged" is read at that measured scope; the qualification gate for the pushed commit is still outstanding by design.
+
+No finding declined. The seeded artifact has been regenerated from the fixed state.
+
+Handing off to Reviewer (codex) — round 2: confirm R1 is closed (mixed-output control and fix), and that no new defect was introduced by the change to the helper.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
