@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -135,5 +135,25 @@ Basis: The existing fail-closed status control misses the new command, and the s
 - Verification: reran the complete manual matrix on the corrected runtime candidate and updated the hashed receipt. The existing merge-cleanup suite is running in the disposable clone. The exact-commit full gate remains pending after reviewer approval.
 
 Re-review the F1–F3 fixes and their replayed evidence. Keep the final gate distinct from this independent review.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+The Round 1 file sweep carries forward. For this turn I rechecked the corrected status, parking and ref-proof paths in the seeded files, the preview and execute consumers, the runbooks, the approved plan and the updated receipt. Graph generation `2026-11-25T18:19:12Z` traces the canonical checkout. The seeded source supplies the citations and probe inputs.
+
+- [Pass] F1 closed. The existing injection predicate sees `status` first and optional locks stay disabled. A `python3 -B -` probe patched `scan_clones.run_git` at `checkout_status(Path.cwd())`, asserted `args[0] == "status"` and `env["GIT_OPTIONAL_LOCKS"] == "0"`, and returned the existing fixture's rejection. It printed `F1 argv prefix=status, GIT_OPTIONAL_LOCKS=0, output=([], 'status refused')`. Those assertions passed in the combined probe (overall exit 1 on the final F3 assertion below). The injected error feeds preservation at `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1050–1056,1270–1278`; the fixture is `test/gh534_phase_a_tests.py:502–509,522–526`. The receipt records the Producer's passing injected and clean controls at `TESTS-RESULTS/2026-11-25+GH-1603/manual-check.md:31`.
+- [Pass] F2 closed. The same `python3 -B -` probe invoked `scan_clones.main()` with `--check-transcript-parking "$PWD" --parking-tip` and a 40-character fixture OID. Mocked `run_git` returned the candidate OID and `/absolute/unidentified-origin.git`, which produced CLI return 1 after only candidate resolution and the origin query. Substituting `https://github.com/example-fixture/landing` plus empty successful scan outputs produced CLI return 0. Both assertions passed before the combined probe's F3 failure. Standalone dispatch requires a recognized origin and the caller checks the actual push destination, pins the inspected OID and keeps the checkout quiescent. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1334–1351,1668–1682`; `skills/2-daily/merge-cleanup/SKILL.md:189–204`; `skills/3-weekly/merge-cleanup-deep/SKILL.md:189–202`.
+- [Should] F3 remains open for a malformed OID inside an otherwise recognized merged-PR entry. Treat this as incomplete proof by using the existing unusable-output path when the selected row lacks a usable merge OID.
+  - Observed input: `python3 -B -` imported `scan_clones`, patched `run_git` to return a successful fetch, two local refs at the same 40-character `a` OID, an attached HEAD, ancestry exit 1 and matching origin `https://github.com/example-fixture/landing`. Mocked `subprocess.run` returned a matching `gh repo view` URL and the merged list `[{"number":1,"state":"MERGED","baseRefName":"development","headRefOid":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","mergeCommit":{"oid":null}}]`. The probe called `classify_local_refs(Path.cwd())` and `format_ref_count` on the resulting proof and held refs. It exited 1. Decisive output was `missing OID: audit='2', reason='not reachable from origin/development; no merged PR has this head'`. The same probe printed `prior control: audit='2 (incomplete proof)'` for `[null]` and `empty control: audit='2'` for `[]`. The known head is dropped at `skills/2-daily/merge-cleanup/scripts/scan_clones.py:493–503`, turning unavailable comparison evidence into a conclusive miss at lines 669–680 and an unqualified count at lines 1081–1084 and 1554–1559. The approved plan requires incomplete proof when a necessary comparison fails at `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:42`.
+  - Affected scope: A successful merged-PR lookup for the selected base includes a row for an otherwise unproven local head whose merge OID is null. Both refs are still preserved.
+  - Falsifier: Replay the exact three lists. The null-OID list and `[null]` should preserve both refs, return successful conservative classification and display `2 (incomplete proof)`. The conclusive empty list should still display `2`.
+- [Pass] The corrected receipt covers the reporting red controls and the original fixture publication, the six candidate cases, and separate caller pinning and read-only controls. The same probe hashed the retained bytes and checked their length before the F3 assertion. It printed `receipt bytes=4645 sha256=68029cc65bded11d137d2489201e6544da4b065bf0755e5c3d7c4549ddd3dd8f candidate=564673af1f00f33405208fa6bfda68f79da9f515`, matching `TESTS-RESULTS/2026-11-25+GH-1603/provenance.jsonl:1`. The receipt's `[null]` result agrees with the independent replay. `TESTS-RESULTS/2026-11-25+GH-1603/manual-check.md:18–31`.
+- [Pass] The same cached readiness snapshot feeds the primary row and the preview footer. Stash and behind counts stay advisory. Execute still refreshes and checks readiness before a merge. The 85/85/50/75 intake, rated event and accepted start are persisted. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2706–2715,2775–2776,2915–2960`; `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1538–1546,1562–1574,1589–1616`; `releases.sql:1054,6068–6071`. No additional material pre-existing issue surfaced in the reviewed paths.
+- [Unverified — needs clone run] The existing merge-cleanup and Codex harness suites plus the exact-candidate full gate require separate disposable-clone results before publication. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:46,52`.
+
+VERDICT: FAIL
+
+Basis: F1 and F2 close. F3 handles a null list entry and still calls a missing merge OID complete when that OID is needed to assess a known head. Producer should disposition the remaining F3 input and return its two-ref replay with the empty-list control.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
