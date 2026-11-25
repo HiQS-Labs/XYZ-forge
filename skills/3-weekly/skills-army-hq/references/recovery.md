@@ -95,6 +95,13 @@ to `$CONFIG_DIR/repo` as `git-pulse` does) without making network calls or writi
   its last-fetched `origin`.
 - When the collection checkout is behind its last-fetched upstream or its `FETCH_HEAD` is at
   least 24 hours old, `sync.py` warns `STALE_PULSE_COLLECTION`.
+- When the resolved canonical `XYZ-forge` checkout is a Git worktree root behind its last-fetched
+  upstream (`behind > 0`, checked offline with no network calls), `sync.py` warns
+  `STALE_CANONICAL_FORGE` and skips `DRIFTED` re-vendor commands to prevent downgrades (GH-1605).
+  For a tracked branch, fast-forward it (`git -C <canonical> pull --ff-only`, or reconcile local
+  commits first if diverged); for a detached `HEAD` or untracked branch, switch to an up-to-date
+  tracked checkout or point `--canonical` / `XYZ_FORGE_ROOT` / `targets.json "canonical"` at a
+  current checkout, then re-run `sync.py --status`.
 
 `sync.py` prints the recovery steps and never modifies `config.sh` or retires a clone automatically.
 To remediate:
