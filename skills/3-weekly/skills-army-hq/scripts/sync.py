@@ -222,16 +222,26 @@ def drift_gate(root, state, config, found, explicit, apply, allow_drift, warning
         warn(warnings, "drift check skipped: no canonical XYZ-forge root resolved "
                        "(set --canonical, XYZ_FORGE_ROOT, or targets.json \"canonical\")")
         return None
-    canonical_top = shared.collection_repo(canonical)
+    top = shared.collection_repo(canonical)
+    canonical_top = top if top == canonical else None
     if canonical_top is None:
-        ahead, behind, branch = None, None, None
+        ahead, behind, branch, tracked = None, None, None, False
     else:
         ahead, behind = ahead_behind(canonical_top)
         head = shared.git_at(canonical_top, "symbolic-ref", "-q", "--short", "HEAD")
         branch = (head.stdout.strip() or "HEAD") if head.returncode == 0 else "HEAD"
+        upstream = shared.git_at(canonical_top, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}")
+        tracked = branch != "HEAD" and upstream.returncode == 0 and bool(upstream.stdout.strip())
     if behind:
         quoted = shlex.quote(str(canonical_top))
-        if ahead:
+        if not tracked:
+            if branch == "HEAD":
+                remedy = (f"check out an up-to-date tracked branch in {quoted} (HEAD is detached) "
+                          f"or point --canonical / XYZ_FORGE_ROOT / targets.json \"canonical\" at a current checkout")
+            else:
+                remedy = (f"switch {quoted} to an up-to-date tracked checkout (branch {branch} has no configured upstream) "
+                          f"or point --canonical / XYZ_FORGE_ROOT / targets.json \"canonical\" at a current checkout")
+        elif ahead:
             remedy = (f"reconcile or fast-forward it (git -C {quoted} pull --ff-only will refuse "
                       f"while {ahead} commit(s) ahead) or point --canonical / XYZ_FORGE_ROOT / "
                       f"targets.json \"canonical\" at a current checkout")
@@ -414,7 +424,7 @@ def main(argv=None):
     p.add_argument("--canonical", metavar="FORGE_ROOT",
                    help="XYZ-forge checkout whose skills/ is canonical (else XYZ_FORGE_ROOT, targets.json \"canonical\")")
     p.add_argument("--allow-drift", action="store_true",
-                   help="Deploy despite drifted vendored skills; the drift is still reported and recorded")
+                   help="Deploy despite drifted vendored skills or skipped verification on a stale canonical checkout; warnings are still reported and recorded")
     args = p.parse_args(argv)
     try:
         root = shared.location(args.root)
