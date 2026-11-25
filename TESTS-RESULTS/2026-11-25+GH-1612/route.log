@@ -1,4 +1,4 @@
-== route: changed-path inventory fed to ci-route.sh push (as the pre-push hook does), base b479f74e0..HEAD
+== route: changed-path inventory fed to ci-route.sh push, base b479f74e0..HEAD
 docs_only=true
 pdda_needed=true
 full_required=false
