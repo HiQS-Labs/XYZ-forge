@@ -75,7 +75,7 @@ after-deploy checks), then support rows (access, rehearsal, config), each in tim
 
 - A gate missing any field (above all owner, time or method) is not planned. Ask it as a morning
   question, never carry it as prose: who deploys, who gives the go-ahead and when, who does the
-  after-deploy checks (a late-evening one too).
+  after-deploy checks (a late-evening one too). Ask every missing field, not just who and when.
 - Check each step against the real code and target environment using what is recorded (repo, PR,
   deploy log). Example: a staging config change is valid only if the code running there supports it
   (the host's recorded commit says what runs). A step from an older checklist is a claim, not a
@@ -84,8 +84,8 @@ after-deploy checks), then support rows (access, rehearsal, config), each in tim
 - A pass is evidence, not absence: each check says what it must have seen (row counts, named
   items), so a query that matched nothing cannot read as "all on".
 - Some checks only count right before the deploy. Put a timer on them, set for just before the
-  deploy itself (not the earlier go-ahead), and say why in the row; plan an early rehearsal of the
-  method as its own row.
+  deploy itself (not the earlier go-ahead), and say why in the row; plan an early rehearsal of that
+  same check's method as its own row.
 - List known review findings on every included PR once, with grade and who accepted each. A new
   finding: first see whether a reviewer already considered it.
 - Read-only by default. The sheet is a plan, never an approval: any later server write needs the

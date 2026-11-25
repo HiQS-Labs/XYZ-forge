@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, round 3). Skill edit, smoke and manual checks done and recorded under `TESTS-RESULTS/2026-11-25+GH-1612/`. Final QA ran 3 rounds (the cap) and ended Escalated: rounds 1 and 2 found real defects (fixed and re-smoked); round 3 left one Blocker and one Should open (missing method fields not all asked as questions; rehearsal covers a different method from the timed check). | PR is a DRAFT. A later session tightens step 5a for those two points, re-runs smoke (a) and (b), and gets a fresh final review (needs an operator-authorized extra round). |
+| Plan QA Approved (Codex, round 3). Final QA ran 3 rounds (the cap) and ended Escalated; rounds 1 and 2 found real defects (fixed, re-smoked). Round 3's two open findings (every missing gate field asked; rehearsal matches the timed check) got one line each in step 5a and one smoke run, **not re-reviewed**. | PR stays a DRAFT. The operator decides whether an extra review round is worth it. |
 
 ## Requirement (operator brief, 2026-11-25)
 
@@ -115,18 +115,16 @@ Step 7 gains one clause ("a run sheet from step 5a goes first and is recomputed 
 
 ## Acceptance
 
-Feature checks fail on the unchanged base `b479f74e0`; safeguards (A3, A5, A6) are shown with a controlled bad input. All manual, recorded under `TESTS-RESULTS/` (GH-831).
+Simplified after final QA escalated (the original A1-A6 scripted checks were more machinery than a 30-line prompt edit needs; they are in git history at `90c4bed52`). Manual, recorded under `TESTS-RESULTS/2026-11-25+GH-1612/` (GH-831).
 
-- [x] A1 Content: the skill has step 5a with all six columns, "gates first", the no-deploy "add nothing" rule, the today's-body baseline sentence, one bullet per lesson 1-7, and step 8 item 6; checker prints line numbers. Base prints missing for each. Control: a copy with the lesson-4 bullet removed reports it missing.
-- [x] A2 Size and numbering: measured added lines from `git diff --numstat` are within 20-30 for step 5a plus the two small edits, the file is under about 140 lines, and the step headings 1-9 still carry their numbers. Base: 107 lines, no 5a.
-- [x] A3 Privacy: one fixed-pattern `rg -n -i` (client, product, host, email, private-link shapes) plus a manual look for proper names over the skill and the evidence folder, each confirmed nonempty; the plan file is scanned separately and its required `owner` field is listed as project metadata, not a finding. Controls: a planted fictional token and a planted person-name example are both caught; a generic role label passes.
-- [x] A4 Smoke, from the consumer entry point (the skill read through its path in this clone), fictional ledgers, read-only; the whole proposed body is captured and nothing is published. Three drafts: (a) yesterday silent, today's first body plans a deploy with one complete gate, one gate with an owner but no planned time, and one gate with no owner: expect exactly one six-column sheet first, gates first, a morning question for each incomplete gate, the goal header intact; (b) the same case after a simulated guarded reread whose live body cancels the deploy: expect no sheet, header intact; (c) a no-deploy day: expect zero run-sheet output. Replay the base skill on (a) and witness no sheet. Action log shows no `gh` write and no host or deploy operation; checkout state checked separately (`git status --porcelain` clean outside `TESTS-RESULTS/`).
-- [x] A5 Diff invariant: changed paths limited to the skill, this plan, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`, and the skill diff must be nonempty. Controls: a synthetic `test/new-suite.sh` is rejected, an empty skill diff is rejected.
-- [ ] A6 Delivery (not met: final QA escalated at the cap, so the PR is a draft): a final-QA receipt for the delivered revision is committed and the opened PR's actual base is `development`. Controls: a missing receipt and a wrong-base value are each rejected by the same check.
+- [x] A1 The skill's step 5a carries the six columns, gate rows first, the no-deploy "add nothing" rule, the baseline link, one bullet per lesson 1-7, plus step 7's clause and step 8 item 6; 30 added lines, 136 total, steps 1-9 keep their numbers. Observation: the diff itself.
+- [x] A2 One smoke run from the consumer entry point on a fictional deploy-day ledger (`smoke-deploy-day.md`): one six-column sheet first, gate rows first, every incomplete gate's missing fields asked, the rehearsal matches the timed check, nothing published.
+- [x] A3 One `rg` privacy check over the skill and the evidence folder: 0 matches.
+- [ ] A4 Delivery: independent review approves the final artifact. Not met: final QA escalated at the cap, and the last two fixes were not re-reviewed, so the PR stays a draft.
 
 ## Verification
 
-Docs route: `utils/pdda/pdda.sh run` and `ci-local.sh --fast` (a local check only: it skips the suite and keeps no qualifying gate record) on the final approved commit, then the one push, whose hook decides the real route from the changed paths. No new suite or registry entry; checks are manual and recorded under `TESTS-RESULTS/` with provenance.
+Docs route: `utils/pdda/pdda.sh run`, the two existing suites, then the push, whose hook decides the real route from the changed paths. No new suite or registry entry; checks are manual and recorded under `TESTS-RESULTS/` with provenance.
 
 ## Risks
 

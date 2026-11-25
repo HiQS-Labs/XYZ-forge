@@ -1,9 +1,0 @@
-A4 receipt checks (skill blob 6bbd309bca3bbde000c6354021cba4564805ef71)
-(a) smoke-a-deploy-day.md: 1 proposed body captured
-   body 1: run-sheet text=yes; first section='Deploy-day run sheet (plan only)'; columns=6; rows=11; gate row after a support row=no; header kept=yes; SOP kept=yes
-(b) smoke-b-reread-cancels.md: 2 proposed bodies captured
-   body 1: run-sheet text=yes; first section='Deploy-day run sheet'; columns=6; rows=9; gate row after a support row=no; header kept=yes; SOP kept=yes
-   body 2: run-sheet text=no; first section='Items'; columns=None; rows=0; gate row after a support row=no; header kept=yes; SOP kept=yes
-(c) smoke-c-no-deploy.md: 2 proposed bodies captured
-   body 1: run-sheet text=no; first section='Items'; columns=None; rows=0; gate row after a support row=no; header kept=yes; SOP kept=yes
-   body 2: run-sheet text=no; first section='Items'; columns=None; rows=0; gate row after a support row=no; header kept=yes; SOP kept=yes
