@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -109,5 +109,40 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) each with a co
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Approve the fixture repair against the stated acceptance, based on the whole phase B file, phase C consumers, complete seeded diff and retained Producer receipts. No blocking defect, new test, gate registration, duplicate subsystem or production edit found. No pre-existing defect requiring a change was found in the phase B file sweep. This is independent source/evidence review, not an independent replay of the clone runs or qualification of a pushed commit. The one newly raised Nit below is optional.
+
+- [Pass] **Q1 — acceptance met.** The recorded decision is “KEEP” (PROJECT/2-WORKING/GH-1615-PHASE-B-FIXTURE-REPAIR.md:65); the fixture repair is test/gh534_phase_b_tests.py:204–211. TESTS-RESULTS/2026-11-25+GH-1615/provenance.jsonl:12–14 records candidate `1a9cf2823`, exit 0, “Ran 39 tests ... OK”, “Ran 111 tests ... OK”, and “Ran 227 tests ... OK”; SUMMARY.md:5 identifies the base/candidate. Preserve those receipts. These are retained disposable-clone results, not runs performed in this reviewer worktree.
+- [Pass] **Q2 — implementation matches the chosen design.** The scoped `mock.patch.object`, `start`, and `addCleanup(wiring.stop)` immediately follow the environment cleanup (test/gh534_phase_b_tests.py:201–211; plan:71–73). The seed copies only the releases app/resolver and supporting files, without githooks (test/gh534_phase_b_tests.py:181–190). Production's missing-installer refusal is explicit at skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1057–1059 and is called before landing at :1124. The existing module stub is test/gh436-merge-cleanup.py:43. The diff adds no production edit, new test file or registry entry; its remaining changes are the planned evidence, plan and ledger bookkeeping. No fix required.
+- [Pass] **Q3 — red controls distinguish delivery.** provenance.jsonl:1 and :3 record `BASE-B-red` (exit 1, 14 failures/1 error) and `BASE-C-red` (exit 1, 32 failures/1 error), versus the candidate greens at :12–13. The failing-name lists reconcile to 15 and 33. Rows :15–16 record distinct mutant substitutions, `differs from the original: True`, own-assertion failures, and unmutated success: `3 != 0` for the allowlist and `'remote head moved' not found` for the head comparison. Those assertions exist at test/gh534_phase_b_tests.py:495 and :648. All 20 retained rows contain nonempty commands, revisions and decisive output (reviewer JSON/AST probe, exit 0: “receipts: 20 unique nonempty rows; base lists reconcile to 15 and 33 failures/errors”). No row is being accepted from an exit code alone. The experiment/collection helpers do not enforce success via process exit (run_stubbed_phase_b.py:6–9, run_stubbed_phase_c.py:6–9, collect_count.py:12–16); these are manual receipts, so reruns must inspect counts/OK/RESULT and nonempty output. Keep that interpretation; no new gate requested.
+- [Pass] **Q4 — existing guarantees retained.** `CAND-GATED-green` records 227 tests and `IMPORTER-DRIVER` records “PASS rows=18 FAIL rows=0” (provenance.jsonl:14, :17). The complete 39-test candidate run at :12 includes the 24 previously green tests. I attacked patch stacking/restoration by executing only the AST-extracted three patch statements against dummy objects, without importing or running fixtures. Command below exited 0, decisive output: “PASS: real and aggregator identities restored; both call signatures accepted”. This checks the real cleanup mechanism against both prior identities; it does not pretend to replay the gate. No fix required.
+
+```python
+# Invocation: PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' (body below; PY terminator)
+import ast,types,unittest
+from pathlib import Path
+from unittest import mock
+p=Path('test/gh534_phase_b_tests.py')
+c=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.ClassDef) and n.name=='LedgerFixture')
+s=next(n for n in c.body if isinstance(n,ast.FunctionDef) and n.name=='setUp')
+for prior in (lambda: 'real',lambda: 'aggregator'):
+    obj=types.SimpleNamespace(gate_unwired_reason=prior); case=unittest.TestCase()
+    exec(compile(ast.Module(body=s.body[-3:],type_ignores=[]),str(p),'exec'),dict(mock=mock,merge_cleanup=obj,self=case))
+    assert obj.gate_unwired_reason(None)==obj.gate_unwired_reason(None,install=True)==''
+    case.doCleanups(); assert obj.gate_unwired_reason is prior
+print('PASS: real and aggregator identities restored; both call signatures accepted')
+```
+
+- [Pass] **Q5 — the seam being mocked is outside these tests' claims.** Phase B checks ledger classification, landing/repair and the ledger gate; the gate-red pin still patches `pre_merge_ledger_gate` separately (test/gh534_phase_b_tests.py:728–740). Hook wiring is a different function. Phase C imports the fixture at :34 and its override calls `super().setUp()` first at :249–250. The sweep found no B/C assertion demanding the GH-1576 wiring refusal or the old right to push an unwired clone. The comment accurately scopes the stub, and separate refusal evidence exists under TESTS-RESULTS/2026-11-21+GH-1576/provenance.jsonl. No fix required.
+- [Pass] **Q6 — corrections and limits are proportionate.** `validate.sh:96` registers the wrapper, test/gh436-merge-cleanup.sh:11 executes the aggregator, and test/gh436-merge-cleanup.py:1382–1384 imports A/B/C. Thus the corrected gating premise (plan:42–55; SUMMARY.md:21) is true. Recorded collection/run receipts at provenance.jsonl:6–7 support all 39 B tests being included. Accepted-and-recorded limits are other untraced aggregator shims, missing raw baseline logs and outstanding qualification (SUMMARY.md:38–43). Candidate receipt snippets, rather than full raw logs or retained mutant runner, limit independent forensic replay; the precise substitutions/test names and own-assertion outputs at provenance.jsonl:15–16 are sufficient for this small repair. The rating explanation at plan:119 correctly narrows severity to standalone failures; the seeded releases.sql adds only GH-1615 and its pickup/rate/update receipts. The literal `--force` invocation is Producer-attested, not independently demonstrated by that SQL. None of these is a hidden qualification claim. Preserve the limits.
+- [Nit] **Q2/Q6 — align the mutant A description.** Plan:96 names `eligible = None`, while provenance.jsonl:15 records `deferred_set = deferred_closure(all_ordered, eligible)` → `deferred_set = set()`. Both target the allowlist guarantee, and the observed assertion is discriminating, so this does not block approval. Optional fix: update that plan cell to the actual recorded substitution; do not rewrite the historical receipt.
+- [Pass] **Q7 — no operator decision is hidden.** Plan:13–17 excludes new registration, retirement, production changes and editing the gated aggregator; :111–115 explicitly retains the aggregator stub and leaves any later deletion optional. The seeded diff respects those bounds. No additional decision or fix required.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the separately recorded qualification/publication steps; this approval assumes no later gate result.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
