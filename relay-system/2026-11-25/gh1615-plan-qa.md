@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -110,5 +110,43 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) each with a co
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+#### What this proposes
+Repair standalone phase B and C runs by scoping the existing GH-1576 wiring stub to the shared LedgerFixture setup. Keep production and the aggregator unchanged, and prove the repaired suite still detects two production regressions.
+
+#### How the existing system works, per this document
+The registered gh436 aggregator imports all phase B tests and already supplies a process-wide wiring stub. Standalone entry points lack that stub, so synthetic landing repositories fail the production wiring refusal before reaching their intended subjects.
+
+#### What it's not
+Accepted exclusions, subject to source validation: no new registration, retirement, production change, aggregator edit or new tests (frontmatter non_goals). Deferred optional work: deleting the aggregator stub (Operator decisions left open). Other aggregator-only shims are explicitly untraced (Risks); no later authorization is requested. Paraphrase written from the artifact only.
+
+#### Source-backed review
+swept file: yes
+
+Reviewed the whole plan, including its pre-existing claims, alternatives, exclusions, risks and acceptance table. No additional pre-existing defect identified in the artifact. Source checks below are static; no suite, executable fixture or git command ran here. Runtime outcomes remain [Unverified — needs clone run] unless the Producer supplies retained receipts. Reversibility: Easy — a fixture-local patch with normal unittest cleanup.
+
+- [Should] R1-1 — Retain the evidence already cited as observed, before signing off the plan's factual run claims. The artifact at lines 38–46 asserts exact baseline failures, timings, green stub experiments and a green aggregator run; line 89 calls AC-1 “recorded,” while line 85 only promises future evidence. No receipt for these runs is supplied with the review input. Probe: `rg --files TESTS-RESULTS/2026-11-25+GH-1615 .relay-artifacts` → exit 2, decisive output `rg: TESTS-RESULTS/2026-11-25+GH-1615: No such file or directory (os error 2)`. The available GH-1606 provenance addresses different checks, not these exact runs. Fix: retain the cited baseline/stub-run commands, revisions, exit statuses and decisive nonempty output in provenance.jsonl and reference the retained artifact; supply it as a review input. If those runs cannot be recovered, label them unverified and reproduce in a disposable full clone. This requests evidence/doc correction, not production behavior.
+  Observed input: artifact lines 38–46 and 89 claim completed measurements, versus the missing evidence path above.
+  Affected scope: completed run claims used to establish the root cause and red control, not future candidate acceptance runs.
+  Falsifier: a supplied retained receipt for each cited baseline/stub experiment, with matching revision, command, exit status and nonempty summary, closes this finding.
+
+- [Pass] Q1 — The issue's “ungated” premise is contradicted by `validate.sh:96`, the wrapper's `exec python3 "$HERE/gh436-merge-cleanup.py"`, and `test/gh436-merge-cleanup.py:1382-1384`. A non-executing AST namespace reconstruction (Python heredoc reading the four modules with ast.parse; replaying top-level class definitions and phase imports) exited 0: `a tests 46 phase B 0; b tests 39 phase B 39; c tests 111 phase B 27; g tests 227 phase B 39`. No collection hook, skip decorator or __all__ exclusion was found in the phase B/C or aggregator collection path. Phase C reimports the same two B classes, rather than replacing them with different classes. Keep the premise correction. Static collection is not proof that a particular historical run passed.
+
+- [Pass] Q2–3 — The origin and proposed scope are sound: `test/gh436-merge-cleanup.py:39-43` supplies the process-wide stub, while `test/gh534_phase_b_tests.py:175-204` seeds repositories without githooks. The real refusal is `merge_cleanup.py:1057-1059,1124-1126`. Starting patch.object in setUp and registering stop with addCleanup follows the existing environment patch at B:202-204; cleanup restores the preceding aggregator lambda. B's fixture-derived classes have no setup override; C's TestCScript calls super at C:249-250, and TestGh623Resilience (C:621) inherits setup. Repeated run_main calls remain within the fixture patch lifetime (B:251-271). No direct competing wiring patch appears in B/C. Keep the scoped patch and the explicit limit on untraced shims.
+
+- [Pass] Q4 — The wiring seam is distinct from the asserted ledger gate: `TestE6Gate.test_gate_red_prevents_the_merge` patches pre_merge_ledger_gate, not gate_unwired_reason (B:719-729). B:467-483 pins allowlisting; B:603-627 pins the moved-head refusal. Neither suite asserts the wiring refusal. No historical wiring-invariant inversion was identified. Keep production unchanged and keep the comment identifying GH-1576's separate wiring evidence.
+
+- [Pass] Q5 — Both mutant anchors occur once in merge_cleanup.py (read-only Python str.count probe → exit 0, counts `1` and `1`). Setting eligible=None at the assignment before `merge_cleanup.py:2970` skips filtering and the “not sequenced” diagnostic required at B:483; disabling the comparison at production:1183 removes the “remote head moved” diagnostic required at B:623, even if the subsequent ordinary push is rejected. These are sound predicted red controls, not executed results. Run the named tests green before mutation and require the intended assertion failure, not an import/syntax/environment error. AC-1 plus AC-2 reject an unchanged candidate if the reported baseline is substantiated; AC-5 checks sensitivity rather than replacing that baseline. No extra test or machinery is needed.
+
+- [Pass] Q6 — AC-4 is the correct candidate guarantee: the actual registered wrapper executes the aggregator. The importer search found only the gh436 registered entry importing B/C (`test/gh436-merge-cleanup.py:1383-1384`); it also collects phase A at 1382. The fixture change reaches B's TestB1Classify, TestPhase5EndToEnd and TestE6Gate, plus C's TestCScript and TestGh623Resilience (B:285,384,690; C:245,621). Other C record/parity tests still execute in that entry point. Keep AC-3/4/6; gh1606's driver explicitly calls d.doCleanups in finally (`TESTS-RESULTS/2026-11-25+GH-1606/run_controls.py`, quoted `finally: d.doCleanups()`), so scoped cleanup fits that importer too.
+
+- [Pass] Q7–8 — The lower priority/severity and higher cheapness are reasonable judgments given existing gated collection and a fixture-local repair (artifact:116); the exact numbers are prioritization judgments, not measurements. No hidden production/registration/retirement decision is needed. Accept all frontmatter exclusions, including leaving the aggregator lambda. The existing fixture plus unittest.mock is the smallest adequate mechanism; no new suite, registry or production change is justified. The historical GH-1606 statements should remain history with an explicit correction, as artifact:51-53 proposes. The wrapper's A-only descriptive aside is incomplete but does not assert that B is ungated or require expanding this repair.
+
+VERDICT: FAIL
+Basis: The scoped repair, corrected gating premise and proposed acceptance controls are supported by static source inspection. R1-1 remains open because the Definition of Done requires factual run claims to be grounded in runs, and the cited baseline/experiment receipts were not supplied. Candidate runtime verification is intentionally future work; this verdict does not demand executing implementation acceptance before implementation. No later gate is assumed.
+
+Handing off to Producer — retain/supply the cited baseline and experiment receipts, disposition R1-1, and return the plan for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
