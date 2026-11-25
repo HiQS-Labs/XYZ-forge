@@ -2,7 +2,7 @@
 gh_issue: 1605
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1605
 title: "skills-army-hq: sync.py warns STALE_CANONICAL_FORGE when canonical checkout is behind upstream instead of printing downgrade DRIFTED commands"
-status: Active — plan drafted; awaiting Codex plan QA
+status: Active — implemented & verified; awaiting Final Codex QA
 created: 2026-11-25
 updated: 2026-11-25
 owner: Antigravity implementation sub-agent (start-task lane)
@@ -27,7 +27,7 @@ context_tags: [skills-army-hq, drift-guard, sync, stale-canonical]
 
 | What was just completed | What's next |
 |---|---|
-| Triangulate recon/falsification/shrink complete; tracking issue #1605 opened, fresh task clone provisioned with pre-push hooks, PRS rating persisted (`82/78/50/88`), and plan drafted. | Run Codex plan QA (`relay-xyz`), adjudicate any findings until Approved, then admit (`--accepted-start`) and implement. |
+| Plan QA Approved in round 2 (`relay-system/2026-11-25/gh1605-plan-qa.md`, attested `d52e23414267`); admitted (`--accepted-start`), implemented (`41baf1524`), and verified in disposable `-verify` clone (34 unittest + 28 gh620 + 7 gh660 + 10/10 smoke & red-control in `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md`). | Run Final Codex QA (`relay-system/2026-11-25/gh1605-final-qa.md`), qualify in disposable push clone, open PR against `development`, and retire published checkouts. |
 
 ## Quad Concepts
 
@@ -171,3 +171,8 @@ Subsystem and canonical writer extended: `skills/3-weekly/skills-army-hq/scripts
 5. No network commands are executed by `sync.py`; `utils/py/skill_drift_check.py` is unchanged; no new test files or `validate.sh` entries are added (GH-831).
 6. `SKILL.md` and `references/recovery.md` document `STALE_CANONICAL_FORGE` accurately.
 7. Existing suites (`test/skills-army-hq.sh`, `test/gh620-skills-army-mini-sync.sh`), `utils/pdda/pdda.sh run`, `releases_app.py check`, red control, and smoke checks all pass on the final approved commit.
+
+## Lessons Learned (For Future Agents)
+
+- When `sync.py` executes `<canonical>/utils/py/skill_drift_check.py`, a stale canonical checkout runs an **old** copy of `skill_drift_check.py`. Any guard that protects against stale canonical checkouts must therefore live in `sync.py` (which ships to every device via Git Pulse Sync), not only in `skill_drift_check.py`.
+- `sync.py:427-428` intentionally omits `changelog.md` writes on a no-op `--apply` (pinned by `test_a4_owned_links_idempotence_removed_disabled_and_dedup`). Any override warning/receipt documentation must scope `changelog.md` persistence to runs where a sync transaction actually occurs.
