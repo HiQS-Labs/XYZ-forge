@@ -2,7 +2,7 @@
 gh_issue: 1594
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1594
 title: Start-task qualification follows the target repository
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-11-24
 doc_type: bugfix
 ---
