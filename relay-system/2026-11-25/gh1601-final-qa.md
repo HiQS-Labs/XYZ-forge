@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -145,5 +145,34 @@ Each finding re-read against the source before acting.
 - [Should] F5 A6/route on the final candidate: **Implemented.** `a6-diff-invariant.log` lists the staged inventory (16 paths) against `origin/development`, drives the allowlist and `utils/ci-route.sh push` from that same inventory, and keeps both red controls; suites and the docs gate re-run on the final candidate.
 
 Handing off to Reviewer for round 2.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+**What this skill does.** It finds today's ledger and the previous working day's ledger, then checks yesterday's claims and feedback against GitHub. It refreshes the shared plan while preserving the goal and estimate, checks the live body immediately before publishing, and asks an independent reviewer to read the published result.
+
+**What it is not.** Daily Planner owns per-operator claim comments, while this workflow owns the shared ledger body. The ledger records plans and evidence without granting merge, deployment, or test sign-off.
+
+**Input boundary.** The complete seeded `.relay-artifacts/SKILL.md` was read before the plan and receipts.
+
+**Step B — source-backed**
+
+Skill citations refer to `.relay-artifacts/SKILL.md`, Plan citations to `PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md`, and receipt filenames to `TESTS-RESULTS/2026-11-25+GH-1601/`.
+
+- [Pass] R1 and F1: Skill :25–37 resolves the last working day strictly before today, distinguishes confirmed absence from unavailable data, and stops before drafting on a failed today or missing/unavailable prior lookup. Only confirmed absence of today gets a creation offer. The first body read is the baseline and draft source, a newer body means redraft and recheck or stop, and a failed pre-edit read stops the write (Skill :73–83). R2 and F2: Skill :41–52 verifies merge evidence, PR review verdict/reviewer/`commit_id`, older-head approvals and end-of-day comments, and now links deployment evidence or reports deployment unverified.
+- [Pass] R3–R9 map to Plan :42–48. Skill :54–58 reads full feedback and discloses skipped Slack. Skill :60–64 reports live head, CI, conflicts, draft, past reviews and current requests separately. Skill :66–69 classifies and orders the work. Skill :73–78 preserves the goal, scope, SOPs, estimate and formula, and requires linked share changes and a dated row even when unchanged. Skill :85–98 gives the specified low-effort read-only Codex reviewer only the two URLs and checklist, requires a read of the published body, and calls for firsthand adjudication and disclosure if review cannot run. Skill :49–52,100–107 covers access, shell and privacy traps and the four reply fields.
+- [Pass] Authority and reuse. Skill :18–23,51–52,62–69,79–83,95 limits the external write to the authorized body edit, confines trial merges to a local throwaway clone, and bars server writes, deployment and implied sign-off. The use split at Skill :10–11 agrees with `skills/2-daily/daily-planner/SKILL.md:151–155,167–182`. The reason to avoid running the engine is borne out by `skills/3-weekly/weekly-planner/scripts/planner_core.py:2283–2300,3299,3325–3331`, which selects the newest earlier ledger and writes local JSON and Markdown. The 107-line, instruction-only skill and one catalog row are proportionate. The registration contract calls for the row at `ARCHITECTURE.md:105`, and the viewer discovers the skill by glob (`skills/README.md:13,17–24`, `mini/skills/skill-viewer/scripts/list_skills.py:81–93`).
+- [Pass] A1, A2 and the A4 catalog assertion. `a1-a4-text.log:1–12` records the 107-line candidate, the missing base path and zero base catalog matches. A2 requires that same skill path, and the omitted-validator control removes four patterns (`a2-nine-points.log:8,11–14`). The source map above covers behavior beyond the keyword checker. The two suites can also pass on base, so A4 depends on its row check as well. Local probe `cmp .relay-artifacts/SKILL.md skills/2-daily/yesterday-today/SKILL.md && wc -l .relay-artifacts/SKILL.md` exited 0 and printed `107 .relay-artifacts/SKILL.md`. `SUMMARY.md:7` still says 105 and should be aligned with the refreshed log.
+- [Should] F3 remains open. **Observed input:** Plan :102 requires every evidence file in the nonempty scan set. `a3-privacy-scan.log:2–14` explicitly excludes itself, while `provenance.jsonl:3` says every final input was scanned. This also leaves the receipt's own contents outside the reported privacy check. The probe `python3 -c 'from pathlib import Path; p=Path("TESTS-RESULTS/2026-11-25+GH-1601"); s=(p/"a3-privacy-scan.log").read_text().splitlines(); print(sorted(f.name for f in p.iterdir() if f.is_file() and f"nonempty: {f.name}" not in s))'` exited 0 and printed `['a3-privacy-scan.log']`. The missing/empty-input rejection and fictional planted hit are recorded at :16–20 and cover the red controls. **Affected scope:** the A3 claim for the committed evidence folder. **Falsifier:** a nonempty enumeration and privacy scan include the published scan receipt as well as the other inputs and index patch, and the same detector flags the fictional value in a temporary control. Keep the detector's private patterns in scratch and record the control result without copying the matched string into the clean deliverables.
+- [Should] F4 remains open for the confirmed-absence portion of A5. **Observed input:** Skill :29–35 and Plan :82 require title lookup followed by the ledger's links before declaring absence. For simulated today 2026-12-31, `smoke-steps1-2.log:18–22` goes directly from zero matches in one capped search to the offer, with no link result or evidence that the search was complete. `SUMMARY.md:19` describes the stops as lines an agent is directed to print. Record the actual stop after both discovery paths are resolved. The main path now shows the entry point, real matched pair and yesterday's counts, and the failed-lookup and zero-write observations are present (`smoke-steps1-2.log:2–17,23–29`). The unchanged base cannot load the consumer path (`a1-a4-text.log:7–8`). **Affected scope:** an apparent empty today search (including a ledger resolvable through the week links). **Falsifier:** a no-write transcript records a complete empty title lookup plus an empty or inapplicable link fallback, followed by the emitted offer. A matching link instead resolves the ledger.
+- [Should] F5 is closed for the path inventory and route and remains open for suite provenance. `a6-diff-invariant.log:1–22` inventories all 16 candidate paths, including the skill and index, and lists no new test, script, or registry change. `route.log:1–9` records the docs route, and the A6 synthetic path and empty/base controls both reject (`a6-diff-invariant.log:23–28`). **Observed input:** Plan :110 requires suites and PDDA on the final commit. `suites-and-gate.log:1–5` reports 8/0, 3/0 and zero PDDA errors against `e023b7de3+staged`, while `provenance.jsonl:4` identifies just `e023b7de3`. Those labels do not identify the same tested tree. **Affected scope:** A4 suite and PDDA receipts for the delivered skill and catalog. **Falsifier:** the suite log and provenance agree on the tested commit, with any later receipt-only changes accounted for. Preserve the observed inventory and route controls.
+- [Pass] A7 has the required provenance path and the approved plan QA attestation (`provenance.jsonl:1–7`, `relay-system/2026-11-25/gh1601-plan-qa.md:243–250`). Final approval, its committed receipt and the development-target PR remain delivery work (Plan :94,106). The base cannot satisfy A7 because it lacks these task-specific receipts. No standalone A7 base run or PR was established here.
+
+The complete skill sweep found no additional pre-existing defect. The closest graph was the main Forge checkout, generation `2026-11-23T23:18:20Z`. Its coverage reported the seed, candidate skill, plan, and new receipts missing, so the review uses direct worktree reads. The staged inventory is Producer evidence. I did not run Git, re-run the live smoke or suites, or independently establish the complete diff or privacy scan. Setup declares no reviewer phase gate.
+
+VERDICT: FAIL
+
+Basis: The skill changes resolve both instruction findings. The evidence still excludes its own privacy receipt, does not establish the confirmed-absence path, and does not bind the suite run to an exact commit. Handing off to Producer to close those three evidence gaps for round 3.  [Unverified — no citation]
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
