@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -156,5 +156,31 @@ Handing off to Producer (antigravity) — disposition R1 and R2, revise the plan
 - **R2 (`[Should]`) — Implemented:** Qualified Acceptance Criterion 3, step 3 docs scope, and step 4 smoke path 2 in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` so `changelog.md` recording is scoped to when a sync transaction occurs (`sync.py:427-428`), explicitly preserving unchanged `changelog.md` bytes on a repeated no-op `--apply --allow-drift` (also added to the manual smoke checks).
 
 Handing off to Reviewer (codex) — please verify R1 and R2 dispositions in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` and approve if ready.
+
+### Reviewer · Round 2
+
+Input boundary: plan doc only (PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md)
+
+**What this proposes:** Add an offline canonical-checkout freshness check to the distributed sync manager before it invokes the canonical drift checker. Suppress downgrade instructions when behind, report stale metadata, and require explicit acknowledgement before enabled-target deployment.
+
+**How the existing system works, per this document:** sync.py invokes the checker from the resolved canonical checkout, which may itself be old. Its existing git helper supplies ahead/behind counts, and its transaction writer intentionally leaves history unchanged on a no-op apply.
+
+**What it's not:** The non-goals exclude network fetches, canonical fetch-age gating, comparator/intake changes, RECEIPT-STALE work, and new test suites. Conditional future work remains deferred as stated in the plan.
+
+**Source-backed technical validation — Ship the plan**
+
+- [Pass] R1 closed: plan lines 135–138 now retain the missing-canonical early return, initialize all three metadata values for a non-git canonical, and assign `head` before reading it. This matches the local helper contracts in `skills/3-weekly/skills-army-hq/scripts/intake.py:436-443` and the established branch probe in `skills/3-weekly/skills-army-hq/scripts/sync.py:177-179`.
+- [Pass] R2 closed: plan lines 151, 158 and 169 now qualify receipt recording on a transaction and explicitly require unchanged history for repeated no-op override. That matches `skills/3-weekly/skills-army-hq/scripts/sync.py:427-428` and the existing `test_a4_owned_links_idempotence_removed_disabled_and_dedup` assertion in `test/test_deploy_skills.py` (`self.assertEqual((self.root / "changelog.md").read_bytes(), old)`).
+- [Pass] Whole-plan re-review supports the existing architecture: plan lines 132–149 extend the existing ref helper and gate before the stale checker invocation at `skills/3-weekly/skills-army-hq/scripts/sync.py:57-64,225-231`. Upstream and branch ref priority remains intact (`sync.py:110-117`), unknown counts fall through, divergence is handled explicitly, and enabled-target refusal precedes reconciliation (`sync.py:416-418`). The stale JSON variant explicitly reports skipped verification rather than empty successful comparison; fresh metadata is additive. No additional pre-existing source defect established in the reviewed scope.
+- [Pass] Plan lines 154–163 and 167–173 retain falsifiable stale/fresh/diverged/recovery/no-upstream checks, pre-fix red control, no new suites, and durable provenance. These are implementation acceptance obligations, not results obtained here. No executable fixtures, suites, or phase gate ran during this turn, and no later gate is assumed.
+- [Pass] PRS remains consistent. Read-only command: `python3 -B` using `sqlite3.connect('file:releases.db?mode=ro',uri=True)` and `select gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,doc_path from roadmap_items where gh_number='1605'` → exit 0; decisive output: `[(1605, 82, 78, 50, 88, 'PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md')]`. Plan rating rationale ties urgency to repeated downgrade exposure and keeps appeal neutral. Historical incident counts remain document evidence, not independently reproduced incidents.
+
+Reversibility: Easy — one existing manager and its documentation, no persistent migration. The material bet remains that locally fetched refs are sufficient for this bounded warning; absent or unfetched upstream knowledge deliberately retains existing behavior. Swept the entire plan and sync.py; inspected the requested comparator, docs, existing test invariants and intake git helpers. No whole-intake audit is claimed.
+
+swept file: yes
+VERDICT: PASS
+Basis: Both earlier findings are resolved without expanding scope; the plan meets the stated plan-QA Definition of Done. Implementation and disposable-clone runtime verification remain outstanding.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
