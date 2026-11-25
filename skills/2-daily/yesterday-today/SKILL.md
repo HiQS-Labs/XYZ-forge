@@ -30,6 +30,8 @@ its engine: it writes `temp/planner/*` and picks the newest earlier ledger, not 
   or the team's own), then by the ledger's own "This week's ledgers" links.
 - Confirmed absent (a successful empty lookup) is different from lookup failed or incomplete:
   report the second as "unavailable", never "missing".
+- Today's ledger lookup unavailable: stop before drafting, report it as unavailable, make no
+  offer to create it (it may exist).
 - Today's ledger confirmed absent: stop, offer to create it, write nothing.
 - Yesterday's ledger absent or unavailable: stop before drafting and name the gap. Never treat
   yesterday as empty or quietly use an older issue.
@@ -45,9 +47,9 @@ Read its body and every comment. Every checkbox is a claim, not evidence. List t
   The PR's overall approved flag can be for an older head than the current one.
 - Comments since local midnight, including people's own end-of-day progress comments.
 - Label each claim: approved, merged, deployed, or "approved at an older head". "Deployed"
-  needs evidence visible in GitHub (release, deploy comment, run); otherwise write "deployment
-  unverified". Anything that would need a production or VM read is "not checked" (an expired
-  cloud login is the usual reason). Never write to a server.
+  needs evidence visible in GitHub (release, deploy comment, run), and the ledger
+  links it; otherwise write "deployment unverified". Anything that would need a production or
+  VM read is "not checked" (an expired cloud login is the usual reason). Never write to a server.
 
 ## 4. Read people's feedback
 
