@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -201,5 +201,17 @@ VERDICT: FAIL
 Basis: the production fix direction, bounded guarantee and conservative tradeoff are acceptable. R1 remains open because the revised healthy return-only push stub contradicts the existing remote-head confirmation and cannot prove the promised healthy/resume landing. Correct that narrow manual-driver design, then return for plan approval; implementation evidence remains a subsequent obligation.
 
 Handing off to Producer (claude) — correct the healthy publication seam and stdout capture in the plan, then return for Round 3.
+
+### Producer · Round 2
+
+Revised the plan again (*Manual driver* push seam, AC-3 row, *Decisions after plan QA round 1*, *Open questions*, *Recon ledger*). Disposition of the one open item:
+
+- **R1 [Blocker] (healthy push seam) — Implemented.** Verified before accepting: the fixture's `gh` stub reads the PR head from the origin branch (`test/gh534_phase_b_tests.py:74-79`), and after the push `merge_cleanup.py:2213-2226` waits for it to equal B1's commit and returns exit 2 otherwise, so a return-only `(True, "pushed")` stub cannot land — the reviewer's Form 1 contradiction is correct. Fix as proposed: S1 keeps the counting **refusal** stub (the incident shape); every **healthy** run (S3/S4/S5) uses a counting wrapper that **delegates to the real `push_resolved_head`** against the fixture's bare origin, and the driver asserts the origin branch SHA is non-empty and equals the repaired commit in the attempt record, and that the PR reads `MERGED`, before accepting a landing. The driver captures **stdout and stderr** (`routing to B1` / `B1:` are `log` → stdout, `merge_cleanup.py:444-445`; `LedgerFixture.run_main` captures only stderr, `:262-269`). The driver's PR setup is now named: it derives from `TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it` (`:421`).
+- **Measured, not just argued.** In a disposable clone at base `b479f74e0`, with only the wiring seam applied (the same stub `test/gh436-merge-cleanup.py:43` uses), that existing scenario passes end to end: `attempt 1/2 reserved … B1 rc=0 … pushed d55922402c to feat/b … PR #2 is MERGED`, `Ran 1 test … OK`. So the healthy real-push path is runnable on `LedgerFixture`; no production change is needed to support it.
+- **[Pass] items — kept unchanged** (bounded class claim, conservative deferral, placement/failure vocabulary, non-vacuity rules, surgical scope, rating correction).
+
+No finding declined. No code written; this relay is plan QA only.
+
+Handing off to Reviewer (codex) — round 3 (last of the cap): confirm the corrected healthy seam closes R1, and say whether any path remains where an unchanged candidate would be reported as delivered.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -27,7 +27,7 @@ goal: "A B1 repair is never started while the push gate cannot run: the PR is de
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 returned FAIL (R1 blocker, R2/R3 should); all three accepted and the plan revised, including a measured pre-existing phase B breakage. | Codex plan QA round 2; then implement the reviewed scope. |
+| Plan QA rounds 1–2 returned FAIL; round 1's three findings and round 2's single remaining item (healthy push seam) were all accepted and fixed, with a measured pre-existing phase B breakage recorded. | Codex plan QA round 3 (last of the cap); then implement the reviewed scope. |
 
 ## Observed problem (measured, not remembered)
 
@@ -139,8 +139,12 @@ disposable full clones, never the primary.
 ### Manual driver — `TESTS-RESULTS/2026-11-25+GH-1606/run_controls.py` (not a suite, not registered)
 
 Same shape as the GH-1597 controls driver. It reuses `LedgerFixture` (bare origin, seeded ledger, primary
-clone, `gh` stub) and the setup of the existing disjoint-B1 phase B scenario, and adds two **declared
-controlled seams** to the seed commit on `development`, before the PR branch is cut:
+clone, `gh` stub) and derives its PR setup from the existing scenario
+`TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it`
+(`test/gh534_phase_b_tests.py:421`) — a real B1 repair, a real push to the fixture's bare origin, and a
+landing, which fails at base *only* because the seed lacks the installer (measured above). It adds two
+**declared controlled seams** to the seed commit on `development`, before the PR branch is cut (the shim is
+committed executable, `git update-index --chmod=+x`):
 
 1. `githooks/install.sh` stub — `--check` and bare run exit 0. Stands in for real wiring; the real wiring
    refusal is witnessed by `TESTS-RESULTS/2026-11-21+GH-1576/`.
@@ -148,19 +152,30 @@ controlled seams** to the seed commit on `development`, before the PR branch is 
    `$GH1606_TOOLCHAIN=fault`, else exits 0 silently. Stands in for the toolchain only; the **real**
    `validate.sh --print-mode` behaviour is witnessed on the real task clone (AC-1).
 
-`push_resolved_head` is replaced by a counting stub: `(False, "push refused: utput above.")` for the
-incident reproduction, `(True, "pushed")` for healthy runs. Every scenario runs twice with identical inputs
+**Push seam (round-2 R1 correction).** The fixture's `gh` stub reads the PR head from the origin branch
+(`test/gh534_phase_b_tests.py:74-79`), and after the push `merge_cleanup.py:2213-2226` waits for that head to
+equal B1's commit and returns exit 2 otherwise — so a return-only `(True, "pushed")` stub could never land.
+Therefore: for the incident reproduction (S1) the driver uses a counting refusal stub returning
+`(False, "push refused: utput above.")`; for every **healthy** run it uses a counting wrapper that **delegates
+to the real `push_resolved_head`** against the fixture's local bare origin (the installer stub installs no
+real hook, so this is a plain push, and `gate_unwired_reason` passes via the stub's `--check`). Before a
+healthy run is accepted as landed the driver asserts the origin branch SHA is non-empty **and equals the
+repaired commit recorded in the attempt record**, and that the fixture reports the PR `MERGED`. Every
+scenario runs twice with identical inputs
 — once against the BASE script directory (a clone at `b479f74e0`) and once against the CANDIDATE — selected
 by an explicit script-directory argument. Per run the driver records: exit code, full stderr, whether
 `routing to B1` and any `B1:` lines appear, the attempt count **loaded from the record file** (absent file is
 reported as `absent`, never as `0`; it is accepted only where the scenario expects it), the origin PR branch
-SHA before and after (`git ls-remote`), and the push-stub call count.
+SHA before and after (`git ls-remote`), and the push-wrapper call count. The driver captures **stdout and
+stderr**: `routing to B1` and `B1:` lines are written by `log` to stdout (`merge_cleanup.py:444-445`), whereas
+`LedgerFixture.run_main` captures only stderr (`test/gh534_phase_b_tests.py:262-269`), so the driver runs
+`merge_cleanup.main()` under its own `redirect_stdout` and `redirect_stderr`.
 
 | ID | Scenario (identical inputs for BASE and CANDIDATE) | Unchanged / unfixed candidate is rejected because | Expected (candidate) |
 |---|---|---|---|
 | AC-1 | Real task clone, real `validate.sh`: helper under system `python3`, then under the venv PATH | On BASE the helper does not exist (`AttributeError`) — recorded as the base red; a helper that returns `""` under the fault fails the check | system → nonempty, contains `ENVIRONMENT FAULT`; venv → `""` |
 | AC-2 (central) | S1/S2: conflicting disjoint-ledger PR, toolchain fault, push stub refusing | BASE (S1) must show: exit 2, `routing to B1`, attempts == 1, push stub called once, **fault text absent** from output — that is the incident. A candidate that still reserves fails S2 | S2: exit 3; stderr names `ENVIRONMENT FAULT` and `deferred: gate toolchain`; `routing to B1` present, no `B1:` lines; record `absent` or `attempts == []`; push stub 0 calls; origin branch SHA unchanged |
-| AC-3 | S3 healthy toolchain; S4 fault run then `--resume --execute` with toolchain fixed; S5 no `validate.sh` in the clone (consumer shape); S7 `--resume` with the record at the 2-repair ceiling under fault | A candidate that changes the healthy path, spends/loses a slot across the resume, or probes before the resume skip fails one of these | S3: BASE == CANDIDATE (lands, attempts == 1, one push); S4: second run lands, total attempts == 1; S5: BASE == CANDIDATE; S7: `previously parked`, record unchanged |
+| AC-3 | S3 healthy toolchain; S4 fault run then `--resume --execute` with toolchain fixed; S5 no `validate.sh` in the clone (consumer shape); S7 `--resume` with the record at the 2-repair ceiling under fault | A candidate that changes the healthy path, spends/loses a slot across the resume, or probes before the resume skip fails one of these | S3: BASE == CANDIDATE (PR `MERGED`, attempts == 1, exactly one real push, origin SHA == the record's repaired commit); S4: second run lands the same way, total attempts == 1; S5: BASE == CANDIDATE; S7: `previously parked`, record unchanged (the 2-attempt ceiling record is created through the `attempt_record` writer, not hand-written JSON) |
 | AC-4 | S6 dry run under fault, then healthy | A missing warning, a warning under a healthy toolchain, or any new write fails | fault: `PRE-FLIGHT:` line naming the fault, no attempt record, no new writes beyond the existing selection pin; healthy: no such line |
 | AC-5 | Existing gated suites: `gh436-merge-cleanup.sh`, `gh645-…`, `gh674-…` run through the classified gate | Any regression | all green; phase B explicitly **not** used as a witness (red at base) |
 | AC-6 | `SKILL.md` carries one sentence on the deferral and the PRE-FLIGHT entry, read from the consumer entry (Phase 5 / PRE-FLIGHT paragraph) | Missing or contradictory text | present and consistent with exit-3 / deferred vocabulary |
@@ -199,12 +214,14 @@ PATH fixed — the deferred PR is repaired and lands using the same budget it wo
 | R1 [Blocker] red control not runnable as written | **Accepted.** AC-2 rewritten as the manual driver above; phase B withdrawn as a witness after measuring it red at base |
 | R2 [Should] "whole class" overstated | **Accepted.** Class bounded to blocking toolchain faults; PHP stays advisory; fail-open and unmeasured cases stated |
 | R3 [Should] probe is conservative | **Accepted.** Tradeoff recorded; hook classifier not copied |
+| Round 2 R1 [Blocker] (open item) healthy push seam cannot land | **Accepted.** Verified: fixture head comes from the origin branch (`:74-79`) and `merge_cleanup.py:2213-2226` stops with exit 2 on a head mismatch. Healthy runs now delegate to the real `push_resolved_head`; S1 keeps the refusal stub; the published head must equal the recorded repaired commit; stdout is captured |
+| Round 2 passes (R2, R3, Q3-4, Q5, Q7-8) | Kept unchanged. |
 | Passes (Q1/3/4, Q2/4/6, Q6/7/8) | Kept. Taken: advisory/primary-specific warning label; "no *new* writes"; qualify "all hidden causes"; defer over stop; truncation stays out of scope; effort 25→70 correction stands |
 
-## Open questions for the reviewers (round 2)
+## Open questions for the reviewers (round 3)
 
-1. Is the driver design (declared seams for wiring and the toolchain, counting push stub, base-vs-candidate by script directory) a faithful enough red control, given the real `validate.sh` behaviour is witnessed separately in AC-1?
-2. Is accepting conservative deferral enough, or should the hook's route be consulted?
+1. With the healthy path now delegating to the real `push_resolved_head` and asserting the published head equals the recorded repair, does the driver still have any path where an unchanged candidate is reported as delivered?
+2. Is anything else in the S1–S7 set unrunnable on `LedgerFixture` plus the two declared seams?
 
 ## Per-issue rating (RELEASES vocabulary, `rated pri/sev/appeal/effort`, 1–100)
 
@@ -222,3 +239,5 @@ NO_ENTRY at plan time; decide at handoff.
 - Correction recorded: hook wiring is already pre-reserve, so the class is "gate toolchain", not "any push precondition".
 - Plan QA round 1 (Codex, 2026-11-25): VERDICT FAIL → R1/R2/R3 accepted. Verified R1 empirically before accepting: a single existing phase B end-to-end test run in a disposable clone at base failed with the GH-1576 missing-installer refusal; the full phase B file then measured 39 tests, 14 failures, 1 error. Gated merge-cleanup suites located in `validate.sh` (`gh436`, `gh645`, `gh674`).
 - Round-1 review paraphrase (written from the artifact only) matched the plan's intent; no comprehension mismatch to adjudicate.
+- Plan QA round 2 (Codex, 2026-11-25): VERDICT FAIL on a single item (healthy push seam). Verified against `merge_cleanup.py:2213-2226` and the fixture's `view()` (`test/gh534_phase_b_tests.py:74-79`) before accepting; derived the driver from the existing disjoint-B1 landing scenario at `:421`. All other round-2 findings were `[Pass]`.
+- Feasibility measured before round 3: in a disposable clone at base `b479f74e0`, applying only the wiring seam (`merge_cleanup.gate_unwired_reason = lambda clone, install=False: ""`, the same stub `test/gh436-merge-cleanup.py:43` uses) makes the existing scenario `TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it` pass end to end: `attempt 1/2 reserved (script, rung B1, head 5629dff0c3)`, B1 repair `rc=0`, real push `pushed d55922402c to feat/b`, both PRs `MERGED`, `Ran 1 test … OK`. So the healthy path through the real `push_resolved_head` is runnable on `LedgerFixture`.
