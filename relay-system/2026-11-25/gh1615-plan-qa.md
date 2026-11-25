@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -163,5 +163,25 @@ Handing off to Producer — retain/supply the cited baseline and experiment rece
 No finding declined. No implementation yet; this relay is plan QA only.
 
 Handing off to Reviewer (codex), round 2: confirm R1-1 is closed against the retained receipts, and say whether anything else blocks approval.
+
+### Reviewer · Round 2
+
+**Source-backed review — approve the plan.**
+swept file: yes
+
+Read the entire revised artifact, retained receipts, experiment runners, collection script and failure lists; spot-checked the source seams from round 1. No additional pre-existing defect in the plan blocks approval. The round-2 instruction waives a new paraphrase. Reversibility remains Easy: fixture-local patch and unittest cleanup. All stated non-goals remain accepted; Q1–Q8 dispositions from round 1 stand.
+
+- [Pass] **R1-1 closed — the missing retained evidence is supplied.** Spot-checked five rows against the plan and its stated base: provenance.jsonl:1 reports BASE-B-red at d3b238ed5, exit 1, “Ran 39 tests in 78.097s ; FAILED (failures=14, errors=1)”; :2 reports EXP-1-B at that revision, exit 0, “RESULT run=39 failures=0 errors=0 ok=True”; :3–4 report C's 111 tests red (32 failures/1 error) then green with the one-line stub; :6 reports the same-base gated run, exit 0, “Ran 227 tests in 252.499s ; OK”. These match artifact:38–46. The retained runners apply only the stated wiring stub before unittest collection/run (run_stubbed_phase_b.py:4–6; run_stubbed_phase_c.py:4–6). Keep the receipts and their explicit raw-log retention limitation at artifact:50. These are Producer-retained historical receipts, not independently rerun results.
+
+- [Pass] **Receipt consistency probe.** Command: Python heredoc using json.loads over TESTS-RESULTS/2026-11-25+GH-1615/provenance.jsonl, asserting exactly 11 rows, each with revision == 'd3b238ed5' and nonempty command/output_snippet; printing the five rows above; counting FAIL/ERROR lines in failures-at-base.txt; ast.parse on the three retained runner/counter scripts without executing them. Exit 0; decisive output: “listed=15”, “listed=33”, “11 nonempty revision-pinned receipts; retained runners parse without executing”. The failure lists reconcile with provenance.jsonl:1,3. No suite, executable fixture or git command ran here.
+
+- [Pass] **AC-5 is now discriminating.** Artifact:96 explicitly requires each mutant to differ, the same pinned test to be green on the unmutated candidate, and failure on the test's own assertion rather than an import/syntax/environment error. This resolves the round-1 advice. The allowlist assertion at test/gh534_phase_b_tests.py:483 and remote-head diagnostic assertion at :623 remain distinct from hook wiring; the production anchors remain the eligibility filter at merge_cleanup.py:2970 and moved-head refusal at :1183. Keep these controls as planned; their runtime sensitivity remains to be demonstrated during implementation, not claimed by this approval.
+
+- [Pass] **Scope and guarantee check retained.** Artifact:71–73 keeps the patch in shared fixture setup with addCleanup; test/gh436-merge-cleanup.py:43 supplies the previous process-wide stub, and :1382–1384 imports A/B/C into the entry registered at validate.sh:96. Artifact:92–99 retains base red, candidate B/C, actual gated wrapper, importer and scope checks. Keep the candidate acceptance sequence and the correction of historical gating claims at artifact:54–56. No new suite, production change or operator decision is needed for this plan.
+
+VERDICT: PASS
+Basis: R1-1 is closed by revision-pinned, nonempty retained receipts consistent with the plan and supporting files. AC-5 now excludes accidental mutant failure. No new blocking issue was found in the whole-plan sweep. This approves the plan only: candidate acceptance and mutant execution are future implementation evidence, and no later relay gate is assumed.
+
+Relay closed (Approved), no further turn needed. Producer may implement the reviewed scope and execute the planned acceptance controls in disposable full clones.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
