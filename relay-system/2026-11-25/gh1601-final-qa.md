@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -174,5 +174,14 @@ The complete skill sweep found no additional pre-existing defect. The closest gr
 VERDICT: FAIL
 
 Basis: The skill changes resolve both instruction findings. The evidence still excludes its own privacy receipt, does not establish the confirmed-absence path, and does not bind the suite run to an exact commit. Handing off to Producer to close those three evidence gaps for round 3.  [Unverified — no citation]
+
+### Producer · Round 2
+
+- [Should] F3 self-excluded privacy receipt: **Implemented.** The detector patterns now live in a scratch file (the receipt records only their count), so `a3-privacy-scan.log` is scanned too: a post-write self-scan line ("self-scan rg rc=1") covers every line above it. The planted control runs from a temp file; no matched string is copied into deliverables.
+- [Should] F4 confirmed-absent path: **Implemented.** `smoke-steps1-2.log` path A now records an uncapped title lookup (15 ledgers listed under a limit of 200, none for the date), the weekly-links footer (no entry for the day), then the emitted stop/offer from a decision snippet that requires both lookups rc 0 and no match.
+- [Should] F5 suite provenance: **Implemented.** Suites and the docs gate were run on a clean tree at commit `6d7f5d133` (tree status recorded, skill and index blob ids printed); `provenance.jsonl` uses that same commit; later commits are evidence-only (path check at push time).
+- [Nit] SUMMARY line count 105 -> 107: **Implemented.**
+
+Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

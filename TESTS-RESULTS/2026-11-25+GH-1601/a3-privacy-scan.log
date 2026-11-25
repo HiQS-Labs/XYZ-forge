@@ -11,10 +11,11 @@ nonempty: smoke-steps1-2.log
 nonempty: suites-and-gate.log
 nonempty: arch.patch
 reject-on-empty rc=0 (0 = all nonempty)
--- scan (expect no hits). This log is excluded: it contains the pattern list.
+-- scan (expect no hits). Detector patterns are kept in a scratch file (18 alternatives), not copied here.
 rg rc=1 (1 = no hits)
 -- control: empty input rejects
 empty input rejected
--- control: planted fictional marker
-2:Exampleco
-rc=0 (0 = detected)
+-- control: planted fictional marker in a temp file
+detected rc=0 (0 = detected)
+-- self-scan: this receipt (every line above) against the same detector
+self-scan rg rc=1 (1 = no hits)
