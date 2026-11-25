@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, clone provisioned, plan drafted. | Plan QA (Codex via relay-xyz), then write the skill, index row, changelog, smoke receipt. |
+| Issue filed, clone provisioned, plan drafted; plan QA round 1 (FAIL, 6 Should) revised. | Plan QA round 2, then write the skill, index row, smoke receipt, final QA. |
 
 ## Requirements (operator brief, 2026-11-25)
 
@@ -61,7 +61,7 @@ Constraints: check existing skills first (`daily-planner`, `daily`, `where-are-w
 
 ## Recon (base `ac0e8b65b`)
 
-- **`daily-planner --mode ledger`** (`skills/2-daily/daily-planner/SKILL.md`, "Daily Work Ledger", GH-1459): finds "Daily Work Ledger — YYYY-MM-DD" issues by title regex in a ledger timezone, verifies per-operator claim comments by their first-line marker, carries one operator's unfinished items, calibrates checkouts. It publishes per-operator comments. It does **not** verify checkbox claims against PR reviews, read people's feedback, or rewrite the ledger body, and it assumes that title pattern. Reuse by reference: use its discovery where the repo follows it; fall back to title or "This week's ledgers" links otherwise.
+- **`daily-planner --mode ledger`** (`skills/2-daily/daily-planner/SKILL.md:128-183`, GH-1459; engine `skills/3-weekly/weekly-planner/scripts/planner_core.py`): finds "Daily Work Ledger — YYYY-MM-DD" issues by title regex in a ledger timezone, verifies per-operator claim comments by their first-line marker, carries one operator's unfinished items, calibrates checkouts. It publishes per-operator comments. Its review step covers the operator's own PRs and review requests for claims and remediation; it does **not** verify a team ledger's checkboxes against PR reviews and heads, read people's feedback, or rewrite the ledger body. It assumes that title pattern, and the engine writes `temp/planner/*` even without `--publish-ledger`. Reuse by reference: use its discovery where the repo follows it; fall back to title or "This week's ledgers" links otherwise.
 - **`daily`** (Rebalance's prompt-log synthesizer, outside this repo) and **`where-are-we-at`** (topic status via recon/merge-cleanup) answer different questions; neither updates a ledger issue.
 - **`weekly-planner`** owns the weekly plan and its shared engine; **`todo-list`** turns an assistant list into serial work and owns the issue closeout procedure. Neither carries yesterday-to-today ledger refresh.
 - **`relay-xyz`** is the reviewer path for QA of this change; the skill's own validation step is a separate, low-effort read-only Codex review of the ledger, not a relay.
@@ -78,32 +78,36 @@ Constraints: check existing skills first (`daily-planner`, `daily`, `where-are-w
 
 ## Plan
 
-1. **Write `skills/2-daily/yesterday-today/SKILL.md`** (extends no code; reuses `daily-planner` ledger discovery by reference). Frontmatter `name: yesterday-today`; description with triggers ("yesterday-today", "update today's ledger from yesterday", "refresh today's work ledger") and the when-to-use-versus-`daily-planner` sentence. Steps, each short:
-   1. Resolve yesterday and today in the operator's local timezone (last working day on weekends/holidays); find both ledger issues; stop and offer to create a missing today ledger.
-   2. Read yesterday's ledger and its comments. Treat every checkbox as a claim.
-   3. Verify each claim: merged commits on the integration branch, PR reviews (verdict, reviewer, `commit_id`, from the reviews endpoint), comments since local midnight, people's own end-of-day comments. Label approved / merged / deployed / approved at an older head.
-   4. Read feedback in full (reviews, issue and PR comments); keep only what changes today's work. Optional Slack read; say when not checked.
-   5. Live state of every open PR in the ledger (head, CI, conflicts, draft, reviewers); throwaway-clone trial merge of the planned order.
-   6. Classify every open item done / carried / new / parked / dropped; group by person, reviews and deploy gates first; a ledger is a plan, not an approval.
-   7. Rewrite today's body keeping the goal header, scope rule, SOP sections and % estimate with formula and dated change log (change a share only with linked evidence; add a dated row even when unchanged). Save the old body; re-read the live body immediately before `gh issue edit --body-file`.
-   8. One independent validation by a low-effort read-only Codex `gpt-6.2-astra` sub-agent given the two issue URLs and the checklist, never the author's conclusions; verify each finding firsthand; say so if it could not run.
-   9. Traps and the short final reply.
-2. **`ARCHITECTURE.md`:** one Skills Index row in the `2-daily` table.
-3. **`CHANGELOG.md`:** only if the repo's `CHANGELOG_WRITES` mode asks for a branch write (default `off`/`landing`: skipped).
-4. **Smoke receipt** under `TESTS-RESULTS/2026-11-25+GH-1601/`: read the skill from its consumer entry point and dry-run steps 1–2 read-only against a real ledger pair; no private content.
+1. **Write `skills/2-daily/yesterday-today/SKILL.md`** (about 130 lines, no code). Frontmatter `name: yesterday-today`; description with triggers ("yesterday-today", "update today's ledger from yesterday", "refresh today's work ledger") and one sentence on use versus `daily-planner` (that skill posts per-operator claim comments; this one rewrites the ledger body from verified team evidence). **Reuse by convention, not by running the engine:** the skill borrows `daily-planner`'s documented title pattern, ledger timezone idea and "lowest issue number wins among same-date duplicates" rule, and does the lookups with plain read-only `gh`. It does not run `planner_core.py --mode ledger`, because that command writes `temp/planner/*` files even without `--publish-ledger` (`planner_core.py:3299,3325-3331`) and picks the newest existing earlier ledger, not the resolved previous workday (`:2283-2300`). Steps:
+   1. **Resolve dates and issues (read-only).** Today and yesterday in the operator's local timezone; on a weekend or holiday, yesterday is the last working day (check the ledger's own "This week's ledgers" links and holiday notes). Find each issue by title pattern, falling back to those links. Distinguish *confirmed absent* (a successful empty lookup) from *lookup failed or incomplete* (report "unavailable", never "missing"). If today's ledger is confirmed absent, stop and offer to create it; write nothing.
+   2. **Read yesterday's ledger body and comments.** Treat every checkbox as a claim.
+   3. **Verify each claim** with GitHub reads: merged commits on the integration branch; PR reviews from the reviews endpoint (verdict, reviewer, `commit_id`); comments since local midnight; people's own end-of-day comments. Label each as approved, merged, deployed or "approved at an older head". "Deployed" needs linked evidence visible in GitHub (a release, deploy comment or run); otherwise say "deployment unverified". Anything needing a production or VM read is reported "not checked"; the skill never writes to a server.
+   4. **Read people's feedback in full** (review bodies, issue and PR comments); keep only what changes today. Optional Slack read; say when it was not checked.
+   5. **Live state of every open PR in the ledger:** head, CI, conflicts, draft, past reviews and current review requests (reported separately). A trial merge of the planned order is done only in a throwaway local clone.
+   6. **Classify** every open item done / carried / new / parked / dropped; group by person, reviews and deploy gates first. A ledger is a plan, not an approval: no wording that implies merge, deploy or test sign-off.
+   7. **Rewrite today's body**, keeping the ledger's goal/target header (official count, progress bar, items list), scope rule, SOP sections and the % completion estimate with its formula, components and dated change log. A share changes only with linked evidence under that ledger's own estimate rule; add a dated row even when nothing changed. **Publish guard:** save the old body to a file; re-read the live body immediately before `gh issue edit --body-file`. Live body equals the saved one: edit. Live body changed: rebase the draft on the live text and repeat the check, or stop. Read failed: stop. Edit only after the operator's go-ahead if the invocation did not already ask for the update.
+   8. **Validate once, after a confirmed write:** a low-effort, read-only Codex `gpt-6.2-astra` sub-agent is given only the two issue URLs and the checklist (never the author's conclusions) and fetches the *published* body itself. Verify each finding firsthand before fixing; if the reviewer cannot run, say "independent review did not run".
+   9. **Traps and final reply.** zsh does not word-split an unquoted `$var` in a loop; expired cloud login means "not checked"; a proxied `grep` can print a false "0 matches" (use `rg` or `git grep`); no bare @mentions unless asking that person something; no personal emails or secrets in an issue. Final chat reply: ledger link, what changed, validator verdict, next steps.
+2. **`ARCHITECTURE.md`:** one Skills Index row in the `2-daily` table (no other catalog pins a skill list: `skills/README.md:13`; the viewer test derives counts from disk).
+3. **`CHANGELOG.md`:** only if the repo's `CHANGELOG_WRITES` mode asks for a branch write (default: skipped).
+4. **Evidence** under `TESTS-RESULTS/2026-11-25+GH-1601/`: `SUMMARY.md` (smoke receipt: resolved dates, checkbox count, stop message, which read commands ran), the check logs, and `provenance.jsonl`.
+5. **Final relay QA** (Codex via relay-xyz) on the implemented skill, this plan's acceptance map and the evidence, then push through the pre-push gate and open the PR against `development`.
 
 ## Acceptance
 
-- [ ] A1 `skills/2-daily/yesterday-today/SKILL.md` exists, `name: yesterday-today`, under ~130 lines, with the triggers and the daily-planner boundary sentence. Red control: `ls skills/*/yesterday-today` is empty on base `ac0e8b65b`.
-- [ ] A2 Each of the nine lessons in the issue brief appears as a step or trap (checked by reading the file against a list, recorded in the receipt). Red control: base has no such file.
-- [ ] A3 The file has no client names, people's names, hostnames, emails or private details (`git grep -n -i` over the new files for the example repo's name, its logins and its host names returns nothing; `rg` used, not GNU-only flags).
-- [ ] A4 `ARCHITECTURE.md` lists `yesterday-today`; `test/path-integrity.sh` and `test/gh589-skill-viewer.sh` pass; docs gate `utils/pdda/pdda.sh run` has zero errors.
-- [ ] A5 Smoke, main path: from the consumer entry point (`skills/2-daily/yesterday-today/SKILL.md` through the clone), steps 1–2 resolve both example issues and list yesterday's checkboxes read-only. Adjacent path: a missing-today case (a date with no ledger) stops with the offer-to-create message and writes nothing.
-- [ ] A6 No new test file or registry entry in the diff (GH-831).
+Unchanged base `ac0e8b65b` must fail each delivery assertion; each control is run and its observed output recorded.
+
+- [ ] A1 `skills/2-daily/yesterday-today/SKILL.md` exists, is nonempty, and has frontmatter `name: yesterday-today`, the three trigger phrases and the `daily-planner` boundary sentence, in at most about 130 lines. Observation: a script prints the file's existence, line count and parsed frontmatter name; on base it prints `missing`.
+- [ ] A2 Nine-point checklist: for each of the nine requirement items above, the exact line number in the skill that carries it (recorded in `SUMMARY.md`). Red control: the same checker run against a copy of the skill with one item's lines removed reports that item missing.
+- [ ] A3 Privacy scan: one `rg -n -i` command with a fixed pattern list (the example repo's name, its people's logins and names, hostnames, `@` addresses) over the named deliverables (`SKILL.md`, the plan doc, `TESTS-RESULTS/2026-11-25+GH-1601/*`, the `ARCHITECTURE.md` diff) after confirming each is nonempty. Red control: the same scan over a temp copy with one planted forbidden string reports it.
+- [ ] A4 `ARCHITECTURE.md` contains the exact row `| [yesterday-today](skills/2-daily/yesterday-today/SKILL.md) |` (absent on base); `test/path-integrity.sh` and `test/gh589-skill-viewer.sh` pass.
+- [ ] A5 Smoke, from the consumer entry point (the skill read through its path in this clone): steps 1-2 against a real ledger pair, read-only; then step 1 against a date with a confirmed-absent ledger, which prints the offer-to-create stop. Record resolved dates, checkbox count, the stop text and the exact read commands; show a zero-write check (`git status --porcelain` clean outside `TESTS-RESULTS/`, no `gh issue edit/create` in the command log). A failed lookup must read "unavailable", not "missing".
+- [ ] A6 Diff invariant on the nonempty candidate diff: changed paths are only `skills/2-daily/yesterday-today/SKILL.md`, `ARCHITECTURE.md`, the plan doc, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`; no path under `test/` and no `validate.sh` change (GH-831). Red control: the checker rejects a diff listing a synthetic `test/new-suite.sh`.
+- [ ] A7 Delivery: final relay QA receipt committed, `provenance.jsonl` present in the evidence folder, PR base is `development`.
 
 ## Verification
 
-Docs route only: `utils/pdda/pdda.sh run`, plus the two existing suites above run once. No new suite. Smoke is a manual check under `TESTS-RESULTS/`.
+Docs route (`utils/ci-route.sh`): `utils/pdda/pdda.sh run`, plus the two existing suites above, run once on the final commit. No new suite or registry entry. The checks above are manual, recorded under `TESTS-RESULTS/` with `provenance.jsonl`.
 
 ## Risks
 

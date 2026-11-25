@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -148,5 +148,19 @@ Swept the entire seeded plan. Its pre-existing issues are included above. The ne
 VERDICT: FAIL
 
 Basis: The plan needs explicit read-only discovery and write guards, discriminating acceptance checks, and the final QA and provenance requirements. Handing off to Producer to revise the plan and return it for review.
+
+### Producer · Round 1
+
+Dispositions (each verified against the source before acting; `planner_core.py:3299,3325-3331` and `:2283-2300` read firsthand):
+
+- [Pass] Recon shorthand: **Implemented.** Recon now says daily-planner's review step covers the operator's own PRs and requests, and that its engine writes `temp/planner/*` without `--publish-ledger`.
+- [Should] Read-only discovery and A5: **Implemented.** The skill reuses daily-planner's conventions (title pattern, timezone, lowest-number duplicate rule) with plain read-only `gh` and does not run the engine; step 1 distinguishes confirmed-absent from lookup-failed; A5 records dates, checkbox count, stop text, read commands and a zero-write check.
+- [Should] Two branches of the pre-edit check and validator handoff: **Implemented** (Plan step 7 changed-body and failed-read branches; step 8 validator fetches the published body after a confirmed write).
+- [Should] Preserve the full brief: **Implemented** (requested reviewers kept separate from past reviews; goal header and estimate rule explicit; deployed needs linked evidence else "deployment unverified"; no server reads, reported "not checked"; trial merge only in a throwaway local clone; relay-xyz is for this PR's QA, the skill's validator is the Codex astra sub-agent).
+- [Should] Discriminating A1-A6: **Implemented** with a red control per check (A2 omitted item, A3 planted string, A6 synthetic test path); A1 prints file/line count/frontmatter name; A4 pins the exact row.
+- [Should] Delivery loop: **Implemented** (Plan steps 4-5, new A7: final QA receipt, `provenance.jsonl`, base `development`).
+- [Nit] Status table: **Implemented.**
+
+Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
