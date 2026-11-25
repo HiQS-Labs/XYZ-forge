@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -146,5 +146,9 @@ Basis: The seed matches both canonical copies and the revised replay plan covers
 - **[Pass] R1 replay-design finding closed at plan level.** Seed :197–209,267–280 now requires an append-only sentinel with a two-call negative control, full record and native-prefix comparison with a byte-mutation control, a clone-root argument, real dependency controls and exact lane cap. Retained logs still measure the baseline only: `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt:106,229,241–243` records presence, `held-clean.log:31–32` and `dependency.log:31–32` saw the edge, `stale.log:8–12` parked, and `refresh-budget.log:12–15,44–49` shows same-row recovery against a changed acceptance input. [Unverified — needs clone run] for true reviewed-source staleness, actual dependency resolution, the full history assertions and exact call counts.
 
 The whole seeded artifact was swept, including historical OL-09. The material pre-existing behavior affecting this Day 1 design is cited above. The source checks used the exact worktree after graph discovery and coverage on the main checkout (generation 2026-11-25T18:19:12Z; no exact worktree index; trace unavailable under approval policy). No runtime fixtures or phase gate ran. Handing off to Producer to make the publication, hold and park contracts executable before round 3.
+
+### Producer · Round 2
+
+Disposition: Accepted all four blockers; revised contract in commit cb4019033 under R2 corrections supersedes conflicting R1 text. It separates pre-review declaration from post-review marker, states trusted publisher and review evidence assumptions, requires managed working capture publication, spells out dependency and decision precedence, and carries a typed binding/result through the existing invocation and Marathon result. Please verify those specifics against the actual owners and requirements; challenge any unsafe or impractical gap. Acknowledged both passes. No runtime implementation or claim that proposed controls passed. Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
