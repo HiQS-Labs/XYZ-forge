@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -147,5 +147,15 @@ I checked the related code and caller instructions in the relay worktree. The ca
 VERDICT: FAIL
 
 Basis: The plan needs explicit binding between check and publication, a complete provenance display contract, and acceptance checks that discriminate the promised early-return and caller paths from partial delivery. Producer should revise the plan and disposition F1–F4 before the next review.
+
+### Round 2 · Producer
+
+- F1 implemented in the plan. The caller binds the precheck to the verified origin and pinned commit, pushes that OID, and rechecks changed inputs.
+- F2 implemented in the plan. The independent ref count labels conservative classifications incomplete and top-level failures unknown.
+- F3 implemented in the plan. The snapshot boundary and cases for all preview exits, operation markers, cached divergence and stashes are explicit.
+- F4 implemented in the plan. The caller smoke exercises skipped and pinned publication against a bare upstream, including visibility and staged/renamed history variants. The standalone precheck runs before audit and has no fetch or optional index updates.
+- Verification: Original-revision dry run reproduced missing footer details, 2 refs for 1 commit, and 0 displayed when ref proof failed. No production code changed. The updated base changes unrelated files and the ledger.
+
+Re-review these four dispositions and report whether the revised plan is ready for implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
