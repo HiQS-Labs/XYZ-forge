@@ -109,7 +109,7 @@ def ahead_behind(repo):
         return None, None
     head = shared.git_at(repo, "symbolic-ref", "-q", "--short", "HEAD")
     branch_ref = f"origin/{head.stdout.strip()}" if head.returncode == 0 and head.stdout.strip() else None
-    for ref in ("@{upstream}", *((branch_ref,) if branch_ref else ()), "origin/HEAD", "origin/main", "origin/master", "FETCH_HEAD"):
+    for ref in ("@{upstream}", *((branch_ref,) if branch_ref else ()), "origin/HEAD", "origin/development", "origin/main", "origin/master", "FETCH_HEAD"):
         run = shared.git_at(repo, "rev-list", "--left-right", "--count", f"HEAD...{ref}")
         parts = run.stdout.split() if run.returncode == 0 else []
         if len(parts) == 2 and all(p.isdigit() for p in parts):
@@ -222,7 +222,42 @@ def drift_gate(root, state, config, found, explicit, apply, allow_drift, warning
         warn(warnings, "drift check skipped: no canonical XYZ-forge root resolved "
                        "(set --canonical, XYZ_FORGE_ROOT, or targets.json \"canonical\")")
         return None
-    drift = {**drift_report(root, canonical), "origin": origin}
+    canonical_top = shared.collection_repo(canonical)
+    if canonical_top is None:
+        ahead, behind, branch = None, None, None
+    else:
+        ahead, behind = ahead_behind(canonical_top)
+        head = shared.git_at(canonical_top, "symbolic-ref", "-q", "--short", "HEAD")
+        branch = (head.stdout.strip() or "HEAD") if head.returncode == 0 else "HEAD"
+    if behind:
+        quoted = shlex.quote(str(canonical_top))
+        if ahead:
+            remedy = (f"reconcile or fast-forward it (git -C {quoted} pull --ff-only will refuse "
+                      f"while {ahead} commit(s) ahead) or point --canonical / XYZ_FORGE_ROOT / "
+                      f"targets.json \"canonical\" at a current checkout")
+        else:
+            remedy = (f"fast-forward it (git -C {quoted} pull --ff-only) or point --canonical / "
+                      f"XYZ_FORGE_ROOT / targets.json \"canonical\" at a current checkout")
+        warn(warnings,
+             f"STALE_CANONICAL_FORGE: canonical XYZ-forge checkout {canonical} "
+             f"(from {origin}, branch {branch or 'unknown'}, {fmt_ahead_behind(ahead, behind)}) "
+             f"is {behind} commit(s) behind its upstream (as of the last fetch) — "
+             f"skipping drift comparison and re-vendor commands to avoid downgrades; {remedy}")
+        deploying = any(t["enabled"] for t in config["targets"])
+        if apply and deploying and not allow_drift:
+            shared.require(False,
+                           f"REFUSED: canonical XYZ-forge checkout {canonical} is {behind} commit(s) behind "
+                           f"its upstream; drift cannot be verified — update {canonical}, pass a current "
+                           f"--canonical, or deploy with --allow-drift (loudly)")
+        if apply and deploying and allow_drift:
+            warn(warnings,
+                 f"--allow-drift: deploying without drift verification because canonical {canonical} "
+                 f"is {behind} commit(s) behind its upstream")
+        return {"canonical": str(canonical), "origin": origin, "branch": branch,
+                "ahead": ahead, "behind": behind, "stale_canonical": True,
+                "skipped": "STALE_CANONICAL_FORGE"}
+    drift = {**drift_report(root, canonical), "origin": origin, "branch": branch,
+             "ahead": ahead, "behind": behind, "stale_canonical": False}
     drifted = [e for e in drift["drifted"] if e["skill"] in found]
     for entry in drifted:
         remedy = (f"python3 {shlex.quote(str(root / 'intake.py'))} --root {shlex.quote(str(root))} --apply "

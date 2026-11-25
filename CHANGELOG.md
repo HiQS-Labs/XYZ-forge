@@ -3,6 +3,19 @@
 
 # Changelog
 
+## 2026-11-25 — GH-1605: warn `STALE_CANONICAL_FORGE` in `sync.py` when canonical checkout is behind upstream
+
+- `skills/3-weekly/skills-army-hq/scripts/sync.py` now checks offline upstream status on the
+  resolved canonical `XYZ-forge` checkout before invoking `skill_drift_check.py` (extending
+  `ahead_behind()` with `origin/development` fallback right after `origin/HEAD`). When
+  `behind > 0`, `drift_gate()` emits `WARN STALE_CANONICAL_FORGE` with safe update/reconciliation
+  remedies, skips `drift_report()` so zero downgrade-risk `WARN DRIFTED` / `intake.py --apply
+  update` commands are printed, returns structured `stale_canonical: true` metadata in
+  `result["drift"]`, and refuses `--apply` on enabled targets unless `--allow-drift` is explicitly
+  passed loudly. Documented in `skills/3-weekly/skills-army-hq/SKILL.md` and
+  `skills/3-weekly/skills-army-hq/references/recovery.md`. No new suite (GH-831). Evidence:
+  `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md`.
+
 ## 2026-11-20 — GH-1535 (KS-02): operator decision comments release decide holds & U15 body/label holds
 
 - `skills/1-hourly/kickstart/scripts/build_queue.py` now fetches issue `comments` in the existing

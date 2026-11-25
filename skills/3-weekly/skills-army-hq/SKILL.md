@@ -231,6 +231,14 @@ reported as `unrecognized` and never fail.
   recommended place), then the repository `skills-army-hq` itself was vendored from.
   An explicit setting that lacks the checker or `skills/` is an error; no setting at all
   is a `WARN drift check skipped`, never a silent pass.
+- **Stale canonical guard (GH-1605):** Before invoking the checker, `sync.py` checks offline
+  ahead/behind status on the resolved canonical checkout (no network calls). When `behind > 0`,
+  it emits `WARN STALE_CANONICAL_FORGE` citing the checkout, origin, branch, ahead/behind counts,
+  and safe update remedies, skips drift comparison so zero downgrade-risk `DRIFTED` / `intake.py
+  --apply update` commands are printed, and sets `drift.stale_canonical: true` (`skipped:
+  "STALE_CANONICAL_FORGE"`). On `--apply` with an enabled target, it **REFUSES** (exit 2) unless
+  `--allow-drift` is explicitly passed loudly (and recorded in `changelog.md` when a sync
+  transaction occurs).
 - Preview / `--status`: every drifted forge-owned skill is a `WARN DRIFTED <name>` line on
   stderr citing the vendored and canonical paths and the re-vendor command; the JSON result
   carries `warnings` and a `drift` block (`ok`, `drifted`, `unrecognized`, `origin`). Note that
