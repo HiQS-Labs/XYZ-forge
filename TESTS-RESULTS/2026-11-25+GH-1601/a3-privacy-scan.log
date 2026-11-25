@@ -1,0 +1,21 @@
+== A3: enumerate final inputs (each must be nonempty; a missing or empty input rejects)
+nonempty: SKILL.md
+nonempty: GH-1601-YESTERDAY-TODAY-SKILL.md
+nonempty: SUMMARY.md
+nonempty: a1-a4-text.log
+nonempty: a2-nine-points.log
+nonempty: a6-diff-invariant.log
+nonempty: provenance.jsonl
+nonempty: route.log
+nonempty: smoke-steps1-2.log
+nonempty: suites-and-gate.log
+nonempty: arch.patch
+reject-on-empty rc=0 (0 = all nonempty)
+-- scan (expect no hits). Detector patterns are kept in a scratch file (18 alternatives), not copied here.
+rg rc=1 (1 = no hits)
+-- control: empty input rejects
+empty input rejected
+-- control: planted fictional marker in a temp file
+detected rc=0 (0 = detected)
+-- self-scan: this receipt (every line above) against the same detector
+self-scan rg rc=1 (1 = no hits)

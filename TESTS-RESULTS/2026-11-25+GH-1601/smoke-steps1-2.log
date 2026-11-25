@@ -1,0 +1,34 @@
+# A5 smoke: /yesterday-today steps 1-2, read-only. Placeholders: <example-repo>, <Y>=yesterday's issue, <T>=today's issue.
+## consumer entry point (read through this clone's path)
+$ sed -n 1,3p skills/2-daily/yesterday-today/SKILL.md; grep -n '^## 1\.' skills/2-daily/yesterday-today/SKILL.md
+name: yesterday-today
+25:## 1. Resolve the dates and both issues (read-only)
+git status --porcelain before: 1 line (this receipt file, created just before)
+## step 1, main path (today = Wed 2026-11-25, yesterday = Tue 2026-11-24, latest working day before today)
+$ gh issue list -R <example-repo> --state all --search "Daily Work Ledger in:title" --limit 10 --json number,title
+[rc=0]
+daily-planner title pattern matches: 0 (confirmed empty, rc 0) -> fall back to the team title convention
+$ gh issue list -R <example-repo> --state all --search "Planned Work Ledger in:title" --limit 10 --json number,title
+[rc=0]
+today <T> -> matched 1 issue(s) by title containing "Wednesday Nov 25, 2026"
+yesterday <Y> -> matched 1 issue(s) by title containing "Tuesday Nov 24, 2026"
+## step 2, read yesterday <Y> body and comments
+$ gh issue view <Y> -R <example-repo> --json body,comments [rc=0]
+comments: 10 | claims (checkboxes): checked 10 unchecked 34
+## adjacent path A: simulated today = Thu 2026-12-31, no ledger exists (both discovery paths)
+$ gh issue list -R <example-repo> --state all --search "Planned Work Ledger in:title" --limit 200 --json number,title   # one uncapped title lookup
+[rc=0]
+ledger issues listed: 15 (limit 200, so the list is not capped)
+titles containing "Dec 31, 2026": 0
+$ gh issue view <T> -R <example-repo> --json body   # most recent ledger's weekly-links footer, the second discovery path
+[rc=0]
+weekly-links footer found: True | days listed: ['Fri', 'Mon', 'Thu', 'Tue'] | covers the week of Nov 23-27 only; no entry for Thu Dec 31
+skill output: STOP. Today's ledger for Thu 2026-12-31 is confirmed absent (complete title lookup empty; weekly links have no such day). Offer: create it? Nothing written.
+
+## adjacent path B: failed lookup (nonexistent repository)
+$ gh issue list -R <nonexistent-owner>/<nonexistent-repo> --state all --search "Planned Work Ledger in:title" --json number,title
+[rc=1]
+skill output: today's ledger lookup UNAVAILABLE (rc 1, not 'missing'). STOP before drafting; no offer to create.
+## zero-write check
+gh subcommands run, in order: list, list, view, list, view, list (no edit/create/comment; each view and list scoped with -R <example-repo> except path B, which targets a nonexistent repository on purpose)
+git status --porcelain after: 1 line (still only this receipt; no other path touched)

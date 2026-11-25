@@ -1,0 +1,6 @@
+== suites and docs gate on tested commit 6d7f5d13322d1bb943da92fde71490386e8a2723 (clean tree:        0 changed paths)
+tested tree skill+index blobs: 82583abaa4796d32aefb151fae89c6fdc92ce7fe 6547c5adfe895408862960749cc87bb009a55d0b
+gh589-skill-viewer: 8 passed, 0 failed
+  path-integrity: 3 pass, 0 fail
+PDDA run complete: no errors, 34 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+later commits change only TESTS-RESULTS/, relay-system/, PROJECT/ (checked by: git diff --name-only 6d7f5d13322d1bb943da92fde71490386e8a2723 HEAD at push time)
