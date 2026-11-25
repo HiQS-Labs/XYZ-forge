@@ -23,7 +23,7 @@ Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 40%
 
 | What was just completed | What's next |
 |---|---|
-| OL-09 preparation published; Day 1 OL-10 baseline replays reproduced held dispatch. | Resolve R1 plan-QA blockers, then obtain independent approval before runtime edits. |
+| OL-09 preparation published (historical). Day 1 plan QA R1–R3 failed; R3 redesign (below) written. | One extra independent plan review (Round 4, authorized); runtime edits only after Approved. |
 
 ## Requested outcome and boundaries
 
@@ -356,3 +356,98 @@ acknowledged. Reviewer should test the chronological publication path, trust
 assumption, managed-selector downgrade resistance, exact hold/release cases and
 typed no-reservation park against actual source. Review is not approval of an
 unimplemented portable receipt or proof of any unrun scenario.
+
+### R3 redesign — 2026-11-25 (supersedes conflicting R1/R2 text; one extra review authorized)
+
+Review budget, stated plainly: plan QA used three of three rounds (R1–R3, all FAIL,
+transcript `relay-system/2026-11-25/gh1476-day1-plan-qa.md`; local head `3c1b2d985`,
+tag `keep/gh1609-day1-plan-r3`). The operator authorized **exactly one additional
+independent plan review** for this repair window (Round 4 of the same thread, same
+token, counter not reset). If it does not approve, stop; no round 5, no new run.
+
+**Two tiers, credited separately.** *Tier A (holds)* is a change that stands alone:
+a known human or dependency hold parks the row before promotion and before any native
+attempt, on every lane. *Tier B (managed admission)* adds reviewed-source binding for
+lanes that opt in. Tier A merged without Tier B is **partial OL-10 progress, not OL-10
+credit**; the #1400 scoreboard is not touched by this work either way.
+
+**Tier A.** Preflight already fetches the issue (`fetch_issue_details`); extend that one
+fetch with labels and comments and run the *existing* hold recognizer over it
+(`issue_hold_reason`, `operator_decision` in `skills/1-hourly/kickstart/scripts/build_queue.py`).
+Move the recognizer's pure functions to one importable module that Kickstart also imports
+(no copy). A hold returns the existing exit-5 refusal path, so Jog's refusal writer
+(`jog_run.py:652–659`) parks the row. Unavailable lookup keeps today's tolerance on a
+legacy lane (a *known* hold is the only refusal there). Releasing a hold: the latest
+trusted-operator `Operator decision: proceed` as an exact first line; `pending`/free text
+or a wrong-author comment does not release; body/label holds stay independent.
+
+**Tier B — the four review findings, decided.**
+
+1. *Published transcript vs reviewed head, and publisher identity.* Two distinct commits:
+   `reviewed_head` A (what the reviewer read, the trailer's `reviewed-head:`) and
+   `transcript_commit` B (the later commit that holds the approved transcript + trailer).
+   The issue marker is one JSON payload `{version, issue, capture_path, reviewed_head: A,
+   transcript_commit: B, transcript_path}` (the pre-review capture block stays free of any
+   commit ID). Admission: B is an ancestor of the integration tip; `git show B:transcript_path`
+   parses to a trailer with `status: Approved` and `reviewed-head: A`; the existing
+   `relay_attest.source_matches` on A→B proves B differs from A only in transcript paths
+   (add one small pure `parse_trailer(text)` to that owner for a portable read — no `.git`
+   receipt, no absolute path); bound paths at A equal the same paths at the evaluated
+   integration SHA (objects, expected absence included; unrelated changes allowed). Reading
+   at A alone cannot find the approval (negative control). A seeded or transcript-only
+   review is accepted here only because the publisher is trusted, which is the assumption
+   (below). Publisher identity: the marker author must equal the operator login, which Jog
+   resolves once (env `XYZ_OPERATOR_LOGIN`, else `gh api user`, the same sources Kickstart
+   uses) and forwards to Preflight as an argument; never the org slug; unresolved login on
+   a managed lane parks.
+2. *Managed classification with unavailable ref or lookup.* The integration ref is resolved
+   by the repo's existing integration-branch setting, never from the capture, and Jog
+   classifies **before promotion**. A lane is managed if *any* positive evidence exists:
+   the local capture has the block, the integration tree's capture for the issue has it
+   (a stale tracking ref counts — staleness cannot hide a positive), or the row's prior
+   execution record says `admission.class=managed`. Managed plus any unverifiable input
+   (no ref, no lookup, ambiguous captures, missing marker, bad author) parks with a specific
+   reason, with no promotion and no worker. Legacy requires the *absence* of all three
+   evidence kinds; if the fetch failed the class is recorded as `legacy-unverified` in the
+   execution record (the sticky store is that existing record, not a new database) and runs
+   as today. **Residual, stated:** a first-seen lane with block deleted locally, never
+   published or dispatched managed, and a tracking ref predating its publication is
+   indistinguishable from legacy offline work; accepted for a local-first CLI.
+   Withdrawing managed intent is a reviewed capture change on the integration branch.
+3. *Dependency release when prose is removed.* The reviewed capture block carries typed
+   `dependencies: [owner/repo#N, …]` (issue or PR), part of the reviewed bytes. Admission
+   requires each declared dependency verified resolved by lookup (issue closed; PR merged;
+   closed-unmerged, unknown kind and unavailable lookup park). Removing the prose line
+   therefore cannot release a declared dependency; prose `Blocked by #N` still holds on its
+   own while the text exists. A dependency discovered only in prose after review is not
+   covered by a declaration: managed lane parks while that text is present (existing rule).
+4. *Attempt key across capture rename or namespace change.* At dispatch Jog writes the
+   exact native key (`MARATHON_LANE_NS or phase_id`, `marathon_drive.py:1542–1545`) into the
+   execution record. On retry/refresh, a derived key that differs from the recorded key
+   parks `attempt-key-changed`; a managed row with prior dispatched executions and no
+   recorded key parks unless an attempt file already exists under the derived key. No
+   key translation, copy or reset; a conservative refusal is the intended outcome.
+
+**Typed start-tree handoff** (unchanged from R2, accepted as a Pass in R3): optional
+managed binding `{version, reviewed_sha, evaluated_sha, paths}` in the invocation,
+all-or-none, checked by Marathon's branch selection before any switch or reservation;
+mismatch emits `marathon-drive/result@1` `parked` reason `managed-start-tree-mismatch`,
+no reservation. Legacy packets without the field are unchanged. The unchanged-branch
+assertion is measured at the Marathon selection boundary, since Jog's checkpoint runner
+may switch to development before the lease (`jog_run.py:2861–2873`).
+
+**Trust assumption.** Local-first developer CLI: the configured operator login is trusted
+to have published only independently reviewed commits; transcript digests prove
+consistency, not reviewer identity. No second review authority, scheduler, database,
+or new test suite is added (AGENTS.md *No new tests*); acceptance is by existing suites
+plus manual controls under `TESTS-RESULTS/2026-11-25+GH-1476-day1/`.
+
+**Falsifiable acceptance (disposable full clone, worker edge alone stubbed, one sentinel
+append per call, two-call negative control).** Ready = 1 call. Human hold, declared
+dependency open, closed-unmerged PR, prose-removed open dependency, lookup-unavailable
+managed, block-removed-local, wrong publisher author, approval readable only at A, source
+changed after review = 0 calls and identical native bytes; unrelated source change,
+matching lane = 1 call. Refresh via `jog retry`: same global ID, old execution records
+byte-identical, native prefix preserved with exactly one appended line; renamed capture
+or changed namespace = park; exhausted key = 0 calls. Each control runs red against the
+unchanged candidate first. Tier A controls are runnable and creditable without Tier B.
