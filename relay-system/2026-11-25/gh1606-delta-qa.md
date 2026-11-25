@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -107,5 +107,23 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) each with a co
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+Ship the delta; no required changes.
+
+swept file: yes
+
+- [Pass] Q1/Q2 — I agree with reversing my earlier acceptance of the empty nonzero fallback. A usage error is not evidence of a blocking toolchain fault. The plan's skip-on-unanswerable rule (PROJECT/2-WORKING/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md:84-86), skills/2-daily/merge-cleanup/SKILL.md:269, and the helper contract (skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1072-1097) agree. The same helper controls the advisory warning (:1443-1448) and pre-reserve deferral (:2176-2183). Narrow AST-extracted helper probe, with subprocess mocked (no gate or fixture executed), returned: mixed rc3 → both fault lines joined; php-only rc0 → ''; python-only rc3 → python line; stderr-only rc3 → python line; no-fault rc3 → ''; empty rc2 → ''; OSError → ''; TimeoutExpired → ''; absent validate.sh → '' without calling subprocess. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` with ast.parse/compile extracting only gate_toolchain_fault_reason, Path.is_file patched true/false and subprocess.run patched with CompletedProcess or the named exceptions. Exit 0; decisive output: `mixed 'ENVIRONMENT FAULT: php advisory | ENVIRONMENT FAULT: python3 missing modules'`, `no-fault ''`, `empty ''`, `absent ''; subprocess not called`. No fix needed.
+- [Pass] Q2 — Whole-tree `rg -n --hidden -g '!.git' -g '!.relay-artifacts/**' 'validate.sh --print-mode exited|output tail|nonzero.*fault line|first.*ENVIRONMENT FAULT' .` exited 0. Remaining fallback descriptions are explicitly historical: relay-system/2026-11-25/gh1606-final-qa.md:153,186 and the accepted PR-review finding at PROJECT/2-WORKING/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md:249. No remaining live fallback dependency found. Preserve historical turns; no fix needed.
+- [Pass] Q3 — S8 installs the usage branch before cutting PR branches (TESTS-RESULTS/2026-11-25+GH-1606/run_controls.py:33-39,65-87,184-186); _drive passes GH1606_TOOLCHAIN=usage into main (:121-125). The landing-clone helper then runs before reserve (merge_cleanup.py:2176-2183). Old fallback returns nonempty usage text, so the pre-fix code defers. Candidate S8 requires rc4, MERGED, exactly one attempt and push, and a nonempty published origin head equal to the recorded repair (run_controls.py:304-308,342-344); the prefix-red requires rc3, the positive defer message and a present zero/absent attempt value (:346-350). An AST-only evaluation of these predicates on {} and a driver-error result exited 0: `S8 predicates reject empty and driver-error results`. The nofault checks require subprocess rc0 plus an explicitly parsed False/True flag (:291-298), so missing output cannot satisfy either. Retained red/green and S8 results are provenance.jsonl:6-7,15-16. End-to-end replay was not rerun here (requires disposable clone); accepted-and-recorded, supported by those producer receipts. No fix needed.
+- [Pass] Q4 — Scope is the helper's one return change plus explanation, two manual controls and S8, and regenerated receipts. No hook, routing, accounting or budget change appears in .relay-artifacts/GH-1606-delta.diff. JSON parsing and assertions over the retained provenance exited 0: `provenance 23 rows; all passed; no /Users/`. SUMMARY.md:5,27 and provenance.jsonl:19-22 agree on candidate 06671b514 and 227/8/6 suite counts. Older commit identifiers describe historical fixes; the phase-B base receipt remains explicitly historical (:23). No fix needed.
+- [Pass] Q5 — Actual Python faults still print ENVIRONMENT FAULT and exit 3 (validate.sh:1042-1045), so the delta retains their early deferral. A nonzero result with no recognized diagnostic can now spend a repair slot and reach the hook: that is the intended bounded loss of foresight, not permission to publish a blocked gate. push_resolved_head still verifies wiring and performs an ordinary hooked push (merge_cleanup.py:1190-1203); tier2 invokes the real gate (githooks/pre-push:354-360), and full routing refuses a nonzero actual gate (:453-463). These paths are unchanged. No fix needed.
+- [Pass] Q6 / sweep — Read the complete affected Python module, manual driver, plan, summary and provenance, including surrounding pre-existing behavior; no additional pre-existing defect established. The new PR-body/template and CodeRabbit walkthrough claims (plan:250-251) are external producer reports, not independently verified here; accepted-and-recorded as administrative claims, not runtime proof. The 23-row receipt set is internally consistent, but does not independently prove checkout identity or rerun the suites. SUMMARY.md:35-43 records conservative-route, phase-B and final-gate limitations. Qualification gate and hosted CI on the new head remain unverified by design; this approval neither supplies them nor assumes a later relay gate. No fix needed.
+
+VERDICT: PASS
+Basis: The smallest runtime correction restores the documented advisory-probe contract, preserves recognized blocking faults and the hook boundary, and has discriminating retained red/green controls. Narrow independent probes passed; disposable-clone and external results are assessed as retained producer evidence with the stated limits.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
