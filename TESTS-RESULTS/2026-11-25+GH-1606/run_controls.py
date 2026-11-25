@@ -203,6 +203,28 @@ def _helper_probe(repo, path_env):
     return p.returncode, (p.stdout.strip() or p.stderr.strip())[-700:]
 
 
+def _mixed_probe(repo):
+    """Final-QA R1: the gate can print an advisory php fault line before the blocking python one.
+    Feed the helper that two-line rc-3 output (and a php-only rc-0 output) through a patched subprocess.run."""
+    code = (
+        "import sys,subprocess\nfrom pathlib import Path\nfrom unittest.mock import patch\n"
+        "sys.path.insert(0,%r)\nimport merge_cleanup as m\n"
+        "def run(rc,out):\n"
+        "    r=subprocess.CompletedProcess([],rc,stdout=out,stderr='')\n"
+        "    with patch.object(m.subprocess,'run',return_value=r):\n"
+        "        return m.gate_toolchain_fault_reason(Path.cwd())\n"
+        "php='ENVIRONMENT FAULT: php present but unusable (advisory)\\n'\n"
+        "py='ENVIRONMENT FAULT: python3 (/usr/bin/python3) version 3.9.6; missing modules: yaml,pytest,requests,mypy; requires Python >=3.10\\n'\n"
+        "mixed=run(3,php+py)\n"
+        "print('MIXED_NAMES_PYTHON=',('python3' in mixed and 'missing modules' in mixed))\n"
+        "print('MIXED_NAMES_PHP=',('php' in mixed))\n"
+        "print('PHP_ONLY_RC0_EMPTY=',run(0,php)=='')\n"
+        % str(Path(repo) / "skills/2-daily/merge-cleanup/scripts"))
+    p = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, cwd=str(repo))
+    flags = {ln.split("=")[0]: ln.split("=")[1].strip() == "True" for ln in p.stdout.splitlines() if "=" in ln}
+    return p.returncode, flags, (p.stdout.strip() or p.stderr.strip())[-500:]
+
+
 def _attempts(r):
     return r["attempts"]
 
@@ -213,6 +235,7 @@ def main():
     ap.add_argument("--repo")
     ap.add_argument("--base-repo")
     ap.add_argument("--candidate-repo")
+    ap.add_argument("--prefix-repo", help="the candidate BEFORE the final-QA R1 fix (red side of AC-1-mixed)")
     ap.add_argument("--out")
     a = ap.parse_args()
     if a.one:
@@ -243,6 +266,17 @@ def main():
     v_rc, v_out = _helper_probe(cand, venv + ":" + sysp)
     add("AC-1-healthy", "real validate.sh, test venv first on PATH: helper returns ''",
         v_rc == 0 and v_out in ("''", '""'), "helper under PATH=%s:..." % venv, v_out)
+
+    # AC-1-mixed (final QA R1): advisory php line before the blocking python line -------------------------
+    if a.prefix_repo:
+        pr_rc, pr_flags, pr_out = _mixed_probe(a.prefix_repo)
+        add("AC-1-mixed-red", "PRE-FIX helper (first fault line only) loses the blocking python cause behind an advisory php line",
+            pr_rc == 0 and pr_flags.get("MIXED_NAMES_PYTHON") is False, "mixed-output probe at the pre-fix commit", pr_out,
+            "red control for final-QA R1")
+    m_rc, m_flags, m_out = _mixed_probe(cand)
+    add("AC-1-mixed-green", "CANDIDATE names the blocking python cause AND the advisory php line; php-only rc 0 still returns ''",
+        m_rc == 0 and m_flags.get("MIXED_NAMES_PYTHON") and m_flags.get("MIXED_NAMES_PHP") and m_flags.get("PHP_ONLY_RC0_EMPTY"),
+        "mixed-output probe at the candidate", m_out)
 
     res = {}
     for sc in SCENARIOS:

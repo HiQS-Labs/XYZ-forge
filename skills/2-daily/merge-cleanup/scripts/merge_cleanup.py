@@ -1090,8 +1090,10 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
     if res.returncode == 0:
         return ""
     out = ((res.stdout or "") + (res.stderr or "")).strip()
-    fault = next((ln.strip() for ln in out.splitlines() if "ENVIRONMENT FAULT" in ln), "")
-    return fault or f"validate.sh --print-mode exited {res.returncode}: {out[-300:]}"
+    # Every fault line, in order: the gate prints each fault it detects (an advisory php line can precede the
+    # blocking python line that exits 3), so naming only the first could hide the cause that refuses the push.
+    faults = [ln.strip() for ln in out.splitlines() if "ENVIRONMENT FAULT" in ln]
+    return " | ".join(faults) if faults else f"validate.sh --print-mode exited {res.returncode}: {out[-300:]}"
 
 
 def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
@@ -2175,7 +2177,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     if toolchain:
                         log_err(f"PR #{p_num}: DEFERRED — the pre-push gate cannot run here, so no repair slot "
                                 f"was spent: {toolchain}")
-                        failed[p_num] = f"deferred: gate toolchain ({toolchain[:120]})"
+                        failed[p_num] = f"deferred: gate toolchain ({toolchain[:500]})"
                         continue
                 # C: one durable attempt record at the pinned coordinator (the --primary path),
                 # shared with the caller's repair rungs. B1 is a repair: it needs a slot.
