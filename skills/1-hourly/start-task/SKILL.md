@@ -47,11 +47,11 @@ repository gates separately.
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Start-Task Discipline:**
-> 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
+> 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone and task branch under the target policy, and record intake and task ratings under that repo’s governance.
 > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
 > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
 > 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation, then smoke-run the change on its main path and one adjacent path.
-> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
+> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, apply the target’s qualification policy before pushing, open the PR against its integration branch, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
 >
 > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
 
@@ -148,9 +148,9 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    and live HEAD commit rather than duplicating clones, creating redundant branches, or
    overwriting valid working state. On transport drops or reconnects, ascertain remote execution
    state before retrying mutations.
-   Create any missing issue first. Where PDDA applies, capture it in `1-INBOX`,
-   park its roadmap entry immediately, then promote it through the documented
-   lifecycle before execution. Read `PROJECT/PDDA.md` and the repo's RELEASES
+   Create any missing issue first. Follow the target's intake lifecycle. In Forge,
+   capture it in `1-INBOX`, then use the rated pickup operation described below at
+   selection and promote the capture before execution. Read `PROJECT/PDDA.md` and the repo's RELEASES
    documentation for actual verbs and formats. Use the existing CLI to write
    the DB, dump, and generated views; never hand-edit them or add another write
    path. Check registration by reading back the issue, doc pointer, and ledger.
@@ -299,26 +299,23 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    plan as you go. Commit coherent checkpoints to the group's branch. Revisit
    plan QA if new evidence materially changes scope, architecture, or risk.
    Apply tiered verification discipline: during iterative implementation and
-   relay review loops, run ONLY the focused target test suite (`bash test/<target-test>.sh`
-   or `./validate.sh --auto`). Do NOT re-run full qualifying test gates between
-   review rounds when tweaking text or minor points. Select the final gate from
-   the actual changed paths against the integration base, using the repo's existing
-   classifier and push-hook route. In XYZ Forge, when `utils/ci-route.sh` routes the
-   changed paths as docs (most `*.md`/`*.txt`, including most skill instructions), use
-   the deterministic documentation gate (`utils/pdda/pdda.sh run`), not `ci-local.sh` or
-   the full `validate.sh` suite. The classifier decides, not the file extension: some
-   Markdown is a full-gate surface (for example `WORKTREE-SAFETY.md` and
-   `skills/*/merge-cleanup/SKILL.md`) and follows the full route.
-   Include both sides of renames and deletions; a changed script, test, DB, or other
-   non-doc path must follow its classified tier rather than being called docs-only.
-   When the route requires the full gate, run `ci-local.sh --fast` on the final approved commit and then push: the pre-push hook runs the full `./validate.sh` suite, and that is the one full-gate run (GH-1518). Do not also run full `ci-local.sh` or `./validate.sh` before the push; that runs the same suite twice on the same commit.
-   In Forge, the full-gate hand-off to the hook holds only when the
-   [required hook check](#target-repository-qualification) passes and this is
-   the branch's first push. The hook classifies only the pushed range; on a later
-   docs-only push, the full suite never runs. When a full gate is required on a later
-   push, run `./validate.sh` once on the final approved commit before pushing. Its
-   receipt (`utils/py/gate_receipt.py`) lets the hook reuse the result. For consumer
-   repos, use their [qualification policy](#target-repository-qualification).
+   relay review loops, run ONLY the focused target test suite. Do NOT re-run full qualifying test gates between
+   review rounds when tweaking text or minor points. Run the required qualification
+   on the final approved revision.
+   - **Consumer repositories:** Use the [target repository qualification](#target-repository-qualification)
+     commands and any pre-push policy resolved for that repo.
+   - **XYZ Forge:** For focused verification, use `bash test/<target-test>.sh`
+     or `./validate.sh --auto`. Select the final gate from the actual changed
+     paths against the integration base using the existing classifier. Include
+     both sides of renames and deletions. A docs route uses `utils/pdda/pdda.sh run`.
+     A script, test or DB change, and protected Markdown such as
+     `WORKTREE-SAFETY.md` or `skills/*/merge-cleanup/SKILL.md`, follow the classified route.
+     When the full gate is required on the first push, run `ci-local.sh --fast`,
+     pass the [required hook check](#target-repository-qualification), then
+     push so the hook runs the full `./validate.sh` suite (GH-1518).
+     On later pushes the hook classifies only the pushed range. When a full gate
+     is still required, run `./validate.sh` once on the final approved commit before
+     pushing so the hook can reuse its receipt (`utils/py/gate_receipt.py`).
    In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
    never a valued task clone or linked worktree. Verify its repository identity
    before and after the run; drift invalidates its evidence. Retain required
