@@ -23,7 +23,7 @@ Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 40%
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 4 and final QA round 2 approved; manual scenarios, docs checks and Small gate passed. | Publish reviewed PR; real OL-09 witness and OL-10 remain separate. |
+| OL-09 preparation published; Day 1 OL-10 baseline replays reproduced held dispatch. | Resolve R1 plan-QA blockers, then obtain independent approval before runtime edits. |
 
 ## Requested outcome and boundaries
 
@@ -214,3 +214,68 @@ acceptance did not. The changed-source case lacks a reviewed-source binding and
 is not a complete stale-review proof. Corrected refresh retained one synthetic
 prior native line byte-for-byte and added a second on dispatch (receipt 2/2);
 the first failed refresh and invalid inherited-override runs are not passes.
+
+### R1 design revision — proposed contract for review
+
+The owner of the existing preparation capture opts a lane into managed admission
+with a versioned `preparation_admission` block **in that capture**, not a queue
+or readiness database. It identifies the qualified issue, integration ref,
+reviewed preparation commit, a committed independent-review transcript/receipt,
+and the bounded source paths (capture, contract inputs and `artifacts` including
+missing-path expectations). The existing preparation publisher writes this
+block before review; the independent reviewer covers those bytes. Its finalized
+Conveyor marker comment carries the exact reviewed commit and review receipt
+identity after publication. A comment's own SHA or readiness label is not proof.
+The consumer verifies the marker is authored by the configured repository owner,
+that the cited preparation PR is merged into the selected integration history,
+that its independent reviewer receipt actually binds the reviewed revision and
+reports approval, and that the current capture/block matches that reviewed tree.
+Do not accept an asserted reviewer string or self-authored prose as attestation.
+Use the existing `relay_attest` validator where its bound evidence is usable;
+if its absolute-path binding makes a committed receipt nonportable, extend that
+owner with a portable, identity-checked export/read path rather than weakening
+it or inventing a second review authority. Exact issue, reviewed commit, receipt,
+PR and capture must agree; unavailable, missing, ambiguous, malformed, wrong
+owner or unverifiable managed evidence parks with a specific reason. The marker
+is a lookup/locator, not execution authority by itself.
+
+Preflight compares Git object identity for each bounded path at reviewed source
+and at its evaluated immutable ref, including expected absence; unrelated source
+changes are permitted. Capture and contract bytes are included. Resolve the
+actual lane branch before a native attempt and compare the same bounded paths in
+its starting tree against that evaluated ref; if the branch is absent use the
+current starting tree, if present verify that branch's tree. A mismatch or dirty
+relevant path parks; no branch switch, token or attempt reservation on mismatch.
+The invocation must carry the evaluated full SHA and relevant bound paths, not
+merely a mutable ref name; revalidate immediately before dispatch and before
+Marathon reserves the attempt. This is a candidate design to verify against the
+existing structured invocation contract, not permission to weaken an existing
+pin or create a standalone gate.
+
+Managed selection is durable in the capture itself. Unknown GitHub lookup cannot
+turn a managed capture into legacy: it parks. A direct/legacy capture without the
+opt-in retains existing offline/fidelity behavior, while known explicit native
+holds in live issue or capture still park. For managed lanes fetch issue body,
+labels and owner decisions and relevant dependency status; unavailable information
+parks. Reuse Kickstart's existing supported hold grammar and owner-authored latest
+operator decision rules, with independent body/label holds continuing to block;
+only the authorized owner may release a decision hold, and a dependency must be
+verified resolved before a dependency hold is cleared. Never interpret a random
+comment or bare readiness label as release. Preflight returns NOT-READY/BLOCKED,
+not exit 4, so Jog's existing refusal writer records the execution and parks it.
+
+R1 review dispositions: accept all three Blockers and the Should. The exact
+artifact seed must be supplied and compared in the next review; the previously
+read committed copy is substantive but not a seeded-input attestation. Preserve
+the first red controls, then upgrade the disposable replay: append one line per
+sentinel call; prove two calls fail the exactly-one assertion; snapshot full old
+execution records and native bytes before retry, assert records identical and
+native history retains the exact prefix plus one new line, with a byte-mutation
+red control. Replace author-machine path in the reusable control with an explicit
+fixture clone argument. Test an actual `Blocked by #902` and resolved/unresolved
+state separately from HELD; add missing/wrong-author/offline managed cases,
+legacy direct/offline behavior, fresh vs stale reviewed source, unrelated diff,
+existing lane branch, and exhausted cap with identical history and zero calls.
+Use `jog retry` as same-row recovery. The existing 2/2 fixture is evidence of
+preserved prior native count, not proof of all these stronger assertions. R1 Nit:
+OL-09 publication is historical and Day 1 plan QA is now the active hold.
