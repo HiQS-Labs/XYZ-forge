@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -163,5 +163,22 @@ Basis: F1 and F2 close. F3 handles a null list entry and still calls a missing m
 - Verification: the three distinct CLI probes ran against the disposable real Git checkout and the hashed receipt was refreshed. Full qualification remains separate.
 
 Please close the bounded review if F3 is resolved and no material regression remains.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+The Round 1 file sweep carries forward. This turn rechecked the revised provenance path in the seeded worktree and the existing Phase 0, parking, and teardown consumers. Canonical graph generation `2026-11-25T18:19:12Z` supplied the call path; the seeded source and replay supply the current evidence. No additional material pre-existing defect surfaced in the bounded review.
+
+- [Pass] F3 closed. Matched rows with unusable OIDs and malformed list entries now route to incomplete proof. The two local refs stay preserved. The empty-list control stays conclusive, and valid squash evidence still reaches the ancestry and content comparisons. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:476–514,673–709,1081–1092,1559–1564`.
+  - Probe command `python3 -B - >"$TMPDIR/gh1603-review.log"` with inline Python importing `scan_clones`, patching `run_git` for two same-tip refs and `subprocess.run` for the repository view and merged list, and calling `classify_local_refs(Path.cwd())` and `format_ref_count`. Exit 0. Decisive output was `null merge OID: ok=True, held=2, audit=2 (incomplete proof)`, `null row: ok=True, held=2, audit=2 (incomplete proof)`, `empty list: ok=True, held=2, audit=2`, `bad head OID: ok=True, held=2, audit=2 (incomplete proof)`, `missing repo identity: ok=True, held=2, audit=2 (incomplete proof)`, and `valid squash evidence: ok=True, held=0, audit=0`.
+- [Pass] F1 and F2 remain closed. The status command retains the injectable argument prefix and disables optional locks. Standalone parking rejects an unknown origin before scanning. The caller verifies the push destination and publishes the inspected OID under a creation-only lease with quiescent inputs. Refused material stays local through the backup and deep-triage handoff. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1275–1290,1339–1352,1673–1687`; `skills/2-daily/merge-cleanup/SKILL.md:181–215`; `skills/3-weekly/merge-cleanup-deep/SKILL.md:189–202`.
+- [Pass] The retained matrix records the original missing footer details, false zero after failed proof, and publication of the fictional transcript to a disposable origin. Its six outcomes cover the cached readiness snapshot and preview exits, distinct preservation counts, refused and allowed parking, the caller's pinned publication, and the clean-primary control. The new real Git CLI controls agree with the independent replay. The same probe matched the nonempty receipt to its provenance, printing `receipt bytes=4927 sha256=5487a790baebaf89bddf5ac4202da0c5943bb42c626804f0e162ee1e2905e20a candidate=bb6398fbe79dfcf49628a26320c963bef78b6b7c`. `TESTS-RESULTS/2026-11-25+GH-1603/manual-check.md:5–31`; `TESTS-RESULTS/2026-11-25+GH-1603/provenance.jsonl:1`.
+- [Pass] The audit still presents the Phase 0 counts, and the execute path refreshes and rechecks readiness. The 85/85/50/75 rating and accepted start remain in the intake ledger. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1567–1621`; `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2915–2960`; `releases.sql:1054,6069,6071`.
+- [Unverified — needs clone run] The existing merge-cleanup and Codex harness suites and the full gate still require separate passing evidence in a disposable full clone before publication. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:46,52`.
+
+VERDICT: PASS
+
+Basis: F1–F3 are closed. The independent replay confirms conservative preservation with incomplete evidence and conclusive outcomes with valid evidence. Approval covers the bounded final review. Publication qualification remains pending.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
