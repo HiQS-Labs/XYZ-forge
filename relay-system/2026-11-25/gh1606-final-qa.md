@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -109,5 +109,43 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) each with a co
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+- [Should] R1 — The first diagnostic can hide the actual blocking fault. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1093` selects only the first `ENVIRONMENT FAULT` line. The real gate can emit an advisory PHP line at `validate.sh:1032` and then the blocking Python line at `validate.sh:1043`, exiting 3 at `:1044`. In that case both the preflight warning (`merge_cleanup.py:1441-1445`) and the pre-reserve refusal (`:2175-2178`) name PHP only, losing the interpreter/modules and remediation that caused refusal. This follows the plan's first-line instruction but contradicts AC-1's requirement to name the blocking cause. Fix: retain all fault lines (or otherwise preserve the blocking Python diagnostic), keeping rc-0 advisory output nonblocking. Add a retained manual mixed-output red/green control, without adding a suite.
+  - Observed input: Form 1, source contradiction above plus the following non-mutating helper probe, exit **0**, decisive output `returncode: 3`, `reason: ENVIRONMENT FAULT: php present but unusable (advisory)`, `blocking_python_fault_named: False`. It supplies the two-line output shape the real gate explicitly permits; no gate or fixture was executed.
+    ```bash
+    export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+    mkdir -p "$TMPDIR"
+    python3 - <<'PROBE'
+    import sys, subprocess
+    from pathlib import Path
+    from unittest.mock import patch
+    sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+    import merge_cleanup as m
+    result=subprocess.CompletedProcess([],3,stdout='ENVIRONMENT FAULT: php present but unusable (advisory)\nENVIRONMENT FAULT: python3 (/usr/bin/python3) version 3.9.6; missing modules: yaml,pytest,requests,mypy; requires Python >=3.10\n',stderr='')
+    with patch.object(m.subprocess,'run',return_value=result):
+        reason=m.gate_toolchain_fault_reason(Path.cwd())
+    print('returncode:',result.returncode)
+    print('reason:',reason)
+    print('blocking_python_fault_named:', 'python3' in reason)
+    PROBE
+    ```
+  - Affected scope: nonzero toolchain probes with an advisory fault preceding the blocking fault; no change requested to hook routing, budget, fail-open exceptions or PHP's advisory status.
+  - Falsifier: on this exact two-line rc-3 input the returned reason must include the Python version/modules; PHP-only rc-0 must still return `''`. Showing the gate cannot emit both lines would also falsify the source trace, but `validate.sh:1028-1044` currently permits it.
+- [Pass] Q1(b–d), Q2 — Ordering and accounting match the approved plan: resume skip precedes the new execute-only probe (`merge_cleanup.py:2152-2179`), which precedes `attempt_record.reserve` (`:2191`); a fault sets `failed[p_num]` and continues without reaching the writer. Hard dependents consult `failed` (`:2045-2057`), and remaining failures return 3 (`:2515-2529`). The push still checks wiring and uses the inherited environment plus attempt context (`:1184-1197`); no bypass or accounting change appears in the artifact. Q1(a) is met for the single Python-fault case, with the R1 exception above. No fix requested on these paths.
+- [Pass] Q3 — The artifact adds one helper around the existing gate, not a copied toolchain registry or another budget writer (`merge_cleanup.py:1071-1094`). Its complete changed-path list contains only evidence, ledger and the two merge-cleanup files (`.relay-artifacts/GH-1606-final.diff:1,44,67,383,427,450`); no new suite or runner registry. `run_controls.py:1-17,50-86` explicitly derives a manual driver from the existing fixture with declared seams. No fix requested.
+- [Pass] Q4 — Retained rejection is substantive: `provenance.jsonl:4` reports base `rc=2, attempts=1, fault_named=false`; `:5` reports candidate `rc=3, attempts="absent", fault_named=true`; `:13` reports the after-reserve mutant spends one slot and fails the candidate predicate. The predicate checks routing, no B1 lines, nonempty unchanged origin head, OPEN state, and no push (`run_controls.py:252-258`). Healthy checks capture the actual origin head immediately after real push (`:110-115`), require it nonempty and equal to the recorded repair (`:235-239`), then require MERGED and one attempt. Empty/missing scenario output cannot satisfy that central or healthy predicate. No fix requested.
+- [Pass] Q5 — Static attempts to violate the cap/resume/selection guarantees found the existing under-lock reservation still in place (`merge_cleanup.py:2191-2201`), resume ceiling before the new probe (`:2152-2169`), and allowlist verification/filtering unchanged (`:2744-2747,2967-2987`). Retained S4/S7 and consumer controls support those adjacent cases (`provenance.jsonl:7-10`). The new dry-run call is advisory and occurs after the pre-existing selection write (`merge_cleanup.py:2953-2959`); helper stdout is captured and `--print-mode` exits before suites (`validate.sh:1049-1060`). `rg -n 'preflight_warnings\(' skills utils test` returned only the definition at `:1436` and main caller at `:2958` (exit 0); optional default preserves the old call shape. No executable fixtures or gate were run here; hard-dependency handling and absence of new dry-run writes were inspected in source, not independently exercised. No fix requested.
+- [Pass] Q6 — `SKILL.md:269` accurately records execute deferral, no slot, consumer/fail-open behavior, primary-only advisory warning and conservative-deferral caveat; `:497-500` labels preflight advisory. Its claim that the fault is named needs R1's diagnostic correction, rather than a broader behavior change. No other correction requested.
+- [Pass] Q7 — Ledger diff is consistent with the single CLI writer: generation 2956→2958, one rated GH-1606 row (55/55/50/70), matching pickup/update receipts and linked work events (`.relay-artifacts/GH-1606-final.diff:390-426`). No hand edit is evident. This is consistency inspection; the omitted binary and execution of the writer were not independently verified. No fix requested.
+- [Pass] Q8 — `SUMMARY.md:27-37` records the controlled seams, discarded mutant construction error, unmeasured conservative route, base Phase-B failures and outstanding final gate. These are accepted-and-recorded limits. S7 proves unchanged count, not byte-for-byte record equality (`run_controls.py:276-280`); the summary's “record unchanged” should be understood at that measured accounting scope. Qualification on the final pushed commit remains outstanding as Setup permits; no later gate is assumed. Beyond R1, the full-file sweep found no additional actionable pre-existing defect in the reviewed files.
+
+Handing off to Producer (claude) — address R1, retain the mixed-output control and take the next turn.
+
+VERDICT: FAIL
+Basis: The pre-reserve fix and central red controls support slot preservation, but an observed diagnostic-selection failure still hides the blocking Python cause when the gate also emits an earlier advisory PHP fault.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
