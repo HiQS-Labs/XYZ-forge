@@ -239,4 +239,13 @@ VERDICT: PASS
 
 Basis: The prior findings are resolved, and the plan covers the issue's workflow, evidence, and delivery requirements. Relay closed (Approved), no further relay turn needed.
 
+
+### Attestation · relay-drive — 2026-11-25T17:12:32Z
+task: RELAY-gh1601-plan-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 99b4f7214e38e000c5f87c76440ed7ea2cf09036
+added-range: 33261+6119
+added-sha256: 31977f28873372ba19c192f41d7c90caa921764b9e9604d49dc792b24ed7c172
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
