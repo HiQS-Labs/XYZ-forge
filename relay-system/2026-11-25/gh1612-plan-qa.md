@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -109,5 +109,41 @@ Write graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), then a VERDICT.
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**  
+Add a short deploy-day run sheet to the existing morning ledger refresh. Put it first in today's ledger, put gates first in the sheet, and give each step an owner, time, method, pass evidence and stop condition. Turn incomplete gates into morning questions and skip the sheet on days without a deploy.
+
+**How the existing system works, per this document**  
+The skill gathers current PR facts at step 5, writes today's body at step 7 and checks it at step 8. The plan inserts the run sheet after PR collection and uses the repository's existing deploy docs for procedures.
+
+**What it's not**  
+The non-goals exclude a new skill or helper, a deploy procedure, execution, approval, scheduling, server access and skill installation.
+
+**Input boundary**  
+Artifact frontmatter `non_goals` and `goal`, Status, Requirement, Recon, Preflight bet, Plan, Draft wording, Acceptance, Verification and Risks. Paraphrase written before opening the base skill or issue.
+
+**Source-backed assessment**  
+Read [GH-1612](https://github.com/HiQS-Labs/XYZ-forge/issues/1612) in full and swept the base skill from frontmatter through step 9. The seeded plan is absent from the main checkout's graph index, so the review cites the relay worktree files directly.
+
+swept file: yes
+
+- [Pass] The six columns and deploy/no-deploy trigger match GH-1612 §1 and the plan's draft at `.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:82-90`. All seven lessons have corresponding text at lines 92–106: incomplete gates and late follow-up (92–94), real code and environment plus stale checklists (95–97), access and fallback (98), positive evidence (99–100), timer and rehearsal (101–102), review history and acceptance (103–104), and read-only planning with per-action approval and backups (105–106). The draft's staging and query examples are generic, and lines 85–86 route procedures to the repo's own docs.
+- [Pass] Step 5a belongs after PR fact collection and before ordering. Step 5 supplies past reviews and current requests, step 6 classifies, step 7 drafts and publishes, and step 8 validates the published body independently (`skills/2-daily/yesterday-today/SKILL.md:60-98`). Keeping 6–9 numbered as they are preserves the existing step-7 reference at line 20. I found no separate defect in the existing skill relevant to this edit.
+- [Pass] The budget allows the draft and its two small integrations without trimming. `wc -l skills/2-daily/yesterday-today/SKILL.md` → exit 0, `107`; `awk 'NR>=82 && NR<=106 {n++} END{print "step 5a draft lines:", n}' .relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md` → exit 0, `step 5a draft lines: 25`. With a heading separator and the step-7/8 additions, the result lands around 135. The one-skill design and existing validator cover the requested scope (`.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:66-76,109`).
+- [Should] State how to verify a proposed step within the morning skill's authority. **Observed input:** Draft lines 95–98 say “Test each step against the real code and the target environment” and offer reading the staging host's recorded commit, while the plan's non-goals at line 18 and GH-1612 §2 exclude server access. The base skill forbids testing and server writes at `skills/2-daily/yesterday-today/SKILL.md:18-23` and marks production/VM reads “not checked” at lines 49–52. Draft lines 105–106 also need to make clear that the per-action approval and backups describe a later operator-authorized action. **Affected scope:** Gates whose compatibility, access or rehearsal requires an environment operation beyond the skill's permitted reads. **Falsifier:** A draft using repository and recorded deployment evidence validates a staging-only change when the deployed revision is recorded in GitHub, and raises a question when only a host read or execution could establish it. Both cases leave the morning skill read-only except for its existing guarded ledger publish. Make those boundaries explicit while preserving the early rehearsal as a planned step.
+- [Should] Connect step 5a to the same today's-body snapshot used by step 7. **Observed input:** Draft lines 84–85 trigger even when the deploy appears only in today's body, but base steps 1–2 describe issue resolution and reading yesterday (`skills/2-daily/yesterday-today/SKILL.md:25-41`), and step 7 owns the first successful today's-body read and guarded redraft (73–81). The proposed step-7 clause at draft line 109 only changes placement. **Affected scope:** Today's-only deploy intent or checklist link, including intent added or removed while drafting. **Falsifier:** With yesterday silent and today's baseline linking a deploy planned today, draft one sheet from that snapshot. If the guarded reread replaces it with a body canceling the deploy, the regenerated draft omits the sheet. State that 5a uses the first successful today's-body read as the step-7 baseline and recomputes on guarded redraft. Keep the existing lookup stops and header preservation.
+- [Should] Make the acceptance observations distinguish a working change from the base and give each safeguard its own negative case. **Observed input:** The blanket base-fail claim at plan line 113 conflicts with A3 and A5 at lines 117–119: an empty base diff is inside the allowlist, and a clean base can pass a privacy scan. The plan A3 also includes the plan file in a people-name scan even though its required owner field names a person (line 6). A4 at line 118 checks an ownerless gate and presence of a sheet but omits the six columns and first placement requested in GH-1612 §§1, 3. A6 at line 120 can only establish delivery against actual PR metadata and an applicable receipt. **Affected scope:** The manual acceptance checks in plan lines 113–120. **Falsifier:** The same recorded checks reject missing content, a planted privacy token, an out-of-scope path, a bad deploy draft and absent or wrong delivery evidence for their respective reasons. Keep the checks manual and specify:
+  - **A1–A2:** The base lacks 5a and validator item 6, and the insertion has zero added lines. A1's missing lesson mutation is a suitable second control. Measure the actual diff for the 20–30 added lines and confirm unchanged step numbering.
+  - **A3:** Run the same matcher on the feature prose and evidence with a fictional prohibited token as the red control. Distinguish project metadata such as the required owner field from the generic skill and evidence examples.
+  - **A4:** Load the skill from its checkout entry point, run the same fictional inputs through drafting and capture the entire proposed ledger body without publishing. The deploy case needs a complete gate plus an incomplete one, and must place exactly one six-column sheet first with gates first, the incomplete gate asked as a question and the existing goal header intact. Let the no-deploy case assert zero run-sheet output. Replay the base on the same deploy input and witness the missing sheet. Inspect the action log for no external writes or deploy operations and check checkout state separately. A hand-composed table or a standalone reading of step 5a would leave the real entry point and body assembly unexercised.
+  - **A5–A6:** Exercise A5 on an out-of-scope path and require the intended skill diff to be present. For A6 require a receipt for the delivered revision and the opened PR's actual base. Missing receipt and wrong-base metadata are the negative cases. State which feature checks fail on base and which safeguards use controlled bad input (`GUIDING-PRINCIPLES.md:104`).
+- [Nit] Call `ci-local.sh --fast` a local check in Verification. It skips the suite and doesn't retain a qualifying gate record (`ci-local.sh:399-409,427-437`). The final pre-push route still depends on the actual changed paths (`utils/ci-route.sh:305-318,336-348`).
+
+**VERDICT: FAIL**  
+**Basis:** The compact plan fits the request, but the draft needs an explicit read-only evidence boundary, a baseline and redraft link for today's deploy intent, and acceptance observations that can catch a failed change. This was plan QA. Implementation smoke and gate execution are pending the Producer's revised plan and later implementation.
+
+Handoff to Producer (claude-a) for disposition and a revised plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
