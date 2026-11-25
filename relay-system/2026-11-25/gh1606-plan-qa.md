@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -208,10 +208,43 @@ Revised the plan again (*Manual driver* push seam, AC-3 row, *Decisions after pl
 
 - **R1 [Blocker] (healthy push seam) — Implemented.** Verified before accepting: the fixture's `gh` stub reads the PR head from the origin branch (`test/gh534_phase_b_tests.py:74-79`), and after the push `merge_cleanup.py:2213-2226` waits for it to equal B1's commit and returns exit 2 otherwise, so a return-only `(True, "pushed")` stub cannot land — the reviewer's Form 1 contradiction is correct. Fix as proposed: S1 keeps the counting **refusal** stub (the incident shape); every **healthy** run (S3/S4/S5) uses a counting wrapper that **delegates to the real `push_resolved_head`** against the fixture's bare origin, and the driver asserts the origin branch SHA is non-empty and equals the repaired commit in the attempt record, and that the PR reads `MERGED`, before accepting a landing. The driver captures **stdout and stderr** (`routing to B1` / `B1:` are `log` → stdout, `merge_cleanup.py:444-445`; `LedgerFixture.run_main` captures only stderr, `:262-269`). The driver's PR setup is now named: it derives from `TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it` (`:421`).
 - **Measured, not just argued.** In a disposable clone at base `b479f74e0`, with only the wiring seam applied (the same stub `test/gh436-merge-cleanup.py:43` uses), that existing scenario passes end to end: `attempt 1/2 reserved … B1 rc=0 … pushed d55922402c to feat/b … PR #2 is MERGED`, `Ran 1 test … OK`. So the healthy real-push path is runnable on `LedgerFixture`; no production change is needed to support it.
-- **[Pass] items — kept unchanged** (bounded class claim, conservative deferral, placement/failure vocabulary, non-vacuity rules, surgical scope, rating correction).
+- **[Unverified — no citation] items — kept unchanged** (bounded class claim, conservative deferral, placement/failure vocabulary, non-vacuity rules, surgical scope, rating correction).
 
 No finding declined. No code written; this relay is plan QA only.
 
 Handing off to Reviewer (codex) — round 3 (last of the cap): confirm the corrected healthy seam closes R1, and say whether any path remains where an unchanged candidate would be reported as delivered.
+
+### Reviewer · Round 3
+
+**What this proposes**
+
+Paraphrase written from the artifact only. Probe validate's blocking toolchain diagnostics before reserving a B1 repair, defer the affected PR, and reuse the helper for an advisory primary-checkout warning. Preserve the budget and hook enforcement.
+
+**How the existing system works, per this document**
+
+Wiring is checked before reservation, but toolchain failure is currently discovered after repair when pushing. The revised manual driver uses a refusal stub for the incident and a counting real-push wrapper for healthy controls, checking the published branch against the recorded repair and capturing both output streams.
+
+**What it's not**
+
+Accept frontmatter exclusions: no bypass, accounting change, interpreter switching or genuine suite-RED output work. Phase B's existing wiring-fixture breakage is deferred (Measured prerequisite). Exact hook-route equivalence is explicitly unmeasured and conservative deferral accepted (Risks); implementation and delivery evidence remain later obligations (Status and Acceptance).
+
+**Source-backed assessment — approve the plan**
+
+- **[Pass] R1 closed / Q5.** The corrected healthy wrapper delegates to the actual publication owner (artifact:155–172; `merge_cleanup.py:1142–1166`), which pushes the repaired SHA to the fixture origin. The subsequent live-head comparison (`merge_cleanup.py:2210–2227`) now has a real published value to observe. AC-2 independently rejects an unchanged candidate through exit 3, named fault, no reservation and zero push calls (artifact:177,183–184); AC-1 rejects a missing or always-empty helper (artifact:176). These are falsifiable prospective checks, not an observed candidate rejection in this turn. Implementation detail for the driver: capture/assert the nonempty remote head immediately after the real push inside the wrapper, retain that observation, then assert MERGED after main returns. The fixture deletes the source branch on merge (`test/gh534_phase_b_tests.py:155–157`); a fresh post-merge ls-remote cannot supply that head. This fits the proposed counting wrapper without another production mechanism. No remaining return-only success seam is specified.
+
+- **[Pass] Q1–Q2.** Wiring is already checked before reservation (`merge_cleanup.py:1094,2148`); the added check addresses the detected blocking-toolchain class at its origin. Validate's Python fault exits 3 (`validate.sh:1035–1045`) before print-mode returns and before receipt admission (`:1049–1066`). PHP remains advisory (`:1028–1033`). Push copies the environment (`merge_cleanup.py:1155–1163`), but identical PATH does not mean identical route: docs and receipt reuse can skip validate (`githooks/pre-push:390–395,421–440`). Accept the expressly bounded, conservative probe and its documented fail-open/executable-bit limits; do not claim exact hook equivalence or delivery proof.
+
+- **[Pass] Q3–Q4.** Execute-only placement after the resume skip preserves the existing ceiling authority (`merge_cleanup.py:2121–2148`; `attempt_record.py:31,125–146`). Deferring through failed fits hard-dependent blocking (`merge_cleanup.py:2032–2043`), durable batch outcome reporting (`:1953–1955`) and incomplete-run exit 3 (`:2471–2482`). No refund/accounting rewrite is needed. Missing validate skips only this helper, preserving the installer requirement (`:1055–1058`); defaulted preflight arguments preserve existing callers (`:1409–1439`). Dry-run acceptance correctly excludes the pre-existing selection write (`:2910–2916`). S3/S4/S5/S7 attack healthy publication, resume budget, missing validate and the parked skip (artifact:178); no further source-established obstacle to those controls is identified. Runtime execution remains unverified here.
+
+- **[Pass] Q6–Q8.** Choose defer over stop to continue independent work using the failure-map contract above. Leave the push stderr truncation (`merge_cleanup.py:1165`) outside this bounded fix. Reusing the existing advisory warning owner (`:1409–1439`) serves advance warning; it is not scope creep when labelled primary-specific. The helper reuses validate's oracle rather than copying its imports or the hook classifier (artifact:84–106,204–213). Accept the stated non-goals and the small reversible scope. The 55/55/50 scores remain incident-based judgment (artifact, Per-issue rating); effort 25→70 correctly reflects higher cheapness (`RELEASES-DB-FAQS.md:156`), with evidence setup additional work.
+
+swept file: yes
+
+Reviewed the entire seeded plan and swept the source beyond the insertion sites, including attempt-record ownership and the specified fixture/validate paths. No additional independently established pre-existing production defect is asserted. Source-read commands exited 0; decisive spans are cited above. No git command, validate, suite, pytest, executable fixture or runtime acceptance probe was run. The Producer's reported clone run is supporting context, not independently reproduced evidence. No later gate is assumed.
+
+VERDICT: PASS
+Basis: the last open contradiction is resolved by real publication plus published-head observation. Requirements, bounded root cause, smallest change and non-vacuous acceptance controls are sufficiently grounded for plan approval. This approves implementation of the plan; it does not certify implementation or delivery. Retain the planned base-red/candidate-green outputs and provenance during implementation.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
