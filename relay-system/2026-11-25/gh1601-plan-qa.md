@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -204,5 +204,39 @@ Basis: The plan needs to bind the publish guard to the draft's actual input, sto
 - [Nit] Preflight naming of the validator: **Implemented** in Recon (relay-xyz is for this change's QA only; the skill's validator is the Codex sub-agent).
 
 Handing off to Reviewer for round 3.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+**What this proposes.** Add a prompt-only skill that refreshes today's GitHub work ledger after checking the previous workday's claims and team feedback. The skill preserves the existing goal header and completion estimate, checks the live body before publishing, and sends the two issue URLs and a checklist to an independent reviewer after a confirmed write.  [Unverified — no citation]
+
+**How the existing system works, per this document.** Daily Planner locates date-stamped ledgers and publishes per-operator claim comments. Its engine also writes local output, so the new skill borrows its discovery conventions and uses read-only GitHub lookups directly.
+
+**What it's not.** The plan excludes helper code, changes to Daily Planner, unattended creation of missing issues, skill installation, and server writes.
+
+**Input boundary.** Plan frontmatter `non_goals` and `goal`, plus Status, Requirements, Recon, Preflight bet, Plan, Acceptance, Verification, and Risks. This paraphrase was drafted before checking the issue or implementation sources in this round.
+
+**Step B — source-backed**
+
+Plan citations refer to `.relay-artifacts/GH-1601-YESTERDAY-TODAY-SKILL.md`.
+
+- [Pass] The discovery reference and the named skill fit the existing workflows. Daily Planner discovers exact titles, resolves duplicate issues, verifies claim authorship, and checks the operator's PRs and review requests (`skills/2-daily/daily-planner/SKILL.md:151-155,167-175`). Its engine selects the newest earlier ledger, publishes through the claim-comment path, and writes local reports even on a discovery run (`skills/3-weekly/weekly-planner/scripts/planner_core.py:2294-2300,3128-3144,3325-3331`). Plan :64,75-76,81 uses those conventions with read-only GitHub commands and supplies the team-wide body refresh. The existing alternatives cover local telemetry, topic status, weekly planning and individual issue closeout (`skills/2-daily/daily-planner/SKILL.md:132`, `skills/2-daily/where-are-we-at/SKILL.md:14-25,42`, `skills/3-weekly/weekly-planner/SKILL.md:48-50,85-95`, `skills/2-daily/todo-list/SKILL.md:166-187`). That accounts for the alternatives under `skills/README.md:25-28`.
+- [Pass] All nine requirements carry through to the steps. Plan :82-86 covers read-only discovery, stops for missing or unavailable inputs, verification by merge/review evidence including the review head, linked deployment evidence, full feedback with optional Slack disclosure, distinct past and requested reviews, and trial sequencing in a local throwaway clone. Plan :87-90 covers triage and ordering, the plan-versus-approval boundary, preservation of the goal and estimate, the independent read-only low-effort Codex `gpt-6.2-astra` observer of the published issue, the shell/access/privacy traps, and the four final-reply fields. The prior draft-baseline finding is closed at :88. A draft based on body A can be published only after the immediate comparison with A. If the new read shows A plus a teammate's edit, the plan requires a redraft from that body and a repeated check, or a stop. The prior-ledger stop finding is closed at :82. Plan :67,75,89,94 also assigns the two review roles explicitly. These steps cover the ask and non-goals in [GH-1601 §§1–3](https://github.com/HiQS-Labs/XYZ-forge/issues/1601).
+- [Pass] The documented registration is one row with a purpose (`skills/README.md:13,17-24`, `ARCHITECTURE.md:75-84`). The viewer and its existing suite derive the catalog and count from the filesystem (`mini/skills/skill-viewer/scripts/list_skills.py:81-92`, `test/gh589-skill-viewer.sh:17-25`). The proposed path is a docs surface (`utils/ci-route.sh:63-69,333-344,459-477`). Plan :91,103 resolves the prior first-cell finding by requiring the link prefix and a nonempty purpose cell.
+- [Pass] Each of A1–A6 distinguishes the planned delivery from an unchanged base (Plan :98-105). A1 checks entry-file presence and metadata. A2 checks the nine lessons and rejects a removed lesson. A3 needs nonempty candidate inputs and demonstrates that its scan catches a planted match. A4 needs the new index entry even if the two existing suites pass on base. A5 must load the new skill and execute steps 1–2 with reads against a real ledger pair, then exercise the confirmed-missing-today branch at :82 and record the read commands and stop. A6 rejects an empty diff and a planted test path. Its changelog allowlist now agrees with Plan :92 and `PROJECT/PDDA.md:1064-1067`. A7 and Plan :93-94 preserve provenance, final relay QA and the required PR target. The one-skill implementation and manual evidence are proportionate to [GH-1601 §§2–3](https://github.com/HiQS-Labs/XYZ-forge/issues/1601).
+- [Nit] In the delivered skill, state that the prior date is the latest working day strictly before local today (Plan :40,82). A normal Monday then reads explicitly as a Friday lookup when Friday was a working day. In the A5 receipt, label the absent date as the simulated **today** date so the reader can distinguish the offer-to-create branch from the prior-ledger stop (Plan :82,104).
+
+Seeded-checkout probe (read-only), exit 0, decisive output `False False False` for skill file, index row, and evidence directory respectively:
+
+```sh
+python3 -c 'from pathlib import Path; p="skills/2-daily/yesterday-today/SKILL.md"; print(Path(p).is_file(), f"| [yesterday-today]({p}) |" in Path("ARCHITECTURE.md").read_text(), Path("TESTS-RESULTS/2026-11-25+GH-1601").is_dir())'
+```
+
+The plan's named base commit was not independently inspected. The nearest graph is the main Forge checkout (generation `2026-11-23T23:18:20Z`), with the seed and relay missing from that index. Line claims use direct worktree source. The file sweep found no further pre-existing defect affecting approval. Setup specifies no reviewer phase gate. Implementation smoke and suites remain [Unverified — needs clone run].
+
+VERDICT: PASS
+
+Basis: The prior findings are resolved, and the plan covers the issue's workflow, evidence, and delivery requirements. Relay closed (Approved), no further relay turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
