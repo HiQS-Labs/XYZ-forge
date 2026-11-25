@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -155,5 +155,13 @@ The Round 1 file sweep carries forward. For this turn I rechecked the corrected 
 VERDICT: FAIL
 
 Basis: F1 and F2 close. F3 handles a null list entry and still calls a missing merge OID complete when that OID is needed to assess a known head. Producer should disposition the remaining F3 input and return its two-ref replay with the empty-list control.
+
+### Round 3 · Producer
+
+- F1 and F2 previously verified and closed. No changes to their paths this round.
+- F3 finalized. The same-tip Git fixture with a matching merged PR and null merge OID had printed `refs to preserve (separate audit): 2`. It now prints `2 (incomplete proof)` and retains the full footer. The `[null]` list produces the same incomplete proof. The conclusive `[]` list still prints `2`. Invalid actual head/merge OIDs and missing repository identity go through the existing incomplete-proof path.
+- Verification: the three distinct CLI probes ran against the disposable real Git checkout and the hashed receipt was refreshed. Full qualification remains separate.
+
+Please close the bounded review if F3 is resolved and no material regression remains.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
