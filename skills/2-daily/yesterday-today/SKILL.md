@@ -63,6 +63,33 @@ Head SHA, CI, conflicts, draft state, past reviews and current review requests (
 separately). To see conflicts that "mergeable" hides, trial-merge the planned merge order in a
 throwaway local clone, never in a working checkout.
 
+## 5a. Deploy-day run sheet (only when a deploy is planned today)
+
+Applies when yesterday's ledger, today's ledger or a linked deploy checklist plans a deploy
+today; otherwise add nothing. The sheet is the first section of today's body, read from step 7's
+baseline and recomputed if step 7 redrafts. Link the repo's deploy docs; do not restate a procedure.
+
+One row per step, gates first (go-ahead, deploy, after-deploy checks): step | named owner | planned
+time | exact method (where it runs, with which access) | what a pass looks like | what stops the deploy.
+
+- A gate missing any field (above all owner, time or method) is not planned. Ask it as a morning
+  question, never carry it as prose: who deploys, who gives the go-ahead and when, who does the
+  after-deploy checks (a late-evening one too).
+- Check each step against the real code and target environment using what is recorded (repo, PR,
+  deploy log). Example: a staging config change is valid only if the code running there supports
+  it; that host's recorded commit says what runs. A step copied from an older checklist is a
+  claim, not a fact. If only a host read or run could settle it, ask it and plan it as an owner's
+  step; this skill makes no host read.
+- Check access early (sign-ins, VPN, Docker, free disk) and name the fallback machine in the row.
+- A pass is evidence, not absence: each check says what it must have seen (row counts, named
+  items), so a query that matched nothing cannot read as "all on".
+- Some checks only count right before the deploy. Put a timer on them and say why in the row;
+  plan an early rehearsal of the method as its own row.
+- List known review findings on every included PR once, with grade and who accepted each. A new
+  finding: first see whether a reviewer already considered it.
+- Read-only by default. The sheet is a plan, never an approval: any later server write needs the
+  operator's explicit approval for that action, with backups made first.
+
 ## 6. Classify and order
 
 Every open item becomes exactly one of: done, carried, new, parked, dropped. Nothing is lost.
@@ -75,7 +102,7 @@ Group by person, with reviews and deploy gates first. Word items as work to do, 
   items list), scope rule, SOP sections and the % completion estimate with its formula,
   components and dated change log. The header is whatever this ledger uses; do not assume a
   release name. Change an item's share only with linked evidence, under that ledger's own
-  estimate rule, and add a dated change-log row even when nothing changed.
+  estimate rule, and add a dated change-log row even when nothing changed. The 5a run sheet goes first.
 - Immediately before `gh issue edit <n> --body-file <file>`, re-read the live body. Same as the
   baseline: edit. Changed: use the new read as baseline and draft source, redraft, check again,
   or stop. Read failed: stop. Never overwrite blindly. Confirm the edit with a read-back.
@@ -93,6 +120,8 @@ body itself:
 3. Does today's feedback list match what people actually wrote?
 4. Are the goal header, scope rule, SOP sections and estimate (formula, change log) intact?
 5. Does any wording imply a merge, deploy or test sign-off?
+6. Deploy planned: is the run sheet first, one row per step with owner, time, method, pass evidence
+   and stop condition, gates missing a field asked as questions? No deploy: was nothing added?
 
 Verify each finding firsthand before changing anything. If the reviewer could not run, say
 "independent review did not run" and give the reason; do not substitute a self-review.
