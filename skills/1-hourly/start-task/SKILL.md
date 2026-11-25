@@ -59,6 +59,25 @@ Then begin work.
 
 ---
 
+## Target repository qualification
+
+Choose the qualification policy once from the verified canonical target repository
+in Step 1. Apply it during clone provisioning, final verification and every push.
+
+- **XYZ Forge (`HiQS-Labs/XYZ-forge`):** In each fresh full clone, run
+  `bash githooks/install.sh` and then `bash githooks/install.sh --check` before
+  beginning work (GH-549). Run the check immediately before every push (GH-1576).
+  A nonzero exit blocks work or push at that checkpoint until the hook is repaired
+  and the check passes. Never use `--no-verify` or `XYZ_SKIP_PREPUSH` to get past it.
+- **Consumer repositories:** Resolve the target's required hooks and qualification
+  commands from its startup instructions and CI, including when it vendors Forge
+  in `.xyz/`. Run any target-required hook setup during provisioning and follow the
+  target's own pre-push policy. Run its verified qualification commands on the final
+  revision and record their results. If no applicable gate is documented, ask the
+  operator to decide which checks are required before proceeding. Forge's hook
+  installer and attempt accounting apply only to Forge. Failed or skipped checks
+  must be recorded as such, and required checks must pass before delivery.
+
 ## Workflow
 
 1. **Resolve the request and the target repo.** Read its startup instructions
@@ -96,10 +115,8 @@ Then begin work.
 3. **Provision isolated work and register intake before implementation.** Create
    a fresh **full clone from the canonical remote**, verify origin and base SHA,
    and create the task branch under repo policy. In XYZ Forge the branch is cut
-   off `origin/development`. Provisioning runs `bash githooks/install.sh` and then
-   `bash githooks/install.sh --check` in the new clone before any other work (hooks do not
-   travel with a clone, GH-549); a failing check stops the task there (GH-1576).
-   Preserve the primary checkout and other sessions.
+   off `origin/development`. Apply [target repository qualification](#target-repository-qualification)
+   for provisioning before beginning work. Preserve the primary checkout and other sessions.
    **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
    tracking issue first, so the number is known before anything is named:
    - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
@@ -295,8 +312,13 @@ Then begin work.
    Include both sides of renames and deletions; a changed script, test, DB, or other
    non-doc path must follow its classified tier rather than being called docs-only.
    When the route requires the full gate, run `ci-local.sh --fast` on the final approved commit and then push: the pre-push hook runs the full `./validate.sh` suite, and that is the one full-gate run (GH-1518). Do not also run full `ci-local.sh` or `./validate.sh` before the push; that runs the same suite twice on the same commit.
-   **Every push, first or later, is preceded immediately by `bash githooks/install.sh --check` (GH-1576).** An unwired clone pushes with no hook at all, so a nonzero exit stops the push: run `bash githooks/install.sh`, re-check, and only then push. Never use `--no-verify` or `XYZ_SKIP_PREPUSH` to get past it. The kickstart, jog, express and merge-cleanup push steps run the same check themselves and refuse.
-   That hand-off holds only when both of these are true: that check passes, and this push is the branch's first, so the hook classifies the whole PR diff against the integration base. The hook classifies only the pushed range; once the branch is on the remote, a docs-only final push routes `docs` and the full suite never runs. If either is false, run full `./validate.sh` once on the final approved commit before pushing. Its receipt (`utils/py/gate_receipt.py`) lets the hook reuse that run instead of repeating it.
+   In Forge, the full-gate hand-off to the hook holds only when the
+   [required hook check](#target-repository-qualification) passes and this is
+   the branch's first push. The hook classifies only the pushed range; on a later
+   docs-only push, the full suite never runs. When a full gate is required on a later
+   push, run `./validate.sh` once on the final approved commit before pushing. Its
+   receipt (`utils/py/gate_receipt.py`) lets the hook reuse the result. For consumer
+   repos, use their [qualification policy](#target-repository-qualification).
    In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
    never a valued task clone or linked worktree. Verify its repository identity
    before and after the run; drift invalidates its evidence. Retain required
@@ -309,8 +331,13 @@ Then begin work.
    invocation, empty or already-done input). Record the commands, observed output and
    verdict as a manual check under `TESTS-RESULTS/<date>+GH-<n>/` with provenance; this
    adds no suite or test (GH-831). Mutating runs use a disposable full clone, as above.
-   For documentation-only work, read the changed instruction once from its consumer's
-   entry point, or skip with a one-line reason. A smoke failure is a defect to fix (or
+   When changing shared provisioning or qualification instructions, use Forge and
+   one representative consumer as the two smoke paths (GH-1594). Walk the changed
+   instructions from target identification through the push decision in fresh full
+   clones. Check that an unwired Forge clone is refused and a consumer without Forge
+   hooks reaches its own qualification commands. Exercise those commands and retain
+   the receipts. For other documentation-only work, read the changed instruction
+   once from its consumer's entry point, or skip with a one-line reason. A smoke failure is a defect to fix (or
    a blocker to record) before final QA. The receipt is evidence for the reviewer; it
    never replaces or counts as the independent review (step 6). GH-1064's resume and
    rerun defects (#1074, #1084) passed suites and an approved review; one run past the
@@ -347,8 +374,8 @@ Then begin work.
    and continue independent groups.
 
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
-   and accidental files, run `bash githooks/install.sh --check` and push through the repository's required gate (a failing check means no push), and open the
-   PR against its active integration branch (`development` in XYZ Forge). Reuse
+   and accidental files, apply [target repository qualification](#target-repository-qualification)
+   before pushing, and open the PR against its active integration branch (`development` in XYZ Forge). Reuse
    an existing PR for the branch. If a network interruption occurs during PR creation,
    query `gh pr list --head <branch>` to verify whether the PR was registered before
    re-executing. Include the problem/result, issue mapping,
