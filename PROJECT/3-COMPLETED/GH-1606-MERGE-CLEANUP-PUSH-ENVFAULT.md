@@ -1,6 +1,6 @@
 ---
 title: "merge-cleanup: gate-toolchain fault must not burn a B1 repair slot or hide its cause"
-status: "In progress (PR ready; awaiting merge)"
+status: Complete
 created: 2026-11-25
 updated: 2026-11-25
 owner: Noel Saw
