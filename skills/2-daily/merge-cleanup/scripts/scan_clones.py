@@ -14,6 +14,7 @@ import json
 import subprocess
 import shutil
 import signal
+import stat
 import tempfile
 import time
 from pathlib import Path
@@ -472,7 +473,10 @@ def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
         if view.returncode != 0:
             result["reason"] = f"gh repo view failed: {view.stderr.strip() or 'no diagnostic'}"
             return result
-        answered = _normalize_remote(json.loads(view.stdout)["url"])
+        repo_url = json.loads(view.stdout)["url"]
+        if not isinstance(repo_url, str) or not repo_url.strip():
+            raise ValueError("repository identity is missing")
+        answered = _normalize_remote(repo_url)
         if answered != key:
             result["reason"] = f"gh answered for {answered}, origin is {key}"
             return result
@@ -487,12 +491,19 @@ def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
         if not isinstance(prs, list):
             raise ValueError("pr list is not a list")
         for pr in prs:
+            if not isinstance(pr, dict):
+                raise ValueError("merged PR entry is not an object")
             if pr.get("state") != "MERGED" or pr.get("baseRefName") != integration_branch:
                 continue
-            mc = (pr.get("mergeCommit") or {}).get("oid")
+            merge_commit = pr.get("mergeCommit")
+            if not isinstance(merge_commit, dict):
+                raise ValueError("merged PR entry lacks merge-commit evidence")
+            mc = merge_commit.get("oid")
             head = pr.get("headRefOid")
-            if isinstance(head, str) and isinstance(mc, str) and head and mc:
-                result["by_head"][head] = {"number": pr.get("number"), "mergeCommit": mc}
+            if not all(isinstance(oid, str) and re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", oid)
+                       for oid in (head, mc)):
+                raise ValueError("merged PR entry has an invalid head or merge commit OID")
+            result["by_head"][head] = {"number": pr.get("number"), "mergeCommit": mc}
         result["truncated"] = len(prs) >= limit
         result["ok"] = True
     except (OSError, subprocess.TimeoutExpired, ValueError, KeyError, TypeError) as exc:
@@ -582,9 +593,9 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
             blob ids, modes, paths; whitespace is not normalised away -> landed.
     Rule 3: anything else -> unlanded, naming the ref, the commit and the reason.
     `git cherry` is not consulted: it drops whitespace, so its equality is not behavioural equality.
-    Returns {"ok": bool, "failed_query": str, "unlanded": [str], "landed": [str]}.
+    Incomplete squash proof still holds the affected refs but labels the audit count incomplete.
     """
-    out: Dict[str, Any] = {"ok": False, "failed_query": "", "unlanded": [], "landed": []}
+    out: Dict[str, Any] = {"ok": False, "failed_query": "", "unlanded": [], "landed": [], "incomplete": False}
     published = None
     if published_pr:
         published = published_pr_head(repo_path, published_pr, integration_branch)
@@ -662,27 +673,33 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
         if index is None:
             index = merged_pr_index(repo_path, integration_branch)
         if not index["ok"]:
+            out["incomplete"] = True
             out["unlanded"].append(f"{name} @ {sha[:10]}: not reachable from {remote_ref}; merged-PR lookup unavailable ({index['reason']})")
             continue
         pr = index["by_head"].get(sha)
         if pr is None:
             why = "no merged PR has this head"
             if index["truncated"]:
+                out["incomplete"] = True
                 why += " within the first 500 merged PRs"
             out["unlanded"].append(f"{name} @ {sha[:10]}: not reachable from {remote_ref}; {why}")
             continue
         mc = pr["mergeCommit"]
         mc_anc = run_git(repo_path, ["merge-base", "--is-ancestor", mc, remote_ref])
         if mc_anc.returncode != 0:
+            if mc_anc.returncode != 1:
+                out["incomplete"] = True
             out["unlanded"].append(f"{name} @ {sha[:10]}: PR #{pr['number']} merge commit {mc[:10]} is not on {remote_ref}")
             continue
         mb = run_git(repo_path, ["merge-base", sha, f"{mc}^"])
         if mb.returncode != 0 or not mb.stdout.strip():
+            out["incomplete"] = True
             out["unlanded"].append(f"{name} @ {sha[:10]}: PR #{pr['number']}: cannot compute the merge-base against {mc[:10]}^")
             continue
         branch_diff = _raw_diff(repo_path, mb.stdout.strip(), sha)
         merge_diff = _raw_diff(repo_path, f"{mc}^", mc)
         if branch_diff is None or merge_diff is None:
+            out["incomplete"] = True
             out["unlanded"].append(f"{name} @ {sha[:10]}: PR #{pr['number']}: diff query failed")
             continue
         if branch_diff == merge_diff:
@@ -1037,24 +1054,11 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
 
     # Status check — the COMPLETE NUL-safe porcelain, every file named (A.3). No regenerable
     # allowance: harnesses.db carries invocation data, *.db.bak may be the last pre-rebuild copy.
-    st_res = run_git(path, ["status", "--porcelain", "-z", "--untracked-files=all"])
-    if st_res.returncode == 0:
-        entries = [e for e in st_res.stdout.split("\0") if e]
-        files = []
-        i = 0
-        while i < len(entries):
-            e = entries[i]
-            files.append(e)
-            if len(e) > 1 and e[0] == "R":  # rename carries the source path as the next NUL field
-                i += 1
-            i += 1
-        res["dirty_count"] = len(files)
-        res["dirty_files"] = files
-        res["is_clean"] = not files
-    else:
-        res["is_clean"] = False
-        res["dirty_count"] = -1
-        res["query_failures"].append(f"git status: {st_res.stderr.strip() or 'failed'}")
+    files, status_error = checkout_status(path)
+    res.update(is_clean=not files and not status_error,
+               dirty_count=len(files) if not status_error else -1, dirty_files=files)
+    if status_error:
+        res["query_failures"].append(f"git status: {status_error}")
 
     # Native worktree removal deletes ignored files, unlike whole-clone Trash relocation.
     # Neither landed nor published refs establish recovery for those files.
@@ -1079,6 +1083,7 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
                                **({"published_pr": published_pr} if published_pr else {}))
     if published_pr:
         res["published_refs"] = prov.get("published", [])
+    res["ref_proof"] = ("incomplete" if prov.get("incomplete") else "complete") if prov["ok"] else "unknown"
     if prov["ok"]:
         res["unpushed_branches"] = prov["unlanded"]
         res["landed_refs"] = prov["landed"]
@@ -1267,6 +1272,119 @@ def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = No
     return results
 
 
+def checkout_status(path: Path) -> Tuple[List[str], str]:
+    """Count individual porcelain entries; rename/copy source fields aren't extra entries."""
+    try:
+        result = run_git(path, ["status", "--porcelain", "-z", "--untracked-files=all"],
+                         env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"))
+    except UnicodeError:
+        return [], "working-tree paths could not be decoded"
+    if result.returncode or result.stderr.strip():
+        return [], result.stderr.strip() or "failed"
+    entries = iter(result.stdout.rstrip("\0").split("\0")) if result.stdout else iter(())
+    files = []
+    for entry in entries:
+        files.append(entry)
+        if "R" in entry[:2] or "C" in entry[:2]:
+            next(entries, None)
+    return files, ""
+
+
+TRANSCRIPT_ROOTS = ("relay-system/", "marathon-system/", "consult/", "consult-receipts/",
+                    "TESTS-RESULTS/", "evidence/")
+GITHUB_SLUG = r"[a-z\d][a-z\d-]*/[a-z\d_.-]+"
+GITHUB_REMOTE = r"(?:https?://|ssh://git@|git@)github\.com[:/]"
+TRANSCRIPT_REPOSITORY = re.compile(
+    rf"(?<![\w@]){GITHUB_REMOTE}({GITHUB_SLUG})|"
+    rf"^\s*(?:repository|repo|repo_slug|target_repo):[ \t]*[\"`']?({GITHUB_SLUG})(?=[\s\"`']|$)",
+    re.IGNORECASE | re.MULTILINE,
+)
+PARKING_REFUSED = (
+    "Remote temp-merge-cleanup-* parking refused. Keep the material local: verify a bundle/ZIP "
+    "backup, preserve the tip on a renamed local branch, recreate integration from origin when "
+    "safe, and record the local backup and ref in temp-docs.md for the operator."
+)
+
+
+def transcript_parking_problem(path: Path, baseline: str, tips: List[str],
+                               *, require_origin: bool = False) -> str:
+    """Read local history and this checkout's index/worktree without fetching or writing."""
+    def git_output(args: List[str]) -> str:
+        result = run_git(path, ["--no-optional-locks", *args])
+        if result.returncode or result.stderr.strip():
+            raise ValueError("incomplete transcript inspection")
+        return result.stdout
+
+    def blob_ids(raw: str) -> set:
+        # With --no-renames each raw record is metadata NUL path NUL.
+        ids = set()
+        for record in raw.split("\0")[::2]:
+            if not record.strip():
+                continue
+            old_mode, new_mode, old, new, _ = record.strip().split()
+            for mode, oid in ((old_mode, old), (new_mode, new)):
+                if mode.lstrip(":") != "000000":
+                    if mode.lstrip(":") not in ("100644", "100755"):
+                        raise ValueError("non-regular transcript blob")
+                    if oid.strip("0"):
+                        ids.add(oid)
+        return ids
+
+    def inspect_content(content: str) -> None:
+        slugs = {(a or b).lower().removesuffix(".git") for a, b in TRANSCRIPT_REPOSITORY.findall(content)}
+        if not slugs or "\0" in content:
+            raise ValueError("transcript repository identity is missing")
+        foreign.update(slugs - {origin})
+
+    try:
+        origin_url = git_output(["remote", "get-url", "origin"]).strip()
+        origin_match = re.fullmatch(rf"{GITHUB_REMOTE}({GITHUB_SLUG})/?", origin_url, re.IGNORECASE)
+        origin = origin_match[1].lower().removesuffix(".git") if origin_match else ""
+        if require_origin and not origin:
+            return "Could not establish the parking origin repository identity."
+        foreign: set = set()
+        raw = ["--raw", "--no-abbrev", "--no-renames", "-z"]
+        scoped = ["--", *TRANSCRIPT_ROOTS]
+        ids = blob_ids(git_output(["log", "--format=", "--no-show-signature", "--root", "--full-history",
+                                  "--diff-merges=separate", *raw, *tips, f"^{baseline}", *scoped]))
+        ids.update(blob_ids(git_output(["diff", "--cached", *raw, "HEAD", *scoped])))
+        for oid in ids:
+            inspect_content(git_output(["cat-file", "blob", oid]))
+        # Diff against HEAD to include files added to the index. The separate staged probe
+        # still sees staged content overwritten or removed in the working tree.
+        changed = git_output(["diff", "--name-only", "--no-renames", "-z", "HEAD", *scoped])
+        untracked = git_output(["ls-files", "--others", "--exclude-standard", "-z", *scoped])
+        root = path.resolve()
+        for name in set((changed + untracked).split("\0")) - {""}:
+            file = root / name
+            if file.is_symlink() or not _within(file.resolve(), root):
+                raise ValueError("non-regular transcript path")
+            try:
+                if not stat.S_ISREG(file.stat().st_mode):
+                    raise ValueError("non-regular transcript path")
+                inspect_content(file.read_text(encoding="utf-8"))
+            except FileNotFoundError:
+                continue  # deleted worktree file; any staged blob is inspected above
+    except UnicodeError:
+        return "Transcript text or paths could not be decoded."
+    except (OSError, RuntimeError, ValueError):
+        return "Could not verify transcript content or repository identity."
+    for slug in sorted(foreign):
+        try:
+            lookup = subprocess.run(
+                [_gh_bin(), "repo", "view", f"https://github.com/{slug}", "--json", "nameWithOwner,visibility"],
+                cwd=path, capture_output=True, text=True, check=False, timeout=15,
+            )
+            if lookup.returncode:
+                return "Foreign transcript repository visibility could not be verified."
+            result = json.loads(lookup.stdout)
+            if result["nameWithOwner"].lower() != slug or result["visibility"] != "PUBLIC":
+                return "Foreign transcript repository is private or its public visibility could not be verified."
+        except (OSError, subprocess.TimeoutExpired, ValueError, KeyError, TypeError, AttributeError):
+            return "Foreign transcript repository visibility could not be verified."
+    return ""
+
+
 def inspect_primary_landing(primary_repo: Path, integration_branch: str = "development") -> Dict[str, Any]:
     """Phase 0: can the primary on-disk checkout actually RECEIVE the landing?
 
@@ -1288,7 +1406,10 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
         "integration_branch": integration_branch,
         "current_branch": "",
         "is_clean": False,
-        "dirty_count": 0,
+        "dirty_count": -1,
+        "stash_count": -1,
+        "behind_integration": None,
+        "parking_problem": "",
         "on_integration_branch": False,
         "unpushed_on_integration": 0,
         "can_ff": False,
@@ -1313,27 +1434,29 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
     branch = run_git(path, ["rev-parse", "--abbrev-ref", "HEAD"])
     if branch.returncode != 0:
         res["blockers"].append(f"cannot read the current branch: {branch.stderr.strip() or 'git failed'}")
-        return res
-    res["current_branch"] = branch.stdout.strip()
-    res["on_integration_branch"] = res["current_branch"] == integration_branch
-    if not res["on_integration_branch"]:
-        res["blockers"].append(
-            f"on '{res['current_branch'] or 'unknown'}', not the integration branch '{integration_branch}' — "
-            f"`git merge --ff-only {remote_ref}` will not land here"
-        )
-
-    status = run_git(path, ["status", "--porcelain"])
-    if status.returncode != 0:
-        res["blockers"].append(f"cannot read working-tree status: {status.stderr.strip() or 'git failed'}")
     else:
-        dirty = [ln for ln in status.stdout.splitlines() if ln.strip()]
+        res["current_branch"] = branch.stdout.strip()
+        res["on_integration_branch"] = res["current_branch"] == integration_branch
+        if not res["on_integration_branch"]:
+            res["blockers"].append(
+                f"on '{res['current_branch'] or 'unknown'}', not the integration branch '{integration_branch}' — "
+                f"`git merge --ff-only {remote_ref}` will not land here"
+            )
+
+    dirty, status_error = checkout_status(path)
+    if status_error:
+        res["blockers"].append(f"cannot read working-tree status: {status_error}")
+    else:
         res["dirty_count"] = len(dirty)
         res["is_clean"] = not dirty
         if dirty:
             res["blockers"].append(
-                f"{len(dirty)} uncommitted path(s) — commit, park, or stash them before landing; "
+                f"{len(dirty)} uncommitted path(s) — preserve them before landing; "
                 "reconciliation would otherwise run over unsaved work"
             )
+    stashes = run_git(path, ["stash", "list", "--format=%gd"])
+    if stashes.returncode == 0:
+        res["stash_count"] = len(stashes.stdout.splitlines())
 
     # A half-finished merge/rebase/cherry-pick can leave porcelain empty while the operation is
     # still open, and the next merge will refuse. Fail closed; never abort it for the operator.
@@ -1388,20 +1511,26 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
 
     # Local commits the remote does not have would be silently skipped by a squash-merge landing.
     # A FAILED count is unknown state, not zero.
-    ahead = run_git(path, ["rev-list", "--count", f"{remote_ref}..{integration_branch}"])
-    ref_evidence = ahead.returncode == 0 and ahead.stdout.strip().isdigit()
+    counts = run_git(path, ["rev-list", "--left-right", "--count", f"{remote_ref}...{integration_branch}"])
+    divergence = counts.stdout.split()
+    ref_evidence = counts.returncode == 0 and len(divergence) == 2 and all(n.isdigit() for n in divergence)
     if ref_evidence:
-        res["unpushed_on_integration"] = int(ahead.stdout.strip())
-        if res["unpushed_on_integration"]:
+        behind, ahead = map(int, divergence)
+        res.update(unpushed_on_integration=ahead, behind_integration=behind)
+        if ahead:
             res["blockers"].append(
-                f"{res['unpushed_on_integration']} local commit(s) on '{integration_branch}' are not on origin — "
-                "push or explicitly abandon them first"
+                f"{ahead} local commit(s) on '{integration_branch}' are not on origin — "
+                "preserve or explicitly dispose of them before landing"
             )
     else:
         res["blockers"].append(
             f"cannot compare '{integration_branch}' against '{remote_ref}' — the landing target could not be "
             "resolved, so readiness is unknown (fetch the remote, or check that the branch and remote exist)"
         )
+
+    if dirty or status_error or res["unpushed_on_integration"] or not res["on_integration_branch"]:
+        tips = [integration_branch, "HEAD"] if ref_evidence else ["HEAD"]
+        res["parking_problem"] = transcript_parking_problem(path, remote_ref, tips)
 
     # Positive ancestry proof against the tip we would fast-forward to.
     ff = run_git(path, ["merge-base", "--is-ancestor", "HEAD", remote_ref])
@@ -1423,30 +1552,62 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
     return res
 
 
+def show_count(value: Optional[int]) -> str:
+    return str(value) if value is not None and value >= 0 else "unknown"
+
+
+def format_ref_count(checkout: Dict[str, Any]) -> str:
+    proof = checkout.get("ref_proof", "complete")
+    count = len(checkout["unpushed_branches"])
+    if proof == "unknown":
+        return "unknown"
+    return f"{count} (incomplete proof)" if proof == "incomplete" else str(count)
+
+
+def format_primary_findings(info: Dict[str, Any]) -> List[str]:
+    behind = info.get("behind_integration")
+    ahead = info.get("unpushed_on_integration") if behind is not None else None
+    stashes = info.get("stash_count")
+    lines = []
+    if not info["landing_ready"] or behind or stashes != 0 or info.get("parking_problem"):
+        lines.append(f"  dirty paths: {show_count(info['dirty_count'])}; stashes: {show_count(stashes)} (advisory); "
+                     f"integration commits ahead: {show_count(ahead)}, behind: {show_count(behind)} (behind alone is advisory)")
+    if info["blockers"]:
+        lines.append("  blockers: " + " | ".join(" ".join(b.split()) for b in info["blockers"]))
+    if info.get("parking_problem"):
+        lines.append(f"  {info['parking_problem']} {PARKING_REFUSED}")
+    return lines
+
+
 def format_primary_landing(info: Dict[str, Any]) -> str:
     """One-glance Phase 0 verdict for the primary checkout."""
     verdict = "READY" if info["landing_ready"] else "NOT READY"
     lines = [
         f"Primary checkout: {info['path']}",
         f"  branch: {info['current_branch'] or '(unknown)'}  (integration: {info['integration_branch']})",
-        "  clean: " + ("yes" if info["is_clean"] else f"no ({info['dirty_count']} path(s))"),
+        "  clean: " + ("yes" if info["is_clean"] else f"no ({show_count(info['dirty_count'])} path(s))"),
         f"  landing: {verdict}",
     ]
-    for b in info["blockers"]:
-        lines.append(f"    - {b}")
-    return "\n".join(lines)
+    return "\n".join(lines + format_primary_findings(info))
 
 
-def format_scan_table(checkouts: List[Dict[str, Any]]) -> str:
-    """Formats checkout audit as a readable markdown table."""
+def format_scan_table(checkouts: List[Dict[str, Any]],
+                      primary_landing: Optional[Dict[str, Any]] = None) -> str:
+    """Format checkout preservation evidence alongside the primary's Phase 0 snapshot."""
     lines = [
-        "| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |",
-        "|---|---|---|:---:|:---:|:---:|:---:|---|---|",
+        "| Directory | Type | Branch | Clean | Activity | Stashes | Refs to preserve | Integration commits (ahead/behind) | Disposition | Reason |",
+        "|---|---|---|:---:|:---:|:---:|:---:|:---:|---|---|",
     ]
     for c in checkouts:
-        clean_str = "✅" if c["is_clean"] else f"❌ ({c['dirty_count']})"
-        stash_str = "0" if c["stash_count"] == 0 else f"⚠️ {c['stash_count']}"
-        unpushed_str = "0" if not c["has_unpushed"] else f"⚠️ {len(c['unpushed_branches'])}"
+        primary = primary_landing if primary_landing and c["path"] == primary_landing["path"] else None
+        state = primary or c
+        clean_str = "✅" if state["is_clean"] else f"❌ ({show_count(state['dirty_count'])})"
+        stash_str = show_count(state.get("stash_count", c["stash_count"]))
+        commits = "—"
+        if primary:
+            behind = primary.get("behind_integration")
+            ahead = primary.get("unpushed_on_integration") if behind is not None else None
+            commits = f"{show_count(ahead)}/{show_count(behind)}"
         act = c.get("activity", {})
         tier = act.get("activity_tier", "DORMANT")
         if tier == "ACTIVE_WRITING":
@@ -1457,7 +1618,7 @@ def format_scan_table(checkouts: List[Dict[str, Any]]) -> str:
             act_str = "💤 Dormant"
 
         lines.append(
-            f"| `{c['name']}` | {c['checkout_type']} | `{c['current_branch']}` | {clean_str} | {act_str} | {stash_str} | {unpushed_str} | **{c['disposition']}** | {c['disposition_reason']} |"
+            f"| `{c['name']}` | {c['checkout_type']} | `{state['current_branch']}` | {clean_str} | {act_str} | {stash_str} | {format_ref_count(c)} | {commits} | **{c['disposition']}** | {c['disposition_reason']} |"
         )
     return "\n".join(lines)
 
@@ -1501,7 +1662,29 @@ def main():
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
     parser.add_argument("--integration-branch", default="development", help="Branch local refs must have landed on (default: development)")
 
+    parser.add_argument("--check-transcript-parking", metavar="CHECKOUT",
+                        help="Read-only transcript check before remote docs parking")
+    parser.add_argument("--parking-tip", metavar="COMMIT",
+                        help="Exact commit to inspect for transcript parking (default: HEAD)")
     args = parser.parse_args()
+
+    if args.parking_tip and not args.check_transcript_parking:
+        parser.error("--parking-tip requires --check-transcript-parking")
+    if args.check_transcript_parking:
+        path = Path(args.check_transcript_parking).expanduser()
+        if args.parking_tip and not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", args.parking_tip):
+            parser.error("--parking-tip must be an exact commit OID")
+        tip = run_git(path, ["rev-parse", "--verify", (args.parking_tip or "HEAD") + "^{commit}"])
+        if not (path / ".git").exists() or tip.returncode:
+            print(f"Cannot resolve the candidate checkout and commit. {PARKING_REFUSED}")
+            return 1
+        baseline = f"refs/remotes/origin/{args.integration_branch}"
+        problem = transcript_parking_problem(path, baseline, [tip.stdout.strip()], require_origin=True)
+        if problem:
+            print(f"{problem} {PARKING_REFUSED}")
+            return 1
+        print(f"No transcript parking refusal for inspected commit {tip.stdout.strip()}.")
+        return 0
 
     primary_repo = Path(args.primary).expanduser() if args.primary else Path.cwd()
     if args.root:
@@ -1525,4 +1708,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
