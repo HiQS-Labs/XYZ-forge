@@ -279,3 +279,80 @@ existing lane branch, and exhausted cap with identical history and zero calls.
 Use `jog retry` as same-row recovery. The existing 2/2 fixture is evidence of
 preserved prior native count, not proof of all these stronger assertions. R1 Nit:
 OL-09 publication is historical and Day 1 plan QA is now the active hold.
+
+### R2 contract corrections — supersede conflicting R1 text
+
+**Publication sequence and authority.** The pre-review capture block contains
+only `version`, qualified `owner/repo#issue`, integration ref, and normalized
+bounded paths with present/absent expectations. It never contains its own commit
+ID or a future receipt. Publish and review that capture in `2-WORKING` through
+normal preparation QA. Conveyor runs non-dispatching contract/probe validation
+without requiring the post-review record; that validation cannot emit an
+executable invocation or confer admission. Once independent QA approves the
+exact reviewed capture commit and its PR is merged, the existing Conveyor issue
+marker gets one machine-readable payload: version, qualified issue, capture path,
+reviewed full SHA, merged preparation PR number, review transcript path, and
+approved review's full input SHA. The marker is authored by the configured
+trusted operator login (the same explicit owner input used by Kickstart, or the
+authenticated login when no owner was supplied); the trusted publisher attests
+that independent QA covered that commit. This local-first trust assumption is
+explicit: transcript hashes prove consistency, not reviewer identity; a copied
+JSON/trailer or arbitrary self-authored comment is not independent proof.
+Admission checks the marker author, exact PR/issue/capture/review identities,
+merged PR head and integration ancestry, and reads the committed review transcript
+at its published commit for the recorded approval and input SHA. A wrong author,
+missing/unavailable lookup, divergent review, unmerged PR or ambiguity parks.
+A repository whose landing policy does not preserve the reviewed commit must
+prove exact reviewed capture and bound objects in its merged tree; absent that
+proof it parks. No broad assertion that a path-bound `.git` attestation can be
+copied between clones. Operator login is a login, never the organization slug.
+
+**Classification and promotion.** Before Jog's promotion, consult the selected
+integration tree's capture for the qualified issue, including both inbox and
+working locations. A managed declaration there is authoritative even if the
+execution copy loses its block. Managed inbox is held for publication and
+independent review as a working capture; it is not rewritten on the way to
+execution. A managed working capture must match the reviewed capture object and
+be the exact doc Preflight selects. Removing the execution-copy block, missing
+published object, conflicting captures or missing authoritative ref parks.
+Withdrawal of managed intent is a separately reviewed/published capture change,
+not omission in a local checkout. A genuine direct/legacy capture with no
+managed declaration in the available authoritative integration tree retains the
+existing direct/offline behavior; known positive holds still park. If no
+integration tree is available, do not silently reclassify known managed work;
+retain its previous managed identity and park. Tests must expose the case where
+that identity cannot be established rather than assume offline lookup is proof.
+
+**Holds.** Reuse the existing recognizer for `status:held`, line `HELD:`,
+`Blocked by #N` and active `after #N`, but treat each as independent. A literal
+HELD or blocker marker remains held until its authorized owner removes it from
+the source as well as the dependency being verified resolved; resolution alone
+never overrides explicit text. For issue dependencies require closed; for PRs
+require merged, with closed-unmerged, unknown type and unavailable lookup held.
+Unknown references park. Owner-decision holds are released only by the latest
+configured owner-authored exact first-line `Operator decision: proceed` or
+`Operator decision: close` (close routes to separate close handling, never build).
+`pending`, free text and wrong-author comments do not release; a subsequent hold
+supersedes. Label/body/dependency holds remain independently effective. The broad
+existing decision regex cannot be reused unchanged for release.
+
+**Typed handoff and park.** Extend the existing invocation with optional managed
+binding `{version, reviewed_sha, evaluated_sha, paths}`; require all fields and
+validated relative paths/object IDs together, reject malformed or partial fields,
+and leave legacy packets without the field compatible. Reuse Marathon's branch
+selection as the single owner: before switching/creating a branch and before
+reservation, resolve its intended actual tree, compare bound objects to the
+immutable evaluated SHA and check relevant dirty paths. The same check covers an
+already-feature-branch target. Emit a valid `marathon-drive/result@1` with
+`outcome=parked`, `reason=managed-start-tree-mismatch` and no reservation on
+mismatch; Jog's existing `jog_project_marathon_outcome` maps parked to parked.
+Include the bound identity in the existing invocation/result flow and verify it
+again at the actual use boundary. A stale existing lane branch is preserved;
+owner reconciles or reviews it separately, then uses `jog retry` on the same row.
+No checkout, force, attempt reset or deletion to manufacture freshness.
+
+R2 dispositions: all four Blockers accepted as corrections above; both Passes
+acknowledged. Reviewer should test the chronological publication path, trust
+assumption, managed-selector downgrade resistance, exact hold/release cases and
+typed no-reservation park against actual source. Review is not approval of an
+unimplemented portable receipt or proof of any unrun scenario.
