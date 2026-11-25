@@ -1,7 +1,7 @@
-A1 content check, candidate skills/2-daily/yesterday-today/SKILL.md at commit 994ed6d8f34a798f5af9397fa950d9b468a8af7e (line numbers):
+A1 content check, candidate skills/2-daily/yesterday-today/SKILL.md (blob 6bbd309bca3bbde000c6354021cba4564805ef71, skill commit 540e04421); line numbers:
   ^## 5a\. Deploy-day run sheet                    66:## 5a. Deploy-day run sheet (only when a deploy is planned today)
-  otherwise add nothing                            69:today; otherwise add nothing. The sheet is the first section of tod
-  read from step 7's                               69:today; otherwise add nothing. The sheet is the first section of tod
+  otherwise add nothing \(no section, question or note\) 69:otherwise add nothing (no section, question or note). The sheet is 
+  built from step 7's baseline                     70:built from step 7's baseline, recomputed on a redraft. Link the rep
   six columns: step \| named owner \| planned time 72:One row per step, six columns: step | named owner | planned time | 
   what stops the deploy                            73:which access) | what a pass looks like | what stops the deploy. Gat
   Gate rows first                                  73:which access) | what a pass looks like | what stops the deploy. Gat
@@ -13,18 +13,19 @@ A1 content check, candidate skills/2-daily/yesterday-today/SKILL.md at commit 99
   access early                                     83:- Check access early (sign-ins, VPN, Docker, free disk) and name th
   evidence, not absence                            84:- A pass is evidence, not absence: each check says what it must hav
   right before the deploy                          86:- Some checks only count right before the deploy. Put a timer on th
-  early rehearsal                                  87:  plan an early rehearsal of the method as its own row.
-  known review findings                            88:- List known review findings on every included PR once, with grade 
-  never an approval                                90:- Read-only by default. The sheet is a plan, never an approval: any
-  explicit approval for that action                91:  operator's explicit approval for that action, with backups made f
-  backups made first                               91:  operator's explicit approval for that action, with backups made f
-  ^6\. Deploy day: run sheet first                 123:6. Deploy day: run sheet first, six columns, gates first, any gate
-  The 5a run sheet goes first                      105:  estimate rule, and add a dated change-log row even when nothing 
+  set for just before the                          86:- Some checks only count right before the deploy. Put a timer on th
+  early rehearsal                                  87:  deploy itself (not the earlier go-ahead), and say why in the row;
+  known review findings                            89:- List known review findings on every included PR once, with grade 
+  never an approval                                91:- Read-only by default. The sheet is a plan, never an approval: any
+  explicit approval for that action                92:  operator's explicit approval for that action, with backups made f
+  backups made first                               92:  operator's explicit approval for that action, with backups made f
+  ^6\. Deploy day: sheet first, six columns        124:6. Deploy day: sheet first, six columns, gates first, gaps asked? 
+  A step 5a sheet goes first                       106:  estimate rule, and add a dated change-log row even when nothing 
 
-Same 21 patterns on BASE copy (inputs/base-SKILL.md); each must read MISSING:
+Same 22 patterns on BASE copy (inputs/base-SKILL.md); each must read MISSING:
   ^## 5a\. Deploy-day run sheet                    MISSING
-  otherwise add nothing                            MISSING
-  read from step 7's                               MISSING
+  otherwise add nothing \(no section, question or note\) MISSING
+  built from step 7's baseline                     MISSING
   six columns: step \| named owner \| planned time MISSING
   what stops the deploy                            MISSING
   Gate rows first                                  MISSING
@@ -36,13 +37,14 @@ Same 21 patterns on BASE copy (inputs/base-SKILL.md); each must read MISSING:
   access early                                     MISSING
   evidence, not absence                            MISSING
   right before the deploy                          MISSING
+  set for just before the                          MISSING
   early rehearsal                                  MISSING
   known review findings                            MISSING
   never an approval                                MISSING
   explicit approval for that action                MISSING
   backups made first                               MISSING
-  ^6\. Deploy day: run sheet first                 MISSING
-  The 5a run sheet goes first                      MISSING
+  ^6\. Deploy day: sheet first, six columns        MISSING
+  A step 5a sheet goes first                       MISSING
 
 Control: candidate with the lesson-4 bullet removed:
   evidence, not absence                            MISSING

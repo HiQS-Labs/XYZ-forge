@@ -1,6 +1,9 @@
-smoke-a-deploy-day.md: run-sheet header columns=6
-smoke-b-reread-cancels.md: run-sheet header columns=6
-row order, smoke (a):          G1  G2  G3  G4  G5  G6  S1  S2  S3 
-row order, smoke (b) draft 1:  G1  G2  G3  G4  G5  G6  S1  S2  S3 
-smoke-a-deploy-day.md: gate row after a support row? no
-smoke-b-reread-cancels.md: gate row after a support row? no
+A4 receipt checks (skill blob 6bbd309bca3bbde000c6354021cba4564805ef71)
+(a) smoke-a-deploy-day.md: 1 proposed body captured
+   body 1: run-sheet text=yes; first section='Deploy-day run sheet (plan only)'; columns=6; rows=11; gate row after a support row=no; header kept=yes; SOP kept=yes
+(b) smoke-b-reread-cancels.md: 2 proposed bodies captured
+   body 1: run-sheet text=yes; first section='Deploy-day run sheet'; columns=6; rows=9; gate row after a support row=no; header kept=yes; SOP kept=yes
+   body 2: run-sheet text=no; first section='Items'; columns=None; rows=0; gate row after a support row=no; header kept=yes; SOP kept=yes
+(c) smoke-c-no-deploy.md: 2 proposed bodies captured
+   body 1: run-sheet text=no; first section='Items'; columns=None; rows=0; gate row after a support row=no; header kept=yes; SOP kept=yes
+   body 2: run-sheet text=no; first section='Items'; columns=None; rows=0; gate row after a support row=no; header kept=yes; SOP kept=yes
