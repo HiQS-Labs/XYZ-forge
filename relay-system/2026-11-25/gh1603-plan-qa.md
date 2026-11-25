@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -150,12 +150,44 @@ Basis: The plan needs explicit binding between check and publication, a complete
 
 ### Round 2 · Producer
 
-- F1 implemented in the plan. The caller binds the precheck to the verified origin and pinned commit, pushes that OID, and rechecks changed inputs.
+- F1 implemented in the plan. The caller binds the precheck to the verified origin and pinned commit, pushes that OID, and rechecks changed inputs.  [Unverified — no citation]
 - F2 implemented in the plan. The independent ref count labels conservative classifications incomplete and top-level failures unknown.
 - F3 implemented in the plan. The snapshot boundary and cases for all preview exits, operation markers, cached divergence and stashes are explicit.
 - F4 implemented in the plan. The caller smoke exercises skipped and pinned publication against a bare upstream, including visibility and staged/renamed history variants. The standalone precheck runs before audit and has no fetch or optional index updates.
 - Verification: Original-revision dry run reproduced missing footer details, 2 refs for 1 commit, and 0 displayed when ref proof failed. No production code changed. The updated base changes unrelated files and the ledger.
 
 Re-review these four dispositions and report whether the revised plan is ready for implementation.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+Input boundary — I read the complete revised plan, `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:1-52`, before checking implementation sources. The plan review brief supplies the artifact and acceptance criteria.
+
+**What this proposes**
+
+Capture readiness once against the cached integration ref and reuse it in the primary audit row and preview footer. Keep the separate count of refs to preserve and show incomplete proof. Have the caller run the same read-only transcript check on the candidate checkout before parking, then publish only the inspected commit to the verified destination.  [Unverified — no citation]
+
+**How the existing system works, per this document**
+
+Phase 0 owns landing readiness, and the audit independently fetches and classifies refs for preservation. The caller owns remote documentation parking. Deep cleanup preserves backups and hands selected hunks to a fresh reviewed PR.
+
+**What it’s not**
+
+The plan limits screening to recognized repository evidence in the listed roots. It leaves automatic repair and publication outside the CLI and tracks relay-source prevention separately in GH-1604.
+
+**Source-backed assessment**
+
+The canonical graph generation `2026-11-25T18:12:31Z` identified the readiness and provenance callers. It is indexed on a different checkout, so the citations below use the seeded worktree. The plan sweep found no additional material defect within the brief.
+
+- [Pass] F1 closed. The plan requires a refreshed baseline for the verified push destination, the exact candidate OID from the candidate checkout, publication of that OID under the creation-only lease, and a repeat check for changed inputs. The same-tip fixture varies the index, and the moving-ref fixture reads the result against the intended inspected OID. This binds the input that the current caller publishes. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:43,51`; `skills/2-daily/merge-cleanup/SKILL.md:179-192`.
+- [Pass] F2 closed. The plan retains conservative preservation, distinguishes top-level unknown from incomplete counted results, and specifies a two-ref control and a failed merged-PR lookup. The new distinction addresses the current paths where failed lookups still return `ok=True` or a missing proof renders zero. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:42,50`; `skills/2-daily/merge-cleanup/scripts/scan_clones.py:595-599,662-692,1443-1449`.
+- [Pass] F3 closed. One cached-ref snapshot governs the primary readiness fields and footer. The revised matrix names dirty, stash, ahead and behind, tests separate ref-proof counts, covers normal/scan-only/PR-only and discovery/selection errors, and advances the bare upstream to expose an accidental refresh of the readiness inputs. Stashes and behind-only remain advisory, and the execute path keeps its live recheck. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:42,50,52`; `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2696-2710,2755-2760,2781-2817,2899-2925,3048-3049`.
+- [Pass] F4 closed. Standalone dispatch precedes the audit fetch. The matrix checks refs, index, status and FETCH_HEAD and differentiates a refusal from actual publication by observing the bare upstream. It covers private/lookup failure, positive controls, unreadable or mismatched evidence, staged/untracked content, transient commits and both sides of renames. Caller ownership and the deep-cleanup fresh-PR path remain in place. The 85/85/50/75 rating and patch-revert rollback fit the bounded CLI and runbook change. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:38,43-46,51`; `skills/2-daily/merge-cleanup/scripts/scan_clones.py:595-599,1504-1517`; `skills/3-weekly/merge-cleanup-deep/SKILL.md:131-139,189-205`.
+- [Unverified — needs clone run] The producer reports the original-revision dry-run symptoms. The base source independently shows the Phase 0 local-commit count, independent audit ref count, and final warning referring back to Phase 0. The parking runbook goes from history inspection to publication. The clone matrix and existing suites/full gate remain implementation qualification, with red/green receipts to retain under the existing convention. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1389-1399,1443-1449`; `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2862-2866`; `skills/2-daily/merge-cleanup/SKILL.md:179-192`; `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:46,50-52`.
+
+VERDICT: PASS
+
+Basis: The revised plan closes F1–F4 and is ready for implementation. Approval covers the plan. Runtime qualification remains in the disposable full clone.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
