@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -95,5 +95,36 @@ Review GH-1603 against its approved plan at `PROJECT/2-WORKING/GH-1603-TRANSCRIP
 4. Confirm the rating/persisted intake and scope, and call out a concrete regression if present. The existing suite and required full gate run outside this worktree, and require separate passing results before publication.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Reviewed the seeded scan and merge-cleanup scripts, the Phase 0 and parking instructions, the deep-triage handoff, the approved plan and plan relay, and the manual receipt. I followed the existing audit, readiness, and teardown paths as well as the changed code. The nearest graph generation (`2026-11-25T18:19:12Z`) indexes the canonical checkout. The seeded worktree is the source for this review.
+
+- [Blocker] F1 — The shared status helper bypasses the existing fail-closed test injection. Keep optional locking disabled while passing `status` as the first argument at the existing `run_git` seam, or update the existing injector for the new command shape.
+  - Observed input: `test/gh534_phase_a_tests.py:502–509,522–526` injects failure on the prefix `["status"]` and requires `PRESERVE_UNVERIFIED_QUERY`. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1045–1051,1265–1272` now passes `["--no-optional-locks", "status", …]`. A `python3 -B -` probe imported `scan_clones`, patched `run_git` with the existing prefix predicate (`args[:1] == ["status"]`), and called `checkout_status(Path.cwd())`. It exited 1 with `existing injector matched=False` and `files=[]; error=''`. The registered suite imports this test at `test/gh436-merge-cleanup.py:1382`.
+  - Affected scope: The existing status failure control in `gh436-merge-cleanup.sh`. A real status failure still takes the production error path.
+  - Falsifier: The existing test's injected status failure must reach the preservation assertion, and its clean baseline must remain `SAFE_REMOVE_CLONE`. Run the existing suite in the disposable full clone.
+
+- [Blocker] F2 — The standalone check clears an unidentifiable origin. Return a refusal when canonical origin identity cannot be established and retain the caller's independent check of the actual push destination.
+  - Observed input: `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:51` requires rejecting unknown target identity. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1327–1331,1358–1371,1663–1673` converts an unrecognized origin into an empty string and returns success if there are no foreign slugs. A `python3 -B -` probe called `scan_clones.main()` with `--check-transcript-parking "$PWD" --parking-tip aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`. It patched only `run_git` to return that SHA from tip resolution, `/absolute/unidentified-origin.git` for `remote get-url origin`, and successful empty history/index/worktree output. The probe exited 1 because the command printed `No transcript parking refusal for inspected commit aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.` and returned 0.
+  - Affected scope: The standalone verdict for a candidate with a resolvable tip and a nonempty origin answer whose repository identity cannot be parsed. The runbook's separate destination check reduces the risk of acting on this verdict.
+  - Falsifier: With the same pinned tip and no transcript changes, unknown origin must return 1. A recognized matching destination must still clear ordinary docs, and matching-origin and independently public transcript controls must still clear. Record the unknown-target case explicitly in the manual receipt.
+
+- [Should] F3 — Pre-existing malformed merged-PR evidence can abort the audit before the footer. Validate returned row shape and route malformed evidence through the existing incomplete-proof path.
+  - Observed input: A `python3 -B -` probe called `scan_clones.merged_pr_index(Path.cwd(), "development")` with mocked successful `run_git` origin `https://github.com/example-fixture/landing` and successful `subprocess.run` responses `{"url":"https://github.com/example-fixture/landing"}` and `[null]`. It exited 1 with `AttributeError: 'NoneType' object has no attribute 'get'` at `skills/2-daily/merge-cleanup/scripts/scan_clones.py:491`. This bypasses conservative classification at lines 663–668 when called from `inspect_checkout` at lines 1071–1081. The scan precedes the preview footer in `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2706–2715,2769–2776`.
+  - Affected scope: Ref provenance queries for non-ancestor tips when a successful GitHub CLI response has a non-object row in its merged-PR list.
+  - Falsifier: The same `[null]` response should preserve the affected refs, display `incomplete proof`, and reach the normal preview footer. A successful empty list should still produce complete negative proof.
+
+- [Pass] With ordinary valid evidence, the audit uses the Phase 0 dirt/stash/divergence snapshot and displays independent ref proof. Normal, scan-only, PR-only, discovery failure, and selection failure reach the footer with their existing exits. Stash and behind counts stay advisory. Execution keeps the current override, stale-rebase check, remote refresh and live readiness recheck. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1420–1538,1553–1609`; `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2413–2425,2706–2725,2770–2776,2797–2810,2822–2833,2915–2960,3064–3065`.
+- [Pass] The history/index/worktree scan and local recovery route follow the scoped design for identified origins. History includes intermediate commits and both raw blob sides, and index inspection is per checkout. Standalone exits before scan/fetch and uses no optional index locks. The caller verifies the fetch/push repository, uses the refreshed baseline, and publishes the inspected OID under a creation-only lease with quiescent inputs. Local recovery retains verified backup and operator-controlled refs. Deep triage keeps refused material in its verified backup before the fresh-PR handoff. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:1298–1371,1659–1682`; `skills/2-daily/merge-cleanup/SKILL.md:181–215`; `skills/3-weekly/merge-cleanup-deep/SKILL.md:189–205`.
+- [Pass] The retained receipt records the reporting red controls (omitted tail detail and false zero after failed tag proof) and the parking red control (the original route created the fixture branch with the transcript). It records the five preview routes, readiness controls, private/public/same-origin cases, staged/untracked/intermediate/rename variants, the read-only comparison and the pinned push. It does not separately demonstrate unknown target identity, as F2 shows. `TESTS-RESULTS/2026-11-25+GH-1603/manual-check.md:3–29`. `wc -c` and `shasum -a 256` on that receipt both exited 0, returning 4242 bytes and `33df4fb3c767c636a978b16a84960c70860a8f9afefa2cec702ece6f4bce3fac`, matching `TESTS-RESULTS/2026-11-25+GH-1603/provenance.jsonl:1`.
+- [Pass] The active plan pointer stores 85/85/50/75 and the rated and accepted-start events persisted. The scope remains the local CLI and caller runbooks, with source prevention tracked separately. `releases.sql:1054,6068–6071`; `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:32–46,54–57`.
+- [Unverified — needs clone run] The two existing focused suites and the full gate need passing results on the corrected candidate in a disposable full clone before publication. The manual matrix is evidence for its recorded cases. `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:46,50–52`.
+
+VERDICT: FAIL
+
+Basis: The existing fail-closed status control misses the new command, and the standalone transcript check accepts an unknown origin. The audit also aborts on malformed merged-PR evidence. Producer should disposition F1–F3 and return the corrected candidate with updated evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
