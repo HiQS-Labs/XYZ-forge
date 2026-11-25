@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -164,5 +164,42 @@ Revised `PROJECT/2-WORKING/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md` (sections *Ro
 No finding declined. No code written yet; this relay is plan QA only.
 
 Handing off to Reviewer (codex) — round 2: check the revised AC-2 driver design (can it reach `routing to B1` and the push seam on the existing `LedgerFixture`?), the bounded class claim, and the recorded tradeoff.
+
+### Reviewer · Round 2
+
+**What this proposes**
+
+Paraphrase written from the artifact only. Add a bounded print-mode toolchain probe immediately before a B1 reservation, defer on its reported fault, and reuse it for an advisory primary-checkout warning. Keep repair accounting and push enforcement unchanged.
+
+**How the existing system works, per this document**
+
+Hook installation is checked before reservation, but toolchain readiness is discovered only after repair at push. The existing phase B fixture lacks that installer and is already broken at base, so the revised manual controls introduce explicit installer/toolchain seams and a counting push stub.
+
+**What it's not**
+
+Accept the frontmatter exclusions: no bypass, interpreter selection, accounting change or genuine suite-failure output change. Phase B repair is deferred outside this task (Measured prerequisite); real docs-route equivalence is unmeasured and conservative deferral accepted (Risks). Implementation and runtime evidence follow plan approval; approval here cannot establish delivery.
+
+**Source-backed assessment — Block pending one control-design correction**
+
+- **[Blocker] R1 remains open: the healthy push seam cannot satisfy AC-3.** **Observed input:** the artifact explicitly replaces the healthy push with a counting stub returning `(True, "pushed")` (`.relay-artifacts/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md:151-157`) yet requires S3/S4 to land (`:163`). In the reused fixture, live `headRefOid` comes from the origin PR branch (`test/gh534_phase_b_tests.py:74-79`), not the push function's return. Immediately after that return, `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2213-2226` refreshes that head, waits for B1's commit and stops with exit 2 when they differ. This is a Form 1 artifact/source contradiction, not an inferred external-service hazard. **Affected scope:** S3 healthy, S4 repaired resume and any S5 healthy B1 control; the revised installer seam can clear the earlier wiring refusal, but success without publication cannot clear the next head check. **Falsifier:** run the proposed return-only healthy stub unchanged and show the origin PR head actually equals B1's commit and the fixture reports MERGED; otherwise expect the explicit head-mismatch refusal. **Fix:** keep the counting refusal stub for S1/S2, but make the healthy wrapper count and delegate to the real `push_resolved_head` against the fixture's local bare origin (the declared installer seam installs no actual hook), or explicitly publish the repaired SHA to that local branch. Assert the nonempty published head equals the repaired SHA before accepting MERGED, and capture stdout as well as stderr: `routing to B1`/`B1:` use `log` on stdout (`merge_cleanup.py:444-445,2117,2167`), whereas `LedgerFixture.run_main` only captures stderr (`test/gh534_phase_b_tests.py:262-269`). No new suite or production change is requested. Runtime execution remains **[Unverified — needs clone run]**; the source contradiction itself is established.
+
+- **[Pass] R2 / Q1-Q2 — the bounded fault claim now matches the chosen oracle.** `validate.sh:1035-1045` checks Python version/imports and exits 3; PHP is advisory at `:1028-1033`. The plan now excludes PHP, timeout/spawn failures and executable-bit divergence. Hook wiring really precedes B1 reservation (`merge_cleanup.py:1094,2148`). Action: implement the scoped helper as proposed; retain these explicit limits. Print-mode exits before receipt admission/suites (`validate.sh:1049-1066`), so this is useful introspection, not gate evidence.
+
+- **[Pass] R3 / Q2,Q6-Q7 — conservative deferral is now an explicit design decision.** Push inherits PATH via the copied environment (`merge_cleanup.py:1155-1163`), but the docs route and full-receipt reuse skip validate (`githooks/pre-push:390-395,421-440`). Accept the small conservative probe rather than duplicating that classifier. This may delay a push that would succeed today; the benefit is avoiding a spent slot for detected blocking faults. Action: retain the stated false-deferral boundary and avoid describing it as exact hook equivalence.
+
+- **[Pass] Q3-Q4,Q6 — placement and failure vocabulary fit existing state owners.** Hard dependents consult failed/pending (`merge_cleanup.py:2032-2043`); batch rows retain the reason (`:1953-1955`); incomplete queues return 3 and retain deferred clones (`:2471-2498`). Resume's ceiling skip precedes reserve (`:2121-2148`), and the locked two-repair authority remains `attempt_record.py:reserve` (`MAX_REPAIRS = 2`, append under `RecordLock`). Action: keep the helper inside execute after that skip. Missing validate must skip only the new helper, preserving the existing installer requirement (`merge_cleanup.py:1055-1058`). Defaulted preflight argument preserves callers; label its warning primary-specific because `validate.sh:58-94` precedes print-mode. No new dry-run writes: the pre-existing selection publication remains at `merge_cleanup.py:2910-2916`. The warning serves the stated advance-warning requirement; truncation at `:1165` can stay out of scope.
+
+- **[Pass] Q5 — non-vacuity is substantially improved, subject to R1.** Artifact `:162,168-169` now requires actual B1 routing, named nonempty fault output, zero push calls, unchanged remote head, and explicit absent/loaded-empty attempt records. Those distinguish pre-reserve deferral from early refusal and spent-slot behavior. Action: retain the paired base/candidate S1/S2 assertions and repair the healthy seam above. No unchanged-candidate rejection has been witnessed in this review; these are prospective acceptance checks, not delivered evidence. A summary naming a deferred PR establishes the failure-map outcome, not an independently exercised hard-dependent scenario; source coverage for that unchanged mechanism is sufficient for this plan.
+
+- **[Pass] Q7-Q8 — the surgical design and rating correction stand.** The plan extends the existing warning owner (`merge_cleanup.py:1409-1439`) and validate oracle (`validate.sh:1049-1060`), with no accounting rewrite or new gate machinery. Effort means cheapness (`RELEASES-DB-FAQS.md:156`), so 25→70 is directionally correct for this small change; the other scores remain incident-based judgment, not measured recurrence. Action: keep this scope; repair only the manual control's publication semantics.
+
+swept file: yes
+
+Reviewed the full artifact and swept merge_cleanup.py beyond the proposed insertion sites, plus attempt_record.py and the specified validate block. No additional independently established pre-existing defect is asserted. Read-only source inspection only; no git command, validate, suite, pytest, executable fixture, external service or runtime acceptance probe was run. Source-read commands exited 0; decisive code spans are quoted/cited above. No later gate is assumed.
+
+VERDICT: FAIL
+Basis: the production fix direction, bounded guarantee and conservative tradeoff are acceptable. R1 remains open because the revised healthy return-only push stub contradicts the existing remote-head confirmation and cannot prove the promised healthy/resume landing. Correct that narrow manual-driver design, then return for plan approval; implementation evidence remains a subsequent obligation.
+
+Handing off to Producer (claude) — correct the healthy publication seam and stdout capture in the plan, then return for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
