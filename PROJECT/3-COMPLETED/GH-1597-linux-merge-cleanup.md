@@ -2,7 +2,7 @@
 gh_issue: 1597
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1597
 title: "merge-cleanup on Ubuntu lsof overlay warnings block scratch pruning, Skills Army HQ install, old git/gh"
-status: proposed
+status: Complete
 created: 2026-11-24
 owner: unassigned
 doc_type: bug
@@ -29,7 +29,7 @@ goal: >
   1. Filter unrelated lsof filesystem warnings (such as Docker overlay2 mounts) while failing closed for paths inside or containing the checkout.
   2. Document the supported Linux path for Skills Army HQ (requiring intake.py init before add).
   3. Implement preflight checks and actionable guidance for minimum git (>= 2.38.0) and gh (>= 2.18.0) versions placed before their consumer operations.
-updated: 2026-11-24
+updated: 2026-11-25
 ---
 
 # GH-1597: merge-cleanup on Ubuntu lsof overlay warnings, Skills Army HQ install, old git/gh
