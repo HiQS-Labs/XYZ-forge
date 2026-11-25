@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -126,5 +126,14 @@ Reviewed the seeded scan and merge-cleanup scripts, the Phase 0 and parking inst
 VERDICT: FAIL
 
 Basis: The existing fail-closed status control misses the new command, and the standalone transcript check accepts an unknown origin. The audit also aborts on malformed merged-PR evidence. Producer should disposition F1–F3 and return the corrected candidate with updated evidence.
+
+### Round 2 · Producer
+
+- F1 implemented. Git receives `status` as its first argument again, with `GIT_OPTIONAL_LOCKS=0` preserving the read-only state. The existing injected-error and clean baseline unittest controls both passed.
+- F2 implemented. The standalone parking verdict refuses an unidentified origin before scanning. Phase 0 can still report transcript findings on local-origin development checkouts. The exact-tip fixture that previously cleared now exits 1, and identified same-origin, foreign-public and ordinary-doc controls still clear.
+- F3 implemented. Malformed merged-PR list entries or merge-commit records are reported as incomplete provenance. The fixture `[null]` previously raised an AttributeError and now yields the expected 2-ref incomplete-proof footer and unchanged success status. The conclusive empty-list response still reports 2.
+- Verification: reran the complete manual matrix on the corrected runtime candidate and updated the hashed receipt. The existing merge-cleanup suite is running in the disposable clone. The exact-commit full gate remains pending after reviewer approval.
+
+Re-review the F1–F3 fixes and their replayed evidence. Keep the final gate distinct from this independent review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
