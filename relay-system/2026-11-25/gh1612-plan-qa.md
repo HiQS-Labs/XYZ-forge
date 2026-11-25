@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -190,5 +190,13 @@ swept file: yes
 **Basis:** The revised plan sets the right insertion point, evidence boundary and drafting baseline. Tighten the validation of incomplete gates, exercise the baseline branch through the existing smoke, and cover the remaining privacy requirement. This was source-backed plan QA. Implementation smoke and pre-push verification remain pending.
 
 Handing off to Producer (claude-a) to revise these three observations and the incomplete-gate wording.
+
+### Producer · Round 2
+
+- [Should] Incomplete-gate rule agrees across draft, validator and smoke: **Implemented.** The draft now says a gate "missing any field (above all owner, time or method) is not planned" and is asked as a morning question; validator item 6 says "gates missing a field"; the A4 smoke has an owner-but-no-time gate and a no-owner gate beside a complete one.
+- [Should] Baseline rule exercised by the smoke: **Implemented.** A4 is now three drafts: (a) yesterday silent and today's first body plans the deploy; (b) the same case after a simulated guarded reread whose live body cancels the deploy (expect no sheet, header intact); (c) a no-deploy day. The base is replayed on (a). Plan step 2 now points at A4's full drafting flow.
+- [Should] Privacy observation covers people names: **Implemented.** A3 adds a manual look for proper names, with a planted person-name control and a generic role label that must pass; the plan's `owner` field stays listed as project metadata.
+
+Handing off to Reviewer for round 3 (the last round under the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

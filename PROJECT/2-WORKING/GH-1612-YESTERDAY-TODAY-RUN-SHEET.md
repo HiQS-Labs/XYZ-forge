@@ -73,7 +73,7 @@ Constraints: about 20 to 30 added lines, file under about 140 lines, plain Engli
 ## Plan
 
 1. Edit `skills/2-daily/yesterday-today/SKILL.md`: add step `5a. Deploy-day run sheet` with the six row columns and the seven lessons as short bullets; add "run sheet first" to step 7; add one validator line (item 6) to step 8. Keep numbering of steps 6-9 unchanged. Trim elsewhere if the file would pass about 135 lines.
-2. Smoke (GH-1088), from the consumer entry point: read the skill through its path in this clone and dry-run step 5a read-only against two fictional ledgers, one with a planned deploy (expect one run sheet, gates first, an ownerless gate raised as a question) and one without (expect nothing added). Record under `TESTS-RESULTS/2026-11-25+GH-1612/`.
+2. Smoke (GH-1088): run the full drafting flow of A4 below, from the consumer entry point, on fictional ledgers; record under `TESTS-RESULTS/2026-11-25+GH-1612/`.
 3. Final relay QA (Codex via relay-xyz), then the single push through the pre-push gate (attempt budget 2, reserved) and PR against `development`.
 
 ## Draft wording (step 5a, to be inserted after step 5)
@@ -90,8 +90,8 @@ One row per step, gates first (go-ahead, deploy, after-deploy checks): step | na
 planned time | exact method (where it runs, with which access) | what a pass looks like |
 what stops the deploy.
 
-- A gate with no owner, time and method is not planned. Ask it as a morning question, never carry
-  it as prose: who deploys, who gives the go-ahead and when, who does the after-deploy checks
+- A gate missing any field (above all owner, time or method) is not planned. Ask it as a morning
+  question, never carry it as prose: who deploys, who gives the go-ahead and when, who does the after-deploy checks
   (a late-evening one too).
 - Check each step against the real code and the target environment using what is recorded: the
   repo, the PR, a deploy log. Example: a staging config change is valid only if the code running
@@ -109,7 +109,7 @@ what stops the deploy.
   operator's explicit approval for that action, with backups made first.
 ```
 
-Step 7 gains one clause ("a run sheet from step 5a goes first and is recomputed on a redraft"). Step 8 gains item 6: "If a deploy is planned, is the run sheet first, one row per step with owner, time, method, pass evidence and stop condition, ownerless gates asked as questions, and no approval implied? On a no-deploy day, was nothing added?"
+Step 7 gains one clause ("a run sheet from step 5a goes first and is recomputed on a redraft"). Step 8 gains item 6: "If a deploy is planned, is the run sheet first, one row per step with owner, time, method, pass evidence and stop condition, gates missing a field asked as questions, and no approval implied? On a no-deploy day, was nothing added?"
 
 ## Acceptance
 
@@ -117,8 +117,8 @@ Feature checks fail on the unchanged base `b479f74e0`; safeguards (A3, A5, A6) a
 
 - [ ] A1 Content: the skill has step 5a with all six columns, "gates first", the no-deploy "add nothing" rule, the today's-body baseline sentence, one bullet per lesson 1-7, and step 8 item 6; checker prints line numbers. Base prints missing for each. Control: a copy with the lesson-4 bullet removed reports it missing.
 - [ ] A2 Size and numbering: measured added lines from `git diff --numstat` are within 20-30 for step 5a plus the two small edits, the file is under about 140 lines, and the step headings 1-9 still carry their numbers. Base: 107 lines, no 5a.
-- [ ] A3 Privacy: one fixed-pattern `rg -n -i` (client, product, host, email, private-link shapes) over the skill and the evidence folder, each confirmed nonempty; the plan file is scanned separately and its required `owner` field is listed as project metadata, not a finding. Control: a planted fictional token is found.
-- [ ] A4 Smoke, from the consumer entry point (the skill read through its path in this clone), two fictional ledger pairs, read-only, whole proposed body captured and not published. Deploy case: one complete gate and one gate with no owner; expect exactly one six-column sheet first, gates first, the incomplete gate asked as a question, the goal header intact. No-deploy case: zero run-sheet output. Replay the base skill on the deploy input and witness no sheet. Action log shows no `gh` write and no host or deploy operation; checkout state checked separately (`git status --porcelain` clean outside `TESTS-RESULTS/`).
+- [ ] A3 Privacy: one fixed-pattern `rg -n -i` (client, product, host, email, private-link shapes) plus a manual look for proper names over the skill and the evidence folder, each confirmed nonempty; the plan file is scanned separately and its required `owner` field is listed as project metadata, not a finding. Controls: a planted fictional token and a planted person-name example are both caught; a generic role label passes.
+- [ ] A4 Smoke, from the consumer entry point (the skill read through its path in this clone), fictional ledgers, read-only; the whole proposed body is captured and nothing is published. Three drafts: (a) yesterday silent, today's first body plans a deploy with one complete gate, one gate with an owner but no planned time, and one gate with no owner: expect exactly one six-column sheet first, gates first, a morning question for each incomplete gate, the goal header intact; (b) the same case after a simulated guarded reread whose live body cancels the deploy: expect no sheet, header intact; (c) a no-deploy day: expect zero run-sheet output. Replay the base skill on (a) and witness no sheet. Action log shows no `gh` write and no host or deploy operation; checkout state checked separately (`git status --porcelain` clean outside `TESTS-RESULTS/`).
 - [ ] A5 Diff invariant: changed paths limited to the skill, this plan, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`, and the skill diff must be nonempty. Controls: a synthetic `test/new-suite.sh` is rejected, an empty skill diff is rejected.
 - [ ] A6 Delivery: a final-QA receipt for the delivered revision is committed and the opened PR's actual base is `development`. Controls: a missing receipt and a wrong-base value are each rejected by the same check.
 
