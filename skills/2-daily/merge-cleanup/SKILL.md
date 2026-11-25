@@ -37,6 +37,15 @@ When the operator speaks naturally:
 
 ---
 
+## Prerequisites & Environment Requirements
+
+- **Python**: 3.9 or newer.
+- **Git**: 2.38.0 or newer. Required for `git merge-tree --write-tree` during landing forecasts (`build_landing_forecast`). If older git (e.g. 2.34.1 on default Ubuntu 22.04 LTS) is installed, merge-cleanup will warn in preflight and error gracefully in merge simulation with an upgrade recommendation (e.g. `add-apt-repository ppa:git-core/ppa && apt update && apt install git`).
+- **GitHub CLI (`gh`)**: 2.18.0 or newer. Required for the `headRefOid` JSON field during Phase 4 PR discovery. If an older `gh` (e.g. 2.4.0 from Ubuntu universe) is installed, merge-cleanup will warn during preflight and advise installing the official release from `https://cli.github.com`.
+- **Process & Handle Monitoring (`lsof`)**: Used by `inspect_open_handles` to identify active processes holding checkout directories before any deletion. On Linux hosts (including environments running Docker with overlay filesystems), `lsof` can emit warnings about unstatable mounts outside the target checkout (e.g. `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/.../merged`). `merge-cleanup` safely classifies and filters out warnings for paths outside the repository checkout, while strictly failing closed for any warnings at, inside, or containing the checkout path. Pruning continues to enforce that checkouts with active root-CWD processes or open handles are never removed.
+
+---
+
 ## Project merge policy
 
 Before any caller-owned doc parking or executing cleanup, read the target project's policy:
@@ -217,7 +226,7 @@ Parking preserves work for later review; it never qualifies it for integration o
 ### Phase 2: Active Process & Session Inspection
 - Checks driver locks: `.git/relay-driver.lock` (or vendored `.relay-driver.lock`) and validates holder PID liveness via `kill -0 <pid>`.
 - Checks `.tick/` active claims through the **event log fold**, never `STATE.md` (a derived snapshot): `tick claims --json` with `TICK_REPO_ROOT` pinned to the coordination root (a linked worktree's is its parent clone's). Any claimed task → `ACTIVE_TICK_CLAIM` naming task and agent; a `.tick/locks/` entry of any shape counts; `tick` missing, failing, or an events directory that is missing/unreadable → `PRESERVE_UNVERIFIED_SESSION` naming why (GH-534 A.4, `decisions/2026-09-09-tick-claims-verb.md`).
-- Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 **and** empty stderr is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or **any** stderr line (`WARNING: can't opendir`), is incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning.
+- Checks live file handles via `lsof -F pcn +D <checkout>` from a CWD outside it. Three outcomes, because `lsof +D` exits 1 whether idle or held: a normal exit with code 0/1 with empty stderr (or only tolerated benign warnings about unstatable unrelated filesystems such as Docker overlay2 mounts, plus companion disclaimer) is a complete enumeration (matches → `ACTIVE_PROCESS` naming PIDs and commands, none → verified idle); a signal-killed/timed-out/absent `lsof`, or any related or unclassified stderr line (`WARNING: can't opendir`, `WARNING: can't stat`), fails closed as incomplete → `PRESERVE_UNVERIFIED_SESSION` naming the warning (GH-1597).
 - **Activity Window Ladder (10m + 60m Recency Detection):** Inspects non-ephemeral file modification timestamps (`mtime` ignoring `.git`, `node_modules`, `.venv`, `.DS_Store`, and `*.sqlite-wal`/`*.sqlite-shm`) to classify:
   - **`ACTIVE_WRITING`** ($\le 10$m): In-progress active editing.
   - **`RECENT_IDLE`** ($10\text{m} - 60\text{m}$): Paused session, recent edits.
@@ -257,6 +266,7 @@ Parking preserves work for later review; it never qualifies it for integration o
 ### Phase 5: required checks and pinned heads (GH-1226)
 - Before each merge the script reads `gh pr checks <n> --required --json name,bucket`. `pass`/`skipping` proceed, and so does gh's "no required checks reported". Failing or cancelled checks mean the PR is not merged (exit 3).
 - While required checks are pending, the script re-reads them every `MERGE_CLEANUP_CHECKS_POLL_S` (default 30 s) for up to `MERGE_CLEANUP_CHECKS_WAIT_S` (default 1800 s). Still pending after that defers the PR (exit 3), and so does an unreadable answer. It never merges on a guess. A dry run only reports the check state; it does not change its exit code.
+- **Gate toolchain probe before a repair slot (GH-1606).** Before reserving a B1 repair slot, an executing run runs the landing clone's `validate.sh --print-mode` (the pre-push gate's own toolchain check, under the PATH the push will inherit, no suites). A blocking toolchain fault (wrong interpreter, missing modules) defers that PR: exit 3, the fault named, **no slot spent**, the queue continues and its hard dependents wait. Put the right interpreter first on PATH (the test venv) and re-run. A clone without `validate.sh`, or a probe that cannot answer, skips it, and the pre-push hook stays the enforcing authority. The probe is conservative: a push whose hook route would have skipped `validate.sh` can still be deferred. The dry run warns about the primary's toolchain only (advisory).
 - At final eligibility the live head must equal the dry-run pin. A B1 repair pushes a new head. When that head is the one this run pushed and nothing else moved it, the run waits for its checks (required checks, plus any `wait_for_checks`) on that exact commit. If the pre-repair head reported required checks, "no required checks" on the new head counts as not registered yet and is waited for. When they pass, the run re-checks the head, re-pins it (the selection file and the batch allowlist), and lands it in the same run (GH-1475). Checks that fail, stay pending past the wait or never register, or a head another push moved, defer it as before: re-run the dry run to re-pin, then `--execute` again.
 - A dry run that reaches a B1-repairable ledger conflict logs B1's preview and continues with the next PR, so the whole batch is previewed.
 
@@ -485,8 +495,8 @@ record; name the issue failure in the run summary.
 A landing loop that completes cleanly with no kept clone (no handoff, stop or kept B1 result) and no
 deferred sync removes its own `merge-cleanup-*` landing workdir; otherwise it is kept for inspection. When the only reason to keep it is a deferred PR (exit 3), the clones of PRs that landed in the run are released and the deferred PRs' clones stay. At the end of every landing loop, older retained `merge-cleanup-*` and `merge-check-*` folders under the temp root are pruned (GH-1475): per prefix the newest `MERGE_CLEANUP_KEEP_WORKDIRS` (default 3) and anything touched in the last hour are kept, and an older folder is removed only when its name and contents are the tool's own shape. Every removal (clean run, exit-3 release, pruning) keeps a folder that `lsof` cannot verify as idle, or whose clones hold untracked files, a stash, a linked worktree, or tracked changes outside an in-progress merge. A re-pinned B1 repair also defers when the integration branch moved during its check wait. Pruning is skipped while another `merge_cleanup.py` may be running.
 Before you `--execute` a batch, read the dry run's `PRE-FLIGHT:` warnings (low disk under the temp
-root, battery power, a harness `TMPDIR`, another `--execute` running, no required checks); they
-never refuse.
+root, battery power, a harness `TMPDIR`, another `--execute` running, no required checks, a pre-push
+gate toolchain fault in the primary, GH-1606); they never refuse.
 
 **Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
 retry the identical command once before escalating to the operator — a block that succeeds on a

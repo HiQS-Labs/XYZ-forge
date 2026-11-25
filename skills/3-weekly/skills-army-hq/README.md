@@ -77,9 +77,10 @@ the upstream project. Keep local receipts and imported private skills private.
 
 ## Getting started
 
-Requires Python 3.9+; macOS is the supported alpha platform. Clone the standalone repository, choose
-one empty collection directory (the Pulse path by default), preview initialization, then apply it.
-If Pulse already contains the deployed payloads, follow the adoption instructions below instead:
+Requires Python 3.9+; supported on macOS and Linux (POSIX). Clone the standalone repository, choose
+one empty collection directory (the Pulse path `~/git-pulse-sync/Deployed Skills` by default), preview initialization
+with `intake.py init`, then apply it with `intake.py --apply init`. Note: `init` must be run before `intake.py add`
+to establish the collection state. If Pulse already contains the deployed payloads, follow the adoption instructions below instead:
 
 ```bash
 git clone https://github.com/HiQS-Labs/XYZ-skills-army-mini.git

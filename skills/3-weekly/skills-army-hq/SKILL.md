@@ -27,10 +27,13 @@ description: >-
    receipt digest with the deployed bytes, exit 0 can carry warnings, and an unexplained missing
    payload stops it before the JSON. Read the warnings and report the four facets in
    *Definition of done* separately.
-4. **Root and canonical are per-device; resolve both before any command.** The collection root
-   is `--root`, else `XYZ_SKILLS_ROOT`, else `~/git-pulse-sync/Deployed Skills`. If that default
-   does not exist on this device, stop and report; never improvise against another path, and
-   never place a symlink at the default (a symlinked root is refused). The canonical forge
+4. **Root and canonical are per-device; resolve both before any command.** Supported on POSIX
+   platforms (macOS and Linux). The collection root is `--root`, else `XYZ_SKILLS_ROOT`, else
+   `~/git-pulse-sync/Deployed Skills`. If that default does not exist on this device (such as a fresh
+   Linux host), initialize it first via `intake.py init` (preview) and `intake.py --apply init` (or
+   `--adopt-existing` to attach in place) before invoking `intake.py add`. If an uninitialized path
+   is encountered without explicit init instruction, stop and report; never improvise against another
+   path, and never place a symlink at the default (a symlinked root is refused). The canonical forge
    checkout is `--canonical`, else `XYZ_FORGE_ROOT`, else `targets.json`'s `canonical`, else the
    checkout this manager was vendored from, which may be hundreds of commits stale. A stale
    canonical makes current skills look `DRIFTED`, and re-vendoring from it **downgrades** them:

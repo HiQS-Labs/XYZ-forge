@@ -90,6 +90,91 @@ def _gh(args: List[str], cwd: Path, timeout: int = 180) -> subprocess.CompletedP
     except (OSError, subprocess.TimeoutExpired) as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=str(exc))
 
+# --- GH-1597: Tool version checks (Git >= 2.38.0, GitHub CLI >= 2.18.0) ---
+_GH_VERSION_CHECKED: Optional[Tuple[bool, str]] = None
+_GH_WARNED: bool = False
+_GIT_VERSION_CHECKED: Optional[Tuple[bool, str]] = None
+_GIT_WARNED: bool = False
+
+
+def _parse_version(v_str: str) -> Optional[Tuple[int, int, int]]:
+    m = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", v_str)
+    if not m:
+        return None
+    major = int(m.group(1))
+    minor = int(m.group(2))
+    patch = int(m.group(3)) if m.group(3) else 0
+    return (major, minor, patch)
+
+
+def check_gh_version() -> Optional[str]:
+    """Checks gh version against minimum 2.18.0 (required for headRefOid field).
+    Memoized to prevent duplicate checks."""
+    global _GH_VERSION_CHECKED
+    if _GH_VERSION_CHECKED is not None:
+        ok, msg = _GH_VERSION_CHECKED
+        return msg if not ok else None
+    res = _gh(["--version"], Path("."))
+    out = res.stdout.strip() or res.stderr.strip()
+    ver = _parse_version(out)
+    if ver is None:
+        _GH_VERSION_CHECKED = (True, "")
+        return None
+    if ver < (2, 18, 0):
+        ver_str = f"{ver[0]}.{ver[1]}.{ver[2]}"
+        msg = (f"gh version {ver_str} is below the required 2.18.0 minimum for PR discovery (headRefOid field); "
+               "upgrade gh (e.g. https://cli.github.com or release .deb on Ubuntu/Debian).")
+        _GH_VERSION_CHECKED = (False, msg)
+        return msg
+    _GH_VERSION_CHECKED = (True, "")
+    return None
+
+
+def warn_gh_version_if_needed() -> Optional[str]:
+    """Emits gh version warning once if gh is below minimum 2.18.0."""
+    global _GH_WARNED
+    msg = check_gh_version()
+    if msg and not _GH_WARNED:
+        _GH_WARNED = True
+        log_err(f"PRE-FLIGHT: {msg}")
+        return msg
+    return None
+
+
+def check_git_version() -> Optional[str]:
+    """Checks git version against minimum 2.38.0 (required for git merge-tree --write-tree).
+    Memoized to prevent duplicate checks."""
+    global _GIT_VERSION_CHECKED
+    if _GIT_VERSION_CHECKED is not None:
+        ok, msg = _GIT_VERSION_CHECKED
+        return msg if not ok else None
+    res = run_git(Path("."), ["--version"], timeout=5)
+    out = res.stdout.strip() or res.stderr.strip()
+    ver = _parse_version(out)
+    if ver is None:
+        _GIT_VERSION_CHECKED = (True, "")
+        return None
+    if ver < (2, 38, 0):
+        ver_str = f"{ver[0]}.{ver[1]}.{ver[2]}"
+        msg = (f"git version {ver_str} is below the required 2.38.0 minimum for landing forecast (git merge-tree --write-tree); "
+               "upgrade git (e.g. ppa:git-core/ppa on Ubuntu/Debian).")
+        _GIT_VERSION_CHECKED = (False, msg)
+        return msg
+    _GIT_VERSION_CHECKED = (True, "")
+    return None
+
+
+def warn_git_version_if_needed() -> Optional[str]:
+    """Emits git version warning once if git is below minimum 2.38.0."""
+    global _GIT_WARNED
+    msg = check_git_version()
+    if msg and not _GIT_WARNED:
+        _GIT_WARNED = True
+        log_warn(f"PRE-FLIGHT: {msg}")
+        return msg
+    return None
+
+
 
 # --- GH-623: network resilience — bounded calls, transient-only retry, defer instead of stop ----
 # The incident run lost 3 of 7 PRs to one DNS failure and never retried anything. The contract,
@@ -104,6 +189,7 @@ MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
 PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-push hook, which can run a gate
+GATE_PROBE_TIMEOUT_S = 60     # GH-1606: validate.sh --print-mode toolchain probe (no suites run)
 DEFAULT_CANARY_TIMEOUT_S = 300  # bound for intermediate canary execution in disposable clone
 
 # GH-1226: every PR this run merged, for the post-run merged ⊆ --prs assertion (batch or not).
@@ -982,6 +1068,35 @@ def gate_unwired_reason(clone: Path, install: bool = False) -> str:
     return ""
 
 
+def gate_toolchain_fault_reason(clone: Path) -> str:
+    """GH-1606: '' unless the clone's own `validate.sh --print-mode` reports a blocking toolchain fault.
+
+    The pre-push gate's first act is validate.sh's toolchain probe: an old interpreter or missing
+    modules exit 3 before any suite runs. `--print-mode` is that same probe with no suites and no
+    accounting, run under the PATH the push will inherit, so a B1 repair slot is not spent on a push
+    the gate will refuse at once. Foresight, not a second gate: a clone with no validate.sh (a consumer
+    repo, whose own qualification applies) and a probe that cannot answer (spawn error, timeout) give
+    '' and the pre-push hook stays the enforcing authority. Advisory diagnostics (php) exit 0 and are
+    not a fault here. A nonzero exit with no ENVIRONMENT FAULT line (an unrelated failure, or a validate.sh
+    that does not know --print-mode) is likewise not a toolchain fault: '' and the hook decides.
+    """
+    script = Path(clone) / "validate.sh"
+    if not script.is_file():
+        return ""
+    try:
+        res = subprocess.run(["bash", str(script), "--print-mode"], cwd=str(clone), capture_output=True,
+                             text=True, timeout=GATE_PROBE_TIMEOUT_S, check=False)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return ""
+    if res.returncode == 0:
+        return ""
+    out = ((res.stdout or "") + (res.stderr or "")).strip()
+    # Every fault line, in order: the gate prints each fault it detects (an advisory php line can precede the
+    # blocking python line that exits 3), so naming only the first could hide the cause that refuses the push.
+    faults = [ln.strip() for ln in out.splitlines() if "ENVIRONMENT FAULT" in ln]
+    return " | ".join(faults)
+
+
 def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
                           workdir: Path) -> Dict[str, Any]:
     """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
@@ -1321,10 +1436,16 @@ def _probe_text(cmd: List[str]) -> str:
     return res.stdout if res.returncode == 0 and isinstance(res.stdout, str) else ""
 
 
-def preflight_warnings() -> List[str]:
+def preflight_warnings(primary_repo: Optional[Path] = None) -> List[str]:
     """GH-1475 (F1, F2, F10): read-only hazards for an unattended batch. Warnings only; a probe
-    that cannot answer stays silent."""
+    that cannot answer stays silent. GH-1606: with `primary_repo`, also the gate toolchain probe."""
     out = []
+    if primary_repo is not None:
+        toolchain = gate_toolchain_fault_reason(primary_repo)
+        if toolchain:
+            out.append(f"the pre-push gate's toolchain probe reports a fault ({toolchain}); advisory and "
+                       "specific to the primary checkout. --execute probes each conflicted PR's landing clone and "
+                       "defers it (exit 3) before spending a repair slot; fix PATH first")
     try:
         free_gb = shutil.disk_usage(tempfile.gettempdir()).free / 1e9
         if free_gb < PREFLIGHT_MIN_FREE_GB:
@@ -1345,6 +1466,12 @@ def preflight_warnings() -> List[str]:
     if others:
         out.append(f"another merge_cleanup.py --execute is running (pid {', '.join(others)}); "
                    "run one landing batch per machine")
+    gh_msg = check_gh_version()
+    if gh_msg and not _GH_WARNED:
+        out.append(gh_msg)
+    git_msg = check_git_version()
+    if git_msg and not _GIT_WARNED:
+        out.append(git_msg)
     return out
 
 
@@ -2043,6 +2170,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                         log_err(f"  export {attempt_record.RECORD_ENV}={record_path}  # caller ladder: /unstuck")
                         failed[p_num] = "previously parked (resume)"
                         continue
+                # GH-1606: a repair slot is bounded and durable, so do not spend one while the gate that
+                # must accept the repaired head cannot run. Defer (exit 3, queue continues) like any other
+                # fixable precondition; fix PATH and re-run. Execute only: a dry run reserves nothing.
+                if not dry_run:
+                    toolchain = gate_toolchain_fault_reason(clone)
+                    if toolchain:
+                        log_err(f"PR #{p_num}: DEFERRED — the pre-push gate cannot run here, so no repair slot "
+                                f"was spent: {toolchain}")
+                        failed[p_num] = f"deferred: gate toolchain ({toolchain[:500]})"
+                        continue
                 # C: one durable attempt record at the pinned coordinator (the --primary path),
                 # shared with the caller's repair rungs. B1 is a repair: it needs a slot.
                 record = attempt_record.record_path(primary_repo, origin, p_num)
@@ -2600,6 +2737,7 @@ def main():
     # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
     checkpoint_eligible_prs: Optional[Set[int]] = None
     if merging:
+        warn_gh_version_if_needed()
         try:
             early_prs = fetch_open_prs_with_retry(str(primary_repo))
         except FetchError as exc:
@@ -2786,6 +2924,7 @@ def main():
     # as an empty queue — an empty list and an error are different facts. Exhaustion exits 2
     # BEFORE Phase 6: rolling into teardown on a false "no PRs" would report success while the
     # queue was silently skipped.
+    warn_gh_version_if_needed()
     try:
         prs = fetch_open_prs_with_retry(str(primary_repo))
     except FetchError as exc:
@@ -2811,6 +2950,7 @@ def main():
         if not listed_problems:
             listed_order = effective_sequence(prs, set(listed_found))
             if len(listed_order) >= 3:
+                warn_git_version_if_needed()
                 forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
         args._forecast = forecast
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
@@ -2818,7 +2958,7 @@ def main():
         jog_warning = jog_primary_precondition(primary_repo, [p for p in prs if int(p.get("number", 0)) in args.prs])
         if jog_warning:
             log_warn(jog_warning)
-        for warning in preflight_warnings():
+        for warning in preflight_warnings(primary_repo):
             log_warn(f"PRE-FLIGHT: {warning}")
     if prs and not args.prs:
         log("Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).")
