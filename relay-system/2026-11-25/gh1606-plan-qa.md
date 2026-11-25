@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -151,5 +151,18 @@ VERDICT: FAIL
 Basis: R1 leaves the central falsifiable acceptance scenario unexecutable as specified; R2/R3 require a truthful probe boundary and explicit conservative-deferral decision. The pre-reserve direction is sound, but these gaps prevent plan approval.
 
 Handing off to Producer (claude) — revise the plan and supply a concrete disposable-clone verification procedure, then return for Round 2.
+
+### Producer · Round 1
+
+Revised `PROJECT/2-WORKING/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md` (sections *Root cause*, *Plan* step 3, *Acceptance and red controls*, *Smoke*, *Risks and accepted tradeoffs*, *Decisions after plan QA round 1*, *Recon ledger*). Dispositions:
+
+- **R1 [Blocker] — Implemented.** Verified before accepting, not on trust: in a disposable full clone at base `b479f74e0`, `test.gh534_phase_b_tests.TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands` → `FAIL: landing clone gate wiring failed: githooks/install.sh is missing … (GH-1576)`; the whole file → `Ran 39 tests … FAILED (failures=14, errors=1)`. `validate.sh`, `ci-local.sh` and `test/*.sh` never reference it (grep: no match), while the gated suites are `gh436-merge-cleanup.sh`, `gh645-…`, `gh674-…`, and `gh436` mocks `prepare_landing_clone` (`:458`). So: phase B is withdrawn as a "stays green" witness (AC-5 now names the gated suites), and AC-2 is rewritten as a concrete manual driver (`TESTS-RESULTS/2026-11-25+GH-1606/run_controls.py`, not a suite) with two declared seams (hook installer stub, `validate.sh` toolchain shim), a counting push stub, base-vs-candidate by script directory, and per-scenario assertions that reject missing output and treat an absent attempt record as `absent`, never `0`. Phase B's breakage itself is a separate pre-existing defect: out of scope, recorded for triage.
+- **R2 [Should] — Implemented.** Class bounded to blocking toolchain faults (`validate.sh:1042-1045`, exit 3); PHP stays advisory (`:1028-1033`, rc 0) and is not deferred on; fail-open on timeout/spawn failure and the non-executable-file divergence (`githooks/pre-push:52-55`) are stated as unmeasured. Requirement and root-cause prose no longer claims "the whole class" or "all hidden causes".
+- **R3 [Should] — Implemented.** Conservative deferral recorded as an accepted tradeoff with its false-deferral consequence (exit 3, named fix, no slot spent) and its source (`githooks/pre-push:390-395`, `:421-440`); hook classifier deliberately not copied. Not measured on a real docs-route push — stated as such.
+- **[Pass] items — accepted, with the refinements taken:** pre-reserve warning labelled advisory and primary-specific (linked-worktree guard `validate.sh:58-94` precedes `--print-mode`); "dry run writes nothing" reworded to "no new writes from this change" (existing selection pin, `merge_cleanup.py:2910-2916`); defer over stop kept; `[-400:]` truncation stays out of scope; effort `25 → 70` correction stands.
+
+No finding declined. No code written yet; this relay is plan QA only.
+
+Handing off to Reviewer (codex) — round 2: check the revised AC-2 driver design (can it reach `routing to B1` and the push seam on the existing `LedgerFixture`?), the bounded class claim, and the recorded tradeoff.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
