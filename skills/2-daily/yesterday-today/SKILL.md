@@ -69,17 +69,17 @@ Applies when yesterday's ledger, today's ledger or a linked deploy checklist pla
 today; otherwise add nothing. The sheet is the first section of today's body, read from step 7's
 baseline and recomputed if step 7 redrafts. Link the repo's deploy docs; do not restate a procedure.
 
-One row per step, gates first (go-ahead, deploy, after-deploy checks): step | named owner | planned
-time | exact method (where it runs, with which access) | what a pass looks like | what stops the deploy.
+One row per step, six columns: step | named owner | planned time | exact method (where it runs, with
+which access) | what a pass looks like | what stops the deploy. Gate rows first (go-ahead, deploy,
+after-deploy checks), then support rows (access, rehearsal, config), each in time order.
 
 - A gate missing any field (above all owner, time or method) is not planned. Ask it as a morning
   question, never carry it as prose: who deploys, who gives the go-ahead and when, who does the
   after-deploy checks (a late-evening one too).
 - Check each step against the real code and target environment using what is recorded (repo, PR,
-  deploy log). Example: a staging config change is valid only if the code running there supports
-  it; that host's recorded commit says what runs. A step copied from an older checklist is a
-  claim, not a fact. If only a host read or run could settle it, ask it and plan it as an owner's
-  step; this skill makes no host read.
+  deploy log). Example: a staging config change is valid only if the code running there supports it
+  (the host's recorded commit says what runs). A step from an older checklist is a claim, not a
+  fact. If only a host read or run could settle it, ask it as an owner's step; no host read here.
 - Check access early (sign-ins, VPN, Docker, free disk) and name the fallback machine in the row.
 - A pass is evidence, not absence: each check says what it must have seen (row counts, named
   items), so a query that matched nothing cannot read as "all on".
@@ -120,8 +120,8 @@ body itself:
 3. Does today's feedback list match what people actually wrote?
 4. Are the goal header, scope rule, SOP sections and estimate (formula, change log) intact?
 5. Does any wording imply a merge, deploy or test sign-off?
-6. Deploy planned: is the run sheet first, one row per step with owner, time, method, pass evidence
-   and stop condition, gates missing a field asked as questions? No deploy: was nothing added?
+6. Deploy day: run sheet first, six columns, gates first, any gate missing a field asked as a
+   question? No deploy: nothing added?
 
 Verify each finding firsthand before changing anything. If the reviewer could not run, say
 "independent review did not run" and give the reason; do not substitute a self-review.
