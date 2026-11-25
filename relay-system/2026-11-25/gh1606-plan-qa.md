@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -114,5 +114,42 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) each with a co
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+Paraphrase written from the artifact only. Add a bounded gate-toolchain probe before a B1 repair reservation and defer a conflicted PR when it reports a fault. Reuse that probe for a run-start warning and document the behavior, without changing the repair budget.
+
+**How the existing system works, per this document**
+
+Landing-clone preparation checks hook wiring before reservation. B1 then reserves a durable slot, repairs the conflict and pushes; an environment refusal at push time can spend the slot while the stderr tail hides the cause. The document says validate's print-mode already checks toolchain readiness without running suites.
+
+**What it's not**
+
+Excluded by frontmatter: gate bypasses, budget/accounting changes, interpreter selection and genuine failing-suite diagnostics. Alternatives defer widening the push-output slice; defer versus stop and the warning's scope remain reviewer questions. No additional authorization phase is specified.
+
+**Source-backed assessment — Block pending plan corrections**
+
+- **[Blocker] R1 — AC-2 cannot produce its promised red control as written.** Observed input: artifact:117 promises a PATH-only base/candidate run of the existing B1 fixture; `test/gh534_phase_b_tests.py:175-192` seeds releases tools and a README, not validate or hooks, and `test/gh436-merge-cleanup.py:40-43` disables the wiring check. Running phase B alone instead encounters the real missing-installer refusal at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1056-1058` before reservation. Affected scope: AC-2/AC-3's claimed environment-fault scenario. Falsifier: an explicit fixture setup that demonstrably reaches the real environment diagnostic, shows base exit 2 with one attempt, candidate exit 3 with zero attempts, and a healthy candidate repair that actually pushes. Fix: specify the disposable-clone manual driver/setup, including gate files/hook or a clearly declared controlled push-refusal seam, the wiring setup, and the exact base/candidate command. Do not add a suite. Require nonempty named fault output, actual entry into B1, an unchanged published PR head on defer, and an existing/absent attempt record handled explicitly; never accept missing output as zero attempts. No such observed unchanged-candidate rejection is currently supplied; AC-1's stub only tests the helper oracle, not reservation ordering.
+
+- **[Should] R2 — “whole class” overstates the chosen probe contract.** Observed input: artifact:62-64 includes broken PHP, but `validate.sh:1028-1033` prints that fault without exiting; with healthy Python it reaches exit 0 at `validate.sh:1060`. Artifact:77 discards every rc-0 diagnostic. Also `bash validate.sh` can read a non-executable file that the hook explicitly rejects at `githooks/pre-push:52-55`; timeout/spawn failure deliberately returns empty (artifact:78-79). Affected scope: the claim that every gate-runnability fault is prevented before reservation. Falsifier: show each included fault produces a nonempty helper reason before reserve, including PHP-only output with rc 0; otherwise the universal claim is false. Fix: bound the requirement/root-cause claim to the detected blocking Python/toolchain diagnostics and explicitly document fail-open/unmeasured cases, or define how named diagnostics are handled independently of rc. Keep PHP's actual advisory semantics intact; do not invent a new policy merely to match the prose.
+
+- **[Should] R3 — acknowledge that this probe is conservative, not the exact push precondition.** Observed input: artifact:75-76 describes the eventual push's check, but `githooks/pre-push:390-395` selects `run_docs_gate` (`:337-345`) without validate; the proposed unconditional probe requires mypy/pytest/requests at `validate.sh:1037-1044`. Full-receipt reuse also exits before validate (`githooks/pre-push:421-440`). Affected scope: B1 repairs whose push would select docs or reuse a receipt; a Python missing only mypy is a concrete input to the stricter probe. Falsifier: demonstrate the repaired push's real route always requires the same toolchain for every supported B1 shape, or explicitly accept conservative deferral. Fix: record that scoped tradeoff and its false-deferral consequence, or reuse an existing route owner if exact equivalence is required; do not copy the hook's classifier. Same PATH is supported by `merge_cleanup.py:1155-1163` (copied environment plus attempt context), but identical PATH does not establish identical route. No runtime route reproduction was executed here.
+
+- **[Pass] Q1/Q3/Q4 — ordering and deferral fit the existing owners.** The cited wiring check really is pre-reserve (`merge_cleanup.py:1094`); reservation durably appends before B1 finishes and pushes (`:2148,2188,2197`). Put the new check inside the execute path after the resume skip (`:2121-2136`). Hard dependents consult failed/pending (`:2032-2043`), batch outcomes persist the failure reason (`:1953-1955`), and the incomplete queue returns 3 (`:2471-2482`). A deferred landing clone remains inspectable (`:2485-2498`); no remote repair or attempt record should have changed. The two-attempt cap stays owned by `attempt_record.py:reserve` (MAX_REPAIRS and append under RecordLock). Concrete action: retain these mechanisms and include their outcomes in the manual check, rather than add accounting/refund logic. Missing validate is silent only for the new helper; it does not waive the existing missing-installer refusal. These are source-based compatibility conclusions, not executed regressions.
+
+- **[Pass] Q2/Q4/Q6 — print-mode is useful read-only introspection, with limits.** It exits before gate accounting/suites (`validate.sh:1049-1066`), but the linked-worktree guard precedes it (`validate.sh:58-94`), so a warning from a linked primary can describe that primary rather than the disposable landing clone. Concrete action: label run-start output advisory and clone-specific rather than proof of push readiness. Preserve the no-write warning helper convention (`merge_cleanup.py:1409-1439`). “Dry run no writes” should mean no new writes from this change: the existing dry run publishes its selection before warnings (`:2910-2916`). A scoped warning meets the issue's advance-warning requirement and is not scope creep.
+
+- **[Pass] Q6/Q7/Q8 — keep the small design and most non-goals.** Defer rather than stop is appropriate for independent PRs under the existing exit-3/dependency contract above. Keep genuine suite-RED truncation outside this fix (`merge_cleanup.py:1165`), but qualify the claim that preflight eliminates all hidden environment causes because the helper intentionally fails open. Accept no bypass, no interpreter switching, and no accounting changes. One helper reused by B1 and preflight extends existing owners; no parallel gate, new suite or runner is justified. The effort-axis correction is right (`RELEASES-DB-FAQS.md:156`: higher means cheaper); 70 is a reasonable estimate for the code, with manual evidence setup additional work. The other scores are defensible judgment from the reported incident (artifact:148), not independently measured recurrence.
+
+swept file: yes
+
+The artifact was reviewed in full and merge_cleanup.py was swept beyond the proposed insertion sites; no additional independently established pre-existing defect is asserted in this turn. Source inspection only: no validate, test suite, pytest, executable fixture, git command, or external runtime probe was run. Runtime acceptance remains [Unverified — needs clone run]; no later gate is assumed.
+
+VERDICT: FAIL
+Basis: R1 leaves the central falsifiable acceptance scenario unexecutable as specified; R2/R3 require a truthful probe boundary and explicit conservative-deferral decision. The pre-reserve direction is sound, but these gaps prevent plan approval.
+
+Handing off to Producer (claude) — revise the plan and supply a concrete disposable-clone verification procedure, then return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
