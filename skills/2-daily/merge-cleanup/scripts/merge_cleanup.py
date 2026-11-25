@@ -36,6 +36,8 @@ from scan_clones import (
     inspect_checkout,
     inspect_primary_landing,
     format_primary_landing,
+    format_primary_findings,
+    format_ref_count,
     format_scan_table,
     format_completion_and_followup_summary,
     format_issue_marker_body,
@@ -2699,6 +2701,19 @@ def main():
     print("=" * 80 + "\n")
     print(format_primary_landing(primary_landing) + "\n")
 
+    primary_checkout = None
+
+    def finish_preview(code: int) -> int:
+        if dry_run:
+            findings = format_primary_findings(primary_landing)
+            if findings:
+                verdict = "READY" if primary_landing["landing_ready"] else "NOT READY; --execute would refuse without an override"
+                print(f"Primary landing summary: {verdict}")
+                print("\n".join(findings))
+                if primary_checkout:
+                    print(f"  refs to preserve (separate audit): {format_ref_count(primary_checkout)}")
+        return code
+
     def _primary_blocks(action: str) -> bool:
         """True when `action` must be refused because the primary cannot receive it."""
         if primary_landing["landing_ready"] or args.allow_unready_primary or dry_run:
@@ -2712,26 +2727,26 @@ def main():
     # Reconcile specific PR directly if requested
     if args.reconcile_pr > 0:
         if _primary_blocks("reconcile"):
-            return 2
+            return finish_preview(2)
         # GH-852: look up the hosted run by this PR's own head and merge commit, not the
         # primary's HEAD; a PR GitHub does not report as merged has nothing to reconcile.
         info = refresh_pr_with_retry(args.reconcile_pr, primary_repo)
         if info.get("error"):
             log_err(f"PR #{args.reconcile_pr}: cannot read its state — {info['error']}")
-            return 2
+            return finish_preview(2)
         merge_oid = (info.get("mergeCommit") or {}).get("oid")
         if info.get("state") != "MERGED" or not merge_oid:
             log_err(f"PR #{args.reconcile_pr} is {info.get('state')}, not merged — nothing to reconcile")
-            return 2
+            return finish_preview(2)
         if not run_post_merge_reconcile(
             args.reconcile_pr, primary_repo,
             integration_branch=args.integration_branch, dry_run=dry_run,
             pr_head=info.get("headRefOid"), merged_head=merge_oid,
         ):
-            return 2
+            return finish_preview(2)
         if not dry_run and not commit_and_push_phase5_writes(
                 args.reconcile_pr, primary_repo, args.integration_branch):
-            return 2
+            return finish_preview(2)
         if not dry_run:
             # GH-1475 (F8): a recovered PR counts as landed and reconciled in its unfinished batch.
             batch = batch_record.find_unfinished(primary_repo, origin_url(primary_repo) or "",
@@ -2749,7 +2764,7 @@ def main():
                     log("STATUS: landed, QA pending — record a verdict with --record-sweep <file> "
                         f"(batch: {batch.get('issue_url') or batch['path']})")
                     return 4
-        return 0
+        return finish_preview(0)
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch, sibling_root=sibling)
@@ -2757,7 +2772,8 @@ def main():
     print(f"PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS ({len(checkouts)} found)")
     print("=" * 80 + "\n")
     print(roots_line + "\n")
-    print(format_scan_table(checkouts) + "\n")
+    primary_checkout = next((c for c in checkouts if c["path"] == primary_landing["path"]), None)
+    print(format_scan_table(checkouts, primary_landing) + "\n")
 
     summary = format_completion_and_followup_summary(checkouts)
     if summary:
@@ -2779,7 +2795,7 @@ def main():
         print()
 
     if args.scan_only:
-        return 0
+        return finish_preview(0)
 
     # Phase 4: Open PR Sequencing
     # GH-623: discovery is retried on transient failures, and a FAILED discovery is never read
@@ -2791,7 +2807,7 @@ def main():
     except FetchError as exc:
         log_err(f"PR discovery failed after {RETRY_ATTEMPTS} attempts: {exc} — refusing to continue; "
                 f"the queue cannot be verified empty")
-        return 2
+        return finish_preview(2)
     # Stacked-dependent retargeting keeps seeing every open PR, listed or not: it protects an
     # unlisted PR whose base branch a listed landing deletes (GH-1226 keeps this deliberately).
     args._open_prs_for_stacks = list(prs)
@@ -2814,7 +2830,7 @@ def main():
                 forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
         args._forecast = forecast
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
-            return 2
+            return finish_preview(2)
         jog_warning = jog_primary_precondition(primary_repo, [p for p in prs if int(p.get("number", 0)) in args.prs])
         if jog_warning:
             log_warn(jog_warning)
@@ -2897,7 +2913,7 @@ def main():
         log("No open PRs found for this repository.")
 
     if args.prs_only:
-        return 0
+        return finish_preview(0)
 
     # Phase 5: Execute Merges & Post-Merge Reconciliation (if not teardown-only)
     # Gate on Phase 0. Merging is remote and effectively irreversible; landing into a tree that
@@ -2964,7 +2980,7 @@ def main():
                 + " within " + ", ".join(f"#{n}" for n in sorted(args.prs)))
         if rc != 0:
             log_err("Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.")
-            return rc
+            return finish_preview(rc)
     if args.execute and not args.teardown_only and listed_deferred:
         # GH-1226: a listed PR that never reached Phase 5 did not land; that is exit 3, not success.
         log_err("Listed PR(s) not landed by this run (closed since the pin check, or held by an unlisted "
@@ -3046,7 +3062,7 @@ def main():
         log(f"  sweep: {cmd or batch_record.NO_SWEEP_COMMAND}")
         return 4
     log("Merge cleanup run complete.")
-    return 0
+    return finish_preview(0)
 
 
 def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:

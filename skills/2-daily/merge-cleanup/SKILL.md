@@ -150,7 +150,9 @@ about everyone else's work and nothing about their own.
 - Not ready is a **refusal**, reported before the PR matrix and enforced before the first mutation.
   It covers zero-PR cleanup, teardown-only cleanup, and `--reconcile-pr`; none may silently defer
   the primary checkout to the operator after reporting success.
-  A dry run still prints the sequence, labelled explicitly as not executable while blockers stand.
+  Read the entire Phase 0 verdict. Save the full dry-run output and never pipe it through head/tail.
+  Report all blockers and one combined remediation in one message. The footer repeats the verdict.
+  Stashes and behind-only counts are advisory for landing; the audit counts refs separately.
   `--allow-unready-primary` overrides the refusal deliberately and records the blockers.
 - The verdict is **re-established against the live remote** immediately before the first merge, so
   a stale cached `origin/*` cannot certify a tree that has since diverged. A refresh that *fails*
@@ -184,10 +186,20 @@ Parking preserves work for later review; it never qualifies it for integration o
    qualify. Inspect both old and new blobs where present; a text suffix alone is insufficient.
    Code/config/ledger files, binary data, symlinks/submodules, mixed or unknown history retain
    the existing preserve/handoff rules; a code edit followed by a revert never qualifies.
-2. Preserve the exact tip under a unique local `temp-merge-cleanup-<date>-<short-sha>` branch
+2. Before publication, verify the origin push destination matches the fetched repository and use
+   its freshly fetched integration ref. In the candidate checkout's context run
+   `python3 <harness>/skills/2-daily/merge-cleanup/scripts/scan_clones.py --check-transcript-parking "$CHECKOUT" --integration-branch "$INTEGRATION" --parking-tip "$TIP"`
+   with the exact candidate commit OID. On refusal or unknown visibility, do not publish. Offer a
+   verified local bundle/ZIP, a renamed local preservation branch, integration recreated from
+   origin when safe, and an entry in the existing temp-docs ledger with the local ref, backup and
+   verification. Get the operator's decision before changing refs. A passing precheck cannot
+   detect all sensitive content, including indirect identities or files outside transcript roots.
+   Keep the checkout quiescent, and repeat the check if the candidate or baseline changes.
+   For eligible material, preserve the exact tip under a unique local `temp-merge-cleanup-<date>-<short-sha>` branch
    and publish it to the same `origin` under that name. An existing name is reusable only at
    the identical SHA; otherwise choose a new unused name. Use a creation-only remote-ref
-   lease for a new branch (expected remote ref absent), never force-replace an existing ref.
+   lease for a new branch (expected remote ref absent) with the inspected OID as the push source.
+   Never force-replace an existing ref.
    Verify the origin branch SHA equals the saved tip. Publication failure blocks continuation
    without changing the source branch or working tree. Retain existing preserve refs/stashes.
 3. Before continuing, save an unchecked item in session memory/checklist, durably backed by

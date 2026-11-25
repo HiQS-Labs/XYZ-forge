@@ -193,6 +193,9 @@ PR-WORTHY work carries the requirement for its eventual merge method; cherry-pic
 work creates new IDs, so name the source commits and backup rather than claiming original IDs
 were preserved. Cleanup re-reads the primary's policy and fresh safety evidence before acting.
 Historical content equivalence never becomes a blanket authorization to remove a checkout.
+Before handing transcript-bearing hunks to a publishable PR, apply merge-cleanup's
+[transcript parking precheck](../../2-daily/merge-cleanup/SKILL.md#committed-documentation-parking--caller-owned-before-executing-phase-0)
+to the candidate. On refusal keep those hunks in the verified local backup.
 
 | Verdict | Handoff |
 |---|---|
