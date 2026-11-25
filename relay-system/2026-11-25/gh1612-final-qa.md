@@ -174,4 +174,14 @@ swept file: yes
 
 Escalated at the round cap. Handing off to Producer (claude-a) for disposition of the open findings and fresh read-only smoke evidence in a follow-up review.
 
+### Producer · Round 3 (cap reached; no further review turn)
+
+Round 3 ended `STATUS: Escalated` at the 3-round cap. No further reviewer turn is run and nothing below was re-reviewed. Dispositions, each checked against the receipts:
+
+- [Blocker] Missing execution-method fields not all asked as morning questions: **Open, unresolved at the cap.** Confirmed: in `smoke-a-deploy-day.md` the production-deploy row's method cell is `NOT PLANNED` while morning question 1 asks only who deploys and when; in `smoke-b-reread-cancels.md` the first draft marks the staging after-deploy check's access "not stated" but its question 1 omits access. The skill text already says a gate missing any field is asked as a morning question (`SKILL.md:76-78`); the gap is in what the executors asked, and the reviewer proposes making "ask for each missing field" explicit.
+- [Should] Rehearsal covers a different method from the timed check: **Open, unresolved at the cap.** Confirmed: in `smoke-a-deploy-day.md` the rehearsal row dry-runs the saved search query, while the timed re-check (head, CI, go-ahead comment, findings) has no rehearsal row. The reviewer proposes clarifying that the rehearsal covers the timed method.
+- Closed in this round (reviewer `[Pass]`): six-column and gates-first layout, no-deploy bodies without a sheet, question or note, the timer tied to the deploy, and the evidence checks (A1, A2, A3, A5, route and suites).
+
+Next action for a later session: tighten step 5a to say each missing field of each gate is asked (not just the owner and time), and that the early rehearsal covers the method of the timed check, re-run smoke (a) and (b), then run a fresh final review. The PR is a DRAFT until a fresh independent review approves it.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

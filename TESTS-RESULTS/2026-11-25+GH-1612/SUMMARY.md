@@ -10,7 +10,7 @@ Base `b479f74e0`; tested skill text = blob `6bbd309bc` (commit `540e04421`; unch
 | A4 smoke | Whole proposed body for three drafts plus a base replay, from the consumer entry point, read-only, nothing published | see below | `smoke-a-deploy-day.md`, `smoke-b-reread-cancels.md`, `smoke-c-no-deploy.md`, `smoke-base-replay.md` |
 | A5 | Diff invariant (skill nonempty, paths limited to the allowlist); controls: synthetic `test/new-suite.sh`, empty skill diff | candidate accepted; both controls rejected (rc 1) | `a5-diff-invariant.log` |
 | Route and gate | `ci-route.sh push` on the changed paths; `gh589-skill-viewer`, `path-integrity`, `pdda.sh run` | `route=docs tier=1`; 8/0 and 3/0; PDDA run: no errors (warnings pre-existing in other docs) | `route.log`, `suites-and-gate.log` |
-| A6 | Delivered-revision receipt and the PR's actual base | filled in at delivery (see PR) | — |
+| A6 | Delivered-revision receipt and the PR's actual base | not met: final QA escalated at the cap; the PR is a draft against `development` | — |
 
 ## A4 smoke detail
 
@@ -29,3 +29,7 @@ Run history (all superseded runs are in git history; the receipts here are the l
 Observations, not defects: the executors proposed owners and times for support rows and labelled them "proposed, to confirm", then asked about them; one executor noted the skill does not say what to do with deploy rows if the live body cancels the deploy mid-run (it dropped them, which is the intended reading of "otherwise add nothing").
 
 Not exercised: steps 1-5's real GitHub reads, publishing, and the step-8 independent validator (they would write to or read a real ledger issue); no host read of any kind.
+
+## Review state (honest)
+
+Plan QA: Approved by Codex at round 3. Final QA: Codex reviewed three rounds (the cap) and ended `Escalated`. Rounds 1 and 2 each found a real defect in the smoke output (layout; a no-sheet note and a mistimed recheck); step 5a was reworded each time and the smoke re-run. Round 3 closed those and left two open: (Blocker) in the deploy-day drafts a gate's missing execution-method field (production deploy method; staging check access) is not always asked as a morning question; (Should) the early rehearsal covers the saved query, not the timed GitHub recheck. Neither was fixed after the cap and nothing after round 3 was re-reviewed. Independent review did not approve the final artifact, so the PR is a draft. Resume action: tighten step 5a on those two points, re-run smoke (a) and (b), then a fresh final review.
