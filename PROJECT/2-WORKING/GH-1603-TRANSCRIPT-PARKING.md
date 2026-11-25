@@ -5,6 +5,7 @@ title: "Merge-cleanup readiness and transcript parking"
 status: "In Progress"
 created: 2026-11-25
 updated: 2026-11-25
+owner: Forge maintenance
 doc_type: bugfix
 goal: "Report the landing blockers together and keep unverifiable transcripts local."
 effort: 2
