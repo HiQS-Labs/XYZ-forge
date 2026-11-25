@@ -1,6 +1,6 @@
 ---
 title: "merge-cleanup: gate-toolchain fault must not burn a B1 repair slot or hide its cause"
-status: "In progress (final QA pending)"
+status: "In progress (PR ready; awaiting merge)"
 created: 2026-11-25
 updated: 2026-11-25
 owner: Noel Saw
@@ -27,7 +27,7 @@ goal: "A B1 repair is never started while the push gate cannot run: the PR is de
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex on round 3 (rounds 1–2 FAIL, all findings fixed). Implemented in `cabf9c530`; controls, smoke and the three gated merge-cleanup suites recorded under `TESTS-RESULTS/2026-11-25+GH-1606/`. | Final Codex relay QA on the diff; then the qualification gate, push, PR and closeout comment. |
+| Plan approved by Codex (round 3). Implemented; final Codex QA approved on round 2 after one real finding (first fault line could hide the blocking python cause) was fixed in `11ac019c7`. Controls, smoke and the three gated merge-cleanup suites recorded under `TESTS-RESULTS/2026-11-25+GH-1606/`. | Qualification gate and push from a disposable clone, open the PR; merge is a separate step. Triage the pre-existing, ungated phase B breakage separately. |
 
 ## Observed problem (measured, not remembered)
 
@@ -229,7 +229,7 @@ PATH fixed — the deferred PR is repaired and lands using the same budget it wo
 
 ## Lessons learned
 
-NO_ENTRY at plan time; decide at handoff.
+NO_ENTRY. The evidence is one incident and one fix; the generalizable claims (probe preconditions before spending a bounded budget; do not assume a gate prints a single fault line) rest on a single run each, which the admission rule treats as `confounded`, and adoption or a merge is not evidence. Revisit if the same shape recurs.
 
 ## Recon ledger
 
