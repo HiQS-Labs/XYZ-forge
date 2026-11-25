@@ -15,11 +15,16 @@ yesterday <Y> -> matched 1 issue(s) by title containing "Tuesday Nov 24, 2026"
 ## step 2, read yesterday <Y> body and comments
 $ gh issue view <Y> -R <example-repo> --json body,comments [rc=0]
 comments: 10 | claims (checkboxes): checked 10 unchecked 34
-## adjacent path A: simulated today = Thu 2026-12-31, no ledger exists
-$ gh issue list -R <example-repo> --state all --search "Planned Work Ledger Thursday Dec 31, 2026 in:title" --limit 10 --json number,title
+## adjacent path A: simulated today = Thu 2026-12-31, no ledger exists (both discovery paths)
+$ gh issue list -R <example-repo> --state all --search "Planned Work Ledger in:title" --limit 200 --json number,title   # one uncapped title lookup
 [rc=0]
-matches: 0 -> confirmed absent (successful empty lookup)
-skill output at this point: STOP. Today's ledger for Thu 2026-12-31 is confirmed absent. Offer: create it? Nothing written.
+ledger issues listed: 15 (limit 200, so the list is not capped)
+titles containing "Dec 31, 2026": 0
+$ gh issue view <T> --json body   # most recent ledger's weekly-links footer, the second discovery path
+[rc=0]
+weekly-links footer found: True | days listed: ['Fri', 'Mon', 'Thu', 'Tue'] | covers the week of Nov 23-27 only; no entry for Thu Dec 31
+skill output: STOP. Today's ledger for Thu 2026-12-31 is confirmed absent (complete title lookup empty; weekly links have no such day). Offer: create it? Nothing written.
+
 ## adjacent path B: failed lookup (nonexistent repository)
 $ gh issue list -R <nonexistent-owner>/<nonexistent-repo> --state all --search "Planned Work Ledger in:title" --json number,title
 [rc=1]
