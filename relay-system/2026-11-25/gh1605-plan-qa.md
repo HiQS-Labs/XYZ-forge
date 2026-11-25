@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -114,5 +114,40 @@ End with `swept file: yes|no`, `VERDICT: PASS|FAIL`, and a `Basis:`; set `STATUS
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+Input boundary: plan doc only (PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md)
+
+**What this proposes:** Detect whether the resolved canonical Forge checkout is behind a locally known upstream before invoking its drift checker. Suppress downgrade commands, report structured stale metadata, and refuse enabled-target apply unless explicitly overridden; document and manually verify the behavior.
+
+**How the existing system works, per this document:** Distributed sync.py resolves the canonical checkout and executes that checkout's checker, so updating the checker alone misses stale installations. Existing ahead_behind() already measures local refs, while the drift gate prints re-vendor instructions and prevents unacknowledged drift deployment.
+
+**What it's not:** The explicit non-goals exclude network fetches, canonical fetch-age gating, comparator/intake changes, RECEIPT-STALE work, and new test suites. Fetch-age gating and comparator changes are deferred until the stated recurrence/caller conditions arise.
+
+**Source-backed technical validation — Block pending two bounded plan corrections**
+
+- [Pass] The proposed owner closes the old-checker failure: `scripts/sync.py:57-64` executes the checker from the resolved canonical checkout; checking upstream status in the distributed sync before that call avoids relying on newly installed checker code. `utils/py/skill_drift_check.py:34-66,85-97` remains a filesystem comparator, so the non-duplication boundary is sound.
+- [Pass] Existing helper precedence and fixture compatibility support the approach: `scripts/sync.py:107-117` prefers upstream and branch refs, then fallbacks; adding development after origin/HEAD preserves those priorities. `scripts/intake.py:436-443` supplies offline repo discovery. `test/test_deploy_skills.py:44-49,580-585,593-639` supplies local git fixtures without remotes and asserts individual drift fields, so unknown behind counts and additive fresh metadata preserve the pinned drift behavior. Divergence and no-enabled-target handling are expressly specified at plan lines 138-148; unknown freshness remains intentionally outside the guard.
+- [Should] R1 — Define the branch probe before using its result.
+  **Observed input:** Form 1 artifact contradiction: `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md:135-137` assigns canonical_top and ahead/behind, then reads `head.stdout`/`head.returncode` without assigning head. Current `scripts/sync.py:218-239` has no head variable; the head in `ahead_behind()` at lines 110-111 is local to that separate function. A literal implementation raises NameError on every resolved git canonical checkout, before stale handling.
+  **Affected scope:** New canonical branch metadata for git-backed canonical roots.
+  **Falsifier:** An explicit `head = shared.git_at(canonical_top, "symbolic-ref", "-q", "--short", "HEAD")` before the branch expression, with the non-git/None path handled separately, removes this contradiction; attached and detached manual cases should return their branch name and HEAD respectively.
+  **Concrete fix:** Add that assignment to step 2, retaining the existing canonical-is-None early return at sync.py:221-224 before repository discovery. No new helper or test suite needed.
+- [Should] R2 — Scope the override receipt promise to a transaction, preserving no-op behavior.
+  **Observed input:** Form 1 artifact contradiction: plan acceptance criterion 3 (`...md:168`) promises a loud warning recorded in changelog.md for stale `--apply --allow-drift`, while `scripts/sync.py:427-428` writes a transaction only if actions, changes, or errors are nonempty. Concrete input: an already reconciled collection with an enabled target, canonical behind > 0, and `--apply --allow-drift`; step 2 adds only a warning, leaving all three lists empty. `test/test_deploy_skills.py`'s `test_a4_owned_links_idempotence_removed_disabled_and_dedup` explicitly requires repeated no-op apply to preserve changelog bytes.
+  **Affected scope:** Stale-canonical override on an already reconciled collection, as distinct from the planned smoke case that creates links.
+  **Falsifier:** With that no-op input, expect exit 0, a loud stderr/JSON warning, and unchanged history; with new links, expect the warning in the transaction receipt. The plan stating those two outcomes eliminates the contradiction without new runtime behavior.
+  **Concrete fix:** Qualify acceptance criterion 3 and documentation promises as “recorded in changelog when a sync transaction occurs”; include the no-op case in the existing temporary manual smoke procedure. Preserve the existing no-op invariant.
+- [Pass] Verification design is appropriately bounded: plan lines 152-162 specify existing suites plus a pre-fix red control, positive stale behavior, divergence, recovery, genuine drift and no-upstream checks; lines 153 and 170 prohibit new suites/entries. Run these only in a disposable full clone per AGENTS.md, with retained nonempty output and provenance. No runtime pass is claimed by this review, and no later relay gate is assumed.
+- [Pass] PRS values match the ledger. Read-only probe: `python3 -B` with `sqlite3.connect("file:releases.db?mode=ro", uri=True)` and `select gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,doc_path from roadmap_items where gh_number='1605'` → exit 0; decisive output: `[(1605, 82, 78, 50, 88, 'PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md')]`. The same row is published in `releases.sql:1054`. The plan's recurrence narrative supports severity-led priority and neutral appeal, but its historical incident counts were not independently queried in this turn.
+
+Reversibility: Easy — the proposed implementation is confined to one existing manager and its docs; reverting restores the previous behavior without a migration. Shared impact is the additional canonical git reads and stale JSON variant; consumers must recognize skipped verification rather than infer an empty drift list. Whole-plan and whole-sync sweep completed; no additional pre-existing source defect established in the reviewed scope. Intake inspection was limited to the requested git helpers; no claim of a whole-intake audit.
+
+swept file: yes
+VERDICT: FAIL
+Basis: The architecture and bounded verification are sound, but R1 leaves an executable step incomplete and R2 contradicts an existing no-op invariant. Correct the plan rather than expand implementation scope. Runtime verification remains for the Producer's disposable clone.
+
+Handing off to Producer (antigravity) — disposition R1 and R2, revise the plan, and return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
