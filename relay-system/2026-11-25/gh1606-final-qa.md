@@ -209,4 +209,13 @@ Basis: R1 is closed by inspected code, retained red/green evidence and an indepe
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-25T20:26:22Z
+task: RELAY-gh1606-final-qa-r2
+reviewer: codex
+status: Approved
+reviewed-head: 15792a167237b0783d862b47eeca3d5e02375844
+added-range: 21673+6455
+added-sha256: 140bab3edbf24dfdc3a9f9d381753331388774089e5b091ec3a03e41cfae1ae9
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
