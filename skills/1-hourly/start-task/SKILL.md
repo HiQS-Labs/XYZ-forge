@@ -47,17 +47,36 @@ repository gates separately.
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Start-Task Discipline:**
-> 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
+> 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone and task branch under the target policy, and record intake and task ratings under that repo’s governance.
 > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
 > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
 > 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation, then smoke-run the change on its main path and one adjacent path.
-> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
+> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, apply the target’s qualification policy before pushing, open the PR against its integration branch, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
 >
 > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
 
 Then begin work.
 
 ---
+
+## Target repository qualification
+
+Choose the qualification policy once from the verified canonical target repository
+in Step 1. Apply it during clone provisioning, final verification and every push.
+
+- **XYZ Forge (`HiQS-Labs/XYZ-forge`):** In each fresh full clone, run
+  `bash githooks/install.sh` and then `bash githooks/install.sh --check` before
+  beginning work (GH-549). Run the check immediately before every push (GH-1576).
+  A nonzero exit blocks work or push at that checkpoint until the hook is repaired
+  and the check passes. Never use `--no-verify` or `XYZ_SKIP_PREPUSH` to get past it.
+- **Consumer repositories:** Resolve the target's required hooks and qualification
+  commands from its startup instructions and CI, including when it vendors Forge
+  in `.xyz/`. Run any target-required hook setup during provisioning and follow the
+  target's own pre-push policy. Run its verified qualification commands on the final
+  revision and record their results. If no applicable gate is documented, ask the
+  operator to decide which checks are required before proceeding. Forge's hook
+  installer and attempt accounting apply only to Forge. Failed or skipped checks
+  must be recorded as such, and required checks must pass before delivery.
 
 ## Workflow
 
@@ -96,10 +115,8 @@ Then begin work.
 3. **Provision isolated work and register intake before implementation.** Create
    a fresh **full clone from the canonical remote**, verify origin and base SHA,
    and create the task branch under repo policy. In XYZ Forge the branch is cut
-   off `origin/development`. Provisioning runs `bash githooks/install.sh` and then
-   `bash githooks/install.sh --check` in the new clone before any other work (hooks do not
-   travel with a clone, GH-549); a failing check stops the task there (GH-1576).
-   Preserve the primary checkout and other sessions.
+   off `origin/development`. Apply [target repository qualification](#target-repository-qualification)
+   for provisioning before beginning work. Preserve the primary checkout and other sessions.
    **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
    tracking issue first, so the number is known before anything is named:
    - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
@@ -131,9 +148,9 @@ Then begin work.
    and live HEAD commit rather than duplicating clones, creating redundant branches, or
    overwriting valid working state. On transport drops or reconnects, ascertain remote execution
    state before retrying mutations.
-   Create any missing issue first. Where PDDA applies, capture it in `1-INBOX`,
-   park its roadmap entry immediately, then promote it through the documented
-   lifecycle before execution. Read `PROJECT/PDDA.md` and the repo's RELEASES
+   Create any missing issue first. Follow the target's intake lifecycle. In Forge,
+   capture it in `1-INBOX`, then use the rated pickup operation described below at
+   selection and promote the capture before execution. Read `PROJECT/PDDA.md` and the repo's RELEASES
    documentation for actual verbs and formats. Use the existing CLI to write
    the DB, dump, and generated views; never hand-edit them or add another write
    path. Check registration by reading back the issue, doc pointer, and ledger.
@@ -282,24 +299,28 @@ Then begin work.
    plan as you go. Commit coherent checkpoints to the group's branch. Revisit
    plan QA if new evidence materially changes scope, architecture, or risk.
    Apply tiered verification discipline: during iterative implementation and
-   relay review loops, run ONLY the focused target test suite (`bash test/<target-test>.sh`
-   or `./validate.sh --auto`). Do NOT re-run full qualifying test gates between
-   review rounds when tweaking text or minor points. Select the final gate from
-   the actual changed paths against the integration base, using the repo's existing
-   classifier and push-hook route. In XYZ Forge, when `utils/ci-route.sh` routes the
-   changed paths as docs (most `*.md`/`*.txt`, including most skill instructions), use
-   the deterministic documentation gate (`utils/pdda/pdda.sh run`), not `ci-local.sh` or
-   the full `validate.sh` suite. The classifier decides, not the file extension: some
-   Markdown is a full-gate surface (for example `WORKTREE-SAFETY.md` and
-   `skills/*/merge-cleanup/SKILL.md`) and follows the full route.
-   Include both sides of renames and deletions; a changed script, test, DB, or other
-   non-doc path must follow its classified tier rather than being called docs-only.
-   When the route requires the full gate, run `ci-local.sh --fast` on the final approved commit and then push: the pre-push hook runs the full `./validate.sh` suite, and that is the one full-gate run (GH-1518). Do not also run full `ci-local.sh` or `./validate.sh` before the push; that runs the same suite twice on the same commit.
-   **Every push, first or later, is preceded immediately by `bash githooks/install.sh --check` (GH-1576).** An unwired clone pushes with no hook at all, so a nonzero exit stops the push: run `bash githooks/install.sh`, re-check, and only then push. Never use `--no-verify` or `XYZ_SKIP_PREPUSH` to get past it. The kickstart, jog, express and merge-cleanup push steps run the same check themselves and refuse.
-   That hand-off holds only when both of these are true: that check passes, and this push is the branch's first, so the hook classifies the whole PR diff against the integration base. The hook classifies only the pushed range; once the branch is on the remote, a docs-only final push routes `docs` and the full suite never runs. If either is false, run full `./validate.sh` once on the final approved commit before pushing. Its receipt (`utils/py/gate_receipt.py`) lets the hook reuse that run instead of repeating it.
-   In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
-   never a valued task clone or linked worktree. Verify its repository identity
-   before and after the run; drift invalidates its evidence. Retain required
+   relay review loops, run ONLY the focused target test suite. Do NOT re-run full qualifying test gates between
+   review rounds when tweaking text or minor points. Run the required qualification
+   on the final approved revision.
+   - **Consumer repositories:** Use the [target repository qualification](#target-repository-qualification)
+     commands and any pre-push policy resolved for that repo.
+   - **XYZ Forge:** For focused verification, use `bash test/<target-test>.sh`
+     or `./validate.sh --auto`. Select the final gate from the actual changed
+     paths against the integration base using the existing classifier. Include
+     both sides of renames and deletions. A docs route uses `utils/pdda/pdda.sh run`.
+     A script, test or DB change, and protected Markdown such as
+     `WORKTREE-SAFETY.md` or `skills/*/merge-cleanup/SKILL.md`, follow the classified route.
+     After final review approval (Step 8), qualify the exact approved commit.
+     When the full gate is required on the first push, run `ci-local.sh --fast`,
+     then push from the disposable qualification clone in Step 9 so its installed
+     hook runs the full `./validate.sh` suite once (GH-1518). The hook decides
+     its route at push time and can fall back to the full gate (GH-1537). On a later
+     push whose final diff requires the full gate, run `./validate.sh` once on the
+     approved commit in the same clone you will push from so its hook can reuse the
+     exact-commit receipt (`utils/py/gate_receipt.py`).
+   In XYZ Forge, use a **separate disposable full clone** whenever a direct gate or
+   a push will run mutation-heavy suites. Verify HEAD, `core.bare`, remotes and
+   local `user.email` before and after the run. Drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
    scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
    **Smoke the change before final QA (GH-1088).** Suites prove nothing regressed;
@@ -309,8 +330,13 @@ Then begin work.
    invocation, empty or already-done input). Record the commands, observed output and
    verdict as a manual check under `TESTS-RESULTS/<date>+GH-<n>/` with provenance; this
    adds no suite or test (GH-831). Mutating runs use a disposable full clone, as above.
-   For documentation-only work, read the changed instruction once from its consumer's
-   entry point, or skip with a one-line reason. A smoke failure is a defect to fix (or
+   When changing shared provisioning or qualification instructions, use Forge and
+   one representative consumer as the two smoke paths (GH-1594). Walk the changed
+   instructions from target identification through the push decision in fresh full
+   clones. Check that an unwired Forge clone is refused and a consumer without Forge
+   hooks reaches its own qualification commands. Exercise those commands and retain
+   the receipts. For other documentation-only work, read the changed instruction
+   once from its consumer's entry point, or skip with a one-line reason. A smoke failure is a defect to fix (or
    a blocker to record) before final QA. The receipt is evidence for the reviewer; it
    never replaces or counts as the independent review (step 6). GH-1064's resume and
    rerun defects (#1074, #1084) passed suites and an approved review; one run past the
@@ -347,8 +373,15 @@ Then begin work.
    and continue independent groups.
 
 9. **Open or update the ready PR and hand off.** Inspect the final diff for scope
-   and accidental files, run `bash githooks/install.sh --check` and push through the repository's required gate (a failing check means no push), and open the
-   PR against its active integration branch (`development` in XYZ Forge). Reuse
+   and accidental files. After final review approval, apply
+   [target repository qualification](#target-repository-qualification) before pushing.
+   For every Forge push, use a separate disposable full clone with the exact
+   approved commit, verified canonical origin and the same attempt context. This
+   keeps a full-gate fallback isolated even when the final diff routes to docs.
+   Install the hook there during provisioning and check it immediately before
+   pushing. Compare clone identity before and after the hook runs as in Step 7.
+   After required gates pass, open the ready PR against the target's integration
+   branch (`development` in XYZ Forge). Reuse
    an existing PR for the branch. If a network interruption occurs during PR creation,
    query `gh pr list --head <branch>` to verify whether the PR was registered before
    re-executing. Include the problem/result, issue mapping,

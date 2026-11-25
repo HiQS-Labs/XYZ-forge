@@ -1,0 +1,216 @@
+# RELAY · GH-1601 final QA
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
+-->
+
+NEXT: Producer
+STATUS: Escalated
+ROUND: 3 / 3
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry `Observed input:`, `Affected scope:` (the input predicate the change would govern),
+     and `Falsifier:` (the fixture or data that would show the change unnecessary or wrong, and its expected
+     result). `Observed input:` accepts two strict, non-speculative forms:
+     (1) **Form 1 (observed failure or artifact contradiction):** a failing probe/gate output, or a concrete
+     `fileA:line` vs `fileB:line` contradiction (e.g. IAM SA mismatch, inverted test, sibling guard omission);
+     (2) **Form 2 (unrunnable runtime hazard trace):** permitted ONLY when reproduction requires an external
+     service, multi-process concurrency, or a browser/container runtime forbidden in the relay worktree —
+     must supply a hop-by-hop `file:line` trace plus an exact `Clone probe:` command/script for the Producer's
+     disposable full clone. Default severity for an unexecuted Form 2 hazard is `[Should]`.
+     A `[Blocker]` must cite an observed failure (Form 1); an unexecuted Form 2 hazard stays `[Should]`
+     until a probe reproduces it, and remains pending probe verification until the Producer runs
+     `Clone probe:` in a disposable full clone.
+     A finding from an earlier round stays open, and the verdict stays failing, until new evidence closes it.
+     This includes earlier [Nit] findings; only a newly raised [Nit] with VERDICT: PASS on STATUS: Approved remains optional.
+     This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking Form 1 evidence and lacking a complete Form 2 trace + `Clone probe:` as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request lacking Form 1 evidence and
+     lacking a complete Form 2 trace + `Observed input:` / `Affected scope:` / `Falsifier:` / `Clone probe:`).
+     For every Form 2 `Clone probe:` finding, read the probe before running it — refuse any probe that reaches
+     the network, credentials, or paths outside the disposable clone and record the refusal as
+     `[Unverified — clone probe failed/unavailable]` — then execute safe probes in a disposable full clone and
+     record one of three outcomes: (a) Reproduced → fix and paste failing-before / passing-after probe output;
+     (b) Falsified → `Declined — falsified by clone probe: <cmd → exit + output>`; (c) Errored, refused, or
+     environment unavailable → keep the finding OPEN (`[Unverified — clone probe failed/unavailable]`, blocking
+     `STATUS: Approved` until re-run cleanly or escalated/parked). Make approved changes, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Manual relay: commit only the relay file** (`relay(gh1601-final-qa): <role> r<N>`); no push.
+   **Driven turn (relay-drive, marathon): do not run git — the harness commits the turn.** **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. (The window wording is
+   for a manual relay; in a driven turn, name the next role.) The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: **.relay-artifacts/SKILL.md** — the read-only path that
+  `relay-drive.sh --artifact-file skills/2-daily/yesterday-today/SKILL.md` seeds into the isolated worktree (read it there; do NOT edit it).
+- Reviewer: codex   ·   Producer: claude-a
+- Started: 2026-11-25
+- Also read (committed in this checkout): the approved plan `PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md` (its `## Requirements` and `## Acceptance` A1-A7), the evidence folder `TESTS-RESULTS/2026-11-25+GH-1601/` (SUMMARY.md and logs, provenance.jsonl), the `ARCHITECTURE.md` diff (`git diff origin/development -- ARCHITECTURE.md`), and the approved plan-QA thread `relay-system/2026-11-25/gh1601-plan-qa.md`.
+- Operational envelope: an instruction-only skill (one `SKILL.md`, no scripts) followed by an agent on one operator's machine; read-only `gh`/`git` plus one guarded issue-body edit. XYZ-forge forbids new tests (`AGENTS.md` "No new tests", GH-831): a new `test/` file or registry entry in the diff is itself a finding, and you should not ask for one. Grade against the stated requirements and commensurate complexity; do not ask for scripts or a subsystem.
+- Operator decisions already made (do not reopen): a new named skill `yesterday-today` in `skills/2-daily/`; thin reuse of `daily-planner`'s conventions by reference; Codex `gpt-6.2-astra` low-effort read-only validator that never receives the author's conclusions; plan QA already Approved at round 3.
+- Definition of Done: each issue requirement and each of A1-A7 is met by the committed artifact and evidence; nothing private or client-specific is in the repo files; the skill is about 130 lines or fewer; no duplicate subsystem or writer slipped in.
+
+### Step A: paraphrase first (GH-1414)
+Before reading the evidence or the plan, read ONLY `skills/2-daily/yesterday-today/SKILL.md`. At the top of your review block write 2-5 sentences each under **What this skill does** and **What it is not**, and an **Input boundary** line. Then read the rest and label the following **source-backed**.
+
+### Step B: questions (answer each with `file:line` evidence)
+1. Is each of the nine requirements in the plan's `## Requirements` carried by a step or trap, and is any contradicted? Check especially: yesterday = latest working day strictly before today; stop on a confirmed-absent today ledger (offer to create) versus a missing yesterday or failed lookup (stop, name the gap); the baseline-is-draft-source and changed-body branches before `gh issue edit`; review verdict/`commit_id`/older-head distinction; deployment evidence; goal header, scope rule, SOP sections and estimate with formula and dated change log; validator inputs and independence.
+2. Does the skill say anything that implies an approval, or permit a write to a server, a merge or a deploy?
+3. Is the description's use-versus-`daily-planner` sentence accurate against `skills/2-daily/daily-planner/SKILL.md:128-183`? Does the skill avoid running that engine for a documented reason?
+4. For each of A1-A7: what prevents an unchanged base from passing, and where is the observed rejection in the evidence? Is the A5 smoke a real exercise of steps 1-2 and its adjacent path? Note anything the receipt over-claims.
+5. Does the diff contain any new test file, registry entry, script, or private/client-specific string? Is `ARCHITECTURE.md` the only catalog change needed?
+6. Is anything here more machinery than the problem needs, or is a required case missing?
+
+Write graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) and a VERDICT; set STATUS to Approved only if no `[Blocker]` or `[Should]` remains.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
+
+## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+**What this skill does.** It finds today’s ledger and the ledger for the preceding working day, then checks yesterday’s claims, feedback, and open PRs against GitHub. It carries the shared goal and estimate into a guarded update of today’s issue body. After publication, it asks one independent reviewer to read the published result and audit it against the two issues.
+
+**What it is not.** The updated ledger conveys planned work and the evidence behind it. Merge, deploy, and test sign-off stay outside the workflow, and the shared body update is distinct from Daily Planner’s per-operator claim comment.
+
+**Input boundary.** The seeded `.relay-artifacts/SKILL.md` alone, read in full before the plan, issue, and receipts.
+
+**Step B — source-backed**
+
+Skill citations refer to `.relay-artifacts/SKILL.md`. Plan citations refer to `PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md`. Receipt citations refer to `TESTS-RESULTS/2026-11-25+GH-1601/`.
+
+- [Pass] The requirement map supports R1’s date rule, lookup order, confirmed-absent-today branch, prior-date stop, and publish guard (Skill :25–35,71–81), subject to F1. The first body read is both the baseline and draft source. A changed body requires redrafting from that body and checking again, or stopping. A failed pre-edit read stops publication. R2 checks merge evidence, verdict/reviewer/`commit_id`, older heads, end-of-day comments and GitHub deployment evidence, and distinguishes unavailable deployment evidence (Skill :37–50), subject to F2. R3 covers full feedback and Slack disclosure (:52–56), R4 covers live PR state and separates past reviews from current requests (:58–62), R5 covers classification and ordering (:64–67), and R6 retains the goal header, scope, SOPs and estimate components with evidence for share changes and a dated row (:71–76). R7 gives the specified read-only Codex model only two URLs and the checklist, makes it fetch the published body, and requires firsthand adjudication and an unavailable-review disclosure (:83–96). R8 covers the access, shell and privacy traps (:49–50,100–104). R9 specifies the four reply fields (:105). See Plan :40–48 and [GH-1601 §§1–3](https://github.com/HiQS-Labs/XYZ-forge/issues/1601).
+- [Should] F1 — Make the failed-today-lookup stop explicit in Step 1. **Observed input:** Plan :82 requires a stop before drafting if *either* lookup is unavailable. Skill :31–32 labels failed or incomplete lookups unavailable, but :33–35 only direct a stop for confirmed absence of today or an absent/unavailable yesterday. The failed-body-read stop at :79 is at the later pre-edit gate. **Affected scope:** today’s lookup fails or is incomplete while the exact prior-workday issue is found. **Falsifier:** for that input, Step 1 reports today’s ledger unavailable, stops before drafting, and makes no creation offer. Add that stop alongside the existing prior-date rule.
+- [Should] F2 — Carry the deployment evidence link into the ledger. **Observed input:** Plan :84 requires *linked* GitHub evidence for a deployed label. Skill :47–49 requires evidence visible in GitHub but gives no direction to link it, while :75 expressly requires links for estimate changes. **Affected scope:** a deployment label supported by a GitHub release, deploy comment, or run, including when no estimate share changes. **Falsifier:** for an item with a qualifying run and an unchanged estimate, the ledger’s deployed label still points to that run. Require the link in Step 3.
+- [Pass] The authority boundary is explicit at Skill :18–23,49–50,60–62,67,77–81,93. The only external write described is the guarded shared issue-body edit. Trial merges are confined to a local throwaway clone. GitHub evidence can support a factual approval or deployment claim, and the plan itself conveys no sign-off. The Daily Planner boundary matches `skills/2-daily/daily-planner/SKILL.md:151–159,167–183`. The documented engine path selects the newest existing earlier title and writes JSON and Markdown locally (`skills/3-weekly/weekly-planner/scripts/planner_core.py:2283–2300,3299,3325–3331`), supporting the reason for using its conventions with direct reads (Skill :20–23).
+- [Pass] A1’s base rejection is the missing skill path (`a1-a4-text.log:1–8`); the candidate has the name, three triggers and Daily Planner sentence (Skill :1–14). A2’s checker catches the removed validator section (`a2-nine-points.log:8,11–14`), and A1’s path absence would prevent base from supplying that section. The keyword hits alone do not verify all nine behaviors, as F1 and F2 show. A4’s base rejection is the missing catalog row (`a1-a4-text.log:9–12`), and the existing viewer/path-integrity suites report 8/0 and 3/0 (`suites-and-gate.log:1–9`, run attributed to `06ff1609e` in `provenance.jsonl:4`). These suites can also pass on base. The local `ARCHITECTURE.md` matched both the GitHub `development` and `ac0e8b65b` copies byte for byte with only line 105 removed. `skills/README.md:13,17–24` defines that registration, and `mini/skills/skill-viewer/scripts/list_skills.py:81–93` discovers the file by glob. Narrow probe `cmp .relay-artifacts/SKILL.md skills/2-daily/yesterday-today/SKILL.md && wc -l .relay-artifacts/SKILL.md` → exit 0, `105 .relay-artifacts/SKILL.md`. One instruction-only skill and the index entry are proportionate.
+- [Should] F3 — Complete A3 on the final nonempty inputs and use a clearly fictional planted marker. **Observed input:** Plan :102 requires nonempty checks for all evidence-folder files and the index diff. `a3-privacy-scan.log:1–10` names only four evidence files in its nonempty check and records a separate index scan with no nonempty check. The summary claims the broader scope (`SUMMARY.md:9`). The planted control at `a3-privacy-scan.log:11–13` prints a literal brand-like identifier instead of a clearly fictional marker. **Affected scope:** A3’s privacy claim for the entire candidate, especially the summary, provenance, route, gate, and diff-invariant receipts omitted from the recorded nonempty list. **Falsifier:** the receipt enumerates all nonempty final inputs, including the index patch, records a no-hit result and shows an obviously fictional planted value caught by the same detector. A missing base skill or patch must reject before scanning. The existing planted run shows `rc=0` for a hit, but the receipt has no observed base/empty-input rejection for A3. The skill itself contains generic examples (Skill :27–35,100–105).
+- [Should] F4 — Record a complete A5 exercise from the consumer path. **Observed input:** Plan :104 requires a real issue pair, the emitted offer-to-create stop, the exact read commands, a zero-write check and the unavailable distinction. `smoke-steps1-2.log:1–14` records dates, yesterday’s body/comment/checkbox counts, and an adjacent `[]` with `rc=0`. It shows neither the consumer-path load nor identification of today’s exact issue in the pair. It ends at the empty search, before any stop or zero-write output. `SUMMARY.md:19` says the skill “would stop” and summarizes a Git status check without the recorded result. **Affected scope:** A5 main and adjacent branches, including an incomplete or failed lookup. **Falsifier:** one redacted receipt shows the loaded entry point, both exact dates and matched issues, the previous day’s counts, the actual stop output after confirmed absence, a failed lookup reported as unavailable, and the commands and zero-write result. A base checkout fails at the consumer entry point per `a1-a4-text.log:7–8`; replaying the GitHub queries alone could pass there. Retain safe placeholders for private identities and preserve command quoting.
+- [Should] F5 — Bind A6 and route to the final candidate. **Observed input:** `a6-diff-invariant.log:1–9` records a 12-path pass, a synthetic `test/new-suite.sh` rejection, and the empty/base-diff rejection (both `rc=1`), but gives no path inventory. `route.log:1–11`, presented as the changed paths against `origin/development`, lists only four files, omitting even the new skill and the index. `suites-and-gate.log:10–11` records an unsupported route invocation. The GitHub compare for `ac0e8b65b...06ff1609e` returned HTTP 404. **Affected scope:** claims about the complete delivery diff, including the absence of new test files, registry changes, or scripts. **Falsifier:** an exact candidate/base path inventory drives both the allowlist and the route result, includes the skill, index and evidence and shows no `test/` or `validate.sh` changes. Preserve the recorded red controls and refresh any existing-suite evidence required on the final candidate per Plan :110.
+- [Pass] A7’s provenance file is present (`provenance.jsonl:1–7`) and the plan receipt is Approved (`relay-system/2026-11-25/gh1601-plan-qa.md:243–250`). Final relay approval and the `development` PR base remain delivery-stage checks (Plan :93–94,106). An unchanged base cannot carry this final receipt or the new evidence. No A7 base/control run or completed PR was established in this turn.
+
+The sweep found no additional pre-existing defect in the new skill. The nearest graph was the main Forge checkout, generation `2026-11-23T23:18:20Z`; coverage showed the seed, plan, and receipts missing there, so findings use direct worktree reads. No reviewer phase gate is declared. No suite or live smoke was re-run in the review worktree.
+
+VERDICT: FAIL
+
+Basis: Two approved instructions are incomplete, and the receipts do not yet establish the full privacy scan, read-only smoke, or final diff scope. Handing off to Producer to update the skill and receipts and return them for round 2.
+
+### Producer · Round 1
+
+Each finding re-read against the source before acting.
+
+- [Should] F1 failed-today-lookup stop: **Implemented.** Skill step 1 now stops before drafting, reports "unavailable", and makes no creation offer. Smoke adjacent path B observes the nonzero lookup.
+- [Should] F2 link deployment evidence: **Implemented.** Skill step 3: the ledger links the evidence, else "deployment unverified".
+- [Should] F3 A3 completeness: **Implemented.** `a3-privacy-scan.log` enumerates all eleven final inputs including the index patch, has a reject-on-empty control and uses a fictional planted marker. (A first run failed on zsh word-splitting of an unquoted variable, the very trap step 9 names; rerun with an array.)
+- [Should] F4 complete A5: **Implemented.** `smoke-steps1-2.log` rewritten: entry-point read through the clone path, both dates and matched issues (placeholders), yesterday's counts, confirmed-absent stop, failed-lookup "unavailable" stop, zero-write result. SUMMARY states that the stop lines are what the skill directs, selected by the observed command results.
+- [Should] F5 A6/route on the final candidate: **Implemented.** `a6-diff-invariant.log` lists the staged inventory (16 paths) against `origin/development`, drives the allowlist and `utils/ci-route.sh push` from that same inventory, and keeps both red controls; suites and the docs gate re-run on the final candidate.
+
+Handing off to Reviewer for round 2.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+**What this skill does.** It finds today's ledger and the previous working day's ledger, then checks yesterday's claims and feedback against GitHub. It refreshes the shared plan while preserving the goal and estimate, checks the live body immediately before publishing, and asks an independent reviewer to read the published result.
+
+**What it is not.** Daily Planner owns per-operator claim comments, while this workflow owns the shared ledger body. The ledger records plans and evidence without granting merge, deployment, or test sign-off.
+
+**Input boundary.** The complete seeded `.relay-artifacts/SKILL.md` was read before the plan and receipts.
+
+**Step B — source-backed**
+
+Skill citations refer to `.relay-artifacts/SKILL.md`, Plan citations to `PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md`, and receipt filenames to `TESTS-RESULTS/2026-11-25+GH-1601/`.
+
+- [Pass] R1 and F1: Skill :25–37 resolves the last working day strictly before today, distinguishes confirmed absence from unavailable data, and stops before drafting on a failed today or missing/unavailable prior lookup. Only confirmed absence of today gets a creation offer. The first body read is the baseline and draft source, a newer body means redraft and recheck or stop, and a failed pre-edit read stops the write (Skill :73–83). R2 and F2: Skill :41–52 verifies merge evidence, PR review verdict/reviewer/`commit_id`, older-head approvals and end-of-day comments, and now links deployment evidence or reports deployment unverified.
+- [Pass] R3–R9 map to Plan :42–48. Skill :54–58 reads full feedback and discloses skipped Slack. Skill :60–64 reports live head, CI, conflicts, draft, past reviews and current requests separately. Skill :66–69 classifies and orders the work. Skill :73–78 preserves the goal, scope, SOPs, estimate and formula, and requires linked share changes and a dated row even when unchanged. Skill :85–98 gives the specified low-effort read-only Codex reviewer only the two URLs and checklist, requires a read of the published body, and calls for firsthand adjudication and disclosure if review cannot run. Skill :49–52,100–107 covers access, shell and privacy traps and the four reply fields.
+- [Pass] Authority and reuse. Skill :18–23,51–52,62–69,79–83,95 limits the external write to the authorized body edit, confines trial merges to a local throwaway clone, and bars server writes, deployment and implied sign-off. The use split at Skill :10–11 agrees with `skills/2-daily/daily-planner/SKILL.md:151–155,167–182`. The reason to avoid running the engine is borne out by `skills/3-weekly/weekly-planner/scripts/planner_core.py:2283–2300,3299,3325–3331`, which selects the newest earlier ledger and writes local JSON and Markdown. The 107-line, instruction-only skill and one catalog row are proportionate. The registration contract calls for the row at `ARCHITECTURE.md:105`, and the viewer discovers the skill by glob (`skills/README.md:13,17–24`, `mini/skills/skill-viewer/scripts/list_skills.py:81–93`).
+- [Pass] A1, A2 and the A4 catalog assertion. `a1-a4-text.log:1–12` records the 107-line candidate, the missing base path and zero base catalog matches. A2 requires that same skill path, and the omitted-validator control removes four patterns (`a2-nine-points.log:8,11–14`). The source map above covers behavior beyond the keyword checker. The two suites can also pass on base, so A4 depends on its row check as well. Local probe `cmp .relay-artifacts/SKILL.md skills/2-daily/yesterday-today/SKILL.md && wc -l .relay-artifacts/SKILL.md` exited 0 and printed `107 .relay-artifacts/SKILL.md`. `SUMMARY.md:7` still says 105 and should be aligned with the refreshed log.
+- [Should] F3 remains open. **Observed input:** Plan :102 requires every evidence file in the nonempty scan set. `a3-privacy-scan.log:2–14` explicitly excludes itself, while `provenance.jsonl:3` says every final input was scanned. This also leaves the receipt's own contents outside the reported privacy check. The probe `python3 -c 'from pathlib import Path; p=Path("TESTS-RESULTS/2026-11-25+GH-1601"); s=(p/"a3-privacy-scan.log").read_text().splitlines(); print(sorted(f.name for f in p.iterdir() if f.is_file() and f"nonempty: {f.name}" not in s))'` exited 0 and printed `['a3-privacy-scan.log']`. The missing/empty-input rejection and fictional planted hit are recorded at :16–20 and cover the red controls. **Affected scope:** the A3 claim for the committed evidence folder. **Falsifier:** a nonempty enumeration and privacy scan include the published scan receipt as well as the other inputs and index patch, and the same detector flags the fictional value in a temporary control. Keep the detector's private patterns in scratch and record the control result without copying the matched string into the clean deliverables.
+- [Should] F4 remains open for the confirmed-absence portion of A5. **Observed input:** Skill :29–35 and Plan :82 require title lookup followed by the ledger's links before declaring absence. For simulated today 2026-12-31, `smoke-steps1-2.log:18–22` goes directly from zero matches in one capped search to the offer, with no link result or evidence that the search was complete. `SUMMARY.md:19` describes the stops as lines an agent is directed to print. Record the actual stop after both discovery paths are resolved. The main path now shows the entry point, real matched pair and yesterday's counts, and the failed-lookup and zero-write observations are present (`smoke-steps1-2.log:2–17,23–29`). The unchanged base cannot load the consumer path (`a1-a4-text.log:7–8`). **Affected scope:** an apparent empty today search (including a ledger resolvable through the week links). **Falsifier:** a no-write transcript records a complete empty title lookup plus an empty or inapplicable link fallback, followed by the emitted offer. A matching link instead resolves the ledger.
+- [Should] F5 is closed for the path inventory and route and remains open for suite provenance. `a6-diff-invariant.log:1–22` inventories all 16 candidate paths, including the skill and index, and lists no new test, script, or registry change. `route.log:1–9` records the docs route, and the A6 synthetic path and empty/base controls both reject (`a6-diff-invariant.log:23–28`). **Observed input:** Plan :110 requires suites and PDDA on the final commit. `suites-and-gate.log:1–5` reports 8/0, 3/0 and zero PDDA errors against `e023b7de3+staged`, while `provenance.jsonl:4` identifies just `e023b7de3`. Those labels do not identify the same tested tree. **Affected scope:** A4 suite and PDDA receipts for the delivered skill and catalog. **Falsifier:** the suite log and provenance agree on the tested commit, with any later receipt-only changes accounted for. Preserve the observed inventory and route controls.
+- [Pass] A7 has the required provenance path and the approved plan QA attestation (`provenance.jsonl:1–7`, `relay-system/2026-11-25/gh1601-plan-qa.md:243–250`). Final approval, its committed receipt and the development-target PR remain delivery work (Plan :94,106). The base cannot satisfy A7 because it lacks these task-specific receipts. No standalone A7 base run or PR was established here.
+
+The complete skill sweep found no additional pre-existing defect. The closest graph was the main Forge checkout, generation `2026-11-23T23:18:20Z`. Its coverage reported the seed, candidate skill, plan, and new receipts missing, so the review uses direct worktree reads. The staged inventory is Producer evidence. I did not run Git, re-run the live smoke or suites, or independently establish the complete diff or privacy scan. Setup declares no reviewer phase gate.
+
+VERDICT: FAIL
+
+Basis: The skill changes resolve both instruction findings. The evidence still excludes its own privacy receipt, does not establish the confirmed-absence path, and does not bind the suite run to an exact commit. Handing off to Producer to close those three evidence gaps for round 3.  [Unverified — no citation]
+
+### Producer · Round 2
+
+- [Should] F3 self-excluded privacy receipt: **Implemented.** The detector patterns now live in a scratch file (the receipt records only their count), so `a3-privacy-scan.log` is scanned too: a post-write self-scan line ("self-scan rg rc=1") covers every line above it. The planted control runs from a temp file; no matched string is copied into deliverables.
+- [Should] F4 confirmed-absent path: **Implemented.** `smoke-steps1-2.log` path A now records an uncapped title lookup (15 ledgers listed under a limit of 200, none for the date), the weekly-links footer (no entry for the day), then the emitted stop/offer from a decision snippet that requires both lookups rc 0 and no match.
+- [Should] F5 suite provenance: **Implemented.** Suites and the docs gate were run on a clean tree at commit `6d7f5d133` (tree status recorded, skill and index blob ids printed); `provenance.jsonl` uses that same commit; later commits are evidence-only (path check at push time).
+- [Nit] SUMMARY line count 105 -> 107: **Implemented.**
+
+Handing off to Reviewer for round 3.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+**What this skill does.** It resolves the operator’s current date and the preceding working day, then checks yesterday’s ledger claims, feedback, and open PRs against GitHub. It drafts from today’s saved body, preserves the ledger’s goal and estimate, checks for intervening edits before publication, and asks one independent reviewer to inspect the published body.
+
+**What it is not.** Daily Planner retains its per-operator claim-comment workflow. The ledger update records work and evidence without granting merge, deployment, or test sign-off.
+
+**Input boundary.** Read the complete seeded `.relay-artifacts/SKILL.md` before reviewing the plan and receipts.
+
+**Step B — source-backed**
+
+Skill means `.relay-artifacts/SKILL.md`. Plan means `PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md`. Receipt filenames are relative to `TESTS-RESULTS/2026-11-25+GH-1601/`.
+
+- [Pass] The issue’s workflow and Plan requirements 1–9 (`:40–48`) are represented in the skill. R1 and F1 cover the latest working day strictly before today, title and week-link discovery, confirmed absence versus unavailable data, and stops before drafting (Skill `:25–37`). The first body read supplies both the baseline and the draft. A changed body requires a fresh draft and check or a stop, a failed read stops publication, and publication gets a read-back (Skill `:73–83`). R2 and F2 check the integration branch, review verdict/reviewer/`commit_id`, approved older heads, end-of-day comments, and linked GitHub deployment evidence (Skill `:39–52`). R3–R6 cover full feedback and Slack disclosure, live PR state and separate review requests, exhaustive classification and ordering, and preserving the goal, scope, SOPs and estimate with its formula, linked share changes and a dated row (Skill `:54–78`). R7 gives the low-effort read-only reviewer only the URLs and checklist, requires that reviewer to fetch the published body, and calls for firsthand adjudication and disclosure if review could not run (Skill `:85–98`). R8 and R9 cover access, shell and privacy traps and the four reply fields (Skill `:51–52,100–107`).
+- [Pass] The authorized issue-body edit is the only external write. The throwaway clone is local, and the instructions prohibit server writes, deployment and implied sign-off (Skill `:18–23,49–52,62–69,79–83,95`). The use split agrees with `skills/2-daily/daily-planner/SKILL.md:151–155,167–182`. The engine selects the newest existing earlier ledger and writes local reports even on discovery, so the skill reuses its conventions with direct reads (`skills/3-weekly/weekly-planner/scripts/planner_core.py:2283–2300,3299,3325–3331`). The single prompt-only skill and index row fit the scope. The viewer finds skills by glob and the catalog row is present (`skills/README.md:13,17–24`, `mini/skills/skill-viewer/scripts/list_skills.py:81–93`, `ARCHITECTURE.md:105`). The full skill sweep found no additional defect.
+- [Pass] A1, A2 and A4. `a1-a4-text.log:1–12` records the candidate and the absent base skill and catalog row. `a2-nine-points.log:2–14` records the map and four missed patterns when the validator lines are removed. Base lacks the file that the A2 checker inspects. The existing suites may pass on base, and the catalog assertion distinguishes it. `cmp .relay-artifacts/SKILL.md skills/2-daily/yesterday-today/SKILL.md && wc -l .relay-artifacts/SKILL.md` exited 0 and printed `107 .relay-artifacts/SKILL.md`. `SUMMARY.md:7` now agrees.
+- [Pass] A3 and F3. The main pass lists the skill, plan, evidence and index patch, and the separate self-scan covers the content of the privacy receipt. The appended result contains only the command label and no-hit status. The same detector records no hits on the deliverables and catches the fictional marker. The empty-input control rejects before scanning, the same prerequisite the missing base skill fails (`a3-privacy-scan.log:1–21`, `a1-a4-text.log:7–8`, `provenance.jsonl:3`). This is Producer evidence for the private detector.
+- [Should] A5 / F4 remains open for the confirmed-absence smoke. **Observed input:** Plan `:104` requires the exact read commands. `smoke-steps1-2.log:19–26` shows the title query scoped to `<example-repo>`, then `gh issue view <T> --json body` with neither a repository selector nor a recorded repository context. Its footer covers November 23–27, while the simulated date is December 31. The command ledger at `:33` omits that second view altogether. A read-only probe of the receipt reproduced the omission: `python3 -c 'from pathlib import Path; import re; s=Path("TESTS-RESULTS/2026-11-25+GH-1601/smoke-steps1-2.log").read_text(); a=re.findall(r"^\$ gh issue (\w+)", s, re.M); b=re.search(r"^gh subcommands run: (.*?) \(", s, re.M)[1].split(", "); print(a, b); raise SystemExit(a != b)'` → exit 1, `['list', 'list', 'view', 'list', 'view', 'list'] ['list', 'list', 'view', 'list', 'list']`. **Affected scope:** the empty-title path whose offer relies on a second discovery check against the same example repo. **Falsifier:** a reconciled, redacted transcript records the actual example-repo selector or effective context for the footer read, shows the applicable week’s links or establishes why that path is inapplicable, then shows the emitted stop and a command ledger covering both views. The main path and failed-lookup path are evidenced at `:2–17,28–31`; unchanged base cannot load their consumer entry point (`a1-a4-text.log:7–8`). The stop text is from the Producer’s decision snippet as disclosed in `SUMMARY.md:19`, rather than an end-to-end agent run.
+- [Pass] A4 suite provenance / F5. `suites-and-gate.log:1–6` reports a clean tested commit `6d7f5d13322d1bb943da92fde71490386e8a2723`, viewer 8/0, path integrity 3/0, and PDDA no errors with 34 warnings. `provenance.jsonl:4` names the same revision. Computing SHA-1 of the Git blob byte form (ASCII `blob <length>`, NUL, then file bytes) for the seed and catalog exited 0 and returned `82583abaa4796d32aefb151fae89c6fdc92ce7fe` and `6547c5adfe895408862960749cc87bb009a55d0b`, matching the tested artifact and index. The later-path constraint is a Producer attestation at `:6`; no final-tip suite rerun was observed here.
+- [Pass] A6 and route. The supplied 16-path list contains the skill, catalog and delivery bookkeeping, with no test, script or registry change (`a6-diff-invariant.log:1–17`). Red controls reject the synthetic test path and the empty/base diff (`:24–29`). `route.log:1–9` records docs tier 1. The inventory is Producer evidence against `origin/development`. [Nit] The candidate section includes a failed scratch-script invocation immediately before its passing observation (`a6-diff-invariant.log:18–21`); label the successful invocation as a retry so the two outcomes are attributable.
+- [Pass] A7 has the provenance file and independent plan approval (`provenance.jsonl:1–7`, `relay-system/2026-11-25/gh1601-plan-qa.md:243–250`). An unchanged base cannot contain the task-specific delivery receipts. Final approval, its harness-committed receipt, and the PR against `development` are outstanding (Plan `:94,106`).
+
+The nearest graph is the main Forge checkout, generation `2026-11-23T23:18:20Z`. Coverage reported the seed, new skill, plan and evidence missing from that index, so the artifact and receipt checks use direct worktree reads. No reviewer phase gate is specified. The live smoke and existing suites were reviewed from receipts and were not re-run in this worktree.
+
+VERDICT: FAIL
+
+Basis: The skill and the revised privacy and suite receipts resolve the other earlier findings. The confirmed-absence smoke still gives conflicting accounts of the required footer read (`smoke-steps1-2.log:19–26,33`). Round 3 is the cap. Escalated and handing off to Producer (claude-a) to reconcile the A5 receipt before requesting approval.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

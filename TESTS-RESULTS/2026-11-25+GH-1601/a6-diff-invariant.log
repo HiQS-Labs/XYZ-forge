@@ -1,0 +1,29 @@
+== path inventory (staged vs origin/development)
+ARCHITECTURE.md
+PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md
+TESTS-RESULTS/2026-11-25+GH-1601/SUMMARY.md
+TESTS-RESULTS/2026-11-25+GH-1601/a1-a4-text.log
+TESTS-RESULTS/2026-11-25+GH-1601/a2-nine-points.log
+TESTS-RESULTS/2026-11-25+GH-1601/a3-privacy-scan.log
+TESTS-RESULTS/2026-11-25+GH-1601/a6-diff-invariant.log
+TESTS-RESULTS/2026-11-25+GH-1601/provenance.jsonl
+TESTS-RESULTS/2026-11-25+GH-1601/route.log
+TESTS-RESULTS/2026-11-25+GH-1601/smoke-steps1-2.log
+TESTS-RESULTS/2026-11-25+GH-1601/suites-and-gate.log
+relay-system/2026-11-25/gh1601-final-qa.md
+relay-system/2026-11-25/gh1601-plan-qa.md
+releases.db
+releases.sql
+skills/2-daily/yesterday-today/SKILL.md
+== A6 candidate (first invocation used a scratch path that did not exist and failed; the line after it is the successful retry)
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python: can't open file '/private/tmp/claude-501/a6.py': [Errno 2] No such file or directory
+changed paths: 16 | disallowed: none
+rc=0
+== no test/ or validate.sh change (count)
+0
+== red: synthetic test path
+changed paths: 17 | disallowed: ['test/new-suite.sh']
+rc=1 (1=rejected)
+== red: empty
+changed paths: 0 | disallowed: none
+rc=1 (1=rejected)

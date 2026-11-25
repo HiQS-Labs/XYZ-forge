@@ -1,0 +1,9 @@
+== route: the same inventory, as the pre-push hook feeds it
+pdda_needed=true
+full_required=false
+changed_tests=
+route=docs
+tier=1
+tier2_subsystems=
+tier2_tests=
+tier_reason=docs-only
