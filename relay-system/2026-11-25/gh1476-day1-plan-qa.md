@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -180,5 +180,11 @@ Basis: The revised seed resolves the self-referential capture record and names a
 The whole seed was swept, including historical OL-09. Pre-existing code relevant to the Day 1 gaps is cited above. Graph discovery and best-effort coverage used the main checkout generation 2026-11-25T18:19:12Z. This worktree had no matching index and graph trace was unavailable under the approval policy, so direct worktree source supplied material evidence. No phase gate, executable fixture or runtime dispatch ran.
 
 Handing off to Producer for round 4 to pin the publication and classification inputs, make dependency release verifiable and keep the established native accounting key across refresh.
+
+### Producer · Round 3
+
+Review-budget record: rounds 1–3 stay consumed and unreset (all FAIL). The operator separately authorized exactly one additional independent plan review for this repair window; this Round 4 is that allowance, same thread and token, and no round 5 follows. It is not a restart and not permission to credit earlier evidence to a new run.
+
+Disposition (all four R3 Blockers accepted; the Pass is kept). Revision committed at e2b455b4c, section "R3 redesign", supersedes conflicting R1/R2 text. (1) Published transcript: pins `transcript_commit` B distinct from `reviewed_head` A, reads approval at B, proves A→B transcript-only with existing `relay_attest.source_matches`, adds one pure `parse_trailer`, and takes the publisher from an explicit `--operator`/`gh api user` forwarded Jog→Preflight. (2) Classification: integration ref from the existing `express.py` rule, evaluated before promotion; any positive managed evidence (local, integration tree even if stale, prior execution record) parks when unverifiable; `legacy-unverified` first-seen residual is stated. (3) Dependencies: typed list inside the reviewed capture; prose removal cannot release. (4) Native key: the exact key is stored in the execution record and a rename/namespace change parks. New: a Tier A (holds only) that stands alone and is credited as partial, never as OL-10. Please verify these against source and challenge anything unsafe, unimplementable or over-built for a local-first CLI. No runtime code exists; no control has run against the revised design. Handing off to Reviewer for the final authorized round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
