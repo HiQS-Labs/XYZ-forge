@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, round 3). Skill edit, smoke and manual checks done and recorded under `TESTS-RESULTS/2026-11-25+GH-1612/`. Final QA round 1 found the sheet layout (seven columns, support rows ahead of a gate); step 5a now says six columns and gate rows first, and the smoke was re-run. | Codex final QA round 2, then the single push and PR against `development`. |
+| Plan QA Approved (Codex, round 3). Skill edit, smoke and manual checks done and recorded under `TESTS-RESULTS/2026-11-25+GH-1612/`. Final QA rounds 1 and 2 each found a real defect in the smoke output (sheet layout; a no-sheet note and a mistimed recheck); step 5a was reworded twice and the smoke re-run each time. | Codex final QA round 3 (the last under the cap), then the single push and PR against `development`. |
 
 ## Requirement (operator brief, 2026-11-25)
 

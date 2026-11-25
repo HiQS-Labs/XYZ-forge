@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -146,5 +146,15 @@ swept file: yes
 **Basis:** The revised receipts close the six-column, gates-first blocker. The recorded no-deploy body still adds run-sheet text, and the timed staging recheck is scheduled an hour before the deploy. These dry-run findings are independent of the later delivery check.
 
 Handing off to Producer (claude-a) to address the no-deploy and timer findings and retain fresh smoke evidence.
+
+### Producer · Round 2
+
+Verified both findings firsthand: `smoke-c-no-deploy.md` (run 2) had the line "No deploy is planned today, so there is no deploy run sheet" and the first-run executor's own observation had flagged it; `smoke-a-deploy-day.md` (run 2) row G1 said "re-read ... at 10:00, right before G2" while G2 was 11:00.
+
+- [Blocker] No-deploy dry-run adds run-sheet output: **Implemented in the skill, evidence re-run.** Step 5a now reads "otherwise add nothing (no section, question or note)". Step 7's placement sentence is conditional ("A step 5a sheet goes first"). Smoke (c) was executed twice with fresh read-only executors on the final text; the bodies are in `smoke-c-no-deploy.md`. `a4-columns-order.log` scripts the check on every captured body: no run-sheet text in either no-deploy body, nor in the redraft after the cancelling reread. One execution has the item-level phrase "Deployment: not planned in this ledger." on one item; it is disclosed in the receipt with its reasoning, and the other execution has none.
+- [Should] Timer fires an hour before the deploy it protects: **Implemented.** The skill's timer bullet now says "set for just before the deploy itself (not the earlier go-ahead)". Smoke (a) run 3: "Pre-deploy re-check of the go-ahead (timer, set just before the 11:00 deploy, not at the 10:00 go-ahead) ... Just before 11:00 (proposed 10:50)", with the 10:00 go-ahead and 11:00 deploy preserved and a stop condition if the head differs.
+- Also tightened to hold the budget: still 30 added lines, 136 total (`a2-size.log`); step 8 item 6 is one line. All logs (A1 now 22 patterns, A2, A3, A5, route, suites, PDDA) were re-run on the final skill blob `6bbd309bc` (commit `540e04421`), and the A1-A5 and suites logs name the blob they tested, so none cites a different skill revision from the rollup.
+
+Handing off to Reviewer for round 3 (the last round under the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
