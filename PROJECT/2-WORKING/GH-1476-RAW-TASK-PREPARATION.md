@@ -375,8 +375,8 @@ credit**; the #1400 scoreboard is not touched by this work either way.
 fetch with labels and comments and run the *existing* hold recognizer over it
 (`issue_hold_reason`, `operator_decision` in `skills/1-hourly/kickstart/scripts/build_queue.py`).
 Move the recognizer's pure functions to one importable module that Kickstart also imports
-(no copy). A hold returns the existing exit-5 refusal path, so Jog's refusal writer
-(`jog_run.py:652–659`) parks the row. Unavailable lookup keeps today's tolerance on a
+(no copy). A hold exits nonzero (not 4), so Jog's existing refusal writer
+(`jog_run.py:652–659`) parks the row; exit 4 would project `completed` (:648–651). Unavailable lookup keeps today's tolerance on a
 legacy lane (a *known* hold is the only refusal there). Releasing a hold: the latest
 trusted-operator `Operator decision: proceed` as an exact first line; `pending`/free text
 or a wrong-author comment does not release; body/label holds stay independent.
@@ -397,11 +397,13 @@ or a wrong-author comment does not release; body/label holds stay independent.
    at A alone cannot find the approval (negative control). A seeded or transcript-only
    review is accepted here only because the publisher is trusted, which is the assumption
    (below). Publisher identity: the marker author must equal the operator login, which Jog
-   resolves once (env `XYZ_OPERATOR_LOGIN`, else `gh api user`, the same sources Kickstart
-   uses) and forwards to Preflight as an argument; never the org slug; unresolved login on
+   resolves once (an explicit `--operator` argument on Jog's existing CLI, else `gh api user`, the same two
+   sources as Kickstart's `--owner` at `build_queue.py:389,421–422`; there is no existing
+   env variable and none is added) and forwards to Preflight as an argument; never the org slug; unresolved login on
    a managed lane parks.
 2. *Managed classification with unavailable ref or lookup.* The integration ref is resolved
-   by the repo's existing integration-branch setting, never from the capture, and Jog
+   by the existing `express.py` rule (explicit `--base`, else `origin/HEAD`, else the GitHub
+   default branch; `express.py:1623`), never from the capture; Jog passes it to Preflight, and Jog
    classifies **before promotion**. A lane is managed if *any* positive evidence exists:
    the local capture has the block, the integration tree's capture for the issue has it
    (a stale tracking ref counts — staleness cannot hide a positive), or the row's prior
