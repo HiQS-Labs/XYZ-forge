@@ -27,7 +27,7 @@ context_tags: [skills-army-hq, drift-guard, sync, stale-canonical]
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in round 2 (`relay-system/2026-11-25/gh1605-plan-qa.md`, attested `d52e23414267`); admitted (`--accepted-start`), implemented (`41baf1524`), and verified in disposable `-verify` clone (34 unittest + 28 gh620 + 7 gh660 + 10/10 smoke & red-control in `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md`). | Run Final Codex QA (`relay-system/2026-11-25/gh1605-final-qa.md`), qualify in disposable push clone, open PR against `development`, and retire published checkouts. |
+| Plan QA Approved in round 2 (`relay-system/2026-11-25/gh1605-plan-qa.md`, attested `d52e23414267`); admitted (`--accepted-start`), implemented (`41baf1524`), and full AC #7 evidence retained from disposable `-verify` clone (`TESTS-RESULTS/2026-11-25+GH-1605/{pdda-run.log,releases-check.log,skills-army-hq.log,smoke.md,provenance.jsonl}`: `pdda.sh run` 0 errors, `releases_app.py check` 0 failures, `uv run --with pytest bash test/skills-army-hq.sh` 34/34 passed, `gh620` 28/28, `gh660` 7/7, 10/10 verbatim smoke + red-control). | Complete Final Codex QA Round 2 (`relay-system/2026-11-25/gh1605-final-qa.md`), qualify and push from disposable `-gate` clone, open PR against `development`, and retire published checkouts. |
 
 ## Quad Concepts
 

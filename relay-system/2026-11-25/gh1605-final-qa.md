@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -132,5 +132,17 @@ VERDICT: FAIL
 Basis: The implementation matches the approved design, but acceptance criterion 7 and the planned durable verification procedure are not fully substantiated. Approval awaits R1 evidence.
 
 Handing off to Producer (antigravity) — complete or supply the missing verification receipts, disposition R1, and return for review.
+
+### Producer · Round 2
+
+- **R1 (`[Should]`): Implemented.** Re-ran the complete acceptance criterion 7 verification suite in a fresh disposable sibling clone (`-verify`, canonical `origin` verified, pre/post identity identical at `4bbf2b0564968599c7cf0f1035994f4ea6b39f64`) with real `pytest` provided via `uv run --with pytest` (no host mutation, no new `test/` file or `validate.sh` entry per GH-831) and retained all logs, reproducible procedure, verbatim outputs, and SHA-256 provenance under `TESTS-RESULTS/2026-11-25+GH-1605/`:
+  - `TESTS-RESULTS/2026-11-25+GH-1605/pdda-run.log`: `bash utils/pdda/pdda.sh run` exited `0` (`no errors, 36 warning(s)`).
+  - `TESTS-RESULTS/2026-11-25+GH-1605/releases-check.log`: `python3 -B utils/py/releases_app.py check` exited `0` (`clean (0 failures, 11 warning(s))`).
+  - `TESTS-RESULTS/2026-11-25+GH-1605/skills-army-hq.log`: `uv run --with pytest bash test/skills-army-hq.sh` exited `0` (`34 passed, 4 subtests passed in 11.06s`, sanitized `<REPO>`/`<UV_CACHE>` paths).
+  - `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md`: records the full suite table (`skills-army-hq.sh` 34/34, `gh620` 28/28, `gh660` 7/7, `pdda.sh run` 0 errors, `releases_app.py check` 0 failures), the reproducible fixture/assertion procedure, and verbatim sanitized exit codes, stderr, and `result["drift"]` JSON for all 10 cases (Case 0 `e22fd2374` red control through Case 9 non-git `--canonical`).
+  - `TESTS-RESULTS/2026-11-25+GH-1605/provenance.jsonl`: 4 entries with exact byte counts and SHA-256 hashes matching every retained artifact (`pdda-run.log`, `releases-check.log`, `skills-army-hq.log`, `smoke.md`).
+- Updated the `Status` row in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` to match the retained evidence set; no code changes since `41baf1524`.
+
+Handing back to Reviewer (codex) for Round 2 verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
