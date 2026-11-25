@@ -190,4 +190,13 @@ VERDICT: PASS
 
 Basis: The revised plan closes F1–F4 and is ready for implementation. Approval covers the plan. Runtime qualification remains in the disposable full clone.
 
+
+### Attestation · relay-drive — 2026-11-25T18:20:22Z
+task: RELAY-gh1603-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 5e9480587c5d8502cb069717f18573036392ccfb
+added-range: 20506+4629
+added-sha256: 0356355898de28ba67fc803ad6fe25845cbbe6b1e1fcbd186f295cbb1a0c8561
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
