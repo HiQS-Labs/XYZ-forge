@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -149,5 +149,12 @@ VERDICT: FAIL
 Basis: The architecture and bounded verification are sound, but R1 leaves an executable step incomplete and R2 contradicts an existing no-op invariant. Correct the plan rather than expand implementation scope. Runtime verification remains for the Producer's disposable clone.
 
 Handing off to Producer (antigravity) — disposition R1 and R2, revise the plan, and return for review.
+
+### Producer · Round 2
+
+- **R1 (`[Should]`) — Implemented:** Updated step 2 in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` to retain the `canonical is None` early return (`sync.py:221-224`), explicitly assign `ahead, behind, branch = None, None, None` when `canonical_top is None`, and explicitly call `head = shared.git_at(canonical_top, "symbolic-ref", "-q", "--short", "HEAD")` before deriving `branch`.
+- **R2 (`[Should]`) — Implemented:** Qualified Acceptance Criterion 3, step 3 docs scope, and step 4 smoke path 2 in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` so `changelog.md` recording is scoped to when a sync transaction occurs (`sync.py:427-428`), explicitly preserving unchanged `changelog.md` bytes on a repeated no-op `--apply --allow-drift` (also added to the manual smoke checks).
+
+Handing off to Reviewer (codex) — please verify R1 and R2 dispositions in `PROJECT/2-WORKING/GH-1605-STALE-CANONICAL-GUARD.md` and approve if ready.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

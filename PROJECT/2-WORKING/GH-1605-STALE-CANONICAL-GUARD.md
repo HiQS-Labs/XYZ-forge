@@ -132,9 +132,10 @@ Subsystem and canonical writer extended: `skills/3-weekly/skills-army-hq/scripts
 1. **Extend `ahead_behind(repo)` (`skills/3-weekly/skills-army-hq/scripts/sync.py`):**
    - Insert `"origin/development"` immediately after `"origin/HEAD"` and before `"origin/main"` in the fallback ref tuple so detached/untracked Forge checkouts without `origin/HEAD` still compare against `origin/development` while preserving `@{upstream}` and `origin/<branch>` priority for Pulse and other repos.
 2. **Add canonical staleness check in `drift_gate()` (`skills/3-weekly/skills-army-hq/scripts/sync.py`):**
+   - Retain the existing `canonical is None` early return (`sync.py:221-224`) before repository discovery.
    - After resolving `canonical, origin = canonical_root(...)`, inspect the canonical checkout offline via `canonical_top = shared.collection_repo(canonical)`:
-     - `ahead, behind = ahead_behind(canonical_top)` (or `(None, None)` if `canonical_top is None`).
-     - `branch = head.stdout.strip() if head.returncode == 0 else "HEAD"` (or `None` if `canonical_top is None`).
+     - If `canonical_top is None`: set `ahead, behind, branch = None, None, None`.
+     - Else: set `ahead, behind = ahead_behind(canonical_top)`, run `head = shared.git_at(canonical_top, "symbolic-ref", "-q", "--short", "HEAD")`, and set `branch = head.stdout.strip() if head.returncode == 0 else "HEAD"`.
    - If `behind` (i.e. `behind is not None and behind > 0`):
      - Build safe remediation text:
        - When `ahead` is `0` or `None`: `fast-forward it (git -C {shlex.quote(str(canonical_top))} pull --ff-only) or point --canonical / XYZ_FORGE_ROOT / targets.json "canonical" at a current checkout`.
@@ -147,14 +148,14 @@ Subsystem and canonical writer extended: `skills/3-weekly/skills-army-hq/scripts
      - Return `{"canonical": str(canonical), "origin": origin, "branch": branch, "ahead": ahead, "behind": behind, "stale_canonical": True, "skipped": "STALE_CANONICAL_FORGE"}`.
    - When not stale (`behind` is `0` or `None`): run `drift_report(root, canonical)` unchanged and include additive metadata `branch`, `ahead`, `behind`, `stale_canonical: False` in the returned `drift` dict alongside existing `canonical`, `ok`, `drifted`, `unrecognized`, `origin`.
 3. **Update docs (`skills/3-weekly/skills-army-hq/SKILL.md` and `skills/3-weekly/skills-army-hq/references/recovery.md`):**
-   - In `SKILL.md` under `## Drift guard: deploying a drifted skill fails loudly (GH-660)`, add a concise bullet documenting `STALE_CANONICAL_FORGE` behavior on `--status`/preview and `--apply` / `--allow-drift`.
+   - In `SKILL.md` under `## Drift guard: deploying a drifted skill fails loudly (GH-660)`, add a concise bullet documenting `STALE_CANONICAL_FORGE` behavior on `--status`/preview and `--apply` / `--allow-drift` (noting changelog recording applies when a sync transaction occurs).
    - In `references/recovery.md` under the stale-clone recovery section, add a concise note explaining `STALE_CANONICAL_FORGE` alongside `STALE_PULSE_COLLECTION` and how to resolve it (`git -C <canonical> pull --ff-only` or pointing `--canonical` / `XYZ_FORGE_ROOT` / `targets.json "canonical"` at a current checkout).
 4. **Verify & smoke-test (bounded test scope, GH-831 compliant):**
    - **Test non-scope (GH-831):** No new files under `test/`, no `validate.sh` `TESTS` edits, no edits to `test/test_deploy_skills.py` unless pinned behavior breaks (none expected).
    - Run existing focused suites in safe isolation: `bash test/skills-army-hq.sh` and `bash test/gh620-skills-army-mini-sync.sh` (plus `utils/pdda/pdda.sh run` and `python3 utils/py/releases_app.py check`).
    - Run deterministic manual smoke + red-control verification script (stored only in temp during execution; commands, raw outputs, and red control recorded under `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md` + `provenance.jsonl`):
      1. **Red control (`git show e22fd2374:skills/3-weekly/skills-army-hq/scripts/sync.py`):** against a fixture canonical checkout `0 ahead / 2 behind` upstream with an updated deployed skill, pre-fix `sync.py --status` emits `WARN DRIFTED` with downgrade `intake.py --apply update ... --source <stale-checkout>`.
-     2. **Main path (post-fix, `0 ahead / 2 behind`):** `--status` exits `0`, emits `WARN STALE_CANONICAL_FORGE`, emits **0** `WARN DRIFTED` and **0** `intake.py --apply update` lines, JSON has `drift.stale_canonical == True`, `drift.behind == 2`, `drift.skipped == "STALE_CANONICAL_FORGE"`, no `drifted` key; `--apply` (enabled target) exits `2` with `REFUSED` (no links created, no downgrade command); `--apply --allow-drift` exits `0` loudly and deploys links with changelog receipt.
+     2. **Main path (post-fix, `0 ahead / 2 behind`):** `--status` exits `0`, emits `WARN STALE_CANONICAL_FORGE`, emits **0** `WARN DRIFTED` and **0** `intake.py --apply update` lines, JSON has `drift.stale_canonical == True`, `drift.behind == 2`, `drift.skipped == "STALE_CANONICAL_FORGE"`, no `drifted` key; `--apply` (enabled target) exits `2` with `REFUSED` (no links created, no downgrade command); `--apply --allow-drift` on pending links exits `0` loudly, deploys links, and records the warning/drift block in `changelog.md`; a repeated no-op `--apply --allow-drift` on the already-reconciled collection exits `0` loudly (stderr + JSON warning) while leaving `changelog.md` bytes unchanged (preserving the `sync.py:427-428` no-op invariant).
      3. **Adjacent real-world paths:**
         - Diverged canonical (`1 ahead / 2 behind`, matching MBP 14" `3 ahead / 1077 behind`): warning explicitly notes `pull --ff-only will refuse while 1 commit(s) ahead` and suppresses `DRIFTED`.
         - Fresh canonical (`0 ahead / 0 behind`) with genuine drift in collection: normal `WARN DRIFTED` + `--apply` refusal still fires (`drift.stale_canonical == False`, `drift.behind == 0`).
@@ -165,7 +166,7 @@ Subsystem and canonical writer extended: `skills/3-weekly/skills-army-hq/scripts
 
 1. When the resolved canonical `XYZ-forge` checkout is behind its last-fetched upstream (`behind > 0`), `sync.py --status` and preview emit `WARN STALE_CANONICAL_FORGE` citing the canonical path, origin, branch, ahead/behind counts, and safe remediation, and emit **zero** `WARN DRIFTED` lines and **zero** `intake.py --apply update` commands.
 2. When `canonical` is diverged (`ahead > 0` and `behind > 0`), the remediation notes that `pull --ff-only` will refuse while commits are ahead and points to reconciling or selecting a current canonical checkout.
-3. On `--apply` with an enabled target and stale canonical (`behind > 0`), `sync.py` refuses (exit 2, no links deployed, no downgrade command printed) unless `--allow-drift` is explicitly passed (exit 0, loud warning recorded in `changelog.md`).
+3. On `--apply` with an enabled target and stale canonical (`behind > 0`), `sync.py` refuses (exit 2, no links deployed, no downgrade command printed) unless `--allow-drift` is explicitly passed (exit 0, loud warning on stderr and in JSON, and recorded in `changelog.md` when a sync transaction occurs — preserving the existing no-op changelog invariant at `sync.py:427-428` when already reconciled).
 4. When `canonical` is up-to-date (`behind == 0`) or has no upstream (`behind is None`), existing GH-660 drift detection and refusal work identically and `result["drift"]["stale_canonical"]` is `False`.
 5. No network commands are executed by `sync.py`; `utils/py/skill_drift_check.py` is unchanged; no new test files or `validate.sh` entries are added (GH-831).
 6. `SKILL.md` and `references/recovery.md` document `STALE_CANONICAL_FORGE` accurately.
