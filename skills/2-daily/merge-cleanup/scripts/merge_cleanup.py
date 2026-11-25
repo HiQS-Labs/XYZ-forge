@@ -1077,7 +1077,8 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
     the gate will refuse at once. Foresight, not a second gate: a clone with no validate.sh (a consumer
     repo, whose own qualification applies) and a probe that cannot answer (spawn error, timeout) give
     '' and the pre-push hook stays the enforcing authority. Advisory diagnostics (php) exit 0 and are
-    not a fault here.
+    not a fault here. A nonzero exit with no ENVIRONMENT FAULT line (an unrelated failure, or a validate.sh
+    that does not know --print-mode) is likewise not a toolchain fault: '' and the hook decides.
     """
     script = Path(clone) / "validate.sh"
     if not script.is_file():
@@ -1093,7 +1094,7 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
     # Every fault line, in order: the gate prints each fault it detects (an advisory php line can precede the
     # blocking python line that exits 3), so naming only the first could hide the cause that refuses the push.
     faults = [ln.strip() for ln in out.splitlines() if "ENVIRONMENT FAULT" in ln]
-    return " | ".join(faults) if faults else f"validate.sh --print-mode exited {res.returncode}: {out[-300:]}"
+    return " | ".join(faults)
 
 
 def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,

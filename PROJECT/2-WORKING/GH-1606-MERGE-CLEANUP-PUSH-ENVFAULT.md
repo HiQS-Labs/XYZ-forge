@@ -81,7 +81,7 @@ for the toolchain check (no copied module list).
    - `""` when `<clone>/validate.sh` is absent (a consumer repo; its own qualification policy applies);
    - otherwise run `bash validate.sh --print-mode` in the clone with the inherited environment
      (the same PATH the push will use), bounded timeout;
-   - rc 0 → `""`; nonzero → the first `ENVIRONMENT FAULT` line, else the output tail with the rc;
+   - rc 0 → `""`; nonzero → every `ENVIRONMENT FAULT` line, joined; a nonzero exit with **no** fault line → `""` (an unrelated failure, or a `validate.sh` that does not know `--print-mode`, is not a toolchain fault and the pre-push hook stays authoritative; CodeRabbit finding on PR #1614);
    - a probe that cannot answer (spawn error, timeout) returns `""` — the pre-push hook stays the
      enforcing authority; this is foresight, not a second gate.
 2. **Pre-reserve defer (execute only)** in the B1 branch, immediately before `attempt_record.reserve`

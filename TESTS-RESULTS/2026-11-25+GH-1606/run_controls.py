@@ -219,6 +219,7 @@ def _mixed_probe(repo):
         "print('MIXED_NAMES_PYTHON=',('python3' in mixed and 'missing modules' in mixed))\n"
         "print('MIXED_NAMES_PHP=',('php' in mixed))\n"
         "print('PHP_ONLY_RC0_EMPTY=',run(0,php)=='')\n"
+        "print('NOFAULT_RC3_EMPTY=',run(3,'usage: validate.sh [options]\\n')=='')\n"
         % str(Path(repo) / "skills/2-daily/merge-cleanup/scripts"))
     p = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, cwd=str(repo))
     flags = {ln.split("=")[0]: ln.split("=")[1].strip() == "True" for ln in p.stdout.splitlines() if "=" in ln}
@@ -277,6 +278,15 @@ def main():
     add("AC-1-mixed-green", "CANDIDATE names the blocking python cause AND the advisory php line; php-only rc 0 still returns ''",
         m_rc == 0 and m_flags.get("MIXED_NAMES_PYTHON") and m_flags.get("MIXED_NAMES_PHP") and m_flags.get("PHP_ONLY_RC0_EMPTY"),
         "mixed-output probe at the candidate", m_out)
+
+    # AC-1-nofault (PR #1614 CodeRabbit finding): a nonzero exit with NO fault line is not a toolchain fault ----
+    if a.prefix_repo:
+        _rc, pf, po = _mixed_probe(a.prefix_repo)
+        add("AC-1-nofault-red", "PRE-FIX helper returns the output tail for a nonzero exit with no fault line, which would defer a PR for no named fault",
+            _rc == 0 and pf.get("NOFAULT_RC3_EMPTY") is False, "no-fault-line probe at the pre-fix commit", po,
+            "red control for the CodeRabbit finding on PR #1614")
+    add("AC-1-nofault-green", "CANDIDATE returns '' for a nonzero exit with no fault line, so the pre-push hook stays authoritative",
+        m_rc == 0 and m_flags.get("NOFAULT_RC3_EMPTY"), "no-fault-line probe at the candidate", m_out)
 
     res = {}
     for sc in SCENARIOS:
