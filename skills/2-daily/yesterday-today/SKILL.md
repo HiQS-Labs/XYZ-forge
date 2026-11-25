@@ -65,9 +65,9 @@ throwaway local clone, never in a working checkout.
 
 ## 5a. Deploy-day run sheet (only when a deploy is planned today)
 
-Applies when yesterday's ledger, today's ledger or a linked deploy checklist plans a deploy
-today; otherwise add nothing. The sheet is the first section of today's body, read from step 7's
-baseline and recomputed if step 7 redrafts. Link the repo's deploy docs; do not restate a procedure.
+Applies when yesterday's ledger, today's ledger or a linked deploy checklist plans a deploy today;
+otherwise add nothing (no section, question or note). The sheet is the first section of today's body,
+built from step 7's baseline, recomputed on a redraft. Link the repo's deploy docs; restate none.
 
 One row per step, six columns: step | named owner | planned time | exact method (where it runs, with
 which access) | what a pass looks like | what stops the deploy. Gate rows first (go-ahead, deploy,
@@ -83,8 +83,9 @@ after-deploy checks), then support rows (access, rehearsal, config), each in tim
 - Check access early (sign-ins, VPN, Docker, free disk) and name the fallback machine in the row.
 - A pass is evidence, not absence: each check says what it must have seen (row counts, named
   items), so a query that matched nothing cannot read as "all on".
-- Some checks only count right before the deploy. Put a timer on them and say why in the row;
-  plan an early rehearsal of the method as its own row.
+- Some checks only count right before the deploy. Put a timer on them, set for just before the
+  deploy itself (not the earlier go-ahead), and say why in the row; plan an early rehearsal of the
+  method as its own row.
 - List known review findings on every included PR once, with grade and who accepted each. A new
   finding: first see whether a reviewer already considered it.
 - Read-only by default. The sheet is a plan, never an approval: any later server write needs the
@@ -102,7 +103,7 @@ Group by person, with reviews and deploy gates first. Word items as work to do, 
   items list), scope rule, SOP sections and the % completion estimate with its formula,
   components and dated change log. The header is whatever this ledger uses; do not assume a
   release name. Change an item's share only with linked evidence, under that ledger's own
-  estimate rule, and add a dated change-log row even when nothing changed. The 5a run sheet goes first.
+  estimate rule, and add a dated change-log row even when nothing changed. A step 5a sheet goes first.
 - Immediately before `gh issue edit <n> --body-file <file>`, re-read the live body. Same as the
   baseline: edit. Changed: use the new read as baseline and draft source, redraft, check again,
   or stop. Read failed: stop. Never overwrite blindly. Confirm the edit with a read-back.
@@ -120,8 +121,7 @@ body itself:
 3. Does today's feedback list match what people actually wrote?
 4. Are the goal header, scope rule, SOP sections and estimate (formula, change log) intact?
 5. Does any wording imply a merge, deploy or test sign-off?
-6. Deploy day: run sheet first, six columns, gates first, any gate missing a field asked as a
-   question? No deploy: nothing added?
+6. Deploy day: sheet first, six columns, gates first, gaps asked? No deploy: nothing added?
 
 Verify each finding firsthand before changing anything. If the reviewer could not run, say
 "independent review did not run" and give the reason; do not substitute a self-review.

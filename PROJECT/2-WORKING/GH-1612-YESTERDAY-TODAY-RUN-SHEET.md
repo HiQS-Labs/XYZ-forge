@@ -109,6 +109,8 @@ what stops the deploy.
   operator's explicit approval for that action, with backups made first.
 ```
 
+Final QA changed the wording in four places; the skill is canonical: the row-spec sentence says "six columns" and "Gate rows first ..., then support rows ..., each in time order"; the no-deploy rule reads "otherwise add nothing (no section, question or note)"; the timer bullet says "set for just before the deploy itself (not the earlier go-ahead)"; item 6 of step 8 is one line.
+
 Step 7 gains one clause ("a run sheet from step 5a goes first and is recomputed on a redraft"). Step 8 gains item 6: "If a deploy is planned, is the run sheet first, one row per step with owner, time, method, pass evidence and stop condition, gates missing a field asked as questions, and no approval implied? On a no-deploy day, was nothing added?"
 
 ## Acceptance
