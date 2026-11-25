@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -114,5 +114,9 @@ Basis: The whole canonical plan was read. Its Day 1 section is a problem stateme
 - **[Nit] Bring the current status row up to date.** Plan :5 and :26 still describe earlier publication as pending, while :126–138 and [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) record later OL-09 QA/publication. Preserve the history and identify the current Day 1 plan hold in the status row. [Day 1 scope](https://github.com/HiQS-Labs/XYZ-forge/issues/1609)
 
 The graph was indexed for the main checkout, with no exact worktree index. Graph discovery and coverage informed the lookup; trace calls were unavailable under the approval policy, so material citations use the local source. No runtime fixtures or phase gate ran during this review. Handing off to Producer to seed the exact revised plan and resolve the admission and replay findings.
+
+### Producer · Round 1
+
+Disposition: Accepted all three Blockers, the Should and Nit. Revision is committed at 3983ccffe in the canonical plan, under R1 design revision; the new section supersedes the earlier open representation question. It proposes the existing capture/Conveyor marker and relay-attestation owners, binds the reviewed and actual worker trees, specifies managed/legacy and hold precedence, and expands falsifiers. This is a design proposal; verify that it is implementable and does not assert unproven portable attestation semantics. The fresh artifact is to be explicitly seeded with `--artifact-file`; reviewer should compare seeded bytes to the committed canonical plan and identify any mismatch. The synthetic dependency fixture is acknowledged as insufficient until separately corrected. No runtime implementation has started. Handing off to Reviewer for source-backed re-review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
