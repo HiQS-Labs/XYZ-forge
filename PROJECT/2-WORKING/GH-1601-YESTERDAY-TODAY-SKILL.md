@@ -33,6 +33,22 @@ goal: >
 |---|---|
 | Issue filed, clone provisioned, plan drafted. | Plan QA (Codex via relay-xyz), then write the skill, index row, changelog, smoke receipt. |
 
+## Requirements (operator brief, 2026-11-25)
+
+The operator's own wording of the routine, done by hand that morning: review yesterday's work ledger issue and see what was completed by everyone; confirm the findings against GitHub activity; read people's feedback on issue comments and PRs; find today's ledger issue and update it from what was completed, what carries over and what starts new today; spin up a low-effort Codex `gpt-6.2-astra` sub-agent to validate the updated ledger; keep the % completion estimate and the goal/target header in the body. The run taught nine things the skill must carry, briefly:
+
+1. Resolve "yesterday" and "today" in the operator's local timezone (the last working day across weekends/holidays); find both issues by title and "This week's ledgers" links; if today's is missing, stop and offer to create it; never overwrite blindly (save the old body, check the live body is unchanged right before `gh issue edit --body-file`).
+2. A checkbox is a claim, not evidence: verify with merged commits on the integration branch, PR reviews (verdict, reviewer, `commit_id`), and comments since local midnight; distinguish approved, merged, deployed and "approved at an older head"; reviews are only on the PR reviews endpoint; check people's own end-of-day comments.
+3. Feedback: read review bodies and comments in full; extract only what changes today (findings, refusals, deploy warnings, offers, unanswered questions); optional Slack read, and say when not checked.
+4. Live state of every open PR in the ledger (head, CI, conflicts, draft, requested reviewers); a throwaway-clone trial merge of the planned order shows conflicts "MERGEABLE" hides.
+5. Classify every open item done / carried / new / parked / dropped; group by person, reviews and deploy gates first; a ledger is a plan, not an approval.
+6. Keep the goal/target header (official count + progress bar, items list), scope rule, SOP sections and the % estimate with formula and dated change log; change a share only with linked evidence under that ledger's own rule; add a dated row even when unchanged; the header is generic, not hardcoded to one release.
+7. Publish, then one independent validation by a low-effort read-only Codex `gpt-6.2-astra` sub-agent given the two issue URLs and a checklist, never the author's conclusions; verify each finding firsthand before fixing; say so if it could not run.
+8. Traps: zsh does not word-split unquoted `$var` in loops; production/VM reads may need a fresh cloud login (report as not checked, never write to servers); a proxied grep can give false "0 matches"; no bare @mentions unless asking that person something; no personal emails or secrets in an issue.
+9. The final chat reply is short: ledger link, what changed, validator verdict, next steps.
+
+Constraints: check existing skills first (`daily-planner`, `daily`, `where-are-we-at`, `weekly-planner`, `todo-list`); reuse by reference; prompt-only; no new tests; plain English; repo-agnostic; about 130 lines; generic examples only.
+
 ## Rating rationale (2026-11-25)
 
 `rated 30/10/50/85` (pri/sev/appeal/effort).
