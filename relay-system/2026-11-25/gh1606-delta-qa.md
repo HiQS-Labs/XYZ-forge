@@ -126,4 +126,13 @@ Basis: The smallest runtime correction restores the documented advisory-probe co
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-25T21:07:31Z
+task: RELAY-gh1606-delta-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: 5fdf53b103d7bdf23e96b7e9e12896eb66b017c5
+added-range: 12100+5351
+added-sha256: 9808314c65dce89738941a312656bcd59793be9ec5a2c7eac1544af989d2c877
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
