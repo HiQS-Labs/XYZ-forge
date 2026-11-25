@@ -1,0 +1,16 @@
+A2 size and numbering (base b479f74e0)
+  base lines: 107   candidate lines: 136
+  numstat (added deleted): 30	1	skills/2-daily/yesterday-today/SKILL.md
+  headings:
+    25:## 1. Resolve the dates and both issues (read-only)
+    39:## 2. Read yesterday's ledger
+    43:## 3. Verify each claim against GitHub
+    54:## 4. Read people's feedback
+    60:## 5. Live state of every open PR in the ledger
+    66:## 5a. Deploy-day run sheet (only when a deploy is planned today)
+    93:## 6. Classify and order
+    98:## 7. Rewrite today's body, then publish with a guard
+    112:## 8. One independent validation
+    129:## 9. Traps and the reply
+  steps 1-9 all present: ok1 ok2 ok3 ok4 ok5 ok6 ok7 ok8 ok9 
+  base headings count: 9   candidate: 10

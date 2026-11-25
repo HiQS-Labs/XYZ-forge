@@ -1,0 +1,15 @@
+A5 diff invariant (changed paths vs b479f74e0)
+ACCEPT: 5 paths
+  rc=0
+control 1: synthetic out-of-scope path
+REJECT: out-of-scope paths: ['test/new-suite.sh']
+  rc=1
+control 2: empty skill diff (skill path removed)
+REJECT: skill diff empty/absent
+  rc=1
+changed paths:
+  PROJECT/2-WORKING/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md
+  relay-system/2026-11-25/gh1612-plan-qa.md
+  releases.db
+  releases.sql
+  skills/2-daily/yesterday-today/SKILL.md

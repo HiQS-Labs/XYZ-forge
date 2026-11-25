@@ -1,0 +1,45 @@
+A1 content check, candidate skills/2-daily/yesterday-today/SKILL.md (line numbers):
+  ^## 5a\. Deploy-day run sheet                    66:## 5a. Deploy-day run sheet (only when a deploy is planned today)
+  gates first \(go-ahead                           72:One row per step, gates first (go-ahead, deploy, after-deploy check
+  otherwise add nothing                            69:today; otherwise add nothing. The sheet is the first section of tod
+  read from step 7's                               69:today; otherwise add nothing. The sheet is the first section of tod
+  named owner \| planned                           72:One row per step, gates first (go-ahead, deploy, after-deploy check
+  what stops the deploy                            73:time | exact method (where it runs, with which access) | what a pas
+  gate missing any field                           75:- A gate missing any field (above all owner, time or method) is not
+  real code and target environment                 78:- Check each step against the real code and target environment usin
+  makes no host read                               82:  step; this skill makes no host read.
+  access early                                     83:- Check access early (sign-ins, VPN, Docker, free disk) and name th
+  evidence, not absence                            84:- A pass is evidence, not absence: each check says what it must hav
+  right before the deploy                          86:- Some checks only count right before the deploy. Put a timer on th
+  early rehearsal                                  87:  plan an early rehearsal of the method as its own row.
+  known review findings                            88:- List known review findings on every included PR once, with grade 
+  never an approval                                90:- Read-only by default. The sheet is a plan, never an approval: any
+  explicit approval for that action                91:  operator's explicit approval for that action, with backups made f
+  backups made first                               91:  operator's explicit approval for that action, with backups made f
+  ^6\. Deploy planned                              123:6. Deploy planned: is the run sheet first, one row per step with o
+  The 5a run sheet goes first                      105:  estimate rule, and add a dated change-log row even when nothing 
+
+Same patterns on BASE copy (inputs/base-SKILL.md); each must read MISSING:
+  ^## 5a\. Deploy-day run sheet                    MISSING
+  gates first \(go-ahead                           MISSING
+  otherwise add nothing                            MISSING
+  read from step 7's                               MISSING
+  named owner \| planned                           MISSING
+  what stops the deploy                            MISSING
+  gate missing any field                           MISSING
+  real code and target environment                 MISSING
+  makes no host read                               MISSING
+  access early                                     MISSING
+  evidence, not absence                            MISSING
+  right before the deploy                          MISSING
+  early rehearsal                                  MISSING
+  known review findings                            MISSING
+  never an approval                                MISSING
+  explicit approval for that action                MISSING
+  backups made first                               MISSING
+  ^6\. Deploy planned                              MISSING
+  The 5a run sheet goes first                      MISSING
+
+Control: candidate with the lesson-4 bullet removed:
+  evidence, not absence                            MISSING
+  right before the deploy                          84:- Some checks only count right before the deploy. Put a timer on th

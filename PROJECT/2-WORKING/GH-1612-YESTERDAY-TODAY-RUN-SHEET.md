@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake, rating and this plan written. | Codex plan QA (relay-xyz), then the edit, smoke, final QA, one push. |
+| Plan QA Approved (Codex, round 3). Skill edit, smoke and manual checks done and recorded under `TESTS-RESULTS/2026-11-25+GH-1612/`. | Codex final QA, then the single push and PR against `development`. |
 
 ## Requirement (operator brief, 2026-11-25)
 
@@ -115,11 +115,11 @@ Step 7 gains one clause ("a run sheet from step 5a goes first and is recomputed 
 
 Feature checks fail on the unchanged base `b479f74e0`; safeguards (A3, A5, A6) are shown with a controlled bad input. All manual, recorded under `TESTS-RESULTS/` (GH-831).
 
-- [ ] A1 Content: the skill has step 5a with all six columns, "gates first", the no-deploy "add nothing" rule, the today's-body baseline sentence, one bullet per lesson 1-7, and step 8 item 6; checker prints line numbers. Base prints missing for each. Control: a copy with the lesson-4 bullet removed reports it missing.
-- [ ] A2 Size and numbering: measured added lines from `git diff --numstat` are within 20-30 for step 5a plus the two small edits, the file is under about 140 lines, and the step headings 1-9 still carry their numbers. Base: 107 lines, no 5a.
-- [ ] A3 Privacy: one fixed-pattern `rg -n -i` (client, product, host, email, private-link shapes) plus a manual look for proper names over the skill and the evidence folder, each confirmed nonempty; the plan file is scanned separately and its required `owner` field is listed as project metadata, not a finding. Controls: a planted fictional token and a planted person-name example are both caught; a generic role label passes.
-- [ ] A4 Smoke, from the consumer entry point (the skill read through its path in this clone), fictional ledgers, read-only; the whole proposed body is captured and nothing is published. Three drafts: (a) yesterday silent, today's first body plans a deploy with one complete gate, one gate with an owner but no planned time, and one gate with no owner: expect exactly one six-column sheet first, gates first, a morning question for each incomplete gate, the goal header intact; (b) the same case after a simulated guarded reread whose live body cancels the deploy: expect no sheet, header intact; (c) a no-deploy day: expect zero run-sheet output. Replay the base skill on (a) and witness no sheet. Action log shows no `gh` write and no host or deploy operation; checkout state checked separately (`git status --porcelain` clean outside `TESTS-RESULTS/`).
-- [ ] A5 Diff invariant: changed paths limited to the skill, this plan, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`, and the skill diff must be nonempty. Controls: a synthetic `test/new-suite.sh` is rejected, an empty skill diff is rejected.
+- [x] A1 Content: the skill has step 5a with all six columns, "gates first", the no-deploy "add nothing" rule, the today's-body baseline sentence, one bullet per lesson 1-7, and step 8 item 6; checker prints line numbers. Base prints missing for each. Control: a copy with the lesson-4 bullet removed reports it missing.
+- [x] A2 Size and numbering: measured added lines from `git diff --numstat` are within 20-30 for step 5a plus the two small edits, the file is under about 140 lines, and the step headings 1-9 still carry their numbers. Base: 107 lines, no 5a.
+- [x] A3 Privacy: one fixed-pattern `rg -n -i` (client, product, host, email, private-link shapes) plus a manual look for proper names over the skill and the evidence folder, each confirmed nonempty; the plan file is scanned separately and its required `owner` field is listed as project metadata, not a finding. Controls: a planted fictional token and a planted person-name example are both caught; a generic role label passes.
+- [x] A4 Smoke, from the consumer entry point (the skill read through its path in this clone), fictional ledgers, read-only; the whole proposed body is captured and nothing is published. Three drafts: (a) yesterday silent, today's first body plans a deploy with one complete gate, one gate with an owner but no planned time, and one gate with no owner: expect exactly one six-column sheet first, gates first, a morning question for each incomplete gate, the goal header intact; (b) the same case after a simulated guarded reread whose live body cancels the deploy: expect no sheet, header intact; (c) a no-deploy day: expect zero run-sheet output. Replay the base skill on (a) and witness no sheet. Action log shows no `gh` write and no host or deploy operation; checkout state checked separately (`git status --porcelain` clean outside `TESTS-RESULTS/`).
+- [x] A5 Diff invariant: changed paths limited to the skill, this plan, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`, and the skill diff must be nonempty. Controls: a synthetic `test/new-suite.sh` is rejected, an empty skill diff is rejected.
 - [ ] A6 Delivery: a final-QA receipt for the delivered revision is committed and the opened PR's actual base is `development`. Controls: a missing receipt and a wrong-base value are each rejected by the same check.
 
 ## Verification
