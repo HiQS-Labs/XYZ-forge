@@ -181,4 +181,13 @@ VERDICT: PASS
 
 Basis: F1–F3 are closed. The independent replay confirms conservative preservation with incomplete evidence and conclusive outcomes with valid evidence. Approval covers the bounded final review. Publication qualification remains pending.
 
+
+### Attestation · relay-drive — 2026-11-25T18:37:42Z
+task: RELAY-gh1603-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 88c71f36e991cdca94dfca5daa2ed22bda20ef7a
+added-range: 24474+3632
+added-sha256: 6aee7a9598608e31c2d52861a86da025558568a0a27293991cddb962c0685b4e
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
