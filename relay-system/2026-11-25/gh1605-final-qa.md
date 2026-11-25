@@ -186,4 +186,13 @@ Basis: The outstanding evidence request is satisfied by the retained full script
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-25T19:01:04Z
+task: RELAY-gh1605-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: b139faad57eb0a38ca536330b78d8f089e0bb580
+added-range: 22668+2911
+added-sha256: 0f94b8f17789f620a99f3ec945ee45c1f8c1cda85a545043528be17a20c685f7
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
