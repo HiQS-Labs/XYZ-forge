@@ -1,6 +1,6 @@
 ---
 title: "Make the merge-cleanup phase B suite green when run on its own; the gate already runs it (correct the 'ungated' premise)"
-status: "In progress (final QA pending)"
+status: "In progress (PR ready; awaiting merge)"
 created: 2026-11-25
 updated: 2026-11-25
 owner: Noel Saw
@@ -29,7 +29,7 @@ goal: "Running `python3 test/gh534_phase_b_tests.py` (and phase C, which imports
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex on round 2 (round 1: one finding, retained receipts, closed). Implemented in `1a9cf2823`: phase B 39/39, phase C 111/111, gated wrapper 227 OK, both production mutants rejected, importer driver 18/18; evidence under `TESTS-RESULTS/2026-11-25+GH-1615/`. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
+| Plan approved by Codex on round 2 (round 1: one finding, retained receipts, closed). Implemented in `1a9cf2823`: phase B 39/39, phase C 111/111, gated wrapper 227 OK, both production mutants rejected, importer driver 18/18; evidence under `TESTS-RESULTS/2026-11-25+GH-1615/`. | Qualification gate and push from a disposable clone, ready PR (final Codex QA approved round 1, attested). Merge is the operator's. |
 
 ## Observed (measured at base `d3b238ed5`, not remembered)
 
@@ -93,7 +93,7 @@ Evidence under `TESTS-RESULTS/2026-11-25+GH-1615/` with `provenance.jsonl`; runs
 | AC-2 | Candidate, clean clone, same command | an unrepaired fixture leaves red tests | `Ran 39`, `failures=0`, `errors=0` |
 | AC-3 | Candidate: phase C standalone | the shared fixture is not what phase C needs | C green (counts recorded against its base run) |
 | AC-4 | **The gate path, which now executes the changed fixture:** `bash test/gh436-merge-cleanup.sh` on the candidate | the scoped patch interacts badly with `gh436`'s module-level stub | green, `Ran 227`, same as base |
-| AC-5 | Not vacuous: two production mutants in scratch copies must turn the specific pinned test red on the candidate | a stub that over-masks, or a suite that cannot fail, stays green under a real regression | mutant A (`eligible = None`, so the `--prs` allowlist stops restricting) makes `test_unlisted_pr_is_never_sequenced` red; mutant B (disable the remote-head-moved refusal in `push_resolved_head`) makes `test_remote_head_moved_during_resolution_is_not_pushed` red; each mutant verified to differ from the original, and each must fail on the test's **own assertion** (not an import, syntax or environment error) while the same test is green on the unmutated candidate |
+| AC-5 | Not vacuous: two production mutants in scratch copies must turn the specific pinned test red on the candidate | a stub that over-masks, or a suite that cannot fail, stays green under a real regression | mutant A (`deferred_set = deferred_closure(all_ordered, eligible)` replaced by `deferred_set = set()`, so the `--prs` allowlist stops deferring unlisted PRs) makes `test_unlisted_pr_is_never_sequenced` red; mutant B (disable the remote-head-moved refusal in `push_resolved_head`) makes `test_remote_head_moved_during_resolution_is_not_pushed` red; each mutant verified to differ from the original, and each must fail on the test's **own assertion** (not an import, syntax or environment error) while the same test is green on the unmutated candidate |
 | AC-6 | Importers: `run_controls.py` (GH-1606 driver) against the candidate | the scoped patch changes behaviour for importers | 18 of 18 driver rows pass |
 | AC-7 | The four skill-table pinned tests pass standalone | they stay red | `ok` for `test_same_key_update_on_both_sides_is_handoff_and_nothing_is_overwritten`, `test_unknown_mergeable_settles_and_the_pr_lands`, `test_unlisted_pr_is_never_sequenced`, `TestE6Gate.test_gate_red_prevents_the_merge` |
 | AC-8 | Scope: `git diff --name-only origin/development..HEAD` | a `validate.sh`, `ci-local.sh`, `.github/`, `gh436`, production or new `test/*` file in the diff | only `test/gh534_phase_b_tests.py`, this doc, `TESTS-RESULTS/2026-11-25+GH-1615/*`, relay threads, `releases.db`, `releases.sql` |
