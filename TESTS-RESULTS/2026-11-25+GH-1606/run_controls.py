@@ -32,6 +32,10 @@ SENTINEL = "@@GH1606-RESULT@@"
 SHIM = r'''#!/usr/bin/env bash
 # GH-1606 controlled seam: stands in for validate.sh's toolchain probe ONLY (`--print-mode`).
 [ "$1" = "--print-mode" ] || exit 0
+if [ "${GH1606_TOOLCHAIN:-ok}" = "usage" ]; then   # a validate.sh that does not know --print-mode (PR #1614 review)
+  echo "usage: validate.sh [--tier N] [options]" >&2
+  exit 2
+fi
 if [ "${GH1606_TOOLCHAIN:-ok}" = "fault" ]; then
   echo "ENVIRONMENT FAULT: python3 (/usr/bin/python3) version 3.9.6; missing modules: yaml,pytest,requests,mypy; requires Python >=3.10 (fixture shim of validate.sh:1043)"
   exit 3
@@ -40,7 +44,7 @@ exit 0
 '''
 INSTALLER = "#!/usr/bin/env bash\n# GH-1606 controlled seam: stands in for real pre-push hook wiring.\nexit 0\n"
 SCENARIOS = ["S1_fault_refusing_push", "S3_healthy", "S4_fault_then_resume", "S5_consumer_no_validate",
-             "S6_dry_run", "S7_ceiling_resume"]
+             "S6_dry_run", "S7_ceiling_resume", "S8_unknown_flag_validate"]
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -177,7 +181,12 @@ def s7(T, mc, ar, d):
     return {"run": _drive(T, mc, ar, d, toolchain="fault", push="real", extra=["--resume"])}
 
 
-SCENARIO_FUNCS = {"S1_fault_refusing_push": s1, "S3_healthy": s3, "S4_fault_then_resume": s4,
+def s8(T, mc, ar, d):
+    d.build()  # the clone's validate.sh exits 2 with a usage line and no fault line
+    return {"run": _drive(T, mc, ar, d, toolchain="usage", push="real")}
+
+
+SCENARIO_FUNCS = {"S8_unknown_flag_validate": s8, "S1_fault_refusing_push": s1, "S3_healthy": s3, "S4_fault_then_resume": s4,
                   "S5_consumer_no_validate": s5, "S6_dry_run": s6, "S7_ceiling_resume": s7}
 
 
@@ -266,7 +275,7 @@ def main():
         s_rc == 0 and "ENVIRONMENT FAULT" in s_out and s_out not in ("''", '""'), "helper under PATH=%s" % sysp, s_out)
     v_rc, v_out = _helper_probe(cand, venv + ":" + sysp)
     add("AC-1-healthy", "real validate.sh, test venv first on PATH: helper returns ''",
-        v_rc == 0 and v_out in ("''", '""'), "helper under PATH=%s:..." % venv, v_out)
+        v_rc == 0 and v_out in ("''", '""'), "helper under PATH=$HOME/.cache/xyz-forge-test-venv/bin:...", v_out)
 
     # AC-1-mixed (final QA R1): advisory php line before the blocking python line -------------------------
     if a.prefix_repo:
@@ -328,6 +337,17 @@ def main():
         add("AC-3-S7-" + who, f"{who}: --resume at the 2-repair ceiling stays parked under a fault; record unchanged; no push",
             r.get("rc") == 3 and r.get("previously_parked") and r.get("attempts") == 2 and len(r.get("push_calls", [])) == 0,
             "S7 at " + who, json.dumps({k: r.get(k) for k in ("rc", "attempts", "previously_parked")}))
+
+    # AC-3-S8 (PR #1614 review): a validate.sh that rejects --print-mode must not defer the PR -------------
+    c8 = res["S8_unknown_flag_validate"]["cand"].get("run", {})
+    add("AC-3-S8-cand", "CANDIDATE: a validate.sh that answers --print-mode with a usage error (no fault line) does NOT defer; the PR repairs and lands, published head equals the repair",
+        ok_run(c8) and not c8.get("deferred_named"), "S8 at candidate", json.dumps({k: c8.get(k) for k in ("rc", "attempts", "deferred_named")}))
+    if a.prefix_repo:
+        p8 = _spawn(a.prefix_repo, "S8_unknown_flag_validate").get("run", {})
+        add("AC-3-S8-prefix-red", "PRE-FIX commit wrongly defers the same PR (exit 3, no repair) for a reason that names no fault",
+            p8.get("rc") == 3 and p8.get("deferred_named") and p8.get("attempts") in ("absent", 0) and not p8.get("fault_named"),
+            "S8 at the pre-fix commit", json.dumps({k: p8.get(k) for k in ("rc", "attempts", "deferred_named", "fault_named")}),
+            "red control for the CodeRabbit finding on PR #1614", exit_code=p8.get("rc", -1))
 
     # AC-4 -------------------------------------------------------------------------------------------
     cd = res["S6_dry_run"]["cand"]

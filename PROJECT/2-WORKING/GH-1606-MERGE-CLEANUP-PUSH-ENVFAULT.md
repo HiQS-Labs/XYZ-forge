@@ -27,7 +27,7 @@ goal: "A B1 repair is never started while the push gate cannot run: the PR is de
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (round 3). Implemented; final Codex QA approved on round 2 after one real finding (first fault line could hide the blocking python cause) was fixed in `11ac019c7`. Controls, smoke and the three gated merge-cleanup suites recorded under `TESTS-RESULTS/2026-11-25+GH-1606/`. | Qualification gate and push from a disposable clone, open the PR; merge is a separate step. Triage the pre-existing, ungated phase B breakage separately. |
+| Plan approved by Codex (round 3). Final Codex QA approved on round 2 after one real finding was fixed in `11ac019c7`. PR #1614 opened; CodeRabbit's PR review then found one more valid finding (a nonzero probe exit with no fault line must not defer), fixed in `06671b514` with a retained red/green control and a fresh end-to-end scenario. | Fresh Codex delta review of the fix, qualification gate and push, CI on the new head, then merge. The ungated phase B breakage is tracked in Issue #1615. |
 
 ## Observed problem (measured, not remembered)
 
@@ -241,3 +241,11 @@ NO_ENTRY. The evidence is one incident and one fix; the generalizable claims (pr
 - Round-1 review paraphrase (written from the artifact only) matched the plan's intent; no comprehension mismatch to adjudicate.
 - Plan QA round 2 (Codex, 2026-11-25): VERDICT FAIL on a single item (healthy push seam). Verified against `merge_cleanup.py:2213-2226` and the fixture's `view()` (`test/gh534_phase_b_tests.py:74-79`) before accepting; derived the driver from the existing disjoint-B1 landing scenario at `:421`. All other round-2 findings were `[Pass]`.
 - Feasibility measured before round 3: in a disposable clone at base `b479f74e0`, applying only the wiring seam (`merge_cleanup.gate_unwired_reason = lambda clone, install=False: ""`, the same stub `test/gh436-merge-cleanup.py:43` uses) makes the existing scenario `TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it` pass end to end: `attempt 1/2 reserved (script, rung B1, head 5629dff0c3)`, B1 repair `rc=0`, real push `pushed d55922402c to feat/b`, both PRs `MERGED`, `Ran 1 test … OK`. So the healthy path through the real `push_resolved_head` is runnable on `LedgerFixture`.
+
+## Decisions after the PR review (CodeRabbit, PR #1614)
+
+| Finding | Disposition |
+|---|---|
+| Inline, minor: a nonzero `validate.sh --print-mode` exit with no `ENVIRONMENT FAULT` line returns the output tail and defers the PR (plan line 84 said the same) | **Accepted and fixed** in `06671b514`: return `''`, the pre-push hook stays authoritative. Consistent with this plan's own rule that a probe which cannot answer is skipped. Codex's final QA had accepted the fallback; the two reviewers disagreed and the stricter rule was chosen on the plan's own principle. Retained controls: `AC-1-nofault-red/green` and `AC-3-S8-*` in `provenance.jsonl`. |
+| Description check: PR body did not follow the template's checkbox sections | **Accepted**: PR body rewritten to the template. (The template's `check_machine_paths.py` does not exist in this repo; the real check is `pdda.sh hardcoded-paths`, which passes.) |
+| Walkthrough and pre-merge checks | All four passed; no finding. |
