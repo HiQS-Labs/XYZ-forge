@@ -19,3 +19,7 @@ The receipt (`smoke-steps1-2.log`) is one run, in order: the skill read through 
 Adjacent paths. (A) A simulated today with no ledger: both discovery paths are recorded, an uncapped title lookup (15 ledgers listed under a limit of 200, none for that date) and the weekly-links footer (no entry for that day), after which the stop "confirmed absent, offer to create, nothing written" is emitted by the receipt's own decision snippet. (B) A failed lookup (a repository that does not exist): `gh` exits nonzero, so the skill reports "unavailable", stops before drafting and makes no creation offer. The stop lines are what the skill directs an agent to print; the receipt records the observed command results that select them. Zero-write: only `gh issue list` and `gh issue view` ran, and the only path changed in the checkout was the receipt file.
 
 Not exercised: steps 3-9 (they need a real ledger update and the independent validator, which would write to an external issue); the Slack read (the skill says to state it was not checked).
+
+## Review state (honest)
+
+Plan QA: Approved by Codex at round 3. Final QA: Codex reviewed three rounds (the cap) and ended `Escalated`; its sole open finding at the cap was a smoke-receipt inconsistency (the command ledger omitted one `gh issue view`, and one logged command lacked its repository selector). Both were corrected after the cap, as factual fixes to the receipt only, and were **not re-reviewed**. Independent review did not approve the final artifact, so the PR is a draft.

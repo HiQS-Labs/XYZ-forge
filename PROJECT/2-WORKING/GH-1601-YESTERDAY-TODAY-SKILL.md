@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, clone provisioned, plan drafted; plan QA Approved at round 3 (Codex); skill, index row and evidence written; final QA round 1 findings fixed. | Final QA round 2, push, open the PR. |
+| Plan QA Approved (Codex, r3). Skill, index row and evidence written. Final QA ran 3 rounds (cap) and ended Escalated on one smoke-receipt inconsistency, corrected after the cap and not re-reviewed. | PR is a draft until a fresh independent review of the corrected receipt approves it (needs an operator-authorized extra round). |
 
 ## Requirements (operator brief, 2026-11-25)
 

@@ -20,7 +20,7 @@ $ gh issue list -R <example-repo> --state all --search "Planned Work Ledger in:t
 [rc=0]
 ledger issues listed: 15 (limit 200, so the list is not capped)
 titles containing "Dec 31, 2026": 0
-$ gh issue view <T> --json body   # most recent ledger's weekly-links footer, the second discovery path
+$ gh issue view <T> -R <example-repo> --json body   # most recent ledger's weekly-links footer, the second discovery path
 [rc=0]
 weekly-links footer found: True | days listed: ['Fri', 'Mon', 'Thu', 'Tue'] | covers the week of Nov 23-27 only; no entry for Thu Dec 31
 skill output: STOP. Today's ledger for Thu 2026-12-31 is confirmed absent (complete title lookup empty; weekly links have no such day). Offer: create it? Nothing written.
@@ -30,5 +30,5 @@ $ gh issue list -R <nonexistent-owner>/<nonexistent-repo> --state all --search "
 [rc=1]
 skill output: today's ledger lookup UNAVAILABLE (rc 1, not 'missing'). STOP before drafting; no offer to create.
 ## zero-write check
-gh subcommands run: list, list, view, list, list (no edit/create/comment)
+gh subcommands run, in order: list, list, view, list, view, list (no edit/create/comment; each view and list scoped with -R <example-repo> except path B, which targets a nonexistent repository on purpose)
 git status --porcelain after: 1 line (still only this receipt; no other path touched)
