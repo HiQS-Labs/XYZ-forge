@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -98,5 +98,54 @@ The operational envelope is the local developer merge-cleanup CLI and its caller
 5. Are the rating and rollback proportional? Can a changed candidate or a same-tip linked ref evade or contradict the proposed guard?
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Input boundary — I read the complete seeded plan, `PROJECT/2-WORKING/GH-1603-TRANSCRIPT-PARKING.md:1-44`, before reading implementation sources. The plan review brief supplies the artifact and criteria for this turn.
+
+**What this proposes**
+
+Capture primary readiness once for the Phase 0 display, audit row and dry-run footer, with stashes and behind-only counts advisory. Add a read-only check of transcript evidence before the caller publishes documentation history to a parking branch. A refusal leaves recovery local and subject to operator decision.
+
+**How the existing system works, per this document**
+
+Phase 0 checks whether the primary checkout can receive a landing, while the audit counts separately classified local refs for preservation. A linked branch can make two ref entries describe one commit. The orchestrator reports and gates landings; the merge-cleanup skill owns documentation parking and deep cleanup hands PR-worthy material to a fresh reviewed PR.
+
+**What it’s not**
+
+The change excludes a general-purpose secret scanner, automatic publication or ref repair, and relay-source prevention. A passing check carries the limitations at plan lines 35–38, including indirect or missing identities and files outside covered roots.
+
+**Source-backed assessment**
+
+I checked the related code and caller instructions in the relay worktree. The canonical clone's graph generation was `2026-11-25T18:12:31Z`, on a different revision from the named plan base, so the citations below use the worktree files. The findings below account for the defects found in the plan sweep and the relevant pre-existing source behavior.
+
+- [Should] F1 — Bind the parking decision to the publish input. Make the caller check the exact candidate checkout and commit OID against the verified integration baseline for the actual push destination, then publish that OID under the existing creation-only lease. Recheck any changed candidate before publishing it. Treat equality of commit OIDs only as a reason to reuse a history walk; distinct checkouts can still have different index and worktree evidence.
+  - Observed input: Plan lines 35–36 say to check the exact candidate again immediately before publication, yet `skills/2-daily/merge-cleanup/SKILL.md:179-192` describes inspecting a range, publishing a named branch to `origin`, then verifying its OID. The plan leaves the contract between the check and the push unstated. A creation-only destination lease checks whether the destination name exists. It supplies no evidence that the push source is the OID inspected, or that the destination used for publication is the one used to exclude already-published history. The candidate state also explicitly includes checkout-specific files (plan line 35), while `skills/2-daily/merge-cleanup/scripts/scan_clones.py:601-616,639-649` enumerates by ref even when OIDs match.
+  - Affected scope: Caller-owned remote parking of a candidate whose ref, destination or local evidence differs from the input to an earlier check.
+  - Falsifier: In a disposable clone, pass at clean tip A, then advance the named temp ref to B containing a fixture-private transcript before the publication step. The caller must refuse B or publish only A, as read back from the throwaway upstream. In a same-tip linked checkout, stage the private transcript only in the second index and expect refusal there despite the clean sibling result. Use the existing fetch and publication workflow; this needs no new lock or publisher.
+
+- [Should] F2 — Define what the ref count means when squash provenance is incomplete. Preserve conservative checkout dispositions and label the count as unknown or explicitly incomplete when the evidence cannot classify it conclusively. Keep it independent of the integration ahead/behind count.
+  - Observed input: Plan line 34 requires unknown on incomplete proof. In `skills/2-daily/merge-cleanup/scripts/scan_clones.py:662-692`, merged-PR lookup and diff failures add entries to `unlanded` and still yield `ok=True`. The empty/failed top-level path at lines 1082–1087 and 1447–1449 can also print zero. Using `prov["ok"]` as the sole display guard fixes only the latter. The held-on-lookup-failure behavior is already pinned in `test/gh534_phase_a_tests.py:252`.
+  - Affected scope: Audit rows and footer counts when ref enumeration/fetch fails or a non-ancestor ref requires a merged-PR or content comparison that cannot complete.
+  - Falsifier: A fixture with two refs at the same non-ancestor tip and a failed merged-PR lookup still preserves both refs, displays incomplete proof, and reports one integration-ahead commit. Repeat with a successful negative lookup and require a conclusive count of two refs. Separately fail fetch and require unknown without zero.
+
+- [Should] F3 — Make the acceptance checks reject partial delivery across exit paths and give the counts an explicit meaning. Record labeled dirt, stash, ahead, behind, and separate ref-provenance values. Reuse the one snapshot for the primary audit readiness fields and footer, with a consistent baseline for its ahead/behind comparison. Keep the existing live execute recheck.
+  - Observed input: Plan line 34 promises normal, scan-only, PR-only, discovery-error and selection-error coverage. Line 42 specifies a single dry run and “all four quantities” despite defining five distinct counts across that bullet and line 34. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2781-2794,2816-2817,2899-2900,3048-3049` has independent returns. The one outlined check can pass with four of five counts, one footer path, and no operation marker. Phase 0 precedes audit discovery at lines 2696 and 2755, and audit ref classification fetches at `skills/2-daily/merge-cleanup/scripts/scan_clones.py:595-599`. A report can mix cached and refreshed evidence unless the plan defines the snapshot boundary.
+  - Affected scope: The three named dry-run modes once Phase 0 has run, their discovery and selection errors, and advisory-only snapshots.
+  - Falsifier: On the same diverged fixture set up an operation marker, or add it in a fixture variant. Require the last 20 lines of each mode to carry the blockers and named counts, including the two-ref versus one-ahead distinction. Inject discovery and selection failures and assert their existing nonzero exits and the same footer. With a clean behind-only/stash-only fixture require READY and visible advisory counts. Exercise cached origin plus a newer bare-upstream tip to show that the audit's primary readiness fields and footer still agree with the Phase 0 snapshot.
+
+- [Should] F4 — Exercise the transcript decision through the caller procedure, and define the standalone check's read-only boundary. Dispatch the existing CLI's precheck before the ordinary scan, use read-only local evidence, and leave the caller's existing origin refresh in place. Record the actual root names and reuse a single checker for Phase 0 and standalone.
+  - Observed input: Plan line 43 compares refs and status around the precheck and requires Phase 0 advice, but never checks that the caller skips publication. `skills/2-daily/merge-cleanup/SKILL.md:187-203` still publishes and proceeds after verification. The standalone CLI currently unconditionally scans after parsing options (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:1494-1516`), which goes through `inspect_checkout:1077-1079` to fetch at lines 595–599. A fetch can write FETCH_HEAD while the observed refs and status remain identical.
+  - Affected scope: The standalone candidate flag and the caller's remote parking path, including candidates outside the primary checkout.
+  - Falsifier: In the existing manual matrix use a fixture-private ref, an unavailable/identity-mismatched lookup and an unreadable or unidentified transcript. For each, require refusal and demonstrate no remote temp branch was created by reading the bare upstream. Run the public-positive and same-repo ordinary-docs controls. Include concrete separate staged, untracked, removed-intermediate and rename-across-root cases. Trace the standalone path for absence of fetch or ref/index writes, comparing FETCH_HEAD, refs and index as well as status. Retain the red/green results under the established receipt convention.
+
+- [Pass] The readiness/parking ownership and rollback fit the task. Plan lines 34–38 preserve the existing execute gate and put local preservation and any publish decision with the caller. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2702-2710,2902-2919` already owns the strict gate and live refresh. `skills/3-weekly/merge-cleanup-deep/SKILL.md:131-139,189-205` forbids pushes from reviewed clones and hands selected work to a fresh PR. `utils/py/consult.py:701-709` and `relay-automation/relay-turn-lib.sh:125-128` establish the normal consult/relay root and archive layout. The 85/85/50/75 rationale and patch-revert rollback are proportionate for this bounded implementation. The publication decision itself carries disclosure risk, which the local fallback avoids.
+- [Unverified — needs clone run] The baseline claimed at plan line 42 has a source-backed rejection: `scan_clones.py:1389-1399,1443-1449` reports local commits and a ref count independently, with no behind count, and `merge_cleanup.py:2862-2866,3048-3049` refers back to Phase 0 and ends without repeating the details. The base parking path at `SKILL.md:179-192` has document-history classification followed by a remote publish and lacks a transcript visibility decision. I did not execute a live red/green fixture or gate in this relay. Use the existing `test/gh436-merge-cleanup.sh` and `test/codex-turn.sh` plus the required full gate in a disposable full clone, as called for by plan lines 38 and 44. No new suites or registry entries.
+
+VERDICT: FAIL
+
+Basis: The plan needs explicit binding between check and publication, a complete provenance display contract, and acceptance checks that discriminate the promised early-return and caller paths from partial delivery. Producer should revise the plan and disposition F1–F4 before the next review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
