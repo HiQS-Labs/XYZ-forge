@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -162,5 +162,37 @@ Dispositions (each verified against the source before acting; `planner_core.py:3
 - [Nit] Status table: **Implemented.**
 
 Handing off to Reviewer for round 2.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+**What this proposes.** Add a short prompt-only skill that finds today’s and the previous workday’s GitHub ledgers, checks yesterday’s work and feedback, and uses that evidence to update today’s body. The update preserves the goal and completion estimate, checks for intervening edits before publishing, and gets one independent review of the published body.
+
+**How the existing system works, per this document.** Daily Planner discovers date-stamped ledger issues and records a single operator’s work in claim comments. Its engine also writes local planner output, so the proposed workflow borrows the discovery conventions and performs the lookups itself with read-only GitHub commands.
+
+**What it's not.** The frontmatter excludes helper code, changes to Daily Planner, unattended creation of a missing ledger, server writes, and installation.
+
+**Input boundary.** Plan frontmatter `non_goals` and `goal`, and Status, Requirements, Recon, Preflight bet, Plan, Acceptance, Verification, and Risks. This paraphrase was drafted before opening the issue or implementation source this round.
+
+**Step B — source-backed**
+
+Plan line citations refer to `.relay-artifacts/GH-1601-YESTERDAY-TODAY-SKILL.md`.
+
+- [Pass] The new skill fits the documented unit of work. Daily Planner discovers ledger titles, verifies claim-comment authorship, and checks the operator's own PRs and review requests (`skills/2-daily/daily-planner/SKILL.md:151-155,167-175`). Its publishing branch calls `sync_daily_ledger_comment` (`skills/3-weekly/weekly-planner/scripts/planner_core.py:3128-3144`), and the CLI writes JSON and Markdown even without publishing (:3299,3325-3331). Plan :64,81 correctly reuses title, timezone and canonical-issue conventions without calling the engine. The alternatives work at a different scope: local telemetry (`skills/2-daily/daily-planner/SKILL.md:132`), topic assessment (`skills/2-daily/where-are-we-at/SKILL.md:14-25,42`), a shared weekly planning engine (`skills/3-weekly/weekly-planner/SKILL.md:49-50`), and per-issue closeout comments (`skills/2-daily/todo-list/SKILL.md:166-187`). Plan :64-76 satisfies the existing-skill check in `skills/README.md:25-28`. The prompt-only design is proportionate.
+- [Should] Save the body used to draft the update before drafting. **Observed input:** Plan :88 starts by rewriting today's body and only then introduces “save the old body to a file.” Its equality branch permits the edit without tying the saved body to the draft's input, contrary to the no-blind-overwrite requirement at Plan :40. If the draft is based on body `A`, and the snapshot and pre-edit read both see `A + teammate update`, the specified equality check passes while the draft still omits the update. **Affected scope:** today's body changes after it was read for drafting and before the saved snapshot. Make the initial successful body read both the saved baseline and the source of the draft. On rebase, use the newly read body as both, then repeat the comparison. **Falsifier:** given draft source `A` and a later read of `A + teammate update`, the instructions allow only a rebased draft preserving the update or a stop. The explicit failed-read and changed-body branches and the published-body validator at Plan :88-89 resolve the other parts of the first-round finding.
+- [Should] Make an unresolved prior ledger a stop before drafting. **Observed input:** Plan :82 distinguishes failed or incomplete lookups and explicitly stops on absent **today** only. Plan :83 immediately requires reading yesterday's confirmed ledger, and Plan :22-25,84 requires its claims as input. For a resolved prior date of Tuesday with only Monday and Wednesday ledgers present, step 2 has no Tuesday issue to read, yet Tuesday's absence has no explicit stop. **Affected scope:** the resolved prior workday is missing, or either ledger lookup is unavailable. Stop without rewriting today's body when either required input is unavailable, and report the precise failed or missing lookup. Use the offer to create only for confirmed absence of today's ledger. **Falsifier:** a successful lookup finds an older ledger and today's ledger but no ledger for the resolved prior workday. The skill reports that gap without treating yesterday as empty or silently using the older issue.
+- [Pass] The other operational lessons are reflected in the steps. Plan :84-87 covers checkbox claims, head-aware reviews, linked deployment evidence, no server access, full feedback, Slack disclosure, outstanding review requests, local trial sequencing, and the plan-versus-approval boundary. Plan :88-90 preserves the goal and estimate components, requires the low-effort read-only Codex `gpt-6.2-astra` validator to fetch the published issue using the two URLs and checklist, and spells out all traps and the four final-reply fields. Plan :93-94,106 adds provenance, final relay QA and the `development` PR base from [GH-1601 §3](https://github.com/HiQS-Labs/XYZ-forge/issues/1601). The stale unconditional changelog reference in the status table is gone (Plan :34,92).
+- [Pass] The required registration is one row with a purpose in the `2-daily` index (`skills/README.md:13,17-24`, `ARCHITECTURE.md:75-84`). The viewer globs the skill tree and compares its count and names to disk (`mini/skills/skill-viewer/scripts/list_skills.py:83-84`, `test/gh589-skill-viewer.sh:17-25`). The proposed skill path is a docs surface (`utils/ci-route.sh:63-69,333-344,459-477`).
+- [Pass] A1 now requires a usable entry file with metadata and triggers. A2 tests content by mapping all nine requirements and removing one for the red control. A3 requires nonempty inputs and a planted-string control. A4's linked entry distinguishes the candidate from base independently of the existing suites. A5 exercises the loaded skill's steps 1–2 on a real pair, plus the missing-today stop and failed-lookup distinction. A6 requires a nonempty diff and rejects a planted test path. These are materially better than presence-only and empty-input checks (Plan :98-105). A1, A2 and A5 need the new skill, A3 needs the named candidate deliverables, A4 needs the new row, and A6 needs the candidate diff. These are plan checks. Smoke and suite execution remain [Unverified — needs clone run].
+- [Should] Align the A6 allowlist with the plan's changelog mode. **Observed input:** Plan :92 allows a `CHANGELOG.md` write when branch mode calls for it, and `PROJECT/PDDA.md:1064-1067` requires that write in `CHANGELOG_WRITES=branch`. Plan :105 excludes that path unconditionally. **Affected scope:** a candidate prepared with branch mode enabled. Admit the file only when the existing branch-write condition applies, or state that this plan uses the default and omits the branch-mode case. **Falsifier:** for a branch-mode candidate with the required entry, the same A6 check accepts the documented delivery paths and still rejects `test/new-suite.sh`.
+- [Nit] Call the quoted A4 string the first cell of the required row and require a nonempty purpose cell. Plan :103 calls the cell the “exact row,” while `ARCHITECTURE.md:79-84` has two columns. Narrow probe `python3 -c 'from pathlib import Path; a=Path("ARCHITECTURE.md").read_text().splitlines(); prefix="| [daily-planner](skills/2-daily/daily-planner/SKILL.md) |"; print("existing row as full line:", prefix in a); print("existing row as prefix:", any(line.startswith(prefix) for line in a)); print("seeded skill exists:", Path("skills/2-daily/yesterday-today/SKILL.md").is_file()); print("seeded index contains link:", any("[yesterday-today](skills/2-daily/yesterday-today/SKILL.md)" in line for line in a))'` → exit 0, `existing row as full line: False`, `existing row as prefix: True`, `seeded skill exists: False`, `seeded index contains link: False`. The named base commit was not independently queried.
+- [Nit] In the preflight summary at Plan :75, name Codex for the ledger validator and leave relay-xyz with implementation QA as specified at :67,89,94.
+
+The entire seeded plan was swept, including existing sections. The findings above include the remaining defects found in that sweep. The closest graph was the main Forge checkout (generation 2026-11-23T23:18:20Z). The seeded plan and relay were absent from that index, so the citations and decisions use direct worktree reads. Setup names no reviewer phase gate.
+
+VERDICT: FAIL
+
+Basis: The plan needs to bind the publish guard to the draft's actual input, stop on an unresolved prior ledger, and reconcile the changelog rule with A6. Handing off to Producer to revise the plan and return it for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
