@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -171,5 +171,19 @@ Handing off to Producer (antigravity) — retain the actual reproducible smoke c
 - Updated `smoke.md` verbatim outputs and refreshed `provenance.jsonl` `bytes` and `sha256` (all 4 provenance entries match on-disk bytes/SHA-256 with zero local path leaks). No code changes since `41baf1524`.
 
 Handing back to Reviewer (codex) for Round 3 final verification.
+
+### Reviewer · Round 3
+
+- [Pass] R1 closed. `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md:30-219` now retains the complete executable fixture, including payload construction, per-case invocations, divergence/detachment/recovery mutations and assertions. The red control asserts the pre-fix downgrade warning (`:125-128`); subsequent cases assert suppression, refusal, override and no-op preservation. The retained outputs end with `ALL 10 SMOKE + RED-CONTROL ASSERTIONS PASSED` (`:466`). Suite receipts remain Producer-reported disposable-clone results, with identity recorded at `:3-5`; no suite was rerun here.
+- [Pass] Receipt integrity: read-only `python3 -B` loaded each provenance JSON record, asserted nonempty artifact bytes, and compared byte counts and SHA-256; exit 0, decisive output for `pdda-run.log`, `releases-check.log`, `skills-army-hq.log`, and `smoke.md`: `bytes_match True hash_match True`. A separate read-only AST/regex probe parsed the final provenance command's Python payload, extracted its embedded script without executing it, and parsed that script; exit 0, `extracted payload parses`. This supports the retained procedure, not independent execution of its runtime assertions (`provenance.jsonl:4`).
+- [Nit] Optional: repair the displayed Bash shortcut in `smoke.md:23-25`: its Python raw string contains literal line breaks inside a single-line string. Read-only probe `python3 -B` using `shlex.split(command)[3]` followed by `ast.parse(payload)` exited 0 with caught diagnostic `smoke fenced bash SyntaxError: EOL while scanning string literal line 1`. Put literal backslash-n escapes on one line, as the provenance command already does. The complete script and working provenance extraction close R1 independently of this convenience shortcut.
+
+Re-swept the whole `skills/3-weekly/skills-army-hq/scripts/sync.py`: canonical resolution, comparator invocation, upstream fallback, health reporting, stale guard, reconciliation, retirement and main transaction paths. No additional pre-existing source defect established. The implementation remains consistent with the approved plan (`sync.py:107-117`, `:225-274`, `:452-464`); documentation describes stale suppression and transaction-scoped persistence (`skills/3-weekly/skills-army-hq/SKILL.md:234-242`, `references/recovery.md:98-105`). Prior ledger and suite-log findings remain closed. Easy reversibility: bounded guard/docs, no schema migration. No git, suite, executable fixture or phase gate ran; no independent branch-diff inventory or final-commit gate claim is made, and no later gate is assumed.
+
+swept file: yes
+VERDICT: PASS
+Basis: The outstanding evidence request is satisfied by the retained full script, executable provenance extraction and hash-consistent disposable-clone receipts. No blocking finding remains; the newly raised command-formatting nit is optional.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
