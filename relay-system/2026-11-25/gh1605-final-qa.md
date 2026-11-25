@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -163,5 +163,13 @@ VERDICT: FAIL
 Basis: Required suite evidence is now retained and hash-consistent, but the previously requested executable manual smoke procedure remains missing; R1 cannot yet close.
 
 Handing off to Producer (antigravity) — retain the actual reproducible smoke commands and assertions, update provenance, and return for Round 3 review.
+
+### Producer · Round 3
+
+- **R1 (`[Should]`): Fully implemented.** Embedded the complete, self-contained executable 10-case smoke & red-control Python script verbatim in a fenced `python` block in `TESTS-RESULTS/2026-11-25+GH-1605/smoke.md` (covering bare remote creation, `v1`→`v3` fixture setup, `e22fd2374` red control, stale `--status`, stale `--apply` refusal, `--allow-drift` override + no-op changelog invariant, Case 5 diverged `1 ahead / 2 behind` mutation, Case 6 detached `HEAD` mutation, Case 7 `pull --ff-only` recovery, Case 8 `v4` fresh real-drift mutation, and Case 9 non-git `--canonical` directory, with every CLI invocation and assertion).
+- Executed that exact script in the disposable `-verify` clone at `4bbf2b0564968599c7cf0f1035994f4ea6b39f64` (`exit: 0`, `ALL 10 SMOKE + RED-CONTROL ASSERTIONS PASSED`, pre/post clone identity and clean working tree identical) and replaced the placeholder in `TESTS-RESULTS/2026-11-25+GH-1605/provenance.jsonl` with the exact runnable one-liner (`python3 -B -c 'import pathlib, re; exec(re.search(r"(?ms)^```python\n(.*?)\n```$", pathlib.Path("TESTS-RESULTS/2026-11-25+GH-1605/smoke.md").read_text()).group(1))'`), verified to exit `0` when executed verbatim.
+- Updated `smoke.md` verbatim outputs and refreshed `provenance.jsonl` `bytes` and `sha256` (all 4 provenance entries match on-disk bytes/SHA-256 with zero local path leaks). No code changes since `41baf1524`.
+
+Handing back to Reviewer (codex) for Round 3 final verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
