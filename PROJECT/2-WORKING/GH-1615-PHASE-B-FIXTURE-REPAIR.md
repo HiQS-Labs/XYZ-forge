@@ -1,6 +1,6 @@
 ---
 title: "Make the merge-cleanup phase B suite green when run on its own; the gate already runs it (correct the 'ungated' premise)"
-status: "In progress (plan QA pending)"
+status: "In progress (final QA pending)"
 created: 2026-11-25
 updated: 2026-11-25
 owner: Noel Saw
@@ -29,7 +29,7 @@ goal: "Running `python3 test/gh534_phase_b_tests.py` (and phase C, which imports
 
 | What was just completed | What's next |
 |---|---|
-| Fresh task clone, Issue #1615 registered, recon and failure analysis done. The recon **overturned the issue's premise** (the gate already collects this suite); plan rewritten around that. | Codex plan QA via relay-xyz; then implement the reviewed scope. |
+| Plan approved by Codex on round 2 (round 1: one finding, retained receipts, closed). Implemented in `1a9cf2823`: phase B 39/39, phase C 111/111, gated wrapper 227 OK, both production mutants rejected, importer driver 18/18; evidence under `TESTS-RESULTS/2026-11-25+GH-1615/`. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
 
 ## Observed (measured at base `d3b238ed5`, not remembered)
 
