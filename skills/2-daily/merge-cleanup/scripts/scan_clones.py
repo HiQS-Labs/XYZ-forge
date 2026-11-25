@@ -488,9 +488,14 @@ def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
         if not isinstance(prs, list):
             raise ValueError("pr list is not a list")
         for pr in prs:
+            if not isinstance(pr, dict):
+                raise ValueError("merged PR entry is not an object")
             if pr.get("state") != "MERGED" or pr.get("baseRefName") != integration_branch:
                 continue
-            mc = (pr.get("mergeCommit") or {}).get("oid")
+            merge_commit = pr.get("mergeCommit")
+            if not isinstance(merge_commit, dict):
+                raise ValueError("merged PR entry lacks merge-commit evidence")
+            mc = merge_commit.get("oid")
             head = pr.get("headRefOid")
             if isinstance(head, str) and isinstance(mc, str) and head and mc:
                 result["by_head"][head] = {"number": pr.get("number"), "mergeCommit": mc}
@@ -1265,7 +1270,8 @@ def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = No
 def checkout_status(path: Path) -> Tuple[List[str], str]:
     """Count individual porcelain entries; rename/copy source fields aren't extra entries."""
     try:
-        result = run_git(path, ["--no-optional-locks", "status", "--porcelain", "-z", "--untracked-files=all"])
+        result = run_git(path, ["status", "--porcelain", "-z", "--untracked-files=all"],
+                         env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"))
     except UnicodeError:
         return [], "working-tree paths could not be decoded"
     if result.returncode or result.stderr.strip():
@@ -1295,7 +1301,8 @@ PARKING_REFUSED = (
 )
 
 
-def transcript_parking_problem(path: Path, baseline: str, tips: List[str]) -> str:
+def transcript_parking_problem(path: Path, baseline: str, tips: List[str],
+                               *, require_origin: bool = False) -> str:
     """Read local history and this checkout's index/worktree without fetching or writing."""
     def git_output(args: List[str]) -> str:
         result = run_git(path, ["--no-optional-locks", *args])
@@ -1328,6 +1335,8 @@ def transcript_parking_problem(path: Path, baseline: str, tips: List[str]) -> st
         origin_url = git_output(["remote", "get-url", "origin"]).strip()
         origin_match = re.fullmatch(rf"{GITHUB_REMOTE}({GITHUB_SLUG})/?", origin_url, re.IGNORECASE)
         origin = origin_match[1].lower().removesuffix(".git") if origin_match else ""
+        if require_origin and not origin:
+            return "Could not establish the parking origin repository identity."
         foreign: set = set()
         raw = ["--raw", "--no-abbrev", "--no-renames", "-z"]
         scoped = ["--", *TRANSCRIPT_ROOTS]
@@ -1665,7 +1674,7 @@ def main():
             print(f"Cannot resolve the candidate checkout and commit. {PARKING_REFUSED}")
             return 1
         baseline = f"refs/remotes/origin/{args.integration_branch}"
-        problem = transcript_parking_problem(path, baseline, [tip.stdout.strip()])
+        problem = transcript_parking_problem(path, baseline, [tip.stdout.strip()], require_origin=True)
         if problem:
             print(f"{problem} {PARKING_REFUSED}")
             return 1
