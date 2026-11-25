@@ -81,47 +81,50 @@ Constraints: about 20 to 30 added lines, file under about 140 lines, plain Engli
 ```
 ## 5a. Deploy-day run sheet (only when a deploy is planned today)
 
-Applies when yesterday's or today's ledger, or a linked deploy checklist, plans a deploy today.
-If none does, add nothing. The sheet is the first section of today's body (step 7). Link the
-repo's own deploy docs and name the step; do not restate a deploy procedure.
+Applies when yesterday's ledger, today's ledger or a linked deploy checklist plans a deploy
+today; otherwise add nothing. Read today's side from the same first read of today's body that
+step 7 uses as its baseline, and recompute if step 7 redrafts from a newer read. The sheet is
+the first section of today's body. Link the repo's deploy docs; do not restate a procedure.
 
 One row per step, gates first (go-ahead, deploy, after-deploy checks): step | named owner |
 planned time | exact method (where it runs, with which access) | what a pass looks like |
 what stops the deploy.
 
 - A gate with no owner, time and method is not planned. Ask it as a morning question, never carry
-  it as prose. That includes who deploys, who gives the go-ahead and when, and who does the
-  after-deploy checks (a late-evening one too).
-- Test each step against the real code and the target environment before writing it. Example: a
-  config change on a staging host is valid only if the code running there supports it (read that
-  host's recorded commit). A step copied from an older checklist is a claim, not a fact.
+  it as prose: who deploys, who gives the go-ahead and when, who does the after-deploy checks
+  (a late-evening one too).
+- Check each step against the real code and the target environment using what is recorded: the
+  repo, the PR, a deploy log. Example: a staging config change is valid only if the code running
+  there supports it; that host's recorded commit says what runs. A step copied from an older
+  checklist is a claim, not a fact. If only a read or run on the host could settle it, ask it as
+  a question and plan it as an owner's step; this skill makes no host read.
 - Check access early (sign-ins, VPN, Docker, free disk) and name the fallback machine in the row.
 - A pass is evidence, not absence: each check says what it must have seen (row counts, named
   items), so a query that matched nothing cannot read as "all on".
-- Some checks only count right before the deploy. Put a timer on them and say why in the row,
-  and rehearse the method early.
+- Some checks only count right before the deploy. Put a timer on them and say why in the row;
+  plan an early rehearsal of the method as its own row.
 - List known review findings on every included PR once, with grade and who accepted each. A new
   finding: first see whether a reviewer already considered it.
-- Read-only by default. The sheet is a plan, never an approval: a server write needs the
-  operator's explicit approval for that action, with backups first.
+- Read-only by default. The sheet is a plan, never an approval: any later server write needs the
+  operator's explicit approval for that action, with backups made first.
 ```
 
-Step 7 gains one clause ("a run sheet from step 5a goes first"). Step 8 gains item 6: "If a deploy is planned, is the run sheet first, one row per step with owner, time, method, pass evidence and stop condition, ownerless gates asked as questions, and no approval implied? On a no-deploy day, was nothing added?"
+Step 7 gains one clause ("a run sheet from step 5a goes first and is recomputed on a redraft"). Step 8 gains item 6: "If a deploy is planned, is the run sheet first, one row per step with owner, time, method, pass evidence and stop condition, ownerless gates asked as questions, and no approval implied? On a no-deploy day, was nothing added?"
 
 ## Acceptance
 
-Unchanged base `b479f74e0` must fail each assertion; the control is recorded.
+Feature checks fail on the unchanged base `b479f74e0`; safeguards (A3, A5, A6) are shown with a controlled bad input. All manual, recorded under `TESTS-RESULTS/` (GH-831).
 
-- [ ] A1 Run sheet text: the skill contains step 5a with all six columns, "gates first", the no-deploy "add nothing" rule, and one bullet per lesson 1-7 (checker prints line numbers). Red control: base prints missing; a copy with the lesson-4 bullet removed reports it missing.
-- [ ] A2 Size and shape: added lines within 20-30 (plus the two small edits), file under about 140 lines, steps 6-9 keep their numbers, step 8 has a run-sheet line. Red control: base shows 107 lines and no run-sheet line.
-- [ ] A3 Privacy scan: one fixed-pattern `rg -n -i` over the skill, this plan and the evidence folder (client, product, people, host names, emails, private links), after confirming each is nonempty. Red control: a planted string is found.
-- [ ] A4 Smoke: with-deploy dry-run yields one sheet with gates first and the ownerless gate as a question; without-deploy dry-run adds nothing; zero writes (`git status --porcelain` clean outside `TESTS-RESULTS/`, no `gh` write in the log).
-- [ ] A5 Diff invariant: changed paths limited to the skill, this plan, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`; no `test/` path (GH-831).
-- [ ] A6 Delivery: final QA receipt committed, PR base `development`.
+- [ ] A1 Content: the skill has step 5a with all six columns, "gates first", the no-deploy "add nothing" rule, the today's-body baseline sentence, one bullet per lesson 1-7, and step 8 item 6; checker prints line numbers. Base prints missing for each. Control: a copy with the lesson-4 bullet removed reports it missing.
+- [ ] A2 Size and numbering: measured added lines from `git diff --numstat` are within 20-30 for step 5a plus the two small edits, the file is under about 140 lines, and the step headings 1-9 still carry their numbers. Base: 107 lines, no 5a.
+- [ ] A3 Privacy: one fixed-pattern `rg -n -i` (client, product, host, email, private-link shapes) over the skill and the evidence folder, each confirmed nonempty; the plan file is scanned separately and its required `owner` field is listed as project metadata, not a finding. Control: a planted fictional token is found.
+- [ ] A4 Smoke, from the consumer entry point (the skill read through its path in this clone), two fictional ledger pairs, read-only, whole proposed body captured and not published. Deploy case: one complete gate and one gate with no owner; expect exactly one six-column sheet first, gates first, the incomplete gate asked as a question, the goal header intact. No-deploy case: zero run-sheet output. Replay the base skill on the deploy input and witness no sheet. Action log shows no `gh` write and no host or deploy operation; checkout state checked separately (`git status --porcelain` clean outside `TESTS-RESULTS/`).
+- [ ] A5 Diff invariant: changed paths limited to the skill, this plan, `releases.db`/`releases.sql`, `relay-system/`, `TESTS-RESULTS/`, and the skill diff must be nonempty. Controls: a synthetic `test/new-suite.sh` is rejected, an empty skill diff is rejected.
+- [ ] A6 Delivery: a final-QA receipt for the delivered revision is committed and the opened PR's actual base is `development`. Controls: a missing receipt and a wrong-base value are each rejected by the same check.
 
 ## Verification
 
-Docs route: `utils/pdda/pdda.sh run` and `ci-local.sh --fast` on the final approved commit, then the one push (hook decides the route). No new suite or registry entry; checks are manual and recorded under `TESTS-RESULTS/` with provenance.
+Docs route: `utils/pdda/pdda.sh run` and `ci-local.sh --fast` (a local check only: it skips the suite and keeps no qualifying gate record) on the final approved commit, then the one push, whose hook decides the real route from the changed paths. No new suite or registry entry; checks are manual and recorded under `TESTS-RESULTS/` with provenance.
 
 ## Risks
 

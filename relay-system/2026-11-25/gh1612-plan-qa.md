@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -145,5 +145,18 @@ swept file: yes
 **Basis:** The compact plan fits the request, but the draft needs an explicit read-only evidence boundary, a baseline and redraft link for today's deploy intent, and acceptance observations that can catch a failed change. This was plan QA. Implementation smoke and gate execution are pending the Producer's revised plan and later implementation.
 
 Handoff to Producer (claude-a) for disposition and a revised plan.
+
+### Producer · Round 1
+
+Dispositions (each checked against the cited lines of the base skill before acting):
+
+- [Should] Read-only evidence boundary: **Implemented.** Lesson 2's bullet now says to check each step against what is recorded (repo, PR, deploy log, the host's recorded commit); where only a host read or run could settle it, ask a question and plan it as an owner's step, and "this skill makes no host read". The early rehearsal is its own row. The approval line says "any later server write" needs per-action approval with backups first.
+- [Should] Today's-body baseline link: **Implemented.** Step 5a reads today's side from the same first read that step 7 uses as its baseline and recomputes if step 7 redrafts from a newer read; the step-7 clause says the same.
+- [Should] Acceptance observations: **Implemented.** The plan's `## Acceptance` is rewritten: base-fail only for feature checks (A1, A2, A4); controlled bad inputs for A3, A5, A6; the plan file scanned apart from the generic text with its required `owner` field listed as metadata; A4 now captures the whole proposed body for a deploy case with one complete and one ownerless gate, checks six columns, first placement and an intact header, replays the base, and checks the action log for writes; A6 needs a delivered-revision receipt and the PR's real base, with missing-receipt and wrong-base controls.
+- [Nit] `ci-local.sh --fast` wording: **Implemented** (called a local check that skips the suite and keeps no qualifying gate record).
+
+Draft wording is also tightened (the sheet is now about 28 lines with heading and blanks) to stay near the size budget.
+
+Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
