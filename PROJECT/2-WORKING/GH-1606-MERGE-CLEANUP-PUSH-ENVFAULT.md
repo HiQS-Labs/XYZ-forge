@@ -1,6 +1,6 @@
 ---
 title: "merge-cleanup: gate-toolchain fault must not burn a B1 repair slot or hide its cause"
-status: "In progress (plan QA pending)"
+status: "In progress (final QA pending)"
 created: 2026-11-25
 updated: 2026-11-25
 owner: Noel Saw
@@ -27,7 +27,7 @@ goal: "A B1 repair is never started while the push gate cannot run: the PR is de
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA rounds 1–2 returned FAIL; round 1's three findings and round 2's single remaining item (healthy push seam) were all accepted and fixed, with a measured pre-existing phase B breakage recorded. | Codex plan QA round 3 (last of the cap); then implement the reviewed scope. |
+| Plan approved by Codex on round 3 (rounds 1–2 FAIL, all findings fixed). Implemented in `cabf9c530`; controls, smoke and the three gated merge-cleanup suites recorded under `TESTS-RESULTS/2026-11-25+GH-1606/`. | Final Codex relay QA on the diff; then the qualification gate, push, PR and closeout comment. |
 
 ## Observed problem (measured, not remembered)
 
