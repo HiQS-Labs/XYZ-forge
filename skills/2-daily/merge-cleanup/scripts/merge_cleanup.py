@@ -189,6 +189,7 @@ MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
 PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-push hook, which can run a gate
+GATE_PROBE_TIMEOUT_S = 60     # GH-1606: validate.sh --print-mode toolchain probe (no suites run)
 DEFAULT_CANARY_TIMEOUT_S = 300  # bound for intermediate canary execution in disposable clone
 
 # GH-1226: every PR this run merged, for the post-run merged ⊆ --prs assertion (batch or not).
@@ -1067,6 +1068,32 @@ def gate_unwired_reason(clone: Path, install: bool = False) -> str:
     return ""
 
 
+def gate_toolchain_fault_reason(clone: Path) -> str:
+    """GH-1606: '' unless the clone's own `validate.sh --print-mode` reports a blocking toolchain fault.
+
+    The pre-push gate's first act is validate.sh's toolchain probe: an old interpreter or missing
+    modules exit 3 before any suite runs. `--print-mode` is that same probe with no suites and no
+    accounting, run under the PATH the push will inherit, so a B1 repair slot is not spent on a push
+    the gate will refuse at once. Foresight, not a second gate: a clone with no validate.sh (a consumer
+    repo, whose own qualification applies) and a probe that cannot answer (spawn error, timeout) give
+    '' and the pre-push hook stays the enforcing authority. Advisory diagnostics (php) exit 0 and are
+    not a fault here.
+    """
+    script = Path(clone) / "validate.sh"
+    if not script.is_file():
+        return ""
+    try:
+        res = subprocess.run(["bash", str(script), "--print-mode"], cwd=str(clone), capture_output=True,
+                             text=True, timeout=GATE_PROBE_TIMEOUT_S, check=False)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return ""
+    if res.returncode == 0:
+        return ""
+    out = ((res.stdout or "") + (res.stderr or "")).strip()
+    fault = next((ln.strip() for ln in out.splitlines() if "ENVIRONMENT FAULT" in ln), "")
+    return fault or f"validate.sh --print-mode exited {res.returncode}: {out[-300:]}"
+
+
 def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
                           workdir: Path) -> Dict[str, Any]:
     """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
@@ -1406,10 +1433,16 @@ def _probe_text(cmd: List[str]) -> str:
     return res.stdout if res.returncode == 0 and isinstance(res.stdout, str) else ""
 
 
-def preflight_warnings() -> List[str]:
+def preflight_warnings(primary_repo: Optional[Path] = None) -> List[str]:
     """GH-1475 (F1, F2, F10): read-only hazards for an unattended batch. Warnings only; a probe
-    that cannot answer stays silent."""
+    that cannot answer stays silent. GH-1606: with `primary_repo`, also the gate toolchain probe."""
     out = []
+    if primary_repo is not None:
+        toolchain = gate_toolchain_fault_reason(primary_repo)
+        if toolchain:
+            out.append(f"the pre-push gate's toolchain probe reports a fault ({toolchain}); advisory and "
+                       "specific to the primary checkout. --execute probes each conflicted PR's landing clone and "
+                       "defers it (exit 3) before spending a repair slot; fix PATH first")
     try:
         free_gb = shutil.disk_usage(tempfile.gettempdir()).free / 1e9
         if free_gb < PREFLIGHT_MIN_FREE_GB:
@@ -2133,6 +2166,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                                 f"already shows {attempt_record.MAX_REPAIRS} repairs")
                         log_err(f"  export {attempt_record.RECORD_ENV}={record_path}  # caller ladder: /unstuck")
                         failed[p_num] = "previously parked (resume)"
+                        continue
+                # GH-1606: a repair slot is bounded and durable, so do not spend one while the gate that
+                # must accept the repaired head cannot run. Defer (exit 3, queue continues) like any other
+                # fixable precondition; fix PATH and re-run. Execute only: a dry run reserves nothing.
+                if not dry_run:
+                    toolchain = gate_toolchain_fault_reason(clone)
+                    if toolchain:
+                        log_err(f"PR #{p_num}: DEFERRED — the pre-push gate cannot run here, so no repair slot "
+                                f"was spent: {toolchain}")
+                        failed[p_num] = f"deferred: gate toolchain ({toolchain[:120]})"
                         continue
                 # C: one durable attempt record at the pinned coordinator (the --primary path),
                 # shared with the caller's repair rungs. B1 is a repair: it needs a slot.
@@ -2912,7 +2955,7 @@ def main():
         jog_warning = jog_primary_precondition(primary_repo, [p for p in prs if int(p.get("number", 0)) in args.prs])
         if jog_warning:
             log_warn(jog_warning)
-        for warning in preflight_warnings():
+        for warning in preflight_warnings(primary_repo):
             log_warn(f"PRE-FLIGHT: {warning}")
     if prs and not args.prs:
         log("Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).")
