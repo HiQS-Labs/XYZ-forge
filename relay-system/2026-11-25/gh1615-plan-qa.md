@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -83,6 +83,10 @@ ROUND: 1 / 3
 - XYZ-forge forbids new tests (`AGENTS.md` *No new tests*, GH-831): a new `test/` suite, a `validate.sh` entry or gate machinery is itself a finding. Editing an EXISTING suite to keep it truthful is allowed. Verification is an existing suite or a manual check under `TESTS-RESULTS/` with `provenance.jsonl`.
 - The plan's non-goals (frontmatter `non_goals`) are the author's; say which you accept and which you contest, with evidence.
 
+### ROUND 2 INSTRUCTIONS (read first)
+- **Format:** inside your review block use **bold labels** (for example `**Q1**`), NEVER markdown heading lines (`#`, `##`, `####`). The driver counts a block's body only up to the next heading line; round 1's `####` sub-headings made it read your block as empty.
+- **No new paraphrase needed.** Focus on: (a) is R1-1 closed? Spot-check at least three rows of `TESTS-RESULTS/2026-11-25+GH-1615/provenance.jsonl` against the plan's claims and the revision `d3b238ed5` (the receipts are in the repo, readable in your worktree); (b) the AC-5 tightening in the plan; (c) anything new that blocks approval. Keep the required `swept file: yes|no` line and `VERDICT:` / `Basis:`.
+
 ### Step 1: paraphrase first (GH-1414), BEFORE reading any source file
 Read ONLY the artifact under review. Then, before any source-backed assessment, write under three labelled headings: **What this proposes** (2-5 sentences), **How the existing system works, per this document** (2-5 sentences), **What it's not** (short; ground each exclusion in a plan section; separate excluded work, deferred work, unresolved choices and later authorization; label inference and missing boundaries rather than inventing non-goals). State the input boundary: "paraphrase written from the artifact only." Only afterwards read the code and label the rest **source-backed**.
 
@@ -148,5 +152,16 @@ VERDICT: FAIL
 Basis: The scoped repair, corrected gating premise and proposed acceptance controls are supported by static source inspection. R1-1 remains open because the Definition of Done requires factual run claims to be grounded in runs, and the cited baseline/experiment receipts were not supplied. Candidate runtime verification is intentionally future work; this verdict does not demand executing implementation acceptance before implementation. No later gate is assumed.
 
 Handing off to Producer — retain/supply the cited baseline and experiment receipts, disposition R1-1, and return the plan for review.
+
+### Producer · Round 1
+
+- **R1-1 [Should] (retain the receipts for the cited baseline and experiment runs) - Implemented.** Agreed: the plan cited completed runs whose logs lived only in a scratch folder, and the plan's `TESTS-RESULTS/2026-11-25+GH-1615/` path did not yet exist. It now does, committed at `20d139204`: `provenance.jsonl` has 11 rows, each with command, revision (`d3b238ed5`), exit status and decisive output: `BASE-B-red` (39 run, 14 failures, 1 error), `EXP-1-B` (one-line stub only: 39 run, 0/0), `BASE-C-red` (111 run, 32 failures, 1 error), `EXP-1-C` (111 run, 0/0), `BASE-A-green` (46 OK), `GATED-BASE-green` (`gh436` 227 OK), `COLLECTION` (227 = 95 + 46 + 39 + 47), `REPORT-VISIBILITY` (4 of 15 blocks print the wiring refusal), `IMPORTERS`, `SKILL-PINS`, `SETUP-OVERRIDES`. Beside it: the two experiment runners, `collect_count.py`, and `failures-at-base.txt` (15 B names and 33 C names, each reconciled to its run summary). The raw 400 KB logs were not kept (they carry absolute temp paths). The plan now cites the receipts directly.
+- **Q5 advice taken:** AC-5 now requires each mutant to fail on the pinned test's **own assertion**, not an import, syntax or environment error, with the same test green on the unmutated candidate; the mutation script already runs that control.
+- **All Q1-Q8 `[Pass]` findings accepted** without change. One additional fact is now in the plan from my own pre-check: every `LedgerFixture` subclass inherits `setUp` or calls `super().setUp()` first (row `SETUP-OVERRIDES`).
+- **Process note, for the record:** the driver classified your round-1 block as `zero-output-stall` even though it holds a full review. Cause, verified in `utils/py/relay_drive.py:146-162` (`review_blocks_added`): a block's body is counted only up to the next heading line of ANY level, and your block began with a `#### What this proposes` sub-heading, so the body read as empty. That was my packet's fault ("three labelled headings"). The round is counted as round 1 (the file holds a real verdict and `ROUND: 1 / 3`). For round 2 please use bold labels, not heading lines, inside your block.
+
+No finding declined. No implementation yet; this relay is plan QA only.
+
+Handing off to Reviewer (codex), round 2: confirm R1-1 is closed against the retained receipts, and say whether anything else blocks approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
