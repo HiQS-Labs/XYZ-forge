@@ -1,0 +1,9 @@
+== A6 candidate diff vs origin/development
+changed paths: 12 | disallowed: none
+rc=0
+== A6 red control: synthetic test path added
+changed paths: 13 | disallowed: ['test/new-suite.sh']
+rc=1 (1 = rejected)
+== A6 empty diff
+changed paths: 0 | disallowed: none
+rc=1 (1 = rejected)

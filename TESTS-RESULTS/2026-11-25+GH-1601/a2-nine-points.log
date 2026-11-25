@@ -1,0 +1,14 @@
+== A2 candidate
+1 OK [('local date', [27]), ('working day', [4]), ("This week's ledgers", [30]), ('[Cc]onfirmed absent', [31]), ('re-read the live body', [77])]
+2 OK [('claim, not evidence', [39]), ('reviews endpoint', [44]), ('commit_id', [44]), ('older head', [45]), ('end-of-day', [46])]
+3 OK [('in full', [54]), ('Slack', [55])]
+4 OK [('throwaway local clone', [62]), ('current review requests', [60])]
+5 OK [('done, carried, new, parked, dropped', [66]), ('plan, not an approval', [18])]
+6 OK [('goal/target header', [72]), ('change-log row', [76])]
+7 OK [('gpt-6\\.2-astra', [85]), ('never your conclusions', [86]), ('firsthand', [95]), ('did not run', [96])]
+8 OK [('word-split', [100]), ('not checked', [49]), ('0 matches', [101]), ('@mentions', [103]), ('secrets', [104])]
+9 OK [('Final chat reply', [105])]
+missing patterns: 0
+== A2 red control: copy with item 7 lines removed
+7 MISSING [('gpt-6\\.2-astra', []), ('never your conclusions', []), ('firsthand', []), ('did not run', [])]
+missing patterns: 4

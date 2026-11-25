@@ -1,0 +1,14 @@
+$ gh issue list -R <example-repo> --state all --search Daily Work Ledger in:title --limit 5 --json number,title
+[]
+[rc=0]
+$ gh issue list -R <example-repo> --state all --search Planned Work Ledger in:title --limit 10 --json number,title,createdAt
+[{"number":<n>,"title":"Planned Work Ledger: Friday Nov 27, 2026"},{"number":<n>,"title":"Planned Work Ledger: Friday Nov 20, 2026"},{"number":<n>,"title":"Planned Work Ledger: Thursday Nov 19, 2026"},{"number":<n>,"title":"Planned Work Ledger: Thursday Nov 26, 2026 (US Thanksgiving)"},{"number":<n>," ...
+[rc=0]
+resolved today 2026-11-25 Wednesday yesterday 2026-11-24 Tuesday
+$ gh issue view <yesterday> --json body,comments [rc=0]
+body chars 14234 comments 10
+checked 10 unchecked 34
+--- adjacent: simulated today = Thu 2026-12-31 (no ledger exists)
+$ gh issue list -R <example-repo> --state all --search Planned Work Ledger Thursday Dec 31, 2026 in:title --limit 5 --json number,title
+[]
+[rc=0]

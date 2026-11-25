@@ -1,0 +1,13 @@
+== A3 scan (nonempty deliverables)
+nonempty: skills/2-daily/yesterday-today/SKILL.md
+nonempty: PROJECT/2-WORKING/GH-1601-YESTERDAY-TODAY-SKILL.md
+nonempty: TESTS-RESULTS/2026-11-25+GH-1601/a1-a4-text.log
+nonempty: TESTS-RESULTS/2026-11-25+GH-1601/a2-nine-points.log
+nonempty: TESTS-RESULTS/2026-11-25+GH-1601/a3-privacy-scan.log
+nonempty: TESTS-RESULTS/2026-11-25+GH-1601/smoke-steps1-2.log
+-- hits (expect none):
+rg rc=1 (1 = no hits)
+arch-diff rc=1 (1 = no hits)
+-- red control: planted string
+2:BinoidCBD
+rc=0 (0 = detected)

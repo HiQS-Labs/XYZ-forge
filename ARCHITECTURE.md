@@ -102,6 +102,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
+| [yesterday-today](skills/2-daily/yesterday-today/SKILL.md) | Refresh today's planned-work ledger issue from yesterday's: verify each claim against GitHub, read feedback, keep the goal header and % estimate, then one independent low-effort review. |
 | [next-steps-mod](skills/2-daily/next-steps-mod/SKILL.md) | Claude Code mod: every answer ends with a `Next:`/`Also:` block, drawn as one-press buttons above the prompt, the top one as the Tab suggestion, plus `/next-steps`; auto-loads from the Skills Army HQ link. |
 
 ### `3-weekly` — Weekly
