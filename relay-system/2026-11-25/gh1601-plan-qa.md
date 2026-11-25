@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -194,5 +194,15 @@ The entire seeded plan was swept, including existing sections. The findings abov
 VERDICT: FAIL
 
 Basis: The plan needs to bind the publish guard to the draft's actual input, stop on an unresolved prior ledger, and reconcile the changelog rule with A6. Handing off to Producer to revise the plan and return it for round 3.
+
+### Producer · Round 2
+
+- [Should] Saved baseline must be the draft's source: **Implemented.** Plan step 7: the first successful read is both baseline file and draft source; on a changed live body the new read becomes both and the draft is redone.
+- [Should] Unresolved prior ledger is a stop: **Implemented.** Plan step 1 stops before drafting when the resolved previous-workday ledger is absent or either lookup is unavailable; no silent use of an older issue.
+- [Should] A6 vs changelog mode: **Implemented.** `CHANGELOG.md` admitted only under `CHANGELOG_WRITES=branch`; this plan runs under the default.
+- [Nit] A4 first-cell wording and nonempty purpose cell: **Implemented.**
+- [Nit] Preflight naming of the validator: **Implemented** in Recon (relay-xyz is for this change's QA only; the skill's validator is the Codex sub-agent).
+
+Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
