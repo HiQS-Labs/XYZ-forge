@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -158,5 +158,37 @@ Dispositions (each checked against the cited lines of the base skill before acti
 Draft wording is also tightened (the sheet is now about 28 lines with heading and blanks) to stay near the size budget.
 
 Handing off to Reviewer for round 2.
+
+### Reviewer · Round 2
+
+**What this proposes**  
+Extend the morning ledger refresh with a deploy-day sheet at the top of today's body. Put gates first and give each step an owner, time, method, pass evidence and stop condition. Turn incomplete gates into morning questions and generate the sheet from the same snapshot as the rest of the draft.
+
+**How the existing system works, per this document**  
+Step 5 gathers PR state and earlier reviews. Step 7 builds today's draft from a saved baseline and rechecks the body before publishing. Step 8 gives an independent reviewer a checklist for the published ledger.
+
+**What it's not**  
+The plan's non-goals exclude a new skill or script, deploy instructions, server access, deployment execution or approval, and skill installation.
+
+**Input boundary**  
+The proposal paraphrase used the updated plan's `non_goals`, `goal`, Status, Requirement, Recon, Preflight bet, Plan, Draft wording, Acceptance and Risks. The source-backed assessment below followed the base skill and issue reads.
+
+**Source-backed assessment**  
+Read GH-1612 §§1–3 and the entire 107-line base skill. The Forge main-checkout index generation is `2026-11-25T18:19:12Z`. Coverage reports the relay artifact missing from that checkout, so plan evidence comes from the seeded copy. I found no additional issue in the base skill that this plan needs to fix.
+
+swept file: yes
+
+- [Pass] The six columns, deploy trigger and repo-owned procedure links match GH-1612 §§1–2 and draft lines 84–91. Draft lines 93–109 cover the deploy and after-deploy owners, recorded code and environment evidence and stale checklists, access and fallback, positive pass evidence, timer and early rehearsal, prior PR findings and their acceptance, and the read-only and later per-action approval rules. The staging and query examples are generic. The evidence boundary from round 1 is resolved by lines 96–100 and 108–109, consistent with `skills/2-daily/yesterday-today/SKILL.md:18–23,49–52`.
+- [Pass] The baseline wording now carries the snapshot through draft and redraft (`.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:84–87,112`). Step 5a follows PR evidence and precedes classification. Existing steps 6–9 retain their numbers and the opening reference to the step-7 write still points to the right step (`skills/2-daily/yesterday-today/SKILL.md:18–23,60–98`). The published-body validator still reads the issue independently (lines 85–95).
+- [Pass] The size budget is feasible. `wc -l skills/2-daily/yesterday-today/SKILL.md` → exit 0, `107`. `awk 'NR>=82 && NR<=109 {n++} END {print "draft lines:", n}' .relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md` → exit 0, `draft lines: 28`. Adding a separator and the checklist line while extending the existing step-7 line fits within 30 added lines and leaves the file under 140. Lines 69–76 and 112 reuse the existing skill and validator without a separate helper.
+- [Pass] A1 can reject the base by scoping the content check to the missing step 5a and item 6. A2 can reject it because it adds zero lines. A4's base replay must miss the deploy sheet. A5 handles empty and out-of-scope changes, and A6 uses the delivered revision and the opened PR's actual base with separate negative controls (`.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:116–123`; base skill lines 60–71 and 85–100). The round-1 verification nit is closed. Plan line 127 calls fast mode a local check, consistent with `ci-local.sh:399–409,427–437`.
+- [Should] Make the incomplete-gate rule agree across the draft, validator and smoke. **Observed input:** The goal requires a question for a gate missing any required value (`.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:20–24)). Draft lines 93–95 use “no owner, time and method,” and the validator and A4 name only ownerless gates (lines 112,121). A gate row for a go-ahead with a named owner and no planned time can be omitted without a question while the remaining sheet satisfies those named observations. **Affected scope:** Deploy-day gates with an owner but a missing required field. **Falsifier:** Give the go-ahead a named owner, a method, pass evidence and a stop condition, and leave the planned time blank. The full draft raises a morning question for the missing time, and the checklist catches a draft that silently omits it. Say “missing any required field” in the draft and checklist and include one partially specified gate in the existing deploy smoke alongside the issue's ownerless gate.
+- [Should] Carry the revised baseline rule into the existing A4 exercise. **Observed input:** Plan step 2 still describes dry-running step 5a (`.relay-artifacts/GH-1612-YESTERDAY-TODAY-RUN-SHEET.md:75–77`), and A4 permits a deploy expressed in yesterday's ledger (line 121). That input and the no-deploy input can both pass without using today's baseline or the recompute clause at lines 84–87 and 112. **Affected scope:** Deploy intent present only in today's ledger and changed in the guarded reread. **Falsifier:** Yesterday is silent, today's first body plans the deploy, and the simulated reread cancels it. The two captured drafts show one sheet then zero, with the goal header preserved and no publish. Use those bodies in the existing fictional smoke and make Plan step 2 point to A4's full drafting flow.
+- [Should] Include people names in the A3 privacy observation. **Observed input:** Requirement line 46 explicitly excludes people names, but A3 line 120 lists client, product, host, email and private-link patterns only. A standalone person's name in example prose may match none of those categories. **Affected scope:** Generic skill and smoke prose, excluding the plan's required owner metadata. **Falsifier:** A planted person-name example is caught while a generic role label and the documented metadata exception pass. Add a manual look for proper names alongside the existing pattern scan.
+
+**VERDICT: FAIL**  
+**Basis:** The revised plan sets the right insertion point, evidence boundary and drafting baseline. Tighten the validation of incomplete gates, exercise the baseline branch through the existing smoke, and cover the remaining privacy requirement. This was source-backed plan QA. Implementation smoke and pre-push verification remain pending.
+
+Handing off to Producer (claude-a) to revise these three observations and the incomplete-gate wording.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
