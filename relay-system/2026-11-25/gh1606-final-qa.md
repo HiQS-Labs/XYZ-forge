@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -158,5 +158,55 @@ Basis: The pre-reserve fix and central red controls support slot preservation, b
 No finding declined. The seeded artifact has been regenerated from the fixed state.
 
 Handing off to Reviewer (codex) — round 2: confirm R1 is closed (mixed-output control and fix), and that no new defect was introduced by the change to the helper.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+- [Pass] R1 closed; Q1(a). `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1090-1096` returns early on rc 0, collects every fault line on nonzero, and joins them. The blocking Python cause survives the preceding advisory PHP cause permitted by `validate.sh:1028-1045`. Retained `TESTS-RESULTS/2026-11-25+GH-1606/provenance.jsonl:4-5` witnesses pre-fix red and fixed green. No further fix requested.
+  - Independent non-mutating helper probe, exit **0** (subprocess mocked; no gate/fixture executed):
+    ```bash
+    export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+    mkdir -p "$TMPDIR"
+    python3 - <<'PROBE'
+    import sys, subprocess, json
+    from pathlib import Path
+    from unittest.mock import patch
+    sys.path.insert(0,'skills/2-daily/merge-cleanup/scripts')
+    import merge_cleanup as m
+    php='ENVIRONMENT FAULT: php present but unusable (advisory)\n'
+    py='ENVIRONMENT FAULT: python3 (/usr/bin/python3) version 3.9.6; missing modules: yaml,pytest,requests,mypy; requires Python >=3.10\n'
+    def reason(rc,out='',err=''):
+        with patch.object(m.subprocess,'run',return_value=subprocess.CompletedProcess([],rc,stdout=out,stderr=err)):
+            return m.gate_toolchain_fault_reason(Path.cwd())
+    r=reason(3,php+py)
+    assert php.strip() in r and py.strip() in r
+    assert reason(0,php)==''
+    assert reason(3,'',py)==py.strip()
+    assert reason(3)=='validate.sh --print-mode exited 3: '
+    for exc in (OSError('controlled'),subprocess.TimeoutExpired('controlled',60)):
+        with patch.object(m.subprocess,'run',side_effect=exc):
+            assert m.gate_toolchain_fault_reason(Path.cwd())==''
+    with patch.object(m.subprocess,'run',side_effect=AssertionError('must not spawn')):
+        assert m.gate_toolchain_fault_reason(Path('/nonexistent-gh1606-consumer'))==''
+    print('mixed_reason:',r)
+    print('PASS: mixed rc3, advisory rc0, stderr-only, empty nonzero fallback, spawn/timeout fail-open, absent consumer')
+    rows=[json.loads(x) for x in Path('TESTS-RESULTS/2026-11-25+GH-1606/provenance.jsonl').read_text().splitlines()]
+    print('provenance:',len(rows),'rows;',sum(x['passed'] for x in rows),'passed')
+    PROBE
+    ```
+    Decisive output: `mixed_reason: ENVIRONMENT FAULT: php present but unusable (advisory) | ENVIRONMENT FAULT: python3 (/usr/bin/python3) version 3.9.6; missing modules: yaml,pytest,requests,mypy; requires Python >=3.10`; `PASS: mixed rc3, advisory rc0, stderr-only, empty nonzero fallback, spawn/timeout fail-open, absent consumer`; `provenance: 19 rows; 19 passed`.
+- [Pass] Q1(b–d), Q2. Resume parking still precedes the execute-only probe (`merge_cleanup.py:2156-2181`), which precedes the existing reservation (`:2193-2203`). Fault refusal logs the full reason, writes only the existing `failed` map and continues; hard dependents consult that map (`:2068-2080`), and incomplete landings return 3 (`:2517-2531`). The inherited push environment and wiring enforcement remain at `:1186-1200`; no budget or bypass change. Plan deviation is limited to the justified R1 diagnostic correction. No fix requested.
+- [Pass] Q3. The complete seeded diff has six text paths (`.relay-artifacts/GH-1606-final.diff:1,46,71,421,465,488`): evidence, ledger, skill text and existing orchestrator. One helper reuses the gate rather than copying its toolchain registry. `run_controls.py:1-17,50-86` is a declared manual driver under TESTS-RESULTS, with no suite/registry addition or parallel accounting writer. No fix requested.
+- [Pass] Q4. `provenance.jsonl:6-7,15` records the unchanged base spending one slot, candidate spending none, and after-reserve mutant being rejected despite naming the fault. `run_controls.py:294-303` requires routing, no B1 entry, OPEN state, nonempty unchanged origin SHA and no push; absent/empty scenario output fails. Healthy runs capture the published origin immediately after the real push (`:110-115`) and require nonempty head equality with the recorded repair, MERGED state and one attempt (`:285-289`). No fix requested.
+- [Pass] Q5. Tried the helper boundary violations above; all passed. Static attempts to bypass the cap/resume ordering found the existing reservation authority intact (`merge_cleanup.py:2156-2203`); retained resume/consumer controls remain green (`provenance.jsonl:9-12`). Dry-run helper execution adds no writer: the existing selection publication precedes advisory warnings (`merge_cleanup.py:2953-2961`), and print-mode exits before accounting/suites (`validate.sh:1049-1066`). Selection and hard-dependency filtering remain at `merge_cleanup.py:2746-2749,2969-2989`. Caller search `rg -n 'preflight_warnings\(' skills utils test`, exit 0, returned only definition `:1438` and main call `:2960`; optional default preserves the old call shape. Hard dependencies and dry-run write purity were source-inspected, not independently fixture-executed here. No fix requested.
+- [Pass] Q6. `skills/2-daily/merge-cleanup/SKILL.md:269,497-500` accurately describes no-slot deferral, inherited PATH, primary-only advisory warning, consumer/fail-open behavior and conservative deferral. The mixed diagnostic correction now supports its fault-naming claim. No fix requested.
+- [Pass] Q7. Ledger consistency remains as in round 1: generation 2958, GH-1606 rated 55/55/50/70, paired pickup/update receipts and work events (`.relay-artifacts/GH-1606-final.diff:421-464`). No hand edit evident; binary DB and actual CLI execution were not independently verified. No fix requested.
+- [Pass] Q8 and full-file sweep. `SUMMARY.md:27-39` preserves the declared seams, discarded mutant-construction error, unmeasured conservative route, pre-existing ungated Phase-B failures and outstanding final gate. These are accepted-and-recorded limits; S7's “record unchanged” proves count preservation only (`run_controls.py:316-320`). The independent review mentioned as outstanding is this turn; no later gate is assumed. The whole-file sweep found no additional actionable pre-existing defect or new regression in the reviewed files. No fix requested.
+
+VERDICT: PASS
+Basis: R1 is closed by inspected code, retained red/green evidence and an independent narrow probe. The four acceptance items are supported within the approved operational envelope; remaining measurement limits are explicit and accepted, not presumed passing.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
