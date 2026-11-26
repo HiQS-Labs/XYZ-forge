@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -91,5 +91,69 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The insertion and hold semantics are sound at plan level, but the promised ready-work controls cannot pass with the specified fixture changes: both fixture installers omit the newly required recognizer. This is an observed artifact contradiction, not a claim that an implementation or suite was run. The single authorized review is exhausted; stop, no repair round or implementation.
+
+swept file: yes
+
+Reviewed the entire seeded file, grading only its settled holds-only section, `.relay-artifacts/GH-1476-RAW-TASK-PREPARATION.md:360–480`; earlier managed-admission text is superseded history. No additional in-scope pre-existing defects found beyond the findings below. No artifact/source edits, Git commands, suites, executable fixtures, or external-service probes were run.
+
+- [Blocker] **B1 — Install the recognizer in the existing fixtures before claiming ready-work compatibility (Q4/Q5/Q6).**
+  **Observed input:** Form 1 contradiction: the plan at `.relay-artifacts/GH-1476-RAW-TASK-PREPARATION.md:416–420` requires loading `skills/1-hourly/kickstart/scripts/build_queue.py` relative to the executing `jog_run.py`, holding if absent; at `:474–476` it specifies adding one `gh issue view` answer to restore the existing suite. However, `test/gh280-jog-marathon-adapter.sh:160–162` and `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt:160–162` both install only `relay-automation bin src utils`. Their remote starts from an empty commit (`test/_setup.sh:85–93`), so cloning it supplies no missing `skills/`. The replay invokes the fixture's copied CLI (`control.txt:226`), and gh280's vendored run invokes its copied `.xyz/utils/py/releases_app.py` (`test/gh280-jog-marathon-adapter.sh:724`). Thus the proposed changed-head ready and dependency-done controls (`artifact:457–458`) encounter `hold-check-unavailable`, not their expected worker call. The production vendor manifest containing `skills` does not repair these hand-built fixture installers.
+  **Affected scope:** The existing Day 1 replay and gh280 root/vendored fixtures executing the new helper; ready tasks as well as all intended hold cases. A zero-call hold case could otherwise pass for the missing-import reason and conceal a nonfunctional hold reader.
+  **Fix:** Include the existing recognizer at its correct harness-relative path in both existing fixture installers, alongside the proposed shim change. Keep this within the existing fixture/replay edits; add no suite or gate. Make the hold cases assert the specific reason as well as the `hold:` prefix, and retain the ready/done exactly-one controls. Parameterize the replay's existing author-machine paths (`control.txt:12,14`) to the disposable clone used for the candidate/base comparison.
+  **Falsifier:** In the disposable root and vendored fixtures, import the recognizer from the executing Jog module's harness root, then run the ready and closed-dependency controls: exactly one sentinel line each, no `hold-check-unavailable`. Run the hold fixtures: zero calls with their intended hold reasons. A fixture already supplying that exact module would falsify the missing-install finding; neither current installer does. Full execution remains **[Unverified — needs clone run]**.
+
+- [Nit] **N1 — Correct the shared-caller inventory (Q5).** `artifact:469–472` names G/H/I/K/N as rows reaching the new check. Section M also invokes the real queue at `test/gh280-jog-marathon-adapter.sh:1136–1141`, specifically exercising inbox promotion. Section N's retry-build case is a live-lock refusal (`:1304–1312`); the lock is acquired at `utils/py/jog_run.py:1087–1090`, before the proposed helper at `:1111`, so N7 will not need the new issue answer. Fix the inventory to distinguish M's admission coverage from N's earlier lock refusal. Running the whole existing suite, as already planned, remains appropriate.
+
+- [Pass] **Q1 — Correct placement and writer.** The loop check at `utils/py/jog_run.py:2875–2879` precedes lease acquisition, promotion at `:2891`, and execution creation at `:2910` → `:624–640`; retry-build's check before `:1111` precedes its lease and `:1112` dispatch. `utils/py/releases_app.py:5125–5127` updates status/reason/lease without assigning `attempt_count`; `:5128–5132` explicitly handles pending→parked, and `:5136–5137` uses the existing receipt writer. No live writer was invoked during this review.
+
+- [Pass] **Q2 — Open references are bounded to the recognizer's conditional grammar.** `build_queue.py:185–196` makes the label, HELD, Blocked-by and active-after forms unconditional. Only `:197–200` depends on the supplied open set; it uses the same `AFTER` at `:89` that item 3 enumerates after sanitization (`:146–150`). Thus every conditional match gets one deduplicated lookup; failures/unknown states remain unresolved under the plan's positive done test (`artifact:409–415`). A line-start `depends on` needs no lookup to hold. The plain-sentence done fixture avoids the unconditional branch. The claimed live PR response was not independently queried here; dependency-state transport still needs the planned clone verification.
+
+- [Pass] **Q3 — Refusal control flow matches promotion failure.** Park removes the row from the pending selector (`jog_run.py:2844–2848`); `break` when checkpointed and otherwise `continue` matches `:2894–2899`. Counting the refusal under checkpoint/supervised mirrors `:2881–2882` and preserves their `max_tasks` bound (`:2834–2836`). This avoids repeatedly selecting the same pending row. Ordinary mode's existing promotion-failure path likewise does not count the parked task as a completed task.
+
+- [Unverified — needs clone run] **Q4 — Six acceptance rows are measurable, but not yet established.** The replay already reaches the worker edge (`control.txt:101–110,226–230`) and queries queue attempts/status. The proposed append-only sentinel, independent issue/capture cases, reference-aware shim, inbox placement, and before/after snapshots can measure the six rows and per-refusal assertions (`artifact:445–464`), once B1 is corrected. Query attempts/status in the primary DB, execution count in primary `.tick/jog/<gid>/state.json` (`jog_run.py:624–640`), and capture/native attempts in the execution target (`control.txt:213–226`). Treat an absent prior state file as zero executions, and snapshot both file names and bytes for unchanged native history. The current replay's `held` case sets both sources (`control.txt:189–191,204`), its `dependency` case is HELD prose (`:193–195,204`), and its sentinel overwrites (`:106`), so historical outputs alone prove none of the new independent cases or exactly-one assertions. The plan explicitly calls for those upgrades and for honest red/control classification; no later gate is assumed.
+
+- [Pass] **Q5/Q6/Q7 — Remaining architecture is surgical.** The CLI routes are `releases_app.py:5223` and `:5252–5253` → `jog_run.py:1095–1119`; direct `jog_run.py:3034` reaches the same loop. Legacy relay shares that loop (`:2907–2910,2952–2985`), simulation is guarded there, and dry-run returns earlier (`:2727–2770`). The stated `gh` shim mismatch is real (`test/gh280-jog-marathon-adapter.sh:57–74`). Production root/vendored loading relative to `jog_run.py` is structurally sound: `build_queue.py:549–550` guards its CLI main, and `relay-automation/xyz-vendor.sh:451,480–484` ships `skills/`. B1 concerns the fixtures, not that production manifest. One helper with two entry-point calls and the existing status writer introduces no scheduler, database, attempt reset, or parallel hold grammar (`artifact:388–422`). Production vendored execution is not claimed as run.
+
+Read-only probe (exit **0**; imports the main-guarded recognizer, performs only in-memory calls and source reads):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import importlib.util
+from pathlib import Path
+p=Path('skills/1-hourly/kickstart/scripts/build_queue.py')
+s=importlib.util.spec_from_file_location('holds_probe',p)
+m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+for body in ['Blocked by #902','after #902','depends on #902','Proceed after #902 lands','Proceed after #902 is done.']:
+    refs={int(x.group(1)) for x in m.AFTER.finditer(m._sanitize_body(body))}
+    print(repr(body), 'done=',repr(m.issue_hold_reason({'body':body},set())),'open=',repr(m.issue_hold_reason({'body':body},refs)))
+print('label:',m.issue_hold_reason({'labels':[{'name':'status:held'}]},set()))
+for path in ['test/gh280-jog-marathon-adapter.sh','TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt']:
+    print(path+': '+next(x.strip() for x in Path(path).read_text().splitlines() if 'for d in relay-automation' in x))
+PY
+```
+
+Decisive output:
+
+```text
+'Blocked by #902' done= 'blocked by #902' open= 'blocked by #902'
+'after #902' done= 'after #902' open= 'after #902'
+'depends on #902' done= 'after #902' open= 'after #902'
+'Proceed after #902 lands' done= 'after #902' open= 'after #902'
+'Proceed after #902 is done.' done= None open= 'after #902'
+label: label status:held
+test/gh280-jog-marathon-adapter.sh: for d in relay-automation bin src utils; do
+TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt: for d in relay-automation bin src utils; do
+```
+
+Evidence boundary: Verify-tier graph discovery used project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-25T18:19:12Z`. It indexes another checkout, not this relay worktree; caller tracing was denied by tool approval policy. All material citations were therefore checked against local source. Coverage flagged gh280 lines 729–730 and xyz-vendor line 304 (read locally), and the replay/seed as missing in that indexed checkout (read locally). No whole-repository graph completeness claim is made.
+
+Handing off to Producer (claude-a) — report the escalated finding to the operator and stop under the one-review budget; no repair round or implementation is authorized here.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
