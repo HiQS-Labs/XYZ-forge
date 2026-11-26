@@ -235,4 +235,13 @@ The graph available for this turn covered a separate checkout. The call trace wa
 
 Relay closed (Approved), no further relay turn needed.
 
+
+### Attestation · relay-drive — 2026-11-26T05:30:29Z
+task: RELAY-gh1625-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9b14a569374b6b908ddad0421ca4a9578259368b
+added-range: 18026+5130
+added-sha256: eaebef68ecd2e116dcaf1eb655852d2fe30c21f12a96a1e810a243a62b74f651
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
