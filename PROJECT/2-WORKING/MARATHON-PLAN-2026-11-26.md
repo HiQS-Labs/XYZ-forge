@@ -210,7 +210,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1638 relay turn worktree seeding nests an existing allowlisted directory inside itself (relay-turn-lib.sh:784) and drops directory entries from the commit pathspec (:1633) — `needs-doc`
 - #1637 Factory review loop: 4-round default and consult tie-break at the cap instead of stalling — `needs-doc`
 - #1634 Merge sequence 2026-11-26: #1629, #1632, #1628 — `needs-doc`
-- #1633 jog supervised wake: row at its native lane-attempt cap halts the wake instead of continuing to the ready successor (OL-12) — `needs-doc`
 - #1631 ci-local.sh runs python3 -m pytest directly, without the gate's toolchain probe or the GH-1627 venv selection — `needs-doc`
 - #1630 Follow-up to PR #1628: recheck the supervised deadline after the hold lookups, plus two small CodeRabbit fixes — `needs-doc`
 - #1626 merge-cleanup: a landing dry run deletes retained scratch clones (prune_retained_scratch ignores dry run) — `needs-doc`
@@ -350,6 +349,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #885 Skills fast lane: markdown-first policy, two measurements, and /express choosing its gate (not a plan) — `needs-doc`
 - #884 Exploration: clean-room CI rebuild contingency (core harnesses, then ratchets, then regression tests) with a 3-model judging panel — `needs-doc`
 - #868 ci-suite-audit: Full Suite Audit Report (2026-09-27 — a076b1b1) — `needs-doc`
+- #859 Sketch: Test Impact Analysis / Regression Test Selection for CI (extends ci-route.sh) — `needs-doc`
 
 ## How to fire a lane
 
