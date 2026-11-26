@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py", line 129, in <module>
+    main()
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py", line 85, in main
+    assert explains_refusal(preview_errors[0]), ("preview refusal must give the ownership reason and the adoption remedy",
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('preview refusal must give the ownership reason and the adoption remedy', ['Cannot proceed; run intake.py update xyz --source /x'])
+rc=1
