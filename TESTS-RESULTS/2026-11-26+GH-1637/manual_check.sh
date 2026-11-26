@@ -42,7 +42,7 @@ else
   fi
   if [ "${STUB_REV_APPROVE_AT:-0}" = "$r" ]; then
     printf '\n### Reviewer · Round %s\n\nVERDICT: PASS\nBasis: repaired head reviewed.\nswept file: yes\n' "$n" >> "$RELAY_FILE"
-    sed -i.bak -e 's/^STATUS: .*/STATUS: Approved/' "$RELAY_FILE"; rm -f "$RELAY_FILE.bak"
+    sed -i.bak -e "s/^STATUS: .*/STATUS: ${STUB_REV_STATUS:-Approved}/" "$RELAY_FILE"; rm -f "$RELAY_FILE.bak"
     "$TICK_BIN" done "$RELAY_TASK" --agent rev >/dev/null 2>&1
   else
     printf '\n### Reviewer · Round %s\n\nVERDICT: FAIL\nBasis: open finding.\n\n- [Should] something is still open\n' "$n" >> "$RELAY_FILE"
@@ -179,9 +179,15 @@ reset; STUB_REPAIR=1 STUB_CODEX=REAL STUB_REV_APPROVE_AT=5 drive 9 --consult-at-
 repair_attested && ok "S2d the approval attests a CHANGED repair head" || bad "S2d repair head"
 [ "$RC" = 0 ] && [ "$(status)" = Approved ] && [ "$(order)" = "bld rev bld rev bld rev bld rev bld bld rev" ] && ok "S2d cap 9: 9 turns, consult, builder repair, reviewer approves the repaired SHA" || bad "S2d rc=$RC status=$(status) order='$(order)'"
 
+echo "== S2f REAL, no repair, reviewer writes CLOSED instead of Approved: refused too (repair-missing)"
+reset; STUB_CODEX=REAL STUB_REV_APPROVE_AT=2 STUB_REV_STATUS=Closed drive 2 --consult-at-cap
+[ "$RC" = 4 ] && grep -q "repair-missing" <<<"$OUT" && [ -z "$(attest)" ] && ok "S2f an unchanged candidate cannot be Closed after a REAL verdict" || bad "S2f rc=$RC attest=$(attest): $OUT"
 echo "== S3 SAFETY -> hold"
 reset; STUB_AGY=SAFETY drive 3 --consult-at-cap
 [ "$RC" = 4 ] && grep -q "consult-hold" <<<"$OUT" && [ "$(status)" = Open ] && ok "S3 consult-hold, STATUS still Open" || bad "S3 rc=$RC status=$(status): $OUT"
+echo "== S3b a valid SAFETY veto stands when the peer advisor fails -> consult-hold (not inconclusive)"
+reset; STUB_CODEX=SAFETY STUB_AGY=FAIL drive 3 --consult-at-cap
+[ "$RC" = 4 ] && grep -q "consult-hold" <<<"$OUT" && [ "$(status)" = Open ] && ok "S3b SAFETY + failed peer = consult-hold" || bad "S3b rc=$RC status=$(status): $OUT"
 echo "== S4 one advisor fails -> consult-inconclusive (a lone NON-BLOCKING never adjudicates)"
 reset; STUB_AGY=FAIL drive 3 --consult-at-cap
 [ "$RC" = 4 ] && grep -q "consult-inconclusive" <<<"$OUT" && [ "$(status)" = Open ] && ok "S4 hold" || bad "S4 rc=$RC status=$(status): $OUT"

@@ -868,10 +868,10 @@ def main():
         """
         if not terminal_status(ns):
             return ("none",)
-        if ns == "Approved" and role == "reviewer" and shim_ok and repair_base[0] and not commits_touch_non_receipt(repair_base[0], get_head_commit()):
+        if ns in ("Approved", "Closed") and role == "reviewer" and shim_ok and repair_base[0] and not commits_touch_non_receipt(repair_base[0], get_head_commit()):
             # GH-1637: the consult judged an open finding REAL; an approval needs a repair beyond the
             # transcript, otherwise the unchanged candidate would be approved over a finding judged real.
-            eprint(f"relay-drive: STATUS Approved after a consult-REAL verdict, but nothing changed since {repair_base[0][:12]} beyond transcripts — refusing (repair-missing)")
+            eprint(f"relay-drive: STATUS {ns} after a consult-REAL verdict, but nothing changed since {repair_base[0][:12]} beyond transcripts — refusing (repair-missing)")
             return ("refused", "repair-missing")
         if role != "reviewer" or not shim_ok or (ns == relay_attest.ADJUDICATED and not adjudicated):
             why = (f"builder-role turn ({actor})" if role != "reviewer"
@@ -1193,9 +1193,10 @@ def main():
                 text = f.read()
             answers[m.group(1)] = (m.group(2), text, parse_adjudication(text))
         verdicts = {a: (answers[a][2] if a in answers else None) for a in CONSULT_ADVISORS}
-        if all(verdicts.values()):
-            toks = set(verdicts.values())
-            outcome = "hold-safety" if "SAFETY" in toks else ("adjudicated" if toks == {"NON-BLOCKING"} else "real")
+        if "SAFETY" in verdicts.values():
+            outcome = "hold-safety"   # a valid SAFETY veto stands even when the other advisor failed
+        elif all(verdicts.values()):
+            outcome = "adjudicated" if set(verdicts.values()) == {"NON-BLOCKING"} else "real"
         else:
             outcome = "hold-inconclusive"
         lines = [f"\n### Consult · System — {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}",
