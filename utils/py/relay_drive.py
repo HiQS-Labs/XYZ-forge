@@ -1045,10 +1045,25 @@ def main():
         malformed verdict is no verdict (GH-1637: a lone token that follows prose or a second declaration
         must never adjudicate)."""
         lines = [ln.rstrip() for ln in text.splitlines() if ln.strip()]
-        if not lines or text.count("```") % 2:
+        if not lines:
             return None
+        # CommonMark fences: an opener is 3+ backticks or tildes; only the same character, at least as
+        # long and with no info string, closes it. A declaration inside any fence, or left in a fence
+        # that is never closed, is quoted text and not a verdict.
+        inside, fence, outside_decl = False, None, []
+        for ln in lines:
+            m = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", ln)
+            if m and not inside:
+                inside, fence = True, m.group(1)
+                continue
+            if m and inside and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence) and not m.group(2).strip():
+                inside, fence = False, None
+                continue
+            if not inside and ADJ_LINE_RE.match(ln.lstrip()):
+                outside_decl.append(ln)
         declared = [ln for ln in lines if ADJ_LINE_RE.match(ln.lstrip())]
-        if len(declared) != 1 or lines[-1] != declared[0] or lines[-1] != lines[-1].lstrip():
+        if inside or len(declared) != 1 or outside_decl != declared or lines[-1] != declared[0] \
+                or lines[-1] != lines[-1].lstrip():
             return None
         m = ADJ_TOKEN_RE.match(lines[-1])
         return m.group(1) if m else None
@@ -1084,8 +1099,13 @@ def main():
             return False
         if not token_handoff(args.reviewer):
             return False
-        if tick_ok("claim", args.relay_task, "--agent", args.reviewer, "--paths", relay_file) \
-                and tick_ok("done", args.relay_task, "--agent", args.reviewer):
+        if not tick_ok("claim", args.relay_task, "--agent", args.reviewer, "--paths", relay_file):
+            # Claim refused with the token open to the reviewer: hand it back to its original holder.
+            if holder != args.reviewer and not token_handoff(holder):
+                _s, _h = token_state()
+                eprint(f"relay-drive: WARNING — reviewer claim refused and the handoff could not be restored; token {args.relay_task} is {_s}/{_h or 'none'}")
+            return False
+        if tick_ok("done", args.relay_task, "--agent", args.reviewer):
             return True
         tick_ok("release", args.relay_task, "--agent", args.reviewer, "--to", holder)
         return False
@@ -1100,7 +1120,11 @@ def main():
         except Exception:
             cand = ""
         base = ""
-        for ref in (get_env("RELAY_DIFF_BASE", ""), "origin/development", "development", "origin/main", "main"):
+        explicit = get_env("RELAY_DIFF_BASE", "")
+        refs = [explicit, f"origin/{explicit}" if explicit else ""]
+        # An explicit/lane base wins; the integration-branch guesses only apply when none was supplied.
+        refs += [] if explicit else ["origin/development", "development", "origin/main", "main"]
+        for ref in refs:
             if not ref or not cand:
                 continue
             mb = subprocess.run(["git", "-C", repo, "merge-base", ref, cand], capture_output=True, text=True)
@@ -1137,7 +1161,7 @@ def main():
         if not os.path.isabs(out_base):
             out_base = os.path.join(root_dir, out_base)
         out_dir = os.path.join(out_base, time.strftime("%Y-%m-%d", time.gmtime()))
-        label = f"adjudicate-{os.path.splitext(os.path.basename(relay_file))[0]}"
+        label = f"adjudicate-{os.path.splitext(os.path.basename(relay_file))[0]}-{secrets.token_hex(4)}"   # unique per invocation
         os.makedirs(out_dir, exist_ok=True)
         prompt_file = os.path.join(out_dir, f"{label}.question.md")   # kept beside the answers as evidence
         with open(prompt_file, "w") as f:

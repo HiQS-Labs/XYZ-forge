@@ -2875,7 +2875,12 @@ relay-file: {rel_relay}
             adj_file = get_env("MARATHON_ADJUDICATED_FILE", "")
             if adj_file:
                 with open(adj_file, "a") as _af:
-                    _af.write(f"{args.phase_id} ({', '.join(f'{a}={v}' for a, v in sorted(record['adjudication']['advisors'].items()))})\n")
+                    def _why(a):   # the advisor's last reasoning line, bounded and single-line
+                        body = [ln.strip() for ln in record["adjudication"].get("excerpts", {}).get(a, "").splitlines() if ln.strip()]
+                        return re.sub(r"[;\n]+", ",", body[-2])[:160] if len(body) > 1 else ""
+                    _af.write(f"{args.phase_id} ("
+                              + "; ".join(f"{a}={v}: {_why(a)}" for a, v in sorted(record["adjudication"]["advisors"].items()))
+                              + ")\n")
         log(success_text)
         xyz_marathon_emit("green", success_text)
         head_sha = candidate
@@ -3555,6 +3560,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
             cmd2.extend(["--target-root", args.target_root])
         env2 = os.environ.copy()
         env2["RELAY_FILE"] = relay_file
+        if _RESULT.get("base_branch") and not env2.get("RELAY_DIFF_BASE"):
+            env2["RELAY_DIFF_BASE"] = _RESULT["base_branch"]   # GH-1637: the consult diffs against the lane's real base
         env2["LANE_ATTEMPT_COUNTED"] = "1"
         env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
         env2["RELAY_COST_SUMMARY"] = "0"
