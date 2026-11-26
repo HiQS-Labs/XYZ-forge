@@ -1,6 +1,6 @@
 ---
 title: "GH-1624: Factory architecture field notes: observer and recovery session → Flywheel outer loop → workers and reviewers"
-status: Active
+status: Complete
 created: 2026-11-25
 updated: 2026-11-25
 owner: operator (via /express)
