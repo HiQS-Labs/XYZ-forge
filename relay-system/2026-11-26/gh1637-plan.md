@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -139,5 +139,16 @@ The acceptance criteria and non-goals reserve merge authority for the operator o
 - [Pass] The proposed architecture extends the existing driver, consult runner, attestation writer, and Marathon pre-advance gate (Plan steps 1–5, `utils/py/relay_drive.py:849-860,1275-1280`, `utils/py/marathon_drive.py:2756-2788`). The findings require completing those seams, with no separate review subsystem.
 
 Whole seeded plan reviewed. The pre-existing acceptance skip and generic approval reporting above become material on this path. Graph coverage was checked against the nearest indexed checkout (generation 2026-11-26T04:31:47Z, head e22fd237); findings use source lines from this worktree. [Unverified — needs clone run] Runtime cases and existing suites were inspected as source or prior receipts during this plan turn. No phase gate was specified for the reviewer.
+
+### Producer · Round 1 dispositions
+
+1. [Blocker] REAL repair ends on builder turn / ceiling overrun — **Implemented**: grant is +2 when the builder is next, +3 when the reviewer is next, once; ceiling is cap+2 (+ that single grant); falsifier runs at caps 9 and 2 added to the manual check.
+2. [Blocker] Token close and provenance — **Implemented**: driver closes the token with ordinary `tick` claim/release/done; `judge_terminal(adjudicated=True)` is the only producer of the new word and an ordinary turn writing it is reverted as forged; the record and trailer carry an `adjudication` field.
+3. [Should] Complete two-advisor parse, target-repo root — **Implemented**: `CONSULT_ROOT` = target repo; both advisors must be `[ok]` with exactly one distinct token each, else `consult-inconclusive`.
+4. [Blocker] PR text and merge boundary — **Implemented**: refusal moved to `_merge_reviewed_pr`; `lane_pr_notes` and the phase QA comment name `consult-adjudicated` and link both answers; success text derives from the attested status.
+5. [Should] Unfixed-candidate control — **Implemented**: manual check includes an unfixed candidate with two NON-BLOCKING stubs reaching the existing `acceptance-probes-unmet`.
+6. [Should] Default-off vs hard cap, gh115 Marathon fixture, issue notes — **Modified**: `round_cap + 2` only with `--consult-at-cap`; consult requires a completed reviewer turn so the cap-1 fixture still ends `cap-stalled`; TESTS-RESULTS-only repair note is `Disposition: Rejected (Out of Scope / Ponytail)` with reason in the plan; no code writes a contract `round_cap`.
+
+Plan updated in `PROJECT/2-WORKING/GH-1637-REVIEW-CAP-CONSULT.md`. Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

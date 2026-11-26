@@ -38,14 +38,20 @@ Operator decision (2026-11-26, on the issue): the goal is net forward progress.
 ## Acceptance
 
 - [ ] Default factory review budget is 4 rounds: `max_review_rounds` default 4 (cap 9) in `relay-automation/marathon.sh`, and the `marathon_drive.py` default `round_cap` 9; the docs that state the old default are updated.
-- [ ] At the cap, with the lane non-terminal and not escalated, `relay_drive.py` runs one consult (`consult.sh`, Codex + agy) over the pinned diff, the relay file (open findings plus the builder rebuttal) and asks each advisor for one `ADJUDICATION:` token.
-- [ ] All advisors `NON-BLOCKING` -> the driver records `STATUS: Consult-Adjudicated` with both answers linked, attests it through the existing `judge_terminal` path (driver-run gate included) and exits 0; marathon then runs its real gate as for an approval.
-- [ ] Any advisor `REAL` (and none `SAFETY`) -> exactly one repair: the driver appends the findings, grants two more turns once, and the normal reviewer path then decides. A second cap escalates as today.
-- [ ] Any `SAFETY`, or a missing/unparseable answer -> escalate (hold) with a named reason; never silently approve.
-- [ ] `Consult-Adjudicated` is not `Approved`: `express.py` and jog auto-merge refuse it, so merge stays an operator action.
-- [ ] Default-off in `relay_drive.py` (flag `--consult-at-cap`), so every existing direct caller and suite keeps today's behavior; `marathon_drive.py` passes the flag.
-- [ ] `hard_cap` becomes `round_cap + 2` (decision on the issue's note); the TESTS-RESULTS-only progress note is decided as rejected (consult supersedes).
-- [ ] Verified by existing suites (`gh115-round-cap`, attestation and marathon suites) plus a recorded manual check under `TESTS-RESULTS/2026-11-26+GH-1637/`: one run per verdict class (adjudicated, real-then-repair, safety hold) with stub advisors, and the default-off run.
+- [ ] `relay_drive.py --consult-at-cap` (default off; `marathon_drive.py` passes it). When the cap is reached, no progress extension is available, the lane is non-terminal and not escalated, and at least one reviewer turn completed in this run, the driver runs one consult (`consult.sh --models codex,agy`, `CONSULT_ROOT` = the target repo) over the pinned diff, the relay file (open findings plus the builder rebuttal) and requires each advisor to end with exactly one `ADJUDICATION: NON-BLOCKING|REAL|SAFETY` line.
+- [ ] A complete result is required: both advisors answered `[ok]`, each with exactly one distinct token. A missing, failed, partial, malformed or conflicting answer is a named hold (`consult-inconclusive`); any `SAFETY` is a hold (`consult-hold`).
+- [ ] Both `NON-BLOCKING` -> the driver itself records `STATUS: Consult-Adjudicated` (a driver-authored block linking both answers), closes the token through ordinary `tick` claim/release/done, and attests through the existing `judge_terminal` (driver-run gate included) with the attestation record and trailer carrying an `adjudication` provenance field; exit 0. A reviewer or builder turn that writes `Consult-Adjudicated` itself is reverted as forged.
+- [ ] Any `REAL` (none `SAFETY`) -> exactly one repair, ending on a reviewer turn: the driver appends the findings and grants +2 turns when the builder is next, +3 when the reviewer is next, once; a second cap escalates as today.
+- [ ] `Consult-Adjudicated` is not `Approved`: `_merge_reviewed_pr` (the one shared Jog merge boundary) and `express.py` refuse it, so landing stays an operator action; the lane PR body and the phase QA comment state `consult-adjudicated` and link both answers instead of "Approved by reviewer".
+- [ ] The existing acceptance recheck still runs on the adjudicated candidate: a still-unfixed candidate with two `NON-BLOCKING` stubs exits `acceptance-probes-unmet` before PR publication; a fixed one advances.
+- [ ] Default-off preserved: with the flag absent, `hard_cap` stays `round_cap * 2` and every existing direct caller and the `gh115-round-cap` suite behave as today (the Marathon fixture has no completed reviewer turn, so it still ends `cap-stalled`). With the flag, `hard_cap = round_cap + 2` (plus the one repair grant).
+- [ ] Verified by existing suites (`gh115-round-cap` and the attestation, marathon and jog suites that cover the touched seams) plus a recorded manual check under `TESTS-RESULTS/2026-11-26+GH-1637/`: stub-advisor runs for adjudicated, REAL-then-repair (at cap 9 and cap 2), SAFETY hold, one-advisor-missing hold, the unfixed-candidate negative control, a forged `Consult-Adjudicated` from a turn, and the default-off run.
+
+## Decisions on the issue's notes
+
+- `hard_cap = round_cap * 2`: replaced by `round_cap + 2` **only with `--consult-at-cap`** (the consult path supersedes long extensions); unchanged otherwise.
+- TESTS-RESULTS-only repair not counting as progress (`relay_drive.py` RECEIPT_DIRS, GH-976): **Rejected (Out of Scope / Ponytail)**. An evidence-only repair that makes no non-receipt change now reaches the consult at the cap instead of stalling, which removes the stall without reopening GH-976's transcript-commit thrash.
+- "Contract templates that write round_cap": no code or skill writes one; the values in capture docs are hand-written explicit operator turn counts (`swarm_preflight.py:155` only validates them). They stay explicit; a short cap now ends in the consult instead of a stall.
 
 ## Recon note
 
@@ -60,11 +66,11 @@ Operator decision (2026-11-26, on the issue): the goal is net forward progress.
 
 ## Plan (ordered, verification inline)
 
-1. `relay_attest.py`: add `Consult-Adjudicated` to `TERMINAL`. Verify: `load()` accepts a record with that status; existing attest suites stay green.
-2. `relay_drive.py`: add `--consult-at-cap`; `hard_cap = original_round_cap + 2`; at the cap (when no progress extension is available) call a new `consult_adjudicate()` that builds the prompt (pinned diff against the merge-base with the integration branch, the relay file, the verdict token rules), runs `consult_sh`, and returns `adjudicated` / `real` / `hold`. `adjudicated`: append the consult block, set STATUS, close the token, call `judge_terminal(..., role="reviewer")` with `actor = args.reviewer`, then exit 0 as the approval path does. `real`: append findings once, `round_cap += 2`, `hard_cap += 2`, continue. `hold`: `exit_escalate("consult-hold")`. Verify: the three stub-advisor runs and the default-off run.
-3. `marathon_drive.py`: `terminal_status` reads `relay_attest.TERMINAL`; default `round_cap` 9; pass `--consult-at-cap`. `marathon.sh`: default 4 rounds. Docs: the `MARATHON.example.yaml` and `marathon.sh` header comments, relay-automation README.
-4. `jog_run.py`: auto-merge refuses a record whose status is not `Approved` (a small hunk away from `_jog_task_local_failure`).
-5. Run `gh115-round-cap` plus the attestation, marathon and jog suites that cover the touched seams; write the manual-check receipt under `TESTS-RESULTS/2026-11-26+GH-1637/`.
+1. `relay_attest.py`: `ADJUDICATED = "Consult-Adjudicated"` added to `TERMINAL`; `trailer_text` prints an `adjudication:` line when the record has one; `load()` checks its shape. Verify: a stub record loads; existing attest suites stay green.
+2. `relay_drive.py`: `--consult-at-cap`; `hard_cap` rule; `reviewer_turns_done` counter; `consult_adjudicate()` (prompt, `consult_sh` run with `CONSULT_ROOT` = target repo, strict parse of both answers, outcome adjudicated/real/hold); `judge_terminal(..., adjudicated=False)` so only the driver path may produce the new word and an ordinary turn writing it is reverted as forged; token close helper (claim/release to the reviewer as needed, then claim/done as the reviewer); `actor = args.reviewer` for the record. Verify: the stub-advisor matrix in the acceptance list.
+3. `marathon_drive.py`: `terminal_status` reads `relay_attest.TERMINAL`; default `round_cap` 9; passes `--consult-at-cap`; `lane_pr_notes` and the phase QA comment name the adjudication and link both answers; success text derives from the attested status. `marathon.sh`: default 4 rounds. Docs: `MARATHON.example.yaml` and `marathon.sh` comments, `relay-automation/README.md`.
+4. `jog_run.py`: `_merge_reviewed_pr` refuses a record whose status is not `Approved` (one hunk, away from `_jog_task_local_failure`). `express.py` already requires `Approved`.
+5. Run the existing suites and write the manual-check receipt (acceptance list); the unfixed-candidate control reuses the existing acceptance recheck.
 
 ## Risks / rollback
 
