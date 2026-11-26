@@ -1117,8 +1117,9 @@ def main():
             out_base = os.path.join(root_dir, out_base)
         out_dir = os.path.join(out_base, time.strftime("%Y-%m-%d", time.gmtime()))
         label = f"adjudicate-{os.path.splitext(os.path.basename(relay_file))[0]}"
-        fd, prompt_file = tempfile.mkstemp(prefix="adj-prompt-")
-        with os.fdopen(fd, "w") as f:
+        os.makedirs(out_dir, exist_ok=True)
+        prompt_file = os.path.join(out_dir, f"{label}.question.md")   # kept beside the answers as evidence
+        with open(prompt_file, "w") as f:
             f.write(question)
         env = os.environ.copy()
         env["CONSULT_ROOT"] = repo
@@ -1128,10 +1129,8 @@ def main():
                                   "--models", ",".join(CONSULT_ADVISORS)], env=env, capture_output=True, text=True)
             consult_out = res.stdout or ""
         except OSError as e:
-            consult_out, res = "", None
+            consult_out = ""
             eprint(f"relay-drive: consult-at-cap: could not run consult: {e}")
-        finally:
-            os.remove(prompt_file)
         answers = {}   # advisor -> (answer path, token or None)
         for line in consult_out.splitlines():
             m = re.match(r"\s*\[ok\]\s+(\S+)\s+->\s+(.+?)\s*$", line)
