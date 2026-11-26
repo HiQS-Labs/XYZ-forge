@@ -114,7 +114,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #492 GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR — `already-landed`
 - #1075 GH-1075 · merge-cleanup batch record keeps stale per-PR file lists on resume — `already-closed`
 - #1087 GH-1087 · docs: restore spacing in the GH-1051 work record — `already-closed`
-- #1620 GH-1620 · flywheel skill: spike before more plan review, cap review loops at four rounds, orchestrator overrides at the cap — `already-closed`
 
 ### 🔧 Reconcile — undocumented partial completion
 - #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
@@ -207,6 +206,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1423 relay-drive attest-publish-failed when relay file is under a gitignored path — `unrated`
 - #1050 marathon memory telemetry: no false low-swap warning on hosts with no swap — `unrated`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
+- #1625 test suites leave merge-cleanup-shaped folders in the real system temp directory (fixture PRs pr-1 / pr-2) — `needs-doc`
 - #1623 test/skills-army-hq.sh passes without running anything when python3 cannot import pytest — `needs-doc`
 - #1618 docs: correct the 'ungated' claim about the merge-cleanup phase B/C suite in the GH-1606 documents — `needs-contract`
 - #1616 High-value automation fix candidates — `needs-doc`
@@ -349,7 +349,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #853 Umbrella: suite isolation — existing gate suites assume a quiet, clean, single-tenant host, so parallel load and host state keep turning a clean trunk red — `needs-doc`
 - #849 merge-cleanup batch 2026-09-27: land the open PR queue (#799 #803 #806 #810 #818 #820 #827 #846) and check for CI / core-harness regressions — `needs-doc`
 - #845 umbrella: #840 (GH-833) follow-ups from CodeRabbit's post-merge review — `needs-doc`
-- #843 relay: new-relay.sh writes the caller's absolute --artifact-file path (username, session UUID) into committed relay threads — `needs-doc`
 
 ## How to fire a lane
 
