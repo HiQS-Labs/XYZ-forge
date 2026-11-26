@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -116,5 +116,46 @@ Cite `file:line` for every claim. Set STATUS to Approved if it passes.
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: A1 substantiates the merge landing/check scratch fix. The whole-file sweep found two pre-existing fixture writes that still bypass the suite temp root. The A2 wrapper result is also outstanding.
+
+- [Should] Move the two hard-coded fixture roots inside the suite temp directory. **Observed input:** `test/gh436-merge-cleanup.py:21-35` promises a private temp directory for the whole suite and cleans only that directory. The existing boundary test at `test/gh436-merge-cleanup.py:79-105` creates `/tmp/test_safe_root/repo_clone` and `/tmp/outside_repo` with `mkdir` and never removes either root. These absolute paths bypass both the suite root and A1's sealed parent, so A1 would pass while the test still leaves shared entries. Read-only AST probe, exit 1:
+  ```sh
+  python3 - <<'PY'
+  import ast
+  from pathlib import Path
+  path = Path("test/gh436-merge-cleanup.py")
+  tree = ast.parse(path.read_text())
+  case = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "TestMergeCleanupSafety")
+  case = next(n for n in case.body if n.name == "test_safe_deletable_path_boundaries")
+  roots = []
+  for node in case.body:
+      if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name) and node.value.func.id == "Path":
+          root = Path(ast.literal_eval(node.value.args[0]))
+          if root.is_absolute():
+              roots.append(root)
+              print(f"{path}:{node.lineno} {root}")
+  assert not roots, "fixture roots bypass the suite temp directory"
+  PY
+  ```
+  Decisive output: `test/gh436-merge-cleanup.py:80 /tmp/test_safe_root`, `test/gh436-merge-cleanup.py:101 /tmp/outside_repo`, and `AssertionError: fixture roots bypass the suite temp directory`. **Affected scope:** the existing boundary case on both direct and registered wrapper runs. **Falsifier:** all mkdir targets in that case resolve under one suite-owned temporary parent, with the allowed child inside the safe root and the rejected candidate its sibling outside the safe root. Use the existing case with a `TemporaryDirectory` parent and reference its `safe_root` in `never_delete`. No new case is needed.
+- [Pass] The bootstrap is before `scan_clones`, `merge_cleanup`, and the phase modules (`test/gh436-merge-cleanup.py:10-41,56,1397-1401`). The atexit registration takes no arguments, so removal uses the captured child and parent defaults and tests the parent, prefix and directory type (`:24-35`). The reset is needed because the bootstrap's own `gettempdir()` populates the cache before the environment change. The isolated stdlib probe below exited 0 and printed `None`, `True`, `True`, `True` in order.
+  ```sh
+  python3 -c 'import json, os, sys, tempfile, subprocess, shutil, unittest, unittest.mock, atexit; from pathlib import Path; print("after stdlib imports:", repr(tempfile.tempdir)); inherited = tempfile.gettempdir(); print("after gettempdir:", tempfile.tempdir == inherited); os.environ["TMPDIR"] = str(Path(inherited).parent); print("without reset still inherited:", tempfile.gettempdir() == inherited); tempfile.tempdir = None; print("after reset:", tempfile.gettempdir() == os.environ["TMPDIR"])'
+  ```
+  The wrapper execs the same Python file (`test/gh436-merge-cleanup.sh:8-11`). Default temp lookup reaches the production allocations and listing (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:396-406,432-445,2025,2531-2545`). The phase modules load after setup and their relevant child paths inherit or copy the environment (`test/gh534_phase_a_tests.py:25-36,303-306`, `test/gh534_phase_b_tests.py:23-32,40-42,145,397`, `test/gh534_phase_c_tests.py:20-36,95-99,190-193,405-406,884-887`).
+- [Pass] A1 meets checks (a)-(d) in `PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:93-118`. The receipts show 36→0 new merge scratch entries, zero suite roots left after exit, a nonempty trace changing from 138 inherited-root listings to 138 suite-root listings, all five planted folders intact in the patched run, and 227 tests `OK` on both revisions. The base fails the patched acceptance predicates despite its suite exit 0. See `TESTS-RESULTS/2026-11-25+GH-1625/a1-before-summary.txt:1-10`, `a1-after-summary.txt:1-10`, and `provenance.jsonl:1-2` in the same directory.
+- [Nit] Tighten the frequency claim in `TESTS-RESULTS/2026-11-25+GH-1625/README.md:18-21`. The forced probe shows deletion of five synthetic plants. The unforced recon shows one listing pass and five surviving plants (`PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:44-56`). The 66 skips establish fewer listing passes in that recon. Replace the deletion-frequency statement with those observations. The rating remains grounded at 45/45/50/85 because the forced run establishes a deletion path for tool-shaped directories while loss of real unpushed work remains unobserved. The scope and cost remain one existing suite (`PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:132-138`, `releases.sql:1062,6114-6115`).
+- [Pass] Read-only commit-tree and suite-blob comparison of `7f2f1cce57a065d801905e97aeb28b8a9c49a800..4b32c20e5ad5fd31caf8ef619c6f5137a67b886c` exited 0. The only code delta was the 17-line setup in `test/gh436-merge-cleanup.py:18-36`. The ten changed paths were that suite, the working plan, the two relay transcripts, the four A1 evidence files, and both ledger files. The existing registry entry remains at `validate.sh:96`. No additional suite, registry entry, or parallel fixture mechanism appeared in the comparison.
+
+[Unverified — needs clone run] A2 is the uninstrumented `bash test/gh436-merge-cleanup.sh` check in a disposable full clone (`PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:115`). The setup records it as pending (`relay-system/2026-11-25/gh1625-final-qa.md:90-92`). Return the actual command, exit status and test count for the revised changes. The scoped graph was from a separate checkout, so file citations use the seeded worktree.
+
+Handing off to Producer (claude-a) to isolate the existing boundary fixture, correct the evidence wording, and supply the A2 result.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
