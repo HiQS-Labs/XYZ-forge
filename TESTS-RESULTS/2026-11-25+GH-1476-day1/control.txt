@@ -9,9 +9,9 @@
 #     gate failure, timeout, lane park, protected-branch redirect, PR-publication failure
 #   - jog_run's contract loaders reject unsupported schema versions and malformed artifacts
 #   - both installation shapes: harness at repo ROOT and vendored under .xyz/
-source "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1609-flywheel-day-1-2026-11-25-verify/test/_setup.sh" gh1609-control
+REPO="${1:?usage: bash control.txt <disposable-clone-root> (CASE_KIND=<case>)}"  # GH-1476: fixture clone is an argument, never an author-machine path
+source "$REPO/test/_setup.sh" gh1609-control
 unset MARATHON_LANE_NS MARATHON_ROOT MARATHON_RELAY_DRIVE MARATHON_AGENT_CMD TICK_BIN
-REPO="/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1609-flywheel-day-1-2026-11-25-verify"
 
 # ── deterministic GitHub shim: logs every call, canned PR answers ─────────────────────────────
 # Anything not understood exits 1 — the same shape as an unauthenticated/offline gh, so
@@ -103,7 +103,7 @@ STUB_RD="$WORK/relay-drive.sh"
 cat > "$STUB_RD" << 'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-printf '%s\n' "$*" > "$WORK/relay-drive-args"
+printf '%s\n' "$*" >> "$WORK/relay-drive-args"   # GH-1476: append, one line per worker call
 # GH-505: a success must carry the reviewer attestation the real driver publishes
 [ "${RELAY_DRIVE_EXIT:-0}" -eq 0 ] && bash "$ATTEST_STUB" "$@"
 exit "${RELAY_DRIVE_EXIT:-0}"
@@ -160,6 +160,9 @@ setup_fixture() {
   for d in relay-automation bin src utils; do
     cp -R "$REPO/$d" "$root/$prefix$d"
   done
+  # GH-1476: jog_run.hold_refusal loads the hold rules relative to its own harness root
+  mkdir -p "$root/${prefix}skills/1-hourly/kickstart/scripts"
+  cp "$REPO/skills/1-hourly/kickstart/scripts/build_queue.py" "$root/${prefix}skills/1-hourly/kickstart/scripts/build_queue.py"
   mkdir -p "$root/src" "$root/test" "$root/PROJECT/2-WORKING"
   printf 'module.exports = 1\n' > "$root/src/feature.js"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$root/test/fixture-gate.sh"
@@ -198,11 +201,44 @@ if [ "${CASE_KIND:-ready}" = source ]; then
   printf 'module.exports = 999\n' > "$FR/src/feature.js"
   git -C "$FR" add src/feature.js && git -C "$FR" commit -qm source-change
 fi
+# GH-1476 holds-only cases. issue-hold/issue-label/dep-*/issue-fail: the condition lives only in
+# the live issue (gh shim below); capture-hold: only in the capture document. The capture sits in
+# 1-INBOX for issue-hold, issue-label, capture-hold and inbox-ready so "not promoted" is observable.
+CAP_REL="PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+if [ "${CASE_KIND:-ready}" = capture-hold ]; then
+  printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/$CAP_REL"
+  git -C "$FR" add PROJECT && git -C "$FR" commit -qm capture-hold
+fi
+case "${CASE_KIND:-ready}" in issue-hold|issue-label|capture-hold|inbox-ready)
+  mkdir -p "$FR/PROJECT/1-INBOX"
+  git -C "$FR" mv "$CAP_REL" "PROJECT/1-INBOX/$CAPTURE_DOC_NAME"
+  git -C "$FR" commit -qm to-inbox
+  CAP_REL="PROJECT/1-INBOX/$CAPTURE_DOC_NAME" ;;
+esac
 cat > "$STUB_BIN/gh" <<'EOF'
 #!/usr/bin/env bash
 if [ "${1:-}" = issue ] && [ "${2:-}" = view ]; then
- python3 -c 'import json,os; print(json.dumps({"state":"OPEN","closedAt":None,"body":"## Acceptance\n- [ ] artifact updated and gate green\n" + ({"held":"\nHELD: owner decision required. Do not execute until owner approves the target.\n", "dependency":"\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n", "stale":"\n- [ ] additional live requirement\n"}.get(os.environ.get("CASE_KIND"), ""))}))'
- exit 0
+ python3 - "${3:-}" <<'PY'
+import json, os, sys
+n, k = sys.argv[1], os.environ.get("CASE_KIND", "ready")
+if n == "902":  # dependency lookup: dep-fail -> gh error; dep-done -> closed issue; else open
+    if k == "dep-fail":
+        sys.exit(1)
+    print(json.dumps({"state": "CLOSED" if k == "dep-done" else "OPEN", "url": "https://github.com/example/example/issues/902"}))
+    sys.exit(0)
+if k == "issue-fail":
+    sys.exit(1)
+HELD = "\nHELD: owner decision required. Do not execute until owner approves the target.\n"
+AFTER = "\nThis work comes after #902 here.\n"
+body = "## Acceptance\n- [ ] artifact updated and gate green\n"
+body += {"held": HELD, "issue-hold": HELD,
+         "dependency": "\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n",
+         "dep-open": AFTER, "dep-fail": AFTER, "dep-done": AFTER,
+         "stale": "\n- [ ] additional live requirement\n"}.get(k, "")
+labels = [{"name": "status:held"}] if k == "issue-label" else []
+print(json.dumps({"state": "OPEN", "closedAt": None, "body": body, "labels": labels}))
+PY
+ exit $?
 fi
 if [ "${1:-}" = pr ] && [ "${2:-}" = list ]; then echo '[]'; exit 0; fi
 exit 1
@@ -223,10 +259,32 @@ if [ "${CASE_KIND:-}" = stale ]; then
   printf '2026-11-24T00:00:00Z synthetic-prior-attempt\n' > "$FT/.tick/attempts/gh-901-fixture-lane"
   cp "$FT/.tick/attempts/gh-901-fixture-lane" "$WORK/native-before"
 fi
+q() { python3 -c 'import sqlite3,sys; print(sqlite3.connect(sys.argv[1]).execute(sys.argv[2]).fetchone()[0])' "$FR/releases.db" "$1"; }
+sha() { [ -f "$1" ] && shasum -a 256 "$1" | cut -d' ' -f1 || echo MISSING; }
+execs() { python3 -c 'import glob,json,sys; print(sum(len(json.load(open(p)).get("executions") or []) for p in glob.glob(sys.argv[1]+"/.tick/jog/*/state.json")))' "$FR"; }
+att_before="$(q 'select attempt_count from jog_queue')"; cap_before="$(sha "$FT/$CAP_REL")"; ex_before="$(execs)"
 env -u MARATHON_ALLOW_TRUNK_COMMIT RELAY_DRIVE_EXIT=9 MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" SP_SUGGESTED_BRANCH="marathon/gh901-fixture" python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" --builder codex --reviewer agy --max-tasks 1 </dev/null
 rc=$?
 printf 'jog exit=%s\n' "$rc"
-if [ -f "$WORK/relay-drive-args" ]; then printf 'worker edge calls=1\n'; cat "$WORK/relay-drive-args"; else printf 'worker edge calls=0\n'; fi
+calls=0; [ ! -f "$WORK/relay-drive-args" ] || calls="$(wc -l < "$WORK/relay-drive-args" | tr -d ' ')"
+printf 'worker edge calls=%s\n' "$calls"; [ ! -f "$WORK/relay-drive-args" ] || cat "$WORK/relay-drive-args"
+att_after="$(q 'select attempt_count from jog_queue')"; cap_after="$(sha "$FT/$CAP_REL")"; ex_after="$(execs)"
+reason_after="$(q 'select coalesce(failure_reason,"") from jog_queue')"; status_after="$(q 'select status from jog_queue')"
+printf 'snapshot: attempt_count %s->%s; capture(%s) %s; executions %s->%s; native attempt files=%s; status=%s; reason=%s\n' \
+  "$att_before" "$att_after" "$CAP_REL" "$([ "$cap_before" = "$cap_after" ] && echo unchanged || echo CHANGED)" "$ex_before" "$ex_after" \
+  "$(ls "$FT/.tick/attempts" 2>/dev/null | wc -l | tr -d ' ')" "$status_after" "$reason_after"
+# GH-1476 assertion (only when EXPECT_CALLS is set): exact worker-call count; a refusal must also
+# leave attempt count, capture bytes/location and execution count unchanged, be parked, and carry
+# the SPECIFIC expected hold reason ("hold-check-unavailable: ..." can never satisfy a hold case).
+if [ -n "${EXPECT_CALLS:-}" ]; then
+  ok=1; [ "$calls" = "$EXPECT_CALLS" ] || ok=0
+  if [ "$EXPECT_CALLS" = 0 ]; then
+    [ "$att_after" = "$att_before" ] && [ "$cap_after" = "$cap_before" ] && [ "$ex_after" = "$ex_before" ] && [ "$status_after" = parked ] || ok=0
+    case "$reason_after" in "${EXPECT_REASON:?EXPECT_REASON required for a 0-call case}"*) ;; *) ok=0 ;; esac
+  fi
+  if [ "$ok" = 1 ]; then printf 'ASSERT case=%s expected_calls=%s PASS\n' "${CASE_KIND:-ready}" "$EXPECT_CALLS"
+  else printf 'ASSERT case=%s expected_calls=%s FAIL (calls=%s)\n' "${CASE_KIND:-ready}" "$EXPECT_CALLS" "$calls"; fi
+fi
 python3 -c 'import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print("queue:",c.execute("select global_id,status,failure_reason,attempt_count from jog_queue").fetchall())' "$FR/releases.db"
 printf 'Fixture retained: %s\n' "$WORK"
 if [ "${CASE_KIND:-}" = stale ]; then

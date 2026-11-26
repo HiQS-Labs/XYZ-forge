@@ -52,6 +52,12 @@ if [ "${1:-}" = "pr" ] && [ "${2:-}" = "view" ]; then
   fi
   exit 1
 fi
+# GH-1476: the pre-lease hold check asks `issue view N --json body,labels,state` (and
+# `state,url` per referenced dependency); a clean, open issue with no holds keeps ready rows ready.
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "view" ] && case " $* " in *" body,labels,state "*|*" state,url "*) true;; *) false;; esac; then
+  printf '{"state":"OPEN","url":"https://github.com/example/example/issues/901","body":"## Acceptance\\n- [ ] fixture\\n","labels":[]}\n'
+  exit 0
+fi
 # GH-1344: jog land reads the issue for whole-issue proof before closing it. The fixture issue's
 # Acceptance is fully checked, so the proof holds; `issue close` flips the stub to CLOSED/COMPLETED.
 if [ "${1:-}" = "issue" ] && [ "${2:-}" = "view" ] && case " $* " in *" state,stateReason,body,comments "*|*" state "*|*" state,stateReason "*) true;; *) false;; esac; then
@@ -160,6 +166,9 @@ setup_fixture() {
   for d in relay-automation bin src utils; do
     cp -R "$REPO/$d" "$root/$prefix$d"
   done
+  # GH-1476: jog_run.hold_refusal loads Kickstart's hold rules relative to its own harness root
+  mkdir -p "$root/${prefix}skills/1-hourly/kickstart/scripts"
+  cp "$REPO/skills/1-hourly/kickstart/scripts/build_queue.py" "$root/${prefix}skills/1-hourly/kickstart/scripts/build_queue.py"
   mkdir -p "$root/src" "$root/test" "$root/PROJECT/2-WORKING"
   printf 'module.exports = 1\n' > "$root/src/feature.js"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$root/test/fixture-gate.sh"
