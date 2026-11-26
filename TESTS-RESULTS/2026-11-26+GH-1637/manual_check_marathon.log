@@ -1,0 +1,15 @@
+== M1 default cap: no --round-cap and no brief round-cap -> 9 (4 review rounds), dry run
+  PASS: M1 default round-cap=9
+== M1b marathon.sh default: a phase with no max_review_rounds gets cap 2*4+1 = 9 (dry run)
+  PASS: M1b marathon.sh phase default round-cap=9
+== M2 full path: marathon -> relay-drive consult-at-cap -> Consult-Adjudicated -> pre-advance gate -> success
+  PASS: M2 marathon exit 0
+  PASS: M2 success text names the adjudication
+   receipt: approved Consult-Adjudicated gate green attest True
+  PASS: M2 result receipt: outcome approved, relay_status Consult-Adjudicated
+   PR notes: Automated marathon closeout for phase `p1` (GH-561). |  | Refs #1637 |  | **consult-adjudicated** (not a reviewer approval): the reviewer still had open findings at the round cap; a Codex+agy consult 
+  PASS: M2b lane_pr_notes names consult-adjudicated, advisors and not-a-reviewer-approval
+== M3 default-off through Marathon is unchanged where no reviewer turn completed (cap 1) -> cap-stalled
+  PASS: M3 cap 1 still ends cap-stalled (no reviewer turn, no consult)
+
+RESULT: 7 passed, 0 failed

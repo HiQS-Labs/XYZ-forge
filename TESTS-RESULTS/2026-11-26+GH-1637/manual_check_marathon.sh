@@ -100,6 +100,35 @@ tick_a log task.created TASKN --agent dispatcher >/dev/null
 out="$(MARATHON_AGENT_CMD="$WORK/agent2" python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief.md" --reviewer codex --builder agy --phase-id pN --relay-task TASKN --phases-dir "$A/phases" --round-cap 1 --force --pre-advance-cmd true 2>&1)"; rc=$?
 [ "$rc" = 4 ] && grep -q "reason: cap-stalled" "$A/phases/pN/ESCALATION.md" 2>/dev/null && ok "M3 cap 1 still ends cap-stalled (no reviewer turn, no consult)" || bad "M3 rc=$rc: $(tail -5 <<<"$out")"
 
+echo "== M4 the existing acceptance recheck still judges an ADJUDICATED candidate (red control, then green)"
+mkbrief() { # $1 = file, $2 = probe command; the probe exits 0 only when the fix has landed
+cat >"$1" <<EOB
+Phase brief: build deliverable.txt
+
+## Swarm Preflight Contract
+
+\`\`\`json
+{"target": {"repo": ".", "ref": "main"}, "gate": "true", "artifacts": ["deliverable.txt"],
+ "fix_probes": [{"type": "command", "cmd": "$2", "expect_nonzero": true}],
+ "remediation": {"source": "issue#1637", "criteria": "deliverable.txt exists"}}
+\`\`\`
+EOB
+}
+mkbrief "$A/brief-unfixed.md" "test -f never-built.txt"; mkbrief "$A/brief-fixed.md" "test -f deliverable.txt"
+git -C "$A" add brief-unfixed.md brief-fixed.md && git -C "$A" commit -q -m "briefs"
+for which in unfixed fixed; do
+  git -C "$A" reset -q --hard HEAD; git -C "$A" clean -fdq -e .tick -e phases; rm -f "$A/.order"
+  git -C "$A" rm -q -f --ignore-unmatch deliverable.txt >/dev/null 2>&1
+  tick_a log task.created "TASK-$which" --agent dispatcher >/dev/null
+  out="$(python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief-$which.md" --reviewer codex --builder agy --phase-id "p-$which" \
+        --relay-task "TASK-$which" --phases-dir "$A/phases" --round-cap 3 --force --pre-advance-cmd true --result-file "$WORK/r-$which.json" 2>&1)"; rc=$?
+  if [ "$which" = unfixed ]; then
+    [ "$rc" = 5 ] && grep -q "acceptance-probes-unmet" <<<"$out" && ok "M4 unfixed candidate: adjudicated terminal, then acceptance-probes-unmet (exit 5), no success" || bad "M4 unfixed rc=$rc: $(tail -12 <<<"$out")"
+  else
+    [ "$rc" = 0 ] && grep -q "Consult-Adjudicated" "$WORK/r-fixed.json" && ok "M4 fixed candidate: adjudicated terminal advances (exit 0)" || bad "M4 fixed rc=$rc: $(tail -12 <<<"$out")"
+  fi
+done
+
 echo
 echo "RESULT: $PASSN passed, $FAILN failed"
 [ "$FAILN" = 0 ]
