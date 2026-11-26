@@ -1,8 +1,8 @@
 ---
 title: "pre-push gate: select the prepared test venv automatically when PATH's python3 fails the probe"
-status: In Progress
+status: Complete
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 owner: Noel Saw
 gh_issue: 1627
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1627
