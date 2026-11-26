@@ -2631,11 +2631,17 @@ def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome)
 
 
 def _jog_no_gate_no_pr(receipt):
-    """True only for a receipt that records no gate run and no PR at all (MACHINE-CONTRACTS.md: PR fields
-    are all-null when no PR exists), so a partial or contradictory receipt is never read as task-local."""
-    gate, pr = receipt.get("gate") or {}, receipt.get("pr") or {}
-    return (gate.get("result") == "not-run" and gate.get("exit") is None
-            and not any(pr.get(k) for k in ("number", "url", "state")))
+    """True only for a receipt that EXPLICITLY records no gate run and no PR, and a real clone path.
+
+    MACHINE-CONTRACTS.md: PR fields are all-null when no PR exists and the gate block carries an
+    explicit null exit when it never ran. An absent block or key, an empty `{}`, a falsey number such as 0,
+    or an empty clone path is a partial receipt and is never read as task-local."""
+    gate, pr, repo = receipt.get("gate"), receipt.get("pr"), receipt.get("target_repo")
+    if not all(isinstance(block, dict) for block in (gate, pr, repo)):
+        return False
+    return (gate.get("result") == "not-run" and "exit" in gate and gate["exit"] is None
+            and all(key in pr and pr[key] is None for key in ("number", "url", "state"))
+            and isinstance(repo.get("path"), str) and bool(repo["path"].strip()))
 
 
 def _jog_receipt_is_current(root, gid, latest, drive_exit):
@@ -2694,7 +2700,7 @@ def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
     if (receipt.get("outcome") != "parked" or receipt.get("reason") != "lane parked at the attempt cap"
             or receipt.get("exit_code") != 8 or receipt.get("approval_preserved")
             or not all(isinstance(n, int) and not isinstance(n, bool) for n in (count, cap))
-            or cap < 0 or count < cap
+            or count < cap
             or not _jog_no_gate_no_pr(receipt)
             or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
             != os.path.realpath(target)):

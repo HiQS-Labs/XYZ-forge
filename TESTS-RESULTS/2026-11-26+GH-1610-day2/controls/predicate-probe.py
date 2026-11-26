@@ -87,6 +87,13 @@ res = [
     run("stalled-other-issue-receipt", False, stalled(issue="902"), fn="stalled"),
     run("stalled-gate-not-run-but-exit-recorded", False, stalled(gate_exit=1), fn="stalled"),
     run("stalled-pr-url-without-number", False, stalled(pr_url="https://example.invalid/pr/1", pr_state="OPEN"), fn="stalled"),
+    run("stalled-gate-exit-key-absent", False, dict(stalled(), gate={"cmd": "x", "result": "not-run", "receipt_path": None}), fn="stalled"),
+    run("stalled-pr-empty-object", False, dict(stalled(), pr={}), fn="stalled"),
+    run("stalled-pr-number-zero", False, dict(stalled(), pr={"number": 0, "url": None, "state": None}), fn="stalled"),
+    run("stalled-empty-target-repo-path", False, dict(stalled(), target_repo={"path": "", "origin_url": "https://example.invalid/x.git"}), fn="stalled"),
+    run("exhausted-pr-empty-object", False, dict(receipt(), pr={})),
+    run("exhausted-empty-target-repo-path", False, dict(receipt(), target_repo={"path": "", "origin_url": "https://example.invalid/x.git"})),
+    run("negative-cap-native-refusal", True, receipt(count=2, cap=-1)),
     run("exhausted-gate-not-run-but-exit-recorded", False, dict(receipt(), gate={"cmd": "x", "result": "not-run", "exit": 1, "receipt_path": None})),
     run("exhausted-pr-url-without-number", False, dict(receipt(), pr={"number": None, "url": "https://example.invalid/pr/1", "state": "OPEN"})),
 ]
