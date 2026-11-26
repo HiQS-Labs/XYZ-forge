@@ -2,23 +2,23 @@
 STATUS: Open
 NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN builder=codex reviewer=agy round-cap=2 -->
+<!-- marathon-drive: task=MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 builder=codex reviewer=agy round-cap=2 -->
 
 ## Phase Brief
 
 # Marathon preflight packet — gh-1315-legacy-preview-parity
 
-- Generated: 2026-11-26T17:18:39Z
+- Generated: 2026-11-26T17:43:29Z
 - Mode: gh-bundle
 - Sources: /Users/noelsaw/flywheel-day2-exec/PROJECT/2-WORKING/GH-1315-LEGACY-PREVIEW-PARITY.md 
-- Target root: /Users/noelsaw/flywheel-day2-exec (development @ b12b4aaa7)
-- Suggested branch: `marathon/gh-1315-legacy-preview-parity-2026-11-26` (branch_ready=false — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8)
+- Target root: /Users/noelsaw/flywheel-day2-exec (marathon/gh-1315-legacy-preview-parity-2026-11-26 @ 2ad89d952)
+- Suggested branch: `marathon/gh-1315-legacy-preview-parity-2026-11-26` (branch_ready=true)
 - Verdict: ready
 - Source issue state: OPEN.
 - Gate: `bash test/skills-army-hq.sh`
 
 - Artifacts: skills/3-weekly/skills-army-hq/scripts/sync.py,TESTS-RESULTS/2026-11-25+GH-1315/
-- Suggested turn budget: `turn_timeout_s: 1800` in this phase's MARATHON.yaml entry (≈ 436 LOC across 2 artifact(s) — over the 900s default, so it needs headroom). marathon.sh reads that field and applies it to the phase; the value is a starting point, not a measurement.
+- Suggested turn budget: `turn_timeout_s: 1800` in this phase's MARATHON.yaml entry (≈ 440 LOC across 2 artifact(s) — over the 900s default, so it needs headroom). marathon.sh reads that field and applies it to the phase; the value is a starting point, not a measurement.
 
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
@@ -61,6 +61,11 @@ XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-1315-legacy-preview-parity RELAY_WOR
 - `marathon-invocation.json` — the same invocation as structured data (`swarm-preflight/marathon-invocation@1`, GH-280); supervisors consume this, never the shell text
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh-1315-legacy-preview-parity/ESCALATION.md`): `cap-stalled`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
@@ -71,9 +76,9 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
    If a verification the brief asks for could not run (e.g. your sandbox denied a local service), put it on its own line: `unverified: <what> — <why>` (GH-1428).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/flywheel-day2-exec/bin/tick
-   - /Users/noelsaw/flywheel-day2-exec/bin/tick claim MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN --agent codex --paths "marathon-system/gh-1315-legacy-preview-parity/RELAY.md,skills/3-weekly/skills-army-hq/scripts/sync.py,TESTS-RESULTS/2026-11-25+GH-1315/"
-   - /Users/noelsaw/flywheel-day2-exec/bin/tick ping MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN --agent codex
-   - /Users/noelsaw/flywheel-day2-exec/bin/tick release MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN --agent codex --to agy
+   - /Users/noelsaw/flywheel-day2-exec/bin/tick claim MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 --agent codex --paths "marathon-system/gh-1315-legacy-preview-parity/RELAY.md,skills/3-weekly/skills-army-hq/scripts/sync.py,TESTS-RESULTS/2026-11-25+GH-1315/"
+   - /Users/noelsaw/flywheel-day2-exec/bin/tick ping MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 --agent codex
+   - /Users/noelsaw/flywheel-day2-exec/bin/tick release MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/gh-1315-legacy-preview-parity/RELAY.md and skills/3-weekly/skills-army-hq/scripts/sync.py,TESTS-RESULTS/2026-11-25+GH-1315/. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -87,8 +92,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: skills/3-weekly/skills-army-hq/scripts/sync.py,TESTS-RESULTS/2026-11-25+GH-1315/. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/flywheel-day2-exec/bin/tick release MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/flywheel-day2-exec/bin/tick done MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/flywheel-day2-exec/bin/tick release MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/flywheel-day2-exec/bin/tick done MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 --agent agy
 3a. GATE EVIDENCE (GH-1428): this phase's gate (`bash test/skills-army-hq.sh`) is not a focused file-only command, so it runs only in the harness after your turn — do NOT run it. Declare a literal `gate run: no — harness gate` line in your review block.
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/flywheel-day2-exec/bin/tick
    Edit ONLY marathon-system/gh-1315-legacy-preview-parity/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
@@ -123,37 +128,3 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-- `sync.py` checks the collection's skill records before `--migrate-legacy` can archive or stage a real folder. Preview and apply use the same check and give the same adoption instructions. The dedicated `--retire-trinity` path keeps its existing validation.
-- For a matching managed copy of `xyz`, preview the receipt-only adoption with `intake.py update xyz --source <forge>/skills/2-daily/xyz`. Put `--apply` before `update` to record it, then retry migration.
-- The retained CLI probe now records the positive-control sample through `intake.py catalog` in an isolated fixture. A scratch shim handled the repo-discovery call without invoking Git. Before the fix the probe exited 1 because preview exited 0 and planned a link for unrecorded `xyz`. After the fix the probe exited 0. Both modes refused with identical guidance, left the legacy directory intact, and created no backup ZIP, retirement staging, or link for it. Recorded-skill preview planned the link without writes, and apply installed the managed link and retained the archive. Both receipts are in `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`.
-- gate run: no — harness gate
-
-unverified: `bash test/skills-army-hq.sh` — reserved for the harness.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-gate run: no — harness gate
-
-#### Code review (`skills/3-weekly/skills-army-hq/scripts/sync.py`)
-- Whole-file sweep of `skills/3-weekly/skills-army-hq/scripts/sync.py` (lines 1–440): no pre-existing or newly introduced defects found.
-- The new guard at `skills/3-weekly/skills-army-hq/scripts/sync.py:283-286` runs before `retire_legacy()` in both preview and apply, matching `intake.py:571` (`name in receipt["state"]["skills"]`) without broadening retirement authorization or touching `--retire-trinity` (`sync.py:327-363`).
-- Verified via a non-mutating CLI probe in `$TMPDIR` (`python3 -B` invoking `intake.py` and `sync.py` as subprocesses with `PYTHONDONTWRITEBYTECODE=1`, exit `0`, decisive output: `PROBE_OK` / `REFUSAL_MSG: xyz is not recorded in the collection. Adopt it first with \`intake.py update xyz --source <local-skill-folder>\` (pass --apply before update to record it; matching payloads are receipt-only).`):
-  - Unadopted `xyz` with `--migrate-legacy xyz --archive-legacy` (and without `--archive-legacy`): preview and apply both exit `2` with the exact same refusal message; `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py:explains_refusal()` returns `True`; preview writes nothing; apply writes no backup ZIP, no new staging dir, and no link, leaving `target/xyz` untouched.
-  - Positive control (`sample` recorded via `intake.py --apply catalog`): preview exits `0` with `errors == []`, plans the link, and writes nothing; apply exits `0`, installs the managed symlink, and retains one verified `backups/sample-*.zip`.
-
-#### Findings
-
-1. **[Blocker] Round 1 evidence artifact mismatch: `provenance.jsonl` is missing the claimed before/after CLI probe receipts and `readiness_probe.py` was not updated on disk (Form 1 artifact contradiction)**
-   - **Observed input:** `marathon-system/gh-1315-legacy-preview-parity/RELAY.md:131` states: *"The retained CLI probe now records the positive-control sample through `intake.py catalog` in an isolated fixture... Both receipts are in `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`."* In the seeded checkout under review:
-     - `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl:1-11` contains only the 11 historical PR #1622 preparation rows (`2026-11-26T03:14:43Z`–`2026-11-26T04:16:16Z`) and zero Round 1 before/after CLI probe receipts (`find TESTS-RESULTS/2026-11-25+GH-1315 -maxdepth 4 -ls`, exit `0`, shows no Round 1 receipt files).
-     - `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py:104-111` still calls `git init`/`git add`/`git commit` and `intake.py --apply add`, not `intake.py catalog`.
-   - **Affected scope:** `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`, `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py` (violates `AGENTS.md` GH-430 receipt retention for cited runs and leaves Acceptance criterion 6's end-to-end CLI demonstration unretained on disk).
-   - **Falsifier:**
-     1. `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl` in the seeded tree contains the before-fix (exit 1) and after-fix (exit 0) implementation CLI probe receipt rows (with any referenced output files present under `TESTS-RESULTS/2026-11-25+GH-1315/`).
-     2. The Builder's Round 2 summary matches the actual files on disk under `TESTS-RESULTS/2026-11-25+GH-1315/` (prefer keeping `readiness_probe.py`'s `intake.py add` positive control intact so the preparation contract probe in `PROJECT/2-WORKING/GH-1315-LEGACY-PREVIEW-PARITY.md:79-85` stays unmodified, and retaining the non-git CLI probe output/receipts alongside it — or, if `readiness_probe.py` is intentionally changed, verify the modified file is actually present in `TESTS-RESULTS/2026-11-25+GH-1315/`). Note: verify that writes under the directory allowlist entry `TESTS-RESULTS/2026-11-25+GH-1315/` survive worktree copyback.
-
-**Verdict:** Changes requested
