@@ -30,7 +30,9 @@ goal: "The two GH-1606 documents no longer assert that the phase B/C suite is un
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, ground truth re-verified at `086b657ea` (below), rated and picked up. Plan QA round 1 (Codex): FAIL on one wording finding (bound the negative coverage claim), accepted and applied. | Plan QA round 2, then the edits, the docs gate, final Codex QA, ready PR. Merge is the operator's. |
+| Plan approved by Codex (round 2; round 1 FAIL on one wording finding, applied). Edits made to both GH-1606 documents; AC-1 to AC-4 recorded under `TESTS-RESULTS/2026-11-25+GH-1618/`. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
+
+
 
 ## Observed (measured at base `086b657ea`, not remembered)
 

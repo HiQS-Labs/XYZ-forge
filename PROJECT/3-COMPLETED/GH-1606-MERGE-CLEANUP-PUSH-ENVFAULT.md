@@ -27,7 +27,30 @@ goal: "A B1 repair is never started while the push gate cannot run: the PR is de
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (round 3). Final Codex QA approved on round 2 after one real finding was fixed in `11ac019c7`. PR #1614 opened; CodeRabbit's PR review then found one more valid finding (a nonzero probe exit with no fault line must not defer), fixed in `06671b514` with a retained red/green control and a fresh end-to-end scenario. | Fresh Codex delta review of the fix, qualification gate and push, CI on the new head, then merge. The ungated phase B breakage is tracked in Issue #1615. |
+| Plan approved by Codex (round 3). Final Codex QA approved on round 2 after one real finding was fixed in `11ac019c7`. PR #1614 opened; CodeRabbit's PR review then found one more valid finding (a nonzero probe exit with no fault line must not defer), fixed in `06671b514` with a retained red/green control and a fresh end-to-end scenario. | Fresh Codex delta review of the fix, qualification gate and push, CI on the new head, then merge. The standalone-red phase B breakage was tracked in Issue #1615 and fixed in PR #1617 (see the Correction section below; the earlier word "ungated" was wrong). |
+
+## Correction (2026-11-25): the gate does run the phase B/C suite
+
+Added after Issue #1615 (closed), PR #1617 (merged as `f8bd9860d`) and Issue #1618. The original text
+below is kept; only the wrong inference is struck through and marked superseded.
+
+- **What was measured stands.** Run standalone at base `b479f74e0`, `python3 test/gh534_phase_b_tests.py` gave
+  39 tests, 14 failures, 1 error. The cause was the GH-1576 wiring check: the fixture seed has no `githooks/`.
+- **What was wrong.** The inference that the suite is "ungated", "referenced by no gate, so the gate never saw it",
+  and that "no gated suite enters the B1 reserve path". It came from searching `validate.sh`, `ci-local.sh` and
+  `test/*.sh` for the file name, which missed that `test/gh436-merge-cleanup.py` imports phases A, B and C with
+  `from gh534_phase_{a,b,c}_tests import *` (lines 1382-1384 at `086b657ea`) and that `validate.sh:96` registers
+  `gh436-merge-cleanup.sh`. The gate therefore runs the phase B and C tests (the gated entry point collects 227
+  tests, 39 of them phase B). It stayed green because `gh436` stubs the wiring check for its whole process
+  (`test/gh436-merge-cleanup.py:43`). Only standalone runs were red, and PR #1617 repaired them.
+- **What a gated suite reaches** (verified at `086b657ea`, receipts in `TESTS-RESULTS/2026-11-25+GH-1618/`). A phase B
+  end-to-end test collected through `gh436` was run once with call counters and reached `attempt_record.reserve`
+  once on the healthy path. A search of `test/` found no direct reference to the toolchain-fault helper; the fault
+  ordering this issue added is demonstrated by this issue's manual driver, and gated fault-ordering coverage was not
+  established by these checks. The reserve probe ran at `086b657ea` on that one test only; the gate at the GH-1606
+  base was not re-run, and nothing else was re-measured.
+- **Nothing in this issue's conclusions depends on the wrong inference.** Its controls ran through its own driver,
+  and AC-5's gated `gh436` run (227 tests) already included the 39 phase B tests.
 
 ## Observed problem (measured, not remembered)
 
@@ -44,8 +67,9 @@ head's push was refused by the pre-push gate with an `ENVIRONMENT FAULT`, and me
 | Hook wiring is already checked pre-reserve | `merge_cleanup.py:1094` in `prepare_landing_clone` | `gate_unwired_reason(clone, install=True)` — so wiring is **not** the gap; only the gate's toolchain is |
 | The hidden cause | `merge_cleanup.py:1165` | `push refused: {r.stderr.strip()[-400:]}` — the hook's own text says "named in the output above", which the slice drops |
 | The slot really was spent | attempt record for PR #1599 after one rerun | two `B1 / resolved` entries; the first never pushed a head |
-| No gated suite enters the B1 reserve path | `test/gh436-merge-cleanup.py:43` stubs `gate_unwired_reason`, `:458` mocks `prepare_landing_clone`; `test/gh534_phase_b_tests.py` is not referenced by `validate.sh`/`ci-local.sh`/`test/*.sh` | no suite drives B1 reservation or a toolchain fault |
-| Phase B is already red at the clean base (round-1 R1, measured) | `python3 test/gh534_phase_b_tests.py` in a disposable clone at `b479f74e0`, venv PATH | `Ran 39 tests … FAILED (failures=14, errors=1)`; cause `githooks/install.sh is missing … (GH-1576)` |
+| ~~No gated suite enters the B1 reserve path~~ | ~~`test/gh436-merge-cleanup.py:43` stubs `gate_unwired_reason`, `:458` mocks `prepare_landing_clone`; `test/gh534_phase_b_tests.py` is not referenced by `validate.sh`/`ci-local.sh`/`test/*.sh`~~ | ~~no suite drives B1 reservation or a toolchain fault~~ |
+| **Superseded 2026-11-25 (see Correction):** the gated `gh436` entry point collects the phase A/B/C classes, and a phase B end-to-end test collected through it reaches B1 reservation | `test/gh436-merge-cleanup.py:43` stubs `gate_unwired_reason`, `:458` mocks `prepare_landing_clone` in gh436's own tests (both true); `:1382-1384` import phases A, B, C with `import *`; `validate.sh:96` registers gh436 | the gate runs the phase B/C tests; no direct test reference to the toolchain-fault helper was found, so gated fault-ordering coverage was not established |
+| Phase B is already red when run standalone at the clean base (round-1 R1, measured) | `python3 test/gh534_phase_b_tests.py` in a disposable clone at `b479f74e0`, venv PATH | `Ran 39 tests … FAILED (failures=14, errors=1)`; cause `githooks/install.sh is missing … (GH-1576)` |
 | Same-class run-start warnings exist | `merge_cleanup.py:1409` `preflight_warnings()`, called at `:2915` | warn-only; no gate-toolchain entry |
 
 ## Requirement (issue #1606)
@@ -125,15 +149,16 @@ disposable full clones, never the primary.
 
 ### Measured prerequisite (round-1 R1, verified before revising)
 
-- `test/gh534_phase_b_tests.py` is **already red at the clean base** `b479f74e0`: 39 tests, 14 failures,
+- `test/gh534_phase_b_tests.py` is **already red when run standalone at the clean base** `b479f74e0`: 39 tests, 14 failures,
   1 error. Cause measured: `landing clone gate wiring failed: githooks/install.sh is missing … (GH-1576)` —
   its `LedgerFixture` seed has no `githooks/`, and GH-1576 patched only `test/gh436-merge-cleanup.py`.
-  The suite is not referenced by `validate.sh`, `ci-local.sh` or any `test/*.sh`, so the gate never saw it.
+  ~~The suite is not referenced by `validate.sh`, `ci-local.sh` or any `test/*.sh`, so the gate never saw it.~~
+  *Superseded 2026-11-25 (see Correction): `gh436` imports it with `import *`, so the gate does run it.*
 - The gated merge-cleanup suites are `gh436-merge-cleanup.sh`, `gh645-…`, `gh674-…`. `gh436` stubs the
-  wiring check (`:43`) and mocks `prepare_landing_clone` (`:458`), so **no gated suite enters the B1
-  reserve path**.
-- Consequence: phase B is **not** a "stays green" witness, and the red control cannot be a PATH-only rerun of
-  its existing fixture. The phase B breakage is a separate, pre-existing defect (out of scope here; recorded
+  wiring check (`:43`) and mocks `prepare_landing_clone` (`:458`) in its own tests, ~~so **no gated suite enters the B1
+  reserve path**~~ *(superseded 2026-11-25, see Correction: a gated-collected phase B test does reach B1 reservation on the healthy path)*.
+- Consequence: standalone phase B is **not** a "stays green" witness, and the red control cannot be a PATH-only rerun of
+  its existing fixture. The standalone phase B breakage is a separate, pre-existing defect (out of scope here; recorded
   for triage, not fixed in this PR).
 
 ### Manual driver — `TESTS-RESULTS/2026-11-25+GH-1606/run_controls.py` (not a suite, not registered)
@@ -177,7 +202,7 @@ stderr**: `routing to B1` and `B1:` lines are written by `log` to stdout (`merge
 | AC-2 (central) | S1/S2: conflicting disjoint-ledger PR, toolchain fault, push stub refusing | BASE (S1) must show: exit 2, `routing to B1`, attempts == 1, push stub called once, **fault text absent** from output — that is the incident. A candidate that still reserves fails S2 | S2: exit 3; stderr names `ENVIRONMENT FAULT` and `deferred: gate toolchain`; `routing to B1` present, no `B1:` lines; record `absent` or `attempts == []`; push stub 0 calls; origin branch SHA unchanged |
 | AC-3 | S3 healthy toolchain; S4 fault run then `--resume --execute` with toolchain fixed; S5 no `validate.sh` in the clone (consumer shape); S7 `--resume` with the record at the 2-repair ceiling under fault | A candidate that changes the healthy path, spends/loses a slot across the resume, or probes before the resume skip fails one of these | S3: BASE == CANDIDATE (PR `MERGED`, attempts == 1, exactly one real push, origin SHA == the record's repaired commit); S4: second run lands the same way, total attempts == 1; S5: BASE == CANDIDATE; S7: `previously parked`, record unchanged (the 2-attempt ceiling record is created through the `attempt_record` writer, not hand-written JSON) |
 | AC-4 | S6 dry run under fault, then healthy | A missing warning, a warning under a healthy toolchain, or any new write fails | fault: `PRE-FLIGHT:` line naming the fault, no attempt record, no new writes beyond the existing selection pin; healthy: no such line |
-| AC-5 | Existing gated suites: `gh436-merge-cleanup.sh`, `gh645-…`, `gh674-…` run through the classified gate | Any regression | all green; phase B explicitly **not** used as a witness (red at base) |
+| AC-5 | Existing gated suites: `gh436-merge-cleanup.sh`, `gh645-…`, `gh674-…` run through the classified gate | Any regression | all green; phase B explicitly **not** used as a witness (red standalone at base) |
 | AC-6 | `SKILL.md` carries one sentence on the deferral and the PRE-FLIGHT entry, read from the consumer entry (Phase 5 / PRE-FLIGHT paragraph) | Missing or contradictory text | present and consistent with exit-3 / deferred vocabulary |
 
 Non-vacuity rule for every row: a claimed named output must be **non-empty** and quoted; missing output is a
@@ -211,7 +236,7 @@ PATH fixed — the deferred PR is repaired and lands using the same budget it wo
 
 | Finding | Disposition |
 |---|---|
-| R1 [Blocker] red control not runnable as written | **Accepted.** AC-2 rewritten as the manual driver above; phase B withdrawn as a witness after measuring it red at base |
+| R1 [Blocker] red control not runnable as written | **Accepted.** AC-2 rewritten as the manual driver above; standalone phase B withdrawn as a witness after measuring it red at base |
 | R2 [Should] "whole class" overstated | **Accepted.** Class bounded to blocking toolchain faults; PHP stays advisory; fail-open and unmeasured cases stated |
 | R3 [Should] probe is conservative | **Accepted.** Tradeoff recorded; hook classifier not copied |
 | Round 2 R1 [Blocker] (open item) healthy push seam cannot land | **Accepted.** Verified: fixture head comes from the origin branch (`:74-79`) and `merge_cleanup.py:2213-2226` stops with exit 2 on a head mismatch. Healthy runs now delegate to the real `push_resolved_head`; S1 keeps the refusal stub; the published head must equal the recorded repaired commit; stdout is captured |
@@ -237,7 +262,7 @@ NO_ENTRY. The evidence is one incident and one fix; the generalizable claims (pr
 - Code traced at base `b479f74e0`: `reserve` `:2148`, `finish` `:2188`, push `:2197`, `push_resolved_head` `:1142`, tail slice `:1165`, hook wiring `:1094`, `preflight_warnings` `:1409`/`:2915`.
 - Correction recorded: an early reading of the file predated PR #1599's own edits to it; all line numbers above are re-read at the clone base.
 - Correction recorded: hook wiring is already pre-reserve, so the class is "gate toolchain", not "any push precondition".
-- Plan QA round 1 (Codex, 2026-11-25): VERDICT FAIL → R1/R2/R3 accepted. Verified R1 empirically before accepting: a single existing phase B end-to-end test run in a disposable clone at base failed with the GH-1576 missing-installer refusal; the full phase B file then measured 39 tests, 14 failures, 1 error. Gated merge-cleanup suites located in `validate.sh` (`gh436`, `gh645`, `gh674`).
+- Plan QA round 1 (Codex, 2026-11-25): VERDICT FAIL → R1/R2/R3 accepted. Verified R1 empirically before accepting: a single existing phase B end-to-end test run in a disposable clone at base failed with the GH-1576 missing-installer refusal; the full phase B file then measured 39 tests, 14 failures, 1 error. Gated merge-cleanup suites located in `validate.sh` (`gh436`, `gh645`, `gh674`). [Correction 2026-11-25: `gh436` also collects the phase A/B/C classes via `import *`; see Correction.]
 - Round-1 review paraphrase (written from the artifact only) matched the plan's intent; no comprehension mismatch to adjudicate.
 - Plan QA round 2 (Codex, 2026-11-25): VERDICT FAIL on a single item (healthy push seam). Verified against `merge_cleanup.py:2213-2226` and the fixture's `view()` (`test/gh534_phase_b_tests.py:74-79`) before accepting; derived the driver from the existing disjoint-B1 landing scenario at `:421`. All other round-2 findings were `[Pass]`.
 - Feasibility measured before round 3: in a disposable clone at base `b479f74e0`, applying only the wiring seam (`merge_cleanup.gate_unwired_reason = lambda clone, install=False: ""`, the same stub `test/gh436-merge-cleanup.py:43` uses) makes the existing scenario `TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it` pass end to end: `attempt 1/2 reserved (script, rung B1, head 5629dff0c3)`, B1 repair `rc=0`, real push `pushed d55922402c to feat/b`, both PRs `MERGED`, `Ran 1 test … OK`. So the healthy path through the real `push_resolved_head` is runnable on `LedgerFixture`.

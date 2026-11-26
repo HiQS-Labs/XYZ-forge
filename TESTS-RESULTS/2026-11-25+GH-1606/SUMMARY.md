@@ -35,9 +35,29 @@ one-off manual driver, not a suite, and is registered nowhere.
   mutant was rebuilt and verified (22 differing lines; probe after `reserve`) before the row above.
 - Conservative deferral is unmeasured on a real docs-route push (plan, *Risks*): the probe can defer a
   repair whose hook route would have skipped `validate.sh`; cost is exit 3 and a named fix, no slot.
-- `test/gh534_phase_b_tests.py` is red at the clean base (39 tests, 14 failures, 1 error) and ungated;
-  not caused by this change and not fixed here. Only its fixture class is reused.
+- `test/gh534_phase_b_tests.py` is red when run standalone at the clean base (39 tests, 14 failures, 1 error) ~~and ungated~~
+  *("ungated" superseded 2026-11-25, see the correction note below)*; not caused by this change and not fixed here. Only its fixture class is reused.
 - Final QA round 1 found one real defect in the first implementation (first-fault-line selection could hide the blocking python cause behind an advisory php line); reproduced with the reviewer's probe, fixed in `11ac019c7`, and all rows above were re-established on that commit (the driver was rerun, the mutant rebuilt and verified, the smoke and the three suites rerun).
 - PR #1614 review (CodeRabbit) found one valid inline finding on the first published head: `gate_toolchain_fault_reason` returned the output tail for a nonzero exit with no `ENVIRONMENT FAULT` line, which would defer a PR for a reason naming no fault (e.g. a consumer's own `validate.sh` that does not know `--print-mode`). Verified against the code, fixed in `06671b514`, and every row above was re-established on that commit.
 - The driver previously expanded the home directory into one provenance `command` string; fixed at the source (the label is now `$HOME/...`) and the recomposed provenance is asserted free of `/Users/` text. `releases.sql` has 5 pre-existing `/Users/` lines at the base; this PR adds none.
 - Not run: the final repository gate for the pushed commit (Step 9) and the final independent review.
+
+## Correction (2026-11-25)
+
+Written after Issue #1615 (closed), PR #1617 (merged as `f8bd9860d`) and Issue #1618; the rows and notes above
+are kept as recorded.
+
+- What was measured stands: run standalone at base `b479f74e0`, `test/gh534_phase_b_tests.py` gave 39 tests, 14
+  failures, 1 error; the cause is the GH-1576 wiring check (the fixture seed has no `githooks/`).
+- What was wrong: the word "ungated" and the statement that no gate runs the suite. The gated entry point
+  `test/gh436-merge-cleanup.py` (registered at `validate.sh:96`) imports phases A, B and C with `import *` (lines
+  1382-1384 at `086b657ea`) and stubs the wiring check for its whole process (`:43`), so the gate runs the phase B/C
+  tests and stayed green. Only standalone runs were red; PR #1617 repaired them. The AC-5 row above (`gh436` 227
+  tests OK) already included the 39 phase B tests.
+- `provenance.jsonl` row `FINDING-phaseB-pre-existing` is a recorded receipt and is unchanged. Its title word
+  "ungated" and its note "referenced by no validate.sh / ci-local.sh / test/*.sh entry, so the gate never saw it"
+  are superseded by this note.
+- Evidence for the correction: `TESTS-RESULTS/2026-11-25+GH-1618/`. A phase B test collected through `gh436` reached
+  `attempt_record.reserve` once on the healthy path (one test, at `086b657ea`). A search of `test/` found no direct
+  reference to the toolchain-fault helper; gated fault-ordering coverage was not established by these checks. The
+  gate at the GH-1606 base was not re-run.
