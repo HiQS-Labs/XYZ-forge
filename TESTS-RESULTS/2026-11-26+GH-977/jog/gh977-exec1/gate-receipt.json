@@ -1,0 +1,20 @@
+{
+  "sha": "e2f483fb72178545cc44f4ea29e56fbaa25669ac",
+  "gate": "bash test/gh257-roadmap-ledger-fixes.sh && bash test/gh549-work-events.sh",
+  "mode": "marathon",
+  "exit_code": 0,
+  "passed": null,
+  "total": null,
+  "duration_s": null,
+  "timestamp": "2026-11-26T17:35:20.967191+00:00",
+  "host": "Darwin 24.6.0",
+  "attempt": {
+    "attestation": "/Users/noelsaw/flywheel-day2-exec/.git/relay-attest/MARATHON-GH-977-ROADMAP-UPDATE-KEEPS-RATING-TURN.json",
+    "id": "242ca69927a748f4938f08cc9f274a92",
+    "kind": "lane",
+    "record": "/Users/noelsaw/flywheel-day2-exec/.tick/attempt-history/gh-977-roadmap-update-keeps-rating-gnbnpe7k/attempts",
+    "archived": true,
+    "sha": "e2f483fb72178545cc44f4ea29e56fbaa25669ac",
+    "state": "active"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 977,
+  "execution_id": "gh977-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-977-roadmap-update-keeps-rating-2026-11-26",
+  "pr_number": 1636,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "ea500f7c26741a40bf284c4671e006a52fde3c544ec90b824128d61750da8ef3",
+    "gate-receipt.json": "8b62e360ead010ed37da0fc5cea50f7af0aad09bc5fcf3dfed96cead11c6bb74",
+    "provenance.jsonl": "bec113907937de0bdb945135e40d83175903737faebf9bd5b11b8aa4a74da5f0"
+  }
+}
