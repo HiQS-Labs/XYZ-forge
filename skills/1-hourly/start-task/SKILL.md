@@ -51,7 +51,7 @@ repository gates separately.
 > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
 > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
 > 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation, then smoke-run the change on its main path and one adjacent path.
-> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, apply the target’s qualification policy before pushing, open the PR against its integration branch, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
+> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, apply the target’s qualification policy before pushing, open the PR against its integration branch, and audit all task and disposable helper checkouts. Retire safe checkouts without waiting for merge, including on resume after hosted CI turns green, and report the checkout audit line in the handoff.
 >
 > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
 
@@ -117,6 +117,9 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    and create the task branch under repo policy. In XYZ Forge the branch is cut
    off `origin/development`. Apply [target repository qualification](#target-repository-qualification)
    for provisioning before beginning work. Preserve the primary checkout and other sessions.
+   Keep a running **Checkout Manifest** in the task plan (active handoff state for simple
+   tasks). Record the absolute path of every task or helper checkout as it is created or
+   reused, including linked worktrees. Carry the manifest across turns and reconcile it on resume.
    **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
    tracking issue first, so the number is known before anything is named:
    - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
@@ -319,7 +322,7 @@ in Step 1. Apply it during clone provisioning, final verification and every push
      approved commit in the same clone you will push from so its hook can reuse the
      exact-commit receipt (`utils/py/gate_receipt.py`).
    In XYZ Forge, use a **separate disposable full clone** whenever a direct gate or
-   a push will run mutation-heavy suites. Verify HEAD, `core.bare`, remotes and
+   a push will run mutation-heavy suites. Record gate, verify and smoke clones in the Checkout Manifest. Verify HEAD, `core.bare`, remotes and
    local `user.email` before and after the run. Drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
    scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
@@ -357,7 +360,7 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    reviewer `Clone probe:` before running it (refuse any probe that reaches the
    network, credentials, or paths outside the disposable clone and record the refusal
    as `[Unverified — clone probe failed/unavailable]`), then execute safe probes in a
-   disposable full clone (recording either a fix with before/after probe output,
+   disposable full clone listed in the Checkout Manifest (recording either a fix with before/after probe output,
    `Declined — falsified by clone probe: <cmd → exit + output>`, or keeping the
    finding OPEN as `[Unverified — clone probe failed/unavailable]` and blocking
    `STATUS: Approved` until re-run cleanly or escalated/parked when the probe errors,
@@ -378,6 +381,7 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    For every Forge push, use a separate disposable full clone with the exact
    approved commit, verified canonical origin and the same attempt context. This
    keeps a full-gate fallback isolated even when the final diff routes to docs.
+   Record the push clone and any later CI-remediation checkout in the Checkout Manifest.
    Install the hook there during provisioning and check it immediately before
    pushing. Compare clone identity before and after the hook runs as in Step 7.
    After required gates pass, open the ready PR against the target's integration
@@ -404,6 +408,14 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    - **Public evidence:** use repo-relative paths to committed `TESTS-RESULTS/` receipts, stable IDs, or public issue/PR/commit links. Never paste DB narratives, transcripts, credentials, hostnames or absolute paths.
    - **ATE/fuzz evidence (Phase 6a):** it counts only after semantic replay, and the cited record must show the predicate and the clean/failing controls. A raw cluster, or a replay matched only by digest or exit code, is `confounded`.
    Report each issue/group's PR or blocker and QA/gate result.
+   **Checkout Retirement Audit (every exit).** Reconcile every manifest path before final
+   handoff and before posting the final closeout comment. On early exits (existing fix
+   confirmed in Step 1, blocked plan QA, draft PR or operator pivot), retire verified-clean
+   disposable helpers and preserve WIP with the reason and next resume or retirement action.
+   For a ready PR, defer retirement only while hosted checks run or fixes are in flight.
+   Record `Checkouts preserved: <paths> (awaiting hosted CI)` in the interim handoff.
+   On PR-watch or resume, including after a later CI-fix push, verify green checks on the
+   current PR head, then re-enter retirement below and update the closeout comment before final handback.
    **Close the loop on each tracked issue** with one comment, using the procedure in
    [`todo-list` §4](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/todo-list/SKILL.md#4-close-the-loop-on-github)
    (`skills/2-daily/todo-list/SKILL.md` here) with marker `<!-- start-task closeout: <branch> -->`:
@@ -411,21 +423,27 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    what stays open. The next step is "awaiting merge" only for a verified ready PR. A group
    that stops earlier (plan QA unresolved, gate blocked, deferred) posts at that stop with
    its actual blocker and resume action. Never close or relabel here. Put the comment URL
-   (or `unposted`) in the handoff. Then
-   complete automatic published-checkout retirement (GH-1059), rather than ending
-   with a reminder (GH-690):
+   (or `unposted`) in the handoff. Both the marked comment and final operator handoff must
+   include the audit result: `Checkouts retired: <paths>` and/or
+   `Checkouts preserved: <path> (<exact reason + next action>)` for every manifest entry.
+   If no checkout was created or reused, write `NONE_CREATED`; like `NO_ENTRY`, this result is mandatory.
+
+   **Retire the recorded checkouts (GH-1059):**
    - Retain required plans, code, review receipts and verification evidence in the PR;
      push every intended local checkpoint and verify the exact live PR/branch head.
      A published draft, failed/skipped required gate, or unfinished review is not PR-ready.
-   - Identify only the task checkout and gate/verify helpers created by this workflow.
+   - Limit retirement to task-owned checkouts in the manifest.
      Resolve the protected primary separately as an absolute path; never infer it from a disposable clone.
      Preserve remaining local-only evidence, stashes, unrelated refs, peer claims/processes,
      dependent worktrees and unknown safety state. Do not sweep other task folders.
    - Release only this workflow's completed claims and stop its own finished processes.
      Leave peer sessions untouched. Change the execution directory to the maintained
      primary or another directory outside every retiring checkout.
-   - Resolve a verified merge-cleanup driver supporting `--retire-published-pr` (the
-     current reviewed task revision or an updated installed/maintained copy). Preview
+   - Set `$CLEANUP_DRIVER` to the first verified driver whose help lists `--retire-published-pr`.
+     Check in order: the current Forge repo's `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`;
+     then `merge-cleanup/scripts/merge_cleanup.py` under `~/.claude/skills/`, `~/.codex/skills/`,
+     `~/.gemini/config/skills/` or the skills-army-hq Deployed Skills collection; then the same
+     repo-relative script in the maintained local XYZ-forge primary clone. Preview
      the command below, repeating `--checkout` for exact task-owned helper paths, then
      add `--execute` for candidates the fresh inspection can retire. The mode proves
      live canonical origin/PR/head publication and reuses existing safety/removal paths;
@@ -437,7 +455,12 @@ in Step 1. Apply it during clone provisioning, final verification and every push
      # Apply the same exact scope with --execute; the driver re-inspects before removal.
      ```
 
-   - Full clones go to recoverable Trash; linked worktrees use native Git removal
+   - For a disposable helper outside the published-PR mode's scope (another repo's smoke
+     clone, a detached Form 2 probe or a repro outside `primary_safe_roots`), independently
+     verify ownership, CWD outside it, no live processes, a clean tree (including untracked
+     files), and no unique or unpushed commits on HEAD or local refs against its canonical
+     remote. Apply the stash, evidence and dependency checks above. Preserve on uncertainty.
+   - Full clones go to recoverable Trash; linked worktrees use native `git worktree remove`
      (which updates the parent's worktree metadata). Report the actual retired paths
      or the exact preservation reason and next action. An older driver, failed query,
      live session or local-only evidence means preserve; never fall back to a manual
