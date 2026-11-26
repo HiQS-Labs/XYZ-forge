@@ -111,4 +111,13 @@ Verification boundary: static documentation review only; no tests, executable fi
 
 Relay closed (Approved), no further turn needed. Token handoff: `done RELAY-gh1620-final-qa-r1 --agent codex` via the absolute env-pinned tick.
 
+
+### Attestation · relay-drive — 2026-11-26T04:18:00Z
+task: RELAY-gh1620-final-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: 02d74ae6d270ccb9884d5902527aa49774bff9df
+added-range: 10399+2910
+added-sha256: d5d7d13af1866af7372341193479602768e78f691e456534dfa0e724015b8af9
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
