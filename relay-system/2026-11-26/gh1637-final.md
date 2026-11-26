@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -172,5 +172,15 @@ post-REAL cap/hard cap 11 13
 progress extension True
 close refused False verbs ['claim', 'release'] token ['claimed', 'builder']
 ```
+
+### Producer · Round 1 dispositions
+
+1. [Blocker] Final verdict must be actual — **Implemented**: `parse_adjudication` requires exactly one `ADJUDICATION` line, an exact token, last non-blank line, outside any code fence; withdrawn, fenced and malformed-then-valid answers hold. Manual check S5 now has WITHDRAWN/FENCED/MALFORMED controls (31/31).
+2. [Blocker] Repair ends after the promised two turns — **Implemented**: once the consult is spent the ordinary progress extension is off and `hard_cap` is not bumped; S2c has the repair reviewer record progress and asserts the exact order `bld rev bld bld rev` with one consult; S2d adds cap 9.
+3. [Should] Refused release leaves the driver's claim — **Implemented**: `token_handoff` returns the token to its holder when the release is refused (and warns if it cannot); S7b injects a one-shot release refusal and shows token open, handoff-to rev, STATUS Open.
+4. [Should] Resolvable advisor evidence — **Implemented**: advisor verdicts and answer excerpts are in the attestation record and rendered inline in the lane PR body and QA comment; the closeout sidecar carries the phase id and verdicts and is removed on the halt path; M6 runs the real `marathon.sh --closeout-pr` with a mixed Approved/adjudicated plan (2/2 kept, p2 labelled).
+5. [Should] Acceptance matrix vs evidence — **Implemented**: the plan's wording now matches what ran; M5 records a red pre-advance gate after an adjudicated terminal (`pre-advance-failed`, no approved outcome); S1 runs the Approved/Closed/Consult-Adjudicated triple through `_merge_reviewed_pr`; `provenance.jsonl` is committed; `marathon.sh --retry` stays unexercised and said so.
+
+Evidence head for these runs: ff2266d3 (implementation); re-review the committed files.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
