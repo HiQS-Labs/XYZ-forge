@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py", line 88, in <module>
+    main()
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py", line 73, in main
+    assert text_only.returncode == 0, ("text-only update must succeed", text_only.returncode,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('text-only update must succeed', 3, '', 'refused: rule=would-drop-rating: refusing: text would drop the saved rating\n')
+rc=1

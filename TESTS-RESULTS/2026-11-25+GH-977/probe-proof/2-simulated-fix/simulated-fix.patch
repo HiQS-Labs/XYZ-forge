@@ -1,0 +1,48 @@
+diff --git a/SOP.md b/SOP.md
+index caeea31e0..cc2887864 100644
+--- a/SOP.md
++++ b/SOP.md
+@@ -79,7 +79,8 @@ The promotion procedure is four DB/file steps on the RELEASES DB:
+    when phased.
+ 2. Repoint the parked row: `python3 utils/py/releases_app.py roadmap repoint --issue-num <n> --doc-path PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
+ 3. Refresh the row text: `python3 utils/py/releases_app.py roadmap update --issue-num <n> --raw-text '- **GH-<n> · <title>** ...'`
+-   — the value **must be a markdown bullet starting `- **<title>**`** or the verb refuses.
++   — the value **must be a markdown bullet starting `- **<title>**`** or the verb refuses. A bullet with no
++   `rated` token keeps the row's saved rating (GH-977).
+ 4. The views need no separate step (ledger writes auto-refresh the baked HTML; the old
+    `roadmap-dashboard.sh` is retired, GH-567). Verify: `releases check` clean + `utils/pdda/pdda.sh run` zero errors. pdda's
+    coverage check reads the DB in releases-mode — a promoted doc needs **no** `ROADMAP.md` line.
+diff --git a/test/gh257-roadmap-ledger-fixes.sh b/test/gh257-roadmap-ledger-fixes.sh
+index 934f8cf9c..0442e8774 100755
+--- a/test/gh257-roadmap-ledger-fixes.sh
++++ b/test/gh257-roadmap-ledger-fixes.sh
+@@ -144,12 +144,12 @@ read pri sev app_score eff ovr <<<"$(sqlite3 "$R/releases.db" "SELECT rating_pri
+   || fail "expected rating columns (80 70 90 60 320), got ($pri $sev $app_score $eff $ovr)"
+ pass "roadmap update correctly populated all 5 rating columns"
+ 
+-# Rated -> Unrated (must reset all 5 rating columns to NULL, not leave old scores)
++# Rated -> text-only update (GH-977: must PRESERVE all 5 rating columns, not clear them)
+ UNRATED_TEXT="- **GH-255 · unrated again** 🆕 — [#255](https://github.com/org/repo/issues/255)"
+ app --root "$R" roadmap update --issue-num 255 --raw-text "$UNRATED_TEXT"
+-cleared_counts="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE gh_number = 255 AND (rating_pri IS NOT NULL OR rating_sev IS NOT NULL OR rating_appeal IS NOT NULL OR rating_effort IS NOT NULL OR rating_ovr IS NOT NULL)")"
+-[ "$cleared_counts" = "0" ] || fail "expected all rating columns to be NULL, found non-null values"
+-pass "roadmap update correctly cleared all 5 rating columns to NULL on unrated line"
++kept="$(sqlite3 "$R/releases.db" "SELECT rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr FROM roadmap_items WHERE gh_number = 255")"
++[ "$kept" = "80|70|90|60|320" ] || fail "expected the saved rating to survive a text-only update, got: $kept"
++pass "roadmap update preserved all 5 rating columns on a text-only line"
+ 
+ # -----------------------------------------------------------------------------
+ # Case 9: schema-behind refusal on pre-migration ledger without rating columns
+diff --git a/utils/py/releases_app.py b/utils/py/releases_app.py
+index c4709ca6e..72ef0d8c9 100644
+--- a/utils/py/releases_app.py
++++ b/utils/py/releases_app.py
+@@ -4227,7 +4227,7 @@ def cmd_roadmap_update(args):
+             if args.raw_text is not None:
+                 updates.append("raw_text = ?")
+                 params.append(new_raw_text)
+-                if has_rating_cols:
++                if has_rating_cols and rating["rating_pri"] is not None:
+                     for c in RATING_COLUMNS:
+                         updates.append("%s = ?" % c)
+                         params.append(rating[c])

@@ -1,0 +1,14 @@
+diff --git a/skills/3-weekly/skills-army-hq/scripts/sync.py b/skills/3-weekly/skills-army-hq/scripts/sync.py
+index 2b453e9b9..852366121 100644
+--- a/skills/3-weekly/skills-army-hq/scripts/sync.py
++++ b/skills/3-weekly/skills-army-hq/scripts/sync.py
+@@ -280,6 +280,9 @@ def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=Non
+             retire = []
+             if name in legacy and key in desired and path.is_dir() and not path.is_symlink():
+                 matched.add(name)
++                shared.require(name in state["skills"],
++                               f"Not adopted: {name} has a copy in the collection but no recorded source; adopt it first "
++                               f"(receipt-only: intake.py update {name} --source <forge>/skills/<tier>/{name})")
+                 retire, change = retire_legacy(root, path, parent, name, found[name], archive_directories, apply)
+                 changes.append(change)
+                 current = None  # the retire action runs first, so the link sees a free path
