@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -302,5 +302,110 @@ close result: False state: ['open', 'reviewer'] calls: [('claim', 'builder'), ('
 6. [Should] Per-invocation consult namespace — **Implemented**: the consult label carries a random per-invocation token, so prompt, run directory and answers are unique even with a shared archive and equal relay basenames.
 
 Suites on the final code: sixteen existing suites green (provenance.jsonl); manual checks 36/36 and 11/11.
+
+### Round 3 · Reviewer · codex
+
+VERDICT: FAIL
+
+Basis: A failed candidate-diff capture can still yield Consult-Adjudicated, and the existing cap-2 REAL fixture reaches Approved after a rebuttal-only repair turn. The revised consult namespace still needs the pending two-process clone probe.
+
+swept file: no
+
+Reviewed the seeded patch and the checkout source on the cap, isolation, terminal, publication and downstream approval paths, including surrounding pre-existing code. The nearest indexed generation (2026-11-26T04:31:47Z) covers a separate Forge checkout, so the findings use direct source reads here. Scope was short of a whole-file sweep of every changed module. No executable fixture, suite or phase gate ran in the relay worktree.
+
+- [Blocker] Hold if the candidate patch cannot be captured. Observed input: the read-only probe below gives the deliverable-path check a positive result, then returns exit 128 and empty stdout for the actual patch command. The prompt contains an empty diff and two valid advisor replies still produce `adjudicated`, setting `STATUS: Consult-Adjudicated`. `utils/py/relay_drive.py:1137–1141` discards the patch command's status, `:1158` embeds its output, and `:1187–1205,1660–1664` allow the terminal. `PROJECT/2-WORKING/GH-1637-REVIEW-CAP-CONSULT.md:41–42` requires advisors to receive the diff and an empty diff to hold. Affected scope: the name-only diff succeeds with a deliverable path, but patch generation fails or returns empty output. Falsifier: the same input returns `consult-inconclusive` before advisor dispatch, leaves STATUS Open and creates no attestation, while a successful nonempty patch can still adjudicate. Check both the return code and the captured patch before opening the consult.
+- [Blocker] Require a repaired candidate after REAL before an approval can be attested. Observed input: `TESTS-RESULTS/2026-11-26+GH-1637/manual_check.sh:27–36,168–170` drives cap 2 with REAL and an immediately approving reviewer, omitting `STUB_REPAIR`; the only post-consult builder action is a rebuttal and handoff. The committed `manual_check.log:21–22` explicitly records Approved for this case. `utils/py/relay_drive.py:1649–1659,1296–1305,1563–1564` grants turns and then applies the ordinary judge with no check against the candidate that triggered REAL. The probe below also attests `Approved` at the same SHA passed to the consult when given a nonempty reviewer block and a done token. Affected scope: REAL, builder hands back with unchanged candidate content, and the next reviewer attempts to close. Even a transcript-only commit can move HEAD without a repair, so a different SHA alone is insufficient. Falsifier: S2b as currently configured produces no Approved attestation and a named hold, while S2/S2d still attest their repaired candidates. Carry the consulted SHA into the repair path and check for a candidate change beyond the transcript before dispatching the repair reviewer, so an unchanged repair cannot consume the token as Approved.
+- [Should] Round 2 namespace probe remains pending. Observed input and affected scope are the existing Round 2 Form 2 trace (shared archive, distinct relay paths with the same basename). The current allocation at `utils/py/relay_drive.py:1160–1168` does add a per-invocation label, but the Producer disposition reports a source change and general suite totals only. Falsifier and Clone probe: rerun the exact two-process probe in Round 2 with `secrets` added to its import list and `secrets=secrets` added to its `env = dict(...)` namespace, as required by the new source. Expected exit 0, each candidate reading its own question and `distinct output namespaces: True`. Record the actual output or keep this pending if it cannot run.
+
+- [Pass] The earlier malformed and fenced-verdict controls now hold (`utils/py/relay_drive.py:1038–1069`; `TESTS-RESULTS/2026-11-26+GH-1637/manual_check.log:33–40`). The refused first release and refused reviewer claim restore the original handoff (`relay_drive.py:1076–1107`; evidence log lines 46–49). The repair-with-progress control still stops after exactly two repair turns (`relay_drive.py:1633–1659`; evidence log lines 23–24).
+- [Pass] The resolved lane base now reaches the consult with an explicit override preserved (`utils/py/marathon_drive.py:3561–3564`, `utils/py/relay_drive.py:1122–1133`). Lane notes and QA comments render bounded inline excerpts, and the mixed closeout carries bounded reasoning from each advisor (`marathon_drive.py:144–153,1761–1769,2871–2883`; `relay-automation/marathon.sh:691–706`). M6 exercises the shell summary with a stub phase writer and asserts the 2/2 count and verdicts (`manual_check_marathon.sh:157–172`), so the Python-to-shell passage of the reasoning is source-checked.
+- [Pass] The four-round defaults, opt-in driver flag, and worktree pin have direct source and recorded controls (`relay-automation/marathon.sh:591–595`, `utils/py/marathon_drive.py:3098–3103,3554–3558`, `utils/py/consult.py:730–754`, `manual_check_marathon.log:1–4,12–13`, `manual_check.log:54–60`). The focus-gate, token close and attestation use the existing judge and writer (`relay_drive.py:919–968,988–1020`); M4 rejected the unfixed candidate and advanced the fixed one, M5 stopped with a red pre-advance gate, and S8 records the spent-token state on publication failure (`manual_check_marathon.log:14–19`; `manual_check.log:41–51`). The plan distinguishes those cases and leaves the existing retry unexercised (`PROJECT/2-WORKING/GH-1637-REVIEW-CAP-CONSULT.md:43,48,78`).
+- [Pass] Jog and Express refuse this terminal for merge/approval, and PDDA still requires Approved or Closed (`utils/py/jog_run.py:2113–2122`, `utils/py/express.py:198–207`, `utils/pdda/check_marathon_qa.py:298–307`, `manual_check.log:7–12`). Archived push qualification still consumes the validated, candidate-bound terminal record for its own purpose (`utils/py/gate_receipt.py:145–175`, `utils/py/relay_attest.py:451–470`). The patch adds no suite or registry entry; it updates the existing default-cap assertion (`test/marathon.sh:136–143`).
+
+Read-only command for the two Blockers (exit 0). It executes the current Python decision functions with in-memory I/O and simulated subprocess results. No external command or fixture is invoked by the probe.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, io, os, re, secrets, sys, time
+from pathlib import Path
+from types import SimpleNamespace as NS
+sys.path.insert(0, "utils/py")
+import relay_attest as att
+
+p = Path("utils/py/relay_drive.py")
+main = next(n for n in ast.parse(p.read_text()).body
+            if isinstance(n, ast.FunctionDef) and n.name == "main")
+names = {"parse_adjudication", "consult_adjudicate", "judge_terminal"}
+nodes = [n for n in main.body if getattr(n, "name", "") in names or
+         isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)
+         and n.targets[0].id in {"ADJ_LINE_RE", "ADJ_TOKEN_RE", "CONSULT_ADVISORS"}]
+cand, base = "a" * 40, "b" * 40
+answer = "Reason\nADJUDICATION: NON-BLOCKING\n"
+ap = {"codex": "/mock/codex.md", "agy": "/mock/agy.md"}
+raw = b"NEXT: Builder\nSTATUS: Open\n\n## Log\n"
+data = {"RELAY.md": raw.decode(), **{path: answer for path in ap.values()}}
+class Sink(io.StringIO):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+    def close(self):
+        data[self.name] = self.getvalue()
+        super().close()
+def file(name, mode="r", **kw):
+    if "w" in mode:
+        return Sink(name)
+    return io.BytesIO(data[name].encode()) if "b" in mode else io.StringIO(data[name])
+def run(argv, **kw):
+    if argv[0] == "consult-stub":
+        question = data[argv[argv.index("--prompt-file") + 1]]
+        print("prompt diff body:", repr(question.split(") ===\n", 1)[1].split("=== RELAY FILE", 1)[0]))
+        return NS(returncode=0, stdout="\n".join(f"[ok] {a} -> {path}" for a, path in ap.items()))
+    if argv[3] == "merge-base":
+        return NS(returncode=0, stdout=base)
+    assert argv[3] == "diff", argv
+    return NS(returncode=128, stdout="", stderr="fatal: external diff died")
+def append(name, block):
+    data[name] += block
+class Att:
+    def __getattr__(self, name):
+        return getattr(att, name)
+    append_before_marker = staticmethod(append)
+    write = staticmethod(lambda record: "/mock/attestation.json")
+    repo_relative = staticmethod(lambda *args: "RELAY.md")
+env = dict(re=re, time=time, secrets=secrets,
+           os=NS(path=NS(**{k: getattr(os.path,k) for k in ("isabs","join","splitext","basename","abspath")},
+                         isfile=lambda path: path in data),
+                 environ={}, getpid=os.getpid, makedirs=lambda *a, **k: None),
+           subprocess=NS(DEVNULL=None, check_output=lambda *a, **k: cand.encode(), run=run),
+           args=NS(round_cap=9, artifact_file=None, relay_task="probe"),
+           target_repo=lambda: "/mock", transcript_repo=lambda: "/mock",
+           commits_touch_non_receipt=lambda *_: True,
+           file_status=lambda: att.header_field(data["RELAY.md"], "STATUS"),
+           terminal_status=lambda status: status in att.TERMINAL,
+           actor="reviewer", token_state=lambda: ("done", ""),
+           attested={}, get_env=lambda k, default=None: default,
+           relay_file="RELAY.md", root_dir="/mock", open=file, consult_sh="consult-stub",
+           relay_attest=Att(), commit_relay_file=lambda *_: True,
+           eprint=print, ATTEMPT_CONTEXT_ENV="MOCK_ATTEMPT")
+exec(compile(ast.Module(nodes, []), str(p), "exec"), env)
+kind, _ = env["consult_adjudicate"]()
+print("failed diff rc=128 ->", kind, env["file_status"]())
+
+data["RELAY.md"] = raw.decode().replace("STATUS: Open", "STATUS: Approved")
+data["RELAY.md"] += "\n### Reviewer · Round 5\n\nVERDICT: PASS\n"
+result = env["judge_terminal"]("Approved", "reviewer",
+          dict(status="Open", raw=raw, reviewed_head=cand, isolated=True, artifact_sha256=None))
+print("no source repair; consult head == review head:", result[1]["reviewed_head"] == cand,
+      "result:", result[0], result[1]["status"])
+PY
+```
+
+```text
+prompt diff body: '\n\n'
+failed diff rc=128 -> adjudicated Consult-Adjudicated
+relay-drive: attested Approved by reviewer — reviewed aaaaaaaaaaaa, 40 bytes of review text, record /mock/attestation.json
+no source repair; consult head == review head: True result: attested Approved
+```
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
