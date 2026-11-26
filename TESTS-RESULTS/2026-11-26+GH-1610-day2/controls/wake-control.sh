@@ -129,9 +129,10 @@ setup_fixture() {  # <root>
   mkdir -p "$root/src" "$root/test" "$root/PROJECT/2-WORKING" "$root/githooks"
   printf 'module.exports = 1\n' > "$root/src/feature.js"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$root/test/fixture-gate.sh"
-  printf '#!/usr/bin/env bash\nexit 1\n' > "$root/test/fixture-gate-red.sh"
+  local red_gate="fixture-gate-red.sh"  # fixture created in the disposable root only (path-integrity: not a repo path)
+  printf '#!/usr/bin/env bash\nexit 1\n' > "$root/test/$red_gate"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$root/githooks/install.sh"
-  local gate1="bash test/fixture-gate.sh"; [ "$CASE" != task-local ] || gate1="bash test/fixture-gate-red.sh"
+  local gate1="bash test/fixture-gate.sh"; [ "$CASE" != task-local ] || gate1="bash test/$red_gate"
   write_capture_doc "$root/PROJECT/2-WORKING/$DOC1" 901 lane "$gate1"
   write_capture_doc "$root/PROJECT/2-WORKING/$DOC2" 902 successor "bash test/fixture-gate.sh"
   [ "$CASE" != refusal ] || python3 - "$root/PROJECT/2-WORKING/$DOC1" <<'PYEOF'
