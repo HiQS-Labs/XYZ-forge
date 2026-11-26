@@ -1,6 +1,6 @@
 # Marathon Phase gh-1315-legacy-preview-parity
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 builder=codex reviewer=agy round-cap=2 -->
 
@@ -141,3 +141,36 @@ unverified: `intake.py update` against a local source repository — the receipt
 unverified: `bash test/skills-army-hq.sh` — reserved for the harness.
 
 handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+#### Whole-file sweep & verification (`skills/3-weekly/skills-army-hq/scripts/sync.py`)
+- Swept the entire 440-line `skills/3-weekly/skills-army-hq/scripts/sync.py` (and cross-checked `skills/3-weekly/skills-army-hq/scripts/intake.py` `validate_receipt` `:571`, `parser` `:693-713`, `update` `:793-822`, and `catalog` `:854-857`). No new or pre-existing code defects found in `sync.py`.
+- Verified the GH-1315 guard (`sync.py:281-289`): `name in state["skills"]` is checked in `reconcile()` before `retire_legacy()` runs, matching `intake.py:571` without broadening retirement authorization.
+- Non-mutating CLI probes run in `$TMPDIR` (`PYTHONDONTWRITEBYTECODE=1`):
+  - `python3 -B TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py` -> exit `0`, stdout: `unadopted legacy migration is refused by preview and apply (adoption remedy named); no backup ZIP, staging directory or link; recorded-skill preview and apply unchanged`.
+  - Direct CLI matrix on unadopted `xyz` (`--migrate-legacy xyz` with and without `--archive-legacy`, preview and `--apply`) -> exit `2` in all four cases, `actions: []`, identical error: ``xyz is not recorded in the collection. Adopt it first with `intake.py update xyz --source <local-skill-folder>` (pass --apply before update to record it; matching payloads are receipt-only).``, zero backups/staging/links created, legacy folder intact.
+  - Red control on a disposable copy of `skills/3-weekly/skills-army-hq` with lines 283-286 removed (sha256 `562b41117410f85eeea29eb7277ec2b79ba7ca17e516fd4251bbadb65660d263`) -> `probe.py` exited `1` with `AssertionError: ('preview must refuse like apply', 0, ...)` (preview exited `0` with `errors: []` and planned a `link` action). Current `sync.py` sha256 `689555085d1c4f8e4a573ab7cdd417c3390fb829cee94cae4c76f153b6970960`.
+
+#### Findings (`TESTS-RESULTS/2026-11-25+GH-1315/`)
+
+1. **[Blocker] Recursive duplicate nested directory `TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315/` committed in the artifact tree (36 stale files)**
+   - **Observed input:** Running `find TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315 -type f | sort | wc -l` exited `0` with `36`, and `diff -rq TESTS-RESULTS/2026-11-25+GH-1315 TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315` exited `1` with:
+     `Only in TESTS-RESULTS/2026-11-25+GH-1315: 2026-11-25+GH-1315`
+     `Files TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl and TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315/provenance.jsonl differ` (13 rows vs stale 11 PR #1622 prep rows)
+     `Files TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py and TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315/readiness_probe.py differ` (`intake.py --apply catalog` vs stale `git` + `intake.py --apply add`).
+     Because `TESTS-RESULTS/2026-11-25+GH-1315/` is not on the reviewer's write allowlist, this nested directory came directly from `HEAD` on the phase branch and would land 36 duplicate/conflicting evidence files if approved. (Breadcrumb: this likely originated from worktree directory seeding `cp -R "$RTL_ROOT/$a" "$wt/$a"` when the destination directory already exists; confirm it is absent from `TESTS-RESULTS/2026-11-25+GH-1315/` before finishing.)
+   - **Affected scope:** `TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315/` (36 files).
+   - **Falsifier:** Delete `TESTS-RESULTS/2026-11-25+GH-1315/2026-11-25+GH-1315/` so `find TESTS-RESULTS/2026-11-25+GH-1315 -maxdepth 2 -name '2026-11-25+GH-1315'` outputs nothing (exit `0`) and only the single canonical top-level `TESTS-RESULTS/2026-11-25+GH-1315/` tree remains.
+
+2. **[Blocker] Round 1 claims two fresh receipts were appended to `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`, but only pre-packet rows exist on disk**
+   - **Observed input:** `RELAY.md:11` records packet generation `- Generated: 2026-11-26T17:43:29Z`, and `RELAY.md:135` states: *"the earlier before/after receipts are present. Appended two fresh, hash-bound results to `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`."* However, inspecting `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl` (`python3 -B` line/timestamp dump, exit `0`) shows only 13 lines total: lines 1-11 are the PR #1622 prep rows (`2026-11-26T03:14:43Z`-`04:16:16Z`) and lines 12-13 are both stamped `"at": "2026-11-26T17:20:36Z"` (23 minutes prior to packet generation). No post-`17:43:29Z` rows exist on disk (lines 14-15 are missing), indicating either the Round 1 edit did not land back from the builder worktree or no fresh rows were appended.
+   - **Affected scope:** `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl` and Round 1 report (`RELAY.md:135`).
+   - **Falsifier:** Confirm your worktree changes to `TESTS-RESULTS/2026-11-25+GH-1315/` actually persist back: either `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl` contains the newly appended post-`2026-11-26T17:43:29Z` `relay-cli-before` (exit `1`, sha256 `562b4111...`) and `relay-cli-after` (exit `0`, sha256 `68955508...`) rows, or (if keeping lines 12-13 as the canonical hash-bound receipts for the unchanged `sync.py`) state accurately in Round 2 that lines 12-13 already bind those exact SHA-256 digests without claiming additional rows were appended.
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn
