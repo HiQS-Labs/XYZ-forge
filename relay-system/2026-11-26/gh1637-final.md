@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -415,5 +415,112 @@ no source repair; consult head == review head: True result: attested Approved
 3. [Should] Namespace probe — **Implemented**: the exact two-process probe (with `secrets` added to the namespace as asked) is retained as `TESTS-RESULTS/2026-11-26+GH-1637/namespace_probe.py`, output in `namespace_probe.log`: each candidate read only its own question and `distinct output namespaces: True`.
 
 Evidence: manual checks 38/38 and 11/11; sixteen existing suites green (provenance.jsonl).
+
+
+### Round 4 · Reviewer · codex
+
+VERDICT: FAIL
+
+Basis: After a REAL verdict, the repair guard rejects Approved on unchanged deliverables but still attests Closed on the same candidate. The consult also loses the required SAFETY hold reason when the other advisor fails.
+
+swept file: no
+
+Reviewed the seeded patch, the affected runtime paths and adjacent pre-existing terminal and publication logic. The nearest graph generation (2026-11-26T04:31:47Z) belongs to a separate checkout. The findings use direct source reads in this worktree. The sweep did not cover every line of every changed module. No executable fixture, suite or phase gate ran here.
+
+- [Blocker] Require a repaired candidate before either reviewer terminal can advance the lane after REAL. Observed input: the probe below gives the judge a legitimate reviewer turn, a done token and a HEAD whose only change since the consult was `relay-system/turn.md`. Approved is refused as `repair-missing`, but Closed is attested at that same HEAD. `utils/py/relay_drive.py:869–876` applies the guard only to Approved, while `utils/py/relay_attest.py:29–36,451–455` treats Closed as a valid terminal. The relay's post-loop path returns success after a terminal attestation (`relay_drive.py:1690–1698`), Marathon binds it and publishes phase success if its existing checks pass (`utils/py/marathon_drive.py:2568–2569,2818–2840`), and the Jog merge boundary can accept Closed (`utils/py/jog_run.py:2113–2137`). Affected scope: a reviewer closes a post-REAL lane after the builder hands back with unchanged deliverables, including a transcript-only turn on a lane without a fix probe. Falsifier: the S2e conditions with a reviewer writing Closed also return `repair-missing` and produce no success attestation. A repaired candidate can still close, and ordinary Closed without a preceding REAL keeps its existing eligibility under acceptance lines 44–45. Apply the repair predicate to both reviewer terminals in that scoped path and evaluate it against the revision the reviewer was actually dispatched to read (`relay_drive.py:1295–1314`).
+- [Should] Preserve a valid SAFETY veto when the other advisor fails. Observed input: the probe supplies `[ok] codex` with final `ADJUDICATION: SAFETY` and `[FAIL] agy`. The result is `consult-inconclusive` because `utils/py/relay_drive.py:1195–1200,1224–1226` tests completeness before recognizing SAFETY. `PROJECT/2-WORKING/GH-1637-REVIEW-CAP-CONSULT.md:42` requires `consult-hold` for any SAFETY. Affected scope: one valid SAFETY and a missing, failed or invalid peer answer. The lane already holds, but the recorded reason omits the safety escalation. Falsifier: the same inputs leave STATUS Open and produce `consult-hold`, while a failed peer with only NON-BLOCKING still produces `consult-inconclusive`. Prioritize valid SAFETY before the completeness check.
+- [Pass] Round 3 patch capture is closed. The diff status and nonempty patch are checked before prompt creation, and the committed S10b control observed no advisor dispatched, Open and no attestation (`utils/py/relay_drive.py:1143–1149`, `TESTS-RESULTS/2026-11-26+GH-1637/manual_check.log:58–59`).
+- [Pass] The exact Approved variant from Round 3 is now refused. The probe below rejects the receipt-only change and attests a changed repair, consistent with the S2e and S2d controls (`utils/py/relay_drive.py:769–794,869–875`, `TESTS-RESULTS/2026-11-26+GH-1637/manual_check.log:23–29`). The Closed variant above keeps the repair finding open.
+- [Pass] The pending namespace probe is closed. Both processes read their own question and the retained output reports `distinct output namespaces: True` (`TESTS-RESULTS/2026-11-26+GH-1637/namespace_probe.log:1–3`, `utils/py/relay_drive.py:1168–1176`).
+- [Pass] The retained evidence still covers isolated candidate reads, malformed verdicts and refused-close recovery (`TESTS-RESULTS/2026-11-26+GH-1637/manual_check.log:33–51,62–64`), plus the unfixed/fixed acceptance pair and red pre-advance gate (`manual_check_marathon.log:14–19` in the same directory). `Consult-Adjudicated` itself still cannot enter the Jog or Express merge path (`utils/py/jog_run.py:2113–2118`, `utils/py/express.py:198–207`). The evidence records 16 suite exits at zero (`TESTS-RESULTS/2026-11-26+GH-1637/provenance.jsonl:4`).
+
+Read-only probe for the two findings (exit 0). It executes the current decision functions with in-memory I/O and subprocess doubles.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, io, os, re, secrets, sys, time
+from pathlib import Path
+from types import SimpleNamespace as NS
+sys.path.insert(0, "utils/py")
+import relay_attest as att
+
+p = Path("utils/py/relay_drive.py")
+main = next(n for n in ast.parse(p.read_text()).body if getattr(n, "name", "") == "main")
+names = {"parse_adjudication", "consult_adjudicate", "judge_terminal", "commits_touch_non_receipt"}
+constants = {"ADJ_LINE_RE", "ADJ_TOKEN_RE", "CONSULT_ADVISORS", "RECEIPT_DIRS"}
+nodes = [n for n in main.body if getattr(n, "name", "") in names or
+         isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") in constants]
+cand, base, transcript_head, repair_head = (c * 40 for c in "abcd")
+raw = b"NEXT: Builder\nSTATUS: Open\n\n## Log\n"
+data = {"RELAY.md": raw.decode(), "/mock/codex.md": "Reason\nADJUDICATION: SAFETY\n"}
+class Sink(io.StringIO):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+    def close(self):
+        data[self.name] = self.getvalue()
+        super().close()
+def file(name, mode="r", **kw):
+    if "w" in mode:
+        return Sink(name)
+    return io.BytesIO(data[name].encode()) if "b" in mode else io.StringIO(data[name])
+def check_output(argv, **kw):
+    if argv[3] == "rev-parse":
+        return cand.encode()
+    assert argv[3:6] == ["diff", "--name-only", "-z"], argv
+    if argv[6] == f"{cand}..{transcript_head}":
+        return b"relay-system/turn.md\0"
+    return b"deliverable.txt\0"
+def run(argv, **kw):
+    if argv[0] == "consult-stub":
+        return NS(returncode=0, stdout="[ok] codex -> /mock/codex.md\n[FAIL] agy -> /mock/agy.md\n")
+    if argv[3] == "merge-base":
+        return NS(returncode=0, stdout=base)
+    assert argv[3] == "diff", argv
+    return NS(returncode=0, stdout="diff --git a/deliverable.txt b/deliverable.txt\n+candidate\n")
+class Att:
+    def __getattr__(self, name):
+        return getattr(att, name)
+    append_before_marker = staticmethod(lambda name, block: data.__setitem__(name, data[name] + block))
+    write = staticmethod(lambda record: "/mock/attestation.json")
+    repo_relative = staticmethod(lambda *args: "RELAY.md")
+env = dict(re=re, time=time, secrets=secrets,
+           os=NS(path=NS(**{k: getattr(os.path,k) for k in ("isabs","join","splitext","basename","abspath","realpath","commonpath","relpath")},
+                         isfile=lambda path: path in data),
+                 environ={}, getpid=os.getpid, makedirs=lambda *a, **k: None),
+           subprocess=NS(DEVNULL=None, check_output=check_output, run=run),
+           args=NS(round_cap=9, artifact_file=None, relay_task="probe"),
+           target_repo=lambda: "/mock", transcript_repo=lambda: "/mock",
+           file_status=lambda: att.header_field(data["RELAY.md"], "STATUS"),
+           terminal_status=lambda status: status in att.TERMINAL,
+           actor="reviewer", token_state=lambda: ("done", ""), get_head_commit=lambda: transcript_head,
+           attested={}, get_env=lambda k, default=None: default,
+           relay_file="RELAY.md", root_dir="/mock", open=file, consult_sh="consult-stub",
+           relay_attest=Att(), commit_relay_file=lambda *_: True, repair_base=[cand],
+           eprint=print, ATTEMPT_CONTEXT_ENV="MOCK_ATTEMPT")
+exec(compile(ast.Module(nodes, []), str(p), "exec"), env)
+print("SAFETY plus failed advisor:", env["consult_adjudicate"](), "status:", env["file_status"]())
+for status, head in [("Approved", transcript_head), ("Closed", transcript_head), ("Approved", repair_head)]:
+    env["get_head_commit"] = lambda: head
+    data["RELAY.md"] = raw.decode().replace("STATUS: Open", "STATUS: " + status)
+    data["RELAY.md"] += "\n### Reviewer · Round 5\n\nVERDICT: PASS\n"
+    result = env["judge_terminal"](status, "reviewer",
+              dict(status="Open", raw=raw, reviewed_head=head, isolated=True, artifact_sha256=None))
+    print(status, "deliverable changed:", env["commits_touch_non_receipt"](cand, head),
+          "judge:", result[0], result[1] if result[0] == "refused" else result[1]["status"])
+PY
+```
+
+```text
+SAFETY plus failed advisor: ('hold', 'consult-inconclusive') status: Open
+relay-drive: STATUS Approved after a consult-REAL verdict, but nothing changed since aaaaaaaaaaaa beyond transcripts — refusing (repair-missing)
+Approved deliverable changed: False judge: refused repair-missing
+relay-drive: attested Closed by reviewer — reviewed cccccccccccc, 40 bytes of review text, record /mock/attestation.json
+Closed deliverable changed: False judge: attested Closed
+relay-drive: attested Approved by reviewer — reviewed dddddddddddd, 40 bytes of review text, record /mock/attestation.json
+Approved deliverable changed: True judge: attested Approved
+```
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
