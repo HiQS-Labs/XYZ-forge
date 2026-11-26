@@ -201,6 +201,14 @@ class LedgerFixture(unittest.TestCase):
         env = mock.patch.dict(os.environ, {GH_BIN_ENV: str(self.gh), "GH_STATE": str(self.state), "RELEASES_GH_BIN": str(self.gh)})
         env.start()
         self.addCleanup(env.stop)
+        # GH-1576: merge-cleanup refuses to push from a clone whose `githooks/install.sh --check` fails, and this
+        # fixture's synthetic seed repo has no `githooks/`. The suites built on it exercise landing, repair and
+        # ledger behaviour, not hook wiring (the refusal itself is witnessed by TESTS-RESULTS/2026-11-21+GH-1576/),
+        # so the probe is stubbed here, scoped to each fixture test and restored afterwards. test/gh436-merge-cleanup.py
+        # stubs it module-wide for its own process; this keeps the standalone phase B and C runs truthful too (GH-1615).
+        wiring = mock.patch.object(merge_cleanup, "gate_unwired_reason", lambda clone, install=False: "")
+        wiring.start()
+        self.addCleanup(wiring.stop)
 
     def save(self):
         self.state.write_text(json.dumps(self.st, indent=1))
