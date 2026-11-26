@@ -1,4 +1,0 @@
-contract_keys: ['artifacts', 'fix_probes', 'gate', 'remediation', 'round_cap', 'target']
-contract_probes_from_doc: ['command:python3 TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py'] None
-promotion_probes: ['command:python3 TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py'] None
-JOG LINT OK

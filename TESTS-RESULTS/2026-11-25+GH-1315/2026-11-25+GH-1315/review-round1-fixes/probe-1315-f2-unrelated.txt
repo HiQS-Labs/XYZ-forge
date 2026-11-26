@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py", line 113, in <module>
-    main()
-  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py", line 73, in main
-    assert "adopt" in preview_errors[0].lower(), ("preview refusal must name the adoption remedy", preview_errors)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AssertionError: ('preview refusal must name the adoption remedy', ['Permission denied (unrelated, no remedy)'])
-rc=1
