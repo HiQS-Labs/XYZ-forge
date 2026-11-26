@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -264,5 +264,58 @@ Handing off to Producer to reconcile the seeded plan and its verification matrix
 5. [Should] `--closeout-pr` label — **Implemented**: the multi-phase closeout summary reads phase result evidence to label adjudicated phases and keeps the count.
 
 Handing off to Reviewer for round 4 (the cap).
+
+### Reviewer · Round 4
+
+swept file: yes
+
+**What this proposes**
+Factory relays would default to a nine-turn budget and consult Codex and agy once if actual review has occurred and the lane exhausts its eligible extensions. Two non-blocking verdicts would send a pinned candidate through the existing gates under a distinct attested status. An actionable finding would send the builder and reviewer through one repair pair, while safety findings and incomplete answers would hold.
+
+**How the existing system works, per this document**
+Marathon passes a turn budget to relay-drive, which extends the budget for qualifying progress and otherwise escalates at the cap. The terminal judge runs the configured reviewer gate, checks the token and publishes the reviewed candidate receipt for Marathon.
+
+**What the plan preserves**
+The acceptance criteria retain the operator's landing authority, the push gate and the acceptance recheck. The non-goals leave the legacy Bash behavior in place.
+
+**Source-backed findings**
+
+- [Should] Specify the default-gate ordering and recovery. Observed input: plan lines 43 and 70 promise a driver gate before token close, but the reused judge runs a gate only when `MARATHON_REVIEWER_GATE_CMD` is nonempty (`utils/py/relay_drive.py:908–911,954–956`). Marathon leaves it unset for the default gate and for explicit full suites (`utils/py/marathon_drive.py:559–589,3066–3068,3538–3541`). For those inputs the real gate currently runs in Marathon's pre-advance path (`:2756–2788`). Affected scope: two NON-BLOCKING answers on a normal factory lane with the default gate, or an explicitly configured harness-only gate. Falsifier: a red default gate emits no ready PR and leaves exactly the documented token, transcript, attestation and retry state. Say which gate runs before `done` when a focused gate is armed and what happens when only the real pre-advance gate is present. Exercise the latter red case as well as the focused case already in the matrix. Allow the existing pre-advance recovery if that is the chosen order.
+
+  Read-only selector probe, exit 0. Decisive output: `default='' explicit_full='' explicit_focused='python3 utils/py/marathon_drive.py'`. This evaluated the selector only.
+  ```sh
+  PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+  import ast, os, re, shlex
+  from pathlib import Path
+  tree = ast.parse(Path("utils/py/marathon_drive.py").read_text())
+  gate = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "reviewer_runnable_gate")
+  pattern = next(n for n in tree.body if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "_FULL_SUITE_RE" for t in n.targets))
+  scope = dict(os=os, re=re, shlex=shlex)
+  exec(compile(ast.Module(body=[pattern, gate], type_ignores=[]), "<gate selector>", "exec"), scope)
+  select = scope["reviewer_runnable_gate"]
+  implicit = select("bash validate.sh", False, ".", "")
+  explicit = select("bash validate.sh", True, ".", "")
+  focused = select("python3 utils/py/marathon_drive.py", True, ".", "")
+  print(f"default={implicit!r} explicit_full={explicit!r} explicit_focused={focused!r}")
+  assert implicit == explicit == "" and focused == "python3 utils/py/marathon_drive.py"
+  PY
+  ```
+
+- [Should] Exclude harness transcripts from the empty-deliverable check. Observed input: plan lines 41–42 and 46 rely on an empty merge-base diff to hold a no-op. On a freshly rendered same-repository lane, Marathon itself stages and commits `RELAY.md` before dispatch (`utils/py/marathon_drive.py:3438–3452`). A candidate whose only change from the integration merge-base is that tracked file has a nonempty raw diff even if no builder changed the deliverable. The existing candidate comparison already distinguishes harness transcripts from other changes (`utils/py/relay_attest.py:489–515`). Affected scope: transcript-only candidates, particularly lanes without a fix probe. Falsifier: a candidate whose only changed path is the phase's `RELAY.md` holds before the consult can confer adjudication, while a candidate containing an actual deliverable change reaches the advisors. Define the empty check over the deliverable diff, reusing the harness-owned path exclusions where they fit. Keep the transcript separately in the prompt. Add a transcript-only control to complement the still-unfixed-with-probe control.
+
+- [Should] Supply the closeout with evidence on its normal entry point and retain the answer links. Observed input: plan lines 45 and 71 rely on phase result evidence, but `--closeout-pr` and progress observation are separate flags (`relay-automation/marathon.sh:392–408`), and only the progress branch supplies `--result-file` (`:624–633`). Marathon arms that writer only when the path is supplied (`utils/py/marathon_drive.py:1270–1275`). The result currently exposes `relay_status` and `attest_path` (`:287–323`), while consult returns local answer paths (`utils/py/consult.py:701–709,953–958,1105`) and the existing Marathon archive stages only the copied relay transcript (`utils/py/marathon_drive.py:2290–2314`). Affected scope: regular Python `--closeout-pr` with progress disabled, and PR or issue readers opening advisor links from another checkout. Falsifier: a mixed Approved/adjudicated `--closeout-pr` run with progress disabled preserves the completed count, identifies the adjudicated phase from that run's validated result, and both answer links resolve from the published PR without access to its authoring checkout. Name the result handoff for closeout-only calls and the published archive location for the exact two answers. Keep the existing result schema and attestation writer where they fit. The Round 3 closeout finding remains open.
+
+- [Pass] Plan lines 45 and 72 now agree on the exact Jog exclusion and line 48 exercises all three statuses. The shared helper reaches the merge only after candidate checks (`utils/py/jog_run.py:2113–2134`). Express still requires Approved, PDDA's approval slot still accepts Approved or Closed, and push qualification uses a load-valid receipt bound to the candidate (`utils/py/express.py:204–205`, `utils/pdda/check_marathon_qa.py:294–307`, `utils/py/gate_receipt.py:145–175`).
+
+- [Pass] Plan lines 41–43, 48, 62 and 70 align the strict two-advisor parser, the consult-entry preimage and SHA, and the separate refused-close and post-`done` publication controls. The judge uses the supplied preimage for its append-only comparison and reviewed SHA (`utils/py/relay_drive.py:872–891,965–972`), and the consult runner has a single isolation creation point (`utils/py/consult.py:730–752`). Line 53 records the evidence-repair tradeoff and its stated source.
+
+- [Pass] The plan keeps explicit short caps, scopes the new ceiling to opt-in callers, routes REAL to the builder before the reviewer, and preserves the fix-probe red control (lines 44, 46–48 and 54). The cap-1 GH-115 fixture has only a token handoff (`test/gh115-round-cap.sh:143–173`). Marathon still rejects an unmet fix probe before its gate or PR path (`utils/py/marathon_drive.py:2756–2775,2858–2865`).
+
+Whole seeded plan reviewed. The pre-existing gate selector, transcript render commit and optional receipt writer account for the findings above. Graph coverage was checked on the nearest indexed checkout (generation 2026-11-26T04:31:47Z, head e22fd237). Trace was unavailable under the approval policy and the cited lines came from local source, including the partial Marathon shell ranges. [Unverified — needs clone run] No reviewer phase gate was specified, and the existing suites and proposed stub runs were not executed in this worktree.
+
+Round cap reached. Handing off to Producer for disposition of the escalated plan.
+
+VERDICT: FAIL
+Basis: The plan leaves the default red-gate recovery unspecified, a transcript-only candidate defeats its raw empty-diff safeguard, and ordinary closeout has no configured handoff for the result and answer links.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
