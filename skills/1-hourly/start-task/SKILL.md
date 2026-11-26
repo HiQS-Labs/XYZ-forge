@@ -30,7 +30,7 @@ Ask only for missing scope, a consequential unresolved decision, or a real block
 do not repeat permission questions already answered. Merge and deployment remain
 separate actions unless the operator includes them. Successful PR-ready publication
 authorizes automatic retirement of this workflow's task checkout and disposable helpers
-through merge-cleanup's published-PR mode (Step 9), without waiting for merge. Preserve
+through Step 9's published-PR mode or its scoped helper procedure, without waiting for merge. Preserve
 anything local-only, active, depended on, or unverifiable; this is not a broad clone sweep.
 
 ---
@@ -117,9 +117,11 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    and create the task branch under repo policy. In XYZ Forge the branch is cut
    off `origin/development`. Apply [target repository qualification](#target-repository-qualification)
    for provisioning before beginning work. Preserve the primary checkout and other sessions.
-   Keep a running **Checkout Manifest** in the task plan (active handoff state for simple
-   tasks). Record the absolute path of every task or helper checkout as it is created or
-   reused, including linked worktrees. Carry the manifest across turns and reconcile it on resume.
+   Keep a running **Checkout Manifest** with the task plan (in durable handoff state for
+   simple tasks). For a tracked plan, reference the manifest by task ID and keep its live
+   entries in private handoff state outside the checkouts. Record each created or reused
+   checkout's absolute path, including linked worktrees. On resume reconcile entries with
+   sibling clones, Git's worktree list and any recorded external helper locations.
    **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
    tracking issue first, so the number is known before anything is named:
    - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
@@ -409,11 +411,11 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    - **ATE/fuzz evidence (Phase 6a):** it counts only after semantic replay, and the cited record must show the predicate and the clean/failing controls. A raw cluster, or a replay matched only by digest or exit code, is `confounded`.
    Report each issue/group's PR or blocker and QA/gate result.
    **Checkout Retirement Audit (every exit).** Reconcile every manifest path before final
-   handoff and before posting the final closeout comment. On early exits (existing fix
+   handoff and before posting the final closeout comment. On any early exit (for example, existing fix
    confirmed in Step 1, blocked plan QA, draft PR or operator pivot), retire verified-clean
    disposable helpers and preserve WIP with the reason and next resume or retirement action.
    For a ready PR, defer retirement only while hosted checks run or fixes are in flight.
-   Record `Checkouts preserved: <paths> (awaiting hosted CI)` in the interim handoff.
+   Record `Checkouts preserved: <paths> (awaiting hosted CI)` in the interim handoff and name the next action. If checks finish red and repair stops, audit as blocked.
    On PR-watch or resume, including after a later CI-fix push, verify green checks on the
    current PR head, then re-enter retirement below and update the closeout comment before final handback.
    **Close the loop on each tracked issue** with one comment, using the procedure in
@@ -426,7 +428,8 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    (or `unposted`) in the handoff. Both the marked comment and final operator handoff must
    include the audit result: `Checkouts retired: <paths>` and/or
    `Checkouts preserved: <path> (<exact reason + next action>)` for every manifest entry.
-   If no checkout was created or reused, write `NONE_CREATED`; like `NO_ENTRY`, this result is mandatory.
+   Use unique checkout folder names or task-relative labels in GitHub comments and absolute
+   paths only in the private handoff. If no checkout was created or reused, write `NONE_CREATED`; like `NO_ENTRY`, this result is mandatory.
 
    **Retire the recorded checkouts (GH-1059):**
    - Retain required plans, code, review receipts and verification evidence in the PR;
@@ -439,10 +442,10 @@ in Step 1. Apply it during clone provisioning, final verification and every push
    - Release only this workflow's completed claims and stop its own finished processes.
      Leave peer sessions untouched. Change the execution directory to the maintained
      primary or another directory outside every retiring checkout.
-   - Set `$CLEANUP_DRIVER` to the first verified driver whose help lists `--retire-published-pr`.
+   - Set `$CLEANUP_DRIVER` to the first driver outside the retiring checkouts whose help lists `--retire-published-pr`.
      Check in order: the current Forge repo's `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`;
      then `merge-cleanup/scripts/merge_cleanup.py` under `~/.claude/skills/`, `~/.codex/skills/`,
-     `~/.gemini/config/skills/` or the skills-army-hq Deployed Skills collection; then the same
+     `~/.gemini/config/skills/` then the skills-army-hq Deployed Skills collection; then the same
      repo-relative script in the maintained local XYZ-forge primary clone. Preview
      the command below, repeating `--checkout` for exact task-owned helper paths, then
      add `--execute` for candidates the fresh inspection can retire. The mode proves
@@ -456,10 +459,14 @@ in Step 1. Apply it during clone provisioning, final verification and every push
      ```
 
    - For a disposable helper outside the published-PR mode's scope (another repo's smoke
-     clone, a detached Form 2 probe or a repro outside `primary_safe_roots`), independently
+     clone or a probe/repro outside `primary_safe_roots`), independently
      verify ownership, CWD outside it, no live processes, a clean tree (including untracked
      files), and no unique or unpushed commits on HEAD or local refs against its canonical
-     remote. Apply the stash, evidence and dependency checks above. Preserve on uncertainty.
+     remote. Check for stashes, local evidence, peer claims, driver locks and dependent
+     worktrees. Preserve linked worktrees with ignored files. Only after verifying all
+     checks and the exact task-owned path, move a full clone to recoverable Trash or run
+     plain `git worktree remove` for a linked worktree. Preserve on any uncertainty;
+     a driver safety refusal is binding.
    - Full clones go to recoverable Trash; linked worktrees use native `git worktree remove`
      (which updates the parent's worktree metadata). Report the actual retired paths
      or the exact preservation reason and next action. An older driver, failed query,
