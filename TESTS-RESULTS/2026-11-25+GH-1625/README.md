@@ -15,8 +15,14 @@ appends `str(root)` to `$GH1625_PRUNE_TRACE` immediately before `for d in root.i
 | five planted folders | all 5 **removed** | checksum-identical |
 | suite | Ran 227 tests, OK | Ran 227 tests, OK |
 
-The before run removing all five planted folders shows a test run can delete tool-shaped folders that are
-not its own when pruning reaches the real temp dir. The probe forced every pass to run; on an unforced run
-the "another merge_cleanup.py is running" guard skips most passes (66 of 67 in recon), so the deletion is
-less frequent there, not absent. Raw summaries: `a1-before-summary.txt`, `a1-after-summary.txt`
+The forced before run removed all five synthetic plants, which shows a deletion path for tool-shaped folders
+that are not the suite's own once pruning lists the real temp dir. The probe forced every pass to reach the
+listing. In the unforced recon on `086b657ea` (plan, "Observed problem"), 66 of 67 passes were skipped by the
+"another merge_cleanup.py is running" guard, one pass listed the temp dir, and all five plants survived it.
+Loss of real unpushed work was not observed.
+
+The suite also had one boundary test writing fixed `/tmp/test_safe_root` and `/tmp/outside_repo` paths outside
+any temp-dir setting (found in final QA); it now uses a per-test `mkdtemp` under the suite dir.
+
+Raw summaries: `a1-before-summary.txt`, `a1-after-summary.txt`
 (`<S>` substituted for the scratch path).

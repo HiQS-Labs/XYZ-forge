@@ -77,9 +77,11 @@ class TestMergeCleanupSafety(unittest.TestCase):
         self.assertFalse(_within(Path("/a"), parent))
 
     def test_safe_deletable_path_boundaries(self):
-        safe_root = Path("/tmp/test_safe_root")
+        base = Path(tempfile.mkdtemp(prefix="gh436-bounds-")).resolve()  # GH-1625: not a fixed /tmp path
+        self.addCleanup(shutil.rmtree, base, True)
+        safe_root = base / "test_safe_root"
         safe_root.mkdir(parents=True, exist_ok=True)
-        never_delete = {Path("/tmp/test_safe_root"), Path.home(), Path("/")}
+        never_delete = {safe_root, Path.home(), Path("/")}
 
         child = safe_root / "repo_clone"
         child.mkdir(parents=True, exist_ok=True)
@@ -98,7 +100,7 @@ class TestMergeCleanupSafety(unittest.TestCase):
         self.assertFalse(ok)
 
         # Path outside safe roots
-        outside = Path("/tmp/outside_repo")
+        outside = base / "outside_repo"
         outside.mkdir(parents=True, exist_ok=True)
         ok, msg = is_safe_deletable_path(outside, safe_roots=[safe_root], never_delete=never_delete)
         self.assertFalse(ok)
