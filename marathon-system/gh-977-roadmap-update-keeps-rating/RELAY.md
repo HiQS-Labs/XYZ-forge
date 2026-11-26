@@ -1,5 +1,5 @@
 # Marathon Phase gh-977-roadmap-update-keeps-rating
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-977-ROADMAP-UPDATE-KEEPS-RATING-TURN builder=codex reviewer=agy round-cap=2 -->
@@ -134,3 +134,19 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 unverified: runtime of `test/gh257-roadmap-ledger-fixes.sh` and `test/gh549-work-events.sh` — the relay assigns both suites to the harness gate.
 
 handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+Reviewed the full files `utils/py/releases_app.py`, `test/gh257-roadmap-ledger-fixes.sh`, and `SOP.md` against all six GH-977 acceptance criteria and adjacent consumers/tests.
+
+- **`utils/py/releases_app.py` (`cmd_roadmap_update`, lines 4108–4257):** Guarding the five-column `RATING_COLUMNS` update on `has_rating_cols and rating["rating_pri"] is not None` (line 4231) is exact and airtight because `parse_rating` (lines 3370–3424) either returns all-`None` when neither `rated` nor `ovr` is present, refuses malformed/orphan tokens (`ovr-orphan`, `rating-shape`, `rating-range`, `ovr-shape`, `ovr-range`), or populates all four axes (`rating_pri` in 1–100) plus `rating_ovr` (`int` or `None`). Text-only `--raw-text` updates (and `roadmap move --raw-text`) persist the new bullet while preserving all five rating columns; explicit replacement ratings still update all five columns and clear a prior `rating_ovr` when omitted. Pre-migration `schema-behind` refusal (lines 4183–4186), `--dry-run`, idempotency, and `_extract_roadmap_update` work-event emission remain coherent. No pre-existing blocking defects found in the swept files within this phase's scope.
+- **`test/gh257-roadmap-ledger-fixes.sh` (Case 8, lines 137–162):** Deliberately updated in place (no new suite, GH-831) to seed `80/70/90/60 ovr 320`, verify a text-only update persists `raw_text` while keeping `80|70|90|60|320`, and verify explicit rescoring `10/20/30/40` replaces the four axes and clears `rating_ovr` (`10|20|30|40|`). Passes `bash -n` (exit 0) and leaves GH-255 well-formed for Case 10's `roadmap render` control. Checked other suites under `test/` — no other test pins the old clearing behavior.
+- **`SOP.md` (Step 1b, lines 81–84):** Accurately documents that a bullet without a `rated` token preserves the saved rating and override (GH-977), while retaining the carry-forward guidance for pre-GH-977 versions.
+- **Independent non-mutating verification:** Ran `bash -n test/gh257-roadmap-ledger-fixes.sh`, `ast.parse` on `utils/py/releases_app.py`, and an isolated out-of-tree Python/SQLite CLI probe under `$TMPDIR` with `PYTHONDONTWRITEBYTECODE=1` and `XYZ_WORK_CONNECTORS=0` covering `roadmap rate` → text-only `roadmap update` (`(80, 70, 90, 60, 320)` preserved), `--dry-run`, idempotent repeat, explicit replacement without `ovr` (`(10, 20, 30, 40, None)`), explicit replacement with `ovr` (`(11, 22, 33, 44, 150)`), malformed `rated` refusal (`rule=rating-shape`, exit 3), orphan `ovr` refusal (`rule=ovr-orphan`, exit 3), `roadmap move --raw-text` preservation, and `releases check` (all exit 0). Full harness gate suites (`test/gh257-roadmap-ledger-fixes.sh`, `test/gh549-work-events.sh`) remain for the harness gate.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
