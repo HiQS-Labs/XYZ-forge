@@ -28,7 +28,7 @@ goal: "When PATH's python3 fails the gate's toolchain probe and ~/.cache/xyz-for
 
 | What was just completed | What's next |
 |---|---|
-| Recon and plan written (this document). | Codex plan QA (cap 4 rounds), then build, then run the real entry points in a disposable clone. |
+| Plan approved by Codex (round 2, `relay-system/2026-11-25/gh1627-plan-qa.md`). Built (`1f2d5738a`) and proven on the real entry points in a disposable clone: rows a-f green, red on base for a, d, e(a) (`TESTS-RESULTS/2026-11-25+GH-1627/README.md`). | Orchestrator final QA, then push through the hook, open the PR (Closes #1627). No LESSONS-LEARNED entry (`NO_ENTRY`: one confounded run per row, no repeated observation). |
 
 ## Observed problem (measured at base `2ef6c3191`)
 

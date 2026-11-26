@@ -1,0 +1,1 @@
+REASON='ENVIRONMENT FAULT: python3 (/opt/homebrew/bin/python3) version 3.14.7; missing modules: mypy; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt) — rerun with PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)'

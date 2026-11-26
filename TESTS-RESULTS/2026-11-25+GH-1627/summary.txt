@@ -1,0 +1,13 @@
+# GH-1627 controls — base=2ef6c3191 candidate=06eac86f5270d26f3b4d5be748486719740fb880 clone=/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1627-venv-autoselect-2026-11-25-gate 2026-11-26T06:08:10Z
+# failing python3: Python 3.14.7 at /opt/homebrew/bin/python3; venv: Python 3.12.13
+PASS f-gh251-validate-pytest-skip: f: gh251-validate-pytest-skip green on candidate
+PASS f-gh732-l3-gate-summary: f: gh732-l3-gate-summary green on candidate
+PASS f-gh268-relay-cue-and-target-checks: f: gh268-relay-cue-and-target-checks green on candidate
+FAIL f-gh436-merge-cleanup: f: gh436-merge-cleanup green on candidate
+PASS f-gh645-merge-cleanup-xyz-tools: f: gh645-merge-cleanup-xyz-tools green on candidate
+PASS f-gh674-merge-cleanup-hosted-lookup: f: gh674-merge-cleanup-hosted-lookup green on candidate
+PASS f-gh251-base: f: gh251 green on base
+PASS f-gh251-unadjusted-red: f: the unadjusted gh251 goes red with the selector present (shows the HOME= edit is required)
+PASS f-pdda: f: pdda.sh run exits 0
+# done: 8 pass, 1 fail
+RECHECK PASS f-gh436-merge-cleanup: rc=0 (provenance), 'Ran 227 tests ... OK', no unittest FAILED line. The driver's FAIL above was its crude patterns matching fixture log text ('gh pr view #1 failed', 'pdda ... FAILED (exit 1)', expected-failure scenarios inside the suite); predicate tightened in run_controls.sh to '^ *FAIL:|^FAILED \(|pass, N fail'. Net: 9 pass, 0 fail.

@@ -17,7 +17,7 @@ printf '#!/usr/bin/env bash\nexit 1\n' > "$WORK/badhome/.cache/xyz-forge-test-ve
 # healthy python3 at a path distinct from the venv; logs every call, then runs the venv interpreter (venv resolved via its own bin).
 printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/healthy.calls"\nexec "%s/python3" "$@"\n' "$WORK" "$VENV_BIN" > "$WORK/healthybin/python3"; chmod +x "$WORK/healthybin/python3"
 git init -q --bare "$WORK/bare"
-SUMMARY="$OUT/summary.txt"; : > "$SUMMARY"; PROV="$OUT/provenance.jsonl"
+SUMMARY="$OUT/summary.txt"; [ -n "${KEEP_SUMMARY:-}" ] || : > "$SUMMARY"; PROV="$OUT/provenance.jsonl"
 pass=0; fail=0
 CAND="$(git -C "$CLONE" rev-parse HEAD)"
 want() { case " $ROWS " in *" $1 "*) return 0;; esac; return 1; }
@@ -26,7 +26,7 @@ rec() { # id desc rc outfile sha
 import hashlib,json,sys,datetime
 i,d,rc,f,sha=sys.argv[1:6]
 h=hashlib.sha256(open(f,'rb').read()).hexdigest() if f and __import__('os').path.exists(f) else None
-print(json.dumps({"ts":datetime.datetime.utcnow().isoformat()+"Z","id":i,"desc":d,"rc":int(rc),"output":f.split('/TESTS-RESULTS/')[-1] if f else None,"output_sha256":h,"checkout":sha}))
+print(json.dumps({"ts":datetime.datetime.now(datetime.timezone.utc).isoformat(),"id":i,"desc":d,"rc":int(rc),"output":f.split('/TESTS-RESULTS/')[-1] if f else None,"output_sha256":h,"checkout":sha}))
 PY
 }
 check() { # id description condition-rc
@@ -142,14 +142,14 @@ if want f; then
   for t in gh251-validate-pytest-skip gh732-l3-gate-summary gh268-relay-cue-and-target-checks gh436-merge-cleanup gh645-merge-cleanup-xyz-tools gh674-merge-cleanup-hosted-lookup; do
     [ -f "$CLONE/test/$t.sh" ] || { echo "SKIP f-$t: no such suite" | tee -a "$SUMMARY"; continue; }
     run "f-$t-cand" "f: $t on CANDIDATE (toolchain-less python3 first: relies on the selector)" PATH="$FAIL_PATH" bash "test/$t.sh"; echo "$RC" > "$WORK/f-$t-cand.rc"
-    [ "$RC" -eq 0 ] && ! grep -q "FAIL" "$OUT/raw/f-$t-cand.out"; check "f-$t" "f: $t green on candidate" $?
+    [ "$RC" -eq 0 ] && ! grep -Eq '^ *FAIL:|^FAILED \(|pass, [1-9][0-9]* fail' "$OUT/raw/f-$t-cand.out"; check "f-$t" "f: $t green on candidate" $?
   done
-  [ "$(cat "$WORK/f-gh251-validate-pytest-skip-base.rc")" -eq 0 ] && ! grep -q "FAIL" "$OUT/raw/f-gh251-validate-pytest-skip-base.out"; check f-gh251-base "f: gh251 green on base" $?
+  [ "$(cat "$WORK/f-gh251-validate-pytest-skip-base.rc")" -eq 0 ] && ! grep -Eq '^ *FAIL:|pass, [1-9][0-9]* fail' "$OUT/raw/f-gh251-validate-pytest-skip-base.out"; check f-gh251-base "f: gh251 green on base" $?
   # why the HOME= isolation is needed: candidate selector + the UNADJUSTED gh251 on a machine that has the venv
   git -C "$CLONE" show "$BASE:test/gh251-validate-pytest-skip.sh" > "$CLONE/test/gh251-validate-pytest-skip.sh"
   run f-gh251-unadjusted "f: CANDIDATE selector + UNADJUSTED (base) gh251 with the venv present" PATH="$FAIL_PATH" bash test/gh251-validate-pytest-skip.sh
   git -C "$CLONE" checkout -q -- test/gh251-validate-pytest-skip.sh
-  grep -q "FAIL" "$OUT/raw/f-gh251-unadjusted.out"; check f-gh251-unadjusted-red "f: the unadjusted gh251 goes red with the selector present (shows the HOME= edit is required)" $?
+  grep -Eq '^ *FAIL:' "$OUT/raw/f-gh251-unadjusted.out"; check f-gh251-unadjusted-red "f: the unadjusted gh251 goes red with the selector present (shows the HOME= edit is required)" $?
   run f-pdda "f: docs gate (pdda.sh run) on CANDIDATE" PATH="$FAIL_PATH" bash utils/pdda/pdda.sh run
   [ "$RC" -eq 0 ]; check f-pdda "f: pdda.sh run exits 0" $?
 fi

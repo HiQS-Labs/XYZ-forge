@@ -1,0 +1,18 @@
+# GH-1627 controls — base=2ef6c3191 candidate=06eac86f5270d26f3b4d5be748486719740fb880 clone=/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1627-venv-autoselect-2026-11-25-gate 2026-11-26T05:34:35Z
+# failing python3: Python 3.14.7 at /opt/homebrew/bin/python3; venv: Python 3.12.13
+PASS a-base-red: base --print-mode exits 3 with the fault (red control)
+PASS a-cand-printmode: cand --print-mode exits 0, exactly one GH-1627 notice naming the venv python
+PASS a-base-tier2: base tier-2 run exits 3 before any suite
+PASS a-cand-tier2: cand tier-2 run exits 0, one notice, pytest layer ran and passed
+PASS a-cand-venv-child: a suite child reports the venv's Python 3.12 (pytest header)
+PASS b1: b1: base and candidate stdout+stderr byte-identical, both exit 3
+PASS b2: b2: base and candidate stdout+stderr byte-identical, both exit 3
+PASS b2-names-path: b2: fault names the PATH interpreter (3.14), not the failing venv
+PASS c: c: healthy distinct python3: identical output, no notice, exit 0
+PASS c-used-path-python: c: the PATH python3 (not the venv path) answered the probe calls
+PASS e-a-base: e(a) base: probe returns the fault line (red control)
+PASS e-a-cand: e(a) cand: probe returns '' — landing is not deferred
+PASS e-b1: e(b1): probe returns the same fault line as base
+PASS e-b2: e(b2): probe returns the same fault line as base
+PASS e-c: e(c): healthy PATH python: '' on base and candidate
+# done: 15 pass, 0 fail

@@ -1,0 +1,7 @@
+/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1627-venv-autoselect-2026-11-25-gate/utils/py/gate_env.py --list-scrubbed
+-c import sys; print(".".join(map(str, sys.version_info[:3])))
+-c import yaml
+-c import pytest
+-c import requests
+-c import mypy
+-c import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)
