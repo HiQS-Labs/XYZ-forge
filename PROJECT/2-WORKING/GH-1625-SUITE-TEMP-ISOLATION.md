@@ -20,9 +20,14 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Reproduced the defect on `origin/development` 086b657ea (all four suite modules leak and call production pruning). Plan written. | Codex plan QA, then implement the one-file change. |
+| Recon reproduced the defect on an archive of `origin/development` at `086b657ea` (all four suite modules leak and call production pruning). Plan QA round 1 FAIL (A1 measurement); A1 revised. | Codex plan QA round 2, then implement the one-file change. |
 
-## Observed problem (reproduced 2026-11-25, base `7f2f1cce5`)
+## Observed problem
+
+Recon runs below used an archive of `origin/development` at `086b657ea` (2026-11-25 ~20:40 local). The task
+branch was cut later from `7f2f1cce5`; the acceptance red control (A1 before) is re-run on `7f2f1cce5`
+itself so before/after compare one exact base. Neither touched file changed between the two revisions
+(checked at implementation time with `git diff --stat 086b657ea 7f2f1cce5 -- test/gh436-merge-cleanup.py test/gh534_phase_*_tests.py skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`).
 
 `merge_cleanup.land_prs` → `_land_prs_loop` creates its landing workdir with
 `tempfile.mkdtemp(prefix="merge-cleanup-")` and, in its `finally`, always calls
@@ -47,7 +52,7 @@ Recon ledger (each module run alone with `TMPDIR=<fresh sealed dir>`, archive of
 
 In the gh436 run, five planted old tool-shaped folders (`merge-cleanup-plant00N/pr-9N-deadbeef-abcdefgh`,
 mtime 2026-11-20) were considered by the real pruning pass: `Scratch pruning: removed 0 … kept 5: merge-cleanup-plant005, …`
-(kept only because they were not removable git clones). The test run therefore applies production
+(the five survived; the log does not say why). The test run therefore applies production
 pruning to whatever directory is the system temp. On the operator's Mac, the real temp held 11 fixture
 folders from one 16-minute gate window on 2026-11-25 (10:20–10:36), matching the issue.
 
@@ -85,19 +90,35 @@ one hunk.
 
 ## Acceptance checks (manual, recorded under `TESTS-RESULTS/2026-11-25+GH-1625/`; no new tests, GH-831)
 
-- A1 (red control, before): with `TMPDIR=<sealed S>` containing five planted old tool-shaped folders,
-  running `python3 test/gh436-merge-cleanup.py` on the unpatched base leaves ≥1 `merge-cleanup-*` folder
-  in S and logs a `Scratch pruning` line naming S. (Observed: 41 folders, pruning line under S.)
-- A1 (after): same command on the patched branch leaves 0 `merge-cleanup-*`/`merge-check-*` folders and
-  no `gh436-suite-tmp-*` folder in S, the five planted folders are byte-identical (marker files intact),
-  and no `Scratch pruning` line names S. The suite result stays OK with the same test count (227).
-- A2 (gate path): `bash test/gh436-merge-cleanup.sh` passes in a disposable clone.
+Setup for A1 (both runs, fresh each time): a sealed parent S with five planted old tool-shaped folders
+`merge-cleanup-plant00N/pr-9N-deadbeef-abcdefgh/marker`. Record before the run: the sorted list of S's
+entries and a SHA-256 of each planted tree (`find … -type f | sort | xargs shasum -a 256`). Run from a
+disposable archive of the revision under test with `TMPDIR=S`.
+
+Enumeration probe (manual, temporary, never committed): in that disposable archive only, add one line to
+`prune_retained_scratch` right after `root = …` that appends `str(root)` to the file named by an env var
+`GH1625_PRUNE_TRACE`, and place it **before** the `_other_merge_cleanup_running()` early return so every
+call is recorded even when pruning is skipped. Set `GH1625_PRUNE_TRACE=<file outside S>` for the run.
+
+- A1 before (red control, on `7f2f1cce5`): `python3 test/gh436-merge-cleanup.py` →
+  (a) ≥1 **new** `merge-cleanup-*`/`merge-check-*` entry in S (entries minus the recorded list);
+  (b) the trace file is non-empty and contains the resolved S path.
+- A1 after (patched branch): same setup and command →
+  (a) 0 new `merge-cleanup-*`/`merge-check-*` entries in S and no `gh436-suite-tmp-*` entry left in S;
+  (b) the trace is **non-empty** and every line is a path under `S/gh436-suite-tmp-*`, none equal to S
+      (an empty trace fails the check: it would mean pruning was never observed);
+  (c) the five planted trees' checksums equal the recorded ones;
+  (d) the suite prints `OK` with the same test count as the before run (227 at recon).
+- A2 (gate path, no probe): `bash test/gh436-merge-cleanup.sh` passes in a disposable full clone.
 - Failure modes caught: a fix that only isolates the wrapper fails A1's direct run; a fix that leaves the
-  per-run dir behind fails the "no gh436-suite-tmp-*" check; an empty or vacuous run fails the test count.
+  per-run dir behind fails (a); pruning still listing the inherited parent fails (b) even if nothing is
+  deleted or logged; touching the plants fails (c); a vacuous or partial run fails (d).
 
 ## Preflight bet check
 
-- Outcome sought: running the merge-cleanup suite never touches the developer's real temp directory.
+- Outcome sought: running the merge-cleanup suite leaves no fixture folders beside the developer's real
+  temp contents and never runs pruning over that directory (its one per-run child is created there and
+  removed on exit).
 - Smallest viable bet: ~10 lines at the top of the existing suite entry module. Not building: a shared
   fixture library, changes to production pruning, or isolation for unrelated suites.
 - Alternative rejected: setting `TMPDIR` in `test/gh436-merge-cleanup.sh` — misses direct Python runs and

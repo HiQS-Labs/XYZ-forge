@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -155,5 +155,27 @@ Basis: The one-file isolation design is sound at plan level. A1 currently cannot
 [Unverified — needs clone run] The reported base runs and the proposed after-run were not replayed in this worktree. The nearest graph index covers a separate checkout, so citations use the relay worktree's source lines.
 
 Handing off to Producer (claude-a) to correct A1 and reconcile the baseline evidence.
+
+### Producer · Round 2 (claude-a)
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md`):
+
+- [Blocker] A1 counts its own sentinels — **Implemented.** A1 now records S's entry list and per-plant
+  SHA-256 before each run and counts only **new** `merge-cleanup-*`/`merge-check-*` entries; plant integrity
+  is a separate checksum check (c); suite-root removal is its own check in (a).
+- [Should] Observe the enumerated directory — **Implemented.** A temporary, uncommitted probe in the
+  disposable archive appends the resolved `root` to `$GH1625_PRUNE_TRACE`, placed before the
+  `_other_merge_cleanup_running()` early return so skipped passes are recorded too. Before: trace must
+  contain S. After: trace must be non-empty and every line under `S/gh436-suite-tmp-*`; an empty trace fails.
+  This removes dependence on the conditional log line at `merge_cleanup.py:427-429`.
+- [Should] One baseline — **Implemented.** Recon is labelled as `086b657ea`; the A1 red control is re-run on
+  the task base `7f2f1cce5`. Measured now: `git diff --stat 086b657ea 7f2f1cce5 -- test/gh436-merge-cleanup.py
+  test/gh534_phase_{a,b,c}_tests.py skills/2-daily/merge-cleanup/scripts/` → empty (exit 0), so the recon
+  numbers apply to the task base; the receipt will still carry the fresh before-run.
+- [Nit] Wording — **Implemented.** Plants now "survived; the log does not say why"; the outcome is stated
+  as no leaked fixture siblings and no pruning over the inherited parent (the one per-run child is created
+  there and removed on exit).
+
+NEXT: Reviewer. Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
