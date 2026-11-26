@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -110,5 +110,33 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) each with a co
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+Correct two GH-1606 documents in place with a dated note and strikes around incorrect gate-coverage inferences. Preserve the standalone failure measurement and the original evidence receipt, and verify the resulting text before delivery.
+
+**How the existing system works, per this document**
+The gate registers gh436, which imports the phase A/B/C unittest classes and stubs the wiring check process-wide. A retained single-test probe reports a healthy-path reserve call; standalone phase B previously failed the wiring check.
+
+**What it's not**
+I accept the frontmatter exclusions: no runtime, suite or gate changes, no receipt rewrite, no revision of the original measurement, no reopening #1615 or editing the other PRs, and no redundant-stub removal. Status defers edits, docs validation and final QA until after plan QA; merge remains later operator authorization. No unresolved implementation choice is identified. Input boundary: paraphrase written from the artifact only.
+
+**Source-backed — Block pending the bounded wording correction below.** Reversibility: Easy; only documentation wording changes. No runtime change is requested.
+
+- [Should] R1 — Keep the negative coverage statement within what was measured. Artifact lines 42 and 65 turn a no-match search into “No gated test drives a toolchain fault” / “What no gated test drives is the toolchain-fault ordering.” The retained receipt only searches a helper identifier (`TESTS-RESULTS/2026-11-25+GH-1618/provenance.jsonl:3`); the single healthy-path probe explicitly “says nothing about a toolchain fault” (same file, line 2). A helper need not be named by a test to be reached indirectly: the reported healthy test at `test/gh534_phase_b_tests.py:429-435` calls `run_main()`, which reaches the helper and reserve at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2177-2201`. **Observed input:** the above concrete evidence/claim mismatch; reviewer command `rg -n gate_toolchain_fault_reason test` → exit 1, no output. **Affected scope:** the plan's Observed table, proposed note and shorter SUMMARY note; this is a request to bound a factual statement, not expand test coverage. **Falsifier:** a retained audit tracing all gated test inputs and seams, showing none supplies a fault on this path, would support the universal negative. **Fix:** say “The search found no direct test reference to the helper; fault ordering is demonstrated by GH-1606's manual driver, and gated fault-ordering coverage was not established by these checks.” Alternatively retain a sufficient source audit. No new suite or runtime probe is needed.
+- [Pass] Q1 — The gate chain is real: `validate.sh:96` registers the shell wrapper; `test/gh436-merge-cleanup.sh:11-12` invokes the Python entry point; `test/gh436-merge-cleanup.py:1382-1384,1593` imports the classes and invokes unittest. A read-only AST scan of the four Python modules (exit 0) found no top-level `load_tests` and no duplicate locally defined Test-class names; source search found no skip decorators. The wrapper intentionally skips non-Forge/vendored contexts through `require_forge_root` at line 11; registry selection also determines whether gh436 runs. In this Forge gate context the retained collection/pass receipts support the premise. Original standalone red remains a separate recorded fact: `TESTS-RESULTS/2026-11-25+GH-1606/provenance.jsonl:23` records b479f74e0, 39/14/1 and GH-1576.
+- [Pass] Q2 — The positive reserve statement is correctly narrow: `TESTS-RESULTS/2026-11-25+GH-1618/probe_gate_reserve.py:16-29` counts the actual calls for exactly one named test, and its receipt at `provenance.jsonl:2` records one call each, OK, revision 086b657ea. This is retained producer evidence, not a reviewer rerun. The historical limitation is explicit at `TESTS-RESULTS/2026-11-25+GH-1618/SUMMARY.md:21-26`; keep that revision/limit explicit when incorporating the note. No claim of a new run at b479f74e0 is supported.
+- [Pass] Q3/Q4 — The edit inventory covers the incorrect sites found by the scoped source search: target doc lines 30, 47, 131-134, 180, 214, 240 and target SUMMARY lines 38-39. The unqualified “no suite drives B1 reservation” in the whole table row at line 47 must be included in its strike, not only its first cell. Keep the true standalone measurement at lines 48 and 128-130, and the true withdrawal of standalone phase B as an unchanged-green witness at lines 135-137, 180 and 214. Artifact lines 54-60 and 74 preserve the receipt and use dated notes/strikes rather than silently deleting that evidence; supersede both the title's “ungated” and the inference in receipt notes via the SUMMARY, without changing receipt bytes.
+- [Nit] Q5 — Make AC-3's required added fact explicit in step 2: target SUMMARY has “39 tests” and “14 failures” at line 38 but no “GH-1576” anywhere. Read-only Python substring check → exit 0, decisive output `SUMMARY.md {'39 tests': True, '14 failures': True, 'GH-1576': False}`. Artifact line 86 says all three must survive in each file. State that the new shorter note adds the GH-1576 cause, or change AC-3 to require preservation where originally present plus the cause in the correction.
+- [Pass] Q5 — AC-1 is a manual contextual review of search hits, not a grep-exit predicate: uncorrected target lines 30/47/131-134 and SUMMARY line 38 currently exhibit the disallowed unqualified hits; a corrected file still legitimately matches the grep. AC-2 inspects scope and receipt preservation; AC-3 guards measurement loss; AC-4 checks structure/paths; AC-5 compares output and claim scope (`artifact:84-90`). These are planned final acceptance, distinct from the existing admission receipts. The claimed origin/development red control was not independently rerun here because git is forbidden; retain the producer's final acceptance receipts rather than treating this plan review as delivery. I ran no gate, executable fixture or test.
+- [Pass] Q6/Q7/Q8 — The plan preserves completed-doc location/frontmatter/status shape (`artifact:54-55`), matches the active-doc frontmatter/status requirements at `PROJECT/PDDA.md:56-77`, and introduces no absolute home path. Pickup and external issue/PR state are supplied context, not independently queried here. The low priority/severity, operator appeal 40 and high cheapness are proportionate to the documentation-only scope (`artifact:46-48`). The chosen in-place correction and existing receipt locations are surgical; accept all stated non-goals, with no additional machinery requested (`artifact:12-17,50-78`). No additional pre-existing defect in the reviewed plan beyond the findings above was identified.
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: The central correction is supported, but its universal negative about gated fault coverage exceeds the recorded search/probe evidence. Bound that wording; clarify the small AC-3 mismatch while updating the plan. This is plan QA only, not approval of implementation or merge.
+
+Handing off to Producer (claude) — disposition R1 and the AC-3 nit, update the plan and evidence wording, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
