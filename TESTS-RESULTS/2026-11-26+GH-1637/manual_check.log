@@ -2,7 +2,7 @@
   PASS: S1 exit 0
   PASS: S1 STATUS is Consult-Adjudicated (not Approved)
   PASS: S1 token closed
-   record: Consult-Adjudicated {'agy': 'NON-BLOCKING', 'codex': 'NON-BLOCKING'} candidate 867bb9616980
+   record: Consult-Adjudicated {'agy': 'NON-BLOCKING', 'codex': 'NON-BLOCKING'} candidate bad31bf066e4
   PASS: S1 attestation record loads with adjudication provenance
    refusal: merge refused: consult-adjudicated lane (not a reviewer approval) awaits the operator's merge (GH-1637)
   PASS: S1 jog merge boundary refuses the record before any merge call
@@ -14,7 +14,7 @@
   PASS: S1 exactly one consult
 == S2 REAL at cap 3, reviewer next: builder is dispatched before any reviewer can approve
   PASS: S2 repaired head then approved (exit 0, Approved)
-   consult judged f02f1046950e -> reviewer attested repaired 2947bf3c1788
+   consult judged 4913c9ae0033 -> reviewer attested repaired cd7efd9dc6f0
   PASS: S2 the approval attests a CHANGED repair head, not the head the consult judged
   PASS: S2 order bld rev bld | consult | bld rev
   PASS: S2 no second consult
@@ -25,11 +25,15 @@
 == S2c REAL then the repaired lane still fails: second cap escalates, no second consult
   PASS: S2c repair reviewer records progress yet the lane ends after exactly the two repair turns (order 'bld rev bld bld rev', one consult)
 == S2d REAL at the new default cap 9 (builder-first alternation, reviewer next at the cap)
-   consult judged 88e51d97537e -> reviewer attested repaired d3ea8b7b14c6
+   consult judged c24ca4e923a6 -> reviewer attested repaired f4deb908dae7
   PASS: S2d the approval attests a CHANGED repair head
   PASS: S2d cap 9: 9 turns, consult, builder repair, reviewer approves the repaired SHA
+== S2f REAL, no repair, reviewer writes CLOSED instead of Approved: refused too (repair-missing)
+  PASS: S2f an unchanged candidate cannot be Closed after a REAL verdict
 == S3 SAFETY -> hold
   PASS: S3 consult-hold, STATUS still Open
+== S3b a valid SAFETY veto stands when the peer advisor fails -> consult-hold (not inconclusive)
+  PASS: S3b SAFETY + failed peer = consult-hold
 == S4 one advisor fails -> consult-inconclusive (a lone NON-BLOCKING never adjudicates)
   PASS: S4 hold
 == S5 duplicate final verdict / token only in quoted text -> consult-inconclusive
@@ -61,6 +65,6 @@
   PASS: S11 cap-stalled, zero consults
 == S12 dirty target: advisors read the pinned candidate, not the working tree
   PASS: S12 both advisors saw MARKER=RED UNTRACKED=absent (working tree has GREEN + untracked.txt)
-  PASS: S12 advisor HEAD equals the attested candidate a47aed790e20
+  PASS: S12 advisor HEAD equals the attested candidate bb1cea377e43
 
-RESULT: 38 passed, 0 failed
+RESULT: 40 passed, 0 failed

@@ -523,4 +523,13 @@ relay-drive: attested Approved by reviewer — reviewed dddddddddddd, 40 bytes o
 Approved deliverable changed: True judge: attested Approved
 ```
 
+### Producer · Round 4 disposition (cap reached; decision recorded)
+
+The reviewer escalated at the round cap with one [Blocker] and one [Should]; both were correct and small, so both were repaired and covered by a control rather than left open. No fifth review round was run (cap).
+
+1. [Blocker] `Closed` bypassed the repair guard — **Implemented**: the repair-required refusal now covers `Approved` and `Closed` (`utils/py/relay_drive.py` `judge_terminal`); manual-check S2f writes `Closed` over an unrepaired candidate and shows `repair-missing`, no attestation; S2/S2b/S2d still attest repaired heads.
+2. [Should] SAFETY with a failed peer — **Implemented**: a valid SAFETY verdict is recognised before the completeness check, so the hold reason is `consult-hold`; S3b shows it, and S4 still shows a failed peer with NON-BLOCKING giving `consult-inconclusive`.
+
+Final-QA close-out: 4 rounds, cap reached; 0 open Blockers; all findings repaired with recorded controls; the last two repairs were verified by the manual checks (40/40, 11/11) and 16 existing suites, not by a further Codex pass.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
