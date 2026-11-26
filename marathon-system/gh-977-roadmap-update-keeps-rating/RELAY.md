@@ -1,6 +1,6 @@
 # Marathon Phase gh-977-roadmap-update-keeps-rating
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-977-ROADMAP-UPDATE-KEEPS-RATING-TURN builder=codex reviewer=agy round-cap=2 -->
 
@@ -123,3 +123,14 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- `utils/py/releases_app.py` updates the five rating columns only when the replacement bullet supplies a parsed rating. A text-only update persists the new bullet and leaves the stored scores and override in place. An explicit replacement rating still writes all five columns, so a replacement without `ovr` clears the previous override.
+- `test/gh257-roadmap-ledger-fixes.sh` Case 8 checks initial rating, text persistence with all five rating columns preserved, and explicit replacement.
+- `SOP.md` Step 1b documents preservation and the workaround for older versions.
+- An isolated SQLite readback through the CLI entry point reproduced the bug before the fix and passed after it. With child processes blocked, `roadmap rate` seeded `80/70/90/60 ovr 320`. Before the fix, the text-only update stored the new text and cleared all five columns. After the fix, it stored the new text and preserved all five values. The explicit replacement then stored `10/20/30/40` with a NULL override. The edited shell suite passed `bash -n`.
+
+unverified: runtime of `test/gh257-roadmap-ledger-fixes.sh` and `test/gh549-work-events.sh` — the relay assigns both suites to the harness gate.
+
+handing off to agy — agy, take your turn.
