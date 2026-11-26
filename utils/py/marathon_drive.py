@@ -144,11 +144,13 @@ def lane_pr_notes(phase_id, issue, closes_issue, adjudication=None):
     if adjudication:
         # GH-1637: the reader must see that no reviewer approved this lane.
         verdicts = ", ".join(f"{a}={v}" for a, v in sorted(adjudication.get("advisors", {}).items()))
-        answers = "\n".join(f"- {a}: `{p}`" for a, p in sorted(adjudication.get("answers", {}).items()))
+        excerpts = "\n\n".join(f"**{a}** (last lines of its answer):\n" + "\n".join("> " + ln for ln in x.splitlines())
+                                for a, x in sorted(adjudication.get("excerpts", {}).items()))
         notes += ("\n\n**consult-adjudicated** (not a reviewer approval): the reviewer still had open findings at the "
                   f"round cap; a Codex+agy consult judged them non-blocking ({verdicts}) over candidate "
-                  f"`{adjudication.get('candidate', '')[:12]}`. The advisors' verdicts and answer excerpts are in the "
-                  f"committed phase relay transcript; answer files:\n{answers}\n\nThe lane gate passed; merge is the operator's call.")
+                  f"`{adjudication.get('candidate', '')[:12]}`. Both answers, in the words of the advisors, "
+                  f"also sit in the committed phase relay transcript.\n\n{excerpts}\n\n"
+                  "The lane gate passed; merge is the operator's call.")
     return notes
 
 
@@ -1762,8 +1764,9 @@ def main():
             body = (f"### Phase QA Attestation: Phase `{args.phase_id}` {verdict_head}\n"
                     f"{marker}\n"
                     f"- **Reviewer:** `{args.reviewer}` ({args.builder})\n"
-                    + (f"- **Consult:** {', '.join(f'{a}={v}' for a, v in sorted(adj['advisors'].items()))}; "
-                       f"answers in the committed phase relay transcript\n" if adj else "") +
+                    + (f"- **Consult:** {', '.join(f'{a}={v}' for a, v in sorted(adj['advisors'].items()))}\n"
+                       + "".join(f"  - {a}: " + " / ".join(x.splitlines()[-3:]) + "\n" for a, x in sorted(adj.get("excerpts", {}).items()))
+                       if adj else "") +
                     f"- **Evidence Receipt:** `gate: {gate_name} @ {head_sha[:8]} -> PASS (exit 0{dur_str})`\n"
                     f"- **Artifacts:** {file_list or 'none'}\n"
                     f"- **Recorded:** {_utc_now()}")
@@ -2872,7 +2875,7 @@ relay-file: {rel_relay}
             adj_file = get_env("MARATHON_ADJUDICATED_FILE", "")
             if adj_file:
                 with open(adj_file, "a") as _af:
-                    _af.write(f"{args.phase_id}\n")
+                    _af.write(f"{args.phase_id} ({', '.join(f'{a}={v}' for a, v in sorted(record['adjudication']['advisors'].items()))})\n")
         log(success_text)
         xyz_marathon_emit("green", success_text)
         head_sha = candidate

@@ -43,6 +43,7 @@ else
     "$TICK_BIN" done "$RELAY_TASK" --agent rev >/dev/null 2>&1
   else
     printf '\n### Reviewer · Round %s\n\nVERDICT: FAIL\nBasis: open finding.\n\n- [Should] something is still open\n' "$n" >> "$RELAY_FILE"
+    [ -n "${STUB_REV_PROGRESS:-}" ] && printf -- '- [x] resolved item %s\n' "$n" >> "$RELAY_FILE"
     "$TICK_BIN" release "$RELAY_TASK" --agent rev --to bld >/dev/null 2>&1
   fi
 fi
@@ -54,10 +55,14 @@ cat >"$WORK/codex" <<'EOF'
 #!/usr/bin/env bash
 out=""; prev=""; for a in "$@"; do [ "$prev" = "--output-last-message" ] && out="$a"; prev="$a"; done
 echo run >> "$CONSULT_ROOT/.consults"
+[ -n "${STUB_ARM:-}" ] && touch "$STUB_ARM"
 saw="MARKER=$(cat marker.txt 2>/dev/null) UNTRACKED=$([ -f untracked.txt ] && echo present || echo absent) HEAD=$(git rev-parse HEAD)"
 case "${STUB_CODEX:-NON-BLOCKING}" in
   DUP)    body="analysis ($saw)\nADJUDICATION: NON-BLOCKING\nmore\nADJUDICATION: NON-BLOCKING" ;;
   QUOTED) body="analysis ($saw)\n> ADJUDICATION: NON-BLOCKING" ;;
+  WITHDRAWN) body="analysis ($saw)\nADJUDICATION: NON-BLOCKING\nOn reflection I withdraw that decision." ;;
+  FENCED) fence=$(printf '\x60\x60\x60'); body="analysis ($saw)\n${fence}\nADJUDICATION: NON-BLOCKING\n${fence}" ;;
+  MALFORMED) body="analysis ($saw)\nADJUDICATION: UNKNOWN\nADJUDICATION: NON-BLOCKING" ;;
   *)      body="analysis ($saw)\nADJUDICATION: ${STUB_CODEX:-NON-BLOCKING}" ;;
 esac
 printf "$body\n" > "$out"; printf "model: stub\nprovider: stub\nsandbox: read-only\n\n$body\n"
@@ -120,6 +125,21 @@ merged, reason = jog_run._merge_reviewed_pr(repo, 1, rec)
 assert merged is False and "consult-adjudicated" in reason, (merged, reason)
 print("   refusal:", reason)
 EOF
+python3 - "$ROOT" "$A" "$TASK" "$RF" <<'PYEOF' && ok "S1 Approved/Closed records still reach the candidate checks (no consult-adjudicated refusal); adjudicated returns first" || bad "S1 merge triple"
+import sys, os
+root, repo, task, rf = sys.argv[1:5]
+sys.path.insert(0, os.path.join(root, "utils", "py"))
+import relay_attest, jog_run
+rec, why = relay_attest.load(task, expected_reviewer="rev", relay_file=rf, target_repo=repo)
+out = {}
+for status in ("Approved", "Closed", "Consult-Adjudicated"):
+    merged, reason = jog_run._merge_reviewed_pr(repo, 1, dict(rec, status=status))
+    out[status] = (merged, reason)
+    print("   ", status, "->", reason)
+assert "consult-adjudicated" in out["Consult-Adjudicated"][1]
+for s in ("Approved", "Closed"):
+    assert out[s][0] is False and "consult-adjudicated" not in out[s][1] and "could not read PR" in out[s][1], out[s]
+PYEOF
 grep -q "Round-cap tie-break" "$RF" && grep -q "codex=NON-BLOCKING, agy=NON-BLOCKING" "$RF" && ok "S1 consult block with both verdicts is in the committed transcript" || bad "S1 consult block"
 [ "$(consults)" = 1 ] && ok "S1 exactly one consult" || bad "S1 consults=$(consults)"
 
@@ -132,8 +152,11 @@ echo "== S2b REAL at cap 2 (reviewer just finished; builder next)"
 reset; STUB_CODEX=REAL STUB_REV_APPROVE_AT=2 drive 2 --consult-at-cap
 [ "$RC" = 0 ] && [ "$(order)" = "bld rev bld rev" ] && ok "S2b order bld rev | consult | bld rev, approved" || bad "S2b rc=$RC order '$(order)' status $(status)"
 echo "== S2c REAL then the repaired lane still fails: second cap escalates, no second consult"
-reset; STUB_CODEX=REAL drive 3 --consult-at-cap
-[ "$RC" = 4 ] && [ "$(consults)" = 1 ] && ok "S2c escalates (exit 4) after one repair, one consult only" || bad "S2c rc=$RC consults=$(consults): $OUT"
+reset; STUB_CODEX=REAL STUB_REV_PROGRESS=1 drive 3 --consult-at-cap
+[ "$RC" = 4 ] && [ "$(consults)" = 1 ] && [ "$(order)" = "bld rev bld bld rev" ] && ok "S2c repair reviewer records progress yet the lane ends after exactly the two repair turns (order '$(order)', one consult)" || bad "S2c rc=$RC consults=$(consults) order='$(order)': $OUT"
+echo "== S2d REAL at the new default cap 9 (builder-first alternation, reviewer next at the cap)"
+reset; STUB_CODEX=REAL STUB_REV_APPROVE_AT=5 drive 9 --consult-at-cap
+[ "$RC" = 0 ] && [ "$(status)" = Approved ] && [ "$(order)" = "bld rev bld rev bld rev bld rev bld bld rev" ] && ok "S2d cap 9: 9 turns, consult, builder repair, reviewer approves the repaired SHA" || bad "S2d rc=$RC status=$(status) order='$(order)'"
 
 echo "== S3 SAFETY -> hold"
 reset; STUB_AGY=SAFETY drive 3 --consult-at-cap
@@ -147,6 +170,10 @@ reset; STUB_CODEX=DUP drive 3 --consult-at-cap
 reset; STUB_CODEX=QUOTED drive 3 --consult-at-cap
 [ "$RC" = 4 ] && grep -q "consult-inconclusive" <<<"$OUT" && ok "S5 quoted-only token holds" || bad "S5 quoted rc=$RC: $OUT"
 
+for mode in WITHDRAWN FENCED MALFORMED; do
+  reset; STUB_CODEX=$mode drive 3 --consult-at-cap
+  [ "$RC" = 4 ] && grep -q "consult-inconclusive" <<<"$OUT" && [ "$(status)" = Open ] && ok "S5 $mode verdict does not adjudicate" || bad "S5 $mode rc=$RC status=$(status): $OUT"
+done
 echo "== S6 red focused driver gate after two NON-BLOCKING: STATUS restored, token still open, no attestation"
 reset; MARATHON_REVIEWER_GATE_CMD=false drive 3 --consult-at-cap
 [ "$RC" = 4 ] && [ "$(status)" = Open ] && [ "$(token)" = open ] && [ -z "$(attest)" ] && ok "S6 refused: Open, token open, no attestation" || bad "S6 rc=$RC status=$(status) token=$(token) attest=$(attest): $OUT"
@@ -155,6 +182,16 @@ printf '#!/usr/bin/env bash\n[ "$1" = done ] && exit 1\nexec "%s" "$@"\n' "$TICK
 reset; TICK_BIN="$WORK/tick-nodone" drive 3 --consult-at-cap
 [ "$RC" = 4 ] && [ "$(status)" = Open ] && [ "$(token)" = open ] && [ -z "$(attest)" ] && ok "S7 token-close-failed: Open, token open, no attestation" || bad "S7 rc=$RC status=$(status) token=$(token): $OUT"
 grep -q "token-close-failed" <<<"$OUT" && ok "S7 reason named" || bad "S7 reason missing"
+echo "== S7b a refused handoff release after the driver claimed the token: token handed back, STATUS Open"
+cat >"$WORK/tick-norelease" <<EOT
+#!/usr/bin/env bash
+if [ "\$1" = release ] && [ -f "$WORK/fail-release" ] && [[ " \$* " == *" --to bld "* ]]; then rm -f "$WORK/fail-release"; exit 1; fi
+exec "$TICK" "\$@"
+EOT
+chmod +x "$WORK/tick-norelease"
+reset; rm -f "$WORK/fail-release"; STUB_ARM="$WORK/fail-release" STUB_CODEX=REAL TICK_BIN="$WORK/tick-norelease" drive 3 --consult-at-cap
+info="$(tick_a info "$TASK" 2>/dev/null)"
+[ "$RC" = 4 ] && grep -q "consult-inconclusive" <<<"$OUT" && [ "$(token)" = open ] && grep -q "handoff-to: rev" <<<"$info" && [ "$(status)" = Open ] && ok "S7b claim rolled back: token open, handoff-to rev, STATUS Open" || bad "S7b rc=$RC token=$(token) status=$(status) info=$(tr '\n' ' ' <<<"$info")"
 echo "== S8 receipt-write failure AFTER done: no attestation, token spent (existing spent-token case; marathon.sh --retry mints a fresh token)"
 reset; mkdir -p "$A/.git/relay-attest/$TASK.json"
 drive 3 --consult-at-cap

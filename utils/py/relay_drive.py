@@ -1035,8 +1035,23 @@ def main():
     # block. Both NON-BLOCKING -> the driver records relay_attest.ADJUDICATED (never "Approved") through
     # the same judge_terminal an approval uses; any REAL -> one builder repair then the reviewer decides;
     # anything else holds. Reuses consult.sh, judge_terminal and commits_touch_non_receipt.
-    ADJ_TOKEN_RE = re.compile(r"^ADJUDICATION:[ \t]*(NON-BLOCKING|REAL|SAFETY)[ \t]*$", re.M)
+    ADJ_LINE_RE = re.compile(r"^ADJUDICATION[ \t]*:", re.I)
+    ADJ_TOKEN_RE = re.compile(r"^ADJUDICATION:[ \t]*(NON-BLOCKING|REAL|SAFETY)[ \t]*$")
     CONSULT_ADVISORS = ("codex", "agy")
+
+    def parse_adjudication(text):
+        """The advisor's one verdict, or None. It must be the ONLY `ADJUDICATION` line of the answer, an
+        exact token, and the LAST non-blank line, outside any code fence; a withdrawn, fenced, repeated or
+        malformed verdict is no verdict (GH-1637: a lone token that follows prose or a second declaration
+        must never adjudicate)."""
+        lines = [ln.rstrip() for ln in text.splitlines() if ln.strip()]
+        if not lines or text.count("```") % 2:
+            return None
+        declared = [ln for ln in lines if ADJ_LINE_RE.match(ln.lstrip())]
+        if len(declared) != 1 or lines[-1] != declared[0] or lines[-1] != lines[-1].lstrip():
+            return None
+        m = ADJ_TOKEN_RE.match(lines[-1])
+        return m.group(1) if m else None
 
     def tick_ok(*argv):
         env = os.environ.copy()
@@ -1050,8 +1065,14 @@ def main():
             return False
         if holder == to_agent:
             return True
-        return (tick_ok("claim", args.relay_task, "--agent", holder, "--paths", relay_file)
-                and tick_ok("release", args.relay_task, "--agent", holder, "--to", to_agent))
+        if not tick_ok("claim", args.relay_task, "--agent", holder, "--paths", relay_file):
+            return False
+        if tick_ok("release", args.relay_task, "--agent", holder, "--to", to_agent):
+            return True
+        # The claim succeeded but the release was refused: give the token back to where it was.
+        if not tick_ok("release", args.relay_task, "--agent", holder, "--to", holder):
+            eprint(f"relay-drive: WARNING — could not return token {args.relay_task} to {holder} after a refused handoff; inspect `tick info`")
+        return False
 
     def adjudication_close_token():
         """Close the token as the reviewer, handing it over first when the builder holds the handoff.
@@ -1138,8 +1159,7 @@ def main():
                 continue
             with open(m.group(2), "r", errors="replace") as f:
                 text = f.read()
-            found = ADJ_TOKEN_RE.findall(text)
-            answers[m.group(1)] = (m.group(2), text, found[0] if len(found) == 1 else None)
+            answers[m.group(1)] = (m.group(2), text, parse_adjudication(text))
         verdicts = {a: (answers[a][2] if a in answers else None) for a in CONSULT_ADVISORS}
         if all(verdicts.values()):
             toks = set(verdicts.values())
@@ -1163,8 +1183,11 @@ def main():
         if outcome != "adjudicated":
             commit_relay_file(f"relay-drive: consult-at-cap {outcome} ({args.relay_task})")
         if outcome == "adjudicated":
+            tail = lambda txt: "\n".join([ln for ln in txt.splitlines() if ln.strip()][-12:])
             info = {"pre": pre, "adjudication": {"by": "consult", "advisors": verdicts, "candidate": cand,
-                                                 "answers": {a: answers[a][0] for a in CONSULT_ADVISORS}}}
+                                                 "answers": {a: answers[a][0] for a in CONSULT_ADVISORS},
+                                                 # inline evidence for readers without this checkout (PR body, QA comment)
+                                                 "excerpts": {a: tail(answers[a][1]) for a in CONSULT_ADVISORS}}}
             return ("adjudicated", info)
         if outcome == "real":
             return ("real", None)
@@ -1583,7 +1606,7 @@ def main():
         elif resolved_after > resolved_before:
             made_progress = True
 
-        if round_idx == args.round_cap and round_idx < hard_cap and made_progress:
+        if round_idx == args.round_cap and round_idx < hard_cap and made_progress and not consult_used:
             args.round_cap += 1
             msg = f"relay-drive: round cap ({args.round_cap - 1}) reached but lane is converging (new commits or resolved items) — bounded extension granted to cap {args.round_cap}"
             eprint(msg)
@@ -1606,8 +1629,9 @@ def main():
                     eprint("relay-drive: consult found a REAL finding but the token cannot be routed to the builder — holding")
                     xyz_relay_emit("red")
                     exit_escalate("consult-inconclusive")
+                # The repair budget is exactly these two turns: with the consult spent, the ordinary
+                # progress extension is off, so the lane ends at this cap whatever the reviewer records.
                 args.round_cap += 2
-                hard_cap += 2
                 eprint(f"relay-drive: consult judged an open finding REAL — one repair granted (builder then reviewer), cap now {args.round_cap}")
             if kind == "adjudicated":
                 actor = args.reviewer   # the record names the reviewer whose findings the consult overrode

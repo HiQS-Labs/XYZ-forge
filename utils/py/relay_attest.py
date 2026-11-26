@@ -350,7 +350,8 @@ def trailer_text(record):
     # GH-1637: provenance of a consult-adjudicated terminal, bound into the trailer like gate_cmd.
     adj = record.get("adjudication")
     if adj:
-        cfg_line += f"adjudication: {json.dumps(adj, sort_keys=True)}\n"
+        bound = {k: adj.get(k) for k in ("by", "advisors", "candidate")}   # answers/excerpts live in the record
+        cfg_line += f"adjudication: {json.dumps(bound, sort_keys=True)}\n"
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"

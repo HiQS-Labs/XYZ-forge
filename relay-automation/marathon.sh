@@ -677,6 +677,7 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_time
       *) _halt_reason="marathon-drive exit $phase_exit" ;;
     esac
     xyz_marathon_run_emit red "halted at phase $idx of $phase_count ($id) — $_halt_reason"
+    rm -f "$MARATHON_ADJUDICATED_FILE"
     exit "$phase_exit"
   fi
 done < <(printf '%s\n' "$PLAN_TSV" | tr '\t' '\037')
@@ -689,7 +690,7 @@ fi
 
 if ((CLOSEOUT_PR)); then
   closeout_plan="${PLAN_NAME:-$(basename "${PLAN%.*}")}"
-  closeout_adjudicated="$(paste -sd, "$MARATHON_ADJUDICATED_FILE" 2>/dev/null || true)"
+  closeout_adjudicated="$(paste -sd';' "$MARATHON_ADJUDICATED_FILE" 2>/dev/null | sed 's/;/; /g' || true)"
   closeout_event_dir="$ROOT/.tick/events"
   closeout_event_count=0
   closeout_event_types=""

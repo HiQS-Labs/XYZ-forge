@@ -129,6 +129,48 @@ for which in unfixed fixed; do
   fi
 done
 
+echo "== M5 red pre-advance gate after an adjudicated terminal (default path: no focused gate, so the real gate is Marathon's pre-advance)"
+git -C "$A" reset -q --hard HEAD; git -C "$A" clean -fdq -e .tick -e phases; rm -f "$A/.order"
+tick_a log task.created TASK-M5 --agent dispatcher >/dev/null
+out="$(python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief.md" --reviewer codex --builder agy --phase-id p-m5 \
+      --relay-task TASK-M5 --phases-dir "$A/phases" --round-cap 3 --force --pre-advance-cmd false --result-file "$WORK/r-m5.json" 2>&1)"; rc=$?
+python3 - "$WORK/r-m5.json" "$rc" <<'PYEOF' && ok "M5 red pre-advance gate: exit 5, no approved outcome, no ready PR (relay_status Consult-Adjudicated kept in the receipt)" || bad "M5 rc=$rc: $(tail -8 <<<"$out")"
+import json, sys
+r = json.load(open(sys.argv[1])); rc = int(sys.argv[2])
+assert rc == 5 and r["outcome"] != "approved" and r["pr"]["number"] is None, (rc, r["outcome"], r["pr"])
+print("   receipt:", r["outcome"], r["reason"], "| relay_status", r["relay_status"], "| gate", r["gate"]["result"])
+PYEOF
+
+echo "== M6 mixed Approved/adjudicated multi-phase closeout summary keeps the count and labels the adjudicated phase"
+mkdir -p "$A/briefs" "$A/PROJECT/2-WORKING"; printf 'brief\n' >"$A/briefs/p1.md"; printf 'brief\n' >"$A/briefs/p2.md"
+cat >"$A/PROJECT/2-WORKING/mix.yaml" <<'EOP'
+name: mix
+phases:
+  - id: p1
+    reviewer: codex
+    brief: briefs/p1.md
+  - id: p2
+    reviewer: codex
+    depends_on: p1
+    brief: briefs/p2.md
+EOP
+cat >"$WORK/drive-stub.sh" <<'EOP'
+#!/usr/bin/env bash
+pid=""; while (($#)); do case "$1" in --phase-id) pid="$2"; shift 2;; *) shift;; esac; done
+[ "$pid" = p2 ] && echo "p2 (agy=NON-BLOCKING, codex=NON-BLOCKING)" >> "$MARATHON_ADJUDICATED_FILE"
+exit 0
+EOP
+cat >"$WORK/closeout-stub.sh" <<'EOP'
+#!/usr/bin/env bash
+while (($#)); do case "$1" in --notes) printf '%s\n' "$2" > "$CLOSEOUT_NOTES_OUT"; shift 2;; *) shift;; esac; done
+exit 0
+EOP
+chmod +x "$WORK/drive-stub.sh" "$WORK/closeout-stub.sh"
+CLOSEOUT_NOTES_OUT="$WORK/closeout-notes.txt" RELAY_TURN_TIMEOUT_S= MARATHON_ROOT="$A" MARATHON_DRIVE="$WORK/drive-stub.sh" MARATHON_CLOSEOUT_BIN="$WORK/closeout-stub.sh" \
+  MARATHON_YAML_BIN="$ROOT/bin/marathon-yaml" TICK_BIN="$TICK" bash "$ROOT/relay-automation/marathon.sh" --plan "$A/PROJECT/2-WORKING/mix.yaml" --closeout-pr >/dev/null 2>&1
+grep -q "Phases approved: 2/2 (consult-adjudicated, not reviewer-approved: p2 (agy=NON-BLOCKING, codex=NON-BLOCKING))" "$WORK/closeout-notes.txt" 2>/dev/null \
+  && ok "M6 closeout summary: count kept (2/2) and p2 labelled consult-adjudicated with its verdicts" || bad "M6 notes: $(cat "$WORK/closeout-notes.txt" 2>/dev/null)"
+
 echo
 echo "RESULT: $PASSN passed, $FAILN failed"
 [ "$FAILN" = 0 ]
