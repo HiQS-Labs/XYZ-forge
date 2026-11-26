@@ -28,7 +28,11 @@ Swarm preflight still gates dispatch. Newly approved published PR results permit
 continued independent pending work, and so does one task-local failure: a valid receipt for
 the execution just run whose own gate ran and failed (`escalated`, reason `pre-advance-failed`,
 exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row stays `failed`
-with its reason and receipt path and is never retried. Every other failure (lock contention,
+with its reason and receipt path and is never retried. So does a row Marathon refused at its
+native lane-attempt cap before dispatching any worker (GH-1633): a valid receipt for the execution
+just run with `parked`, reason `lane parked at the attempt cap`, exit 8, attempt count at the cap,
+gate not run and no PR. It stays `parked` with its history untouched, is never selected again, and the
+next ready row starts exactly once. Every other failure (lock contention,
 guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
 change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
 Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon

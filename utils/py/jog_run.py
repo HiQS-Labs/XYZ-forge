@@ -2599,21 +2599,58 @@ def _jog_result_identity(receipt, gh_num, execution_id):
         raise ContractError("result receipt does not match the selected issue/execution")
 
 
-def _jog_task_local_failure(root, target, gh_num, gid, prior_executions):
-    """Reason when the execution just projected failed only because its own gate ran red, else None.
+def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome):
+    """(latest execution record, its receipt) for the execution just projected, else None.
 
-    Fail closed: anything but a valid, identity-matched `pre-advance-failed` receipt whose gate
-    ran and exited nonzero (never the resource guard's 108) is treated as a shared stop."""
+    Only the one execution this wake just ran counts, and its receipt must load and match the
+    selected issue and execution id; anything else is a shared stop for the caller."""
     try:
         executions = jog_load_state(root, gid).get("executions") or []
         latest = executions[-1] if executions else {}
-        if (len(executions) != prior_executions + 1 or latest.get("status") != "projected-failed"
-                or latest.get("outcome") != "escalated"):
+        if (len(executions) != prior_executions + 1 or latest.get("status") != status
+                or latest.get("outcome") != outcome):
             return None
         receipt = load_marathon_result(_ledger_abs_path(root, gid, latest.get("result_path")))
         _jog_result_identity(receipt, gh_num, latest.get("execution_id"))
     except (ContractError, OSError, TypeError, ValueError, AttributeError):
         return None
+    return latest, receipt
+
+
+def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected was refused at its native lane-attempt cap, else None.
+
+    Fail closed: only a valid, identity-matched receipt that Marathon wrote when it parked the lane
+    at its cap BEFORE any worker was dispatched (exit 8, attempt count at the cap, gate not run,
+    no PR) is task-local. The row stays parked with its receipt and native history untouched; it is
+    never pending again, so it cannot be selected twice."""
+    found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-parked", "parked")
+    if not found:
+        return None
+    latest, receipt = found
+    attempt = receipt.get("attempt") or {}
+    count, cap = attempt.get("count"), attempt.get("max")
+    if (receipt.get("outcome") != "parked" or receipt.get("reason") != "lane parked at the attempt cap"
+            or receipt.get("exit_code") != 8 or receipt.get("approval_preserved")
+            or not all(isinstance(n, int) and not isinstance(n, bool) for n in (count, cap))
+            or cap < 1 or count < cap
+            or (receipt.get("gate") or {}).get("result") != "not-run"
+            or (receipt.get("pr") or {}).get("number")
+            or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
+            != os.path.realpath(target)):
+        return None
+    return f"{receipt['reason']}, attempts {count}/{cap}; result: {latest.get('result_path')}"
+
+
+def _jog_task_local_failure(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected failed only because its own gate ran red, else None.
+
+    Fail closed: anything but a valid, identity-matched `pre-advance-failed` receipt whose gate
+    ran and exited nonzero (never the resource guard's 108) is treated as a shared stop."""
+    found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-failed", "escalated")
+    if not found:
+        return None
+    latest, receipt = found
     from marathon_drive import GATE_GUARD_KILL_EXIT
     gate = receipt.get("gate") or {}
     gate_exit = gate.get("exit")
@@ -3028,6 +3065,12 @@ def jog_run_main(args=None):
                         if result.get("outcome") == "approved" and (result.get("pr") or {}).get("number"):
                             print(f"jog: GH-{gh_num} published awaiting approval; continuing independent pending work.")
                             continue
+                    exhausted = supervised and _jog_lane_exhausted(
+                        root, target, gh_num, ledger_gid, prior_executions)
+                    if exhausted:
+                        print(f"jog: GH-{gh_num} lane exhausted ({exhausted}); retained parked without "
+                              "retry; continuing independent pending work.")
+                        continue
                 if action == "failed":
                     local = supervised and _jog_task_local_failure(
                         root, target, gh_num, ledger_gid, prior_executions)
