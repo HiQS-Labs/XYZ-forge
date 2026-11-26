@@ -150,3 +150,13 @@ Reviewed the full files `utils/py/releases_app.py`, `test/gh257-roadmap-ledger-f
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-26T17:33:30Z
+task: MARATHON-GH-977-ROADMAP-UPDATE-KEEPS-RATING-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 6738ec6c9965ce918db978859798e93fd8c0d707
+added-range: 25689+2871
+added-sha256: ccbfb97209b7e199806f59e52e381df85d99be2dc3f105997c47893ebab8a65c
+config-sha256: 18365c5820e9b5b527e7033251b8822ea0a7ad6c2c39601f6db27d6525f416aa
+gate-run: no
