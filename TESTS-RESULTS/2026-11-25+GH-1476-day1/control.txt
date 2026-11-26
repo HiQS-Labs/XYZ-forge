@@ -231,7 +231,7 @@ if k == "issue-fail":
 HELD = "\nHELD: owner decision required. Do not execute until owner approves the target.\n"
 AFTER = "\nThis work comes after #902 here.\n"
 body = "## Acceptance\n- [ ] artifact updated and gate green\n"
-body += {"held": HELD, "issue-hold": HELD,
+body += {"held": HELD, "issue-hold": HELD, "retry-hold": HELD,
          "dependency": "\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n",
          "dep-open": AFTER, "dep-fail": AFTER, "dep-done": AFTER,
          "stale": "\n- [ ] additional live requirement\n"}.get(k, "")
@@ -263,7 +263,7 @@ q() { python3 -c 'import sqlite3,sys; print(sqlite3.connect(sys.argv[1]).execute
 sha() { [ -f "$1" ] && shasum -a 256 "$1" | cut -d' ' -f1 || echo MISSING; }
 execs() { python3 -c 'import glob,json,sys; print(sum(len(json.load(open(p)).get("executions") or []) for p in glob.glob(sys.argv[1]+"/.tick/jog/*/state.json")))' "$FR"; }
 att_before="$(q 'select attempt_count from jog_queue')"; cap_before="$(sha "$FT/$CAP_REL")"; ex_before="$(execs)"
-env -u MARATHON_ALLOW_TRUNK_COMMIT RELAY_DRIVE_EXIT=9 MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" SP_SUGGESTED_BRANCH="marathon/gh901-fixture" python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" --builder codex --reviewer agy --max-tasks 1 </dev/null
+env -u MARATHON_ALLOW_TRUNK_COMMIT RELAY_DRIVE_EXIT=9 MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" SP_SUGGESTED_BRANCH="marathon/gh901-fixture" python3 "$FR/utils/py/releases_app.py" --root "$FR" jog ${JOG_VERB:-run} --target-root "$FT" --builder codex --reviewer agy $([ "${JOG_VERB:-run}" = run ] && echo "--max-tasks 1" || echo 901) </dev/null
 rc=$?
 printf 'jog exit=%s\n' "$rc"
 calls=0; [ ! -f "$WORK/relay-drive-args" ] || calls="$(wc -l < "$WORK/relay-drive-args" | tr -d ' ')"
