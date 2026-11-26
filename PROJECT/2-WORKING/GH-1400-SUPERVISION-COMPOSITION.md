@@ -418,3 +418,24 @@ Later qualification shares evidence across at most two planned bounded real runs
 ## Merge evidence
 
 - PR #1621 merged 2026-11-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## GH-1633 — exhausted lane continues to the ready successor (OL-12, 2026-11-26)
+
+Flywheel Day 2 (#1610) exercised a supervised wake with a ready successor behind each case, on the real
+Jog → Preflight → Marathon path with the worker edge stubbed (GitHub responses, git transport and fixture gates are shimmed too). Task-local red gate, a human hold and a
+shared stop already behaved as required; a row at its native lane-attempt cap halted the wake with the
+successor never started. `_jog_lane_exhausted` in `utils/py/jog_run.py` now treats only a valid,
+identity-matched cap receipt written after dispatch (parked, the drive itself exited 8, count at cap, gate not run, no PR,
+same execution clone) as task-local; any other parked Marathon result still halts, except the already documented
+published-approval continuation and the pre-lease human-hold park. Evidence and the red-then-green controls are under
+`TESTS-RESULTS/2026-11-26+GH-1610-day2/`. OL-12 credit remains the operator's call after review of that
+evidence and the live run recorded on #1610.
+
+Operator decision recorded on #1610 (2026-11-26): an identity-matched, current `cap-stalled` receipt (reviewer
+round cap, Marathon exit 4, gate not run, no PR) is also a qualifying task-local outcome; `_jog_review_cap_stalled`
+implements it beside `_jog_task_local_failure`. Both new predicates share `_jog_receipt_is_current` (the drive's own
+exit status and a receipt newer than the recorded dispatch instant) and Jog sets any receipt already at the result
+path aside before dispatching. Shared stops (`cap-or-close-mismatch`, `no-progress`, refusals, crashes) still start
+zero successors. Open finding at the review cap: a delayed receipt from an older concurrent Marathon process on the
+same execution id could still be mistaken for the current one; two live drives in one clone are excluded by the
+clone driver lock, so it was accepted open and is stated in the PR.

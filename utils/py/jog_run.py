@@ -680,7 +680,10 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         if prior_token:
             argv += ["--relay-task", f"{prior_token}-{len(state['executions'])}"]
     argv += ["--execution-id", exec_id]
+    _jog_set_aside_stale_result(invocation["result_path"])
     record["result_path"] = _ledger_rel_path(root, gid, invocation["result_path"])
+    # GH-1633: the instant before the drive starts; a receipt older than this was not written by it.
+    record["dispatched_epoch"] = time.time()
     # PR #281 review B4: persist the result path BEFORE dispatch — a crash mid-drive otherwise
     # orphans a receipt that was actually written (the ledger's newest record still says null).
     jog_save_state(root, gid, state)
@@ -2602,21 +2605,125 @@ def _jog_result_identity(receipt, gh_num, execution_id):
         raise ContractError("result receipt does not match the selected issue/execution")
 
 
-def _jog_task_local_failure(root, target, gh_num, gid, prior_executions):
-    """Reason when the execution just projected failed only because its own gate ran red, else None.
+def _jog_set_aside_stale_result(path):
+    """Keep, never delete: a receipt already at this execution's result path was not written by the
+    drive about to start (ordinal execution ids can reuse a path), so move it out of the way. After
+    the drive returns, a file at `path` can then only have been written by that drive (GH-1633)."""
+    # Only a regular file (or a link to one) is a receipt; anything else, such as a directory, stays in
+    # place so Marathon's own invalid-result-path refusal still fires.
+    if os.path.isfile(path):
+        os.replace(path, f"{path}.prior-{time.time_ns()}")
 
-    Fail closed: anything but a valid, identity-matched `pre-advance-failed` receipt whose gate
-    ran and exited nonzero (never the resource guard's 108) is treated as a shared stop."""
+
+def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome):
+    """(latest execution record, its receipt) for the execution just projected, else None.
+
+    Only the one execution this wake just ran counts, and its receipt must load and match the
+    selected issue and execution id; anything else is a shared stop for the caller."""
     try:
         executions = jog_load_state(root, gid).get("executions") or []
         latest = executions[-1] if executions else {}
-        if (len(executions) != prior_executions + 1 or latest.get("status") != "projected-failed"
-                or latest.get("outcome") != "escalated"):
+        if (len(executions) != prior_executions + 1 or latest.get("status") != status
+                or latest.get("outcome") != outcome):
             return None
         receipt = load_marathon_result(_ledger_abs_path(root, gid, latest.get("result_path")))
         _jog_result_identity(receipt, gh_num, latest.get("execution_id"))
     except (ContractError, OSError, TypeError, ValueError, AttributeError):
         return None
+    # The receipt on disk must still be the one Jog projected: it recorded the outcome and reason at
+    # projection time, so a file rewritten afterwards cannot reclassify the execution (GH-1633).
+    if latest.get("reason") != receipt.get("reason"):
+        return None
+    return latest, receipt
+
+
+def _jog_no_gate_no_pr(receipt):
+    """True only for a receipt that EXPLICITLY records no gate run and no PR, and a real clone path.
+
+    MACHINE-CONTRACTS.md: PR fields are all-null when no PR exists and the gate block carries an
+    explicit null exit when it never ran. An absent block or key, an empty `{}`, a falsey number such as 0,
+    or an empty clone path is a partial receipt and is never read as task-local."""
+    gate, pr, repo = receipt.get("gate"), receipt.get("pr"), receipt.get("target_repo")
+    if not all(isinstance(block, dict) for block in (gate, pr, repo)):
+        return False
+    return (gate.get("result") == "not-run" and "exit" in gate and gate["exit"] is None
+            and all(key in pr and pr[key] is None for key in ("number", "url", "state"))
+            and isinstance(repo.get("path"), str) and bool(repo["path"].strip()))
+
+
+def _jog_receipt_is_current(root, gid, latest, drive_exit):
+    """True when the receipt at this execution's result path was written by the drive this wake just ran.
+
+    Execution ids are ordinal and a reused output directory can still hold an older receipt, and
+    Marathon keeps its exit status when writing the new receipt fails. So the drive's own exit status
+    must be the expected one AND the receipt file must be newer than the dispatch instant Jog recorded
+    (older files at the path are also set aside before dispatch by `_jog_set_aside_stale_result`)."""
+    dispatched = latest.get("dispatched_epoch")
+    try:
+        written = os.stat(_ledger_abs_path(root, gid, latest.get("result_path"))).st_mtime
+    except (OSError, TypeError, ValueError):
+        return False
+    return not (latest.get("drive_exit") != drive_exit or isinstance(dispatched, bool)
+                or not isinstance(dispatched, (int, float)) or written < dispatched)
+
+
+def _jog_review_cap_stalled(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected stalled at its reviewer round cap, else None.
+
+    Operator decision (#1610, 2026-11-26): an identity-matched, current `cap-stalled` receipt
+    (escalated, exit 4, gate not run, no PR, same execution clone) is a task-local outcome: the row stays
+    `failed` with its reason and receipt, is never retried by the wake, and the next ready row starts.
+    Anything else stays a shared stop."""
+    found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-failed", "escalated")
+    if not found:
+        return None
+    latest, receipt = found
+    if not _jog_receipt_is_current(root, gid, latest, 4):
+        return None
+    if (receipt.get("outcome") != "escalated" or receipt.get("reason") != "cap-stalled"
+            or receipt.get("exit_code") != 4 or receipt.get("approval_preserved")
+            or not _jog_no_gate_no_pr(receipt)
+            or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
+            != os.path.realpath(target)):
+        return None
+    return f"{receipt['reason']}, exit 4; result: {latest.get('result_path')}"
+
+
+def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected was refused at its native lane-attempt cap, else None.
+
+    Fail closed: only a valid, identity-matched receipt written after this execution was dispatched, by
+    Marathon parking the lane at its cap BEFORE any worker was dispatched (the drive itself exited 8,
+    attempt count at the cap, gate not run, no PR), is task-local. The row stays parked with its receipt
+    and native history untouched; it is never pending again, so it cannot be selected twice."""
+    found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-parked", "parked")
+    if not found:
+        return None
+    latest, receipt = found
+    attempt = receipt.get("attempt") or {}
+    count, cap = attempt.get("count"), attempt.get("max")
+    if not _jog_receipt_is_current(root, gid, latest, 8):
+        return None
+    if (receipt.get("outcome") != "parked" or receipt.get("reason") != "lane parked at the attempt cap"
+            or receipt.get("exit_code") != 8 or receipt.get("approval_preserved")
+            or not all(isinstance(n, int) and not isinstance(n, bool) for n in (count, cap))
+            or count < cap
+            or not _jog_no_gate_no_pr(receipt)
+            or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
+            != os.path.realpath(target)):
+        return None
+    return f"{receipt['reason']}, attempts {count}/{cap}; result: {latest.get('result_path')}"
+
+
+def _jog_task_local_failure(root, target, gh_num, gid, prior_executions):
+    """Reason when the execution just projected failed only because its own gate ran red, else None.
+
+    Fail closed: anything but a valid, identity-matched `pre-advance-failed` receipt whose gate
+    ran and exited nonzero (never the resource guard's 108) is treated as a shared stop."""
+    found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-failed", "escalated")
+    if not found:
+        return None
+    latest, receipt = found
     from marathon_drive import GATE_GUARD_KILL_EXIT
     gate = receipt.get("gate") or {}
     gate_exit = gate.get("exit")
@@ -3031,9 +3138,16 @@ def jog_run_main(args=None):
                         if result.get("outcome") == "approved" and (result.get("pr") or {}).get("number"):
                             print(f"jog: GH-{gh_num} published awaiting approval; continuing independent pending work.")
                             continue
-                if action == "failed":
-                    local = supervised and _jog_task_local_failure(
+                    exhausted = supervised and _jog_lane_exhausted(
                         root, target, gh_num, ledger_gid, prior_executions)
+                    if exhausted:
+                        print(f"jog: GH-{gh_num} lane exhausted ({exhausted}); retained parked without "
+                              "retry; continuing independent pending work.")
+                        continue
+                if action == "failed":
+                    local = supervised and (
+                        _jog_task_local_failure(root, target, gh_num, ledger_gid, prior_executions)
+                        or _jog_review_cap_stalled(root, target, gh_num, ledger_gid, prior_executions))
                     if local:
                         print(f"jog: GH-{gh_num} failed task-locally ({local}); retained without "
                               "retry; continuing independent pending work.")
