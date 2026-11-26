@@ -1,0 +1,6 @@
+readiness_rc= 1 connector_events= 0 []
+ _probe.py", line 76, in main
+    assert ratings(repo) == [(80, 70, 90, 60, 320)], ("text-only update dropped the saved rating",
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('text-only update dropped the saved rating', [(None, None, None, None, None)], 'updated GH-977\n', '')
+

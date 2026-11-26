@@ -1,0 +1,37 @@
+== test: GH-257 ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.WOClkKS9Lr
+initialized /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.WOClkKS9Lr/repo/releases.db (slug 'test-repo', enforcement=lenient, generation 1); canonical dump at /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-GH-257.XXXXXX.WOClkKS9Lr/repo/releases.sql
+  PASS: roadmap add refused malformed raw_text: '- [ ] #255 malformed checkbox'
+  PASS: roadmap add refused malformed raw_text: '-   **GH-255 · repeated spaces** 🆕'
+  PASS: roadmap add refused malformed raw_text: '-	**GH-255 · tab after dash** 🆕'
+  PASS: roadmap add refused malformed raw_text: '- **GH-255 unclosed bold'
+  PASS: roadmap add refused malformed raw_text: '- **** empty title GH-255'
+  PASS: roadmap add refused malformed raw_text: '- **GH-255 · title**
+- [ ] #999 smuggled row'
+  PASS: roadmap add refused malformed raw_text: '- **GH-255 · title**
+malformed continuation'
+  PASS: roadmap add refused mismatched issue number
+added roadmap entry rmi-01M8AXCTEH0KKR21QMSJ3CTDSD for GH-255
+  PASS: roadmap add succeeded with valid raw_text
+  PASS: roadmap update refused malformed raw_text: '- [ ] #255 bad update'
+  PASS: roadmap update refused malformed raw_text: '-   **GH-255 · extra spaces**'
+  PASS: roadmap update refused malformed raw_text: '-	**GH-255 · tab after dash**'
+  PASS: roadmap update refused malformed raw_text: '- **GH-255 unclosed title'
+  PASS: roadmap update refused malformed raw_text: '- **** empty title GH-255'
+  PASS: roadmap update refused malformed raw_text: '- **GH-255 · title**
+- [ ] #999 bad line'
+  PASS: roadmap update refused malformed raw_text: '- **GH-255 · title**
+continuation'
+  PASS: roadmap update --dry-run reported planned diff
+  PASS: dry-run verified non-mutating against database
+updated GH-255
+  PASS: roadmap update succeeded for GH-255
+  PASS: roadmap list reflects updated raw_text
+  PASS: releases.sql carries roadmap-update receipt
+  PASS: roadmap update idempotent when text unchanged
+  PASS: idempotent update wrote zero additional receipts
+updated GH-255
+  PASS: roadmap update correctly populated all 5 rating columns
+updated GH-255
+  FAIL: expected all rating columns to be NULL, found non-null values
+exit=1

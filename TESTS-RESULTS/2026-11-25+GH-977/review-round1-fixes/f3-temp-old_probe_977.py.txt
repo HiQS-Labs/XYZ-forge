@@ -1,0 +1,3 @@
+readiness_rc= 1 connector_events= 2 [977, 977]
+ , None, None, None)], 'updated GH-977\n', 'work_connectors: XYZ_WORK_CONNECTORS_REGISTRY is active — running non-vendored connector(s) github_board from the environment\nwork_connectors: XYZ_WORK_CONNECTORS_REGISTRY is active — running non-vendored connector(s) github_board from the environment\n')
+
