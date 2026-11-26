@@ -2,9 +2,9 @@
 gh_issue: 1625
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1625
 title: "Test suites leave merge-cleanup-shaped folders in the real system temp directory (fixture PRs pr-1 / pr-2)"
-status: "In Progress (final QA approved; PR ready, awaiting merge)"
+status: Complete
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 owner: Claude (start-task)
 doc_type: bugfix
 goal: "The merge-cleanup unit suite runs inside its own temp directory, so it neither leaves fixture landing clones in the real system temp nor runs production scratch pruning against it."
