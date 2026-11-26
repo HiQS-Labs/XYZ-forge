@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -176,5 +176,63 @@ Handing off to Producer (claude-a) to isolate the existing boundary fixture, cor
   Recorded in `TESTS-RESULTS/2026-11-25+GH-1625/provenance.jsonl` (row 3) and README "A2".
 
 NEXT: Reviewer. Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Both Round 1 findings are closed. The A1 red control and patched results meet the plan, and the recorded A2 wrapper run passed on the same suite source seeded here. The whole-file sweep found no other pre-existing defect affecting the reviewed isolation requirement.
+
+- [Pass] Closed the shared boundary-fixture finding. Both candidates now descend from the private `gh436-bounds-` fixture and the test registers cleanup for that fixture. The allowed candidate stays inside `safe_root`, the rejected candidate is its sibling outside `safe_root`, and the original `NEVER_DELETE` and `SAFE_ROOTS` assertions remain (`test/gh436-merge-cleanup.py:79-107`). The remaining `/tmp` path literals in the suite are inputs to command generation and a Bash syntax check (`test/gh436-merge-cleanup.py:1572-1583`).
+- [Pass] The direct and wrapper runs share one bootstrap before local imports and phase collection (`test/gh436-merge-cleanup.sh:8-11`, `test/gh436-merge-cleanup.py:10-41,56,1398-1403`). The bootstrap's own `gettempdir()` populates the cache before `TMPDIR` changes. Resetting it redirects the next default lookup, and the no-argument atexit callback operates on the captured child with the parent, name and directory checks (`test/gh436-merge-cleanup.py:24-35`, Round 1 stdlib probe at `relay-system/2026-11-25/gh1625-final-qa.md:148-152`). The production allocation and listing sites use those defaults (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:396-406,432-445,2025,2545`).
+- [Pass] A1 meets (a)–(d) on the bootstrap revision. The before run left 36 matching entries and made 138/138 listings in S. The after run left zero matching entries and zero suite temp roots, made 138/138 listings in the private child, preserved all five planted trees by checksum, and matched the 227-test count with OK (`PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:93-118`, `TESTS-RESULTS/2026-11-25+GH-1625/a1-before-summary.txt:1-10`, `TESTS-RESULTS/2026-11-25+GH-1625/a1-after-summary.txt:1-10`). The README now reports five synthetic deletions under the forced probe and five survivors under the unforced recon, with one listing and 66 skips. That evidence supports the existing 45/45/50/85 rating and its distinction between reachable deletion and observed harm (`TESTS-RESULTS/2026-11-25+GH-1625/README.md:18-22`, `PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:44-57,132-138`, `releases.sql:1062,6114-6115`).
+- [Pass] A2 is recorded as `TMPDIR=<S> bash test/gh436-merge-cleanup.sh` in the disposable full clone on `bbd6ba299`, exit 0, 227 tests OK, S empty and both old fixture directory mtimes unchanged (`TESTS-RESULTS/2026-11-25+GH-1625/provenance.jsonl:3`, `TESTS-RESULTS/2026-11-25+GH-1625/README.md:30-34`). The read-only comparison below exited 0. It printed four changed paths since Round 1, the existing suite, the relay, and the receipt README and provenance. The three paths changed after A2 were the relay and those two receipt files. It printed `seeded suite == A2 == HEAD: 6325d3df4c89e861d44f779a4535442e850e86d1`. Together with the Round 1 scope comparison (`relay-system/2026-11-25/gh1625-final-qa.md:155`), this shows a single modified suite, with the existing registry entry at `validate.sh:96`.
+  ```sh
+  python3 - <<'PY'
+  from pathlib import Path
+  from hashlib import sha1
+  import zlib
+  g = Path(Path(".git").read_text().strip().split(": ", 1)[1])
+  def read(oid):
+      return zlib.decompress((g.parent.parent/"objects"/oid[:2]/oid[2:]).read_bytes()).split(b"\0", 1)[1]
+  def tree(commit):
+      return read(commit).splitlines()[0].split()[1].decode()
+  def entries(oid):
+      result, data = {}, read(oid)
+      while data:
+          name, data = data.split(b"\0", 1)
+          mode, name = name.decode().split(" ", 1)
+          result[name] = (mode, data[:20].hex())
+          data = data[20:]
+      return result
+  def changed(a, b, path=""):
+      if a == b:
+          return []
+      left, right = entries(a), entries(b)
+      result = []
+      for name in sorted(left.keys() | right.keys()):
+          x, y = left.get(name), right.get(name)
+          if x != y:
+              result += changed(x[1], y[1], path+name+"/") if x and y and x[0] == y[0] == "40000" else [path+name]
+      return result
+  head = (g/"HEAD").read_text().strip()
+  gate = "bbd6ba2995f75d63d754e839811d8eb5a80387a6"
+  prior = "4b32c20e5ad5fd31caf8ef619c6f5137a67b886c"
+  suite = Path("test/gh436-merge-cleanup.py")
+  for rev in (prior, gate):
+      print(rev[:9], "to HEAD:", ", ".join(changed(tree(rev), tree(head))))
+  data = suite.read_bytes()
+  blob = sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+  for rev in (head, gate):
+      assert blob == entries(entries(tree(rev))["test"][1])[suite.name][1]
+  print("seeded suite == A2 == HEAD:", blob)
+  PY
+  ```
+
+The graph available for this turn covered a separate checkout. The call trace was unavailable under the approval policy, so the file citations use the seeded worktree. Runtime results are from the Producer's recorded runs.
+
+Relay closed (Approved), no further relay turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
