@@ -23,7 +23,7 @@ Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 40%
 
 | What was just completed | What's next |
 |---|---|
-| OL-09 preparation published (historical). Day 1 plan QA rounds 1–4 failed and are consumed; the R3 two-tier text is replaced by a holds-only plan (below). | One separate holds-only plan review (authorized 2026-11-25); no implementation until it passes and the operator releases it. Partial progress, no OL-10 credit. |
+| OL-09 preparation published (historical). Day 1 plan QA rounds 1–4 failed and are consumed; the R3 two-tier text is replaced by a holds-only plan (below). | Plan review 5 (holds-only) failed on fixture installers (B1); the 2026-11-25 orchestrator override accepted the plan with B1 folded in, and the hold check is built (see Build record). | Independent code review of the final head, push through the gate, ready PR (Refs #1476). Partial progress, no OL-10 credit. |
 
 ## Requested outcome and boundaries
 
@@ -461,20 +461,35 @@ Any case that is not red on the unchanged head is recorded as a control, never a
 reproduced defect. For every refusal the run also asserts: queue `attempt_count` equal to its
 pre-run value; row `parked` with `failure_reason` starting `hold:`; capture still in
 `1-INBOX`, bytes identical; execution-record count and `.tick/attempts` unchanged. Evidence
-lands in `TESTS-RESULTS/2026-11-25+GH-1476-day1/holds-only/` with `provenance.jsonl`.
+lands in `TESTS-RESULTS/2026-11-25+GH-1476-holds/` with `provenance.jsonl`.
 
 **Existing callers that share the touched code, and how they are shown unaffected.**
 `releases_app.py:5223 → jog_run_main` (every `jog run`), `jog retry-build`, supervised and
 checkpoint modes. `test/jog-queue.sh` (`--simulate`, `--dry-run`) is skipped by design.
-`test/gh280-jog-marathon-adapter.sh` sections G, H, I, K, N (root install, vendored
-foreign-cwd, default executor, retry-build at `:940`, supervisor lock) run real rows through a
-`gh` shim (`:57`) that answers `issue view` only when `--json` names ` state ` or the
-`state,stateReason,body,comments` set and exits 1 otherwise, which the new check would read
-as "cannot check → held". The
-implementation therefore adds the one matching `issue view` answer to that suite's existing shim
-(fixture edit, no new test), and shows green by running both suites in the disposable clone on the
-unchanged head (baseline) and on the change, same results. Legacy `--executor relay` uses the
-same loop and is covered by the same check.
+`test/gh280-jog-marathon-adapter.sh` sections G, H, I, K, M (root install, vendored
+foreign-cwd, default executor, retry-build at `:940`, and M's inbox promotion through the real
+queue at `:1136–1141`) run real rows through a `gh` shim (`:57`) that answers `issue view` only
+when `--json` names ` state ` or the `state,stateReason,body,comments` set and exits 1
+otherwise, which the new check would read as "cannot check → held". Section N7 (retry-build
+under a live supervisor lock) refuses at `jog_run.py:1087–1090`, before the helper, so it needs
+no new answer. The implementation therefore adds the one matching `issue view` answer to that
+suite's existing shim (fixture edit, no new test), and shows green by running both suites in the
+disposable clone on the unchanged head (baseline) and on the change, same results. Legacy
+`--executor relay` uses the same loop and is covered by the same check.
+
+**Fixture installers (round 5 blocker B1, folded in).** The hold rules are loaded relative to
+`jog_run.py`'s own harness root, but the hand-built fixtures copy only `relay-automation bin src
+utils`. Both the gh280 `setup_fixture` and the Day 1 replay installer therefore also copy
+`skills/1-hourly/kickstart/scripts/build_queue.py` to `<root>/<prefix>skills/…` (root and
+vendored `.xyz/` shapes). Every 0-call replay case asserts the specific expected reason prefix
+(`hold: issue …` / `hold: capture …`), so `hold-check-unavailable: …` can never satisfy a hold
+case, and the replay takes the disposable clone as an argument instead of an author-machine path.
+
+**Build record (2026-11-25/26).** `utils/py/jog_run.py`: `hold_refusal` and `_gh_issue_json`
+after `find_issue_doc`; one call in the `jog run` loop before the lease and one in
+`_jog_retry_build_locked` before its lease. Evidence: `TESTS-RESULTS/2026-11-25+GH-1476-holds/`
+(`base/` red and `change/` green per case, `suites-change/`, `provenance.jsonl`). Still partial
+progress under #1476: no OL-10 credit.
 
 **Not claimed.** No OL-10 credit, no reviewed-source binding, no stale-source detection, no
 attempt-budget change, no PR in this window.
