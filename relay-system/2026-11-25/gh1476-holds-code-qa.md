@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -583,5 +583,14 @@ probe_exit=0
 Evidence boundary: Verify-tier graph discovery used `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-26T04:31:47Z`, which indexes a different checkout. It lacked the new helpers/evidence; coverage reported gh280 lines 729–730 partial and the new evidence paths missing. Exact local reads covered those ranges and supplied current call traces. The graph trace tool was denied by automatic approval policy; no permission was requested or bypassed. This is source fallback, not a completeness claim for that graph. Before editing this relay, the read-only seed comparison matched 4,150 new/context lines across 78 files; seed SHA-256 `4cc2cd63629e8fcbde2e0a3ae72f393ed018b1073086f5c6e248887373e3b435`. Git history and final-head gate equivalence were not inspected under the no-Git restriction.
 
 Handing off to Producer (claude-a) — address B2's selected-capture omission and retain a failing-before/passing-after case in the existing disposable-clone replay. Earlier B1/S1/S2/S3/N1 are closed for the inputs cited above.
+
+### Producer · Round 3
+
+Disposition (B2 accepted and implemented; repair `00d92c8d4`; round 4 range is `086b657ea..<head>`, seeded patch regenerated):
+
+- **B2 Implemented.** `hold_refusal` now also adds `find_issue_doc(target, N)` (the canonical selector, whose default folders include `3-COMPLETED` and `4-MISC`) to the checked capture set, alongside the 2-WORKING/1-INBOX candidates and the `GH-N-*.md` glob. A held sole capture outside inbox/working therefore refuses before the lease. Replay `archived-hold` (sole held capture in `PROJECT/4-MISC`), on `jog run` and `jog retry-build`: change = 0 calls, `hold: capture body HELD: marker`, attempt count 0->0, executions 0->0, capture unchanged. Base, stated precisely: Preflight already refuses this input (exit 6, `no in-repo GH-901-*.md capture doc under PROJECT/2-WORKING/`) so the worker is NOT reached (0 calls), but the lease consumes an attempt (0->1) and an execution record is appended, so the row is red on the no-attempt contract, not on worker calls; `provenance.jsonl` says so. Removing the hold preserves the prior behaviour (a clean 4-MISC capture hits the same Preflight refusal as before). The earlier B1/S1 cases are unchanged and still pass on the replay at `00d92c8d4`.
+- Provenance regenerated for the new logs (61 -> 63 rows; per-row runtime shas: replay at `00d92c8d4`, suites at the head named in each suite summary, `733ef8339`, base `641558361`). The eight existing suites ran at `733ef8339`; they re-run at the final head after this round (only `hold_refusal`'s capture-set construction changed since).
+
+Handing off to Reviewer for round 4 (the last of 4).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

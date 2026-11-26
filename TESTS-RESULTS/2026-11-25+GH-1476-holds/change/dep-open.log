@@ -1,12 +1,12 @@
 == test: gh1609-control ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.42NQvo54YJ
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Aa9Hd3SLl9
 jog: GH-901 not started: hold: issue after #902; parking item.
 jog: queue complete (0 pending tasks).
 jog exit=0
 worker edge calls=0
 snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold: issue after #902
 ASSERT case=dep-open expected_calls=0 PASS
-queue: [('jog-01M8B3M1BJAZ3D7MA671WX77HQ', 'parked', 'hold: issue after #902', 0)]
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.42NQvo54YJ
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.42NQvo54YJ
+queue: [('jog-01M8B4MGJDNMYER8MZTTGGPJPK', 'parked', 'hold: issue after #902', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Aa9Hd3SLl9
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.Aa9Hd3SLl9
 control exit=0
