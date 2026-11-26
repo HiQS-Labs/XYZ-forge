@@ -13,6 +13,9 @@ export XYZ_ATTEMPT_CONTEXT
 export TMPDIR="$WORK/tmp"; mkdir -p "$TMPDIR"
 
 PATHS_FILE="$WORK/paths.txt"
+# GH-1627: validate.sh now selects ~/.cache/xyz-forge-test-venv when python3 fails the probe. The two refusal cases below test
+# "no usable fallback", so they run with a HOME that has no venv (a machine that has one would otherwise run the suites).
+NO_VENV_HOME="$WORK/no-venv-home"; mkdir -p "$NO_VENV_HOME"
 # GH-808: the suite only needs --paths-file to classify tier 2 with T2_PYTEST=1 (any
 # *.py path sets it) — naming releases_app.py routed both nested runs at the ~24-suite
 # releases lane and made this suite ~22% of the full gate. skills-army-hq is the
@@ -57,7 +60,7 @@ exec "$REAL_PY" "\$@"
 PYSH
 chmod +x "$FAKE_BIN/python3"
 
-out="$(PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1)"; rc=$?
+out="$(HOME="$NO_VENV_HOME" PATH="$FAKE_BIN:$PATH" bash "$VAL" --paths-file "$PATHS_FILE" 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && [ -n "$out" ] \
   && grep -Fq "ENVIRONMENT FAULT: python3 ($FAKE_BIN/python3) version" <<<"$out" \
   && grep -Fq 'missing modules: pytest' <<<"$out" \
@@ -75,7 +78,7 @@ fi
 exec "$REAL_PY" "\$@"
 PYSH
 chmod +x "$YAML_BIN/python3"
-out="$(PATH="$YAML_BIN:$PATH" bash "$VAL" --print-mode 2>&1)"; rc=$?
+out="$(HOME="$NO_VENV_HOME" PATH="$YAML_BIN:$PATH" bash "$VAL" --print-mode 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && [ -n "$out" ] \
   && grep -Fq "ENVIRONMENT FAULT: python3 ($YAML_BIN/python3) version" <<<"$out" \
   && grep -Fq 'missing modules: yaml' <<<"$out" \
