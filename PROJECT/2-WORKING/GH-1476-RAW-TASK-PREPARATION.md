@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1476
 title: "GH-1476: Raw task preparation"
 status: "In progress (plan approved; implementation verification pending)"
 created: 2026-11-16
-updated: 2026-11-17
+updated: 2026-11-25
 doc_type: feedback
 owner: Codex
 goal: Accept raw daily-goal tasks and research selected work consistently before execution admission.
@@ -23,7 +23,7 @@ Umbrella: [Issue #1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400), 40%
 
 | What was just completed | What's next |
 |---|---|
-| OL-09 preparation published (historical). Day 1 plan QA R1–R3 failed; R3 redesign (below) written. | One extra independent plan review (Round 4, authorized); runtime edits only after Approved. |
+| OL-09 preparation published (historical). Day 1 plan QA rounds 1–4 failed and are consumed; the R3 two-tier text is replaced by a holds-only plan (below). | One separate holds-only plan review (authorized 2026-11-25); no implementation until it passes and the operator releases it. Partial progress, no OL-10 credit. |
 
 ## Requested outcome and boundaries
 
@@ -357,99 +357,125 @@ assumption, managed-selector downgrade resistance, exact hold/release cases and
 typed no-reservation park against actual source. Review is not approval of an
 unimplemented portable receipt or proof of any unrun scenario.
 
-### R3 redesign — 2026-11-25 (supersedes conflicting R1/R2 text; one extra review authorized)
+### Holds-only repair plan — 2026-11-25 (replaces the R3 two-tier text; R1/R2 managed-admission text above is superseded and not planned)
 
-Review budget, stated plainly: plan QA used three of three rounds (R1–R3, all FAIL,
-transcript `relay-system/2026-11-25/gh1476-day1-plan-qa.md`; local head `3c1b2d985`,
-tag `keep/gh1609-day1-plan-r3`). The operator authorized **exactly one additional
-independent plan review** for this repair window (Round 4 of the same thread, same
-token, counter not reset). If it does not approve, stop; no round 5, no new run.
+**Review budget.** Plan QA rounds 1–3 and the extra round 4 all failed and stay consumed
+(transcript `relay-system/2026-11-25/gh1476-day1-plan-qa.md`, unchanged). The operator
+decision of 2026-11-25 on #1476 authorizes ONE separate review of this holds-only plan.
+If it fails: stop, no repair round. If it passes: still no implementation here.
+**Credit:** partial progress on #1476 only. No OL-10 credit; #1400 is not touched.
 
-**Two tiers, credited separately.** *Tier A (holds)* is a change that stands alone:
-a known human or dependency hold parks the row before promotion and before any native
-attempt, on every lane. *Tier B (managed admission)* adds reviewed-source binding for
-lanes that opt in. Tier A merged without Tier B is **partial OL-10 progress, not OL-10
-credit**; the #1400 scoreboard is not touched by this work either way.
+**Problem (observed Nov 18 and Nov 25, real `jog run` → Preflight → Marathon).** A task whose
+issue or capture carries a person-written hold, or says it comes after unfinished work,
+still reaches the worker. Replay at `TESTS-RESULTS/2026-11-25+GH-1476-day1/`: ready = 1
+worker call, human hold = 1, dependency hold = 1, stale acceptance = 0.
 
-**Tier A.** Preflight already fetches the issue (`fetch_issue_details`); extend that one
-fetch with labels and comments and run the *existing* hold recognizer over it
-(`issue_hold_reason`, `operator_decision` in `skills/1-hourly/kickstart/scripts/build_queue.py`).
-Move the recognizer's pure functions to one importable module that Kickstart also imports
-(no copy). A hold exits nonzero (not 4), so Jog's existing refusal writer
-(`jog_run.py:652–659`) parks the row; exit 4 would project `completed` (:648–651). Unavailable lookup keeps today's tolerance on a
-legacy lane (a *known* hold is the only refusal there). Releasing a hold: the latest
-trusted-operator `Operator decision: proceed` as an exact first line; `pending`/free text
-or a wrong-author comment does not release; body/label holds stay independent.
+**Scope.** Before a task is promoted out of the inbox or handed to a worker, refuse it when
+(a) the live issue has a hold, (b) the capture/preparation document has a hold, or (c) work
+it says it comes after is not confirmed done. If the check cannot be made, the task stays
+held. A refusal starts no worker, consumes no attempt, leaves the capture where it is, and
+records its reason through the existing park writer.
 
-**Tier B — the four review findings, decided.**
+**Traced path (head `ed00b9d67`).** `jog_run_main` loop `utils/py/jog_run.py:2842` picks the
+pending row → `:2875` `gh_num` → `:2879` `jog_acquire_lease` (adds 1 to the row's
+`attempt_count`, `utils/py/releases_app.py:5072–5100`) → `:2888–2900` `find_issue_doc` and
+inbox promotion → `:2910` `run_marathon_phase` (`:603`; appends an execution record, runs
+Preflight, then Marathon reserves the native attempt). Preflight reads only
+body/state/closedAt (`utils/py/swarm_preflight.py:707`); no label, no capture hold, no
+referenced issue is ever read on this path. A second entry reaches the same worker
+boundary: `jog retry-build` (`jog_run.py:1111` lease, `:1112` `run_marathon_phase`).
 
-1. *Published transcript vs reviewed head, and publisher identity.* Two distinct commits:
-   `reviewed_head` A (what the reviewer read, the trailer's `reviewed-head:`) and
-   `transcript_commit` B (the later commit that holds the approved transcript + trailer).
-   The issue marker is one JSON payload `{version, issue, capture_path, reviewed_head: A,
-   transcript_commit: B, transcript_path}` (the pre-review capture block stays free of any
-   commit ID). Admission: B is an ancestor of the integration tip; `git show B:transcript_path`
-   parses to a trailer with `status: Approved` and `reviewed-head: A`; the existing
-   `relay_attest.source_matches` on A→B proves B differs from A only in transcript paths
-   (add one small pure `parse_trailer(text)` to that owner for a portable read — no `.git`
-   receipt, no absolute path); bound paths at A equal the same paths at the evaluated
-   integration SHA (objects, expected absence included; unrelated changes allowed). Reading
-   at A alone cannot find the approval (negative control). A seeded or transcript-only
-   review is accepted here only because the publisher is trusted, which is the assumption
-   (below). Publisher identity: the marker author must equal the operator login, which Jog
-   resolves once (an explicit `--operator` argument on Jog's existing CLI, else `gh api user`, the same two
-   sources as Kickstart's `--owner` at `build_queue.py:389,421–422`; there is no existing
-   env variable and none is added) and forwards to Preflight as an argument; never the org slug; unresolved login on
-   a managed lane parks.
-2. *Managed classification with unavailable ref or lookup.* The integration ref is resolved
-   by the existing `express.py` rule (explicit `--base`, else `origin/HEAD`, else the GitHub
-   default branch; `express.py:1623`), never from the capture; Jog passes it to Preflight, and Jog
-   classifies **before promotion**. A lane is managed if *any* positive evidence exists:
-   the local capture has the block, the integration tree's capture for the issue has it
-   (a stale tracking ref counts — staleness cannot hide a positive), or the row's prior
-   execution record says `admission.class=managed`. Managed plus any unverifiable input
-   (no ref, no lookup, ambiguous captures, missing marker, bad author) parks with a specific
-   reason, with no promotion and no worker. Legacy requires the *absence* of all three
-   evidence kinds; if the fetch failed the class is recorded as `legacy-unverified` in the
-   execution record (the sticky store is that existing record, not a new database) and runs
-   as today. **Residual, stated:** a first-seen lane with block deleted locally, never
-   published or dispatched managed, and a tracking ref predating its publication is
-   indistinguishable from legacy offline work; accepted for a local-first CLI.
-   Withdrawing managed intent is a reviewed capture change on the integration branch.
-3. *Dependency release when prose is removed.* The reviewed capture block carries typed
-   `dependencies: [owner/repo#N, …]` (issue or PR), part of the reviewed bytes. Admission
-   requires each declared dependency verified resolved by lookup (issue closed; PR merged;
-   closed-unmerged, unknown kind and unavailable lookup park). Removing the prose line
-   therefore cannot release a declared dependency; prose `Blocked by #N` still holds on its
-   own while the text exists. A dependency discovered only in prose after review is not
-   covered by a declaration: managed lane parks while that text is present (existing rule).
-4. *Attempt key across capture rename or namespace change.* At dispatch Jog writes the
-   exact native key (`MARATHON_LANE_NS or phase_id`, `marathon_drive.py:1542–1545`) into the
-   execution record. On retry/refresh, a derived key that differs from the recorded key
-   parks `attempt-key-changed`; a managed row with prior dispatched executions and no
-   recorded key parks unless an attempt file already exists under the derived key. No
-   key translation, copy or reset; a conservative refusal is the intended outcome.
+**The one place.** A single helper in `utils/py/jog_run.py`, `refuse_on_hold(target, gh_num)`,
+called at `jog_run.py:2875–2879`: after `gh_num = row["gh_number"]`, BEFORE
+`jog_acquire_lease`. That is the only point that is before the lease (so the row's
+`attempt_count` is untouched), before promotion (`:2891`, so the capture stays in
+`1-INBOX`), and before `run_marathon_phase` (so no execution record, no Preflight, no
+native reservation). On a refusal it calls the existing `jog_set_status(root, gh_num,
+"parked", failure_reason="hold: <reason>")` (`releases_app.py:5105`; receipt-backed
+`perform_write`, pending→parked works without a lease), then mirrors the existing
+promotion-failure branch (`jog_run.py:2893–2899`): `break` under checkpoint, else
+`continue`; under checkpoint/supervised it also counts the task as processed as the lease
+path does (`:2880`). `jog retry-build` calls the same helper once before `:1111`; same
+logic, no second implementation. The check is skipped only for `--simulate` (no worker can
+start there; `test/jog-queue.sh:209` stays unchanged). `--dry-run` is untouched.
 
-**Typed start-tree handoff** (unchanged from R2, accepted as a Pass in R3): optional
-managed binding `{version, reviewed_sha, evaluated_sha, paths}` in the invocation,
-all-or-none, checked by Marathon's branch selection before any switch or reservation;
-mismatch emits `marathon-drive/result@1` `parked` reason `managed-start-tree-mismatch`,
-no reservation. Legacy packets without the field are unchanged. The unchanged-branch
-assertion is measured at the Marathon selection boundary, since Jog's checkpoint runner
-may switch to development before the lease (`jog_run.py:2861–2873`).
+**What the helper reads (existing rules, no new reader).**
+1. Live issue: `gh issue view N --json body,labels,state` in `target`, 45 s timeout, same
+   style as `swarm_preflight.py:707`. Fed to `issue_hold_reason` (`skills/1-hourly/kickstart/scripts/build_queue.py:182`):
+   `status:held` label, `HELD:` line, `Blocked by #N`, active `after/depends on/gated on/wait for #N`.
+2. Capture/preparation document: the file `find_issue_doc(target, gh_num)` returns (inbox or
+   working), text after its frontmatter, passed to the same function as `{"body": text, "labels": []}`.
+   No document found is not an error (raw issue); a document that exists but cannot be read parks.
+3. Open references for the conditional `after #N` rule (the part the recognizer does not
+   supply itself). Source: the helper takes every number matched by the recognizer's own
+   `AFTER` pattern (`build_queue.py:89`) in the sanitized issue body and capture body, and
+   looks each up once with `gh issue view N --json state,url` (checked live: a merged PR
+   answers `MERGED`). N is "confirmed done" only if `state == MERGED`, or `state == CLOSED`
+   and the URL contains `/issues/`. Open, closed-unmerged PR, lookup failure and
+   unparseable output all put N into the open set, so the recognizer returns `after #N`.
+4. Loading the recognizer: import `build_queue.py` by path from the harness root of
+   `jog_run.py` itself (`<root>/skills/1-hourly/kickstart/scripts/`; it is main-guarded at
+   `:549`, import probed). `xyz-vendor.sh:451,480` copies `skills/`, so root and vendored
+   layouts both resolve; implementation step 1 re-proves both. If it cannot load, the task is held
+   (`hold-check-unavailable`), not waved through.
+5. Cannot-check cases that park: issue lookup fails or is non-JSON, capture unreadable,
+   recognizer unloadable, any referenced lookup failing (via item 3).
 
-**Trust assumption.** Local-first developer CLI: the configured operator login is trusted
-to have published only independently reviewed commits; transcript digests prove
-consistency, not reviewer identity. No second review authority, scheduler, database,
-or new test suite is added (AGENTS.md *No new tests*); acceptance is by existing suites
-plus manual controls under `TESTS-RESULTS/2026-11-25+GH-1476-day1/`.
+**Stated consequences of reusing the recognizer unchanged.** Only the plain-sentence form
+(`… after #902 …`) is released when #902 is done. `Blocked by #N` and the line-start or
+"lands/merges" `after`/`depends on` forms hold while that text exists, even if #N is closed
+(probed at head: `Blocked by #902` → hold with `set()` and with `{902}`); the owner releases
+them by editing the text or label, then `jog retry`. No release grammar is added. The "done → 1
+worker call" acceptance fixture therefore uses the plain-sentence form. Measured on the
+current tree, the capture rule alone would park 2 of 239 inbox/working docs
+(`GH-1248-OUTER-LOOP-PRIMITIVE.md`, `GH-945-RADAR-VERIFY-ASSET-RECO.md`); implementation
+reports them rather than silencing them.
 
-**Falsifiable acceptance (disposable full clone, worker edge alone stubbed, one sentinel
-append per call, two-call negative control).** Ready = 1 call. Human hold, declared
-dependency open, closed-unmerged PR, prose-removed open dependency, lookup-unavailable
-managed, block-removed-local, wrong publisher author, approval readable only at A, source
-changed after review = 0 calls and identical native bytes; unrelated source change,
-matching lane = 1 call. Refresh via `jog retry`: same global ID, old execution records
-byte-identical, native prefix preserved with exactly one appended line; renamed capture
-or changed namespace = park; exhausted key = 0 calls. Each control runs red against the
-unchanged candidate first. Tier A controls are runnable and creditable without Tier B.
+**Answers to round 4's two holds findings.** (1) Hold-before-promotion: the check is at
+`:2875`, ahead of promotion at `:2891`, and reads the capture as well as the issue; a held
+inbox capture is never renamed or rewritten. (2) Open references: supplied by item 3, from
+bounded lookups of the references the text actually names, not assumed.
+
+**Out of scope, one line each (follow-up under #1476).**
+- Which integration ref / copy of the instructions is trusted, and how a withdrawal clears managed identity.
+- Recovering a missing prior attempt key (rename or namespace change across a refresh).
+- Not covered either: `Operator decision: hold` comments (needs the trusted-login resolution) and
+  `--dry-run` readiness reporting; both stay as they are.
+
+**Acceptance (existing Day 1 replay harness `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt`,
+disposable fixtures, one disposable full clone, worker edge stubbed; no new suite, GH-831).**
+The replay gets extra `CASE_KIND` values and an append-only worker sentinel (calls counted by
+lines, not file presence). Each case runs first on the unchanged head (red or control) and
+then on the change.
+
+| Case | Unchanged head | After |
+|---|---|---|
+| hold only in the issue (clean capture in `1-INBOX`) | 1 call (red) | 0 |
+| hold only in the capture (clean issue, capture in `1-INBOX`) | 1 call (red) | 0 |
+| dependency still open (`after #902`, #902 OPEN) | 1 call (red) | 0 |
+| dependency lookup fails (stub exits 1 for #902) | 1 call (red) | 0 |
+| ready task | 1 call (control) | exactly 1 |
+| dependency confirmed done, nothing else wrong (#902 CLOSED issue) | 1 call (control) | 1 |
+
+Any case that is not red on the unchanged head is recorded as a control, never as a
+reproduced defect. For every refusal the run also asserts: queue `attempt_count` equal to its
+pre-run value; row `parked` with `failure_reason` starting `hold:`; capture still in
+`1-INBOX`, bytes identical; execution-record count and `.tick/attempts` unchanged. Evidence
+lands in `TESTS-RESULTS/2026-11-25+GH-1476-day1/holds-only/` with `provenance.jsonl`.
+
+**Existing callers that share the touched code, and how they are shown unaffected.**
+`releases_app.py:5223 → jog_run_main` (every `jog run`), `jog retry-build`, supervised and
+checkpoint modes. `test/jog-queue.sh` (`--simulate`, `--dry-run`) is skipped by design.
+`test/gh280-jog-marathon-adapter.sh` sections G, H, I, K, N (root install, vendored
+foreign-cwd, default executor, retry-build at `:940`, supervisor lock) run real rows through a
+`gh` shim (`:57`) that answers `issue view` only when `--json` names ` state ` or the
+`state,stateReason,body,comments` set and exits 1 otherwise, which the new check would read
+as "cannot check → held". The
+implementation therefore adds the one matching `issue view` answer to that suite's existing shim
+(fixture edit, no new test), and shows green by running both suites in the disposable clone on the
+unchanged head (baseline) and on the change, same results. Legacy `--executor relay` uses the
+same loop and is covered by the same check.
+
+**Not claimed.** No OL-10 credit, no reviewed-source binding, no stale-source detection, no
+attempt-budget change, no PR in this window.
+
