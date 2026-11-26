@@ -2,9 +2,9 @@
 gh_issue: 977
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/977
 title: "roadmap update --raw-text without a rated token keeps the row's saved rating"
-status: "Prepared 2026-11-25 (1-INBOX, held: not enqueued, not started)"
+status: Active
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 owner: Conveyor preparation (Day 2 Flywheel proving-arc candidate; ledger #1610, ranking #1616)
 doc_type: bugfix
 ratings_provisional: true
