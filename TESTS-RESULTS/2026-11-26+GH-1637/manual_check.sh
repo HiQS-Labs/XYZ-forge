@@ -179,7 +179,7 @@ ans="$(find "$WORK/archive" -name '*.codex.md' | head -1)"
 [ -n "$ans" ] && grep -q "MARKER=RED UNTRACKED=absent" "$ans" && grep -q "MARKER=RED UNTRACKED=absent" "$(find "$WORK/archive" -name '*.agy.md' | head -1)" \
   && ok "S12 both advisors saw MARKER=RED UNTRACKED=absent (working tree has GREEN + untracked.txt)" || bad "S12 advisors saw: $(grep -h MARKER "$WORK"/archive/*/*/*.md 2>/dev/null | head -2)"
 cand="$(python3 -c "import json,sys;print(json.load(open('$A/.git/relay-attest/$TASK.json'))['adjudication']['candidate'])" 2>/dev/null)"
-grep -q "HEAD=$cand" "$ans" && ok "S12 advisor HEAD equals the attested candidate ${cand:0:12}" || bad "S12 candidate/advisor HEAD mismatch"
+grep -q "HEAD=$cand" "$ans" && ok "S12 advisor HEAD equals the attested candidate ${cand:0:12}" || bad "S12 candidate/advisor HEAD mismatch (rc=$RC status=$(status) cand='$cand' advisor=$(grep -o 'HEAD=[0-9a-f]*' "$ans" | head -1))"
 
 echo
 echo "RESULT: $PASSN passed, $FAILN failed"
