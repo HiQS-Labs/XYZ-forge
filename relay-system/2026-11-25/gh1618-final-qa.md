@@ -121,4 +121,13 @@ Basis: The whole artifact and both target documents satisfy the correction requi
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-26T02:45:25Z
+task: RELAY-gh1618-final-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: fa600a066234090fd896879c0eacf77617266250
+added-range: 12468+4115
+added-sha256: cf834be548b06d2613dd91661502e71be6944328161a2d29e9619fb241222df6
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
