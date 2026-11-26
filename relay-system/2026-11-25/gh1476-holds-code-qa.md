@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -265,5 +265,152 @@ Dispositions (all five accepted and implemented; repairs at `bba006ffc`, evidenc
 - **N1 Implemented.** `provenance.jsonl` labels baseline expected-call cases `manual-fixture-replay-control`, and the mutation rows `manual-fixture-assertion-red-control`; the first review's passes stand.
 
 Existing suites on committed state in one disposable clone, base `641558361` vs change `bba006ffc`: jog-queue, gh280 (227 pass / 0 fail both), gh291, gh505, gh202, gh454, gh232, gh168 all rc=0 on both. Handing off to Reviewer for round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: Block. B1's no-hint case is repaired, but a ledger hint can still make the hold checker and Preflight select different captures, admitting a held capture. S1 also remains incomplete for label objects without usable names. S2, S3 and N1 are closed by the evidence below.
+
+swept file: yes
+gate run: no
+
+Swept the complete `utils/py/jog_run.py`, `utils/py/wave_reconcile.py`, `test/gh280-jog-marathon-adapter.sh`, the replay and both retained drivers; inspected the seeded whole diff and its retained evidence within the settled holds-only scope. B1 is the remaining in-scope pre-existing resolver/Preflight disagreement; no additional in-scope pre-existing defect was established. No Git command, suite, full fixture, network request or worker ran. The probes below execute only extracted read/decision functions against in-memory responses and scratch files. No phase gate is configured. End-to-end verification of the remaining counterexamples is **[Unverified — needs clone run]**.
+
+- [Blocker] **B1 remains OPEN — a uniquely hinted capture is not necessarily the capture Preflight executes (Q1/Q2).**
+  **Observed input:** Form 1, P4 below (exit 0): two working captures declare `gh_issue: 901`. The first path returned by the actual filesystem glob contains `HELD: owner decision`; the other contains `Ready`, and the ledger hint names that clean document. The actual resolver chooses the hinted clean capture, the actual Preflight source selector chooses the held one, and the actual `hold_refusal` returns `None`. On this run the outputs were `hold resolver: GH-901-A.md`, `preflight selection: GH-901-B.md`, `selected capture body: HELD: owner decision`, `hold_refusal: None`. This is the concrete contradiction: `wave_reconcile.py:1123–1136` honors the hint; `jog_run.py:1686–1690` checks only that result and only consults candidates when it is None; dispatch at `jog_run.py:644–647` passes `--gh-issue`, so `swarm_preflight.py:1439–1446` independently takes `matches[0]`. The refusal is bypassed before the lease at `jog_run.py:2964`; this probe does not claim a worker was launched here.
+  **Affected scope:** Multiple primary working captures where a ledger hint resolves to a different document from Preflight's issue-mode selection. Both `jog run` and `retry-build` use this path. This is capture-selection consistency for the hold check, not the explicitly excluded reviewed-source attestation work.
+  **Fix:** Make admission and execution consume the same existing canonical capture selection, or refuse before the lease when they cannot be made consistent. Do not treat a non-None resolver result alone as proof that the downstream document was checked. Preserve unique and genuinely absent capture behavior.
+  **Falsifier:** In a disposable clone, make two otherwise executable working captures, put a hold only in the actual Preflight-selected one, and point the ledger hint at the clean other one. Both entry points must either refuse with zero worker calls/attempts/executions and unchanged captures, or demonstrably execute the same clean authoritative document they checked. The supplied current input does neither at the selection boundary. Retain the existing no-hint ambiguous and unique-ready controls.
+
+- [Should] **S1 remains OPEN — a labels list with incomplete objects still passes (Q1).**
+  **Observed input:** Form 1, P4: with `state="OPEN"`, `body="Ready"`, `labels=[{}]` and `labels=[{"name":null}]` both produce `None`. The new check at `jog_run.py:1681` validates the list container only; `build_queue.py:184` turns either missing name into an empty string, so the exception handler never fires. This is an incomplete-response control, not a claim that normal GitHub responses use these shapes. The original `{}`/missing-body/string-label examples are now correctly refused (`change/issue-malformed.log:3–8`, `change/issue-badlabels.log:3–8`).
+  **Affected scope:** Primary issue responses whose label entries lack a usable string name. A valid empty labels list remains valid.
+  **Fix:** Validate the label entries needed by the hold recognizer before using their absence of `status:held` as evidence of readiness; return the existing unavailable refusal for incomplete entries. Keep positive valid hold detection and valid ready responses unchanged.
+  **Falsifier:** The two supplied incomplete-label responses must refuse without an exception, `labels=[]` with a clean body must return None, and `labels=[{"name":"status:held"}]` must retain `hold: issue label status:held`.
+
+- [Pass] **S2 closed (Q7).** `TESTS-RESULTS/2026-11-25+GH-1476-holds/run-cases.sh:20–31` now obtains its deletion operand directly from a successful `mktemp -d` and does not derive it from log contents. The prior `/tmp/` / traversal acceptance path is gone. This is source inspection; no cleanup was executed by the Reviewer.
+
+- [Pass] **S3 closed (Q4).** `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt:273–275,286–299` requires a nonempty capture before the snapshot and compares the native filename/hash map as well as queue attempts, capture digest/location, execution count, parked status and the specific reason. Both retained change-side mutation logs say `FAIL (calls=0)` at line 8: `change/capture-hold-mutate-native.log` and `change/issue-hold-mutate-capture.log` under the holds evidence directory. P5 additionally measured the actual nonempty guard and map function: an absent capture exits 1, an existing capture exits 0, and changing bytes under the same native filename changes the map. These are narrow assertion probes, not full dispatch runs.
+
+- [Pass] **N1 closed; provenance and normal controls support their bounded claims (Q4/Q5).** `TESTS-RESULTS/2026-11-25+GH-1476-holds/provenance.jsonl:8,11,18,20` labels the four baseline expected-call cases as controls. The 55 artifacts in that manifest are nonempty and match their recorded hashes (P6). Its line 1 explicitly explains that the amended `control.txt` supersedes the historical Day 1 harness hash; that historical receipt is not current-harness proof. The summaries at `suites-base/summary.txt:1–8` and `suites-change/summary.txt:1–8` report all eight existing suites rc=0 at `64155836` and `bba006ff`; both gh280 logs end with `227 pass, 0 fail`. These are inspected Producer receipts, not rerun gates or independently proven final-head qualification.
+
+- [Pass] **Unchanged placement/grammar/layout conclusions stand (Q2/Q3/Q6/Q7).** `jog_run.py:1111–1117,2952–2980` still checks before lease/promotion, with checkpoint break and supervised counting; simulation bypasses the helper. `:1697–1708` derives conditional references using the recognizer's own sanitized AFTER matches and treats non-confirmed dependencies as unresolved; `build_queue.py:184–200` retains its unconditional hold forms. The root/vendored fixture installs at `test/gh280-jog-marathon-adapter.sh:169–171` match the module-relative rule load at `jog_run.py:1671`. The candidate collection extraction at `wave_reconcile.py:1100–1110,1127` preserves the prior collector and selection policy. No second hold grammar or scheduler was added. B1/S1 qualify these passes.
+
+**P4 — exact selection and response-shape probe (exit 0).** The subprocess adapters below return data in memory: even the Preflight `git rev-parse` call is replaced, so no Git command runs. The only filesystem writes are the two Markdown inputs under scratch. The ledger adapter returns the concrete hint row; all document selection logic is the actual source.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PROBE'
+import ast, datetime, glob, json, os, re, subprocess, sys, tempfile, types, __future__
+from pathlib import Path
+
+def defs(path,names,ns):
+    nodes=[n for n in ast.parse(Path(path).read_text()).body if isinstance(n,ast.FunctionDef) and n.name in names]
+    assert len(nodes)==len(names)
+    exec(compile(ast.Module(body=nodes,type_ignores=[]),path,'exec',flags=__future__.annotations.compiler_flag),ns)
+root=Path(tempfile.mkdtemp(prefix='holds-hinted-',dir=os.environ['TMPDIR']))
+d=root/'PROJECT/2-WORKING';d.mkdir(parents=True)
+for name in ['GH-901-A.md','GH-901-B.md']:(d/name).write_text('---\ngh_issue: 901\n---\nReady\n')
+held,clean=[Path(p) for p in glob.glob(str(d/'GH-901-*.md'))]
+held.write_text('---\ngh_issue: 901\n---\nHELD: owner decision\n')
+w=types.ModuleType('wave_reconcile');w.__dict__.update(Path=Path,os=os,re=re,ledger_rows=lambda *a:[{'gh_number':901,'doc_path':str(clean.relative_to(root))}])
+defs('utils/py/wave_reconcile.py',{'parse_doc_frontmatter','doc_issue_number','_issue_doc_candidates','issue_doc_index','find_issue_doc','find_issue_doc_candidates'},w.__dict__)
+sys.modules['wave_reconcile']=w
+src='utils/py/jog_run.py'
+ns={'Path':Path,'__file__':str(Path(src).resolve()),'json':json,'find_issue_doc':w.find_issue_doc,
+    'subprocess':types.SimpleNamespace(run=lambda *a,**k:types.SimpleNamespace(returncode=0,stdout=json.dumps(payload)))}
+defs(src,{'_gh_issue_json','hold_refusal'},ns)
+pf={'__file__':str(Path('utils/py/swarm_preflight.py').resolve()),'os':os,'re':re,'sys':sys,'datetime':datetime,
+    'compute_default_root':lambda *a:(str(root),'unused'),'get_env':lambda key,default:default,
+    'SourceSelection':types.SimpleNamespace,
+    'subprocess':types.SimpleNamespace(check_output=lambda *a,**k:(str(root)+'\n').encode(),CalledProcessError=subprocess.CalledProcessError,DEVNULL=subprocess.DEVNULL)}
+defs('utils/py/swarm_preflight.py',{'resolve_source_selection'},pf)
+selection=pf['resolve_source_selection'](types.SimpleNamespace(project_doc=None,gh_issues=['901'],target_root=str(root)))
+payload={'body':'Ready','labels':[],'state':'OPEN'}
+print('ledger hint:',clean.name)
+print('hold resolver:',Path(w.find_issue_doc(root,901)).name)
+print('preflight selection:',Path(selection.primary_doc).name)
+print('selected capture body:',Path(selection.primary_doc).read_text().split('---',2)[2].strip())
+print('hold_refusal:',repr(ns['hold_refusal'](root,901)))
+for labels in [[{}],[{'name':None}],[],[{'name':'status:held'}]]:
+    payload={'state':'OPEN','body':'Ready','labels':labels}
+    print('labels=',json.dumps(labels),'->',repr(ns['hold_refusal'](root,901)))
+PROBE
+```
+
+```text
+ledger hint: GH-901-A.md
+hold resolver: GH-901-A.md
+preflight selection: GH-901-B.md
+selected capture body: HELD: owner decision
+hold_refusal: None
+labels= [{}] -> None
+labels= [{"name": null}] -> None
+labels= [] -> None
+labels= [{"name": "status:held"}] -> 'hold: issue label status:held'
+```
+
+**P5 — exact assertion-only probe (exit 0).** It extracts only the read-only `nmap` function and capture-presence guard, not the executable replay.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PROBE'
+from pathlib import Path
+import os, subprocess, tempfile
+s=Path('TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt').read_text().splitlines()
+nmap=next(l for l in s if l.startswith('nmap()'))
+guard=next(l for l in s if l.startswith('[ -s "$FT/$CAP_REL" ]'))
+root=Path(tempfile.mkdtemp(prefix='holds-assert-',dir=os.environ['TMPDIR']))
+env=dict(os.environ,FT=str(root),CAP_REL='capture.md')
+r=subprocess.run(['bash','-c',guard],env=env,capture_output=True,text=True)
+print('missing capture:',r.returncode,r.stdout.strip());assert r.returncode==1
+(root/'capture.md').write_text('present\n')
+r=subprocess.run(['bash','-c',guard],env=env,capture_output=True,text=True)
+print('present capture:',r.returncode);assert r.returncode==0
+p=root/'.tick/attempts/prior';p.parent.mkdir(parents=True);p.write_bytes(b'before\n')
+def snapshot():
+    r=subprocess.run(['bash','-c',nmap+'\nnmap'],env=env,capture_output=True,text=True)
+    assert r.returncode==0 and r.stdout.strip(),r
+    return r.stdout
+before=snapshot();assert snapshot()==before
+p.write_bytes(b'after\n');after=snapshot()
+print('same native name, changed bytes, maps equal:',before==after);assert before!=after
+print('native names:',before.split()[0],after.split()[0])
+PROBE
+```
+
+```text
+missing capture: 1 ASSERT-SETUP FAIL: capture missing or empty before the run: capture.md
+present capture: 0
+same native name, changed bytes, maps equal: False
+native names: ./prior ./prior
+```
+
+**P6 — provenance hash check (exit 0).**
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1
+python3 - <<'PROBE'
+from pathlib import Path
+import hashlib,json
+for folder in ['2026-11-25+GH-1476-day1','2026-11-25+GH-1476-holds']:
+    rows=[json.loads(l) for l in Path('TESTS-RESULTS',folder,'provenance.jsonl').read_text().splitlines()]
+    mismatches=[]
+    for r in rows:
+        p=Path('TESTS-RESULTS',r['artifact']) if '/' in r['artifact'] else Path('TESTS-RESULTS',folder,r['artifact'])
+        raw=p.read_bytes(); assert raw,p
+        if hashlib.sha256(raw).hexdigest()!=r['sha256']: mismatches.append((r['artifact'],hashlib.sha256(raw).hexdigest()))
+    print(folder,'rows=',len(rows),'mismatches=',mismatches)
+PROBE
+```
+
+```text
+2026-11-25+GH-1476-day1 rows= 9 mismatches= [('control.txt', '7522a95b38604a594dafeb7a56857b6cff9b7e36dbf05070c97027e9a86d04bd')]
+2026-11-25+GH-1476-holds rows= 55 mismatches= []
+```
+
+Evidence boundary: Verify-tier discovery used graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-26T04:31:47Z`, in a different checkout. The graph lacked the new helpers/evidence; coverage flagged gh280 lines 729–730 partial and the new evidence paths missing. Full local reads supplied those gaps and the current call traces. The read-only seed comparison, before this review edit, found all 3,828 new/context lines across 72 files equal to the local files; seed SHA-256 `4cb3f7ba199faffeddc38b09038fcf27aca88d9bfd793a4cd82a2425595c50fb`. Git history and final-head gate equivalence were not inspected under the no-Git restriction.
+
+Handing off to Producer (claude-a) — finish B1's checked-versus-executed capture consistency and S1's incomplete-label validation; retain focused red/green evidence in a disposable full clone before the next review. S2, S3 and N1 need no further changes.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
