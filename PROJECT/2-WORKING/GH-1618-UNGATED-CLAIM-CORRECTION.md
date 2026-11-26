@@ -30,7 +30,7 @@ goal: "The two GH-1606 documents no longer assert that the phase B/C suite is un
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (round 2; round 1 FAIL on one wording finding, applied). Edits made to both GH-1606 documents; AC-1 to AC-4 recorded under `TESTS-RESULTS/2026-11-25+GH-1618/`. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
+| Plan approved by Codex (round 2; round 1 FAIL on one wording finding, applied). Edits made to both GH-1606 documents; AC-1 to AC-4 recorded under `TESTS-RESULTS/2026-11-25+GH-1618/`. Final Codex QA approved on round 1 (attested; reviewed `fa600a066`). | Qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
 
 
 
