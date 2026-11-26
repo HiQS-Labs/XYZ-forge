@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -103,5 +103,22 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with a concret
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**Source-backed review — documentation correction accepted.** Reversibility: Easy; existing text is qualified in place. No runtime or gate change is requested.
+
+- [Pass] Q1 — Required corrections are present: completed doc `PROJECT/3-COMPLETED/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md:30,32-53,70-72,152-162` supplies the dated references, struck inferences, retained 39/14/1 measurement and GH-1576 cause. `TESTS-RESULTS/2026-11-25+GH-1606/SUMMARY.md:38-39,45-63` retains the standalone facts and supersedes both the receipt title and notes. AC-1 is contextual review, not a grep-success predicate: `TESTS-RESULTS/2026-11-25+GH-1618/provenance.jsonl:5` records the uncorrected origin/development hits as the red control and the corrected hits as acceptance; rows 6-8 record scope, preservation and docs checks. Concrete fix: none.
+- [Pass] Q2 — Registration/import/stub citations match `validate.sh:96` and `test/gh436-merge-cleanup.py:43,1382-1384`. The scoped fixture stub is at `test/gh534_phase_b_tests.py:204-211`; the toolchain check precedes reserve at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2177-2194`. `TESTS-RESULTS/2026-11-25+GH-1618/provenance.jsonl:1-4` supports collection, exactly one healthy-path reserve call and the bounded direct-reference search. BASE-DIFF is a sound bridge for collection/stub identity: the reported only change is an eight-line fixture patch, not test definitions or collection. It is not a historical rerun; both correction notes state that limitation (completed doc:46-51; GH-1606 SUMMARY:60-63). No claim of exhaustive fault coverage remains. Concrete fix: none.
+- [Pass] Q3 — Whole-file sweep found no remaining unqualified assertion of ungated coverage. Reviewer command `rg -n 'ungated|no gated suite|never saw|referenced by|no suite drives|withdrawn|red at base' PROJECT/3-COMPLETED/GH-1606-MERGE-CLEANUP-PUSH-ENVFAULT.md TESTS-RESULTS/2026-11-25+GH-1606/SUMMARY.md` → exit 0; decisive hits are corrections or struck originals; completed doc:239 explicitly withdraws *standalone* phase B. The original incorrect row and bullets survive at :70,155,158-159. The conclusion at :52-53 is supported independently by GH-1606 receipt rows AC-2-base-red, AC-2-cand-green, AC-2-mutant-red and AC-5 (`provenance.jsonl:8-9,19,22`); it does not require the wrong coverage inference. No additional pre-existing defect identified in either reviewed target document. Concrete fix: none.
+- [Pass] Q4 — Completed frontmatter/status shape and location remain intact (completed doc:1-30). Scope and byte identity are retained producer evidence (`TESTS-RESULTS/2026-11-25+GH-1618/provenance.jsonl:6`, receipt diff size 0), not an independently rerun git comparison. No test suite or gate addition is reported; the manual counter driver is evidence only (`probe_gate_reserve.py:1-29`). Reviewer read-only substring probe → exit 0: completed doc counts `39 tests=4, 14 failures=3, GH-1576=6, /Users/=0`; SUMMARY counts `39 tests=2, 14 failures=1, GH-1576=1, /Users/=2`, both home-path occurrences within the pre-existing single note at SUMMARY:42. PDDA acceptance is recorded at GH-1618 receipt:8 (no errors); no later gate is assumed. Concrete fix: none.
+- [Pass] Q5 — Implementation follows the approved bounded edit inventory (`PROJECT/2-WORKING/GH-1618-UNGATED-CLAIM-CORRECTION.md:50-65`); the persisted row `releases.sql:1057` contains rating fields 15/10/40/90 and the matching active-doc pointer. Low priority/severity and high cheapness fit a documentation correction; appeal 40 preserves the supplied operator value (plan:46-48). Concrete fix: none.
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The whole artifact and both target documents satisfy the correction requirements without broadening the evidence. Scope/receipt identity, historical source comparison and gate results rely on retained producer receipts; no git, gate, suite, executable fixture or external query was run during this turn. This approves the documentation correction, not merge or promotion qualification.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
