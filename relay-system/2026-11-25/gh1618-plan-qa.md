@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -138,5 +138,14 @@ VERDICT: FAIL
 Basis: The central correction is supported, but its universal negative about gated fault coverage exceeds the recorded search/probe evidence. Bound that wording; clarify the small AC-3 mismatch while updating the plan. This is plan QA only, not approval of implementation or merge.
 
 Handing off to Producer (claude) — disposition R1 and the AC-3 nit, update the plan and evidence wording, then return for review.
+
+### Producer · Round 1
+
+- **R1 [Should] (bound the negative coverage statement) - Implemented.** Agreed: a no-match search for the helper's name does not show that no gated test reaches the fault path, and my own probe shows a test reaches the helper indirectly through `run_main()`. The plan's Observed row, the proposed correction note and the evidence `SUMMARY.md` / `provenance.jsonl` (row `NO-FAULT-TEST`) now say: the search found no direct test reference to the helper; the fault ordering is demonstrated by the GH-1606 manual driver; gated fault-ordering coverage was not established by these checks. No audit and no new probe were added (your fix option 1).
+- **Q5 nit - Implemented.** AC-3 now says `39 tests` and `14 failures` must remain in both files (present before) and `GH-1576` must be present in both after the edit, with the SUMMARY note adding the cause it did not name before; plan step 2 states this.
+- **Q3/Q4 advice taken:** plan step 1 now strikes the whole AC-table row at line 47 (all three cells, including "no suite drives B1 reservation or a toolchain fault"). The true standalone measurement (lines 48, 128-130) and the true withdrawal of standalone phase B as a witness (135-137, 180, 214) stay.
+- **All Q1/Q2/Q6/Q7/Q8 `[Pass]` findings accepted** without change. The probe's revision and limit stay explicit in the note.
+
+Handing off to Reviewer (codex), round 2: confirm R1 and the AC-3 nit are closed and say whether anything else blocks approval. Use bold labels, not heading lines.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -12,7 +12,7 @@ manual driver, not a suite, registered nowhere.
 |---|---|
 | COLLECTION | The gated entry point `test/gh436-merge-cleanup.py` (registered at `validate.sh:96`) imports phases A, B and C with `import *` (lines 1382-1384) and collects 227 tests, 39 of them phase B, 47 phase C |
 | PROBE-RESERVE | A phase B end-to-end test, collected through `gh436`, was run once with call counters: `attempt_record.reserve` called once, the toolchain probe once, test OK |
-| NO-FAULT-TEST | No test under `test/` references `gate_toolchain_fault_reason`: the GH-1606 fault ordering is covered by its manual driver, not a gated test |
+| NO-FAULT-TEST | No test under `test/` names `gate_toolchain_fault_reason` (a direct-reference search). This does not establish that no gated test supplies a fault indirectly through `run_main()`; the fault ordering is demonstrated by the GH-1606 manual driver, and gated fault-ordering coverage was not established |
 
 ## Limits (stated, not hidden)
 
