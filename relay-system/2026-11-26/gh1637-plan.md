@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -200,5 +200,59 @@ Basis: The plan still allows a gate refusal to leave a terminal spent token with
 6. [Should] Evidence-repair disposition and README package — **Modified**: `Disposition: Rejected (Out of Scope / Ponytail)`, sourced to the operator's brief ("decide them with the leanest change") because the issue note says "consider"; the packaged tarball is regenerated with `make-pkg.sh`.
 
 Handing off to Reviewer for round 3.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+**What this proposes**
+Factory phases would default to four review rounds and call Codex and agy once when qualifying review reaches the cap. Two NON-BLOCKING answers would attest the candidate as Consult-Adjudicated and continue to delivery gates, a REAL finding would route one builder/reviewer pair, and a safety or inconclusive outcome would hold.
+
+**How the existing system works, per this document**
+Marathon hands a turn cap to relay-drive, which can extend for progress and otherwise escalates at the cap. The terminal judge runs the configured approval gate, verifies the token and writes the reviewed candidate receipt.
+
+**What the plan preserves**
+The operator retains landing authority, the push gate and acceptance probe remain, and the change applies to the Python path. Existing suites and a recorded manual matrix supply implementation evidence.
+
+**Source-backed findings**
+
+- [Should] Keep `Closed` eligible at the shared Jog boundary. Observed input: seeded plan line 45 refuses exactly `Consult-Adjudicated`, but line 72 rejects every status other than `Approved`. A valid `Closed` record currently passes the status check in `utils/py/relay_attest.py:28,440–444` and can reach the exact-candidate merge in `utils/py/jog_run.py:2113–2134,2180–2183,2218–2222`. Affected scope: valid legacy `Closed` receipts and the new adjudicated receipt. Falsifier: valid Approved and Closed inputs reach the same candidate checks as today, while Consult-Adjudicated returns before any merge call. Make step 4 match Acceptance and include all three statuses in the manual control. Round 2's finding remains open in the seeded artifact.
+
+- [Should] Make the strict parser and snapshot the single implementation contract. Observed input: plan lines 41–42 require one final verdict per successful advisor; line 62 still specifies “the same parse.” The reused parser takes any `->` row and any first matching token (`utils/py/relay_drive.py:1289–1302`), while consult emits named successful and unsuccessful rows (`utils/py/consult.py:949–981`). Affected scope: duplicate identical verdicts, tokens in quoted rebuttals, and paths supplied by a failed or unrelated advisor. Falsifier: a duplicate final verdict, a token only in quoted text, or a missing [ok] for either named advisor produces `consult-inconclusive`; one exact final verdict from each succeeds. Align lines 42, 62 and 70. Keep the new no-stash/no-untracked rule and explicitly pass the consult-entry SHA and transcript preimage into the judge. Its `pre` inputs drive the append-only comparison and reviewed SHA (`relay_drive.py:872–891,968–972,1088–1102`); the latest ordinary turn's preimage describes a different boundary.
+
+- [Should] Include both token and publication refusals in the manual matrix. Observed input: seeded plan line 43 specifies recovery for a refused close and a publication failure after `done`, but line 48 exercises only a red driver gate among those failures. `judge_terminal` has distinct token and publication refusals (`utils/py/relay_drive.py:954–956,984–1006`), and Marathon startup deliberately refuses a spent token without a valid attestation (`utils/py/marathon_drive.py:2939–2979`). Affected scope: a green driver gate followed by close refusal or receipt-write failure. Falsifier: inject a refused close and observe restored Open status, no driver-owned claim left behind, and no attestation; then allow `done` and inject a receipt-write failure, observe no ready PR, and use `marathon.sh --retry <phase-id>` to dispatch on a fresh token (`relay-automation/marathon.sh:375–382,608–620`). The gate-before-close order fixes Round 2's ordering defect. Add these separate controls to verify the recovery promised by line 43 and the Round 2 disposition.
+
+- [Should] Resolve the evidence-repair request against the operator's actual wording. Observed input: issue #1637 says “count evidence repairs”; the preceding bullet is the one that says “consider” and refers to the ceiling. Seeded plan line 53 uses “consider” to justify declining evidence repairs, and `utils/py/relay_drive.py:1409–1417` still excludes receipt-only commits from the existing progress check. Affected scope: a TESTS-RESULTS-only repair with spare extension budget. Falsifier: cite the operator message that explicitly delegates this tradeoff, or demonstrate the requested extension on an evidence-only repair with a transcript-only negative control. Correct the rationale and make the disposition match its source. [Issue #1637](https://github.com/HiQS-Labs/XYZ-forge/issues/1637)
+
+- [Should] Carry the decision label through the existing optional Marathon closeout. Observed input: plan lines 19–20 and 45 require the ready PR to distinguish adjudication from reviewer approval and link both answers. Step 3 only changes the lane PR. The separate `marathon.sh --closeout-pr` path counts all zero-exit phases as “Phases approved” and passes that text to its PR publisher (`relay-automation/marathon.sh:383–384,662–675,682–696`). Affected scope: a successful multi-phase invocation with `--closeout-pr` and at least one adjudicated phase. Falsifier: a mixed Approved/adjudicated closeout labels the adjudicated phase and carries its existing answer links while retaining the completion count. Reuse phase result evidence for that summary.
+
+- [Pass] The plan now routes REAL to the builder before the reviewer and keeps consult eligibility tied to actual review text (seeded plan lines 41, 44 and 48). The current driver dispatches from the token actor and has a nonempty-review predicate (`utils/py/relay_drive.py:1082–1087,1385–1394`), so this fits the existing dispatch loop. The default-off ceiling is explicit at plan line 47. The cap-1 integration fixture only hands off and still expects `cap-stalled` (`test/gh115-round-cap.sh:143–173`).
+
+- [Pass] The revised plan names the residual probe-less risk and keeps the delivery recheck where the lane supplies a fix probe (seeded plan line 46, `utils/py/marathon_drive.py:2675–2704,2756–2775`). The existing GH-438 receipt shows unfixed exit 5, fixed exit 0, and contract-less exit 0 (`TESTS-RESULTS/2026-09-01+GH-365/qualifying-run.log:2831–2842`). The planned stub-advisor cases still need their own red and green receipt. The package rebuild is specified in step 3 (line 71).
+
+Read-only artifact probe (exit 0) printed `Closed conflict: plan lines 45,72`, `parser conflict: plan lines 41,62`, `post-done failure missing from matrix: plan lines 43,48`, and `matrix names neither refused close nor post-done publication failure`. The decisive checks were:
+```sh
+python3 - <<'PYCODE'
+from pathlib import Path
+lines = Path(".relay-artifacts/GH-1637-REVIEW-CAP-CONSULT.md").read_text().splitlines()
+items = {
+    "Closed conflict": (45, "refusing exactly this status", 72, 'status is not `Approved`'),
+    "parser conflict": (41, "exactly one", 62, "the same parse"),
+    "post-done failure missing from matrix": (43, "publication failure after `done`", 48, "a red driver gate"),
+}
+for name, (a, x, b, y) in items.items():
+    assert x in lines[a-1] and y in lines[b-1], name
+    print(f"{name}: plan lines {a},{b}")
+assert "publication failure" not in lines[47] and "refused close" not in lines[47]
+print("matrix names neither refused close nor post-done publication failure")
+PYCODE
+```
+
+Whole seeded plan reviewed. Existing behaviors exposed by the proposed path are cited above. Graph coverage was checked on the nearest indexed checkout (generation 2026-11-26T04:31:47Z, head e22fd237); trace was unavailable under the approval policy. Local source supplied exact lines, including the partial Marathon shell coverage. [Unverified — needs clone run] This is a plan review; existing suites and planned stub-advisor scenarios were not executed, and no reviewer phase gate was specified.
+
+VERDICT: FAIL
+Basis: The seeded implementation steps still conflict with the acceptance criteria on Closed receipts and verdict parsing. The recovery matrix and operator disposition remain incomplete, and the optional Marathon closeout would still report adjudicated phases as reviewer-approved.
+
+Handing off to Producer to reconcile the seeded plan and its verification matrix.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
