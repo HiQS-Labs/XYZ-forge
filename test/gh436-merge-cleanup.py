@@ -15,7 +15,24 @@ import subprocess
 import shutil
 import unittest
 import unittest.mock as mock
+import atexit
 from pathlib import Path
+
+# GH-1625: run the whole suite (and the gh534 phase modules it imports) in its own temp dir, so fixture
+# landings never leave merge-cleanup-*/merge-check-* folders in the real temp dir and production
+# prune_retained_scratch never lists it. Must run before merge_cleanup and the phase modules import.
+_INHERITED_TMP = Path(tempfile.gettempdir()).resolve()
+_SUITE_TMP = Path(tempfile.mkdtemp(prefix="gh436-suite-tmp-", dir=_INHERITED_TMP)).resolve()
+os.environ["TMPDIR"] = str(_SUITE_TMP)
+tempfile.tempdir = None
+
+
+def _remove_suite_tmp(path=_SUITE_TMP, parent=_INHERITED_TMP):
+    if path.parent == parent and path.name.startswith("gh436-suite-tmp-") and path.is_dir():
+        shutil.rmtree(path, ignore_errors=True)
+
+
+atexit.register(_remove_suite_tmp)
 
 # Add skill scripts to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
@@ -60,9 +77,11 @@ class TestMergeCleanupSafety(unittest.TestCase):
         self.assertFalse(_within(Path("/a"), parent))
 
     def test_safe_deletable_path_boundaries(self):
-        safe_root = Path("/tmp/test_safe_root")
+        base = Path(tempfile.mkdtemp(prefix="gh436-bounds-")).resolve()  # GH-1625: not a fixed /tmp path
+        self.addCleanup(shutil.rmtree, base, True)
+        safe_root = base / "test_safe_root"
         safe_root.mkdir(parents=True, exist_ok=True)
-        never_delete = {Path("/tmp/test_safe_root"), Path.home(), Path("/")}
+        never_delete = {safe_root, Path.home(), Path("/")}
 
         child = safe_root / "repo_clone"
         child.mkdir(parents=True, exist_ok=True)
@@ -81,7 +100,7 @@ class TestMergeCleanupSafety(unittest.TestCase):
         self.assertFalse(ok)
 
         # Path outside safe roots
-        outside = Path("/tmp/outside_repo")
+        outside = base / "outside_repo"
         outside.mkdir(parents=True, exist_ok=True)
         ok, msg = is_safe_deletable_path(outside, safe_roots=[safe_root], never_delete=never_delete)
         self.assertFalse(ok)
