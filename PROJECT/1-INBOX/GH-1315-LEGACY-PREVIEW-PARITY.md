@@ -2,10 +2,10 @@
 gh_issue: 1315
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1315
 title: "Legacy migration preview refuses unadopted skill retirement"
-status: Proposed (1-INBOX — not yet active)
+status: "Prepared 2026-11-25 (1-INBOX, held: queue row still pending/0, not started)"
 created: 2026-11-11
-updated: 2026-11-11
-owner: Codex Jog trial
+updated: 2026-11-25
+owner: Conveyor preparation (Day 2 Flywheel proving-arc candidate; ledger #1610, ranking #1616)
 doc_type: bugfix
 goal: "Legacy migration preview refuses unadopted skill retirement"
 ---
@@ -16,30 +16,50 @@ goal: "Legacy migration preview refuses unadopted skill retirement"
 
 | What was just completed | What's next |
 |---|---|
-| Open issue and live source inspected; no matching active doc or open PR found. | Independent plan QA, supported pickup/accepted-start, generated packet proof, then one bounded Jog run. |
-
-## Plan
-
-1. Require the existing retirement ownership eligibility before retire_legacy archives or stages anything, shared by preview/apply. Return an adoption remedy through the existing errors path. Preserve valid recorded-skill migration and receipt-only adoption. Do not broaden retirement authorization or change deployed configuration. Record isolated preview/apply controls and use the existing skills-army-hq suite.
-2. Run the declared existing focused gate in a disposable full clone, record final manual witnesses under TESTS-RESULTS with provenance, and obtain Agy review through Jog. No manual implementation by the trial owner.
+| Re-prepared 2026-11-25 on top of the 2026-11-11 Jog-trial capture: refreshed recon, a CLI-level readiness probe, and both-consumer validation. History preserved; no implementation, no queue change. | Independent preparation review, publication of this preparation PR, then an explicit `/jog 1315` or `/start-task 1315` by the operator (or the Day 2 launch step). |
 
 ## Acceptance
 
+- [ ] The preview should refuse with the same reason, and name the fix: adopt the skill first. For a payload that already matches, the GH-1306 receipt-only path is `intake.py update xyz --source <forge>/skills/2-daily/xyz`.
+- [ ] Keep the existing apply rule: retirement needs a recorded skill, and `--migrate-legacy` does not accept a deployed-but-unadopted skill.
 - [ ] An unadopted real legacy directory is refused by preview and apply with an adoption remedy.
 - [ ] Refusal creates no backup, staging retirement, or link and preserves the directory.
 - [ ] Recorded-skill migration remains supported; verify in isolated fixtures only.
+- [ ] Preview and apply are both demonstrated through the full `sync.py` command line in a disposable fixture, not by calling functions.
 
 ## Acceptance — deviations from the issue
 
-- [added] An unadopted real legacy directory is refused by preview and apply with an adoption remedy. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
-- [added] Refusal creates no backup, staging retirement, or link and preserves the directory. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
-- [added] Recorded-skill migration remains supported; verify in isolated fixtures only. — reason: Translate the issue prose into a machine-checkable checklist; manual regression evidence follows the repository no-new-tests rule.
+The issue states its acceptance under `## Expected`, not `## Acceptance`, so Preflight cannot compare the two lists (it reports `no-issue-section`, advisory). The first criterion above is the first part of `## Expected` copied verbatim; its remaining sentence is replaced below.
 
-## Scope and budget
+- [changed] Alternatively, `--migrate-legacy` could accept a deployed-but-unadopted skill. That is a design choice; the preview/apply mismatch is the defect either way. -> Keep the existing apply rule: retirement needs a recorded skill, and `--migrate-legacy` does not accept a deployed-but-unadopted skill. — reason: the issue leaves the design open; the newest triage note on #1315 (2026-11-25) settles it as "keep the existing apply rule and have preview explain the same refusal and adoption remedy", which also avoids broadening retirement authorization.
+- [added] An unadopted real legacy directory is refused by preview and apply with an adoption remedy. — reason: carried over from the 2026-11-11 capture; turns the issue prose into a machine-checkable checklist (manual regression evidence follows the no-new-tests rule).
+- [added] Refusal creates no backup, staging retirement, or link and preserves the directory. — reason: carried over from the 2026-11-11 capture; the issue records the leftover backup ZIP as the harm.
+- [added] Recorded-skill migration remains supported; verify in isolated fixtures only. — reason: carried over from the 2026-11-11 capture; the positive control (the probe checks it).
+- [added] Preview and apply are both demonstrated through the full `sync.py` command line in a disposable fixture, not by calling functions. — reason: the 2026-11-25 triage note and #1616 name the missing end-to-end CLI replay as unverified; the earlier apply reproduction used functions.
 
-Easy to revert as a targeted source commit. The relay change affects artifact admission; the migration change affects explicit legacy retirement only. Stop on containment, ownership, gate failure, or cap exhaustion. No merge, deployment, cleanup, new test suite, or configuration change. Independent of the other trial item. PRS proposal: rated 60/45/50/85.
+## Recon note (parent-only; no research child, per the operator's brief)
 
-Trial #1386 owns one invocation, max_tasks=2, Codex builder/Agy reviewer, round_cap=2 and LANE_MAX_ATTEMPTS=2. Hard end 2026-11-11T06:51:58Z; reserve ten minutes for closeout. No repeated dispatch or reset of history. Launch environment: RELAY_TURN_TIMEOUT_S=240, RELAY_TURN_IDLE_S=240, MARATHON_GATE_WALL_S=660, LANE_MAX_ATTEMPTS=2; inherited width overrides unset. Native timeout handoff recovery only; no manual second dispatch. Full gate runs serially on this host with default width and the existing test venv, only if time remains.
+- **Baseline:** `origin/development` at `086b657ea37dc2c7d3e1433e29157b451b331f1c` (2026-11-25).
+- **Preview path:** `sync.py` `reconcile` (`:265`) calls `retire_legacy` (`:242`, called at `:283`) for `--migrate-legacy NAME`; preview (`apply=False`) never builds the retirement action, so nothing validates ownership. Observed through the real CLI on 2026-11-25: preview exit 0, `errors: []`, `matches_managed: true`, one `link` action planned.
+- **Apply path:** apply builds the `retire-directory` action after writing the backup ZIP; `intake.py` `validate_receipt` (`:571`) then refuses it with `Invalid retirement` unless `name == "skills-sync-trinity" or name in receipt["state"]["skills"]`. That ownership rule is the state guard to reuse, before the backup.
+- **Downstream/retry boundary:** none; a refused apply leaves the folder and an orphan `backups/<name>-<date>.zip`; the operator re-runs after `intake.py update <name> --source ...` (receipt-only, GH-1306).
+- **Dependencies:** none blocking. Open PR #1608 (STALE_CANONICAL_FORGE warning) also edits `sync.py` around `drift_gate`/`main`; it can shift line anchors and cause a rebase, not a semantic conflict, and the probe is behavior-based.
+- **Discriminating check:** `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py` drives `intake.py` and `sync.py` as subprocesses in a disposable fixture (unadopted `xyz`; recorded `sample` as positive control). It exits 0 only when the fixed behavior is observed.
+- **Foreseeable approvals/runtime:** none; `sync.py` is in a published skill folder, so the implementer runs the usual published-skill suite check at landing.
+- **Unknowns:** the exact remedy wording is the builder's call within "adopt first" plus the `intake.py update` path; `jog` and `file-xyz-bug` are also unadopted (issue scope note), the same guard covers them.
+- **Next owner:** the operator.
+
+## Attempt and retry history (read 2026-11-25, nothing reset)
+
+- **`jog_queue` (origin/development):** one row, `jog-01M74KY8CS4RY60S9YSFCCZTTB`, `status=pending`, `attempt_count=0`, no lease, no failure reason, created 2026-11-11T06:15:20Z. The earlier "pending 0" status is verified, not assumed. (The primary checkout's local ledger was deliberately not read.)
+- **Roadmap row:** `rmi-01M74KXXCTB4NC9H8BZJAKV2CM`, section `In progress`, marker 🚧, `status_label=in-progress`, rated 60/45/50/85, doc path unchanged. `work_events`: `parked` (06:15:08Z), `in_flight` with `accepted_start: true` via `roadmap-update` (06:15:19Z), `jog_pending` (06:15:20Z). `op_receipts`: `roadmap-pickup`, `roadmap-update`, `jog-add` on 2026-11-11. This accepted-start predates this preparation and is preserved as-is.
+- **Prior attempt:** Jog trial #1386 (2026-11-11) prepared this issue, enqueued it, then ran one `jog run --max-tasks 2` loop that failed on the first task (#1171) at reviewer credit exhaustion; #1315 was never dispatched. Trial closeout: "#1315 remains pending0". Evidence: `TESTS-RESULTS/2026-11-11+GH-1315/` (function-level probe, unfixed baselines) and `TESTS-RESULTS/2026-11-11+GH-1386/1315-packet.md`, `1315-marathon-invocation.json`.
+- **Branches/PRs:** none for #1315. Marathon plans `PROJECT/2-WORKING/MARATHON-PLAN-2026-11-11..26.md` list it as an independent item, unexecuted.
+- **Attempts consumed:** 0 queue, 0 native (no task branch, no PR, no builder turn).
+
+## Rating rationale
+
+Existing row preserved: `rated 60/45/50/85` (sum 240), set at pickup on 2026-11-11. `pickup` reuse preserves it; nothing was rescored. Severity 45: a preview that over-promises and an apply that refuses cleanly, with one orphan backup ZIP as the only side effect; priority 60: Day 2 candidate (#1616 ranks it second); appeal 50 neutral; effort 85: one guard in `sync.py`. Recurrence: one incident (2026-11-01), trend unknown.
 
 ## Swarm Preflight Contract
 
@@ -53,18 +73,20 @@ Trial #1386 owns one invocation, max_tasks=2, Codex builder/Agy reviewer, round_
   "round_cap": 2,
   "artifacts": [
     "skills/3-weekly/skills-army-hq/scripts/sync.py",
-    "TESTS-RESULTS/2026-11-11+GH-1315/"
+    "TESTS-RESULTS/2026-11-25+GH-1315/"
   ],
   "fix_probes": [
     {
       "type": "command",
-      "cmd": "python3 TESTS-RESULTS/2026-11-11+GH-1315/manual_probe.py",
+      "cmd": "python3 TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py",
       "expect_nonzero": true
     }
   ],
   "remediation": {
     "source": "issue#1315",
-    "criteria": "Require the existing retirement ownership eligibility before retire_legacy archives or stages anything, shared by preview/apply. Return an adoption remedy through the existing errors path. Preserve valid recorded-skill migration and receipt-only adoption. Do not broaden retirement authorization or change deployed configuration. Record isolated preview/apply controls and use the existing skills-army-hq suite."
+    "criteria": "Check the existing retirement ownership rule (a recorded skill, as validate_receipt requires) before sync.py retire_legacy archives or stages anything, so preview and apply refuse an unadopted skill identically and name the adoption remedy (intake.py update NAME --source ...). Refusal writes no backup ZIP, staging directory or link and leaves the folder intact. Recorded-skill migration still previews and applies. Do not broaden retirement authorization or change deployed configuration. Use the existing skills-army-hq suite."
   }
 }
 ```
+
+The probe is a retained manual check, not a suite: it exits 0 only when the fixed behavior is observed, and `expect_nonzero: true` makes any crash read as unfixed. It replaces the 2026-11-11 function-level probe, which stays in `TESTS-RESULTS/2026-11-11+GH-1315/` as history. Probe evidence (unfixed, simulated fix, comment-only edit) and both consumers' exit codes are in `TESTS-RESULTS/2026-11-25+GH-1315/`.
