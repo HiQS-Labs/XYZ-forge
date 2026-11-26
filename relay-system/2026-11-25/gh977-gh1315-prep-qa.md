@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -241,5 +241,56 @@ Each finding re-read against the code and re-measured in a disposable full clone
 - Q6 diff receipt: **Provided.** `TESTS-RESULTS/2026-11-25+GH-977/diff-evidence/` holds `git diff --stat origin/development` (69 files, all under the two capture docs, `TESTS-RESULTS/2026-11-25+GH-977|1315/`, this relay file, and `releases.db`/`releases.sql`) and `git diff origin/development -- releases.sql`, which is exactly seven lines: generation 2966->2967 (two lines), one new `roadmap_items` row, one `roadmap-pickup` op receipt and one `parked` work event, all for #977. No historical row is touched and there is no #977 `jog_queue` insert.
 
 No product fix was implemented. Handing off to Reviewer for round 2.
+
+### Reviewer · Round 2
+
+swept file: no
+
+Read both complete captures and readiness scripts, the summaries/provenance, remediation receipts and simulated patches, the retained diff, and the relevant runtime decision paths. The whole large runtime modules and unrelated ledger history were not swept; this is a bounded preparation review, not implementation QA. No additional pre-existing defect was identified in the fully read capture/probe files beyond the remaining F2 weakness below. No Git command, executable fixture, suite, Preflight run or phase gate was executed this turn; no phase gate is configured here. CLI results below are inspected Producer receipts, not an independent replay.
+
+Graph: Verify tier; all 87 project entries checked, this worktree is not indexed. Nearest project is `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-25T18:19:12Z`. Symbol lookup returned the four relevant decision functions without pagination remaining. Coverage reports missing new preparation content and partial gh257/gh549 shell ranges; local source was used, including the reported shell ranges. Another checkout's index is not evidence of this artifact's freshness.
+
+- **[Should] F2 remains OPEN — the selected error still need not explain ownership or give an adoption remedy.** **Observed input:** Form 1, decision-only reproduction: JSON `{"errors":[{"path":"/fixture/app skills/xyz","error":"adoption service unavailable"}]}` with exit 2 in both modes passes all three refusal assertions in `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py:72`, `:73`, `:77`. The string supplies neither the missing ownership reason nor a remedy, contradicting the capture's acceptance at `PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md:23` and remediation at `:88`. Parity and the positive control are improved, but parity of an unrelated failure does not establish the required refusal. The new retained falsifier (`review-round1-fixes/probe-1315-f2-unrelated.txt:7`) uses `Permission denied (unrelated, no remedy)` and therefore misses the original `adopt` substring counterexample. **Affected scope:** identical unrelated exit-2 errors for the selected unadopted folder that contain `adopt`, with recorded-skill migration otherwise working. **Fix:** strengthen this existing manual probe to require the ownership explanation and an actionable adoption instruction for the selected skill; for this matching-payload fixture the capture already specifies `intake.py update xyz --source ...`. An equivalent actionable formulation is fine; no new suite is requested. **Falsifier:** the exact JSON above must fail the refusal checks, while the retained simulated fix's `Not adopted: ... no recorded source; adopt it first (receipt-only: intake.py update ...)` must pass. Retain a full CLI replay in the disposable clone and refresh the three-state proof after the probe change.
+
+  Exact decision-only command executed (exit **0**; decisive output: `FALSE POSITIVE: identical unrelated error "adoption service unavailable" passes all refusal assertions (72, 73, 77)`). It extracts only the JSON selector and assertions; it does not execute the fixture or its subprocess calls:
+
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'CHECK'
+  import ast,json
+  from pathlib import Path
+  p=Path('TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py')
+  t=ast.parse(p.read_text())
+  f=next(n for n in ast.walk(t) if isinstance(n,ast.FunctionDef) and n.name=='refusal')
+  ns={'json':json}
+  exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),ns)
+  ns.update(rc=2,out=json.dumps({'errors':[{'path':'/fixture/app skills/xyz','error':'adoption service unavailable'}]}),err='')
+  ns['preview_errors']=ns['refusal'](ns['out'])
+  for line in (72,73,77):
+      n=next(n for n in ast.walk(t) if isinstance(n,ast.Assert) and n.lineno==line)
+      exec(compile(ast.Module(body=[n],type_ignores=[]),str(p),'exec'),ns)
+  print('FALSE POSITIVE: identical unrelated error "adoption service unavailable" passes all refusal assertions (72, 73, 77)')
+  print('Decision-only check; no readiness script, subprocess, fixture, or Git command executed')
+  CHECK
+  ```
+
+- **[Pass] F1 CLOSED / Q1 #977.** `TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py:73`–`:83` now requires success, persisted replacement text, all five retained ratings, and successful explicit rescore. The two retained falsifiers end `rc=1`, respectively naming `text-only update must succeed` and `text-only update must persist the requested text`; the simulated-fix receipt ends `rc=0` (`review-round1-fixes/probe-977-f1-refuse.txt:7`, `probe-977-f1-noop.txt:7`, `probe-977-simfix.txt:2`). This closes the refusal/no-op false positive. Q1 #1315 remains F2; its positive apply control is now present at `readiness_probe.py:104`–`:107` and the CLI receipt `review-round1-fixes/probe-1315-simfix.txt:1`–`:2` records success.
+
+- **[Pass] F3 CLOSED on retained clone evidence.** The #977 child environment explicitly overrides connectors, HOME and device config (`readiness_probe.py:30`–`:35`). `review-round1-fixes/f3-temp-old_probe_977.py.txt:1` records `connector_events= 2 [977, 977]`; `f3-2026-11-25+GH-977-readiness_probe.py.txt:1` records `connector_events= 0 []`, and its lines 3–5 show the expected unfixed-rating assertion, so this was not an early unrelated failure. The retained clone script was read; its generated offline connector also passed an in-memory syntax compile. I did not inspect operator configuration or infer that all historical runs were side-effect free.
+
+- **[Pass] F4 CLOSED.** `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl:9` now names `../2026-11-25+GH-977/ledger-readback-977-1315.json`. Read-only JSON/path checks exited 0 and reported `977 all provenance output paths exist` and `1315 all provenance output paths exist`.
+
+- **[Pass] Q2 / polarity and retained state proof.** `utils/py/swarm_preflight.py:283`–`:297` still maps command nonzero to unfixed for `expect_nonzero: true`; propagated crashes do not become landed. Both complete scripts leave exceptions uncaught. Both `SUMMARY.md:10`–`:14` tables agree with the parsed retained JSON/RC files: `e331a4d98` → exit 0/unfixed, `448cea7a8` → exit 4/landed, `6cbef1e44` → exit 0/unfixed. This establishes recorded polarity, not immunity to a script accepting the wrong condition (F2).
+
+- **[Pass] Q3 / existing gates and bounded artifacts.** The contracts still name existing suites (`GH-977` capture `:83`, `GH-1315` capture `:73`); #977 includes the suite requiring change at `:87`. `test/gh257-roadmap-ledger-fixes.sh:147`–`:152` still pins clearing. Its retained code-only red control ends `FAIL: expected all rating columns to be NULL, found non-null values` / `exit=1`; the adjusted simulated-fix gh257 and gh549 receipts end `ALL PASSED` and `125 passed, 0 failed` / `exit=0`. The #1315 real suite receipt ends `34 passed, 4 subtests passed` / `exit=0`, while its capture `:48` expressly warns about the missing-pytest skip. No new suite or product implementation is requested by this review. Other possible source-text pins remain bounded by round 1's search, not an exhaustive fresh search claim.
+
+- **[Pass] Q4 / acceptance and ratings remain consistent with the reviewed decisions.** The capture declarations remain at `GH-977:31`–`:44` and `GH-1315:23`–`:38`: preserve-on-omit and retaining the current ownership rule are explicit. Round 1's cited live issue/comment comparison is retained; live GitHub was not queried again this turn. #977 still declares provisional `65/55/50/85` at `:68` with the recurrence bounds at `:71`; #1315 retains `60/45/50/85` at `:63`. F2 concerns measuring the accepted remedy, not changing that acceptance.
+
+- **[Pass] Q5/Q6 / supplied diff receipt closes the requested evidence gap, with its stated cutoff.** `TESTS-RESULTS/2026-11-25+GH-977/diff-evidence/README.md:1` pins capture to `a7b620924` before adding that evidence directory. The SQL diff adds only the #977 roadmap row, pickup receipt and parked event (`releases.sql.diff:26`, `:34`, `:42`), plus generation changes; it contains no #1315 history mutation or queue insert. The retained stat lists preparation docs/evidence, this relay and the ledger pair, with no runtime source edit. Local source still contains the original defects (`utils/py/releases_app.py:4230`–`:4233`; `skills/3-weekly/skills-army-hq/scripts/sync.py:281`–`:285`). The #1315 capture now records the three trial calls and explicit pending-row/accepted-start caution at `:56`–`:59`. Its historical accepted-start is not new launch authorization. These are inspected receipts with a declared cutoff, not a current Git diff or proof of absence of all external writes. The preparation is otherwise proportionate; the remaining correction is local to the existing probe.
+
+VERDICT: FAIL
+Basis: F1, F3 and F4 are closed, and the missing diff receipt is supplied. F2 remains open on a reproduced decision-check false positive. Round 2/2 is exhausted, so STATUS is Escalated rather than Approved; no later gate is assumed.
+
+Handing off to Producer (claude-a) for escalation to the operator: F2 needs the bounded probe correction and clone evidence above before a newly authorized review cycle. Do not implement either product fix or silently extend the round cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
