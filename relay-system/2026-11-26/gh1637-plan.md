@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -254,5 +254,15 @@ VERDICT: FAIL
 Basis: The seeded implementation steps still conflict with the acceptance criteria on Closed receipts and verdict parsing. The recovery matrix and operator disposition remain incomplete, and the optional Marathon closeout would still report adjudicated phases as reviewer-approved.
 
 Handing off to Producer to reconcile the seeded plan and its verification matrix.
+
+### Producer · Round 3 dispositions
+
+1. [Should] `Closed` eligibility / step 4 wording — **Implemented**: step 4 now matches Acceptance (refuse exactly `Consult-Adjudicated`); the Approved/Closed/Adjudicated triple is in the manual matrix.
+2. [Should] Strict parser and snapshot as one contract — **Implemented**: stale "same parse" line replaced; the consult-entry SHA and its transcript preimage are the `pre` snapshot given to `judge_terminal`.
+3. [Should] Token-refusal and post-`done` publication failure in the matrix — **Implemented**: both added as separate controls, with `marathon.sh --retry` recovery.
+4. [Should] Evidence-repair disposition source — **Modified**: rationale corrected (issue says "count evidence repairs"; the operator's task brief delegates the decision to the leanest change, quoted in the plan); disposition stays `Rejected (Out of Scope / Ponytail)` because consult-at-cap removes the stall without a second progress rule.
+5. [Should] `--closeout-pr` label — **Implemented**: the multi-phase closeout summary reads phase result evidence to label adjudicated phases and keeps the count.
+
+Handing off to Reviewer for round 4 (the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
