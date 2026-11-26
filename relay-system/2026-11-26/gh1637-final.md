@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -291,5 +291,16 @@ unequal backtick fences 'NON-BLOCKING'
 closed long fence 'NON-BLOCKING'
 close result: False state: ['open', 'reviewer'] calls: [('claim', 'builder'), ('release', 'builder'), ('claim', 'reviewer'), ('release', 'reviewer')]
 ```
+
+### Producer · Round 2 dispositions
+
+1. [Blocker] Open Markdown fence — **Implemented**: `parse_adjudication` tracks CommonMark fences (opener 3+ backticks/tildes; only the same character, at least as long, no info string closes it); a declaration inside a fence or in a never-closed fence is no verdict. Manual-check S5 now covers unclosed-tilde and four-backtick-closed-by-three; the plain and correctly-closed-fence controls return their token (parser probe printed in the working log).
+2. [Should] Reviewer claim refused — **Implemented**: the close helper hands the token back to its original holder through `token_handoff` and names the observed token state if that fails; S7c refuses the reviewer claim once with the builder holding the handoff (cap 2) and shows token open, handoff-to bld, STATUS Open, no attestation.
+3. [Should] Integration base — **Implemented**: Marathon passes the lane's resolved base branch as `RELAY_DIFF_BASE` to the dispatch; the driver tries an explicit base as given and under `origin/`, and uses the development/main guesses only when none was supplied.
+4. [Should] Closeout reasoning — **Implemented (bounded)**: the closeout sidecar now carries each advisor's verdict plus its last reasoning line (<=160 chars) next to the phase id; the full excerpts are in the lane PR body and QA comment, the attestation record and the committed transcript. I am not adding a lane-PR URL lookup to the multi-phase closeout (no PR exists at that point for a cut lane in the same invocation).
+5. [Should] Evidence statements — **Implemented**: the plan matrix now describes M5 (receipt keeps `Consult-Adjudicated`, outcome `pre-advance-failed`) and S8 (spent token, no attestation) accurately, `marathon.sh --retry` stays explicitly unexercised, and S2/S2d record a CHANGED repair head attested by the reviewer (ancestor of it, different from the head the consult judged).
+6. [Should] Per-invocation consult namespace — **Implemented**: the consult label carries a random per-invocation token, so prompt, run directory and answers are unique even with a shared archive and equal relay basenames.
+
+Suites on the final code: sixteen existing suites green (provenance.jsonl); manual checks 36/36 and 11/11.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
