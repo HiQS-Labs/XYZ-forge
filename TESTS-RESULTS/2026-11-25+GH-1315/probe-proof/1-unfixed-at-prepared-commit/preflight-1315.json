@@ -1,6 +1,6 @@
 {
   "schema": "swarm-preflight/run-candidate@1",
-  "generated_at": "2026-11-26T03:10:34Z",
+  "generated_at": "2026-11-26T03:25:40Z",
   "mode": "project-doc",
   "candidate": {
     "slug": "gh-1315-legacy-preview-parity"
@@ -12,7 +12,7 @@
     "issues": [],
     "target_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25",
     "branch": "development",
-    "commit": "ced62b8966e198f74fe01cc1033291e466bfc260",
+    "commit": "e331a4d986eceefa856748c8519a270b1515db26",
     "suggested_branch": "marathon/gh-1315-legacy-preview-parity-2026-11-26",
     "branch_ready": false,
     "skip_branch_prompt": false
@@ -52,7 +52,7 @@
     "stale_index_lock_path": null,
     "stale_index_lock_warning": null,
     "evaluated_ref": "development",
-    "evaluated_ref_commit": "ced62b8966e198f74fe01cc1033291e466bfc260",
+    "evaluated_ref_commit": "e331a4d986eceefa856748c8519a270b1515db26",
     "checkout_matches_ref": true,
     "head_behind_ref": 0,
     "candidate_state": "ready",

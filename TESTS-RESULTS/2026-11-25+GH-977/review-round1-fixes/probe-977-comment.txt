@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py", line 88, in <module>
+    main()
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py", line 76, in main
+    assert ratings(repo) == [(80, 70, 90, 60, 320)], ("text-only update dropped the saved rating",
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('text-only update dropped the saved rating', [(None, None, None, None, None)], 'updated GH-977\n', '')
+rc=1

@@ -1,0 +1,2 @@
+text-only roadmap update preserves saved ratings; explicit rated token still replaces them
+rc=0

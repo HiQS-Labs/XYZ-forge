@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py", line 88, in <module>
+    main()
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25/TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py", line 75, in main
+    assert raw_text(repo) == new_text, ("text-only update must persist the requested text", raw_text(repo))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('text-only update must persist the requested text', '- **GH-977 · probe** 🆕 (rated 80/70/90/60 ovr 320) — [#977](https://github.com/org/repo/issues/977)')
+rc=1
