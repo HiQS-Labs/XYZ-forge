@@ -681,6 +681,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
             argv += ["--relay-task", f"{prior_token}-{len(state['executions'])}"]
     argv += ["--execution-id", exec_id]
     record["result_path"] = _ledger_rel_path(root, gid, invocation["result_path"])
+    # GH-1633: the instant before the drive starts; a receipt older than this was not written by it.
+    record["dispatched_epoch"] = time.time()
     # PR #281 review B4: persist the result path BEFORE dispatch — a crash mid-drive otherwise
     # orphans a receipt that was actually written (the ledger's newest record still says null).
     jog_save_state(root, gid, state)
@@ -2620,23 +2622,27 @@ def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome)
 def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
     """Reason when the execution just projected was refused at its native lane-attempt cap, else None.
 
-    Fail closed: only a valid, identity-matched, fresh receipt that Marathon wrote when it parked the
-    lane at its cap BEFORE any worker was dispatched (the drive itself exited 8, attempt count at the
-    cap, gate not run, no PR) is task-local. The row stays parked with its receipt and native history untouched; it is
-    never pending again, so it cannot be selected twice."""
+    Fail closed: only a valid, identity-matched receipt written after this execution was dispatched, by
+    Marathon parking the lane at its cap BEFORE any worker was dispatched (the drive itself exited 8,
+    attempt count at the cap, gate not run, no PR), is task-local. The row stays parked with its receipt
+    and native history untouched; it is never pending again, so it cannot be selected twice."""
     found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-parked", "parked")
     if not found:
         return None
     latest, receipt = found
     attempt = receipt.get("attempt") or {}
     count, cap = attempt.get("count"), attempt.get("max")
-    # The receipt must belong to the process this wake just ran: execution ids are ordinal and a
-    # reused output directory can still hold an older receipt, so the drive's own exit status must
-    # be the native cap exit and the receipt must have been finished after this execution started.
-    finished = (receipt.get("timestamps") or {}).get("finished_at")
-    started = latest.get("started_at")
-    if (latest.get("drive_exit") != 8 or not isinstance(finished, str) or not isinstance(started, str)
-            or finished < started):
+    # The receipt must belong to the process this wake just ran: execution ids are ordinal and a reused
+    # output directory can still hold an older receipt (even from the same second, and Marathon keeps
+    # exit 8 when writing the new one fails). So the drive's own exit status must be the native cap exit
+    # AND the receipt file must have been written after Jog recorded the dispatch instant.
+    dispatched = latest.get("dispatched_epoch")
+    try:
+        written = os.stat(_ledger_abs_path(root, gid, latest.get("result_path"))).st_mtime
+    except (OSError, TypeError, ValueError):
+        return None
+    if (latest.get("drive_exit") != 8 or isinstance(dispatched, bool)
+            or not isinstance(dispatched, (int, float)) or written < dispatched):
         return None
     if (receipt.get("outcome") != "parked" or receipt.get("reason") != "lane parked at the attempt cap"
             or receipt.get("exit_code") != 8 or receipt.get("approval_preserved")

@@ -1,7 +1,7 @@
 PROBE fresh-native-cap expect=accept got=accept OK
 PROBE stale-receipt-process-exit-2 expect=refuse got=refuse OK
 PROBE stale-receipt-process-killed expect=refuse got=refuse OK
-PROBE stale-receipt-even-with-exit-8 expect=refuse got=accept FAIL
+PROBE stale-same-second-receipt-write-failed-exit-8 expect=refuse got=accept FAIL
 PROBE fresh-receipt-wrong-process-exit expect=refuse got=refuse OK
 PROBE other-execution-receipt expect=refuse got=refuse OK
 PROBE other-issue-receipt expect=refuse got=refuse OK
