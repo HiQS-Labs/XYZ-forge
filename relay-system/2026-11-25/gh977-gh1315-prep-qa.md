@@ -446,4 +446,13 @@ Basis: F1-F5 are closed on cited source and retained evidence, with F5 independe
 
 Relay closed (Approved), no further turn needed. Producer owns the subsequent preparation publication workflow; this review does not admit either issue to execution.
 
+
+### Attestation · relay-drive — 2026-11-26T04:20:00Z
+task: RELAY-gh977-gh1315-prep-qa-r4
+reviewer: codex
+status: Approved
+reviewed-head: 140c26d102287522a2da4abe8c3c17ee628a9270
+added-range: 54054+9576
+added-sha256: 0feb2deac53fdff7d0bf7bdb19c4c156e8324fa6793e9607114d12adc3a4b9e5
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
