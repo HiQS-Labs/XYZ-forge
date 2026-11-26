@@ -1683,12 +1683,16 @@ def hold_refusal(target, gh_num):
         return "hold-check-unavailable: live issue response incomplete"
     # Preflight (`swarm_preflight.py` --gh-issue) takes the first GH-N-*.md in 2-WORKING, the
     # resolver may prefer another capture when several declare the issue: check every capture
-    # either could execute (and any inbox copy Jog would promote), so a hold in any of them refuses.
+    # either could execute (any inbox copy Jog would promote, and the canonical find_issue_doc pick),
+    # so a hold in any of them refuses.
     captures = []
     try:
         from wave_reconcile import find_issue_doc_candidates
         docs = set(find_issue_doc_candidates(target, gh_num, ("2-WORKING", "1-INBOX")))
         docs |= set(glob.glob(os.path.join(target, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md")))
+        selected = find_issue_doc(target, gh_num)  # the canonical selector also reaches 3-COMPLETED/4-MISC
+        if selected:
+            docs.add(selected)
         for doc in sorted(docs):
             text = Path(doc).read_text(encoding="utf-8")
             if text.startswith("---") and len(text.split("---", 2)) >= 3:

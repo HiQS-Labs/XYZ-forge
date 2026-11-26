@@ -218,6 +218,14 @@ if [ "${CASE_KIND:-ready}" = ambiguous ] || [ "${CASE_KIND:-ready}" = ambiguous-
   printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$held_doc"
   git -C "$FR" add PROJECT && git -C "$FR" commit -qm ambiguous-captures
 fi
+# archived-hold: the only capture is a held one in 4-MISC, which the canonical find_issue_doc selects
+if [ "${CASE_KIND:-ready}" = archived-hold ]; then
+  mkdir -p "$FR/PROJECT/4-MISC"
+  git -C "$FR" mv "$CAP_REL" "PROJECT/4-MISC/$CAPTURE_DOC_NAME"
+  printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/PROJECT/4-MISC/$CAPTURE_DOC_NAME"
+  git -C "$FR" add PROJECT && git -C "$FR" commit -qm archived-hold
+  CAP_REL="PROJECT/4-MISC/$CAPTURE_DOC_NAME"
+fi
 case "${CASE_KIND:-ready}" in issue-hold|issue-label|capture-hold|inbox-ready)
   mkdir -p "$FR/PROJECT/1-INBOX"
   git -C "$FR" mv "$CAP_REL" "PROJECT/1-INBOX/$CAPTURE_DOC_NAME"

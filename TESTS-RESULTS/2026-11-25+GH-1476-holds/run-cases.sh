@@ -44,10 +44,12 @@ issue-badlabels|0|hold-check-unavailable: live issue response incomplete
 issue-nolabelname|0|hold-check-unavailable: live issue response incomplete
 ambiguous|0|hold: capture body HELD: marker
 ambiguous-a|0|hold: capture body HELD: marker
+archived-hold|0|hold: capture body HELD: marker
 retry-ready|1||retry-build
 retry-hold|0|hold: issue body HELD: marker|retry-build
 ambiguous|0|hold: capture body HELD: marker|retry-build
 ambiguous-a|0|hold: capture body HELD: marker|retry-build
+archived-hold|0|hold: capture body HELD: marker|retry-build
 capture-hold|0|hold: capture body HELD: marker||native
 issue-hold|0|hold: issue body HELD: marker||capture
 CASES
