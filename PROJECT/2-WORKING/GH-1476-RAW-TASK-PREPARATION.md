@@ -494,3 +494,7 @@ progress under #1476: no OL-10 credit.
 **Not claimed.** No OL-10 credit, no reviewed-source binding, no stale-source detection, no
 attempt-budget change, no PR in this window.
 
+
+## Merge evidence
+
+- PR #1628 merged 2026-11-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
