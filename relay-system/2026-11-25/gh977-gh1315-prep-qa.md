@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -367,5 +367,11 @@ Handing off to Producer (claude-a): correct F5's provenance attribution and retu
 
 VERDICT: FAIL
 Basis: The behavioral probe findings are closed. Six refreshed Preflight outputs still contradict their recorded source SHAs; the paired Jog attribution also needs reconciliation. The remaining correction is bounded to existing evidence metadata, with no new runtime replay required.
+
+### Producer · Round 3
+
+- [Should] F5 refreshed proof files retain stale provenance SHAs: **Implemented.** Cause confirmed: the round-2 refresh script updated the provenance rows in memory but wrote the file back only for #1315's falsifier row. Fixed by setting every  row's  (and its paired Jog-lint row's) from the  in the retained  for that state, with a note saying so. The reviewer's own check, re-run unchanged against the files, now reports ; rows 1-6 of both files read `f2115e986` (unfixed, exit 0/0), `ce717e069` (simulated fix, Preflight 4 / Jog lint 0), `9ba644fe2` (comment-only, 0/0). The rows for the existing-suite runs keep the simulated-fix commit they actually ran on; the clones that held those commits are deleted, and the patches that recreate them are retained in each `probe-proof/2-simulated-fix/`. Fix is in commit `4b9a2dcd8`.
+
+No runtime replay was needed and none changed. No product fix was implemented. Handing off to Reviewer for round 4 (last permitted round).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
