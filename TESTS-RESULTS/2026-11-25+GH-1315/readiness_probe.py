@@ -6,15 +6,17 @@ Exit 0 ONLY when the FIXED behavior is positively observed through the real CLI;
 
 Fixed behavior (issue #1315 "Expected"): for a skill that has a copy in the collection but is NOT
 recorded in .deploy-skills.json, `sync.py --migrate-legacy NAME --archive-legacy` refuses in preview
-(exit 2) with the SAME error as apply (exit 2) for that folder, and the error names the skill and the
-adoption remedy; neither mode creates a backup ZIP, a new staging directory or a link, or touches the
-real legacy folder.  A skill that IS recorded still previews AND applies (managed link plus retained
+(exit 2) with the SAME error as apply (exit 2) for that folder; that error must give the ownership
+reason (no recorded source) AND the actionable remedy for the skill (`intake.py update NAME --source ...`),
+so an unrelated error, even one mentioning "adopt", does not pass.  Neither mode creates a backup ZIP, a new
+staging directory or a link, or touches the real legacy folder.  A skill that IS recorded still previews AND applies (managed link plus retained
 archive): the positive control.
 
 All writes are confined to one resolved temp directory; HOME points inside it.
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -30,6 +32,16 @@ def run(env, script, root, *args):
     p = subprocess.run([sys.executable, "-B", str(BUNDLE / script), "--root", str(root), *args],
                        env=env, cwd=env["HOME"], capture_output=True, text=True, timeout=60)
     return p.returncode, p.stdout, p.stderr
+
+
+def explains_refusal(error):
+    """The issue's acceptance: the refusal gives the OWNERSHIP REASON (the skill has no recorded source in
+    the collection state) and the actionable ADOPTION REMEDY for this skill (`intake.py update xyz --source ...`).
+    An unrelated error that merely mentions "adopt" gives neither and does not pass."""
+    text = " ".join(error.split()).lower()
+    reason = re.search(r"not adopted|unadopted|no recorded source|not recorded|isn't recorded|is not recorded|no recorded skill", text)
+    remedy = re.search(r"intake\.py\s+update\s+xyz\b.*--source", text)
+    return bool(reason and remedy)
 
 
 def snapshot(path):
@@ -70,12 +82,16 @@ def main():
         rc, out, err = run(env, "sync.py", root, *legacy)
         preview_errors = refusal(out)
         assert rc == 2 and len(preview_errors) == 1, ("preview must refuse like apply", rc, out, err)
-        assert "adopt" in preview_errors[0].lower(), ("preview refusal must name the adoption remedy", preview_errors)
+        assert explains_refusal(preview_errors[0]), ("preview refusal must give the ownership reason and the adoption remedy",
+                                                    preview_errors)
         assert snapshot(work) == before, "preview must not write anything"
 
         rc, out, err = run(env, "sync.py", root, *legacy, "--apply")
-        assert rc == 2 and refusal(out) == preview_errors, ("apply must refuse with the same reason as preview",
-                                                           rc, refusal(out), preview_errors, err)
+        apply_errors = refusal(out)
+        assert rc == 2 and len(apply_errors) == 1 and explains_refusal(apply_errors[0]), (
+            "apply must refuse with the ownership reason and the adoption remedy", rc, apply_errors, err)
+        assert apply_errors == preview_errors, ("apply and preview must refuse with the same reason",
+                                                preview_errors, apply_errors)
         # A refused apply may still record a sync-partial history entry; what it must NOT leave is a
         # backup ZIP, a new staging directory or a link, and the legacy folder must be intact.
         assert not list(root.glob("backups/*.zip")), "refused apply must not write a backup ZIP"
