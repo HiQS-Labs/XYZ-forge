@@ -86,9 +86,9 @@ import ast, sys, pathlib
 tree = ast.parse(pathlib.Path(sys.argv[1], "utils/py/marathon_drive.py").read_text())
 fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "lane_pr_notes")
 ns = {}; exec(compile(ast.Module(body=[fn], type_ignores=[]), "<n>", "exec"), ns)
-adj = {"advisors": {"codex": "NON-BLOCKING", "agy": "NON-BLOCKING"}, "candidate": "a" * 40, "answers": {"codex": "/x/c.md", "agy": "/x/a.md"}}
+adj = {"advisors": {"codex": "NON-BLOCKING", "agy": "NON-BLOCKING"}, "candidate": "a" * 40, "excerpts": {"codex": "reasoning one\nADJUDICATION: NON-BLOCKING", "agy": "reasoning two\nADJUDICATION: NON-BLOCKING"}}
 txt = ns["lane_pr_notes"]("p1", "1637", False, adj)
-assert "consult-adjudicated" in txt and "not a reviewer approval" in txt and "codex=NON-BLOCKING" in txt and "/x/c.md" in txt and "operator's call" in txt, txt
+assert "consult-adjudicated" in txt and "not a reviewer approval" in txt and "codex=NON-BLOCKING" in txt and "reasoning one" in txt and "reasoning two" in txt and "operator's call" in txt, txt
 plain = ns["lane_pr_notes"]("p1", "1637", False)
 assert "consult-adjudicated" not in plain
 print("   PR notes:", txt.replace("\n", " | ")[:200])
@@ -132,7 +132,7 @@ done
 echo "== M5 red pre-advance gate after an adjudicated terminal (default path: no focused gate, so the real gate is Marathon's pre-advance)"
 git -C "$A" reset -q --hard HEAD; git -C "$A" clean -fdq -e .tick -e phases; rm -f "$A/.order"
 tick_a log task.created TASK-M5 --agent dispatcher >/dev/null
-out="$(python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief.md" --reviewer codex --builder agy --phase-id p-m5 \
+out="$(python3 "$ROOT/utils/py/marathon_drive.py" --phase-brief "$A/brief-fixed.md" --reviewer codex --builder agy --phase-id p-m5 \
       --relay-task TASK-M5 --phases-dir "$A/phases" --round-cap 3 --force --pre-advance-cmd false --result-file "$WORK/r-m5.json" 2>&1)"; rc=$?
 python3 - "$WORK/r-m5.json" "$rc" <<'PYEOF' && ok "M5 red pre-advance gate: exit 5, no approved outcome, no ready PR (relay_status Consult-Adjudicated kept in the receipt)" || bad "M5 rc=$rc: $(tail -8 <<<"$out")"
 import json, sys
