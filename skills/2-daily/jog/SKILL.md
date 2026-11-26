@@ -31,8 +31,9 @@ exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row st
 with its reason and receipt path and is never retried. So does a row Marathon refused at its
 native lane-attempt cap before dispatching any worker (GH-1633): a valid receipt for the execution
 just run with `parked`, reason `lane parked at the attempt cap`, exit 8, attempt count at the cap,
-gate not run and no PR. It stays `parked` with its history untouched, is never selected again, and the
-next ready row starts exactly once. Every other failure (lock contention,
+gate not run and no PR, written by the drive process that itself exited 8 during this execution. It stays
+`parked` with its history untouched and is never selected again; the wake then continues with the next
+pending row under the same max-tasks, deadline and dispatch checks as any other row. Every other failure (lock contention,
 guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
 change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
 Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon

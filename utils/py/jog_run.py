@@ -2620,9 +2620,9 @@ def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome)
 def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
     """Reason when the execution just projected was refused at its native lane-attempt cap, else None.
 
-    Fail closed: only a valid, identity-matched receipt that Marathon wrote when it parked the lane
-    at its cap BEFORE any worker was dispatched (exit 8, attempt count at the cap, gate not run,
-    no PR) is task-local. The row stays parked with its receipt and native history untouched; it is
+    Fail closed: only a valid, identity-matched, fresh receipt that Marathon wrote when it parked the
+    lane at its cap BEFORE any worker was dispatched (the drive itself exited 8, attempt count at the
+    cap, gate not run, no PR) is task-local. The row stays parked with its receipt and native history untouched; it is
     never pending again, so it cannot be selected twice."""
     found = _jog_projected_receipt(root, gh_num, gid, prior_executions, "projected-parked", "parked")
     if not found:
@@ -2630,10 +2630,18 @@ def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
     latest, receipt = found
     attempt = receipt.get("attempt") or {}
     count, cap = attempt.get("count"), attempt.get("max")
+    # The receipt must belong to the process this wake just ran: execution ids are ordinal and a
+    # reused output directory can still hold an older receipt, so the drive's own exit status must
+    # be the native cap exit and the receipt must have been finished after this execution started.
+    finished = (receipt.get("timestamps") or {}).get("finished_at")
+    started = latest.get("started_at")
+    if (latest.get("drive_exit") != 8 or not isinstance(finished, str) or not isinstance(started, str)
+            or finished < started):
+        return None
     if (receipt.get("outcome") != "parked" or receipt.get("reason") != "lane parked at the attempt cap"
             or receipt.get("exit_code") != 8 or receipt.get("approval_preserved")
             or not all(isinstance(n, int) and not isinstance(n, bool) for n in (count, cap))
-            or cap < 1 or count < cap
+            or cap < 0 or count < cap
             or (receipt.get("gate") or {}).get("result") != "not-run"
             or (receipt.get("pr") or {}).get("number")
             or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")

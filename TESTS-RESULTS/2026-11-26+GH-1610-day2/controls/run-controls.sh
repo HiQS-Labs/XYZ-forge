@@ -8,12 +8,12 @@ set -u
 label="${1:?label}"; repo="${2:?repo root}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$here/$label"
-while IFS='|' read -r kind expect; do
+while IFS='|' read -r kind expect mutate; do
   [ -n "$kind" ] || continue
-  case_name="${kind%-red}"
+  case_name="${kind%-red}"; case_name="${case_name%%-mutate-*}"
   own="$(mktemp -d "${TMPDIR:-/tmp}/gh1610-case.XXXXXX")" || exit 1
   log="$here/$label/$kind.log"
-  CASE="$case_name" EXPECT_SUCC="$expect" TMPDIR="$own" bash "$here/wake-control.sh" "$repo" > "$log" 2>&1 < /dev/null
+  CASE="$case_name" EXPECT_SUCC="$expect" MUTATE="${mutate:-}" TMPDIR="$own" bash "$here/wake-control.sh" "$repo" > "$log" 2>&1 < /dev/null
   echo "control exit=$?" >> "$log"
   line="$(grep -E '^ASSERT' "$log" || echo "ASSERT case=$kind NOT-REPORTED")"
   case "$kind" in
@@ -31,4 +31,6 @@ shared-red|1
 task-local-red|0
 exhausted-red|0
 refusal-red|1
+exhausted-mutate-history-red||history
+exhausted-mutate-failed-red||failed
 CASES

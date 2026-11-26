@@ -425,7 +425,8 @@ Flywheel Day 2 (#1610) exercised a supervised wake with a ready successor behind
 Jog → Preflight → Marathon path with only the worker edge stubbed. Task-local red gate, a human hold and a
 shared stop already behaved as required; a row at its native lane-attempt cap halted the wake with the
 successor never started. `_jog_lane_exhausted` in `utils/py/jog_run.py` now treats only a valid,
-identity-matched cap receipt (parked, exit 8, count at cap, gate not run, no PR, same execution clone) as
-task-local; any other parked outcome still halts. Evidence and the red-then-green controls are under
+identity-matched, fresh cap receipt (parked, the drive itself exited 8, count at cap, gate not run, no PR,
+same execution clone) as task-local; any other parked outcome still halts, except the already documented
+published-approval continuation and the pre-lease human-hold park. Evidence and the red-then-green controls are under
 `TESTS-RESULTS/2026-11-26+GH-1610-day2/`. OL-12 credit remains the operator's call after review of that
 evidence and the live run recorded on #1610.

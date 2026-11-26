@@ -181,8 +181,15 @@ printf 'worker edge calls: GH-901=%s GH-902=%s\n' "$c1" "$c2"; [ ! -f "$WORK/rel
 printf 'queue after: %s\n' "$(rows)"
 r1="$(q 'select status from jog_queue where gh_number=901')"; a1="$(q 'select attempt_count from jog_queue where gh_number=901')"
 r1reason="$(q 'select coalesce(failure_reason,"") from jog_queue where gh_number=901')"
+hist=na
 if [ "$CASE" = exhausted ]; then
-  cmp -s "$WORK/native-before" "$FT/.tick/attempts/gh-901-fixture-lane" && echo "native lane history of GH-901 unchanged=yes" || echo "native lane history of GH-901 unchanged=NO"
+  if cmp -s "$WORK/native-before" "$FT/.tick/attempts/gh-901-fixture-lane"; then hist=yes; else hist=NO; fi
+  echo "native lane history of GH-901 unchanged=$hist"
+  # MUTATE=history|failed: red controls for the retention assertions (applied after the run)
+  case "${MUTATE:-}" in
+    history) echo mutated >> "$FT/.tick/attempts/gh-901-fixture-lane"; cmp -s "$WORK/native-before" "$FT/.tick/attempts/gh-901-fixture-lane" && hist=yes || hist=NO ;;
+    failed) r1=failed ;;
+  esac
 fi
 
 # expectations: successor dispatch count, and that row 1 is never re-dispatched (0 calls for exhausted/hold,
@@ -192,7 +199,7 @@ want_succ="${EXPECT_SUCC:-$want_succ}"
 ok=1
 [ "$c2" = "$want_succ" ] || ok=0
 case "$CASE" in exhausted|hold|refusal) [ "$c1" = 0 ] || ok=0 ;; *) [ "$c1" -le 1 ] || ok=0 ;; esac
-case "$r1" in parked|failed) ;; *) ok=0 ;; esac
+case "$CASE" in exhausted) [ "$r1" = parked ] && [ "$hist" = yes ] || ok=0 ;; *) case "$r1" in parked|failed) ;; *) ok=0 ;; esac ;; esac
 [ "$CASE" != hold ] || { [ "$a1" = 0 ] && case "$r1reason" in "hold: capture body HELD: marker"*) true ;; *) false ;; esac || ok=0; }
 if [ "$ok" = 1 ]; then printf 'ASSERT case=%s successor_calls=%s PASS (row1=%s: %s)\n' "$CASE" "$c2" "$r1" "$r1reason"
 else printf 'ASSERT case=%s want_successor_calls=%s FAIL (calls 901=%s 902=%s; row1=%s: %s)\n' "$CASE" "$want_succ" "$c1" "$c2" "$r1" "$r1reason"; fi
