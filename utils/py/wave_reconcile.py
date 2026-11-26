@@ -1097,6 +1097,19 @@ def doc_issue_number(path):
     return int(match[1]) if match else None
 
 
+def _issue_doc_candidates(directories):
+    """{issue number: [documents declaring it]}, supporting recon/phase documents excluded."""
+    candidates = {}
+    for directory in directories:
+        for path in sorted(Path(directory).glob("*.md")):
+            if path.name.startswith(("recon-", "MARATHON-PLAN-")):
+                continue
+            number = doc_issue_number(path)
+            if number is not None:
+                candidates.setdefault(number, []).append(path)
+    return candidates
+
+
 def issue_doc_index(directories):
     """Index once; primary issue docs outrank supporting recon/phase documents.
 
@@ -1111,14 +1124,7 @@ def issue_doc_index(directories):
                                "SELECT gh_number, doc_path FROM roadmap_items"):
             if row["gh_number"] is not None and row["doc_path"]:
                 hints.setdefault(int(row["gh_number"]), set()).add(Path(row["doc_path"]).name)
-    candidates = {}
-    for directory in directories:
-        for path in sorted(Path(directory).glob("*.md")):
-            if path.name.startswith(("recon-", "MARATHON-PLAN-")):
-                continue
-            number = doc_issue_number(path)
-            if number is not None:
-                candidates.setdefault(number, []).append(path)
+    candidates = _issue_doc_candidates(directories)
     result = {}
     for number, paths in candidates.items():
         primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
@@ -1137,6 +1143,14 @@ def find_issue_doc(repo_root, issue_num, folders=None):
     path = issue_doc_index(Path(repo_root, "PROJECT", f) for f in folders).get(int(issue_num))
     return str(path) if path else None
 
+
+
+def find_issue_doc_candidates(repo_root, issue_num, folders=None):
+    """Every document declaring this issue, so a caller can tell an absent capture (empty list)
+    from an unresolved/ambiguous one (find_issue_doc returns None while this is non-empty)."""
+    folders = folders if folders is not None else ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC")
+    found = _issue_doc_candidates(Path(repo_root, "PROJECT", f) for f in folders)
+    return [str(p) for p in found.get(int(issue_num), [])]
 
 
 def find_active_doc_for_issue(repo_root, issue_num):

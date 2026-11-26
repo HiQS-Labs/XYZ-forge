@@ -1678,30 +1678,38 @@ def hold_refusal(target, gh_num):
     issue = _gh_issue_json(target, gh_num, "body,labels,state")
     if issue is None:
         return "hold-check-unavailable: live issue lookup failed"
+    if not isinstance(issue.get("body"), str) or not isinstance(issue.get("labels"), list):
+        return "hold-check-unavailable: live issue response incomplete"
     capture = None
     try:
+        from wave_reconcile import find_issue_doc_candidates
         doc = find_issue_doc(target, gh_num)
+        if doc is None and find_issue_doc_candidates(target, gh_num):
+            return "hold-check-unavailable: ambiguous capture documents"
         if doc:
             capture = Path(doc).read_text(encoding="utf-8")
             if capture.startswith("---") and len(capture.split("---", 2)) >= 3:
                 capture = capture.split("---", 2)[2]
     except Exception:
         return "hold-check-unavailable: capture document unreadable"
-    bodies = {"issue": issue.get("body") or "", "capture": capture or ""}
-    refs = {int(n) for text in bodies.values() for n in rules.AFTER.findall(rules._sanitize_body(text))}
-    open_refs = set()
-    for n in refs:
-        dep = _gh_issue_json(target, n, "state,url") or {}
-        done = dep.get("state") == "MERGED" or (dep.get("state") == "CLOSED" and "/issues/" in str(dep.get("url")))
-        if not done:
-            open_refs.add(n)
-    reason = rules.issue_hold_reason(issue, open_refs)
-    if reason:
-        return f"hold: issue {reason}"
-    if capture is not None:
-        reason = rules.issue_hold_reason({"body": capture, "labels": []}, open_refs)
+    try:
+        bodies = (issue["body"], capture or "")
+        refs = {int(n) for text in bodies for n in rules.AFTER.findall(rules._sanitize_body(text))}
+        open_refs = set()
+        for n in refs:
+            dep = _gh_issue_json(target, n, "state,url") or {}
+            done = dep.get("state") == "MERGED" or (dep.get("state") == "CLOSED" and "/issues/" in str(dep.get("url")))
+            if not done:
+                open_refs.add(n)
+        reason = rules.issue_hold_reason(issue, open_refs)
         if reason:
-            return f"hold: capture {reason}"
+            return f"hold: issue {reason}"
+        if capture is not None:
+            reason = rules.issue_hold_reason({"body": capture, "labels": []}, open_refs)
+            if reason:
+                return f"hold: capture {reason}"
+    except Exception as exc:
+        return f"hold-check-unavailable: hold rules failed ({type(exc).__name__})"
     return None
 
 

@@ -209,6 +209,11 @@ if [ "${CASE_KIND:-ready}" = capture-hold ]; then
   printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/$CAP_REL"
   git -C "$FR" add PROJECT && git -C "$FR" commit -qm capture-hold
 fi
+if [ "${CASE_KIND:-ready}" = ambiguous ]; then
+  cp "$FR/$CAP_REL" "$FR/PROJECT/2-WORKING/GH-901-FIXTURE-LANE-B.md"
+  printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/PROJECT/2-WORKING/GH-901-FIXTURE-LANE-B.md"
+  git -C "$FR" add PROJECT && git -C "$FR" commit -qm ambiguous-captures
+fi
 case "${CASE_KIND:-ready}" in issue-hold|issue-label|capture-hold|inbox-ready)
   mkdir -p "$FR/PROJECT/1-INBOX"
   git -C "$FR" mv "$CAP_REL" "PROJECT/1-INBOX/$CAPTURE_DOC_NAME"
@@ -228,6 +233,9 @@ if n == "902":  # dependency lookup: dep-fail -> gh error; dep-done -> closed is
     sys.exit(0)
 if k == "issue-fail":
     sys.exit(1)
+if k == "issue-malformed":  # successful but incomplete response
+    print("{}")
+    sys.exit(0)
 HELD = "\nHELD: owner decision required. Do not execute until owner approves the target.\n"
 AFTER = "\nThis work comes after #902 here.\n"
 body = "## Acceptance\n- [ ] artifact updated and gate green\n"
@@ -235,7 +243,7 @@ body += {"held": HELD, "issue-hold": HELD, "retry-hold": HELD,
          "dependency": "\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n",
          "dep-open": AFTER, "dep-fail": AFTER, "dep-done": AFTER,
          "stale": "\n- [ ] additional live requirement\n"}.get(k, "")
-labels = [{"name": "status:held"}] if k == "issue-label" else []
+labels = [{"name": "status:held"}] if k == "issue-label" else (["status:held"] if k == "issue-badlabels" else [])
 print(json.dumps({"state": "OPEN", "closedAt": None, "body": body, "labels": labels}))
 PY
  exit $?
@@ -262,24 +270,31 @@ fi
 q() { python3 -c 'import sqlite3,sys; print(sqlite3.connect(sys.argv[1]).execute(sys.argv[2]).fetchone()[0])' "$FR/releases.db" "$1"; }
 sha() { [ -f "$1" ] && shasum -a 256 "$1" | cut -d' ' -f1 || echo MISSING; }
 execs() { python3 -c 'import glob,json,sys; print(sum(len(json.load(open(p)).get("executions") or []) for p in glob.glob(sys.argv[1]+"/.tick/jog/*/state.json")))' "$FR"; }
-att_before="$(q 'select attempt_count from jog_queue')"; cap_before="$(sha "$FT/$CAP_REL")"; ex_before="$(execs)"
+nmap() { [ -d "$FT/.tick/attempts" ] || return 0; (cd "$FT/.tick/attempts" && find . -type f | sort | while read -r f; do printf '%s %s\n' "$f" "$(shasum -a 256 "$f" | cut -d' ' -f1)"; done); }
+[ -s "$FT/$CAP_REL" ] || { echo "ASSERT-SETUP FAIL: capture missing or empty before the run: $CAP_REL"; exit 1; }
+att_before="$(q 'select attempt_count from jog_queue')"; cap_before="$(sha "$FT/$CAP_REL")"; ex_before="$(execs)"; nat_before="$(nmap)"
 env -u MARATHON_ALLOW_TRUNK_COMMIT RELAY_DRIVE_EXIT=9 MARATHON_RELAY_DRIVE="$STUB_RD" CODEX_BIN="$STUB_CODEX" AGY_BIN="$STUB_AGY" SP_SUGGESTED_BRANCH="marathon/gh901-fixture" python3 "$FR/utils/py/releases_app.py" --root "$FR" jog ${JOG_VERB:-run} --target-root "$FT" --builder codex --reviewer agy $([ "${JOG_VERB:-run}" = run ] && echo "--max-tasks 1" || echo 901) </dev/null
 rc=$?
 printf 'jog exit=%s\n' "$rc"
 calls=0; [ ! -f "$WORK/relay-drive-args" ] || calls="$(wc -l < "$WORK/relay-drive-args" | tr -d ' ')"
 printf 'worker edge calls=%s\n' "$calls"; [ ! -f "$WORK/relay-drive-args" ] || cat "$WORK/relay-drive-args"
-att_after="$(q 'select attempt_count from jog_queue')"; cap_after="$(sha "$FT/$CAP_REL")"; ex_after="$(execs)"
+# MUTATE=native|capture: red control for the assertions themselves (the run is already over)
+case "${MUTATE:-}" in
+  native) mkdir -p "$FT/.tick/attempts"; echo mutated >> "$FT/.tick/attempts/gh-901-fixture-lane" ;;
+  capture) rm -f "$FT/$CAP_REL" ;;
+esac
+att_after="$(q 'select attempt_count from jog_queue')"; cap_after="$(sha "$FT/$CAP_REL")"; ex_after="$(execs)"; nat_after="$(nmap)"
 reason_after="$(q 'select coalesce(failure_reason,"") from jog_queue')"; status_after="$(q 'select status from jog_queue')"
 printf 'snapshot: attempt_count %s->%s; capture(%s) %s; executions %s->%s; native attempt files=%s; status=%s; reason=%s\n' \
   "$att_before" "$att_after" "$CAP_REL" "$([ "$cap_before" = "$cap_after" ] && echo unchanged || echo CHANGED)" "$ex_before" "$ex_after" \
-  "$(ls "$FT/.tick/attempts" 2>/dev/null | wc -l | tr -d ' ')" "$status_after" "$reason_after"
+  "$(printf '%s' "$nat_after" | grep -c . || true)" "$status_after" "$reason_after"
 # GH-1476 assertion (only when EXPECT_CALLS is set): exact worker-call count; a refusal must also
 # leave attempt count, capture bytes/location and execution count unchanged, be parked, and carry
 # the SPECIFIC expected hold reason ("hold-check-unavailable: ..." can never satisfy a hold case).
 if [ -n "${EXPECT_CALLS:-}" ]; then
   ok=1; [ "$calls" = "$EXPECT_CALLS" ] || ok=0
   if [ "$EXPECT_CALLS" = 0 ]; then
-    [ "$att_after" = "$att_before" ] && [ "$cap_after" = "$cap_before" ] && [ "$ex_after" = "$ex_before" ] && [ "$status_after" = parked ] || ok=0
+    [ "$att_after" = "$att_before" ] && [ "$cap_after" = "$cap_before" ] && [ "$ex_after" = "$ex_before" ] && [ "$nat_after" = "$nat_before" ] && [ "$status_after" = parked ] || ok=0
     case "$reason_after" in "${EXPECT_REASON:?EXPECT_REASON required for a 0-call case}"*) ;; *) ok=0 ;; esac
   fi
   if [ "$ok" = 1 ]; then printf 'ASSERT case=%s expected_calls=%s PASS\n' "${CASE_KIND:-ready}" "$EXPECT_CALLS"

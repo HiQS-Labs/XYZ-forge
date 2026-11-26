@@ -8,7 +8,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 out="$here/suites-$label"; mkdir -p "$out"
 cd "$clone" || exit 2
 unset XYZ_HARNESS TICK_REPO_ROOT
-for s in jog-queue.sh gh280-jog-marathon-adapter.sh gh291-contract-goldens.sh gh505-relay-attest.sh gh202-wave-reconcile-issue-state.sh; do
+for s in jog-queue.sh gh280-jog-marathon-adapter.sh gh291-contract-goldens.sh gh505-relay-attest.sh gh202-wave-reconcile-issue-state.sh gh454-reconciler-defects.sh gh232-wave-reconcile-multiphase.sh gh168-wave-reconcile-scope.sh; do
   start="$(date -u +%FT%TZ)"
   bash "test/$s" > "$out/$s.log" 2>&1 < /dev/null; rc=$?
   [ -s "$out/$s.log" ] || { echo "EMPTY LOG $s" >&2; rc=99; }
