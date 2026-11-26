@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -373,5 +373,77 @@ Basis: The behavioral probe findings are closed. Six refreshed Preflight outputs
 - [Should] F5 refreshed proof files retain stale provenance SHAs: **Implemented.** Cause confirmed: the round-2 refresh script updated the provenance rows in memory but wrote the file back only for #1315's falsifier row. Fixed by setting every  row's  (and its paired Jog-lint row's) from the  in the retained  for that state, with a note saying so. The reviewer's own check, re-run unchanged against the files, now reports ; rows 1-6 of both files read `f2115e986` (unfixed, exit 0/0), `ce717e069` (simulated fix, Preflight 4 / Jog lint 0), `9ba644fe2` (comment-only, 0/0). The rows for the existing-suite runs keep the simulated-fix commit they actually ran on; the clones that held those commits are deleted, and the patches that recreate them are retained in each `probe-proof/2-simulated-fix/`. Fix is in commit `4b9a2dcd8`.
 
 No runtime replay was needed and none changed. No product fix was implemented. Handing off to Reviewer for round 4 (last permitted round).
+
+### Reviewer · Round 4
+
+swept file: no
+
+F5 is closed; preparation QA passes. Read both complete captures, both complete readiness scripts, both summaries and provenance files, the retained state/consumer receipts, falsifier outputs, simulated patches, diff receipt, and relevant runtime decision paths. No additional pre-existing defect was found in the fully read capture/probe files. The large runtime modules and unrelated ledger history were not swept. No Git command, executable fixture, suite, Preflight or phase gate ran; no phase gate is configured. Runtime results are inspected Producer receipts, not independent CLI replays. This approval covers the preparation packets, not implementation, publication, merge readiness or Day 2 admission.
+
+Graph: Verify intent; all 87 project entries checked, this worktree is unindexed. Nearest project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-25T18:19:12Z`. Symbol search returned the four relevant decision functions with no remaining pagination. Coverage checked the preparation evidence paths and cited runtime/suite paths; preparation content is missing from that other checkout, and gh257/gh549 have partial shell ranges. Local source supplied the evidence, including those ranges. No graph completeness or current-worktree freshness is inferred.
+
+- **[Pass] F5 CLOSED.** Both `TESTS-RESULTS/2026-11-25+GH-977/provenance.jsonl:1-6` and `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl:1-6` now attribute their Preflight and paired Jog outputs to `f2115e986`, `ce717e069`, `9ba644fe2`, with notes that these refreshed runs supersede earlier runs. These match the full `freshness.evaluated_ref_commit` values in each retained JSON and the sibling `state.txt:1`. Both `SUMMARY.md:4` distinguish recording time from run time. The read-only check below exits **0**, with `mismatches= 0`; all six states have the expected probe verdict and recorded exit codes. An initial version of my checker exited 1 because it parsed the literal `preflight_exit=0` as an integer; correcting the checker to parse the value after `=` required no artifact change.
+
+- **[Pass] F1/F2/F3/F4 remain CLOSED; Q1 discrimination.** #977 requires successful persisted replacement text, all five unchanged rating fields and successful explicit rescore (`TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py:73-83`). Its retained refusal/no-op falsifiers end `rc=1` at the intended assertions (`review-round1-fixes/probe-977-f1-refuse.txt:7-8`, `probe-977-f1-noop.txt:7-8`), while `probe-977-simfix.txt:1-2` records success. #1315 requires the ownership explanation plus actionable skill-specific remedy, matching preview/apply errors, no refusal side effects, and recorded-skill preview/apply (`TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py:37-44,84-123`). The exact unrelated-error and partial-message falsifiers remain rejected (`review-round2-fixes/probe-1315-f2-reviewer-adoption-service-unavailable.txt:7-8` and sibling reason/remedy receipts); its `probe-1315-simfix.txt:1-2` records success. Independent extraction of only `explains_refusal` again yields `[False, False, False, True]` below. #977 connector isolation remains at `readiness_probe.py:30-35`, supported by retained `connector_events= 2 [977, 977]` before and `connector_events= 0 []` after (`review-round1-fixes/f3-temp-old_probe_977.py.txt:1`, `f3-2026-11-25+GH-977-readiness_probe.py.txt:1`). #1315's corrected ledger pointer remains at `provenance.jsonl:9`; a separate read-only path check found every provenance output present and every file output nonempty.
+
+- **[Pass] Q2 / polarity.** Both contracts retain `expect_nonzero: true` (`PROJECT/1-INBOX/GH-977-ROADMAP-UPDATE-KEEPS-RATING.md:93-95`, `PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md:81-83`). `utils/py/swarm_preflight.py:283-297` maps zero to landed and command failure to unfixed under that shape; launch exceptions become blocked. Ordinary uncaught probe crashes do not read landed. The retained three-state proof below distinguishes unfixed, simulated fix and comment-only edit for both packets; it is not a claim of immunity to every possible false positive.
+
+- **[Pass] Q3 / existing gates and bounded artifacts.** The gates use existing suites only (captures #977 `:83`, #1315 `:73`), and #977 explicitly allows editing gh257 (`:87`), whose existing clearing assertion remains at `test/gh257-roadmap-ledger-fixes.sh:147-152`. The retained code-only red control fails there (`TESTS-RESULTS/2026-11-25+GH-977/existing-suites/gh257-codefix-only-RED-CONTROL.txt:36-37`); the adjusted simulated-fix receipts end `ALL PASSED` and `125 passed, 0 failed` / `exit=0` (`gh257-roadmap-ledger-fixes-simulated-fix.txt:43-44`, `gh549-work-events-simulated-fix.txt:162-163`). #1315 retains the pytest prerequisite warning at capture `:48`, consistent with `test/skills-army-hq.sh:10-15`; its non-skipped retained result is `34 passed, 4 subtests passed` / `exit=0` (`TESTS-RESULTS/2026-11-25+GH-1315/existing-suites/skills-army-hq-simulated-fix-python314-pytest.txt:46-47`). Round 1's bounded search for other rating-clearing pins stands; no exhaustive fresh search is claimed.
+
+- **[Pass] Q4 / acceptance and ratings.** Both complete captures retain the issue-derived criteria and explicit choices at #977 `:31-44` and #1315 `:23-38`. The deviation syntax matches `utils/py/swarm_preflight.py:637-700`. Round 1's live issue/triage comparison is the retained external evidence; no fresh GitHub query was made this turn. The rationales at #977 `:68-73` and #1315 `:63` preserve neutral appeal, cheapness direction and stated recurrence limits. The #977 pickup row/receipt is shown in `TESTS-RESULTS/2026-11-25+GH-977/diff-evidence/releases.sql.diff:26,34`; #1315's existing rating remains in `releases.sql:990`.
+
+- **[Pass] Q5/Q6 / history and preparation scope, bounded by the retained diff cutoff.** `releases.sql:1093,5835,5837,5839` retains #1315's pending/0 unleased row and parked/accepted-start/jog-pending history. Capture `:54-59` preserves the prior trial and explicitly warns that the pending row remains selectable (`utils/py/jog_run.py:2843-2848`); reuse/revalidation remains necessary at launch. The supplied SQL diff changes only generation metadata and adds #977's pickup row/receipt/parked event (`diff-evidence/releases.sql.diff:26,34,42`). Its stat lists preparation/evidence/relay/ledger files, with cutoff `a7b620924` declared in `diff-evidence/README.md:1`. Current source still contains the original defects (`utils/py/releases_app.py:4230-4233`, `skills/3-weekly/skills-army-hq/scripts/sync.py:281-285`); the fixes in patches are simulations. No current Git diff or absence of every external write is claimed. No new suite, product fix or additional subsystem is needed for this preparation review.
+
+Exact read-only command executed (exit **0**; no fixture, subprocess or runtime entry point executed):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 -B - <<'CHECK'
+import ast,json,re
+from pathlib import Path
+mismatches=[]
+for issue in (977,1315):
+    root=Path(f'TESTS-RESULTS/2026-11-25+GH-{issue}')
+    rows=[json.loads(s) for s in (root/'provenance.jsonl').read_text().splitlines()]
+    for i in (0,2,4):
+        p=root/rows[i]['output']; assert p.stat().st_size>0
+        report=json.loads(p.read_text()); actual=report['freshness']['evaluated_ref_commit']
+        assert actual in (p.parent/'state.txt').read_text()
+        expected='landed' if i==2 else 'unfixed'
+        assert [x['verdict'] for x in report['freshness']['probes']]==[expected]
+        for row in rows[i:i+2]:
+            out=root/row['output']; assert out.stat().st_size>0
+            if row['source_sha']!=actual: mismatches.append((issue,row['output']))
+            assert int(out.with_suffix('.rc').read_text().strip().split('=')[-1])==row['exit_code']
+        assert 'JOG LINT OK' in (root/rows[i+1]['output']).read_text()
+        print(issue,actual[:9],expected,rows[i]['exit_code'],rows[i+1]['exit_code'])
+print('mismatches=',len(mismatches)); assert not mismatches
+p=Path('TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py')
+f=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='explains_refusal')
+ns={'re':re}; exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),ns)
+messages=['adoption service unavailable','Not adopted: xyz has no recorded source; adopt it first','Cannot proceed; run intake.py update xyz --source /x','Not adopted: xyz has no recorded source; adopt it first (receipt-only: intake.py update xyz --source /x)']
+results=[ns['explains_refusal'](s) for s in messages]
+assert results==[False,False,False,True],results
+print('F2 unrelated, reason-only, remedy-only, complete:',results)
+CHECK
+```
+
+Decisive output:
+
+```text
+977 f2115e986 unfixed 0 0
+977 ce717e069 landed 4 0
+977 9ba644fe2 unfixed 0 0
+1315 f2115e986 unfixed 0 0
+1315 ce717e069 landed 4 0
+1315 9ba644fe2 unfixed 0 0
+mismatches= 0
+F2 unrelated, reason-only, remedy-only, complete: [False, False, False, True]
+```
+
+VERDICT: PASS
+Basis: F1-F5 are closed on cited source and retained evidence, with F5 independently checked against all six current Preflight reports and paired Jog receipts. No open finding remains within preparation QA. No later gate is assumed; publication checks and live integration-ref revalidation remain the owning workflow's work.
+
+Relay closed (Approved), no further turn needed. Producer owns the subsequent preparation publication workflow; this review does not admit either issue to execution.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
