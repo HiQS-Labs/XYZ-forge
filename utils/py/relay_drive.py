@@ -868,6 +868,11 @@ def main():
         """
         if not terminal_status(ns):
             return ("none",)
+        if ns == "Approved" and role == "reviewer" and shim_ok and repair_base[0] and not commits_touch_non_receipt(repair_base[0], get_head_commit()):
+            # GH-1637: the consult judged an open finding REAL; an approval needs a repair beyond the
+            # transcript, otherwise the unchanged candidate would be approved over a finding judged real.
+            eprint(f"relay-drive: STATUS Approved after a consult-REAL verdict, but nothing changed since {repair_base[0][:12]} beyond transcripts — refusing (repair-missing)")
+            return ("refused", "repair-missing")
         if role != "reviewer" or not shim_ok or (ns == relay_attest.ADJUDICATED and not adjudicated):
             why = (f"builder-role turn ({actor})" if role != "reviewer"
                    else f"FAILED reviewer turn ({actor}; shim returned non-zero)" if not shim_ok
@@ -1137,8 +1142,11 @@ def main():
         if not commits_touch_non_receipt(base, cand):
             eprint(f"relay-drive: consult-at-cap: no deliverable change between {base[:12]} and {cand[:12]} (transcripts and receipts do not count) — holding")
             return ("hold", "consult-inconclusive")
-        diff = subprocess.run(["git", "-C", repo, "diff", f"{base}..{cand}"], capture_output=True, text=True,
-                              errors="replace").stdout
+        dproc = subprocess.run(["git", "-C", repo, "diff", f"{base}..{cand}"], capture_output=True, text=True, errors="replace")
+        diff = dproc.stdout
+        if dproc.returncode != 0 or not diff.strip():
+            eprint(f"relay-drive: consult-at-cap: could not capture the candidate patch {base[:12]}..{cand[:12]} (git diff exit {dproc.returncode}, {len(diff)} bytes) — holding")
+            return ("hold", "consult-inconclusive")
         with open(relay_file, "rb") as f:
             pre_raw = f.read()
         pre = {"status": file_status(), "raw": pre_raw, "canon": None, "reviewed_head": cand,
@@ -1214,7 +1222,7 @@ def main():
                                                  "excerpts": {a: tail(answers[a][1]) for a in CONSULT_ADVISORS}}}
             return ("adjudicated", info)
         if outcome == "real":
-            return ("real", None)
+            return ("real", cand)
         return ("hold", "consult-hold" if outcome == "hold-safety" else "consult-inconclusive")
 
     original_round_cap = args.round_cap
@@ -1222,6 +1230,7 @@ def main():
     # without it the historical cap*2 ceiling is unchanged.
     hard_cap = args.round_cap + 2 if args.consult_at_cap else args.round_cap * 2
     consult_used = False
+    repair_base = [None]   # the candidate a consult judged REAL; an approval must follow a change beyond transcripts
     reviewer_review_seen = False   # a reviewer turn this run appended a non-empty review block
     round_idx = 0
     while round_idx < args.round_cap:
@@ -1642,6 +1651,8 @@ def main():
             consult_used = True
             eprint(f"relay-drive: round cap ({args.round_cap}) reached with open reviewer findings — consult tie-break (codex+agy, pinned candidate)")
             kind, info = consult_adjudicate()
+            if kind == "real":
+                repair_base[0] = info
             if kind == "hold":
                 eprint(f"relay-drive: consult tie-break did not clear the lane ({info}) — holding for a human")
                 xyz_relay_emit("red")

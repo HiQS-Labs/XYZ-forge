@@ -166,8 +166,11 @@ repair_attested && ok "S2 the approval attests a CHANGED repair head, not the he
 [ "$(order)" = "bld rev bld bld rev" ] && ok "S2 order bld rev bld | consult | bld rev" || bad "S2 order '$(order)'"
 [ "$(consults)" = 1 ] && ok "S2 no second consult" || bad "S2 consults=$(consults)"
 echo "== S2b REAL at cap 2 (reviewer just finished; builder next)"
+reset; STUB_REPAIR=1 STUB_CODEX=REAL STUB_REV_APPROVE_AT=2 drive 2 --consult-at-cap
+[ "$RC" = 0 ] && [ "$(order)" = "bld rev bld rev" ] && ok "S2b order bld rev | consult | bld rev, approved on the repaired head" || bad "S2b rc=$RC order '$(order)' status $(status)"
+echo "== S2e REAL, builder hands back WITHOUT repairing, reviewer tries to approve: refused (repair-missing), no Approved attestation"
 reset; STUB_CODEX=REAL STUB_REV_APPROVE_AT=2 drive 2 --consult-at-cap
-[ "$RC" = 0 ] && [ "$(order)" = "bld rev bld rev" ] && ok "S2b order bld rev | consult | bld rev, approved" || bad "S2b rc=$RC order '$(order)' status $(status)"
+[ "$RC" = 4 ] && grep -q "repair-missing" <<<"$OUT" && [ -z "$(attest)" ] && ok "S2e unchanged candidate cannot be approved after a REAL verdict" || bad "S2e rc=$RC attest=$(attest): $OUT"
 echo "== S2c REAL then the repaired lane still fails: second cap escalates, no second consult"
 reset; STUB_CODEX=REAL STUB_REV_PROGRESS=1 drive 3 --consult-at-cap
 [ "$RC" = 4 ] && [ "$(consults)" = 1 ] && [ "$(order)" = "bld rev bld bld rev" ] && ok "S2c repair reviewer records progress yet the lane ends after exactly the two repair turns (order '$(order)', one consult)" || bad "S2c rc=$RC consults=$(consults) order='$(order)': $OUT"
@@ -233,6 +236,11 @@ echo "== S10 transcript-only candidate (builder commits no deliverable): hold be
 reset; STUB_COMMIT=no drive 3 --consult-at-cap
 [ "$RC" = 4 ] && [ "$(consults)" = 0 ] && grep -q "no deliverable change" <<<"$OUT" && ok "S10 holds, consult never ran" || bad "S10 rc=$RC consults=$(consults): $OUT"
 
+echo "== S10b the candidate patch cannot be captured (git diff fails after the name-only check passed): hold before any advisor is dispatched"
+REAL_GIT="$(command -v git)"; mkdir -p "$WORK/shim"
+printf '#!/usr/bin/env bash\ncase " $* " in *" diff "*) case " $* " in *" --name-only "*) ;; *) exit 128 ;; esac ;; esac\nexec "%s" "$@"\n' "$REAL_GIT" >"$WORK/shim/git"; chmod +x "$WORK/shim/git"
+reset; PATH="$WORK/shim:$PATH" drive 3 --consult-at-cap
+[ "$RC" = 4 ] && [ "$(consults)" = 0 ] && grep -q "could not capture the candidate patch" <<<"$OUT" && [ "$(status)" = Open ] && [ -z "$(attest)" ] && ok "S10b patch capture failure holds: no advisor dispatched, STATUS Open, no attestation" || bad "S10b rc=$RC consults=$(consults) status=$(status): $OUT"
 echo "== S11 default-off: same lane without --consult-at-cap keeps cap-stalled, no consult"
 reset; drive 3
 [ "$RC" = 4 ] && grep -q "cap-stalled" <<<"$OUT" && [ "$(consults)" = 0 ] && ok "S11 cap-stalled, zero consults" || bad "S11 rc=$RC consults=$(consults): $OUT"
