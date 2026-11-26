@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -118,5 +118,115 @@ Local developer tooling in a docs/ledger-only PR. No implementation, no queue en
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: no
+
+Reviewed both complete captures, both complete readiness scripts, retained summaries/provenance, probe-state JSON and patches, and relevant existing source/suite paths. The ledger review was bounded to the two issues and their receipts; the base-to-head diff/full ledger sweep remains unverified because this driven turn explicitly forbids all Git commands. No suites, fixtures, Git commands, or real readiness scripts were executed. The checks below only parse files or execute extracted decision statements with in-memory inputs. No additional pre-existing defect was identified in the fully swept preparation files beyond the findings below; this is not an exhaustive claim about the large runtime modules.
+
+Graph navigation: Verify intent, project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-25T18:19:12Z`; this worktree is not indexed. Coverage reported missing new preparation paths and partial gh257/gh549 shell ranges. Read local source, including those ranges, rather than treating another checkout's index as proof.
+
+- **[Should] F1 — #977 can report landed after an unrelated failed text update.** **Observed input:** Form 1: `PROJECT/1-INBOX/GH-977-ROADMAP-UPDATE-KEEPS-RATING.md:34` and `:100` require preserve, not refuse, but `TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py:61` accepts nonzero if output merely contains `rat`. Controlled input `returncode=1, stderr="operation failed: database is locked"` passes because `operation` contains `rat`; the row is unchanged because the write failed. The probe also never reads back the new raw text. **Affected scope:** no-token updates that fail or silently do nothing while an explicit-token update still works. **Fix:** require exit 0 and read back the requested replacement text as well as all five unchanged fields; remove the obsolete refuse allowance from the probe docstring. **Falsifier:** this exact refusal and a successful no-op must produce nonzero/unfixed; an actual persisted text-only update plus the existing explicit rescore control must produce zero/landed. Re-run the retained three-state proof after changing the probe.
+
+  Decision-only command run here (exit 0, decisive output: `text-only roadmap update preserves saved ratings; explicit rated token still replaces them` followed by `FALSE POSITIVE: failed text-only update accepted; no subprocess or fixture executed`):
+
+  ```python
+  # python3 -B - <<'PY'
+  import ast
+  from pathlib import Path
+  from types import SimpleNamespace
+  p=Path('TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py')
+  tree=ast.parse(p.read_text()); main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='main')
+  body=[n for n in main.body[0].body if 57<=n.lineno<=69]
+  state={'ratings':[(80,70,90,60,320)]}
+  def app(repo,*args):
+      if 'probe rescored' in args[-1]:
+          state['ratings']=[(10,20,30,40,None)]
+          return SimpleNamespace(returncode=0,stdout='',stderr='')
+      return SimpleNamespace(returncode=1,stdout='',stderr='operation failed: database is locked')
+  exec(compile(ast.Module(body=body,type_ignores=[]),str(p),'exec'),dict(app=app,repo=None,URL='https://github.com/org/repo/issues/977',ratings=lambda repo:state['ratings']))
+  print('FALSE POSITIVE: failed text-only update accepted; no subprocess or fixture executed')
+  # PY
+  ```
+
+- **[Should] F2 — #1315 does not establish refusal parity or successful recorded-skill apply.** **Observed input:** Form 1: the capture requires both modes to name the adoption remedy (`PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md:25`, `:87`), while `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py:66` checks only exit 2, `:67` accepts any `adopt` substring anywhere in combined output, and `:71` does not inspect apply's reason at all. Its positive control ends after preview (`:92`–`:98`), despite the contract saying recorded migration “still previews and applies” (`:87`). **Affected scope:** unrelated exit-2 refusals, warnings containing `adopt`, and fixes that break recorded-skill apply. **Fix:** check the actual error for the selected legacy directory in both modes, require the ownership refusal and actionable `intake.py update` remedy, and extend the existing manual control to apply the recorded skill and verify the managed link/retained archive. No new suite. **Falsifier:** unrelated refusal messages must remain unfixed; matching ownership refusals with the remedy and a successful recorded-skill preview/apply must read landed. Retain the clone CLI evidence, not just function output.
+
+  Decision-only command run here (exit 0; output: `Preview error "adoption service unavailable" and apply error "permission denied" both pass the refusal assertions`):
+
+  ```python
+  # python3 -B - <<'PY'
+  import ast
+  from pathlib import Path
+  p=Path('TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py')
+  t=ast.parse(p.read_text())
+  for line,env in [(66,{'rc':2,'text':'adoption service unavailable'}),(67,{'text':'adoption service unavailable'}),(71,{'rc':2,'out':'','err':'permission denied'})]:
+      n=next(n for n in ast.walk(t) if isinstance(n,ast.Assert) and n.lineno==line)
+      exec(compile(ast.Module(body=[n],type_ignores=[]),str(p),'exec'),env)
+  print('Preview error "adoption service unavailable" and apply error "permission denied" both pass the refusal assertions')
+  # PY
+  ```
+
+- **[Should] F3 — #977's fixture inherits live connector configuration. Pending clone probe verification.** **Observed input:** Form 2: `TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py:28` copies the entire environment without disabling connectors or isolating HOME/device config; `:48`–`:53` performs real ledger writes. `utils/py/releases_app.py:1775` dispatches after every write; `:1632` disables dispatch only for `XYZ_WORK_CONNECTORS=0`. `utils/py/device_config.py:31` otherwise selects the inherited override or real `~/.xyz/device_config.json`; `utils/py/work_connectors/__init__.py:88`–`:118` loads enabled connectors, `:128`–`:139` supplies raw issue-number events, and `:458`–`:487` launches them. `utils/py/work_connectors/github_board.py:94`–`:99` chooses the configured repository and calls `set_issue_status(..., write=True)`. Thus the fixture's fake URL does not isolate the legacy board connector's issue 977 projection. This contradicts the probe's “All writes are confined” claim at `:12`. **Affected scope:** running this readiness probe on a machine with an enabled legacy board connector (no policy guard), including Preflight consumption. **Fix:** explicitly force `XYZ_WORK_CONNECTORS=0` in the child environment; also point device config/HOME at the fixture so the probe does not depend on operator settings. **Falsifier:** with a deliberately enabled offline connector, the uncorrected probe should emit a fixture event; after isolation it must emit none while still testing the ledger behavior. No live board call is needed or authorized. **Clone probe:** run the following only in a disposable full clone. It supplies a minimal environment and an offline connector through the existing registry seam; all fixture/config/log writes stay under that clone's `temp/`. Exit 1 with `connector_events` containing issue 977 reproduces the escape; exit 0 with no events is the expected fixed result. An errored/unavailable run keeps F3 open.
+
+  ```bash
+  python3 -B - <<'PY'
+  import json, os, subprocess, sys, tempfile
+  from pathlib import Path
+  root = Path.cwd().resolve()
+  probe = root / 'TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py'
+  assert probe.is_file()
+  scratch = root / 'temp'
+  scratch.mkdir(exist_ok=True)
+  with tempfile.TemporaryDirectory(prefix='qa977-connectors-', dir=scratch) as raw:
+      work = Path(raw).resolve()
+      assert work.is_relative_to(root)
+      home = work / 'home'; home.mkdir()
+      config = work / 'device.json'
+      config.write_text(json.dumps({'work_connectors': {'github_board': {
+          'enabled': True, 'project_owner': 'offline', 'project_number': 1,
+          'repos': ['offline/fixture']}}}))
+      log = work / 'events.jsonl'
+      fake = work / 'offline_connector.py'
+      fake.write_text('import json,os,sys\n'
+          'batch=json.load(sys.stdin)\n'
+          'with open(os.environ["QA977_LOG"],"a") as f: f.write(json.dumps(batch)+"\\n")\n'
+          'print("advanced_to: %s" % max(e["id"] for e in batch["events"]))\n')
+      empty_git_config = work / 'gitconfig'; empty_git_config.write_text('')
+      env = {'PATH': os.environ['PATH'], 'HOME': str(home), 'TMPDIR': str(work),
+          'PYTHONDONTWRITEBYTECODE': '1', 'XYZ_DEVICE_CONFIG_PATH': str(config),
+          'XYZ_WORK_CONNECTORS': '1', 'QA977_LOG': str(log),
+          'XYZ_WORK_CONNECTORS_REGISTRY': json.dumps({'github_board': str(fake)}),
+          'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': str(empty_git_config),
+          'GIT_TERMINAL_PROMPT': '0', 'GH_CONFIG_DIR': str(home / 'gh')}
+      run = subprocess.run([sys.executable, '-B', str(probe)], cwd=root,
+          env=env, capture_output=True, text=True, timeout=120)
+      events = [e for line in (log.read_text().splitlines() if log.exists() else [])
+          for e in json.loads(line)['events']]
+      print('readiness_rc=', run.returncode, 'connector_events=', events)
+      print(run.stdout, run.stderr)
+      if not events and run.returncode != 0:
+          # The unfixed ledger normally fails this assertion; other failures are inconclusive.
+          assert 'text-only update dropped the saved rating' in run.stderr, 'probe errored before measurement'
+      raise SystemExit(1 if events else 0)
+  PY
+  ```
+
+- **[Nit] F4 — repair the #1315 ledger receipt pointer.** `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl:9` names `ledger-readback-977-1315.json` in its own directory, where it does not exist. Its `SUMMARY.md:22` correctly points to the sibling GH-977 directory. Resolve the provenance path as `../2026-11-25+GH-977/ledger-readback-977-1315.json`. Read-only Python check `json.loads(p.read_text().splitlines()[8]); (p.parent / row['output']).is_file()` exited 0 and printed `1315 ledger provenance output exists: False`.
+
+- **[Pass] Q2 / supported shape:** both contracts use the supported command shape with `expect_nonzero: true` (`GH-977` capture `:93`–`:95`; `GH-1315` capture `:80`–`:82`). `utils/py/swarm_preflight.py:283`–`:297` maps a nonzero command to unfixed and an execution exception to blocked. A normally propagated crash does not read landed; F1/F2 identify errors the scripts themselves accept as success. The retained `probe-proof/*/preflight-*.json` report `unfixed`, `landed`, `unfixed` with exit receipts 0, 4, 0 for each issue; both summaries' table at lines 10–14 accurately describes those recorded results. These are inspected Producer receipts, not independently replayed CLI results.
+
+- **[Pass] Q3 / bounded gates and artifacts:** the capture gates (`GH-977:83`, `GH-1315:72`) name existing suites only. GH-977 artifacts include the gh257 suite at `:87`; its existing Case 8 (`test/gh257-roadmap-ledger-fixes.sh:147`–`:152`) pins clearing, and the retained red-control output ends `FAIL: expected all rating columns to be NULL, found non-null values` / `exit=1`. Literal searches in `test/` found this clearing expectation; the other NULL-rating matches in `test/gh69-roadmap-shadow.sh:253`–`:313` concern add/rate rather than update. This is a bounded search, not proof of all possible pins. GH-1315's existing wrapper skips with exit 0 without pytest (`test/skills-army-hq.sh:10`–`:15`); the capture explicitly warns at `:48`, and its real retained suite log ends `34 passed, 4 subtests passed` / `exit=0`. Require that interpreter prerequisite at execution; no later relay gate is assumed.
+
+- **[Pass] Q4 / acceptance and ratings:** read the live issue bodies/comments through the GitHub connector. GH-977 capture `:31`–`:33` copies the three Ask bullets, and its `:42`–`:44` declares additions consistent with [triage comment 7174351131](https://github.com/HiQS-Labs/XYZ-forge/issues/977#issuecomment-7174351131). GH-1315 capture `:23` copies the first Expected paragraph and `:34` explicitly replaces the alternative design, consistent with [triage comment 7174351181](https://github.com/HiQS-Labs/XYZ-forge/issues/1315#issuecomment-7174351181). A read-only import of `extract_contract`, `extract_declared_deviations`, and `contract_probes_from_doc` exited 0: both contracts nonempty, labels nonempty, reason `None`; #977 has 3 added/0 malformed, #1315 has 4 added/1 changed/0 malformed. The parser is `utils/py/swarm_preflight.py:637`–`:705`. No issue edit to invent an Acceptance heading is needed. The rating rationales (`GH-977:68`–`:73`, `GH-1315:62`) retain neutral appeal and cheapness direction from `skills/1-hourly/start-task/SKILL.md:448`–`:474`; #977 explicitly bounds its recurrence evidence to issue/comments.
+
+- **[Pass] Q5 / current history, with launch caution:** `releases.sql:990`, `:1093`, `:3930`, `:3932`, `:3934`, `:5835`, `:5837`, `:5839` contain the described #1315 rating, pending/0 unleased queue row, pickup/update/add receipts and accepted-start event. `TESTS-RESULTS/2026-11-11+GH-1386/SUMMARY.md:7`–`:17` records an initial #1171 promotion refusal, then the resumed loop's reviewer-credit failure; #1315 was never dispatched. The refreshed capture's `:56` compresses that history to the resumed loop; the underlying attempt conclusion is supported. Its prose “held” is not a queue pause: `utils/py/jog_run.py:2843`–`:2848` selects pending rows. Day 2 must revalidate/reuse that existing row and avoid treating the old accepted-start as fresh approval. Preserve its history; do not reset it or add a second row.
+
+- **[Unverified — needs Producer diff receipt] Q6 / no unrelated changes:** the local runtime still contains the original defects (`utils/py/releases_app.py:4230`–`:4233`; `skills/3-weekly/skills-army-hq/scripts/sync.py:281`–`:285`), while simulated implementation patches are evidence only. The current SQL contains #977's pickup receipt (`releases.sql:4386`) and rated row (`:1057`), and no #977 queue INSERT was found. This supports the intended preparation scope, but does not prove the full diff or that historical rows were unchanged. Before the next review retain the Producer's `git diff --stat origin/development` and `git diff origin/development -- releases.sql` output for inspection; do not ask this reviewer to violate the no-Git turn rule. Live issues currently have only the `bug` label; absence of all past external writes cannot be established from the local artifact. Apart from the above corrections, the existing manual checks and receipts are proportionate; no new suite or subsystem is requested.
+
+Handing off to Producer (claude-a): correct F1/F2/F4, execute the offline disposable-clone probe for F3 and disposition it with evidence, refresh affected readiness receipts, and provide the bounded diff evidence. Do not implement either product fix in this preparation turn.
+
+VERDICT: FAIL
+Basis: Two measured decision-check false positives, an unverified connector-containment hazard with a complete clone probe, and one broken evidence pointer remain open; full diff verification is also outstanding under the driven-turn no-Git restriction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
