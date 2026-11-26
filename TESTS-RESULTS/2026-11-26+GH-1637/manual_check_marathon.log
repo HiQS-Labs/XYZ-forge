@@ -11,5 +11,8 @@
   PASS: M2b lane_pr_notes names consult-adjudicated, advisors and not-a-reviewer-approval
 == M3 default-off through Marathon is unchanged where no reviewer turn completed (cap 1) -> cap-stalled
   PASS: M3 cap 1 still ends cap-stalled (no reviewer turn, no consult)
+== M4 the existing acceptance recheck still judges an ADJUDICATED candidate (red control, then green)
+  PASS: M4 unfixed candidate: adjudicated terminal, then acceptance-probes-unmet (exit 5), no success
+  PASS: M4 fixed candidate: adjudicated terminal advances (exit 0)
 
-RESULT: 7 passed, 0 failed
+RESULT: 9 passed, 0 failed

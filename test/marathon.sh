@@ -136,7 +136,8 @@ grep -q "^p2|7|agy|src/p2.js|MARATHON-P2-TURN-2|1200|chain--p2|$" "$WORK/phases-
 grep -q "^p1|5|codex||||chain--p1|$" "$WORK/phases-ran" \
   && pass "--retry p2: p1's task-name derivation unaffected (no --relay-task)" \
   || fail "--retry p2 p1 unaffected: [$(grep p1 "$WORK/phases-ran")]"
-grep -q "^p3|5|codex||||chain--p3|$" "$WORK/phases-ran" \
+# GH-1637: p3 sets no max_review_rounds -> default 4 rounds -> cap 9 (was 5)
+grep -q "^p3|9|codex||||chain--p3|$" "$WORK/phases-ran" \
   && pass "--retry p2: p3's task-name derivation unaffected (no --relay-task)" \
   || fail "--retry p2 p3 unaffected: [$(grep p3 "$WORK/phases-ran")]"
 
