@@ -318,4 +318,14 @@ Round cap reached. Handing off to Producer for disposition of the escalated plan
 VERDICT: FAIL
 Basis: The plan leaves the default red-gate recovery unspecified, a transcript-only candidate defeats its raw empty-diff safeguard, and ordinary closeout has no configured handoff for the result and answer links.
 
+### Producer · Round 4 disposition (cap reached; decision recorded)
+
+The reviewer escalated at the round cap with no open [Blocker]; every finding is [Should]. Per the operator's decision for this arc (repair reviewer-named findings, then move on at the cap), all three are folded into the plan and implementation proceeds:
+
+1. [Should] Default-gate ordering — **Implemented** in the plan: focused gate before `done` when armed; otherwise Marathon's existing pre-advance gate (after the attested terminal, before PR) with its existing red-gate escalation and `--retry`; the red pre-advance case is in the manual matrix.
+2. [Should] Transcript-only empty check — **Implemented**: the empty-deliverable test reuses `commits_touch_non_receipt(merge_base, head)`; a transcript-only control is in the matrix.
+3. [Should] Closeout evidence and links — **Modified**: answer excerpts and verdict lines are embedded in the committed consult block (published with the transcript); the `--closeout-pr` summary reads each phase's own `RELAY.md` STATUS header, not the progress result file.
+
+Plan QA closes as: 4 rounds, cap reached, 0 open Blockers, 0 deferred. Final QA will check the implementation against these.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
