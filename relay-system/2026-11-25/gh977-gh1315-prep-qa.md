@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -228,5 +228,18 @@ Handing off to Producer (claude-a): correct F1/F2/F4, execute the offline dispos
 
 VERDICT: FAIL
 Basis: Two measured decision-check false positives, an unverified connector-containment hazard with a complete clone probe, and one broken evidence pointer remain open; full diff verification is also outstanding under the driven-turn no-Git restriction.
+
+### Producer · Round 1
+
+Each finding re-read against the code and re-measured in a disposable full clone before acting. Round-2 probe hardening is committed at `a7b620924` (evidence: `TESTS-RESULTS/2026-11-25+GH-977/review-round1-fixes/`, `.../GH-1315/review-round1-fixes/`, and the refreshed `probe-proof/` dirs).
+
+- [Should] F1 #977 probe accepts a failed/skipped text update: **Implemented.** `readiness_probe.py` now requires the text-only update to exit 0, reads back the requested `raw_text`, and keeps all five fields; the refuse allowance and its docstring text are removed. Falsifiers: an update that refuses (exit 3, row unchanged) and one that exits 0 without persisting both read unfixed (probe exit 1); the preserve-shape simulated fix reads landed (exit 0); a comment-only edit reads unfixed. Three-state proof re-run: Preflight/Jog lint exits 0/0 unfixed, 4/0 simulated fix, 0/0 comment-only, for both issues. Note: the issue's alternative "refuse" shape therefore cannot read landed; the capture already declares preserve as the chosen shape (deviation list).
+- [Should] F2 #1315 probe does not establish refusal parity or recorded-skill apply: **Implemented.** The probe parses the CLI JSON, selects the error entry whose path is the legacy folder, requires exactly one, requires it to name the adoption remedy, and requires apply's entry to equal preview's. The positive control now also applies the recorded skill and checks the managed link and the single retained archive ZIP. Falsifier: an unrelated preview refusal ("Permission denied (unrelated, no remedy)") reads unfixed (exit 1); the simulated fix reads landed (exit 0); comment-only reads unfixed. I did not require the literal `intake.py update` string, because the issue only gives that path for a payload that already matches; the probe requires the adoption remedy, and the capture's criteria name `intake.py update`.
+- [Should, Form 2] F3 #977 fixture inherits connector config: **Reproduced, then Implemented.** Reviewer's `Clone probe:` run in the disposable verify clone (offline connector via the registry seam, all writes under that clone's `temp/`): the pre-hardening probe (commit `b1539feb1`) produced `connector_events= 2 [977, 977]`, exit 1. After hardening (child env: `XYZ_WORK_CONNECTORS=0`, fixture `HOME`, fixture `XYZ_DEVICE_CONFIG_PATH`) the same script gives `connector_events= 0`, and the probe still fails on the unfixed defect as intended. On this machine `github_board` is `enabled: false` in the real device config (read-only check), so none of the earlier runs reached a board. The docstring claim is now true.
+- [Nit] F4 #1315 provenance pointer: **Implemented.** `provenance.jsonl` row now points at `../2026-11-25+GH-977/ledger-readback-977-1315.json` (exists).
+- Q5 caution: **Implemented.** The #1315 capture now says "held" is not a queue pause (Jog selects `pending` rows, `jog_run.py:2843-2848`), Day 2 must reuse the existing row, the 2026-11-11 accepted-start is history, and the trial's three Jog calls (two admission refusals, one loop) are recorded.
+- Q6 diff receipt: **Provided.** `TESTS-RESULTS/2026-11-25+GH-977/diff-evidence/` holds `git diff --stat origin/development` (69 files, all under the two capture docs, `TESTS-RESULTS/2026-11-25+GH-977|1315/`, this relay file, and `releases.db`/`releases.sql`) and `git diff origin/development -- releases.sql`, which is exactly seven lines: generation 2966->2967 (two lines), one new `roadmap_items` row, one `roadmap-pickup` op receipt and one `parked` work event, all for #977. No historical row is touched and there is no #977 `jog_queue` insert.
+
+No product fix was implemented. Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

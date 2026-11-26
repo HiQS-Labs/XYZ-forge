@@ -1,0 +1,70 @@
+ PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md   |  59 ++--
+ .../1-INBOX/GH-977-ROADMAP-UPDATE-KEEPS-RATING.md  | 105 ++++++++
+ TESTS-RESULTS/2026-11-25+GH-1315/SUMMARY.md        |  21 ++
+ ...ills-army-hq-simulated-fix-python314-pytest.txt |  47 ++++
+ .../skills-army-hq-simulated-fix.txt               |   2 +
+ .../1-unfixed-at-prepared-commit/jog-lint-1315.rc  |   1 +
+ .../1-unfixed-at-prepared-commit/jog-lint-1315.txt |   4 +
+ .../preflight-1315.err                             |   0
+ .../preflight-1315.json                            | 122 +++++++++
+ .../1-unfixed-at-prepared-commit/preflight-1315.rc |   1 +
+ .../1-unfixed-at-prepared-commit/state.txt         |   1 +
+ .../probe-proof/2-simulated-fix/jog-lint-1315.rc   |   1 +
+ .../probe-proof/2-simulated-fix/jog-lint-1315.txt  |   4 +
+ .../probe-proof/2-simulated-fix/preflight-1315.err |   0
+ .../2-simulated-fix/preflight-1315.json            | 122 +++++++++
+ .../probe-proof/2-simulated-fix/preflight-1315.rc  |   1 +
+ .../2-simulated-fix/simulated-fix.patch            |  14 +
+ .../probe-proof/2-simulated-fix/state.txt          |   1 +
+ .../3-comment-only-edit/comment-only-edit.patch    |  25 ++
+ .../3-comment-only-edit/jog-lint-1315.rc           |   1 +
+ .../3-comment-only-edit/jog-lint-1315.txt          |   4 +
+ .../3-comment-only-edit/preflight-1315.err         |   0
+ .../3-comment-only-edit/preflight-1315.json        | 122 +++++++++
+ .../3-comment-only-edit/preflight-1315.rc          |   1 +
+ .../probe-proof/3-comment-only-edit/state.txt      |   1 +
+ TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl  |  10 +
+ .../2026-11-25+GH-1315/readiness_probe.py          | 113 ++++++++
+ .../review-round1-fixes/README.md                  |   3 +
+ .../review-round1-fixes/probe-1315-comment.txt     |   8 +
+ .../probe-1315-f2-unrelated.txt                    |   8 +
+ .../review-round1-fixes/probe-1315-simfix.txt      |   2 +
+ TESTS-RESULTS/2026-11-25+GH-977/SUMMARY.md         |  21 ++
+ .../gh257-codefix-only-RED-CONTROL.txt             |  37 +++
+ .../gh257-roadmap-ledger-fixes-simulated-fix.txt   |  44 +++
+ .../gh549-work-events-simulated-fix.txt            | 163 +++++++++++
+ .../ledger-readback-977-1315.json                  |  44 +++
+ .../1-unfixed-at-prepared-commit/jog-lint-977.rc   |   1 +
+ .../1-unfixed-at-prepared-commit/jog-lint-977.txt  |   4 +
+ .../1-unfixed-at-prepared-commit/preflight-977.err |   0
+ .../preflight-977.json                             | 300 +++++++++++++++++++++
+ .../1-unfixed-at-prepared-commit/preflight-977.rc  |   1 +
+ .../1-unfixed-at-prepared-commit/state.txt         |   1 +
+ .../probe-proof/2-simulated-fix/jog-lint-977.rc    |   1 +
+ .../probe-proof/2-simulated-fix/jog-lint-977.txt   |   4 +
+ .../probe-proof/2-simulated-fix/preflight-977.err  |   0
+ .../probe-proof/2-simulated-fix/preflight-977.json | 300 +++++++++++++++++++++
+ .../probe-proof/2-simulated-fix/preflight-977.rc   |   1 +
+ .../2-simulated-fix/simulated-fix.patch            |  48 ++++
+ .../probe-proof/2-simulated-fix/state.txt          |   1 +
+ .../3-comment-only-edit/comment-only-edit.patch    |  25 ++
+ .../3-comment-only-edit/jog-lint-977.rc            |   1 +
+ .../3-comment-only-edit/jog-lint-977.txt           |   4 +
+ .../3-comment-only-edit/preflight-977.err          |   0
+ .../3-comment-only-edit/preflight-977.json         | 300 +++++++++++++++++++++
+ .../3-comment-only-edit/preflight-977.rc           |   1 +
+ .../probe-proof/3-comment-only-edit/state.txt      |   1 +
+ TESTS-RESULTS/2026-11-25+GH-977/provenance.jsonl   |  11 +
+ TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py |  88 ++++++
+ .../review-round1-fixes/README.md                  |   6 +
+ .../f3-2026-11-25+GH-977-readiness_probe.py.txt    |   6 +
+ .../f3-temp-old_probe_977.py.txt                   |   3 +
+ .../review-round1-fixes/f3_clone_probe.py          |  35 +++
+ .../review-round1-fixes/probe-977-comment.txt      |   8 +
+ .../review-round1-fixes/probe-977-f1-noop.txt      |   8 +
+ .../review-round1-fixes/probe-977-f1-refuse.txt    |   8 +
+ .../review-round1-fixes/probe-977-simfix.txt       |   2 +
+ relay-system/2026-11-25/gh977-gh1315-prep-qa.md    | 232 ++++++++++++++++
+ releases.db                                        | Bin 2031616 -> 2031616 bytes
+ releases.sql                                       |   7 +-
+ 69 files changed, 2501 insertions(+), 20 deletions(-)
