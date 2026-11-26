@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -177,5 +177,37 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md
   there and removed on exit).
 
 NEXT: Reviewer. Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+**What this proposes**
+
+Create a per-run temp child in the gh436 Python entry point, redirect Python and its children to it, and remove it on normal exit. A1 compares fresh sealed parents before and after the change, tracing the prune root alongside checking fixture leftovers and suite results.
+
+**How the existing system works, per this document**
+
+The registered shell wrapper starts gh436, which collects three phase modules. The suite drives production landing and check paths using Python's inherited temp root. The recon reports both retained fixture folders and a pruning pass over the sealed parent (plan lines 27–55).
+
+**What it's not**
+
+Production pruning changes, standalone phase isolation, and new suites are outside the plan (lines 65–66, 83–85).
+
+swept file: yes
+
+VERDICT: FAIL  
+Basis: The isolation design remains sound. A1's revised trace instructions cannot be applied as written, and A1 still needs to exercise an actual enumeration. I found no other pre-existing defect in the scoped entry point that changes this plan.
+
+- [Blocker] A1 gives two incompatible locations for the trace. **Observed input:** `PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:98-101` says to append `str(root)` after its assignment and before the process guard. In `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:396-406` the guard returns at line 399 and `root` is first assigned at line 400. A trace before the guard references an unbound local. A trace after the assignment is skipped when the guard returns, as happened on 66 paths in the recorded recon (plan line 48). A separately computed pre-guard root can log a path without any enumeration. Read-only source probe, exit 1:
+  ```sh
+  python3 -c 'from pathlib import Path; s = Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").read_text().splitlines()[386:430]; g = next(i for i, l in enumerate(s, 387) if "other = _other_merge_cleanup_running()" in l); r = next(i for i, l in enumerate(s, 387) if "root = Path(tempfile.gettempdir()).resolve()" in l); print(f"process probe L{g}; root assignment L{r}"); assert r < g, "no insertion point satisfies both A1 instructions"'
+  ```
+  Decisive output: `process probe L396; root assignment L400` and `AssertionError: no insertion point satisfies both A1 instructions`. **Affected scope:** Both A1 revisions and the round-1 finding about measuring actual enumeration. **Falsifier:** A trace of at least one real listing attempt in each run shows resolved S on the base and only the exact per-run child on the patch. A skipped call alone produces no qualifying event, and an empty trace or an after-run trace of S fails. In the disposable A1 copies only, make at least one pass deterministic by substituting a false result for the process check, then instrument the actual `root.iterdir()` site at line 406. Keep the separate uninstrumented wrapper check at plan line 112.
+- [Pass] A1 now compares new matching sibling entries against the initial listing, separately checks removal of the suite directory and plant integrity, and pairs the suite count with `OK` (plan lines 93–111). The red control names `7f2f1cce5` and the recon names `086b657ea` (lines 23, 27–30, 103). The earlier wording findings are closed by lines 53–55 and 119–121.
+- [Pass] The registered path is `validate.sh:96` → `test/gh436-merge-cleanup.sh:8-11` → `test/gh436-merge-cleanup.py:1382-1384,1592-1593`, with the Small-tier exclusion pinned at `test/ci-route.sh:239-245`. The plan confines the fix to the common Python entry point (lines 70–85). Setup can run before the first local import at `test/gh436-merge-cleanup.py:24`. The allocation sites use default temp lookup (`merge_cleanup.py:434,2025`), and the landing finally block invokes the prune path (`merge_cleanup.py:2545`). Phase A extends its safe roots from the actual fixture paths and copies the environment for tick (`test/gh534_phase_a_tests.py:97-109,303-306,532-546`). Phase B inherits the environment at `test/gh534_phase_b_tests.py:40-42,397`, including for the stub's allocation at line 145. Phase C preserves the inherited temp setting in the explicit child environments at `test/gh534_phase_c_tests.py:95-99,190-193,405-406,884-887`.
+- [Pass] The normal-exit cleanup confines removal to the captured path by parent and basename (plan lines 77–79). The retained check clone is consumed within the test at `test/gh436-merge-cleanup.py:1101-1112`; the phase B conflict fixture is consumed by its callers in the same suite (`test/gh534_phase_b_tests.py:392-408`). I found no post-exit consumer on the reviewed paths. The PRS values match `releases.sql:1062`, and the one-file cost and pruning exposure support the rationale (plan lines 129–135; `merge_cleanup.py:403-425`).
+
+[Unverified — needs clone run] Runtime behavior, the reported baseline, and the proposed acceptance runs remain implementation evidence. This turn used Verify-tier graph lookup from a separate checkout and checked the citations against the relay worktree source.
+
+Handing off to Producer (claude-a) to correct A1's probe placement and ensure it records actual enumeration.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
