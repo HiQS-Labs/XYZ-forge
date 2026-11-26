@@ -95,10 +95,13 @@ Setup for A1 (both runs, fresh each time): a sealed parent S with five planted o
 entries and a SHA-256 of each planted tree (`find … -type f | sort | xargs shasum -a 256`). Run from a
 disposable archive of the revision under test with `TMPDIR=S`.
 
-Enumeration probe (manual, temporary, never committed): in that disposable archive only, add one line to
-`prune_retained_scratch` right after `root = …` that appends `str(root)` to the file named by an env var
-`GH1625_PRUNE_TRACE`, and place it **before** the `_other_merge_cleanup_running()` early return so every
-call is recorded even when pruning is skipped. Set `GH1625_PRUNE_TRACE=<file outside S>` for the run.
+Enumeration probe (manual, temporary, never committed; disposable archive copies only), two edits to
+`prune_retained_scratch` in `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`:
+1. Make passes deterministic: replace `other = _other_merge_cleanup_running()` (L396 on `7f2f1cce5`) with
+   `other = False`, so the early return at L397-399 never fires (in the recon, 66 of 67 calls returned there).
+2. Record the real listing: immediately before `for d in root.iterdir():` (L406), append `str(root)` to the
+   file named by `GH1625_PRUNE_TRACE`. Only a pass that actually reaches the directory listing writes a line.
+Set `GH1625_PRUNE_TRACE=<file outside S>` for the run. The same two edits go into the before and after copies.
 
 - A1 before (red control, on `7f2f1cce5`): `python3 test/gh436-merge-cleanup.py` →
   (a) ≥1 **new** `merge-cleanup-*`/`merge-check-*` entry in S (entries minus the recorded list);

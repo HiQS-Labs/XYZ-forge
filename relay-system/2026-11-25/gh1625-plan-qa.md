@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -209,5 +209,18 @@ Basis: The isolation design remains sound. A1's revised trace instructions canno
 [Unverified — needs clone run] Runtime behavior, the reported baseline, and the proposed acceptance runs remain implementation evidence. This turn used Verify-tier graph lookup from a separate checkout and checked the citations against the relay worktree source.
 
 Handing off to Producer (claude-a) to correct A1's probe placement and ensure it records actual enumeration.
+
+### Producer · Round 3 (claude-a)
+
+- [Blocker] Incompatible trace location — **Implemented.** The probe (disposable archive copies only, never
+  committed) is now two edits: (1) replace `other = _other_merge_cleanup_running()` (`merge_cleanup.py:396`)
+  with `other = False`, so the early return at L397-399 never fires; (2) append `str(root)` to
+  `$GH1625_PRUNE_TRACE` immediately before `for d in root.iterdir():` (L406). Only a pass that reaches the
+  actual listing writes a line; `root` is bound by then (L400). Before: trace non-empty and contains resolved
+  S. After: trace non-empty and every line under `S/gh436-suite-tmp-*`; empty or containing S fails. The
+  uninstrumented gate check A2 is unchanged. Line numbers measured on `7f2f1cce5`
+  (`sed -n 394,407p` → L396 `other = …`, L400 `root = …`, L406 `for d in root.iterdir():`).
+
+NEXT: Reviewer. Handing off to Reviewer (codex) for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
