@@ -8,6 +8,9 @@ set -euo pipefail
 # Emits marathon.complete only when every phase is approved.
 #
 # Per-phase round cap = 2 * max_review_rounds + 1 (turns ≠ rounds; the off-by-one kills phases early).
+# GH-1637: max_review_rounds defaults to 4 (cap 9). At the cap, with reviewer findings still open, the
+# driver runs one Codex+agy consult instead of stalling: findings judged non-blocking continue to the real
+# gate as STATUS: Consult-Adjudicated (recorded, never "Approved"; landing stays the operator's).
 # Cross-phase context injection (M6) and MARATHON-STATE.md projection (M7) are deliberately deferred —
 # the boundary events already land in .tick/events/ (phase.start/approved/escalated, marathon.complete).
 #
@@ -577,6 +580,10 @@ if ((PROGRESS_ENABLED)); then
 fi
 
 idx=0
+# GH-1637: marathon-drive appends a phase id here when its terminal was consult-adjudicated, so the
+# closeout summary can label it without guessing each phase's RELAY.md path.
+MARATHON_ADJUDICATED_FILE="$(mktemp "${TMPDIR:-/tmp}/marathon-adjudicated.XXXXXX")"
+export MARATHON_ADJUDICATED_FILE
 # Read TSV with a NON-whitespace field separator (US / \037): `IFS=$'\t' read` coalesces consecutive
 # tabs (tab is whitespace-class), which would collapse empty columns and shift every field. Translate
 # tabs → \037 so empty fields (no rounds / no depends_on / no artifact / no turn_timeout_s) are
@@ -584,7 +591,7 @@ idx=0
 while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_timeout_s name; do
   [[ -n "$id" ]] || continue
   idx=$((idx + 1))
-  rounds="${rounds:-2}"
+  rounds="${rounds:-4}"   # GH-1637: was 2
   cap=$((2 * rounds + 1))
   lane_ns=""
   [[ -n "$PLAN_NAME" ]] && lane_ns="${PLAN_NAME}--${id}"
@@ -676,11 +683,13 @@ done < <(printf '%s\n' "$PLAN_TSV" | tr '\t' '\037')
 
 if ((DRY_RUN)); then
   log "dry-run complete: $phase_count phase(s) would run in order"
+  rm -f "$MARATHON_ADJUDICATED_FILE"
   exit 0
 fi
 
 if ((CLOSEOUT_PR)); then
   closeout_plan="${PLAN_NAME:-$(basename "${PLAN%.*}")}"
+  closeout_adjudicated="$(paste -sd, "$MARATHON_ADJUDICATED_FILE" 2>/dev/null || true)"
   closeout_event_dir="$ROOT/.tick/events"
   closeout_event_count=0
   closeout_event_types=""
@@ -691,12 +700,13 @@ if ((CLOSEOUT_PR)); then
     done | LC_ALL=C sort -u | paste -sd, -)"
   fi
   closeout_notes="Marathon plan: $closeout_plan
-Phases approved: $phase_count/$phase_count
+Phases approved: $phase_count/$phase_count${closeout_adjudicated:+ (consult-adjudicated, not reviewer-approved: $closeout_adjudicated)}
 Tick events: $closeout_event_count${closeout_event_types:+ ($closeout_event_types)}"
   if ! bash "$CLOSEOUT_BIN" --repo "$ROOT" --auto-pr --title "Marathon: $closeout_plan" --notes "$closeout_notes"; then
     log "closeout PR failed after successful marathon; leaving marathon successful"
   fi
 fi
+rm -f "$MARATHON_ADJUDICATED_FILE"
 "$TICK_BIN" log marathon.complete "MARATHON-RUN" --agent marathon > /dev/null 2>&1 || true
 
 # GH-75: the whole-run success record (title/sessionId = plan name, "N of M phase(s) approved").

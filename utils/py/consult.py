@@ -727,10 +727,16 @@ def main():
     with open(prompt_snapshot, "w") as f:
         f.write(prompt_text)
 
-    base_res = subprocess.run(["git", "-C", root, "stash", "create"], capture_output=True, text=True)
-    base = base_res.stdout.strip()
-    if not base:
-        base = "HEAD"
+    # GH-1637: CONSULT_PIN_SHA pins the advisors to one committed candidate: no stash of working
+    # changes and no untracked-file overlay, so what they read is exactly what gets attested.
+    pin_sha = os.environ.get("CONSULT_PIN_SHA", "").strip()
+    if pin_sha:
+        base = pin_sha
+    else:
+        base_res = subprocess.run(["git", "-C", root, "stash", "create"], capture_output=True, text=True)
+        base = base_res.stdout.strip()
+        if not base:
+            base = "HEAD"
         
     wt = tempfile.mkdtemp(prefix=f"consult-wt-{os.getpid()}-")
     
@@ -741,7 +747,7 @@ def main():
     try:
         try:
             ls_res = subprocess.run(["git", "-C", root, "ls-files", "--others", "--exclude-standard", "-z"], capture_output=True)
-            if ls_res.stdout:
+            if ls_res.stdout and not pin_sha:
                 for f in ls_res.stdout.split(b'\0'):
                     if not f: continue
                     f = f.decode('utf-8')

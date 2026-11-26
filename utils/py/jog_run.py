@@ -2112,6 +2112,9 @@ def _merge_reviewed_pr(root, pr_num, record, expected_candidate=None):
     """
     if record is None:
         return False, "merge refused: no valid reviewer attestation for this task (GH-505)"
+    if record.get("status") == relay_attest.ADJUDICATED:
+        # GH-1637: a consult tie-break is not a reviewer approval; landing it is the operator's call.
+        return False, "merge refused: consult-adjudicated lane (not a reviewer approval) awaits the operator's merge (GH-1637)"
     done, why = _token_done(root, record["task"])
     if not done:
         return False, f"merge refused: {why} (GH-505)"

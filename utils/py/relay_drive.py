@@ -172,6 +172,9 @@ def main():
     parser.add_argument("--strict-role-handoff", action="store_true")
     parser.add_argument("--target-root", dest="target_root")
     parser.add_argument("--consult-verify", dest="consult_verify", action="store_true")
+    # GH-1637: at the round cap, one Codex+agy consult adjudicates the reviewer's open findings
+    # instead of the lane stalling with no PR. Opt-in here; marathon-drive passes it.
+    parser.add_argument("--consult-at-cap", dest="consult_at_cap", action="store_true")
     parser.add_argument("--artifact-file", dest="artifact_file")
     parser.add_argument("--review-once", dest="review_once", action="store_true")
     parser.add_argument("--force", dest="force", action="store_true")
@@ -554,7 +557,7 @@ def main():
             return "?"
 
     def terminal_status(s):
-        return s in ["Approved", "Closed"]
+        return s in relay_attest.TERMINAL
 
     def escalated_status(s):
         return s == "Escalated"
@@ -846,7 +849,7 @@ def main():
         with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
             f.write(text)
 
-    def judge_terminal(ns, role, pre, shim_ok=True):
+    def judge_terminal(ns, role, pre, shim_ok=True, adjudicated=False, close_token=None, extra_record=None):
         """Judge the turn the driver just watched. Returns a verdict tuple; the CALLER picks the exit
         so a shim failure (5/6/7) keeps its own code (round-3 F3).
 
@@ -857,11 +860,18 @@ def main():
 
         Only a reviewer-role turn whose shim returned 0 can ever be attested: a failed or timed-out
         turn (shim_ok=False) is reverted whatever its role — nothing that turn wrote is trusted.
+
+        GH-1637: `adjudicated=True` is passed only by the driver's own consult-at-cap path, the one
+        writer allowed to produce relay_attest.ADJUDICATED; a turn that writes that word itself is
+        reverted as forged. `close_token` runs after the driver-run gate and before publication, so a
+        red gate or a refused close never spends the token; `extra_record` carries the provenance.
         """
         if not terminal_status(ns):
             return ("none",)
-        if role != "reviewer" or not shim_ok:
-            why = f"builder-role turn ({actor})" if role != "reviewer" else f"FAILED reviewer turn ({actor}; shim returned non-zero)"
+        if role != "reviewer" or not shim_ok or (ns == relay_attest.ADJUDICATED and not adjudicated):
+            why = (f"builder-role turn ({actor})" if role != "reviewer"
+                   else f"FAILED reviewer turn ({actor}; shim returned non-zero)" if not shim_ok
+                   else f"{actor}'s turn (only relay-drive's consult-at-cap may record {ns})")
             eprint(f"relay-drive: terminal STATUS {ns} written by {why} — reverting to {pre['status'] or 'Open'}")
             restore_status_line(pre["status"] or "Open")
             with open(relay_file, "a") as f:
@@ -951,6 +961,8 @@ def main():
                            "-c sandbox_workspace_write.network_access=true' (relay-automation/README.md, GH-1428)")
                     return ("refused", "unverified-approval")
                 return ("refused", "gate-failed")
+        if close_token is not None and not close_token():
+            return ("refused", "token-close-failed")
         tstat, tactor = token_state()
         if tstat != "done":
             return ("refused", "close-mismatch" if tactor else "token-state")
@@ -977,6 +989,8 @@ def main():
         cfg_sha = get_env("MARATHON_CONFIG_SHA256", "")
         if cfg_sha:
             record["config_sha256"] = cfg_sha
+        if extra_record:
+            record.update(extra_record)   # GH-1637: consult-adjudication provenance
         record["gate_run"] = gate_run  # GH-1428: whether the reviewer declared a green gate run
         if gate_exit is not None:  # GH-1465: the gate the driver itself ran, and its exit code
             record["gate_cmd"], record["gate_exit"] = reviewer_gate, gate_exit
@@ -1013,8 +1027,156 @@ def main():
         xyz_relay_emit("red")
         exit_escalate("unattested-terminal")
 
+
+    # ---- GH-1637: consult tie-break at the round cap -----------------------------------------
+    # A lane whose reviewer still has open findings at the cap used to stall with no PR, so the real
+    # safety net (the gate, red-then-green, the operator's merge) never ran. With --consult-at-cap the
+    # driver asks Codex and agy ONCE, over the candidate pinned to one SHA, whether the open findings
+    # block. Both NON-BLOCKING -> the driver records relay_attest.ADJUDICATED (never "Approved") through
+    # the same judge_terminal an approval uses; any REAL -> one builder repair then the reviewer decides;
+    # anything else holds. Reuses consult.sh, judge_terminal and commits_touch_non_receipt.
+    ADJ_TOKEN_RE = re.compile(r"^ADJUDICATION:[ \t]*(NON-BLOCKING|REAL|SAFETY)[ \t]*$", re.M)
+    CONSULT_ADVISORS = ("codex", "agy")
+
+    def tick_ok(*argv):
+        env = os.environ.copy()
+        env["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root_dir)
+        return subprocess.run([tick_bin, *argv], env=env, capture_output=True, text=True).returncode == 0
+
+    def token_handoff(to_agent):
+        """Route the open token to `to_agent` through its current holder (ordinary claim + release)."""
+        tstat, holder = token_state()
+        if tstat != "open" or not holder:
+            return False
+        if holder == to_agent:
+            return True
+        return (tick_ok("claim", args.relay_task, "--agent", holder, "--paths", relay_file)
+                and tick_ok("release", args.relay_task, "--agent", holder, "--to", to_agent))
+
+    def adjudication_close_token():
+        """Close the token as the reviewer, handing it over first when the builder holds the handoff.
+        On any failure the token is put back where it was found, so the lane stays recoverable."""
+        tstat, holder = token_state()
+        if tstat == "done":
+            return True
+        if tstat != "open" or not holder:
+            return False
+        if not token_handoff(args.reviewer):
+            return False
+        if tick_ok("claim", args.relay_task, "--agent", args.reviewer, "--paths", relay_file) \
+                and tick_ok("done", args.relay_task, "--agent", args.reviewer):
+            return True
+        tick_ok("release", args.relay_task, "--agent", args.reviewer, "--to", holder)
+        return False
+
+    def consult_adjudicate():
+        """-> ("hold", reason) | ("real", None) | ("adjudicated", info). `info` carries the pre-block
+        snapshot judge_terminal needs; the consult block is already in the relay file for every
+        outcome (committed for hold/real; committed with the attestation for adjudicated)."""
+        repo = target_repo()
+        try:
+            cand = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"], stderr=subprocess.DEVNULL).decode().strip()
+        except Exception:
+            cand = ""
+        base = ""
+        for ref in (get_env("RELAY_DIFF_BASE", ""), "origin/development", "development", "origin/main", "main"):
+            if not ref or not cand:
+                continue
+            mb = subprocess.run(["git", "-C", repo, "merge-base", ref, cand], capture_output=True, text=True)
+            if mb.returncode == 0 and mb.stdout.strip():
+                base = mb.stdout.strip()
+                break
+        if not (cand and base):
+            eprint("relay-drive: consult-at-cap: no candidate or integration merge-base to pin — holding")
+            return ("hold", "consult-inconclusive")
+        if not commits_touch_non_receipt(base, cand):
+            eprint(f"relay-drive: consult-at-cap: no deliverable change between {base[:12]} and {cand[:12]} (transcripts and receipts do not count) — holding")
+            return ("hold", "consult-inconclusive")
+        diff = subprocess.run(["git", "-C", repo, "diff", f"{base}..{cand}"], capture_output=True, text=True,
+                              errors="replace").stdout
+        with open(relay_file, "rb") as f:
+            pre_raw = f.read()
+        pre = {"status": file_status(), "raw": pre_raw, "canon": None, "reviewed_head": cand,
+               "isolated": get_env("RELAY_WORKTREE_ISOLATION", "1") == "1", "artifact_sha256": None}
+        if args.artifact_file:
+            with open(args.artifact_file, "rb") as f:
+                pre["artifact_sha256"] = relay_attest.sha256(f.read())
+        question = (
+            "You are one of two independent advisors breaking a tie in a code-review loop that hit its round "
+            "cap. The reviewer still lists open findings; the builder has answered. Read the relay file "
+            "(findings, dispositions, rebuttal) and the candidate diff below, and judge ONLY whether any "
+            "open finding blocks delivery. A diff that does not deliver what the brief asks is REAL.\n\n"
+            "Answer with your reasoning, then end with EXACTLY ONE line, nothing after it:\n"
+            "ADJUDICATION: NON-BLOCKING   (every open finding is wrong, already fixed, or not worth blocking)\n"
+            "ADJUDICATION: REAL           (at least one open finding is a real defect the builder can repair)\n"
+            "ADJUDICATION: SAFETY         (a safety, data-loss, security or authority concern; a human must decide)\n\n"
+            f"=== CANDIDATE {cand} (diff vs merge-base {base[:12]}) ===\n{diff[-120000:]}\n\n"
+            f"=== RELAY FILE ===\n{pre_raw.decode('utf-8', 'replace')[-120000:]}\n")
+        out_base = get_env("XYZ_ARCHIVE_ROOT") or os.path.join(root_dir, "relay-system")
+        if not os.path.isabs(out_base):
+            out_base = os.path.join(root_dir, out_base)
+        out_dir = os.path.join(out_base, time.strftime("%Y-%m-%d", time.gmtime()))
+        label = f"adjudicate-{os.path.splitext(os.path.basename(relay_file))[0]}"
+        fd, prompt_file = tempfile.mkstemp(prefix="adj-prompt-")
+        with os.fdopen(fd, "w") as f:
+            f.write(question)
+        env = os.environ.copy()
+        env["CONSULT_ROOT"] = repo
+        env["CONSULT_PIN_SHA"] = cand   # advisors read exactly the candidate: no stash, no untracked copy
+        try:
+            res = subprocess.run([consult_sh, "--prompt-file", prompt_file, "--label", label, "--out", out_dir,
+                                  "--models", ",".join(CONSULT_ADVISORS)], env=env, capture_output=True, text=True)
+            consult_out = res.stdout or ""
+        except OSError as e:
+            consult_out, res = "", None
+            eprint(f"relay-drive: consult-at-cap: could not run consult: {e}")
+        finally:
+            os.remove(prompt_file)
+        answers = {}   # advisor -> (answer path, token or None)
+        for line in consult_out.splitlines():
+            m = re.match(r"\s*\[ok\]\s+(\S+)\s+->\s+(.+?)\s*$", line)
+            if not m or m.group(1) not in CONSULT_ADVISORS or not os.path.isfile(m.group(2)):
+                continue
+            with open(m.group(2), "r", errors="replace") as f:
+                text = f.read()
+            found = ADJ_TOKEN_RE.findall(text)
+            answers[m.group(1)] = (m.group(2), text, found[0] if len(found) == 1 else None)
+        verdicts = {a: (answers[a][2] if a in answers else None) for a in CONSULT_ADVISORS}
+        if all(verdicts.values()):
+            toks = set(verdicts.values())
+            outcome = "hold-safety" if "SAFETY" in toks else ("adjudicated" if toks == {"NON-BLOCKING"} else "real")
+        else:
+            outcome = "hold-inconclusive"
+        lines = [f"\n### Consult · System — {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}",
+                 f"Round-cap tie-break (cap {args.round_cap}); candidate {cand}, diff base {base[:12]}; outcome: {outcome}.",
+                 "Advisor verdicts: " + ", ".join(f"{a}={verdicts[a] or 'NO-VALID-ANSWER'}" for a in CONSULT_ADVISORS)]
+        for a in CONSULT_ADVISORS:
+            if a in answers:
+                lines.append(f"Answer ({a}): {answers[a][0]}")
+                lines.extend("> " + ln for ln in answers[a][1].splitlines()[-40:])
+        block = "\n".join(lines) + "\n"
+        text = pre_raw.decode("utf-8", "surrogateescape")
+        if outcome == "adjudicated":
+            text, _n = relay_attest.set_header_field(text, "STATUS", relay_attest.ADJUDICATED)
+        with open(relay_file, "w", encoding="utf-8", errors="surrogateescape") as f:
+            f.write(text)
+        relay_attest.append_before_marker(relay_file, block)
+        if outcome != "adjudicated":
+            commit_relay_file(f"relay-drive: consult-at-cap {outcome} ({args.relay_task})")
+        if outcome == "adjudicated":
+            info = {"pre": pre, "adjudication": {"by": "consult", "advisors": verdicts, "candidate": cand,
+                                                 "answers": {a: answers[a][0] for a in CONSULT_ADVISORS}}}
+            return ("adjudicated", info)
+        if outcome == "real":
+            return ("real", None)
+        return ("hold", "consult-hold" if outcome == "hold-safety" else "consult-inconclusive")
+
     original_round_cap = args.round_cap
-    hard_cap = args.round_cap * 2
+    # GH-1637: with the consult tie-break the cap is cap+2 (the consult supersedes long extensions);
+    # without it the historical cap*2 ceiling is unchanged.
+    hard_cap = args.round_cap + 2 if args.consult_at_cap else args.round_cap * 2
+    consult_used = False
+    reviewer_review_seen = False   # a reviewer turn this run appended a non-empty review block
     round_idx = 0
     while round_idx < args.round_cap:
         s = file_status()
@@ -1405,7 +1567,17 @@ def main():
             
         head_after = get_head_commit()
         resolved_after = count_resolved_items()
-        
+
+        if args.consult_at_cap and role == "reviewer":
+            # GH-1637: only an appended non-empty review block counts as review coverage, so a
+            # token-only handoff can never arm the consult.
+            try:
+                with open(relay_file, "r", encoding="utf-8", errors="replace") as _rf:
+                    if review_blocks_added(rf_text_before, _rf.read()) > 0:
+                        reviewer_review_seen = True
+            except OSError:
+                pass
+
         made_progress = False
         if commits_touch_non_receipt(head_before, head_after):   # GH-976: not a receipt-only move
             made_progress = True
@@ -1418,6 +1590,43 @@ def main():
             eprint(msg)
             with open(relay_file, 'a') as f:
                 f.write(f"\n### Extension · System\n{msg}\n")
+        elif (args.consult_at_cap and round_idx == args.round_cap and not consult_used and reviewer_review_seen
+              and not terminal_status(ns) and not escalated_status(ns)):
+            # GH-1637: at the cap with no extension left and reviewer findings still open — one consult.
+            consult_used = True
+            eprint(f"relay-drive: round cap ({args.round_cap}) reached with open reviewer findings — consult tie-break (codex+agy, pinned candidate)")
+            kind, info = consult_adjudicate()
+            if kind == "hold":
+                eprint(f"relay-drive: consult tie-break did not clear the lane ({info}) — holding for a human")
+                xyz_relay_emit("red")
+                exit_escalate(info)
+            if kind == "real":
+                # One repair that ends on a reviewer turn: the builder acts first, then the reviewer.
+                _t, holder = token_state()
+                if holder == args.reviewer and not (args.builder and token_handoff(args.builder)):
+                    eprint("relay-drive: consult found a REAL finding but the token cannot be routed to the builder — holding")
+                    xyz_relay_emit("red")
+                    exit_escalate("consult-inconclusive")
+                args.round_cap += 2
+                hard_cap += 2
+                eprint(f"relay-drive: consult judged an open finding REAL — one repair granted (builder then reviewer), cap now {args.round_cap}")
+            if kind == "adjudicated":
+                actor = args.reviewer   # the record names the reviewer whose findings the consult overrode
+                verdict = judge_terminal(relay_attest.ADJUDICATED, "reviewer", info["pre"], adjudicated=True,
+                                         close_token=adjudication_close_token,
+                                         extra_record={"adjudication": info["adjudication"]})
+                if verdict[0] == "attested":
+                    print(f"relay-drive: relay terminated (STATUS: {relay_attest.ADJUDICATED}, consult-adjudicated at round cap "
+                          f"{args.round_cap}; reviewer {args.reviewer} findings judged non-blocking by {', '.join(info['adjudication']['advisors'])})")
+                    lane_attempt_reset(tick_repo_root, args.relay_task)
+                    xyz_relay_emit("green")
+                    sys.exit(0)
+                if verdict[0] == "refused":
+                    restore_status_line(info["pre"]["status"] or "Open")
+                    commit_relay_file(f"relay-drive: consult-adjudication refused ({args.relay_task}: {verdict[1]})")
+                eprint(f"relay-drive: consult-adjudicated terminal REFUSED — {verdict[1] if len(verdict) > 1 else verdict[0]}")
+                xyz_relay_emit("red")
+                exit_escalate(verdict[1] if verdict[0] == "refused" else "forged-terminal")
 
 
     s = file_status()

@@ -44,7 +44,7 @@
 #   brief              path (repo-relative) to the phase's task markdown                  (required)
 #   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)
 #   turn_timeout_s     per-turn wall-clock cap exported as RELAY_TURN_TIMEOUT_S            (optional)
-#   max_review_rounds  round-cap = 2*N+1 (default 2 → cap 5)                              (optional)
+#   max_review_rounds  round-cap = 2*N+1 (default 4 → cap 9; GH-1637)                              (optional)
 #   depends_on         run this phase only after the named phase is approved              (optional,
 #                      SCALAR ONLY — one phase id, unquoted: `depends_on: p3`. NOT a list:
 #                      `depends_on: [p3]` parses as the literal string "[p3]" and aborts the

@@ -374,6 +374,17 @@ Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-a
 (with `--review-once`) reviewer completed a single non-approval review. Inspect whose-turn mid-drive
 with `tick info <task>` (the verb is `info`, not `status`).
 
+**Consult tie-break at the round cap (GH-1637, `--consult-at-cap`, passed by `marathon-drive`).** A
+reviewer that still has open findings at the cap no longer ends the lane in a stall: the driver runs one
+`consult.sh` (Codex + agy, pinned to the candidate SHA via `CONSULT_PIN_SHA`) and requires one final
+`ADJUDICATION: NON-BLOCKING|REAL|SAFETY` line from each. Both `NON-BLOCKING` → the driver records
+`STATUS: Consult-Adjudicated` (its own attested terminal, *not* `Approved`; jog auto-merge and express
+refuse it) and the lane continues to its real gate and a ready PR, landing stays the operator's call. Any
+`REAL` → one builder repair then the reviewer decides; any `SAFETY`, an empty deliverable diff, or an
+incomplete/conflicting answer → escalate (`consult-hold` / `consult-inconclusive`). Without the flag the
+historical `cap-stalled` behavior and the `round_cap * 2` ceiling are unchanged; with it the ceiling is
+`round_cap + 2`. `marathon.sh` now defaults `max_review_rounds` to 4 (cap 9).
+
 ### Cross-model windows (Codex / agy)
 In the poll-based multi-window flow, non-Claude windows still need a wake-up path.
 Without `relay-loop.sh --background --cross-model-cmd <shim>`, the operator's

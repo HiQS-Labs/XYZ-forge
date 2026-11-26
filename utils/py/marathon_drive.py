@@ -134,13 +134,21 @@ def _derive_issue_number(lane, task, brief_name):
     return None
 
 
-def lane_pr_notes(phase_id, issue, closes_issue):
+def lane_pr_notes(phase_id, issue, closes_issue, adjudication=None):
     """The lane PR body (GH-561). GH-1234: only a caller that knows this lane finishes the issue
     (Jog: one issue, one phase) may close it; a wave phase of a multi-phase umbrella only
     references it. No derivable issue leaves the body as it was."""
     notes = f"Automated marathon closeout for phase `{phase_id}` (GH-561)."
     if issue:
         notes += f"\n\nCloses #{issue}" if closes_issue else f"\n\nRefs #{issue}"
+    if adjudication:
+        # GH-1637: the reader must see that no reviewer approved this lane.
+        verdicts = ", ".join(f"{a}={v}" for a, v in sorted(adjudication.get("advisors", {}).items()))
+        answers = "\n".join(f"- {a}: `{p}`" for a, p in sorted(adjudication.get("answers", {}).items()))
+        notes += ("\n\n**consult-adjudicated** (not a reviewer approval): the reviewer still had open findings at the "
+                  f"round cap; a Codex+agy consult judged them non-blocking ({verdicts}) over candidate "
+                  f"`{adjudication.get('candidate', '')[:12]}`. The advisors' verdicts and answer excerpts are in the "
+                  f"committed phase relay transcript; answer files:\n{answers}\n\nThe lane gate passed; merge is the operator's call.")
     return notes
 
 
@@ -1748,9 +1756,14 @@ def main():
                 file_list += f" (+{len(lines) - 5} more)"
 
             dur_str = f" in {duration_s:.1f}s" if duration_s else ""
-            body = (f"### Phase QA Attestation: Phase `{args.phase_id}` Approved ✅\n"
+            adj = _RESULT.get("adjudication")
+            verdict_head = ("Consult-Adjudicated ⚠️ (reviewer findings judged non-blocking by consult; not a reviewer approval)"
+                            if adj else "Approved ✅")
+            body = (f"### Phase QA Attestation: Phase `{args.phase_id}` {verdict_head}\n"
                     f"{marker}\n"
                     f"- **Reviewer:** `{args.reviewer}` ({args.builder})\n"
+                    + (f"- **Consult:** {', '.join(f'{a}={v}' for a, v in sorted(adj['advisors'].items()))}; "
+                       f"answers in the committed phase relay transcript\n" if adj else "") +
                     f"- **Evidence Receipt:** `gate: {gate_name} @ {head_sha[:8]} -> PASS (exit 0{dur_str})`\n"
                     f"- **Artifacts:** {file_list or 'none'}\n"
                     f"- **Recorded:** {_utc_now()}")
@@ -2550,7 +2563,7 @@ relay-file: {rel_relay}
         return ""
 
     def terminal_status(s):
-        return s in ("Approved", "Closed")
+        return s in relay_attest.TERMINAL
 
     def token_state(task_name=None):
         try:
@@ -2732,7 +2745,7 @@ relay-file: {rel_relay}
         # --no-commit is the load-bearing flag: closeout's default is `git add -A` + commit, which in
         # an automated call would sweep every unrelated dirty file in the target into the PR. The
         # driver has already committed everything this phase produced.
-        notes = lane_pr_notes(args.phase_id, lane_issue_number(), args.lane_closes_issue)
+        notes = lane_pr_notes(args.phase_id, lane_issue_number(), args.lane_closes_issue, _RESULT.get("adjudication"))
         cmd = [closeout, "--repo", repo, "--head", head, "--base", base,
                "--open-only", "--no-commit",
                "--title", f"Marathon lane {args.phase_id}",
@@ -2852,6 +2865,14 @@ relay-file: {rel_relay}
         _RESULT["attest_path"] = relay_attest.path_for(record["task"], record["target_repo"])
         _phase_memory_sample(f"{args.phase_id}-complete", root=root, tick_bin=tick_bin, relay_task=relay_task)
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
+        if record.get("adjudication"):
+            # GH-1637: recorded terminal, distinct from Approved; the gate above still ran.
+            success_text = f"phase {args.phase_id} complete — STATUS: {record['status']} (consult-adjudicated, not a reviewer approval), gate passed"
+            _RESULT["adjudication"] = record["adjudication"]
+            adj_file = get_env("MARATHON_ADJUDICATED_FILE", "")
+            if adj_file:
+                with open(adj_file, "a") as _af:
+                    _af.write(f"{args.phase_id}\n")
         log(success_text)
         xyz_marathon_emit("green", success_text)
         head_sha = candidate
@@ -3069,7 +3090,7 @@ relay-file: {rel_relay}
 
     cli_round_cap = args.round_cap
     if cli_round_cap is None:
-        args.round_cap = 5
+        args.round_cap = 9   # GH-1637: 4 review rounds (2*4+1 turns); was 5
         m = re.search(r'^[ \t]*[-*]?[ \t]*round-cap:[ \t]*(\d+)', brief_text, re.MULTILINE | re.IGNORECASE)
         if m:
             args.round_cap = int(m.group(1))
@@ -3526,6 +3547,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
             cmd2.append("--review-once")   # GH-207: one approval pass, no round-cap
         else:
             cmd2.extend(["--round-cap", str(args.round_cap)])
+            cmd2.append("--consult-at-cap")   # GH-1637: tie-break at the cap instead of stalling
         if args.target_root:
             cmd2.extend(["--target-root", args.target_root])
         env2 = os.environ.copy()
