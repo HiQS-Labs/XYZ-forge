@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -422,5 +422,166 @@ Dispositions (both accepted and implemented; repair `733ef8339`, evidence in the
 - The recognizer-exception boundary (`hold rules failed`) remains as defensive code; no replay input reaches it now that shape errors are caught earlier.
 
 Existing suites at `733ef8339` (one disposable clone, committed state): jog-queue, gh280 (227 pass / 0 fail), gh291, gh505, gh202, gh454, gh232, gh168 all rc=0; base `641558361` results unchanged from round 1. S2, S3, N1 stay closed. Handing off to Reviewer for round 3.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: FAIL
+Basis: The working-capture ambiguity and malformed-label repairs now pass the focused probes and retained replays. One selected-capture gap remains: the canonical resolver can select a held capture from `4-MISC`, while the new check reads only inbox/working candidates. The actual admission slice reaches its lease call for that concrete held input. This violates the no-attempt refusal contract before any later Preflight decision.
+
+swept file: yes
+gate run: no
+
+Swept the full `utils/py/jog_run.py`, canonical resolver module, gh280 suite, replay and drivers; inspected the seeded diff, plan/history and evidence within the settled holds-only scope. B2 below is the in-scope interaction with pre-existing resolver/legacy behavior; no other in-scope pre-existing defect was established. No Git command, suite, executable fixture, worker, database writer or network request ran. The narrow probe extracts functions and the actual admission statements, replaces subprocess responses and both writer calls with in-memory substitutes, and writes inputs only under `.relay-scratch/tmp`. No phase gate is configured to run after this turn.
+
+- [Blocker] **B2 — The selected capture can fall outside the checked candidate set (Q1/Q2/Q6).**
+  **Observed input:** Form 1, P7 below (exit 0): a clean live issue `{"state":"OPEN","body":"Ready","labels":[]}`, no inbox/working captures, and the sole capture `PROJECT/4-MISC/GH-901-HELD.md` containing exactly `---\ngh_issue: 901\n---\nHELD: owner decision\n`. The real resolver selects that file, the real `hold_refusal` returns `None`, and the actual `jog_run_main` admission statements call the in-memory lease substitute: `actual admission slice, archived body='HELD: owner decision', writer calls=['lease']`. This is a measured admission failure, not a claim that a real worker was launched.
+  Trace: `jog_run.py:1643–1646` delegates to `wave_reconcile.find_issue_doc`, whose default folders at `wave_reconcile.py:1140–1144` include `3-COMPLETED` and `4-MISC`. The new guard explicitly narrows its candidates to `2-WORKING`/`1-INBOX` at `jog_run.py:1690–1691`, thus checks no capture body for this input and returns `None` at `:1717`. The loop calls that guard at `:2957`, reaches the lease at `:2968–2969`, then resolves the omitted document at `:2977`; only inbox documents are promoted (`:2978`). The actual lease increments `attempt_count` at `releases_app.py:5095–5097`. A later refusal therefore cannot satisfy the promised no-attempt hold. The legacy path further uses the same default resolver to read contract artifacts at `jog_run.py:2037–2046`; its outer Preflight is conditional on a root `utils/py/swarm_preflight.py` at `:3042–3043`, while the relay adapter supports vendored runners. This latter dispatch implication is source evidence only; it was not exercised end to end here.
+  **Affected scope:** An otherwise admitted issue whose canonical selected capture lies outside inbox/working and contains a recognized hold or unfinished dependency. The shared helper affects run and retry-build; the measured call-site failure is run. Do not broaden this into rejecting every historical copy or changing the canonical lifecycle selector.
+  **Fix:** Preserve the current all-active-candidates check, and also check the document selected by the existing `find_issue_doc` contract, or establish an equivalent refusal before the lease when a selectable capture lies outside the checked set. Reuse the existing selector; no parallel selection policy or new suite is needed.
+  **Falsifier:** For the exact sole-`4-MISC` held input, the helper must report `hold: capture body HELD: marker`, and the extracted admission slice must record `['park']` with no lease. In the existing disposable-clone replay, both run/retry-build must leave attempt count, execution count, capture location/bytes and native attempts unchanged with zero worker calls. Removing the hold must preserve prior behavior; unique clean working/inbox, two clean working candidates and genuinely absent captures must retain their current behavior. An existing pre-lease guard that demonstrably rejects this exact otherwise admitted input would falsify the call-path claim; the extracted slice contains none. End-to-end verification for this new case remains **[Unverified — needs clone run]**; extend the existing replay, not a new suite.
+
+- [Pass] **B1 closed for the reported working-capture/hint cases; S1 closed (Q1).** P7 pins the canonical hint to A and separately holds A and B: both return `hold: capture body HELD: marker`; two clean captures return `None`. This measures the union at `jog_run.py:1689–1692`. `labels=[{}]`, `[{"name":null}]` and `["status:held"]` now all return the explicit incomplete-response refusal, while `[]` passes and `[{"name":"status:held"}]` preserves the positive label reason (`:1681–1683`, `:1708–1710`). Retained `TESTS-RESULTS/2026-11-25+GH-1476-holds/change/ambiguous.log:3–8`, `change/ambiguous-a.log:3–8`, `change/ambiguous-retry-build.log:3–7`, `change/ambiguous-a-retry-build.log:3–7`, and `change/issue-nolabelname.log:3–8` show zero calls and unchanged state. Their corresponding base logs show one call and failed refusal assertions. B2 is the remaining boundary of the wider “every capture either could execute” claim, rather than a reason to repeat those repaired cases.
+
+- [Pass] **Refusal placement/control flow and dependency truth table remain sound for inputs actually checked (Q2/Q3).** Run's park/continue or checkpoint break at `jog_run.py:2957–2965` precedes lease `:2968`, promotion `:2978` and dispatch; retry's park/return at `:1111–1115` precedes its lease/phase `:1116–1117`. Simulation skips the new guard explicitly at `:2957`. `releases_app.py:5125–5127` changes status/reason/lease without incrementing attempts. P7 exercises the real dependency condition `jog_run.py:1701–1707`: OPEN issue, CLOSED unmerged PR and unavailable lookup remain held; CLOSED issue and MERGED PR pass. These are supplied-response controls, not a live GitHub transport test.
+
+- [Pass] **S2/S3/N1 stay closed; retained proof is now explicit about current harness bytes (Q4/Q5).** `TESTS-RESULTS/2026-11-25+GH-1476-holds/run-cases.sh:20–22` owns its temporary fixture root rather than recovering a cleanup operand from a log. `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt:277–279,290–302` measures native names/bytes, requires a nonempty initial capture, and checks the specific hold reason alongside calls/attempts/executions. Earlier measured assertion red controls remain in this thread; retained mutation logs still fail the preservation assertion as intended. P7 checked all 61 current manifest artifacts for nonempty content and exact SHA-256. `TESTS-RESULTS/2026-11-25+GH-1476-holds/provenance.jsonl:1` explicitly records the current harness hash and explains its difference from the historical Day 1 manifest, so that old digest is not represented as current evidence.
+
+- [Pass] **Existing-suite receipts support their stated runtime, not final-head qualification (Q5/Q6/Q7).** `TESTS-RESULTS/2026-11-25+GH-1476-holds/suites-change/summary.txt:1–8` reports all eight existing suites rc=0 at `733ef833`; the base summary reports the corresponding eight successes. The gh280 fixture additions install the shared recognizer at `test/gh280-jog-marathon-adapter.sh:169–171` and provide the needed issue response at `:55–60`; `TESTS-RESULTS/2026-11-25+GH-1476-holds/suites-change/gh280-jog-marathon-adapter.sh.log:230` reports `227 pass, 0 fail`. No new suite or runtime gate was introduced. These receipts do not cover B2's archived-selection input, and no suite was rerun in this worktree.
+
+**P7 — exact narrow probe and decisive output (exit 0).** The in-memory canonical module preserves its actual folder defaults and selection logic; the mocked ledger supplies hint A for the working-capture regression, then the working files are moved out of candidate folders inside scratch. The admission probe executes only the existing statements from `gh_num` through the lease expression in a one-iteration wrapper. Both writers only append to a Python list, and all subprocess calls return supplied JSON. The Ready mutation is the paired control. Neither a dispatcher nor a database writer is invoked.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+import ast, __future__, glob, hashlib, json, os, re, sys, tempfile, types
+from pathlib import Path
+
+def defs(path, names, ns):
+    nodes = [n for n in ast.parse(Path(path).read_text()).body
+             if isinstance(n, ast.FunctionDef) and n.name in names]
+    assert len(nodes) == len(names)
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), path, 'exec',
+                 flags=__future__.annotations.compiler_flag), ns)
+
+root = Path(tempfile.mkdtemp(prefix='holds-r3-', dir=os.environ['TMPDIR']))
+working = root / 'PROJECT/2-WORKING'
+working.mkdir(parents=True)
+a, b = [working / ('GH-901-' + name + '.md') for name in ('A', 'B')]
+ready = '---\ngh_issue: 901\n---\nReady\n'
+held = '---\ngh_issue: 901\n---\nHELD: owner decision\n'
+w = types.ModuleType('wave_reconcile')
+w.__dict__.update(Path=Path, os=os, re=re,
+    ledger_rows=lambda *args: [{'gh_number': 901, 'doc_path': str(a.relative_to(root))}])
+defs('utils/py/wave_reconcile.py',
+     {'parse_doc_frontmatter', 'doc_issue_number', '_issue_doc_candidates',
+      'issue_doc_index', 'find_issue_doc', 'find_issue_doc_candidates'}, w.__dict__)
+sys.modules['wave_reconcile'] = w
+payload = {'state':'OPEN', 'body':'Ready', 'labels':[]}
+dep = {}
+def response(argv, **kw):
+    return types.SimpleNamespace(returncode=0, stdout=json.dumps(payload if argv[3]=='901' else dep))
+src='utils/py/jog_run.py'
+ns=dict(Path=Path, os=os, glob=glob, json=json, __file__=str(Path(src).resolve()),
+        subprocess=types.SimpleNamespace(run=response))
+defs(src, {'_gh_issue_json', 'hold_refusal', 'find_issue_doc'}, ns)
+check=lambda: ns['hold_refusal'](str(root),901)
+for which in ('A','B','neither'):
+    a.write_text(held if which=='A' else ready)
+    b.write_text(held if which=='B' else ready)
+    print('hint=A, held='+which, 'resolver='+Path(w.find_issue_doc(root,901)).name, 'result='+repr(check()))
+for labels in [[{}],[{'name':None}],['status:held'],[],[{'name':'status:held'}]]:
+    payload={'state':'OPEN','body':'Ready','labels':labels}
+    print('labels='+json.dumps(labels), 'result='+repr(check()))
+payload={'state':'OPEN','body':'This work comes after #902 here.','labels':[]}
+for dep in [{'state':'OPEN','url':'https://github.com/example/example/issues/902'},
+            {'state':'CLOSED','url':'https://github.com/example/example/issues/902'},
+            {'state':'CLOSED','url':'https://github.com/example/example/pull/902'},
+            {'state':'MERGED','url':'https://github.com/example/example/pull/902'},{}]:
+    print('dependency='+json.dumps(dep), 'result='+repr(check()))
+payload={'state':'OPEN','body':'Ready','labels':[]}
+a.rename(root/'A.saved'); b.rename(root/'B.saved')
+print('absent capture result='+repr(check()))
+archived=root/'PROJECT/4-MISC/GH-901-HELD.md'
+archived.parent.mkdir(parents=True)
+archived.write_text(held)
+print('archived selected='+str(Path(ns['find_issue_doc'](str(root),901)).relative_to(root)))
+print('archived selected body='+archived.read_text().split('---',2)[2].strip())
+print('archived hold_refusal='+repr(check()))
+print('legacy root-preflight exists='+str((root/'utils/py/swarm_preflight.py').is_file()))
+
+folder=Path('TESTS-RESULTS/2026-11-25+GH-1476-holds')
+rows=[json.loads(line) for line in (folder/'provenance.jsonl').read_text().splitlines()]
+for row in rows:
+    raw=Path('TESTS-RESULTS',row['artifact']).read_bytes()
+    assert raw and hashlib.sha256(raw).hexdigest()==row['sha256'],row['artifact']
+print('nonempty matching manifest artifacts='+str(len(rows)))
+seed=Path('.relay-artifacts/gh1476-holds-whole-diff.patch')
+idx=None; checked=0; files=set()
+for line in seed.read_text().splitlines():
+    if line.startswith('+++ b/'):
+        path=line[6:]; actual=Path(path).read_text().splitlines(); files.add(path);idx=None
+    elif line.startswith('@@'): idx=int(re.search(r'\+(\d+)',line)[1])-1
+    elif idx is not None and line.startswith(('+',' ')):
+        assert actual[idx]==line[1:],(path,idx+1)
+        idx+=1;checked+=1
+    elif line.startswith('diff --git'):idx=None
+print('seed lines='+str(checked)+' files='+str(len(files)))
+print('seed sha256='+hashlib.sha256(seed.read_bytes()).hexdigest())
+# Read-only execution of the actual admission/lease slice; both writers only record in memory.
+tree=ast.parse(Path(src).read_text())
+fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='jog_run_main')
+loop=next(n for n in ast.walk(fn) if isinstance(n,ast.While))
+start=next(i for i,n in enumerate(loop.body) if isinstance(n,ast.Assign)
+           and any(isinstance(t,ast.Name) and t.id=='gh_num' for t in n.targets))
+end=next(i for i,n in enumerate(loop.body) if isinstance(n,ast.Expr)
+         and isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Name)
+         and n.value.func.id=='jog_acquire_lease')
+assert start < end
+slice_loop=ast.For(target=ast.Name(id='_one',ctx=ast.Store()),iter=ast.List(elts=[ast.Constant(0)],ctx=ast.Load()),body=loop.body[start:end+1],orelse=[])
+code=compile(ast.fix_missing_locations(ast.Module(body=[slice_loop],type_ignores=[])),src,'exec')
+for status in ('HELD: owner decision','Ready'):
+    archived.write_text('---\ngh_issue: 901\n---\n'+status+'\n')
+    seen=[]
+    env={**ns,'row':{'gh_number':901,'attempt_count':0,'global_id':'fixture'},
+         'root':str(root),'target':str(root),'simulate':False,
+         'checkpoint':False,'supervised':False,
+         'jog_set_status':lambda *a,**k:seen.append('park'),
+         'jog_acquire_lease':lambda *a,**k:seen.append('lease')}
+    exec(code,env)
+    print('actual admission slice, archived body='+repr(status)+', writer calls='+repr(seen))
+PROBE
+```
+
+```text
+hint=A, held=A resolver=GH-901-A.md result='hold: capture body HELD: marker'
+hint=A, held=B resolver=GH-901-A.md result='hold: capture body HELD: marker'
+hint=A, held=neither resolver=GH-901-A.md result=None
+labels=[{}] result='hold-check-unavailable: live issue response incomplete'
+labels=[{"name": null}] result='hold-check-unavailable: live issue response incomplete'
+labels=["status:held"] result='hold-check-unavailable: live issue response incomplete'
+labels=[] result=None
+labels=[{"name": "status:held"}] result='hold: issue label status:held'
+dependency={"state": "OPEN", "url": "https://github.com/example/example/issues/902"} result='hold: issue after #902'
+dependency={"state": "CLOSED", "url": "https://github.com/example/example/issues/902"} result=None
+dependency={"state": "CLOSED", "url": "https://github.com/example/example/pull/902"} result='hold: issue after #902'
+dependency={"state": "MERGED", "url": "https://github.com/example/example/pull/902"} result=None
+dependency={} result='hold: issue after #902'
+absent capture result=None
+archived selected=PROJECT/4-MISC/GH-901-HELD.md
+archived selected body=HELD: owner decision
+archived hold_refusal=None
+legacy root-preflight exists=False
+nonempty matching manifest artifacts=61
+seed lines=4150 files=78
+seed sha256=4cc2cd63629e8fcbde2e0a3ae72f393ed018b1073086f5c6e248887373e3b435
+actual admission slice, archived body='HELD: owner decision', writer calls=['lease']
+actual admission slice, archived body='Ready', writer calls=['lease']
+probe_exit=0
+```
+
+Evidence boundary: Verify-tier graph discovery used `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-26T04:31:47Z`, which indexes a different checkout. It lacked the new helpers/evidence; coverage reported gh280 lines 729–730 partial and the new evidence paths missing. Exact local reads covered those ranges and supplied current call traces. The graph trace tool was denied by automatic approval policy; no permission was requested or bypassed. This is source fallback, not a completeness claim for that graph. Before editing this relay, the read-only seed comparison matched 4,150 new/context lines across 78 files; seed SHA-256 `4cc2cd63629e8fcbde2e0a3ae72f393ed018b1073086f5c6e248887373e3b435`. Git history and final-head gate equivalence were not inspected under the no-Git restriction.
+
+Handing off to Producer (claude-a) — address B2's selected-capture omission and retain a failing-before/passing-after case in the existing disposable-clone replay. Earlier B1/S1/S2/S3/N1 are closed for the inputs cited above.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
