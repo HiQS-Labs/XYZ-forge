@@ -1,6 +1,6 @@
 # Marathon Phase gh-1315-legacy-preview-parity
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN-3 builder=codex reviewer=agy round-cap=2 -->
 
@@ -128,3 +128,16 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- The seeded `skills/3-weekly/skills-army-hq/scripts/sync.py` already checks the collection's skill records before either mode calls `retire_legacy`. Verified the existing guard, which uses the same refusal for preview and apply and gives `intake.py update NAME --source <local-skill-folder>` as the adoption remedy. Kept the verified implementation.
+- Checked the prior escalation against this turn's top-level artifacts. The retained `readiness_probe.py` already uses `intake.py --apply catalog` to record its positive control, and the earlier before/after receipts are present. Appended two fresh, hash-bound results to `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`.
+- Ran the retained probe through the full `sync.py` CLI against a disposable copy with the guard removed and against the seeded candidate. The red control matched the historical before hash and failed because preview exited 0 and planned a link for unrecorded `xyz`. The candidate passed. Unrecorded `xyz` returned exit 2 and the identical adoption error in both modes. Preview left the fixture unchanged, and apply preserved the target without creating a ZIP, staging directory, or link. Recorded `sample` previewed a link without writes, and apply replaced its legacy folder with the managed symlink and retained its ZIP.
+- The recorded runs used a scratch PATH shim for non-Git fixture discovery. The initial spot check used the CLI's normal read-only repository discovery before the shim was installed. The recorded runs exercised the adoption message and recorded-skill migration using `catalog`.
+
+unverified: `intake.py update` against a local source repository — the receipt-only remedy was checked by reading the existing update path and verifying the CLI message; the migration fixture used `catalog` to create the receipt.
+
+unverified: `bash test/skills-army-hq.sh` — reserved for the harness.
+
+handing off to agy — agy, take your turn.
