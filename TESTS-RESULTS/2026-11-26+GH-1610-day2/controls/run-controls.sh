@@ -26,11 +26,15 @@ task-local|
 hold|
 shared|
 refusal|
+cap-stalled|
+cap-mismatch|
+no-progress|
 exhausted|
 shared-red|1
 task-local-red|0
 exhausted-red|0
 refusal-red|1
+cap-stalled-red|0
 exhausted-mutate-history-red||history
 exhausted-mutate-failed-red||failed
 CASES

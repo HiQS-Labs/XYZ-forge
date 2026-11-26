@@ -430,3 +430,12 @@ same execution clone) as task-local; any other parked Marathon result still halt
 published-approval continuation and the pre-lease human-hold park. Evidence and the red-then-green controls are under
 `TESTS-RESULTS/2026-11-26+GH-1610-day2/`. OL-12 credit remains the operator's call after review of that
 evidence and the live run recorded on #1610.
+
+Operator decision recorded on #1610 (2026-11-26): an identity-matched, current `cap-stalled` receipt (reviewer
+round cap, Marathon exit 4, gate not run, no PR) is also a qualifying task-local outcome; `_jog_review_cap_stalled`
+implements it beside `_jog_task_local_failure`. Both new predicates share `_jog_receipt_is_current` (the drive's own
+exit status and a receipt newer than the recorded dispatch instant) and Jog sets any receipt already at the result
+path aside before dispatching. Shared stops (`cap-or-close-mismatch`, `no-progress`, refusals, crashes) still start
+zero successors. Open finding at the review cap: a delayed receipt from an older concurrent Marathon process on the
+same execution id could still be mistaken for the current one; two live drives in one clone are excluded by the
+clone driver lock, so it was accepted open and is stated in the PR.

@@ -14,10 +14,10 @@ sys.path.insert(0, os.path.join(repo, "utils", "py"))
 import jog_run
 if mutate:
     import inspect
-    orig = inspect.getsource(jog_run._jog_lane_exhausted)
+    orig = inspect.getsource(jog_run._jog_receipt_is_current)
     src = orig
     if mutate == "drive-exit":
-        src = src.replace('latest.get("drive_exit") != 8 or ', "")
+        src = src.replace('latest.get("drive_exit") != drive_exit or ', "")
     elif mutate in ("set-aside", "set-aside-dirs"):
         pass
     elif mutate == "fresh":
@@ -44,17 +44,24 @@ def receipt(exit_code=8, count=2, cap=2, issue="901", eid="gh901-exec1"):
             "gate": {"cmd": "bash test/fixture-gate.sh", "result": "not-run", "exit": None, "receipt_path": None},
             "acceptance": None, "pr": {"number": None, "url": None, "state": None}, "pr_note": None,
             "relay_status": None, "timestamps": {"started_at": T, "finished_at": T}}
-def run(name, expect, rec, written_offset=1.0, **record):
+def stalled(reason="cap-stalled", exit_code=4, gate="not-run", pr=None, issue="901", eid="gh901-exec1"):
+    r = receipt(exit_code=exit_code, issue=issue, eid=eid)
+    r.update({"outcome": "escalated", "reason": reason}); r["gate"]["result"] = gate; r["pr"]["number"] = pr
+    return r
+def run(name, expect, rec, written_offset=1.0, fn=None, **record):
     """written_offset: receipt file mtime relative to the recorded dispatch instant (negative = older)."""
     path = os.path.join(work, name + ".json"); json.dump(rec, open(path, "w"))
     dispatched = time.time()
     os.utime(path, (dispatched + written_offset, dispatched + written_offset))
-    latest = {"execution_id": "gh901-exec1", "status": "projected-parked", "outcome": "parked",
-              "result_path": path, "started_at": T, "dispatched_epoch": dispatched, "drive_exit": 8}
+    stl = fn == "stalled"
+    latest = {"execution_id": "gh901-exec1", "status": "projected-failed" if stl else "projected-parked",
+              "outcome": "escalated" if stl else "parked",
+              "result_path": path, "started_at": T, "dispatched_epoch": dispatched, "drive_exit": 4 if stl else 8}
     latest.update(record)
     jog_run.jog_load_state = lambda root, gid: {"executions": [latest]}
     jog_run._ledger_abs_path = lambda root, gid, p: p
-    got = jog_run._jog_lane_exhausted(work, target, "901", "gid", 0)
+    pred = jog_run._jog_review_cap_stalled if stl else jog_run._jog_lane_exhausted
+    got = pred(work, target, "901", "gid", 0)
     ok = (got is not None) == expect
     print(f"PROBE {name} expect={'accept' if expect else 'refuse'} got={'accept' if got else 'refuse'} {'OK' if ok else 'FAIL'}")
     return ok
@@ -68,6 +75,15 @@ res = [
     run("other-issue-receipt", False, receipt(issue="902")),
     run("below-cap", False, receipt(count=1, cap=2)),
     run("zero-cap-native-refusal", True, receipt(count=2, cap=0)),
+    run("stalled-fresh-cap-stalled", True, stalled(), fn="stalled"),
+    run("stalled-stale-receipt-process-killed", False, stalled(), fn="stalled", written_offset=-5, drive_exit=-9),
+    run("stalled-stale-same-second-write-failed-exit-4", False, stalled(), fn="stalled", written_offset=-0.2),
+    run("stalled-wrong-process-exit", False, stalled(), fn="stalled", drive_exit=2),
+    run("stalled-other-reason-cap-or-close-mismatch", False, stalled(reason="cap-or-close-mismatch"), fn="stalled"),
+    run("stalled-no-progress-exit-3", False, stalled(reason="no-progress", exit_code=3), fn="stalled", drive_exit=3),
+    run("stalled-after-gate-ran", False, stalled(gate="red"), fn="stalled"),
+    run("stalled-with-pr", False, stalled(pr=7), fn="stalled"),
+    run("stalled-other-issue-receipt", False, stalled(issue="902"), fn="stalled"),
 ]
 # review r3: a staged stale receipt, even with a FUTURE mtime, must be set aside (kept, renamed) before dispatch
 # so that nothing at the result path can predate the drive; without the helper the file would still be there.

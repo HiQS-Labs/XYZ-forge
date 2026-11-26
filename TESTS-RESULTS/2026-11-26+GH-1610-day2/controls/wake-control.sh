@@ -12,6 +12,9 @@
 #   exhausted   row 1 pending with its native lane history already at the cap (2/2)     -> successor expected once
 #   hold        row 1 capture carries a human HELD: marker                               -> successor expected once
 #   shared      row 1 worker edge crashes (exit 9, a shared/unclassified stop)           -> successor expected ZERO times
+#   cap-stalled row 1 builder/reviewer hit the review round cap (worker edge exit 4: escalated cap-stalled)   -> successor expected once
+#   cap-mismatch row 1 relay exit 4 WITHOUT the cap-stalled reason (cap-or-close-mismatch, a shared stop) -> successor expected ZERO times
+#   no-progress row 1 builder made no progress (worker edge exit 3, a shared/unclassified stop)  -> successor expected ZERO times
 #   refusal     row 1 capture acceptance differs from the live issue (Preflight NOT-READY, parked) -> successor expected ZERO times
 # The assertion prints one `ASSERT ...` line. EXPECT_SUCC overrides the case default so that an assertion
 # can be turned into a red control (a wrong expectation must print FAIL).
@@ -64,6 +67,10 @@ issue=unknown
 case "$*" in *gh-901*|*GH-901*|*gh901*) issue=901 ;; *gh-902*|*GH-902*|*gh902*) issue=902 ;; esac
 printf '%s %s\n' "$issue" "$*" >> "$WORK/relay-drive-calls"
 rc="${RD_EXIT_902:-9}"; [ "$issue" != 901 ] || rc="${RD_EXIT_901:-0}"
+if [ "$issue" = 901 ] && [ -n "${RD_ESCALATION_REASON:-}" ]; then   # what the real relay-drive records for exit 4
+  tr0=""; prev0=""; for a in "$@"; do [ "$prev0" != --target-root ] || tr0="$a"; prev0="$a"; done
+  mkdir -p "$tr0/.relay-scratch" && printf '%s\n' "$RD_ESCALATION_REASON" > "$tr0/.relay-scratch/escalation-reason"
+fi
 if [ "$rc" -eq 0 ]; then
   bash "$ATTEST_STUB" "$@"
   # the real worker commits its turn; the attest stub only edits the tracked relay file, which would leave the
@@ -167,6 +174,10 @@ if [ "$CASE" = exhausted ]; then   # row 1's native lane history is already at t
 fi
 RD1=0; RD2=9
 [ "$CASE" != shared ] || RD1=9
+[ "$CASE" != cap-stalled ] || RD1=4
+[ "$CASE" != cap-mismatch ] || RD1=4
+RD_ESCALATION_REASON=""; [ "$CASE" != cap-stalled ] || RD_ESCALATION_REASON=cap-stalled; export RD_ESCALATION_REASON
+[ "$CASE" != no-progress ] || RD1=3
 end_epoch="$(python3 -c 'import time; print(int(time.time())+900)')"
 printf '== wake: CASE=%s start=%s deadline_epoch=%s\n' "$CASE" "$(date -u +%FT%TZ)" "$end_epoch"
 printf 'queue before: %s\n' "$(rows)"
@@ -194,7 +205,7 @@ fi
 
 # expectations: successor dispatch count, and that row 1 is never re-dispatched (0 calls for exhausted/hold,
 # at most 1 for the others) and ends in a non-pending, non-completed state
-case "$CASE" in shared|refusal) want_succ=0 ;; *) want_succ=1 ;; esac
+case "$CASE" in shared|refusal|no-progress|cap-mismatch) want_succ=0 ;; *) want_succ=1 ;; esac
 want_succ="${EXPECT_SUCC:-$want_succ}"
 ok=1
 [ "$c2" = "$want_succ" ] || ok=0
