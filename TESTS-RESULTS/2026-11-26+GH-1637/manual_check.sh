@@ -173,7 +173,7 @@ reset; drive 3
 [ "$RC" = 4 ] && grep -q "cap-stalled" <<<"$OUT" && [ "$(consults)" = 0 ] && ok "S11 cap-stalled, zero consults" || bad "S11 rc=$RC consults=$(consults): $OUT"
 
 echo "== S12 dirty target: advisors read the pinned candidate, not the working tree"
-reset; echo GREEN >"$A/marker.txt"; echo x >"$A/untracked.txt"
+reset; echo GREEN >"$A/marker.txt"; echo x >"$A/untracked.txt"; rm -rf "$WORK/archive"   # only this run's answers below
 drive 3 --consult-at-cap
 ans="$(find "$WORK/archive" -name '*.codex.md' | head -1)"
 [ -n "$ans" ] && grep -q "MARKER=RED UNTRACKED=absent" "$ans" && grep -q "MARKER=RED UNTRACKED=absent" "$(find "$WORK/archive" -name '*.agy.md' | head -1)" \
