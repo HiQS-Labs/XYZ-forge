@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -124,5 +124,36 @@ Cite `file:line` for every claim. Write your verdict and set STATUS to Approved 
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+Give the gh436 Python entry point a fresh temporary directory before it imports the production module or the three phase modules. Set `TMPDIR`, reset Python's cached temp directory, and remove the exact created directory at normal process exit. The planned proof compares an unpatched and patched run inside a sealed parent directory, then checks the existing gate wrapper.
+
+**How the existing system works, per this document**
+
+The gh436 shell wrapper launches the Python suite, which collects the three phase modules. Fixture landings and checks use the inherited Python temp root, and landing cleanup enumerates that root through production pruning. The plan reports 227 passing tests alongside 41 leaked merge scratch folders and one real pruning pass in the sealed replay (plan lines 27–52).
+
+**What it's not**
+
+The plan leaves production pruning and standalone phase-module entry points outside its scope (plan lines 78–80).
+
+swept file: yes
+
+VERDICT: FAIL  
+Basis: The one-file isolation design is sound at plan level. A1 currently cannot pass as written, and its log predicate cannot establish where pruning enumerated. The findings below cover the existing plan as a whole.
+
+- [Blocker] A1 counts its own sentinels as leaks. **Observed input:** The inputs named in `PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:48` match the zero-count pattern at line 91 and must still exist at line 92. Read-only probe, exit 1: `python3 -c 'from pathlib import Path; names = [f"merge-cleanup-plant{i:03}" for i in range(1, 6)]; hits = [n for n in names if Path(n).match("merge-cleanup-*")]; assert len(hits) == 0, f"expected 0 matches with plants preserved, got {len(hits)}" '` → `AssertionError: expected 0 matches with plants preserved, got 5`. **Affected scope:** Sealed A1 parents seeded with those five directories. **Falsifier:** With only the five unchanged planted trees, the leak check should pass. Adding one extra `merge-cleanup-*` or `merge-check-*` directory, deleting or changing a planted tree, or leaving the run directory behind should fail. Snapshot the planted names and contents before each run, count newly created matching siblings, and check the planted trees and suite-root removal independently.
+- [Should] Observe the directory enumerated by pruning in A1. **Observed input:** Plan lines 88–93 use a log naming the parent as the distinguishing predicate. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:391-411` calculates the keep limit, may skip on the process probe, and lists the resolved temp root at line 406. It only emits the normal root-bearing message at lines 427–429 when `pruned or kept` is truthy. With five plants and `MERGE_CLEANUP_KEEP_WORKDIRS=5`, a pass can enumerate the parent and leave all plants intact with no root-bearing log. The plan itself reports 66 skipped calls at line 43. **Affected scope:** A1 red runs on an ambient machine and after-runs in which allocations move but pruning still enumerates the inherited parent. **Falsifier:** An observed enumeration of the exact resolved parent must make the after check fail even when no pruning line appears, and an empty trace must fail verification. In the disposable clone, make at least one prune pass deterministic for A1 and record the actual enumeration root with a temporary manual probe. Expect the parent before and the isolated suite child after, and retain the ordinary direct-run checks and 227-test outcome as independent evidence. Keep the probe out of the shipped suite.
+- [Should] Tie the red control to one identified baseline. **Observed input:** The status row cites `086b657ea` (plan line 23), the observed problem heading cites `7f2f1cce5` (line 25), and the acceptance section calls the baseline “the unpatched base” (line 89). **Affected scope:** Anyone reproducing or comparing the reported 227 tests, 41 leaks, and pruning output. **Falsifier:** A receipt tying the cited command, exit status, and decisive output to one exact revision, or distinct labeled receipts if both were run. Resolve the two references and identify which evidence belongs to each.
+- [Nit] Tighten two factual statements while revising A1. Plan line 50 attributes retention to the plants having no removable clone. `merge_cleanup.py:310-330,339-347` in the production path allows removal of a tool-shaped directory with no Git metadata when the handle check returns verified idle. Report the observed reason if the transcript has it, or report only that the five survived. Plan line 100 says the suite “never touches” the inherited temp directory, while lines 68–70 deliberately create the suite directory there. State the requirement in terms of no leaked fixture siblings and no pruning of the inherited parent.
+- [Pass] The registered gate is `validate.sh:96` → `test/gh436-merge-cleanup.sh:8-11` → `test/gh436-merge-cleanup.py:1382-1384`. `test/ci-route.sh:239-245` pins its exclusion from Small. The Python direct run also reaches `unittest.main()` at `test/gh436-merge-cleanup.py:1592-1593`. I found no earlier temp-root override in the four modules. Representative allocations are at `test/gh436-merge-cleanup.py:125`, `test/gh534_phase_a_tests.py:97-111`, `test/gh534_phase_b_tests.py:175-203`, and `test/gh534_phase_c_tests.py:95-105`.
+- [Pass] Set the new root before the first local import at `test/gh436-merge-cleanup.py:24`, which also precedes the production import at line 39 and phase collection at lines 1382–1384. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:3097,1961-1972,2025,2545,400-406,432-445` ties both allocation prefixes and pruning to Python's default temp lookup. Phase A's `DEFAULT_SAFE_ROOTS` is a static list (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:22-31`), widened at fixture setup with the actual fixture root (`test/gh534_phase_a_tests.py:97-106,532-546`). Phase A's tick and open-handle calls preserve the environment (`test/gh534_phase_a_tests.py:303-306`, `skills/2-daily/merge-cleanup/scripts/scan_clones.py:325-329,444-449`). The child Python paths inherit or copy it, including the Phase B temp-allocating stub and Phase C's explicitly supplied envs (`test/gh534_phase_b_tests.py:40-42,142-159,397`; `test/gh534_phase_c_tests.py:43-47,69-85,95-99,190-193,405-406,884-887,950`). I found no explicit child env that discards `TMPDIR` on these paths.
+- [Pass] The plan's exact-path/prefix/parent guard at lines 72–74 is proportionate for normal exit. Capture the absolute created path and original parent at setup, and apply the guard to that target at cleanup. The in-suite retained clone checks consume their outputs before exit (`test/gh436-merge-cleanup.py:1101-1112`; `test/gh534_phase_b_tests.py:392-401`), and the GH-1140 helper dirs reported at plan line 43 are test-owned (`test/gh436-merge-cleanup.py:1474-1498`). I found no post-exit consumer in the reviewed suite paths. The 227 count is a useful collection floor when tied to a green suite result and matching baseline (plan lines 43, 93; `test/gh436-merge-cleanup.py:1379-1384,1592-1593`). The 45/45/50/85 rating matches `releases.sql:1062`; the scope and rating rationale at plan lines 65–84 and 108–114 are proportionate to the reported clutter, possible pruning, and small implementation surface.
+
+[Unverified — needs clone run] The reported base runs and the proposed after-run were not replayed in this worktree. The nearest graph index covers a separate checkout, so citations use the relay worktree's source lines.
+
+Handing off to Producer (claude-a) to correct A1 and reconcile the baseline evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
