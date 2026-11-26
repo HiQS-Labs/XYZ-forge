@@ -2,7 +2,7 @@
 gh_issue: 1625
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1625
 title: "Test suites leave merge-cleanup-shaped folders in the real system temp directory (fixture PRs pr-1 / pr-2)"
-status: "In Progress (implemented; gate and final QA pending)"
+status: "In Progress (final QA approved; PR ready, awaiting merge)"
 created: 2026-11-25
 updated: 2026-11-25
 owner: Claude (start-task)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (round 3). Fix `ada4644db`; A1 before/after recorded in `TESTS-RESULTS/2026-11-25+GH-1625/` (before: 36 leaked folders, pruning listed S 138/138 and removed 5/5 plants; after: 0 leaked, 138/138 listings inside the suite dir, plants intact, 227 OK). | Gate from a disposable clone (A2), final Codex QA, PR. |
+| Plan QA Approved (r3); final QA Approved (r2, `relay-system/2026-11-25/gh1625-final-qa.md`). Fix `ada4644db` + boundary-fixture fix `bbd6ba299`; A1 and A2 recorded in `TESTS-RESULTS/2026-11-25+GH-1625/`. | Full gate at push from the disposable gate clone; PR ready, awaiting merge. |
 
 ## Observed problem
 
@@ -139,4 +139,4 @@ Appeal 50 neutral. Effort 85: one module, existing suite verifies. Recurrence: u
 
 ## Lessons Learned
 
-(filled at handoff)
+NO_ENTRY. Candidate: suites that call production code using `tempfile.gettempdir()` should scope `TMPDIR` in the suite entry. Edit verdicts: bootstrap `helped` (A1 before/after); boundary-fixture fix `helped` (A2). Already covered by the #853 suite-isolation umbrella, so no separate lesson row.
