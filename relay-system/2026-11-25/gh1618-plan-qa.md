@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -147,5 +147,31 @@ Handing off to Producer (claude) — disposition R1 and the AC-3 nit, update the
 - **All Q1/Q2/Q6/Q7/Q8 `[Pass]` findings accepted** without change. The probe's revision and limit stay explicit in the note.
 
 Handing off to Reviewer (codex), round 2: confirm R1 and the AC-3 nit are closed and say whether anything else blocks approval. Use bold labels, not heading lines.
+
+### Reviewer · Round 2
+
+**What this proposes**
+Correct two merged GH-1606 documents in place, preserving the standalone failure measurement while superseding the incorrect gate-coverage inference. Add dated notes, retain struck original inferences, and leave the original provenance receipt unchanged.
+
+**How the existing system works, per this document**
+The registered gh436 entry point imports phase A/B/C test classes and stubs the wiring check process-wide. A retained probe at `086b657ea` ran one collected phase B test and counted one healthy-path reserve call. A helper-name search establishes only the absence of direct references, not absence of indirect fault coverage.
+
+**What it's not**
+Accepted exclusions: runtime/test/gate changes, rewriting receipts or measurements, reopening #1615 or editing #1614/#1617, and removing the redundant stub (artifact frontmatter lines 12-17). Implementation, docs checks and final QA remain subsequent work; merge requires later operator action (Status table). No unresolved choice is stated. Input boundary: paraphrase written from the artifact only.
+
+**Source-backed**
+- [Pass] R1 closed. Artifact lines 42 and 65 now explicitly say the search does not establish absence of gated fault coverage. This matches `TESTS-RESULTS/2026-11-25+GH-1618/provenance.jsonl:2-3` and `SUMMARY.md:15,19-26`. The positive claim remains one healthy-path test at the recorded revision, supported by the counter wrappers and selected test at `probe_gate_reserve.py:16-29`; no historical rerun is claimed. Concrete fix: none remaining.
+- [Pass] Q5 nit closed. Artifact lines 60 and 86 explicitly require adding the GH-1576 cause to SUMMARY, while retaining the pre-existing counts in both documents. The existing SUMMARY's measurement is at `TESTS-RESULTS/2026-11-25+GH-1606/SUMMARY.md:38-39`. Concrete fix: none remaining.
+- [Pass] Q1/Q2 premise and limits remain sound. `validate.sh:96`, `test/gh436-merge-cleanup.sh:11-12`, and `test/gh436-merge-cleanup.py:43,1382-1384,1593` establish registration, process stub, import and unittest execution. The wrapper's Forge-root check and registry selection qualify when that entry runs. The retained 227-test collection receipt (`GH-1618/provenance.jsonl:1`) and GH-1615 SUMMARY's base/candidate gated rows support actual collection/execution; no new name-collision/skip/load_tests issue was identified. Reviewer command `rg -n 'load_tests|@unittest.skip|@pytest.mark.skip' test/gh436-merge-cleanup.py test/gh534_phase_a_tests.py test/gh534_phase_b_tests.py test/gh534_phase_c_tests.py` returned exit 1, no matches. The fixture's missing-hook seed and scoped patch are visible at `test/gh534_phase_b_tests.py:181-210`; the end-to-end input calls `run_main()` at lines 429-435, and production probes before reserving at `merge_cleanup.py:2177-2193`. The separate original standalone 39/14/1 observation and GH-1576 cause remain recorded at `GH-1606/provenance.jsonl:23`. Concrete fix: none.
+- [Pass] Q3/Q4 inventory and preservation remain adequate. Artifact lines 54-60 cover target doc lines 30, 47, 131-134, 180, 214, 240 and SUMMARY lines 38-39, including the whole incorrect table row. The standalone measurement and withdrawal as an unchanged-green witness remain true historical facts; artifact lines 58-60 preserve and qualify them. Artifact lines 65 and 74 retain struck inferences and supersede the receipt wording through SUMMARY rather than rewriting it. Concrete fix: execute this bounded edit list.
+- [Pass] Q5 acceptance is appropriately manual and contextual. Artifact lines 84-90 distinguish final checks from retained admission measurements. The unedited target doc lines 30, 47, 131-134 and SUMMARY line 38 visibly supply AC-1's red input; grep success alone is not a pass. AC-2 checks scope/receipt preservation, AC-3 prevents measurement loss, AC-4 covers document structure/paths, and AC-5 checks factual scope against output. No git command, executable fixture, suite or gate was run this turn; the claimed origin/development red control was not independently rerun because git is forbidden. Final acceptance and its receipts remain implementation obligations, not assumed later results. Concrete fix: retain those results during delivery.
+- [Pass] Q6/Q7/Q8: artifact frontmatter and Status comply with `PROJECT/PDDA.md:56-77`; lines 54 and 78 preserve completed-doc location and bound ledger changes. No absolute home path or new suite/gate is proposed. Pickup and external issue/PR state remain supplied context rather than independently queried facts. The documentation-only `15/10/40/90` rationale at artifact line 48 is proportionate, with appeal explicitly operator-supplied. The existing documents and evidence directory suffice; no additional machinery is warranted. No additional pre-existing defect was identified in the whole reviewed plan. Concrete fix: none.
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Both prior findings are closed by the revised wording. The full plan now keeps the measured facts, bounds the inference to its evidence, and provides proportionate final acceptance. Approval is for the plan, not completed implementation, qualification or merge.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
