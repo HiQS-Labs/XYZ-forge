@@ -58,6 +58,7 @@ def run(name, expect, rec, written_offset=1.0, fn=None, **record):
     latest = {"execution_id": "gh901-exec1", "status": "projected-failed" if stl else "projected-parked",
               "outcome": "escalated" if stl else "parked",
               "result_path": path, "started_at": T, "dispatched_epoch": dispatched, "drive_exit": 4 if stl else 8}
+    latest.setdefault("reason", rec.get("reason"))   # what Jog recorded when it projected this receipt
     latest.update(record)
     jog_run.jog_load_state = lambda root, gid: {"executions": [latest]}
     jog_run._ledger_abs_path = lambda root, gid, p: p
@@ -93,6 +94,8 @@ res = [
     run("stalled-empty-target-repo-path", False, dict(stalled(), target_repo={"path": "", "origin_url": "https://example.invalid/x.git"}), fn="stalled"),
     run("exhausted-pr-empty-object", False, dict(receipt(), pr={})),
     run("exhausted-empty-target-repo-path", False, dict(receipt(), target_repo={"path": "", "origin_url": "https://example.invalid/x.git"})),
+    run("stalled-receipt-rewritten-after-projection", False, stalled(), fn="stalled", reason="cap-or-close-mismatch"),
+    run("exhausted-receipt-rewritten-after-projection", False, receipt(), reason="lane parked for another reason"),
     run("negative-cap-native-refusal", True, receipt(count=2, cap=-1)),
     run("exhausted-gate-not-run-but-exit-recorded", False, dict(receipt(), gate={"cmd": "x", "result": "not-run", "exit": 1, "receipt_path": None})),
     run("exhausted-pr-url-without-number", False, dict(receipt(), pr={"number": None, "url": "https://example.invalid/pr/1", "state": "OPEN"})),

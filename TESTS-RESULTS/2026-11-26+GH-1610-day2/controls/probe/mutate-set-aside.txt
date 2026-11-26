@@ -24,6 +24,8 @@ PROBE stalled-pr-number-zero expect=refuse got=refuse OK
 PROBE stalled-empty-target-repo-path expect=refuse got=refuse OK
 PROBE exhausted-pr-empty-object expect=refuse got=refuse OK
 PROBE exhausted-empty-target-repo-path expect=refuse got=refuse OK
+PROBE stalled-receipt-rewritten-after-projection expect=refuse got=refuse OK
+PROBE exhausted-receipt-rewritten-after-projection expect=refuse got=refuse OK
 PROBE negative-cap-native-refusal expect=accept got=accept OK
 PROBE exhausted-gate-not-run-but-exit-recorded expect=refuse got=refuse OK
 PROBE exhausted-pr-url-without-number expect=refuse got=refuse OK

@@ -2627,6 +2627,10 @@ def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome)
         _jog_result_identity(receipt, gh_num, latest.get("execution_id"))
     except (ContractError, OSError, TypeError, ValueError, AttributeError):
         return None
+    # The receipt on disk must still be the one Jog projected: it recorded the outcome and reason at
+    # projection time, so a file rewritten afterwards cannot reclassify the execution (GH-1633).
+    if latest.get("reason") != receipt.get("reason"):
+        return None
     return latest, receipt
 
 
