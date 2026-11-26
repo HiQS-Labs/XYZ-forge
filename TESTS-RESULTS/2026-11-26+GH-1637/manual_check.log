@@ -1,0 +1,43 @@
+== S1 both NON-BLOCKING -> Consult-Adjudicated (cap 3, reviewer finding open, builder rebuttal last)
+  PASS: S1 exit 0
+  PASS: S1 STATUS is Consult-Adjudicated (not Approved)
+  PASS: S1 token closed
+   record: Consult-Adjudicated {'agy': 'NON-BLOCKING', 'codex': 'NON-BLOCKING'} candidate a0040bfff076
+  PASS: S1 attestation record loads with adjudication provenance
+   refusal: merge refused: consult-adjudicated lane (not a reviewer approval) awaits the operator's merge (GH-1637)
+  PASS: S1 jog merge boundary refuses the record before any merge call
+  PASS: S1 consult block with both verdicts is in the committed transcript
+  PASS: S1 exactly one consult
+== S2 REAL at cap 3, reviewer next: builder is dispatched before any reviewer can approve
+  PASS: S2 repaired head then approved (exit 0, Approved)
+  PASS: S2 order bld rev bld | consult | bld rev
+  PASS: S2 no second consult
+== S2b REAL at cap 2 (reviewer just finished; builder next)
+  PASS: S2b order bld rev | consult | bld rev, approved
+== S2c REAL then the repaired lane still fails: second cap escalates, no second consult
+  PASS: S2c escalates (exit 4) after one repair, one consult only
+== S3 SAFETY -> hold
+  PASS: S3 consult-hold, STATUS still Open
+== S4 one advisor fails -> consult-inconclusive (a lone NON-BLOCKING never adjudicates)
+  PASS: S4 hold
+== S5 duplicate final verdict / token only in quoted text -> consult-inconclusive
+  PASS: S5 duplicate verdict holds
+  PASS: S5 quoted-only token holds
+== S6 red focused driver gate after two NON-BLOCKING: STATUS restored, token still open, no attestation
+  PASS: S6 refused: Open, token open, no attestation
+== S7 refused token close (tick done fails): STATUS restored, token handed back, no attestation
+  PASS: S7 token-close-failed: Open, token open, no attestation
+  PASS: S7 reason named
+== S8 receipt-write failure AFTER done: no attestation, token spent (existing spent-token case; marathon.sh --retry mints a fresh token)
+  PASS: S8 attest-publish-failed, token done, no ready terminal
+== S9 a reviewer TURN that writes Consult-Adjudicated itself is reverted as forged
+  PASS: S9 forged terminal reverted (exit 4)
+== S10 transcript-only candidate (builder commits no deliverable): hold before any consult
+  PASS: S10 holds, consult never ran
+== S11 default-off: same lane without --consult-at-cap keeps cap-stalled, no consult
+  PASS: S11 cap-stalled, zero consults
+== S12 dirty target: advisors read the pinned candidate, not the working tree
+  PASS: S12 both advisors saw MARKER=RED UNTRACKED=absent (working tree has GREEN + untracked.txt)
+  PASS: S12 advisor HEAD equals the attested candidate d3b1a0727fec
+
+RESULT: 25 passed, 0 failed
