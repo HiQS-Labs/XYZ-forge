@@ -23,6 +23,35 @@ a PR by itself. An explicitly invoked 10days sweep retains its named firing exce
 
 ## Choose the work and answer the three rubrics
 
+### Flywheel architecture and implementation work: exercise it before reviewing it again
+
+This rule applies only to work on the Flywheel's own architecture and implementation: the
+[#1400](https://github.com/HiQS-Labs/XYZ-forge/issues/1400) arc and the issues, plans and
+daily ledgers under it. Work that Flywheel drives for other projects keeps each owning
+skill's review limits. Operator decision, 2026-11-25
+([#1620](https://github.com/HiQS-Labs/XYZ-forge/issues/1620)).
+
+1. **Ask for a technical spike instead of more plan review.** When a plan or preparation
+   review is not converging, or its open findings would show up by running the change,
+   stop reviewing the text. Build the smallest version in a disposable clone and exercise
+   both the code and the written procedure on the real entry point. Record the commands,
+   exit codes and observed results, time-box it, and carry what it shows back into the
+   plan. A spike is evidence for the next decision; it lands nothing by itself.
+2. **At most four review rounds per review loop.** Plan, preparation and final review
+   loops are each capped at four rounds in total. Inside that budget, repair narrow
+   findings and re-review without stopping to ask.
+3. **Override at the cap.** At four rounds the orchestrating agent or the operator can and
+   should decide instead of opening a fifth round: accept the plan or preparation with the
+   open finding folded into the build, drop the disputed piece, or stop the item. Record
+   the decision and its reason on the issue as an override. For a final review at the cap,
+   the pull request may be opened with the open findings stated plainly; it is never
+   recorded as approved.
+4. **What an override never touches.** Red-then-green evidence on the real path, the push
+   gate, safety, containment and attempt limits, and the operator's merge decision.
+
+This is the operator's standing decision for this project, so applying it is not a silent
+cap change under Rubric 1A and not a cap increase under step 4 of the ladder below.
+
 Name the current objective, observed baseline, intended capability and critical-path
 blocker. More PRs, repeated component checks and longer runtime are not capability
 gains by themselves. Keep this to a short decision in the existing issue or plan, not
