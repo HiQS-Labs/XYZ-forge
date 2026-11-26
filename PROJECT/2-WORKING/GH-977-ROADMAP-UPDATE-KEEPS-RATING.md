@@ -107,3 +107,7 @@ The probe is a retained manual check, not a suite: it exits 0 only when the fixe
 ## Merge evidence
 
 - PR #1622 merged 2026-11-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1636 merged 2026-11-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

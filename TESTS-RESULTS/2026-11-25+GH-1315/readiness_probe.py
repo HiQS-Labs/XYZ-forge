@@ -101,14 +101,12 @@ def main():
         # positive control: a skill RECORDED in state still previews cleanly and plans the link
         shutil.rmtree(target / "xyz")  # the refused fixture is done; keep it from muddying the control
         shutil.rmtree(root / "xyz")
-        repo = work / "source repo"
-        (repo / "skills" / "sample").mkdir(parents=True)
-        (repo / "skills" / "sample" / "SKILL.md").write_text(BODY.format(n="sample"))
-        for git in (("init", "-q"), ("add", "."), ("-c", "user.name=Probe", "-c", "user.email=probe@example.invalid",
-                                                   "commit", "-qm", "fixture")):
-            subprocess.run(["git", "-C", str(repo), *git], check=True, capture_output=True)
-        rc, out, err = run(env, "intake.py", root, "--apply", "add", str(repo / "skills" / "sample"))
-        assert rc == 0, ("add", rc, out, err)
+        (root / "sample").mkdir()
+        (root / "sample" / "SKILL.md").write_text(BODY.format(n="sample"))
+        rc, out, err = run(env, "intake.py", root, "--apply", "catalog")
+        assert rc == 0, ("catalog", rc, out, err)
+        state = json.loads((root / ".deploy-skills.json").read_text())
+        assert "sample" in state["skills"], "fixture must record sample"
         (target / "sample").mkdir()
         (target / "sample" / "SKILL.md").write_text(BODY.format(n="sample") + "stale installer copy\n")
         before = snapshot(work)
