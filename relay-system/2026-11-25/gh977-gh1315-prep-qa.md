@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -302,5 +302,70 @@ Operator authorization (2026-11-25, Flywheel project only; newest comment on #13
 - Q5/Q6 evidence from round 1 stands; the diff receipt cutoff is unchanged because the only files changed since are the #1315 probe/doc/evidence and this relay file.
 
 No product fix was implemented. Handing off to Reviewer for round 3.
+
+### Reviewer · Round 3
+
+swept file: no
+
+F2 is closed; one evidence-attribution correction remains before approval. Read both complete captures and readiness scripts, summaries/provenance, refreshed proof JSON/RC/lint receipts, simulated patches, remediation receipts, retained diff and the relevant runtime source. No additional defect was found in the fully read capture/probe files. The large runtime modules and whole ledger were not swept; this is preparation QA. No Git, fixture, suite, Preflight or phase gate was executed; no phase gate is configured. Runtime results below are inspected Producer receipts, not independent CLI replays.
+
+Graph: Verify intent; all 87 project entries checked, this worktree remains unindexed. Nearest project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-25T18:19:12Z`; symbol search completed without pagination remaining. Coverage reports missing preparation files and partial gh257/gh549 shell ranges. Read local source and the reported ranges. Graph trace access was denied; local source supplied the bounded call-path evidence. Another checkout's metadata does not establish this worktree's freshness.
+
+- **[Should] F5 — refreshed proof files retain stale provenance SHAs.** **Observed input:** Form 1 artifact contradiction: `TESTS-RESULTS/2026-11-25+GH-977/provenance.jsonl:1,3,5` and `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl:1,3,5` attribute the three Preflight outputs to `e331a4d98`, `448cea7a8`, `6cbef1e44`. The named files now contain `f2115e986`, `ce717e069`, `9ba644fe2`, respectively, at `probe-proof/{1-unfixed-at-prepared-commit,2-simulated-fix,3-comment-only-edit}/preflight-977.json:57` and the corresponding `preflight-1315.json:55`. Both `SUMMARY.md:4` explicitly promise that each provenance row names the exact SHA it ran on. The refreshed outputs and summaries agree; their provenance does not. **Affected scope:** attribution of the six refreshed Preflight runs and paired Jog lint receipts (rows 2/4/6 likewise retain earlier SHAs). This does not invalidate the observed probe behavior, but it prevents truthful run-to-revision attribution in the preparation evidence. **Fix:** reconcile these existing provenance entries with the retained runs, including recording metadata/notes and paired Jog receipts. If preserving historical entries, point them at actual retained historical outputs and add entries for the new outputs; do not leave old and new runs sharing overwritten paths without explanation. No new suite, runtime change or replay is needed when the retained run records establish the correct attribution. **Falsifier:** each current Preflight provenance `source_sha` equals its nonempty output's `freshness.evaluated_ref_commit`, and the paired Jog entries identify the same state/revision as their retained state receipts; the check below then exits 0 with `mismatches= 0`.
+
+  Exact read-only command executed, exit **1**. Decisive output: `[(977, 1, 'e331a4d98', 'f2115e986'), (977, 3, '448cea7a8', 'ce717e069'), (977, 5, '6cbef1e44', '9ba644fe2'), (1315, 1, 'e331a4d98', 'f2115e986'), (1315, 3, '448cea7a8', 'ce717e069'), (1315, 5, '6cbef1e44', '9ba644fe2')]` and `mismatches= 6`.
+
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'CHECK'
+  import json
+  from pathlib import Path
+  mismatches=[]
+  for issue in (977,1315):
+      root=Path(f'TESTS-RESULTS/2026-11-25+GH-{issue}')
+      for line,text in enumerate((root/'provenance.jsonl').read_text().splitlines(),1):
+          row=json.loads(text)
+          if row['output'].endswith(f'preflight-{issue}.json'):
+              p=root/row['output']; assert p.stat().st_size>0
+              actual=json.loads(p.read_text())['freshness']['evaluated_ref_commit']
+              if row['source_sha']!=actual:
+                  mismatches.append((issue,line,row['source_sha'][:9],actual[:9]))
+  print(mismatches)
+  print('mismatches=',len(mismatches))
+  raise SystemExit(bool(mismatches))
+  CHECK
+  ```
+
+- **[Pass] F2 CLOSED / Q1 #1315.** `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py:37-44` now requires both the ownership reason and skill-specific adoption command; `:84-94` applies that requirement to both modes and checks parity. `:97-100` checks refusal side effects, and `:115-123` covers recorded-skill preview and apply. The exact previous counterexample now fails at the intended assertion (`review-round2-fixes/probe-1315-f2-reviewer-adoption-service-unavailable.txt:7-8`, assertion plus `rc=1`), as do reason-only and remedy-only messages in the sibling receipts. `review-round2-fixes/probe-1315-simfix.txt:1-2` records the complete CLI success and `rc=0`; unfixed and comment-only receipts fail at the preview assertion. These close the requested CLI falsifier and positive-control gap. Independent decision-only extraction below exited **0**, output `unrelated, reason-only, remedy-only, complete: [False, False, False, True]`; no fixture or subprocess was invoked.
+
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'CHECK'
+  import ast,re
+  from pathlib import Path
+  p=Path('TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py')
+  f=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='explains_refusal')
+  ns={'re':re}; exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),ns)
+  messages=['adoption service unavailable','Not adopted: xyz has no recorded source; adopt it first','Cannot proceed; run intake.py update xyz --source /x','Not adopted: xyz has no recorded source; adopt it first (receipt-only: intake.py update xyz --source /x)']
+  results=[ns['explains_refusal'](s) for s in messages]
+  assert results==[False,False,False,True],results
+  print('unrelated, reason-only, remedy-only, complete:',results)
+  CHECK
+  ```
+
+- **[Pass] F1/F3/F4 remain CLOSED / Q1 #977.** `TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py:73-83` still requires successful persisted text, preserved five-field rating and explicit rescore. Its `review-round1-fixes/probe-977-f1-refuse.txt:7-8` and `probe-977-f1-noop.txt:7-8` fail at the intended assertions; `probe-977-simfix.txt:2` records `rc=0`. Connector isolation remains explicit at `readiness_probe.py:33-34`; retained F3 receipts show `connector_events= 2 [977, 977]` before and `connector_events= 0 []` after (`f3-temp-old_probe_977.py.txt:1`, `f3-2026-11-25+GH-977-readiness_probe.py.txt:1`), with the expected unfixed rating failure. The corrected sibling ledger pointer remains at `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl:9`; a read-only parse confirmed all provenance output paths exist. F5 concerns attribution, not missing paths.
+
+- **[Pass] Q2 / polarity and recorded states.** `utils/py/swarm_preflight.py:283-297` maps command success to landed only with `expect_nonzero: true`; uncaught probe failures remain unfixed. Both contracts use that shape (`GH-977` capture `:93-95`, `GH-1315` capture `:81-83`). Read-only parsing of all six refreshed reports and RC files found `f2115e986` → 0/unfixed, `ce717e069` → 4/landed, `9ba644fe2` → 0/unfixed; all six Jog lint RCs are 0 and their text ends `JOG LINT OK`. Both `SUMMARY.md:10-14` tables match those outputs. F5 must align the provenance rows with this evidence.
+
+- **[Pass] Q3 / existing gates and bounded artifacts.** Capture gates remain the existing suites (`GH-977:83`, `GH-1315:73`), and #977 includes gh257 as an artifact (`:87`). Its current `test/gh257-roadmap-ledger-fixes.sh:147-152` pins clearing; the retained code-only red control fails exactly there (`TESTS-RESULTS/2026-11-25+GH-977/existing-suites/gh257-codefix-only-RED-CONTROL.txt:36-37`). Adjusted simulated-fix receipts record gh257 success (`gh257-roadmap-ledger-fixes-simulated-fix.txt:43-44`) and gh549 `125 passed, 0 failed` (`gh549-work-events-simulated-fix.txt:162-163`). #1315's pytest prerequisite warning remains in its capture `:48`, matching the wrapper at `test/skills-army-hq.sh:10-15`; its real retained result is `34 passed, 4 subtests passed` (`TESTS-RESULTS/2026-11-25+GH-1315/existing-suites/skills-army-hq-simulated-fix-python314-pytest.txt:46-47`). This is bounded existing coverage; no exhaustive fresh search for every source-text pin is claimed.
+
+- **[Pass] Q4 / acceptance and ratings.** Complete capture review found the issue-derived criteria and declared choices retained at `PROJECT/1-INBOX/GH-977-ROADMAP-UPDATE-KEEPS-RATING.md:31-44` and `PROJECT/1-INBOX/GH-1315-LEGACY-PREVIEW-PARITY.md:23-38`. Round 1's live issue/triage comparison remains the external evidence; no fresh GitHub query was made this turn. Rating rationales remain at #977 `:68-73` and #1315 `:63`, with neutral appeal, cheapness direction and recurrence limits. #1315's revised probe description/remediation (`:47`, `:88`) now matches what the probe measures.
+
+- **[Pass] Q5/Q6 / preserved history and preparation scope, within the retained diff cutoff.** `releases.sql:990,1093,5835,5837,5839` preserves #1315's rating, pending/0 queue row and prior accepted-start history. Its capture `:56-59` records the trial and warns that pending remains selectable (`utils/py/jog_run.py:2843-2848`), so Day 2 must reuse/revalidate that row. The bounded SQL diff adds only #977's pickup row/receipt/parked event and generation changes (`TESTS-RESULTS/2026-11-25+GH-977/diff-evidence/releases.sql.diff:26,34,42`). The retained stat lists only preparation/evidence/relay/ledger files; its cutoff is explicitly `a7b620924` (`diff-evidence/README.md:1`). Current runtime still has the original defects (`utils/py/releases_app.py:4230-4233`, `skills/3-weekly/skills-army-hq/scripts/sync.py:281-285`); simulated patches are evidence only. No current Git diff or absence of all external writes is claimed. No extra subsystem or suite is warranted.
+
+Handing off to Producer (claude-a): correct F5's provenance attribution and return for round 4. Keep F1-F4 closed, preserve the runtime evidence, and do not implement either product fix in this preparation turn.
+
+VERDICT: FAIL
+Basis: The behavioral probe findings are closed. Six refreshed Preflight outputs still contradict their recorded source SHAs; the paired Jog attribution also needs reconciliation. The remaining correction is bounded to existing evidence metadata, with no new runtime replay required.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
