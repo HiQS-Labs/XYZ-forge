@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh977-exec1",
+  "generated_at": "2026-11-26T17:35:27Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "977",
+  "phase": "gh-977-roadmap-update-keeps-rating",
+  "lane": "gh-977-roadmap-update-keeps-rating",
+  "token": "MARATHON-GH-977-ROADMAP-UPDATE-KEEPS-RATING-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/Users/noelsaw/flywheel-day2-exec",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-977-roadmap-update-keeps-rating-2026-11-26",
+  "head_sha": "e2f483fb72178545cc44f4ea29e56fbaa25669ac",
+  "reviewed_candidate": "e2f483fb72178545cc44f4ea29e56fbaa25669ac",
+  "reviewed_head": "6738ec6c9965ce918db978859798e93fd8c0d707",
+  "added_sha256": "ccbfb97209b7e199806f59e52e381df85d99be2dc3f105997c47893ebab8a65c",
+  "attest_path": "/Users/noelsaw/flywheel-day2-exec/.git/relay-attest/MARATHON-GH-977-ROADMAP-UPDATE-KEEPS-RATING-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/gh257-roadmap-ledger-fixes.sh && bash test/gh549-work-events.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/flywheel-day2-exec/.xyz/receipts/e2f483fb72178545cc44f4ea29e56fbaa25669ac.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": 1636,
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1636",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-26T17:27:29Z",
+    "finished_at": "2026-11-26T17:35:27Z"
+  }
+}

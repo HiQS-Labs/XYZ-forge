@@ -134,22 +134,32 @@ receipt_count_after="$(grep -c "roadmap-update" "$R/releases.sql" || true)"
 pass "idempotent update wrote zero additional receipts"
 
 # -----------------------------------------------------------------------------
-# Case 8: roadmap update synchronizes ALL FIVE rating columns
+# Case 8: roadmap update preserves or replaces all five rating columns
 # -----------------------------------------------------------------------------
+rating_sql="SELECT rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr FROM roadmap_items WHERE gh_number = 255"
+
 # Unrated -> Rated
 RATED_TEXT="- **GH-255 · rated title** 🆕 (rated 80/70/90/60 ovr 320) — [#255](https://github.com/org/repo/issues/255)"
 app --root "$R" roadmap update --issue-num 255 --raw-text "$RATED_TEXT"
-read pri sev app_score eff ovr <<<"$(sqlite3 "$R/releases.db" "SELECT rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr FROM roadmap_items WHERE gh_number = 255" | tr '|' ' ')"
-[ "$pri" = "80" ] && [ "$sev" = "70" ] && [ "$app_score" = "90" ] && [ "$eff" = "60" ] && [ "$ovr" = "320" ] \
-  || fail "expected rating columns (80 70 90 60 320), got ($pri $sev $app_score $eff $ovr)"
-pass "roadmap update correctly populated all 5 rating columns"
+ratings="$(sqlite3 "$R/releases.db" "$rating_sql")"
+[ "$ratings" = "80|70|90|60|320" ] || fail "expected initial rating 80|70|90|60|320, got: $ratings"
+pass "roadmap update populated all five rating columns"
 
-# Rated -> Unrated (must reset all 5 rating columns to NULL, not leave old scores)
-UNRATED_TEXT="- **GH-255 · unrated again** 🆕 — [#255](https://github.com/org/repo/issues/255)"
-app --root "$R" roadmap update --issue-num 255 --raw-text "$UNRATED_TEXT"
-cleared_counts="$(sqlite3 "$R/releases.db" "SELECT COUNT(*) FROM roadmap_items WHERE gh_number = 255 AND (rating_pri IS NOT NULL OR rating_sev IS NOT NULL OR rating_appeal IS NOT NULL OR rating_effort IS NOT NULL OR rating_ovr IS NOT NULL)")"
-[ "$cleared_counts" = "0" ] || fail "expected all rating columns to be NULL, found non-null values"
-pass "roadmap update correctly cleared all 5 rating columns to NULL on unrated line"
+# GH-977: a text-only edit preserves the saved scores and override.
+TEXT_ONLY="- **GH-255 · refreshed title** 🆕 — [#255](https://github.com/org/repo/issues/255)"
+app --root "$R" roadmap update --issue-num 255 --raw-text "$TEXT_ONLY"
+stored_text="$(sqlite3 "$R/releases.db" "SELECT raw_text FROM roadmap_items WHERE gh_number = 255")"
+[ "$stored_text" = "$TEXT_ONLY" ] || fail "expected the text-only update to persist, got: $stored_text"
+ratings="$(sqlite3 "$R/releases.db" "$rating_sql")"
+[ "$ratings" = "80|70|90|60|320" ] || fail "expected the saved rating after a text-only update, got: $ratings"
+pass "roadmap update preserved all five rating columns on a text-only edit"
+
+# A replacement rating without an override clears the previous override.
+RESCORED_TEXT="- **GH-255 · rescored title** 🆕 (rated 10/20/30/40) — [#255](https://github.com/org/repo/issues/255)"
+app --root "$R" roadmap update --issue-num 255 --raw-text "$RESCORED_TEXT"
+ratings="$(sqlite3 "$R/releases.db" "$rating_sql")"
+[ "$ratings" = "10|20|30|40|" ] || fail "expected replacement scores with no override, got: $ratings"
+pass "roadmap update replaced the scores and cleared the previous override"
 
 # -----------------------------------------------------------------------------
 # Case 9: schema-behind refusal on pre-migration ledger without rating columns

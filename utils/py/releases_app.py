@@ -4110,6 +4110,7 @@ def cmd_roadmap_update(args):
 
     GH-257 adds raw_text/section updates; GH-424 adds an explicit status marker.
     Marker-only updates preserve raw_text, ratings, section and doc_path.
+    GH-977: raw_text updates replace ratings only when they supply a rating.
     """
     marker = getattr(args, "status_marker", None)  # `move` shares this handler.
     accepted = getattr(args, "accepted_start", False)
@@ -4227,7 +4228,7 @@ def cmd_roadmap_update(args):
             if args.raw_text is not None:
                 updates.append("raw_text = ?")
                 params.append(new_raw_text)
-                if has_rating_cols:
+                if has_rating_cols and rating["rating_pri"] is not None:
                     for c in RATING_COLUMNS:
                         updates.append("%s = ?" % c)
                         params.append(rating[c])
