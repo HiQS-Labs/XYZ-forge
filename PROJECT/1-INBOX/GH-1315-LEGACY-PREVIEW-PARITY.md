@@ -91,3 +91,7 @@ Existing row preserved: `rated 60/45/50/85` (sum 240), set at pickup on 2026-11-
 ```
 
 The probe is a retained manual check, not a suite: it exits 0 only when the fixed behavior is observed, and `expect_nonzero: true` makes any crash read as unfixed. It replaces the 2026-11-11 function-level probe, which stays in `TESTS-RESULTS/2026-11-11+GH-1315/` as history. Probe evidence (unfixed, simulated fix, comment-only edit) and both consumers' exit codes are in `TESTS-RESULTS/2026-11-25+GH-1315/`.
+
+## Merge evidence
+
+- PR #1622 merged 2026-11-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
