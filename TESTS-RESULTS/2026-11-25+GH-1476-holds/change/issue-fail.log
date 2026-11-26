@@ -1,0 +1,12 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.OrHqTQfcHB
+jog: GH-901 not started: hold-check-unavailable: live issue lookup failed; parking item.
+jog: queue complete (0 pending tasks).
+jog exit=0
+worker edge calls=0
+snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold-check-unavailable: live issue lookup failed
+ASSERT case=issue-fail expected_calls=0 PASS
+queue: [('jog-01M8B4MPDPQWNFB39KFBNAWY93', 'parked', 'hold-check-unavailable: live issue lookup failed', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.OrHqTQfcHB
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.OrHqTQfcHB
+control exit=0

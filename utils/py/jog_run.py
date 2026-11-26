@@ -1108,6 +1108,11 @@ def _jog_retry_build_locked(root, gh_num, args):
     finally:
         conn.close()
 
+    held = hold_refusal(_execution_root(root, getattr(args, "target_root", None)), gh_num)
+    if held:  # GH-1476 (holds only): same refusal as `jog run`, before the lease and any dispatch
+        jog_set_status(root, gh_num, "parked", failure_reason=held)
+        print(f"jog: retry-build GH-{gh_num} → parked — {held}")
+        return 0
     jog_acquire_lease(root, gh_num, os.getpid())
     action, reason = run_marathon_phase(
         root, gh_num, gid,
@@ -1639,6 +1644,81 @@ def find_issue_doc(root, gh_num):
     """Use reconciliation's canonical issue identity resolver."""
     from wave_reconcile import find_issue_doc as resolve_issue_doc
     return resolve_issue_doc(root, gh_num)
+
+
+def _gh_issue_json(target, number, fields):
+    """`gh issue view N --json fields` as a dict, or None when it cannot be answered."""
+    try:
+        r = subprocess.run(["gh", "issue", "view", str(number), "--json", fields],
+                           cwd=target, capture_output=True, text=True, timeout=45)
+        value = json.loads(r.stdout) if r.returncode == 0 else None
+    except Exception:
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def hold_refusal(target, gh_num):
+    """GH-1476 (holds only): why this task must not start, or None when no hold applies.
+
+    Reads the live issue and the capture/preparation document through Kickstart's existing
+    `issue_hold_reason` (status:held label, HELD: line, Blocked by #N, active/conditional
+    `after #N`). The recognizer's conditional `after #N` needs the open referenced numbers:
+    every number its own AFTER pattern finds in the issue body and capture is looked up once,
+    and anything not confirmed done (open, closed-unmerged PR, lookup failure) is open.
+    A check that cannot be made refuses: "hold-check-unavailable: ...", never a pass.
+    """
+    import importlib.util
+    path = Path(__file__).resolve().parents[2] / "skills" / "1-hourly" / "kickstart" / "scripts" / "build_queue.py"
+    try:
+        spec = importlib.util.spec_from_file_location("jog_hold_rules", path)
+        rules = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(rules)
+    except Exception as exc:
+        return f"hold-check-unavailable: hold rules not loadable ({type(exc).__name__})"
+    issue = _gh_issue_json(target, gh_num, "body,labels,state")
+    if issue is None:
+        return "hold-check-unavailable: live issue lookup failed"
+    if (not isinstance(issue.get("body"), str) or not isinstance(issue.get("labels"), list)
+            or not all(isinstance(lab, dict) and isinstance(lab.get("name"), str) for lab in issue["labels"])):
+        return "hold-check-unavailable: live issue response incomplete"
+    # Preflight (`swarm_preflight.py` --gh-issue) takes the first GH-N-*.md in 2-WORKING, the
+    # resolver may prefer another capture when several declare the issue: check every capture
+    # either could execute (any inbox copy Jog would promote, and the canonical find_issue_doc pick),
+    # so a hold in any of them refuses.
+    captures = []
+    try:
+        from wave_reconcile import find_issue_doc_candidates
+        docs = set(find_issue_doc_candidates(target, gh_num, ("2-WORKING", "1-INBOX")))
+        docs |= set(glob.glob(os.path.join(target, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md")))
+        selected = find_issue_doc(target, gh_num)  # the canonical selector also reaches 3-COMPLETED/4-MISC
+        if selected:
+            docs.add(selected)
+        for doc in sorted(docs):
+            text = Path(doc).read_text(encoding="utf-8")
+            if text.startswith("---") and len(text.split("---", 2)) >= 3:
+                text = text.split("---", 2)[2]
+            captures.append(text)
+    except Exception:
+        return "hold-check-unavailable: capture document unreadable"
+    try:
+        bodies = (issue["body"], *captures)
+        refs = {int(n) for text in bodies for n in rules.AFTER.findall(rules._sanitize_body(text))}
+        open_refs = set()
+        for n in refs:
+            dep = _gh_issue_json(target, n, "state,url") or {}
+            done = dep.get("state") == "MERGED" or (dep.get("state") == "CLOSED" and "/issues/" in str(dep.get("url")))
+            if not done:
+                open_refs.add(n)
+        reason = rules.issue_hold_reason(issue, open_refs)
+        if reason:
+            return f"hold: issue {reason}"
+        for text in captures:
+            reason = rules.issue_hold_reason({"body": text, "labels": []}, open_refs)
+            if reason:
+                return f"hold: capture {reason}"
+    except Exception as exc:
+        return f"hold-check-unavailable: hold rules failed ({type(exc).__name__})"
+    return None
 
 
 def extract_probes_from_doc(doc_path):
@@ -2874,6 +2954,19 @@ def jog_run_main(args=None):
 
             gh_num = row["gh_number"]
             att = row["attempt_count"] + 1
+
+            # GH-1476 (holds only): a hold in the issue or capture, or unfinished work it comes
+            # after, refuses BEFORE the lease (no attempt), promotion and any execution record.
+            # --simulate starts no worker, so it is not gated.
+            held = None if simulate else hold_refusal(target, gh_num)
+            if held:
+                print(f"jog: GH-{gh_num} not started: {held}; parking item.")
+                jog_set_status(root, gh_num, "parked", failure_reason=held)
+                if checkpoint or supervised:
+                    tasks_processed += 1
+                if checkpoint:
+                    break
+                continue
 
             # Acquire lease via perform_write
             jog_acquire_lease(root, gh_num, os.getpid(),

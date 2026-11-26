@@ -1,0 +1,12 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.5yuRknhEly
+jog: GH-901 not started: hold-check-unavailable: live issue response incomplete; parking item.
+jog: queue complete (0 pending tasks).
+jog exit=0
+worker edge calls=0
+snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold-check-unavailable: live issue response incomplete
+ASSERT case=issue-malformed expected_calls=0 PASS
+queue: [('jog-01M8B4MSBV631GM7675H1C910C', 'parked', 'hold-check-unavailable: live issue response incomplete', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.5yuRknhEly
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.5yuRknhEly
+control exit=0

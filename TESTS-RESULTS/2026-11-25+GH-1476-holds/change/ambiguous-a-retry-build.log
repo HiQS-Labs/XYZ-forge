@@ -1,0 +1,11 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.nlYWyLW2d4
+jog: retry-build GH-901 → parked — hold: capture body HELD: marker
+jog exit=0
+worker edge calls=0
+snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold: capture body HELD: marker
+ASSERT case=ambiguous-a expected_calls=0 PASS
+queue: [('jog-01M8B4NS8BHT0NVYCJ9F7ZSP8C', 'parked', 'hold: capture body HELD: marker', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.nlYWyLW2d4
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.nlYWyLW2d4
+control exit=0

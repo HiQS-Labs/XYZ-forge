@@ -1,0 +1,24 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.NpEvpiFuHN
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.NpEvpiFuHN/root-install/.tick/jog/jog-01M8A43NPHGQKJR45E3S519SS3/gh901-exec1/preflight)
+jog: GH-901 preflight refused: NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t
+jog: advancing halted: GH-901 parked — preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t
+jog exit=0
+worker edge calls=0
+queue: [('jog-01M8A43NPHGQKJR45E3S519SS3', 'parked', "preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t", 1)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.NpEvpiFuHN
+jog: reset GH-901 to pending
+
+============================================================
+jog: processing GH-901 (attempt 2) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec2, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.NpEvpiFuHN/root-install/.tick/jog/jog-01M8A43NPHGQKJR45E3S519SS3/gh901-exec2/preflight)
+jog: GH-901 preflight refused: NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t
+jog: advancing halted: GH-901 parked — preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 issue criterion(a) missing from the doc with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <t
+refreshed row: [('jog-01M8A43NPHGQKJR45E3S519SS3', 'parked', 2)]
+history: [('gh901-exec1', 'preflight-refused'), ('gh901-exec2', 'preflight-refused')]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.NpEvpiFuHN
