@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -93,5 +93,22 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+
+Basis: The seeded skill satisfies all three scoped documentation checks. Read the entire 302-line artifact and issue #1620; no pre-existing defects were found within those checks. No wording or policy changes requested.
+
+swept file: yes
+
+- [Pass] Scope is explicit: `.relay-artifacts/SKILL.md:28–32` restricts the rule to Flywheel's own #1400 architecture/implementation arc and says other projects retain each owning skill's review limits. This agrees with the existing workflow ownership at lines 16–22 and unrelated-campaign boundary at lines 115–119. The inserted block does not purport to change another skill or establish a repo-wide limit.
+- [Pass] The recorded exception is consistent with the existing ladder: lines 40–46 cap each review loop at four and require the override and reason on the issue; lines 52–53 identify the standing operator decision. Rubric 1A at line 67 forbids **silent** changes, while ladder step 4 at lines 109–113 still requires escalation for cap/spending increases and control bypasses. Applying the stated four-round limit neither authorizes a fifth round nor resets attempt allowances (lines 125 and 167–172).
+- [Pass] Protected controls remain binding: lines 49–50 expressly preserve real-path red-then-green evidence, the push gate, safety, containment, attempt limits and the operator's merge decision. The spike at lines 34–39 is time-boxed disposable-clone evidence and “lands nothing by itself.” The final-review PR clause at lines 46–48 requires disclosed findings and says “never recorded as approved”; publication therefore supplies no approval. Existing exact-head QA and per-PR merge approval at lines 138–152 and 272–276 continue to apply.
+- [Pass] Whole-file comparison: `cat .relay-artifacts/SKILL.md` exited 0; comparing its lines outside 26–54 with GitHub `fetch_file(repository_full_name="HiQS-Labs/XYZ-forge", path="skills/2-daily/flywheel/SKILL.md", ref="development")`, blob `ec26c5c11d2fdc4a6afe5b7262073503f3afbb0d`, using `[...lines.slice(0,25), ...lines.slice(54)].join("\n") === base.content` returned `true`. The seeded skill differs from that published file only by the 29-line block directly under the rubric-section heading at line 24.
+
+Verification boundary: static documentation review only; no tests, executable fixtures or docs gate run, and no later gate assumed. This verdict does not certify merge readiness or a repository-wide changed-file inventory. Graph discovery found no index for this isolated checkout; nearest Forge index generation `2026-11-25T18:19:12Z` reported the seeded artifact and relay paths missing, so all review conclusions use the directly read local artifact rather than graph completeness.
+
+Relay closed (Approved), no further turn needed. Token handoff: `done RELAY-gh1620-final-qa-r1 --agent codex` via the absolute env-pinned tick.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
