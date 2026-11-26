@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -182,5 +182,114 @@ close refused False verbs ['claim', 'release'] token ['claimed', 'builder']
 5. [Should] Acceptance matrix vs evidence — **Implemented**: the plan's wording now matches what ran; M5 records a red pre-advance gate after an adjudicated terminal (`pre-advance-failed`, no approved outcome); S1 runs the Approved/Closed/Consult-Adjudicated triple through `_merge_reviewed_pr`; `provenance.jsonl` is committed; `marathon.sh --retry` stays unexercised and said so.
 
 Evidence head for these runs: ff2266d3 (implementation); re-review the committed files.
+
+### Round 2 · Reviewer · codex
+
+VERDICT: FAIL
+
+Basis: A verdict inside a code fence can still authorize adjudication. The close rollback, published evidence, and candidate isolation also have unresolved cases.
+
+swept file: no
+
+Reviewed the seeded diff and the current source along the changed runtime paths and their approval consumers. The seeded diff predates the round-1 dispositions, so the current checkout is the source for the retest. The graph covers a separate Forge checkout. Scope was the affected paths and surrounding logic, and a full-source sweep of every changed module remains outstanding. No fixture, suite, or gate ran here.
+
+- [Blocker] Reject a verdict inside an open Markdown fence. Observed input: the read-only probe below returns `'NON-BLOCKING'` for an unclosed tilde fence and for a four-backtick fence followed by a three-backtick line. The parser counts three-backtick substrings (`utils/py/relay_drive.py:1047–1054`), and a second valid NON-BLOCKING sends either case down the adjudication path (`:1163–1166`). This leaves the round-1 verdict finding open against acceptance line 42. Affected scope: an advisor's only apparent verdict is the final line of a fenced example. Falsifier: both fenced inputs return None and hold, while the plain and correctly closed four-backtick controls return NON-BLOCKING. Track fence marker and opening length per line and require the final declaration to be outside the fence.
+- [Should] Restore the original handoff after the reviewer claim is refused. Observed input: the probe starts open to builder and refuses the reviewer claim after a successful transfer. It ends `False`, open to reviewer. The release at `utils/py/relay_drive.py:1085–1091` requires a claim (`src/scope.js:97–104`), and the caller restores STATUS only (`relay_drive.py:1647–1649`). S7b's previously reported first-release refusal is covered by the new rollback and receipt (`manual_check.log:40–41` in the GH-1637 evidence directory). Affected scope: adjudication moving an open token from builder to reviewer when that second claim is refused. Falsifier: a one-shot reviewer claim refusal restores Open and the original builder handoff, with no attestation. Distinguish refusal to claim from refusal of done, return the handoff through the existing helper when the token is open to the reviewer, and name the observed token state if recovery fails.
+- [Should] Preserve the integration base used for the actual PR. Observed input: a target with `MARATHON_INTEGRATION_BRANCH=release` checked out on release is routed to a lane with PR base release (`utils/py/marathon_drive.py:3396–3403,3452–3458,2751–2755`). The dispatch does not supply that base (`:3542–3563`), and with an existing `origin/development` ref the tie-break selects its merge-base first (`utils/py/relay_drive.py:1102–1109`). Affected scope: an auto-cut lane with a known base other than development and no explicit `RELAY_DIFF_BASE`; for example a release line with a file change absent from development. Falsifier: on that history the prompt names the merge-base with release and excludes the release-only change, while including the lane's own change. Pass the already-resolved lane base through the dispatch, preserving an explicit override.
+- [Should] Give the mixed closeout PR the same access to advisor reasoning. Observed input: `utils/py/marathon_drive.py:2871–2878` passes only phase ID and verdict tokens to `relay-automation/marathon.sh:691–706`; M6 asserts exactly those tokens (`TESTS-RESULTS/2026-11-26+GH-1637/manual_check_marathon.sh:157–172`). Acceptance line 45 requires the closeout summary to link both answers. The lane PR and QA comment now include excerpts (`marathon_drive.py:144–153,1761–1772`). Affected scope: readers of a mixed `--closeout-pr` summary with no lane PR link or access to the local advisor archive. Falsifier: the mixed body still reports 2/2, labels p2, and gives readers a resolvable transcript reference or bounded inline reasoning from each advisor. Carry that reference or excerpt alongside the existing phase data.
+- [Should] Reconcile the checked evidence statement with the receipts. Observed input: acceptance line 48 still says the red pre-advance control left STATUS restored and token open and includes a fresh-token retry among verified cases. M5 retains `Consult-Adjudicated` in the result (`manual_check_marathon.log:17–19`), S8 stops at a spent token (`manual_check.log:42–43`), and plan line 78 says the retry was unexercised. S2/S2d also describe an approved repaired SHA, but the builder stub writes deliverable content only on its first turn (`manual_check.sh:27–33,146–159`), and the approval assertions check exit, STATUS and order. Affected scope: the declared evidence for red recovery and review of a newly repaired candidate. Falsifier: the matrix describes the M5 and S8 observations accurately, and the REAL control records a changed repair SHA and verifies the reviewer attested it. Keep the retry explicitly unexercised unless a clone run records it. The four hashes in `provenance.jsonl:1–2` matched the current scripts and logs.
+- [Should] Allocate consult inputs and outputs per invocation. Form 2, pending clone probe. Observed input: two independently locked Marathon runs can use distinct clones and the same `XYZ_ARCHIVE_ROOT` (`utils/py/marathon_drive.py:1403–1412,2171`). Both phase paths end in `RELAY.md`. The driver constructs the same date-directory, label and prompt path in each process, opens it for overwrite, and passes the path to the subprocess alongside the caller's own pinned SHA (`utils/py/relay_drive.py:1136–1150`). The child opens that path later and creates a run directory from that label plus wall-clock seconds (`utils/py/consult.py:689–693,708–709`); the parent consumes answer paths and stamps its own candidate (`relay_drive.py:1155–1166,1185–1190`). Affected scope: overlapping runs in separate clones using a shared archive and equal relay basenames. Candidate A can receive candidate B's question, or the runs can share answer paths if started in the same second. Falsifier: two producers with distinct full relay paths and distinct candidate markers sharing an archive each receive only their own prompt and have distinct output namespaces. Allocate a unique directory or label for each consult invocation and keep its prompt and answers there.
+
+  Clone probe: run this from a disposable full clone. It evaluates the current path-writing code in two processes, synchronizes the writes before a child-style read, and uses only a temporary directory inside the clone.
+
+  ```sh
+  PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+  import ast, multiprocessing as mp, os, tempfile, time
+  from pathlib import Path
+  from types import SimpleNamespace
+
+  path = Path("utils/py/relay_drive.py")
+  fn = next(n for n in ast.walk(ast.parse(path.read_text()))
+            if isinstance(n, ast.FunctionDef) and n.name == "consult_adjudicate")
+  def assignment(name):
+      return next(i for i, n in enumerate(fn.body) if isinstance(n, ast.Assign)
+                  and any(isinstance(t, ast.Name) and t.id == name for t in n.targets))
+  block = compile(ast.Module(fn.body[assignment("out_base"):assignment("env")], []), str(path), "exec")
+  ctx = mp.get_context("fork")
+  barrier, results = ctx.Barrier(2, timeout=10), ctx.Queue()
+  def run(task, archive):
+      env = dict(os=os, time=time, tempfile=tempfile,
+                 get_env=lambda key, default=None: archive if key == "XYZ_ARCHIVE_ROOT" else default,
+                 root_dir=archive, relay_file=f"{task}/RELAY.md", question=task, cand=task,
+                 args=SimpleNamespace(relay_task=task))
+      exec(block, env)
+      barrier.wait()
+      results.put((task, Path(env["prompt_file"]).read_text(), env["out_dir"], env["label"]))
+
+  with tempfile.TemporaryDirectory(prefix="cap-consult-probe-", dir=Path.cwd()) as archive:
+      children = [ctx.Process(target=run, args=(task, archive)) for task in ("candidate-A", "candidate-B")]
+      for child in children:
+          child.start()
+      for child in children:
+          child.join(15)
+          if child.is_alive():
+              child.terminate()
+              child.join()
+              raise SystemExit("probe timed out")
+          if child.exitcode != 0:
+              raise SystemExit(f"probe child failed: {child.exitcode}")
+      rows = [results.get(timeout=2), results.get(timeout=2)]
+      for task, question, out_dir, label in sorted(rows):
+          print(f"{task} read {question}; output namespace {Path(out_dir).name}/{label}")
+      distinct = len({(row[2], row[3]) for row in rows}) == 2
+      print("distinct output namespaces:", distinct)
+      raise SystemExit(0 if distinct and all(task == question for task, question, *_ in rows) else 1)
+  PY
+  ```
+
+- [Pass] The round-1 extra-turn defect is closed. The cap extension is disabled after consult and the repair adds two turns (`utils/py/relay_drive.py:1609–1635`), and the recorded repair-with-progress case ends after `bld rev bld bld rev` with one consult (`TESTS-RESULTS/2026-11-26+GH-1637/manual_check.log:21–22`).
+- [Pass] The defaults, pinned isolation and reject-before-advance path have cited evidence. The Bash default is 4 (`relay-automation/marathon.sh:594–595`), the Python phase default is 9 and the driver flag is opt-in (`utils/py/marathon_drive.py:3093–3097,3547–3553`, `utils/py/relay_drive.py:174–177,1196–1201`). The pin bypasses the stash and untracked copy (`utils/py/consult.py:730–754`). The red and green candidate controls and both gate refusal paths are recorded in `manual_check_marathon.log:14–19` and `manual_check.log:35–39`. The focused gate, close, and attestation use the existing judge and writer (`relay_drive.py:919–966,988–1023`).
+- [Pass] The reviewer-approval boundary still holds. Jog blocks exactly the new status (`utils/py/jog_run.py:2113–2122`, with the triple in `manual_check.log:7–10`), Express requires Approved (`utils/py/express.py:198–207`), and PDDA accepts Approved/Closed (`utils/pdda/check_marathon_qa.py:298–307`). Archived push qualification checks a valid, candidate-bound terminal attestation and admits the new terminal for that distinct purpose (`utils/py/gate_receipt.py:145–175`, `utils/py/relay_attest.py:451–470`).
+
+Read-only probe for the parser and close rollback (exit 0, decisive output below). It evaluates the current source with input strings and an in-memory tick model.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, re
+from pathlib import Path
+from types import SimpleNamespace
+p = 'utils/py/relay_drive.py'
+tree = ast.parse(Path(p).read_text())
+names = {'ADJ_LINE_RE', 'ADJ_TOKEN_RE', 'parse_adjudication', 'token_handoff', 'adjudication_close_token'}
+nodes = [n for n in ast.walk(tree) if (isinstance(n, ast.FunctionDef) and n.name in names) or (isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id in names for t in n.targets))]
+state, log = ['open', 'builder'], []
+def tick(verb, task, flag, agent, *rest):
+    log.append((verb, agent))
+    if verb == 'claim':
+        if agent == 'reviewer':
+            return False
+        state[:] = ['claimed', agent]
+        return True
+    if verb == 'release' and state == ['claimed', agent]:
+        state[:] = ['open', rest[-1]]
+        return True
+    return False
+env = dict(re=re, tick_ok=tick, token_state=lambda: tuple(state), relay_file='RELAY.md', args=SimpleNamespace(reviewer='reviewer', relay_task='token'))
+exec(compile(ast.Module(sorted(nodes, key=lambda n: n.lineno), []), p, 'exec'), env)
+parse = env['parse_adjudication']
+for label, prefix in [('plain', 'Analysis'), ('tilde fence', '~~~text'), ('unequal backtick fences', '`'*4 + '\n' + '`'*3), ('closed long fence', '`'*4 + '\nexample\n' + '`'*4 + '\nReason')]:
+    print(label, repr(parse(prefix + '\nADJUDICATION: NON-BLOCKING')))
+print('close result:', env['adjudication_close_token'](), 'state:', state, 'calls:', log)
+PY
+```
+
+```text
+plain 'NON-BLOCKING'
+tilde fence 'NON-BLOCKING'
+unequal backtick fences 'NON-BLOCKING'
+closed long fence 'NON-BLOCKING'
+close result: False state: ['open', 'reviewer'] calls: [('claim', 'builder'), ('release', 'builder'), ('claim', 'reviewer'), ('release', 'reviewer')]
+```
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
