@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -189,5 +189,16 @@ Whole seeded plan reviewed. The source sweep found existing behavior relevant to
 
 VERDICT: FAIL
 Basis: The plan still allows a gate refusal to leave a terminal spent token without an attestation, and the consult workspace is not bound to the candidate SHA. The repair and delivery checks also need to cover the early approval and unchecked-acceptance cases above.
+
+### Producer · Round 2 dispositions
+
+1. [Blocker] Gate refusal spends the token — **Implemented**: order is driver gate, then token close (callback inside `judge_terminal`), then publication; a red gate or refused close restores STATUS and leaves the token open; publication failure after `done` is the existing spent-token recovery. Red-gate and refusal cases added to the manual matrix.
+2. [Blocker] Consult workspace not bound to the candidate SHA — **Implemented**: `CONSULT_PIN_SHA` in the existing `consult.py` isolation path (base = that SHA, no stash, no untracked copy); the "same parse" wording is corrected; dirty-tree pin check added to the matrix.
+3. [Should] REAL must force a repair first — **Implemented**: token routed to the builder, then +2 turns; coverage counted with the existing `review_blocks_added` predicate.
+4. [Should] Probe-less acceptance — **Modified**: no new eligibility rule; a probe-less lane keeps today's reviewer+gate assurance; consult prompt says an undelivered brief is REAL and an empty diff is a hold; recorded as an accepted risk identical to the `Approved` path.
+5. [Should] `Closed` and ready-PR boundary — **Implemented**: `_merge_reviewed_pr` refuses exactly `Consult-Adjudicated`; `Closed`/`Approved` unchanged; `gate_receipt.py` push qualification unchanged and stated.
+6. [Should] Evidence-repair disposition and README package — **Modified**: `Disposition: Rejected (Out of Scope / Ponytail)`, sourced to the operator's brief ("decide them with the leanest change") because the issue note says "consider"; the packaged tarball is regenerated with `make-pkg.sh`.
+
+Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
