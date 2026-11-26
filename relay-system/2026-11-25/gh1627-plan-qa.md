@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -174,5 +174,60 @@ Dispositions:
 - The two `[Pass]` findings and the `[Unverified — needs clone run]` item are accepted as stated; the latter is the build-phase evidence.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2 · codex
+
+**What this proposes**
+
+The gate will extract its existing Python toolchain probe into one function and try the prepared home-directory venv only after PATH's Python fails. A successful fallback changes PATH for that invocation and its children and prints its identity; unsuccessful fallback restores the original probe's diagnostic state. Two existing negative cases receive local HOME isolation, with small documentation updates.
+
+**How the existing system works, per this document**
+
+validate.sh owns the probe and runs it before --print-mode returns. The hook invokes validate.sh separately for its mode report and its real gate, while docs routing and receipt reuse bypass it. merge-cleanup reads the result of --print-mode rather than maintaining another probe; hook receipt operations work with the standard library.
+
+**What it's not**
+
+Excluded: venv creation, host/profile changes, a path knob, replacement of healthy PATH Python, hook/merge-cleanup rewrites, and new suites. Deferred: ci-local.sh's independent invocations. No implementation choice is left open; actual build-phase measurements are still outstanding.
+
+**Source-backed assessment**
+
+swept file: yes
+
+Ship the plan to implementation. I reviewed the entire seeded artifact, including its unchanged sections, and found no additional pre-existing plan defect requiring correction. This is plan approval, not implementation or delivery approval. No phase gate is configured in these Reviewer steps, and no gate, suite, fixture, or git command was run.
+
+Graph scope: Verify tier; nearest indexed project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-26T04:31:47Z`. This worktree is not indexed. The graph search returned an older `preflight_warnings` and no `gate_toolchain_fault_reason`; coverage has no recorded gaps for the named source paths in that other checkout, while the seeded artifact is missing there and test coverage has known gaps (both pages inspected). Material conclusions therefore use direct local source reads. Local literal searches supplemented test coverage; this is not an exhaustive runtime claim about test/.
+
+- **[Pass] F1 closed.** Plan `.relay-artifacts/GH-1627-GATE-VENV-AUTOSELECT.md:38`, `:44`, `:100`, `:108`, and `:110` now distinguish hook exit 1 from inner exit 3, correctly describe base gh251 as independent of fallback availability, and separate rejecting from preservation controls. This agrees with `githooks/pre-push:455-472`, `validate.sh:1035-1045`, and `test/gh251-validate-pytest-skip.sh:60-85`. The unsupported recorded-result claim is gone.
+- **[Pass] F2 closed.** Plan lines 107-109 now require a distinct healthy PATH entry, downstream observation, all preflight states, valid push accounting, a route that actually runs validate.sh, no receipt reuse, and remote read-back. Line 38 correctly makes selection and notices per invocation. These controls address `githooks/pre-push:90-99`, `:354-359`, `:390-395`, `:421-453`; merge-cleanup's result mapping remains at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1083-1097` and its warning consumer at `:1444-1448`. If using row c's forwarding shim, observe child PATH resolution (for example, `command -v python3`); the delegated interpreter's `sys.executable` alone does not identify which wrapper PATH selected.
+- **[Pass] The implementation remains bounded and buildable.** Plan lines 58-70 reuse the module list/version floor and recompute diagnostic state after a failed fallback; line 64 exports PATH for workers and child invocations. The original refusal is at `validate.sh:1035-1045`, with admission downstream at `:1063-1068`. Invocation-local HOME isolation at plan line 73 keeps gh251's negative assertions meaningful (`test/gh251-validate-pytest-skip.sh:60-85`). No additional selector, wrapper layer, host change, or suite is needed. The hook's direct Python imports remain standard-library (`utils/py/gate_receipt.py:13-24`, `utils/py/rtl.py:1-16`), supporting the unchanged-hook scope for a runnable 3.14 interpreter lacking development modules.
+- **[Unverified — needs clone run] Build-phase proof remains required.** Plan lines 98-110 prescribe base/candidate runs and provenance, including byte-identical unsuccessful-fallback output, child interpreter observation, actual gated publication, preflight agreement, and existing suite regressions. Rows a/d/e(a) must reject the unchanged candidate; preservation rows should pass on base. None of those runtime outcomes was measured in this turn, and approval does not assume a later automatic gate.
+
+Narrow read-only source check: `PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'` with the following body, then `PY`; exit **0**:
+
+```python
+from pathlib import Path
+p = Path('.relay-artifacts/GH-1627-GATE-VENV-AUTOSELECT.md').read_text()
+v = Path('validate.sh').read_text()
+h = Path('githooks/pre-push').read_text()
+assert p and v and h
+assert 'hook exit 1' in p and 'inner exit 3' in p
+assert 'base gh251 is green with or without the venv' in p
+assert '**rejecting** controls' in p and '**preservation** controls' in p
+assert '**distinct from**' in p and 'no receipt on the commit' in p
+assert 'git ls-remote' in p and '(c) healthy distinct PATH python' in p
+b = v.split('# GH-732 environment faults BEGIN', 1)[1].split('# GH-732 environment faults END', 1)[0]
+assert b and b.count('test-venv') == 1
+assert h.rstrip().endswith('exit 1')
+print('F1: corrected hook status, baseline gh251, and preservation/rejection split present')
+print('F2: distinct healthy path, forced gate/no receipt, remote read-back, and preflight c present')
+print('base source: venv occurs only in fault text; hook refusal ends with exit 1')
+```
+
+Decisive output: all three printed lines above appeared. This checks the document corrections against the source; it is not a runtime red control.
+
+VERDICT: PASS
+Basis: F1 and F2 are resolved in the seeded artifact. The plan can be built as written, with runtime acceptance and retained evidence explicitly belonging to implementation.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) can proceed to implementation and disposable-clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
