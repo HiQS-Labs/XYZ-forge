@@ -1,0 +1,10 @@
+suite_rc=0
+rev=7f2f1cce5 label=before S=<S>
+suite_tail=Ran 227 tests in 311.068s  OK 
+new_merge_entries=36
+suite_tmp_left=0
+plants_unchanged=NO
+trace_lines=138
+trace_eq_S=138
+trace_under_suite_tmp=0
+trace_distinct=<S> 

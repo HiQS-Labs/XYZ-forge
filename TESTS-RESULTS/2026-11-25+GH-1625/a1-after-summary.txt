@@ -1,0 +1,10 @@
+suite_rc=0
+rev=ada4644db label=after S=<S>
+suite_tail=Ran 227 tests in 310.817s  OK 
+new_merge_entries=0
+suite_tmp_left=0
+plants_unchanged=yes
+trace_lines=138
+trace_eq_S=0
+trace_under_suite_tmp=138
+trace_distinct=<S>/gh436-suite-tmp-yv3ig44_ 

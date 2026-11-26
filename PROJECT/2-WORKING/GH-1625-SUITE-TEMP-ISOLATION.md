@@ -2,7 +2,7 @@
 gh_issue: 1625
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1625
 title: "Test suites leave merge-cleanup-shaped folders in the real system temp directory (fixture PRs pr-1 / pr-2)"
-status: "In Progress (plan written, awaiting plan QA)"
+status: "In Progress (implemented; gate and final QA pending)"
 created: 2026-11-25
 updated: 2026-11-25
 owner: Claude (start-task)
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Recon reproduced the defect on an archive of `origin/development` at `086b657ea` (all four suite modules leak and call production pruning). Plan QA round 1 FAIL (A1 measurement); A1 revised. | Codex plan QA round 2, then implement the one-file change. |
+| Plan QA Approved (round 3). Fix `ada4644db`; A1 before/after recorded in `TESTS-RESULTS/2026-11-25+GH-1625/` (before: 36 leaked folders, pruning listed S 138/138 and removed 5/5 plants; after: 0 leaked, 138/138 listings inside the suite dir, plants intact, 227 OK). | Gate from a disposable clone (A2), final Codex QA, PR. |
 
 ## Observed problem
 
