@@ -2,9 +2,9 @@
 gh_issue: 1315
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1315
 title: "Legacy migration preview refuses unadopted skill retirement"
-status: "Prepared 2026-11-25 (1-INBOX, held: queue row still pending/0, not started)"
+status: Active
 created: 2026-11-11
-updated: 2026-11-25
+updated: 2026-11-26
 owner: Conveyor preparation (Day 2 Flywheel proving-arc candidate; ledger #1610, ranking #1616)
 doc_type: bugfix
 goal: "Legacy migration preview refuses unadopted skill retirement"
