@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -592,5 +592,54 @@ Disposition (B2 accepted and implemented; repair `00d92c8d4`; round 4 range is `
 - Provenance regenerated for the new logs (65 rows; per-row runtime shas: replay at `00d92c8d4`, base `641558361`, change-side suites at `2c22fdf11`, the head named in `suites-change/summary.txt`; code is unchanged between `00d92c8d4` and `2c22fdf11`, only evidence and relay files differ). The eight existing suites were re-run at `2c22fdf11`: all rc=0, gh280 227 pass / 0 fail; the base-side suite receipts are those from `641558361`.
 
 Handing off to Reviewer for round 4 (the last of 4).
+
+### Reviewer · Round 4
+
+VERDICT: PASS
+
+Basis: B2 is closed by the canonical selected-capture union and the measured pre-lease refusal. Earlier B1/S1/S2/S3/N1 remain closed. No additional actionable defect was identified in the whole-file sweep within the settled holds-only scope. This approves the code review, not final-head gate qualification or OL-10 readiness.
+
+swept file: yes
+
+gate run: no — no phase gate is configured for this turn; no suite, executable fixture, service call, or Git command was run. Reviewed the seeded whole diff, complete changed runtime modules and existing fixture/replay files, surrounding call paths, plan/history, and retained evidence. The narrow probe below uses extracted source with in-memory stubs and scratch captures; it does not execute a worker or mutate the queue.
+
+- **[Pass] B2 closed.** `utils/py/jog_run.py:1693` adds the canonical selected capture, including a sole `4-MISC` capture, before reading bodies. The rerun below changes the earlier observed `writer calls=['lease']` for `HELD: owner decision` to `writer calls=['park']`; the `Ready` control still reaches `['lease']`. The existing disposable-clone receipts cover both entry points: `TESTS-RESULTS/2026-11-25+GH-1476-holds/change/archived-hold.log:7` and `change/archived-hold-retry-build.log:6` report attempts `0->0`, executions `0->0`, unchanged capture, zero native attempt files, and the specific capture hold reason. The base red is correctly attributed: `base/archived-hold.log:11` reports zero worker calls, while line 12 reports attempts/executions `0->1`; it is not evidence of a worker bypass.
+- **[Pass] B1/S1 and Q1/Q3 remain closed.** Active candidates, Preflight's working-folder glob, and the canonical pick are united at `utils/py/jog_run.py:1691`; malformed label entries refuse at line 1681. The probe retains both ambiguous-capture hold refusals and the clean control, rejects all three malformed label examples, and distinguishes open work, closed issues, closed-unmerged PRs, merged PRs, and failed lookups. Loader/read/recognizer failures return refusal reasons at lines 1677, 1702, and 1720. Dependency lookup failure stays unresolved at lines 1708–1711. These paths fail closed; the retained hold cases require their specific hold reason rather than accepting an unavailable-input reason.
+- **[Pass] Q2 placement/control flow.** Retry refuses and returns at `utils/py/jog_run.py:1111` before lease/dispatch at lines 1116–1117. The queue guard at line 2961 skips simulation, parks before the lease at line 2972 and promotion at line 2982, counts a processed item in checkpoint/supervised modes, breaks for checkpoint, and otherwise continues. The lease increments attempts at `utils/py/releases_app.py:5096`; the existing status writer at line 5126 does not. This agrees with the retained no-attempt/no-execution snapshots, rather than relying on worker-call count alone.
+- **[Pass] S2/S3/N1 and Q4/Q5 remain closed.** `TESTS-RESULTS/2026-11-25+GH-1476-holds/run-cases.sh:20` creates its own cleanup directory; line 31 no longer derives the deletion target from logged text. `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt:286` requires a nonempty capture, and lines 307–310 compare exact calls, attempts, capture hash/location, executions, native-file maps, parked status, and the expected reason. The two change-side mutation receipts (`capture-hold-mutate-native.log:8`, `issue-hold-mutate-capture.log:8`, under the same holds evidence folder's `change/`) say FAIL as intended. Approval uses the ASSERT/snapshot evidence, not the manual driver's exit zero. The probe checked all 65 manifest artifacts for nonempty content and matching hashes. Runtime labels retain their distinct replay/base/suite commits; `suites-change/summary.txt:1` through line 8 report eight rc=0 runs at `2c22fdf1`. These are inspected Producer receipts, not suites rerun by this reviewer.
+- **[Pass] Q6/Q7.** The fixture supplies the hold recognizer beneath the installed prefix (`test/gh280-jog-marathon-adapter.sh:169`) and a clean issue response in its existing GH shim (line 55). Runtime loading is module-relative (`utils/py/jog_run.py:1671`), consistent with root and vendored installs. The candidate extraction retains the canonical index's existing collection/selection path (`utils/py/wave_reconcile.py:1100`, `:1113`, `:1148`), adding the necessary shared candidate access instead of a second parser or state mechanism. No new suite is introduced.
+
+**P8 — rerun retained P7 against the final seeded source; exit 0.** The command was inspected before execution; all generated captures stayed beneath the configured scratch directory.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+from pathlib import Path
+s=Path('relay-system/2026-11-25/gh1476-holds-code-qa.md').read_text()
+s=s.split('**P7 — exact narrow probe and decisive output (exit 0).**',1)[1]
+probe=s.split("python3 - <<'PROBE'\n",1)[1].split('\nPROBE\n',1)[0]
+exec(compile(probe,'retained-P7','exec'))
+PY
+```
+
+Decisive output (the earlier label/dependency/ambiguous-capture cases also retained their stated results):
+
+```text
+archived selected=PROJECT/4-MISC/GH-901-HELD.md
+archived selected body=HELD: owner decision
+archived hold_refusal='hold: capture body HELD: marker'
+legacy root-preflight exists=False
+nonempty matching manifest artifacts=65
+seed lines=4391 files=82
+seed sha256=d8cf5e36b959be80491d3e54fa1dca7f02d9e99f0b947a80514e8b386ad0b0ca
+jog: GH-901 not started: hold: capture body HELD: marker; parking item.
+actual admission slice, archived body='HELD: owner decision', writer calls=['park']
+actual admission slice, archived body='Ready', writer calls=['lease']
+```
+
+Evidence boundary: Verify-tier graph lookup/coverage used project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, indexed at `2026-11-26T04:31:47Z`, a different checkout. Its missing new paths/helpers and partial gh280 range 729–730 were covered by local source reads; source tracing supplies the current call-site evidence. No graph completeness claim is made. The seed comparison above preceded this relay append. Git history and final-head gate equivalence were not inspected under the no-Git restriction, and no later gate is assumed.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
