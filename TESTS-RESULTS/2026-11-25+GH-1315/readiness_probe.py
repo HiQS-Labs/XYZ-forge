@@ -6,9 +6,10 @@ Exit 0 ONLY when the FIXED behavior is positively observed through the real CLI;
 
 Fixed behavior (issue #1315 "Expected"): for a skill that has a copy in the collection but is NOT
 recorded in .deploy-skills.json, `sync.py --migrate-legacy NAME --archive-legacy` refuses in preview
-(exit 2, an error naming the adoption remedy) exactly as apply does (exit 2), and neither mode
-creates a backup, a staging directory or a link, or touches the real legacy folder.  A skill that IS
-recorded still previews cleanly (positive control).
+(exit 2) with the SAME error as apply (exit 2) for that folder, and the error names the skill and the
+adoption remedy; neither mode creates a backup ZIP, a new staging directory or a link, or touches the
+real legacy folder.  A skill that IS recorded still previews AND applies (managed link plus retained
+archive): the positive control.
 
 All writes are confined to one resolved temp directory; HOME points inside it.
 """
@@ -61,14 +62,20 @@ def main():
         staging_before = {q.name for q in root.glob(".staging/*")}
         legacy = ("--migrate-legacy", "xyz", "--archive-legacy")
 
+        def refusal(out):
+            """The error entries that concern the selected legacy folder, parsed from the CLI's JSON."""
+            errors = json.loads(out)["errors"]
+            return [e["error"] for e in errors if e["path"].rstrip("/").split("/")[-1] == "xyz"]
+
         rc, out, err = run(env, "sync.py", root, *legacy)
-        text = out + err
-        assert rc == 2, ("preview must refuse like apply", rc, text)
-        assert "adopt" in text.lower(), ("preview refusal must name the adoption remedy", text)
+        preview_errors = refusal(out)
+        assert rc == 2 and len(preview_errors) == 1, ("preview must refuse like apply", rc, out, err)
+        assert "adopt" in preview_errors[0].lower(), ("preview refusal must name the adoption remedy", preview_errors)
         assert snapshot(work) == before, "preview must not write anything"
 
         rc, out, err = run(env, "sync.py", root, *legacy, "--apply")
-        assert rc == 2, ("apply must still refuse", rc, out, err)
+        assert rc == 2 and refusal(out) == preview_errors, ("apply must refuse with the same reason as preview",
+                                                           rc, refusal(out), preview_errors, err)
         # A refused apply may still record a sync-partial history entry; what it must NOT leave is a
         # backup ZIP, a new staging directory or a link, and the legacy folder must be intact.
         assert not list(root.glob("backups/*.zip")), "refused apply must not write a backup ZIP"
@@ -94,8 +101,12 @@ def main():
         assert rc == 0 and result["errors"] == [], ("recorded skill must still preview cleanly", rc, out, err)
         assert any(a["kind"] == "link" and a["name"] == "sample" for a in result["actions"]), result["actions"]
         assert snapshot(work) == before, "recorded-skill preview must not write anything"
+        rc, out, err = run(env, "sync.py", root, "--migrate-legacy", "sample", "--archive-legacy", "--apply")
+        assert rc == 0, ("recorded skill must still apply", rc, out, err)
+        assert (target / "sample").is_symlink() and (target / "sample").resolve() == (root / "sample").resolve()
+        assert len(list(root.glob("backups/sample-*.zip"))) == 1, "apply must retain the archive of the legacy folder"
         print("unadopted legacy migration is refused by preview and apply (adoption remedy named); "
-              "no backup ZIP, staging directory or link; recorded-skill preview unchanged")
+              "no backup ZIP, staging directory or link; recorded-skill preview and apply unchanged")
 
 
 if __name__ == "__main__":
