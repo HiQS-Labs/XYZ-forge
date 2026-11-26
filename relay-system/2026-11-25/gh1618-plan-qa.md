@@ -174,4 +174,13 @@ Basis: Both prior findings are closed by the revised wording. The full plan now 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-26T02:40:23Z
+task: RELAY-gh1618-plan-qa-r2
+reviewer: codex
+status: Approved
+reviewed-head: 8a4bcf595c2c2ef1e6390d2cd0316f51ca827ff5
+added-range: 21806+5222
+added-sha256: 81fcb92ca27344d5696ee98f5e94a6487bb0d186cf85d2d07cc65d4a0ba484ee
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
