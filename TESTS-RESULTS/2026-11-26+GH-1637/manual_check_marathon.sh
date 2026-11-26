@@ -8,9 +8,9 @@
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$ROOT/test/_setup.sh" gh1637-marathon >/dev/null
-export TICK_BIN="$TICK" XYZ_ARCHIVE_ROOT="$WORK/archive" CONSULT_TIMEOUT=60 XYZ_HARNESS_CONTEXT=marathon MARATHON_ROOT="$A"
+unset XYZ_ARCHIVE_ROOT   # transcripts and consult answers land in <clone>/relay-system (this is a disposable clone)
+export TICK_BIN="$TICK" CONSULT_TIMEOUT=60 XYZ_HARNESS_CONTEXT=marathon MARATHON_ROOT="$A"
 unset MARATHON_REVIEWER_GATE_CMD
-mkdir -p "$XYZ_ARCHIVE_ROOT"   # turn transcripts need a durable root (rtl_transcript_root)
 printf '.tick/\nbin/\n.order\n.n\n.consults\nagy\ncodex\n' >"$A/.gitignore"
 echo RED >"$A/marker.txt"; git -C "$A" add .gitignore marker.txt && git -C "$A" commit -q -m seed && git -C "$A" push -q origin HEAD:main
 PASSN=0; FAILN=0
