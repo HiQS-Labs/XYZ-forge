@@ -209,9 +209,13 @@ if [ "${CASE_KIND:-ready}" = capture-hold ]; then
   printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/$CAP_REL"
   git -C "$FR" add PROJECT && git -C "$FR" commit -qm capture-hold
 fi
-if [ "${CASE_KIND:-ready}" = ambiguous ]; then
+# ambiguous: two working captures declare #901 and only B holds; ambiguous-a: only A holds. Preflight
+# takes whichever the filesystem lists first and the resolver may prefer another, so the hold check
+# must refuse for a hold in either.
+if [ "${CASE_KIND:-ready}" = ambiguous ] || [ "${CASE_KIND:-ready}" = ambiguous-a ]; then
   cp "$FR/$CAP_REL" "$FR/PROJECT/2-WORKING/GH-901-FIXTURE-LANE-B.md"
-  printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$FR/PROJECT/2-WORKING/GH-901-FIXTURE-LANE-B.md"
+  held_doc="$FR/PROJECT/2-WORKING/GH-901-FIXTURE-LANE-B.md"; [ "$CASE_KIND" = ambiguous ] || held_doc="$FR/$CAP_REL"
+  printf '\nHELD: owner decision required. Do not execute until owner approves the target.\n' >> "$held_doc"
   git -C "$FR" add PROJECT && git -C "$FR" commit -qm ambiguous-captures
 fi
 case "${CASE_KIND:-ready}" in issue-hold|issue-label|capture-hold|inbox-ready)
@@ -243,7 +247,7 @@ body += {"held": HELD, "issue-hold": HELD, "retry-hold": HELD,
          "dependency": "\nHELD: unresolved dependency GH-902. Do not execute until resolved.\n",
          "dep-open": AFTER, "dep-fail": AFTER, "dep-done": AFTER,
          "stale": "\n- [ ] additional live requirement\n"}.get(k, "")
-labels = [{"name": "status:held"}] if k == "issue-label" else (["status:held"] if k == "issue-badlabels" else [])
+labels = [{"name": "status:held"}] if k == "issue-label" else (["status:held"] if k == "issue-badlabels" else ([{}] if k == "issue-nolabelname" else []))
 print(json.dumps({"state": "OPEN", "closedAt": None, "body": body, "labels": labels}))
 PY
  exit $?

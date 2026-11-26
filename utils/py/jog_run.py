@@ -1678,22 +1678,26 @@ def hold_refusal(target, gh_num):
     issue = _gh_issue_json(target, gh_num, "body,labels,state")
     if issue is None:
         return "hold-check-unavailable: live issue lookup failed"
-    if not isinstance(issue.get("body"), str) or not isinstance(issue.get("labels"), list):
+    if (not isinstance(issue.get("body"), str) or not isinstance(issue.get("labels"), list)
+            or not all(isinstance(lab, dict) and isinstance(lab.get("name"), str) for lab in issue["labels"])):
         return "hold-check-unavailable: live issue response incomplete"
-    capture = None
+    # Preflight (`swarm_preflight.py` --gh-issue) takes the first GH-N-*.md in 2-WORKING, the
+    # resolver may prefer another capture when several declare the issue: check every capture
+    # either could execute (and any inbox copy Jog would promote), so a hold in any of them refuses.
+    captures = []
     try:
         from wave_reconcile import find_issue_doc_candidates
-        doc = find_issue_doc(target, gh_num)
-        if doc is None and find_issue_doc_candidates(target, gh_num):
-            return "hold-check-unavailable: ambiguous capture documents"
-        if doc:
-            capture = Path(doc).read_text(encoding="utf-8")
-            if capture.startswith("---") and len(capture.split("---", 2)) >= 3:
-                capture = capture.split("---", 2)[2]
+        docs = set(find_issue_doc_candidates(target, gh_num, ("2-WORKING", "1-INBOX")))
+        docs |= set(glob.glob(os.path.join(target, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md")))
+        for doc in sorted(docs):
+            text = Path(doc).read_text(encoding="utf-8")
+            if text.startswith("---") and len(text.split("---", 2)) >= 3:
+                text = text.split("---", 2)[2]
+            captures.append(text)
     except Exception:
         return "hold-check-unavailable: capture document unreadable"
     try:
-        bodies = (issue["body"], capture or "")
+        bodies = (issue["body"], *captures)
         refs = {int(n) for text in bodies for n in rules.AFTER.findall(rules._sanitize_body(text))}
         open_refs = set()
         for n in refs:
@@ -1704,8 +1708,8 @@ def hold_refusal(target, gh_num):
         reason = rules.issue_hold_reason(issue, open_refs)
         if reason:
             return f"hold: issue {reason}"
-        if capture is not None:
-            reason = rules.issue_hold_reason({"body": capture, "labels": []}, open_refs)
+        for text in captures:
+            reason = rules.issue_hold_reason({"body": text, "labels": []}, open_refs)
             if reason:
                 return f"hold: capture {reason}"
     except Exception as exc:

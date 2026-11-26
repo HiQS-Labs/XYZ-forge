@@ -40,11 +40,14 @@ dep-open|0|hold: issue after #902
 dep-fail|0|hold: issue after #902
 issue-fail|0|hold-check-unavailable: live issue lookup failed
 issue-malformed|0|hold-check-unavailable: live issue response incomplete
-issue-badlabels|0|hold-check-unavailable: hold rules failed
-ambiguous|0|hold-check-unavailable: ambiguous capture documents
+issue-badlabels|0|hold-check-unavailable: live issue response incomplete
+issue-nolabelname|0|hold-check-unavailable: live issue response incomplete
+ambiguous|0|hold: capture body HELD: marker
+ambiguous-a|0|hold: capture body HELD: marker
 retry-ready|1||retry-build
 retry-hold|0|hold: issue body HELD: marker|retry-build
-ambiguous|0|hold-check-unavailable: ambiguous capture documents|retry-build
+ambiguous|0|hold: capture body HELD: marker|retry-build
+ambiguous-a|0|hold: capture body HELD: marker|retry-build
 capture-hold|0|hold: capture body HELD: marker||native
 issue-hold|0|hold: issue body HELD: marker||capture
 CASES
