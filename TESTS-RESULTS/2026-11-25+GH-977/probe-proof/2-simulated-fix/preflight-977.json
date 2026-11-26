@@ -1,6 +1,6 @@
 {
   "schema": "swarm-preflight/run-candidate@1",
-  "generated_at": "2026-11-26T03:25:45Z",
+  "generated_at": "2026-11-26T04:11:41Z",
   "mode": "project-doc",
   "candidate": {
     "slug": "gh-977-roadmap-update-keeps-rating"
@@ -12,7 +12,7 @@
     "issues": [],
     "target_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-day2-verify-977-1315-2026-11-25",
     "branch": "development",
-    "commit": "448cea7a8ebc2d490798ba42c616fd0160148d6a",
+    "commit": "ce717e0699980907c302b7d1d72ce7a4d0f163ad",
     "suggested_branch": "marathon/gh-977-roadmap-update-keeps-rating-2026-11-26",
     "branch_ready": false,
     "skip_branch_prompt": false
@@ -54,7 +54,7 @@
     "stale_index_lock_path": null,
     "stale_index_lock_warning": null,
     "evaluated_ref": "development",
-    "evaluated_ref_commit": "448cea7a8ebc2d490798ba42c616fd0160148d6a",
+    "evaluated_ref_commit": "ce717e0699980907c302b7d1d72ce7a4d0f163ad",
     "checkout_matches_ref": true,
     "head_behind_ref": 0,
     "candidate_state": "stale",

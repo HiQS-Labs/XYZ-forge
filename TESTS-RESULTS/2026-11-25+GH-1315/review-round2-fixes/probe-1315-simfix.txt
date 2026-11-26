@@ -1,0 +1,2 @@
+unadopted legacy migration is refused by preview and apply (adoption remedy named); no backup ZIP, staging directory or link; recorded-skill preview and apply unchanged
+rc=0
