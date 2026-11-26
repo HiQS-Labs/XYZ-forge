@@ -256,4 +256,13 @@ Basis: The revised A1 exercises the actual prune listing site and discriminates 
 
 Relay closed (Approved), no further relay turn needed.
 
+
+### Attestation · relay-drive — 2026-11-26T05:10:20Z
+task: RELAY-gh1625-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0ba6ba87b7c1d1d4ec148deeaa4ad1739d35b7f0
+added-range: 26061+4765
+added-sha256: 8e635e70042cd92e79de7d663745746d3b79ef30cd8bb70b2f827170259210fc
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
