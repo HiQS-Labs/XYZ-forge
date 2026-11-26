@@ -25,10 +25,18 @@ collision hold; nothing is reset, cleaned or discarded. Keep preserved branches 
 
 Each selected pending item counts toward max-tasks, including a readiness refusal. Current
 Swarm preflight still gates dispatch. Newly approved published PR results permit
-continued independent pending work, and so does one task-local failure: a valid receipt for
+continued independent pending work, and so does a task-local failure (three cases, below): a valid receipt for
 the execution just run whose own gate ran and failed (`escalated`, reason `pre-advance-failed`,
 exit 5, gate red, gate exit neither 0 nor the resource guard's 108). That row stays `failed`
-with its reason and receipt path and is never retried. Every other failure (lock contention,
+with its reason and receipt path and is never retried. So does a row whose reviewer round cap stalled (operator decision, #1610, 2026-11-26):
+a valid receipt for the execution just run with `escalated`, reason `cap-stalled`, exit 4, gate not run and no
+PR, written after dispatch by a drive that itself exited 4 (other exit-4 reasons such as `cap-or-close-mismatch`
+stay shared stops); it stays `failed` and is not retried by the wake. So does a row Marathon refused at its
+native lane-attempt cap before dispatching any worker (GH-1633): a valid receipt for the execution
+just run with `parked`, reason `lane parked at the attempt cap`, exit 8, attempt count at the cap,
+gate not run and no PR, written after this execution was dispatched by a drive process that itself exited 8. It stays
+`parked` with its history untouched and is never selected again by a wake (an explicit `retry-build` is still available); the wake then continues with the next
+pending row under the same max-tasks, deadline and dispatch checks as any other row. Every other Marathon failure (lock contention,
 guard-killed gate, refusal, interruption, crash, missing or mismatched receipt, clone ledger
 change) stops the wake, and the next dispatch still passes the clone lock and alignment checks.
 Dependencies remain subject to preflight; a readiness refusal parks and halts the wake. Native Marathon

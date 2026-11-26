@@ -3502,13 +3502,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
     driver_heartbeat_start()
     refresh_remote_tracking_ref()
 
+    # GH-1633: an old escalation reason that could not be removed must never be read back as this
+    # run's reason (it would turn an unclassified exit 4 into a stale `cap-stalled` receipt).
+    stale_reason_file = [False]
+
     def _run_relay_drive(review_once=False):
         reason_file = os.path.join(xyz_harness, ".relay-scratch", "escalation-reason")
         if os.path.isfile(reason_file):
             try:
                 os.remove(reason_file)
             except OSError:
-                pass
+                stale_reason_file[0] = True
         incident_file = os.path.join(xyz_harness, ".relay-scratch", "last-turn-incident.json")
         if os.path.isfile(incident_file):
             try:
@@ -3717,7 +3721,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
     elif relay_exit == 4:
         reason = "cap-or-close-mismatch"
         reason_file = os.path.join(xyz_harness, ".relay-scratch", "escalation-reason")
-        if os.path.isfile(reason_file):
+        if os.path.isfile(reason_file) and not stale_reason_file[0]:
             with open(reason_file, 'r') as f:
                 reason = f.read().strip()
         log(f"relay escalated: {reason} (relay-drive exit 4)")

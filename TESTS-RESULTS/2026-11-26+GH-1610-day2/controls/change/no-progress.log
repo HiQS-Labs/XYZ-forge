@@ -1,0 +1,42 @@
+== test: gh1610-wake ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D
+== wake: CASE=no-progress start=2026-11-26T18:32:46Z deadline_epoch=1795718866
+queue before: [(901, 'pending', 0, ''), (902, 'pending', 0, '')]
+jog: execution clone aligned at 4908f083408182e53cfa54813f31d3d17e487cc3; other branches and untracked files retained
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-install/.tick/jog/jog-01M8CJ39ADC311ME5H9MM2SMM5/gh901-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-execution/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-execution was on its trunk branch 'development' — cut 'marathon/gh901-fixture' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-execution/marathon-system/gh-901-fixture-lane/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-901-FIXTURE-LANE-TURN → codex
+marathon-drive: memory-telemetry: phase gh-901-fixture-lane-start boundary — compressor=6516MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay escalated: no-progress (relay-drive exit 3)
+marathon-drive: transcript saved: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-execution/relay-system/2026-11-26/marathon-gh-901-fixture-lane-183249.md
+marathon-drive: memory-telemetry: phase gh-901-fixture-lane-escalated boundary — compressor=6516MB
+marathon-drive: escalation written: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-execution/marathon-system/gh-901-fixture-lane/ESCALATION.md (reason: no-progress)
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-install/.tick/jog/jog-01M8CJ39ADC311ME5H9MM2SMM5/gh901-exec1/preflight/marathon-result.json (outcome: escalated, exit 3)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 6516MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+jog: stopping queue execution on task failure.
+jog: GH-901 failed: marathon escalated: no-progress (exit 3) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-install/.tick/jog/jog-01M8CJ39ADC311ME5H9MM2SMM5/gh901-exec1/preflight/marathon-result.json]
+jog exit=0
+worker edge calls: GH-901=1 GH-902=0
+901 --relay-file /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-execution/marathon-system/gh-901-fixture-lane/
+queue after: [(901, 'failed', 1, 'marathon escalated: no-progress (exit 3) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-install/.tick/jog/jog-01M8CJ39ADC311ME5H9MM2SMM5/gh901-exec1/preflight/marathon-result.json]'), (902, 'pending', 0, '')]
+ASSERT case=no-progress successor_calls=0 PASS (row1=failed: marathon escalated: no-progress (exit 3) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D/root-install/.tick/jog/jog-01M8CJ39ADC311ME5H9MM2SMM5/gh901-exec1/preflight/marathon-result.json])
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.hUzk9cyf5D
+control exit=0
