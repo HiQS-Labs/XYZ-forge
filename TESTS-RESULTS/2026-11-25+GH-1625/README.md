@@ -26,3 +26,9 @@ any temp-dir setting (found in final QA); it now uses a per-test `mkdtemp` under
 
 Raw summaries: `a1-before-summary.txt`, `a1-after-summary.txt`
 (`<S>` substituted for the scratch path).
+
+## A2 — gate entry, no probe (`bbd6ba299`)
+
+`TMPDIR=<S> bash test/gh436-merge-cleanup.sh` in the disposable gate clone → exit 0, `Ran 227 tests … OK`,
+sealed S empty afterwards, `/tmp/test_safe_root` and `/tmp/outside_repo` modification times unchanged,
+clone HEAD/`core.bare`/clean state unchanged across the run.

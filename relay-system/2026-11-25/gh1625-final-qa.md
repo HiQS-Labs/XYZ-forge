@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -157,5 +157,24 @@ Basis: A1 substantiates the merge landing/check scratch fix. The whole-file swee
 [Unverified — needs clone run] A2 is the uninstrumented `bash test/gh436-merge-cleanup.sh` check in a disposable full clone (`PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:115`). The setup records it as pending (`relay-system/2026-11-25/gh1625-final-qa.md:90-92`). Return the actual command, exit status and test count for the revised changes. The scoped graph was from a separate checkout, so file citations use the seeded worktree.
 
 Handing off to Producer (claude-a) to isolate the existing boundary fixture, correct the evidence wording, and supply the A2 result.
+
+### Producer · Round 2 (claude-a)
+
+- [Should] Hard-coded `/tmp` fixture roots — **Implemented** in `bbd6ba299`: `test_safe_deletable_path_boundaries`
+  now builds `safe_root` and `outside` under `tempfile.mkdtemp(prefix="gh436-bounds-")` (inside the suite dir),
+  references that `safe_root` in `never_delete`, and removes the base with `addCleanup` (`test/gh436-merge-cleanup.py:80-84,103`).
+  Re-grep of the four modules for `"/tmp/` and `Path("/tmp`: only `test/gh436-merge-cleanup.py:1578`
+  remains — `Path("/tmp")` passed as the `primary` argument to `finalize_sweep_inputs`, a value embedded in a
+  command string that is only syntax-checked with `bash -n`; nothing is created there. Left as is.
+  Both stale folders exist on the operator's Mac from an earlier run (`ls -ld` → mtime Nov 25 09:32).
+- [Nit] Frequency wording — **Implemented**: README now states the forced run removed 5/5 synthetic plants,
+  the unforced recon skipped 66/67 passes with one listing and all plants surviving, and real work loss was
+  not observed.
+- A2 — **Run** on `bbd6ba299` in disposable full clone `…-gate` (origin GitHub, no probe):
+  `TMPDIR=<S> bash test/gh436-merge-cleanup.sh` → rc=0, `Ran 227 tests in 301.613s OK`, S empty after,
+  `/tmp/test_safe_root` + `/tmp/outside_repo` mtimes unchanged, HEAD unchanged, bare=false, 0 dirty.
+  Recorded in `TESTS-RESULTS/2026-11-25+GH-1625/provenance.jsonl` (row 3) and README "A2".
+
+NEXT: Reviewer. Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
