@@ -7,4 +7,5 @@ PROBE other-execution-receipt expect=refuse got=refuse OK
 PROBE other-issue-receipt expect=refuse got=refuse OK
 PROBE below-cap expect=refuse got=refuse OK
 PROBE zero-cap-native-refusal expect=accept got=accept OK
+PROBE staged-future-mtime-stale-receipt-set-aside-before-dispatch expect=gone-and-kept got=gone-and-kept OK
 exit=0

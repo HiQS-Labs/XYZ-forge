@@ -680,6 +680,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         if prior_token:
             argv += ["--relay-task", f"{prior_token}-{len(state['executions'])}"]
     argv += ["--execution-id", exec_id]
+    _jog_set_aside_stale_result(invocation["result_path"])
     record["result_path"] = _ledger_rel_path(root, gid, invocation["result_path"])
     # GH-1633: the instant before the drive starts; a receipt older than this was not written by it.
     record["dispatched_epoch"] = time.time()
@@ -2599,6 +2600,14 @@ def _dry_run_preflight(target, gh_num):
 def _jog_result_identity(receipt, gh_num, execution_id):
     if str(receipt.get("issue")) != str(gh_num) or receipt.get("execution_id") != execution_id:
         raise ContractError("result receipt does not match the selected issue/execution")
+
+
+def _jog_set_aside_stale_result(path):
+    """Keep, never delete: a receipt already at this execution's result path was not written by the
+    drive about to start (ordinal execution ids can reuse a path), so move it out of the way. After
+    the drive returns, a file at `path` can then only have been written by that drive (GH-1633)."""
+    if os.path.lexists(path):
+        os.replace(path, f"{path}.prior-{time.time_ns()}")
 
 
 def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """GH-1633 review blocker probe: `_jog_lane_exhausted` must not accept a STALE cap receipt.
 
-usage: python3 predicate-probe.py <repo-root> [--mutate drive-exit|fresh]
+usage: python3 predicate-probe.py <repo-root> [--mutate drive-exit|fresh|set-aside]
 Calls the real predicate with the PRODUCTION receipt loader (`load_marathon_result`, so each synthetic
 receipt must be a complete marathon-drive/result@1 document) and the real identity check; only the two
 ledger lookups are patched to return synthetic state. Receipt age is set with os.utime. Prints one
@@ -18,10 +18,15 @@ if mutate:
     src = orig
     if mutate == "drive-exit":
         src = src.replace('latest.get("drive_exit") != 8 or ', "")
+    elif mutate == "set-aside":
+        pass
     elif mutate == "fresh":
         src = src.replace(" or written < dispatched", "")
-    assert src != orig, "mutation did not apply"
-    exec(compile(src, "mutated", "exec"), jog_run.__dict__)
+    if mutate == "set-aside":   # red control: the helper becomes a no-op
+        jog_run._jog_set_aside_stale_result = lambda path: None
+    else:
+        assert src != orig, "mutation did not apply"
+        exec(compile(src, "mutated", "exec"), jog_run.__dict__)
 
 work = tempfile.mkdtemp(prefix="gh1633-probe.")
 target = os.path.join(work, "exec"); os.makedirs(target)
@@ -62,4 +67,13 @@ res = [
     run("below-cap", False, receipt(count=1, cap=2)),
     run("zero-cap-native-refusal", True, receipt(count=2, cap=0)),
 ]
+# review r3: a staged stale receipt, even with a FUTURE mtime, must be set aside (kept, renamed) before dispatch
+# so that nothing at the result path can predate the drive; without the helper the file would still be there.
+stale = os.path.join(work, "staged-stale.json"); json.dump(receipt(), open(stale, "w"))
+os.utime(stale, (time.time() + 3600, time.time() + 3600))
+jog_run._jog_set_aside_stale_result(stale)
+kept = [f for f in os.listdir(work) if f.startswith("staged-stale.json.prior-")]
+ok = (not os.path.exists(stale)) and len(kept) == 1 and json.load(open(os.path.join(work, kept[0])))["execution_id"] == "gh901-exec1"
+print(f"PROBE staged-future-mtime-stale-receipt-set-aside-before-dispatch expect=gone-and-kept got={'gone-and-kept' if ok else 'present-or-lost'} {'OK' if ok else 'FAIL'}")
+res.append(ok)
 sys.exit(0 if all(res) else 1)
