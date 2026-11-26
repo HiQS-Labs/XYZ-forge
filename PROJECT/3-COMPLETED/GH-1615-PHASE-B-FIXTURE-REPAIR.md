@@ -1,8 +1,8 @@
 ---
 title: "Make the merge-cleanup phase B suite green when run on its own; the gate already runs it (correct the 'ungated' premise)"
-status: "In progress (PR ready; awaiting merge)"
+status: Complete
 created: 2026-11-25
-updated: 2026-11-25
+updated: 2026-11-26
 owner: Noel Saw
 gh_issue: 1615
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1615
