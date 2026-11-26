@@ -1,6 +1,6 @@
 # Marathon Phase gh-1315-legacy-preview-parity
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1315-LEGACY-PREVIEW-PARITY-TURN builder=codex reviewer=agy round-cap=2 -->
 
@@ -123,3 +123,12 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- `sync.py` checks the collection's skill records before `--migrate-legacy` can archive or stage a real folder. Preview and apply use the same check and give the same adoption instructions. The dedicated `--retire-trinity` path keeps its existing validation.
+- For a matching managed copy of `xyz`, preview the receipt-only adoption with `intake.py update xyz --source <forge>/skills/2-daily/xyz`. Put `--apply` before `update` to record it, then retry migration.
+- The retained CLI probe now records the positive-control sample through `intake.py catalog` in an isolated fixture. A scratch shim handled the repo-discovery call without invoking Git. Before the fix the probe exited 1 because preview exited 0 and planned a link for unrecorded `xyz`. After the fix the probe exited 0. Both modes refused with identical guidance, left the legacy directory intact, and created no backup ZIP, retirement staging, or link for it. Recorded-skill preview planned the link without writes, and apply installed the managed link and retained the archive. Both receipts are in `TESTS-RESULTS/2026-11-25+GH-1315/provenance.jsonl`.
+- gate run: no — harness gate
+
+unverified: `bash test/skills-army-hq.sh` — reserved for the harness.

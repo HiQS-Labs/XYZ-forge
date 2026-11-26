@@ -280,6 +280,10 @@ def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=Non
             retire = []
             if name in legacy and key in desired and path.is_dir() and not path.is_symlink():
                 matched.add(name)
+                shared.require(name in state["skills"],
+                               f"{name} is not recorded in the collection. Adopt it first with "
+                               f"`intake.py update {name} --source <local-skill-folder>` "
+                               "(pass --apply before update to record it; matching payloads are receipt-only).")
                 retire, change = retire_legacy(root, path, parent, name, found[name], archive_directories, apply)
                 changes.append(change)
                 current = None  # the retire action runs first, so the link sees a free path
