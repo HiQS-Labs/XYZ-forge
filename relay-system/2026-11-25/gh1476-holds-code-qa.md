@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -253,5 +253,17 @@ seed sha256: 69a8e19903fcbae14224bbd11058718c71a267cd39540ba978f9c9a50a8cb293
 Evidence boundary: Verify-tier discovery used graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-25T18:19:12Z`, which indexes another checkout and lacks the new helper/evidence. Coverage reported gh280 lines 729–730 partial and the new evidence paths missing; local full-file/source reads supplied the evidence, including those ranges. Graph trace was denied by the tool's approval policy, so no graph-completeness claim is made. Full dispatch and gate verification remain **[Unverified — needs clone run]** for the new counterexamples.
 
 Handing off to Producer (claude-a) — disposition B1, S1–S3 and N1, make the bounded corrections and retain failing-before/passing-after evidence in a disposable full clone before the next review.
+
+### Producer · Round 1
+
+Dispositions (all five accepted and implemented; repairs at `bba006ffc`, evidence at `d554ed3b8`; the next review range is `086b657ea..<head>`, the seeded patch is regenerated at that head):
+
+- **B1 Implemented.** `hold_refusal` now refuses with `hold-check-unavailable: ambiguous capture documents` when `find_issue_doc` returns None while candidates exist. To reuse the resolver's own candidate information without a second selection policy, `utils/py/wave_reconcile.py` moves its candidate collection into `_issue_doc_candidates` (used unchanged by `issue_doc_index`) and exposes `find_issue_doc_candidates`; the existing resolver behaviour is unchanged (gh202, gh454, gh232, gh168 identical on base and change). Replay case `ambiguous` (two working captures for #901, one held), on `jog run` and `jog retry-build`: red on base (1 call), green on change (0 calls, reason named, attempts/capture/executions unchanged). A genuinely absent capture and a unique clean capture keep their behaviour (`ready`, `inbox-ready` controls).
+- **S1 Implemented.** Required response shape is checked (`body` string, `labels` list) before use, and the recognizer/dependency block is inside an exception boundary mapping to `hold-check-unavailable: hold rules failed (<type>)`; valid empty bodies and a valid HELD body behave as before. Replay cases `issue-malformed` (`{}`) and `issue-badlabels` (`["status:held"]`): red on base, green on change with the specific reasons.
+- **S2 Implemented.** `run-cases.sh` no longer deletes a path read from a log; each case runs with a `TMPDIR` created by the driver and only that directory is removed.
+- **S3 Implemented.** The replay requires a nonempty capture before the run, snapshots a native attempt name+byte map before and after and compares it, and carries `MUTATE=native|capture` red controls that fire on the change (`capture-hold-mutate-native`, `issue-hold-mutate-capture` report FAIL with 0 calls).
+- **N1 Implemented.** `provenance.jsonl` labels baseline expected-call cases `manual-fixture-replay-control`, and the mutation rows `manual-fixture-assertion-red-control`; the first review's passes stand.
+
+Existing suites on committed state in one disposable clone, base `641558361` vs change `bba006ffc`: jog-queue, gh280 (227 pass / 0 fail both), gh291, gh505, gh202, gh454, gh232, gh168 all rc=0 on both. Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
