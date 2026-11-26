@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """GH-1633 review blocker probe: `_jog_lane_exhausted` must not accept a STALE cap receipt.
 
-usage: python3 predicate-probe.py <repo-root> [--mutate drive-exit|fresh|set-aside]
+usage: python3 predicate-probe.py <repo-root> [--mutate drive-exit|fresh|set-aside|set-aside-dirs]
 Calls the real predicate with the PRODUCTION receipt loader (`load_marathon_result`, so each synthetic
 receipt must be a complete marathon-drive/result@1 document) and the real identity check; only the two
 ledger lookups are patched to return synthetic state. Receipt age is set with os.utime. Prints one
@@ -18,12 +18,14 @@ if mutate:
     src = orig
     if mutate == "drive-exit":
         src = src.replace('latest.get("drive_exit") != 8 or ', "")
-    elif mutate == "set-aside":
+    elif mutate in ("set-aside", "set-aside-dirs"):
         pass
     elif mutate == "fresh":
         src = src.replace(" or written < dispatched", "")
     if mutate == "set-aside":   # red control: the helper becomes a no-op
         jog_run._jog_set_aside_stale_result = lambda path: None
+    elif mutate == "set-aside-dirs":   # red control: the r3 behaviour that also moved directories
+        jog_run._jog_set_aside_stale_result = lambda path: os.path.lexists(path) and os.replace(path, f"{path}.prior-{time.time_ns()}")
     else:
         assert src != orig, "mutation did not apply"
         exec(compile(src, "mutated", "exec"), jog_run.__dict__)
@@ -75,5 +77,11 @@ jog_run._jog_set_aside_stale_result(stale)
 kept = [f for f in os.listdir(work) if f.startswith("staged-stale.json.prior-")]
 ok = (not os.path.exists(stale)) and len(kept) == 1 and json.load(open(os.path.join(work, kept[0])))["execution_id"] == "gh901-exec1"
 print(f"PROBE staged-future-mtime-stale-receipt-set-aside-before-dispatch expect=gone-and-kept got={'gone-and-kept' if ok else 'present-or-lost'} {'OK' if ok else 'FAIL'}")
+res.append(ok)
+# review r4: a DIRECTORY at the result path must stay where it is (Marathon refuses it: exit 2)
+d = os.path.join(work, "result-dir"); os.makedirs(d)
+jog_run._jog_set_aside_stale_result(d)
+ok = os.path.isdir(d) and not [f for f in os.listdir(work) if f.startswith("result-dir.prior-")]
+print(f"PROBE directory-at-result-path-left-in-place expect=in-place got={'in-place' if ok else 'moved'} {'OK' if ok else 'FAIL'}")
 res.append(ok)
 sys.exit(0 if all(res) else 1)

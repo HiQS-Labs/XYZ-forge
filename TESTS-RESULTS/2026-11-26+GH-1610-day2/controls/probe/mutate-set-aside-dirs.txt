@@ -1,0 +1,12 @@
+PROBE fresh-native-cap expect=accept got=accept OK
+PROBE stale-receipt-process-exit-2 expect=refuse got=refuse OK
+PROBE stale-receipt-process-killed expect=refuse got=refuse OK
+PROBE stale-same-second-receipt-write-failed-exit-8 expect=refuse got=refuse OK
+PROBE fresh-receipt-wrong-process-exit expect=refuse got=refuse OK
+PROBE other-execution-receipt expect=refuse got=refuse OK
+PROBE other-issue-receipt expect=refuse got=refuse OK
+PROBE below-cap expect=refuse got=refuse OK
+PROBE zero-cap-native-refusal expect=accept got=accept OK
+PROBE staged-future-mtime-stale-receipt-set-aside-before-dispatch expect=gone-and-kept got=gone-and-kept OK
+PROBE directory-at-result-path-left-in-place expect=in-place got=moved FAIL
+exit=1

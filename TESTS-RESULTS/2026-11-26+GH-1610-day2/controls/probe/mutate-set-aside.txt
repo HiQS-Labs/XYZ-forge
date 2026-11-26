@@ -8,4 +8,5 @@ PROBE other-issue-receipt expect=refuse got=refuse OK
 PROBE below-cap expect=refuse got=refuse OK
 PROBE zero-cap-native-refusal expect=accept got=accept OK
 PROBE staged-future-mtime-stale-receipt-set-aside-before-dispatch expect=gone-and-kept got=present-or-lost FAIL
+PROBE directory-at-result-path-left-in-place expect=in-place got=in-place OK
 exit=1

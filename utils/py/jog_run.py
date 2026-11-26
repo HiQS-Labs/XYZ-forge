@@ -2606,7 +2606,9 @@ def _jog_set_aside_stale_result(path):
     """Keep, never delete: a receipt already at this execution's result path was not written by the
     drive about to start (ordinal execution ids can reuse a path), so move it out of the way. After
     the drive returns, a file at `path` can then only have been written by that drive (GH-1633)."""
-    if os.path.lexists(path):
+    # Only a regular file (or a link to one) is a receipt; anything else, such as a directory, stays in
+    # place so Marathon's own invalid-result-path refusal still fires.
+    if os.path.isfile(path):
         os.replace(path, f"{path}.prior-{time.time_ns()}")
 
 
