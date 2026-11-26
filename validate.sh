@@ -1032,14 +1032,35 @@ if command -v php >/dev/null 2>&1; then
     echo "ENVIRONMENT FAULT: php present but unusable (${_php_error%%$'\n'*}) — suites needing php will report this fault, not a failure; NOT promotion evidence (GH-732)"
   fi
 fi
-_python_version="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null)"
-_python_missing=""
-for _python_module in yaml pytest requests mypy; do  # mypy: test_python_layer runs python3 -m mypy (GH-1519)
-  if ! python3 -c "import $_python_module" >/dev/null 2>&1; then
-    _python_missing="${_python_missing:+$_python_missing,}$_python_module"
+# The one toolchain probe (GH-732/GH-1437/GH-1627): sets _python_version and _python_missing for interpreter $1
+# (a command name or path) and succeeds only when it is >= 3.10 with every gate module importable.
+_xyz_python_probe() {
+  _python_version="$("$1" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))' 2>/dev/null)"
+  _python_missing=""
+  for _python_module in yaml pytest requests mypy; do  # mypy: test_python_layer runs python3 -m mypy (GH-1519)
+    if ! "$1" -c "import $_python_module" >/dev/null 2>&1; then
+      _python_missing="${_python_missing:+$_python_missing,}$_python_module"
+    fi
+  done
+  "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1 && [ -z "$_python_missing" ]
+}
+if _xyz_python_probe python3; then
+  _xyz_python_ok=1
+else
+  _xyz_python_ok=0
+  # GH-1627: PATH's python3 failed. Use the prepared gate venv for this run when it passes the SAME probe (run in a subshell so a
+  # failing venv leaves the PATH interpreter's diagnostics untouched). A python3 that passes is never replaced; with no usable
+  # venv the fault below is exactly today's.
+  _xyz_venv_bin="${HOME:-}/.cache/xyz-forge-test-venv/bin"
+  if [ -x "$_xyz_venv_bin/python3" ] && ( _xyz_python_probe "$_xyz_venv_bin/python3" ); then
+    PATH="$_xyz_venv_bin:$PATH"; export PATH
+    if _xyz_python_probe python3; then
+      _xyz_python_ok=1
+      echo "validate.sh: python3 on PATH failed the toolchain probe; using $_xyz_venv_bin/python3 (version $_python_version) for this run (GH-1627)"
+    fi
   fi
-done
-if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1 || [ -n "$_python_missing" ]; then
+fi
+if [ "$_xyz_python_ok" -ne 1 ]; then
   echo "ENVIRONMENT FAULT: python3 ($(command -v python3 || echo unavailable)) version ${_python_version:-unavailable}; missing modules: ${_python_missing:-none}; requires Python >=3.10 with yaml/pytest/requests/mypy (pip install -r requirements-dev.txt) — rerun with PATH=\"\$HOME/.cache/xyz-forge-test-venv/bin:\$PATH\" bash validate.sh (retain your arguments); NOT promotion evidence (GH-732)"
   exit 3
 fi

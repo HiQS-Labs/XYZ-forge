@@ -287,7 +287,7 @@ pinned `mypy` toolchain with `python3 -m pip install -r requirements-dev.txt`. T
 layer runs mypy against the scoped `mypy.ini` configuration.
 If the gate reports an environment fault, use the prepared gate-toolchain venv:
 `PATH="$HOME/.cache/xyz-forge-test-venv/bin:$PATH" bash validate.sh` (retain your gate arguments).
-The gate does not install Python or create this venv automatically.
+When `python3` on PATH fails that toolchain probe and the venv passes the same probe, the gate puts the venv first on PATH for that run and prints one line saying so (GH-1627); otherwise the fault and this remedy stand. A healthy `python3` is never replaced. The gate does not install Python or create this venv automatically.
 
 ## Hardware sizing for unattended runs
 
