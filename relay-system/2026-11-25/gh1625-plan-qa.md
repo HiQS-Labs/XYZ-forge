@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -222,5 +222,38 @@ Handing off to Producer (claude-a) to correct A1's probe placement and ensure it
   (`sed -n 394,407p` → L396 `other = …`, L400 `root = …`, L406 `for d in root.iterdir():`).
 
 NEXT: Reviewer. Handing off to Reviewer (codex) for round 3.
+
+### Reviewer · Round 3
+
+**What this proposes**
+
+Create a fresh temp child before the gh436 suite imports its local modules. Point `TMPDIR` and Python's default temp lookup at that child, then remove the captured child at normal exit. The inference from the proposed placement is that both suite entry points use the same isolation.
+
+**How the existing system works, per this document**
+
+The gh436 wrapper invokes the Python suite, which collects the three phase modules. Landing and check fixtures write under the inherited temp root, and landing cleanup can enumerate that root. The plan reports 41 leftover matching directories and one real prune pass in the sealed 227-test repro (`PROJECT/2-WORKING/GH-1625-SUITE-TEMP-ISOLATION.md:27-55`).
+
+**What it's not**
+
+Production pruning, standalone phase-module entry points, and new test suites are outside scope (plan lines 63–66, 83–85).
+
+swept file: yes
+
+VERDICT: PASS
+Basis: The revised A1 exercises the actual prune listing site and discriminates the unpatched parent from the patched suite root. The one-file design covers both entry points and the fixture subprocesses. The earlier findings are closed. I found no other pre-existing defect in the reviewed scope that changes the plan.
+
+- [Pass] Round-2 blocker closed. Plan lines 98–104 place the append after the guard and immediately before the listing, with the temporary override ensuring the guard takes the continuing branch. The worktree source puts the probe at `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:396`, its early return at line 399, root assignment at line 400, and `root.iterdir()` at line 406. The following read-only command exited 0 and printed those four lines in order:
+  ```sh
+  python3 -c 'from pathlib import Path; s = Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").read_text().splitlines(); keys = ("other = _other_merge_cleanup_running()", "return", "root = Path(tempfile.gettempdir()).resolve()", "for d in root.iterdir():"); hits = [(i, l.strip()) for i, l in enumerate(s, 1) if 396 <= i <= 406 and l.strip() in keys]; print(hits); assert [i for i, _ in hits] == [396, 399, 400, 406]'
+  ```
+  Decisive output: `[(396, 'other = _other_merge_cleanup_running()'), (399, 'return'), (400, 'root = Path(tempfile.gettempdir()).resolve()'), (406, 'for d in root.iterdir():')]`.
+- [Pass] The earlier A1 findings stay closed. The red control pins `7f2f1cce5` separately from recon at `086b657ea` (plan lines 27–30, 106). The after check fails on an empty trace, an inherited-parent trace, new matching siblings, a leftover suite root, or changed plant checksums. It also requires the baseline test count with `OK`. A2 exercises the wrapper with the probe removed (plan lines 93–118). The observed plant retention and the inherited-parent requirement are stated at lines 53–57 and 122–124.
+- [Pass] `validate.sh:96` registers `test/gh436-merge-cleanup.sh:8-11`, with the Small-tier exclusion at `test/ci-route.sh:239-245`. `test/gh436-merge-cleanup.py:24,39,1382-1384,1592-1593` gives the setup a single insertion point before local imports for both wrapper and direct runs. The four fixture modules have no existing temp-root override. `merge_cleanup.py:400,434,1961-1972,2025,2545` ties lookup, both allocations, and the landing cleanup to the same temp setting. Phase A widens safe roots from its fixtures and copies the environment (`test/gh534_phase_a_tests.py:97-109,303-306,532-546`). Phase B's allocating stub inherits it (`test/gh534_phase_b_tests.py:142-147,392-399`), and Phase C retains it in its explicit child environments (`test/gh534_phase_c_tests.py:95-99,190-193,405-406,884-887`).
+- [Pass] Plan lines 77–79 confine normal-exit removal to the captured child by path, prefix, and parent. The retained clone is examined during the test at `test/gh436-merge-cleanup.py:1101-1112`, and Phase B uses its retained conflict clone within the fixture at `test/gh534_phase_b_tests.py:392-408`. I found no post-exit consumer on these paths. The rating matches the ledger at `releases.sql:1062`, with rationale proportionate to the potential prune exposure and one-module change (plan lines 132–138).
+- [Nit] Update the plan's status row at line 23 when implementation starts. It still lists round 2 as next.
+
+[Unverified — needs clone run] The recon outcomes and A1/A2 execution remain runtime evidence for implementation. This round used source reads and a narrow read-only probe. The nearest graph was from a separate checkout, with shifted source lines and no index for the seeded plan. The graph call trace was unavailable under the current approval policy, so the citations and call chain above use the relay worktree source.
+
+Relay closed (Approved), no further relay turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
