@@ -35,13 +35,13 @@ goal: "When PATH's python3 fails the gate's toolchain probe and ~/.cache/xyz-for
 | Claim | Source | Observed |
 |---|---|---|
 | The probe lives in one place | `validate.sh` GH-732 block (`# GH-732 environment faults BEGIN … END`) | inline loop over `yaml pytest requests mypy` plus `version_info >= (3, 10)` on `python3`; on failure prints `ENVIRONMENT FAULT` with the `PATH=` remedy and `exit 3` |
-| The hook never picks an interpreter | `githooks/pre-push` | it runs `python3 utils/py/gate_receipt.py …` (admit, receipt check) and calls `validate.sh`, `validate.sh --print-mode`; all gate work is inside `validate.sh` |
+| The hook never picks an interpreter | `githooks/pre-push` | it runs `python3 utils/py/gate_receipt.py …` (admit `:90-99`, receipt check `:426`) and, on the tier-2 and full routes, `validate.sh --print-mode` then the real `validate.sh` (`:354-359`, `:445-453`). Two routes skip `validate.sh`: the docs route (`:390-395`, runs `utils/pdda/pdda.sh`) and exact-commit receipt reuse (`:421-440`). On a gate failure the hook exits **1** (`:455-472`) with the inner gate's exit status (3 for a toolchain fault) printed in its message. Each `validate.sh` invocation selects independently: its PATH export reaches its children, not the parent hook, so the notice appears once per `validate.sh` invocation (a normal push runs `--print-mode` and the gate: two notices), not once per push |
 | `gate_receipt.py` does not need the toolchain | `cd utils/py && /opt/homebrew/bin/python3 -c "import gate_receipt"` (3.14.7) | imports cleanly: the hook's own `python3` calls already work on a toolchain-less interpreter |
 | merge-cleanup runs the same probe by calling it | `merge_cleanup.py:1071` `gate_toolchain_fault_reason` runs `bash validate.sh --print-mode`; rc 0 → no fault | it reads validate.sh's answer; it has no copy of the probe |
 | `--print-mode` exits after the probe block | `validate.sh:1049` follows the block | a selection made inside the block is visible to `--print-mode`, the hook and merge-cleanup alike |
 | No venv-path override exists | `git grep -i "test-venv\|TEST_VENV\|GATE_VENV"` | only the literal default `~/.cache/xyz-forge-test-venv` in `validate.sh`, README and `test/gh251-validate-pytest-skip.sh` |
 | `ci-local.sh` does not run the probe | `ci-local.sh:226,325` call `python3 -m json.tool` / `python3 -m pytest` directly | outside this issue's scope ("anything that runs the same probe"); parked |
-| Two existing assertions depend on the venv being absent | `test/gh251-validate-pytest-skip.sh` cases 2 and 3 put a failing `python3` shim first on PATH and expect exit 3 | on a Mac with a healthy venv, selection makes them go red; they must run with `HOME` pointed at an empty dir (an edit to the existing suite, not a new one) |
+| Two existing assertions depend on the venv being absent *once the selector exists* | `test/gh251-validate-pytest-skip.sh` cases 2 and 3 put a failing `python3` shim first on PATH and expect exit 3 | base `validate.sh` never reads the venv (it appears only in the fault text), so base gh251 is green with or without the venv. With the selector and the unadjusted suite, a Mac with a healthy venv would run the suites instead of exiting 3 and those cases go red; they must run with `HOME` pointed at an empty dir (an edit to the existing suite, not a new one) |
 
 ## Requirements (issue #1627, Acceptance)
 
@@ -97,17 +97,19 @@ pri 60 / sev 45 / appeal 50 (neutral, no operator preference) / effort 75, as pr
 
 Run on a disposable full clone, base vs change, under `TESTS-RESULTS/2026-11-25+GH-1627/` with `provenance.jsonl`. "Failing python3" is a PATH-first shim that fails the probe (the same technique the gh251 suite uses); the healthy venv is the real `~/.cache/xyz-forge-test-venv`.
 
-| ID | Scenario | Unchanged candidate is rejected because | Expected (change) |
-|---|---|---|---|
-| a | failing python3 first on PATH + real healthy venv; `validate.sh --print-mode`, then a real gate tier run | base exits 3 before any suite | exit 0, exactly one `GH-1627` notice line naming the venv python; suites run on the venv (the run's own python is the venv's) |
-| b1 | venv missing (`HOME` = empty dir) | n/a (must equal base) | stdout/stderr and exit identical to base (exit 3, same fault text) |
-| b2 | venv present but failing (`HOME` with a shim venv whose python3 fails the probe) | n/a (must equal base) | identical to base; exit 3, fault names the PATH interpreter, not the venv |
-| c | healthy python3 on PATH, real venv also present | a candidate that always prepends the venv | no notice line, PATH untouched, output identical to base |
-| d | a real `git push` through the installed hook, with a failing python3 first on PATH, to a local bare remote | base refuses (exit 3) | the hook reaches the gate, runs it on the venv, push lands |
-| e | merge-cleanup's `gate_toolchain_fault_reason` on the clone under (a) and (b1/b2) | base returns the fault line for (a) | `''` for (a); fault line for (b1/b2), same as base |
-| f | `gh251-validate-pytest-skip.sh`, GH-732 suites, GH-1437-related checks | any regression | green; on base the unmodified gh251 also green only without the venv (recorded) |
+Rows a, d and e(a) are the **rejecting** controls: base fails them and the change must pass. Rows b1, b2, c, e(b/c) and f are **preservation** controls: they must give the same observable result on base and on the change (they are not expected to turn red on base); c additionally rejects an always-prepend candidate.
 
-A smoke (GH-1088) is (a) as the main path and (b1)/(c) as the adjacent path.
+| ID | Scenario | Base (expected) | Change (expected) |
+|---|---|---|---|
+| a | failing python3 shim first on PATH + real healthy venv; `validate.sh --print-mode`, then a real tier run of `validate.sh` | `--print-mode` exits 3 with the fault line; no suite starts | exit 0, exactly one `GH-1627` notice line naming the venv python, and suites run on the venv (the interpreter observed inside a suite child is the venv's) |
+| b1 | venv missing (`HOME` = empty dir), same failing shim | exit 3, fault line | stdout/stderr and exit byte-identical to base |
+| b2 | venv present but failing (`HOME` holds a shim venv whose python3 fails the probe) | exit 3, fault line | byte-identical to base; the fault names the PATH interpreter, not the venv |
+| c | healthy python3 on PATH that is a path **distinct from** the venv (real Homebrew python with the four modules, or a copy-shim that execs the venv python under another path), real venv also present | no notice; PATH untouched | no notice; the interpreter observed in a child is the PATH one, not the venv path; output identical to base |
+| d | a real `git push` through the installed hook of the disposable clone, to a local bare remote, with a failing python3 first on PATH, valid attempt accounting, and a code path change that routes to the tier-2 or full gate (not docs, no receipt on the commit) | the gate's toolchain fault (inner exit 3, hook exit 1, message `RED (exit 3)`), and the remote ref does not advance | the hook runs `validate.sh` (transcript shows the notice and suite results, no `--no-verify`, no receipt reuse), hook exit 0, `git ls-remote` on the bare remote shows the candidate SHA |
+| e | merge-cleanup's `gate_toolchain_fault_reason(clone)` under: (a) failing shim + healthy venv; (b1) venv missing; (b2) venv failing; (c) healthy distinct PATH python | (a) the fault line | (a) `''`; (b1)/(b2) the same fault line as base; (c) `''` |
+| f | `gh251-validate-pytest-skip.sh`, the GH-732 suites and the GH-1437-related checks, run (1) on base, (2) on the change with the gh251 edit, with the real venv present | green | green. (The selector with the *unadjusted* gh251 on a machine with the venv is also run once to show why the `HOME=` isolation is needed; no recorded result is claimed before that run.) |
+
+A smoke (GH-1088) is (a) as the main path and (b1)/(c) as the adjacent path. The docs route and receipt-reuse route are not selector paths: they do not invoke `validate.sh`, so they are unchanged by this work and stated as such (d forces a code-path diff so the gate is reached).
 
 ## Parked (dropped, not in this PR)
 
