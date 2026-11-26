@@ -230,4 +230,13 @@ Basis: F1 and F2 are resolved in the seeded artifact. The plan can be built as w
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) can proceed to implementation and disposable-clone verification.
 
+
+### Attestation · relay-drive — 2026-11-26T05:29:34Z
+task: RELAY-gh1627-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 75c497d6e1ac0850ef9b6ff07457664c410baa83
+added-range: 22673+6192
+added-sha256: 0de1d87dbff1fd437e48733c47133d2876c69d2ec4e68cab4b65090418e0631c
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
