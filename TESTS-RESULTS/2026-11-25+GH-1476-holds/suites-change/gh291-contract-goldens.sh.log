@@ -1,5 +1,5 @@
 == test: gh291-contract-goldens ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh291-contract-goldens.XXXXXX.DVdbRyFuJE
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh291-contract-goldens.XXXXXX.M9QbyjjNHi
   PASS: F1 root invocation: producer output conforms to the @1 golden
   PASS: F2 vendored invocation: producer output conforms to the @1 golden
   PASS: G1 loader accepts the adapted root golden
@@ -9,9 +9,9 @@
   PASS: M3 relative argv[0] refused
   PASS: M4 missing required field refused
   PASS: M5 non-object env refused
-marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh291-contract-goldens.XXXXXX.DVdbRyFuJE/res-approved.json (outcome: approved, exit 0)
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh291-contract-goldens.XXXXXX.M9QbyjjNHi/res-approved.json (outcome: approved, exit 0)
   PASS: F3 approved receipt: writer output conforms to the @1 golden
-marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh291-contract-goldens.XXXXXX.DVdbRyFuJE/res-refused.json (outcome: refused, exit 2)
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh291-contract-goldens.XXXXXX.M9QbyjjNHi/res-refused.json (outcome: refused, exit 2)
   PASS: F4 refused receipt: writer output conforms to the @1 golden
   PASS: G3 loader accepts the approved golden verbatim
   PASS: G4 loader accepts the refused golden verbatim

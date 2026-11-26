@@ -1,5 +1,5 @@
 == test: gh280-jog-marathon-adapter ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.xTm9AF75Xf
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.eMg9ahhrzd
   PASS: A1 root preflight exits 0 (candidate ready)
   PASS: A2 packet still carries run-candidate.json (additive)
   PASS: A2 packet still carries lane-plan.json (additive)

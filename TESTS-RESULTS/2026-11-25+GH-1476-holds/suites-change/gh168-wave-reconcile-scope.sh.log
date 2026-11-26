@@ -1,5 +1,5 @@
 == test: gh168-wave-reconcile-scope ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh168-wave-reconcile-scope.XXXXXX.UAmbQQtND3
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh168-wave-reconcile-scope.XXXXXX.XS4pMXsX1s
 == test: gh168-wave-reconcile-scope ==
   PASS: unrelated pre-existing planner drift does not roll back reconciliation
   PASS: warning block names the unrelated held item
