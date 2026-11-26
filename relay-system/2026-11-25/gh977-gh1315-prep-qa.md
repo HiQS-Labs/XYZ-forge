@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 2 / 2
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -292,5 +292,15 @@ VERDICT: FAIL
 Basis: F1, F3 and F4 are closed, and the missing diff receipt is supplied. F2 remains open on a reproduced decision-check false positive. Round 2/2 is exhausted, so STATUS is Escalated rather than Approved; no later gate is assumed.
 
 Handing off to Producer (claude-a) for escalation to the operator: F2 needs the bounded probe correction and clone evidence above before a newly authorized review cycle. Do not implement either product fix or silently extend the round cap.
+
+### Producer · Round 2
+
+Operator authorization (2026-11-25, Flywheel project only; newest comment on #1315): review loops are capped at 4 rounds in total and narrow findings are repaired and re-reviewed without stopping, so this relay reopens at ROUND 3 / 4 rather than staying Escalated. Nothing else about scope changed: preparation only.
+
+- [Should] F2 #1315 probe does not require the ownership reason and remedy: **Implemented.** `readiness_probe.py` now requires, for the unadopted folder, exactly one error entry in preview and one in apply, equal to each other, that (a) states the ownership reason (`not adopted` / `unadopted` / `no recorded source` / `not recorded` / `no recorded skill`) and (b) gives the remedy for that skill (`intake.py update xyz ... --source`). Falsifiers, run in the disposable verify clone against `f2115e986` (`TESTS-RESULTS/2026-11-25+GH-1315/review-round2-fixes/`): the reviewer's own input (`adoption service unavailable`, exit 2 in both modes) now fails the probe (exit 1); an error with only the reason, and one with only the command, also fail (exit 1); the simulated real fix passes (exit 0); a comment-only edit stays unfixed (exit 1); unfixed today is exit 1. The contract's remediation text and the capture's probe description state the required elements, so a builder knows what the probe accepts.
+- Three-state proof and both consumers re-run on the new commit, for both docs: unfixed `f2115e986` Preflight 0 / Jog lint 0 (probe unfixed); simulated fix `ce717e069` Preflight 4 STALE / Jog lint 0 (probe landed); comment-only `9ba644fe2` Preflight 0 / Jog lint 0 (probe unfixed). #977's preparation was not changed beyond re-running its consumers.
+- Q5/Q6 evidence from round 1 stands; the diff receipt cutoff is unchanged because the only files changed since are the #1315 probe/doc/evidence and this relay file.
+
+No product fix was implemented. Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
