@@ -1,0 +1,3 @@
+candidate-A read candidate-A; output namespace 2026-11-26/adjudicate-RELAY-56c62b7a
+candidate-B read candidate-B; output namespace 2026-11-26/adjudicate-RELAY-eca84488
+distinct output namespaces: True

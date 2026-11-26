@@ -2,7 +2,7 @@
   PASS: S1 exit 0
   PASS: S1 STATUS is Consult-Adjudicated (not Approved)
   PASS: S1 token closed
-   record: Consult-Adjudicated {'agy': 'NON-BLOCKING', 'codex': 'NON-BLOCKING'} candidate 508aa059ff71
+   record: Consult-Adjudicated {'agy': 'NON-BLOCKING', 'codex': 'NON-BLOCKING'} candidate 867bb9616980
   PASS: S1 attestation record loads with adjudication provenance
    refusal: merge refused: consult-adjudicated lane (not a reviewer approval) awaits the operator's merge (GH-1637)
   PASS: S1 jog merge boundary refuses the record before any merge call
@@ -14,16 +14,18 @@
   PASS: S1 exactly one consult
 == S2 REAL at cap 3, reviewer next: builder is dispatched before any reviewer can approve
   PASS: S2 repaired head then approved (exit 0, Approved)
-   consult judged 95d56de543d2 -> reviewer attested repaired 424b862bc8e2
+   consult judged f02f1046950e -> reviewer attested repaired 2947bf3c1788
   PASS: S2 the approval attests a CHANGED repair head, not the head the consult judged
   PASS: S2 order bld rev bld | consult | bld rev
   PASS: S2 no second consult
 == S2b REAL at cap 2 (reviewer just finished; builder next)
-  PASS: S2b order bld rev | consult | bld rev, approved
+  PASS: S2b order bld rev | consult | bld rev, approved on the repaired head
+== S2e REAL, builder hands back WITHOUT repairing, reviewer tries to approve: refused (repair-missing), no Approved attestation
+  PASS: S2e unchanged candidate cannot be approved after a REAL verdict
 == S2c REAL then the repaired lane still fails: second cap escalates, no second consult
   PASS: S2c repair reviewer records progress yet the lane ends after exactly the two repair turns (order 'bld rev bld bld rev', one consult)
 == S2d REAL at the new default cap 9 (builder-first alternation, reviewer next at the cap)
-   consult judged dce4cb094890 -> reviewer attested repaired cdcc8f53c7a4
+   consult judged 88e51d97537e -> reviewer attested repaired d3ea8b7b14c6
   PASS: S2d the approval attests a CHANGED repair head
   PASS: S2d cap 9: 9 turns, consult, builder repair, reviewer approves the repaired SHA
 == S3 SAFETY -> hold
@@ -53,10 +55,12 @@
   PASS: S9 forged terminal reverted (exit 4)
 == S10 transcript-only candidate (builder commits no deliverable): hold before any consult
   PASS: S10 holds, consult never ran
+== S10b the candidate patch cannot be captured (git diff fails after the name-only check passed): hold before any advisor is dispatched
+  PASS: S10b patch capture failure holds: no advisor dispatched, STATUS Open, no attestation
 == S11 default-off: same lane without --consult-at-cap keeps cap-stalled, no consult
   PASS: S11 cap-stalled, zero consults
 == S12 dirty target: advisors read the pinned candidate, not the working tree
   PASS: S12 both advisors saw MARKER=RED UNTRACKED=absent (working tree has GREEN + untracked.txt)
-  PASS: S12 advisor HEAD equals the attested candidate 728a82e48f74
+  PASS: S12 advisor HEAD equals the attested candidate a47aed790e20
 
-RESULT: 36 passed, 0 failed
+RESULT: 38 passed, 0 failed

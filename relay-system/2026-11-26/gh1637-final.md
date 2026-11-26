@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-26.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -407,5 +407,13 @@ failed diff rc=128 -> adjudicated Consult-Adjudicated
 relay-drive: attested Approved by reviewer — reviewed aaaaaaaaaaaa, 40 bytes of review text, record /mock/attestation.json
 no source repair; consult head == review head: True result: attested Approved
 ```
+
+### Producer · Round 3 dispositions
+
+1. [Blocker] Patch capture failure — **Implemented**: the driver checks the `git diff` exit status and a non-empty patch before opening the consult and holds as `consult-inconclusive` otherwise; S10b shims `git diff` to fail after the name-only check passes and shows no advisor dispatched, STATUS Open, no attestation.
+2. [Blocker] Approval after REAL without a repair — **Implemented**: the consulted candidate is carried into `judge_terminal`; an `Approved` from the repair reviewer is refused (`repair-missing`) unless a path outside transcripts/receipts changed since that candidate. S2e is the S2b fixture without `STUB_REPAIR` and now refuses; S2/S2b/S2d (with a repair commit) attest a changed head.
+3. [Should] Namespace probe — **Implemented**: the exact two-process probe (with `secrets` added to the namespace as asked) is retained as `TESTS-RESULTS/2026-11-26+GH-1637/namespace_probe.py`, output in `namespace_probe.log`: each candidate read only its own question and `distinct output namespaces: True`.
+
+Evidence: manual checks 38/38 and 11/11; sixteen existing suites green (provenance.jsonl).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
