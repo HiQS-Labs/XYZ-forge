@@ -1,0 +1,39 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU
+marathon-drive: branch guard: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution was on its trunk branch 'development' — cut 'marathon/gh901-fixture' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution/marathon-system/gh-901-fixture-lane-b/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-901-FIXTURE-LANE-B-TURN → codex
+marathon-drive: memory-telemetry: phase gh-901-fixture-lane-b-start boundary — compressor=2357MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay-drive exited with unexpected code 9
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-install/.tick/jog/jog-01M8B3HZ93FT8TCTMWSAJ9FTR2/gh901-exec1/preflight/marathon-result.json (outcome: refused, exit 2)
+marathon-drive: interrupted-phase record written: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution/marathon-system/gh-901-fixture-lane-b/PHASE-INTERRUPTED.md (reason: usage or configuration error)
+marathon-drive: transcript saved: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution/relay-system/2026-11-26/marathon-gh-901-fixture-lane-b-045927.md
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 2357MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+
+============================================================
+jog: processing GH-901 (attempt 1) at position 1
+============================================================
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-install/.tick/jog/jog-01M8B3HZ93FT8TCTMWSAJ9FTR2/gh901-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution/relay-automation/marathon-drive.sh)
+jog: stopping queue execution on task failure.
+jog exit=0
+worker edge calls=1
+--relay-file /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution/marathon-system/gh-901-fixture-lane-b/RELAY.md --relay-task MARATHON-GH-901-FIXTURE-LANE-B-TURN --agent-cmd /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution/relay-automation/marathon-agent.sh --reviewer agy --builder codex --round-cap 5 --target-root /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-execution
+snapshot: attempt_count 0->1; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->1; native attempt files=1; status=failed; reason=marathon refused: unexpected-relay-exit-9 (exit 2) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-install/.tick/jog/jog-01M8B3HZ93FT8TCTMWSAJ9FTR2/gh901-exec1/preflight/marathon-result.json]
+ASSERT case=ambiguous-a expected_calls=0 FAIL (calls=1)
+queue: [('jog-01M8B3HZ93FT8TCTMWSAJ9FTR2', 'failed', 'marathon refused: unexpected-relay-exit-9 (exit 2) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU/root-install/.tick/jog/jog-01M8B3HZ93FT8TCTMWSAJ9FTR2/gh901-exec1/preflight/marathon-result.json]', 1)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.wCQxLrjiVU
+control exit=0

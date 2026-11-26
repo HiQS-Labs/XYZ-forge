@@ -1,5 +1,5 @@
 == test: gh202-wave-reconcile-issue-state ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh202-wave-reconcile-issue-state.XXXXXX.dtfc4SU4Zp
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh202-wave-reconcile-issue-state.XXXXXX.1afs28YkKu
 == test: gh202-wave-reconcile-issue-state ==
   PASS: reconcile exits 0 despite marathon-plan exit 5 (items held tolerated)
   PASS: exit-5 tolerance is logged, not silent

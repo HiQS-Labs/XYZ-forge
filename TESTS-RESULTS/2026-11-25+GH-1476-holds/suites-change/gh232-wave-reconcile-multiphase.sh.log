@@ -1,5 +1,5 @@
 == test: gh232-wave-reconcile-multiphase ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh232-wave-reconcile-multiphase.XXXXXX.LKEn9vAps3
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh232-wave-reconcile-multiphase.XXXXXX.OQbICbDUVA
 == test: gh232-wave-reconcile-multiphase ==
   PASS: reconcile exits 0 on mixed open/closed PR
   PASS: OPEN-issue multi-phase doc stays in 2-WORKING

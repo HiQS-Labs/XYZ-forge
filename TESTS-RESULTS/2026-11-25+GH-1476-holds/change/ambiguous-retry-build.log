@@ -1,11 +1,11 @@
 == test: gh1609-control ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.9suUXwLLK1
-jog: retry-build GH-901 → parked — hold-check-unavailable: ambiguous capture documents
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.CqWnIENGYt
+jog: retry-build GH-901 → parked — hold: capture body HELD: marker
 jog exit=0
 worker edge calls=0
-snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold-check-unavailable: ambiguous capture documents
+snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold: capture body HELD: marker
 ASSERT case=ambiguous expected_calls=0 PASS
-queue: [('jog-01M8B2E710QMJ49VGYD1FPVEV8', 'parked', 'hold-check-unavailable: ambiguous capture documents', 0)]
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.9suUXwLLK1
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.9suUXwLLK1
+queue: [('jog-01M8B3N18HJE7XE9SZJ8D4AJA7', 'parked', 'hold: capture body HELD: marker', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.CqWnIENGYt
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.CqWnIENGYt
 control exit=0

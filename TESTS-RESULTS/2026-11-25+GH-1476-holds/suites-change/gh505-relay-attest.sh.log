@@ -1,5 +1,5 @@
 == test: gh505-relay-attest ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh505-relay-attest.XXXXXX.KnaxTTVnjW
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh505-relay-attest.XXXXXX.8f4YGSR39x
 == test: gh505-relay-attest ==
   PASS: A: the stub builder turn really ran through codex-turn
   PASS: A: builder-written Approved → driver exits 4
@@ -23,7 +23,7 @@
   PASS: B: the isolated worktree was cut at the pinned revision
   PASS: B: reviewed-head is the parent of the shim's commit
   PASS: B: record loads for reviewer rev; digest = sha256(exactly the appended bytes)
-new-relay: wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh505-relay-attest.XXXXXX.KnaxTTVnjW/agent-a/relay.md (NEXT: Reviewer, reviewer=rev)
+new-relay: wrote /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh505-relay-attest.XXXXXX.8f4YGSR39x/agent-a/relay.md (NEXT: Reviewer, reviewer=rev)
   PASS: B1: reviewer following generated append-above-marker instruction is attested
   PASS: B1: exactly one trailing marker remains
   PASS: B1: marker remains the final line
@@ -80,11 +80,11 @@ Confirm merge into development and advance to next item? [Y/n] jog: merge failed
 [jog] Task GH-7 completed drive pass.
 Confirm merge into development and advance to next item? [Y/n] 
 [jog] Task GH-7 completed drive pass.
-Confirm merge into development and advance to next item? [Y/n] jog: merge refused: candidate 0744bd44c5b6 changes non-transcript content after reviewed head b52d69ba0298 (candidate-drifted-from-reviewed-head) — parking GH-7
+Confirm merge into development and advance to next item? [Y/n] jog: merge refused: candidate e2690fd57d70 changes non-transcript content after reviewed head 99d0e24fc503 (candidate-drifted-from-reviewed-head) — parking GH-7
 
 [jog] Task GH-7 completed drive pass.
 Confirm merge into development and advance to next item? [Y/n] jog: merge refused: no valid reviewer attestation for this task (GH-505) — parking GH-7
-jog: auto-merge refused/failed: merge refused: candidate 0744bd44c5b6 changes non-transcript content after reviewed head b52d69ba0298 (candidate-drifted-from-reviewed-head)
+jog: auto-merge refused/failed: merge refused: candidate e2690fd57d70 changes non-transcript content after reviewed head 99d0e24fc503 (candidate-drifted-from-reviewed-head)
 jog: auto-merge refused/failed: merge failed (gh exit 1): 
 jog: --reviewer <agent> is required for the relay executor too — relay-drive accepts a terminal STATUS only from the named reviewer (GH-505)
 jog: --reviewer must differ from --builder (both are 'rev')

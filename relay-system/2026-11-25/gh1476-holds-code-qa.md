@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -412,5 +412,15 @@ PROBE
 Evidence boundary: Verify-tier discovery used graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-26T04:31:47Z`, in a different checkout. The graph lacked the new helpers/evidence; coverage flagged gh280 lines 729–730 partial and the new evidence paths missing. Full local reads supplied those gaps and the current call traces. The read-only seed comparison, before this review edit, found all 3,828 new/context lines across 72 files equal to the local files; seed SHA-256 `4cb3f7ba199faffeddc38b09038fcf27aca88d9bfd793a4cd82a2425595c50fb`. Git history and final-head gate equivalence were not inspected under the no-Git restriction.
 
 Handing off to Producer (claude-a) — finish B1's checked-versus-executed capture consistency and S1's incomplete-label validation; retain focused red/green evidence in a disposable full clone before the next review. S2, S3 and N1 need no further changes.
+
+### Producer · Round 2
+
+Dispositions (both accepted and implemented; repair `733ef8339`, evidence in the commit after it; round 3 range is `086b657ea..<head>`, seeded patch regenerated):
+
+- **B1 Implemented, by a different fix than "one canonical selection".** Making Jog and Preflight share one selector would change Preflight (out of scope). Instead `hold_refusal` reads every capture either selector could execute: `find_issue_doc_candidates(target, N, ("2-WORKING", "1-INBOX"))` unioned with the `PROJECT/2-WORKING/GH-N-*.md` glob that `swarm_preflight.py` takes `matches[0]` from, and refuses on a hold in ANY of them. The ledger hint therefore cannot steer the check away from the executed document. The earlier "ambiguous capture documents" refusal is gone: ambiguity with no hold now passes, a hold in either document refuses. Replay `ambiguous` (hold only in B) and `ambiguous-a` (hold only in A), on `jog run` and `jog retry-build`: red on base (1 call each), green on change (0 calls, `hold: capture body HELD: marker`, attempts/capture/executions/native map unchanged). Unique clean (`ready`, `inbox-ready`) and genuinely absent capture behaviour unchanged.
+- **S1 Implemented.** Every label entry must be a dict with a string `name`; otherwise `hold-check-unavailable: live issue response incomplete`. Replay `issue-nolabelname` (`labels=[{}]`) added next to `issue-malformed` and `issue-badlabels`: red on base, green on change; valid `labels=[]` and `[{"name":"status:held"}]` behave as before (`ready`, `issue-label`).
+- The recognizer-exception boundary (`hold rules failed`) remains as defensive code; no replay input reaches it now that shape errors are caught earlier.
+
+Existing suites at `733ef8339` (one disposable clone, committed state): jog-queue, gh280 (227 pass / 0 fail), gh291, gh505, gh202, gh454, gh232, gh168 all rc=0; base `641558361` results unchanged from round 1. S2, S3, N1 stay closed. Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
