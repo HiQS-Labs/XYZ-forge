@@ -52,7 +52,7 @@ The issue states its acceptance under `## Ask`, not `## Acceptance`, so Prefligh
 - **Retry boundary:** none: a single ledger write; repair is one `roadmap rate` per row. Reversibility: Easy.
 - **Dependencies:** none open. Open PRs touching these files: none (#1608 touches skills-army-hq only; #1024 is a draft unrelated to `releases_app.py`).
 - **Discriminating check:** `TESTS-RESULTS/2026-11-25+GH-977/readiness_probe.py` drives the real CLI in a disposable ledger. It exits 0 only when a text-only update keeps all five fields and an explicit token still rescores; any crash exits nonzero, which Preflight reads as unfixed.
-- **Foreseeable approvals/runtime:** none beyond the normal gate; the builder may not run the gate itself.
+- **Foreseeable approvals/runtime:** none beyond the normal gate; the builder may not run the gate itself. Red control witnessed: a code-only fix turns the existing gh257 suite red (`TESTS-RESULTS/2026-11-25+GH-977/existing-suites/`); with Case 8 edited, both gate suites pass against the simulated fix.
 - **Unknowns:** whether any other roadmap row already lost its rating (a sweep for rated events with NULL fields is out of scope; named in the issue).
 - **Next owner:** the operator (explicit `/jog 977` or `/start-task 977`).
 

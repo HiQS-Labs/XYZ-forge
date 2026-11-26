@@ -45,7 +45,7 @@ The issue states its acceptance under `## Expected`, not `## Acceptance`, so Pre
 - **Downstream/retry boundary:** none; a refused apply leaves the folder and an orphan `backups/<name>-<date>.zip`; the operator re-runs after `intake.py update <name> --source ...` (receipt-only, GH-1306).
 - **Dependencies:** none blocking. Open PR #1608 (STALE_CANONICAL_FORGE warning) also edits `sync.py` around `drift_gate`/`main`; it can shift line anchors and cause a rebase, not a semantic conflict, and the probe is behavior-based.
 - **Discriminating check:** `TESTS-RESULTS/2026-11-25+GH-1315/readiness_probe.py` drives `intake.py` and `sync.py` as subprocesses in a disposable fixture (unadopted `xyz`; recorded `sample` as positive control). It exits 0 only when the fixed behavior is observed.
-- **Foreseeable approvals/runtime:** none; `sync.py` is in a published skill folder, so the implementer runs the usual published-skill suite check at landing.
+- **Foreseeable approvals/runtime:** none; `sync.py` is in a published skill folder, so the implementer runs the usual published-skill suite check at landing. Gate caution: `test/skills-army-hq.sh` prints `SKIPPED: pytest not importable` and exits 0 when the running python lacks pytest, a vacuous pass (observed under python3.12; 34 passed under python3.14 with pytest, `TESTS-RESULTS/2026-11-25+GH-1315/existing-suites/`). The gate run must use a python that imports pytest.
 - **Unknowns:** the exact remedy wording is the builder's call within "adopt first" plus the `intake.py update` path; `jog` and `file-xyz-bug` are also unadopted (issue scope note), the same guard covers them.
 - **Next owner:** the operator.
 

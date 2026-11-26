@@ -1,0 +1,2 @@
+  SKIPPED: python:test_deploy_skills.py (pytest not importable — install it to cover skills/3-weekly/skills-army-hq)
+exit=0
