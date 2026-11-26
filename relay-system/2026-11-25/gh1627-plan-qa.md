@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-25.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -106,5 +106,64 @@ Write your verdict (PASS / FAIL / PARKED, with `swept file: yes|no`) and set STA
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+**What this proposes**
+
+The gate will reuse its existing Python probe to select the prepared home-directory venv only when PATH's Python fails and that venv passes. It will prepend the venv for this gate process and its children, announce the interpreter, preserve existing failure diagnostics otherwise, and isolate two existing gh251 failure cases from the user's venv.
+
+**How the existing system works, per this document**
+
+The document places the sole toolchain probe in validate.sh, before --print-mode. It says the hook delegates gate execution there, while merge-cleanup calls --print-mode and interprets its exit status; earlier hook receipt operations allegedly need only the standard library.
+
+**What it's not**
+
+Excluded: venv creation, system/profile changes, a path override, new suites, hook routing changes, and replacing healthy PATH Python. Deferred: ci-local.sh's independent Python invocations. No unresolved implementation choice is declared; the document says uncertainty is not material.
+
+**Source-backed assessment**
+
+swept file: yes
+
+Scope/evidence: read the entire seeded plan, the existing GH-732 block and pre-print-mode control flow, hook routes, gh251, and the named merge-cleanup functions. Graph discovery used the nearest indexed project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-11-26T04:31:47Z`; this relay worktree is not indexed, and that other checkout's graph lacks `gate_toolchain_fault_reason`. Consequently all material citations below use this worktree's source. Coverage returned no recorded issues for the eight requested evidence paths in that other checkout, but known gaps in `test/`; local literal searches supplemented it. No exhaustive claim about every test's runtime is made. The whole-plan sweep found the existing inaccuracies below, not an additional implementation defect. No gate is configured in these Reviewer steps and none was run.
+
+- **[Should] F1 — Correct the acceptance table's baseline claims before treating it as executable acceptance.**
+  **Observed input:** Form 1 contradictions: `.relay-artifacts/GH-1627-GATE-VENV-AUTOSELECT.md:106` says the real push base exits 3, whereas `githooks/pre-push:453-472` captures the gate's 3, prints it, and exits **1**. Plan line 108 says unmodified base gh251 is green “only without the venv (recorded)”; `validate.sh:1035-1045` never reads the venv and `test/gh251-validate-pytest-skip.sh:60-85` already expects the PATH-shim refusal irrespective of HOME. The record cited by that parenthetical is not supplied.
+  **Affected scope:** rows d/f and the distinction between the base suite and the changed selector with the unadjusted suite; no production behavior change requested.
+  **Falsifier:** in disposable clones, base push must be nonzero with the inner gate's exit-3 diagnostic and no remote-ref advance; base gh251's negative cases must behave identically with the prepared venv present or absent. A changed selector plus the unadjusted gh251 should reject the newly available fallback; the HOME-isolated version should restore the negative cases. Results contradicting this trace should reopen the assessment.
+  **Fix:** record push exit 1 separately from inner gate exit 3, correct row f to distinguish base from selector-changed/unadjusted-test behavior, and remove “recorded” until there is a linked receipt. Keep b1/b2/c/f explicitly labeled preservation/regression controls: they should not reject the unchanged base. The actual unchanged-candidate rejection comes from a, d and e(a), not from pretending every preservation row turns red on base.
+  Narrow source probe (exit **0**, no gate/fixture execution):
+  ```python
+  # python3 -B - <<'PY' ... PY
+  from pathlib import Path
+  v = Path('validate.sh').read_text()
+  h = Path('githooks/pre-push').read_text()
+  b = v.split('# GH-732 environment faults BEGIN', 1)[1].split('# GH-732 environment faults END', 1)[0]
+  assert b and h
+  assert b.count('test-venv') == 1
+  assert 'test-venv' in next(l for l in b.splitlines() if 'ENVIRONMENT FAULT: python3' in l)
+  assert h.rstrip().endswith('exit 1')
+  assert 'documentation gate, not validate.sh.' in h
+  print('base probe: test-venv occurs only in diagnostic; HOME cannot enable fallback')
+  print('hook: docs route bypasses validate.sh; final refusal exits 1')
+  ```
+  Decisive output: `base probe: test-venv occurs only in diagnostic; HOME cannot enable fallback` and `hook: docs route bypasses validate.sh; final refusal exits 1`.
+
+- **[Should] F2 — Make the healthy-interpreter and push controls discriminating, and complete the preflight matrix.**
+  **Observed input:** `.relay-artifacts/GH-1627-GATE-VENV-AUTOSELECT.md:105` permits the healthy PATH Python to be the same prepared venv, making an always-prepend substitution observationally indistinguishable by interpreter identity. Line 107 tests preflight only for a/b, despite requirement 4 at line 51 promising all three states. Line 106 leaves the pushed route and receipt state unspecified, while `githooks/pre-push:390-395` and `:421-440` can succeed without running validate.sh. The observed-problem claim “all gate work is inside validate.sh” at plan line 38 is therefore false.
+  **Affected scope:** manual rows c/d/e and the plan's description of process-local PATH inheritance; retain the existing implementation scope.
+  **Falsifier:** c uses a healthy interpreter path distinct from the fallback and observes that same interpreter in a downstream child, with no notice; e also returns `''` for that healthy-PATH case; d's transcript demonstrates the actual tier-2/full gate ran, with no bypass or receipt reuse, and a local remote read-back shows the candidate ref landed. An unchanged base must fail d at the toolchain probe before publication, not at accounting or unrelated checks.
+  **Fix:** add those explicit preconditions/observables to c/d/e, including valid existing attempt accounting (`githooks/pre-push:90-99`, `validate.sh:1063-1068`). State that each validate.sh invocation selects independently: its PATH export reaches its children, not the parent hook. A normal push calls both --print-mode and the real gate (`githooks/pre-push:354-359`, `:445-453`), so “one notice” is per validate invocation, not necessarily once across the push. Document the docs-only and receipt-reuse exceptions; no hook rewrite is needed for the stated toolchain-less 3.14 case.
+
+- **[Pass] Core selector is surgical and DRY.** Plan lines 58-70 preserve one module list/version floor, reset the version and missing-module state on each probe, and re-probe PATH after a rejected fallback. Against `validate.sh:1035-1045`, that preserves the fault text/state for stable missing/failing-venv cases and leaves healthy PATH untouched. Exporting PATH at plan line 64 supplies the selected executable to child workers and nested validate invocations; explicitly injected shims still take priority in gh251. Keeping HOME isolation local to the two calls at gh251 lines 60/78 preserves the assertions at 61-66/79-85, including refusal before pytest. Plan lines 72-73 and 98 require existing coverage/manual evidence only, with no new suite, external profile edits or automatic installation. No extra selector, knob, lock or wrapper is warranted.
+
+- **[Pass] No hook or merge-cleanup code change is justified for a runnable Python 3.14 missing the four development modules.** Hook admission/check use gate_receipt (`githooks/pre-push:92-97`, `:426`), whose imports plus rtl's imports are standard-library (`utils/py/gate_receipt.py:13-24`, `utils/py/rtl.py:1-16`). Probe: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$PWD/utils/py" /opt/homebrew/bin/python3 -B -c 'import sys, gate_receipt; print("gate_receipt import OK; Python", sys.version.split()[0])'` → exit **0**, `gate_receipt import OK; Python 3.14.7`. The classifier's Python uses sys/re (`utils/ci-route.sh:183-184`). Docs routing runs PDDA directly: its map/scanners/marathon checker use standard-library imports (`utils/pdda/pdda.sh:645-647`, `:1251`, `:1385`, `:1696`; `utils/py/pdda_gov_scan.py:58-59`, `utils/py/pdda_comment_refs.py:17-19`, `utils/pdda/check_marathon_qa.py:17-22`); missing pytest/yaml/requests/mypy alone does not alter those paths. This does not promise rescue for an absent or nonfunctional Python executable before hook admission. merge-cleanup's function calls the gate and returns empty on rc 0 or its fault lines otherwise (`merge_cleanup.py:1083-1097`); `preflight_warnings` consumes it at 1444-1448. Its decision should follow the selector without duplicating it.
+
+- **[Unverified — needs clone run] Delivery evidence remains future work.** Rows a/d/e identify intended red controls, not observed rejections in this review. Real suite execution, push publication, byte-identical failed-fallback output and complete gh251/GH-732 regressions must be measured in disposable full clones with provenance as the plan requires at line 98. Local literal searches found no additional Python-fault assertion site beyond gh251; that is bounded source evidence, not proof that every suite passes with the venv. The related issues were assessed only as quoted in the plan, not independently fetched.
+
+Handing off to Producer (claude-a) — correct the acceptance matrix and routing description, then return for plan QA. The selector design can remain as proposed.
+
+VERDICT: FAIL
+Basis: The implementation approach is proportionate, but the plan as written contains false baseline outcomes and leaves key acceptance cases able to miss the claimed behavior. F1/F2 require small plan corrections; no production redesign or new tests are requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
