@@ -2,7 +2,7 @@
 gh_issue: 1315
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1315
 title: "Legacy migration preview refuses unadopted skill retirement"
-status: Active
+status: Complete
 created: 2026-11-11
 updated: 2026-11-26
 owner: Conveyor preparation (Day 2 Flywheel proving-arc candidate; ledger #1610, ranking #1616)
