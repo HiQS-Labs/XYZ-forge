@@ -1,0 +1,12 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.4e9I6wwZgK
+jog: GH-901 not started: hold-check-unavailable: ambiguous capture documents; parking item.
+jog: queue complete (0 pending tasks).
+jog exit=0
+worker edge calls=0
+snapshot: attempt_count 0->0; capture(PROJECT/2-WORKING/GH-901-FIXTURE-LANE.md) unchanged; executions 0->0; native attempt files=0; status=parked; reason=hold-check-unavailable: ambiguous capture documents
+ASSERT case=ambiguous expected_calls=0 PASS
+queue: [('jog-01M8B2DTW2YPW8VJDMTZA7RK85', 'parked', 'hold-check-unavailable: ambiguous capture documents', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.4e9I6wwZgK
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.4e9I6wwZgK
+control exit=0

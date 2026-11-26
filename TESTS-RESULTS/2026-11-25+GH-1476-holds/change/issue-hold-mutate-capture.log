@@ -1,0 +1,12 @@
+== test: gh1609-control ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.FmozZgUVSj
+jog: GH-901 not started: hold: issue body HELD: marker; parking item.
+jog: queue complete (0 pending tasks).
+jog exit=0
+worker edge calls=0
+snapshot: attempt_count 0->0; capture(PROJECT/1-INBOX/GH-901-FIXTURE-LANE.md) CHANGED; executions 0->0; native attempt files=0; status=parked; reason=hold: issue body HELD: marker
+ASSERT case=issue-hold expected_calls=0 FAIL (calls=0)
+queue: [('jog-01M8B2ECYAA6G4WKGFXG1K8XYJ', 'parked', 'hold: issue body HELD: marker', 0)]
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.FmozZgUVSj
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1609-control.XXXXXX.FmozZgUVSj
+control exit=0
