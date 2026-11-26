@@ -422,7 +422,7 @@ Later qualification shares evidence across at most two planned bounded real runs
 ## GH-1633 — exhausted lane continues to the ready successor (OL-12, 2026-11-26)
 
 Flywheel Day 2 (#1610) exercised a supervised wake with a ready successor behind each case, on the real
-Jog → Preflight → Marathon path with only the worker edge stubbed. Task-local red gate, a human hold and a
+Jog → Preflight → Marathon path with the worker edge stubbed (GitHub responses, git transport and fixture gates are shimmed too). Task-local red gate, a human hold and a
 shared stop already behaved as required; a row at its native lane-attempt cap halted the wake with the
 successor never started. `_jog_lane_exhausted` in `utils/py/jog_run.py` now treats only a valid,
 identity-matched cap receipt written after dispatch (parked, the drive itself exited 8, count at cap, gate not run, no PR,

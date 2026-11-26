@@ -1,22 +1,22 @@
 == test: gh1610-wake ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6
-== wake: CASE=exhausted start=2026-11-26T17:57:20Z deadline_epoch=1795716740
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW
+== wake: CASE=exhausted start=2026-11-26T18:10:02Z deadline_epoch=1795717502
 queue before: [(901, 'pending', 0, ''), (902, 'pending', 0, '')]
 lane-attempt-cap: lane gh-901-fixture-lane PARKED after 2 attempt(s) (cap 2) — no relay token seeded.
-jog: execution clone aligned at 50cc753058bf81a2d3d7dafd059472b650161d61; other branches and untracked files retained
+jog: execution clone aligned at 10c7bf357ece00e7ae09463924fb6be23e95875b; other branches and untracked files retained
 
 ============================================================
 jog: processing GH-901 (attempt 1) at position 1
 ============================================================
-jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-install/.tick/jog/jog-01M8CG2DPE5NNGQTC87E9A3A5B/gh901-exec1/preflight)
-jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-execution/relay-automation/marathon-drive.sh)
-marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-install/.tick/jog/jog-01M8CG2DPE5NNGQTC87E9A3A5B/gh901-exec1/preflight/marathon-result.json (outcome: parked, exit 8)
-jog: advancing halted: GH-901 parked — marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-install/.tick/jog/jog-01M8CG2DPE5NNGQTC87E9A3A5B/gh901-exec1/preflight/marathon-result.json]
-jog: GH-901 parked: marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-install/.tick/jog/jog-01M8CG2DPE5NNGQTC87E9A3A5B/gh901-exec1/preflight/marathon-result.json]
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-install/.tick/jog/jog-01M8CGSNATCYGR9Z1P4W9ZSXY2/gh901-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-execution/relay-automation/marathon-drive.sh)
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-install/.tick/jog/jog-01M8CGSNATCYGR9Z1P4W9ZSXY2/gh901-exec1/preflight/marathon-result.json (outcome: parked, exit 8)
+jog: advancing halted: GH-901 parked — marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-install/.tick/jog/jog-01M8CGSNATCYGR9Z1P4W9ZSXY2/gh901-exec1/preflight/marathon-result.json]
+jog: GH-901 parked: marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-install/.tick/jog/jog-01M8CGSNATCYGR9Z1P4W9ZSXY2/gh901-exec1/preflight/marathon-result.json]
 jog exit=0
 worker edge calls: GH-901=0 GH-902=0
-queue after: [(901, 'parked', 1, 'marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-install/.tick/jog/jog-01M8CG2DPE5NNGQTC87E9A3A5B/gh901-exec1/preflight/marathon-result.json]'), (902, 'pending', 0, '')]
+queue after: [(901, 'parked', 1, 'marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-install/.tick/jog/jog-01M8CGSNATCYGR9Z1P4W9ZSXY2/gh901-exec1/preflight/marathon-result.json]'), (902, 'pending', 0, '')]
 native lane history of GH-901 unchanged=yes
-ASSERT case=exhausted want_successor_calls=1 FAIL (calls 901=0 902=0; row1=parked: marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6/root-install/.tick/jog/jog-01M8CG2DPE5NNGQTC87E9A3A5B/gh901-exec1/preflight/marathon-result.json])
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.UAlIXAHjg6
+ASSERT case=exhausted want_successor_calls=1 FAIL (calls 901=0 902=0; row1=parked: marathon parked: lane parked at the attempt cap (exit 8) [gh901-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW/root-install/.tick/jog/jog-01M8CGSNATCYGR9Z1P4W9ZSXY2/gh901-exec1/preflight/marathon-result.json])
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.MfvQ4b7kSW
 control exit=0

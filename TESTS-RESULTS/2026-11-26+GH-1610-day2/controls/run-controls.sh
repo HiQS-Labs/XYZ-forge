@@ -28,6 +28,7 @@ shared|
 refusal|
 cap-stalled|
 cap-mismatch|
+stale-reason|
 no-progress|
 exhausted|
 shared-red|1

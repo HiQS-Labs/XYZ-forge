@@ -44,9 +44,10 @@ def receipt(exit_code=8, count=2, cap=2, issue="901", eid="gh901-exec1"):
             "gate": {"cmd": "bash test/fixture-gate.sh", "result": "not-run", "exit": None, "receipt_path": None},
             "acceptance": None, "pr": {"number": None, "url": None, "state": None}, "pr_note": None,
             "relay_status": None, "timestamps": {"started_at": T, "finished_at": T}}
-def stalled(reason="cap-stalled", exit_code=4, gate="not-run", pr=None, issue="901", eid="gh901-exec1"):
+def stalled(reason="cap-stalled", exit_code=4, gate="not-run", pr=None, issue="901", eid="gh901-exec1", gate_exit=None, pr_url=None, pr_state=None):
     r = receipt(exit_code=exit_code, issue=issue, eid=eid)
-    r.update({"outcome": "escalated", "reason": reason}); r["gate"]["result"] = gate; r["pr"]["number"] = pr
+    r.update({"outcome": "escalated", "reason": reason}); r["gate"]["result"] = gate; r["gate"]["exit"] = gate_exit
+    r["pr"].update({"number": pr, "url": pr_url, "state": pr_state})
     return r
 def run(name, expect, rec, written_offset=1.0, fn=None, **record):
     """written_offset: receipt file mtime relative to the recorded dispatch instant (negative = older)."""
@@ -84,6 +85,10 @@ res = [
     run("stalled-after-gate-ran", False, stalled(gate="red"), fn="stalled"),
     run("stalled-with-pr", False, stalled(pr=7), fn="stalled"),
     run("stalled-other-issue-receipt", False, stalled(issue="902"), fn="stalled"),
+    run("stalled-gate-not-run-but-exit-recorded", False, stalled(gate_exit=1), fn="stalled"),
+    run("stalled-pr-url-without-number", False, stalled(pr_url="https://example.invalid/pr/1", pr_state="OPEN"), fn="stalled"),
+    run("exhausted-gate-not-run-but-exit-recorded", False, dict(receipt(), gate={"cmd": "x", "result": "not-run", "exit": 1, "receipt_path": None})),
+    run("exhausted-pr-url-without-number", False, dict(receipt(), pr={"number": None, "url": "https://example.invalid/pr/1", "state": "OPEN"})),
 ]
 # review r3: a staged stale receipt, even with a FUTURE mtime, must be set aside (kept, renamed) before dispatch
 # so that nothing at the result path can predate the drive; without the helper the file would still be there.

@@ -2630,6 +2630,14 @@ def _jog_projected_receipt(root, gh_num, gid, prior_executions, status, outcome)
     return latest, receipt
 
 
+def _jog_no_gate_no_pr(receipt):
+    """True only for a receipt that records no gate run and no PR at all (MACHINE-CONTRACTS.md: PR fields
+    are all-null when no PR exists), so a partial or contradictory receipt is never read as task-local."""
+    gate, pr = receipt.get("gate") or {}, receipt.get("pr") or {}
+    return (gate.get("result") == "not-run" and gate.get("exit") is None
+            and not any(pr.get(k) for k in ("number", "url", "state")))
+
+
 def _jog_receipt_is_current(root, gid, latest, drive_exit):
     """True when the receipt at this execution's result path was written by the drive this wake just ran.
 
@@ -2661,8 +2669,7 @@ def _jog_review_cap_stalled(root, target, gh_num, gid, prior_executions):
         return None
     if (receipt.get("outcome") != "escalated" or receipt.get("reason") != "cap-stalled"
             or receipt.get("exit_code") != 4 or receipt.get("approval_preserved")
-            or (receipt.get("gate") or {}).get("result") != "not-run"
-            or (receipt.get("pr") or {}).get("number")
+            or not _jog_no_gate_no_pr(receipt)
             or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
             != os.path.realpath(target)):
         return None
@@ -2688,8 +2695,7 @@ def _jog_lane_exhausted(root, target, gh_num, gid, prior_executions):
             or receipt.get("exit_code") != 8 or receipt.get("approval_preserved")
             or not all(isinstance(n, int) and not isinstance(n, bool) for n in (count, cap))
             or cap < 0 or count < cap
-            or (receipt.get("gate") or {}).get("result") != "not-run"
-            or (receipt.get("pr") or {}).get("number")
+            or not _jog_no_gate_no_pr(receipt)
             or os.path.realpath((receipt.get("target_repo") or {}).get("path") or "")
             != os.path.realpath(target)):
         return None

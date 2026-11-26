@@ -14,6 +14,8 @@
 #   shared      row 1 worker edge crashes (exit 9, a shared/unclassified stop)           -> successor expected ZERO times
 #   cap-stalled row 1 builder/reviewer hit the review round cap (worker edge exit 4: escalated cap-stalled)   -> successor expected once
 #   cap-mismatch row 1 relay exit 4 WITHOUT the cap-stalled reason (cap-or-close-mismatch, a shared stop) -> successor expected ZERO times
+#   stale-reason row 1 relay exit 4 with NO current reason while an OLD `cap-stalled` reason file survives cleanup
+#                (macOS `chflags uchg` makes its removal fail)                                  -> successor expected ZERO times
 #   no-progress row 1 builder made no progress (worker edge exit 3, a shared/unclassified stop)  -> successor expected ZERO times
 #   refusal     row 1 capture acceptance differs from the live issue (Preflight NOT-READY, parked) -> successor expected ZERO times
 # The assertion prints one `ASSERT ...` line. EXPECT_SUCC overrides the case default so that an assertion
@@ -176,8 +178,13 @@ RD1=0; RD2=9
 [ "$CASE" != shared ] || RD1=9
 [ "$CASE" != cap-stalled ] || RD1=4
 [ "$CASE" != cap-mismatch ] || RD1=4
+[ "$CASE" != stale-reason ] || RD1=4
 RD_ESCALATION_REASON=""; [ "$CASE" != cap-stalled ] || RD_ESCALATION_REASON=cap-stalled; export RD_ESCALATION_REASON
 [ "$CASE" != no-progress ] || RD1=3
+if [ "$CASE" = stale-reason ]; then   # an old reason from an earlier run that cannot be removed (macOS immutable flag)
+  mkdir -p "$FT/.relay-scratch" && printf 'cap-stalled\n' > "$FT/.relay-scratch/escalation-reason" && chflags uchg "$FT/.relay-scratch/escalation-reason"
+  trap 'chflags nouchg "$FT/.relay-scratch/escalation-reason" 2>/dev/null; printf "Fixture retained: %s\n" "$WORK"' EXIT
+fi
 end_epoch="$(python3 -c 'import time; print(int(time.time())+900)')"
 printf '== wake: CASE=%s start=%s deadline_epoch=%s\n' "$CASE" "$(date -u +%FT%TZ)" "$end_epoch"
 printf 'queue before: %s\n' "$(rows)"
@@ -205,7 +212,7 @@ fi
 
 # expectations: successor dispatch count, and that row 1 is never re-dispatched (0 calls for exhausted/hold,
 # at most 1 for the others) and ends in a non-pending, non-completed state
-case "$CASE" in shared|refusal|no-progress|cap-mismatch) want_succ=0 ;; *) want_succ=1 ;; esac
+case "$CASE" in shared|refusal|no-progress|cap-mismatch|stale-reason) want_succ=0 ;; *) want_succ=1 ;; esac
 want_succ="${EXPECT_SUCC:-$want_succ}"
 ok=1
 [ "$c2" = "$want_succ" ] || ok=0
