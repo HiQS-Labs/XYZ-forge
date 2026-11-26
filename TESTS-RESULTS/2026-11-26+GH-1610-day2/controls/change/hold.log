@@ -1,26 +1,26 @@
 == test: gh1610-wake ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK
-== wake: CASE=hold start=2026-11-26T17:46:57Z deadline_epoch=1795716117
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki
+== wake: CASE=hold start=2026-11-26T17:57:41Z deadline_epoch=1795716761
 queue before: [(901, 'pending', 0, ''), (902, 'pending', 0, '')]
 marathon-drive: relay-drive exited with unexpected code 9
-jog: execution clone aligned at 6371284335266a1c958a84e7d15a4448c9f01357; other branches and untracked files retained
+jog: execution clone aligned at 6b032fb850e376c2d8d6c58eaad280437a33a78d; other branches and untracked files retained
 jog: GH-901 not started: hold: capture body HELD: marker; parking item.
-jog: execution clone aligned at 6371284335266a1c958a84e7d15a4448c9f01357; other branches and untracked files retained
+jog: execution clone aligned at 6b032fb850e376c2d8d6c58eaad280437a33a78d; other branches and untracked files retained
 
 ============================================================
 jog: processing GH-902 (attempt 1) at position 1
 ============================================================
-jog: running preflight for GH-902 (execution gh902-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-install/.tick/jog/jog-01M8CFFD9MDBTDHVJV529GZRZH/gh902-exec1/preflight)
-jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-execution/relay-automation/marathon-drive.sh)
-marathon-drive: branch guard: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-execution was on its trunk branch 'development' — cut 'marathon/gh901-fixture' and continuing (GH-561)
+jog: running preflight for GH-902 (execution gh902-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-install/.tick/jog/jog-01M8CG328V38MWEAKR9ASXZ5PQ/gh902-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-execution/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-execution was on its trunk branch 'development' — cut 'marathon/gh901-fixture' and continuing (GH-561)
 marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
-marathon-drive: relay file committed: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-execution/marathon-system/gh-902-fixture-successor/RELAY.md
+marathon-drive: relay file committed: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-execution/marathon-system/gh-902-fixture-successor/RELAY.md
 marathon-drive: tick token seeded: MARATHON-GH-902-FIXTURE-SUCCESSOR-TURN → codex
-marathon-drive: memory-telemetry: phase gh-902-fixture-successor-start boundary — compressor=6253MB
+marathon-drive: memory-telemetry: phase gh-902-fixture-successor-start boundary — compressor=6468MB
 marathon-drive: phase start: running relay-drive --round-cap 5
-marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-install/.tick/jog/jog-01M8CFFD9MDBTDHVJV529GZRZH/gh902-exec1/preflight/marathon-result.json (outcome: refused, exit 2)
-marathon-drive: interrupted-phase record written: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-execution/marathon-system/gh-902-fixture-successor/PHASE-INTERRUPTED.md (reason: usage or configuration error)
-marathon-drive: transcript saved: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-execution/relay-system/2026-11-26/marathon-gh-902-fixture-successor-174701.md
+marathon-drive: result receipt written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-install/.tick/jog/jog-01M8CG328V38MWEAKR9ASXZ5PQ/gh902-exec1/preflight/marathon-result.json (outcome: refused, exit 2)
+marathon-drive: interrupted-phase record written: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-execution/marathon-system/gh-902-fixture-successor/PHASE-INTERRUPTED.md (reason: usage or configuration error)
+marathon-drive: transcript saved: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-execution/relay-system/2026-11-26/marathon-gh-902-fixture-successor-175745.md
 
 marathon-drive: end-of-run cost summary (tick analyze) —
 --- cost ---
@@ -29,16 +29,16 @@ tokens: 0 total (0 in / 0 out)
 human minutes (self-reported): 0
 wall-clock (run window): 0s
 per done-task: n/a (0 tasks done)
-memory: compressor peak: 6253MB
+memory: compressor peak: 6468MB
 
 clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
 jog: stopping queue execution on task failure.
 jog: GH-901 parked: hold: capture body HELD: marker
-jog: GH-902 failed: marathon refused: unexpected-relay-exit-9 (exit 2) [gh902-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-install/.tick/jog/jog-01M8CFFD9MDBTDHVJV529GZRZH/gh902-exec1/preflight/marathon-result.json]
+jog: GH-902 failed: marathon refused: unexpected-relay-exit-9 (exit 2) [gh902-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-install/.tick/jog/jog-01M8CG328V38MWEAKR9ASXZ5PQ/gh902-exec1/preflight/marathon-result.json]
 jog exit=0
 worker edge calls: GH-901=0 GH-902=1
-902 --relay-file /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-execution/marathon-system/gh-902-fixture-succe
-queue after: [(901, 'parked', 0, 'hold: capture body HELD: marker'), (902, 'failed', 1, 'marathon refused: unexpected-relay-exit-9 (exit 2) [gh902-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK/root-install/.tick/jog/jog-01M8CFFD9MDBTDHVJV529GZRZH/gh902-exec1/preflight/marathon-result.json]')]
+902 --relay-file /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-execution/marathon-system/gh-902-fixture-succe
+queue after: [(901, 'parked', 0, 'hold: capture body HELD: marker'), (902, 'failed', 1, 'marathon refused: unexpected-relay-exit-9 (exit 2) [gh902-exec1; result: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki/root-install/.tick/jog/jog-01M8CG328V38MWEAKR9ASXZ5PQ/gh902-exec1/preflight/marathon-result.json]')]
 ASSERT case=hold successor_calls=1 PASS (row1=parked: hold: capture body HELD: marker)
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.Ic7YhGw6BK
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.2EJ5hJtqki
 control exit=0

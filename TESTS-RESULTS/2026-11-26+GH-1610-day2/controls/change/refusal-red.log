@@ -1,13 +1,13 @@
 == test: gh1610-wake ==
-  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.9nqlAyqZ3x
-== wake: CASE=refusal start=2026-11-26T17:47:49Z deadline_epoch=1795716169
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.oQwkj5676n
+== wake: CASE=refusal start=2026-11-26T17:58:57Z deadline_epoch=1795716837
 queue before: [(901, 'pending', 0, ''), (902, 'pending', 0, '')]
-jog: execution clone aligned at ca7e6df91e7c751229330700ddcb602177107ad5; other branches and untracked files retained
+jog: execution clone aligned at 8eeb279d5998e9182748321808471bd34d3b92c3; other branches and untracked files retained
 
 ============================================================
 jog: processing GH-901 (attempt 1) at position 1
 ============================================================
-jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.9nqlAyqZ3x/root-install/.tick/jog/jog-01M8CFGZR2ZJJPCP0XFJTVY3KF/gh901-exec1/preflight)
+jog: running preflight for GH-901 (execution gh901-exec1, packet: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.oQwkj5676n/root-install/.tick/jog/jog-01M8CG5BQDQRXFTPQA01ZB3FG3/gh901-exec1/preflight)
 jog: GH-901 preflight refused: NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <te
 jog: advancing halted: GH-901 parked — preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <te
 jog: GH-901 parked: preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <te
@@ -15,5 +15,5 @@ jog exit=0
 worker edge calls: GH-901=0 GH-902=0
 queue after: [(901, 'parked', 1, "preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <te"), (902, 'pending', 0, '')]
 ASSERT case=refusal want_successor_calls=1 FAIL (calls 901=0 902=0; row1=parked: preflight-refused (exit 5): NOT-READY (exit 5) — next: acceptance criteria diverge from issue #901 — 1 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance — deviations from the issue' as `- [dropped|changed|added] <te)
-Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.9nqlAyqZ3x
+Fixture retained: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh1610-wake.XXXXXX.oQwkj5676n
 control exit=0
