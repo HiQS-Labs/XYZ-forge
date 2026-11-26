@@ -14,5 +14,10 @@
 == M4 the existing acceptance recheck still judges an ADJUDICATED candidate (red control, then green)
   PASS: M4 unfixed candidate: adjudicated terminal, then acceptance-probes-unmet (exit 5), no success
   PASS: M4 fixed candidate: adjudicated terminal advances (exit 0)
+== M5 red pre-advance gate after an adjudicated terminal (default path: no focused gate, so the real gate is Marathon's pre-advance)
+   receipt: escalated pre-advance-failed | relay_status Consult-Adjudicated | gate red
+  PASS: M5 red pre-advance gate: exit 5, no approved outcome, no ready PR (relay_status Consult-Adjudicated kept in the receipt)
+== M6 mixed Approved/adjudicated multi-phase closeout summary keeps the count and labels the adjudicated phase
+  PASS: M6 closeout summary: count kept (2/2) and p2 labelled consult-adjudicated with its verdicts
 
-RESULT: 9 passed, 0 failed
+RESULT: 11 passed, 0 failed
