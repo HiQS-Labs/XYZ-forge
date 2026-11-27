@@ -543,7 +543,7 @@ hosted promotion run; then the caller runs the sweep and records it with `--reco
     for the full gate, the pre-promotion `gh workflow run wave-reconcile.yml` dispatch (GH-1127, #1131).
     A full sweep is never rerun locally: record `verdict: deferred` naming the promotion dispatch, or
     `clean` naming the hosted run that covered the batch tip.
-- **Automated QA regression sweep (GH-1383):** In `--execute` mode, when a non-deferred local sweep command is declared (e.g. small canary suite in a throwaway clone), `merge_cleanup.py` automatically executes it upon batch landing completion. If the sweep passes, it records `verdict: clean`, updates the batch issue, and exits 0. If the sweep fails, it records `verdict: findings` with the error output and exits 4. To disable automatic execution and retain the manual exit 4 flow, pass `--no-auto-sweep`.
+- **Automated QA regression sweep (GH-1383):** In `--execute` mode, when a non-deferred local sweep command is declared (e.g. small canary suite in a throwaway clone), `merge_cleanup.py` automatically executes it upon batch landing completion. If the sweep passes, it records `verdict: clean`, updates the batch issue, and exits 0. If the sweep fails, times out (900 s) or cannot be launched, it records `verdict: findings` with the error output and exits 4. To disable automatic execution and retain the manual exit 4 flow, pass `--no-auto-sweep`.
 - **Exit 4 = landed, QA pending.** After a normal Phase 6, a batch with landings that no recorded
   verdict covers (or whose automated sweep was deferred, reported findings, or was opted out via `--no-auto-sweep`)
   ends with exit 4. Held or handed-off PRs elsewhere in the batch do not change
