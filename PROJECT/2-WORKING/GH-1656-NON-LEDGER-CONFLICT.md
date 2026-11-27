@@ -29,7 +29,7 @@ goal: "A PR GitHub reports CONFLICTING never reaches `gh pr merge`: a clean loca
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex (round 4). Implemented; 13 focused cases red on base, green on the candidate (`TESTS-RESULTS/2026-11-27+GH-1656/`). | Full focused suites, smoke, final Codex QA, gate, PR. |
+| Plan QA approved (Codex, round 4). Final QA approved (Codex; round 1 found that Forge's real pre-push admission refuses a detached candidate, fixed by publishing from the local integration branch and witnessed on the real hook; round 2 a recovery-command quoting fix; attested `fc0667540`). Receipts in `TESTS-RESULTS/2026-11-27+GH-1656/`. | Qualification push, PR, parent lands through merge-cleanup. |
 
 ## Problem (observed)
 
@@ -253,3 +253,10 @@ manual local merge (no data loss). Priority 75: one of four fixes the operator s
 live Runs A/B (#1657). Appeal 50 (neutral, no operator value). Effort 60: one branch, one helper,
 one record field, tests in an existing suite. Recurrence: 2 incidents on 2026-11-27 (#1651,
 #1652, one batch); no earlier same-class report found in the last 28 days (trend unknown).
+
+## Lessons Learned
+
+- A fixture that stubs the pre-push gate (`gate_unwired_reason`) cannot see Forge's attempt
+  admission. The new push path passed 13 fixture cases and a CLI smoke with a substitute hook, yet
+  the real installer refused it (`real-hook-detached.log`). Any new push path needs one replay
+  against the real `githooks/install.sh`.
