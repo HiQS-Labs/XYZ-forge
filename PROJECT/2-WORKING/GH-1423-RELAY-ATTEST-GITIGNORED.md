@@ -1,6 +1,6 @@
 ---
 title: relay-drive attest-publish-failed when relay file is under a gitignored path
-status: "Prepared 2026-11-27 (1-INBOX, not enqueued, not started)"
+status: Active
 created: 2026-11-11
 updated: 2026-11-27
 owner: Noel Saw (Conveyor preparation 2026-11-27 for the Flywheel Run A queue; ledger #1658)

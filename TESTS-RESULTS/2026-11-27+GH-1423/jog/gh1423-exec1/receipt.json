@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1423,
+  "execution_id": "gh1423-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1423-relay-attest-gitignored-2026-11-27",
+  "pr_number": 1677,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "b0ad93b6308a7e93d76241c8d5d518fb0058c46d5d6e78d3f1befd7e007b8528",
+    "gate-receipt.json": "dc237acead8265ad18262a320a91d28a65e6e7c5240d43bf244cfacd45effb88",
+    "provenance.jsonl": "9d643fe2454ab69135b38a1eb4898da99a678c444ea2f7341c299e8287f43b3d"
+  }
+}

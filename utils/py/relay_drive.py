@@ -835,10 +835,11 @@ def main():
         if ls.returncode != 0:
             eprint("relay-drive: relay file is untracked/gitignored — attestation trailer kept on disk only, commit skipped")
             return True
-        add = subprocess.run(["git", "-C", trepo, "add", "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+        # GH-1423: a path-scoped commit uses the tracked file's working-tree content.
+        # Explicit git add can reject the same file when its parent directory is ignored.
         cm = subprocess.run(["git", "-C", trepo, "commit", "-q", "-m", msg, "--", os.path.abspath(relay_file)], capture_output=True, text=True)
-        if add.returncode != 0 or cm.returncode != 0:
-            eprint(f"relay-drive: commit of relay file FAILED: {(add.stderr or cm.stderr).strip()}")
+        if cm.returncode != 0:
+            eprint(f"relay-drive: commit of relay file FAILED: {cm.stderr.strip()}")
             return False
         return True
 

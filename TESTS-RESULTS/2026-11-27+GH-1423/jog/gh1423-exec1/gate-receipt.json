@@ -1,0 +1,21 @@
+{
+  "sha": "9e40a86dbf5044cd0ae606f214c60ffa4ed8195b",
+  "gate": "validate.sh",
+  "mode": "parallel",
+  "exit_code": 0,
+  "passed": 408,
+  "total": 408,
+  "duration_s": null,
+  "timestamp": "2026-11-27T23:52:20.214697+00:00",
+  "host": "Darwin 24.6.0",
+  "attempt": {
+    "attestation": "/Users/noelsaw/flywheel-runA-exec/.git/relay-attest/MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN.json",
+    "id": "2902bb96be064eb8a2e3aed70e135525",
+    "kind": "lane",
+    "record": "/Users/noelsaw/flywheel-runA-exec/.tick/attempt-history/gh-1423-relay-attest-gitignored-zihv7wcv/attempts",
+    "archived": true,
+    "sha": "9e40a86dbf5044cd0ae606f214c60ffa4ed8195b",
+    "state": "active"
+  },
+  "scope": "full"
+}
