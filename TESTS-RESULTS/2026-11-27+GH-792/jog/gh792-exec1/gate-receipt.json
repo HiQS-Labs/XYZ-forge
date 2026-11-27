@@ -1,0 +1,20 @@
+{
+  "sha": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+  "gate": "bash test/gh-gen4-phase5-campaign.sh",
+  "mode": "marathon",
+  "exit_code": 0,
+  "passed": null,
+  "total": null,
+  "duration_s": null,
+  "timestamp": "2026-11-27T16:58:48.142711+00:00",
+  "host": "Darwin 24.6.0",
+  "attempt": {
+    "attestation": "/Users/noelsaw/flywheel-day3-exec/.git/relay-attest/MARATHON-GH-792-GEN4-SANDBOX-DISJOINT-FIRST-TURN.json",
+    "id": "e9c92570f5754bf2ad4f56f8d1511e10",
+    "kind": "lane",
+    "record": "/Users/noelsaw/flywheel-day3-exec/.tick/attempt-history/gh-792-gen4-sandbox-disjoint-first-b2zw5jyb/attempts",
+    "archived": true,
+    "sha": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+    "state": "active"
+  }
+}
