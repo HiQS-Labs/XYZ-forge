@@ -1,6 +1,6 @@
 ---
 title: "merge-cleanup: a GitHub-CONFLICTING PR whose conflict is not in the ledger fails at gh pr merge"
-status: In progress
+status: Complete
 created: 2026-11-27
 updated: 2026-11-27
 owner: Noel Saw
