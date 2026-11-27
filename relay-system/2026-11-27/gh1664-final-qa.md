@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -99,5 +99,92 @@ Output: graded findings with file:line, `swept file: yes|no`, a literal `VERDICT
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 (codex)
+
+swept file: yes
+
+- **[Blocker] A malformed prepared ref aborts the queue instead of parking the item.** Observed input: the seeded contract with the plan's base SHA as `prepared_commit` and JSON `"ref": "development\u0000"`. The real contract parser accepts that string (`utils/py/swarm_preflight.py:65–70,132–153`). Jog's nonblank test accepts it and the rev-parse launch raises before it can return an unavailable reason (`utils/py/jog_run.py:1752–1753,1777–1787`). Both callers require that reason to take their park branch (`:1114–1120,3158–3171`). Affected scope: stamped packets with a ref or cited path that cannot be passed to Git as an argument. Falsifier: run the same probe and expect a named `stale-check-unavailable:` return, with normal ref inputs and the existing G11–G13 outcomes preserved. Validate the Git-bound fields or handle launch errors within the existing admission check so the row parks before any lease.
+
+  Read-only probe below exited **1** with `jog_run.py:1785 → jog_run.py:1753 → ValueError: embedded null byte`. Fetch was stubbed as successful and the real Python subprocess argument check was exercised against the Python executable. No Git or network command ran.
+
+```bash
+python3 -B - <<'PY'
+import io, json, subprocess, sys
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0, "utils/py")
+import jog_run, swarm_preflight
+doc = Path("PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md")
+packet = swarm_preflight.extract_contract(str(doc))
+packet.update(prepared_commit="52813e56f0abd76cd3ba277602cc3e7fdf1e6f90")
+packet["target"]["ref"] = "development\0"
+markdown = "## Swarm Preflight Contract\n```json\n" + json.dumps(packet) + "\n```\n"
+run = subprocess.run
+def local_run(argv, **kwargs):
+    if argv[3:] == ["fetch", "--prune", "--quiet"]:
+        return subprocess.CompletedProcess(argv, 0, "", "")
+    assert argv[3:6] == ["rev-parse", "--verify", "--quiet"], argv
+    return run([sys.executable, "-c", "pass", argv[-1]], **kwargs)
+with patch.object(jog_run, "_admission_captures", return_value=[str(doc)]), \
+     patch.object(swarm_preflight, "open", side_effect=lambda *a, **k: io.StringIO(markdown), create=True), \
+     patch.object(jog_run.subprocess, "run", side_effect=local_run):
+    assert swarm_preflight.extract_contract(str(doc))["target"]["ref"] == "development\0"
+    reason = jog_run.stale_evidence_refusal(".", 1664)
+    assert reason and reason.startswith("stale-check-unavailable:"), reason
+PY
+```
+
+- **[Should] Bound the new admission fetch by the supervised dispatch deadline.** Observed input: `--supervise-until` establishes a monotonic deadline (`utils/py/jog_run.py:2953–2973`) → the queue checks it before selecting an item (`:3106–3128`) → supervised alignment returns (`:3135–3137`) → the stale check gets no deadline (`:3158–3159`) → the added fetch uses bare `subprocess.run` without a timeout (`:1752–1753,1781–1784`), while the later Preflight call already uses the bounded process path (`:644–647,2827–2842`). Affected scope: supervised admission of a stamped packet when the added fetch takes longer than the remaining dispatch time, after alignment has completed. Falsifier: a local child that delays the admission fetch for four seconds must be stopped by a one-second remaining deadline, before a lease. Use the existing bounded runner for the added Git calls when a deadline is set and put the supervised caller's deadline on that path. Pending clone probe verification.
+
+  Clone probe: from the disposable full clone root, use this local fake Git child. It performs no fetch, accesses no credentials and uses a temporary directory inside that clone. The current helper takes no deadline argument, so the baseline branch below measures its current call. On a fix, test the deadline-aware call and confirm the supervised call site passes that same deadline.
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
+import inspect, io, json, os, sys, tempfile, time
+from pathlib import Path
+from unittest.mock import patch
+
+sys.path.insert(0, "utils/py")
+import jog_run, swarm_preflight
+
+doc = Path("PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md").resolve()
+packet = swarm_preflight.extract_contract(str(doc))
+packet["prepared_commit"] = "52813e56f0abd76cd3ba277602cc3e7fdf1e6f90"
+markdown = "## Swarm Preflight Contract\n```json\n" + json.dumps(packet) + "\n```\n"
+with tempfile.TemporaryDirectory(dir=Path.cwd()) as tmp:
+    child = Path(tmp, "git")
+    child.write_text(f"#!{sys.executable}\nimport sys, time\n"
+                     "assert sys.argv[3:] == ['fetch', '--prune', '--quiet']\n"
+                     "time.sleep(4)\nsys.exit(1)\n")
+    child.chmod(0o700)
+    check = jog_run.stale_evidence_refusal
+    with patch.dict(os.environ, {"PATH": tmp + os.pathsep + os.environ["PATH"]}), \
+         patch.object(jog_run, "_admission_captures", return_value=[str(doc)]), \
+         patch.object(swarm_preflight, "open", lambda *a, **k: io.StringIO(markdown), create=True):
+        started = time.monotonic()
+        kwargs = {"deadline": started + 1} if "deadline" in inspect.signature(check).parameters else {}
+        try:
+            reason = check(str(Path.cwd()), 1664, **kwargs)
+        except jog_run.ContractError as exc:
+            reason = str(exc)
+        elapsed = time.monotonic() - started
+        print(f"elapsed={elapsed:.2f}s reason={reason!r}")
+        assert elapsed < 3 and reason and ("deadline" in reason or "timed out" in reason), reason
+PY
+```
+
+- **[Should] Retain the planned red evidence for G12.** Observed input: the plan requires a base rejection at G12 (`PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md:196–201,209–216`), but the cut run stops at the G13 failure and exits 1 before reaching G12 (`TESTS-RESULTS/2026-11-27+GH-1664/suite/red-base-g12-g13-cut.log:122–129`, `test/gh280-jog-marathon-adapter.sh:831–846`). Affected scope: the remote-only change witness, specifically the regression where successful admission compares cached A. Falsifier: retain a disposable-clone base run of G12 alone with its remote left reachable. Expect the G12 refusal oracle to fail after a lease and dispatch. The existing green G12 receipt must still show a named refusal at B with zero attempts and no execution. Record the exact cut, revision, command and exit in provenance.
+
+- **[Pass] Acceptance 1–3 on the retained fixture.** Run and retry-build share the refusal before the lease (`utils/py/jog_run.py:1114–1125,3155–3171`). G9 names `src/feature.js`, parks at 1 and records no execution (`TESTS-RESULTS/2026-11-27+GH-1664/suite/green-full.log:122–125`). The inbox replay independently shows the unchanged capture, attempts 1→1 and executions 0→0 (`replay/green-stale-evidence-run.log:4–10`, relative to the evidence directory). Its refresh reaches the worker once, with the same global ID, one row and attempts 1→1→2 (`:35–45`). The replay uses a stub exit 9 after dispatch. G10 supplies the approving receipt and the artifact write after an unrelated commit above the refreshed stamp (`test/gh280-jog-marathon-adapter.sh:780–801`, `suite/green-full.log:126–129`). G4 covers unstamped dispatch (`:105–110`). The recovery handoff directs inbox packets to `jog retry` plus `jog run` with the clone current (`skills/1-hourly/conveyor/SKILL.md:69–71,105–109`, `skills/2-daily/jog/SKILL.md:168–176`).
+- **[Pass] Acceptance 4 has a discriminating red and green in the existing suite.** Base spends attempt 2 at G9, attempt 1 at G11, and attempt 1 plus a Preflight execution at G13 (`suite/red-base-jog_run.log:122–123`, `suite/red-base-g11-cut.log:122,167`, `suite/red-base-g12-g13-cut.log:122–129`). The base replay reaches the worker once, increments the attempt and fails its refusal assertion (`replay/red-stale-evidence-run.log:34–37`). The candidate suite logs G9–G13 and 244 pass, 0 fail (`suite/green-full.log:122–137,248`). The GH-1664 packet's own `grep_absent` probe seeks the implementation marker with the existing Preflight polarity (`PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md:289–305`, `utils/py/swarm_preflight.py:278–282,302–305`).
+- **[Pass] Capture selection, compatibility and scope.** The shared union covers the working glob, lifecycle candidates and canonical selection (`utils/py/jog_run.py:1664–1678`, `utils/py/swarm_preflight.py:1439–1446`). Holds short-circuit staleness, and simulation skips both. An unstamped capture emits the planned notice and continues without a new fetch for that capture (`jog_run.py:1699–1732,1771–1784,3155–3159`). The stamped path uses the execution root, fetches once before resolution, refuses nonzero fetch and invalid or unknown stamps, strips artifacts, preserves probe spelling, and skips an empty path list (`:1752–1805`). C1's retained manual check records detection with `core.ignorecase=true` and the miss with it forced false (`icase-manual-check.txt:1–10`). The parking and retry writes remain in the existing queue owner (`utils/py/releases_app.py:4963–4974,5124–5138`). Coverage lives in G9–G13 of the existing adapter suite and the retained replay witness (`test/gh280-jog-marathon-adapter.sh:727–847`, `provenance.jsonl:1–11`). The stored 70/55/50/65 matches the plan's rationale and bounded implementation (`releases.sql:1072`, `PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md:280–287`).
+- **[Pass] Retained receipt bytes.** From the repo root, the following read-only probe exited 0 with `11 nonempty evidence files match provenance SHA-256` (`provenance.jsonl:1–10`, including the source archive hash on line 1).
+  ```bash
+  python3 -B -c 'import hashlib,json,pathlib; p=pathlib.Path("TESTS-RESULTS/2026-11-27+GH-1664/provenance.jsonl"); rows=[json.loads(s) for s in p.read_text().splitlines()]; checks=[(pathlib.Path(r[k]).read_bytes(),r[h]) for r in rows for k,h in (("artifact","sha256"),("source","source_sha256")) if h in r]; assert checks and all(b and hashlib.sha256(b).hexdigest()==h for b,h in checks); print(len(checks),"nonempty evidence files match provenance SHA-256")'
+  ```
+
+VERDICT: FAIL
+Basis: The whole admission-helper and call-site sweep found the malformed-ref failure and the new unbounded supervised fetch. The existing retry-build inbox limitation is documented in the operator handoff (`skills/2-daily/jog/SKILL.md:168–176`). The core behavior has retained proof, with the specific G12 red control still missing. The nearest graph predates this lane and its trace calls were denied, so citations use worktree source. Suites and the full gate were not run in this relay worktree. Producer claude-a should address the findings, run the deadline probe and return the evidence for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
