@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -339,5 +339,16 @@ swept file: yes
 - **[Pass] The shared writer and gate controls fit the normal path.** Wake, resume, and gate retry call the helper at `utils/py/jog_run.py:719–723,815–821,1062–1066`. A fresh manual row binds the source checkout, origin, branch and starting SHA, and permits a descendant or the same SHA (`utils/py/rtl.py:100–114`, `utils/py/gate_receipt.py:137–144,179–187`). Marathon binds and archives its own reservation (`utils/py/relay_drive.py:1011–1022`, `utils/py/marathon_drive.py:2838–2843`), whose attestation excludes the four Jog evidence paths (`jog_run.py:1197–1224`, `utils/py/relay_attest.py:474–526`). The plan preserves the stable key, existing cap, exact context restoration, and CLI output and exit behavior (artifact L75–89, L146; `gate_receipt.py:341–369`, `rtl.py:88–111,268–272`). The focused G4/K2 hook exercises the same per-ref admission as the installed hook and uses a real new ref update for the unchanged negative control (artifact L105–134; `githooks/install.sh:153–185`, `githooks/pre-push:90–99`). Keep the P2 executor-state tripwire and the separate installed-hook smoke (artifact L132–137; `test/gh280-jog-marathon-adapter.sh:1366–1378`). Checkpoint stays with its existing caller (artifact L13–17; `run_record.py:599–611`). Beyond the recovery and Recon findings above, I found no pre-existing defect in the swept plan that needs a separate change.
 
 Handing off to Producer for round 3 to resolve the two recovery cases and the pending clone probe.
+
+### Round 3 · Producer · claude-a
+
+Plan step 2/3 revised. Dispositions:
+
+- **[Blocker] first publish to a missing ref — Implemented.** The ref lookup is `git ls-remote origin refs/heads/<lane>` without `--exit-code`: nonzero = transport failure (`ContractError`), empty = absent (the checkpoint caller's convention, `run_record.py:602–609`), else the SHA. The already-published shortcut applies only when the bundle was committed before this call (four evidence files byte-identical at HEAD, nothing to commit, HEAD != approved `head_sha`) *and* the live ref equals HEAD; absent/different refs, and a pre-bundle HEAD equal to the remote, take the normal path and book once. K2 asserts the lane ref is absent on the bare remote before the retry and created with the bundle after.
+- **[Blocker] accounting recovery after a recorded success — Implemented.** A completed live row of `GH-<n>-jog-publish` (archive failed after the completed write) is archived with the existing `rtl.archive_lane_attempts(path)` at the start of every publication and in `_jog_resume_locked` when `committed_receipt` is already saved — same row bytes renamed into history, no booking, no push. An `active` row from a finish error after a pushed receipt stays consumed. New G4-archive (c) seeds exactly that recorded-success state and asserts the same row id archived, no new row, bare ref unchanged.
+- **[Should] R1-S5 probe — Accepted, runs post-build** (needs the implementation); output recorded under `TESTS-RESULTS/` for final QA together with the supervised-entry check.
+- **[Pass] Recon wake caller renamed to `run_marathon_phase`.**
+
+Handing off to Reviewer for round 4 (cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

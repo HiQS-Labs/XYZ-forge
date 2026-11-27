@@ -46,7 +46,7 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
 | Claim | Source | Observed |
 |---|---|---|
 | Jog pushes the receipt bundle with no attempt context | `utils/py/jog_run.py` `publish_jog_receipt` (≈L1176–1250): commit then `_git(target, "push", "origin", "HEAD:refs/heads/<lane>")`, `env=None` | the push inherits Jog's environment; Jog never sets `XYZ_ATTEMPT_CONTEXT` |
-| Three callers publish | `jog_run.py` wake (≈L721, `_jog_dispatch_marathon`), `jog_resume` (≈L818), gate-only retry (≈L1063) | all three have the coordinator `root`, the execution `target` and `gh_num` |
+| Three callers publish | `jog_run.py` wake (≈L721, `run_marathon_phase`), `jog_resume` (≈L818), gate-only retry (≈L1063) | all three have the coordinator `root`, the execution `target` and `gh_num` |
 | The hook refuses any task push without context | `githooks/install.sh` stub `_attempt_guard` → `gate_receipt.py admit --ref --destination-ref`; `githooks/pre-push` L91–95 | `attempt_admission` raises `task qualification has no attempt reservation` when the env var is empty and the destination is a task branch |
 | Marathon books and attests its own lane reservation | `marathon_drive.py` `lane_attempt_gate` → `rtl.lane_attempt_reserve(kind="lane")`; relay_drive binds it to the attestation; archived on completion | the lane push succeeds under it, in Marathon's process only |
 | That lane reservation cannot cover the receipt commit | `attempt_admission` attestation branch → `relay_attest.candidate_ok` → `source_matches` | only transcript-only commits after the reviewed head pass; the receipt bundle adds `TESTS-RESULTS/...`, so it would be refused ("changes non-transcript content") |
@@ -87,10 +87,17 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
    `ContractError` (the existing Jog park/`jog: <msg>` surfaces). The three callers pass `accounting_root=root`.
    The key `GH-<n>-jog-publish` is the canonical publication identity; retries and restarts draw on the same budget,
    nothing renames it, and it is not a recovery switch for any other key.
-   **Already-published recovery (R1-B1 / R2-B2), no second booking:** after the evidence files are verified/committed
-   and the existing landing-tail proof holds, Jog reads the exact live ref with
-   `git ls-remote --exit-code origin refs/heads/<lane>` (the pattern already used by checkpoint publication,
-   `jog_run.py:2423–2427`). If it equals the local HEAD (the bundle commit), the receipt is already published:
+   **Settle a pending archive first (R3-B2):** at the start of every publication *and* in `_jog_resume_locked`
+   when `committed_receipt` is already saved, if the live last row of `GH-<n>-jog-publish` is a `manual`
+   `completed` row (its archive failed after the completed write), Jog archives it with the existing
+   `rtl.archive_lane_attempts(path)` (same bytes renamed into `attempt-history`, no booking, no push). An `active`
+   row left by a finish error after a successful push stays a consumed attempt (superseded by the next booking).
+   **Already-published recovery (R1-B1 / R2-B2 / R3-B1), no second booking:** the shortcut applies only when the bundle
+   was already committed before this call (all four evidence files at HEAD byte-identical, nothing to commit,
+   HEAD != the approved `head_sha`). Jog then reads the exact live ref with `git ls-remote origin refs/heads/<lane>`
+   (no `--exit-code`): nonzero exit = transport failure → `ContractError`; empty output = ref absent; otherwise the
+   SHA (absence-as-empty is the checkpoint caller's convention, `run_record.py:602–609`). Absent or different ⇒ normal
+   booking path (a first publish books once and creates the ref). If it equals the local HEAD (the bundle commit), the receipt is already published:
    Jog books nothing and pushes nothing; if the live row of `GH-<n>-jog-publish` is a `manual` row that is `active`, or
    `completed` with `candidate` == HEAD (archival pending), Jog finishes that same row as `completed` with the
    existing `manual_attempt_finish` (admission re-checks identity, origin, branch and candidate), which archives it.
@@ -120,8 +127,10 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
      bare remote out of band and append a `completed` row with `candidate` = HEAD to the live file (crash before
      archival) — `jog resume` exits 0, books nothing, the archive holds exactly those 2 rows (same ids), state has
      `committed_receipt`; (b) seed failed + `active` at cap with the remote still at the prior SHA — `jog resume`
-     refuses `budget exhausted`, both live rows and the remote ref unchanged. (Case "active + already pushed" is
-     covered by the same code path as (a) and checked in the smoke.)
+     refuses `budget exhausted`, both live rows and the remote ref unchanged; (c) after a successful publication,
+     move the archived file back to the live path as a `completed` row (archive failed after the completed write, with
+     `committed_receipt` saved) — `jog resume` archives that same row id with no booking and the bare ref unchanged.
+   - K2 additionally asserts the bare remote lacks the K2 lane ref before the retry (first publish creates it).
    - Lock (R1-S5/R2-S4): the Round 1 two-resume clone probe, run against the implementation in a disposable clone
      (patching the binding the publication helper calls), expects B exit 4 and exactly one additional row; recorded
      under `TESTS-RESULTS/`. Supervised recovery publishing with the lock held is exercised by the existing gh280
