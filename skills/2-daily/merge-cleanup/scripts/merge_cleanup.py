@@ -643,6 +643,13 @@ def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, A
     """Retarget open stacked dependents before merging their base."""
     pr_num = info["number"]
     head = info.get("headRefName") or ""
+    # GH-1662: a fork's head branch is not a branch of this repository, so a fork PR is nobody's stacked parent
+    # (the sorter already says so). The live read carries no identity; the discovery list does.
+    cross = info.get("isCrossRepository")
+    if cross is None:
+        cross = next((p.get("isCrossRepository") for p in open_prs if p.get("number") == pr_num), None)
+    if cross:
+        return True
     dependents = [p for p in open_prs
                   if p.get("number") != pr_num and (p.get("baseRefName") or "") == head]
     if not dependents:

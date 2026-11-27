@@ -1,3 +1,0 @@
-merge-cleanup: WARNING — This sequence is NOT executable as things stand: the primary checkout cannot receive the landing (see PHASE 0). --execute would refuse.
-merge-cleanup: ERROR — PR #101: landing clone gate wiring failed: githooks/install.sh is missing, so this clone's pre-push gate cannot be proven (GH-1576) — stopping
-merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

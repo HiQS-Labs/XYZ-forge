@@ -474,19 +474,47 @@ print(json.dumps(out))
     pm = json.loads(subprocess.run([PY39, "-c", probe, md], capture_output=True, text=True).stdout)
     with open(os.path.join(RUNS, "A16-fork-probe.json"), "w") as fh:
         json.dump({"candidate": pc, "mutant_no_cross_repository_guard": pm}, fh, indent=1)
+    prot = r'''
+import json, subprocess, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import merge_cleanup as mc
+calls = []
+mc._gh = lambda args, *a, **kw: (calls.append(args) or subprocess.CompletedProcess(args, 0, "", ""))
+def run(parent_live, parent_listed, child_base="feat/parent"):
+    calls.clear()
+    live = dict(number=10, headRefName="feat/parent", baseRefName="main")
+    if parent_live is not None:
+        live["isCrossRepository"] = parent_live
+    listed = dict(number=10, headRefName="feat/parent", baseRefName="main", isCrossRepository=parent_listed)
+    child = dict(number=12, headRefName="feat/child", baseRefName=child_base, isCrossRepository=False)
+    mc._protect_stacked_dependents(live, [listed, child], Path("."), "main")
+    return list(calls)
+print(json.dumps({"fork_info_has_field": run(True, True), "fork_production_shape": run(None, True),
+                  "same_repository_parent": run(False, False), "no_identity_anywhere": run(None, None)}))
+'''
+    pcp = json.loads(subprocess.run([PY39, "-c", prot, CAND], capture_output=True, text=True).stdout.strip().splitlines()[-1])
+    mdp = patched("mut-protect", "merge_cleanup.py", "    if cross:\n        return True\n    dependents = [p for p in open_prs", "    dependents = [p for p in open_prs")
+    pmp = json.loads(subprocess.run([PY39, "-c", prot, mdp], capture_output=True, text=True).stdout.strip().splitlines()[-1])
+    edit_call = [["pr", "edit", "12", "--base", "main"]]
+    prot_ok = (pcp["fork_info_has_field"] == [] and pcp["fork_production_shape"] == [] and pcp["same_repository_parent"] == edit_call
+               and pcp["no_identity_anywhere"] == edit_call and pmp["fork_production_shape"] == edit_call)
+    with open(os.path.join(RUNS, "A16-protect-probe.json"), "w") as fh:
+        json.dump({"candidate": pcp, "mutant_no_cross_repository_guard": pmp}, fh, indent=1)
     f = build("a16", forks=True)
     r, o, e, _ = run(f, "A16-cand-fork-dry", CAND, ["--standalone", "--prs", "118"], root=False)
     fm = build("a16m", forks=True)
     rm, om, em, _ = run(fm, "A16-mutant-fork-dry", md, ["--standalone", "--prs", "118"], root=False)
     ok = (pc["fork_main_pair"]["order_deps"] == [[1, []], [2, []]] and pc["fork_main_pair"]["listed_1"] == [1]
           and pc["genuine_stack"]["order_deps"] == [[1, []], [2, [1]]] and pc["genuine_stack"]["listed_2"] == []
-          and pm["fork_main_pair"]["listed_1"] == [] and r == 0 and "Would merge PR #118" in o and "Would merge PR #118" not in om and "PR #118: depends on deferred prerequisite (#119)" in (om + em))
+          and pm["fork_main_pair"]["listed_1"] == [] and r == 0 and "Would merge PR #118" in o and "Would merge PR #118" not in om and "PR #118: depends on deferred prerequisite (#119)" in (om + em) and prot_ok)
     rec("A16", "Fork heads are not stacked parents (plan QA final R1 F1): two fork PRs from `main` have no edge and a selected one is kept; a genuine same-repository stack still orders and defers; the mutant without the guard reproduces the defect",
         "toposort_prs / effective_sequence probe (candidate vs mutant); " + cmd_s + " --standalone --prs 118   (fixture --with-forks)", r, ok,
-        "candidate fork pair %s listed {1}->%s; genuine stack %s listed {2}->%s; mutant listed {1}->%s; end-to-end candidate rc %d (Would merge #118: %s), mutant rc %d (#118 previewed: %s; deferred behind fork #119: %s)" % (
+        "retarget probe candidate fork(live field)=%s fork(production shape)=%s same-repository=%s no-identity=%s; mutant fork(production shape)=%s; candidate fork pair %s listed {1}->%s; genuine stack %s listed {2}->%s; mutant listed {1}->%s; end-to-end candidate rc %d (Would merge #118: %s), mutant rc %d (#118 previewed: %s; deferred behind fork #119: %s)" % (
+            pcp["fork_info_has_field"], pcp["fork_production_shape"], pcp["same_repository_parent"], pcp["no_identity_anywhere"], pmp["fork_production_shape"],
             pc["fork_main_pair"]["order_deps"], pc["fork_main_pair"]["listed_1"], pc["genuine_stack"]["order_deps"], pc["genuine_stack"]["listed_2"],
             pm["fork_main_pair"]["listed_1"], r, "Would merge PR #118" in o, rm, "Would merge PR #118" in om, "depends on deferred prerequisite (#119)" in (om + em)), REV_CAND,
-        "probes: runs/A16-fork-probe.json. Known, pre-existing and unchanged: _protect_stacked_dependents still matches by short branch name (merge_cleanup.py), harmless unless a fork head shares a name with another PR's non-integration base")
+        "probes: runs/A16-fork-probe.json, runs/A16-protect-probe.json")
 
 bad = [a for a, ok in results if not ok]
 print("\nrows: %d, failed: %s" % (len(results), bad or "none"))

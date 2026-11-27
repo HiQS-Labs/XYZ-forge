@@ -1,4 +1,0 @@
-merge-cleanup: ERROR — PR #110: required checks failing (ci) — not merged
-merge-cleanup: ERROR — PR #116: NOT attempted — depends on #110 (required checks failing: ci)
-merge-cleanup: ERROR — 2 PR(s) did not land (0 deferred by network, 0 awaiting checks or a re-pin, 0 parked on resume, 2 handed off or parked): #110 (required checks failing: ci), #116 (blocked by #110)
-merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.
